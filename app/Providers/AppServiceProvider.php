@@ -5,6 +5,7 @@ namespace App\Providers;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\View;
+use Illuminate\Support\Facades\URL; // ⬅️ Tambahkan ini di bagian atas
 use App\Models\CctvData;
 
 class AppServiceProvider extends ServiceProvider
@@ -23,7 +24,11 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // 🔑 Force HTTPS for asset URLs in production
+        if ($this->app->environment('production')) {
+            URL::forceScheme('https');
+        }
+
         Schema::defaultStringLength(191);
         
         // Share control room data to sidebar
