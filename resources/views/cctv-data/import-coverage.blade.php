@@ -5,8 +5,12 @@
     <link href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endsection 
+
+@push('head')
+    <meta name="csrf-token" content="{{ csrf_token() }}">
+@endpush 
 @section('content')
-<x-page-title title="CCTV Coverage" pagetitle="Import Coverage dari Excel" />
+<x-page-title title="CCTV Coverage" pagetitle="Data CCTV Coverage" />
 
 <div class="row">
     <div class="col-12">
@@ -14,20 +18,70 @@
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between mb-3">
                     <div>
-                        <h5 class="mb-0 fw-bold">Import CCTV Coverage dari Excel</h5>
-                        <p class="mb-0 text-muted">Upload file Excel (.xlsx, .xls) atau CSV untuk mengimpor data coverage CCTV secara massal</p>
+                        <h5 class="mb-0 fw-bold">Data CCTV Coverage</h5>
+                        <p class="mb-0 text-muted">Daftar Data CCTV Coverage yang sudah diimport</p>
                     </div>
+                    <div class="d-flex gap-2">
+                        <button type="button" class="btn btn-primary" id="btnImportCoverage">
+                            <i class="material-icons-outlined">upload</i> Import Coverage
+                        </button>
                     <div class="dropdown">
-                        <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
-                            data-bs-toggle="dropdown">
-                            <span class="material-icons-outlined fs-5">more_vert</span>
+                            <a href="javascript:;" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                                <i class="material-icons-outlined">more_vert</i>
                         </a>
                         <ul class="dropdown-menu">
                             <li><a class="dropdown-item" href="{{ route('cctv-data.index') }}"><i class="material-icons-outlined me-2">arrow_back</i> Kembali</a></li>
                         </ul>
+                        </div>
                     </div>
                 </div>
 
+<!-- Data Table Section -->
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card rounded-4">
+            <div class="card-body">
+                <!-- <div class="d-flex align-items-start justify-content-between mb-3">
+                    <div>
+                        <h5 class="mb-0 fw-bold">Data CCTV Coverage</h5>
+                        <p class="mb-0 text-muted">Daftar Data CCTV Coverage yang sudah diimport</p>
+                    </div>
+                </div> -->
+
+                <div class="table-responsive">
+                    <table class="table table-bordered table-striped table-hover" id="coverageDataTable" style="width:100%">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>No. CCTV</th>
+                                <th>Coverage Lokasi</th>
+                                <th>Coverage Detail Lokasi</th>
+                                <th>Kategori Aktivitas</th>
+                                <th>Kategori Area</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data akan dimuat via AJAX -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+                    </div>
+                </div>
+
+<!-- Modal Import Coverage -->
+<div class="modal fade" id="importCoverageModal" tabindex="-1" aria-labelledby="importCoverageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title fw-bold" id="importCoverageModalLabel">
+                    <i class="material-icons-outlined me-2">upload</i> Import CCTV Coverage dari Excel
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
                 @if(session('success'))
                     <div class="alert alert-success alert-dismissible fade show" role="alert">
                         {{ session('success') }}
@@ -81,7 +135,7 @@
                             </a>
                         </div>
 
-                        <form action="{{ route('cctv-data.import-coverage') }}" method="POST" enctype="multipart/form-data">
+                        <form action="{{ route('cctv-data.import-coverage') }}" method="POST" enctype="multipart/form-data" id="importCoverageForm">
                             @csrf
                             
                             <div class="mb-4">
@@ -93,31 +147,43 @@
                             </div>
 
                             <div class="alert alert-info">
-                                <h6 class="fw-bold mb-2">Format File Excel yang Diperlukan:</h6>
-                                <p class="mb-2">File Excel harus memiliki header pada baris pertama dengan kolom-kolom berikut:</p>
+                                <h6 class="fw-bold mb-2">Format File Excel - Dua Mode Tersedia:</h6>
+                                
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-primary mb-2">📝 Mode UPDATE (Update Data yang Sudah Ada):</h6>
+                                    <p class="mb-2 small">Untuk update kategori aktivitas dan kategori area pada data yang sudah ada, cukup gunakan 4 kolom berikut:</p>
+                                    <ul class="mb-0 small">
+                                        <li><strong>Coverage Lokasi</strong> - Lokasi coverage (contoh: Dermaga, Workshop FAD) - <span class="text-danger">*Key untuk matching</span></li>
+                                        <li><strong>Coverage Detail Lokasi</strong> - Detail lokasi coverage (contoh: Dermaga FAD Prapatan, Base Workshop) - <span class="text-danger">*Key untuk matching</span></li>
+                                        <li><strong>Kategori Aktivitas</strong> - Kategori aktivitas (contoh: Aktivitas Non Kritis, Aktivitas Kritis, Aktivitas Highrisk)</li>
+                                        <li><strong>Kategori Area</strong> - Kategori area (contoh: Area Non Kritis, Area Kritis, Area Highrisk)</li>
+                                    </ul>
+                                    <p class="mb-0 mt-2 small text-muted"><strong>Catatan:</strong> Sistem akan mencari data yang cocok berdasarkan Coverage Lokasi dan Coverage Detail Lokasi, lalu mengupdate Kategori Aktivitas dan Kategori Area.</p>
+                                </div>
+
+                                <div class="mb-3">
+                                    <h6 class="fw-bold text-success mb-2">➕ Mode CREATE (Buat Data Baru):</h6>
+                                    <p class="mb-2 small">Untuk membuat data coverage baru, gunakan semua kolom berikut:</p>
                                 <ul class="mb-0 small">
-                                    <li><strong>Site</strong> - Site CCTV (contoh: HO, LMO)</li>
-                                    <li><strong>Perusahaan CCTV</strong> - Nama perusahaan (contoh: PT Fajar Anugerah Dinamika)</li>
-                                    <li><strong>Nomer CCTV</strong> - Nomor CCTV (contoh: CCTV 01 FAD LMO, LMO-FAD-0001, atau 2 (Dermaga PMO-BMO))</li>
+                                        <li><strong>Site</strong> - Site CCTV (contoh: HO, LMO, BMO 2)</li>
+                                        <li><strong>Perusahaan CCTV</strong> - Nama perusahaan (contoh: PT Fajar Anugerah Dinamika, PT Bukit Makmur Mandiri Utama)</li>
+                                        <li><strong>Nomer CCTV</strong> - Nomor CCTV (contoh: CCTV 01 FAD LMO, LMO-FAD-0001, 1172178038)</li>
                                     <li><strong>Coverage Lokasi</strong> - Lokasi coverage (contoh: Dermaga, Workshop FAD)</li>
                                     <li><strong>Coverage Detail Lokasi</strong> - Detail lokasi coverage (contoh: Dermaga FAD Prapatan, Base Workshop)</li>
+                                        <li><strong>Kategori Aktivitas</strong> - Kategori aktivitas (opsional)</li>
+                                        <li><strong>Kategori Area</strong> - Kategori area (opsional)</li>
                                 </ul>
-                                <p class="mb-0 mt-2"><strong>Catatan Penting:</strong></p>
-                                <ul class="mb-0 small mt-1">
-                                    <li>Data CCTV harus sudah ada di database terlebih dahulu</li>
-                                    <li>Sistem akan mencocokkan berdasarkan Site, Perusahaan CCTV, dan Nomer CCTV</li>
-                                    <li>Sistem mendukung berbagai format nomor CCTV (contoh: "CCTV 01 FAD LMO" akan dicocokkan dengan "LMO-FAD-0001")</li>
-                                    <li>Data coverage yang sudah ada akan di-skip (tidak duplikat)</li>
-                                </ul>
+                                    <p class="mb-0 mt-2 small text-muted"><strong>Catatan:</strong> Data CCTV harus sudah ada di database terlebih dahulu. Sistem akan mencocokkan berdasarkan Site, Perusahaan CCTV, dan Nomer CCTV.</p>
+                                </div>
                             </div>
 
                             <div class="mt-4 d-flex gap-2">
                                 <button type="submit" class="btn btn-primary">
                                     <i class="material-icons-outlined">upload</i> Import Data
                                 </button>
-                                <a href="{{ route('cctv-data.index') }}" class="btn btn-secondary">
+                                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
                                     <i class="material-icons-outlined">close</i> Batal
-                                </a>
+                                </button>
                             </div>
                         </form>
                     </div>
@@ -150,36 +216,123 @@
     </div>
 </div>
 
-<!-- Data Table Section -->
-<div class="row mt-4">
-    <div class="col-12">
-        <div class="card rounded-4">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between mb-3">
-                    <div>
-                        <h5 class="mb-0 fw-bold">Data CCTV Coverage</h5>
-                        <p class="mb-0 text-muted">Daftar Data CCTV Coverage yang sudah diimport</p>
+<!-- Modal Edit Coverage -->
+<div class="modal fade" id="editCoverageModal" tabindex="-1" aria-labelledby="editCoverageModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header ">
+                <h5 class="modal-title fw-bold" id="editCoverageModalLabel">
+                    <i class="material-icons-outlined me-2">edit</i> Edit CCTV Coverage
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="editCoverageForm">
+                <div class="modal-body">
+                    <input type="hidden" id="editCoverageId" name="id">
+                    
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label class="form-label fw-bold">
+                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">videocam</i>
+                                No. CCTV
+                            </label>
+                            <div class="form-control bg-light" id="editNoCctv" style="border: 1px solid #dee2e6; min-height: 38px; display: flex; align-items: center;">
+                                -
+                            </div>
+                            <small class="form-text text-muted">Informasi CCTV (tidak dapat diubah)</small>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="editCoverageLokasi" class="form-label fw-bold">
+                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">location_on</i>
+                                Coverage Lokasi <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="editCoverageLokasi" name="coverage_lokasi" 
+                                   placeholder="Contoh: Dermaga, Workshop FAD" required>
+                            <div class="invalid-feedback">
+                                Coverage Lokasi harus diisi
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-12 mb-3">
+                            <label for="editCoverageDetailLokasi" class="form-label fw-bold">
+                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">place</i>
+                                Coverage Detail Lokasi <span class="text-danger">*</span>
+                            </label>
+                            <input type="text" class="form-control" id="editCoverageDetailLokasi" name="coverage_detail_lokasi" 
+                                   placeholder="Contoh: Dermaga FAD Prapatan, Base Workshop" required>
+                            <div class="invalid-feedback">
+                                Coverage Detail Lokasi harus diisi
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="editKategoriAktivitas" class="form-label fw-bold">
+                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">category</i>
+                                Kategori Aktivitas
+                            </label>
+                            <div class="input-group">
+                                <select class="form-select" id="editKategoriAktivitas" name="kategori_aktivitas">
+                                    <option value="">-- Pilih atau Ketik Manual --</option>
+                                    <option value="Aktivitas Non Kritis">Aktivitas Non Kritis</option>
+                                    <option value="Aktivitas Kritis">Aktivitas Kritis</option>
+                                    <option value="Aktivitas Highrisk">Aktivitas Highrisk</option>
+                                    <option value="Operasional">Operasional</option>
+                                    <option value="Maintenance">Maintenance</option>
+                                    <option value="Produksi">Produksi</option>
+                                </select>
+                                <button type="button" class="btn btn-outline-secondary" id="btnEditKategoriAktivitasManual" title="Input Manual">
+                                    <i class="material-icons-outlined">edit</i>
+                                </button>
+                            </div>
+                            <input type="text" class="form-control mt-2 d-none" id="editKategoriAktivitasManual" placeholder="Ketik kategori aktivitas manual">
+                            <small class="form-text text-muted">Pilih dari dropdown atau ketik manual</small>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="editKategoriArea" class="form-label fw-bold">
+                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">map</i>
+                                Kategori Area
+                            </label>
+                            <div class="input-group">
+                                <select class="form-select" id="editKategoriArea" name="kategori_area">
+                                    <option value="">-- Pilih atau Ketik Manual --</option>
+                                    <option value="Area Non Kritis">Area Non Kritis</option>
+                                    <option value="Area Kritis">Area Kritis</option>
+                                    <option value="Area Highrisk">Area Highrisk</option>
+                                    <option value="Area Produksi">Area Produksi</option>
+                                    <option value="Area Workshop">Area Workshop</option>
+                                    <option value="Area Parkir">Area Parkir</option>
+                                    <option value="Area Fabrikasi">Area Fabrikasi</option>
+                                </select>
+                                <button type="button" class="btn btn-outline-secondary" id="btnEditKategoriAreaManual" title="Input Manual">
+                                    <i class="material-icons-outlined">edit</i>
+                                </button>
+                            </div>
+                            <input type="text" class="form-control mt-2 d-none" id="editKategoriAreaManual" placeholder="Ketik kategori area manual">
+                            <small class="form-text text-muted">Pilih dari dropdown atau ketik manual</small>
+                        </div>
+                    </div>
+
+                    <div class="alert alert-info mb-0">
+                        <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">info</i>
+                        <strong>Catatan:</strong> Field yang bertanda <span class="text-danger">*</span> wajib diisi.
                     </div>
                 </div>
-
-                <div class="table-responsive">
-                    <table class="table table-bordered table-striped table-hover" id="coverageDataTable" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th>#</th>
-                                <th>No. CCTV</th>
-                                <th>Coverage Lokasi</th>
-                                <th>Coverage Detail Lokasi</th>
-                                <th>Created At</th>
-                                <th>Updated At</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data akan dimuat via AJAX -->
-                        </tbody>
-                    </table>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="material-icons-outlined me-1">close</i> Batal
+                    </button>
+                    <button type="submit" class="btn btn-primary">
+                        <i class="material-icons-outlined me-1">save</i> Simpan Perubahan
+                    </button>
                 </div>
-            </div>
+            </form>
         </div>
     </div>
 </div>
@@ -204,8 +357,9 @@
                 { data: 'no_cctv', name: 'no_cctv' },
                 { data: 'coverage_lokasi', name: 'coverage_lokasi' },
                 { data: 'coverage_detail_lokasi', name: 'coverage_detail_lokasi' },
-                { data: 'created_at', name: 'created_at' },
-                { data: 'updated_at', name: 'updated_at' }
+                { data: 'kategori_aktivitas', name: 'kategori_aktivitas' },
+                { data: 'kategori_area', name: 'kategori_area' },
+                { data: 'actions', name: 'actions', orderable: false, searchable: false }
             ],
             order: [[0, 'desc']],
             pageLength: 25,
@@ -248,8 +402,56 @@
             });
         });
 
+        // Handle button click to open modal - menggunakan cara sederhana
+        $('#btnImportCoverage').on('click', function(e) {
+            e.preventDefault();
+            var modalElement = $('#importCoverageModal');
+            if (modalElement.length) {
+                // Coba menggunakan Bootstrap 5 API
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    try {
+                        var modal = bootstrap.Modal.getOrCreateInstance(modalElement[0]);
+                        modal.show();
+                    } catch (e) {
+                        console.error('Error showing modal with Bootstrap 5:', e);
+                        // Fallback ke jQuery
+                        modalElement.modal('show');
+                    }
+                } else {
+                    // Fallback ke jQuery jika Bootstrap belum tersedia
+                    modalElement.modal('show');
+                }
+            } else {
+                console.error('Modal element not found');
+            }
+        });
+
+        // Handle form submit - reload table after successful import
+        $('#importCoverageForm').on('submit', function(e) {
+            // Form akan submit normal, setelah redirect akan reload table
+        });
+
         // Show success/error message dari session
         @if(session('success'))
+        // Close modal if open
+        setTimeout(function() {
+            var modalElement = $('#importCoverageModal');
+            if (modalElement.length) {
+                if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                    try {
+                        var modal = bootstrap.Modal.getInstance(modalElement[0]);
+                        if (modal) {
+                            modal.hide();
+                        }
+                    } catch (e) {
+                        modalElement.modal('hide');
+                    }
+                } else {
+                    modalElement.modal('hide');
+                }
+            }
+        }, 100);
+        
         Swal.fire({
             icon: 'success',
             title: 'Berhasil!',
@@ -271,7 +473,323 @@
             confirmButtonText: 'OK'
         });
         @endif
+
+        // Handle View Coverage
+        $(document).on('click', '.btn-view-coverage', function() {
+            var id = $(this).data('id');
+            viewCoverage(id);
+        });
+
+        // Handle Edit Coverage
+        $(document).on('click', '.btn-edit-coverage', function() {
+            var id = $(this).data('id');
+            editCoverage(id);
+        });
+
+        // Handle Delete Coverage
+        $(document).on('click', '.btn-delete-coverage', function() {
+            var id = $(this).data('id');
+            var lokasi = $(this).data('lokasi');
+            var detail = $(this).data('detail');
+            deleteCoverage(id, lokasi, detail);
+        });
+
+        // Handle toggle manual input untuk Kategori Aktivitas
+        $('#btnEditKategoriAktivitasManual').on('click', function() {
+            var manualInput = $('#editKategoriAktivitasManual');
+            if (manualInput.hasClass('d-none')) {
+                manualInput.removeClass('d-none');
+                $('#editKategoriAktivitas').val('');
+                manualInput.focus();
+            } else {
+                manualInput.addClass('d-none').val('');
+            }
+        });
+
+        // Handle toggle manual input untuk Kategori Area
+        $('#btnEditKategoriAreaManual').on('click', function() {
+            var manualInput = $('#editKategoriAreaManual');
+            if (manualInput.hasClass('d-none')) {
+                manualInput.removeClass('d-none');
+                $('#editKategoriArea').val('');
+                manualInput.focus();
+            } else {
+                manualInput.addClass('d-none').val('');
+            }
+        });
+
+        // Jika select kategori aktivitas diubah, sembunyikan input manual
+        $('#editKategoriAktivitas').on('change', function() {
+            if ($(this).val()) {
+                $('#editKategoriAktivitasManual').addClass('d-none').val('');
+            }
+        });
+
+        // Jika select kategori area diubah, sembunyikan input manual
+        $('#editKategoriArea').on('change', function() {
+            if ($(this).val()) {
+                $('#editKategoriAreaManual').addClass('d-none').val('');
+            }
+        });
     });
+
+    function viewCoverage(id) {
+        // Fetch data via AJAX
+        $.ajax({
+            url: "{{ url('cctv-data-coverage-import') }}/" + id,
+            type: "GET",
+            success: function(response) {
+                if (response.success) {
+                    var data = response.data;
+                    var content = `
+                        <div class="p-3">
+                            <h6 class="fw-bold mb-3">Detail CCTV Coverage</h6>
+                            <table class="table table-borderless">
+                                <tr>
+                                    <td class="fw-bold" style="width: 150px;">No. CCTV:</td>
+                                    <td>${data.no_cctv || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Coverage Lokasi:</td>
+                                    <td>${data.coverage_lokasi || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Coverage Detail Lokasi:</td>
+                                    <td>${data.coverage_detail_lokasi || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Kategori Aktivitas:</td>
+                                    <td>${data.kategori_aktivitas || '-'}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Kategori Area:</td>
+                                    <td>${data.kategori_area || '-'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    `;
+                    Swal.fire({
+                        title: 'Detail Coverage',
+                        html: content,
+                        width: '600px',
+                        confirmButtonText: 'Tutup'
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Gagal memuat data'
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Gagal memuat data coverage'
+                });
+            }
+        });
+    }
+
+    function editCoverage(id) {
+        // Fetch data via AJAX
+        $.ajax({
+            url: "{{ url('cctv-data-coverage-import') }}/" + id,
+            type: "GET",
+            success: function(response) {
+                if (response.success) {
+                    var data = response.data;
+                    
+                    // Set form values
+                    $('#editCoverageId').val(data.id);
+                    $('#editNoCctv').text(data.no_cctv || '-');
+                    $('#editCoverageLokasi').val(data.coverage_lokasi || '');
+                    $('#editCoverageDetailLokasi').val(data.coverage_detail_lokasi || '');
+                    
+                    // Set kategori aktivitas - cek apakah ada di option, jika tidak gunakan input manual
+                    var kategoriAktivitas = data.kategori_aktivitas || '';
+                    if (kategoriAktivitas) {
+                        var aktivitasOption = $('#editKategoriAktivitas option[value="' + kategoriAktivitas + '"]');
+                        if (aktivitasOption.length > 0) {
+                            $('#editKategoriAktivitas').val(kategoriAktivitas);
+                            $('#editKategoriAktivitasManual').addClass('d-none').val('');
+                        } else {
+                            $('#editKategoriAktivitas').val('');
+                            $('#editKategoriAktivitasManual').removeClass('d-none').val(kategoriAktivitas);
+                        }
+                    } else {
+                        $('#editKategoriAktivitas').val('');
+                        $('#editKategoriAktivitasManual').addClass('d-none').val('');
+                    }
+                    
+                    // Set kategori area - cek apakah ada di option, jika tidak gunakan input manual
+                    var kategoriArea = data.kategori_area || '';
+                    if (kategoriArea) {
+                        var areaOption = $('#editKategoriArea option[value="' + kategoriArea + '"]');
+                        if (areaOption.length > 0) {
+                            $('#editKategoriArea').val(kategoriArea);
+                            $('#editKategoriAreaManual').addClass('d-none').val('');
+                        } else {
+                            $('#editKategoriArea').val('');
+                            $('#editKategoriAreaManual').removeClass('d-none').val(kategoriArea);
+                        }
+                    } else {
+                        $('#editKategoriArea').val('');
+                        $('#editKategoriAreaManual').addClass('d-none').val('');
+                    }
+                    
+                    // Show modal
+                    var editModal = new bootstrap.Modal(document.getElementById('editCoverageModal'));
+                    editModal.show();
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Gagal memuat data'
+                    });
+                }
+            },
+            error: function() {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: 'Gagal memuat data coverage'
+                });
+            }
+        });
+    }
+
+    // Handle form submit untuk edit
+    $('#editCoverageForm').on('submit', function(e) {
+        e.preventDefault();
+        
+        // Ambil nilai dari select atau input manual
+        var kategoriAktivitas = $('#editKategoriAktivitasManual').hasClass('d-none') 
+            ? $('#editKategoriAktivitas').val().trim() 
+            : $('#editKategoriAktivitasManual').val().trim();
+        var kategoriArea = $('#editKategoriAreaManual').hasClass('d-none') 
+            ? $('#editKategoriArea').val().trim() 
+            : $('#editKategoriAreaManual').val().trim();
+        
+        var formData = {
+            id: $('#editCoverageId').val(),
+            coverage_lokasi: $('#editCoverageLokasi').val().trim(),
+            coverage_detail_lokasi: $('#editCoverageDetailLokasi').val().trim(),
+            kategori_aktivitas: kategoriAktivitas,
+            kategori_area: kategoriArea
+        };
+
+        // Validasi
+        if (!formData.coverage_lokasi || !formData.coverage_detail_lokasi) {
+            Swal.fire({
+                icon: 'warning',
+                title: 'Validasi Gagal',
+                text: 'Coverage Lokasi dan Coverage Detail Lokasi harus diisi!'
+            });
+            return;
+        }
+
+        // Disable submit button
+        var submitBtn = $('#editCoverageForm button[type="submit"]');
+        var originalText = submitBtn.html();
+        submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm me-2"></span>Menyimpan...');
+
+        $.ajax({
+            url: "{{ url('cctv-data-coverage-import') }}/" + formData.id,
+            type: "PUT",
+            data: formData,
+            headers: {
+                'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+            },
+            success: function(response) {
+                if (response.success) {
+                    // Close modal
+                    var editModal = bootstrap.Modal.getInstance(document.getElementById('editCoverageModal'));
+                    editModal.hide();
+                    
+                    // Reload table
+                    table.ajax.reload(null, false);
+                    
+                    // Show success message
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
+                        text: 'Data coverage berhasil diupdate',
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: response.message || 'Gagal menyimpan data'
+                    });
+                    submitBtn.prop('disabled', false).html(originalText);
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = 'Gagal menyimpan data';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error',
+                    text: errorMsg
+                });
+                submitBtn.prop('disabled', false).html(originalText);
+            }
+        });
+    });
+
+    function deleteCoverage(id, lokasi, detail) {
+        Swal.fire({
+            title: 'Hapus Coverage?',
+            html: `<p>Apakah Anda yakin ingin menghapus coverage ini?</p>
+                   <p class="text-muted"><strong>Lokasi:</strong> ${lokasi || '-'}<br>
+                   <strong>Detail:</strong> ${detail || '-'}</p>`,
+            icon: 'warning',
+            showCancelButton: true,
+            confirmButtonColor: '#d33',
+            cancelButtonColor: '#3085d6',
+            confirmButtonText: 'Ya, Hapus!',
+            cancelButtonText: 'Batal'
+        }).then((result) => {
+            if (result.isConfirmed) {
+                $.ajax({
+                    url: "{{ url('cctv-data-coverage-import') }}/" + id,
+                    type: "DELETE",
+                    headers: {
+                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
+                    },
+                    success: function(response) {
+                        if (response.success) {
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil',
+                                text: 'Data coverage berhasil dihapus'
+                            });
+                            table.ajax.reload(null, false);
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error',
+                                text: response.message || 'Gagal menghapus data'
+                            });
+                        }
+                    },
+                    error: function() {
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error',
+                            text: 'Gagal menghapus data coverage'
+                        });
+                    }
+                });
+            }
+        });
+    }
 </script>
 @endsection
 

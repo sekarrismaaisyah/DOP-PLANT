@@ -28,7 +28,69 @@ class CctvDataController extends Controller
      */
     public function index()
     {
-        return view('cctv-data.index');
+        // Get statistics for dashboard
+        $totalCctv = CctvData::count();
+        $cctvBaik = CctvData::where('kondisi', 'Baik')->count();
+        $cctvRusak = CctvData::where('kondisi', 'Breakdown')->count();
+        $cctvLive = CctvData::where('status', 'Live View')->count();
+        $cctvWithLink = CctvData::whereNotNull('link_akses')->where('link_akses', '!=', '')->count();
+        $cctvWithCoordinates = CctvData::whereNotNull('longitude')->whereNotNull('latitude')->count();
+        
+        // Distribution by site
+        $distributionBySite = CctvData::select('site', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('site')
+            ->where('site', '!=', '')
+            ->groupBy('site')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+        
+        // Distribution by perusahaan
+        $distributionByPerusahaan = CctvData::select('perusahaan', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('perusahaan')
+            ->where('perusahaan', '!=', '')
+            ->groupBy('perusahaan')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+        
+        // Distribution by kondisi
+        $distributionByKondisi = CctvData::select('kondisi', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('kondisi')
+            ->where('kondisi', '!=', '')
+            ->groupBy('kondisi')
+            ->orderByDesc('count')
+            ->get();
+        
+        // Distribution by status
+        $distributionByStatus = CctvData::select('status', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('status')
+            ->where('status', '!=', '')
+            ->groupBy('status')
+            ->orderByDesc('count')
+            ->get();
+        
+        // Control rooms count
+        $totalControlRooms = CctvData::whereNotNull('control_room')
+            ->where('control_room', '!=', '')
+            ->distinct('control_room')
+            ->count('control_room');
+        
+        $stats = [
+            'total_cctv' => $totalCctv,
+            'cctv_baik' => $cctvBaik,
+            'cctv_rusak' => $cctvRusak,
+            'cctv_live' => $cctvLive,
+            'cctv_with_link' => $cctvWithLink,
+            'cctv_with_coordinates' => $cctvWithCoordinates,
+            'total_control_rooms' => $totalControlRooms,
+            'distribution_by_site' => $distributionBySite,
+            'distribution_by_perusahaan' => $distributionByPerusahaan,
+            'distribution_by_kondisi' => $distributionByKondisi,
+            'distribution_by_status' => $distributionByStatus,
+        ];
+        
+        return view('cctv-data.index', compact('stats'));
     }
 
     /**
@@ -508,6 +570,198 @@ class CctvDataController extends Controller
     }
 
     /**
+     * Download template Excel untuk import CCTV Data
+     */
+    public function downloadTemplate()
+    {
+        try {
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            // Set header kolom
+            $headers = [
+                'Site', 'Perusahaan', 'Kategori', 'No. CCTV', 'Nama CCTV', 'Fungsi CCTV',
+                'Bentuk Instalasi CCTV', 'Jenis', 'Tipe CCTV', 'Radius Pengawasan', 'Jenis Spesifikasi Zoom',
+                'Lokasi Pemasangan', 'Control Room', 'Status', 'Kondisi',
+                'Longitude', 'Latitude', 'Coverage Lokasi', 'Coverage Detail Lokasi',
+                'Kategori Area Tercapture', 'Kategori Aktivitas Tercapture',
+                'Link Akses', 'User Name', 'Password', 'Connected', 'Mirrored', 'Fitur Auto Alert',
+                'Keterangan', 'Verifikasi By Petugas OCR', 'Bulan Update', 'Tahun Update'
+            ];
+
+            // Helper function untuk convert angka ke kolom Excel (A, B, ..., Z, AA, AB, ...)
+            $getColumnLetter = function($number) {
+                $letter = '';
+                while ($number > 0) {
+                    $mod = ($number - 1) % 26;
+                    $letter = chr(65 + $mod) . $letter;
+                    $number = intval(($number - $mod) / 26);
+                }
+                return $letter;
+            };
+
+            // Set header di baris pertama
+            $colIndex = 1;
+            foreach ($headers as $header) {
+                $col = $getColumnLetter($colIndex);
+                $sheet->setCellValue($col . '1', $header);
+                $colIndex++;
+            }
+
+            // Style header
+            $headerStyle = [
+                'font' => [
+                    'bold' => true,
+                    'color' => ['rgb' => 'FFFFFF'],
+                ],
+                'fill' => [
+                    'fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID,
+                    'startColor' => ['rgb' => '4472C4'],
+                ],
+                'alignment' => [
+                    'horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER,
+                    'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
+                ],
+            ];
+            $lastCol = $getColumnLetter(count($headers));
+            $sheet->getStyle('A1:' . $lastCol . '1')->applyFromArray($headerStyle);
+
+            // Contoh data
+            $examples = [
+                [
+                    'HO', 'PT Fajar Anugerah Dinamika', 'CCTV', 'LMO-FAD-0001', 'CCTV 01 FAD LMO', 'Monitoring',
+                    'Pole Mount', 'Fixed', 'IP Camera', '50', 'Optical Zoom',
+                    'Dermaga FAD Prapatan', 'Control Room HO', 'Live View', 'Baik',
+                    '116.123456', '-6.123456', 'Dermaga', 'Dermaga FAD Prapatan',
+                    'Area Produksi', 'Operasional',
+                    'http://cctv.example.com', 'admin', 'password123', 'Yes', 'No', 'Yes',
+                    'CCTV untuk monitoring dermaga', 'Sudah Diverifikasi', '12', '2024'
+                ],
+                [
+                    'LMO', 'PT Fajar Anugerah Dinamika', 'CCTV', 'LMO-FAD-0002', 'CCTV 02 FAD LMO', 'Security',
+                    'Wall Mount', 'PTZ', 'IP Camera', '100', 'Digital Zoom',
+                    'Workshop FAD', 'Control Room LMO', 'Live View', 'Baik',
+                    '116.234567', '-6.234567', 'Workshop FAD', 'Base Workshop',
+                    'Area Workshop', 'Maintenance',
+                    'http://cctv.example.com', 'admin', 'password123', 'Yes', 'No', 'No',
+                    'CCTV untuk security workshop', 'Sudah Diverifikasi', '11', '2024'
+                ],
+            ];
+
+            // Data rows dengan contoh
+            $rowNum = 2;
+            foreach ($examples as $index => $example) {
+                $colIndex = 1;
+                foreach ($example as $value) {
+                    $col = $getColumnLetter($colIndex);
+                    $sheet->setCellValue($col . $rowNum, $value);
+                    $colIndex++;
+                }
+                
+                // Set style untuk baris contoh (warna abu-abu terang)
+                if ($index < 2) {
+                    $sheet->getStyle('A' . $rowNum . ':' . $lastCol . $rowNum)->getFill()
+                        ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                        ->getStartColor()->setRGB('F0F0F0');
+                }
+                $rowNum++;
+            }
+
+            // Baris kosong untuk diisi user
+            for ($i = 1; $i <= count($headers); $i++) {
+                $col = $getColumnLetter($i);
+                $sheet->setCellValue($col . $rowNum, '');
+            }
+            
+            // Set style untuk kolom yang harus diisi (warna kuning)
+            $sheet->getStyle('A' . $rowNum . ':' . $lastCol . $rowNum)->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+                ->getStartColor()->setRGB('FFFACD');
+
+            // Auto-size columns
+            for ($i = 1; $i <= count($headers); $i++) {
+                $col = $getColumnLetter($i);
+                $sheet->getColumnDimension($col)->setAutoSize(true);
+            }
+
+            // Add instruction sheet
+            $instructionSheet = $spreadsheet->createSheet();
+            $instructionSheet->setTitle('Petunjuk');
+            $instructionSheet->setCellValue('A1', 'PETUNJUK PENGISIAN');
+            $instructionSheet->getStyle('A1')->getFont()->setBold(true)->setSize(14);
+            
+            $instructions = [
+                'A3' => '1. Kolom Site: Isi dengan site CCTV (contoh: HO, LMO, BMO 1)',
+                'A4' => '2. Kolom Perusahaan: Isi dengan nama perusahaan CCTV',
+                'A5' => '3. Kolom Kategori: Isi dengan kategori (contoh: CCTV)',
+                'A6' => '4. Kolom No. CCTV: Isi dengan nomor CCTV (contoh: LMO-FAD-0001)',
+                'A7' => '5. Kolom Nama CCTV: Isi dengan nama CCTV',
+                'A8' => '6. Kolom Fungsi CCTV: Isi dengan fungsi CCTV (contoh: Monitoring, Security)',
+                'A9' => '7. Kolom Bentuk Instalasi CCTV: Isi dengan bentuk instalasi (contoh: Pole Mount, Wall Mount)',
+                'A10' => '8. Kolom Jenis: Isi dengan jenis CCTV (contoh: Fixed, PTZ)',
+                'A11' => '9. Kolom Tipe CCTV: Isi dengan tipe CCTV (contoh: IP Camera)',
+                'A12' => '10. Kolom Radius Pengawasan: Isi dengan radius dalam meter (angka)',
+                'A13' => '11. Kolom Jenis Spesifikasi Zoom: Isi dengan jenis zoom (contoh: Optical Zoom, Digital Zoom)',
+                'A14' => '12. Kolom Lokasi Pemasangan: Isi dengan lokasi pemasangan CCTV',
+                'A15' => '13. Kolom Control Room: Isi dengan nama control room',
+                'A16' => '14. Kolom Status: Isi dengan status (contoh: Live View, Offline)',
+                'A17' => '15. Kolom Kondisi: Isi dengan kondisi (contoh: Baik, Rusak)',
+                'A18' => '16. Kolom Longitude: Isi dengan koordinat longitude (angka desimal)',
+                'A19' => '17. Kolom Latitude: Isi dengan koordinat latitude (angka desimal)',
+                'A20' => '18. Kolom Coverage Lokasi: Isi dengan lokasi coverage',
+                'A21' => '19. Kolom Coverage Detail Lokasi: Isi dengan detail lokasi coverage',
+                'A22' => '20. Kolom Kategori Area Tercapture: Isi dengan kategori area',
+                'A23' => '21. Kolom Kategori Aktivitas Tercapture: Isi dengan kategori aktivitas',
+                'A24' => '22. Kolom Link Akses: Isi dengan URL akses CCTV',
+                'A25' => '23. Kolom User Name: Isi dengan username untuk akses CCTV',
+                'A26' => '24. Kolom Password: Isi dengan password untuk akses CCTV',
+                'A27' => '25. Kolom Connected: Isi dengan Yes atau No',
+                'A28' => '26. Kolom Mirrored: Isi dengan Yes atau No',
+                'A29' => '27. Kolom Fitur Auto Alert: Isi dengan Yes atau No',
+                'A30' => '28. Kolom Keterangan: Isi dengan keterangan tambahan (opsional)',
+                'A31' => '29. Kolom Verifikasi By Petugas OCR: Isi dengan status verifikasi',
+                'A32' => '30. Kolom Bulan Update: Isi dengan bulan update (angka 1-12)',
+                'A33' => '31. Kolom Tahun Update: Isi dengan tahun update (angka, contoh: 2024)',
+            ];
+
+            foreach ($instructions as $cell => $instruction) {
+                $instructionSheet->setCellValue($cell, $instruction);
+            }
+
+            $instructionSheet->setCellValue('A35', 'CATATAN PENTING:');
+            $instructionSheet->getStyle('A35')->getFont()->setBold(true);
+            $instructionSheet->setCellValue('A36', '- Nama kolom tidak case-sensitive (huruf besar/kecil tidak masalah)');
+            $instructionSheet->setCellValue('A37', '- Nama kolom dapat menggunakan spasi atau underscore');
+            $instructionSheet->setCellValue('A38', '- Data yang sudah ada di database (berdasarkan No. CCTV) akan di-skip');
+            $instructionSheet->setCellValue('A39', '- Baris kosong akan diabaikan');
+            $instructionSheet->setCellValue('A40', '- Pastikan format data sesuai (angka untuk longitude/latitude, bulan/tahun)');
+            
+            foreach (range('A', 'E') as $col) {
+                $instructionSheet->getColumnDimension($col)->setAutoSize(true);
+            }
+            
+            // Set active sheet kembali ke sheet pertama
+            $spreadsheet->setActiveSheetIndex(0);
+
+            // Download file
+            $writer = new Xlsx($spreadsheet);
+            $filename = 'template_import_cctv_data_' . date('Y-m-d_His') . '.xlsx';
+            
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="' . $filename . '"');
+            header('Cache-Control: max-age=0');
+
+            $writer->save('php://output');
+            exit;
+
+        } catch (Exception $e) {
+            Log::error('Error downloading template CCTV Data: ' . $e->getMessage());
+            return redirect()->route('cctv-data.import-form')
+                ->with('error', 'Error generating template: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Display WMS Map with CCTV data from database.
      */
     public function mapWms()
@@ -700,7 +954,7 @@ class CctvDataController extends Controller
         $orderDir = $request->get('order')[0]['dir'] ?? 'desc';
 
         // Column mapping (sesuai urutan kolom di DataTable)
-        $columns = ['cctv_coverage.id', 'cctv_data_bmo2.no_cctv', 'cctv_coverage.coverage_lokasi', 'cctv_coverage.coverage_detail_lokasi', 'cctv_coverage.created_at', 'cctv_coverage.updated_at'];
+        $columns = ['cctv_coverage.id', 'cctv_data_bmo2.no_cctv', 'cctv_coverage.coverage_lokasi', 'cctv_coverage.coverage_detail_lokasi', 'cctv_coverage.kategori_aktivitas', 'cctv_coverage.kategori_area'];
         // Jika kolom pertama (#) yang di-order, gunakan id sebagai gantinya
         if ($orderColumn == 0) {
             $orderColumnName = 'cctv_coverage.id';
@@ -715,8 +969,8 @@ class CctvDataController extends Controller
                 'cctv_data_bmo2.no_cctv',
                 'cctv_coverage.coverage_lokasi',
                 'cctv_coverage.coverage_detail_lokasi',
-                'cctv_coverage.created_at',
-                'cctv_coverage.updated_at'
+                'cctv_coverage.kategori_aktivitas',
+                'cctv_coverage.kategori_area'
             )
             ->leftJoin('cctv_data_bmo2', 'cctv_coverage.id_cctv', '=', 'cctv_data_bmo2.id');
 
@@ -725,7 +979,9 @@ class CctvDataController extends Controller
             $query->where(function($q) use ($searchValue) {
                 $q->where('cctv_data_bmo2.no_cctv', 'like', '%' . $searchValue . '%')
                   ->orWhere('cctv_coverage.coverage_lokasi', 'like', '%' . $searchValue . '%')
-                  ->orWhere('cctv_coverage.coverage_detail_lokasi', 'like', '%' . $searchValue . '%');
+                  ->orWhere('cctv_coverage.coverage_detail_lokasi', 'like', '%' . $searchValue . '%')
+                  ->orWhere('cctv_coverage.kategori_aktivitas', 'like', '%' . $searchValue . '%')
+                  ->orWhere('cctv_coverage.kategori_area', 'like', '%' . $searchValue . '%');
             });
         }
 
@@ -741,13 +997,20 @@ class CctvDataController extends Controller
 
         // Format data for DataTable
         $formattedData = $data->map(function($item, $index) use ($start) {
+            $actions = '<div class="d-flex gap-2 flex-wrap justify-content-center">' .
+                '<button type="button" class="btn btn-sm btn-info btn-view-coverage" data-id="' . $item->id . '" title="View"><i class="material-icons-outlined">visibility</i></button>' .
+                '<button type="button" class="btn btn-sm btn-warning btn-edit-coverage" data-id="' . $item->id . '" title="Edit"><i class="material-icons-outlined">edit</i></button>' .
+                '<button type="button" class="btn btn-sm btn-danger btn-delete-coverage" data-id="' . $item->id . '" data-lokasi="' . htmlspecialchars($item->coverage_lokasi ?? '') . '" data-detail="' . htmlspecialchars($item->coverage_detail_lokasi ?? '') . '" title="Delete"><i class="material-icons-outlined">delete</i></button>' .
+                '</div>';
+            
             return [
                 'DT_RowIndex' => $start + $index + 1,
                 'no_cctv' => $item->no_cctv ?? '-',
                 'coverage_lokasi' => $item->coverage_lokasi ?? '-',
                 'coverage_detail_lokasi' => $item->coverage_detail_lokasi ?? '-',
-                'created_at' => $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : '-',
-                'updated_at' => $item->updated_at ? $item->updated_at->format('Y-m-d H:i:s') : '-',
+                'kategori_aktivitas' => $item->kategori_aktivitas ?? '-',
+                'kategori_area' => $item->kategori_area ?? '-',
+                'actions' => $actions,
                 'id' => $item->id,
             ];
         });
@@ -775,6 +1038,8 @@ class CctvDataController extends Controller
             $sheet->setCellValue('C1', 'Nomer CCTV');
             $sheet->setCellValue('D1', 'Coverage Lokasi');
             $sheet->setCellValue('E1', 'Coverage Detail Lokasi');
+            $sheet->setCellValue('F1', 'Kategori Aktivitas');
+            $sheet->setCellValue('G1', 'Kategori Area');
 
             // Style header
             $headerStyle = [
@@ -791,14 +1056,14 @@ class CctvDataController extends Controller
                     'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                 ],
             ];
-            $sheet->getStyle('A1:E1')->applyFromArray($headerStyle);
+            $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
 
             // Contoh data
             $examples = [
-                ['HO', 'PT Fajar Anugerah Dinamika', 'CCTV 01 FAD LMO', 'Dermaga', 'Dermaga FAD Prapatan'],
-                ['LMO', 'PT Fajar Anugerah Dinamika', 'LMO-FAD-0001', 'Workshop FAD', 'Base Workshop'],
-                ['LMO', 'PT Fajar Anugerah Dinamika', 'LMO-FAD-0001', 'Workshop FAD', 'Parkiran Unit'],
-                ['BMO 1', 'PT Fajar Anugerah Dinamika', 'BMO1-MTL-0023', 'Workshop FAD', 'Area Fabrikasi'],
+                ['HO', 'PT Fajar Anugerah Dinamika', 'CCTV 01 FAD LMO', 'Dermaga', 'Dermaga FAD Prapatan', 'Operasional', 'Area Produksi'],
+                ['LMO', 'PT Fajar Anugerah Dinamika', 'LMO-FAD-0001', 'Workshop FAD', 'Base Workshop', 'Maintenance', 'Area Workshop'],
+                ['LMO', 'PT Fajar Anugerah Dinamika', 'LMO-FAD-0001', 'Workshop FAD', 'Parkiran Unit', 'Operasional', 'Area Parkir'],
+                ['BMO 1', 'PT Fajar Anugerah Dinamika', 'BMO1-MTL-0023', 'Workshop FAD', 'Area Fabrikasi', 'Produksi', 'Area Fabrikasi'],
             ];
 
             // Data rows dengan contoh
@@ -809,10 +1074,12 @@ class CctvDataController extends Controller
                 $sheet->setCellValue('C' . $rowNum, $example[2]);
                 $sheet->setCellValue('D' . $rowNum, $example[3]);
                 $sheet->setCellValue('E' . $rowNum, $example[4]);
+                $sheet->setCellValue('F' . $rowNum, $example[5] ?? '');
+                $sheet->setCellValue('G' . $rowNum, $example[6] ?? '');
                 
                 // Set style untuk baris contoh (warna abu-abu terang)
                 if ($index < 2) {
-                    $sheet->getStyle('A' . $rowNum . ':E' . $rowNum)->getFill()
+                    $sheet->getStyle('A' . $rowNum . ':G' . $rowNum)->getFill()
                         ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                         ->getStartColor()->setRGB('F0F0F0');
                 }
@@ -825,14 +1092,16 @@ class CctvDataController extends Controller
             $sheet->setCellValue('C' . $rowNum, '');
             $sheet->setCellValue('D' . $rowNum, '');
             $sheet->setCellValue('E' . $rowNum, '');
+            $sheet->setCellValue('F' . $rowNum, '');
+            $sheet->setCellValue('G' . $rowNum, '');
             
             // Set style untuk kolom yang harus diisi (warna kuning)
-            $sheet->getStyle('A' . $rowNum . ':E' . $rowNum)->getFill()
+            $sheet->getStyle('A' . $rowNum . ':G' . $rowNum)->getFill()
                 ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
                 ->getStartColor()->setRGB('FFFACD');
 
             // Auto-size columns
-            foreach (range('A', 'E') as $col) {
+            foreach (range('A', 'G') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
 
@@ -894,6 +1163,108 @@ class CctvDataController extends Controller
     }
 
     /**
+     * Get CCTV Coverage detail by ID
+     */
+    public function getCoverageDetail($id)
+    {
+        try {
+            $coverage = CctvCoverage::with('cctvData')
+                ->leftJoin('cctv_data_bmo2', 'cctv_coverage.id_cctv', '=', 'cctv_data_bmo2.id')
+                ->select(
+                    'cctv_coverage.*',
+                    'cctv_data_bmo2.no_cctv'
+                )
+                ->where('cctv_coverage.id', $id)
+                ->first();
+
+            if (!$coverage) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Data coverage tidak ditemukan'
+                ], 404);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $coverage->id,
+                    'no_cctv' => $coverage->no_cctv ?? '-',
+                    'coverage_lokasi' => $coverage->coverage_lokasi,
+                    'coverage_detail_lokasi' => $coverage->coverage_detail_lokasi,
+                    'kategori_aktivitas' => $coverage->kategori_aktivitas,
+                    'kategori_area' => $coverage->kategori_area,
+                ]
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update CCTV Coverage
+     */
+    public function updateCoverage(Request $request, $id)
+    {
+        try {
+            $request->validate([
+                'coverage_lokasi' => 'required|string|max:255',
+                'coverage_detail_lokasi' => 'required|string|max:255',
+                'kategori_aktivitas' => 'nullable|string|max:255',
+                'kategori_area' => 'nullable|string|max:255',
+            ]);
+
+            $coverage = CctvCoverage::findOrFail($id);
+            
+            $coverage->update([
+                'coverage_lokasi' => $request->coverage_lokasi,
+                'coverage_detail_lokasi' => $request->coverage_detail_lokasi,
+                'kategori_aktivitas' => $request->kategori_aktivitas,
+                'kategori_area' => $request->kategori_area,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data coverage berhasil diupdate'
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validasi gagal',
+                'errors' => $e->errors()
+            ], 422);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Delete CCTV Coverage
+     */
+    public function deleteCoverage($id)
+    {
+        try {
+            $coverage = CctvCoverage::findOrFail($id);
+            $coverage->delete();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Data coverage berhasil dihapus'
+            ]);
+        } catch (Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Import CCTV Coverage data from Excel file.
      */
     public function importCoverage(Request $request)
@@ -927,13 +1298,31 @@ class CctvDataController extends Controller
             // Ambil header (baris pertama)
             $headers = array_map('trim', $rows[0]);
             
-            // Mapping kolom Excel ke field
+            // Mapping kolom Excel ke field (dengan variasi nama yang lebih banyak dan handle typo)
             $columnMapping = [
                 'site' => ['site'],
                 'perusahaan' => ['perusahaan cctv', 'perusahaan'],
                 'no_cctv' => ['nomer cctv', 'nomer cctv', 'no cctv', 'no_cctv'],
-                'coverage_lokasi' => ['coverage lokasi', 'coverage_lokasi'],
-                'coverage_detail_lokasi' => ['coverage detail lokasi', 'coverage_detail_lokasi'],
+                'coverage_lokasi' => [
+                    'coverage lokasi', 'coverage_lokasi', 
+                    'coverage_loksai', 'coverage loksai', // handle typo: loksai
+                    'lokasi coverage', 'lokasi_coverage'
+                ],
+                'coverage_detail_lokasi' => [
+                    'coverage detail lokasi', 'coverage_detail_lokasi', 
+                    'detail lokasi coverage', 'detail_lokasi_coverage', 
+                    'detail lokasi', 'coverage detail'
+                ],
+                'kategori_aktivitas' => [
+                    'kategori aktivitas', 'kategori_aktivitas', 
+                    'kategori aktivitasa', 'kategori_aktivitasa', // handle typo: aktivitasa
+                    'kategori aktivitas', 'aktivitas kategori'
+                ],
+                'kategori_area' => [
+                    'kategori area', 'kategori_area',
+                    'aktivitas area', 'aktivitas_area', // handle variasi: aktivitas area
+                    'area kategori', 'area'
+                ],
             ];
 
             // Cari index kolom untuk setiap field
@@ -951,17 +1340,87 @@ class CctvDataController extends Controller
                 }
             }
 
-            // Validasi kolom wajib
-            if ($columnIndexes['site'] === null || 
-                $columnIndexes['perusahaan'] === null || 
-                $columnIndexes['no_cctv'] === null) {
-                return back()->withErrors(['file' => 'File harus memiliki kolom: Site, Perusahaan CCTV, dan Nomer CCTV.']);
+            // Deteksi mode: UPDATE atau CREATE
+            // Mode UPDATE: hanya perlu coverage_lokasi, coverage_detail_lokasi, kategori_aktivitas, kategori_area
+            // Mode CREATE: perlu site, perusahaan, no_cctv, coverage_lokasi, coverage_detail_lokasi, kategori_aktivitas, kategori_area
+            $isUpdateMode = ($columnIndexes['coverage_lokasi'] !== null && 
+                           $columnIndexes['coverage_detail_lokasi'] !== null &&
+                           $columnIndexes['kategori_aktivitas'] !== null &&
+                           $columnIndexes['kategori_area'] !== null &&
+                           ($columnIndexes['site'] === null || $columnIndexes['perusahaan'] === null || $columnIndexes['no_cctv'] === null));
+            
+            $isCreateMode = ($columnIndexes['site'] !== null && 
+                           $columnIndexes['perusahaan'] !== null && 
+                           $columnIndexes['no_cctv'] !== null &&
+                           $columnIndexes['coverage_lokasi'] !== null && 
+                           $columnIndexes['coverage_detail_lokasi'] !== null);
+
+            // Validasi kolom wajib berdasarkan mode
+            if ($isUpdateMode) {
+                // Mode UPDATE: hanya perlu 4 kolom
+                $missingColumns = [];
+                if ($columnIndexes['coverage_lokasi'] === null) $missingColumns[] = 'Coverage Lokasi';
+                if ($columnIndexes['coverage_detail_lokasi'] === null) $missingColumns[] = 'Coverage Detail Lokasi';
+                if ($columnIndexes['kategori_aktivitas'] === null) $missingColumns[] = 'Kategori Aktivitas';
+                if ($columnIndexes['kategori_area'] === null) $missingColumns[] = 'Kategori Area';
+                
+                if (!empty($missingColumns)) {
+                    $foundColumns = [];
+                    foreach ($headers as $header) {
+                        if (!empty(trim($header))) {
+                            $foundColumns[] = trim($header);
+                        }
+                    }
+                    return back()->withErrors([
+                        'file' => 'Mode UPDATE: Kolom yang diperlukan tidak ditemukan. Kolom yang ditemukan: ' . implode(', ', $foundColumns) . 
+                        '. Kolom yang kurang: ' . implode(', ', $missingColumns) . 
+                        '. Pastikan nama kolom sesuai: Coverage Lokasi, Coverage Detail Lokasi, Kategori Aktivitas, Kategori Area.'
+                    ]);
+                }
+            } elseif ($isCreateMode) {
+                // Mode CREATE: perlu semua kolom
+                $missingColumns = [];
+                if ($columnIndexes['site'] === null) $missingColumns[] = 'Site';
+                if ($columnIndexes['perusahaan'] === null) $missingColumns[] = 'Perusahaan CCTV';
+                if ($columnIndexes['no_cctv'] === null) $missingColumns[] = 'Nomer CCTV';
+                if ($columnIndexes['coverage_lokasi'] === null) $missingColumns[] = 'Coverage Lokasi';
+                if ($columnIndexes['coverage_detail_lokasi'] === null) $missingColumns[] = 'Coverage Detail Lokasi';
+                
+                if (!empty($missingColumns)) {
+                    $foundColumns = [];
+                    foreach ($headers as $header) {
+                        if (!empty(trim($header))) {
+                            $foundColumns[] = trim($header);
+                        }
+                    }
+                    return back()->withErrors([
+                        'file' => 'Mode CREATE: Kolom yang diperlukan tidak ditemukan. Kolom yang ditemukan: ' . implode(', ', $foundColumns) . 
+                        '. Kolom yang kurang: ' . implode(', ', $missingColumns)
+                    ]);
+                }
+            } else {
+                // Tidak jelas mode-nya - berikan informasi kolom yang ditemukan
+                $foundColumns = [];
+                foreach ($headers as $header) {
+                    if (!empty(trim($header))) {
+                        $foundColumns[] = trim($header);
+                    }
+                }
+                
+                $foundColumnsStr = !empty($foundColumns) ? implode(', ', $foundColumns) : 'Tidak ada kolom yang dikenali';
+                
+                return back()->withErrors([
+                    'file' => 'File tidak valid. Kolom yang ditemukan: ' . $foundColumnsStr . 
+                    '. Untuk UPDATE: perlu Coverage Lokasi, Coverage Detail Lokasi, Kategori Aktivitas, Kategori Area. ' .
+                    'Untuk CREATE: perlu Site, Perusahaan CCTV, Nomer CCTV, Coverage Lokasi, Coverage Detail Lokasi.'
+                ]);
             }
 
             // Proses data (mulai dari baris kedua)
             $successCount = 0;
             $errorCount = 0;
-            $skippedCount = 0;
+            $updateCount = 0;
+            $createCount = 0;
             $errors = [];
 
             DB::beginTransaction();
@@ -981,53 +1440,113 @@ class CctvDataController extends Controller
                     $noCctvExcel = isset($row[$columnIndexes['no_cctv']]) ? trim((string) $row[$columnIndexes['no_cctv']]) : null;
                     $coverageLokasi = isset($row[$columnIndexes['coverage_lokasi']]) ? trim((string) $row[$columnIndexes['coverage_lokasi']]) : null;
                     $coverageDetailLokasi = isset($row[$columnIndexes['coverage_detail_lokasi']]) ? trim((string) $row[$columnIndexes['coverage_detail_lokasi']]) : null;
+                    $kategoriAktivitas = isset($columnIndexes['kategori_aktivitas']) && $columnIndexes['kategori_aktivitas'] !== null && isset($row[$columnIndexes['kategori_aktivitas']]) ? trim((string) $row[$columnIndexes['kategori_aktivitas']]) : null;
+                    $kategoriArea = isset($columnIndexes['kategori_area']) && $columnIndexes['kategori_area'] !== null && isset($row[$columnIndexes['kategori_area']]) ? trim((string) $row[$columnIndexes['kategori_area']]) : null;
 
-                    // Validasi data wajib
-                    if (empty($site) || empty($perusahaan) || empty($noCctvExcel)) {
-                        $errorCount++;
-                        $errors[] = "Baris " . ($i + 1) . ": Site, Perusahaan CCTV, dan Nomer CCTV harus diisi.";
-                        continue;
-                    }
+                    if ($isUpdateMode) {
+                        // MODE UPDATE: hanya update berdasarkan coverage_lokasi dan coverage_detail_lokasi
+                        // Validasi data wajib untuk update
+                        if (empty($coverageLokasi) || empty($coverageDetailLokasi)) {
+                            $errorCount++;
+                            $errors[] = "Baris " . ($i + 1) . ": Coverage Lokasi dan Coverage Detail Lokasi harus diisi.";
+                            continue;
+                        }
 
-                    // Cari CCTV dengan multiple matching strategies
-                    $cctvData = $this->findCctvByFlexibleMatching($site, $perusahaan, $noCctvExcel);
+                        // Cari data yang cocok berdasarkan coverage_lokasi dan coverage_detail_lokasi
+                        $existingCoverage = CctvCoverage::where('coverage_lokasi', $coverageLokasi)
+                            ->where('coverage_detail_lokasi', $coverageDetailLokasi)
+                            ->first();
 
-                    if (!$cctvData) {
-                        $errorCount++;
-                        $errors[] = "Baris " . ($i + 1) . ": CCTV tidak ditemukan dengan Site: {$site}, Perusahaan: {$perusahaan}, Nomer CCTV: {$noCctvExcel}";
-                        continue;
-                    }
+                        if ($existingCoverage) {
+                            // Update kategori_aktivitas dan kategori_area
+                            try {
+                                $existingCoverage->update([
+                                    'kategori_aktivitas' => $kategoriAktivitas,
+                                    'kategori_area' => $kategoriArea,
+                                ]);
+                                $successCount++;
+                                $updateCount++;
+                            } catch (Exception $e) {
+                                $errorCount++;
+                                $errors[] = "Baris " . ($i + 1) . ": Gagal update data - " . $e->getMessage();
+                            }
+                        } else {
+                            $errorCount++;
+                            $errors[] = "Baris " . ($i + 1) . ": Data tidak ditemukan dengan Coverage Lokasi: '{$coverageLokasi}' dan Coverage Detail Lokasi: '{$coverageDetailLokasi}'. Pastikan data sudah ada di database.";
+                        }
+                    } else {
+                        // MODE CREATE: buat data baru
+                        // Validasi data wajib untuk create
+                        if (empty($site) || empty($perusahaan) || empty($noCctvExcel)) {
+                            $errorCount++;
+                            $errors[] = "Baris " . ($i + 1) . ": Site, Perusahaan CCTV, dan Nomer CCTV harus diisi.";
+                            continue;
+                        }
 
-                    // Cek apakah coverage sudah ada (optional - bisa dihapus jika ingin allow duplicate)
-                    $existingCoverage = CctvCoverage::where('id_cctv', $cctvData->id)
-                        ->where('coverage_lokasi', $coverageLokasi)
-                        ->where('coverage_detail_lokasi', $coverageDetailLokasi)
-                        ->first();
+                        if (empty($coverageLokasi) || empty($coverageDetailLokasi)) {
+                            $errorCount++;
+                            $errors[] = "Baris " . ($i + 1) . ": Coverage Lokasi dan Coverage Detail Lokasi harus diisi.";
+                            continue;
+                        }
 
-                    if ($existingCoverage) {
-                        $skippedCount++;
-                        continue;
-                    }
+                        // Cari CCTV dengan multiple matching strategies
+                        $cctvData = $this->findCctvByFlexibleMatching($site, $perusahaan, $noCctvExcel);
 
-                    // Simpan data coverage
-                    try {
-                        CctvCoverage::create([
-                            'id_cctv' => $cctvData->id,
-                            'coverage_lokasi' => $coverageLokasi,
-                            'coverage_detail_lokasi' => $coverageDetailLokasi,
-                        ]);
-                        $successCount++;
-                    } catch (Exception $e) {
-                        $errorCount++;
-                        $errors[] = "Baris " . ($i + 1) . ": " . $e->getMessage();
+                        if (!$cctvData) {
+                            $errorCount++;
+                            $errors[] = "Baris " . ($i + 1) . ": CCTV tidak ditemukan dengan Site: {$site}, Perusahaan: {$perusahaan}, Nomer CCTV: {$noCctvExcel}";
+                            continue;
+                        }
+
+                        // Cek apakah sudah ada (untuk avoid duplicate)
+                        $existingCoverage = CctvCoverage::where('id_cctv', $cctvData->id)
+                            ->where('coverage_lokasi', $coverageLokasi)
+                            ->where('coverage_detail_lokasi', $coverageDetailLokasi)
+                            ->first();
+
+                        if ($existingCoverage) {
+                            // Update jika sudah ada
+                            try {
+                                $existingCoverage->update([
+                                    'kategori_aktivitas' => $kategoriAktivitas,
+                                    'kategori_area' => $kategoriArea,
+                                ]);
+                                $successCount++;
+                                $updateCount++;
+                            } catch (Exception $e) {
+                                $errorCount++;
+                                $errors[] = "Baris " . ($i + 1) . ": Gagal update data - " . $e->getMessage();
+                            }
+                        } else {
+                            // Create baru
+                            try {
+                                CctvCoverage::create([
+                                    'id_cctv' => $cctvData->id,
+                                    'coverage_lokasi' => $coverageLokasi,
+                                    'coverage_detail_lokasi' => $coverageDetailLokasi,
+                                    'kategori_aktivitas' => $kategoriAktivitas,
+                                    'kategori_area' => $kategoriArea,
+                                ]);
+                                $successCount++;
+                                $createCount++;
+                            } catch (Exception $e) {
+                                $errorCount++;
+                                $errors[] = "Baris " . ($i + 1) . ": " . $e->getMessage();
+                            }
+                        }
                     }
                 }
 
                 DB::commit();
 
-                $message = "Import berhasil! {$successCount} data coverage berhasil diimpor.";
-                if ($skippedCount > 0) {
-                    $message .= " {$skippedCount} data di-skip (sudah ada di database).";
+                $modeText = $isUpdateMode ? "Mode UPDATE" : "Mode CREATE";
+                $message = "Import berhasil ({$modeText})! {$successCount} data coverage berhasil diproses.";
+                if ($updateCount > 0 && $createCount > 0) {
+                    $message .= " ({$updateCount} data diupdate, {$createCount} data baru).";
+                } elseif ($updateCount > 0) {
+                    $message .= " ({$updateCount} data diupdate).";
+                } elseif ($createCount > 0) {
+                    $message .= " ({$createCount} data baru).";
                 }
                 if ($errorCount > 0) {
                     $message .= " {$errorCount} data gagal diimpor.";
@@ -3351,7 +3870,87 @@ class CctvDataController extends Controller
      */
     public function indexControlRoom()
     {
-        return view('cctv-data.control-room');
+        // Get statistics for dashboard
+        // Use TRIM to handle spaces and ensure accurate counting
+        $totalControlRooms = CctvData::whereNotNull('control_room')
+            ->whereRaw("TRIM(COALESCE(control_room, '')) != ''")
+            ->distinct('control_room')
+            ->count('control_room');
+        
+        // Count all CCTV (total should be 2038)
+        $totalCctvInControlRooms = CctvData::count();
+        
+        $cctvBaikInControlRooms = CctvData::where('kondisi', 'Baik')->count();
+        
+        $cctvRusakInControlRooms = CctvData::where('kondisi', 'Rusak')->count();
+        
+        $cctvLiveInControlRooms = CctvData::where('status', 'Live View')->count();
+        
+        $totalPengawas = CctvControlRoomPengawas::distinct('nama_pengawas')->count('nama_pengawas');
+        
+        // Distribution by control room
+        $distributionByControlRoom = CctvData::select('control_room', DB::raw('COUNT(*) as count'))
+            ->whereRaw("TRIM(COALESCE(control_room, '')) != ''")
+            ->groupBy('control_room')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+        
+        // Distribution by site (untuk control room)
+        $distributionBySite = CctvData::select('site', DB::raw('COUNT(DISTINCT control_room) as count'))
+            ->whereRaw("TRIM(COALESCE(control_room, '')) != ''")
+            ->whereNotNull('site')
+            ->where('site', '!=', '')
+            ->groupBy('site')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+        
+        // Distribution by perusahaan (untuk control room)
+        $distributionByPerusahaan = CctvData::select('perusahaan', DB::raw('COUNT(DISTINCT control_room) as count'))
+            ->whereRaw("TRIM(COALESCE(control_room, '')) != ''")
+            ->whereNotNull('perusahaan')
+            ->where('perusahaan', '!=', '')
+            ->groupBy('perusahaan')
+            ->orderByDesc('count')
+            ->limit(10)
+            ->get();
+        
+        // Distribution by kondisi (untuk semua CCTV)
+        $distributionByKondisi = CctvData::select('kondisi', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('kondisi')
+            ->where('kondisi', '!=', '')
+            ->groupBy('kondisi')
+            ->orderByDesc('count')
+            ->get();
+        
+        // Distribution by status (untuk semua CCTV)
+        $distributionByStatus = CctvData::select('status', DB::raw('COUNT(*) as count'))
+            ->whereNotNull('status')
+            ->where('status', '!=', '')
+            ->groupBy('status')
+            ->orderByDesc('count')
+            ->get();
+        
+        // Control rooms dengan pengawas
+        $controlRoomsWithPengawas = CctvControlRoomPengawas::distinct('control_room')->count('control_room');
+        
+        $stats = [
+            'total_control_rooms' => $totalControlRooms,
+            'total_cctv' => $totalCctvInControlRooms,
+            'cctv_baik' => $cctvBaikInControlRooms,
+            'cctv_rusak' => $cctvRusakInControlRooms,
+            'cctv_live' => $cctvLiveInControlRooms,
+            'total_pengawas' => $totalPengawas,
+            'control_rooms_with_pengawas' => $controlRoomsWithPengawas,
+            'distribution_by_control_room' => $distributionByControlRoom,
+            'distribution_by_site' => $distributionBySite,
+            'distribution_by_perusahaan' => $distributionByPerusahaan,
+            'distribution_by_kondisi' => $distributionByKondisi,
+            'distribution_by_status' => $distributionByStatus,
+        ];
+        
+        return view('cctv-data.control-room', compact('stats'));
     }
 
     /**

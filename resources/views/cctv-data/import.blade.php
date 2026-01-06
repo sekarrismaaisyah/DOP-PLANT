@@ -41,11 +41,30 @@
 
                 <div class="row">
                     <div class="col-md-8">
+                        <div class="card bg-light mb-4">
+                            <div class="card-body">
+                                <h6 class="fw-bold mb-3">Langkah-langkah:</h6>
+                                <ol class="mb-0">
+                                    <li class="mb-2">Download template Excel dengan klik tombol <strong>"Download Template"</strong> di bawah</li>
+                                    <li class="mb-2">Buka file Excel yang sudah didownload</li>
+                                    <li class="mb-2">Isi data sesuai dengan format yang ada di template</li>
+                                    <li class="mb-2">Simpan file Excel</li>
+                                    <li class="mb-2">Upload file Excel yang sudah diisi melalui form di bawah</li>
+                                </ol>
+                            </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mb-3">
+                            <a href="{{ route('cctv-data.download-template') }}" class="btn btn-success" id="btnDownloadTemplate">
+                                <i class="material-icons-outlined">download</i> Download Template Excel
+                            </a>
+                        </div>
+
                         <form action="{{ route('cctv-data.import') }}" method="POST" enctype="multipart/form-data">
                             @csrf
                             
                             <div class="mb-4">
-                                <label for="file" class="form-label fw-bold">Pilih File Excel/CSV <span class="text-danger">*</span></label>
+                                <label for="file" class="form-label fw-bold">Pilih File Excel/CSV yang Sudah Diisi <span class="text-danger">*</span></label>
                                 <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls,.csv" required>
                                 <small class="form-text text-muted">
                                     Format yang didukung: .xlsx, .xls, .csv (Maksimal 10MB)
@@ -106,5 +125,46 @@
     </div>
 </div>
 
+@endsection
+
+@section('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    $(document).ready(function() {
+        // Handle download template button click
+        $('#btnDownloadTemplate').on('click', function(e) {
+            // Show loading
+            Swal.fire({
+                title: 'Menyiapkan template...',
+                text: 'Mohon tunggu',
+                allowOutsideClick: false,
+                didOpen: () => {
+                    Swal.showLoading();
+                }
+            });
+        });
+
+        // Show success/error message dari session
+        @if(session('success'))
+        Swal.fire({
+            icon: 'success',
+            title: 'Berhasil!',
+            text: '{{ session('success') }}',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
+        });
+        @endif
+
+        @if(session('error'))
+        Swal.fire({
+            icon: 'error',
+            title: 'Gagal!',
+            text: '{{ session('error') }}',
+            confirmButtonColor: '#3085d6',
+            confirmButtonText: 'OK'
+        });
+        @endif
+    });
+</script>
 @endsection
 

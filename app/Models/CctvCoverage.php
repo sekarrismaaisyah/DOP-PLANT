@@ -15,6 +15,8 @@ class CctvCoverage extends Model
         'id_cctv',
         'coverage_lokasi',
         'coverage_detail_lokasi',
+        'kategori_aktivitas',
+        'kategori_area',
     ];
 
     /**

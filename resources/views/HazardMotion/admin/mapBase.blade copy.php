@@ -1334,7 +1334,7 @@
 
 @section('content')
 <div class="hazard-detection-header">
-    <h1 class="hazard-detection-title">Dashboard Overview </h1>
+    <h1 class="hazard-detection-title">Hazard in Motion </h1>
     <p class="hazard-detection-subtitle">Real-time detection and monitoring of safety hazards in operational areas</p>
     
     <!-- Collapse Header Button -->
@@ -1368,20 +1368,6 @@
                     <p class="mb-0">Total CCTV</p>
                     <small class="text-muted" id="totalCctvLabel">unit</small>
                   </button>
-
-                  <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#totalCctvModal" title="Lihat detail Control Room">
-                    <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="material-icons-outlined">museum</i>
-                    </span>
-                    <h3 class="mb-0" id="totalControlRoomCount">{{ number_format($totalControlRoomCount ?? 0) }}</h3>
-                    <p class="mb-0">Control Room</p>
-                    <small class="text-muted">unit</small>
-                  </button>
-
-
-
-
                   <div class="vr"></div>
                   <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#totalCctvModal" title="Lihat detail Luasan Area Kerja">
                     <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
@@ -1717,206 +1703,62 @@
                     
                   </div> --}}
 
-                 
-                <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
-                     <div class="d-flex align-items-center gap-4">
-                      <div class="">
-                        <p class="mb-0 data-attributes">
-                          <span id="donutGr"
-                            data-peity='{ "fill": ["#fd7e14", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
-                        </p>
-                      </div>
-                      <div class="">
-                        <p class="mb-1 fs-6 fw-bold">Kondisi Baik</p>
-                        <h2 class="mb-0" >1,880</h2>
-                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="">92.2%</span><span id="">Kondisi Baik</span></p>
-                      </div>
+                 <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
+                   
+                   <div class="d-flex align-items-center gap-4 cctv-stat-card" id="cctvStatCard" style="cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s;" 
+                        title="Klik untuk melihat detail CCTV">
+                     <div class="">
+                       <p class="mb-0 data-attributes">
+                         <span id="donutCctvAktif"
+                           data-peity='{ "fill": ["#6f42c1", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                       </p>
                      </div>
-                    
-                    <div class="vr"></div>
+                     <div class="">
+                       <p class="mb-1 fs-6 fw-bold">CCTV Live View & Connected</p>
+                       <h2 class="mb-0" id="statCctvAktifCount">{{ number_format($yearlyHazards ?? 0 ) }}</h2>
+                       <p class="mb-0">
+                         <span class="text-success me-2 fw-medium" id="statCctvAktifChange">0%</span>
+                         <span id="statCctvAktifText">0 CCTV</span>
+                       </p>
+                     </div>
+                   </div>
+
+                      <div class="vr"></div>
                     <div class="d-flex align-items-center gap-4">
                       <div class="">
                         <p class="mb-0 data-attributes">
-                          <span id="donutBelumPja"
-                            data-peity='{ "fill": ["#20c997", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>{{ $cctvSudahPjaPercentage ?? 0 }}/100</span>
+                          <span id="donutKondisiBaik"
+                            data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
                         </p>
                       </div>
                       <div class="">
-                        <p class="mb-1 fs-6 fw-bold">PJA CCTV</p>
-                        <h2 class="mb-0" id="statBelumPjaCount">{{ number_format($cctvSudahPjaPercentage ?? 0, 1) }}%</h2>
+                        <p class="mb-1 fs-6 fw-bold">Kondisi CCTV Baik</p>
+                        <h2 class="mb-0" id="statKondisiBaikCount">{{ number_format($yearlyHazards ?? 0) }}</h2>
                         <p class="mb-0">
-                          <span class="text-success me-2 fw-medium" id="statBelumPjaChange">{{ number_format($cctvSudahPjaCount ?? 0) }} CCTV</span>
-                          <span id="statBelumPjaText">dari {{ number_format($totalCctvForPja ?? 0) }} CCTV</span>
+                          <span class="text-success me-2 fw-medium" id="statKondisiBaikChange">0%</span>
+                          <span id="statKondisiBaikText">0 CCTV</span>
                         </p>
                       </div>
                     </div>
 
-                    <div class="vr"></div>
-                    <div class="d-flex align-items-center gap-4">
-                        <div class="">
-                            <p class="mb-0 data-attributes">
-                            <span id="donutHazard"
-                                data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
-                            </p>
-                        </div>
-                        <div class="">
-                            <p class="mb-1 fs-6 fw-bold">P2H CCTV</p>
-                            <h2 class="mb-0" >90%</h2>
-                            <p class="mb-0"><span class="text-success me-2 fw-medium">Sudah di P2H</span></p>
-                        </div>
-                     </div>
-
-                  
-                   
-
-
-
-
-
-                </div>
-
-
-                <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
-                     <div class="d-flex align-items-center gap-4">
-                      <div class="">
-                        <p class="mb-0 data-attributes">
-                          <span id="donutCctvAktif"
-                            data-peity='{ "fill": ["#fd7e14", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
-                        </p>
-                      </div>
-                      <div class="">
-                        <p class="mb-1 fs-6 fw-bold">Map Wms</p>
-                        <h2 class="mb-0" >Week 01</h2>
-                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="">Week 01 Terupdate</span></p>
-                      </div>
-                     </div>
-                    
-                    <div class="vr"></div>
+                      <div class="vr"></div>
                     <div class="d-flex align-items-center gap-4">
                       <div class="">
                         <p class="mb-0 data-attributes">
                           <span id="donutKondisiTidakBaik"
-                            data-peity='{ "fill": ["#20c997", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>{{ $cctvSudahPjaPercentage ?? 0 }}/100</span>
+                            data-peity='{ "fill": ["#fd7e14", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
                         </p>
                       </div>
                       <div class="">
-                        <p class="mb-1 fs-6 fw-bold">Area Kerja</p>
-                        <h2 class="mb-0" >Week 01</h2>
-                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="">Week 01 Terupdate</span></p>
+                        <p class="mb-1 fs-6 fw-bold">Kondisi CCTV Tidak Baik</p>
+                        <h2 class="mb-0" id="statKondisiTidakBaikCount">{{ number_format($yearlyHazards ?? 0) }}</h2>
+                        <p class="mb-0">
+                          <span class="text-success me-2 fw-medium" id="statKondisiTidakBaikChange">0%</span>
+                          <span id="statKondisiTidakBaikText">0 CCTV</span>
+                        </p>
                       </div>
                     </div>
 
-                    <div class="vr"></div>
-                    <div class="d-flex align-items-center gap-4">
-                        <div class="">
-                            <p class="mb-0 data-attributes">
-                            <span id="donutKondisiBaik"
-                                data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
-                            </p>
-                        </div>
-                        <div class="">
-                            <p class="mb-1 fs-6 fw-bold">Boundery Cctv</p>
-                            <h2 class="mb-0" >Week 01</h2>
-                            <p class="mb-0"><span class="text-success me-2 fw-medium">Week 01 Terupdate</span></p>
-                        </div>
-                     </div>
-
-                  
-                   
-
-
-
-
-
-                </div>
-
-                 <div class="mt-2">
-                    
-                  </div>
-
-                  <div class="table-responsive mt-3" style="max-height: 300px; overflow-y: auto;">
-                    <table class="table table-bordered table-hover">
-                      <thead class="table-light" style="position: sticky; top: 0; z-index: 10; background-color: #f8f9fa;">
-                        <tr>
-                          <th style="width: 50px;">No</th>
-                          <th>Nama CCTV</th>
-                          <th>No. CCTV</th>
-                          <th>Lokasi</th>
-                          <th style="width: 300px;">Kondisi</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @if(!empty($p2hResults) && count($p2hResults) > 0)
-                          @foreach($p2hResults as $index => $result)
-                            <tr>
-                              <td class="text-center">{{ $index + 1 }}</td>
-                              <td>{{ $result['nama_cctv'] ?? '-' }}</td>
-                              <td>{{ $result['no_cctv'] ?? '-' }}</td>
-                              <td>{{ $result['lokasi'] ?? '-' }}</td>
-                              <td>
-                                <div class="d-flex flex-column gap-2">
-                                  <div class="d-flex gap-3">
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kondisi_{{ $result['cctv_id'] ?? $index }}" 
-                                        id="baik_{{ $result['cctv_id'] ?? $index }}" 
-                                        value="baik" 
-                                        {{ ($result['kondisi'] ?? '') == 'baik' ? 'checked' : '' }} 
-                                        disabled>
-                                      <label class="form-check-label" for="baik_{{ $result['cctv_id'] ?? $index }}">
-                                        Baik
-                                      </label>
-                                    </div>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kondisi_{{ $result['cctv_id'] ?? $index }}" 
-                                        id="rusak_{{ $result['cctv_id'] ?? $index }}" 
-                                        value="rusak" 
-                                        {{ ($result['kondisi'] ?? '') == 'rusak' ? 'checked' : '' }} 
-                                        disabled>
-                                      <label class="form-check-label" for="rusak_{{ $result['cctv_id'] ?? $index }}">
-                                        Rusak
-                                      </label>
-                                    </div>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kondisi_{{ $result['cctv_id'] ?? $index }}" 
-                                        id="tidak_ada_{{ $result['cctv_id'] ?? $index }}" 
-                                        value="tidak_ada" 
-                                        {{ ($result['kondisi'] ?? '') == 'tidak_ada' ? 'checked' : '' }} 
-                                        disabled>
-                                      <label class="form-check-label" for="tidak_ada_{{ $result['cctv_id'] ?? $index }}">
-                                        Tidak Ada
-                                      </label>
-                                    </div>
-                                  </div>
-                                  @if(!empty($result['catatan']))
-                                    <div>
-                                      <label class="form-label small text-muted">Catatan (opsional):</label>
-                                      <input type="text" class="form-control form-control-sm" 
-                                        value="{{ $result['catatan'] }}" 
-                                        readonly>
-                                    </div>
-                                  @else
-                                    <div>
-                                      <label class="form-label small text-muted">Catatan (opsional):</label>
-                                      <input type="text" class="form-control form-control-sm" 
-                                        placeholder="-" 
-                                        readonly>
-                                    </div>
-                                  @endif
-                                </div>
-                              </td>
-                            </tr>
-                          @endforeach
-                        @else
-                          <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
-                              <i class="material-icons-outlined me-2">info</i>
-                              Tidak ada data P2H tersedia
-                            </td>
-                          </tr>
-                        @endif
-                      </tbody>
-                    </table>
-                  </div>
                     
                   </div>
                </div>
@@ -2685,13 +2527,8 @@
     let grLayer = null;
     let insidenLayer = null;
     let unitVehicleLayer = null;
-    let hazardColorOverlayLayer = null;
-    let isHazardColorModeActive = false;
-    let hazardColorOverlayListener = null;
     let userGpsLayer = null;
     let popupOverlay = null;
-    let isRiskMatrixModeActive = false;
-    let originalAreaKerjaStyleFunction = null;
     
     // Site filter - harus didefinisikan sebelum digunakan di style function
     let currentSiteFilter = '';
@@ -2925,8 +2762,8 @@
         }
     }
 
-    // Original area kerja style function (without risk matrix)
-    function getOriginalAreaKerjaStyle(feature) {
+    // Style functions for different layers
+    function getAreaKerjaStyle(feature) {
         const props = feature.getProperties();
         const areaKerja = props.area_kerja || '';
         
@@ -2957,249 +2794,6 @@
                 width: strokeWidth
             })
         });
-    }
-
-    // Style functions for different layers
-    function getAreaKerjaStyle(feature) {
-        // If risk matrix mode is active, use risk-based styling
-        if (isRiskMatrixModeActive) {
-            return getRiskBasedAreaKerjaStyle(feature);
-        }
-        
-        // Otherwise use original style
-        return getOriginalAreaKerjaStyle(feature);
-    }
-
-    // Calculate risk level for area kerja based on risk matrix criteria
-    function calculateRiskForAreaKerja(feature) {
-        const props = feature.getProperties();
-        const lokasiName = props.lokasi || props.nama_lokasi || props.name || '';
-        const idLokasi = props.id_lokasi || props.id || '';
-        
-        // Criteria 1: Terdapat Laporan SAP dari SO PJA CCTV (minimal 1 OIH)
-        const hasSapReportFromPja = hasSapReportToday('area_kerja', idLokasi, lokasiName, null, null, feature.getGeometry());
-        
-        // Criteria 2: CCTV Kondisi Online (Critical)
-        // Check if there are online CCTV in this area
-        const hasOnlineCctv = checkCctvOnlineInArea(lokasiName, idLokasi, feature.getGeometry());
-        
-        // Criteria 3: Area Highrisk ada Laporan SAP (Critical)
-        // Check if this is a high-risk area and has SAP report
-        const isHighRiskArea = checkIfHighRiskArea(lokasiName, idLokasi);
-        const hasSapInHighRiskArea = isHighRiskArea && hasSapReportFromPja;
-        
-        // Determine risk level based on risk matrix
-        // HIGH (Red):
-        // - Semua kondisi TIDAK MEMENUHI
-        // - Hanya "Terdapat Laporan SAP dari SO PJA CCTV" MEMENUHI
-        // - Hanya "Area Highrisk ada Laporan SAP (Critical)" MEMENUHI
-        if (!hasSapReportFromPja && !hasOnlineCctv && !hasSapInHighRiskArea) {
-            return 'HIGH'; // Semua TIDAK MEMENUHI
-        }
-        if (hasSapReportFromPja && !hasOnlineCctv && !hasSapInHighRiskArea) {
-            return 'HIGH'; // Hanya SAP MEMENUHI
-        }
-        if (!hasSapReportFromPja && !hasOnlineCctv && hasSapInHighRiskArea) {
-            return 'HIGH'; // Hanya High Risk SAP MEMENUHI
-        }
-        
-        // MEDIUM (Yellow):
-        // - "Terdapat Laporan SAP dari SO PJA CCTV" TIDAK MEMENUHI, tapi "Area Highrisk ada Laporan SAP (Critical)" dan "CCTV Kondisi Online (Critical)" MEMENUHI
-        // - "Terdapat Laporan SAP dari SO PJA CCTV" MEMENUHI, "Area Highrisk ada Laporan SAP (Critical)" TIDAK MEMENUHI, tapi "CCTV Kondisi Online (Critical)" MEMENUHI
-        if (!hasSapReportFromPja && hasSapInHighRiskArea && hasOnlineCctv) {
-            return 'MEDIUM';
-        }
-        if (hasSapReportFromPja && !hasSapInHighRiskArea && hasOnlineCctv) {
-            return 'MEDIUM';
-        }
-        
-        // NORMAL (Green):
-        // - Semua kondisi MEMENUHI
-        if (hasSapReportFromPja && hasOnlineCctv && (hasSapInHighRiskArea || !isHighRiskArea)) {
-            return 'NORMAL';
-        }
-        
-        // Default to MEDIUM if conditions don't match exactly
-        return 'MEDIUM';
-    }
-
-    // Check if CCTV is online in the area
-    function checkCctvOnlineInArea(lokasiName, idLokasi, geometry) {
-        if (!cctvLocations || !cctvLocations.length) {
-            console.log('[Risk Matrix] No CCTV locations available');
-            return false;
-        }
-        
-        // Filter CCTV by location/area
-        const cctvInArea = cctvLocations.filter(cctv => {
-            const cctvLokasi = (cctv.lokasi || cctv.area_kerja || cctv.site || '').toLowerCase().trim();
-            const areaLokasi = lokasiName.toLowerCase().trim();
-            
-            // Check if CCTV location matches area location
-            if (cctvLokasi && areaLokasi) {
-                const locationMatch = cctvLokasi.includes(areaLokasi) || areaLokasi.includes(cctvLokasi);
-                if (locationMatch) return true;
-            }
-            
-            // If geometry available, check if CCTV coordinates are within area
-            if (geometry && cctv.latitude && cctv.longitude) {
-                try {
-                    const lat = parseFloat(cctv.latitude);
-                    const lng = parseFloat(cctv.longitude);
-                    if (!isNaN(lat) && !isNaN(lng)) {
-                        const cctvCoord = ol.proj.fromLonLat([lng, lat]);
-                        return geometry.intersectsCoordinate(cctvCoord);
-                    }
-                } catch (e) {
-                    // Silently fail if coordinate check fails
-                }
-            }
-            
-            return false;
-        });
-        
-        if (cctvInArea.length === 0) {
-            console.log(`[Risk Matrix] No CCTV found in area: ${lokasiName}`);
-            return false;
-        }
-        
-        // Check if at least one CCTV is online
-        const hasOnline = cctvInArea.some(cctv => {
-            // Check if CCTV is online (status = 1 or nyala = true or is_online = true)
-            return cctv.status === 1 || cctv.nyala === true || cctv.is_online === true || 
-                   cctv.status_online === 1 || cctv.kondisi === 'Online';
-        });
-        
-        console.log(`[Risk Matrix] Area: ${lokasiName}, CCTV in area: ${cctvInArea.length}, Has online: ${hasOnline}`);
-        return hasOnline;
-    }
-
-    // Check if area is high-risk
-    function checkIfHighRiskArea(lokasiName, idLokasi) {
-        // Define high-risk area keywords
-        const highRiskKeywords = ['pit', 'hauling', 'tambang', 'mining', 'high risk', 'highrisk'];
-        const areaName = lokasiName.toLowerCase().trim();
-        
-        // Check if area name contains high-risk keywords
-        return highRiskKeywords.some(keyword => areaName.includes(keyword));
-    }
-
-    // Get risk-based style for area kerja
-    function getRiskBasedAreaKerjaStyle(feature) {
-        const riskLevel = calculateRiskForAreaKerja(feature);
-        
-        let fillColor, strokeColor;
-        
-        switch(riskLevel) {
-            case 'HIGH':
-                // Red for HIGH risk
-                fillColor = 'rgba(220, 38, 38, 0.6)'; // Bright red
-                strokeColor = '#dc2626';
-                break;
-            case 'MEDIUM':
-                // Yellow for MEDIUM risk
-                fillColor = 'rgba(250, 204, 21, 0.6)'; // Yellow
-                strokeColor = '#facc15';
-                break;
-            case 'NORMAL':
-            default:
-                // Green for NORMAL risk
-                fillColor = 'rgba(34, 197, 94, 0.6)'; // Green
-                strokeColor = '#22c55e';
-                break;
-        }
-        
-        return new ol.style.Style({
-            fill: new ol.style.Fill({
-                color: fillColor
-            }),
-            stroke: new ol.style.Stroke({
-                color: strokeColor,
-                width: 3
-            })
-        });
-    }
-
-    // Apply risk matrix colors to area kerja layers
-    function applyRiskMatrixToAreaKerja() {
-        if (isRiskMatrixModeActive) return;
-        
-        isRiskMatrixModeActive = true;
-        
-        // Hide CCTV coverage layers
-        if (window.areaCctvLayers && Array.isArray(window.areaCctvLayers)) {
-            window.areaCctvLayers.forEach(layer => {
-                if (layer) {
-                    layer.setVisible(false);
-                }
-            });
-        }
-        
-        // Hide area CCTV BMO2 PAMA layer
-        if (areaCctvBmo2PamaLayer) {
-            areaCctvBmo2PamaLayer.setVisible(false);
-        }
-        
-        // Update area kerja layers with risk-based styling
-        if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
-            window.areaKerjaLayers.forEach(layer => {
-                if (layer) {
-                    layer.setStyle(function(feature) {
-                        return getRiskBasedAreaKerjaStyle(feature);
-                    });
-                    layer.setVisible(true);
-                }
-            });
-        }
-        
-        // Update area kerja BMO2 PAMA layer
-        if (areaKerjaBmo2PamaLayer) {
-            areaKerjaBmo2PamaLayer.setStyle(function(feature) {
-                return getRiskBasedAreaKerjaStyle(feature);
-            });
-            areaKerjaBmo2PamaLayer.setVisible(true);
-        }
-        
-        // Force refresh to apply new styles
-        map.render();
-    }
-
-    // Remove risk matrix colors from area kerja layers
-    function removeRiskMatrixFromAreaKerja() {
-        if (!isRiskMatrixModeActive) return;
-        
-        isRiskMatrixModeActive = false;
-        
-        // Show CCTV coverage layers
-        if (window.areaCctvLayers && Array.isArray(window.areaCctvLayers)) {
-            window.areaCctvLayers.forEach(layer => {
-                if (layer) {
-                    layer.setVisible(true);
-                }
-            });
-        }
-        
-        // Show area CCTV BMO2 PAMA layer
-        if (areaCctvBmo2PamaLayer) {
-            areaCctvBmo2PamaLayer.setVisible(true);
-        }
-        
-        // Restore original area kerja styling
-        if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
-            window.areaKerjaLayers.forEach(layer => {
-                if (layer) {
-                    layer.setStyle(getOriginalAreaKerjaStyle);
-                }
-            });
-        }
-        
-        // Restore area kerja BMO2 PAMA layer
-        if (areaKerjaBmo2PamaLayer) {
-            areaKerjaBmo2PamaLayer.setStyle(getOriginalAreaKerjaStyle);
-        }
-        
-        // Force refresh to apply original styles
-        map.render();
     }
 
     function getAreaCctvStyle(feature) {
@@ -3250,100 +2844,6 @@
         });
     }
 
-    // Function to apply hazard color to image (canvas manipulation)
-    function applyHazardColorToImage(image) {
-        if (!image || !isHazardColorModeActive) return image;
-        
-        try {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const imgWidth = image.width || image.naturalWidth || 256;
-            const imgHeight = image.height || image.naturalHeight || 256;
-            
-            canvas.width = imgWidth;
-            canvas.height = imgHeight;
-            
-            // Draw original image
-            ctx.drawImage(image, 0, 0, imgWidth, imgHeight);
-            
-            // Get image data
-            const imageData = ctx.getImageData(0, 0, imgWidth, imgHeight);
-            const data = imageData.data;
-            
-            // Apply hazard color transformation based on pixel intensity/brightness
-            // Simulate MCE2 score colors: red (extreme) to green (very low)
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                const a = data[i + 3];
-                
-                if (a === 0) continue; // Skip transparent pixels
-                
-                // Calculate brightness/intensity
-                const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
-                
-                // Create position-based variation for more realistic hazard zones
-                const pixelIndex = i / 4;
-                const x = pixelIndex % imgWidth;
-                const y = Math.floor(pixelIndex / imgWidth);
-                const centerX = imgWidth / 2;
-                const centerY = imgHeight / 2;
-                const distX = Math.abs(x - centerX) / Math.max(centerX, 1);
-                const distY = Math.abs(y - centerY) / Math.max(centerY, 1);
-                const positionFactor = Math.min(1, (distX + distY) / 2);
-                
-                // Add some noise for more natural variation
-                const noise = (Math.random() - 0.5) * 0.1;
-                
-                // Combine brightness, position, and noise for hazard score simulation
-                const hazardScore = Math.max(0, Math.min(1, brightness * 0.5 + positionFactor * 0.4 + noise * 0.1));
-                
-                // Map to MCE2 color scale (25-58, lower = more red/hazard)
-                // Invert so lower values = more hazard (red)
-                const invertedScore = 1 - hazardScore;
-                
-                let newR, newG, newB;
-                
-                if (invertedScore > 0.85) {
-                    // Extreme (25-32): Bright red #dc2626
-                    newR = 220; newG = 38; newB = 38;
-                } else if (invertedScore > 0.70) {
-                    // High (33-35): Orange #f97316
-                    newR = 249; newG = 115; newB = 22;
-                } else if (invertedScore > 0.55) {
-                    // High moderate (36-38): Yellow-orange #fb923c
-                    newR = 251; newG = 146; newB = 60;
-                } else if (invertedScore > 0.40) {
-                    // Moderate (39-41): Yellow #facc15
-                    newR = 250; newG = 204; newB = 21;
-                } else if (invertedScore > 0.25) {
-                    // Moderate-low (42-45): Light green #86efac
-                    newR = 134; newG = 239; newB = 172;
-                } else if (invertedScore > 0.10) {
-                    // Low (46-49): Green #22c55e
-                    newR = 34; newG = 197; newB = 94;
-                } else {
-                    // Very low (50-58): Dark green #16a34a
-                    newR = 22; newG = 163; newB = 74;
-                }
-                
-                // Blend with original color to maintain texture
-                const blendFactor = 0.75; // How much hazard color vs original
-                data[i] = Math.round(newR * blendFactor + r * (1 - blendFactor));
-                data[i + 1] = Math.round(newG * blendFactor + g * (1 - blendFactor));
-                data[i + 2] = Math.round(newB * blendFactor + b * (1 - blendFactor));
-                // Keep original alpha
-            }
-            
-            ctx.putImageData(imageData, 0, 0);
-            return canvas;
-        } catch (error) {
-            console.error('Error applying hazard color to image:', error);
-            return image;
-        }
-    }
-
     // Function to create WMS layer
     function createWMSLayer(layerName = '', serverKey = currentWmsServer) {
         const server = wmsServers[serverKey];
@@ -3355,185 +2855,45 @@
             'TILED': true
         };
         
-        const tileSource = new ol.source.TileWMS({
-            url: server.url,
-            params: params,
-            serverType: 'mapserver',
-            crossOrigin: 'anonymous',
-            tileGrid: new ol.tilegrid.TileGrid({
-                extent: ol.proj.transformExtent(
-                    server.bbox,
-                    'EPSG:4326',
-                    'EPSG:3857'
-                ),
-                resolutions: [
-                    156543.03392804097,
-                    78271.51696402048,
-                    39135.75848201024,
-                    19567.87924100512,
-                    9783.93962050256,
-                    4891.96981025128,
-                    2445.98490512564,
-                    1222.99245256282,
-                    611.49622628141,
-                    305.748113140705,
-                    152.8740565703525,
-                    76.43702828517625,
-                    38.21851414258813,
-                    19.109257071294063,
-                    9.554628535647032,
-                    4.777314267823516,
-                    2.388657133911758,
-                    1.194328566955879,
-                    0.5971642834779395
-                ],
-                tileSize: [256, 256]
-            })
-        });
-        
-        // Apply custom tile load function if hazard color mode is active
-        if (isHazardColorModeActive) {
-            tileSource.setTileLoadFunction(function(imageTile, src) {
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                
-                img.onload = function() {
-                    try {
-                        const coloredCanvas = applyHazardColorToImage(img);
-                        if (coloredCanvas && coloredCanvas instanceof HTMLCanvasElement) {
-                            const imageElement = imageTile.getImage();
-                            if (imageElement) {
-                                imageElement.src = coloredCanvas.toDataURL();
-                            }
-                        } else {
-                            // Fallback to original
-                            const imageElement = imageTile.getImage();
-                            if (imageElement) {
-                                imageElement.src = src;
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error processing tile:', error);
-                        // Fallback to original
-                        const imageElement = imageTile.getImage();
-                        if (imageElement) {
-                            imageElement.src = src;
-                        }
-                    }
-                };
-                
-                img.onerror = function() {
-                    // Fallback to original src if error
-                    const imageElement = imageTile.getImage();
-                    if (imageElement) {
-                        imageElement.src = src;
-                    }
-                };
-                
-                img.src = src;
-            });
-        }
-        
         return new ol.layer.Tile({
-            source: tileSource,
+            source: new ol.source.TileWMS({
+                url: server.url,
+                params: params,
+                serverType: 'mapserver',
+                crossOrigin: 'anonymous',
+                tileGrid: new ol.tilegrid.TileGrid({
+                    extent: ol.proj.transformExtent(
+                        server.bbox,
+                        'EPSG:4326',
+                        'EPSG:3857'
+                    ),
+                    resolutions: [
+                        156543.03392804097,
+                        78271.51696402048,
+                        39135.75848201024,
+                        19567.87924100512,
+                        9783.93962050256,
+                        4891.96981025128,
+                        2445.98490512564,
+                        1222.99245256282,
+                        611.49622628141,
+                        305.748113140705,
+                        152.8740565703525,
+                        76.43702828517625,
+                        38.21851414258813,
+                        19.109257071294063,
+                        9.554628535647032,
+                        4.777314267823516,
+                        2.388657133911758,
+                        1.194328566955879,
+                        0.5971642834779395
+                    ],
+                    tileSize: [256, 256]
+                })
+            }),
             zIndex: 1,
             opacity: 0.85
         });
-    }
-
-    // Function to apply hazard color to WMS layer
-    function applyHazardColorOverlay() {
-        if (isHazardColorModeActive) return;
-        
-        isHazardColorModeActive = true;
-        
-        // Recreate WMS layer with hazard color transformation
-        const currentLayerName = currentLayer;
-        const currentServer = currentWmsServer;
-        
-        // Remove old WMS layer
-        if (wmsLayer) {
-            map.removeLayer(wmsLayer);
-            wmsLayer = null;
-        }
-        
-        // Create new WMS layer with hazard colors
-        wmsLayer = createWMSLayer(currentLayerName, currentServer);
-        map.addLayer(wmsLayer);
-        
-        // Ensure proper layer ordering
-        const layers = map.getLayers();
-        if (hazardLayer) {
-            if (layers.getArray().includes(hazardLayer)) {
-                layers.remove(hazardLayer);
-            }
-            layers.push(hazardLayer);
-        }
-        if (insidenLayer) {
-            if (layers.getArray().includes(insidenLayer)) {
-                layers.remove(insidenLayer);
-            }
-            layers.push(insidenLayer);
-        }
-        if (cctvLayer) {
-            if (layers.getArray().includes(cctvLayer)) {
-                layers.remove(cctvLayer);
-            }
-            layers.push(cctvLayer);
-        }
-        
-        // Force refresh of tiles
-        if (wmsLayer && wmsLayer.getSource()) {
-            wmsLayer.getSource().refresh();
-        }
-    }
-
-    // Function to remove hazard color overlay
-    function removeHazardColorOverlay() {
-        if (!isHazardColorModeActive) return;
-        
-        isHazardColorModeActive = false;
-        
-        // Remove event listener
-        if (hazardColorOverlayListener) {
-            ol.Observable.unByKey(hazardColorOverlayListener);
-            hazardColorOverlayListener = null;
-        }
-        
-        // Recreate WMS layer without hazard colors
-        const currentLayerName = currentLayer;
-        const currentServer = currentWmsServer;
-        
-        // Remove old WMS layer
-        if (wmsLayer) {
-            map.removeLayer(wmsLayer);
-            wmsLayer = null;
-        }
-        
-        // Create new WMS layer without color transformation
-        wmsLayer = createWMSLayer(currentLayerName, currentServer);
-        map.addLayer(wmsLayer);
-        
-        // Ensure proper layer ordering
-        const layers = map.getLayers();
-        if (hazardLayer) {
-            if (layers.getArray().includes(hazardLayer)) {
-                layers.remove(hazardLayer);
-            }
-            layers.push(hazardLayer);
-        }
-        if (insidenLayer) {
-            if (layers.getArray().includes(insidenLayer)) {
-                layers.remove(insidenLayer);
-            }
-            layers.push(insidenLayer);
-        }
-        if (cctvLayer) {
-            if (layers.getArray().includes(cctvLayer)) {
-                layers.remove(cctvLayer);
-            }
-            layers.push(cctvLayer);
-        }
     }
 
     // Create map dengan Google Satellite sebagai base layer
@@ -7109,11 +6469,6 @@
         donutChartState.donutInsiden = totalInsiden > 0 ? 100 : 0;
         donutChartState.donutGr = totalGr > 0 ? 100 : 0;
         
-        // Initialize PJA CCTV donut chart state dengan nilai dari PHP
-        var cctvSudahPjaPercentage = {{ $cctvSudahPjaPercentage ?? 0 }};
-        var pjaPercentage = Math.max(0, Math.min(100, cctvSudahPjaPercentage));
-        donutChartState.donutBelumPja = pjaPercentage;
-        
         // Initialize number animation states with initial values
         numberAnimationState.statHazardCount = totalHazards;
         numberAnimationState.statCctvCount = totalTbc; // Gunakan nilai TBC dari HTML
@@ -7122,9 +6477,6 @@
         
         // Initialize TBC donut chart dengan nilai 100% (data statis)
         updateDonutChart('donutCctv', 100, '#6f42c1');
-        
-        // Initialize PJA CCTV donut chart dengan nilai dari PHP
-        updateDonutChart('donutBelumPja', pjaPercentage, '#20c997');
         
         // Initialize statistics with no filter (all sites)
         updateStatisticsBySite('');
@@ -8758,25 +8110,6 @@
             }
             layers.push(unitVehicleLayer);
         }
-        // Ensure hazard color overlay is above WMS if active
-        if (hazardColorOverlayLayer && layers.getArray().includes(hazardColorOverlayLayer)) {
-            layers.remove(hazardColorOverlayLayer);
-            layers.push(hazardColorOverlayLayer);
-        }
-        
-        // Reapply hazard color overlay if Map 1 is selected
-        if (isHazardColorModeActive) {
-            // Remove and reapply to ensure it works with new WMS layer
-            removeHazardColorOverlay();
-            setTimeout(() => {
-                // Check if Map 1 is still selected
-                const map1Item = document.querySelector('.map-selection-item[data-map="1"]');
-                if (map1Item && map1Item.classList.contains('selected')) {
-                    applyHazardColorOverlay();
-                }
-            }, 100);
-        }
-        
         // Ensure BMO2 PAMA layers are above WMS but below hazard and CCTV
         if (areaKerjaBmo2PamaLayer && layers.getArray().includes(areaKerjaBmo2PamaLayer)) {
             layers.remove(areaKerjaBmo2PamaLayer);
@@ -13713,20 +13046,6 @@
                 
                 console.log('Map selected:', selectedMapId, 'Matrix:', selectedMapMatrix);
                 
-                // Apply hazard color overlay for Map 1 (Smart Alert CCTV)
-                if (selectedMapId === '1') {
-                    applyHazardColorOverlay();
-                    removeRiskMatrixFromAreaKerja();
-                } else if (selectedMapId === '2') {
-                    // Apply risk matrix to area kerja for Map 2
-                    removeHazardColorOverlay();
-                    applyRiskMatrixToAreaKerja();
-                } else {
-                    // Remove overlays for other maps
-                    removeHazardColorOverlay();
-                    removeRiskMatrixFromAreaKerja();
-                }
-                
                 // TODO: Implement map filtering based on matrix
                 // This will be used to filter evaluation data based on the selected map's matrix
                 // For example: if matrix.cctv.nyala === true, show only CCTV that are on
@@ -14376,35 +13695,6 @@
     $(document).ready(function() {
         // Donut charts will be initialized by updateStatisticsBySite
         // Just ensure peity is loaded first
-        
-        // Initialize donut chart for PJA CCTV (CCTV yang sudah ada PJA)
-        // Chart sudah diinisialisasi di bagian atas bersama chart lainnya
-        // Ini hanya sebagai fallback jika updateDonutChart belum tersedia
-        setTimeout(function() {
-            var cctvSudahPjaPercentage = {{ $cctvSudahPjaPercentage ?? 0 }};
-            var percentage = Math.max(0, Math.min(100, cctvSudahPjaPercentage));
-            
-            // Cek apakah chart sudah diinisialisasi
-            var donutBelumPja = document.getElementById('donutBelumPja');
-            if (donutBelumPja && (!donutBelumPja._peity || typeof updateDonutChart === 'undefined')) {
-                // Fallback: inisialisasi manual jika updateDonutChart belum tersedia
-                if (typeof $ !== 'undefined' && typeof $.fn.peity !== 'undefined') {
-                    donutBelumPja.textContent = Math.round(percentage) + '/100';
-                    try {
-                        if (donutBelumPja._peity) {
-                            $(donutBelumPja).peity('destroy');
-                        }
-                        $(donutBelumPja).peity('donut', {
-                            fill: ['#20c997', "rgb(0 0 0 / 10%)"],
-                            innerRadius: 32,
-                            radius: 40
-                        });
-                    } catch(e) {
-                        console.error('Error initializing donutBelumPja chart:', e);
-                    }
-                }
-            }
-        }, 1000);
         
         // Update chart2 dengan data yang benar setelah template di-load
         

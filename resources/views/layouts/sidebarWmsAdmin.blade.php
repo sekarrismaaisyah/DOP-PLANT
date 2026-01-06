@@ -74,11 +74,41 @@
               <div class="menu-title">Dashboard</div>
             </a>
           </li>
-          
-          <li class="menu-label">Hazard in Motion</li>
+
+
+            <li class="menu-label">Utilitas</li>
           
           <li>
-            <a href="{{ route('map-wms') }}">
+            <a class="has-arrow" href="javascript:;">
+              <div class="parent-icon"><i class="material-icons-outlined">camera</i>
+              </div>
+              <div class="menu-title">CCTV Management</div>
+            </a>
+            <ul>
+              <li><a href="{{ route('cctv-data.index') }}"><i class="material-icons-outlined">arrow_right</i>CCTV Database</a></li>
+              <li><a href="{{ route('cctv-data.pja-cctv-dedicated.index') }}"><i class="material-icons-outlined">arrow_right</i>CCTV PJA DEDICATED</a></li>
+              <li><a href="{{ route('cctv-data.import-coverage-form') }}"><i class="material-icons-outlined">arrow_right</i>CCTV COVERAGE</a></li>
+              <li><a href="{{ route('cctv-data.control-room.index') }}"><i class="material-icons-outlined">arrow_right</i>Pengawas Control Room</a></li>
+            </ul>
+          </li>
+
+           <li>
+            <a class="has-arrow" href="javascript:;">
+              <div class="parent-icon"><i class="material-icons-outlined">gps_fixed</i>
+              </div>
+              <div class="menu-title">Spasial </div>
+            </a>
+            <ul>
+              <li><a href="{{ route('geofencing.index') }}"><i class="material-icons-outlined">arrow_right</i>WMS</a></li>
+              <li><a href="{{ route('geofencing.rules') }}"><i class="material-icons-outlined">arrow_right</i>Area Kerja + Area CCTV</a></li>
+              <li><a href="{{ route('geofencing.monitoring') }}"><i class="material-icons-outlined">arrow_right</i>Boundary Monitoring</a></li>
+            </ul>
+          </li>
+          
+          <li class="menu-label">Control Room</li>
+        
+          <li>
+            <a href="{{ route('maps.map') }}">
               <div class="parent-icon"><i class="material-icons-outlined">map</i>
               </div>
               <div class="menu-title">Live Monitoring</div>
@@ -106,18 +136,7 @@
             </ul>
           </li>
           
-          <li>
-            <a class="has-arrow" href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">gps_fixed</i>
-              </div>
-              <div class="menu-title">Spasial </div>
-            </a>
-            <ul>
-              <li><a href="{{ route('geofencing.index') }}"><i class="material-icons-outlined">arrow_right</i>WMS</a></li>
-              <li><a href="{{ route('geofencing.rules') }}"><i class="material-icons-outlined">arrow_right</i>Area Kerja + Area CCTV</a></li>
-              <li><a href="{{ route('geofencing.monitoring') }}"><i class="material-icons-outlined">arrow_right</i>Boundary Monitoring</a></li>
-            </ul>
-          </li>
+         
           
           <li>
             <a class="has-arrow" href="javascript:;">
@@ -132,7 +151,7 @@
             </ul>
           </li>
           
-          <li>
+          {{-- <li>
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">location_on</i>
               </div>
@@ -144,9 +163,9 @@
               <li><a href="{{ route('spatial-analysis.movement') }}"><i class="material-icons-outlined">arrow_right</i>Movement Patterns</a></li>
               <li><a href="{{ route('spatial-analysis.risk') }}"><i class="material-icons-outlined">arrow_right</i>Risk Assessment</a></li>
             </ul>
-          </li>
+          </li> --}}
           
-          <li>
+          {{-- <li>
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">supervisor_account</i>
               </div>
@@ -157,17 +176,17 @@
               <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>System Status</a></li>
               <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>Operational Control</a></li>
             </ul>
-          </li>
+          </li> --}}
           
-          <li>
+          {{-- <li>
             <a href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">join_right</i>
               </div>
               <div class="menu-title">Timeline & Events</div>
             </a>
-          </li>
+          </li> --}}
           
-          <li>
+          {{-- <li>
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">analytics</i>
               </div>
@@ -179,40 +198,22 @@
               <li><a href="{{ route('reporting.safety') }}"><i class="material-icons-outlined">arrow_right</i>Safety Reports</a></li>
               <li><a href="{{ route('reporting.custom') }}"><i class="material-icons-outlined">arrow_right</i>Custom Reports</a></li>
             </ul>
-          </li>
+          </li> --}}
           
         
-          <li class="menu-label">CCTV & Monitoring</li>
+        
           
-          <li>
-            <a class="has-arrow" href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">camera</i>
+         
+          
+          {{-- <li>
+            <a href="{{ route('hazard-detection.p2h.evaluation') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">assessment</i>
               </div>
-              <div class="menu-title">CCTV Management</div>
+              <div class="menu-title">Evaluasi Pelaksanaan P2H</div>
             </a>
-            <ul>
-              <li><a href="{{ route('cctv-data.index') }}"><i class="material-icons-outlined">arrow_right</i>CCTV Database</a></li>
-              <li><a href="{{ route('cctv-data.pja-cctv-dedicated.index') }}"><i class="material-icons-outlined">arrow_right</i>CCTV PJA DEDICATED</a></li>
-              <li><a href="{{ route('cctv-data.import-form') }}"><i class="material-icons-outlined">arrow_right</i>CCTV COVERAGE</a></li>
-              <li><a href="{{ route('cctv-data.control-room.index') }}"><i class="material-icons-outlined">arrow_right</i>Pengawas Control Room</a></li>
-              {{-- <li><a href="{{ route('cctv-data.import-pja-cctv-form') }}"><i class="material-icons-outlined">arrow_right</i>Import PJA-CCTV Mapping</a></li> --}}
-              {{-- <li><a href="{{ route('cctv-management.status') }}"><i class="material-icons-outlined">arrow_right</i>CCTV Status</a></li> --}}
-            </ul>
-          </li>
+          </li> --}}
           
-          <li>
-            <a class="has-arrow" href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">videocam</i>
-              </div>
-              <div class="menu-title">Live Streaming</div>
-            </a>
-            <ul>
-              <li><a href="{{ route('live-streaming.active') }}"><i class="material-icons-outlined">arrow_right</i>Active Streams</a></li>
-              <li><a href="{{ route('live-streaming.archive') }}"><i class="material-icons-outlined">arrow_right</i>Stream Archive</a></li>
-            </ul>
-          </li>
-          
-          <li>
+          {{-- <li>
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">meeting_room</i>
               </div>
@@ -250,7 +251,7 @@
                 <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>No Control Room Available</a></li>
               @endforelse
             </ul>
-          </li>
+          </li> --}}
           
           <li class="menu-label">Integration & Settings</li>
           

@@ -1334,7 +1334,7 @@
 
 @section('content')
 <div class="hazard-detection-header">
-    <h1 class="hazard-detection-title">Dashboard Overview </h1>
+    <h1 class="hazard-detection-title">Hazard in Motion </h1>
     <p class="hazard-detection-subtitle">Real-time detection and monitoring of safety hazards in operational areas</p>
     
     <!-- Collapse Header Button -->
@@ -1368,20 +1368,6 @@
                     <p class="mb-0">Total CCTV</p>
                     <small class="text-muted" id="totalCctvLabel">unit</small>
                   </button>
-
-                  <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#totalCctvModal" title="Lihat detail Control Room">
-                    <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="material-icons-outlined">museum</i>
-                    </span>
-                    <h3 class="mb-0" id="totalControlRoomCount">{{ number_format($totalControlRoomCount ?? 0) }}</h3>
-                    <p class="mb-0">Control Room</p>
-                    <small class="text-muted">unit</small>
-                  </button>
-
-
-
-
                   <div class="vr"></div>
                   <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#totalCctvModal" title="Lihat detail Luasan Area Kerja">
                     <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
@@ -1718,20 +1704,20 @@
                   </div> --}}
 
                  
-                <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
+                  <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
                      <div class="d-flex align-items-center gap-4">
                       <div class="">
                         <p class="mb-0 data-attributes">
-                          <span id="donutGr"
+                          <span id="donutInsiden"
                             data-peity='{ "fill": ["#fd7e14", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
                         </p>
                       </div>
                       <div class="">
-                        <p class="mb-1 fs-6 fw-bold">Kondisi Baik</p>
-                        <h2 class="mb-0" >1,880</h2>
-                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="">92.2%</span><span id="">Kondisi Baik</span></p>
+                        <p class="mb-1 fs-6 fw-bold">Total CCTV</p>
+                        <h2 class="mb-0" >38</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="statInsidenChange">{{ $yearlyChange ?? '24.9' }}%</span><span id="statInsidenText">{{ $yearlyCount ?? '267' }} hazards</span></p>
                       </div>
-                     </div>
+                    </div>
                     
                     <div class="vr"></div>
                     <div class="d-flex align-items-center gap-4">
@@ -1762,7 +1748,7 @@
                         <div class="">
                             <p class="mb-1 fs-6 fw-bold">P2H CCTV</p>
                             <h2 class="mb-0" >90%</h2>
-                            <p class="mb-0"><span class="text-success me-2 fw-medium">Sudah di P2H</span></p>
+                            <p class="mb-0"><span class="text-success me-2 fw-medium">30 Baik 8 Rusak</span></p>
                         </div>
                      </div>
 
@@ -1773,150 +1759,8 @@
 
 
 
-                </div>
-
-
-                <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
-                     <div class="d-flex align-items-center gap-4">
-                      <div class="">
-                        <p class="mb-0 data-attributes">
-                          <span id="donutCctvAktif"
-                            data-peity='{ "fill": ["#fd7e14", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
-                        </p>
-                      </div>
-                      <div class="">
-                        <p class="mb-1 fs-6 fw-bold">Map Wms</p>
-                        <h2 class="mb-0" >Week 01</h2>
-                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="">Week 01 Terupdate</span></p>
-                      </div>
-                     </div>
-                    
-                    <div class="vr"></div>
-                    <div class="d-flex align-items-center gap-4">
-                      <div class="">
-                        <p class="mb-0 data-attributes">
-                          <span id="donutKondisiTidakBaik"
-                            data-peity='{ "fill": ["#20c997", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>{{ $cctvSudahPjaPercentage ?? 0 }}/100</span>
-                        </p>
-                      </div>
-                      <div class="">
-                        <p class="mb-1 fs-6 fw-bold">Area Kerja</p>
-                        <h2 class="mb-0" >Week 01</h2>
-                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="">Week 01 Terupdate</span></p>
-                      </div>
                     </div>
 
-                    <div class="vr"></div>
-                    <div class="d-flex align-items-center gap-4">
-                        <div class="">
-                            <p class="mb-0 data-attributes">
-                            <span id="donutKondisiBaik"
-                                data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
-                            </p>
-                        </div>
-                        <div class="">
-                            <p class="mb-1 fs-6 fw-bold">Boundery Cctv</p>
-                            <h2 class="mb-0" >Week 01</h2>
-                            <p class="mb-0"><span class="text-success me-2 fw-medium">Week 01 Terupdate</span></p>
-                        </div>
-                     </div>
-
-                  
-                   
-
-
-
-
-
-                </div>
-
-                 <div class="mt-2">
-                    
-                  </div>
-
-                  <div class="table-responsive mt-3" style="max-height: 300px; overflow-y: auto;">
-                    <table class="table table-bordered table-hover">
-                      <thead class="table-light" style="position: sticky; top: 0; z-index: 10; background-color: #f8f9fa;">
-                        <tr>
-                          <th style="width: 50px;">No</th>
-                          <th>Nama CCTV</th>
-                          <th>No. CCTV</th>
-                          <th>Lokasi</th>
-                          <th style="width: 300px;">Kondisi</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        @if(!empty($p2hResults) && count($p2hResults) > 0)
-                          @foreach($p2hResults as $index => $result)
-                            <tr>
-                              <td class="text-center">{{ $index + 1 }}</td>
-                              <td>{{ $result['nama_cctv'] ?? '-' }}</td>
-                              <td>{{ $result['no_cctv'] ?? '-' }}</td>
-                              <td>{{ $result['lokasi'] ?? '-' }}</td>
-                              <td>
-                                <div class="d-flex flex-column gap-2">
-                                  <div class="d-flex gap-3">
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kondisi_{{ $result['cctv_id'] ?? $index }}" 
-                                        id="baik_{{ $result['cctv_id'] ?? $index }}" 
-                                        value="baik" 
-                                        {{ ($result['kondisi'] ?? '') == 'baik' ? 'checked' : '' }} 
-                                        disabled>
-                                      <label class="form-check-label" for="baik_{{ $result['cctv_id'] ?? $index }}">
-                                        Baik
-                                      </label>
-                                    </div>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kondisi_{{ $result['cctv_id'] ?? $index }}" 
-                                        id="rusak_{{ $result['cctv_id'] ?? $index }}" 
-                                        value="rusak" 
-                                        {{ ($result['kondisi'] ?? '') == 'rusak' ? 'checked' : '' }} 
-                                        disabled>
-                                      <label class="form-check-label" for="rusak_{{ $result['cctv_id'] ?? $index }}">
-                                        Rusak
-                                      </label>
-                                    </div>
-                                    <div class="form-check">
-                                      <input class="form-check-input" type="radio" name="kondisi_{{ $result['cctv_id'] ?? $index }}" 
-                                        id="tidak_ada_{{ $result['cctv_id'] ?? $index }}" 
-                                        value="tidak_ada" 
-                                        {{ ($result['kondisi'] ?? '') == 'tidak_ada' ? 'checked' : '' }} 
-                                        disabled>
-                                      <label class="form-check-label" for="tidak_ada_{{ $result['cctv_id'] ?? $index }}">
-                                        Tidak Ada
-                                      </label>
-                                    </div>
-                                  </div>
-                                  @if(!empty($result['catatan']))
-                                    <div>
-                                      <label class="form-label small text-muted">Catatan (opsional):</label>
-                                      <input type="text" class="form-control form-control-sm" 
-                                        value="{{ $result['catatan'] }}" 
-                                        readonly>
-                                    </div>
-                                  @else
-                                    <div>
-                                      <label class="form-label small text-muted">Catatan (opsional):</label>
-                                      <input type="text" class="form-control form-control-sm" 
-                                        placeholder="-" 
-                                        readonly>
-                                    </div>
-                                  @endif
-                                </div>
-                              </td>
-                            </tr>
-                          @endforeach
-                        @else
-                          <tr>
-                            <td colspan="5" class="text-center text-muted py-4">
-                              <i class="material-icons-outlined me-2">info</i>
-                              Tidak ada data P2H tersedia
-                            </td>
-                          </tr>
-                        @endif
-                      </tbody>
-                    </table>
-                  </div>
                     
                   </div>
                </div>
@@ -7109,11 +6953,6 @@
         donutChartState.donutInsiden = totalInsiden > 0 ? 100 : 0;
         donutChartState.donutGr = totalGr > 0 ? 100 : 0;
         
-        // Initialize PJA CCTV donut chart state dengan nilai dari PHP
-        var cctvSudahPjaPercentage = {{ $cctvSudahPjaPercentage ?? 0 }};
-        var pjaPercentage = Math.max(0, Math.min(100, cctvSudahPjaPercentage));
-        donutChartState.donutBelumPja = pjaPercentage;
-        
         // Initialize number animation states with initial values
         numberAnimationState.statHazardCount = totalHazards;
         numberAnimationState.statCctvCount = totalTbc; // Gunakan nilai TBC dari HTML
@@ -7122,9 +6961,6 @@
         
         // Initialize TBC donut chart dengan nilai 100% (data statis)
         updateDonutChart('donutCctv', 100, '#6f42c1');
-        
-        // Initialize PJA CCTV donut chart dengan nilai dari PHP
-        updateDonutChart('donutBelumPja', pjaPercentage, '#20c997');
         
         // Initialize statistics with no filter (all sites)
         updateStatisticsBySite('');
@@ -14378,22 +14214,43 @@
         // Just ensure peity is loaded first
         
         // Initialize donut chart for PJA CCTV (CCTV yang sudah ada PJA)
-        // Chart sudah diinisialisasi di bagian atas bersama chart lainnya
-        // Ini hanya sebagai fallback jika updateDonutChart belum tersedia
         setTimeout(function() {
+            // Debug: Log data PJA CCTV
+            var cctvSudahPjaCount = {{ $cctvSudahPjaCount ?? 0 }};
             var cctvSudahPjaPercentage = {{ $cctvSudahPjaPercentage ?? 0 }};
-            var percentage = Math.max(0, Math.min(100, cctvSudahPjaPercentage));
+            var cctvBelumPjaCount = {{ $cctvBelumPjaCount ?? 0 }};
+            var totalCctvForPja = {{ $totalCctvForPja ?? 0 }};
             
-            // Cek apakah chart sudah diinisialisasi
-            var donutBelumPja = document.getElementById('donutBelumPja');
-            if (donutBelumPja && (!donutBelumPja._peity || typeof updateDonutChart === 'undefined')) {
-                // Fallback: inisialisasi manual jika updateDonutChart belum tersedia
-                if (typeof $ !== 'undefined' && typeof $.fn.peity !== 'undefined') {
-                    donutBelumPja.textContent = Math.round(percentage) + '/100';
+            console.log('=== PJA CCTV Debug ===');
+            console.log('CCTV Sudah PJA Count:', cctvSudahPjaCount);
+            console.log('CCTV Sudah PJA Percentage:', cctvSudahPjaPercentage);
+            console.log('CCTV Belum PJA Count:', cctvBelumPjaCount);
+            console.log('Total CCTV for PJA:', totalCctvForPja);
+            console.log('======================');
+            
+            if (typeof $ !== 'undefined' && typeof $.fn.peity !== 'undefined') {
+                var donutBelumPja = document.getElementById('donutBelumPja');
+                if (donutBelumPja) {
+                    // Pastikan persentase antara 0-100
+                    var percentage = Math.max(0, Math.min(100, Math.round(cctvSudahPjaPercentage)));
+                    donutBelumPja.textContent = percentage + '/100';
+                    
+                    // Update juga di data attribute untuk peity
+                    $(donutBelumPja).attr('data-peity', JSON.stringify({
+                        fill: ['#20c997', "rgb(0 0 0 / 10%)"],
+                        innerRadius: 32,
+                        radius: 40
+                    }));
+                    
                     try {
+                        // Destroy existing chart jika ada
                         if (donutBelumPja._peity) {
-                            $(donutBelumPja).peity('destroy');
+                            try {
+                                $(donutBelumPja).peity('destroy');
+                            } catch(e) {}
                         }
+                        
+                        // Initialize chart dengan warna hijau untuk CCTV yang sudah ada PJA
                         $(donutBelumPja).peity('donut', {
                             fill: ['#20c997', "rgb(0 0 0 / 10%)"],
                             innerRadius: 32,
@@ -14402,9 +14259,13 @@
                     } catch(e) {
                         console.error('Error initializing donutBelumPja chart:', e);
                     }
+                } else {
+                    console.warn('Element donutBelumPja not found');
                 }
+            } else {
+                console.warn('jQuery or peity not loaded');
             }
-        }, 1000);
+        }, 100);
         
         // Update chart2 dengan data yang benar setelah template di-load
         

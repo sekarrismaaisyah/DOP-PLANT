@@ -4,6 +4,7 @@ namespace App\Http\Controllers\HazardMotion;
 
 use App\Http\Controllers\Controller;
 use App\Models\CctvData;
+use App\Models\CctvCoverage;
 use App\Models\InsidenTabel;
 use App\Models\GrTable;
 use App\Models\HazardValidation;
@@ -1929,6 +1930,64 @@ class HazardDetectionController extends Controller
             // CCTV yang mengcover Area Non Kritis (berdasarkan coverage_lokasi yang non kritis)
             $cctvAreaNonKritis = $detailCoverageLokasi->where('is_kritis', false)->sum('jumlah_cctv');
             
+            // Aktivitas Highrisk dari tabel cctv_coverage
+            // Ambil ID CCTV yang sesuai dengan filter company dan site
+            $cctvIds = (clone $query)->pluck('id')->toArray();
+            
+            // Inisialisasi variabel dengan default 0
+            $aktivitasHighrisk = 0;
+            $detailAktivitasHighrisk = collect([]);
+            
+            // Hitung aktivitas highrisk dari tabel cctv_coverage
+            // Mencari kategori_aktivitas yang bernilai "Aktivitas Highrisk" atau "Aktivitas Kritis"
+            try {
+                $aktivitasHighriskQuery = CctvCoverage::query();
+                
+                // Filter berdasarkan ID CCTV jika ada
+                if (!empty($cctvIds)) {
+                    $aktivitasHighriskQuery->whereIn('id_cctv', $cctvIds);
+                }
+                
+                // Filter berdasarkan kategori aktivitas
+                $aktivitasHighriskQuery->where(function($q) {
+                    $q->where('kategori_aktivitas', 'Aktivitas Highrisk')
+                      ->orWhere('kategori_aktivitas', 'Aktivitas Kritis');
+                });
+                
+                // Hitung jumlah aktivitas highrisk
+                $aktivitasHighrisk = $aktivitasHighriskQuery->count();
+                
+                // Ambil detail lokasi aktivitas highrisk (query baru dengan filter yang sama)
+                $detailAktivitasHighriskQuery = CctvCoverage::query();
+                
+                // Filter berdasarkan ID CCTV jika ada
+                if (!empty($cctvIds)) {
+                    $detailAktivitasHighriskQuery->whereIn('id_cctv', $cctvIds);
+                }
+                
+                // Filter berdasarkan kategori aktivitas
+                $detailAktivitasHighriskQuery->where(function($q) {
+                    $q->where('kategori_aktivitas', 'Aktivitas Highrisk')
+                      ->orWhere('kategori_aktivitas', 'Aktivitas Kritis');
+                });
+                
+                $detailAktivitasHighrisk = $detailAktivitasHighriskQuery
+                    ->select('coverage_lokasi', 'coverage_detail_lokasi', 'kategori_aktivitas')
+                    ->get()
+                    ->map(function($item) {
+                        return [
+                            'lokasi' => $item->coverage_lokasi ?? 'Tidak Diketahui',
+                            'detail_lokasi' => $item->coverage_detail_lokasi ?? 'Tidak Diketahui',
+                            'kategori_aktivitas' => $item->kategori_aktivitas ?? 'Tidak Diketahui'
+                        ];
+                    })
+                    ->values();
+            } catch (Exception $e) {
+                Log::error('Error calculating aktivitas highrisk: ' . $e->getMessage());
+                $aktivitasHighrisk = 0;
+                $detailAktivitasHighrisk = collect([]);
+            }
+            
             // Detail area kritis yang tercover (hanya yang kritis)
             $detailAreaKritis = $detailCoverageLokasi->where('is_kritis', true)
                 ->map(function($item) {
@@ -2000,6 +2059,8 @@ class HazardDetectionController extends Controller
                 'jumlahAreaNonKritis' => $jumlahAreaNonKritis,
                 'cctvAreaKritis' => $cctvAreaKritis,
                 'cctvAreaNonKritis' => $cctvAreaNonKritis,
+                'aktivitasHighrisk' => isset($aktivitasHighrisk) ? $aktivitasHighrisk : 0,
+                'detailAktivitasHighrisk' => isset($detailAktivitasHighrisk) ? $detailAktivitasHighrisk->toArray() : [],
                 'detailAreaKritis' => $detailAreaKritis,
                 'detailCoverageLokasi' => $detailCoverageLokasi,
                 'aktif' => $aktif,
@@ -2037,6 +2098,8 @@ class HazardDetectionController extends Controller
                 'jumlahAreaNonKritis' => 0,
                 'cctvAreaKritis' => 0,
                 'cctvAreaNonKritis' => 0,
+                'aktivitasHighrisk' => 0,
+                'detailAktivitasHighrisk' => [],
                 'detailAreaKritis' => [],
                 'detailCoverageLokasi' => [],
                 'aktif' => 0,

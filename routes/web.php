@@ -24,7 +24,10 @@ use App\Http\Controllers\HazardValidationController;
 use App\Http\Controllers\BaselinePjaController;
 use App\Http\Controllers\ChatController;
 use App\Http\Controllers\HazardMotion\MapBaseController;
+use App\Http\Controllers\HazardMotion\fullMapsController;
+use App\Http\Controllers\HazardMotion\CctvP2hController;
 use App\Http\Controllers\ScoreCard\ScoreCardController;
+use App\Http\Controllers\DashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -45,6 +48,14 @@ Auth::routes();
 Route::middleware(['auth'])->group(function () {
     // Define a GET route for the root URL ('/')
     Route::get('/', [HomeController::class, 'index'])->name('index');
+    
+    // Dashboard Routes
+    Route::prefix('dashboard')->name('dashboard.')->group(function () {
+        Route::get('/', [DashboardController::class, 'index'])->name('index');
+        Route::get('/data', [DashboardController::class, 'getData'])->name('data');
+    });
+    Route::get('/full-maps', [fullMapsController::class, 'index'])->name('index');
+    Route::get('/full-maps/api/cctv-by-coverage', [fullMapsController::class, 'getCctvByCoverageLocation'])->name('full-maps.api.cctv-by-coverage');
     Route::get('/clickhouse-status', [HomeController::class, 'checkClickHouseStatus'])->name('clickhouse.status');
     Route::get('/cctv-company-data', [HomeController::class, 'companyCctvData'])->name('cctv.company-data');
     Route::get('/company-cctv-data', [HomeController::class, 'getCompanyCctvData'])->name('company-cctv-data');
@@ -103,10 +114,14 @@ Route::middleware(['auth'])->group(function () {
     // Routes khusus harus didefinisikan SEBELUM resource route
     Route::get('cctv-data-import', [CctvDataController::class, 'importForm'])->name('cctv-data.import-form');
     Route::post('cctv-data-import', [CctvDataController::class, 'import'])->name('cctv-data.import');
+    Route::get('cctv-data-import/download-template', [CctvDataController::class, 'downloadTemplate'])->name('cctv-data.download-template');
     Route::get('cctv-data-coverage-import', [CctvDataController::class, 'importCoverageForm'])->name('cctv-data.import-coverage-form');
     Route::post('cctv-data-coverage-import', [CctvDataController::class, 'importCoverage'])->name('cctv-data.import-coverage');
     Route::get('cctv-data-coverage-import/data', [CctvDataController::class, 'getCoverageData'])->name('cctv-data.coverage.data');
     Route::get('cctv-data-coverage-import/download-template', [CctvDataController::class, 'downloadTemplateCoverage'])->name('cctv-data.download-template-coverage');
+    Route::get('cctv-data-coverage-import/{id}', [CctvDataController::class, 'getCoverageDetail'])->name('cctv-data.coverage.detail');
+    Route::put('cctv-data-coverage-import/{id}', [CctvDataController::class, 'updateCoverage'])->name('cctv-data.coverage.update');
+    Route::delete('cctv-data-coverage-import/{id}', [CctvDataController::class, 'deleteCoverage'])->name('cctv-data.coverage.delete');
     Route::get('cctv-data-control-room', [CctvDataController::class, 'indexControlRoom'])->name('cctv-data.control-room.index');
     Route::get('cctv-data-control-room/data', [CctvDataController::class, 'getControlRoomData'])->name('cctv-data.control-room.data');
     Route::post('cctv-data-control-room/pengawas', [CctvDataController::class, 'storePengawasControlRoom'])->name('cctv-data.control-room.pengawas.store');
@@ -165,6 +180,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/api/total-cctv-count', [HazardDetectionController::class, 'getTotalCctvCount'])->name('api.total-cctv-count');
         Route::get('/api/tbc-overview', [HazardDetectionController::class, 'getTbcOverview'])->name('api.tbc-overview');
         Route::get('/api/unit-vehicles', [HazardDetectionController::class, 'getUnitVehicles'])->name('api.unit-vehicles');
+        
+        // P2H Checklist Routes
+        Route::get('/p2h/{controlRoom}', [CctvP2hController::class, 'create'])->name('p2h.create');
+        Route::post('/p2h', [CctvP2hController::class, 'store'])->name('p2h.store');
+        Route::get('/p2h/{controlRoom}/history', [CctvP2hController::class, 'history'])->name('p2h.history');
+        Route::get('/api/p2h/status', [CctvP2hController::class, 'getStatus'])->name('api.p2h.status');
+        Route::get('/p2h-evaluation', [CctvP2hController::class, 'evaluation'])->name('p2h.evaluation');
         Route::get('/api/unit-gps-logs', [HazardDetectionController::class, 'getUnitGpsLogs'])->name('api.unit-gps-logs');
     });
 
