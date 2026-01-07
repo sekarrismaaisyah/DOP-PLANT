@@ -1,11 +1,10 @@
-@extends('layouts.masterMotionHazardAdmin')
+{{-- @extends('layouts.masterMotionHazardAdmin') --}}
+@extends('layouts.master-home')
 
 @section('title', 'Hazard Detection - Beraucoal')
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 <style>
     /* Filter Dropdown Styles */
     .btn-filter {
@@ -79,54 +78,238 @@
         opacity: 1;
     }
     
-    /* Map Sidebar Panel Styles */
-    .map-sidebar {
+    /* Icon Toolbar - Left Side - Modern Clean Style */
+    .map-icon-toolbar {
         position: absolute;
-        top: 0;
-        right: 0;
-        width: 380px;
-        height: 100%;
-        background: #ffffff;
-        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+        top: 90px;
+        left: 20px;
         z-index: 1000;
         display: flex;
-        transition: transform 0.3s ease;
+        flex-direction: column;
+        gap: 6px;
+        background: #ffffff;
+        border-radius: 12px;
+        padding: 10px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08), 0 1px 3px rgba(0, 0, 0, 0.05);
+        border: 1px solid rgba(0, 0, 0, 0.06);
+        transition: all 0.3s ease;
+    }
+    
+    /* Icon Toolbar Button - Clean Modern Style */
+    .icon-toolbar-btn {
+        position: relative;
+        width: 64px;
+        min-height: 64px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: #64748b;
+        padding: 10px 8px;
+        gap: 6px;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+    
+    .icon-toolbar-btn:hover {
+        background: #f8fafc;
+        border-color: #cbd5e1;
+        color: #334155;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+        transform: translateY(-1px);
+    }
+    
+    .icon-toolbar-btn.active {
+        background: #3b82f6;
+        border-color: #3b82f6;
+        color: #ffffff;
+        box-shadow: 0 2px 6px rgba(59, 130, 246, 0.25);
+    }
+    
+    .icon-toolbar-btn.active:hover {
+        background: #2563eb;
+        border-color: #2563eb;
+    }
+    
+    .icon-toolbar-btn i {
+        font-size: 26px;
+        transition: transform 0.15s ease;
+        line-height: 1;
+    }
+    
+    .icon-toolbar-btn:hover i {
+        transform: scale(1.05);
+    }
+    
+    .icon-toolbar-btn.active i {
+        transform: none;
+    }
+    
+    .icon-toolbar-btn .btn-label {
+        font-size: 11px;
+        font-weight: 500;
+        text-align: center;
+        line-height: 1.2;
+        color: inherit;
+        margin-top: 2px;
+    }
+    
+    /* Badge for count - Subtle Style */
+    .icon-toolbar-badge {
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        min-width: 18px;
+        height: 18px;
+        padding: 0 5px;
+        background: #ef4444;
+        color: #ffffff;
+        border-radius: 9px;
+        font-size: 10px;
+        font-weight: 600;
+        display: none;
+        align-items: center;
+        justify-content: center;
+        border: 2px solid #ffffff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+        z-index: 10;
+    }
+    
+    .icon-toolbar-badge:not(:empty) {
+        display: flex;
+    }
+    
+    .icon-toolbar-btn.active .icon-toolbar-badge {
+        background: #ffffff;
+        color: #3b82f6;
+        border-color: #3b82f6;
+        box-shadow: 0 1px 3px rgba(59, 130, 246, 0.3);
+    }
+    
+    /* Divider - Subtle */
+    .icon-toolbar-divider {
+        height: 1px;
+        background: #e5e7eb;
+        margin: 6px 0;
+        border: none;
+    }
+    
+    /* Map Sidebar Panel Styles - Right Side */
+    .map-sidebar {
+        position: absolute;
+        top: 90px;
+        right: 0;
+        width: 420px;
+        height: calc(100% - 90px);
+        background: #ffffff;
+        box-shadow: -4px 0 16px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        display: flex;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         transform: translateX(0);
+        border-top-left-radius: 20px;
+        border-bottom-left-radius: 20px;
+    }
+    
+    @media (max-width: 1200px) {
+        .map-icon-toolbar {
+            top: 85px;
+            left: 15px;
+            padding: 8px;
+        }
+        .icon-toolbar-btn {
+            width: 60px;
+            min-height: 60px;
+            padding: 8px 6px;
+        }
+        .icon-toolbar-btn i {
+            font-size: 24px;
+        }
+        .icon-toolbar-btn .btn-label {
+            font-size: 10px;
+        }
+        .map-sidebar {
+            top: 85px;
+            height: calc(100% - 85px);
+            width: 380px;
+        }
+    }
+    
+    @media (max-width: 768px) {
+        .map-icon-toolbar {
+            top: 75px;
+            left: 10px;
+            padding: 8px 6px;
+            gap: 4px;
+        }
+        .icon-toolbar-btn {
+            width: 56px;
+            min-height: 56px;
+            padding: 8px 4px;
+            gap: 4px;
+        }
+        .icon-toolbar-btn i {
+            font-size: 22px;
+        }
+        .icon-toolbar-btn .btn-label {
+            font-size: 9px;
+        }
+        .icon-toolbar-badge {
+            min-width: 16px;
+            height: 16px;
+            font-size: 9px;
+            padding: 0 4px;
+        }
+        .map-sidebar {
+            top: 75px;
+            height: calc(100% - 75px);
+            width: 100%;
+            max-width: 340px;
+        }
     }
     
     .map-sidebar.collapsed {
-        transform: translateX(calc(100% - 50px));
+        transform: translateX(calc(100% - 60px));
     }
     
     .sidebar-toggle-btn {
         position: absolute;
-        left: -40px;
+        left: -50px;
         top: 50%;
         transform: translateY(-50%);
-        width: 40px;
-        height: 60px;
-        background: #ffffff;
-        border: 1px solid #e5e7eb;
+        width: 50px;
+        height: 70px;
+        background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+        border: 2px solid #e5e7eb;
         border-right: none;
-        border-radius: 8px 0 0 8px;
+        border-radius: 12px 0 0 12px;
         display: flex;
         align-items: center;
         justify-content: center;
         cursor: pointer;
-        transition: all 0.2s ease;
+        transition: all 0.25s ease;
         z-index: 1001;
-        box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+        box-shadow: -4px 0 8px rgba(0, 0, 0, 0.08);
     }
     
     .sidebar-toggle-btn:hover {
-        background: #f9fafb;
-        box-shadow: -2px 0 6px rgba(0, 0, 0, 0.1);
+        background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        box-shadow: -6px 0 12px rgba(0, 0, 0, 0.12);
+        border-color: #3b82f6;
     }
     
     .sidebar-toggle-btn i {
-        font-size: 24px;
+        font-size: 28px;
         color: #6b7280;
         transition: transform 0.3s ease;
+    }
+    
+    .sidebar-toggle-btn:hover i {
+        color: #3b82f6;
     }
     
     .map-sidebar.collapsed .sidebar-toggle-btn i {
@@ -139,80 +322,16 @@
         display: flex;
         flex-direction: column;
         overflow: hidden;
+        background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
     }
     
+    /* Remove old tab styles - now using icon toolbar */
     .sidebar-tabs {
-        display: flex;
-        background: #f8f9fa;
-        border-bottom: 1px solid #e5e7eb;
-        padding: 8px;
-        gap: 4px;
-        overflow-x: auto;
-        overflow-y: hidden;
-        scroll-behavior: smooth;
-        -webkit-overflow-scrolling: touch;
-        scrollbar-width: thin;
-        scrollbar-color: #cbd5e1 #f8f9fa;
-    }
-    
-    .sidebar-tabs::-webkit-scrollbar {
-        height: 6px;
-    }
-    
-    .sidebar-tabs::-webkit-scrollbar-track {
-        background: #f8f9fa;
-    }
-    
-    .sidebar-tabs::-webkit-scrollbar-thumb {
-        background: #cbd5e1;
-        border-radius: 3px;
-    }
-    
-    .sidebar-tabs::-webkit-scrollbar-thumb:hover {
-        background: #94a3b8;
+        display: none;
     }
     
     .sidebar-tab {
-        flex: 0 0 auto;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        padding: 12px 16px;
-        background: transparent;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        position: relative;
-        min-height: 70px;
-        min-width: 80px;
-        max-width: 120px;
-    }
-    
-    .sidebar-tab:hover {
-        background: #e9ecef;
-    }
-    
-    .sidebar-tab.active {
-        background: #ffffff;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .sidebar-tab i {
-        font-size: 24px;
-        color: #6b7280;
-        margin-bottom: 4px;
-    }
-    
-    .sidebar-tab.active i {
-        color: #3b82f6;
-    }
-    
-    .sidebar-tab .tab-label {
-        font-size: 12px;
-        font-weight: 500;
-        color: #6b7280;
+        display: none;
         margin-bottom: 4px;
     }
     
@@ -337,235 +456,7 @@
         box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
     }
     
-    .list-item-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 16px;
-        color: #ffffff;
-        margin-right: 12px;
-        flex-shrink: 0;
-    }
-    
-    .list-item-content {
-        flex: 1;
-        min-width: 0;
-    }
-    
-    .list-item-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 4px;
-        word-break: break-word;
-    }
-    
-    .list-item-subtitle {
-        font-size: 12px;
-        color: #6b7280;
-        word-break: break-word;
-    }
-    
-    .list-item-time {
-        font-size: 11px;
-        color: #9ca3af;
-        margin-top: 4px;
-    }
-    
-    .empty-state {
-        padding: 40px 20px;
-        text-align: center;
-        color: #9ca3af;
-    }
-    
-    .empty-state i {
-        font-size: 48px;
-        margin-bottom: 12px;
-        opacity: 0.5;
-    }
-    
-    .empty-state p {
-        font-size: 14px;
-        margin: 0;
-    }
-    
-    /* Map Selection Styles for Evaluasi */
-    .map-selection-container {
-        padding: 16px;
-    }
-    
-    .map-selection-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .map-selection-title i {
-        font-size: 20px;
-        color: #3b82f6;
-    }
-    
-    .map-selection-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-        margin-bottom: 16px;
-    }
-    
-    .map-selection-item {
-        position: relative;
-        cursor: pointer;
-        border-radius: 8px;
-        overflow: hidden;
-        transition: all 0.2s ease;
-        border: 2px solid #e5e7eb;
-        background: #ffffff;
-    }
-    
-    .map-selection-item:hover {
-        border-color: #3b82f6;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-        transform: translateY(-2px);
-    }
-    
-    .map-selection-item.selected {
-        border-color: #3b82f6;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
-        background: #eff6ff;
-    }
-    
-    .map-selection-item.selected::after {
-        content: '';
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        width: 24px;
-        height: 24px;
-        background: #3b82f6;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 10;
-    }
-    
-    .map-selection-item.selected::before {
-        content: '✓';
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        width: 24px;
-        height: 24px;
-        color: #ffffff;
-        font-size: 14px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        z-index: 11;
-    }
-    
-    .map-thumbnail {
-        width: 100%;
-        height: 100px;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-        position: relative;
-        overflow: hidden;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-    }
-    
-    .map-thumbnail.map-1 {
-        background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
-    }
-    
-    .map-thumbnail.map-2 {
-        background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
-    }
-    
-    .map-thumbnail.map-3 {
-        background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
-    }
-    
-    .map-thumbnail.map-4 {
-        background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);
-    }
-    
-    .map-thumbnail.map-5 {
-        background: linear-gradient(135deg, #30cfd0 0%, #330867 100%);
-    }
-    
-    .map-thumbnail.map-6 {
-        background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%);
-    }
-    
-    .map-thumbnail-pattern {
-        position: absolute;
-        width: 100%;
-        height: 100%;
-        opacity: 0.3;
-        background-image: 
-            repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px),
-            repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);
-    }
-    
-    .map-thumbnail-icon {
-        position: relative;
-        z-index: 1;
-        font-size: 32px;
-        color: rgba(255, 255, 255, 0.9);
-    }
-    
-    .map-selection-label {
-        padding: 10px 12px;
-        text-align: center;
-        font-size: 13px;
-        font-weight: 500;
-        color: #374151;
-        background: #ffffff;
-        border-top: 1px solid #e5e7eb;
-    }
-    
-    .map-selection-item.selected .map-selection-label {
-        color: #3b82f6;
-        font-weight: 600;
-        background: #eff6ff;
-    }
-    
-    .map-selection-description {
-        font-size: 11px;
-        color: #6b7280;
-        margin-top: 4px;
-        line-height: 1.4;
-    }
-    
-    .map-selection-info {
-        padding: 12px;
-        background: #f8f9fa;
-        border-radius: 8px;
-        margin-top: 16px;
-        font-size: 12px;
-        color: #6b7280;
-        line-height: 1.6;
-    }
-    
-    .map-selection-info i {
-        font-size: 16px;
-        color: #3b82f6;
-        margin-right: 6px;
-        vertical-align: middle;
-    }
-    
-    /* CCTV specific styles (diambil dari inicctvdetail) */
+    /* CCTV specific styles */
     .sidebar-list-item[data-type="cctv"] {
         flex-direction: column;
         align-items: stretch;
@@ -651,6 +542,20 @@
         margin-top: 4px;
     }
     
+    .list-item-expand-icon {
+        margin-left: auto;
+        color: #6b7280;
+        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, color 0.2s ease;
+        flex-shrink: 0;
+        font-size: 20px;
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border-radius: 4px;
+    }
+    
     /* Control Room specific styles */
     .sidebar-list-item[data-type="controlroom"] {
         flex-direction: column;
@@ -679,8 +584,6 @@
         padding: 14px 16px;
         cursor: pointer;
         transition: background-color 0.2s ease;
-        display: flex;
-        align-items: center;
     }
     
     .sidebar-list-item[data-type="controlroom"] .sidebar-list-item-header:hover {
@@ -766,21 +669,18 @@
         height: 8px;
     }
     
-    .list-item-expand-icon {
-        margin-left: auto;
-        color: #6b7280;
-        transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, color 0.2s ease;
-        flex-shrink: 0;
-        font-size: 20px;
-        width: 24px;
-        height: 24px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 4px;
+    /* Expand icon hanya untuk CCTV */
+    .sidebar-list-item[data-type="cctv"]:hover .list-item-expand-icon {
+        background-color: rgba(59, 130, 246, 0.1);
+        color: #3b82f6;
     }
     
-    /* CCTV detail + status styles (dari inicctvdetail) */
+    .sidebar-list-item[data-type="cctv"].expanded .list-item-expand-icon {
+        transform: rotate(180deg);
+        background-color: rgba(59, 130, 246, 0.15);
+        color: #3b82f6;
+    }
+    
     .cctv-hazard-status-icon {
         margin-left: 8px;
         margin-right: 8px;
@@ -806,11 +706,6 @@
         animation: pulse-red 2s ease-in-out infinite;
     }
     
-    .cctv-hazard-status-icon.loading {
-        background-color: rgba(156, 163, 175, 0.15);
-        color: #9ca3af;
-    }
-    
     @keyframes pulse-red {
         0%, 100% {
             opacity: 1;
@@ -820,6 +715,11 @@
             opacity: 0.8;
             box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
         }
+    }
+    
+    .cctv-hazard-status-icon.loading {
+        background-color: rgba(156, 163, 175, 0.15);
+        color: #9ca3af;
     }
     
     .cctv-hazard-status-badge {
@@ -1033,11 +933,38 @@
     
     .cctv-pja-info {
         font-size: 11px;
-        color: #6b7280;
-        line-height: 1.5;
+        color: #065f46;
         margin-left: 20px;
+        line-height: 1.6;
     }
-
+    
+    .cctv-no-data {
+        padding: 16px;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 12px;
+        font-style: italic;
+        background: #f9fafb;
+        border-radius: 6px;
+        border: 1px dashed #d1d5db;
+    }
+    
+    .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+        color: #9ca3af;
+    }
+    
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+    }
+    
+    .empty-state p {
+        font-size: 14px;
+        margin: 0;
+    }
     
     /* Collapsed state styles */
     .map-sidebar.collapsed {
@@ -1233,27 +1160,760 @@
         color: #000;
     }
     
-    /* Map container - menggunakan class dari template */
+    /* Full-screen map container */
+    .map-fullscreen-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        z-index: 999;
+        background-color: #f9fafb;
+        overflow: hidden;
+    }
+    
+    /* Map container - full screen */
     #hazardMap {
         width: 100%;
-        height: 600px;
-        border-radius: 12px;
+        height: 100%;
+        border-radius: 0;
         overflow: hidden;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        border: 1px solid #e5e7eb;
+        box-shadow: none;
+        border: none;
         background-color: #f9fafb;
     }
     
-    /* Map container responsive */
+    /* Map controls overlay panel - Enhanced Modern Design */
+    :root {
+        --panel-radius: 20px;
+        --chip-radius: 999px;
+        --primary-color: #0d6efd;
+        --primary-hover: #0b5ed7;
+        --success-color: #198754;
+        --danger-color: #dc3545;
+        --warning-color: #ffc107;
+        --info-color: #0dcaf0;
+    }
+    
+    .map-controls-overlay {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        z-index: 1001;
+    }
+    
+    /* Top bar - Enhanced */
+    .topbar {
+        position: fixed;
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        z-index: 30;
+        display: flex;
+        gap: 16px;
+        align-items: center;
+        animation: slideDown 0.4s ease-out;
+    }
+    
+    @keyframes slideDown {
+        from {
+            opacity: 0;
+            transform: translateY(-20px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .search-wrap {
+        flex: 1 1 auto;
+        max-width: 760px;
+        border-radius: var(--panel-radius);
+        box-shadow: 0 8px 32px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.08);
+        background: linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.95) 100%);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        padding: 14px 16px;
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        border: 1px solid rgba(255,255,255,.8);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .search-wrap:hover {
+        box-shadow: 0 12px 40px rgba(0,0,0,.15), 0 4px 12px rgba(0,0,0,.1);
+        transform: translateY(-2px);
+    }
+    
+    .icon-btn {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        background: linear-gradient(135deg, rgba(13,110,253,.1) 0%, rgba(13,110,253,.05) 100%);
+        color: var(--primary-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .icon-btn::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(13,110,253,.2) 0%, rgba(13,110,253,.1) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .icon-btn:hover {
+        background: linear-gradient(135deg, rgba(13,110,253,.15) 0%, rgba(13,110,253,.1) 100%);
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(13,110,253,.2);
+    }
+    
+    .icon-btn:hover::before {
+        opacity: 1;
+    }
+    
+    .icon-btn:active {
+        transform: scale(0.98);
+    }
+    
+    .search-input {
+        height: 48px;
+        border-radius: 14px;
+        border: 2px solid transparent;
+        background: linear-gradient(135deg, #f0f7ff 0%, #e8f4ff 100%);
+        padding-left: 18px;
+        padding-right: 18px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        flex: 1;
+    }
+    
+    .search-input:focus {
+        box-shadow: 0 0 0 4px rgba(13,110,253,.1);
+        outline: none;
+        border-color: rgba(13,110,253,.3);
+        background: #ffffff;
+    }
+    
+    .search-input::placeholder {
+        color: #94a3b8;
+        font-weight: 400;
+    }
+    
+    .send-btn {
+        width: 56px;
+        height: 48px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+        border: 0;
+        color: white;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        box-shadow: 0 4px 12px rgba(13,110,253,.3);
+    }
+    
+    .send-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(13,110,253,.4);
+        background: linear-gradient(135deg, var(--primary-hover) 0%, var(--primary-color) 100%);
+    }
+    
+    .send-btn:active {
+        transform: translateY(0);
+    }
+    
+    .chip {
+        border-radius: var(--chip-radius);
+        padding: 12px 20px;
+        background: linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.95) 100%);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        box-shadow: 0 8px 24px rgba(0,0,0,.12), 0 2px 8px rgba(0,0,0,.08);
+        border: 1px solid rgba(255,255,255,.8);
+        white-space: nowrap;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 600;
+        font-size: 14px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: #1e293b;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .chip::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(13,110,253,.1) 0%, rgba(13,110,253,.05) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+    }
+    
+    .chip:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 32px rgba(0,0,0,.16), 0 4px 12px rgba(0,0,0,.1);
+        border-color: rgba(13,110,253,.3);
+    }
+    
+    .chip:hover::before {
+        opacity: 1;
+    }
+    
+    .chip:active {
+        transform: translateY(-1px);
+    }
+    
+    .chip i {
+        transition: transform 0.3s ease;
+    }
+    
+    .chip:hover i {
+        transform: scale(1.1);
+    }
+    
+    /* Dropdown positioning for chips - Enhanced */
+    .topbar .position-relative .dropdown-menu {
+        margin-top: 10px;
+        border-radius: 16px;
+        box-shadow: 0 12px 40px rgba(0,0,0,.15), 0 4px 12px rgba(0,0,0,.1);
+        border: 1px solid rgba(255,255,255,.8);
+        padding: 8px 0;
+        background: rgba(255,255,255,.98);
+        backdrop-filter: blur(20px);
+        animation: fadeInDown 0.3s ease;
+    }
+    
+    @keyframes fadeInDown {
+        from {
+            opacity: 0;
+            transform: translateY(-10px);
+        }
+        to {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    }
+    
+    .topbar .dropdown-item {
+        padding: 12px 20px;
+        transition: all 0.2s ease;
+        border-radius: 0;
+        font-weight: 500;
+        color: #1e293b;
+    }
+    
+    .topbar .dropdown-item:hover {
+        background: linear-gradient(135deg, rgba(13,110,253,.1) 0%, rgba(13,110,253,.05) 100%);
+        color: var(--primary-color);
+        padding-left: 24px;
+        transform: translateX(4px);
+    }
+    
+    .topbar .dropdown-item:active {
+        background: linear-gradient(135deg, rgba(13,110,253,.15) 0%, rgba(13,110,253,.1) 100%);
+    }
+    
+    /* Smooth scrollbar for dropdown */
+    .topbar .dropdown-menu::-webkit-scrollbar {
+        width: 8px;
+    }
+    
+    .topbar .dropdown-menu::-webkit-scrollbar-track {
+        background: rgba(0,0,0,.05);
+        border-radius: 10px;
+    }
+    
+    .topbar .dropdown-menu::-webkit-scrollbar-thumb {
+        background: rgba(13,110,253,.3);
+        border-radius: 10px;
+    }
+    
+    .topbar .dropdown-menu::-webkit-scrollbar-thumb:hover {
+        background: rgba(13,110,253,.5);
+    }
+    
+    /* Drawer panel - Enhanced */
+    .drawer {
+        position: fixed;
+        top: 88px;
+        left: 20px;
+        width: min(760px, calc(100vw - 40px));
+        border-radius: var(--panel-radius);
+        background: linear-gradient(135deg, rgba(255,255,255,.98) 0%, rgba(255,255,255,.95) 100%);
+        backdrop-filter: blur(20px) saturate(180%);
+        -webkit-backdrop-filter: blur(20px) saturate(180%);
+        box-shadow: 0 20px 60px rgba(0,0,0,.25), 0 8px 24px rgba(0,0,0,.15);
+        border: 1px solid rgba(255,255,255,.8);
+        z-index: 40;
+        overflow: hidden;
+        transform: translateX(-20px) scale(0.98);
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .drawer.open {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+    }
+    
+    .drawer-head {
+        padding: 18px 20px;
+        border-bottom: 2px solid rgba(13,110,253,.15);
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: linear-gradient(135deg, rgba(13,110,253,.05) 0%, rgba(13,110,253,.02) 100%);
+    }
+    
+    .close-x {
+        width: 48px;
+        height: 48px;
+        border-radius: 14px;
+        display: grid;
+        place-items: center;
+        border: 0;
+        background: linear-gradient(135deg, rgba(220,53,69,.1) 0%, rgba(220,53,69,.05) 100%);
+        color: var(--danger-color);
+        font-size: 28px;
+        line-height: 1;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-weight: 300;
+    }
+    
+    .close-x:hover {
+        background: linear-gradient(135deg, rgba(220,53,69,.15) 0%, rgba(220,53,69,.1) 100%);
+        transform: scale(1.1) rotate(90deg);
+        box-shadow: 0 4px 12px rgba(220,53,69,.2);
+    }
+    
+    .close-x:active {
+        transform: scale(1.05) rotate(90deg);
+    }
+    
+    .drawer-body {
+        padding: 28px 28px 32px;
+        background: linear-gradient(180deg, rgba(255,255,255,.5) 0%, rgba(248,250,252,.5) 100%);
+    }
+    
+    .menu-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 24px 20px;
+    }
+    
+    .menu-item {
+        text-decoration: none;
+        color: #1e293b;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 12px;
+        padding: 16px 12px;
+        border-radius: 18px;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        overflow: hidden;
+        background: transparent;
+        border: 0;
+        cursor: pointer;
+    }
+    
+    .menu-item::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(135deg, rgba(13,110,253,.08) 0%, rgba(13,110,253,.03) 100%);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        border-radius: 18px;
+    }
+    
+    .menu-item:hover {
+        transform: translateY(-4px);
+        background: rgba(255,255,255,.6);
+    }
+    
+    .menu-item:hover::before {
+        opacity: 1;
+    }
+    
+    .menu-item:active {
+        transform: translateY(-2px);
+    }
+    
+    .menu-icon {
+        width: 72px;
+        height: 72px;
+        border-radius: 20px;
+        display: grid;
+        place-items: center;
+        background: linear-gradient(135deg, rgba(13,110,253,.1) 0%, rgba(13,110,253,.05) 100%);
+        border: 2px solid rgba(13,110,253,.15);
+        font-size: 32px;
+        color: var(--primary-color);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        position: relative;
+        z-index: 1;
+        box-shadow: 0 4px 12px rgba(13,110,253,.1);
+    }
+    
+    .menu-item:hover .menu-icon {
+        transform: scale(1.1) rotate(5deg);
+        box-shadow: 0 8px 20px rgba(13,110,253,.2);
+    }
+    
+    .menu-label {
+        font-weight: 700;
+        font-size: 14px;
+        text-align: center;
+        color: #1e293b;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+        letter-spacing: 0.3px;
+    }
+    
+    /* Layer toggle buttons in drawer - Enhanced */
+    .drawer .layer-toggle-btn {
+        width: 100%;
+        padding: 0;
+        border: 0;
+        background: transparent;
+        cursor: pointer;
+    }
+    
+    .drawer .layer-toggle-btn .menu-icon {
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .drawer .layer-toggle-btn.active .menu-icon {
+        background: linear-gradient(135deg, rgba(13,110,253,.2) 0%, rgba(13,110,253,.15) 100%);
+        border-color: var(--primary-color);
+        color: var(--primary-color);
+        box-shadow: 0 6px 20px rgba(13,110,253,.25);
+        transform: scale(1.05);
+    }
+    
+    .drawer .layer-toggle-btn.active .menu-label {
+        color: var(--primary-color);
+        font-weight: 800;
+    }
+    
+    .drawer .layer-toggle-btn.active::after {
+        content: '✓';
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 26px;
+        height: 26px;
+        background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-hover) 100%);
+        color: white;
+        border-radius: 50%;
+        display: grid;
+        place-items: center;
+        font-size: 14px;
+        font-weight: bold;
+        box-shadow: 0 3px 10px rgba(13,110,253,.4);
+        z-index: 2;
+        animation: checkmarkPop 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+    }
+    
+    @keyframes checkmarkPop {
+        0% {
+            transform: scale(0);
+            opacity: 0;
+        }
+        50% {
+            transform: scale(1.2);
+        }
+        100% {
+            transform: scale(1);
+            opacity: 1;
+        }
+    }
+    
+    /* Pulse animation for active menu items */
+    .drawer .layer-toggle-btn.active .menu-icon::before {
+        content: '';
+        position: absolute;
+        inset: -4px;
+        border-radius: 24px;
+        background: rgba(13,110,253,.2);
+        animation: pulse 2s ease-in-out infinite;
+        z-index: -1;
+    }
+    
+    @keyframes pulse {
+        0%, 100% {
+            opacity: 0.5;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 0.8;
+            transform: scale(1.05);
+        }
+    }
+    
+    .drawer .layer-toggle-btn:hover .menu-icon {
+        background: linear-gradient(135deg, rgba(13,110,253,.15) 0%, rgba(13,110,253,.1) 100%);
+        transform: scale(1.15) rotate(5deg);
+        box-shadow: 0 8px 24px rgba(13,110,253,.25);
+    }
+    
+    /* Backdrop - Enhanced */
+    .backdrop {
+        position: fixed;
+        inset: 0;
+        z-index: 35;
+        background: linear-gradient(135deg, rgba(0,0,0,.1) 0%, rgba(0,0,0,.05) 100%);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    .backdrop.open {
+        opacity: 1;
+        pointer-events: auto;
+    }
+    
+    /* Ensure dropdowns appear above map */
+    .map-controls-overlay .dropdown-menu {
+        z-index: 1002;
+    }
+    
+    /* Loading state for buttons */
+    .icon-btn:disabled,
+    .send-btn:disabled,
+    .chip:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        pointer-events: none;
+    }
+    
+    /* Focus visible for accessibility */
+    .icon-btn:focus-visible,
+    .chip:focus-visible,
+    .menu-item:focus-visible,
+    .close-x:focus-visible {
+        outline: 3px solid rgba(13,110,253,.5);
+        outline-offset: 2px;
+    }
+    
+    /* Selection state for menu items */
+    .menu-item:focus {
+        outline: none;
+    }
+    
+    /* Enhanced shadow on hover for search wrap */
+    .search-wrap:focus-within {
+        box-shadow: 0 12px 40px rgba(13,110,253,.2), 0 4px 12px rgba(0,0,0,.1);
+        border-color: rgba(13,110,253,.3);
+    }
+    
+    /* Ripple effect on button click - using different pseudo-element */
+    .icon-btn,
+    .chip,
+    .send-btn {
+        position: relative;
+        overflow: hidden;
+    }
+    
+    /* Note: menu-item already has ::before, so we skip ripple for it */
+    .icon-btn:active,
+    .chip:active,
+    .send-btn:active {
+        transform: scale(0.98);
+    }
+    
+    /* Responsive map controls - Enhanced */
     @media (max-width: 1200px) {
-        #hazardMap {
-            height: 500px;
+        .topbar {
+            gap: 12px;
+        }
+        
+        .search-wrap {
+            max-width: 600px;
+        }
+        
+        .menu-icon {
+            width: 68px;
+            height: 68px;
+            font-size: 30px;
+        }
+    }
+    
+    @media (max-width: 900px) {
+        .menu-grid {
+            grid-template-columns: repeat(3, minmax(0, 1fr));
+            gap: 20px 16px;
+        }
+        
+        .menu-icon {
+            width: 64px;
+            height: 64px;
+            font-size: 28px;
+        }
+        
+        .drawer-body {
+            padding: 24px 20px 28px;
         }
     }
     
     @media (max-width: 768px) {
-        #hazardMap {
-            height: 400px;
+        .topbar {
+            top: 16px;
+            left: 16px;
+            right: 16px;
+            gap: 10px;
+        }
+        
+        .drawer {
+            top: 80px;
+            left: 16px;
+            width: calc(100vw - 32px);
+            border-radius: 16px;
+        }
+        
+        .menu-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 18px 14px;
+        }
+        
+        .search-wrap {
+            max-width: 100%;
+            padding: 12px 14px;
+        }
+        
+        .icon-btn {
+            width: 44px;
+            height: 44px;
+        }
+        
+        .search-input {
+            height: 44px;
+            font-size: 14px;
+        }
+        
+        .send-btn {
+            width: 52px;
+            height: 44px;
+        }
+        
+        .chip {
+            padding: 10px 16px;
+            font-size: 13px;
+        }
+        
+        .chip i {
+            font-size: 18px;
+        }
+        
+        .drawer-head {
+            padding: 14px 16px;
+        }
+        
+        .drawer-body {
+            padding: 20px 16px 24px;
+        }
+        
+        .menu-icon {
+            width: 60px;
+            height: 60px;
+            font-size: 26px;
+        }
+        
+        .menu-label {
+            font-size: 13px;
+        }
+    }
+    
+    @media (max-width: 520px) {
+        .topbar {
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+        
+        .search-wrap {
+            order: 1;
+            width: 100%;
+            margin-bottom: 8px;
+        }
+        
+        .chip {
+            font-size: 12px;
+            padding: 8px 14px;
+            flex: 1 1 auto;
+            min-width: 0;
+        }
+        
+        .chip span {
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        
+        .chip i {
+            font-size: 16px;
+        }
+        
+        .drawer {
+            top: 100px;
+            left: 12px;
+            width: calc(100vw - 24px);
+        }
+        
+        .menu-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 16px 12px;
+        }
+        
+        .menu-icon {
+            width: 56px;
+            height: 56px;
+            font-size: 24px;
+        }
+        
+        .menu-label {
+            font-size: 12px;
+        }
+        
+        .drawer-body {
+            padding: 18px 14px 20px;
+        }
+    }
+    
+    @media (max-width: 400px) {
+        .menu-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px 10px;
+        }
+        
+        .menu-icon {
+            width: 52px;
+            height: 52px;
+            font-size: 22px;
+        }
+        
+        .menu-label {
+            font-size: 11px;
         }
     }
     
@@ -1678,19 +2338,167 @@
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@8.2.0/ol.css">
 <link rel="stylesheet" href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}">
+<!-- TourGuide JS CSS -->
+<link rel="stylesheet" href="https://unpkg.com/@sjmc11/tourguidejs/dist/css/tour.min.css">
+<style>
+    /* Custom TourGuide Dialog Styles */
+    [data-tg-dialog] {
+        max-width: 380px !important;
+        width: 100% !important;
+        box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3) !important;
+        border-radius: 12px !important;
+        overflow: hidden !important;
+    }
+    
+    [data-tg-dialog-body] {
+        padding: 20px !important;
+        max-height: 400px;
+        overflow-y: auto;
+    }
+    
+    [data-tg-dialog-footer] {
+        padding: 12px 20px !important;
+        border-top: 1px solid #e5e7eb !important;
+        background-color: #f9fafb !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    
+    [data-tg-step-dots] {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-bottom: 8px !important;
+        padding: 8px 0 !important;
+        flex-wrap: wrap !important;
+    }
+    
+    [data-tg-step-dot] {
+        width: 8px !important;
+        height: 8px !important;
+        border-radius: 50% !important;
+        background-color: #d1d5db !important;
+        border: none !important;
+        padding: 0 !important;
+        cursor: pointer !important;
+        transition: all 0.2s ease !important;
+        margin: 0 2px !important;
+    }
+    
+    [data-tg-step-dot][data-tg-active="true"] {
+        background-color: #3b82f6 !important;
+        width: 24px !important;
+        border-radius: 4px !important;
+    }
+    
+    [data-tg-dialog-footer] [data-tg-buttons] {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+    
+    [data-tg-button] {
+        flex: 1 !important;
+        padding: 10px 16px !important;
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        border: 1px solid #e5e7eb !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+        background-color: white !important;
+        color: #374151 !important;
+    }
+    
+    [data-tg-button][data-tg-button-primary] {
+        background-color: #3b82f6 !important;
+        color: white !important;
+        border-color: #3b82f6 !important;
+    }
+    
+    [data-tg-button][data-tg-button-primary]:hover {
+        background-color: #2563eb !important;
+        border-color: #2563eb !important;
+    }
+    
+    [data-tg-button]:not([data-tg-button-primary]):hover {
+        background-color: #f9fafb !important;
+    }
+    
+    [data-tg-step-progress] {
+        font-size: 12px !important;
+        color: #6b7280 !important;
+        margin-bottom: 8px !important;
+        text-align: center !important;
+        width: 100% !important;
+    }
+    
+    /* Alternative selectors for TourGuide JS */
+    .tg-dialog,
+    [class*="tg-dialog"] {
+        max-width: 380px !important;
+        width: 100% !important;
+    }
+    
+    .tg-dialog-footer,
+    [class*="tg-dialog-footer"] {
+        padding: 12px 20px !important;
+        border-top: 1px solid #e5e7eb !important;
+        background-color: #f9fafb !important;
+        display: flex !important;
+        flex-direction: column !important;
+        gap: 10px !important;
+    }
+    
+    .tg-step-dots,
+    [class*="tg-step-dots"] {
+        display: flex !important;
+        justify-content: center !important;
+        align-items: center !important;
+        gap: 8px !important;
+        margin-bottom: 8px !important;
+        padding: 8px 0 !important;
+        flex-wrap: wrap !important;
+    }
+    
+    .tg-buttons,
+    [class*="tg-buttons"] {
+        display: flex !important;
+        justify-content: space-between !important;
+        align-items: center !important;
+        gap: 10px !important;
+        width: 100% !important;
+    }
+    
+    .tg-button,
+    [class*="tg-button"] {
+        flex: 1 !important;
+        padding: 10px 16px !important;
+        border-radius: 8px !important;
+        font-weight: 500 !important;
+        font-size: 14px !important;
+        border: 1px solid #e5e7eb !important;
+        transition: all 0.2s ease !important;
+        cursor: pointer !important;
+    }
+</style>
 @endsection
 
 @section('content')
-<div class="hazard-detection-header">
-    <h1 class="hazard-detection-title">Dashboard Overview </h1>
+<div class="hazard-detection-header mt-5" >
+    <h1 class="hazard-detection-title">Hazard in Motion </h1>
     <p class="hazard-detection-subtitle">Real-time detection and monitoring of safety hazards in operational areas</p>
     
     <!-- Collapse Header Button -->
-    <div class="mb-3">
+    <div class="mb-3" data-tg-tour="<strong>Dashboard Statistics & Coverage</strong><br><br>Klik untuk membuka/menutup panel statistik dashboard. Panel ini menampilkan ringkasan data CCTV, coverage area, dan statistik area kritis.">
         <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardStatsCollapse" aria-expanded="true" aria-controls="dashboardStatsCollapse">
             <span class="fw-bold d-flex align-items-center">
                 <i class="material-icons-outlined me-2">dashboard</i>
-                 Dashboard Readiness
+                Dashboard Statistics & Coverage
             </span>
             <i class="material-icons-outlined collapse-icon">expand_less</i>
         </button>
@@ -1698,583 +2506,26 @@
 
     <!-- Collapsible Content -->
     <div class="collapse show" id="dashboardStatsCollapse">
-        <div class="row">
-            <div class="col-12 d-flex">
-                <div class="card rounded-4 w-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                    <h5 class="mb-0 fw-bold">Total Kesiapan Utilitas</h5>
-                    <span class="badge bg-primary" id="coverageBadge">0% Coverage</span>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
-                        
-                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 kesiapan-tab-btn active" data-tab-target="kesiapan-alat" title="Lihat detail Total CCTV">
-                        <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="material-icons-outlined">view_list</i>
-                        </span>
-                        <h3 class="mb-0" id="totalCctvCountDynamic">92.2%</h3>
-                        <p class="mb-0">Kesiapan Alat</p>
-                        <small class="text-muted" id="totalCctvLabel">Pengawasan Berjarak</small>
-                    </button>
-
-                    <div class="vr"></div>
-                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 kesiapan-tab-btn" data-tab-target="kesiapan-orang" title="Lihat detail Control Room">
-                        <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="material-icons-outlined">museum</i>
-                        </span>
-                        <h3 class="mb-0" id="totalControlRoomCount">90%</h3>
-                        <p class="mb-0">Kesiapan Orang</p>
-                       <small class="text-muted" id="">Pengawasan Berjarak</small>
-                    </button>
-
-                    
-                    <div class="vr"></div>
-                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 kesiapan-tab-btn" data-tab-target="area-kerja" title="Lihat detail Coverage">
-                        <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="material-icons-outlined">percent</i>
-                        </span>
-                        <h3 class="mb-0" id="coveragePercentage">0%</h3>
-                        <p class="mb-0">Area Kerja</p>
-                        <small class="text-muted" id="">Pengawasan Berjarak</small>
-                    </button>
-                    </div>
-                </div>
-                </div>
-            </div>
-        </div>
-        
-
-         
-
-        {{-- Detail Total CCTV Section --}}
-        <div class="row mt-4" id="kesiapan-tab-content-wrapper" style="display: block !important;">
-          <div class="col-12">
-            {{-- Tab Content --}}
-            <div class="tab-content" id="kesiapanTabContent" style="display: block !important;">
-              {{-- Tab Pane: Kesiapan Alat --}}
-              <div class="tab-pane fade show active" id="kesiapan-alat" role="tabpanel" aria-labelledby="kesiapan-alat-tab" style="display: block; opacity: 1;">
-                <div class="card mb-4">
-                  <div class="card-header border-bottom">
-                    <div class="">
-                      <h5 class="mb-0 fw-bold">Detail Kesiapan Alat</h5>
-                      <p class="mb-0 text-muted small">Detail Kesiapan CCTV dan COntrol Room</p>
-                    </div>
-                  </div>
-                  <div class="card-body p-4">
-        
-
-        {{-- KPI Summary Cards --}}
-        <div class="row mb-4">
+    <div class="row">
           <div class="col-12 d-flex">
             <div class="card rounded-4 w-100">
               <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3" data-tg-tour="<strong>Luasan Coverage CCTV</strong><br><br>Menampilkan statistik coverage CCTV meliputi:<br>• Total CCTV: Jumlah unit kamera CCTV<br>• Luasan Area Kerja: Total area yang dikerjakan<br>• Luasan CCTV: Total area yang tercover CCTV<br>• Coverage: Persentase coverage CCTV terhadap area kerja">
+                  <h5 class="mb-0 fw-bold">Luasan Coverage CCTV</h5>
+                  <span class="badge bg-primary" id="coverageBadge">0% Coverage</span>
+                </div>
                 <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total CCTV Terpasang">
-                    <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="material-icons-outlined">videocam</span>
-                    </span>
-                    <h3 class="mb-0" id="modalTotalCctv">0</h3>
-                    <p class="mb-0">Total CCTV Terpasang</p>
-                  </button>
-                  <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="CCTV Aktif Live View & Connected">
+                     
+                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#totalCctvModal" title="Lihat detail Total CCTV" data-tg-tour="<strong>Total CCTV</strong><br><br>Klik untuk melihat detail total jumlah kamera CCTV yang terpasang di semua area kerja.">
                     <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="material-icons-outlined">check_circle</span>
+                      <i class="material-icons-outlined">view_list</i>
                     </span>
-                    <h3 class="mb-0" id="modalCctvAktif">0</h3>
-                    <p class="mb-0">CCTV Aktif</p>
-                    <small class="text-muted">Live View & Connected</small>
+                    <h3 class="mb-0" id="totalCctvCountDynamic">{{ number_format($totalCctvCount ?? 0) }}</h3>
+                    <p class="mb-0">Total CCTV</p>
+                    <small class="text-muted" id="totalCctvLabel">unit</small>
                   </button>
                   <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Kondisi Baik">
-                    <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="material-icons-outlined">verified</span>
-                    </span>
-                    <h3 class="mb-0" id="modalCctvKondisiBaik">0</h3>
-                    <p class="mb-0">Kondisi Baik</p>
-                  </button>
-                  <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Dengan Auto Alert">
-                    <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="material-icons-outlined">notifications_active</span>
-                    </span>
-                    <h3 class="mb-0" id="modalCctvAutoAlert">0</h3>
-                    <p class="mb-0">Dengan Auto Alert</p>
-                  </button>
-                  <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Kondisi CCTV Tidak Baik">
-                    <span class="mb-2 wh-48 bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="material-icons-outlined">error</span>
-                    </span>
-                    <h3 class="mb-0" id="modalCctvKondisiTidakBaik">0</h3>
-                    <p class="mb-0">Kondisi CCTV Tidak Baik</p>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- Control Room Overview Section --}}
-        <div class="card mb-4">
-          <div class="card-body">
-            <div class="d-flex align-items-start justify-content-between mb-3">
-              <div class="">
-                <h5 class="mb-0 fw-bold">Overview Control Room</h5>
-                <small class="text-muted">Statistik CCTV berdasarkan control room</small>
-              </div>
-            </div>
-            <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-3 mb-3">
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-primary bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-primary">meeting_room</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalJumlahControlRoom">0</h5>
-                          <p class="mb-0">Jumlah Control Room</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-success bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-success">check_circle</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalTotalSudahP2h">0</h5>
-                          <p class="mb-0">Sudah P2H</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-danger bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-danger">cancel</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalTotalBelumP2h">0</h5>
-                          <p class="mb-0">Belum P2H</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {{-- Detail Control Room --}}
-            <div class="card shadow-none border rounded-3 mb-0">
-              <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between mb-3">
-                  <div class="">
-                    <h6 class="mb-0 fw-bold">Detail Control Room</h6>
-                    <small class="text-muted">Daftar control room beserta CCTV dan detailnya</small>
-                  </div>
-                  <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#detailControlRoomCollapse" aria-expanded="false" aria-controls="detailControlRoomCollapse">
-                    <span class="material-icons-outlined collapse-icon" style="font-size: 18px;">expand_more</span>
-                  </button>
-                </div>
-                <div class="collapse" id="detailControlRoomCollapse">
-                  <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                    <table class="table table-hover align-middle mb-0">
-                      <thead class="table-light sticky-top">
-                        <tr>
-                          <th style="width: 5%;">No</th>
-                          <th style="width: 18%;">Control Room</th>
-                          <th style="width: 10%;" class="text-end">Jumlah CCTV</th>
-                          <th style="width: 10%;" class="text-end">CCTV Aktif</th>
-                          <th style="width: 10%;" class="text-end">CCTV Rusak</th>
-                          <th style="width: 15%;" class="text-center">Status P2H</th>
-                          <th style="width: 12%;" class="text-center">Intervensi</th>
-                          <th style="width: 20%;" class="text-center">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody id="detailControlRoomTableBody">
-                        <tr>
-                          <td colspan="8" class="text-center text-muted py-4">
-                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                            Memuat data...
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- Modal Intervensi Control Room --}}
-        <div class="modal fade" id="intervensiModal" tabindex="-1" aria-labelledby="intervensiModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold" id="intervensiModalLabel">
-                  <span class="material-icons-outlined me-2">send</span>
-                  Form Intervensi Control Room
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <form id="intervensiForm">
-                  <input type="hidden" id="intervensiControlRoom" name="control_room" value="">
-                  
-                  <div class="mb-3">
-                    <label for="intervensiControlRoomDisplay" class="form-label fw-semibold">Control Room</label>
-                    <input type="text" class="form-control" id="intervensiControlRoomDisplay" readonly>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label for="intervensiPIC" class="form-label fw-semibold">PIC (Pengawas) <span class="text-danger">*</span></label>
-                    <select class="form-select" id="intervensiPIC" name="pic" required>
-                      <option value="">Pilih PIC...</option>
-                    </select>
-                    <div class="form-text">Pilih PIC (Pengawas) dari daftar pengguna</div>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label for="intervensiIssue" class="form-label fw-semibold">Issue <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="intervensiIssue" name="issue" rows="5" placeholder="Masukkan issue atau masalah yang ditemukan..." required></textarea>
-                    <div class="form-text">Jelaskan issue atau masalah yang memerlukan intervensi</div>
-                  </div>
-                </form>
-              </div>
-              <div class="modal-footer border-top">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary" id="submitIntervensiBtn">
-                  <span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>
-                  Kirim Intervensi
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- Area Kritis Overview Section --}}
-        {{-- <div class="card mb-4">
-          <div class="card-body">
-            <div class="d-flex align-items-start justify-content-between mb-3">
-              <div class="">
-                <h5 class="mb-0 fw-bold">Overview Area Kritis</h5>
-                <small class="text-muted">Statistik area kritis berdasarkan kategori_area_tercapture</small>
-              </div>
-            </div>
-            <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-3 mb-3">
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-danger bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-danger">warning</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalJumlahAreaKritis">0</h5>
-                          <p class="mb-0">Jumlah Area Kritis</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-danger bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-danger">videocam</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalCctvAreaKritis">0</h5>
-                          <p class="mb-0">CCTV Area Kritis</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-success bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-success">check_circle</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalCctvAreaNonKritis">0</h5>
-                          <p class="mb-0">CCTV Area Non Kritis</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="card shadow-none border rounded-3 mb-0">
-              <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between mb-3">
-                  <div class="">
-                    <h6 class="mb-0 fw-bold">Detail Coverage Lokasi</h6>
-                    <small class="text-muted">Daftar lokasi coverage beserta jumlah CCTV dan status kritis/non kritis</small>
-                  </div>
-                  <div class="dropdown">
-                    <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle" data-bs-toggle="dropdown">
-                      <span class="material-icons-outlined fs-5">more_vert</span>
-                    </a>
-                    <ul class="dropdown-menu">
-                      <li><a class="dropdown-item" href="javascript:;">Export</a></li>
-                    </ul>
-                  </div>
-                </div>
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                  <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light sticky-top">
-                      <tr>
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 50%;">Coverage Lokasi</th>
-                        <th style="width: 20%;" class="text-end">Jumlah CCTV</th>
-                        <th style="width: 25%;" class="text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody id="detailCoverageLokasiTableBody">
-                      <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
-                          <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                          Memuat data...
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> --}}
-
-
-
-      
-
-        {{-- Data Table Section --}}
-        {{-- <div class="card mb-0">
-          <div class="card-body">
-            <div class="d-flex align-items-start justify-content-between mb-3">
-              <div class="">
-                <h5 class="mb-0 fw-bold">Data CCTV</h5>
-                <small class="text-muted" id="companyCctvCompanyLabel">Data berdasarkan filter yang dipilih</small>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2" id="companyCctvCount">0 CCTV</span>
-              </div>
-            </div>
-            <div class="table-responsive" style="max-height: 500px; overflow-x: auto; overflow-y: auto;">
-              <table class="table table-hover align-middle mb-0" id="companyCctvTable" style="width: 100%; min-width: 1200px;">
-                <thead class="table-light sticky-top">
-                  <tr>
-                    <th style="min-width: 50px;">No</th>
-                    <th style="min-width: 100px;">Site</th>
-                    <th style="min-width: 150px;">Perusahaan</th>
-                    <th style="min-width: 120px;">No CCTV</th>
-                    <th style="min-width: 150px;">Nama</th>
-                    <th style="min-width: 100px;">Status</th>
-                    <th style="min-width: 100px;">Kondisi</th>
-                    <th style="min-width: 150px;">Coverage Lokasi</th>
-                    <th style="min-width: 150px;">Detail Lokasi</th>
-                    <th style="min-width: 150px;">Kategori Area</th>
-                    <th style="min-width: 150px;">Lokasi Pemasangan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colspan="11" class="text-center text-muted py-4">
-                      <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                      Memuat data...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div> --}}
-                  </div>
-                </div>
-              </div>
-              {{-- End Tab Pane: Kesiapan Alat --}}
-
-              {{-- Tab Pane: Kesiapan Orang --}}
-              <div class="tab-pane fade" id="kesiapan-orang" role="tabpanel" aria-labelledby="kesiapan-orang-tab" style="display: none;">
-                <div class="card mb-4">
-                  <div class="card-header border-bottom">
-                    <div class="">
-                      <h5 class="mb-0 fw-bold">Detail Kesiapan Orang</h5>
-                      <p class="mb-0 text-muted small">Detail Kesiapan Personil dan Control Room</p>
-                    </div>
-                  </div>
-                  <div class="card-body p-4">
-                    <div class="row mb-4">
-                        <div class="col-12 d-flex">
-                            <div class="card rounded-4 w-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total Karyawan PJA">
-                                        <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">people</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalKaryawanPja">0</h3>
-                                        <p class="mb-0">Total Karyawan PJA</p>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Karyawan Aktif">
-                                        <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">check_circle</span>
-                                        </span>
-                                        <h3 class="mb-0" id="karyawanAktif">0</h3>
-                                        <p class="mb-0">Karyawan Aktif</p>
-                                        <small class="text-muted">Status Aktif</small>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="PJA Aktif">
-                                        <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">verified</span>
-                                        </span>
-                                        <h3 class="mb-0" id="pjaAktif">0</h3>
-                                        <p class="mb-0">PJA Aktif</p>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total CCTV Dedicated">
-                                        <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">videocam</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalCctvDedicated">0</h3>
-                                        <p class="mb-0">Total CCTV Dedicated</p>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Persentase CCTV dengan PJA">
-                                        <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">percent</span>
-                                        </span>
-                                        <h3 class="mb-0" id="persentaseCctvDenganPja">0%</h3>
-                                        <p class="mb-0">CCTV dengan PJA</p>
-                                        <small class="text-muted" id="detailCctvDenganPja">0 dari 0 CCTV</small>
-                                    </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header border-bottom">
-                                    <h6 class="mb-0 fw-bold">Data Karyawan PJA</h6>
-                                </div>
-                                <div class="card-body p-0">
-                                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                                        <table class="table table-hover table-striped mb-0" id="tableKesiapanOrang">
-                                            <thead class="table-light sticky-top">
-                                                <tr>
-                                                    <th style="min-width: 120px;">Kode SID</th>
-                                                    <th style="min-width: 200px;">Nama PJA</th>
-                                                    <th style="min-width: 100px;">Tipe PJA</th>
-                                                    <th style="min-width: 150px;">Perusahaan</th>
-                                                    <th style="min-width: 200px;">Nama Karyawan</th>
-                                                    <th style="min-width: 100px;">Status Karyawan</th>
-                                                    <th style="min-width: 100px;">Status PJA</th>
-                                                    <th style="min-width: 120px;">PJA Layer</th>
-                                                    <th style="min-width: 150px;">CCTV Dedicated</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tbodyKesiapanOrang">
-                                                <tr>
-                                                    <td colspan="9" class="text-center text-muted py-4">
-                                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                                        Memuat data...
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-              {{-- End Tab Pane: Kesiapan Orang --}}
-
-              {{-- Tab Pane: Area Kerja --}}
-              <div class="tab-pane fade" id="area-kerja" role="tabpanel" aria-labelledby="area-kerja-tab" style="display: none;">
-                <div class="card mb-4">
-                  <div class="card-header border-bottom">
-                    <div class="">
-                      <h5 class="mb-0 fw-bold">Detail Area Kerja</h5>
-                      <p class="mb-0 text-muted small">Detail Coverage dan Area Kerja</p>
-                    </div>
-                  </div>
-                  <div class="card-body p-4">
-                    <div class="row mb-4">
-                        <div class="col-12 d-flex">
-                            <div class="card rounded-4 w-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total Boundary Area Kerja">
-                                        <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">map</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalBoundaryAreaKerja">0%</h3>
-                                        <p class="mb-0">Total Boundary Area Kerja</p>
-                                        <small class="text-muted" id="lastWeekAreaKerja">Week -</small>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total WMS Links">
-                                        <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">link</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalWmsLinks">0%</h3>
-                                        <p class="mb-0">Total WMS Links</p>
-                                        <small class="text-muted" id="lastWeekWms">Week -</small>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Area Highrisk">
-                                        <span class="mb-2 wh-48 bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">warning</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalAreaHighrisk">0%</h3>
-                                        <p class="mb-0">Area Highrisk</p>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Area Kritis">
-                                        <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">priority_high</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalAreaKritis">0%</h3>
-                                        <p class="mb-0">Area Kritis</p>
-                                    </button>
-                                    <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#totalCctvModal" title="Lihat detail Luasan Area Kerja">
+                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#totalCctvModal" title="Lihat detail Luasan Area Kerja" data-tg-tour="<strong>Luasan Area Kerja</strong><br><br>Menampilkan total luas area kerja yang dimonitor. Klik untuk melihat detail lebih lanjut.">
                     <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">square_foot</i>
                     </span>
@@ -2283,7 +2534,7 @@
                     <small class="text-muted" id="luasanAreaKerjaUnit">m²</small>
                   </button>
                   <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#cctvOnModal" title="Lihat detail Luasan CCTV">
+                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#cctvOnModal" title="Lihat detail Luasan CCTV" data-tg-tour="<strong>Luasan CCTV</strong><br><br>Menampilkan total luas area yang tercover oleh kamera CCTV. Klik untuk melihat detail lebih lanjut.">
                     <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">videocam</i>
                     </span>
@@ -2293,7 +2544,7 @@
                   </button>
                  
                   <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#criticalCctvModal" title="Lihat detail Coverage">
+                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#criticalCctvModal" title="Lihat detail Coverage" data-tg-tour="<strong>Coverage Percentage</strong><br><br>Menampilkan persentase coverage CCTV terhadap total area kerja. Semakin tinggi persentase, semakin baik monitoring area kerja.">
                     <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">percent</i>
                     </span>
@@ -2301,57 +2552,618 @@
                     <p class="mb-0">Coverage</p>
                     <small class="text-muted" id="coverageLabel">persentase</small>
                   </button>
-                                    </div>
-
-                                    
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header border-bottom">
-                                    <h6 class="mb-0 fw-bold">Data Area Kerja</h6>
-                                </div>
-                                <div class="card-body p-0">
-                                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                                        <table class="table table-hover table-striped mb-0" id="tableAreaKerja">
-                                            <thead class="table-light sticky-top">
-                                                <tr>
-                                                    <th style="min-width: 100px;">ID</th>
-                                                    <th style="min-width: 150px;">No CCTV</th>
-                                                    <th style="min-width: 200px;">Coverage Lokasi</th>
-                                                    <th style="min-width: 200px;">Coverage Detail Lokasi</th>
-                                                    <th style="min-width: 150px;">Kategori Aktivitas</th>
-                                                    <th style="min-width: 150px;">Kategori Area</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tbodyAreaKerja">
-                                                <tr>
-                                                    <td colspan="6" class="text-center text-muted py-4">
-                                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                                        Memuat data...
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                  </div>
                 </div>
               </div>
-              {{-- End Tab Pane: Area Kerja --}}
             </div>
-            {{-- End Tab Content --}}
           </div>
         </div>
-</div><!--end collapse-->
+
+    <div class="row">
+    
+          <div class="col-12 col-xl-5 col-xxl-4 d-flex">
+            <div class="card rounded-4 w-100 shadow-none bg-transparent border-0">
+               <div class="card-body p-0">
+                 <div class="row g-4">
+                    
+
+              
+                    <div class="col-12 col-xl-12">
+                        <div class="card mb-4 border-0 shadow-sm" data-tg-tour="<strong>Overview Area Kritis</strong><br><br>Menampilkan statistik area kritis berdasarkan kategori:<br>• Jumlah Area Kritis: Total area dengan potensi bahaya tinggi<br>• CCTV Area Kritis: Jumlah CCTV di area kritis<br>• CCTV Area Non Kritis: Jumlah CCTV di area non kritis<br><br>Klik setiap item untuk melihat detail lebih lanjut.">
+                            <div class="card-body p-4">
+                                <div class="mb-3">
+                                    <h5 class="fw-bold mb-1">Overview Area Kritis</h5>
+                                    <small class="text-muted">Statistik area kritis berdasarkan kategori</small>
+                                </div>
+                                
+                                <div class="accordion" id="accordionAreaKritis">
+                                    <!-- Jumlah Area Kritis -->
+                                    <div class="accordion-item mb-3">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJumlahAreaKritis">
+                                                <div class="d-flex align-items-center gap-3 w-100">
+                                                    <div class="bg-danger bg-opacity-10 p-3 rounded">
+                                                        <span class="material-icons-outlined text-danger">warning</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="mb-0 fw-bold" id="modalJumlahAreaKritis">0</h4>
+                                                        <small class="text-muted">Jumlah Area Kritis</small>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseJumlahAreaKritis" class="accordion-collapse collapse" data-bs-parent="#accordionAreaKritis">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <strong>Penjelasan:</strong> Menampilkan total jumlah area yang dikategorikan sebagai area kritis. 
+                                                    Area kritis adalah lokasi yang memiliki potensi bahaya tinggi dan memerlukan monitoring khusus 
+                                                    untuk mencegah terjadinya insiden keselamatan kerja.
+                                                </div>
+                                                <div class="row g-3 mt-2">
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total Area Kritis:</span>
+                                                            <span class="badge bg-danger fs-6" id="detailJumlahAreaKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total Area Non Kritis:</span>
+                                                            <span class="badge bg-success fs-6" id="detailJumlahAreaNonKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total Area:</span>
+                                                            <span class="badge bg-primary fs-6" id="detailTotalArea">0</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3" id="listDetailAreaKritis">
+                                                    <strong>Detail Area Kritis:</strong>
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">Memuat data...</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- CCTV Area Kritis -->
+                                    <div class="accordion-item mb-3">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCctvAreaKritis">
+                                                <div class="d-flex align-items-center gap-3 w-100">
+                                                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                                        <span class="material-icons-outlined text-warning">videocam</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="mb-0 fw-bold" id="modalCctvAreaKritis">0</h4>
+                                                        <small class="text-muted">CCTV Area Kritis</small>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseCctvAreaKritis" class="accordion-collapse collapse" data-bs-parent="#accordionAreaKritis">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <strong>Penjelasan:</strong> Menampilkan jumlah kamera CCTV yang terpasang di area kritis. 
+                                                    CCTV ini berfungsi untuk memantau aktivitas di area berbahaya secara real-time dan membantu 
+                                                    dalam deteksi dini potensi bahaya atau insiden keselamatan.
+                                                </div>
+                                                <div class="row g-3 mt-2">
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">CCTV di Area Kritis:</span>
+                                                            <span class="badge bg-warning fs-6" id="detailCctvAreaKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total CCTV:</span>
+                                                            <span class="badge bg-primary fs-6" id="detailTotalCctvAreaKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Persentase Coverage Area Kritis:</span>
+                                                            <span class="badge bg-info fs-6" id="detailPersentaseCctvAreaKritis">0%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- CCTV Area Non Kritis -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCctvAreaNonKritis">
+                                                <div class="d-flex align-items-center gap-3 w-100">
+                                                    <div class="bg-success bg-opacity-10 p-3 rounded">
+                                                        <span class="material-icons-outlined text-success">check_circle</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="mb-0 fw-bold" id="modalCctvAreaNonKritis">0</h4>
+                                                        <small class="text-muted">CCTV Area Non Kritis</small>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseCctvAreaNonKritis" class="accordion-collapse collapse" data-bs-parent="#accordionAreaKritis">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <strong>Penjelasan:</strong> Menampilkan jumlah kamera CCTV yang terpasang di area non kritis. 
+                                                    Area non kritis adalah lokasi dengan tingkat risiko rendah yang tetap dipantau untuk 
+                                                    keamanan umum dan operasional sehari-hari.
+                                                </div>
+                                                <div class="row g-3 mt-2">
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">CCTV di Area Non Kritis:</span>
+                                                            <span class="badge bg-success fs-6" id="detailCctvAreaNonKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total CCTV:</span>
+                                                            <span class="badge bg-primary fs-6" id="detailTotalCctvAreaNonKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Persentase Coverage Area Non Kritis:</span>
+                                                            <span class="badge bg-info fs-6" id="detailPersentaseCctvAreaNonKritis">0%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                   </div>
+                 
+                   <!-- <div class="col-12 col-xl-12">
+                    <div class="card mb-4 rounded-4 border-0 shadow-sm">
+                        <div class="card-body p-4">
+                            <div class="d-flex align-items-start justify-content-between mb-4">
+                                <div class="">
+                                    <h5 class="mb-1 fw-bold">Overview Area Kritis</h5>
+                                    <small class="text-muted">Statistik area kritis berdasarkan kategori_area_tercapture</small>
+                                </div>
+                            </div>
+                            <div class="accordion" id="accordionAreaKritis">
+                                <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-4">
+                                    <div class="col">
+                                        <div class="accordion-item rounded-3 h-100 bg-white" style="border: 1px solid #e5e7eb;">
+                                            <h2 class="accordion-header" id="headingJumlahAreaKritis">
+                                                <button class="accordion-button collapsed p-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJumlahAreaKritis" aria-expanded="false" aria-controls="collapseJumlahAreaKritis">
+                                                    <div class="d-flex align-items-center gap-3 w-100">
+                                                        <div class="area-icon-wrapper flex-shrink-0" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: #fef2f2; border-radius: 12px;">
+                                                            <span class="material-icons-outlined" style="font-size: 28px; color: #ef4444;">warning</span>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h3 class="mb-1 fw-bold text-dark" id="modalJumlahAreaKritis" style="font-size: 28px; line-height: 1.2;">0</h3>
+                                                            <p class="mb-0 text-muted" style="font-size: 13px;">Jumlah Area Kritis</p>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div id="collapseJumlahAreaKritis" class="accordion-collapse collapse" aria-labelledby="headingJumlahAreaKritis" data-bs-parent="#accordionAreaKritis">
+                                                <div class="accordion-body">
+                                                    <p class="mb-0" style="font-size: 13px;">
+                                                        <strong>Penjelasan:</strong> Menampilkan total jumlah area yang dikategorikan sebagai area kritis. 
+                                                        Area kritis adalah lokasi yang memiliki potensi bahaya tinggi dan memerlukan monitoring khusus 
+                                                        untuk mencegah terjadinya insiden keselamatan kerja.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="accordion-item rounded-3 h-100 bg-white" style="border: 1px solid #e5e7eb;">
+                                            <h2 class="accordion-header" id="headingCctvAreaKritis">
+                                                <button class="accordion-button collapsed p-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCctvAreaKritis" aria-expanded="false" aria-controls="collapseCctvAreaKritis">
+                                                    <div class="d-flex align-items-center gap-3 w-100">
+                                                        <div class="area-icon-wrapper flex-shrink-0" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: #fff7ed; border-radius: 12px;">
+                                                            <span class="material-icons-outlined" style="font-size: 28px; color: #f97316;">videocam</span>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h3 class="mb-1 fw-bold text-dark" id="modalCctvAreaKritis" style="font-size: 28px; line-height: 1.2;">0</h3>
+                                                            <p class="mb-0 text-muted" style="font-size: 13px;">CCTV Area Kritis</p>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div id="collapseCctvAreaKritis" class="accordion-collapse collapse" aria-labelledby="headingCctvAreaKritis" data-bs-parent="#accordionAreaKritis">
+                                                <div class="accordion-body">
+                                                    <p class="mb-0" style="font-size: 13px;">
+                                                        <strong>Penjelasan:</strong> Menampilkan jumlah kamera CCTV yang terpasang di area kritis. 
+                                                        CCTV ini berfungsi untuk memantau aktivitas di area berbahaya secara real-time dan membantu 
+                                                        dalam deteksi dini potensi bahaya atau insiden keselamatan.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col">
+                                        <div class="accordion-item rounded-3 h-100 bg-white" style="border: 1px solid #e5e7eb;">
+                                            <h2 class="accordion-header" id="headingCctvAreaNonKritis">
+                                                <button class="accordion-button collapsed p-4" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCctvAreaNonKritis" aria-expanded="false" aria-controls="collapseCctvAreaNonKritis">
+                                                    <div class="d-flex align-items-center gap-3 w-100">
+                                                        <div class="area-icon-wrapper flex-shrink-0" style="width: 56px; height: 56px; display: flex; align-items: center; justify-content: center; background: #f0fdf4; border-radius: 12px;">
+                                                            <span class="material-icons-outlined" style="font-size: 28px; color: #22c55e;">check_circle</span>
+                                                        </div>
+                                                        <div class="flex-grow-1">
+                                                            <h3 class="mb-1 fw-bold text-dark" id="modalCctvAreaNonKritis" style="font-size: 28px; line-height: 1.2;">0</h3>
+                                                            <p class="mb-0 text-muted" style="font-size: 13px;">CCTV Area Non Kritis</p>
+                                                        </div>
+                                                    </div>
+                                                </button>
+                                            </h2>
+                                            <div id="collapseCctvAreaNonKritis" class="accordion-collapse collapse" aria-labelledby="headingCctvAreaNonKritis" data-bs-parent="#accordionAreaKritis">
+                                                <div class="accordion-body">
+                                                    <p class="mb-0" style="font-size: 13px;">
+                                                        <strong>Penjelasan:</strong> Menampilkan jumlah kamera CCTV yang terpasang di area non kritis. 
+                                                        Area non kritis adalah lokasi dengan tingkat risiko rendah yang tetap dipantau untuk 
+                                                        keamanan umum dan operasional sehari-hari.
+                                                    </p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                   </div> -->
+                   {{-- <div class="col-12 col-xl-12">
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="mb-3">
+                                    <h5 class="fw-bold mb-1">Overview Area Kritis</h5>
+                                    <small class="text-muted">Statistik area kritis berdasarkan kategori</small>
+                                </div>
+                                
+                                <div class="accordion" id="accordionAreaKritis">
+                                    <!-- Jumlah Area Kritis -->
+                                    <div class="accordion-item mb-3">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJumlahAreaKritis">
+                                                <div class="d-flex align-items-center gap-3 w-100">
+                                                    <div class="bg-danger bg-opacity-10 p-3 rounded">
+                                                        <span class="material-icons-outlined text-danger">warning</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="mb-0 fw-bold" id="modalJumlahAreaKritis">0</h4>
+                                                        <small class="text-muted">Jumlah Area Kritis</small>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseJumlahAreaKritis" class="accordion-collapse collapse" data-bs-parent="#accordionAreaKritis">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <strong>Penjelasan:</strong> Menampilkan total jumlah area yang dikategorikan sebagai area kritis. 
+                                                    Area kritis adalah lokasi yang memiliki potensi bahaya tinggi dan memerlukan monitoring khusus 
+                                                    untuk mencegah terjadinya insiden keselamatan kerja.
+                                                </div>
+                                                <div class="row g-3 mt-2">
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total Area Kritis:</span>
+                                                            <span class="badge bg-danger fs-6" id="detailJumlahAreaKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total Area Non Kritis:</span>
+                                                            <span class="badge bg-success fs-6" id="detailJumlahAreaNonKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total Area:</span>
+                                                            <span class="badge bg-primary fs-6" id="detailTotalArea">0</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3" id="listDetailAreaKritis">
+                                                    <strong>Detail Area Kritis:</strong>
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">Memuat data...</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- CCTV Area Kritis -->
+                                    <div class="accordion-item mb-3">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCctvAreaKritis">
+                                                <div class="d-flex align-items-center gap-3 w-100">
+                                                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                                        <span class="material-icons-outlined text-warning">videocam</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="mb-0 fw-bold" id="modalCctvAreaKritis">0</h4>
+                                                        <small class="text-muted">CCTV Area Kritis</small>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseCctvAreaKritis" class="accordion-collapse collapse" data-bs-parent="#accordionAreaKritis">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <strong>Penjelasan:</strong> Menampilkan jumlah kamera CCTV yang terpasang di area kritis. 
+                                                    CCTV ini berfungsi untuk memantau aktivitas di area berbahaya secara real-time dan membantu 
+                                                    dalam deteksi dini potensi bahaya atau insiden keselamatan.
+                                                </div>
+                                                <div class="row g-3 mt-2">
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">CCTV di Area Kritis:</span>
+                                                            <span class="badge bg-warning fs-6" id="detailCctvAreaKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total CCTV:</span>
+                                                            <span class="badge bg-primary fs-6" id="detailTotalCctvAreaKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Persentase Coverage Area Kritis:</span>
+                                                            <span class="badge bg-info fs-6" id="detailPersentaseCctvAreaKritis">0%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- CCTV Area Non Kritis -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCctvAreaNonKritis">
+                                                <div class="d-flex align-items-center gap-3 w-100">
+                                                    <div class="bg-success bg-opacity-10 p-3 rounded">
+                                                        <span class="material-icons-outlined text-success">check_circle</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="mb-0 fw-bold" id="modalCctvAreaNonKritis">0</h4>
+                                                        <small class="text-muted">CCTV Area Non Kritis</small>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseCctvAreaNonKritis" class="accordion-collapse collapse" data-bs-parent="#accordionAreaKritis">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <strong>Penjelasan:</strong> Menampilkan jumlah kamera CCTV yang terpasang di area non kritis. 
+                                                    Area non kritis adalah lokasi dengan tingkat risiko rendah yang tetap dipantau untuk 
+                                                    keamanan umum dan operasional sehari-hari.
+                                                </div>
+                                                <div class="row g-3 mt-2">
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">CCTV di Area Non Kritis:</span>
+                                                            <span class="badge bg-success fs-6" id="detailCctvAreaNonKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total CCTV:</span>
+                                                            <span class="badge bg-primary fs-6" id="detailTotalCctvAreaNonKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Persentase Coverage Area Non Kritis:</span>
+                                                            <span class="badge bg-info fs-6" id="detailPersentaseCctvAreaNonKritis">0%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                   </div> --}}
+                   <div class="col-12  d-flex">
+                      <div class="card mb-0 rounded-4 w-100" data-tg-tour="<strong>Chart Perusahaan dengan CCTV Terbanyak</strong><br><br>Menampilkan grafik perbandingan jumlah CCTV per perusahaan. Grafik ini membantu melihat distribusi CCTV di berbagai perusahaan kontraktor.">
+                       <div class="card-body">
+                         <div class="d-flex align-items-start justify-content-between mb-3">
+                          <div class="">
+                            <h4 class="mb-0">{{ number_format($totalYtdInsiden ?? 9) }}</h4>
+                            <p class="mb-0">Perusahaan dengan CCTV Terbanyak</p>
+                          </div>
+                           <div class="dropdown">
+                             <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                               data-bs-toggle="dropdown">
+                               <span class="material-icons-outlined fs-5">more_vert</span>
+                             </a>
+                             <ul class="dropdown-menu">
+                               <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                               <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                               <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                             </ul>
+                           </div>
+                         </div>
+                         <div class="chart-container2">
+                           <div id="chart3"></div>
+                         </div>
+                         <div class="text-center">
+                          <p class="mb-0"><span class="text-success me-1">{{ $ytdInsidenChange ?? '12.5' }}%</span> from last month</p>
+                        </div>
+                       </div>
+                      </div>
+                   </div>
+
+
+                   
+
+                 </div><!--end row-->
+               </div>
+            </div>  
+          </div> 
+          <div class="col-12 col-xl-7 col-xxl-8 d-flex">
+            <div class="card w-100 rounded-4" data-tg-tour="<strong>Area Kerja & CCTV Coverage</strong><br><br>Tabel ini menampilkan detail coverage CCTV untuk setiap area kerja. Anda dapat melihat:<br>• Nama area kerja<br>• Luasan area<br>• Jumlah CCTV<br>• Persentase coverage<br><br>Di bawah tabel terdapat statistik TBC, HAZARD, INSIDEN, GR, dan kondisi CCTV.">
+               <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <div class="">
+                    <h5 class="mb-0 fw-bold">Area Kerja & CCTV Coverage</h5>
+                    <small class="text-muted">Overview area kerja yang tercover CCTV</small>
+                  </div>
+                  <button class="btn btn-sm btn-primary" id="btnShowDetail" onclick="openCoverageModal()" style="display: none;">
+                    <i class="material-icons-outlined me-1" style="font-size: 16px;">visibility</i>Detail
+                  </button>
+                 </div>
+                 <div class="table-responsive">
+                   <table class="table table-hover align-middle mb-4" id="coverageTable">
+                     <tbody id="coverageTableBody">
+                       <tr>
+                         <td colspan="5" class="text-center text-muted py-4">
+                           <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                           Memuat data...
+                         </td>
+                       </tr>
+                     </tbody>
+                   </table>
+                 </div>
+                  <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3" data-tg-tour="<strong>Statistik Utama</strong><br><br>Menampilkan statistik utama:<br>• TBC: Total valid TBC<br>• HAZARD: Jumlah hazard terdeteksi<br>• INSIDEN: Jumlah insiden<br>• GR: Golden Rule violations<br><br>Setiap card menampilkan donut chart dan persentase perubahan.">
+                     {{-- <div class="vr"></div> --}}
+                    <div class="d-flex align-items-center gap-4 cctv-stat-card" id="cctvStatCard" style="cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s;" 
+                         title="Klik untuk melihat detail TBC">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutCctv"
+                            data-peity='{ "fill": ["#6f42c1", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">TBC</p>
+                        <h2 class="mb-0" id="statCctvCount">0</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="statCctvChange">0 %</span><span id="statCctvText"> valid TBC</span></p>
+                      </div>
+                    </div>
+                     <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutHazard"
+                            data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">HAZARD</p>
+                        <h2 class="mb-0" id="statHazardCount">{{ number_format($monthlyHazards ?? 65) }}</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="statHazardChange">{{ $monthlyChange ?? '16.5' }}%</span><span id="statHazardText">{{ $monthlyCount ?? '55' }} hazards</span></p>
+                      </div>
+                    </div>
+                   
+                    
+
+                      <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutInsiden"
+                            data-peity='{ "fill": ["#fd7e14", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">INSIDEN</p>
+                        <h2 class="mb-0" id="statInsidenCount">{{ number_format($yearlyHazards ?? 9) }}</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="statInsidenChange">{{ $yearlyChange ?? '24.9' }}%</span><span id="statInsidenText">{{ $yearlyCount ?? '267' }} hazards</span></p>
+                      </div>
+                    </div>
+
+                      <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutGr"
+                            data-peity='{ "fill": ["#20c997", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">GR</p>
+                        <h2 class="mb-0" id="statGrCount">{{ number_format($validGrCount ?? 0) }}</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="statGrChange">{{ $yearlyChange ?? '24.9' }}%</span><span id="statGrText">{{ $yearlyCount ?? '267' }} hazards</span></p>
+                      </div>
+                    </div>
+
+                    
+                  </div>
+
+                 <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3" data-tg-tour="<strong>Statistik CCTV</strong><br><br>Menampilkan statistik kondisi CCTV:<br>• CCTV Live View & Connected: CCTV yang aktif dan terhubung<br>• Kondisi CCTV Baik: CCTV yang berfungsi dengan baik<br>• Kondisi CCTV Tidak Baik: CCTV yang bermasalah atau tidak berfungsi<br><br>Gunakan data ini untuk monitoring kesehatan sistem CCTV.">
+                   
+                   <div class="d-flex align-items-center gap-4 cctv-stat-card" id="cctvStatCard" style="cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s;" 
+                        title="Klik untuk melihat detail CCTV">
+                     <div class="">
+                       <p class="mb-0 data-attributes">
+                         <span id="donutCctvAktif"
+                           data-peity='{ "fill": ["#6f42c1", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                       </p>
+                     </div>
+                     <div class="">
+                       <p class="mb-1 fs-6 fw-bold">CCTV Live View & Connected</p>
+                       <h2 class="mb-0" id="statCctvAktifCount">{{ number_format($yearlyHazards ?? 0 ) }}</h2>
+                       <p class="mb-0">
+                         <span class="text-success me-2 fw-medium" id="statCctvAktifChange">0%</span>
+                         <span id="statCctvAktifText">0 CCTV</span>
+                       </p>
+                     </div>
+                   </div>
+
+                      <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutKondisiBaik"
+                            data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">Kondisi CCTV Baik</p>
+                        <h2 class="mb-0" id="statKondisiBaikCount">{{ number_format($yearlyHazards ?? 0) }}</h2>
+                        <p class="mb-0">
+                          <span class="text-success me-2 fw-medium" id="statKondisiBaikChange">0%</span>
+                          <span id="statKondisiBaikText">0 CCTV</span>
+                        </p>
+                      </div>
+                    </div>
+
+                      <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutKondisiTidakBaik"
+                            data-peity='{ "fill": ["#fd7e14", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">Kondisi CCTV Tidak Baik</p>
+                        <h2 class="mb-0" id="statKondisiTidakBaikCount">{{ number_format($yearlyHazards ?? 0) }}</h2>
+                        <p class="mb-0">
+                          <span class="text-success me-2 fw-medium" id="statKondisiTidakBaikChange">0%</span>
+                          <span id="statKondisiTidakBaikText">0 CCTV</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    
+                  </div>
+               </div>
+            </div>  
+          </div> 
+</div><!--end row-->
+    </div><!--end collapse-->
 
 
 
@@ -2385,96 +3197,6 @@
                 collapseIcon.textContent = 'expand_more';
             });
         }
-        
-        // Control Room Detail Collapse icon toggle
-        const controlRoomCollapseElement = document.getElementById('detailControlRoomCollapse');
-        const controlRoomCollapseIcon = document.querySelector('[data-bs-target="#detailControlRoomCollapse"] .collapse-icon');
-        
-        if (controlRoomCollapseElement && controlRoomCollapseIcon) {
-            // Set initial icon (collapsed by default)
-            controlRoomCollapseIcon.textContent = 'expand_more';
-            
-            controlRoomCollapseElement.addEventListener('show.bs.collapse', function() {
-                controlRoomCollapseIcon.textContent = 'expand_less';
-            });
-            
-            controlRoomCollapseElement.addEventListener('hide.bs.collapse', function() {
-                controlRoomCollapseIcon.textContent = 'expand_more';
-            });
-        }
-
-        // Kesiapan Tab Handler - Hidden Tabs System
-        (function() {
-            'use strict';
-            
-            function initKesiapanTabs() {
-                const kesiapanTabButtons = document.querySelectorAll('.kesiapan-tab-btn');
-                const kesiapanTabPanes = document.querySelectorAll('#kesiapanTabContent .tab-pane');
-                
-                if (!kesiapanTabButtons.length || !kesiapanTabPanes.length) {
-                    // Retry if elements not ready
-                    setTimeout(initKesiapanTabs, 100);
-                    return;
-                }
-                
-                // Function to switch tabs
-                function switchKesiapanTab(targetTabId) {
-                    // Hide all tab panes
-                    kesiapanTabPanes.forEach(pane => {
-                        if (pane.id === targetTabId) {
-                            pane.classList.add('show', 'active');
-                            pane.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
-                        } else {
-                            pane.classList.remove('show', 'active');
-                            pane.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
-                        }
-                    });
-                    
-                    // Update button states
-                    kesiapanTabButtons.forEach(btn => {
-                        const btnTarget = btn.getAttribute('data-tab-target');
-                        if (btnTarget === targetTabId) {
-                            btn.classList.add('active');
-                        } else {
-                            btn.classList.remove('active');
-                        }
-                    });
-                    
-                    // Load data when switching to kesiapan-orang tab
-                    if (targetTabId === 'kesiapan-orang') {
-                        loadKesiapanOrangData();
-                    }
-                    
-                    // Load data when switching to area-kerja tab
-                    if (targetTabId === 'area-kerja') {
-                        loadAreaKerjaData();
-                    }
-                }
-                
-                // Initialize: Show Kesiapan Alat by default
-                switchKesiapanTab('kesiapan-alat');
-                
-                // Add click handlers to buttons
-                kesiapanTabButtons.forEach(button => {
-                    button.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        const targetTab = this.getAttribute('data-tab-target');
-                        if (targetTab) {
-                            switchKesiapanTab(targetTab);
-                        }
-                    });
-                });
-            }
-            
-            // Initialize when DOM is ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initKesiapanTabs);
-            } else {
-                initKesiapanTabs();
-            }
-        })();
     });
 </script>
 
@@ -2484,134 +3206,202 @@
 
 
 
-<!-- Main Content -->
-<div class="row">
-    
-    <!-- Map -->
-    <div class="col-12">
-        <div class="card rounded-4 w-200">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between mb-3">
-                    <div class="">
-                        <h5 class="mb-0 fw-bold">Hazard Location Map</h5>
-                    </div>
-                    <div class="d-flex align-items-center gap-3 flex-wrap">
-                        <div class="btn-group position-static">
-                            <div class="btn-group position-static">
-                                <ul class="dropdown-menu" id="mainFilterCompanyDropdown" style="max-height: 300px; overflow-y: auto;">
-                                    <li><a class="dropdown-item filter-option" href="javascript:;" data-value="__all__">Semua Perusahaan</a></li>
-                                </ul>
-                            </div>
-                            <div class="btn-group position-static">
-                                <button type="button" class="btn btn-filter dropdown-toggle px-3" id="mainFilterSiteBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">location_on</i>
-                                    <span id="mainFilterSiteText">Semua Site</span>
-                                </button>
-                                <ul class="dropdown-menu" id="mainFilterSiteDropdown" style="max-height: 300px; overflow-y: auto;">
-                                    <li><a class="dropdown-item filter-option" href="javascript:;" data-value="__all__">Semua Site</a></li>
-                                </ul>
-                            </div>
+<!-- Full-Screen Map Container -->
+<div class="map-fullscreen-container">
+    <!-- Map Controls Overlay -->
+    <div class="map-controls-overlay">
+        <!-- Backdrop -->
+        <div id="backdrop" class="backdrop"></div>
+        
+        <!-- Top Bar -->
+        <div class="topbar">
+            <div class="search-wrap">
+                <button id="btnMenu" class="icon-btn" type="button" aria-label="Open menu" data-tg-tour="<strong>Hazard Location Map</strong><br><br>Peta interaktif untuk melihat lokasi hazard, CCTV, SAP, GR, Insiden, Unit, dan GPS Orang secara real-time. Gunakan filter dan layer toggle untuk menyesuaikan tampilan.">
+                    <i class="material-icons-outlined" style="font-size: 26px;">menu</i>
+                </button>
+                <input class="form-control search-input" placeholder="Cari lokasi, site, atau data..." aria-label="Search"/>
+                <button class="btn btn-primary send-btn" type="button" aria-label="Send">
+                    <i class="material-icons-outlined" style="font-size: 20px;">search</i>
+                </button>
+            </div>
+            <div class="position-relative">
+                <button type="button" class="chip" id="mainFilterSiteBtn" data-bs-toggle="dropdown" aria-expanded="false" data-tg-tour="<strong>Filter Site</strong><br><br>Gunakan filter ini untuk memfilter data berdasarkan site/lokasi. Pilih 'Semua Site' untuk menampilkan semua data.">
+                    <i class="material-icons-outlined" style="font-size: 20px;">location_on</i>
+                    <span id="mainFilterSiteText">Semua Site</span>
+                    <i class="material-icons-outlined" style="font-size: 16px; margin-left: 4px;">expand_more</i>
+                </button>
+                <ul class="dropdown-menu" id="mainFilterSiteDropdown" style="max-height: 300px; overflow-y: auto;">
+                    <li><a class="dropdown-item filter-option" href="javascript:;" data-value="__all__">Semua Site</a></li>
+                </ul>
+            </div>
+            <button type="button" class="chip" id="btnResetMainFilter" data-tg-tour="<strong>Reset Filter</strong><br><br>Klik tombol ini untuk mereset semua filter (Perusahaan dan Site) kembali ke 'Semua'.">
+                <i class="material-icons-outlined" style="font-size: 20px;">refresh</i>
+                <span>Reset</span>
+            </button>
+        </div>
+        
+        <!-- Drawer -->
+        <div id="drawer" class="drawer" role="dialog" aria-modal="true" aria-label="Main menu">
+            <div class="drawer-head">
+                <button id="btnClose" class="close-x" type="button" aria-label="Close">
+                    <span aria-hidden="true">×</span>
+                </button>
+                <input class="form-control search-input flex-grow-1" placeholder="Cari layer atau fitur..." aria-label="Search in menu"/>
+                <button class="btn btn-primary send-btn" type="button" aria-label="Send">
+                    <i class="material-icons-outlined" style="font-size: 18px;">search</i>
+                </button>
+            </div>
+            <div class="drawer-body">
+                <div class="menu-grid" role="group" aria-label="Layer visibility controls" data-tg-tour="<strong>Layer Toggle Buttons</strong><br><br>Gunakan tombol ini untuk menampilkan/menyembunyikan layer di peta:<br>• CCTV: Tampilkan lokasi kamera CCTV<br>• SAP: Tampilkan Safety Action Plan<br>• GR: Tampilkan Golden Rule violations<br>• Insiden: Tampilkan lokasi insiden<br>• Unit: Tampilkan posisi unit kendaraan<br>• GPS Orang: Tampilkan posisi GPS personel<br>• Evaluasi: Tampilkan data evaluasi">
+                    <button type="button" class="menu-item layer-toggle-btn active" id="toggleCctv" data-layer="cctv" title="Toggle CCTV">
+                        <div class="menu-icon">
+                            <i class="material-icons-outlined">videocam</i>
                         </div>
-                        <!-- Layer Visibility Toggle Buttons -->
-                        <div class="btn-group position-static" role="group" aria-label="Layer visibility controls">
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn active" id="toggleCctv" data-layer="cctv" title="Toggle CCTV">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">videocam</i>
-                                <span>CCTV</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn" id="toggleHazard" data-layer="hazard" title="Toggle SAP">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">assignment</i>
-                                <span>SAP</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn active" id="toggleGr" data-layer="gr" title="Toggle Golden Rule">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">rule</i>
-                                <span>GR</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn active" id="toggleInsiden" data-layer="insiden" title="Toggle Insiden">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">report_problem</i>
-                                <span>Insiden</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn" id="toggleUnit" data-layer="unit" title="Toggle Unit">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">directions_car</i>
-                                <span>Unit</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn active" id="toggleGps" data-layer="gps" title="Toggle GPS Orang">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">person_pin</i>
-                                <span>GPS Orang</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn" id="toggleEvaluasi" data-layer="evaluasi" title="Toggle Evaluasi">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">assessment</i>
-                                <span>Evaluasi</span>
-                            </button>
+                        <div class="menu-label">CCTV</div>
+                    </button>
+                    <button type="button" class="menu-item layer-toggle-btn" id="toggleHazard" data-layer="hazard" title="Toggle SAP">
+                        <div class="menu-icon">
+                            <i class="material-icons-outlined">assignment</i>
                         </div>
-                        <button type="button" class="btn btn-filter px-3" id="btnResetMainFilter">
-                            <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">refresh</i>
-                            Reset
-                        </button>
-                    </div>
+                        <div class="menu-label">SAP</div>
+                    </button>
+                    <button type="button" class="menu-item layer-toggle-btn active" id="toggleGr" data-layer="gr" title="Toggle Golden Rule">
+                        <div class="menu-icon">
+                            <i class="material-icons-outlined">rule</i>
+                        </div>
+                        <div class="menu-label">GR</div>
+                    </button>
+                    <button type="button" class="menu-item layer-toggle-btn active" id="toggleInsiden" data-layer="insiden" title="Toggle Insiden">
+                        <div class="menu-icon">
+                            <i class="material-icons-outlined">report_problem</i>
+                        </div>
+                        <div class="menu-label">Insiden</div>
+                    </button>
+                    <button type="button" class="menu-item layer-toggle-btn" id="toggleUnit" data-layer="unit" title="Toggle Unit">
+                        <div class="menu-icon">
+                            <i class="material-icons-outlined">directions_car</i>
+                        </div>
+                        <div class="menu-label">Unit</div>
+                    </button>
+                    <button type="button" class="menu-item layer-toggle-btn active" id="toggleGps" data-layer="gps" title="Toggle GPS Orang">
+                        <div class="menu-icon">
+                            <i class="material-icons-outlined">person_pin</i>
+                        </div>
+                        <div class="menu-label">GPS Orang</div>
+                    </button>
+                    <button type="button" class="menu-item layer-toggle-btn" id="toggleEvaluasi" data-layer="evaluasi" title="Toggle Evaluasi">
+                        <div class="menu-icon">
+                            <i class="material-icons-outlined">assessment</i>
+                        </div>
+                        <div class="menu-label">Evaluasi</div>
+                    </button>
                 </div>
-                <div class="position-relative">
-                    <div id="hazardMap"></div>
-                    <div id="popup" class="ol-popup">
-                        <a href="#" id="popup-closer" class="ol-popup-closer"></a>
-                        <div id="popup-content"></div>
-                    </div>
-                    
-                    <!-- Sidebar Panel -->
-                    <div id="mapSidebar" class="map-sidebar">
-                        <!-- Toggle Button -->
-                        <button id="sidebarToggle" class="sidebar-toggle-btn" type="button">
-                            <i class="material-icons-outlined" id="sidebarToggleIcon">chevron_left</i>
-                        </button>
-                        
-                        <!-- Sidebar Content -->
-                        <div class="sidebar-content">
-                            <!-- Tab Navigation -->
-                            <div class="sidebar-tabs">
-                                <button class="sidebar-tab active" data-tab="cctv" title="CCTV">
-                                    <i class="material-icons-outlined">videocam</i>
-                                    <span class="tab-label">CCTV</span>
-                                    <span class="tab-count" id="cctvTabCount">0</span>
-                                </button>
-                                <button class="sidebar-tab" data-tab="sap" title="SAP">
-                                    <i class="material-icons-outlined">assignment</i>
-                                    <span class="tab-label">SAP</span>
-                                    <span class="tab-count" id="sapTabCount">0</span>
-                                </button>
-                                <button class="sidebar-tab" data-tab="insiden" title="Insiden">
-                                    <i class="material-icons-outlined">report_problem</i>
-                                    <span class="tab-label">Insiden</span>
-                                    <span class="tab-count" id="insidenTabCount">0</span>
-                                </button>
-                                <button class="sidebar-tab" data-tab="unit" title="Unit">
-                                    <i class="material-icons-outlined">directions_car</i>
-                                    <span class="tab-label">Unit</span>
-                                    <span class="tab-count" id="unitTabCount">0</span>
-                                </button>
-                                <button class="sidebar-tab" data-tab="gps" title="GPS Orang">
-                                    <i class="material-icons-outlined">person_pin</i>
-                                    <span class="tab-label">GPS Orang</span>
-                                    <span class="tab-count" id="gpsTabCount">0</span>
-                                </button>
-                                <button class="sidebar-tab" data-tab="controlroom" title="Control Room">
-                                    <i class="material-icons-outlined">meeting_room</i>
-                                    <span class="tab-label">Control Room</span>
-                                    <span class="tab-count" id="controlroomTabCount">0</span>
-                                </button>
-                                <button class="sidebar-tab" data-tab="pja" title="PJA">
-                                    <i class="material-icons-outlined">description</i>
-                                    <span class="tab-label">PJA</span>
-                                    <span class="tab-count" id="pjaTabCount">0</span>
-                                </button>
-                                <button class="sidebar-tab" data-tab="evaluasi" title="Evaluasi">
-                                    <i class="material-icons-outlined">assessment</i>
-                                    <span class="tab-label">Evaluasi</span>
-                                </button>
-                            </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Drawer JavaScript -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const drawer = document.getElementById('drawer');
+            const backdrop = document.getElementById('backdrop');
+            const btnMenu = document.getElementById('btnMenu');
+            const btnClose = document.getElementById('btnClose');
+            
+            function openDrawer() {
+                drawer.classList.add('open');
+                backdrop.classList.add('open');
+            }
+            
+            function closeDrawer() {
+                drawer.classList.remove('open');
+                backdrop.classList.remove('open');
+            }
+            
+            if (btnMenu) {
+                btnMenu.addEventListener('click', openDrawer);
+            }
+            
+            if (btnClose) {
+                btnClose.addEventListener('click', closeDrawer);
+            }
+            
+            if (backdrop) {
+                backdrop.addEventListener('click', closeDrawer);
+            }
+            
+            document.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape') closeDrawer();
+            });
+        });
+    </script>
+    
+    <!-- Map Container -->
+    <div class="position-relative" style="width: 100%; height: 100%;">
+        <div id="hazardMap" data-tg-tour="<strong>Interactive Map</strong><br><br>Peta interaktif untuk melihat lokasi semua data. Anda dapat:<br>• Zoom in/out dengan scroll mouse<br>• Klik marker untuk melihat detail<br>• Drag untuk menggeser peta<br>• Klik area kerja/CCTV untuk evaluasi"></div>
+        <div id="popup" class="ol-popup">
+            <a href="#" id="popup-closer" class="ol-popup-closer"></a>
+            <div id="popup-content"></div>
+        </div>
+        
+        <!-- Icon Toolbar - Left Side -->
+        <div class="map-icon-toolbar" data-tg-tour="<strong>Icon Toolbar</strong><br><br>Gunakan icon untuk melihat data berbeda:<br>• CCTV: Daftar kamera CCTV<br>• SAP: Safety Action Plan<br>• Insiden: Data insiden kecelakaan<br>• Unit: Posisi unit kendaraan<br>• GPS Orang: Lokasi personel<br>• Control Room: Data control room<br>• PJA: Pre Job Analysis<br>• Evaluasi: Summary evaluasi area">
+            <button class="icon-toolbar-btn active" data-tab="cctv" title="CCTV" id="iconToolbarCctv">
+                <i class="material-icons-outlined">videocam</i>
+                <span class="btn-label">CCTV</span>
+                <span class="icon-toolbar-badge" id="iconToolbarCctvCount">0</span>
+            </button>
+            <button class="icon-toolbar-btn" data-tab="sap" title="Safety Action Plan" id="iconToolbarSap">
+                <i class="material-icons-outlined">assignment</i>
+                <span class="btn-label">SAP</span>
+                <span class="icon-toolbar-badge" id="iconToolbarSapCount">0</span>
+            </button>
+            <button class="icon-toolbar-btn" data-tab="insiden" title="Insiden" id="iconToolbarInsiden">
+                <i class="material-icons-outlined">report_problem</i>
+                <span class="btn-label">Insiden</span>
+                <span class="icon-toolbar-badge" id="iconToolbarInsidenCount">0</span>
+            </button>
+            <button class="icon-toolbar-btn" data-tab="unit" title="Unit Kendaraan" id="iconToolbarUnit">
+                <i class="material-icons-outlined">directions_car</i>
+                <span class="btn-label">Unit</span>
+                <span class="icon-toolbar-badge" id="iconToolbarUnitCount">0</span>
+            </button>
+            <button class="icon-toolbar-btn" data-tab="gps" title="GPS Orang" id="iconToolbarGps">
+                <i class="material-icons-outlined">person_pin</i>
+                <span class="btn-label">GPS</span>
+                <span class="icon-toolbar-badge" id="iconToolbarGpsCount">0</span>
+            </button>
+            <div class="icon-toolbar-divider"></div>
+            <button class="icon-toolbar-btn" data-tab="controlroom" title="Control Room" id="iconToolbarControlroom">
+                <i class="material-icons-outlined">meeting_room</i>
+                <span class="btn-label">Control</span>
+                <span class="icon-toolbar-badge" id="iconToolbarControlroomCount">0</span>
+            </button>
+            <button class="icon-toolbar-btn" data-tab="pja" title="Pre Job Analysis" id="iconToolbarPja">
+                <i class="material-icons-outlined">description</i>
+                <span class="btn-label">PJA</span>
+                <span class="icon-toolbar-badge" id="iconToolbarPjaCount">0</span>
+            </button>
+            <button class="icon-toolbar-btn" data-tab="evaluasi" title="Evaluasi" id="iconToolbarEvaluasi">
+                <i class="material-icons-outlined">assessment</i>
+                <span class="btn-label">Evaluasi</span>
+            </button>
+        </div>
+        
+        <!-- Sidebar Panel - Right Side -->
+        <div id="mapSidebar" class="map-sidebar" data-tg-tour="<strong>Sidebar Panel</strong><br><br>Panel sidebar menampilkan daftar data berdasarkan tab yang dipilih. Gunakan icon toolbar di kiri untuk beralih antara CCTV, SAP, Insiden, Unit, GPS Orang, Control Room, PJA, dan Evaluasi. Gunakan search untuk mencari data spesifik.">
+            <!-- Toggle Button -->
+            <button id="sidebarToggle" class="sidebar-toggle-btn" type="button" data-tg-tour="<strong>Toggle Sidebar</strong><br><br>Klik tombol ini untuk membuka/menutup sidebar panel. Sidebar dapat di-collapse untuk memberikan lebih banyak ruang pada peta.">
+                <i class="material-icons-outlined" id="sidebarToggleIcon">chevron_left</i>
+            </button>
+            
+            <!-- Sidebar Content -->
+            <div class="sidebar-content">
                             
                             <!-- Tab Content -->
                             <div class="sidebar-body">
                                 <!-- Search Bar -->
-                                <div class="sidebar-search">
+                                <div class="sidebar-search" data-tg-tour="<strong>Search & Filter</strong><br><br>Gunakan search bar untuk mencari data spesifik di tab yang aktif. Klik tombol filter untuk opsi filter tambahan.">
                                     <i class="material-icons-outlined search-icon">search</i>
                                     <input type="text" id="sidebarSearchInput" class="sidebar-search-input" placeholder="Cari...">
                                     <button type="button" class="sidebar-filter-btn" id="sidebarFilterBtn" title="Filter">
@@ -2625,7 +3415,6 @@
                                     <div class="tab-content active" id="tabContentCctv">
                                         <div class="sidebar-list" id="cctvList"></div>
                                     </div>
-                                    
                                     
                                     <!-- SAP Tab Content -->
                                     <div class="tab-content" id="tabContentSap">
@@ -2667,89 +3456,10 @@
                                     
                                     <!-- Evaluasi Tab Content -->
                                     <div class="tab-content" id="tabContentEvaluasi">
-                                        <div id="evaluasiContent" class="map-selection-container">
-                                            <div class="map-selection-title">
-                                                <i class="material-icons-outlined">map</i>
-                                                <span>Pilihan Map Evaluasi</span>
-                                            </div>
-                                            
-                                            <div class="map-selection-grid">
-                                                <!-- Map 1 -->
-                                                <div class="map-selection-item" data-map="1" data-matrix='{"cctv": {"nyala": true}, "sap": {"exists": true}}'>
-                                                    <div class="map-thumbnail map-1">
-                                                        <div class="map-thumbnail-pattern"></div>
-                                                        <i class="material-icons-outlined map-thumbnail-icon">videocam</i>
-                                                    </div>
-                                                    <div class="map-selection-label">
-                                                        Map 1
-                                                        <div class="map-selection-description">Smart Alert CCTV</div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Map 2 -->
-                                                <div class="map-selection-item" data-map="2" data-matrix='{"cctv": {"nyala": true}, "sap": {"exists": false}}'>
-                                                    <div class="map-thumbnail map-2">
-                                                        <div class="map-thumbnail-pattern"></div>
-                                                        <i class="material-icons-outlined map-thumbnail-icon">videocam_off</i>
-                                                    </div>
-                                                    <div class="map-selection-label">
-                                                        Map 2
-                                                        <div class="map-selection-description">CCTV Nyala (No SAP)</div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Map 3 -->
-                                                <div class="map-selection-item" data-map="3" data-matrix='{"cctv": {"nyala": false}, "sap": {"exists": true}}'>
-                                                    <div class="map-thumbnail map-3">
-                                                        <div class="map-thumbnail-pattern"></div>
-                                                        <i class="material-icons-outlined map-thumbnail-icon">assignment</i>
-                                                    </div>
-                                                    <div class="map-selection-label">
-                                                        Map 3
-                                                        <div class="map-selection-description">SAP (CCTV Mati)</div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Map 4 -->
-                                                <div class="map-selection-item" data-map="4" data-matrix='{"cctv": {"nyala": false}, "sap": {"exists": false}}'>
-                                                    <div class="map-thumbnail map-4">
-                                                        <div class="map-thumbnail-pattern"></div>
-                                                        <i class="material-icons-outlined map-thumbnail-icon">report_problem</i>
-                                                    </div>
-                                                    <div class="map-selection-label">
-                                                        Map 4
-                                                        <div class="map-selection-description">CCTV Mati + No SAP</div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Map 5 -->
-                                                <div class="map-selection-item" data-map="5" data-matrix='{"cctv": {"nyala": true}, "sap": {"exists": true}, "insiden": {"exists": true}}'>
-                                                    <div class="map-thumbnail map-5">
-                                                        <div class="map-thumbnail-pattern"></div>
-                                                        <i class="material-icons-outlined map-thumbnail-icon">warning</i>
-                                                    </div>
-                                                    <div class="map-selection-label">
-                                                        Map 5
-                                                        <div class="map-selection-description">CCTV + SAP + Insiden</div>
-                                                    </div>
-                                                </div>
-                                                
-                                                <!-- Map 6 -->
-                                                <div class="map-selection-item" data-map="6" data-matrix='{"all": true}'>
-                                                    <div class="map-thumbnail map-6">
-                                                        <div class="map-thumbnail-pattern"></div>
-                                                        <i class="material-icons-outlined map-thumbnail-icon">dashboard</i>
-                                                    </div>
-                                                    <div class="map-selection-label">
-                                                        Map 6
-                                                        <div class="map-selection-description">Semua Data</div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            
-                                            <div class="map-selection-info">
-                                                <i class="material-icons-outlined">info</i>
-                                                <strong>Info:</strong> Pilih map evaluasi untuk melihat data berdasarkan matrix yang ditentukan. Klik area kerja atau area CCTV di peta untuk melihat summary evaluasi.
+                                        <div id="evaluasiContent" style="padding: 16px;">
+                                            <div style="text-align: center; color: #6b7280; padding: 40px 20px;">
+                                                <i class="material-icons-outlined" style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">assessment</i>
+                                                <p style="margin: 0; font-size: 14px;">Klik area kerja atau area CCTV di peta untuk melihat summary evaluasi</p>
                                             </div>
                                         </div>
                                     </div>
@@ -2758,8 +3468,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-        </div>
     </div>
 </div>
 
@@ -2785,35 +3493,8 @@
     </div>
 </div>
 
-<!-- Modal P2H Checklist -->
-<div class="modal fade" id="p2hModal" tabindex="-1" aria-labelledby="p2hModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl modal-dialog-scrollable">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="p2hModalLabel">
-                    <i class="material-icons-outlined me-2">assignment</i>
-                    Checklist P2H CCTV - <span id="p2hControlRoomName"></span>
-                </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body" id="p2hModalBody">
-                <div class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-3 text-muted">Memuat form checklist P2H...</p>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary" id="p2hSubmitBtn">
-                    <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">save</i>
-                    Simpan Checklist P2H
-                </button>
-            </div>
-        </div>
-    </div>
-</div>
+
+
 
 @endsection
 
@@ -2970,40 +3651,6 @@
     // Data ini akan di-overwrite oleh loadSapDataByWeek() berdasarkan week filter
     // Filter hanya SAP hari ini untuk performa (mengurangi lag)
     let allSapData = @json($sapData ?? []);
-    console.log('[SAP DEBUG] Total SAP data received from server:', allSapData ? allSapData.length : 0);
-    
-    // Filter OAK data untuk debugging
-    if (allSapData && allSapData.length > 0) {
-        const oakData = allSapData.filter(sap => sap.source_type === 'OAK');
-        console.log('[SAP DEBUG] OAK data count:', oakData.length);
-        if (oakData.length > 0) {
-            console.log('[SAP DEBUG] First OAK record:', oakData[0]);
-            console.log('[SAP DEBUG] OAK records with location:', oakData.filter(s => s.location && s.location.lat && s.location.lng).length);
-            console.log('[SAP DEBUG] OAK records without location:', oakData.filter(s => !s.location || !s.location.lat || !s.location.lng).length);
-        }
-        
-        // Count by source type
-        const countByType = {};
-        allSapData.forEach(sap => {
-            const type = sap.source_type || 'UNKNOWN';
-            countByType[type] = (countByType[type] || 0) + 1;
-        });
-        console.log('[SAP DEBUG] SAP data by source type:', countByType);
-        
-        // Debug INSPEKSI_HAZARD data
-        const inspeksiData = allSapData.filter(sap => sap.source_type === 'INSPEKSI_HAZARD');
-        console.log('[SAP DEBUG] INSPEKSI_HAZARD data count:', inspeksiData.length);
-        if (inspeksiData.length > 0) {
-            console.log('[SAP DEBUG] First INSPEKSI_HAZARD record:', inspeksiData[0]);
-            console.log('[SAP DEBUG] INSPEKSI_HAZARD with date:', inspeksiData.filter(s => s.tanggal_pelaporan || s.detected_at).length);
-            console.log('[SAP DEBUG] INSPEKSI_HAZARD date samples:', inspeksiData.slice(0, 3).map(s => ({
-                task_number: s.task_number,
-                tanggal_pelaporan: s.tanggal_pelaporan,
-                detected_at: s.detected_at
-            })));
-        }
-    }
-    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const todayStr = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
@@ -3023,29 +3670,13 @@
             if (!sap.tanggal_pelaporan && !sap.detected_at) continue;
             
             try {
-                const dateStr = sap.tanggal_pelaporan || sap.detected_at;
-                if (!dateStr) continue;
-                
-                // Normalize date string (handle various formats)
-                let normalizedDate = dateStr.toString().trim();
-                
-                // If format is "YYYY-MM-DD HH:mm:ss", extract just the date part
-                if (normalizedDate.includes(' ')) {
-                    normalizedDate = normalizedDate.split(' ')[0];
-                }
-                
-                // If format is "YYYY-MM-DDTHH:mm:ss", extract just the date part
-                if (normalizedDate.includes('T')) {
-                    normalizedDate = normalizedDate.split('T')[0];
-                }
-                
-                // Compare date strings directly (YYYY-MM-DD format)
-                // This is more reliable than using Date object which can have timezone issues
-                if (normalizedDate === todayStr) {
+                const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
+                sapDate.setHours(0, 0, 0, 0);
+                const sapDateStr = sapDate.toISOString().split('T')[0];
+                if (sapDateStr === todayStr) {
                     todaySapData.push(sap);
                 }
             } catch (e) {
-                console.warn('[SAP DEBUG] Error parsing date:', sap.tanggal_pelaporan || sap.detected_at, 'for SAP:', sap.task_number, e);
                 // Skip invalid dates
                 continue;
             }
@@ -3065,14 +3696,7 @@
         sapData = sapDataForSidebar.slice(0, 1000);
     }
     
-    console.log(`[SAP DEBUG] Filtered SAP data: Sidebar (today) ${sapDataForSidebar.length} items | Map ${sapData.length} items (limited to 1000) for today (${todayStr}) out of ${allSapData.length} total`);
-    
-    // Debug OAK data after filtering
-    const oakToday = sapDataForSidebar.filter(sap => sap.source_type === 'OAK');
-    console.log('[SAP DEBUG] OAK data in sidebar (today):', oakToday.length);
-    if (oakToday.length > 0) {
-        console.log('[SAP DEBUG] OAK today sample:', oakToday[0]);
-    }
+    console.log(`Filtered SAP data: Sidebar (today) ${sapDataForSidebar.length} items | Map ${sapData.length} items (limited to 1000) for today (${todayStr}) out of ${allSapData.length} total`);
     
     const hazardDetections = sapData; // Alias untuk kompatibilitas dengan kode yang sudah ada
     
@@ -3081,12 +3705,6 @@
     // cctvLocationsForMap: Hanya CCTV yang punya koordinat (1789) untuk ditampilkan di map
     const cctvLocations = @json($cctvLocations);
     const cctvLocationsForMap = @json($cctvLocationsForMap ?? $cctvLocations);
-    
-    // All Control Rooms - semua control room yang unik dari database
-    const allControlRooms = @json($allControlRooms ?? []);
-    
-    // P2H Status untuk control rooms
-    const p2hStatus = @json($p2hStatus ?? []);
     
     const grDetections = @json($grDetections ?? []);
     const insidenDataset = @json($insidenGroups);
@@ -3203,13 +3821,8 @@
     let grLayer = null;
     let insidenLayer = null;
     let unitVehicleLayer = null;
-    let hazardColorOverlayLayer = null;
-    let isHazardColorModeActive = false;
-    let hazardColorOverlayListener = null;
     let userGpsLayer = null;
     let popupOverlay = null;
-    let isRiskMatrixModeActive = false;
-    let originalAreaKerjaStyleFunction = null;
     
     // Site filter - harus didefinisikan sebelum digunakan di style function
     let currentSiteFilter = '';
@@ -3227,9 +3840,11 @@
         pja: []
     };
     
+    // Store original PJA data for filtering
+    let originalPjaData = [];
+    
     // Store original Control Room data for filtering
     let originalControlRoomData = [];
-    let originalPjaData = [];
     
     // Layer visibility state
     // Default: SAP dan Unit hidden untuk performa
@@ -3443,8 +4058,8 @@
         }
     }
 
-    // Original area kerja style function (without risk matrix)
-    function getOriginalAreaKerjaStyle(feature) {
+    // Style functions for different layers
+    function getAreaKerjaStyle(feature) {
         const props = feature.getProperties();
         const areaKerja = props.area_kerja || '';
         
@@ -3475,249 +4090,6 @@
                 width: strokeWidth
             })
         });
-    }
-
-    // Style functions for different layers
-    function getAreaKerjaStyle(feature) {
-        // If risk matrix mode is active, use risk-based styling
-        if (isRiskMatrixModeActive) {
-            return getRiskBasedAreaKerjaStyle(feature);
-        }
-        
-        // Otherwise use original style
-        return getOriginalAreaKerjaStyle(feature);
-    }
-
-    // Calculate risk level for area kerja based on risk matrix criteria
-    function calculateRiskForAreaKerja(feature) {
-        const props = feature.getProperties();
-        const lokasiName = props.lokasi || props.nama_lokasi || props.name || '';
-        const idLokasi = props.id_lokasi || props.id || '';
-        
-        // Criteria 1: Terdapat Laporan SAP dari SO PJA CCTV (minimal 1 OIH)
-        const hasSapReportFromPja = hasSapReportToday('area_kerja', idLokasi, lokasiName, null, null, feature.getGeometry());
-        
-        // Criteria 2: CCTV Kondisi Online (Critical)
-        // Check if there are online CCTV in this area
-        const hasOnlineCctv = checkCctvOnlineInArea(lokasiName, idLokasi, feature.getGeometry());
-        
-        // Criteria 3: Area Highrisk ada Laporan SAP (Critical)
-        // Check if this is a high-risk area and has SAP report
-        const isHighRiskArea = checkIfHighRiskArea(lokasiName, idLokasi);
-        const hasSapInHighRiskArea = isHighRiskArea && hasSapReportFromPja;
-        
-        // Determine risk level based on risk matrix
-        // HIGH (Red):
-        // - Semua kondisi TIDAK MEMENUHI
-        // - Hanya "Terdapat Laporan SAP dari SO PJA CCTV" MEMENUHI
-        // - Hanya "Area Highrisk ada Laporan SAP (Critical)" MEMENUHI
-        if (!hasSapReportFromPja && !hasOnlineCctv && !hasSapInHighRiskArea) {
-            return 'HIGH'; // Semua TIDAK MEMENUHI
-        }
-        if (hasSapReportFromPja && !hasOnlineCctv && !hasSapInHighRiskArea) {
-            return 'HIGH'; // Hanya SAP MEMENUHI
-        }
-        if (!hasSapReportFromPja && !hasOnlineCctv && hasSapInHighRiskArea) {
-            return 'HIGH'; // Hanya High Risk SAP MEMENUHI
-        }
-        
-        // MEDIUM (Yellow):
-        // - "Terdapat Laporan SAP dari SO PJA CCTV" TIDAK MEMENUHI, tapi "Area Highrisk ada Laporan SAP (Critical)" dan "CCTV Kondisi Online (Critical)" MEMENUHI
-        // - "Terdapat Laporan SAP dari SO PJA CCTV" MEMENUHI, "Area Highrisk ada Laporan SAP (Critical)" TIDAK MEMENUHI, tapi "CCTV Kondisi Online (Critical)" MEMENUHI
-        if (!hasSapReportFromPja && hasSapInHighRiskArea && hasOnlineCctv) {
-            return 'MEDIUM';
-        }
-        if (hasSapReportFromPja && !hasSapInHighRiskArea && hasOnlineCctv) {
-            return 'MEDIUM';
-        }
-        
-        // NORMAL (Green):
-        // - Semua kondisi MEMENUHI
-        if (hasSapReportFromPja && hasOnlineCctv && (hasSapInHighRiskArea || !isHighRiskArea)) {
-            return 'NORMAL';
-        }
-        
-        // Default to MEDIUM if conditions don't match exactly
-        return 'MEDIUM';
-    }
-
-    // Check if CCTV is online in the area
-    function checkCctvOnlineInArea(lokasiName, idLokasi, geometry) {
-        if (!cctvLocations || !cctvLocations.length) {
-            console.log('[Risk Matrix] No CCTV locations available');
-            return false;
-        }
-        
-        // Filter CCTV by location/area
-        const cctvInArea = cctvLocations.filter(cctv => {
-            const cctvLokasi = (cctv.lokasi || cctv.area_kerja || cctv.site || '').toLowerCase().trim();
-            const areaLokasi = lokasiName.toLowerCase().trim();
-            
-            // Check if CCTV location matches area location
-            if (cctvLokasi && areaLokasi) {
-                const locationMatch = cctvLokasi.includes(areaLokasi) || areaLokasi.includes(cctvLokasi);
-                if (locationMatch) return true;
-            }
-            
-            // If geometry available, check if CCTV coordinates are within area
-            if (geometry && cctv.latitude && cctv.longitude) {
-                try {
-                    const lat = parseFloat(cctv.latitude);
-                    const lng = parseFloat(cctv.longitude);
-                    if (!isNaN(lat) && !isNaN(lng)) {
-                        const cctvCoord = ol.proj.fromLonLat([lng, lat]);
-                        return geometry.intersectsCoordinate(cctvCoord);
-                    }
-                } catch (e) {
-                    // Silently fail if coordinate check fails
-                }
-            }
-            
-            return false;
-        });
-        
-        if (cctvInArea.length === 0) {
-            console.log(`[Risk Matrix] No CCTV found in area: ${lokasiName}`);
-            return false;
-        }
-        
-        // Check if at least one CCTV is online
-        const hasOnline = cctvInArea.some(cctv => {
-            // Check if CCTV is online (status = 1 or nyala = true or is_online = true)
-            return cctv.status === 1 || cctv.nyala === true || cctv.is_online === true || 
-                   cctv.status_online === 1 || cctv.kondisi === 'Online';
-        });
-        
-        console.log(`[Risk Matrix] Area: ${lokasiName}, CCTV in area: ${cctvInArea.length}, Has online: ${hasOnline}`);
-        return hasOnline;
-    }
-
-    // Check if area is high-risk
-    function checkIfHighRiskArea(lokasiName, idLokasi) {
-        // Define high-risk area keywords
-        const highRiskKeywords = ['pit', 'hauling', 'tambang', 'mining', 'high risk', 'highrisk'];
-        const areaName = lokasiName.toLowerCase().trim();
-        
-        // Check if area name contains high-risk keywords
-        return highRiskKeywords.some(keyword => areaName.includes(keyword));
-    }
-
-    // Get risk-based style for area kerja
-    function getRiskBasedAreaKerjaStyle(feature) {
-        const riskLevel = calculateRiskForAreaKerja(feature);
-        
-        let fillColor, strokeColor;
-        
-        switch(riskLevel) {
-            case 'HIGH':
-                // Red for HIGH risk
-                fillColor = 'rgba(220, 38, 38, 0.6)'; // Bright red
-                strokeColor = '#dc2626';
-                break;
-            case 'MEDIUM':
-                // Yellow for MEDIUM risk
-                fillColor = 'rgba(250, 204, 21, 0.6)'; // Yellow
-                strokeColor = '#facc15';
-                break;
-            case 'NORMAL':
-            default:
-                // Green for NORMAL risk
-                fillColor = 'rgba(34, 197, 94, 0.6)'; // Green
-                strokeColor = '#22c55e';
-                break;
-        }
-        
-        return new ol.style.Style({
-            fill: new ol.style.Fill({
-                color: fillColor
-            }),
-            stroke: new ol.style.Stroke({
-                color: strokeColor,
-                width: 3
-            })
-        });
-    }
-
-    // Apply risk matrix colors to area kerja layers
-    function applyRiskMatrixToAreaKerja() {
-        if (isRiskMatrixModeActive) return;
-        
-        isRiskMatrixModeActive = true;
-        
-        // Hide CCTV coverage layers
-        if (window.areaCctvLayers && Array.isArray(window.areaCctvLayers)) {
-            window.areaCctvLayers.forEach(layer => {
-                if (layer) {
-                    layer.setVisible(false);
-                }
-            });
-        }
-        
-        // Hide area CCTV BMO2 PAMA layer
-        if (areaCctvBmo2PamaLayer) {
-            areaCctvBmo2PamaLayer.setVisible(false);
-        }
-        
-        // Update area kerja layers with risk-based styling
-        if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
-            window.areaKerjaLayers.forEach(layer => {
-                if (layer) {
-                    layer.setStyle(function(feature) {
-                        return getRiskBasedAreaKerjaStyle(feature);
-                    });
-                    layer.setVisible(true);
-                }
-            });
-        }
-        
-        // Update area kerja BMO2 PAMA layer
-        if (areaKerjaBmo2PamaLayer) {
-            areaKerjaBmo2PamaLayer.setStyle(function(feature) {
-                return getRiskBasedAreaKerjaStyle(feature);
-            });
-            areaKerjaBmo2PamaLayer.setVisible(true);
-        }
-        
-        // Force refresh to apply new styles
-        map.render();
-    }
-
-    // Remove risk matrix colors from area kerja layers
-    function removeRiskMatrixFromAreaKerja() {
-        if (!isRiskMatrixModeActive) return;
-        
-        isRiskMatrixModeActive = false;
-        
-        // Show CCTV coverage layers
-        if (window.areaCctvLayers && Array.isArray(window.areaCctvLayers)) {
-            window.areaCctvLayers.forEach(layer => {
-                if (layer) {
-                    layer.setVisible(true);
-                }
-            });
-        }
-        
-        // Show area CCTV BMO2 PAMA layer
-        if (areaCctvBmo2PamaLayer) {
-            areaCctvBmo2PamaLayer.setVisible(true);
-        }
-        
-        // Restore original area kerja styling
-        if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
-            window.areaKerjaLayers.forEach(layer => {
-                if (layer) {
-                    layer.setStyle(getOriginalAreaKerjaStyle);
-                }
-            });
-        }
-        
-        // Restore area kerja BMO2 PAMA layer
-        if (areaKerjaBmo2PamaLayer) {
-            areaKerjaBmo2PamaLayer.setStyle(getOriginalAreaKerjaStyle);
-        }
-        
-        // Force refresh to apply original styles
-        map.render();
     }
 
     function getAreaCctvStyle(feature) {
@@ -3768,100 +4140,6 @@
         });
     }
 
-    // Function to apply hazard color to image (canvas manipulation)
-    function applyHazardColorToImage(image) {
-        if (!image || !isHazardColorModeActive) return image;
-        
-        try {
-            const canvas = document.createElement('canvas');
-            const ctx = canvas.getContext('2d');
-            const imgWidth = image.width || image.naturalWidth || 256;
-            const imgHeight = image.height || image.naturalHeight || 256;
-            
-            canvas.width = imgWidth;
-            canvas.height = imgHeight;
-            
-            // Draw original image
-            ctx.drawImage(image, 0, 0, imgWidth, imgHeight);
-            
-            // Get image data
-            const imageData = ctx.getImageData(0, 0, imgWidth, imgHeight);
-            const data = imageData.data;
-            
-            // Apply hazard color transformation based on pixel intensity/brightness
-            // Simulate MCE2 score colors: red (extreme) to green (very low)
-            for (let i = 0; i < data.length; i += 4) {
-                const r = data[i];
-                const g = data[i + 1];
-                const b = data[i + 2];
-                const a = data[i + 3];
-                
-                if (a === 0) continue; // Skip transparent pixels
-                
-                // Calculate brightness/intensity
-                const brightness = (r * 0.299 + g * 0.587 + b * 0.114) / 255;
-                
-                // Create position-based variation for more realistic hazard zones
-                const pixelIndex = i / 4;
-                const x = pixelIndex % imgWidth;
-                const y = Math.floor(pixelIndex / imgWidth);
-                const centerX = imgWidth / 2;
-                const centerY = imgHeight / 2;
-                const distX = Math.abs(x - centerX) / Math.max(centerX, 1);
-                const distY = Math.abs(y - centerY) / Math.max(centerY, 1);
-                const positionFactor = Math.min(1, (distX + distY) / 2);
-                
-                // Add some noise for more natural variation
-                const noise = (Math.random() - 0.5) * 0.1;
-                
-                // Combine brightness, position, and noise for hazard score simulation
-                const hazardScore = Math.max(0, Math.min(1, brightness * 0.5 + positionFactor * 0.4 + noise * 0.1));
-                
-                // Map to MCE2 color scale (25-58, lower = more red/hazard)
-                // Invert so lower values = more hazard (red)
-                const invertedScore = 1 - hazardScore;
-                
-                let newR, newG, newB;
-                
-                if (invertedScore > 0.85) {
-                    // Extreme (25-32): Bright red #dc2626
-                    newR = 220; newG = 38; newB = 38;
-                } else if (invertedScore > 0.70) {
-                    // High (33-35): Orange #f97316
-                    newR = 249; newG = 115; newB = 22;
-                } else if (invertedScore > 0.55) {
-                    // High moderate (36-38): Yellow-orange #fb923c
-                    newR = 251; newG = 146; newB = 60;
-                } else if (invertedScore > 0.40) {
-                    // Moderate (39-41): Yellow #facc15
-                    newR = 250; newG = 204; newB = 21;
-                } else if (invertedScore > 0.25) {
-                    // Moderate-low (42-45): Light green #86efac
-                    newR = 134; newG = 239; newB = 172;
-                } else if (invertedScore > 0.10) {
-                    // Low (46-49): Green #22c55e
-                    newR = 34; newG = 197; newB = 94;
-                } else {
-                    // Very low (50-58): Dark green #16a34a
-                    newR = 22; newG = 163; newB = 74;
-                }
-                
-                // Blend with original color to maintain texture
-                const blendFactor = 0.75; // How much hazard color vs original
-                data[i] = Math.round(newR * blendFactor + r * (1 - blendFactor));
-                data[i + 1] = Math.round(newG * blendFactor + g * (1 - blendFactor));
-                data[i + 2] = Math.round(newB * blendFactor + b * (1 - blendFactor));
-                // Keep original alpha
-            }
-            
-            ctx.putImageData(imageData, 0, 0);
-            return canvas;
-        } catch (error) {
-            console.error('Error applying hazard color to image:', error);
-            return image;
-        }
-    }
-
     // Function to create WMS layer
     function createWMSLayer(layerName = '', serverKey = currentWmsServer) {
         const server = wmsServers[serverKey];
@@ -3873,185 +4151,45 @@
             'TILED': true
         };
         
-        const tileSource = new ol.source.TileWMS({
-            url: server.url,
-            params: params,
-            serverType: 'mapserver',
-            crossOrigin: 'anonymous',
-            tileGrid: new ol.tilegrid.TileGrid({
-                extent: ol.proj.transformExtent(
-                    server.bbox,
-                    'EPSG:4326',
-                    'EPSG:3857'
-                ),
-                resolutions: [
-                    156543.03392804097,
-                    78271.51696402048,
-                    39135.75848201024,
-                    19567.87924100512,
-                    9783.93962050256,
-                    4891.96981025128,
-                    2445.98490512564,
-                    1222.99245256282,
-                    611.49622628141,
-                    305.748113140705,
-                    152.8740565703525,
-                    76.43702828517625,
-                    38.21851414258813,
-                    19.109257071294063,
-                    9.554628535647032,
-                    4.777314267823516,
-                    2.388657133911758,
-                    1.194328566955879,
-                    0.5971642834779395
-                ],
-                tileSize: [256, 256]
-            })
-        });
-        
-        // Apply custom tile load function if hazard color mode is active
-        if (isHazardColorModeActive) {
-            tileSource.setTileLoadFunction(function(imageTile, src) {
-                const img = new Image();
-                img.crossOrigin = 'anonymous';
-                
-                img.onload = function() {
-                    try {
-                        const coloredCanvas = applyHazardColorToImage(img);
-                        if (coloredCanvas && coloredCanvas instanceof HTMLCanvasElement) {
-                            const imageElement = imageTile.getImage();
-                            if (imageElement) {
-                                imageElement.src = coloredCanvas.toDataURL();
-                            }
-                        } else {
-                            // Fallback to original
-                            const imageElement = imageTile.getImage();
-                            if (imageElement) {
-                                imageElement.src = src;
-                            }
-                        }
-                    } catch (error) {
-                        console.error('Error processing tile:', error);
-                        // Fallback to original
-                        const imageElement = imageTile.getImage();
-                        if (imageElement) {
-                            imageElement.src = src;
-                        }
-                    }
-                };
-                
-                img.onerror = function() {
-                    // Fallback to original src if error
-                    const imageElement = imageTile.getImage();
-                    if (imageElement) {
-                        imageElement.src = src;
-                    }
-                };
-                
-                img.src = src;
-            });
-        }
-        
         return new ol.layer.Tile({
-            source: tileSource,
+            source: new ol.source.TileWMS({
+                url: server.url,
+                params: params,
+                serverType: 'mapserver',
+                crossOrigin: 'anonymous',
+                tileGrid: new ol.tilegrid.TileGrid({
+                    extent: ol.proj.transformExtent(
+                        server.bbox,
+                        'EPSG:4326',
+                        'EPSG:3857'
+                    ),
+                    resolutions: [
+                        156543.03392804097,
+                        78271.51696402048,
+                        39135.75848201024,
+                        19567.87924100512,
+                        9783.93962050256,
+                        4891.96981025128,
+                        2445.98490512564,
+                        1222.99245256282,
+                        611.49622628141,
+                        305.748113140705,
+                        152.8740565703525,
+                        76.43702828517625,
+                        38.21851414258813,
+                        19.109257071294063,
+                        9.554628535647032,
+                        4.777314267823516,
+                        2.388657133911758,
+                        1.194328566955879,
+                        0.5971642834779395
+                    ],
+                    tileSize: [256, 256]
+                })
+            }),
             zIndex: 1,
             opacity: 0.85
         });
-    }
-
-    // Function to apply hazard color to WMS layer
-    function applyHazardColorOverlay() {
-        if (isHazardColorModeActive) return;
-        
-        isHazardColorModeActive = true;
-        
-        // Recreate WMS layer with hazard color transformation
-        const currentLayerName = currentLayer;
-        const currentServer = currentWmsServer;
-        
-        // Remove old WMS layer
-        if (wmsLayer) {
-            map.removeLayer(wmsLayer);
-            wmsLayer = null;
-        }
-        
-        // Create new WMS layer with hazard colors
-        wmsLayer = createWMSLayer(currentLayerName, currentServer);
-        map.addLayer(wmsLayer);
-        
-        // Ensure proper layer ordering
-        const layers = map.getLayers();
-        if (hazardLayer) {
-            if (layers.getArray().includes(hazardLayer)) {
-                layers.remove(hazardLayer);
-            }
-            layers.push(hazardLayer);
-        }
-        if (insidenLayer) {
-            if (layers.getArray().includes(insidenLayer)) {
-                layers.remove(insidenLayer);
-            }
-            layers.push(insidenLayer);
-        }
-        if (cctvLayer) {
-            if (layers.getArray().includes(cctvLayer)) {
-                layers.remove(cctvLayer);
-            }
-            layers.push(cctvLayer);
-        }
-        
-        // Force refresh of tiles
-        if (wmsLayer && wmsLayer.getSource()) {
-            wmsLayer.getSource().refresh();
-        }
-    }
-
-    // Function to remove hazard color overlay
-    function removeHazardColorOverlay() {
-        if (!isHazardColorModeActive) return;
-        
-        isHazardColorModeActive = false;
-        
-        // Remove event listener
-        if (hazardColorOverlayListener) {
-            ol.Observable.unByKey(hazardColorOverlayListener);
-            hazardColorOverlayListener = null;
-        }
-        
-        // Recreate WMS layer without hazard colors
-        const currentLayerName = currentLayer;
-        const currentServer = currentWmsServer;
-        
-        // Remove old WMS layer
-        if (wmsLayer) {
-            map.removeLayer(wmsLayer);
-            wmsLayer = null;
-        }
-        
-        // Create new WMS layer without color transformation
-        wmsLayer = createWMSLayer(currentLayerName, currentServer);
-        map.addLayer(wmsLayer);
-        
-        // Ensure proper layer ordering
-        const layers = map.getLayers();
-        if (hazardLayer) {
-            if (layers.getArray().includes(hazardLayer)) {
-                layers.remove(hazardLayer);
-            }
-            layers.push(hazardLayer);
-        }
-        if (insidenLayer) {
-            if (layers.getArray().includes(insidenLayer)) {
-                layers.remove(insidenLayer);
-            }
-            layers.push(insidenLayer);
-        }
-        if (cctvLayer) {
-            if (layers.getArray().includes(cctvLayer)) {
-                layers.remove(cctvLayer);
-            }
-            layers.push(cctvLayer);
-        }
     }
 
     // Create map dengan Google Satellite sebagai base layer
@@ -4164,43 +4302,16 @@
     const BATCH_SIZE = 100; // Render dalam batch untuk performa
     
     function addSapMarkersBatch(sapDataArray) {
-        console.log('[SAP DEBUG] addSapMarkersBatch called with:', sapDataArray ? sapDataArray.length : 0, 'items');
-        
-        if (!sapDataArray || sapDataArray.length === 0) {
-            console.warn('[SAP DEBUG] addSapMarkersBatch: No data provided');
-            return;
-        }
-        
-        // Debug OAK data
-        const oakInBatch = sapDataArray.filter(sap => sap.source_type === 'OAK');
-        console.log('[SAP DEBUG] addSapMarkersBatch: OAK data count:', oakInBatch.length);
-        const oakWithLocation = oakInBatch.filter(s => s.location && s.location.lat && s.location.lng);
-        const oakWithoutLocation = oakInBatch.filter(s => !s.location || !s.location.lat || !s.location.lng);
-        console.log('[SAP DEBUG] addSapMarkersBatch: OAK with location:', oakWithLocation.length, '| OAK without location:', oakWithoutLocation.length);
-        if (oakWithoutLocation.length > 0) {
-            console.warn('[SAP DEBUG] addSapMarkersBatch: OAK records without location (will be skipped):', oakWithoutLocation.slice(0, 3));
-        }
+        if (!sapDataArray || sapDataArray.length === 0) return;
         
         let markerCount = 0;
-        let skippedNoLocation = 0;
-        let oakMarkersAdded = 0;
         const source = hazardLayer.getSource();
         const features = [];
         
         // Filter dan prepare features
         sapDataArray.forEach(function(sap) {
             if (markerCount >= MAX_SAP_MARKERS) return;
-            if (!sap.location || !sap.location.lat || !sap.location.lng) {
-                skippedNoLocation++;
-                if (sap.source_type === 'OAK') {
-                    console.warn('[SAP DEBUG] Skipping OAK marker (no location):', sap.task_number || sap.id, sap);
-                }
-                return;
-            }
-            
-            if (sap.source_type === 'OAK') {
-                oakMarkersAdded++;
-            }
+            if (!sap.location || !sap.location.lat || !sap.location.lng) return;
             
             const feature = new ol.Feature({
                 geometry: new ol.geom.Point(
@@ -4230,8 +4341,7 @@
                     if (index < features.length) {
                         requestAnimationFrame(addBatch);
                     } else {
-                        console.log(`[SAP DEBUG] Added ${features.length} SAP markers to map (filtered for today) in batches`);
-                        console.log(`[SAP DEBUG] OAK markers added: ${oakMarkersAdded}, Skipped (no location): ${skippedNoLocation}`);
+                        console.log(`Added ${features.length} SAP markers to map (filtered for today) in batches`);
                     }
                 }
             }
@@ -4735,36 +4845,59 @@
     map.addLayer(unitVehicleLayer);
     console.log('Unit vehicle layer created and added to map');
 
+    // Function to create user GPS icon from SVG - using direct data URI
+    const svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><g><path fill="#506C7F" d="M18,12c0-5.522,4.478-10,10-10h8c5.522,0,10,4.478,10,10v7c0-3.313-2.687-6-6-6h-6c-2.209,0-4-1.791-4-4c0-0.553-0.447-1-1-1s-1,0.447-1,1c0,2.209-1.791,4-4,4c-3.313,0-6,2.687-6,6V12z"></path><path fill="#45AAB8" d="M62,60c0,1.104-0.896,2-2,2H4c-1.104,0-2-0.896-2-2v-8c0-1.104,0.447-2.104,1.172-2.828l-0.004-0.004c4.148-3.343,8.896-5.964,14.046-7.714C20.869,45.467,26.117,48,31.973,48c5.862,0,11.115-2.538,14.771-6.56c5.167,1.75,9.929,4.376,14.089,7.728l-0.004,0.004C61.553,49.896,62,50.896,62,52V60z"></path><g><path fill="#F9EBB2" d="M32,42c-2.853,0-5.502-0.857-7.715-2.322c-1.675,0.283-3.325,0.638-4.934,1.097C22.602,43.989,27.041,46,31.973,46c4.938,0,9.383-2.017,12.634-5.238c-1.595-0.454-3.231-0.803-4.892-1.084C37.502,41.143,34.853,42,32,42z"></path><path fill="#F9EBB2" d="M46,22h-1c-0.553,0-1-0.447-1-1v-1v-1c0-2.209-1.791-4-4-4h-6c-2.088,0-3.926-1.068-5-2.687C27.926,13.932,26.088,15,24,15c-2.209,0-4,1.791-4,4v1v1c0,0.553-0.447,1-1,1h-1c-0.553,0-1,0.447-1,1v2c0,0.553,0.447,1,1,1h1c0.553,0,1,0.447,1,1v1c0,6.627,5.373,12,12,12s12-5.373,12-12v-1c0-0.553,0.447-1,1-1h1c0.553,0,1-0.447,1-1v-2C47,22.447,46.553,22,46,22z"></path></g><path fill="#394240" d="M62.242,47.758l0.014-0.014c-5.847-4.753-12.84-8.137-20.491-9.722C44.374,35.479,46,31.932,46,28c1.657,0,3-1.343,3-3v-2c0-0.886-0.391-1.673-1-2.222V12c0-6.627-5.373-12-12-12h-8c-6.627,0-12,5.373-12,12v8.778c-0.609,0.549-1,1.336-1,2.222v2c0,1.657,1.343,3,3,3c0,3.932,1.626,7.479,4.236,10.022c-7.652,1.586-14.646,4.969-20.492,9.722l0.014,0.014C0.672,48.844,0,50.344,0,52v8c0,2.211,1.789,4,4,4h56c2.211,0,4-1.789,4-4v-8C64,50.344,63.328,48.844,62.242,47.758z M18,12c0-5.522,4.478-10,10-10h8c5.522,0,10,4.478,10,10v7c0-3.313-2.687-6-6-6h-6c-2.209,0-4-1.791-4-4c0-0.553-0.447-1-1-1s-1,0.447-1,1c0,2.209-1.791,4-4,4c-3.313,0-6,2.687-6,6V12z M20,28v-1c0-0.553-0.447-1-1-1h-1c-0.553,0-1-0.447-1-1v-2c0-0.553,0.447-1,1-1h1c0.553,0,1-0.447,1-1v-2c0-2.209,1.791-4,4-4c2.088,0,3.926-1.068,5-2.687C30.074,13.932,31.912,15,34,15h6c2.209,0,4,1.791,4,4v2c0,0.553,0.447,1,1,1h1c0.553,0,1,0.447,1,1v2c0,0.553-0.447,1-1,1h-1c-0.553,0-1,0.447-1,1v1c0,6.627-5.373,12-12,12S20,34.627,20,28z M24.285,39.678C26.498,41.143,29.147,42,32,42s5.502-0.857,7.715-2.322c1.66,0.281,3.297,0.63,4.892,1.084C41.355,43.983,36.911,46,31.973,46c-4.932,0-9.371-2.011-12.621-5.226C20.96,40.315,22.61,39.961,24.285,39.678z M62,60c0,1.104-0.896,2-2,2H4c-1.104,0-2-0.896-2-2v-8c0-1.104,0.447-2.104,1.172-2.828l-0.004-0.004c4.148-3.343,8.896-5.964,14.046-7.714C20.869,45.467,26.117,48,31.973,48c5.862,0,11.115-2.538,14.771-6.56c5.167,1.75,9.929,4.376,14.089,7.728l-0.004,0.004C61.553,49.896,62,50.896,62,52V60z"></path><path fill="#394240" d="M24.537,21.862c0.475,0.255,1.073,0.068,1.345-0.396C25.91,21.419,26.18,21,26.998,21c0.808,0,1.096,0.436,1.111,0.458C28.287,21.803,28.637,22,28.999,22c0.154,0,0.311-0.035,0.457-0.111c0.491-0.253,0.684-0.856,0.431-1.347C29.592,19.969,28.651,19,26.998,19c-1.691,0-2.618,0.983-2.9,1.564C23.864,21.047,24.063,21.609,24.537,21.862z"></path><path fill="#394240" d="M34.539,21.862c0.475,0.255,1.073,0.068,1.345-0.396C35.912,21.419,36.182,21,37,21c0.808,0,1.096,0.436,1.111,0.458C38.289,21.803,38.639,22,39.001,22c0.154,0,0.311-0.035,0.457-0.111c0.491-0.253,0.684-0.856,0.431-1.347C39.594,19.969,38.653,19,37,19c-1.691,0-2.618,0.983-2.9,1.564C33.866,21.047,34.065,21.609,34.539,21.862z"></path></g></svg>';
+    const userGpsIconUrl = 'data:image/svg+xml;base64,' + btoa(svgIcon);
+
+    // Function to calculate dynamic scale based on zoom level
+    function getDynamicScale(zoom) {
+        // Scale dinamis berdasarkan zoom level
+        // Zoom rendah (jauh) = scale kecil, Zoom tinggi (dekat) = scale besar
+        if (zoom <= 10) {
+            return 0.15; // Sangat kecil saat zoom jauh
+        } else if (zoom <= 12) {
+            return 0.2; // Kecil
+        } else if (zoom <= 14) {
+            return 0.3; // Sedang
+        } else if (zoom <= 16) {
+            return 0.4; // Agak besar
+        } else if (zoom <= 18) {
+            return 0.5; // Besar
+        } else {
+            return 0.6; // Sangat besar saat zoom sangat dekat
+        }
+    }
+
     // Create User GPS Layer
     userGpsLayer = new ol.layer.Vector({
         source: new ol.source.Vector(),
-        style: function(feature) {
+        style: function(feature, resolution) {
             const userData = feature.get('userData');
-            const battery = userData?.battery ?? 100;
-            const batteryColor = battery < 20 ? '#ef4444' : battery < 50 ? '#f59e0b' : '#10b981';
+            // Dapatkan zoom level dari map
+            const zoom = map.getView().getZoom();
+            const dynamicScale = getDynamicScale(zoom);
             
-            // Icon untuk GPS orang - menggunakan person icon
-            const svgIcon = `
-                <svg width="32" height="32" viewBox="0 0 32 32" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="16" cy="16" r="15" fill="${batteryColor}" opacity="0.9" stroke="white" stroke-width="2"/>
-                    <path d="M16 9 C13.24 9 11 11.24 11 14 C11 16.76 13.24 19 16 19 C18.76 19 21 16.76 21 14 C21 11.24 18.76 9 16 9 Z" fill="white"/>
-                    <path d="M10 22 C10 19.24 12.24 17 15 17 L17 17 C19.76 17 22 19.24 22 22 L22 24 L10 24 Z" fill="white"/>
-                </svg>
-            `;
-            
+            // Icon untuk GPS orang - menggunakan SVG dengan scale dinamis
             const iconStyle = new ol.style.Style({
                 image: new ol.style.Icon({
                     anchor: [0.5, 1],
                     anchorXUnits: 'fraction',
                     anchorYUnits: 'fraction',
-                    src: 'data:image/svg+xml;base64,' + btoa(svgIcon),
-                    scale: 0.7,
+                    src: userGpsIconUrl,
+                    scale: dynamicScale,
                     rotation: userData?.course ? (userData.course * Math.PI / 180) : 0
                 })
             });
             return iconStyle;
         },
         zIndex: 100
+    });
+    
+    // Update style saat zoom berubah
+    map.getView().on('change:resolution', function() {
+        if (userGpsLayer) {
+            userGpsLayer.getSource().changed();
+        }
     });
     map.addLayer(userGpsLayer);
     console.log('User GPS layer created and added to map');
@@ -7627,11 +7760,6 @@
         donutChartState.donutInsiden = totalInsiden > 0 ? 100 : 0;
         donutChartState.donutGr = totalGr > 0 ? 100 : 0;
         
-        // Initialize PJA CCTV donut chart state dengan nilai dari PHP
-        var cctvSudahPjaPercentage = {{ $cctvSudahPjaPercentage ?? 0 }};
-        var pjaPercentage = Math.max(0, Math.min(100, cctvSudahPjaPercentage));
-        donutChartState.donutBelumPja = pjaPercentage;
-        
         // Initialize number animation states with initial values
         numberAnimationState.statHazardCount = totalHazards;
         numberAnimationState.statCctvCount = totalTbc; // Gunakan nilai TBC dari HTML
@@ -7640,9 +7768,6 @@
         
         // Initialize TBC donut chart dengan nilai 100% (data statis)
         updateDonutChart('donutCctv', 100, '#6f42c1');
-        
-        // Initialize PJA CCTV donut chart dengan nilai dari PHP
-        updateDonutChart('donutBelumPja', pjaPercentage, '#20c997');
         
         // Initialize statistics with no filter (all sites)
         updateStatisticsBySite('');
@@ -7937,6 +8062,26 @@
         }
     }
 
+    // Helper function untuk format tanggal dengan mengurangi 8 jam (UTC ke WIB)
+    function formatDateWIB(dateString) {
+        if (!dateString) return 'N/A';
+        try {
+            const date = new Date(dateString);
+            // Kurangi 8 jam untuk konversi UTC ke WIB
+            date.setHours(date.getHours() - 8);
+            return date.toLocaleString('id-ID', {
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        } catch (e) {
+            return 'N/A';
+        }
+    }
+
     function showUserGpsPopup(coordinate, user) {
         if (!user) {
             return;
@@ -7955,11 +8100,12 @@
         const course = user.course !== null && user.course !== undefined ? user.course + '°' : 'N/A';
         const battery = user.battery !== null && user.battery !== undefined ? user.battery + '%' : 'N/A';
         const batteryColor = user.battery < 20 ? '#ef4444' : user.battery < 50 ? '#f59e0b' : '#10b981';
-        const updatedAt = user.gps_updated_at ? new Date(user.gps_updated_at).toLocaleString('id-ID') : 'N/A';
+        const updatedAt = formatDateWIB(user.gps_updated_at);
         const latitude = user.latitude !== null && user.latitude !== undefined ? user.latitude.toFixed(6) : 'N/A';
         const longitude = user.longitude !== null && user.longitude !== undefined ? user.longitude.toFixed(6) : 'N/A';
 
-        const content = `
+        // Tampilkan loading state dulu
+        const loadingContent = `
             <div style="min-width: 280px;">
                 <div class="d-flex align-items-center gap-2 mb-2">
                     <i class="material-icons-outlined text-primary">person_pin</i>
@@ -7967,7 +8113,43 @@
                 </div>
                 <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
                     <p style="margin: 5px 0; font-size: 13px;">
-                        <strong>NPK:</strong> ${npk}
+                        <strong>SID:</strong> ${npk}
+                    </p>
+                    <p style="margin: 5px 0; font-size: 13px; color: #6b7280;">
+                        <i class="material-icons-outlined" style="font-size: 14px; vertical-align: middle;">sync</i>
+                        Memuat informasi lokasi...
+                    </p>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('popup-content').innerHTML = loadingContent;
+        popupOverlay.setPosition(coordinate);
+
+        // Load location details
+        const locationId = user.location_id || user.work_area_location_id || null;
+        const employeeId = user.employee_id || user.user_id || user.id || null;
+        
+        fetch(`{{ route('maps.api.gps-user-location-details') }}?latitude=${latitude}&longitude=${longitude}${locationId ? '&location_id=' + locationId : ''}${employeeId ? '&employee_id=' + employeeId : ''}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const locationData = data.data;
+                    const workAreaName = locationData.work_area ? locationData.work_area.name : 'Tidak diketahui';
+                    const sapCount = locationData.sap_count || 0;
+                    const sapOpenCount = locationData.sap_open_count || 0;
+                    const cctvCount = locationData.cctv_count || 0;
+                    const pjaCount = locationData.pja_count || 0;
+
+                    const content = `
+                        <div style="min-width: 300px;">
+                            <div class="d-flex align-items-center gap-2 mb-2">
+                                <i class="material-icons-outlined text-primary">person_pin</i>
+                                <h6 style="margin: 0; font-weight: 600;">${fullname}</h6>
+                            </div>
+                            <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
+                                <p style="margin: 5px 0; font-size: 13px;">
+                                    <strong>SID:</strong> ${npk}
                     </p>
                     ${email !== 'N/A' ? `<p style="margin: 5px 0; font-size: 13px;"><strong>Email:</strong> ${email}</p>` : ''}
                     ${phone !== 'N/A' ? `<p style="margin: 5px 0; font-size: 13px;"><strong>Phone:</strong> ${phone}</p>` : ''}
@@ -7983,6 +8165,7 @@
                     ${functionalPosition !== 'N/A' ? `<p style="margin: 5px 0; font-size: 13px;"><strong>Jabatan Fungsional:</strong> ${functionalPosition}</p>` : ''}
                     ${structuralPosition !== 'N/A' ? `<p style="margin: 5px 0; font-size: 13px;"><strong>Jabatan Struktural:</strong> ${structuralPosition}</p>` : ''}
                     ${siteAssignment !== 'N/A' ? `<p style="margin: 5px 0; font-size: 13px;"><strong>Site Assignment:</strong> ${siteAssignment}</p>` : ''}
+                                
                     <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
                         <p style="margin: 5px 0; font-size: 13px;">
                             <strong>Koordinat:</strong> ${latitude}, ${longitude}
@@ -7997,13 +8180,287 @@
                             <strong>Update Terakhir:</strong> ${updatedAt}
                         </p>
                     </div>
+
+                                <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px; background-color: #f9fafb; padding: 10px; border-radius: 6px;">
+                                    <p style="margin: 5px 0; font-size: 13px; font-weight: 600; color: #1f2937;">
+                                        <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">location_on</i>
+                                        Lokasi Saat Ini
+                                    </p>
+                                    <p style="margin: 5px 0; font-size: 13px;">
+                                        <strong>Area Kerja:</strong> ${workAreaName}
+                                    </p>
+                                    <p style="margin: 5px 0; font-size: 13px;">
+                                        <strong>SAP di Area:</strong> <span style="color: ${sapCount > 0 ? '#ef4444' : '#10b981'}; font-weight: 600;">${sapCount}</span>
+                                    </p>
+                                    <p style="margin: 5px 0; font-size: 13px;">
+                                        <strong>SAP Open:</strong> <span style="color: ${sapOpenCount > 0 ? '#dc2626' : '#10b981'}; font-weight: 600;">${sapOpenCount}</span>
+                                    </p>
+                                    <p style="margin: 5px 0; font-size: 13px;">
+                                        <strong>CCTV Mengcover:</strong> <span style="color: ${cctvCount > 0 ? '#3b82f6' : '#6b7280'}; font-weight: 600;">${cctvCount}</span>
+                                    </p>
+                                    <p style="margin: 5px 0; font-size: 13px;">
+                                        <strong>PJA Lokasi:</strong> <span style="color: ${pjaCount > 0 ? '#8b5cf6' : '#6b7280'}; font-weight: 600;">${pjaCount}</span>
+                                    </p>
+                                </div>
+
+                                <div style="margin-top: 10px;">
+                                    <button class="btn btn-sm btn-primary w-100" onclick="showGpsUserDetailModal(${JSON.stringify(user).replace(/"/g, '&quot;')}, ${JSON.stringify(locationData).replace(/"/g, '&quot;')})">
+                                        <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">info</i>
+                                        Lihat Detail Lengkap
+                                    </button>
+                                </div>
                 </div>
             </div>
         `;
 
         document.getElementById('popup-content').innerHTML = content;
-        popupOverlay.setPosition(coordinate);
+                } else {
+                    // Fallback jika API error
+                    showUserGpsPopupFallback(coordinate, user);
+                }
+            })
+            .catch(error => {
+                console.error('Error loading location details:', error);
+                showUserGpsPopupFallback(coordinate, user);
+            });
     }
+
+    function showUserGpsPopupFallback(coordinate, user) {
+        const fullname = user.fullname || 'N/A';
+        const npk = user.npk || 'N/A';
+        const latitude = user.latitude !== null && user.latitude !== undefined ? user.latitude.toFixed(6) : 'N/A';
+        const longitude = user.longitude !== null && user.longitude !== undefined ? user.longitude.toFixed(6) : 'N/A';
+        const workAreaName = user.work_area_name || 'Tidak diketahui';
+
+        const content = `
+            <div style="min-width: 280px;">
+                <div class="d-flex align-items-center gap-2 mb-2">
+                    <i class="material-icons-outlined text-primary">person_pin</i>
+                    <h6 style="margin: 0; font-weight: 600;">${fullname}</h6>
+                </div>
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
+                    <p style="margin: 5px 0; font-size: 13px;">
+                        <strong>SID:</strong> ${npk}
+                    </p>
+                    <p style="margin: 5px 0; font-size: 13px;">
+                        <strong>Area Kerja:</strong> ${workAreaName}
+                    </p>
+                    <p style="margin: 5px 0; font-size: 13px;">
+                        <strong>Koordinat:</strong> ${latitude}, ${longitude}
+                    </p>
+                    <p style="margin: 5px 0; font-size: 12px; color: #6b7280;">
+                        Gagal memuat detail lokasi
+                    </p>
+                </div>
+            </div>
+        `;
+
+        document.getElementById('popup-content').innerHTML = content;
+    }
+
+    // Function to show GPS user detail modal
+    window.showGpsUserDetailModal = function(user, locationData) {
+        // Close popup first
+        popupOverlay.setPosition(undefined);
+        
+        // Create or get modal element
+        let modalElement = document.getElementById('gpsUserDetailModal');
+        if (!modalElement) {
+            modalElement = document.createElement('div');
+            modalElement.id = 'gpsUserDetailModal';
+            modalElement.className = 'modal fade';
+            modalElement.setAttribute('tabindex', '-1');
+            document.body.appendChild(modalElement);
+    }
+
+        const workAreaName = locationData.work_area ? locationData.work_area.name : 'Tidak diketahui';
+        const sapCount = locationData.sap_count || 0;
+        const sapOpenCount = locationData.sap_open_count || 0;
+        const cctvCount = locationData.cctv_count || 0;
+        const pjaCount = locationData.pja_count || 0;
+        const sapList = locationData.sap_list || [];
+        const sapOpenList = locationData.sap_open_list || [];
+        const cctvList = locationData.cctv_list || [];
+        const pjaList = locationData.pja_list || [];
+
+        modalElement.innerHTML = `
+            <div class="modal-dialog modal-lg modal-dialog-scrollable">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">
+                            <i class="material-icons-outlined">person_pin</i>
+                            Detail Lokasi: ${user.fullname || 'N/A'}
+                        </h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="row mb-3">
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="material-icons-outlined">location_on</i>
+                                            Lokasi Saat Ini
+                                        </h6>
+                                        <p class="mb-1"><strong>Area Kerja:</strong></p>
+                                        <p class="text-muted">${workAreaName}</p>
+                                        ${locationData.work_area ? `
+                                            <p class="mb-1"><strong>Location ID:</strong></p>
+                                            <p class="text-muted">${locationData.work_area.location_id || 'N/A'}</p>
+                                        ` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="card">
+                                    <div class="card-body">
+                                        <h6 class="card-title">
+                                            <i class="material-icons-outlined">info</i>
+                                            Statistik
+                                        </h6>
+                                        <p class="mb-1"><strong>SAP di Area:</strong></p>
+                                        <p class="text-danger" style="font-size: 24px; font-weight: 600;">${sapCount}</p>
+                                        <p class="mb-1"><strong>SAP Open:</strong></p>
+                                        <p class="text-danger" style="font-size: 24px; font-weight: 600;">${sapOpenCount}</p>
+                                        <p class="mb-1"><strong>CCTV Mengcover:</strong></p>
+                                        <p class="text-primary" style="font-size: 24px; font-weight: 600;">${cctvCount}</p>
+                                        <p class="mb-1"><strong>PJA Lokasi:</strong></p>
+                                        <p class="text-purple" style="font-size: 24px; font-weight: 600; color: #8b5cf6;">${pjaCount}</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        ${sapOpenList.length > 0 ? `
+                            <div class="mb-3">
+                                <h6><i class="material-icons-outlined">warning</i> Daftar SAP Open di Area (${sapOpenCount})</h6>
+                                <div class="table-responsive" style="max-height: 300px;">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Task Number</th>
+                                                <th>Jenis</th>
+                                                <th>Lokasi</th>
+                                                <th>Tanggal</th>
+                                                <th>Jarak</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${sapOpenList.map(sap => `
+                                                <tr>
+                                                    <td>${sap.task_number || 'N/A'}</td>
+                                                    <td><span class="badge bg-danger">${sap.source_type || sap.jenis_laporan || 'SAP'}</span></td>
+                                                    <td>${sap.lokasi || sap.detail_lokasi || 'N/A'}</td>
+                                                    <td>${sap.tanggal ? formatDateWIB(sap.tanggal).split(',')[0] : 'N/A'}</td>
+                                                    <td>${sap.distance ? sap.distance + ' m' : 'N/A'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${sapList.length > 0 ? `
+                            <div class="mb-3">
+                                <h6><i class="material-icons-outlined">warning</i> Daftar Semua SAP di Area (${sapCount})</h6>
+                                <div class="table-responsive" style="max-height: 300px;">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Task Number</th>
+                                                <th>Jenis</th>
+                                                <th>Lokasi</th>
+                                                <th>Tanggal</th>
+                                                <th>Jarak</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${sapList.map(sap => `
+                                                <tr>
+                                                    <td>${sap.task_number || 'N/A'}</td>
+                                                    <td><span class="badge bg-warning">${sap.source_type || sap.jenis_laporan || 'SAP'}</span></td>
+                                                    <td>${sap.lokasi || sap.detail_lokasi || 'N/A'}</td>
+                                                    <td>${sap.tanggal ? formatDateWIB(sap.tanggal).split(',')[0] : 'N/A'}</td>
+                                                    <td>${sap.distance ? sap.distance + ' m' : 'N/A'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${cctvList.length > 0 ? `
+                            <div class="mb-3">
+                                <h6><i class="material-icons-outlined">videocam</i> CCTV yang Mengcover Area (${cctvCount})</h6>
+                                <div class="table-responsive" style="max-height: 300px;">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>Nama CCTV</th>
+                                                <th>No CCTV</th>
+                                                <th>Coverage Lokasi</th>
+                                                <th>Jarak</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${cctvList.map(cctv => `
+                                                <tr>
+                                                    <td>${cctv.name || 'N/A'}</td>
+                                                    <td>${cctv.no_cctv || 'N/A'}</td>
+                                                    <td>${cctv.coverage_lokasi || 'N/A'}</td>
+                                                    <td>${cctv.distance ? cctv.distance + ' m' : 'N/A'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ` : ''}
+
+                        ${pjaList.length > 0 ? `
+                            <div class="mb-3">
+                                <h6><i class="material-icons-outlined">assignment</i> PJA di Lokasi (${pjaCount})</h6>
+                                <div class="table-responsive" style="max-height: 300px;">
+                                    <table class="table table-sm table-hover">
+                                        <thead>
+                                            <tr>
+                                                <th>PJA ID</th>
+                                                <th>Nama PJA</th>
+                                                <th>Lokasi</th>
+                                                <th>Site</th>
+                                                <th>Type</th>
+                                                <th>Employee</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody>
+                                            ${pjaList.map(pja => `
+                                                <tr>
+                                                    <td>${pja.pja_id || 'N/A'}</td>
+                                                    <td>${pja.nama_pja || 'N/A'}</td>
+                                                    <td>${pja.lokasi || pja.detail_lokasi || 'N/A'}</td>
+                                                    <td>${pja.site || 'N/A'}</td>
+                                                    <td><span class="badge bg-info">${pja.pja_type_name || 'N/A'}</span></td>
+                                                    <td>${pja.employee_name || pja.kode_sid || 'N/A'}</td>
+                                                </tr>
+                                            `).join('')}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    </div>
+                </div>
+            </div>
+        `;
+
+        const modal = new bootstrap.Modal(modalElement);
+        modal.show();
+    };
 
     function showUnitVehiclePopup(coordinate, unit) {
         if (!unit) {
@@ -9276,25 +9733,6 @@
             }
             layers.push(unitVehicleLayer);
         }
-        // Ensure hazard color overlay is above WMS if active
-        if (hazardColorOverlayLayer && layers.getArray().includes(hazardColorOverlayLayer)) {
-            layers.remove(hazardColorOverlayLayer);
-            layers.push(hazardColorOverlayLayer);
-        }
-        
-        // Reapply hazard color overlay if Map 1 is selected
-        if (isHazardColorModeActive) {
-            // Remove and reapply to ensure it works with new WMS layer
-            removeHazardColorOverlay();
-            setTimeout(() => {
-                // Check if Map 1 is still selected
-                const map1Item = document.querySelector('.map-selection-item[data-map="1"]');
-                if (map1Item && map1Item.classList.contains('selected')) {
-                    applyHazardColorOverlay();
-                }
-            }, 100);
-        }
-        
         // Ensure BMO2 PAMA layers are above WMS but below hazard and CCTV
         if (areaKerjaBmo2PamaLayer && layers.getArray().includes(areaKerjaBmo2PamaLayer)) {
             layers.remove(areaKerjaBmo2PamaLayer);
@@ -10814,11 +11252,6 @@
         });
     }
 
-    // DataTable untuk modal Total CCTV
-    let companyCctvTable = null;
-    let currentSelectedCompany = '__all__';
-    let currentSelectedSite = '__all__';
-
     document.addEventListener('DOMContentLoaded', function() {
         switchView('hazard');
         
@@ -10832,12 +11265,8 @@
         loadHeaderFilterOptions();
         
         loadAreaKritisOverview();
-        loadControlRoomOverview();
         loadChartStats();
         updateTotalCctvCount();
-        
-        // Inisialisasi DataTable untuk tabel CCTV di halaman utama
-        initializeCompanyCctvTable();
         
         // Event listener untuk filter di header (dropdown button)
         const headerFilterCompanyBtn = document.getElementById('headerFilterCompanyBtn');
@@ -10883,7 +11312,6 @@
                     // Update semua statistik berdasarkan filter
                     loadChartStats();
                     loadAreaKritisOverview();
-                    loadControlRoomOverview();
                     updateTotalCctvCount();
                 }
             });
@@ -10932,7 +11360,6 @@
                     // Update semua statistik berdasarkan filter
                     loadChartStats();
                     loadAreaKritisOverview();
-                    loadControlRoomOverview();
                     updateTotalCctvCount();
                     updateTotalCctvCount();
                 }
@@ -10981,7 +11408,6 @@
                 // Update semua statistik
                 loadChartStats();
                 loadAreaKritisOverview();
-                loadControlRoomOverview();
                 updateTotalCctvCount();
             });
         }
@@ -11030,7 +11456,6 @@
                     // Update semua statistik berdasarkan filter
                     loadChartStats();
                     loadAreaKritisOverview();
-                    loadControlRoomOverview();
                     updateTotalCctvCount();
                 }
             });
@@ -11079,7 +11504,6 @@
                     // Update semua statistik berdasarkan filter
                     loadChartStats();
                     loadAreaKritisOverview();
-                    loadControlRoomOverview();
                     updateTotalCctvCount();
                 }
             });
@@ -11127,7 +11551,6 @@
                 // Update semua statistik
                 loadChartStats();
                 loadAreaKritisOverview();
-                loadControlRoomOverview();
                 updateTotalCctvCount();
             });
         }
@@ -11151,6 +11574,11 @@
             });
         }
     });
+
+    // DataTable untuk modal Total CCTV
+    let companyCctvTable = null;
+    let currentSelectedCompany = '__all__';
+    let currentSelectedSite = '__all__';
     
     // Chart instances
     let chartSiteBar = null;
@@ -11171,8 +11599,6 @@
         currentSelectedSite = '__all__';
         // Panggil API statistik CCTV
         loadChartStats();
-        loadAreaKritisOverview();
-        loadControlRoomOverview();
     });
     
     // Function untuk membuka modal TBC Overview
@@ -11400,7 +11826,6 @@
             setTimeout(() => {
                 loadChartStats();
                 loadAreaKritisOverview();
-                loadControlRoomOverview();
                 updateTotalCctvCount();
             }, 500);
         };
@@ -11585,17 +12010,9 @@
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
-                    // Debug: log data untuk troubleshooting
-                    console.log('Area Kritis Overview Data:', {
-                        aktivitasHighrisk: data.aktivitasHighrisk,
-                        jumlahAreaKritis: data.jumlahAreaKritis,
-                        cctvAreaNonKritis: data.cctvAreaNonKritis,
-                        total: data.total
-                    });
-                    
                     // Update Area Kritis Overview dengan animasi
                     animateNumber('modalJumlahAreaKritis', data.jumlahAreaKritis || 0, 800);
-                    animateNumber('modalCctvAreaKritis', data.aktivitasHighrisk || 0, 800);
+                    animateNumber('modalCctvAreaKritis', data.cctvAreaKritis || 0, 800);
                     animateNumber('modalCctvAreaNonKritis', data.cctvAreaNonKritis || 0, 800);
                     
                     // Update detail data di accordion body
@@ -11610,13 +12027,10 @@
                     // Update list detail area kritis
                     updateDetailAreaKritisList(data.detailAreaKritis || []);
                     
-                    // Update Aktivitas Highrisk detail
-                    animateNumber('detailCctvAreaKritis', data.aktivitasHighrisk || 0, 800);
+                    // Update CCTV Area Kritis detail
+                    animateNumber('detailCctvAreaKritis', data.cctvAreaKritis || 0, 800);
                     animateNumber('detailTotalCctvAreaKritis', totalCctv, 800);
-                    const persentaseCctvAreaKritis = totalCctv > 0 ? ((data.aktivitasHighrisk || 0) / totalCctv * 100).toFixed(1) : 0;
-                    
-                    // Update list detail aktivitas highrisk
-                    updateDetailAktivitasHighriskList(data.detailAktivitasHighrisk || []);
+                    const persentaseCctvAreaKritis = totalCctv > 0 ? ((data.cctvAreaKritis || 0) / totalCctv * 100).toFixed(1) : 0;
                     const persentaseCctvAreaKritisEl = document.getElementById('detailPersentaseCctvAreaKritis');
                     if (persentaseCctvAreaKritisEl) {
                         // Animate percentage dengan delay untuk efek yang lebih baik
@@ -11649,447 +12063,6 @@
             .catch(error => {
                 console.error('Error loading area kritis overview:', error);
             });
-    }
-    
-    // Function untuk load control room overview
-    // Ambil data langsung dari API yang sudah di-group by control_room dari cctv_data_bmo2
-    function loadControlRoomOverview() {
-        fetch(`{{ route('hazard-detection.api.control-room-overview') }}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const controlRoomData = data.data.control_rooms || [];
-                    
-                    // Urutkan: alfabetis
-                    const sortedData = [...controlRoomData].sort((a, b) => {
-                        return a.name.localeCompare(b.name);
-                    });
-                    
-                    // Update statistics
-                    animateNumber('modalJumlahControlRoom', data.data.total_control_rooms || 0, 800);
-                    animateNumber('modalTotalCctvControlRoom', data.data.total_cctv || 0, 800);
-                    animateNumber('modalCctvAktifControlRoom', data.data.total_aktif || 0, 800);
-                    
-                    // Update P2H statistics
-                    animateNumber('modalTotalSudahP2h', data.data.total_sudah_p2h || 0, 800);
-                    animateNumber('modalTotalBelumP2h', data.data.total_belum_p2h || 0, 800);
-                    
-                    // Update detail table
-                    updateDetailControlRoomTable(sortedData);
-                } else {
-                    console.error('Error loading control room overview:', data.message);
-                    // Reset stats jika error
-                    animateNumber('modalJumlahControlRoom', 0, 800);
-                    animateNumber('modalTotalCctvControlRoom', 0, 800);
-                    animateNumber('modalCctvAktifControlRoom', 0, 800);
-                    animateNumber('modalTotalSudahP2h', 0, 800);
-                    animateNumber('modalTotalBelumP2h', 0, 800);
-                    updateDetailControlRoomTable([]);
-                }
-            })
-            .catch(error => {
-                console.error('Error loading control room overview:', error);
-                // Reset stats jika error
-                animateNumber('modalJumlahControlRoom', 0, 800);
-                animateNumber('modalTotalCctvControlRoom', 0, 800);
-                animateNumber('modalCctvAktifControlRoom', 0, 800);
-                animateNumber('modalTotalSudahP2h', 0, 800);
-                animateNumber('modalTotalBelumP2h', 0, 800);
-                updateDetailControlRoomTable([]);
-            });
-    }
-    
-    // Function untuk update detail control room table
-    function updateDetailControlRoomTable(controlRoomData) {
-        const tbody = document.getElementById('detailControlRoomTableBody');
-        if (!tbody) return;
-        
-        if (!controlRoomData || controlRoomData.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
-                        Tidak ada data control room.
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-        
-        let rowsHtml = '';
-        controlRoomData.forEach((controlRoom, index) => {
-            const rowId = `controlRoomRow${index}`;
-            const detailRowId = `controlRoomDetailRow${index}`;
-            
-            // Get P2H status
-            const p2hStatus = controlRoom.p2h_status || {};
-            const hasP2hToday = p2hStatus.has_p2h_today || false;
-            const latestP2hDate = p2hStatus.latest_p2h_date || null;
-            const latestP2hShift = p2hStatus.latest_p2h_shift || null;
-            
-            // Format P2H status badge
-            let p2hStatusBadge = '';
-            if (hasP2hToday) {
-                p2hStatusBadge = '<span class="badge bg-success px-3 py-2">Sudah P2H Hari Ini</span>';
-            } else if (latestP2hDate) {
-                const dateObj = new Date(latestP2hDate);
-                const formattedDate = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                p2hStatusBadge = `<span class="badge bg-warning px-3 py-2" title="P2H Terakhir: ${formattedDate} Shift ${latestP2hShift}">P2H: ${formattedDate}</span>`;
-            } else {
-                p2hStatusBadge = '<span class="badge bg-danger px-3 py-2">Belum P2H</span>';
-            }
-            
-            rowsHtml += `
-                <tr id="${rowId}">
-                    <td>${index + 1}</td>
-                    <td>
-                        <span class="fw-semibold">${escapeHtml(controlRoom.name)}</span>
-                    </td>
-                    <td class="text-end">
-                        <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">${controlRoom.total.toLocaleString('id-ID')} CCTV</span>
-                    </td>
-                    <td class="text-end">
-                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">${controlRoom.aktif.toLocaleString('id-ID')} CCTV</span>
-                    </td>
-                    <td class="text-end">
-                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2">${controlRoom.tidak_aktif.toLocaleString('id-ID')} CCTV</span>
-                    </td>
-                    <td class="text-center">
-                        ${p2hStatusBadge}
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-primary intervensi-btn" type="button" data-control-room="${escapeHtml(controlRoom.name)}" data-bs-toggle="modal" data-bs-target="#intervensiModal" title="Kirim Intervensi">
-                            <span class="material-icons-outlined" style="font-size: 18px;">send</span>
-                        </button>
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-outline-primary control-room-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#${detailRowId}" aria-expanded="false" aria-controls="${detailRowId}">
-                            <span class="material-icons-outlined control-room-icon" style="font-size: 18px;">expand_more</span>
-                        </button>
-                    </td>
-                </tr>
-                <tr id="${detailRowId}" class="collapse">
-                    <td colspan="8" class="p-0">
-                        <div class="p-3 bg-light">
-                            <h6 class="mb-3 fw-bold">Detail CCTV - ${escapeHtml(controlRoom.name)}</h6>
-                            <div class="cctv-detail-scroll" style="max-height: 400px; overflow-y: auto;">
-                                <div id="cctvDetailBody${index}">
-                                    ${generateCctvDetailRows(controlRoom.cctv_list)}
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-        
-        tbody.innerHTML = rowsHtml;
-        
-        // Attach event listeners for collapse icons after HTML is inserted
-        controlRoomData.forEach((controlRoom, index) => {
-            const detailRowId = `controlRoomDetailRow${index}`;
-            const detailRow = document.getElementById(detailRowId);
-            const button = document.querySelector(`[data-bs-target="#${detailRowId}"]`);
-            const icon = button?.querySelector('.control-room-icon');
-            
-            if (detailRow && icon) {
-                detailRow.addEventListener('shown.bs.collapse', function() {
-                    icon.textContent = 'expand_less';
-                });
-                detailRow.addEventListener('hidden.bs.collapse', function() {
-                    icon.textContent = 'expand_more';
-                });
-            }
-        });
-        
-        // Attach event listeners for intervensi buttons
-        attachIntervensiButtonListeners();
-    }
-    
-    // Function untuk attach event listeners pada tombol intervensi
-    function attachIntervensiButtonListeners() {
-        const intervensiButtons = document.querySelectorAll('.intervensi-btn');
-        intervensiButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const controlRoom = this.getAttribute('data-control-room');
-                if (controlRoom) {
-                    loadIntervensiModal(controlRoom);
-                }
-            });
-        });
-    }
-    
-    // Function untuk load modal intervensi dengan data pengawas
-    function loadIntervensiModal(controlRoom) {
-        // Set control room
-        document.getElementById('intervensiControlRoom').value = controlRoom;
-        document.getElementById('intervensiControlRoomDisplay').value = controlRoom;
-        
-        // Reset form
-        document.getElementById('intervensiForm').reset();
-        document.getElementById('intervensiControlRoom').value = controlRoom;
-        document.getElementById('intervensiControlRoomDisplay').value = controlRoom;
-        
-        // Clear and reset PIC dropdown
-        const picSelect = document.getElementById('intervensiPIC');
-        
-        // Destroy existing Select2 instance if any
-        if ($(picSelect).hasClass('select2-hidden-accessible')) {
-            $(picSelect).select2('destroy');
-        }
-        
-        // Clear select options
-        picSelect.innerHTML = '<option value="">Pilih PIC...</option>';
-        picSelect.disabled = false;
-        
-        // Initialize Select2 with AJAX search for better performance
-        $(picSelect).select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Ketik untuk mencari PIC (Pengawas)...',
-            allowClear: true,
-            width: '100%',
-            minimumInputLength: 0, // Allow search from start
-            ajax: {
-                url: `{{ url('cctv-data-control-room/users') }}`,
-                type: 'GET',
-                dataType: 'json',
-                delay: 300, // Debounce 300ms to reduce server requests
-                data: function (params) {
-                    console.log('Select2 AJAX request:', params);
-                    return {
-                        q: params.term || '', // Search term
-                        page: params.page || 1
-                    };
-                },
-                processResults: function (data, params) {
-                    console.log('Select2 AJAX response:', data);
-                    // Handle both old format (success/data) and new format (results)
-                    if (data.success && data.data) {
-                        // Convert old format to new format
-                        const results = data.data.map(user => ({
-                            id: user.id,
-                            text: user.text || (user.username + ' - ' + user.nama),
-                            username: user.username,
-                            nama: user.nama
-                        }));
-                        return {
-                            results: results,
-                            pagination: { more: false }
-                        };
-                    }
-                    // Handle error response
-                    if (data.error) {
-                        console.error('Select2 AJAX error:', data.error);
-                        return {
-                            results: [],
-                            pagination: { more: false }
-                        };
-                    }
-                    return {
-                        results: data.results || [],
-                        pagination: {
-                            more: data.pagination && data.pagination.more
-                        }
-                    };
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    console.error('Select2 AJAX error:', textStatus, errorThrown);
-                    console.error('Response:', jqXHR.responseText);
-                },
-                cache: false // Disable cache to ensure fresh results
-            },
-            // Trigger AJAX when dropdown opens
-            dropdownParent: $(picSelect).closest('.modal-body') || $(document.body),
-            language: {
-                noResults: function() {
-                    return "Tidak ada hasil ditemukan";
-                },
-                searching: function() {
-                    return "Mencari...";
-                },
-                inputTooShort: function() {
-                    return "Ketik untuk mencari";
-                }
-            },
-            escapeMarkup: function (markup) {
-                return markup; // Let our custom formatter work
-            },
-            templateResult: function(user) {
-                if (user.loading) {
-                    return "Mencari...";
-                }
-                if (!user.text && user.username && user.nama) {
-                    return user.username + ' - ' + user.nama;
-                }
-                return user.text || user.id;
-            },
-            templateSelection: function(user) {
-                if (user.text) {
-                    return user.text;
-                }
-                if (user.username && user.nama) {
-                    return user.username + ' - ' + user.nama;
-                }
-                return user.id || '';
-            }
-        });
-        
-        // Trigger initial load when dropdown opens (if minimumInputLength is 0)
-        $(picSelect).on('select2:open', function() {
-            // Force trigger search with empty term to load initial results
-            const $select2 = $(picSelect).data('select2');
-            if ($select2 && !$select2._request) {
-                $select2.trigger('query', { term: '' });
-            }
-        });
-    }
-    
-    // Handle modal close to destroy Select2
-    const intervensiModal = document.getElementById('intervensiModal');
-    if (intervensiModal) {
-        intervensiModal.addEventListener('hidden.bs.modal', function() {
-            const picSelect = document.getElementById('intervensiPIC');
-            if (picSelect && $(picSelect).hasClass('select2-hidden-accessible')) {
-                $(picSelect).select2('destroy');
-            }
-        });
-    }
-    
-    // Handle submit intervensi form
-    document.addEventListener('DOMContentLoaded', function() {
-        const submitIntervensiBtn = document.getElementById('submitIntervensiBtn');
-        if (submitIntervensiBtn) {
-            submitIntervensiBtn.addEventListener('click', function() {
-                const form = document.getElementById('intervensiForm');
-                if (form.checkValidity()) {
-                    const formData = {
-                        control_room: document.getElementById('intervensiControlRoom').value,
-                        pic_id: document.getElementById('intervensiPIC').value,
-                        issue: document.getElementById('intervensiIssue').value
-                    };
-                    
-                    // Disable button
-                    const submitBtn = this;
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengirim...';
-                    
-                    // Send AJAX request to save intervensi
-                    fetch(`{{ url('cctv-data-control-room/intervensi') }}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify(formData)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Show success message
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: data.message || 'Intervensi berhasil dikirim!',
-                                showConfirmButton: true,
-                                confirmButtonText: 'OK'
-                            }).then((result) => {
-                                // Close modal
-                                const modal = bootstrap.Modal.getInstance(document.getElementById('intervensiModal'));
-                                if (modal) {
-                                    modal.hide();
-                                }
-                                
-                                // Reset form
-                                form.reset();
-                                
-                                // Open WhatsApp if URL is available
-                                if (data.data && data.data.whatsapp_url) {
-                                    window.open(data.data.whatsapp_url, '_blank');
-                                }
-                            });
-                        } else {
-                            // Show error message
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: data.message || 'Terjadi kesalahan saat mengirim intervensi.'
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Terjadi kesalahan saat mengirim intervensi. Silakan coba lagi.'
-                        });
-                    })
-                    .finally(() => {
-                        // Re-enable button
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span> Kirim Intervensi';
-                    });
-                } else {
-                    form.reportValidity();
-                }
-            });
-        }
-    });
-    
-    // Function untuk generate CCTV detail rows
-    function generateCctvDetailRows(cctvList) {
-        if (!cctvList || cctvList.length === 0) {
-            return '<div class="text-center text-muted py-3">Tidak ada CCTV</div>';
-        }
-        
-        let rowsHtml = '';
-        cctvList.forEach((cctv, index) => {
-            const status = cctv.status || cctv.kondisi || 'Tidak Diketahui';
-            const kondisi = cctv.kondisi || 'Tidak Diketahui';
-            const statusBadge = (status === 'Aktif' || status === 'Connected' || status === 'Live View' || kondisi === 'Baik')
-                ? '<span class="badge bg-success">Aktif</span>'
-                : '<span class="badge bg-danger">Tidak Aktif</span>';
-            const kondisiBadge = (kondisi === 'Baik')
-                ? '<span class="badge bg-success">Baik</span>'
-                : '<span class="badge bg-danger">Tidak Baik</span>';
-            
-            rowsHtml += `
-                <div class="d-flex align-items-start p-2 mb-2 bg-white border rounded shadow-sm">
-                    <div class="me-3 text-center" style="min-width: 40px;">
-                        <div class="badge bg-secondary bg-opacity-10 text-secondary w-100 mb-1">${index + 1}</div>
-                        <div class="small fw-semibold text-primary text-wrap">${escapeHtml(cctv.no_cctv || cctv.nomor_cctv || 'N/A')}</div>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <div class="fw-semibold text-truncate pe-2" title="${escapeHtml(cctv.nama_cctv || cctv.name || 'N/A')}">
-                                ${escapeHtml(cctv.nama_cctv || cctv.name || 'N/A')}
-                            </div>
-                            <div class="ms-2 text-nowrap">
-                                ${kondisiBadge}
-                            </div>
-                        </div>
-                        <div class="d-flex flex-wrap align-items-center small text-muted">
-                            <span class="me-3">
-                                <span class="fw-semibold">Status:</span> ${statusBadge}
-                            </span>
-                            <span class="me-3">
-                                <span class="fw-semibold">Site:</span> ${escapeHtml(cctv.site || 'N/A')}
-                            </span>
-                            <span class="me-3">
-                                <span class="fw-semibold">Perusahaan:</span> ${escapeHtml(cctv.perusahaan || cctv.perusahaan_cctv || 'N/A')}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        return rowsHtml;
-    }
-    
-    // Function untuk toggle control room detail icon (kept for backward compatibility)
-    function toggleControlRoomDetail(rowId, detailRowId) {
-        // Function is now handled by event listeners in updateDetailControlRoomTable
-        // This function is kept for any onclick handlers that might reference it
     }
     
     // Function untuk update list detail area kritis
@@ -12126,53 +12099,6 @@
         
         if (detailAreaKritis.length > 10) {
             html += `<small class="text-muted">dan ${detailAreaKritis.length - 10} area lainnya...</small>`;
-        }
-        
-        html += '</div>';
-        listContainer.innerHTML = html;
-    }
-    
-    // Function untuk update list detail aktivitas highrisk
-    function updateDetailAktivitasHighriskList(detailAktivitasHighrisk) {
-        const listContainer = document.getElementById('listDetailAktivitasHighrisk');
-        if (!listContainer) return;
-        
-        if (!detailAktivitasHighrisk || detailAktivitasHighrisk.length === 0) {
-            listContainer.innerHTML = `
-                <strong>Detail Lokasi Aktivitas Highrisk:</strong>
-                <div class="mt-2">
-                    <small class="text-muted">Tidak ada data aktivitas highrisk</small>
-                </div>
-            `;
-            return;
-        }
-        
-        let html = '<strong>Detail Lokasi Aktivitas Highrisk:</strong><div class="mt-2">';
-        
-        // Tampilkan maksimal 10 lokasi pertama
-        const maxItems = Math.min(detailAktivitasHighrisk.length, 10);
-        for (let i = 0; i < maxItems; i++) {
-            const item = detailAktivitasHighrisk[i];
-            const lokasi = item.lokasi || 'Tidak Diketahui';
-            const detailLokasi = item.detail_lokasi || 'Tidak Diketahui';
-            const kategori = item.kategori_aktivitas || 'Tidak Diketahui';
-            
-            html += `
-                <div class="p-2 mb-2 bg-white border rounded">
-                    <div class="d-flex align-items-start mb-1">
-                        <i class="material-icons-outlined text-warning me-2" style="font-size: 18px; margin-top: 2px;">warning</i>
-                        <div class="flex-grow-1">
-                            <div class="fw-semibold text-truncate" title="${lokasi}">${lokasi}</div>
-                            <small class="text-muted d-block" style="font-size: 0.85rem;" title="${detailLokasi}">${detailLokasi}</small>
-                        </div>
-                        <span class="badge bg-warning ms-2">${kategori}</span>
-                    </div>
-                </div>
-            `;
-        }
-        
-        if (detailAktivitasHighrisk.length > 10) {
-            html += `<small class="text-muted">dan ${detailAktivitasHighrisk.length - 10} lokasi lainnya...</small>`;
         }
         
         html += '</div>';
@@ -12270,7 +12196,7 @@
                     
                     // Update Area Kritis Overview
                     animateNumber('modalJumlahAreaKritis', data.jumlahAreaKritis || 0, 800);
-                    animateNumber('modalCctvAreaKritis', data.aktivitasHighrisk || 0, 800);
+                    animateNumber('modalCctvAreaKritis', data.cctvAreaKritis || 0, 800);
                     animateNumber('modalCctvAreaNonKritis', data.cctvAreaNonKritis || 0, 800);
                     
                     // Update Detail Coverage Lokasi Table
@@ -12836,97 +12762,68 @@
         tbody.innerHTML = rowsHtml;
     }
 
-    // Function untuk inisialisasi DataTable
-    function initializeCompanyCctvTable() {
-        const tableElement = document.getElementById('companyCctvTable');
-        if (!tableElement) return;
-        
-        // Cek apakah DataTable sudah diinisialisasi
-        if ($.fn.DataTable.isDataTable('#companyCctvTable')) {
-            if (companyCctvTable) {
-                companyCctvTable.destroy();
-            }
-        }
-        
-        companyCctvTable = $('#companyCctvTable').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: "{{ route('hazard-detection.api.company-cctv-data') }}",
-                type: "GET",
-                data: function (d) {
-                    d.company = currentSelectedCompany;
-                    d.site = currentSelectedSite;
-                },
-                dataFilter: function(data) {
-                    var json = jQuery.parseJSON(data);
-                    const countEl = document.getElementById('companyCctvCount');
-                    if (countEl) {
-                        countEl.textContent = `${json.recordsFiltered} CCTV`;
-                    }
-                    return JSON.stringify(json);
-                },
-                error: function(xhr, error, thrown) {
-                    console.error("DataTables AJAX error:", thrown, xhr);
-                    const countEl = document.getElementById('companyCctvCount');
-                    if (countEl) {
-                        countEl.textContent = '0 CCTV';
-                    }
-                }
-            },
-            columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '50px' },
-                { data: 'site', name: 'site', width: '100px' },
-                { data: 'perusahaan', name: 'perusahaan', width: '150px' },
-                { data: 'no_cctv', name: 'no_cctv', className: 'fw-semibold text-primary', width: '120px' },
-                { data: 'nama_cctv', name: 'nama_cctv', width: '150px' },
-                { data: 'status', name: 'status', orderable: false, searchable: false, width: '100px' },
-                { data: 'kondisi', name: 'kondisi', orderable: false, searchable: false, width: '100px' },
-                { data: 'coverage_lokasi', name: 'coverage_lokasi', width: '150px' },
-                { data: 'coverage_detail_lokasi', name: 'coverage_detail_lokasi', width: '150px' },
-                { data: 'kategori_area_tercapture', name: 'kategori_area_tercapture', width: '150px' },
-                { data: 'lokasi_pemasangan', name: 'lokasi_pemasangan', width: '150px' }
-            ],
-            order: [[3, 'asc']],
-            pageLength: 25,
-            scrollX: true,
-            scrollY: '400px',
-            scrollCollapse: true,
-            autoWidth: false,
-            language: {
-                processing: "Memproses data...",
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ data per halaman",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-                infoFiltered: "(disaring dari _MAX_ total data)",
-                paginate: {
-                    first: "Pertama",
-                    last: "Terakhir",
-                    next: "Selanjutnya",
-                    previous: "Sebelumnya"
-                },
-                emptyTable: "Data CCTV akan ditampilkan berdasarkan filter yang dipilih.",
-                zeroRecords: "Tidak ada data yang cocok dengan pencarian"
-            },
-            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
-        });
-    }
-
-    // Inisialisasi DataTable saat halaman dimuat
-    document.addEventListener('DOMContentLoaded', function() {
-        // Inisialisasi DataTable untuk tabel di halaman utama
-        initializeCompanyCctvTable();
-    });
-
-    // Inisialisasi DataTable saat modal dibuka (untuk kompatibilitas)
+    // Inisialisasi DataTable saat modal dibuka
     const totalCctvModal = document.getElementById('totalCctvModal');
     if (totalCctvModal) {
         totalCctvModal.addEventListener('shown.bs.modal', function () {
-            // Jika tabel ada di modal, inisialisasi ulang
-            const modalTable = document.querySelector('#totalCctvModal #companyCctvTable');
-            if (modalTable && !companyCctvTable) {
-                initializeCompanyCctvTable();
+            if (!companyCctvTable) {
+                companyCctvTable = $('#companyCctvTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{{ route('hazard-detection.api.company-cctv-data') }}",
+                        type: "GET",
+                        data: function (d) {
+                            d.company = currentSelectedCompany;
+                            d.site = currentSelectedSite;
+                        },
+                        dataFilter: function(data) {
+                            var json = jQuery.parseJSON(data);
+                            document.getElementById('companyCctvCount').textContent = `${json.recordsFiltered} CCTV`;
+                            return JSON.stringify(json);
+                        },
+                        error: function(xhr, error, thrown) {
+                            console.error("DataTables AJAX error:", thrown, xhr);
+                            document.getElementById('companyCctvCount').textContent = '0 CCTV';
+                        }
+                    },
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '50px' },
+                        { data: 'site', name: 'site', width: '100px' },
+                        { data: 'perusahaan', name: 'perusahaan', width: '150px' },
+                        { data: 'no_cctv', name: 'no_cctv', className: 'fw-semibold text-primary', width: '120px' },
+                        { data: 'nama_cctv', name: 'nama_cctv', width: '150px' },
+                        { data: 'status', name: 'status', orderable: false, searchable: false, width: '100px' },
+                        { data: 'kondisi', name: 'kondisi', orderable: false, searchable: false, width: '100px' },
+                        { data: 'coverage_lokasi', name: 'coverage_lokasi', width: '150px' },
+                        { data: 'coverage_detail_lokasi', name: 'coverage_detail_lokasi', width: '150px' },
+                        { data: 'kategori_area_tercapture', name: 'kategori_area_tercapture', width: '150px' },
+                        { data: 'lokasi_pemasangan', name: 'lokasi_pemasangan', width: '150px' }
+                    ],
+                    order: [[3, 'asc']],
+                    pageLength: 25,
+                    scrollX: true,
+                    scrollY: '400px',
+                    scrollCollapse: true,
+                    autoWidth: false,
+                    language: {
+                        processing: "Memproses data...",
+                        search: "Cari:",
+                        lengthMenu: "Tampilkan _MENU_ data per halaman",
+                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                        infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                        infoFiltered: "(disaring dari _MAX_ total data)",
+                        paginate: {
+                            first: "Pertama",
+                            last: "Terakhir",
+                            next: "Selanjutnya",
+                            previous: "Sebelumnya"
+                        },
+                        emptyTable: "Klik perusahaan di tabel sebelah kiri untuk menampilkan daftar CCTV.",
+                        zeroRecords: "Tidak ada data yang cocok dengan pencarian"
+                    },
+                    dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+                });
             }
         });
 
@@ -12951,13 +12848,7 @@
                 // Update semua statistik berdasarkan filter yang dipilih
                 loadChartStats();
                 loadAreaKritisOverview();
-                loadControlRoomOverview();
                 updateTotalCctvCount();
-                
-                // Reload DataTable jika sudah diinisialisasi
-                if (companyCctvTable) {
-                    companyCctvTable.ajax.reload();
-                }
             }
             
             if (e.target && e.target.id === 'filterSite') {
@@ -13028,7 +12919,6 @@
                 loadChartStats();
                 // Update area kritis overview saat filter di-reset
                 loadAreaKritisOverview();
-                loadControlRoomOverview();
             }
         });
 
@@ -13223,20 +13113,35 @@
                 // For more accurate check, create a point and check if it's inside polygon
                 const point = new ol.geom.Point(coordinate);
                 
-                // Check if point intersects with polygon (point inside polygon)
-                if (geometry.intersectsGeometry(point)) {
-                    return true;
+                // Check if point intersects with polygon using intersects method
+                // Note: intersectsGeometry doesn't exist in OpenLayers, use intersectsCoordinate instead
+                try {
+                    if (geometry.intersectsCoordinate(coordinate)) {
+                        return true;
+                    }
+                } catch (e) {
+                    // Fallback: check if coordinate is within extent
+                    const extent = geometry.getExtent();
+                    if (extent && ol.extent.containsCoordinate(extent, coordinate)) {
+                        // Additional check: use ray casting algorithm for more accurate point-in-polygon
+                        // For now, if it's in extent, we'll consider it as inside
+                        return true;
+                    }
                 }
                 
                 // Also check if point is very close to polygon boundary (within 10 meters tolerance)
                 // This handles cases where coordinate is slightly outside due to GPS accuracy
-                const closestPoint = geometry.getClosestPoint(coordinate);
-                const distance = ol.coordinate.distance(coordinate, closestPoint);
-                // Convert distance from map units to meters (approximate: 1 map unit ≈ 1 meter at equator)
-                // For more accuracy, we can use ol.sphere.getDistance but it requires lon/lat
-                const distanceInMeters = distance; // Approximate conversion
-                if (distanceInMeters < 10) { // 10 meters tolerance
-                    return true;
+                try {
+                    const closestPoint = geometry.getClosestPoint(coordinate);
+                    const distance = ol.coordinate.distance(coordinate, closestPoint);
+                    // Convert distance from map units to meters (approximate: 1 map unit ≈ 1 meter at equator)
+                    // For more accuracy, we can use ol.sphere.getDistance but it requires lon/lat
+                    const distanceInMeters = distance; // Approximate conversion
+                    if (distanceInMeters < 10) { // 10 meters tolerance
+                        return true;
+                    }
+                } catch (e) {
+                    // Ignore error in closest point calculation
                 }
             } else {
                 // For other geometry types, use intersectsCoordinate
@@ -13518,7 +13423,7 @@
         }
         // GPS data akan di-load oleh loadUserGpsData()
         
-        // Initialize Control Room data
+        // Initialize Control Room data - group CCTV by control_room
         initializeControlRoomData();
         
         updateTabCounts();
@@ -13537,11 +13442,34 @@
         const insidenCount = document.getElementById('insidenTabCount');
         const unitCount = document.getElementById('unitTabCount');
         const gpsCount = document.getElementById('gpsTabCount');
-        const controlroomCount = document.getElementById('controlroomTabCount');
         const pjaCount = document.getElementById('pjaTabCount');
         
-        if (cctvCount) cctvCount.textContent = filteredSidebarData.cctv.length;
+        // Update icon toolbar badges
+        const iconToolbarBadges = {
+            'cctvTabCount': 'iconToolbarCctvCount',
+            'sapTabCount': 'iconToolbarSapCount',
+            'insidenTabCount': 'iconToolbarInsidenCount',
+            'unitTabCount': 'iconToolbarUnitCount',
+            'gpsTabCount': 'iconToolbarGpsCount',
+            'pjaTabCount': 'iconToolbarPjaCount',
+            'controlroomTabCount': 'iconToolbarControlroomCount'
+        };
         
+        // Sync counts to icon toolbar badges
+        Object.keys(iconToolbarBadges).forEach(tabCountId => {
+            const tabCountEl = document.getElementById(tabCountId);
+            const iconBadgeEl = document.getElementById(iconToolbarBadges[tabCountId]);
+            if (tabCountEl && iconBadgeEl) {
+                const count = tabCountEl.textContent.trim();
+                if (count && count !== '0' && count !== '...') {
+                    iconBadgeEl.textContent = count;
+                } else {
+                    iconBadgeEl.textContent = '';
+                }
+            }
+        });
+        
+        if (cctvCount) cctvCount.textContent = filteredSidebarData.cctv.length;
         // Untuk SAP, gunakan semua data per week untuk count (bukan hanya data hari ini)
         if (sapCount) {
             const sapCountValue = (typeof sapDataAllWeek !== 'undefined' && sapDataAllWeek.length > 0) 
@@ -13549,12 +13477,26 @@
                 : filteredSidebarData.sap.length;
             sapCount.textContent = sapCountValue;
         }
-        
         if (insidenCount) insidenCount.textContent = filteredSidebarData.insiden.length;
         if (unitCount) unitCount.textContent = filteredSidebarData.unit.length;
         if (gpsCount) gpsCount.textContent = filteredSidebarData.gps.length;
+        const controlroomCount = document.getElementById('controlroomTabCount');
         if (controlroomCount) controlroomCount.textContent = filteredSidebarData.controlroom.length;
         if (pjaCount) pjaCount.textContent = filteredSidebarData.pja.length;
+        
+        // Update icon toolbar badges after updating tab counts
+        Object.keys(iconToolbarBadges).forEach(tabCountId => {
+            const tabCountEl = document.getElementById(tabCountId);
+            const iconBadgeEl = document.getElementById(iconToolbarBadges[tabCountId]);
+            if (tabCountEl && iconBadgeEl) {
+                const count = tabCountEl.textContent.trim();
+                if (count && count !== '0' && count !== '...') {
+                    iconBadgeEl.textContent = count;
+                } else {
+                    iconBadgeEl.textContent = '';
+                }
+            }
+        });
     }
     
     // Get avatar color based on first letter
@@ -13595,10 +13537,29 @@
         }
     }
     
+    // Format date with time (for history)
+    function formatDateWIB(dateString) {
+        if (!dateString) return 'N/A';
+        
+        try {
+            const date = new Date(dateString);
+            // Kurangi 7 jam dari waktu database
+            date.setHours(date.getHours() - 7);
+            const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+            const day = date.getDate();
+            const month = months[date.getMonth()];
+            const year = date.getFullYear();
+            const hours = String(date.getHours()).padStart(2, '0');
+            const minutes = String(date.getMinutes()).padStart(2, '0');
+            
+            return `${day} ${month} ${year}, ${hours}:${minutes} WITA`;
+        } catch (e) {
+            return dateString;
+        }
+    }
+    
     // Render CCTV list
     // Data CCTV diambil langsung dari database, bukan dari WMS atau GeoJSON
-    // Implementasi ini disamakan dengan inicctvdetail untuk menampilkan dropdown detail:
-    // coverage lokasi, inspeksi hazard (minggu ini), dan PJA lokasi
     function renderCctvList(data) {
         const container = document.getElementById('cctvList');
         if (!container) return;
@@ -13693,8 +13654,8 @@
             });
         });
     }
-
-    // Load CCTV details from API (coverage lokasi, inspeksi hazard minggu ini, PJA lokasi)
+    
+    // Load CCTV details from API
     function loadCctvDetails(cctvId, itemElement) {
         const detailSection = itemElement.querySelector('.cctv-detail-section');
         if (!detailSection) return;
@@ -13739,8 +13700,8 @@
                 `;
             });
     }
-
-    // Render CCTV details (coverage lokasi, inspeksi hazard minggu ini, PJA lokasi)
+    
+    // Render CCTV details
     function renderCctvDetails(data, container) {
         const { coverages, hazard_stats, pja_list, week_range } = data;
         
@@ -13808,8 +13769,8 @@
         
         container.innerHTML = html;
     }
-
-    // Load hazard status untuk banyak CCTV
+    
+    // Load hazard status for multiple CCTV
     function loadCctvHazardStatus(cctvIds) {
         if (!cctvIds || cctvIds.length === 0) return;
         
@@ -13819,7 +13780,7 @@
             .then(response => response.json())
             .then(result => {
                 if (result.success && result.data) {
-                    // Update status untuk setiap CCTV
+                    // Update status for each CCTV item
                     Object.keys(result.data).forEach(cctvId => {
                         const status = result.data[cctvId];
                         const item = document.querySelector(`.sidebar-list-item[data-id="${cctvId}"]`);
@@ -13857,7 +13818,7 @@
             })
             .catch(error => {
                 console.error('Error loading CCTV hazard status:', error);
-                // Update semua item ke error state sederhana
+                // Update all items to show error state
                 cctvIds.forEach(cctvId => {
                     const item = document.querySelector(`.sidebar-list-item[data-id="${cctvId}"]`);
                     if (item) {
@@ -13873,18 +13834,20 @@
             });
     }
     
+    // Escape HTML to prevent XSS
+    function escapeHtml(text) {
+        if (!text) return '';
+        const div = document.createElement('div');
+        div.textContent = text;
+        return div.innerHTML;
+    }
+    
     // Render SAP list
     function renderSapList(data) {
-        console.log('[SAP DEBUG] renderSapList called with data:', data ? data.length : 0, 'items');
-        
         const container = document.getElementById('sapList');
-        if (!container) {
-            console.error('[SAP DEBUG] renderSapList: container #sapList not found!');
-            return;
-        }
+        if (!container) return;
         
         if (!data || data.length === 0) {
-            console.warn('[SAP DEBUG] renderSapList: No data to render');
             container.innerHTML = `
                 <div class="empty-state">
                     <i class="material-icons-outlined">assignment</i>
@@ -13892,13 +13855,6 @@
                 </div>
             `;
             return;
-        }
-        
-        // Debug OAK data
-        const oakInData = data.filter(sap => sap.source_type === 'OAK');
-        console.log('[SAP DEBUG] renderSapList: OAK data in render list:', oakInData.length);
-        if (oakInData.length > 0) {
-            console.log('[SAP DEBUG] renderSapList: First OAK in list:', oakInData[0]);
         }
         
         container.innerHTML = data.map((sap, index) => {
@@ -13916,7 +13872,7 @@
                     </div>
                     <div class="list-item-content">
                         <div class="list-item-title">${name}</div>
-                        <div class="list-item-subtitle">${taskNumber ? `Task: ${taskNumber}` : ''} ${lokasi ? `- ${lokasi}` : ''}</div>
+                        <div class="list-item-subtitle">${taskNumber ? `Task: ${taskNumber}` : ''}${lokasi ? ` - ${lokasi}` : ''}</div>
                         ${timestamp ? `<div class="list-item-time">${timestamp}</div>` : ''}
                     </div>
                 </div>
@@ -14071,79 +14027,7 @@
         });
     }
     
-    // Render GPS Orang list
-    function renderGpsList(data) {
-        const container = document.getElementById('gpsList');
-        if (!container) return;
-        
-        if (!data || data.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="material-icons-outlined">person_pin</i>
-                    <p>Tidak ada data GPS Orang hari ini</p>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = data.map((user, index) => {
-            const name = user.fullname || user.npk || `User ${index + 1}`;
-            const npk = user.npk || '';
-            const position = user.functional_position || user.structural_position || '';
-            const department = user.department_name || user.division_name || '';
-            const firstLetter = getFirstLetter(name);
-            const avatarColor = getAvatarColor(firstLetter);
-            const timestamp = formatTimestamp(user.gps_updated_at || user.gps_created_at);
-            const battery = user.battery !== null && user.battery !== undefined ? user.battery : null;
-            const batteryColor = battery < 20 ? '#ef4444' : battery < 50 ? '#f59e0b' : '#10b981';
-            
-            return `
-                <div class="sidebar-list-item" data-type="gps" data-id="${user.user_id || user.id}" data-index="${index}">
-                    <div class="list-item-avatar" style="background-color: ${avatarColor};">
-                        ${firstLetter}
-                    </div>
-                    <div class="list-item-content">
-                        <div class="list-item-title">${name}</div>
-                        <div class="list-item-subtitle">
-                            ${npk ? `NPK: ${npk}` : ''} 
-                            ${position ? `- ${position}` : ''}
-                            ${department ? ` (${department})` : ''}
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 11px; color: #6b7280;">
-                            ${battery !== null ? `
-                                <span style="display: flex; align-items: center; gap: 4px;">
-                                    <i class="material-icons-outlined" style="font-size: 14px;">battery_charging_full</i>
-                                    <span style="color: ${batteryColor};">${battery}%</span>
-                                </span>
-                            ` : ''}
-                            ${timestamp ? `<span>${timestamp}</span>` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
-        // Add click handlers
-        container.querySelectorAll('.sidebar-list-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const userId = this.dataset.id;
-                const userData = data.find(u => (u.user_id || u.id) == userId);
-                if (userData) {
-                    // Highlight item di sidebar
-                    document.querySelectorAll('.sidebar-list-item').forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Jika punya koordinat, zoom ke lokasi
-                    if (userData.latitude && userData.longitude) {
-                        highlightAndZoomToLocation({ lat: userData.latitude, lng: userData.longitude }, 'gps', userData);
-                    }
-                }
-            });
-        });
-    }
-    
-    // Initialize Control Room data
+    // Initialize Control Room data - group CCTV by control_room
     function initializeControlRoomData() {
         if (!cctvLocations || cctvLocations.length === 0) {
             filteredSidebarData.controlroom = [];
@@ -14201,16 +14085,6 @@
             const cctvCount = controlRoom.cctv_list ? controlRoom.cctv_list.length : 0;
             const firstLetter = getFirstLetter(name);
             const avatarColor = getAvatarColor(firstLetter);
-            
-            // Check P2H status
-            const p2hInfo = p2hStatus[name] || { has_p2h: false };
-            const hasP2h = p2hInfo.has_p2h;
-            const p2hBadge = hasP2h 
-                ? '<span style="background-color: #10b981; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 500; margin-left: 8px;">P2H ✓</span>'
-                : '<span style="background-color: #ef4444; color: white; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 500; margin-left: 8px;">Belum P2H</span>';
-            const p2hButton = `<button type="button" class="btn btn-sm ${hasP2h ? 'btn-outline-primary' : 'btn-danger'}" style="margin-left: 8px; font-size: 11px;" onclick="openP2hModal('${escapeHtml(name)}')" title="${hasP2h ? 'Update' : 'Lakukan'} P2H">
-                <i class="material-icons-outlined" style="font-size: 14px; vertical-align: middle;">${hasP2h ? 'edit' : 'assignment'}</i> ${hasP2h ? 'Update' : 'Isi P2H'}
-            </button>`;
             
             // Build CCTV list HTML
             const cctvListHtml = controlRoom.cctv_list ? controlRoom.cctv_list.map((cctv, cctvIndex) => {
@@ -14273,12 +14147,9 @@
                             ${firstLetter}
                         </div>
                         <div class="list-item-content" style="flex: 1;">
-                            <div class="list-item-title" style="display: flex; align-items: center;">
-                                ${escapeHtml(name)} ${p2hBadge}
-                            </div>
-                            <div class="list-item-subtitle" style="display: flex; align-items: center; margin-top: 4px;">
+                            <div class="list-item-title">${escapeHtml(name)}</div>
+                            <div class="list-item-subtitle">
                                 <span style="font-weight: 500; color: #3b82f6;">${cctvCount}</span> CCTV
-                                ${p2hButton}
                             </div>
                         </div>
                         <i class="material-icons-outlined list-item-expand-icon">expand_more</i>
@@ -14336,6 +14207,351 @@
         });
     }
     
+    // Check if user is admin (from backend)
+    const isUserAdmin = @json(auth()->user() && (method_exists(auth()->user(), 'isAdmin') ? auth()->user()->isAdmin() : (isset(auth()->user()->role) && (auth()->user()->role === 'admin' || auth()->user()->role === 'administrator'))));
+    
+    // Flag untuk mencegah load history berulang
+    let gpsHistoryLoaded = false;
+    
+    // Render GPS Orang list
+    function renderGpsList(data) {
+        const container = document.getElementById('gpsList');
+        if (!container) return;
+        
+        // Jika user bukan admin, tampilkan history lokasi (hanya sekali)
+        if (!isUserAdmin && !gpsHistoryLoaded) {
+            gpsHistoryLoaded = true;
+            loadUserGpsHistory();
+            return;
+        }
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="material-icons-outlined">person_pin</i>
+                    <p>Tidak ada data GPS Orang hari ini</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = data.map((user, index) => {
+            const name = user.fullname || user.npk || `User ${index + 1}`;
+            const npk = user.npk || '';
+            const position = user.functional_position || user.structural_position || '';
+            const department = user.department_name || user.division_name || '';
+            const firstLetter = getFirstLetter(name);
+            const avatarColor = getAvatarColor(firstLetter);
+            const timestamp = formatTimestamp(user.gps_updated_at || user.gps_created_at);
+            const battery = user.battery !== null && user.battery !== undefined ? user.battery : null;
+            const batteryColor = battery < 20 ? '#ef4444' : battery < 50 ? '#f59e0b' : '#10b981';
+            
+            return `
+                <div class="sidebar-list-item" data-type="gps" data-id="${user.user_id || user.id}" data-index="${index}">
+                    <div class="list-item-avatar" style="background-color: ${avatarColor};">
+                        ${firstLetter}
+                    </div>
+                    <div class="list-item-content">
+                        <div class="list-item-title">${name}</div>
+                        <div class="list-item-subtitle">
+                            ${npk ? `SID: ${npk}` : ''} 
+                            ${position ? `- ${position}` : ''}
+                            ${department ? ` (${department})` : ''}
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 11px; color: #6b7280;">
+                            ${battery !== null ? `
+                                <span style="display: flex; align-items: center; gap: 4px;">
+                                    <i class="material-icons-outlined" style="font-size: 14px;">battery_charging_full</i>
+                                    <span style="color: ${batteryColor};">${battery}%</span>
+                                </span>
+                            ` : ''}
+                            ${timestamp ? `<span>${timestamp}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Add click handlers
+        container.querySelectorAll('.sidebar-list-item').forEach(item => {
+            item.addEventListener('click', function() {
+                const userId = this.dataset.id;
+                const userData = data.find(u => (u.user_id || u.id) == userId);
+                if (userData) {
+                    // Highlight item di sidebar
+                    document.querySelectorAll('.sidebar-list-item').forEach(i => i.classList.remove('active'));
+                    this.classList.add('active');
+                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Jika punya koordinat, zoom ke lokasi
+                    if (userData.latitude && userData.longitude) {
+                        highlightAndZoomToLocation({ lat: userData.latitude, lng: userData.longitude }, 'gps', userData);
+                    }
+                }
+            });
+        });
+    }
+    
+    // Function to load user GPS history (for non-admin users)
+    function loadUserGpsHistory() {
+        const container = document.getElementById('gpsList');
+        if (!container) return;
+        
+        // Show loading state
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p style="margin-top: 16px;">Memuat history lokasi...</p>
+            </div>
+        `;
+        
+        fetch('{{ route("maps.api.user-gps-history") }}?days=7')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.history) {
+                    // Simpan history ke filteredSidebarData
+                    filteredSidebarData.gpsHistory = data.history;
+                    renderGpsHistoryList(data.history);
+                } else {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="material-icons-outlined">history</i>
+                            <p>Tidak ada history lokasi</p>
+                            ${data.error ? `<p style="font-size: 11px; color: #ef4444; margin-top: 8px;">${data.error}</p>` : ''}
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading GPS history:', error);
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="material-icons-outlined">error_outline</i>
+                        <p>Gagal memuat history lokasi</p>
+                        <p style="font-size: 11px; color: #ef4444; margin-top: 8px;">Silakan refresh halaman</p>
+                    </div>
+                `;
+            });
+    }
+    
+    // Function to render GPS history list with collapsible
+    function renderGpsHistoryList(history) {
+        const container = document.getElementById('gpsList');
+        if (!container) return;
+        
+        if (!history || history.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="material-icons-outlined">history</i>
+                    <p>Tidak ada history lokasi</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = history.map((location, index) => {
+            const visitCount = location.visit_count || 0;
+            const firstVisit = location.first_visit ? formatDateWIB(location.first_visit) : 'N/A';
+            const lastVisit = location.last_visit ? formatDateWIB(location.last_visit) : 'N/A';
+            const locationId = `history-loc-${index}`;
+            const detailId = `history-detail-${index}`;
+            
+            return `
+                <div class="sidebar-list-item history-location-item" data-location-key="${location.location_key}" data-index="${index}">
+                    <div class="d-flex align-items-start gap-2 w-100" style="cursor: pointer;" onclick="toggleHistoryDetail('${detailId}', '${locationId}')">
+                        <div class="list-item-avatar" style="background-color: #3b82f6; min-width: 40px; width: 40px; height: 40px;">
+                            <i class="material-icons-outlined" style="color: white; font-size: 20px;">location_on</i>
+                        </div>
+                        <div class="list-item-content flex-grow-1">
+                            <div class="list-item-title">Lokasi ${index + 1}</div>
+                            <div class="list-item-subtitle">
+                                Kunjungan: <strong>${visitCount}x</strong>
+                            </div>
+                            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
+                                <div>Pertama: ${firstVisit.split(',')[0]}</div>
+                                <div>Terakhir: ${lastVisit.split(',')[0]}</div>
+                            </div>
+                        </div>
+                        <div class="d-flex align-items-center">
+                            <i class="material-icons-outlined history-toggle-icon" id="${locationId}" style="transition: transform 0.3s;">expand_more</i>
+                        </div>
+                    </div>
+                    <div class="history-detail-content" id="${detailId}" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
+                        <div class="text-center py-2">
+                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                            <p class="mt-2 mb-0" style="font-size: 12px; color: #6b7280;">Memuat detail lokasi...</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Add click handler untuk zoom ke lokasi
+        container.querySelectorAll('.history-location-item').forEach(item => {
+            const locationData = history[parseInt(item.dataset.index)];
+            if (locationData && locationData.latitude && locationData.longitude) {
+                item.style.cursor = 'pointer';
+                item.addEventListener('click', function(e) {
+                    // Jangan trigger jika klik pada toggle icon atau detail content
+                    if (e.target.closest('.history-detail-content') || e.target.closest('.history-toggle-icon')) {
+                        return;
+                    }
+                    
+                    highlightAndZoomToLocation(
+                        { lat: locationData.latitude, lng: locationData.longitude }, 
+                        'gps', 
+                        locationData
+                    );
+                });
+            }
+        });
+    }
+    
+    // Function to toggle history detail
+    window.toggleHistoryDetail = function(detailId, iconId) {
+        const detailContent = document.getElementById(detailId);
+        const toggleIcon = document.getElementById(iconId);
+        
+        if (!detailContent || !toggleIcon) return;
+        
+        const isExpanded = detailContent.style.display !== 'none';
+        
+        if (isExpanded) {
+            // Collapse
+            detailContent.style.display = 'none';
+            toggleIcon.style.transform = 'rotate(0deg)';
+            toggleIcon.textContent = 'expand_more';
+        } else {
+            // Expand
+            detailContent.style.display = 'block';
+            toggleIcon.style.transform = 'rotate(180deg)';
+            toggleIcon.textContent = 'expand_less';
+            
+            // Load detail lokasi jika belum di-load
+            const locationItem = detailContent.closest('.history-location-item');
+            if (locationItem && !locationItem.dataset.detailLoaded) {
+                loadHistoryLocationDetail(locationItem, detailContent);
+            }
+        }
+    };
+    
+    // Function to load detail for a history location
+    function loadHistoryLocationDetail(locationItem, detailContainer) {
+        const locationIndex = locationItem.dataset.index;
+        const historyData = filteredSidebarData.gpsHistory || [];
+        const location = historyData[locationIndex];
+        
+        if (!location || !location.latitude || !location.longitude) {
+            detailContainer.innerHTML = `
+                <div class="text-center py-2">
+                    <p style="font-size: 12px; color: #ef4444;">Data lokasi tidak valid</p>
+                </div>
+            `;
+            return;
+        }
+        
+        // Load location details
+        fetch(`{{ route('maps.api.gps-user-location-details') }}?latitude=${location.latitude}&longitude=${location.longitude}${location.location_id ? '&location_id=' + location.location_id : ''}`)
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data) {
+                    const locationData = data.data;
+                    const workAreaName = locationData.work_area ? locationData.work_area.name : 'Tidak diketahui';
+                    const sapCount = locationData.sap_count || 0;
+                    const sapOpenCount = locationData.sap_open_count || 0;
+                    const cctvCount = locationData.cctv_count || 0;
+                    const pjaCount = locationData.pja_count || 0;
+                    
+                    // Get visit details
+                    const visits = location.visits || [];
+                    const visitList = visits.slice(0, 10).map(visit => {
+                        const visitDate = visit.date ? formatDateWIB(visit.date) : 'N/A';
+                        return `
+                            <div style="padding: 8px; border-bottom: 1px solid #f3f4f6; font-size: 12px;">
+                                <div style="display: flex; justify-content: space-between;">
+                                    <span>${visitDate.split(',')[0]}</span>
+                                    <span style="color: #6b7280;">${visitDate.split(',')[1] || ''}</span>
+                                </div>
+                            </div>
+                        `;
+                    }).join('');
+                    
+                    detailContainer.innerHTML = `
+                        <div style="background-color: #f9fafb; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
+                            <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600;">
+                                <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">location_on</i>
+                                Area Kerja: ${workAreaName}
+                            </p>
+                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
+                                <div>
+                                    <span style="color: #6b7280;">SAP:</span>
+                                    <strong style="color: #ef4444;">${sapCount}</strong>
+                                </div>
+                                <div>
+                                    <span style="color: #6b7280;">SAP Open:</span>
+                                    <strong style="color: #dc2626;">${sapOpenCount}</strong>
+                                </div>
+                                <div>
+                                    <span style="color: #6b7280;">CCTV:</span>
+                                    <strong style="color: #3b82f6;">${cctvCount}</strong>
+                                </div>
+                                <div>
+                                    <span style="color: #6b7280;">PJA:</span>
+                                    <strong style="color: #8b5cf6;">${pjaCount}</strong>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="margin-bottom: 12px;">
+                            <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600;">
+                                <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">schedule</i>
+                                Riwayat Kunjungan (${visits.length})
+                            </p>
+                            <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
+                                ${visitList || '<div style="padding: 12px; text-align: center; color: #6b7280; font-size: 12px;">Tidak ada data kunjungan</div>'}
+                            </div>
+                        </div>
+                        
+                        <button class="btn btn-sm btn-primary w-100" onclick="showHistoryLocationDetailModal(${JSON.stringify(location).replace(/"/g, '&quot;')}, ${JSON.stringify(locationData).replace(/"/g, '&quot;')})">
+                            <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">info</i>
+                            Lihat Detail Lengkap
+                        </button>
+                    `;
+                    
+                    locationItem.dataset.detailLoaded = 'true';
+                } else {
+                    detailContainer.innerHTML = `
+                        <div class="text-center py-2">
+                            <p style="font-size: 12px; color: #ef4444;">Gagal memuat detail lokasi</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading location detail:', error);
+                detailContainer.innerHTML = `
+                    <div class="text-center py-2">
+                        <p style="font-size: 12px; color: #ef4444;">Error: ${error.message}</p>
+                    </div>
+                `;
+            });
+    }
+    
+    // Function to show history location detail modal
+    window.showHistoryLocationDetailModal = function(location, locationData) {
+        // Reuse the same modal function as current location
+        showGpsUserDetailModal(
+            {
+                fullname: location.visits && location.visits[0] ? location.visits[0].nama : 'History Lokasi',
+                latitude: location.latitude,
+                longitude: location.longitude
+            },
+            locationData
+        );
+    };
+    
     // Load PJA data from API
     function loadPjaData() {
         const container = document.getElementById('pjaList');
@@ -14391,273 +14607,6 @@
                     </div>
                 `;
             });
-    }
-    
-    // Load Kesiapan Orang data from API
-    function loadKesiapanOrangData() {
-        const tbody = document.getElementById('tbodyKesiapanOrang');
-        if (!tbody) return;
-        
-        // Show loading state
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="9" class="text-center text-muted py-4">
-                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                    Memuat data...
-                </td>
-            </tr>
-        `;
-        
-        // Reset statistics
-        document.getElementById('totalKaryawanPja').textContent = '0';
-        document.getElementById('karyawanAktif').textContent = '0';
-        document.getElementById('pjaAktif').textContent = '0';
-        document.getElementById('totalCctvDedicated').textContent = '0';
-        document.getElementById('persentaseCctvDenganPja').textContent = '0%';
-        document.getElementById('detailCctvDenganPja').textContent = '0 dari 0 CCTV';
-        
-        fetch('{{ route("maps.api.kesiapan-orang-data") }}')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success && data.data) {
-                    // Update statistics
-                    if (data.statistics) {
-                        document.getElementById('totalKaryawanPja').textContent = data.statistics.total_karyawan || 0;
-                        document.getElementById('karyawanAktif').textContent = data.statistics.karyawan_aktif || 0;
-                        document.getElementById('pjaAktif').textContent = data.statistics.pja_aktif || 0;
-                        document.getElementById('totalCctvDedicated').textContent = data.statistics.total_cctv_dedicated || 0;
-                        
-                        // Update persentase CCTV dengan PJA
-                        const persentase = data.statistics.persentase_cctv_dengan_pja || 0;
-                        const cctvDenganPja = data.statistics.cctv_dengan_pja || 0;
-                        const totalCctv = data.statistics.total_cctv || 0;
-                        document.getElementById('persentaseCctvDenganPja').textContent = persentase.toFixed(2) + '%';
-                        document.getElementById('detailCctvDenganPja').textContent = cctvDenganPja + ' dari ' + totalCctv + ' CCTV';
-                    }
-                    
-                    // Render table
-                    renderKesiapanOrangTable(data.data.karyawan, data.data.cctv_dedicated);
-                } else {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="9" class="text-center text-muted py-4">
-                                <i class="material-icons-outlined">info</i>
-                                <p class="mb-0 mt-2">Tidak ada data kesiapan orang</p>
-                            </td>
-                        </tr>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading kesiapan orang data:', error);
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9" class="text-center text-danger py-4">
-                            <i class="material-icons-outlined">error_outline</i>
-                            <p class="mb-0 mt-2">Gagal memuat data kesiapan orang</p>
-                            <small style="color: #9ca3af;">${error.message}</small>
-                        </td>
-                    </tr>
-                `;
-            });
-    }
-    
-    // Render Kesiapan Orang table
-    function renderKesiapanOrangTable(karyawanData, cctvDedicatedData) {
-        const tbody = document.getElementById('tbodyKesiapanOrang');
-        if (!tbody) return;
-        
-        if (!karyawanData || karyawanData.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="9" class="text-center text-muted py-4">
-                        <i class="material-icons-outlined">info</i>
-                        <p class="mb-0 mt-2">Tidak ada data karyawan</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-        
-        // Create a map of PJA to CCTV dedicated for quick lookup
-        const pjaToCctvMap = {};
-        if (cctvDedicatedData && cctvDedicatedData.length > 0) {
-            cctvDedicatedData.forEach(cctv => {
-                const pja = cctv.pja || '';
-                if (!pjaToCctvMap[pja]) {
-                    pjaToCctvMap[pja] = [];
-                }
-                pjaToCctvMap[pja].push(cctv.cctv_dedicated || '');
-            });
-        }
-        
-        // Render table rows
-        let html = '';
-        karyawanData.forEach(karyawan => {
-            const namaPja = karyawan.nama_pja || '';
-            const cctvList = pjaToCctvMap[namaPja] || [];
-            const cctvDisplay = cctvList.length > 0 ? cctvList.join(', ') : '-';
-            
-            const statusKaryawan = karyawan.status_karyawan == '1' || karyawan.status_karyawan == 1 
-                ? '<span class="badge bg-success">Aktif</span>' 
-                : '<span class="badge bg-secondary">Tidak Aktif</span>';
-            
-            const statusPja = karyawan.status_nama_pja == '1' || karyawan.status_nama_pja == 1 
-                ? '<span class="badge bg-info">Aktif</span>' 
-                : '<span class="badge bg-secondary">Tidak Aktif</span>';
-            
-            html += `
-                <tr>
-                    <td>${karyawan.kode_sid || '-'}</td>
-                    <td>${namaPja}</td>
-                    <td>${karyawan.tipe_pja || '-'}</td>
-                    <td>${karyawan.perusahaan || '-'}</td>
-                    <td>${karyawan.nama_karyawan || '-'}</td>
-                    <td>${statusKaryawan}</td>
-                    <td>${statusPja}</td>
-                    <td>${karyawan.pja_kategory_layer || '-'}</td>
-                    <td>${cctvDisplay}</td>
-                </tr>
-            `;
-        });
-        
-        tbody.innerHTML = html;
-    }
-    
-    // Load Area Kerja data from API
-    function loadAreaKerjaData() {
-        const tbody = document.getElementById('tbodyAreaKerja');
-        if (!tbody) return;
-        
-        // Show loading state
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center text-muted py-4">
-                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                    Memuat data...
-                </td>
-            </tr>
-        `;
-        
-        // Reset statistics
-        document.getElementById('totalBoundaryAreaKerja').textContent = '0%';
-        document.getElementById('totalWmsLinks').textContent = '0%';
-        document.getElementById('totalAreaHighrisk').textContent = '0%';
-        document.getElementById('totalAreaKritis').textContent = '0%';
-        const lastWeekAreaKerjaEl = document.getElementById('lastWeekAreaKerja');
-        const lastWeekWmsEl = document.getElementById('lastWeekWms');
-        if (lastWeekAreaKerjaEl) lastWeekAreaKerjaEl.textContent = 'Week -';
-        if (lastWeekWmsEl) lastWeekWmsEl.textContent = 'Week -';
-        
-        fetch('{{ route("maps.api.area-kerja-data") }}')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success && data.data) {
-                    // Update statistics
-                    if (data.statistics) {
-                        // Update percentages
-                        const boundaryPercentage = data.statistics.boundary_area_kerja_percentage || 0;
-                        const wmsPercentage = data.statistics.wms_links_percentage || 0;
-                        const highriskPercentage = data.statistics.area_highrisk_percentage || 0;
-                        const kritisPercentage = data.statistics.area_kritis_percentage || 0;
-                        
-                        document.getElementById('totalBoundaryAreaKerja').textContent = boundaryPercentage.toFixed(2) + '%';
-                        document.getElementById('totalWmsLinks').textContent = wmsPercentage.toFixed(2) + '%';
-                        document.getElementById('totalAreaHighrisk').textContent = highriskPercentage.toFixed(2) + '%';
-                        document.getElementById('totalAreaKritis').textContent = kritisPercentage.toFixed(2) + '%';
-                        
-                        // Update last week info
-                        if (data.statistics.last_week_area_kerja && data.statistics.last_year_area_kerja) {
-                            if (lastWeekAreaKerjaEl) {
-                                lastWeekAreaKerjaEl.textContent = `Week ${data.statistics.last_week_area_kerja}/${data.statistics.last_year_area_kerja}`;
-                            }
-                        } else if (lastWeekAreaKerjaEl) {
-                            lastWeekAreaKerjaEl.textContent = 'Week -';
-                        }
-                        
-                        if (data.statistics.last_week_wms && data.statistics.last_year_wms) {
-                            if (lastWeekWmsEl) {
-                                lastWeekWmsEl.textContent = `Week ${data.statistics.last_week_wms}/${data.statistics.last_year_wms}`;
-                            }
-                        } else if (lastWeekWmsEl) {
-                            lastWeekWmsEl.textContent = 'Week -';
-                        }
-                    }
-                    
-                    // Render table
-                    renderAreaKerjaTable(data.data.cctv_coverage);
-                } else {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
-                                <i class="material-icons-outlined">info</i>
-                                <p class="mb-0 mt-2">Tidak ada data area kerja</p>
-                            </td>
-                        </tr>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading area kerja data:', error);
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center text-danger py-4">
-                            <i class="material-icons-outlined">error_outline</i>
-                            <p class="mb-0 mt-2">Gagal memuat data area kerja</p>
-                            <small style="color: #9ca3af;">${error.message}</small>
-                        </td>
-                    </tr>
-                `;
-            });
-    }
-    
-    // Render Area Kerja table
-    function renderAreaKerjaTable(coverageData) {
-        const tbody = document.getElementById('tbodyAreaKerja');
-        if (!tbody) return;
-        
-        if (!coverageData || coverageData.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
-                        <i class="material-icons-outlined">info</i>
-                        <p class="mb-0 mt-2">Tidak ada data coverage</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-        
-        const html = coverageData.map(item => {
-            return `
-                <tr>
-                    <td>${item.id || '-'}</td>
-                    <td>${item.no_cctv || '-'}</td>
-                    <td>${item.coverage_lokasi || '-'}</td>
-                    <td>${item.coverage_detail_lokasi || '-'}</td>
-                    <td>${item.kategori_aktivitas || '-'}</td>
-                    <td>
-                        ${item.kategori_area ? `
-                            <span class="badge ${item.kategori_area === 'Area Highrisk' ? 'bg-danger bg-opacity-10 text-danger' : item.kategori_area === 'Area Kritis' ? 'bg-warning bg-opacity-10 text-warning' : 'bg-secondary bg-opacity-10 text-secondary'}">
-                                ${item.kategori_area}
-                            </span>
-                        ` : '-'}
-                    </td>
-                </tr>
-            `;
-        }).join('');
-        
-        tbody.innerHTML = html;
     }
     
     // Render PJA list
@@ -15014,6 +14963,8 @@
             filteredSidebarData.sap = [...(sapData || [])];
             filteredSidebarData.insiden = [...(insidenDataset || [])];
             filteredSidebarData.unit = [...(unitVehicles || [])];
+            // GPS data akan di-reset oleh loadUserGpsData() jika perlu
+            // Jangan reset GPS data jika sudah ada, biarkan dari loadUserGpsData()
             // Reset Control Room data ke original jika sudah ada
             if (originalControlRoomData && originalControlRoomData.length > 0) {
                 filteredSidebarData.controlroom = JSON.parse(JSON.stringify(originalControlRoomData));
@@ -15022,8 +14973,6 @@
             if (originalPjaData && originalPjaData.length > 0) {
                 filteredSidebarData.pja = [...originalPjaData];
             }
-            // GPS data akan di-reset oleh loadUserGpsData() jika perlu
-            // Jangan reset GPS data jika sudah ada, biarkan dari loadUserGpsData()
         } else {
             // Filter data CCTV dari database berdasarkan search term
             filteredSidebarData.cctv = (cctvLocations || []).filter(cctv => {
@@ -15058,17 +15007,6 @@
                 return unitId.includes(term) || id.includes(term);
             });
             
-            // Filter GPS data berdasarkan search term
-            if (filteredSidebarData.gps && filteredSidebarData.gps.length > 0) {
-                filteredSidebarData.gps = filteredSidebarData.gps.filter(user => {
-                    const fullname = (user.fullname || '').toLowerCase();
-                    const npk = (user.npk || '').toLowerCase();
-                    const department = (user.department_name || user.division_name || '').toLowerCase();
-                    const position = ((user.functional_position || '') + ' ' + (user.structural_position || '')).toLowerCase();
-                    return fullname.includes(term) || npk.includes(term) || department.includes(term) || position.includes(term);
-                });
-            }
-            
             // Filter Control Room data berdasarkan search term
             if (filteredSidebarData.controlroom && filteredSidebarData.controlroom.length > 0) {
                 filteredSidebarData.controlroom = filteredSidebarData.controlroom.filter(controlRoom => {
@@ -15079,6 +15017,17 @@
                         return cctvName.includes(term);
                     });
                     return name.includes(term) || hasMatchingCctv;
+                });
+            }
+            
+            // Filter GPS data berdasarkan search term
+            if (filteredSidebarData.gps && filteredSidebarData.gps.length > 0) {
+                filteredSidebarData.gps = filteredSidebarData.gps.filter(user => {
+                    const fullname = (user.fullname || '').toLowerCase();
+                    const npk = (user.npk || '').toLowerCase();
+                    const department = (user.department_name || user.division_name || '').toLowerCase();
+                    const position = ((user.functional_position || '') + ' ' + (user.structural_position || '')).toLowerCase();
+                    return fullname.includes(term) || npk.includes(term) || department.includes(term) || position.includes(term);
                 });
             }
             
@@ -15109,6 +15058,12 @@
     
     // Sidebar event listeners
     document.addEventListener('DOMContentLoaded', function() {
+        // Initialize icon toolbar - set CCTV as active by default
+        const defaultIconBtn = document.querySelector('.icon-toolbar-btn[data-tab="cctv"]');
+        if (defaultIconBtn) {
+            defaultIconBtn.classList.add('active');
+        }
+        
         // Toggle sidebar collapse
         const sidebarToggle = document.getElementById('sidebarToggle');
         const mapSidebar = document.getElementById('mapSidebar');
@@ -15124,39 +15079,19 @@
             });
         }
         
-        // Tab switching
-        document.querySelectorAll('.sidebar-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
+        // Icon Toolbar switching - New implementation
+        document.querySelectorAll('.icon-toolbar-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
                 const tabName = this.dataset.tab;
                 
-                // Update active tab
-                document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+                // Update active icon toolbar button
+                document.querySelectorAll('.icon-toolbar-btn').forEach(b => b.classList.remove('active'));
                 this.classList.add('active');
                 
-                // Auto-scroll to active tab if needed (horizontal scroll)
-                const sidebarTabs = document.querySelector('.sidebar-tabs');
-                if (sidebarTabs && !sidebarTabs.closest('.map-sidebar.collapsed')) {
-                    const tabRect = this.getBoundingClientRect();
-                    const tabsRect = sidebarTabs.getBoundingClientRect();
-                    const scrollLeft = sidebarTabs.scrollLeft;
-                    const tabLeft = this.offsetLeft;
-                    const tabWidth = this.offsetWidth;
-                    const tabsWidth = sidebarTabs.offsetWidth;
-                    
-                    // Check if tab is outside visible area
-                    if (tabLeft < scrollLeft) {
-                        // Tab is to the left, scroll to show it
-                        sidebarTabs.scrollTo({
-                            left: tabLeft - 8,
-                            behavior: 'smooth'
-                        });
-                    } else if (tabLeft + tabWidth > scrollLeft + tabsWidth) {
-                        // Tab is to the right, scroll to show it
-                        sidebarTabs.scrollTo({
-                            left: tabLeft + tabWidth - tabsWidth + 8,
-                            behavior: 'smooth'
-                        });
-                    }
+                // Open sidebar if collapsed
+                const mapSidebar = document.getElementById('mapSidebar');
+                if (mapSidebar && mapSidebar.classList.contains('collapsed')) {
+                    mapSidebar.classList.remove('collapsed');
                 }
                 
                 // Render tab content
@@ -15165,49 +15100,25 @@
             });
         });
         
-        // Map Selection for Evaluasi
-        let selectedMapId = null;
-        let selectedMapMatrix = null;
-        
-        document.querySelectorAll('.map-selection-item').forEach(item => {
-            item.addEventListener('click', function() {
-                // Remove selected class from all items
-                document.querySelectorAll('.map-selection-item').forEach(i => {
-                    i.classList.remove('selected');
-                });
+        // Legacy tab switching (for backward compatibility)
+        document.querySelectorAll('.sidebar-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
                 
-                // Add selected class to clicked item
-                this.classList.add('selected');
+                // Update active tab
+                document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
                 
-                // Store selected map info
-                selectedMapId = this.dataset.map;
-                try {
-                    selectedMapMatrix = JSON.parse(this.dataset.matrix || '{}');
-                } catch (e) {
-                    selectedMapMatrix = {};
-                    console.error('Error parsing matrix data:', e);
+                // Sync with icon toolbar
+                document.querySelectorAll('.icon-toolbar-btn').forEach(b => b.classList.remove('active'));
+                const iconBtn = document.querySelector(`.icon-toolbar-btn[data-tab="${tabName}"]`);
+                if (iconBtn) {
+                    iconBtn.classList.add('active');
                 }
                 
-                console.log('Map selected:', selectedMapId, 'Matrix:', selectedMapMatrix);
-                
-                // Apply hazard color overlay for Map 1 (Smart Alert CCTV)
-                if (selectedMapId === '1') {
-                    applyHazardColorOverlay();
-                    removeRiskMatrixFromAreaKerja();
-                } else if (selectedMapId === '2') {
-                    // Apply risk matrix to area kerja for Map 2
-                    removeHazardColorOverlay();
-                    applyRiskMatrixToAreaKerja();
-                } else {
-                    // Remove overlays for other maps
-                    removeHazardColorOverlay();
-                    removeRiskMatrixFromAreaKerja();
-                }
-                
-                // TODO: Implement map filtering based on matrix
-                // This will be used to filter evaluation data based on the selected map's matrix
-                // For example: if matrix.cctv.nyala === true, show only CCTV that are on
-                // if matrix.sap.exists === true, show only areas with SAP
+                // Render tab content
+                currentSidebarTab = tabName;
+                renderSidebarTab(tabName);
             });
         });
         
@@ -15336,7 +15247,7 @@
             const startStr = `${weekStart.getDate()} ${months[weekStart.getMonth()]} ${weekStart.getFullYear()}`;
             const endStr = `${weekEnd.getDate()} ${months[weekEnd.getMonth()]} ${weekEnd.getFullYear()}`;
             
-            console.log('[SAP DEBUG] Loading SAP data for week:', weekValue, 'Start:', weekStartStr, 'Date:', weekStart);
+            console.log('Loading SAP data for week:', weekValue, 'Start:', weekStartStr, 'Date:', weekStart);
             
             // Show SweetAlert loading
             Swal.fire({
@@ -15372,19 +15283,9 @@
                     return response.json();
                 })
                 .then(data => {
-                    console.log('[SAP DEBUG] loadSapDataByWeek: API response received', data);
-                    
                     if (data.success && data.data && (data.data.sap || data.data.hazard)) {
                         // Gunakan sap jika ada, jika tidak gunakan hazard (alias)
                         const newSapData = data.data.sap || data.data.hazard || [];
-                        console.log('[SAP DEBUG] loadSapDataByWeek: Raw SAP data from API:', newSapData.length, 'items');
-                        
-                        // Debug OAK data from API
-                        const oakFromApi = newSapData.filter(sap => sap.source_type === 'OAK');
-                        console.log('[SAP DEBUG] loadSapDataByWeek: OAK data from API:', oakFromApi.length);
-                        if (oakFromApi.length > 0) {
-                            console.log('[SAP DEBUG] loadSapDataByWeek: First OAK from API:', oakFromApi[0]);
-                        }
                         
                         // Filter data berdasarkan tanggal_pelaporan untuk memastikan sesuai week
                         const weekEnd = new Date(weekStart);
@@ -15399,19 +15300,12 @@
                                 sapDate.setHours(0, 0, 0, 0);
                                 return sapDate >= weekStart && sapDate < weekEnd;
                             } catch (e) {
-                                console.warn('[SAP DEBUG] Invalid date format:', sap.tanggal_pelaporan || sap.detected_at, sap);
+                                console.warn('Invalid date format:', sap.tanggal_pelaporan || sap.detected_at);
                                 return false;
                             }
                         });
                         
-                        console.log('[SAP DEBUG] loadSapDataByWeek: Filtered SAP data:', filteredSapData.length, 'items for week', weekValue, 'out of', newSapData.length, 'total');
-                        
-                        // Debug OAK after filtering
-                        const oakFiltered = filteredSapData.filter(sap => sap.source_type === 'OAK');
-                        console.log('[SAP DEBUG] loadSapDataByWeek: OAK data after week filter:', oakFiltered.length);
-                        if (oakFiltered.length > 0) {
-                            console.log('[SAP DEBUG] loadSapDataByWeek: First filtered OAK:', oakFiltered[0]);
-                        }
+                        console.log('SAP data loaded:', filteredSapData.length, 'items for week', weekValue, 'out of', newSapData.length, 'total');
                         
                         // Simpan semua data per week untuk count di tab
                         sapDataAllWeek = [...filteredSapData];
@@ -15440,16 +15334,8 @@
                             }
                         });
                         
-                        // Debug OAK in today's data
-                        const oakToday = sapDataToday.filter(sap => sap.source_type === 'OAK');
-                        console.log('[SAP DEBUG] loadSapDataByWeek: OAK data for today:', oakToday.length);
-                        
                         // Map: Hanya tampilkan 1000 data terbaru dari semua data per week
                         const sapDataForMap = sortedSapDataAll.slice(0, 1000);
-                        
-                        // Debug OAK in map data
-                        const oakInMap = sapDataForMap.filter(sap => sap.source_type === 'OAK');
-                        console.log('[SAP DEBUG] loadSapDataByWeek: OAK data in map (first 1000):', oakInMap.length);
                         
                         // Update global sapData (untuk map)
                         sapData = sapDataForMap;
@@ -15457,8 +15343,6 @@
                         // Update filtered sidebar data (hanya data hari ini untuk sidebar)
                         filteredSidebarData.sap = sapDataToday;
                         sapDataForSidebar = sapDataToday;
-                        
-                        console.log('[SAP DEBUG] loadSapDataByWeek: Final counts - Today:', sapDataToday.length, '| Map:', sapDataForMap.length, '| OAK Today:', oakToday.length, '| OAK Map:', oakInMap.length);
                         
                         // Update tab counts (menggunakan semua data per week untuk count)
                         updateTabCounts();
@@ -15483,7 +15367,7 @@
                         
                         resolve(filteredSapData);
                     } else {
-                        console.warn('[SAP DEBUG] loadSapDataByWeek: No SAP data returned for week', weekValue, data);
+                        console.warn('No SAP data returned for week', weekValue, data);
                         // Set empty jika tidak ada data
                         sapDataAllWeek = [];
                         sapData = [];
@@ -15516,14 +15400,9 @@
                     let errorMessage = 'Terjadi kesalahan saat memuat data SAP.';
                     if (error.name === 'AbortError') {
                         errorMessage = 'Request timeout. Data terlalu besar atau koneksi lambat. Silakan coba lagi.';
-                        console.error('[SAP DEBUG] loadSapDataByWeek: SAP data request timeout after 60 seconds');
+                        console.error('SAP data request timeout after 60 seconds');
                     } else {
-                        console.error('[SAP DEBUG] loadSapDataByWeek: Error loading SAP data:', error);
-                        console.error('[SAP DEBUG] loadSapDataByWeek: Error name:', error.name);
-                        console.error('[SAP DEBUG] loadSapDataByWeek: Error message:', error.message);
-                        console.error('[SAP DEBUG] loadSapDataByWeek: Error stack:', error.stack);
-                        console.error('[SAP DEBUG] loadSapDataByWeek: Week value:', weekValue);
-                        console.error('[SAP DEBUG] loadSapDataByWeek: Week start:', weekStartStr);
+                        console.error('Error loading SAP data:', error);
                         if (error.message) {
                             errorMessage = error.message;
                         }
@@ -15639,211 +15518,416 @@
         }
     }
 
+    // ============================================
+    // Employee Location Monitoring & Telegram Notification
+    // ============================================
+    
+    // Cache untuk menyimpan lokasi user sebelumnya
+    let employeeLocationCache = {};
+    let monitoringInterval = null;
+    let isMonitoringActive = false;
+    
+    /**
+     * Function to find location from user coordinates
+     * Mencari lokasi area kerja berdasarkan koordinat latitude/longitude
+     */
+    function findLocationFromCoordinates(latitude, longitude) {
+        if (!latitude || !longitude || !window.areaKerjaLayers) {
+            return null;
+        }
+        
+        // Convert to number (handle comma as decimal separator)
+        const lat = parseFloat(String(latitude).replace(',', '.'));
+        const lng = parseFloat(String(longitude).replace(',', '.'));
+        
+        if (isNaN(lat) || isNaN(lng)) {
+            return null;
+        }
+        
+        // Iterate through all area kerja layers
+        for (const layer of window.areaKerjaLayers) {
+            if (!layer.getVisible()) continue;
+            
+            const source = layer.getSource();
+            if (!source) continue;
+            
+            const features = source.getFeatures();
+            
+            for (const feature of features) {
+                const geometry = feature.getGeometry();
+                if (!geometry) continue;
+                
+                // Check if coordinate is inside this geometry
+                if (isCoordinateInGeometry(lat, lng, geometry)) {
+                    const props = feature.getProperties();
+                    return {
+                        id_lokasi: props.id_lokasi || null,
+                        lokasi: props.lokasi || '',
+                        site: props.site || '',
+                        perusahaan: props.perusahaan || '',
+                        area_kerja: props.area_kerja || '',
+                        luasan: props.luasan || 0,
+                        geometry: geometry // Keep geometry for further checks
+                    };
+                }
+            }
+        }
+        
+        return null; // No location found
+    }
+    
+    /**
+     * Function to check if should send periodic notification
+     * Mengirim notifikasi periodik setiap 5 menit jika user masih di area yang sama
+     */
+    function shouldSendPeriodicNotification(employeeId) {
+        const cached = employeeLocationCache[employeeId];
+        if (!cached) return false;
+        
+        const now = new Date();
+        const lastNotification = new Date(cached.lastNotificationTime || 0);
+        const minutesDiff = (now - lastNotification) / (1000 * 60);
+        
+        // Send notification every 5 minutes if user is still in the same area
+        return minutesDiff >= 5;
+    }
+    
+    /**
+     * Function to send Telegram notification
+     * Mengirim notifikasi Telegram dengan informasi lokasi, SAP, CCTV, dan PJ
+     */
+    async function sendTelegramNotification(employee, location) {
+        try {
+            console.log(`[Telegram] Preparing notification for ${employee.nama || employee.kode_sid} at ${location.lokasi}`);
+            
+            // Get CSRF token
+            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
+            
+            // Get location details (SAP count, CCTV count, PJ)
+            const summaryResponse = await fetch('{{ route("maps.api.evaluation-summary") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    type: 'area_kerja',
+                    id_lokasi: location.id_lokasi,
+                    lokasi_name: location.lokasi
+                })
+            });
+            
+            const summaryData = await summaryResponse.json();
+            const summary = summaryData.data || summaryData;
+            
+            // Calculate total SAP
+            const inspeksiCount = summary.inspeksi_count || 0;
+            const hazardCount = summary.hazard_count || 0;
+            const inspeksiHazardCount = inspeksiCount + hazardCount; // Gabungkan Inspeksi dan Hazard
+            const inspeksiHazardOpenCount = (summary.inspeksi_open_count || 0) + (summary.hazard_open_count || 0);
+            const coachingCount = summary.coaching_count || 0;
+            const coachingOpenCount = summary.coaching_open_count || 0;
+            const observasiCount = summary.observasi_count || 0;
+            const observasiOpenCount = summary.observasi_open_count || 0;
+            const observasiAreaKritisCount = summary.observasi_area_kritis_count || 0;
+            const observasiAreaKritisOpenCount = summary.observasi_area_kritis_open_count || 0;
+            const totalSap = inspeksiHazardCount + coachingCount + observasiCount;
+            
+            // Get detail lists
+            const inspeksiHazardList = summary.inspeksi_hazard_list || [];
+            const coachingList = summary.coaching_list || [];
+            const observasiList = summary.observasi_list || [];
+            const observasiAreaKritisList = summary.observasi_area_kritis_list || [];
+            
+            // Format message dengan HTML untuk tampilan card-like yang lebih menarik
+            const lokasiName = location.lokasi || 'Area Kerja';
+            const perusahaan = location.perusahaan || employee.nama_perusahaan || 'N/A';
+            const site = location.site || 'N/A';
+            const areaKerja = location.area_kerja || location.lokasi || 'N/A'; // Use lokasi if area_kerja is empty
+            const cctvCount = summary.cctv_list ? summary.cctv_list.length : 0;
+            const waktu = new Date().toLocaleString('id-ID', { 
+                timeZone: 'Asia/Makassar',
+                day: '2-digit',
+                month: '2-digit',
+                year: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+            const deviceInfo = employee.device_info ? employee.device_info.split('\n')[0].substring(0, 50) + '...' : 'N/A';
+            
+            // Function to create progress bar visualization
+            const createProgressBar = (value, max, length = 10) => {
+                if (max === 0) return '▱'.repeat(length);
+                const filled = Math.round((value / max) * length);
+                const empty = length - filled;
+                return '▰'.repeat(filled) + '▱'.repeat(empty);
+            };
+            
+            // Calculate max value for progress bars (gunakan inspeksiHazardCount yang sudah digabung)
+            const maxSap = Math.max(inspeksiHazardCount, coachingCount, observasiCount, 1);
+            
+            // Format dengan HTML untuk tampilan card-like yang lebih menarik
+            const message = `🔷 <b>USER DI AREA KERJA</b> 🔷
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+👤 <b>INFORMASI USER</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<b>Nama:</b> ${employee.nama || employee.kode_sid || 'Unknown'}
+<b>Kode SID:</b> <code>${employee.kode_sid || 'N/A'}</code>
+<b>Perusahaan:</b> ${perusahaan}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📍 <b>INFORMASI LOKASI</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<b>Lokasi:</b> ${lokasiName}
+<b>Site:</b> ${site}
+<b>Area Kerja:</b> ${areaKerja}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📊 <b>STATISTIK AREA</b>
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+📈 <b>TOTAL SAP:</b> <b>${totalSap.toLocaleString('id-ID')}</b>
+
+<b>📋 Detail SAP:</b>
+
+🔍⚠️ <b>Inspeksi & Hazard:</b> <b>${inspeksiHazardCount.toLocaleString('id-ID')}</b> | <b>Open:</b> ${inspeksiHazardOpenCount.toLocaleString('id-ID')}
+   ${createProgressBar(inspeksiHazardCount, maxSap)} ${inspeksiHazardCount > 0 ? Math.round((inspeksiHazardCount / maxSap) * 100) : 0}%
+${inspeksiHazardList.length > 0 ? '\n   <b>📝 Top 5:</b>\n' + inspeksiHazardList.slice(0, 5).map((item, idx) => {
+   const nomor = (item.nomor_laporan || 'N/A').toString();
+   const status = (item.status || 'N/A').toString();
+   return `   ${idx + 1}. <code>${nomor.length > 20 ? nomor.substring(0, 20) + '...' : nomor}</code> [${status}]`;
+}).join('\n') : '   <i>Tidak ada data</i>'}
+
+💬 <b>Coaching:</b> <b>${coachingCount.toLocaleString('id-ID')}</b> | <b>Open:</b> ${coachingOpenCount.toLocaleString('id-ID')}
+   ${createProgressBar(coachingCount, maxSap)} ${coachingCount > 0 ? Math.round((coachingCount / maxSap) * 100) : 0}%
+${coachingList.length > 0 ? '\n   <b>📝 Top 5:</b>\n' + coachingList.slice(0, 5).map((item, idx) => {
+   const nomor = (item.nomor_laporan || 'N/A').toString();
+   const status = (item.status || 'N/A').toString();
+   return `   ${idx + 1}. <code>${nomor.length > 20 ? nomor.substring(0, 20) + '...' : nomor}</code> [${status}]`;
+}).join('\n') : '   <i>Tidak ada data</i>'}
+
+👁️ <b>Observasi:</b> <b>${observasiCount.toLocaleString('id-ID')}</b> | <b>Open:</b> ${observasiOpenCount.toLocaleString('id-ID')}
+   ${createProgressBar(observasiCount, maxSap)} ${observasiCount > 0 ? Math.round((observasiCount / maxSap) * 100) : 0}%
+${observasiList.length > 0 ? '\n   <b>📝 Top 5:</b>\n' + observasiList.slice(0, 5).map((item, idx) => {
+   const nomor = (item.nomor_laporan || 'N/A').toString();
+   const status = (item.status || 'N/A').toString();
+   return `   ${idx + 1}. <code>${nomor.length > 20 ? nomor.substring(0, 20) + '...' : nomor}</code> [${status}]`;
+}).join('\n') : '   <i>Tidak ada data</i>'}
+
+⚠️ <b>Observasi Area Kritis:</b> <b>${observasiAreaKritisCount.toLocaleString('id-ID')}</b> | <b>Open:</b> ${observasiAreaKritisOpenCount.toLocaleString('id-ID')}
+${observasiAreaKritisList.length > 0 ? '\n   <b>📝 Top 5:</b>\n' + observasiAreaKritisList.slice(0, 5).map((item, idx) => {
+   const nomor = (item.nomor_laporan || 'N/A').toString();
+   const status = (item.status || 'N/A').toString();
+   return `   ${idx + 1}. <code>${nomor.length > 20 ? nomor.substring(0, 20) + '...' : nomor}</code> [${status}]`;
+}).join('\n') : '   <i>Tidak ada data</i>'}
+
+─────────────────────────────
+
+📹 <b>CCTV Coverage:</b> <b>${cctvCount.toLocaleString('id-ID')}</b> unit <i>(di lokasi ini)</i>
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+🕐 <b>Waktu:</b> ${waktu}
+📱 <b>Device:</b> <code>${deviceInfo}</code>`;
+            
+            // Send to Telegram (csrfToken already declared above)
+            const telegramResponse = await fetch('{{ route("maps.api.send-telegram") }}', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': csrfToken
+                },
+                body: JSON.stringify({
+                    chat_id: '{{ config("services.telegram.chat_id") }}', // Use default chat_id from config
+                    message: message,
+                    parse_mode: 'HTML' // Use HTML for better formatting
+                })
+            });
+            
+            // Check if response is OK
+            if (!telegramResponse.ok) {
+                const errorText = await telegramResponse.text();
+                console.error(`[Telegram] ✗ HTTP Error ${telegramResponse.status}:`, errorText);
+                return false;
+            }
+            
+            const telegramResult = await telegramResponse.json();
+            
+            if (telegramResult.success) {
+                console.log(`[Telegram] ✓ Notification sent successfully for ${employee.nama || employee.kode_sid}`);
+                return true;
+            } else {
+                console.error(`[Telegram] ✗ Failed to send notification:`, telegramResult.error || telegramResult.message);
+                return false;
+            }
+            
+        } catch (error) {
+            console.error('[Telegram] Error sending notification:', error);
+            // If error is JSON parse error, log the response
+            if (error.message && error.message.includes('JSON')) {
+                console.error('[Telegram] Response was not valid JSON. Check server error logs.');
+            }
+            return false;
+        }
+    }
+    
+    /**
+     * Function to monitor employees and send Telegram notifications
+     * Memonitor lokasi employee dan mengirim notifikasi ketika masuk area kerja
+     */
+    async function monitorEmployeesAndNotify() {
+        if (!isMonitoringActive) {
+            return;
+        }
+        
+        try {
+            // Get employee location data
+            const response = await fetch('{{ route("maps.api.employee-location") }}?limit=1000');
+            const data = await response.json();
+            
+            if (!data.success || !data.employees || data.employees.length === 0) {
+                console.log('[Monitor] No employee location data available');
+                return;
+            }
+            
+            console.log(`[Monitor] Checking ${data.employees.length} employees...`);
+            
+            // Check if area kerja layers are loaded
+            if (!window.areaKerjaLayers || window.areaKerjaLayers.length === 0) {
+                console.log('[Monitor] Area kerja layers not loaded yet, waiting...');
+                return;
+            }
+            
+            const employees = data.employees;
+            let notificationCount = 0;
+            
+            for (const employee of employees) {
+                const employeeId = employee.employee_id || employee.id;
+                const lat = employee.latitude;
+                const lng = employee.longitude;
+                
+                if (!employeeId || !lat || !lng) continue;
+                
+                // Find location from coordinates
+                const location = findLocationFromCoordinates(lat, lng);
+                
+                if (!location) {
+                    // Employee is outside any work area
+                    if (employeeLocationCache[employeeId]) {
+                        // Employee left an area, clear cache
+                        console.log(`[Monitor] ${employee.nama || employee.kode_sid} left work area`);
+                        delete employeeLocationCache[employeeId];
+                    }
+                    continue;
+                }
+                
+                // Check if employee is in a new location or same location
+                const previousLocation = employeeLocationCache[employeeId];
+                const isNewLocation = !previousLocation || 
+                                     (previousLocation.id_lokasi !== location.id_lokasi);
+                
+                // Update cache
+                const now = new Date();
+                employeeLocationCache[employeeId] = {
+                    ...location,
+                    employee: employee,
+                    timestamp: now,
+                    lastNotificationTime: previousLocation?.lastNotificationTime || null
+                };
+                
+                // Send notification if new location or periodic check
+                if (isNewLocation) {
+                    console.log(`[Monitor] ${employee.nama || employee.kode_sid} entered new area: ${location.lokasi}`);
+                    const sent = await sendTelegramNotification(employee, location);
+                    if (sent) {
+                        employeeLocationCache[employeeId].lastNotificationTime = now;
+                        notificationCount++;
+                    }
+                } else if (shouldSendPeriodicNotification(employeeId)) {
+                    console.log(`[Monitor] ${employee.nama || employee.kode_sid} periodic notification for: ${location.lokasi}`);
+                    const sent = await sendTelegramNotification(employee, location);
+                    if (sent) {
+                        employeeLocationCache[employeeId].lastNotificationTime = now;
+                        notificationCount++;
+                    }
+                }
+            }
+            
+            if (notificationCount > 0) {
+                console.log(`[Monitor] ✓ Sent ${notificationCount} notifications`);
+            }
+            
+        } catch (error) {
+            console.error('[Monitor] Error monitoring employees:', error);
+        }
+    }
+    
+    /**
+     * Start monitoring employees
+     * Memulai monitoring lokasi employee dengan interval tertentu
+     */
+    function startEmployeeMonitoring(intervalSeconds = 30) {
+        if (monitoringInterval) {
+            console.log('[Monitor] Monitoring already active');
+            return;
+        }
+        
+        isMonitoringActive = true;
+        console.log(`[Monitor] Starting employee monitoring (interval: ${intervalSeconds}s)`);
+        
+        // Run immediately
+        monitorEmployeesAndNotify();
+        
+        // Then run at interval
+        monitoringInterval = setInterval(() => {
+            monitorEmployeesAndNotify();
+        }, intervalSeconds * 1000);
+    }
+    
+    /**
+     * Stop monitoring employees
+     */
+    function stopEmployeeMonitoring() {
+        if (monitoringInterval) {
+            clearInterval(monitoringInterval);
+            monitoringInterval = null;
+            isMonitoringActive = false;
+            console.log('[Monitor] Employee monitoring stopped');
+        }
+    }
+    
+    // Auto-start monitoring after area layers are loaded
+    // Wait for area layers to be loaded before starting monitoring
+    let monitoringStartAttempts = 0;
+    const maxMonitoringStartAttempts = 30; // Try for 30 seconds
+    
+    function tryStartMonitoring() {
+        if (window.areaKerjaLayers && window.areaKerjaLayers.length > 0) {
+            // Layers are loaded, start monitoring
+            startEmployeeMonitoring(30); // Check every 30 seconds
+        } else {
+            monitoringStartAttempts++;
+            if (monitoringStartAttempts < maxMonitoringStartAttempts) {
+                // Retry after 1 second
+                setTimeout(tryStartMonitoring, 1000);
+            } else {
+                console.warn('[Monitor] Area kerja layers not loaded after 30 seconds, monitoring not started');
+            }
+        }
+    }
+    
+    // Start trying to start monitoring after page load
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => {
+            setTimeout(tryStartMonitoring, 5000); // Wait 5 seconds after DOM ready
+        });
+    } else {
+        setTimeout(tryStartMonitoring, 5000); // Wait 5 seconds
+    }
+    
     // Charts menggunakan script dari template index.js
     // Script chart akan di-load dari build/js/index.js
-    
-    // P2H Modal Functions
-    function openP2hModal(controlRoom) {
-        const modal = new bootstrap.Modal(document.getElementById('p2hModal'));
-        const modalBody = document.getElementById('p2hModalBody');
-        const modalTitle = document.getElementById('p2hControlRoomName');
-        const submitBtn = document.getElementById('p2hSubmitBtn');
-        
-        // Set control room name
-        modalTitle.textContent = controlRoom;
-        
-        // Show loading state
-        modalBody.innerHTML = `
-            <div class="text-center py-5">
-                <div class="spinner-border text-primary" role="status">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p class="mt-3 text-muted">Memuat form checklist P2H...</p>
-            </div>
-        `;
-        
-        // Disable submit button while loading
-        submitBtn.disabled = true;
-        
-        // Show modal
-        modal.show();
-        
-        // Load form via AJAX
-        fetch(`/hazard-detection/p2h/${encodeURIComponent(controlRoom)}`, {
-            headers: {
-                'X-Requested-With': 'XMLHttpRequest',
-                'Accept': 'application/json'
-            }
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                modalBody.innerHTML = result.html;
-                submitBtn.disabled = false;
-                
-                // Attach submit handler
-                attachP2hSubmitHandler();
-            } else {
-                modalBody.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="material-icons-outlined me-2">error</i>
-                        ${result.message || 'Gagal memuat form checklist P2H.'}
-                    </div>
-                `;
-            }
-        })
-        .catch(error => {
-            console.error('Error loading P2H form:', error);
-            modalBody.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="material-icons-outlined me-2">error</i>
-                    Terjadi kesalahan saat memuat form checklist P2H.
-                </div>
-            `;
-        });
-    }
-    
-    function attachP2hSubmitHandler() {
-        const form = document.getElementById('p2hForm');
-        const submitBtn = document.getElementById('p2hSubmitBtn');
-        
-        if (!form) return;
-        
-        // Remove existing handler if any
-        const newForm = form.cloneNode(true);
-        form.parentNode.replaceChild(newForm, form);
-        
-        // Attach new handler to submit button
-        submitBtn.onclick = function() {
-            submitP2hForm();
-        };
-    }
-    
-    function submitP2hForm() {
-        const form = document.getElementById('p2hForm');
-        const submitBtn = document.getElementById('p2hSubmitBtn');
-        const modalBody = document.getElementById('p2hModalBody');
-        
-        if (!form) return;
-        
-        // Disable submit button
-        submitBtn.disabled = true;
-        submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...';
-        
-        // Get form data
-        const formData = new FormData(form);
-        
-        // Convert form data to proper format
-        const data = {
-            control_room: formData.get('control_room'),
-            tanggal_pemeriksaan: formData.get('tanggal_pemeriksaan'),
-            shift: formData.get('shift'),
-            jenis_cctv: formData.getAll('jenis_cctv[]'),
-            pemeriksaan_fisik: {},
-            pemeriksaan_fungsi: {},
-            detail_cctv: [],
-            catatan_lain: formData.get('catatan_lain')
-        };
-        
-        // Process detail_cctv - collect all CCTV details
-        const cctvIds = new Set();
-        for (const [key, value] of formData.entries()) {
-            if (key.startsWith('detail_cctv[') && key.includes('][cctv_id]')) {
-                const match = key.match(/detail_cctv\[(\d+)\]\[cctv_id\]/);
-                if (match) {
-                    cctvIds.add(match[1]);
-                }
-            }
-        }
-        
-        // Process each CCTV detail
-        cctvIds.forEach(cctvId => {
-            const cctvDetail = {
-                cctv_id: parseInt(cctvId),
-                nama_cctv: formData.get(`detail_cctv[${cctvId}][nama_cctv]`) || '',
-                status: formData.get(`detail_cctv[${cctvId}][status]`) || '',
-                catatan: formData.get(`detail_cctv[${cctvId}][catatan]`) || ''
-            };
-            data.detail_cctv.push(cctvDetail);
-        });
-        
-        // Process pemeriksaan_fisik
-        for (let i = 0; i < 9; i++) {
-            data.pemeriksaan_fisik[i] = {
-                jumlah: formData.get(`pemeriksaan_fisik[${i}][jumlah]`) || 0,
-                ketersediaan: formData.get(`pemeriksaan_fisik[${i}][ketersediaan]`) || '',
-                kondisi: formData.get(`pemeriksaan_fisik[${i}][kondisi]`) || ''
-            };
-        }
-        
-        // Process pemeriksaan_fungsi
-        for (let i = 0; i < 8; i++) {
-            data.pemeriksaan_fungsi[i] = {
-                status: formData.get(`pemeriksaan_fungsi[${i}][status]`) || ''
-            };
-        }
-        
-        // Submit via AJAX
-        fetch('{{ route("hazard-detection.p2h.store") }}', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRF-TOKEN': '{{ csrf_token() }}',
-                'Accept': 'application/json'
-            },
-            body: JSON.stringify(data)
-        })
-        .then(response => response.json())
-        .then(result => {
-            if (result.success) {
-                // Close modal first
-                bootstrap.Modal.getInstance(document.getElementById('p2hModal')).hide();
-                
-                // Show success notification
-                if (typeof Swal !== 'undefined') {
-                    Swal.fire({
-                        icon: 'success',
-                        title: 'Berhasil',
-                        text: result.message || 'Data P2H berhasil disimpan.',
-                        timer: 2000,
-                        showConfirmButton: false
-                    }).then(() => {
-                        // Reload page to update P2H status
-                        location.reload();
-                    });
-                } else {
-                    // Fallback if SweetAlert2 not loaded
-                    alert(result.message || 'Data P2H berhasil disimpan.');
-                    location.reload();
-                }
-            } else {
-                // Show error message
-                modalBody.innerHTML = `
-                    <div class="alert alert-danger">
-                        <i class="material-icons-outlined me-2">error</i>
-                        ${result.message || 'Terjadi kesalahan saat menyimpan data.'}
-                    </div>
-                `;
-                
-                // Re-enable submit button
-                submitBtn.disabled = false;
-                submitBtn.innerHTML = '<i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">save</i> Simpan Checklist P2H';
-            }
-        })
-        .catch(error => {
-            console.error('Error submitting P2H form:', error);
-            modalBody.innerHTML = `
-                <div class="alert alert-danger">
-                    <i class="material-icons-outlined me-2">error</i>
-                    Terjadi kesalahan saat menyimpan data.
-                </div>
-            `;
-            
-            // Re-enable submit button
-            submitBtn.disabled = false;
-            submitBtn.innerHTML = '<i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">save</i> Simpan Checklist P2H';
-        });
-    }
 </script>
 <script src="{{ URL::asset('build/plugins/apexchart/apexcharts.min.js') }}"></script>
 <script src="{{ URL::asset('build/js/index.js') }}"></script>
@@ -15853,35 +15937,6 @@
     $(document).ready(function() {
         // Donut charts will be initialized by updateStatisticsBySite
         // Just ensure peity is loaded first
-        
-        // Initialize donut chart for PJA CCTV (CCTV yang sudah ada PJA)
-        // Chart sudah diinisialisasi di bagian atas bersama chart lainnya
-        // Ini hanya sebagai fallback jika updateDonutChart belum tersedia
-        setTimeout(function() {
-            var cctvSudahPjaPercentage = {{ $cctvSudahPjaPercentage ?? 0 }};
-            var percentage = Math.max(0, Math.min(100, cctvSudahPjaPercentage));
-            
-            // Cek apakah chart sudah diinisialisasi
-            var donutBelumPja = document.getElementById('donutBelumPja');
-            if (donutBelumPja && (!donutBelumPja._peity || typeof updateDonutChart === 'undefined')) {
-                // Fallback: inisialisasi manual jika updateDonutChart belum tersedia
-                if (typeof $ !== 'undefined' && typeof $.fn.peity !== 'undefined') {
-                    donutBelumPja.textContent = Math.round(percentage) + '/100';
-                    try {
-                        if (donutBelumPja._peity) {
-                            $(donutBelumPja).peity('destroy');
-                        }
-                        $(donutBelumPja).peity('donut', {
-                            fill: ['#20c997', "rgb(0 0 0 / 10%)"],
-                            innerRadius: 32,
-                            radius: 40
-                        });
-                    } catch(e) {
-                        console.error('Error initializing donutBelumPja chart:', e);
-                    }
-                }
-            }
-        }, 1000);
         
         // Update chart2 dengan data yang benar setelah template di-load
         
@@ -15923,7 +15978,171 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- TourGuide JS Script -->
+<script src="https://unpkg.com/@sjmc11/tourguidejs/dist/tour.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+{{-- <script>
+    // Initialize TourGuide
+    let tourGuide = null;
+    
+    document.addEventListener('DOMContentLoaded', function() {
+        // Wait for all elements and TourGuide script to be ready
+        setTimeout(function() {
+            try {
+                // Check for TourGuideClient (CDN version uses tourguide namespace)
+                let TourGuideClass = null;
+                
+                if (typeof TourGuideClient !== 'undefined') {
+                    TourGuideClass = TourGuideClient;
+                } else if (typeof tourguide !== 'undefined' && tourguide.TourGuideClient) {
+                    TourGuideClass = tourguide.TourGuideClient;
+                } else if (window.tourguide && window.tourguide.TourGuideClient) {
+                    TourGuideClass = window.tourguide.TourGuideClient;
+                }
+                
+                if (TourGuideClass) {
+                    tourGuide = new TourGuideClass({
+                        backdropColor: 'rgba(0, 0, 0, 0.75)',
+                        targetPadding: 20,
+                        dialogAnimate: true,
+                        backdropAnimate: true,
+                        showStepDots: true,
+                        stepDotsPlacement: 'footer',
+                        showStepProgress: true,
+                        showButtons: true,
+                        closeButton: true,
+                        nextLabel: 'Selanjutnya',
+                        prevLabel: 'Sebelumnya',
+                        finishLabel: 'Selesai',
+                        keyboardControls: true,
+                        exitOnEscape: true,
+                        exitOnClickOutside: false,
+                        rememberStep: false,
+                        completeOnFinish: true,
+                        debug: false,
+                        autoScroll: true,
+                        autoScrollSmooth: true,
+                        autoScrollOffset: 20,
+                        dialogWidth: 0,
+                        dialogMaxWidth: 380,
+                        dialogClass: 'custom-tour-dialog'
+                    });
+                    
+                    // Add button to start tour
+                    const startTourBtn = document.createElement('button');
+                    startTourBtn.className = 'btn btn-primary position-fixed';
+                    startTourBtn.style.cssText = 'bottom: 20px; left: 20px; z-index: 10000; box-shadow: 0 4px 6px rgba(0,0,0,0.3); border-radius: 8px; padding: 10px 20px; font-weight: 500;';
+                    startTourBtn.innerHTML = '<i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">help_outline</i>Mulai Tour Guide';
+                    startTourBtn.onclick = function() {
+                        if (tourGuide) {
+                            tourGuide.start();
+                            
+                            // Apply custom styles after tour starts
+                            setTimeout(function() {
+                                const dialog = document.querySelector('[data-tg-dialog], .tg-dialog, [class*="tg-dialog"]');
+                                if (dialog) {
+                                    dialog.style.maxWidth = '380px';
+                                    dialog.style.width = '100%';
+                                    dialog.style.borderRadius = '12px';
+                                    dialog.style.overflow = 'hidden';
+                                }
+                                
+                                const footer = document.querySelector('[data-tg-dialog-footer], .tg-dialog-footer, [class*="tg-dialog-footer"]');
+                                if (footer) {
+                                    footer.style.padding = '12px 20px';
+                                    footer.style.borderTop = '1px solid #e5e7eb';
+                                    footer.style.backgroundColor = '#f9fafb';
+                                    footer.style.display = 'flex';
+                                    footer.style.flexDirection = 'column';
+                                    footer.style.gap = '10px';
+                                }
+                                
+                                const buttons = document.querySelectorAll('[data-tg-button], .tg-button, [class*="tg-button"]');
+                                buttons.forEach(function(btn) {
+                                    if (!btn.classList.contains('tg-close-button') && !btn.classList.contains('tg-step-dot')) {
+                                        btn.style.flex = '1';
+                                        btn.style.padding = '10px 16px';
+                                        btn.style.borderRadius = '8px';
+                                        btn.style.fontWeight = '500';
+                                        btn.style.fontSize = '14px';
+                                    }
+                                });
+                                
+                                const stepDots = document.querySelector('[data-tg-step-dots], .tg-step-dots, [class*="tg-step-dots"]');
+                                if (stepDots) {
+                                    stepDots.style.display = 'flex';
+                                    stepDots.style.justifyContent = 'center';
+                                    stepDots.style.alignItems = 'center';
+                                    stepDots.style.gap = '8px';
+                                    stepDots.style.marginBottom = '8px';
+                                    stepDots.style.padding = '8px 0';
+                                    stepDots.style.flexWrap = 'wrap';
+                                }
+                            }, 100);
+                        }
+                    };
+                    document.body.appendChild(startTourBtn);
+                    
+                    // Function to apply custom styles to dialog
+                    function applyDialogStyles() {
+                        setTimeout(function() {
+                            const dialog = document.querySelector('[data-tg-dialog], .tg-dialog, [class*="tg-dialog"]');
+                            if (dialog) {
+                                dialog.style.maxWidth = '380px';
+                                dialog.style.width = '100%';
+                                dialog.style.borderRadius = '12px';
+                                dialog.style.overflow = 'hidden';
+                            }
+                            
+                            const footer = document.querySelector('[data-tg-dialog-footer], .tg-dialog-footer, [class*="tg-dialog-footer"]');
+                            if (footer) {
+                                footer.style.padding = '12px 20px';
+                                footer.style.borderTop = '1px solid #e5e7eb';
+                                footer.style.backgroundColor = '#f9fafb';
+                                footer.style.display = 'flex';
+                                footer.style.flexDirection = 'column';
+                                footer.style.gap = '10px';
+                            }
+                            
+                            const buttons = document.querySelectorAll('[data-tg-button], .tg-button, [class*="tg-button"]');
+                            buttons.forEach(function(btn) {
+                                if (!btn.classList.contains('tg-close-button') && !btn.classList.contains('tg-step-dot')) {
+                                    btn.style.flex = '1';
+                                    btn.style.padding = '10px 16px';
+                                    btn.style.borderRadius = '8px';
+                                    btn.style.fontWeight = '500';
+                                    btn.style.fontSize = '14px';
+                                }
+                            });
+                            
+                            const stepDots = document.querySelector('[data-tg-step-dots], .tg-step-dots, [class*="tg-step-dots"]');
+                            if (stepDots) {
+                                stepDots.style.display = 'flex';
+                                stepDots.style.justifyContent = 'center';
+                                stepDots.style.alignItems = 'center';
+                                stepDots.style.gap = '8px';
+                                stepDots.style.marginBottom = '8px';
+                                stepDots.style.padding = '8px 0';
+                                stepDots.style.flexWrap = 'wrap';
+                            }
+                        }, 50);
+                    }
+                    
+                    // Listen for tour events to apply styles
+                    if (tourGuide && typeof tourGuide.on === 'function') {
+                        tourGuide.on('step:after', applyDialogStyles);
+                        tourGuide.on('start', applyDialogStyles);
+                    }
+                    
+                    console.log('TourGuide initialized successfully');
+                } else {
+                    console.error('TourGuideClient is not defined. Make sure the script is loaded correctly.');
+                }
+            } catch (error) {
+                console.error('Error initializing TourGuide:', error);
+            }
+        }, 1500);
+    });
+</script> --}}
 @endsection
 
 

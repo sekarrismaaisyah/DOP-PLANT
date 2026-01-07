@@ -4,8 +4,6 @@
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
-<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
-<link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
 <style>
     /* Filter Dropdown Styles */
     .btn-filter {
@@ -334,7 +332,6 @@
     .sidebar-list-item.active {
         background: #eff6ff;
         border-color: #3b82f6;
-        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
     }
     
     .list-item-avatar {
@@ -565,92 +562,6 @@
         vertical-align: middle;
     }
     
-    /* CCTV specific styles (diambil dari inicctvdetail) */
-    .sidebar-list-item[data-type="cctv"] {
-        flex-direction: column;
-        align-items: stretch;
-        padding: 0;
-        overflow: hidden;
-        position: relative;
-    }
-    
-    .sidebar-list-item[data-type="cctv"].expanded {
-        border-color: #3b82f6;
-        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.2);
-    }
-    
-    .sidebar-list-item[data-type="cctv"].no-hazard-inspection {
-        border-left: 3px solid #ef4444;
-    }
-    
-    .sidebar-list-item[data-type="cctv"].has-hazard-inspection {
-        border-left: 3px solid #10b981;
-    }
-    
-    .sidebar-list-item-header {
-        display: flex;
-        align-items: center;
-        padding: 12px;
-        transition: background-color 0.2s ease;
-    }
-    
-    .sidebar-list-item[data-type="cctv"]:hover .sidebar-list-item-header {
-        background-color: transparent;
-    }
-    
-    .list-item-avatar {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-weight: 600;
-        font-size: 16px;
-        color: #ffffff;
-        margin-right: 12px;
-        flex-shrink: 0;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    /* Pastikan avatar tidak terpengaruh oleh styling CCTV */
-    .sidebar-list-item:not([data-type="cctv"]) .list-item-avatar {
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    
-    .list-item-content {
-        flex: 1;
-        min-width: 0;
-    }
-    
-    /* Pastikan content tidak terpengaruh oleh styling CCTV */
-    .sidebar-list-item:not([data-type="cctv"]) .list-item-content {
-        flex: 1;
-        min-width: 0;
-    }
-    
-    .list-item-title {
-        font-size: 14px;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 4px;
-        word-break: break-word;
-        line-height: 1.4;
-    }
-    
-    .list-item-subtitle {
-        font-size: 12px;
-        color: #6b7280;
-        word-break: break-word;
-        line-height: 1.4;
-    }
-    
-    .list-item-time {
-        font-size: 11px;
-        color: #9ca3af;
-        margin-top: 4px;
-    }
-    
     /* Control Room specific styles */
     .sidebar-list-item[data-type="controlroom"] {
         flex-direction: column;
@@ -779,265 +690,6 @@
         justify-content: center;
         border-radius: 4px;
     }
-    
-    /* CCTV detail + status styles (dari inicctvdetail) */
-    .cctv-hazard-status-icon {
-        margin-left: 8px;
-        margin-right: 8px;
-        flex-shrink: 0;
-        width: 20px;
-        height: 20px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        border-radius: 50%;
-        font-size: 14px;
-        transition: all 0.2s ease;
-    }
-    
-    .cctv-hazard-status-icon.has-hazard {
-        background-color: rgba(16, 185, 129, 0.15);
-        color: #10b981;
-    }
-    
-    .cctv-hazard-status-icon.no-hazard {
-        background-color: rgba(239, 68, 68, 0.15);
-        color: #ef4444;
-        animation: pulse-red 2s ease-in-out infinite;
-    }
-    
-    .cctv-hazard-status-icon.loading {
-        background-color: rgba(156, 163, 175, 0.15);
-        color: #9ca3af;
-    }
-    
-    @keyframes pulse-red {
-        0%, 100% {
-            opacity: 1;
-            box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
-        }
-        50% {
-            opacity: 0.8;
-            box-shadow: 0 0 0 4px rgba(239, 68, 68, 0);
-        }
-    }
-    
-    .cctv-hazard-status-badge {
-        position: absolute;
-        top: 8px;
-        right: 8px;
-        font-size: 10px;
-        padding: 2px 6px;
-        border-radius: 10px;
-        font-weight: 600;
-        text-transform: uppercase;
-    }
-    
-    .cctv-hazard-status-badge.no-hazard {
-        background-color: #fee2e2;
-        color: #991b1b;
-    }
-    
-    .cctv-hazard-status-badge.has-hazard {
-        background-color: #d1fae5;
-        color: #065f46;
-    }
-    
-    .cctv-detail-section {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
-        padding: 0 12px;
-        background: #fafbfc;
-        border-top: 1px solid #e5e7eb;
-    }
-    
-    .sidebar-list-item.expanded .cctv-detail-section {
-        max-height: 2000px;
-        padding: 16px 12px;
-    }
-    
-    .cctv-detail-loading {
-        text-align: center;
-        padding: 24px 20px;
-        color: #6b7280;
-        font-size: 12px;
-    }
-    
-    .cctv-detail-loading i {
-        animation: spin 1s linear infinite;
-    }
-    
-    @keyframes spin {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    
-    .cctv-detail-error {
-        padding: 12px;
-        background: #fef2f2;
-        border: 1px solid #fecaca;
-        border-radius: 6px;
-        color: #991b1b;
-        font-size: 12px;
-        margin-bottom: 12px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-    }
-    
-    .cctv-detail-group {
-        margin-bottom: 20px;
-    }
-    
-    .cctv-detail-group:last-child {
-        margin-bottom: 0;
-    }
-    
-    .cctv-detail-group-title {
-        font-size: 13px;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 10px;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding-bottom: 6px;
-        border-bottom: 2px solid #e5e7eb;
-    }
-    
-    .cctv-detail-group-title i {
-        font-size: 18px;
-        color: #3b82f6;
-    }
-    
-    .cctv-coverage-item {
-        padding: 10px 12px;
-        background: #ffffff;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        border-left: 4px solid #3b82f6;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .cctv-coverage-item:hover {
-        transform: translateX(2px);
-        box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
-    }
-    
-    .cctv-coverage-item:last-child {
-        margin-bottom: 0;
-    }
-    
-    .cctv-coverage-lokasi {
-        font-size: 12px;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 4px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    
-    .cctv-coverage-lokasi::before {
-        content: '📍';
-        font-size: 14px;
-    }
-    
-    .cctv-coverage-detail {
-        font-size: 11px;
-        color: #6b7280;
-        margin-left: 20px;
-        line-height: 1.5;
-    }
-    
-    .cctv-hazard-stat {
-        padding: 10px 12px;
-        background: #ffffff;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        border-left: 4px solid #f59e0b;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .cctv-hazard-stat:hover {
-        transform: translateX(2px);
-        box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15);
-    }
-    
-    .cctv-hazard-stat:last-child {
-        margin-bottom: 0;
-    }
-    
-    .cctv-hazard-stat-header {
-        font-size: 12px;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 6px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    
-    .cctv-hazard-stat-header::before {
-        content: '⚠️';
-        font-size: 14px;
-    }
-    
-    .cctv-hazard-stat-count {
-        font-size: 11px;
-        color: #92400e;
-        margin-top: 4px;
-        padding: 4px 8px;
-        background: #fef3c7;
-        border-radius: 4px;
-        display: inline-block;
-        font-weight: 600;
-    }
-    
-    .cctv-pja-item {
-        padding: 10px 12px;
-        background: #ffffff;
-        border-radius: 6px;
-        margin-bottom: 8px;
-        border-left: 4px solid #10b981;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    
-    .cctv-pja-item:hover {
-        transform: translateX(2px);
-        box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
-    }
-    
-    .cctv-pja-item:last-child {
-        margin-bottom: 0;
-    }
-    
-    .cctv-pja-name {
-        font-size: 12px;
-        font-weight: 600;
-        color: #111827;
-        margin-bottom: 6px;
-        display: flex;
-        align-items: center;
-        gap: 6px;
-    }
-    
-    .cctv-pja-name::before {
-        content: '👤';
-        font-size: 14px;
-    }
-    
-    .cctv-pja-info {
-        font-size: 11px;
-        color: #6b7280;
-        line-height: 1.5;
-        margin-left: 20px;
-    }
-
     
     /* Collapsed state styles */
     .map-sidebar.collapsed {
@@ -1690,7 +1342,7 @@
         <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardStatsCollapse" aria-expanded="true" aria-controls="dashboardStatsCollapse">
             <span class="fw-bold d-flex align-items-center">
                 <i class="material-icons-outlined me-2">dashboard</i>
-                 Dashboard Readiness
+                Dashboard Statistics & Coverage
             </span>
             <i class="material-icons-outlined collapse-icon">expand_less</i>
         </button>
@@ -1698,582 +1350,39 @@
 
     <!-- Collapsible Content -->
     <div class="collapse show" id="dashboardStatsCollapse">
-        <div class="row">
-            <div class="col-12 d-flex">
-                <div class="card rounded-4 w-100">
-                <div class="card-body">
-                    <div class="d-flex align-items-center justify-content-between mb-3">
-                    <h5 class="mb-0 fw-bold">Total Kesiapan Utilitas</h5>
-                    <span class="badge bg-primary" id="coverageBadge">0% Coverage</span>
-                    </div>
-                    <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
-                        
-                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 kesiapan-tab-btn active" data-tab-target="kesiapan-alat" title="Lihat detail Total CCTV">
-                        <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="material-icons-outlined">view_list</i>
-                        </span>
-                        <h3 class="mb-0" id="totalCctvCountDynamic">92.2%</h3>
-                        <p class="mb-0">Kesiapan Alat</p>
-                        <small class="text-muted" id="totalCctvLabel">Pengawasan Berjarak</small>
-                    </button>
-
-                    <div class="vr"></div>
-                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 kesiapan-tab-btn" data-tab-target="kesiapan-orang" title="Lihat detail Control Room">
-                        <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="material-icons-outlined">museum</i>
-                        </span>
-                        <h3 class="mb-0" id="totalControlRoomCount">90%</h3>
-                        <p class="mb-0">Kesiapan Orang</p>
-                       <small class="text-muted" id="">Pengawasan Berjarak</small>
-                    </button>
-
-                    
-                    <div class="vr"></div>
-                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 kesiapan-tab-btn" data-tab-target="area-kerja" title="Lihat detail Coverage">
-                        <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
-                        <i class="material-icons-outlined">percent</i>
-                        </span>
-                        <h3 class="mb-0" id="coveragePercentage">0%</h3>
-                        <p class="mb-0">Area Kerja</p>
-                        <small class="text-muted" id="">Pengawasan Berjarak</small>
-                    </button>
-                    </div>
-                </div>
-                </div>
-            </div>
-        </div>
-        
-
-         
-
-        {{-- Detail Total CCTV Section --}}
-        <div class="row mt-4" id="kesiapan-tab-content-wrapper" style="display: block !important;">
-          <div class="col-12">
-            {{-- Tab Content --}}
-            <div class="tab-content" id="kesiapanTabContent" style="display: block !important;">
-              {{-- Tab Pane: Kesiapan Alat --}}
-              <div class="tab-pane fade show active" id="kesiapan-alat" role="tabpanel" aria-labelledby="kesiapan-alat-tab" style="display: block; opacity: 1;">
-                <div class="card mb-4">
-                  <div class="card-header border-bottom">
-                    <div class="">
-                      <h5 class="mb-0 fw-bold">Detail Kesiapan Alat</h5>
-                      <p class="mb-0 text-muted small">Detail Kesiapan CCTV dan COntrol Room</p>
-                    </div>
-                  </div>
-                  <div class="card-body p-4">
-        
-
-        {{-- KPI Summary Cards --}}
-        <div class="row mb-4">
+    <div class="row">
           <div class="col-12 d-flex">
             <div class="card rounded-4 w-100">
               <div class="card-body">
+                <div class="d-flex align-items-center justify-content-between mb-3">
+                  <h5 class="mb-0 fw-bold">Luasan Coverage CCTV</h5>
+                  <span class="badge bg-primary" id="coverageBadge">0% Coverage</span>
+                </div>
                 <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total CCTV Terpasang">
-                    <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="material-icons-outlined">videocam</span>
-                    </span>
-                    <h3 class="mb-0" id="modalTotalCctv">0</h3>
-                    <p class="mb-0">Total CCTV Terpasang</p>
-                  </button>
-                  <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="CCTV Aktif Live View & Connected">
+                     
+                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#totalCctvModal" title="Lihat detail Total CCTV">
                     <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="material-icons-outlined">check_circle</span>
+                      <i class="material-icons-outlined">view_list</i>
                     </span>
-                    <h3 class="mb-0" id="modalCctvAktif">0</h3>
-                    <p class="mb-0">CCTV Aktif</p>
-                    <small class="text-muted">Live View & Connected</small>
+                    <h3 class="mb-0" id="totalCctvCountDynamic">{{ number_format($totalCctvCount ?? 0) }}</h3>
+                    <p class="mb-0">Total CCTV</p>
+                    <small class="text-muted" id="totalCctvLabel">unit</small>
                   </button>
+
                   <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Kondisi Baik">
+                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#totalCctvModal" title="Lihat detail Control Room">
                     <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="material-icons-outlined">verified</span>
+                      <i class="material-icons-outlined">museum</i>
                     </span>
-                    <h3 class="mb-0" id="modalCctvKondisiBaik">0</h3>
-                    <p class="mb-0">Kondisi Baik</p>
+                    <h3 class="mb-0" id="totalControlRoomCount">{{ number_format($totalControlRoomCount ?? 0) }}</h3>
+                    <p class="mb-0">Control Room</p>
+                    <small class="text-muted">unit</small>
                   </button>
+
+
+
+
                   <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Dengan Auto Alert">
-                    <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="material-icons-outlined">notifications_active</span>
-                    </span>
-                    <h3 class="mb-0" id="modalCctvAutoAlert">0</h3>
-                    <p class="mb-0">Dengan Auto Alert</p>
-                  </button>
-                  <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Kondisi CCTV Tidak Baik">
-                    <span class="mb-2 wh-48 bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center">
-                      <span class="material-icons-outlined">error</span>
-                    </span>
-                    <h3 class="mb-0" id="modalCctvKondisiTidakBaik">0</h3>
-                    <p class="mb-0">Kondisi CCTV Tidak Baik</p>
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- Control Room Overview Section --}}
-        <div class="card mb-4">
-          <div class="card-body">
-            <div class="d-flex align-items-start justify-content-between mb-3">
-              <div class="">
-                <h5 class="mb-0 fw-bold">Overview Control Room</h5>
-                <small class="text-muted">Statistik CCTV berdasarkan control room</small>
-              </div>
-            </div>
-            <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-3 mb-3">
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-primary bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-primary">meeting_room</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalJumlahControlRoom">0</h5>
-                          <p class="mb-0">Jumlah Control Room</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-success bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-success">check_circle</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalTotalSudahP2h">0</h5>
-                          <p class="mb-0">Sudah P2H</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-danger bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-danger">cancel</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalTotalBelumP2h">0</h5>
-                          <p class="mb-0">Belum P2H</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            {{-- Detail Control Room --}}
-            <div class="card shadow-none border rounded-3 mb-0">
-              <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between mb-3">
-                  <div class="">
-                    <h6 class="mb-0 fw-bold">Detail Control Room</h6>
-                    <small class="text-muted">Daftar control room beserta CCTV dan detailnya</small>
-                  </div>
-                  <button class="btn btn-sm btn-outline-secondary" type="button" data-bs-toggle="collapse" data-bs-target="#detailControlRoomCollapse" aria-expanded="false" aria-controls="detailControlRoomCollapse">
-                    <span class="material-icons-outlined collapse-icon" style="font-size: 18px;">expand_more</span>
-                  </button>
-                </div>
-                <div class="collapse" id="detailControlRoomCollapse">
-                  <div class="table-responsive" style="max-height: 500px; overflow-y: auto;">
-                    <table class="table table-hover align-middle mb-0">
-                      <thead class="table-light sticky-top">
-                        <tr>
-                          <th style="width: 5%;">No</th>
-                          <th style="width: 18%;">Control Room</th>
-                          <th style="width: 10%;" class="text-end">Jumlah CCTV</th>
-                          <th style="width: 10%;" class="text-end">CCTV Aktif</th>
-                          <th style="width: 10%;" class="text-end">CCTV Rusak</th>
-                          <th style="width: 15%;" class="text-center">Status P2H</th>
-                          <th style="width: 12%;" class="text-center">Intervensi</th>
-                          <th style="width: 20%;" class="text-center">Aksi</th>
-                        </tr>
-                      </thead>
-                      <tbody id="detailControlRoomTableBody">
-                        <tr>
-                          <td colspan="8" class="text-center text-muted py-4">
-                            <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                            Memuat data...
-                          </td>
-                        </tr>
-                      </tbody>
-                    </table>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- Modal Intervensi Control Room --}}
-        <div class="modal fade" id="intervensiModal" tabindex="-1" aria-labelledby="intervensiModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold" id="intervensiModalLabel">
-                  <span class="material-icons-outlined me-2">send</span>
-                  Form Intervensi Control Room
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <form id="intervensiForm">
-                  <input type="hidden" id="intervensiControlRoom" name="control_room" value="">
-                  
-                  <div class="mb-3">
-                    <label for="intervensiControlRoomDisplay" class="form-label fw-semibold">Control Room</label>
-                    <input type="text" class="form-control" id="intervensiControlRoomDisplay" readonly>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label for="intervensiPIC" class="form-label fw-semibold">PIC (Pengawas) <span class="text-danger">*</span></label>
-                    <select class="form-select" id="intervensiPIC" name="pic" required>
-                      <option value="">Pilih PIC...</option>
-                    </select>
-                    <div class="form-text">Pilih PIC (Pengawas) dari daftar pengguna</div>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label for="intervensiIssue" class="form-label fw-semibold">Issue <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="intervensiIssue" name="issue" rows="5" placeholder="Masukkan issue atau masalah yang ditemukan..." required></textarea>
-                    <div class="form-text">Jelaskan issue atau masalah yang memerlukan intervensi</div>
-                  </div>
-                </form>
-              </div>
-              <div class="modal-footer border-top">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary" id="submitIntervensiBtn">
-                  <span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>
-                  Kirim Intervensi
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {{-- Area Kritis Overview Section --}}
-        {{-- <div class="card mb-4">
-          <div class="card-body">
-            <div class="d-flex align-items-start justify-content-between mb-3">
-              <div class="">
-                <h5 class="mb-0 fw-bold">Overview Area Kritis</h5>
-                <small class="text-muted">Statistik area kritis berdasarkan kategori_area_tercapture</small>
-              </div>
-            </div>
-            <div class="row row-cols-1 row-cols-lg-2 row-cols-xl-3 g-3 mb-3">
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-danger bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-danger">warning</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalJumlahAreaKritis">0</h5>
-                          <p class="mb-0">Jumlah Area Kritis</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-danger bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-danger">videocam</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalCctvAreaKritis">0</h5>
-                          <p class="mb-0">CCTV Area Kritis</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              <div class="col">
-                <div class="card shadow-none border rounded-3 mb-0">
-                  <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between">
-                      <div class="d-flex align-items-center gap-3 flex-grow-1">
-                        <div class="wh-48 d-flex align-items-center bg-success bg-opacity-10 justify-content-center rounded-circle">
-                          <span class="material-icons-outlined text-success">check_circle</span>
-                        </div>
-                        <div class="">
-                          <h5 class="mb-0" id="modalCctvAreaNonKritis">0</h5>
-                          <p class="mb-0">CCTV Area Non Kritis</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            
-            <div class="card shadow-none border rounded-3 mb-0">
-              <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between mb-3">
-                  <div class="">
-                    <h6 class="mb-0 fw-bold">Detail Coverage Lokasi</h6>
-                    <small class="text-muted">Daftar lokasi coverage beserta jumlah CCTV dan status kritis/non kritis</small>
-                  </div>
-                  <div class="dropdown">
-                    <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle" data-bs-toggle="dropdown">
-                      <span class="material-icons-outlined fs-5">more_vert</span>
-                    </a>
-                    <ul class="dropdown-menu">
-                      <li><a class="dropdown-item" href="javascript:;">Export</a></li>
-                    </ul>
-                  </div>
-                </div>
-                <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-                  <table class="table table-hover align-middle mb-0">
-                    <thead class="table-light sticky-top">
-                      <tr>
-                        <th style="width: 5%;">No</th>
-                        <th style="width: 50%;">Coverage Lokasi</th>
-                        <th style="width: 20%;" class="text-end">Jumlah CCTV</th>
-                        <th style="width: 25%;" class="text-center">Status</th>
-                      </tr>
-                    </thead>
-                    <tbody id="detailCoverageLokasiTableBody">
-                      <tr>
-                        <td colspan="4" class="text-center text-muted py-4">
-                          <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                          Memuat data...
-                        </td>
-                      </tr>
-                    </tbody>
-                  </table>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div> --}}
-
-
-
-      
-
-        {{-- Data Table Section --}}
-        {{-- <div class="card mb-0">
-          <div class="card-body">
-            <div class="d-flex align-items-start justify-content-between mb-3">
-              <div class="">
-                <h5 class="mb-0 fw-bold">Data CCTV</h5>
-                <small class="text-muted" id="companyCctvCompanyLabel">Data berdasarkan filter yang dipilih</small>
-              </div>
-              <div class="d-flex align-items-center gap-2">
-                <span class="badge bg-secondary bg-opacity-10 text-secondary px-3 py-2" id="companyCctvCount">0 CCTV</span>
-              </div>
-            </div>
-            <div class="table-responsive" style="max-height: 500px; overflow-x: auto; overflow-y: auto;">
-              <table class="table table-hover align-middle mb-0" id="companyCctvTable" style="width: 100%; min-width: 1200px;">
-                <thead class="table-light sticky-top">
-                  <tr>
-                    <th style="min-width: 50px;">No</th>
-                    <th style="min-width: 100px;">Site</th>
-                    <th style="min-width: 150px;">Perusahaan</th>
-                    <th style="min-width: 120px;">No CCTV</th>
-                    <th style="min-width: 150px;">Nama</th>
-                    <th style="min-width: 100px;">Status</th>
-                    <th style="min-width: 100px;">Kondisi</th>
-                    <th style="min-width: 150px;">Coverage Lokasi</th>
-                    <th style="min-width: 150px;">Detail Lokasi</th>
-                    <th style="min-width: 150px;">Kategori Area</th>
-                    <th style="min-width: 150px;">Lokasi Pemasangan</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td colspan="11" class="text-center text-muted py-4">
-                      <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                      Memuat data...
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div> --}}
-                  </div>
-                </div>
-              </div>
-              {{-- End Tab Pane: Kesiapan Alat --}}
-
-              {{-- Tab Pane: Kesiapan Orang --}}
-              <div class="tab-pane fade" id="kesiapan-orang" role="tabpanel" aria-labelledby="kesiapan-orang-tab" style="display: none;">
-                <div class="card mb-4">
-                  <div class="card-header border-bottom">
-                    <div class="">
-                      <h5 class="mb-0 fw-bold">Detail Kesiapan Orang</h5>
-                      <p class="mb-0 text-muted small">Detail Kesiapan Personil dan Control Room</p>
-                    </div>
-                  </div>
-                  <div class="card-body p-4">
-                    <div class="row mb-4">
-                        <div class="col-12 d-flex">
-                            <div class="card rounded-4 w-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total Karyawan PJA">
-                                        <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">people</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalKaryawanPja">0</h3>
-                                        <p class="mb-0">Total Karyawan PJA</p>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Karyawan Aktif">
-                                        <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">check_circle</span>
-                                        </span>
-                                        <h3 class="mb-0" id="karyawanAktif">0</h3>
-                                        <p class="mb-0">Karyawan Aktif</p>
-                                        <small class="text-muted">Status Aktif</small>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="PJA Aktif">
-                                        <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">verified</span>
-                                        </span>
-                                        <h3 class="mb-0" id="pjaAktif">0</h3>
-                                        <p class="mb-0">PJA Aktif</p>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total CCTV Dedicated">
-                                        <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">videocam</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalCctvDedicated">0</h3>
-                                        <p class="mb-0">Total CCTV Dedicated</p>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Persentase CCTV dengan PJA">
-                                        <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">percent</span>
-                                        </span>
-                                        <h3 class="mb-0" id="persentaseCctvDenganPja">0%</h3>
-                                        <p class="mb-0">CCTV dengan PJA</p>
-                                        <small class="text-muted" id="detailCctvDenganPja">0 dari 0 CCTV</small>
-                                    </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header border-bottom">
-                                    <h6 class="mb-0 fw-bold">Data Karyawan PJA</h6>
-                                </div>
-                                <div class="card-body p-0">
-                                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                                        <table class="table table-hover table-striped mb-0" id="tableKesiapanOrang">
-                                            <thead class="table-light sticky-top">
-                                                <tr>
-                                                    <th style="min-width: 120px;">Kode SID</th>
-                                                    <th style="min-width: 200px;">Nama PJA</th>
-                                                    <th style="min-width: 100px;">Tipe PJA</th>
-                                                    <th style="min-width: 150px;">Perusahaan</th>
-                                                    <th style="min-width: 200px;">Nama Karyawan</th>
-                                                    <th style="min-width: 100px;">Status Karyawan</th>
-                                                    <th style="min-width: 100px;">Status PJA</th>
-                                                    <th style="min-width: 120px;">PJA Layer</th>
-                                                    <th style="min-width: 150px;">CCTV Dedicated</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tbodyKesiapanOrang">
-                                                <tr>
-                                                    <td colspan="9" class="text-center text-muted py-4">
-                                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                                        Memuat data...
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                  </div>
-                </div>
-              </div>
-              {{-- End Tab Pane: Kesiapan Orang --}}
-
-              {{-- Tab Pane: Area Kerja --}}
-              <div class="tab-pane fade" id="area-kerja" role="tabpanel" aria-labelledby="area-kerja-tab" style="display: none;">
-                <div class="card mb-4">
-                  <div class="card-header border-bottom">
-                    <div class="">
-                      <h5 class="mb-0 fw-bold">Detail Area Kerja</h5>
-                      <p class="mb-0 text-muted small">Detail Coverage dan Area Kerja</p>
-                    </div>
-                  </div>
-                  <div class="card-body p-4">
-                    <div class="row mb-4">
-                        <div class="col-12 d-flex">
-                            <div class="card rounded-4 w-100">
-                                <div class="card-body">
-                                    <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total Boundary Area Kerja">
-                                        <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">map</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalBoundaryAreaKerja">0%</h3>
-                                        <p class="mb-0">Total Boundary Area Kerja</p>
-                                        <small class="text-muted" id="lastWeekAreaKerja">Week -</small>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total WMS Links">
-                                        <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">link</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalWmsLinks">0%</h3>
-                                        <p class="mb-0">Total WMS Links</p>
-                                        <small class="text-muted" id="lastWeekWms">Week -</small>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Area Highrisk">
-                                        <span class="mb-2 wh-48 bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">warning</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalAreaHighrisk">0%</h3>
-                                        <p class="mb-0">Area Highrisk</p>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Area Kritis">
-                                        <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">priority_high</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalAreaKritis">0%</h3>
-                                        <p class="mb-0">Area Kritis</p>
-                                    </button>
-                                    <div class="vr"></div>
                   <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" data-bs-toggle="modal" data-bs-target="#totalCctvModal" title="Lihat detail Luasan Area Kerja">
                     <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">square_foot</i>
@@ -2301,57 +1410,520 @@
                     <p class="mb-0">Coverage</p>
                     <small class="text-muted" id="coverageLabel">persentase</small>
                   </button>
-                                    </div>
-
-                                    
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <div class="row">
-                        <div class="col-12">
-                            <div class="card">
-                                <div class="card-header border-bottom">
-                                    <h6 class="mb-0 fw-bold">Data Area Kerja</h6>
-                                </div>
-                                <div class="card-body p-0">
-                                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                                        <table class="table table-hover table-striped mb-0" id="tableAreaKerja">
-                                            <thead class="table-light sticky-top">
-                                                <tr>
-                                                    <th style="min-width: 100px;">ID</th>
-                                                    <th style="min-width: 150px;">No CCTV</th>
-                                                    <th style="min-width: 200px;">Coverage Lokasi</th>
-                                                    <th style="min-width: 200px;">Coverage Detail Lokasi</th>
-                                                    <th style="min-width: 150px;">Kategori Aktivitas</th>
-                                                    <th style="min-width: 150px;">Kategori Area</th>
-                                                </tr>
-                                            </thead>
-                                            <tbody id="tbodyAreaKerja">
-                                                <tr>
-                                                    <td colspan="6" class="text-center text-muted py-4">
-                                                        <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                                                        Memuat data...
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                  </div>
                 </div>
               </div>
-              {{-- End Tab Pane: Area Kerja --}}
             </div>
-            {{-- End Tab Content --}}
           </div>
         </div>
-</div><!--end collapse-->
+
+    <div class="row">
+    
+          <div class="col-12 col-xl-5 col-xxl-4 d-flex">
+            <div class="card rounded-4 w-100 shadow-none bg-transparent border-0">
+               <div class="card-body p-0">
+                 <div class="row g-4">
+                    
+
+              
+                    <div class="col-12 col-xl-12">
+                        <div class="card mb-4 border-0 shadow-sm">
+                            <div class="card-body p-4">
+                                <div class="mb-3">
+                                    <h5 class="fw-bold mb-1">Overview Area Kritis</h5>
+                                    <small class="text-muted">Statistik area kritis berdasarkan kategori</small>
+                                </div>
+                                
+                                <div class="accordion" id="accordionAreaKritis">
+                                    <!-- Jumlah Area Kritis -->
+                                    <div class="accordion-item mb-3">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseJumlahAreaKritis">
+                                                <div class="d-flex align-items-center gap-3 w-100">
+                                                    <div class="bg-danger bg-opacity-10 p-3 rounded">
+                                                        <span class="material-icons-outlined text-danger">warning</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="mb-0 fw-bold" id="modalJumlahAreaKritis">0</h4>
+                                                        <small class="text-muted">Jumlah Area Kritis</small>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseJumlahAreaKritis" class="accordion-collapse collapse" data-bs-parent="#accordionAreaKritis">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <strong>Penjelasan:</strong> Menampilkan total jumlah area yang dikategorikan sebagai area kritis. 
+                                                    Area kritis adalah lokasi yang memiliki potensi bahaya tinggi dan memerlukan monitoring khusus 
+                                                    untuk mencegah terjadinya insiden keselamatan kerja.
+                                                </div>
+                                                <div class="row g-3 mt-2">
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total Area Kritis:</span>
+                                                            <span class="badge bg-danger fs-6" id="detailJumlahAreaKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total Area Non Kritis:</span>
+                                                            <span class="badge bg-success fs-6" id="detailJumlahAreaNonKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total Area:</span>
+                                                            <span class="badge bg-primary fs-6" id="detailTotalArea">0</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3" id="listDetailAreaKritis">
+                                                    <strong>Detail Area Kritis:</strong>
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">Memuat data...</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Aktivitas Highrisk -->
+                                    <div class="accordion-item mb-3">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCctvAreaKritis">
+                                                <div class="d-flex align-items-center gap-3 w-100">
+                                                    <div class="bg-warning bg-opacity-10 p-3 rounded">
+                                                        <span class="material-icons-outlined text-warning">warning</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="mb-0 fw-bold" id="modalCctvAreaKritis">0</h4>
+                                                        <small class="text-muted">Aktivitas Highrisk</small>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseCctvAreaKritis" class="accordion-collapse collapse" data-bs-parent="#accordionAreaKritis">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <strong>Penjelasan:</strong> Menampilkan jumlah aktivitas highrisk yang tercatat di tabel cctv_coverage. 
+                                                    Aktivitas highrisk adalah aktivitas dengan tingkat risiko tinggi yang memerlukan monitoring khusus 
+                                                    untuk mencegah terjadinya insiden keselamatan kerja.
+                                                </div>
+                                                <div class="row g-3 mt-2">
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Aktivitas Highrisk:</span>
+                                                            <span class="badge bg-warning fs-6" id="detailCctvAreaKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total CCTV:</span>
+                                                            <span class="badge bg-primary fs-6" id="detailTotalCctvAreaKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Persentase Aktivitas Highrisk:</span>
+                                                            <span class="badge bg-info fs-6" id="detailPersentaseCctvAreaKritis">0%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div class="mt-3" id="listDetailAktivitasHighrisk">
+                                                    <strong>Detail Lokasi Aktivitas Highrisk:</strong>
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">Memuat data...</small>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- CCTV Area Non Kritis -->
+                                    <div class="accordion-item">
+                                        <h2 class="accordion-header">
+                                            <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapseCctvAreaNonKritis">
+                                                <div class="d-flex align-items-center gap-3 w-100">
+                                                    <div class="bg-success bg-opacity-10 p-3 rounded">
+                                                        <span class="material-icons-outlined text-success">check_circle</span>
+                                                    </div>
+                                                    <div>
+                                                        <h4 class="mb-0 fw-bold" id="modalCctvAreaNonKritis">0</h4>
+                                                        <small class="text-muted">CCTV Area Non Kritis</small>
+                                                    </div>
+                                                </div>
+                                            </button>
+                                        </h2>
+                                        <div id="collapseCctvAreaNonKritis" class="accordion-collapse collapse" data-bs-parent="#accordionAreaKritis">
+                                            <div class="accordion-body">
+                                                <div class="mb-3">
+                                                    <strong>Penjelasan:</strong> Menampilkan jumlah kamera CCTV yang terpasang di area non kritis. 
+                                                    Area non kritis adalah lokasi dengan tingkat risiko rendah yang tetap dipantau untuk 
+                                                    keamanan umum dan operasional sehari-hari.
+                                                </div>
+                                                <div class="row g-3 mt-2">
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">CCTV di Area Non Kritis:</span>
+                                                            <span class="badge bg-success fs-6" id="detailCctvAreaNonKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Total CCTV:</span>
+                                                            <span class="badge bg-primary fs-6" id="detailTotalCctvAreaNonKritis">0</span>
+                                                        </div>
+                                                    </div>
+                                                    <div class="col-12">
+                                                        <div class="d-flex align-items-center justify-content-between p-3 bg-light rounded">
+                                                            <span class="fw-semibold">Persentase Coverage Area Non Kritis:</span>
+                                                            <span class="badge bg-info fs-6" id="detailPersentaseCctvAreaNonKritis">0%</span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                   </div>
+                 
+                 
+                  
+                   <div class="col-12  d-flex">
+                      <div class="card mb-0 rounded-4 w-100">
+                       <div class="card-body">
+                         <div class="d-flex align-items-start justify-content-between mb-3">
+                          <div class="">
+                            <h4 class="mb-0">{{ number_format($totalYtdInsiden ?? 9) }}</h4>
+                            <p class="mb-0">Perusahaan dengan CCTV Terbanyak</p>
+                          </div>
+                           <div class="dropdown">
+                             <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                               data-bs-toggle="dropdown">
+                               <span class="material-icons-outlined fs-5">more_vert</span>
+                             </a>
+                             <ul class="dropdown-menu">
+                               <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                               <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                               <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                             </ul>
+                           </div>
+                         </div>
+                         <div class="chart-container2">
+                           <div id="chart3"></div>
+                         </div>
+                         <div class="text-center">
+                          <p class="mb-0"><span class="text-success me-1">{{ $ytdInsidenChange ?? '12.5' }}%</span> from last month</p>
+                        </div>
+                       </div>
+                      </div>
+                   </div>
+
+
+                   
+
+                 </div><!--end row-->
+               </div>
+            </div>  
+          </div> 
+          <div class="col-12 col-xl-7 col-xxl-8 d-flex">
+            <div class="card w-100 rounded-4">
+               <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <div class="">
+                    <h5 class="mb-0 fw-bold">Utilitas</h5>
+                    <small class="text-muted">Overview Ccctv, Maps, P2h, Sap</small>
+                  </div>
+                  <button class="btn btn-sm btn-primary" id="btnShowDetail" onclick="openCoverageModal()" style="display: none;">
+                    <i class="material-icons-outlined me-1" style="font-size: 16px;">visibility</i>Detail
+                  </button>
+                 </div>
+                 {{-- <div class="table-responsive">
+                   <table class="table table-hover align-middle mb-4" id="coverageTable">
+                     <tbody id="coverageTableBody">
+                       <tr>
+                         <td colspan="5" class="text-center text-muted py-4">
+                           <div class="spinner-border spinner-border-sm me-2" role="status"></div>
+                           Memuat data...
+                         </td>
+                       </tr>
+                     </tbody>
+                   </table>
+                 </div> --}}
+                  {{-- <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
+                   
+                    <div class="d-flex align-items-center gap-4 cctv-stat-card" id="cctvStatCard" style="cursor: pointer; padding: 8px; border-radius: 8px; transition: all 0.2s;" 
+                         title="Klik untuk melihat detail TBC">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutCctv"
+                            data-peity='{ "fill": ["#6f42c1", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">TBC</p>
+                        <h2 class="mb-0" id="statCctvCount">0</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="statCctvChange">0 %</span><span id="statCctvText"> valid TBC</span></p>
+                      </div>
+                    </div>
+                     <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutHazard"
+                            data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">HAZARD</p>
+                        <h2 class="mb-0" id="statHazardCount">{{ number_format($monthlyHazards ?? 65) }}</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="statHazardChange">{{ $monthlyChange ?? '16.5' }}%</span><span id="statHazardText">{{ $monthlyCount ?? '55' }} hazards</span></p>
+                      </div>
+                    </div>
+                   
+                    
+
+                      <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutInsiden"
+                            data-peity='{ "fill": ["#fd7e14", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">INSIDEN</p>
+                        <h2 class="mb-0" id="statInsidenCount">{{ number_format($yearlyHazards ?? 9) }}</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="statInsidenChange">{{ $yearlyChange ?? '24.9' }}%</span><span id="statInsidenText">{{ $yearlyCount ?? '267' }} hazards</span></p>
+                      </div>
+                    </div>
+
+                      <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutGr"
+                            data-peity='{ "fill": ["#20c997", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">GR</p>
+                        <h2 class="mb-0" id="statGrCount">{{ number_format($validGrCount ?? 0) }}</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="statGrChange">{{ $yearlyChange ?? '24.9' }}%</span><span id="statGrText">{{ $yearlyCount ?? '267' }} hazards</span></p>
+                      </div>
+                    </div>
+
+                    
+                  </div> --}}
+
+                 
+                <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
+                     <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutGr"
+                            data-peity='{ "fill": ["#fd7e14", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">Kondisi Baik</p>
+                        <h2 class="mb-0" >1,880</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="">92.2%</span><span id="">Kondisi Baik</span></p>
+                      </div>
+                     </div>
+                    
+                    <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutBelumPja"
+                            data-peity='{ "fill": ["#20c997", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>{{ $cctvSudahPjaPercentage ?? 0 }}/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">PJA CCTV</p>
+                        <h2 class="mb-0" id="statBelumPjaCount">{{ number_format($cctvSudahPjaPercentage ?? 0, 1) }}%</h2>
+                        <p class="mb-0">
+                          <span class="text-success me-2 fw-medium" id="statBelumPjaChange">{{ number_format($cctvSudahPjaCount ?? 0) }} CCTV</span>
+                          <span id="statBelumPjaText">dari {{ number_format($totalCctvForPja ?? 0) }} CCTV</span>
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="">
+                            <p class="mb-0 data-attributes">
+                            <span id="donutHazard"
+                                data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                            </p>
+                        </div>
+                        <div class="">
+                            <p class="mb-1 fs-6 fw-bold">P2H CCTV</p>
+                            <h2 class="mb-0" >90%</h2>
+                            <p class="mb-0"><span class="text-success me-2 fw-medium">Sudah di P2H</span></p>
+                        </div>
+                     </div>
+
+                  
+                   
+
+
+
+
+
+                </div>
+
+
+                <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
+                     <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutCctvAktif"
+                            data-peity='{ "fill": ["#fd7e14", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">Map Wms</p>
+                        <h2 class="mb-0" >Week 01</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="">Week 01 Terupdate</span></p>
+                      </div>
+                     </div>
+                    
+                    <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span id="donutKondisiTidakBaik"
+                            data-peity='{ "fill": ["#20c997", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>{{ $cctvSudahPjaPercentage ?? 0 }}/100</span>
+                        </p>
+                      </div>
+                      <div class="">
+                        <p class="mb-1 fs-6 fw-bold">Area Kerja</p>
+                        <h2 class="mb-0" >Week 01</h2>
+                        <p class="mb-0"><span class="text-success me-2 fw-medium" id="">Week 01 Terupdate</span></p>
+                      </div>
+                    </div>
+
+                    <div class="vr"></div>
+                    <div class="d-flex align-items-center gap-4">
+                        <div class="">
+                            <p class="mb-0 data-attributes">
+                            <span id="donutKondisiBaik"
+                                data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>0/100</span>
+                            </p>
+                        </div>
+                        <div class="">
+                            <p class="mb-1 fs-6 fw-bold">Boundery Cctv</p>
+                            <h2 class="mb-0" >Week 01</h2>
+                            <p class="mb-0"><span class="text-success me-2 fw-medium">Week 01 Terupdate</span></p>
+                        </div>
+                     </div>
+
+                  
+                   
+
+
+
+
+
+                </div>
+
+                 <div class="mt-2">
+                    
+                  </div>
+
+                  <div class="table-responsive mt-3" style="max-height: 300px; overflow-y: auto;">
+                    <table class="table table-bordered table-hover">
+                      <thead class="table-light" style="position: sticky; top: 0; z-index: 10; background-color: #f8f9fa;">
+                        <tr>
+                          <th style="width: 50px;">No</th>
+                          <th>Nama CCTV</th>
+                          <th>No. CCTV</th>
+                          <th>Lokasi</th>
+                          <th style="width: 300px;">Kondisi</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        @if(!empty($p2hResults) && count($p2hResults) > 0)
+                          @foreach($p2hResults as $index => $result)
+                            <tr>
+                              <td class="text-center">{{ $index + 1 }}</td>
+                              <td>{{ $result['nama_cctv'] ?? '-' }}</td>
+                              <td>{{ $result['no_cctv'] ?? '-' }}</td>
+                              <td>{{ $result['lokasi'] ?? '-' }}</td>
+                              <td>
+                                <div class="d-flex flex-column gap-2">
+                                  <div class="d-flex gap-3">
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="radio" name="kondisi_{{ $result['cctv_id'] ?? $index }}" 
+                                        id="baik_{{ $result['cctv_id'] ?? $index }}" 
+                                        value="baik" 
+                                        {{ ($result['kondisi'] ?? '') == 'baik' ? 'checked' : '' }} 
+                                        disabled>
+                                      <label class="form-check-label" for="baik_{{ $result['cctv_id'] ?? $index }}">
+                                        Baik
+                                      </label>
+                                    </div>
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="radio" name="kondisi_{{ $result['cctv_id'] ?? $index }}" 
+                                        id="rusak_{{ $result['cctv_id'] ?? $index }}" 
+                                        value="rusak" 
+                                        {{ ($result['kondisi'] ?? '') == 'rusak' ? 'checked' : '' }} 
+                                        disabled>
+                                      <label class="form-check-label" for="rusak_{{ $result['cctv_id'] ?? $index }}">
+                                        Rusak
+                                      </label>
+                                    </div>
+                                    <div class="form-check">
+                                      <input class="form-check-input" type="radio" name="kondisi_{{ $result['cctv_id'] ?? $index }}" 
+                                        id="tidak_ada_{{ $result['cctv_id'] ?? $index }}" 
+                                        value="tidak_ada" 
+                                        {{ ($result['kondisi'] ?? '') == 'tidak_ada' ? 'checked' : '' }} 
+                                        disabled>
+                                      <label class="form-check-label" for="tidak_ada_{{ $result['cctv_id'] ?? $index }}">
+                                        Tidak Ada
+                                      </label>
+                                    </div>
+                                  </div>
+                                  @if(!empty($result['catatan']))
+                                    <div>
+                                      <label class="form-label small text-muted">Catatan (opsional):</label>
+                                      <input type="text" class="form-control form-control-sm" 
+                                        value="{{ $result['catatan'] }}" 
+                                        readonly>
+                                    </div>
+                                  @else
+                                    <div>
+                                      <label class="form-label small text-muted">Catatan (opsional):</label>
+                                      <input type="text" class="form-control form-control-sm" 
+                                        placeholder="-" 
+                                        readonly>
+                                    </div>
+                                  @endif
+                                </div>
+                              </td>
+                            </tr>
+                          @endforeach
+                        @else
+                          <tr>
+                            <td colspan="5" class="text-center text-muted py-4">
+                              <i class="material-icons-outlined me-2">info</i>
+                              Tidak ada data P2H tersedia
+                            </td>
+                          </tr>
+                        @endif
+                      </tbody>
+                    </table>
+                  </div>
+                    
+                  </div>
+               </div>
+            </div>  
+          </div> 
+</div><!--end row-->
+    </div><!--end collapse-->
 
 
 
@@ -2385,96 +1957,6 @@
                 collapseIcon.textContent = 'expand_more';
             });
         }
-        
-        // Control Room Detail Collapse icon toggle
-        const controlRoomCollapseElement = document.getElementById('detailControlRoomCollapse');
-        const controlRoomCollapseIcon = document.querySelector('[data-bs-target="#detailControlRoomCollapse"] .collapse-icon');
-        
-        if (controlRoomCollapseElement && controlRoomCollapseIcon) {
-            // Set initial icon (collapsed by default)
-            controlRoomCollapseIcon.textContent = 'expand_more';
-            
-            controlRoomCollapseElement.addEventListener('show.bs.collapse', function() {
-                controlRoomCollapseIcon.textContent = 'expand_less';
-            });
-            
-            controlRoomCollapseElement.addEventListener('hide.bs.collapse', function() {
-                controlRoomCollapseIcon.textContent = 'expand_more';
-            });
-        }
-
-        // Kesiapan Tab Handler - Hidden Tabs System
-        (function() {
-            'use strict';
-            
-            function initKesiapanTabs() {
-                const kesiapanTabButtons = document.querySelectorAll('.kesiapan-tab-btn');
-                const kesiapanTabPanes = document.querySelectorAll('#kesiapanTabContent .tab-pane');
-                
-                if (!kesiapanTabButtons.length || !kesiapanTabPanes.length) {
-                    // Retry if elements not ready
-                    setTimeout(initKesiapanTabs, 100);
-                    return;
-                }
-                
-                // Function to switch tabs
-                function switchKesiapanTab(targetTabId) {
-                    // Hide all tab panes
-                    kesiapanTabPanes.forEach(pane => {
-                        if (pane.id === targetTabId) {
-                            pane.classList.add('show', 'active');
-                            pane.style.cssText = 'display: block !important; visibility: visible !important; opacity: 1 !important;';
-                        } else {
-                            pane.classList.remove('show', 'active');
-                            pane.style.cssText = 'display: none !important; visibility: hidden !important; opacity: 0 !important;';
-                        }
-                    });
-                    
-                    // Update button states
-                    kesiapanTabButtons.forEach(btn => {
-                        const btnTarget = btn.getAttribute('data-tab-target');
-                        if (btnTarget === targetTabId) {
-                            btn.classList.add('active');
-                        } else {
-                            btn.classList.remove('active');
-                        }
-                    });
-                    
-                    // Load data when switching to kesiapan-orang tab
-                    if (targetTabId === 'kesiapan-orang') {
-                        loadKesiapanOrangData();
-                    }
-                    
-                    // Load data when switching to area-kerja tab
-                    if (targetTabId === 'area-kerja') {
-                        loadAreaKerjaData();
-                    }
-                }
-                
-                // Initialize: Show Kesiapan Alat by default
-                switchKesiapanTab('kesiapan-alat');
-                
-                // Add click handlers to buttons
-                kesiapanTabButtons.forEach(button => {
-                    button.addEventListener('click', function(e) {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        
-                        const targetTab = this.getAttribute('data-tab-target');
-                        if (targetTab) {
-                            switchKesiapanTab(targetTab);
-                        }
-                    });
-                });
-            }
-            
-            // Initialize when DOM is ready
-            if (document.readyState === 'loading') {
-                document.addEventListener('DOMContentLoaded', initKesiapanTabs);
-            } else {
-                initKesiapanTabs();
-            }
-        })();
     });
 </script>
 
@@ -2498,6 +1980,10 @@
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <div class="btn-group position-static">
                             <div class="btn-group position-static">
+                                <button type="button" class="btn btn-filter dropdown-toggle px-3" id="mainFilterCompanyBtn" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">business</i>
+                                    <span id="mainFilterCompanyText">Semua Perusahaan</span>
+                                </button>
                                 <ul class="dropdown-menu" id="mainFilterCompanyDropdown" style="max-height: 300px; overflow-y: auto;">
                                     <li><a class="dropdown-item filter-option" href="javascript:;" data-value="__all__">Semua Perusahaan</a></li>
                                 </ul>
@@ -2625,7 +2111,6 @@
                                     <div class="tab-content active" id="tabContentCctv">
                                         <div class="sidebar-list" id="cctvList"></div>
                                     </div>
-                                    
                                     
                                     <!-- SAP Tab Content -->
                                     <div class="tab-content" id="tabContentSap">
@@ -3081,9 +2566,6 @@
     // cctvLocationsForMap: Hanya CCTV yang punya koordinat (1789) untuk ditampilkan di map
     const cctvLocations = @json($cctvLocations);
     const cctvLocationsForMap = @json($cctvLocationsForMap ?? $cctvLocations);
-    
-    // All Control Rooms - semua control room yang unik dari database
-    const allControlRooms = @json($allControlRooms ?? []);
     
     // P2H Status untuk control rooms
     const p2hStatus = @json($p2hStatus ?? []);
@@ -10832,12 +10314,8 @@
         loadHeaderFilterOptions();
         
         loadAreaKritisOverview();
-        loadControlRoomOverview();
         loadChartStats();
         updateTotalCctvCount();
-        
-        // Inisialisasi DataTable untuk tabel CCTV di halaman utama
-        initializeCompanyCctvTable();
         
         // Event listener untuk filter di header (dropdown button)
         const headerFilterCompanyBtn = document.getElementById('headerFilterCompanyBtn');
@@ -10883,7 +10361,6 @@
                     // Update semua statistik berdasarkan filter
                     loadChartStats();
                     loadAreaKritisOverview();
-                    loadControlRoomOverview();
                     updateTotalCctvCount();
                 }
             });
@@ -10932,7 +10409,6 @@
                     // Update semua statistik berdasarkan filter
                     loadChartStats();
                     loadAreaKritisOverview();
-                    loadControlRoomOverview();
                     updateTotalCctvCount();
                     updateTotalCctvCount();
                 }
@@ -10981,7 +10457,6 @@
                 // Update semua statistik
                 loadChartStats();
                 loadAreaKritisOverview();
-                loadControlRoomOverview();
                 updateTotalCctvCount();
             });
         }
@@ -11030,7 +10505,6 @@
                     // Update semua statistik berdasarkan filter
                     loadChartStats();
                     loadAreaKritisOverview();
-                    loadControlRoomOverview();
                     updateTotalCctvCount();
                 }
             });
@@ -11079,7 +10553,6 @@
                     // Update semua statistik berdasarkan filter
                     loadChartStats();
                     loadAreaKritisOverview();
-                    loadControlRoomOverview();
                     updateTotalCctvCount();
                 }
             });
@@ -11127,7 +10600,6 @@
                 // Update semua statistik
                 loadChartStats();
                 loadAreaKritisOverview();
-                loadControlRoomOverview();
                 updateTotalCctvCount();
             });
         }
@@ -11172,7 +10644,6 @@
         // Panggil API statistik CCTV
         loadChartStats();
         loadAreaKritisOverview();
-        loadControlRoomOverview();
     });
     
     // Function untuk membuka modal TBC Overview
@@ -11400,7 +10871,6 @@
             setTimeout(() => {
                 loadChartStats();
                 loadAreaKritisOverview();
-                loadControlRoomOverview();
                 updateTotalCctvCount();
             }, 500);
         };
@@ -11649,447 +11119,6 @@
             .catch(error => {
                 console.error('Error loading area kritis overview:', error);
             });
-    }
-    
-    // Function untuk load control room overview
-    // Ambil data langsung dari API yang sudah di-group by control_room dari cctv_data_bmo2
-    function loadControlRoomOverview() {
-        fetch(`{{ route('hazard-detection.api.control-room-overview') }}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    const controlRoomData = data.data.control_rooms || [];
-                    
-                    // Urutkan: alfabetis
-                    const sortedData = [...controlRoomData].sort((a, b) => {
-                        return a.name.localeCompare(b.name);
-                    });
-                    
-                    // Update statistics
-                    animateNumber('modalJumlahControlRoom', data.data.total_control_rooms || 0, 800);
-                    animateNumber('modalTotalCctvControlRoom', data.data.total_cctv || 0, 800);
-                    animateNumber('modalCctvAktifControlRoom', data.data.total_aktif || 0, 800);
-                    
-                    // Update P2H statistics
-                    animateNumber('modalTotalSudahP2h', data.data.total_sudah_p2h || 0, 800);
-                    animateNumber('modalTotalBelumP2h', data.data.total_belum_p2h || 0, 800);
-                    
-                    // Update detail table
-                    updateDetailControlRoomTable(sortedData);
-                } else {
-                    console.error('Error loading control room overview:', data.message);
-                    // Reset stats jika error
-                    animateNumber('modalJumlahControlRoom', 0, 800);
-                    animateNumber('modalTotalCctvControlRoom', 0, 800);
-                    animateNumber('modalCctvAktifControlRoom', 0, 800);
-                    animateNumber('modalTotalSudahP2h', 0, 800);
-                    animateNumber('modalTotalBelumP2h', 0, 800);
-                    updateDetailControlRoomTable([]);
-                }
-            })
-            .catch(error => {
-                console.error('Error loading control room overview:', error);
-                // Reset stats jika error
-                animateNumber('modalJumlahControlRoom', 0, 800);
-                animateNumber('modalTotalCctvControlRoom', 0, 800);
-                animateNumber('modalCctvAktifControlRoom', 0, 800);
-                animateNumber('modalTotalSudahP2h', 0, 800);
-                animateNumber('modalTotalBelumP2h', 0, 800);
-                updateDetailControlRoomTable([]);
-            });
-    }
-    
-    // Function untuk update detail control room table
-    function updateDetailControlRoomTable(controlRoomData) {
-        const tbody = document.getElementById('detailControlRoomTableBody');
-        if (!tbody) return;
-        
-        if (!controlRoomData || controlRoomData.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
-                        Tidak ada data control room.
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-        
-        let rowsHtml = '';
-        controlRoomData.forEach((controlRoom, index) => {
-            const rowId = `controlRoomRow${index}`;
-            const detailRowId = `controlRoomDetailRow${index}`;
-            
-            // Get P2H status
-            const p2hStatus = controlRoom.p2h_status || {};
-            const hasP2hToday = p2hStatus.has_p2h_today || false;
-            const latestP2hDate = p2hStatus.latest_p2h_date || null;
-            const latestP2hShift = p2hStatus.latest_p2h_shift || null;
-            
-            // Format P2H status badge
-            let p2hStatusBadge = '';
-            if (hasP2hToday) {
-                p2hStatusBadge = '<span class="badge bg-success px-3 py-2">Sudah P2H Hari Ini</span>';
-            } else if (latestP2hDate) {
-                const dateObj = new Date(latestP2hDate);
-                const formattedDate = dateObj.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
-                p2hStatusBadge = `<span class="badge bg-warning px-3 py-2" title="P2H Terakhir: ${formattedDate} Shift ${latestP2hShift}">P2H: ${formattedDate}</span>`;
-            } else {
-                p2hStatusBadge = '<span class="badge bg-danger px-3 py-2">Belum P2H</span>';
-            }
-            
-            rowsHtml += `
-                <tr id="${rowId}">
-                    <td>${index + 1}</td>
-                    <td>
-                        <span class="fw-semibold">${escapeHtml(controlRoom.name)}</span>
-                    </td>
-                    <td class="text-end">
-                        <span class="badge bg-info bg-opacity-10 text-info px-3 py-2">${controlRoom.total.toLocaleString('id-ID')} CCTV</span>
-                    </td>
-                    <td class="text-end">
-                        <span class="badge bg-success bg-opacity-10 text-success px-3 py-2">${controlRoom.aktif.toLocaleString('id-ID')} CCTV</span>
-                    </td>
-                    <td class="text-end">
-                        <span class="badge bg-danger bg-opacity-10 text-danger px-3 py-2">${controlRoom.tidak_aktif.toLocaleString('id-ID')} CCTV</span>
-                    </td>
-                    <td class="text-center">
-                        ${p2hStatusBadge}
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-primary intervensi-btn" type="button" data-control-room="${escapeHtml(controlRoom.name)}" data-bs-toggle="modal" data-bs-target="#intervensiModal" title="Kirim Intervensi">
-                            <span class="material-icons-outlined" style="font-size: 18px;">send</span>
-                        </button>
-                    </td>
-                    <td class="text-center">
-                        <button class="btn btn-sm btn-outline-primary control-room-toggle-btn" type="button" data-bs-toggle="collapse" data-bs-target="#${detailRowId}" aria-expanded="false" aria-controls="${detailRowId}">
-                            <span class="material-icons-outlined control-room-icon" style="font-size: 18px;">expand_more</span>
-                        </button>
-                    </td>
-                </tr>
-                <tr id="${detailRowId}" class="collapse">
-                    <td colspan="8" class="p-0">
-                        <div class="p-3 bg-light">
-                            <h6 class="mb-3 fw-bold">Detail CCTV - ${escapeHtml(controlRoom.name)}</h6>
-                            <div class="cctv-detail-scroll" style="max-height: 400px; overflow-y: auto;">
-                                <div id="cctvDetailBody${index}">
-                                    ${generateCctvDetailRows(controlRoom.cctv_list)}
-                                </div>
-                            </div>
-                        </div>
-                    </td>
-                </tr>
-            `;
-        });
-        
-        tbody.innerHTML = rowsHtml;
-        
-        // Attach event listeners for collapse icons after HTML is inserted
-        controlRoomData.forEach((controlRoom, index) => {
-            const detailRowId = `controlRoomDetailRow${index}`;
-            const detailRow = document.getElementById(detailRowId);
-            const button = document.querySelector(`[data-bs-target="#${detailRowId}"]`);
-            const icon = button?.querySelector('.control-room-icon');
-            
-            if (detailRow && icon) {
-                detailRow.addEventListener('shown.bs.collapse', function() {
-                    icon.textContent = 'expand_less';
-                });
-                detailRow.addEventListener('hidden.bs.collapse', function() {
-                    icon.textContent = 'expand_more';
-                });
-            }
-        });
-        
-        // Attach event listeners for intervensi buttons
-        attachIntervensiButtonListeners();
-    }
-    
-    // Function untuk attach event listeners pada tombol intervensi
-    function attachIntervensiButtonListeners() {
-        const intervensiButtons = document.querySelectorAll('.intervensi-btn');
-        intervensiButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const controlRoom = this.getAttribute('data-control-room');
-                if (controlRoom) {
-                    loadIntervensiModal(controlRoom);
-                }
-            });
-        });
-    }
-    
-    // Function untuk load modal intervensi dengan data pengawas
-    function loadIntervensiModal(controlRoom) {
-        // Set control room
-        document.getElementById('intervensiControlRoom').value = controlRoom;
-        document.getElementById('intervensiControlRoomDisplay').value = controlRoom;
-        
-        // Reset form
-        document.getElementById('intervensiForm').reset();
-        document.getElementById('intervensiControlRoom').value = controlRoom;
-        document.getElementById('intervensiControlRoomDisplay').value = controlRoom;
-        
-        // Clear and reset PIC dropdown
-        const picSelect = document.getElementById('intervensiPIC');
-        
-        // Destroy existing Select2 instance if any
-        if ($(picSelect).hasClass('select2-hidden-accessible')) {
-            $(picSelect).select2('destroy');
-        }
-        
-        // Clear select options
-        picSelect.innerHTML = '<option value="">Pilih PIC...</option>';
-        picSelect.disabled = false;
-        
-        // Initialize Select2 with AJAX search for better performance
-        $(picSelect).select2({
-            theme: 'bootstrap-5',
-            placeholder: 'Ketik untuk mencari PIC (Pengawas)...',
-            allowClear: true,
-            width: '100%',
-            minimumInputLength: 0, // Allow search from start
-            ajax: {
-                url: `{{ url('cctv-data-control-room/users') }}`,
-                type: 'GET',
-                dataType: 'json',
-                delay: 300, // Debounce 300ms to reduce server requests
-                data: function (params) {
-                    console.log('Select2 AJAX request:', params);
-                    return {
-                        q: params.term || '', // Search term
-                        page: params.page || 1
-                    };
-                },
-                processResults: function (data, params) {
-                    console.log('Select2 AJAX response:', data);
-                    // Handle both old format (success/data) and new format (results)
-                    if (data.success && data.data) {
-                        // Convert old format to new format
-                        const results = data.data.map(user => ({
-                            id: user.id,
-                            text: user.text || (user.username + ' - ' + user.nama),
-                            username: user.username,
-                            nama: user.nama
-                        }));
-                        return {
-                            results: results,
-                            pagination: { more: false }
-                        };
-                    }
-                    // Handle error response
-                    if (data.error) {
-                        console.error('Select2 AJAX error:', data.error);
-                        return {
-                            results: [],
-                            pagination: { more: false }
-                        };
-                    }
-                    return {
-                        results: data.results || [],
-                        pagination: {
-                            more: data.pagination && data.pagination.more
-                        }
-                    };
-                },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    console.error('Select2 AJAX error:', textStatus, errorThrown);
-                    console.error('Response:', jqXHR.responseText);
-                },
-                cache: false // Disable cache to ensure fresh results
-            },
-            // Trigger AJAX when dropdown opens
-            dropdownParent: $(picSelect).closest('.modal-body') || $(document.body),
-            language: {
-                noResults: function() {
-                    return "Tidak ada hasil ditemukan";
-                },
-                searching: function() {
-                    return "Mencari...";
-                },
-                inputTooShort: function() {
-                    return "Ketik untuk mencari";
-                }
-            },
-            escapeMarkup: function (markup) {
-                return markup; // Let our custom formatter work
-            },
-            templateResult: function(user) {
-                if (user.loading) {
-                    return "Mencari...";
-                }
-                if (!user.text && user.username && user.nama) {
-                    return user.username + ' - ' + user.nama;
-                }
-                return user.text || user.id;
-            },
-            templateSelection: function(user) {
-                if (user.text) {
-                    return user.text;
-                }
-                if (user.username && user.nama) {
-                    return user.username + ' - ' + user.nama;
-                }
-                return user.id || '';
-            }
-        });
-        
-        // Trigger initial load when dropdown opens (if minimumInputLength is 0)
-        $(picSelect).on('select2:open', function() {
-            // Force trigger search with empty term to load initial results
-            const $select2 = $(picSelect).data('select2');
-            if ($select2 && !$select2._request) {
-                $select2.trigger('query', { term: '' });
-            }
-        });
-    }
-    
-    // Handle modal close to destroy Select2
-    const intervensiModal = document.getElementById('intervensiModal');
-    if (intervensiModal) {
-        intervensiModal.addEventListener('hidden.bs.modal', function() {
-            const picSelect = document.getElementById('intervensiPIC');
-            if (picSelect && $(picSelect).hasClass('select2-hidden-accessible')) {
-                $(picSelect).select2('destroy');
-            }
-        });
-    }
-    
-    // Handle submit intervensi form
-    document.addEventListener('DOMContentLoaded', function() {
-        const submitIntervensiBtn = document.getElementById('submitIntervensiBtn');
-        if (submitIntervensiBtn) {
-            submitIntervensiBtn.addEventListener('click', function() {
-                const form = document.getElementById('intervensiForm');
-                if (form.checkValidity()) {
-                    const formData = {
-                        control_room: document.getElementById('intervensiControlRoom').value,
-                        pic_id: document.getElementById('intervensiPIC').value,
-                        issue: document.getElementById('intervensiIssue').value
-                    };
-                    
-                    // Disable button
-                    const submitBtn = this;
-                    submitBtn.disabled = true;
-                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengirim...';
-                    
-                    // Send AJAX request to save intervensi
-                    fetch(`{{ url('cctv-data-control-room/intervensi') }}`, {
-                        method: 'POST',
-                        headers: {
-                            'Content-Type': 'application/json',
-                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
-                        },
-                        body: JSON.stringify(formData)
-                    })
-                    .then(response => response.json())
-                    .then(data => {
-                        if (data.success) {
-                            // Show success message
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: data.message || 'Intervensi berhasil dikirim!',
-                                showConfirmButton: true,
-                                confirmButtonText: 'OK'
-                            }).then((result) => {
-                                // Close modal
-                                const modal = bootstrap.Modal.getInstance(document.getElementById('intervensiModal'));
-                                if (modal) {
-                                    modal.hide();
-                                }
-                                
-                                // Reset form
-                                form.reset();
-                                
-                                // Open WhatsApp if URL is available
-                                if (data.data && data.data.whatsapp_url) {
-                                    window.open(data.data.whatsapp_url, '_blank');
-                                }
-                            });
-                        } else {
-                            // Show error message
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: data.message || 'Terjadi kesalahan saat mengirim intervensi.'
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error:', error);
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: 'Terjadi kesalahan saat mengirim intervensi. Silakan coba lagi.'
-                        });
-                    })
-                    .finally(() => {
-                        // Re-enable button
-                        submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span> Kirim Intervensi';
-                    });
-                } else {
-                    form.reportValidity();
-                }
-            });
-        }
-    });
-    
-    // Function untuk generate CCTV detail rows
-    function generateCctvDetailRows(cctvList) {
-        if (!cctvList || cctvList.length === 0) {
-            return '<div class="text-center text-muted py-3">Tidak ada CCTV</div>';
-        }
-        
-        let rowsHtml = '';
-        cctvList.forEach((cctv, index) => {
-            const status = cctv.status || cctv.kondisi || 'Tidak Diketahui';
-            const kondisi = cctv.kondisi || 'Tidak Diketahui';
-            const statusBadge = (status === 'Aktif' || status === 'Connected' || status === 'Live View' || kondisi === 'Baik')
-                ? '<span class="badge bg-success">Aktif</span>'
-                : '<span class="badge bg-danger">Tidak Aktif</span>';
-            const kondisiBadge = (kondisi === 'Baik')
-                ? '<span class="badge bg-success">Baik</span>'
-                : '<span class="badge bg-danger">Tidak Baik</span>';
-            
-            rowsHtml += `
-                <div class="d-flex align-items-start p-2 mb-2 bg-white border rounded shadow-sm">
-                    <div class="me-3 text-center" style="min-width: 40px;">
-                        <div class="badge bg-secondary bg-opacity-10 text-secondary w-100 mb-1">${index + 1}</div>
-                        <div class="small fw-semibold text-primary text-wrap">${escapeHtml(cctv.no_cctv || cctv.nomor_cctv || 'N/A')}</div>
-                    </div>
-                    <div class="flex-grow-1">
-                        <div class="d-flex justify-content-between align-items-start mb-1">
-                            <div class="fw-semibold text-truncate pe-2" title="${escapeHtml(cctv.nama_cctv || cctv.name || 'N/A')}">
-                                ${escapeHtml(cctv.nama_cctv || cctv.name || 'N/A')}
-                            </div>
-                            <div class="ms-2 text-nowrap">
-                                ${kondisiBadge}
-                            </div>
-                        </div>
-                        <div class="d-flex flex-wrap align-items-center small text-muted">
-                            <span class="me-3">
-                                <span class="fw-semibold">Status:</span> ${statusBadge}
-                            </span>
-                            <span class="me-3">
-                                <span class="fw-semibold">Site:</span> ${escapeHtml(cctv.site || 'N/A')}
-                            </span>
-                            <span class="me-3">
-                                <span class="fw-semibold">Perusahaan:</span> ${escapeHtml(cctv.perusahaan || cctv.perusahaan_cctv || 'N/A')}
-                            </span>
-                        </div>
-                    </div>
-                </div>
-            `;
-        });
-        
-        return rowsHtml;
-    }
-    
-    // Function untuk toggle control room detail icon (kept for backward compatibility)
-    function toggleControlRoomDetail(rowId, detailRowId) {
-        // Function is now handled by event listeners in updateDetailControlRoomTable
-        // This function is kept for any onclick handlers that might reference it
     }
     
     // Function untuk update list detail area kritis
@@ -12836,97 +11865,68 @@
         tbody.innerHTML = rowsHtml;
     }
 
-    // Function untuk inisialisasi DataTable
-    function initializeCompanyCctvTable() {
-        const tableElement = document.getElementById('companyCctvTable');
-        if (!tableElement) return;
-        
-        // Cek apakah DataTable sudah diinisialisasi
-        if ($.fn.DataTable.isDataTable('#companyCctvTable')) {
-            if (companyCctvTable) {
-                companyCctvTable.destroy();
-            }
-        }
-        
-        companyCctvTable = $('#companyCctvTable').DataTable({
-            processing: true,
-            serverSide: true,
-            ajax: {
-                url: "{{ route('hazard-detection.api.company-cctv-data') }}",
-                type: "GET",
-                data: function (d) {
-                    d.company = currentSelectedCompany;
-                    d.site = currentSelectedSite;
-                },
-                dataFilter: function(data) {
-                    var json = jQuery.parseJSON(data);
-                    const countEl = document.getElementById('companyCctvCount');
-                    if (countEl) {
-                        countEl.textContent = `${json.recordsFiltered} CCTV`;
-                    }
-                    return JSON.stringify(json);
-                },
-                error: function(xhr, error, thrown) {
-                    console.error("DataTables AJAX error:", thrown, xhr);
-                    const countEl = document.getElementById('companyCctvCount');
-                    if (countEl) {
-                        countEl.textContent = '0 CCTV';
-                    }
-                }
-            },
-            columns: [
-                { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '50px' },
-                { data: 'site', name: 'site', width: '100px' },
-                { data: 'perusahaan', name: 'perusahaan', width: '150px' },
-                { data: 'no_cctv', name: 'no_cctv', className: 'fw-semibold text-primary', width: '120px' },
-                { data: 'nama_cctv', name: 'nama_cctv', width: '150px' },
-                { data: 'status', name: 'status', orderable: false, searchable: false, width: '100px' },
-                { data: 'kondisi', name: 'kondisi', orderable: false, searchable: false, width: '100px' },
-                { data: 'coverage_lokasi', name: 'coverage_lokasi', width: '150px' },
-                { data: 'coverage_detail_lokasi', name: 'coverage_detail_lokasi', width: '150px' },
-                { data: 'kategori_area_tercapture', name: 'kategori_area_tercapture', width: '150px' },
-                { data: 'lokasi_pemasangan', name: 'lokasi_pemasangan', width: '150px' }
-            ],
-            order: [[3, 'asc']],
-            pageLength: 25,
-            scrollX: true,
-            scrollY: '400px',
-            scrollCollapse: true,
-            autoWidth: false,
-            language: {
-                processing: "Memproses data...",
-                search: "Cari:",
-                lengthMenu: "Tampilkan _MENU_ data per halaman",
-                info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
-                infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
-                infoFiltered: "(disaring dari _MAX_ total data)",
-                paginate: {
-                    first: "Pertama",
-                    last: "Terakhir",
-                    next: "Selanjutnya",
-                    previous: "Sebelumnya"
-                },
-                emptyTable: "Data CCTV akan ditampilkan berdasarkan filter yang dipilih.",
-                zeroRecords: "Tidak ada data yang cocok dengan pencarian"
-            },
-            dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
-        });
-    }
-
-    // Inisialisasi DataTable saat halaman dimuat
-    document.addEventListener('DOMContentLoaded', function() {
-        // Inisialisasi DataTable untuk tabel di halaman utama
-        initializeCompanyCctvTable();
-    });
-
-    // Inisialisasi DataTable saat modal dibuka (untuk kompatibilitas)
+    // Inisialisasi DataTable saat modal dibuka
     const totalCctvModal = document.getElementById('totalCctvModal');
     if (totalCctvModal) {
         totalCctvModal.addEventListener('shown.bs.modal', function () {
-            // Jika tabel ada di modal, inisialisasi ulang
-            const modalTable = document.querySelector('#totalCctvModal #companyCctvTable');
-            if (modalTable && !companyCctvTable) {
-                initializeCompanyCctvTable();
+            if (!companyCctvTable) {
+                companyCctvTable = $('#companyCctvTable').DataTable({
+                    processing: true,
+                    serverSide: true,
+                    ajax: {
+                        url: "{{ route('hazard-detection.api.company-cctv-data') }}",
+                        type: "GET",
+                        data: function (d) {
+                            d.company = currentSelectedCompany;
+                            d.site = currentSelectedSite;
+                        },
+                        dataFilter: function(data) {
+                            var json = jQuery.parseJSON(data);
+                            document.getElementById('companyCctvCount').textContent = `${json.recordsFiltered} CCTV`;
+                            return JSON.stringify(json);
+                        },
+                        error: function(xhr, error, thrown) {
+                            console.error("DataTables AJAX error:", thrown, xhr);
+                            document.getElementById('companyCctvCount').textContent = '0 CCTV';
+                        }
+                    },
+                    columns: [
+                        { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, width: '50px' },
+                        { data: 'site', name: 'site', width: '100px' },
+                        { data: 'perusahaan', name: 'perusahaan', width: '150px' },
+                        { data: 'no_cctv', name: 'no_cctv', className: 'fw-semibold text-primary', width: '120px' },
+                        { data: 'nama_cctv', name: 'nama_cctv', width: '150px' },
+                        { data: 'status', name: 'status', orderable: false, searchable: false, width: '100px' },
+                        { data: 'kondisi', name: 'kondisi', orderable: false, searchable: false, width: '100px' },
+                        { data: 'coverage_lokasi', name: 'coverage_lokasi', width: '150px' },
+                        { data: 'coverage_detail_lokasi', name: 'coverage_detail_lokasi', width: '150px' },
+                        { data: 'kategori_area_tercapture', name: 'kategori_area_tercapture', width: '150px' },
+                        { data: 'lokasi_pemasangan', name: 'lokasi_pemasangan', width: '150px' }
+                    ],
+                    order: [[3, 'asc']],
+                    pageLength: 25,
+                    scrollX: true,
+                    scrollY: '400px',
+                    scrollCollapse: true,
+                    autoWidth: false,
+                    language: {
+                        processing: "Memproses data...",
+                        search: "Cari:",
+                        lengthMenu: "Tampilkan _MENU_ data per halaman",
+                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+                        infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+                        infoFiltered: "(disaring dari _MAX_ total data)",
+                        paginate: {
+                            first: "Pertama",
+                            last: "Terakhir",
+                            next: "Selanjutnya",
+                            previous: "Sebelumnya"
+                        },
+                        emptyTable: "Klik perusahaan di tabel sebelah kiri untuk menampilkan daftar CCTV.",
+                        zeroRecords: "Tidak ada data yang cocok dengan pencarian"
+                    },
+                    dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-6"i><"col-sm-12 col-md-6"p>>',
+                });
             }
         });
 
@@ -12951,13 +11951,7 @@
                 // Update semua statistik berdasarkan filter yang dipilih
                 loadChartStats();
                 loadAreaKritisOverview();
-                loadControlRoomOverview();
                 updateTotalCctvCount();
-                
-                // Reload DataTable jika sudah diinisialisasi
-                if (companyCctvTable) {
-                    companyCctvTable.ajax.reload();
-                }
             }
             
             if (e.target && e.target.id === 'filterSite') {
@@ -13028,7 +12022,6 @@
                 loadChartStats();
                 // Update area kritis overview saat filter di-reset
                 loadAreaKritisOverview();
-                loadControlRoomOverview();
             }
         });
 
@@ -13597,8 +12590,6 @@
     
     // Render CCTV list
     // Data CCTV diambil langsung dari database, bukan dari WMS atau GeoJSON
-    // Implementasi ini disamakan dengan inicctvdetail untuk menampilkan dropdown detail:
-    // coverage lokasi, inspeksi hazard (minggu ini), dan PJA lokasi
     function renderCctvList(data) {
         const container = document.getElementById('cctvList');
         if (!container) return;
@@ -13622,255 +12613,54 @@
             const firstLetter = getFirstLetter(name);
             const avatarColor = getAvatarColor(firstLetter);
             
-            // Gunakan kategori_area_tercapture dari database
-            const kategoriArea = cctv.kategori_area_tercapture || '';
+            // Gunakan timestamp dari database (created_at atau updated_at)
+            // Jika tidak ada, gunakan tahun_update dan bulan_update jika tersedia
+            let timestamp = '';
+            if (cctv.created_at) {
+                timestamp = formatTimestamp(cctv.created_at);
+            } else if (cctv.updated_at) {
+                timestamp = formatTimestamp(cctv.updated_at);
+            } else if (cctv.tahun_update && cctv.bulan_update) {
+                // Format dari tahun_update dan bulan_update
+                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+                timestamp = `${months[cctv.bulan_update - 1] || 'Des'} ${cctv.tahun_update}`;
+            }
             
             return `
-                <div class="sidebar-list-item" data-type="cctv" data-id="${cctv.id}" data-index="${index}" data-hazard-status="loading">
-                    <div class="sidebar-list-item-header">
-                        <div class="list-item-avatar" style="background-color: ${avatarColor};">
-                            ${firstLetter}
-                        </div>
-                        <div class="list-item-content">
-                            <div class="list-item-title">${name}</div>
-                            <div class="list-item-subtitle">${id ? `${id}${fullId ? ` (${fullId})` : ''}` : `ID: ${fullId || index + 1}`}</div>
-                            ${kategoriArea ? `<div class="list-item-time">${kategoriArea}</div>` : ''}
-                        </div>
-                        <div class="cctv-hazard-status-icon loading" title="Memeriksa status hazard inspeksi...">
-                            <i class="material-icons-outlined" style="font-size: 14px;">hourglass_empty</i>
-                        </div>
-                        <i class="material-icons-outlined list-item-expand-icon">expand_more</i>
+                <div class="sidebar-list-item" data-type="cctv" data-id="${cctv.id}" data-index="${index}">
+                    <div class="list-item-avatar" style="background-color: ${avatarColor};">
+                        ${firstLetter}
                     </div>
-                    <div class="cctv-detail-section">
-                        <div class="cctv-detail-loading">
-                            <i class="material-icons-outlined" style="font-size: 24px; margin-bottom: 8px; opacity: 0.5;">hourglass_empty</i>
-                            <div>Memuat detail...</div>
-                        </div>
+                    <div class="list-item-content">
+                        <div class="list-item-title">${name}</div>
+                        <div class="list-item-subtitle">${id ? `${id}${fullId ? ` (${fullId})` : ''}` : `ID: ${fullId || index + 1}`}</div>
+                        ${timestamp ? `<div class="list-item-time">${timestamp}</div>` : ''}
                     </div>
                 </div>
             `;
         }).join('');
         
-        // Load hazard status for all CCTV
-        loadCctvHazardStatus(data.map(c => c.id));
-        
-        // Add click handlers - toggle expand/collapse dan load details
+        // Add click handlers - zoom ke lokasi CCTV di map
         container.querySelectorAll('.sidebar-list-item').forEach(item => {
-            item.addEventListener('click', function(e) {
-                // Prevent event bubbling untuk icon expand
-                if (e.target.classList.contains('list-item-expand-icon')) {
-                    e.stopPropagation();
-                }
-                
+            item.addEventListener('click', function() {
                 const cctvId = this.dataset.id;
                 const cctvData = data.find(c => c.id == cctvId);
-                
-                // Toggle expanded state
-                const isExpanded = this.classList.contains('expanded');
-                
-                if (isExpanded) {
-                    // Collapse
-                    this.classList.remove('expanded');
-                } else {
-                    // Expand - load details
-                    this.classList.add('expanded');
-                    loadCctvDetails(cctvId, this);
-                    
+                if (cctvData) {
                     // Jika CCTV punya koordinat, zoom ke lokasi
-                    if (cctvData) {
-                        const hasLocation = cctvData.has_location !== false && cctvData.location && Array.isArray(cctvData.location) && cctvData.location.length === 2;
-                        if (hasLocation) {
-                            highlightAndZoomToLocation(cctvData.location, 'cctv', cctvData);
-                        }
+                    const hasLocation = cctvData.has_location !== false && cctvData.location && Array.isArray(cctvData.location) && cctvData.location.length === 2;
+                    if (hasLocation) {
+                        highlightAndZoomToLocation(cctvData.location, 'cctv', cctvData);
+                    } else {
+                        // Jika tidak punya koordinat, highlight saja di sidebar
+                        document.querySelectorAll('.sidebar-list-item').forEach(i => i.classList.remove('active'));
+                        this.classList.add('active');
+                        this.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        // Bisa tambahkan notifikasi bahwa CCTV ini tidak punya koordinat
+                        console.log('CCTV ini tidak memiliki koordinat:', cctvData.name || cctvData.nama_cctv);
                     }
                 }
-                
-                // Highlight active item
-                document.querySelectorAll('.sidebar-list-item').forEach(i => {
-                    if (i !== this) i.classList.remove('active');
-                });
-                this.classList.add('active');
             });
         });
-    }
-
-    // Load CCTV details from API (coverage lokasi, inspeksi hazard minggu ini, PJA lokasi)
-    function loadCctvDetails(cctvId, itemElement) {
-        const detailSection = itemElement.querySelector('.cctv-detail-section');
-        if (!detailSection) return;
-        
-        // Check if already loaded
-        if (detailSection.dataset.loaded === 'true') {
-            return;
-        }
-        
-        // Show loading
-        detailSection.innerHTML = `
-            <div class="cctv-detail-loading">
-                <i class="material-icons-outlined" style="font-size: 24px; margin-bottom: 8px; opacity: 0.7;">hourglass_empty</i>
-                <div style="margin-top: 8px;">Memuat detail...</div>
-            </div>
-        `;
-        
-        // Fetch details
-        const detailsUrl = `{{ url('cctv-data') }}/${cctvId}/details`;
-        fetch(detailsUrl)
-            .then(response => response.json())
-            .then(result => {
-                if (result.success) {
-                    detailSection.dataset.loaded = 'true';
-                    renderCctvDetails(result.data, detailSection);
-                } else {
-                    detailSection.innerHTML = `
-                        <div class="cctv-detail-error">
-                            <i class="material-icons-outlined" style="font-size: 18px;">error_outline</i>
-                            <span>Error: ${escapeHtml(result.error || 'Gagal memuat detail')}</span>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading CCTV details:', error);
-                detailSection.innerHTML = `
-                    <div class="cctv-detail-error">
-                        <i class="material-icons-outlined" style="font-size: 18px;">error_outline</i>
-                        <span>Error: Gagal memuat detail CCTV</span>
-                    </div>
-                `;
-            });
-    }
-
-    // Render CCTV details (coverage lokasi, inspeksi hazard minggu ini, PJA lokasi)
-    function renderCctvDetails(data, container) {
-        const { coverages, hazard_stats, pja_list, week_range } = data;
-        
-        let html = '';
-        
-        // Coverage Lokasi Section
-        html += '<div class="cctv-detail-group">';
-        html += '<div class="cctv-detail-group-title"><i class="material-icons-outlined">location_on</i> <span>Coverage Lokasi</span></div>';
-        if (coverages && coverages.length > 0) {
-            coverages.forEach(coverage => {
-                html += `
-                    <div class="cctv-coverage-item">
-                        <div class="cctv-coverage-lokasi">${escapeHtml(coverage.coverage_lokasi || '-')}</div>
-                        <div class="cctv-coverage-detail">${escapeHtml(coverage.coverage_detail_lokasi || '-')}</div>
-                    </div>
-                `;
-            });
-        } else {
-            html += '<div class="cctv-no-data">Tidak ada data coverage</div>';
-        }
-        html += '</div>';
-        
-        // Hazard Inspection Statistics Section
-        html += '<div class="cctv-detail-group">';
-        html += '<div class="cctv-detail-group-title"><i class="material-icons-outlined">warning</i> <span>Inspeksi Hazard (Minggu Ini)</span></div>';
-        if (week_range) {
-            html += `<div style="font-size: 11px; color: #6b7280; margin-bottom: 10px; padding: 6px 10px; background: #f3f4f6; border-radius: 4px; display: inline-block;">📅 ${week_range.start} - ${week_range.end}</div>`;
-        }
-        if (hazard_stats && hazard_stats.length > 0) {
-            hazard_stats.forEach(stat => {
-                html += `
-                    <div class="cctv-hazard-stat">
-                        <div class="cctv-hazard-stat-header">${escapeHtml(stat.detail_lokasi || '-')}</div>
-                        <div class="cctv-hazard-stat-count">Total: ${stat.total_count} inspeksi</div>
-                    </div>
-                `;
-            });
-        } else {
-            html += '<div class="cctv-no-data">Tidak ada inspeksi hazard minggu ini</div>';
-        }
-        html += '</div>';
-        
-        // PJA Section
-        html += '<div class="cctv-detail-group">';
-        html += '<div class="cctv-detail-group-title"><i class="material-icons-outlined">person</i> <span>PJA Lokasi</span></div>';
-        if (pja_list && Object.keys(pja_list).length > 0) {
-            Object.keys(pja_list).forEach(detailLokasi => {
-                const pjas = pja_list[detailLokasi];
-                pjas.forEach(pja => {
-                    html += `
-                        <div class="cctv-pja-item">
-                            <div class="cctv-pja-name">${escapeHtml(pja.nama_pja || '-')}</div>
-                            <div class="cctv-pja-info">
-                                ${escapeHtml(pja.employee_name || '-')} (${escapeHtml(pja.kode_sid || '-')})
-                                ${pja.employee_email ? `<br>📧 ${escapeHtml(pja.employee_email)}` : ''}
-                            </div>
-                        </div>
-                    `;
-                });
-            });
-        } else {
-            html += '<div class="cctv-no-data">Tidak ada data PJA</div>';
-        }
-        html += '</div>';
-        
-        container.innerHTML = html;
-    }
-
-    // Load hazard status untuk banyak CCTV
-    function loadCctvHazardStatus(cctvIds) {
-        if (!cctvIds || cctvIds.length === 0) return;
-        
-        const statusUrl = `{{ url('cctv-data/hazard-status') }}?ids=${cctvIds.join(',')}`;
-        
-        fetch(statusUrl)
-            .then(response => response.json())
-            .then(result => {
-                if (result.success && result.data) {
-                    // Update status untuk setiap CCTV
-                    Object.keys(result.data).forEach(cctvId => {
-                        const status = result.data[cctvId];
-                        const item = document.querySelector(`.sidebar-list-item[data-id="${cctvId}"]`);
-                        if (item) {
-                            const statusIcon = item.querySelector('.cctv-hazard-status-icon');
-                            const hasHazard = status.has_hazard_inspection;
-                            
-                            // Update data attribute
-                            item.setAttribute('data-hazard-status', hasHazard ? 'has' : 'no');
-                            
-                            // Update classes
-                            item.classList.remove('no-hazard-inspection', 'has-hazard-inspection');
-                            if (hasHazard) {
-                                item.classList.add('has-hazard-inspection');
-                            } else {
-                                item.classList.add('no-hazard-inspection');
-                            }
-                            
-                            // Update icon
-                            if (statusIcon) {
-                                statusIcon.classList.remove('loading', 'has-hazard', 'no-hazard');
-                                if (hasHazard) {
-                                    statusIcon.classList.add('has-hazard');
-                                    statusIcon.innerHTML = '<i class="material-icons-outlined" style="font-size: 14px;">check_circle</i>';
-                                    statusIcon.title = `Ada ${status.total_count} inspeksi hazard minggu ini`;
-                                } else {
-                                    statusIcon.classList.add('no-hazard');
-                                    statusIcon.innerHTML = '<i class="material-icons-outlined" style="font-size: 14px;">warning</i>';
-                                    statusIcon.title = 'Belum ada inspeksi hazard minggu ini';
-                                }
-                            }
-                        }
-                    });
-                }
-            })
-            .catch(error => {
-                console.error('Error loading CCTV hazard status:', error);
-                // Update semua item ke error state sederhana
-                cctvIds.forEach(cctvId => {
-                    const item = document.querySelector(`.sidebar-list-item[data-id="${cctvId}"]`);
-                    if (item) {
-                        const statusIcon = item.querySelector('.cctv-hazard-status-icon');
-                        if (statusIcon) {
-                            statusIcon.classList.remove('loading', 'has-hazard', 'no-hazard');
-                            statusIcon.classList.add('no-hazard');
-                            statusIcon.innerHTML = '<i class="material-icons-outlined" style="font-size: 14px;">error_outline</i>';
-                            statusIcon.title = 'Error memuat status';
-                        }
-                    }
-                });
-            });
     }
     
     // Render SAP list
@@ -14391,273 +13181,6 @@
                     </div>
                 `;
             });
-    }
-    
-    // Load Kesiapan Orang data from API
-    function loadKesiapanOrangData() {
-        const tbody = document.getElementById('tbodyKesiapanOrang');
-        if (!tbody) return;
-        
-        // Show loading state
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="9" class="text-center text-muted py-4">
-                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                    Memuat data...
-                </td>
-            </tr>
-        `;
-        
-        // Reset statistics
-        document.getElementById('totalKaryawanPja').textContent = '0';
-        document.getElementById('karyawanAktif').textContent = '0';
-        document.getElementById('pjaAktif').textContent = '0';
-        document.getElementById('totalCctvDedicated').textContent = '0';
-        document.getElementById('persentaseCctvDenganPja').textContent = '0%';
-        document.getElementById('detailCctvDenganPja').textContent = '0 dari 0 CCTV';
-        
-        fetch('{{ route("maps.api.kesiapan-orang-data") }}')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success && data.data) {
-                    // Update statistics
-                    if (data.statistics) {
-                        document.getElementById('totalKaryawanPja').textContent = data.statistics.total_karyawan || 0;
-                        document.getElementById('karyawanAktif').textContent = data.statistics.karyawan_aktif || 0;
-                        document.getElementById('pjaAktif').textContent = data.statistics.pja_aktif || 0;
-                        document.getElementById('totalCctvDedicated').textContent = data.statistics.total_cctv_dedicated || 0;
-                        
-                        // Update persentase CCTV dengan PJA
-                        const persentase = data.statistics.persentase_cctv_dengan_pja || 0;
-                        const cctvDenganPja = data.statistics.cctv_dengan_pja || 0;
-                        const totalCctv = data.statistics.total_cctv || 0;
-                        document.getElementById('persentaseCctvDenganPja').textContent = persentase.toFixed(2) + '%';
-                        document.getElementById('detailCctvDenganPja').textContent = cctvDenganPja + ' dari ' + totalCctv + ' CCTV';
-                    }
-                    
-                    // Render table
-                    renderKesiapanOrangTable(data.data.karyawan, data.data.cctv_dedicated);
-                } else {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="9" class="text-center text-muted py-4">
-                                <i class="material-icons-outlined">info</i>
-                                <p class="mb-0 mt-2">Tidak ada data kesiapan orang</p>
-                            </td>
-                        </tr>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading kesiapan orang data:', error);
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="9" class="text-center text-danger py-4">
-                            <i class="material-icons-outlined">error_outline</i>
-                            <p class="mb-0 mt-2">Gagal memuat data kesiapan orang</p>
-                            <small style="color: #9ca3af;">${error.message}</small>
-                        </td>
-                    </tr>
-                `;
-            });
-    }
-    
-    // Render Kesiapan Orang table
-    function renderKesiapanOrangTable(karyawanData, cctvDedicatedData) {
-        const tbody = document.getElementById('tbodyKesiapanOrang');
-        if (!tbody) return;
-        
-        if (!karyawanData || karyawanData.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="9" class="text-center text-muted py-4">
-                        <i class="material-icons-outlined">info</i>
-                        <p class="mb-0 mt-2">Tidak ada data karyawan</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-        
-        // Create a map of PJA to CCTV dedicated for quick lookup
-        const pjaToCctvMap = {};
-        if (cctvDedicatedData && cctvDedicatedData.length > 0) {
-            cctvDedicatedData.forEach(cctv => {
-                const pja = cctv.pja || '';
-                if (!pjaToCctvMap[pja]) {
-                    pjaToCctvMap[pja] = [];
-                }
-                pjaToCctvMap[pja].push(cctv.cctv_dedicated || '');
-            });
-        }
-        
-        // Render table rows
-        let html = '';
-        karyawanData.forEach(karyawan => {
-            const namaPja = karyawan.nama_pja || '';
-            const cctvList = pjaToCctvMap[namaPja] || [];
-            const cctvDisplay = cctvList.length > 0 ? cctvList.join(', ') : '-';
-            
-            const statusKaryawan = karyawan.status_karyawan == '1' || karyawan.status_karyawan == 1 
-                ? '<span class="badge bg-success">Aktif</span>' 
-                : '<span class="badge bg-secondary">Tidak Aktif</span>';
-            
-            const statusPja = karyawan.status_nama_pja == '1' || karyawan.status_nama_pja == 1 
-                ? '<span class="badge bg-info">Aktif</span>' 
-                : '<span class="badge bg-secondary">Tidak Aktif</span>';
-            
-            html += `
-                <tr>
-                    <td>${karyawan.kode_sid || '-'}</td>
-                    <td>${namaPja}</td>
-                    <td>${karyawan.tipe_pja || '-'}</td>
-                    <td>${karyawan.perusahaan || '-'}</td>
-                    <td>${karyawan.nama_karyawan || '-'}</td>
-                    <td>${statusKaryawan}</td>
-                    <td>${statusPja}</td>
-                    <td>${karyawan.pja_kategory_layer || '-'}</td>
-                    <td>${cctvDisplay}</td>
-                </tr>
-            `;
-        });
-        
-        tbody.innerHTML = html;
-    }
-    
-    // Load Area Kerja data from API
-    function loadAreaKerjaData() {
-        const tbody = document.getElementById('tbodyAreaKerja');
-        if (!tbody) return;
-        
-        // Show loading state
-        tbody.innerHTML = `
-            <tr>
-                <td colspan="6" class="text-center text-muted py-4">
-                    <div class="spinner-border spinner-border-sm me-2" role="status"></div>
-                    Memuat data...
-                </td>
-            </tr>
-        `;
-        
-        // Reset statistics
-        document.getElementById('totalBoundaryAreaKerja').textContent = '0%';
-        document.getElementById('totalWmsLinks').textContent = '0%';
-        document.getElementById('totalAreaHighrisk').textContent = '0%';
-        document.getElementById('totalAreaKritis').textContent = '0%';
-        const lastWeekAreaKerjaEl = document.getElementById('lastWeekAreaKerja');
-        const lastWeekWmsEl = document.getElementById('lastWeekWms');
-        if (lastWeekAreaKerjaEl) lastWeekAreaKerjaEl.textContent = 'Week -';
-        if (lastWeekWmsEl) lastWeekWmsEl.textContent = 'Week -';
-        
-        fetch('{{ route("maps.api.area-kerja-data") }}')
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.json();
-            })
-            .then(data => {
-                if (data.success && data.data) {
-                    // Update statistics
-                    if (data.statistics) {
-                        // Update percentages
-                        const boundaryPercentage = data.statistics.boundary_area_kerja_percentage || 0;
-                        const wmsPercentage = data.statistics.wms_links_percentage || 0;
-                        const highriskPercentage = data.statistics.area_highrisk_percentage || 0;
-                        const kritisPercentage = data.statistics.area_kritis_percentage || 0;
-                        
-                        document.getElementById('totalBoundaryAreaKerja').textContent = boundaryPercentage.toFixed(2) + '%';
-                        document.getElementById('totalWmsLinks').textContent = wmsPercentage.toFixed(2) + '%';
-                        document.getElementById('totalAreaHighrisk').textContent = highriskPercentage.toFixed(2) + '%';
-                        document.getElementById('totalAreaKritis').textContent = kritisPercentage.toFixed(2) + '%';
-                        
-                        // Update last week info
-                        if (data.statistics.last_week_area_kerja && data.statistics.last_year_area_kerja) {
-                            if (lastWeekAreaKerjaEl) {
-                                lastWeekAreaKerjaEl.textContent = `Week ${data.statistics.last_week_area_kerja}/${data.statistics.last_year_area_kerja}`;
-                            }
-                        } else if (lastWeekAreaKerjaEl) {
-                            lastWeekAreaKerjaEl.textContent = 'Week -';
-                        }
-                        
-                        if (data.statistics.last_week_wms && data.statistics.last_year_wms) {
-                            if (lastWeekWmsEl) {
-                                lastWeekWmsEl.textContent = `Week ${data.statistics.last_week_wms}/${data.statistics.last_year_wms}`;
-                            }
-                        } else if (lastWeekWmsEl) {
-                            lastWeekWmsEl.textContent = 'Week -';
-                        }
-                    }
-                    
-                    // Render table
-                    renderAreaKerjaTable(data.data.cctv_coverage);
-                } else {
-                    tbody.innerHTML = `
-                        <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
-                                <i class="material-icons-outlined">info</i>
-                                <p class="mb-0 mt-2">Tidak ada data area kerja</p>
-                            </td>
-                        </tr>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading area kerja data:', error);
-                tbody.innerHTML = `
-                    <tr>
-                        <td colspan="6" class="text-center text-danger py-4">
-                            <i class="material-icons-outlined">error_outline</i>
-                            <p class="mb-0 mt-2">Gagal memuat data area kerja</p>
-                            <small style="color: #9ca3af;">${error.message}</small>
-                        </td>
-                    </tr>
-                `;
-            });
-    }
-    
-    // Render Area Kerja table
-    function renderAreaKerjaTable(coverageData) {
-        const tbody = document.getElementById('tbodyAreaKerja');
-        if (!tbody) return;
-        
-        if (!coverageData || coverageData.length === 0) {
-            tbody.innerHTML = `
-                <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
-                        <i class="material-icons-outlined">info</i>
-                        <p class="mb-0 mt-2">Tidak ada data coverage</p>
-                    </td>
-                </tr>
-            `;
-            return;
-        }
-        
-        const html = coverageData.map(item => {
-            return `
-                <tr>
-                    <td>${item.id || '-'}</td>
-                    <td>${item.no_cctv || '-'}</td>
-                    <td>${item.coverage_lokasi || '-'}</td>
-                    <td>${item.coverage_detail_lokasi || '-'}</td>
-                    <td>${item.kategori_aktivitas || '-'}</td>
-                    <td>
-                        ${item.kategori_area ? `
-                            <span class="badge ${item.kategori_area === 'Area Highrisk' ? 'bg-danger bg-opacity-10 text-danger' : item.kategori_area === 'Area Kritis' ? 'bg-warning bg-opacity-10 text-warning' : 'bg-secondary bg-opacity-10 text-secondary'}">
-                                ${item.kategori_area}
-                            </span>
-                        ` : '-'}
-                    </td>
-                </tr>
-            `;
-        }).join('');
-        
-        tbody.innerHTML = html;
     }
     
     // Render PJA list
@@ -15923,7 +14446,6 @@
 </script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 @endsection
 
 

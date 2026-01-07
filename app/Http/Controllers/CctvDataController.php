@@ -7,6 +7,7 @@ use App\Models\CctvCoverage;
 use App\Models\PjaCctv;
 use App\Models\PjaCctvDedicated;
 use App\Models\CctvControlRoomPengawas;
+use App\Models\IntervensiControlRoom;
 use App\Services\ClickHouseService;
 use App\Jobs\ImportPjaCctvJob;
 use Illuminate\Http\Request;
@@ -14,6 +15,7 @@ use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Exception;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Schema;
@@ -2309,269 +2311,528 @@ class CctvDataController extends Controller
     /**
      * Get CCTV details including coverage, hazard stats, and PJA
      */
+    // public function getCctvDetails(Request $request, $id)
+    // {
+    //     try {
+    //         $cctv = CctvData::findOrFail($id);
+            
+    //         // Get coverage locations
+    //         $coverages = CctvCoverage::where('id_cctv', $id)
+    //             ->orderBy('coverage_lokasi')
+    //             ->orderBy('coverage_detail_lokasi')
+    //             ->get();
+            
+    //         // Get this week's date range using ClickHouse toStartOfWeek (konsisten dengan week di database)
+    //         // Gunakan toStartOfWeek() di ClickHouse untuk memastikan week calculation sama dengan kolom 'minggu'
+    //         $today = \Carbon\Carbon::today();
+    //         $todayStr = $today->format('Y-m-d');
+            
+    //         // Get hazard inspection statistics
+    //         $hazardStats = [];
+    //         $clickhouse = new ClickHouseService();
+            
+    //         if ($clickhouse->isConnected() && $coverages->count() > 0) {
+    //             // Tools pengawasan yang valid
+    //             $validTools = [
+    //                 'Post Event - CCTV Portable',
+    //                 'Post Event - CCTV Support',
+    //                 'Post Event - Mining Eyes',
+    //                 'Real Time - CCTV Portable',
+    //                 'Real Time - CCTV Support',
+    //                 'Real Time - Kamera',
+    //                 'Real Time - Mining Eyes'
+    //             ];
+                
+    //             // Build detail lokasi list from coverages
+    //             $detailLokasiList = $coverages->pluck('coverage_detail_lokasi')->filter()->toArray();
+                
+    //             if (!empty($detailLokasiList)) {
+    //                 // Normalize detail lokasi list
+    //                 $normalizedDetailLokasiMap = [];
+    //                 foreach ($detailLokasiList as $lokasi) {
+    //                     $normalized = mb_strtolower(trim($lokasi));
+    //                     $normalizedDetailLokasiMap[$normalized] = $lokasi;
+    //                 }
+                    
+    //                 // Build WHERE conditions for detail lokasi matching with flexible LIKE
+    //                 $detailLokasiConditions = [];
+    //                 foreach ($detailLokasiList as $lokasi) {
+    //                     $escapedLokasi = addslashes(trim($lokasi));
+    //                     // Use multiple matching strategies for better matching
+    //                     $detailLokasiConditions[] = "(
+    //                         lowerUTF8(toString(`nama detail lokasi`)) = lowerUTF8('{$escapedLokasi}')
+    //                         OR lowerUTF8(toString(`nama detail lokasi`)) LIKE lowerUTF8('%{$escapedLokasi}%')
+    //                         OR lowerUTF8('{$escapedLokasi}') LIKE concat('%', lowerUTF8(toString(`nama detail lokasi`)), '%')
+    //                     )";
+    //                 }
+    //                 $detailLokasiFilter = '(' . implode(' OR ', $detailLokasiConditions) . ')';
+                    
+    //                 $escapedTools = array_map(function($tool) {
+    //                     return "'" . addslashes($tool) . "'";
+    //                 }, $validTools);
+    //                 $toolsFilter = implode(',', $escapedTools);
+                    
+    //                 // Query hazard inspections for this week
+    //                 // Gunakan toStartOfWeek() untuk filter berdasarkan week yang sama dengan kolom 'minggu'
+    //                 $sqlHazard = "
+    //                     SELECT 
+    //                         toString(`nama detail lokasi`) as detail_lokasi,
+    //                         toString(`tools pengawasan`) as tools_pengawasan,
+    //                         COUNT(*) as count
+    //                     FROM nitip.tabel_inspeksi_hazard
+    //                     WHERE toStartOfWeek(toDate(`tanggal pelaporan`)) = toStartOfWeek(today())
+    //                         AND toString(`nama detail lokasi`) != ''
+    //                         AND toString(`nama detail lokasi`) IS NOT NULL
+    //                         AND toString(`tools pengawasan`) IN ({$toolsFilter})
+    //                     GROUP BY `nama detail lokasi`, `tools pengawasan`
+    //                     LIMIT 5000
+    //                 ";
+                    
+    //                 try {
+    //                     $hazardResults = $clickhouse->query($sqlHazard);
+                        
+    //                     Log::info('CCTV Details - Hazard Query Results', [
+    //                         'cctv_id' => $id,
+    //                         'total_hazard_results' => count($hazardResults),
+    //                         'coverage_detail_lokasi_list' => array_values($normalizedDetailLokasiMap),
+    //                         'sample_hazard_results' => array_slice($hazardResults, 0, 5)
+    //                     ]);
+                        
+    //                     $matchedCount = 0;
+    //                     $unmatchedCount = 0;
+                        
+    //                     // Group by detail_lokasi with flexible matching
+    //                     foreach ($hazardResults as $row) {
+    //                         $hazardDetailLokasi = trim($row['detail_lokasi'] ?? '');
+    //                         $count = (int)($row['count'] ?? 0);
+    //                         $tool = $row['tools_pengawasan'] ?? '';
+                            
+    //                         if (empty($hazardDetailLokasi)) continue;
+                            
+    //                         // Find matching coverage detail lokasi with flexible matching
+    //                         $matchedCoverageLokasi = null;
+    //                         $normalizedHazard = mb_strtolower(trim($hazardDetailLokasi));
+                            
+    //                         foreach ($normalizedDetailLokasiMap as $normalizedCoverage => $originalCoverage) {
+    //                             // Check if they match using multiple strategies
+    //                             $matches = false;
+                                
+    //                             // Exact match
+    //                             if ($normalizedCoverage === $normalizedHazard) {
+    //                                 $matches = true;
+    //                             }
+    //                             // Coverage contains hazard
+    //                             elseif (mb_strlen($normalizedCoverage) >= mb_strlen($normalizedHazard) && mb_strpos($normalizedCoverage, $normalizedHazard) !== false) {
+    //                                 $matches = true;
+    //                             }
+    //                             // Hazard contains coverage
+    //                             elseif (mb_strlen($normalizedHazard) >= mb_strlen($normalizedCoverage) && mb_strpos($normalizedHazard, $normalizedCoverage) !== false) {
+    //                                 $matches = true;
+    //                             }
+    //                             // Similar text check (>= 80% similarity)
+    //                             elseif (similar_text($normalizedCoverage, $normalizedHazard, $percent) && $percent >= 80) {
+    //                                 $matches = true;
+    //                             }
+                                
+    //                             if ($matches) {
+    //                                 $matchedCoverageLokasi = $originalCoverage;
+    //                                 break;
+    //                             }
+    //                         }
+                            
+    //                         // Hanya masukkan hazard jika ada match dengan coverage detail lokasi CCTV
+    //                         // Jika tidak ada match, skip (tidak tampilkan)
+    //                         if ($matchedCoverageLokasi === null) {
+    //                             $unmatchedCount++;
+    //                             continue; // Skip hazard yang tidak match
+    //                         }
+                            
+    //                         $matchedCount++;
+                            
+    //                         // Gunakan matched coverage detail lokasi sebagai key
+    //                         $keyLokasi = $matchedCoverageLokasi;
+                            
+    //                         if (!isset($hazardStats[$keyLokasi])) {
+    //                             $hazardStats[$keyLokasi] = [
+    //                                 'detail_lokasi' => $keyLokasi,
+    //                                 'total_count' => 0,
+    //                                 'by_tool' => []
+    //                             ];
+    //                         }
+    //                         $hazardStats[$keyLokasi]['total_count'] += $count;
+    //                         $hazardStats[$keyLokasi]['by_tool'][$tool] = $count;
+    //                     }
+                        
+    //                     Log::info('CCTV Details - Hazard Matching Summary', [
+    //                         'cctv_id' => $id,
+    //                         'total_hazard_results' => count($hazardResults),
+    //                         'matched_count' => $matchedCount,
+    //                         'unmatched_count' => $unmatchedCount,
+    //                         'final_hazard_stats_count' => count($hazardStats)
+    //                     ]);
+    //                 } catch (Exception $e) {
+    //                     Log::error('Error querying hazard inspections: ' . $e->getMessage());
+    //                 }
+    //             }
+    //         }
+            
+    //         // Get PJA information
+    //         $pjaList = [];
+    //         if ($clickhouse->isConnected() && $coverages->count() > 0) {
+    //             $detailLokasiList = $coverages->pluck('coverage_detail_lokasi')->filter()->toArray();
+                
+    //             if (!empty($detailLokasiList)) {
+    //                 // Build WHERE conditions for detail lokasi matching (using LIKE for flexible matching)
+    //                 $detailLokasiConditions = [];
+    //                 foreach ($detailLokasiList as $lokasi) {
+    //                     $escapedLokasi = addslashes($lokasi);
+    //                     // Use LIKE for flexible matching (case-insensitive)
+    //                     $detailLokasiConditions[] = "lowerUTF8(toString(detail_lokasi)) = lowerUTF8('{$escapedLokasi}')";
+    //                 }
+    //                 $detailLokasiFilter = '(' . implode(' OR ', $detailLokasiConditions) . ')';
+                    
+    //                 $sqlPja = "
+    //                     SELECT DISTINCT
+    //                         toString(site) as site,
+    //                         toString(lokasi) as lokasi,
+    //                         toString(detail_lokasi) as detail_lokasi,
+    //                         toString(pja_id) as pja_id,
+    //                         toString(nama_pja) as nama_pja,
+    //                         toString(pja_active) as pja_active,
+    //                         toString(employee_name) as employee_name,
+    //                         toString(kode_sid) as kode_sid,
+    //                         toString(employee_email) as employee_email,
+    //                         toString(kategori_pja) as kategori_pja
+    //                     FROM nitip.pja_full_hierarchical_view_fix
+    //                     WHERE {$detailLokasiFilter}
+    //                         AND toString(pja_active) = '1'
+    //                     ORDER BY detail_lokasi, nama_pja
+    //                     LIMIT 100
+    //                 ";
+                    
+    //                 try {
+    //                     $pjaResults = $clickhouse->query($sqlPja);
+                        
+    //                     // Group by detail_lokasi
+    //                     foreach ($pjaResults as $row) {
+    //                         $detailLokasi = $row['detail_lokasi'] ?? '';
+    //                         if (!isset($pjaList[$detailLokasi])) {
+    //                             $pjaList[$detailLokasi] = [];
+    //                         }
+    //                         $pjaList[$detailLokasi][] = [
+    //                             'pja_id' => $row['pja_id'] ?? '',
+    //                             'nama_pja' => $row['nama_pja'] ?? '',
+    //                             'employee_name' => $row['employee_name'] ?? '',
+    //                             'kode_sid' => $row['kode_sid'] ?? '',
+    //                             'employee_email' => $row['employee_email'] ?? '',
+    //                             'kategori_pja' => $row['kategori_pja'] ?? '',
+    //                             'site' => $row['site'] ?? '',
+    //                             'lokasi' => $row['lokasi'] ?? ''
+    //                         ];
+    //                     }
+    //                 } catch (Exception $e) {
+    //                     Log::error('Error querying PJA data: ' . $e->getMessage());
+    //                 }
+    //             }
+    //         }
+            
+    //         return response()->json([
+    //             'success' => true,
+    //             'data' => [
+    //                 'cctv' => [
+    //                     'id' => $cctv->id,
+    //                     'nama_cctv' => $cctv->nama_cctv,
+    //                     'no_cctv' => $cctv->no_cctv,
+    //                     'site' => $cctv->site,
+    //                 ],
+    //                 'coverages' => $coverages->map(function($coverage) {
+    //                     return [
+    //                         'id' => $coverage->id,
+    //                         'coverage_lokasi' => $coverage->coverage_lokasi,
+    //                         'coverage_detail_lokasi' => $coverage->coverage_detail_lokasi,
+    //                     ];
+    //                 }),
+    //                 'hazard_stats' => array_values($hazardStats),
+    //                 'pja_list' => $pjaList,
+    //                 'week_info' => [
+    //                     'today' => $todayStr,
+    //                     'method' => 'toStartOfWeek() in ClickHouse'
+    //                 ]
+    //             ]
+    //         ]);
+            
+    //     } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+    //         return response()->json([
+    //             'success' => false,
+    //             'error' => 'CCTV not found'
+    //         ], 404);
+    //     } catch (Exception $e) {
+    //         Log::error('Error getting CCTV details: ' . $e->getMessage());
+    //         return response()->json([
+    //             'success' => false,
+    //             'error' => 'Error retrieving CCTV details: ' . $e->getMessage()
+    //         ], 500);
+    //     }
+    // }
+
     public function getCctvDetails(Request $request, $id)
-    {
-        try {
-            $cctv = CctvData::findOrFail($id);
-            
-            // Get coverage locations
-            $coverages = CctvCoverage::where('id_cctv', $id)
-                ->orderBy('coverage_lokasi')
-                ->orderBy('coverage_detail_lokasi')
-                ->get();
-            
-            // Get this week's date range using ClickHouse toStartOfWeek (konsisten dengan week di database)
-            // Gunakan toStartOfWeek() di ClickHouse untuk memastikan week calculation sama dengan kolom 'minggu'
-            $today = \Carbon\Carbon::today();
-            $todayStr = $today->format('Y-m-d');
-            
-            // Get hazard inspection statistics
-            $hazardStats = [];
-            $clickhouse = new ClickHouseService();
-            
-            if ($clickhouse->isConnected() && $coverages->count() > 0) {
-                // Tools pengawasan yang valid
-                $validTools = [
-                    'Post Event - CCTV Portable',
-                    'Post Event - CCTV Support',
-                    'Post Event - Mining Eyes',
-                    'Real Time - CCTV Portable',
-                    'Real Time - CCTV Support',
-                    'Real Time - Kamera',
-                    'Real Time - Mining Eyes'
-                ];
-                
-                // Build detail lokasi list from coverages
-                $detailLokasiList = $coverages->pluck('coverage_detail_lokasi')->filter()->toArray();
-                
-                if (!empty($detailLokasiList)) {
-                    // Normalize detail lokasi list
-                    $normalizedDetailLokasiMap = [];
-                    foreach ($detailLokasiList as $lokasi) {
-                        $normalized = mb_strtolower(trim($lokasi));
-                        $normalizedDetailLokasiMap[$normalized] = $lokasi;
-                    }
-                    
-                    // Build WHERE conditions for detail lokasi matching with flexible LIKE
-                    $detailLokasiConditions = [];
-                    foreach ($detailLokasiList as $lokasi) {
-                        $escapedLokasi = addslashes(trim($lokasi));
-                        // Use multiple matching strategies for better matching
-                        $detailLokasiConditions[] = "(
-                            lowerUTF8(toString(`nama detail lokasi`)) = lowerUTF8('{$escapedLokasi}')
-                            OR lowerUTF8(toString(`nama detail lokasi`)) LIKE lowerUTF8('%{$escapedLokasi}%')
-                            OR lowerUTF8('{$escapedLokasi}') LIKE concat('%', lowerUTF8(toString(`nama detail lokasi`)), '%')
-                        )";
-                    }
-                    $detailLokasiFilter = '(' . implode(' OR ', $detailLokasiConditions) . ')';
-                    
-                    $escapedTools = array_map(function($tool) {
-                        return "'" . addslashes($tool) . "'";
-                    }, $validTools);
-                    $toolsFilter = implode(',', $escapedTools);
-                    
-                    // Query hazard inspections for this week
-                    // Gunakan toStartOfWeek() untuk filter berdasarkan week yang sama dengan kolom 'minggu'
-                    $sqlHazard = "
-                        SELECT 
-                            toString(`nama detail lokasi`) as detail_lokasi,
-                            toString(`tools pengawasan`) as tools_pengawasan,
-                            COUNT(*) as count
-                        FROM nitip.tabel_inspeksi_hazard
-                        WHERE toStartOfWeek(toDate(`tanggal pelaporan`)) = toStartOfWeek(today())
-                            AND toString(`nama detail lokasi`) != ''
-                            AND toString(`nama detail lokasi`) IS NOT NULL
-                            AND toString(`tools pengawasan`) IN ({$toolsFilter})
-                        GROUP BY `nama detail lokasi`, `tools pengawasan`
-                        LIMIT 5000
-                    ";
-                    
-                    try {
-                        $hazardResults = $clickhouse->query($sqlHazard);
-                        
-                        Log::info('CCTV Details - Hazard Query Results', [
-                            'cctv_id' => $id,
-                            'total_hazard_results' => count($hazardResults),
-                            'coverage_detail_lokasi_list' => array_values($normalizedDetailLokasiMap),
-                            'sample_hazard_results' => array_slice($hazardResults, 0, 5)
-                        ]);
-                        
-                        $matchedCount = 0;
-                        $unmatchedCount = 0;
-                        
-                        // Group by detail_lokasi with flexible matching
-                        foreach ($hazardResults as $row) {
-                            $hazardDetailLokasi = trim($row['detail_lokasi'] ?? '');
-                            $count = (int)($row['count'] ?? 0);
-                            $tool = $row['tools_pengawasan'] ?? '';
-                            
-                            if (empty($hazardDetailLokasi)) continue;
-                            
-                            // Find matching coverage detail lokasi with flexible matching
-                            $matchedCoverageLokasi = null;
-                            $normalizedHazard = mb_strtolower(trim($hazardDetailLokasi));
-                            
-                            foreach ($normalizedDetailLokasiMap as $normalizedCoverage => $originalCoverage) {
-                                // Check if they match using multiple strategies
-                                $matches = false;
-                                
-                                // Exact match
-                                if ($normalizedCoverage === $normalizedHazard) {
-                                    $matches = true;
-                                }
-                                // Coverage contains hazard
-                                elseif (mb_strlen($normalizedCoverage) >= mb_strlen($normalizedHazard) && mb_strpos($normalizedCoverage, $normalizedHazard) !== false) {
-                                    $matches = true;
-                                }
-                                // Hazard contains coverage
-                                elseif (mb_strlen($normalizedHazard) >= mb_strlen($normalizedCoverage) && mb_strpos($normalizedHazard, $normalizedCoverage) !== false) {
-                                    $matches = true;
-                                }
-                                // Similar text check (>= 80% similarity)
-                                elseif (similar_text($normalizedCoverage, $normalizedHazard, $percent) && $percent >= 80) {
-                                    $matches = true;
-                                }
-                                
-                                if ($matches) {
-                                    $matchedCoverageLokasi = $originalCoverage;
-                                    break;
-                                }
-                            }
-                            
-                            // Hanya masukkan hazard jika ada match dengan coverage detail lokasi CCTV
-                            // Jika tidak ada match, skip (tidak tampilkan)
-                            if ($matchedCoverageLokasi === null) {
-                                $unmatchedCount++;
-                                continue; // Skip hazard yang tidak match
-                            }
-                            
-                            $matchedCount++;
-                            
-                            // Gunakan matched coverage detail lokasi sebagai key
-                            $keyLokasi = $matchedCoverageLokasi;
-                            
-                            if (!isset($hazardStats[$keyLokasi])) {
-                                $hazardStats[$keyLokasi] = [
-                                    'detail_lokasi' => $keyLokasi,
-                                    'total_count' => 0,
-                                    'by_tool' => []
-                                ];
-                            }
-                            $hazardStats[$keyLokasi]['total_count'] += $count;
-                            $hazardStats[$keyLokasi]['by_tool'][$tool] = $count;
-                        }
-                        
-                        Log::info('CCTV Details - Hazard Matching Summary', [
-                            'cctv_id' => $id,
-                            'total_hazard_results' => count($hazardResults),
-                            'matched_count' => $matchedCount,
-                            'unmatched_count' => $unmatchedCount,
-                            'final_hazard_stats_count' => count($hazardStats)
-                        ]);
-                    } catch (Exception $e) {
-                        Log::error('Error querying hazard inspections: ' . $e->getMessage());
-                    }
+{
+    try {
+        $cctv = CctvData::findOrFail($id);
+
+        // Get coverage locations
+        $coverages = CctvCoverage::where('id_cctv', $id)
+            ->orderBy('coverage_lokasi')
+            ->orderBy('coverage_detail_lokasi')
+            ->get();
+
+        // Info tanggal hari ini (untuk informasi di response)
+        $today = \Carbon\Carbon::today();
+        $todayStr = $today->format('Y-m-d');
+
+        // ==============================
+        // 1. HAZARD ("Inspeksi Hazard Minggu Ini")
+        //    Sumber: nitip.aaj_car_all_year_from_dav
+        // ==============================
+        $hazardStats = [];
+        $clickhouse = new ClickHouseService();
+
+        if ($clickhouse->isConnected() && $coverages->count() > 0) {
+            // Tools pengawasan yang valid (kolom: name_tools_observation)
+            $validTools = [
+                'Post Event - CCTV Portable',
+                'Post Event - CCTV Support',
+                'Post Event - Mining Eyes',
+                'Real Time - CCTV Portable',
+                'Real Time - CCTV Support',
+                'Real Time - Mining Eyes',
+                'Real Time - Kamera',
+                'Pengawasan Langsung',
+            ];
+
+            // Daftar detail lokasi dari coverage CCTV
+            $detailLokasiList = $coverages->pluck('coverage_detail_lokasi')->filter()->toArray();
+
+            if (!empty($detailLokasiList)) {
+                // Normalisasi detail lokasi (lowercase, trim) untuk pencocokan fleksibel
+                $normalizedDetailLokasiMap = [];
+                foreach ($detailLokasiList as $lokasi) {
+                    $normalized = mb_strtolower(trim($lokasi));
+                    $normalizedDetailLokasiMap[$normalized] = $lokasi;
                 }
-            }
-            
-            // Get PJA information
-            $pjaList = [];
-            if ($clickhouse->isConnected() && $coverages->count() > 0) {
-                $detailLokasiList = $coverages->pluck('coverage_detail_lokasi')->filter()->toArray();
-                
-                if (!empty($detailLokasiList)) {
-                    // Build WHERE conditions for detail lokasi matching (using LIKE for flexible matching)
-                    $detailLokasiConditions = [];
-                    foreach ($detailLokasiList as $lokasi) {
-                        $escapedLokasi = addslashes($lokasi);
-                        // Use LIKE for flexible matching (case-insensitive)
-                        $detailLokasiConditions[] = "lowerUTF8(toString(detail_lokasi)) = lowerUTF8('{$escapedLokasi}')";
-                    }
-                    $detailLokasiFilter = '(' . implode(' OR ', $detailLokasiConditions) . ')';
-                    
-                    $sqlPja = "
-                        SELECT DISTINCT
-                            toString(site) as site,
-                            toString(lokasi) as lokasi,
-                            toString(detail_lokasi) as detail_lokasi,
-                            toString(pja_id) as pja_id,
-                            toString(nama_pja) as nama_pja,
-                            toString(pja_active) as pja_active,
-                            toString(employee_name) as employee_name,
-                            toString(kode_sid) as kode_sid,
-                            toString(employee_email) as employee_email,
-                            toString(kategori_pja) as kategori_pja
-                        FROM nitip.pja_full_hierarchical_view_fix
-                        WHERE {$detailLokasiFilter}
-                            AND toString(pja_active) = '1'
-                        ORDER BY detail_lokasi, nama_pja
-                        LIMIT 100
-                    ";
-                    
-                    try {
-                        $pjaResults = $clickhouse->query($sqlPja);
-                        
-                        // Group by detail_lokasi
-                        foreach ($pjaResults as $row) {
-                            $detailLokasi = $row['detail_lokasi'] ?? '';
-                            if (!isset($pjaList[$detailLokasi])) {
-                                $pjaList[$detailLokasi] = [];
+
+                // Filter nama_detail_lokasi di ClickHouse
+                $detailLokasiConditions = [];
+                foreach ($detailLokasiList as $lokasi) {
+                    $escapedLokasi = addslashes(trim($lokasi));
+                    $detailLokasiConditions[] =
+                        "lowerUTF8(toString(nama_detail_lokasi)) = lowerUTF8('{$escapedLokasi}')";
+                }
+                $detailLokasiFilter = '(' . implode(' OR ', $detailLokasiConditions) . ')';
+
+                // Filter tools (name_tools_observation)
+                $escapedTools = array_map(function ($tool) {
+                    return "'" . addslashes($tool) . "'";
+                }, $validTools);
+                $toolsFilter = implode(',', $escapedTools);
+
+                // Query hazard minggu ini
+                // Menggunakan toStartOfWeek(tanggal_pembuatan) sebagai acuan minggu
+                $sqlHazard = "
+                    SELECT 
+                        toString(nama_detail_lokasi)     AS detail_lokasi,
+                        toString(name_tools_observation) AS tools_pengawasan,
+                        COUNT(*)                         AS count
+                    FROM nitip.aaj_car_all_year_from_dav
+                    WHERE toStartOfWeek(toDate(tanggal_pembuatan)) = toStartOfWeek(today())
+                        AND toString(nama_detail_lokasi) != ''
+                        AND toString(nama_detail_lokasi) IS NOT NULL
+                        AND toString(name_tools_observation) IN ({$toolsFilter})
+                        AND {$detailLokasiFilter}
+                    GROUP BY nama_detail_lokasi, name_tools_observation
+                    LIMIT 5000
+                ";
+
+                try {
+                    $hazardResults = $clickhouse->query($sqlHazard);
+
+                    Log::info('CCTV Details - Hazard Query Results (aaj_car_all_year_from_dav)', [
+                        'cctv_id'                     => $id,
+                        'total_hazard_results'        => count($hazardResults),
+                        'coverage_detail_lokasi_list' => array_values($normalizedDetailLokasiMap),
+                        'sample_hazard_results'       => array_slice($hazardResults, 0, 5),
+                    ]);
+
+                    $matchedCount   = 0;
+                    $unmatchedCount = 0;
+
+                    // Group per detail_lokasi dengan pencocokan fleksibel ke coverage_detail_lokasi CCTV
+                    foreach ($hazardResults as $row) {
+                        $hazardDetailLokasi = trim($row['detail_lokasi'] ?? '');
+                        $count              = (int)($row['count'] ?? 0);
+                        $tool               = $row['tools_pengawasan'] ?? '';
+
+                        if ($hazardDetailLokasi === '') {
+                            continue;
+                        }
+
+                        $matchedCoverageLokasi = null;
+                        $normalizedHazard      = mb_strtolower($hazardDetailLokasi);
+
+                        foreach ($normalizedDetailLokasiMap as $normalizedCoverage => $originalCoverage) {
+                            $matches = false;
+
+                            // Exact match
+                            if ($normalizedCoverage === $normalizedHazard) {
+                                $matches = true;
                             }
-                            $pjaList[$detailLokasi][] = [
-                                'pja_id' => $row['pja_id'] ?? '',
-                                'nama_pja' => $row['nama_pja'] ?? '',
-                                'employee_name' => $row['employee_name'] ?? '',
-                                'kode_sid' => $row['kode_sid'] ?? '',
-                                'employee_email' => $row['employee_email'] ?? '',
-                                'kategori_pja' => $row['kategori_pja'] ?? '',
-                                'site' => $row['site'] ?? '',
-                                'lokasi' => $row['lokasi'] ?? ''
+                            // Coverage contains hazard
+                            elseif (mb_strlen($normalizedCoverage) >= mb_strlen($normalizedHazard)
+                                && mb_strpos($normalizedCoverage, $normalizedHazard) !== false) {
+                                $matches = true;
+                            }
+                            // Hazard contains coverage
+                            elseif (mb_strlen($normalizedHazard) >= mb_strlen($normalizedCoverage)
+                                && mb_strpos($normalizedHazard, $normalizedCoverage) !== false) {
+                                $matches = true;
+                            }
+                            // Similarity >= 80%
+                            elseif (similar_text($normalizedCoverage, $normalizedHazard, $percent) && $percent >= 80) {
+                                $matches = true;
+                            }
+
+                            if ($matches) {
+                                $matchedCoverageLokasi = $originalCoverage;
+                                break;
+                            }
+                        }
+
+                        // Hanya masukkan hazard jika ada match dengan coverage_detail_lokasi
+                        if ($matchedCoverageLokasi === null) {
+                            $unmatchedCount++;
+                            continue;
+                        }
+
+                        $matchedCount++;
+
+                        $keyLokasi = $matchedCoverageLokasi;
+
+                        if (!isset($hazardStats[$keyLokasi])) {
+                            $hazardStats[$keyLokasi] = [
+                                'detail_lokasi' => $keyLokasi,
+                                'total_count'   => 0,
+                                'by_tool'       => [],
                             ];
                         }
-                    } catch (Exception $e) {
-                        Log::error('Error querying PJA data: ' . $e->getMessage());
+
+                        $hazardStats[$keyLokasi]['total_count'] += $count;
+                        $hazardStats[$keyLokasi]['by_tool'][$tool] = $count;
                     }
+
+                    Log::info('CCTV Details - Hazard Matching Summary (aaj_car_all_year_from_dav)', [
+                        'cctv_id'                  => $id,
+                        'total_hazard_results'     => count($hazardResults),
+                        'matched_count'            => $matchedCount,
+                        'unmatched_count'          => $unmatchedCount,
+                        'final_hazard_stats_count' => count($hazardStats),
+                    ]);
+                } catch (Exception $e) {
+                    Log::error('Error querying hazard from nitip.aaj_car_all_year_from_dav: ' . $e->getMessage());
                 }
             }
-            
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'cctv' => [
-                        'id' => $cctv->id,
-                        'nama_cctv' => $cctv->nama_cctv,
-                        'no_cctv' => $cctv->no_cctv,
-                        'site' => $cctv->site,
-                    ],
-                    'coverages' => $coverages->map(function($coverage) {
-                        return [
-                            'id' => $coverage->id,
-                            'coverage_lokasi' => $coverage->coverage_lokasi,
-                            'coverage_detail_lokasi' => $coverage->coverage_detail_lokasi,
-                        ];
-                    }),
-                    'hazard_stats' => array_values($hazardStats),
-                    'pja_list' => $pjaList,
-                    'week_info' => [
-                        'today' => $todayStr,
-                        'method' => 'toStartOfWeek() in ClickHouse'
-                    ]
-                ]
-            ]);
-            
-        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
-            return response()->json([
-                'success' => false,
-                'error' => 'CCTV not found'
-            ], 404);
-        } catch (Exception $e) {
-            Log::error('Error getting CCTV details: ' . $e->getMessage());
-            return response()->json([
-                'success' => false,
-                'error' => 'Error retrieving CCTV details: ' . $e->getMessage()
-            ], 500);
         }
+
+        // ==============================
+        // 2. PJA Lokasi
+        //    Sumber baru: nitip.wan_vw_pja_karyawan
+        //    Filter: perusahaan CCTV (kolom peruashaan)
+        // ==============================
+        $pjaList = [];
+
+        if ($clickhouse->isConnected()) {
+            $perusahaan = $cctv->perusahaan ?? null;
+
+            if ($perusahaan) {
+                $escapedPerusahaan = addslashes($perusahaan);
+
+                $sqlPja = "
+                    SELECT DISTINCT
+                        toString(kode_sid)            AS kode_sid,
+                        toString(nama_pja)            AS nama_pja,
+                        toString(tipe_pja)            AS tipe_pja,
+                        toString(peruashaan)          AS perusahaan,
+                        toString(nama_karyawan)       AS nama_karyawan,
+                        toString(status_pja_karyawan) AS status_pja_karyawan
+                    FROM nitip.wan_vw_pja_karyawan
+                    WHERE toString(peruashaan) = '{$escapedPerusahaan}'
+                      AND toString(status_pja_karyawan) = '1'
+                    ORDER BY nama_pja, nama_karyawan
+                    LIMIT 200
+                ";
+
+                try {
+                    $pjaResults = $clickhouse->query($sqlPja);
+
+                    // Struktur pja_list sama dengan sebelumnya: pja_list[detail_lokasi][].
+                    // Karena view ini tidak punya detail_lokasi, pakai key tunggal 'GLOBAL'.
+                    $key = 'GLOBAL';
+                    $pjaList[$key] = [];
+
+                    foreach ($pjaResults as $row) {
+                        $pjaList[$key][] = [
+                            'pja_id'        => $row['kode_sid'] ?? '',
+                            'nama_pja'      => $row['nama_pja'] ?? '',
+                            'employee_name' => $row['nama_karyawan'] ?? '',
+                            'kode_sid'      => $row['kode_sid'] ?? '',
+                            'employee_email'=> '',
+                            'kategori_pja'  => $row['tipe_pja'] ?? '',
+                            'site'          => '',
+                            'lokasi'        => '',
+                        ];
+                    }
+                } catch (Exception $e) {
+                    Log::error('Error querying PJA from nitip.wan_vw_pja_karyawan: ' . $e->getMessage());
+                }
+            }
+        }
+
+        return response()->json([
+            'success' => true,
+            'data'    => [
+                'cctv' => [
+                    'id'        => $cctv->id,
+                    'nama_cctv' => $cctv->nama_cctv,
+                    'no_cctv'   => $cctv->no_cctv,
+                    'site'      => $cctv->site,
+                ],
+                'coverages' => $coverages->map(function ($coverage) {
+                    return [
+                        'id'                    => $coverage->id,
+                        'coverage_lokasi'       => $coverage->coverage_lokasi,
+                        'coverage_detail_lokasi'=> $coverage->coverage_detail_lokasi,
+                    ];
+                }),
+                'hazard_stats' => array_values($hazardStats),
+                'pja_list'     => $pjaList,
+                'week_info'    => [
+                    'today'  => $todayStr,
+                    'method' => 'toStartOfWeek(tanggal_pembuatan) in nitip.aaj_car_all_year_from_dav',
+                ],
+            ],
+        ]);
+    } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+        return response()->json([
+            'success' => false,
+            'error'   => 'CCTV not found',
+        ], 404);
+    } catch (Exception $e) {
+        Log::error('Error getting CCTV details: ' . $e->getMessage());
+        return response()->json([
+            'success' => false,
+            'error'   => 'Error retrieving CCTV details: ' . $e->getMessage(),
+        ], 500);
     }
+}
 
     /**
      * Get hazard inspection status for multiple CCTV (batch)
@@ -4232,6 +4493,93 @@ class CctvDataController extends Controller
     }
 
     /**
+     * Get users from ClickHouse for PIC selection (with search support for Select2 AJAX)
+     */
+    public function getUsersFromClickHouse(Request $request)
+    {
+        try {
+            $clickHouseService = new ClickHouseService();
+            
+            // Get search query from request (Select2 sends 'q' parameter)
+            $searchQuery = $request->get('q', '');
+            $page = $request->get('page', 1);
+            $perPage = 20; // Limit results for better performance
+            
+            // Build WHERE clause with search
+            $whereConditions = [
+                "toString(is_active) = '1'",
+                "length(toString(username)) > 0",
+                "username IS NOT NULL",
+                "length(toString(nama)) > 0",
+                "nama IS NOT NULL"
+            ];
+            
+            // Add search condition if query provided
+            if (!empty($searchQuery) && trim($searchQuery) !== '') {
+                // Escape single quotes for ClickHouse
+                $searchTerm = str_replace("'", "''", trim($searchQuery));
+                // Use LIKE with proper escaping - ClickHouse supports LIKE
+                $whereConditions[] = "(lower(toString(username)) LIKE lower('%{$searchTerm}%') OR lower(toString(nama)) LIKE lower('%{$searchTerm}%'))";
+            }
+            
+            $whereClause = implode(' AND ', $whereConditions);
+            
+            // Query users from ClickHouse nitip.vw_user with search and pagination
+            $sql = "SELECT 
+                        toString(id) as id,
+                        toString(username) as username,
+                        toString(nama) as nama,
+                        toString(email) as email,
+                        toString(selular) as selular,
+                        toString(nik) as nik
+                    FROM nitip.vw_user 
+                    WHERE {$whereClause}
+                    ORDER BY username ASC
+                    LIMIT {$perPage} OFFSET " . (($page - 1) * $perPage);
+            
+            $users = $clickHouseService->query($sql);
+            
+            // Format data for Select2 AJAX response
+            $formattedUsers = [];
+            foreach ($users as $user) {
+                $username = trim($user['username'] ?? '');
+                $nama = trim($user['nama'] ?? '');
+                
+                // Skip if username or nama is empty
+                if (empty($username) || empty($nama)) {
+                    continue;
+                }
+                
+                $formattedUsers[] = [
+                    'id' => $user['id'] ?? '',
+                    'text' => $username . ' - ' . $nama, // Format: username - nama
+                    'username' => $username,
+                    'nama' => $nama,
+                    'email' => $user['email'] ?? '',
+                    'selular' => $user['selular'] ?? '',
+                    'nik' => $user['nik'] ?? ''
+                ];
+            }
+
+            // Return in Select2 AJAX format
+            return response()->json([
+                'results' => $formattedUsers,
+                'pagination' => [
+                    'more' => count($formattedUsers) >= $perPage // Indicate if more results available
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error getting users from ClickHouse: ' . $e->getMessage());
+            return response()->json([
+                'results' => [],
+                'pagination' => ['more' => false],
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
      * Delete pengawas control room
      */
     public function deletePengawasControlRoom($id)
@@ -4261,6 +4609,235 @@ class CctvDataController extends Controller
             }
 
             return back()->with('error', 'Terjadi kesalahan saat menghapus data.');
+        }
+    }
+
+    /**
+     * Store intervensi control room
+     */
+    public function storeIntervensiControlRoom(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'control_room' => 'required|string|max:255',
+                'pic_id' => 'required|string',
+                'issue' => 'required|string',
+            ]);
+
+            // Get authenticated user
+            $user = Auth::user();
+            $createdBy = $user ? $user->name : 'Unknown';
+            $createdByEmail = $user ? $user->email : null;
+
+            // Get PIC details from ClickHouse
+            $clickHouseService = new ClickHouseService();
+            $picId = $validated['pic_id'];
+            
+            // Escape single quotes to prevent SQL injection
+            $escapedPicId = str_replace("'", "''", $picId);
+            
+            $sql = "SELECT 
+                        toString(id) as id,
+                        toString(username) as username,
+                        toString(nama) as nama,
+                        toString(selular) as selular
+                    FROM nitip.vw_user 
+                    WHERE toString(id) = '{$escapedPicId}'
+                    LIMIT 1";
+            
+            $picData = $clickHouseService->query($sql);
+            $picInfo = !empty($picData) ? $picData[0] : null;
+
+            // Store intervensi
+            $intervensi = IntervensiControlRoom::create([
+                'control_room' => $validated['control_room'],
+                'pic_id' => $picId,
+                'pic_username' => $picInfo['username'] ?? null,
+                'pic_nama' => $picInfo['nama'] ?? null,
+                'pic_telepon' => $picInfo['selular'] ?? null,
+                'issue' => $validated['issue'],
+                'status' => 'open', // Default status
+                'created_by' => $createdBy,
+                'created_by_email' => $createdByEmail,
+            ]);
+
+            // Prepare WhatsApp URL
+            $whatsappNumber = $picInfo['selular'] ?? null;
+            $whatsappUrl = null;
+            
+            if ($whatsappNumber) {
+                // Clean phone number (remove non-numeric characters except +)
+                $cleanNumber = preg_replace('/[^0-9+]/', '', $whatsappNumber);
+                // Remove leading 0 and replace with country code if needed
+                if (substr($cleanNumber, 0, 1) === '0') {
+                    $cleanNumber = '62' . substr($cleanNumber, 1);
+                } elseif (substr($cleanNumber, 0, 1) !== '+') {
+                    $cleanNumber = '62' . $cleanNumber;
+                }
+                $cleanNumber = str_replace('+', '', $cleanNumber);
+                
+                // Format pesan WhatsApp
+                $pesan = "Form Intervensi Control Room\n\n";
+                $pesan .= "Pelapor: " . $createdBy . "\n";
+                $pesan .= "Control Room: " . $validated['control_room'] . "\n";
+                $pesan .= "PIC: " . ($picInfo['username'] ?? '') . " - " . ($picInfo['nama'] ?? '') . "\n";
+                $pesan .= "Issue:\n" . $validated['issue'];
+                
+                $whatsappUrl = "https://wa.me/" . $cleanNumber . "?text=" . urlencode($pesan);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Intervensi berhasil dikirim!',
+                'data' => [
+                    'intervensi_id' => $intervensi->id,
+                    'whatsapp_url' => $whatsappUrl,
+                    'pic_telepon' => $whatsappNumber
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error storing intervensi control room: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan intervensi.',
+                'error' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Display list of intervensi control room
+     */
+    public function indexIntervensiControlRoom()
+    {
+        return view('cctv-data.intervensi-control-room');
+    }
+
+    /**
+     * Get intervensi control room data for DataTable
+     */
+    public function getIntervensiControlRoomData(Request $request)
+    {
+        $draw = $request->get('draw');
+        $start = $request->get('start', 0);
+        $length = $request->get('length', 10);
+        $searchValue = $request->get('search')['value'] ?? '';
+        $orderColumn = $request->get('order')[0]['column'] ?? 0;
+        $orderDir = $request->get('order')[0]['dir'] ?? 'desc';
+
+        // Column mapping
+        $columns = ['id', 'control_room', 'pic_username', 'pic_nama', 'issue', 'status', 'created_by', 'created_at', 'actions'];
+        $orderColumnName = $columns[$orderColumn] ?? 'created_at';
+
+        // Base query
+        $query = IntervensiControlRoom::query();
+
+        // Search functionality
+        if (!empty($searchValue)) {
+            $query->where(function($q) use ($searchValue) {
+                $q->where('control_room', 'like', '%' . $searchValue . '%')
+                  ->orWhere('pic_username', 'like', '%' . $searchValue . '%')
+                  ->orWhere('pic_nama', 'like', '%' . $searchValue . '%')
+                  ->orWhere('issue', 'like', '%' . $searchValue . '%')
+                  ->orWhere('created_by', 'like', '%' . $searchValue . '%');
+            });
+        }
+
+        // Get total records
+        $recordsTotal = IntervensiControlRoom::count();
+        $recordsFiltered = $query->count();
+
+        // Order and paginate
+        $intervensiList = $query->orderBy($orderColumnName, $orderDir)
+            ->skip($start)
+            ->take($length)
+            ->get();
+
+        // Format data for DataTable
+        $formattedData = $intervensiList->map(function($intervensi, $index) use ($start) {
+            // Status badge
+            $statusBadge = '';
+            if ($intervensi->status === 'closed') {
+                $statusBadge = '<span class="badge bg-success">Closed</span>';
+            } else {
+                $statusBadge = '<span class="badge bg-warning">Open</span>';
+            }
+
+            // Action buttons
+            $actions = '';
+            if ($intervensi->status === 'open') {
+                $actions = '<button class="btn btn-sm btn-success close-intervensi-btn" data-id="' . $intervensi->id . '" title="Close Issue">
+                    <i class="material-icons-outlined" style="font-size: 16px;">check_circle</i> Close
+                </button>';
+            } else {
+                $actions = '<span class="text-muted">Closed</span>';
+            }
+
+            return [
+                'DT_RowIndex' => $start + $index + 1,
+                'id' => $intervensi->id,
+                'control_room' => $intervensi->control_room,
+                'pic_username' => $intervensi->pic_username ?? '-',
+                'pic_nama' => $intervensi->pic_nama ?? '-',
+                'pic_telepon' => $intervensi->pic_telepon ?? '-',
+                'issue' => '<div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="' . htmlspecialchars($intervensi->issue) . '">' . htmlspecialchars($intervensi->issue) . '</div>',
+                'status' => $statusBadge,
+                'created_by' => $intervensi->created_by ?? '-',
+                'created_by_email' => $intervensi->created_by_email ?? '-',
+                'created_at' => $intervensi->created_at ? $intervensi->created_at->format('Y-m-d H:i:s') : '-',
+                'updated_at' => $intervensi->updated_at ? $intervensi->updated_at->format('Y-m-d H:i:s') : '-',
+                'closed_at' => $intervensi->closed_at ? $intervensi->closed_at->format('Y-m-d H:i:s') : '-',
+                'closed_by' => $intervensi->closed_by ?? '-',
+                'actions' => $actions
+            ];
+        });
+
+        return response()->json([
+            'draw' => intval($draw),
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $formattedData
+        ]);
+    }
+
+    /**
+     * Update status of intervensi control room
+     */
+    public function updateIntervensiStatus(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'status' => 'required|in:open,closed'
+            ]);
+
+            $intervensi = IntervensiControlRoom::findOrFail($id);
+            
+            // Get authenticated user
+            $user = Auth::user();
+            $closedBy = $user ? $user->name : 'Unknown';
+
+            $intervensi->status = $validated['status'];
+            if ($validated['status'] === 'closed') {
+                $intervensi->closed_at = now();
+                $intervensi->closed_by = $closedBy;
+            } else {
+                $intervensi->closed_at = null;
+                $intervensi->closed_by = null;
+            }
+            $intervensi->save();
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status intervensi berhasil diupdate.'
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error updating intervensi status: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengupdate status.'
+            ], 500);
         }
     }
 

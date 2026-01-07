@@ -7,10 +7,12 @@ use App\Models\CctvData;
 use App\Models\CctvCoverage;
 use App\Models\CctvControlRoomPengawas;
 use App\Models\CctvP2hChecklist;
+use App\Models\GeojsonArea;
 use App\Models\InsidenTabel;
 use App\Models\GrTable;
 use App\Models\HazardValidation;
 use App\Models\PjaCctvDedicated;
+use App\Models\WmsLink;
 use App\Services\BesigmaDbService;
 use App\Services\ClickHouseService;
 use App\Services\TelegramBotService;
@@ -145,6 +147,14 @@ class MapBaseController extends Controller
             ->where('control_room', '!=', '')
             ->distinct('control_room')
             ->count('control_room');
+        
+        // Ambil semua control room yang unik untuk ditampilkan di overview
+        $allControlRooms = CctvData::whereNotNull('control_room')
+            ->where('control_room', '!=', '')
+            ->distinct('control_room')
+            ->orderBy('control_room')
+            ->pluck('control_room')
+            ->toArray();
 
         $criticalCoverageBaseQuery = CctvData::query()->where(function ($query) {
             $query->where('kategori_area_tercapture', 'like', '%kritis%')
@@ -547,6 +557,7 @@ class MapBaseController extends Controller
             'grDetections',
             'stats',
             'insidenGroups',
+            'allControlRooms',
             'criticalAreaCount',
             'criticalCoveragePercentage',
             'criticalCoverageCctv',
@@ -825,6 +836,410 @@ class MapBaseController extends Controller
                 'success' => false,
                 'error' => $e->getMessage(),
                 'data' => []
+            ], 500);
+        }
+    }
+
+    /**
+     * Get kesiapan orang data (PJA Karyawan and CCTV Dedicated)
+     */
+    public function getKesiapanOrangData(Request $request)
+    {
+        try {
+            $clickhouse = new ClickHouseService();
+            
+            if (!$clickhouse->isConnected()) {
+                Log::warning('ClickHouse is not connected. Returning empty kesiapan orang data.');
+                return response()->json([
+                    'success' => false,
+                    'error' => 'ClickHouse is not connected',
+                    'data' => [],
+                    'statistics' => []
+                ], 500);
+            }
+            
+            // Query untuk mengambil data PJA Karyawan dari nitip.wan_vw_pja_karyawan
+            try {
+                $sqlKaryawan = "
+                    SELECT 
+                        toString(kode_sid) as kode_sid,
+                        toString(nama_pja) as nama_pja,
+                        toString(tipe_pja) as tipe_pja,
+                        toString(peruashaan) as perusahaan,
+                        toString(id_employee) as id_employee,
+                        toString(id_nama_pja) as id_nama_pja,
+                        toString(pja_kategori) as pja_kategori,
+                        toString(id_pja_parent) as id_pja_parent,
+                        toString(nama_karyawan) as nama_karyawan,
+                        toString(id_pja_employee) as id_pja_employee,
+                        toString(status_karyawan) as status_karyawan,
+                        toString(status_nama_pja) as status_nama_pja,
+                        toString(pja_kategory_layer) as pja_kategory_layer,
+                        toString(status_pja_karyawan) as status_pja_karyawan,
+                        tanggal_update_nama_pja,
+                        tanggal_update_data_karyawan,
+                        tanggal_update_data_pja_karyawan
+                    FROM nitip.wan_vw_pja_karyawan
+                    ORDER BY nama_pja, nama_karyawan
+                    LIMIT 10000
+                ";
+                
+                $resultsKaryawan = $clickhouse->query($sqlKaryawan);
+            } catch (Exception $e) {
+                Log::error('Error querying wan_vw_pja_karyawan: ' . $e->getMessage());
+                $resultsKaryawan = [];
+            }
+            
+            // Get CCTV Dedicated data from Laravel model
+            $cctvDedicated = PjaCctvDedicated::select('id', 'no', 'pja', 'cctv_dedicated')
+                ->orderBy('pja')
+                ->orderBy('cctv_dedicated')
+                ->get();
+            
+            // Get total CCTV from cctv_data_bmo2
+            $totalCctv = 0;
+            $cctvWithPjaCount = 0;
+            $persentaseCctvDenganPja = 0;
+            
+            try {
+                $totalCctv = CctvData::count();
+                
+                if ($totalCctv > 0) {
+                    // Get unique CCTV names from pja_cctv_dedicated
+                    $cctvWithPja = PjaCctvDedicated::select('cctv_dedicated')
+                        ->distinct()
+                        ->whereNotNull('cctv_dedicated')
+                        ->where('cctv_dedicated', '!=', '')
+                        ->pluck('cctv_dedicated')
+                        ->map(function($value) {
+                            return trim((string)$value);
+                        })
+                        ->filter(function($value) {
+                            return !empty($value);
+                        })
+                        ->unique()
+                        ->values()
+                        ->toArray();
+                    
+                    // Count CCTV from cctv_data_bmo2 that match with cctv_dedicated
+                    if (!empty($cctvWithPja)) {
+                        // Get all CCTV numbers from cctv_data_bmo2
+                        $allCctvNumbers = CctvData::select('no_cctv')
+                            ->whereNotNull('no_cctv')
+                            ->where('no_cctv', '!=', '')
+                            ->pluck('no_cctv')
+                            ->map(function($value) {
+                                return trim((string)$value);
+                            })
+                            ->filter(function($value) {
+                                return !empty($value);
+                            })
+                            ->unique()
+                            ->values()
+                            ->toArray();
+                        
+                        // Count matches (case-insensitive comparison)
+                        $matchedCctv = [];
+                        foreach ($cctvWithPja as $dedicatedCctv) {
+                            if (empty($dedicatedCctv)) {
+                                continue;
+                            }
+                            
+                            foreach ($allCctvNumbers as $cctvNumber) {
+                                if (empty($cctvNumber)) {
+                                    continue;
+                                }
+                                
+                                // Case-insensitive comparison
+                                if (strcasecmp($dedicatedCctv, $cctvNumber) === 0) {
+                                    // Count each CCTV only once
+                                    if (!in_array($cctvNumber, $matchedCctv, true)) {
+                                        $matchedCctv[] = $cctvNumber;
+                                        $cctvWithPjaCount++;
+                                    }
+                                    break;
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Calculate percentage
+                    $persentaseCctvDenganPja = $totalCctv > 0 
+                        ? round(($cctvWithPjaCount / $totalCctv) * 100, 2) 
+                        : 0;
+                }
+            } catch (Exception $e) {
+                Log::error('Error calculating CCTV with PJA statistics: ' . $e->getMessage(), [
+                    'trace' => $e->getTraceAsString()
+                ]);
+                // Set default values on error
+                $totalCctv = 0;
+                $cctvWithPjaCount = 0;
+                $persentaseCctvDenganPja = 0;
+            }
+            
+            // Format data untuk frontend
+            $karyawanData = [];
+            foreach ($resultsKaryawan as $row) {
+                $karyawanData[] = [
+                    'kode_sid' => $row['kode_sid'] ?? null,
+                    'nama_pja' => $row['nama_pja'] ?? null,
+                    'tipe_pja' => $row['tipe_pja'] ?? null,
+                    'perusahaan' => $row['perusahaan'] ?? null,
+                    'id_employee' => $row['id_employee'] ?? null,
+                    'id_nama_pja' => $row['id_nama_pja'] ?? null,
+                    'pja_kategori' => $row['pja_kategori'] ?? null,
+                    'id_pja_parent' => $row['id_pja_parent'] ?? null,
+                    'nama_karyawan' => $row['nama_karyawan'] ?? null,
+                    'id_pja_employee' => $row['id_pja_employee'] ?? null,
+                    'status_karyawan' => $row['status_karyawan'] ?? null,
+                    'status_nama_pja' => $row['status_nama_pja'] ?? null,
+                    'pja_kategory_layer' => $row['pja_kategory_layer'] ?? null,
+                    'status_pja_karyawan' => $row['status_pja_karyawan'] ?? null,
+                    'tanggal_update_nama_pja' => $row['tanggal_update_nama_pja'] ?? null,
+                    'tanggal_update_data_karyawan' => $row['tanggal_update_data_karyawan'] ?? null,
+                    'tanggal_update_data_pja_karyawan' => $row['tanggal_update_data_pja_karyawan'] ?? null,
+                ];
+            }
+            
+            // Format CCTV Dedicated data
+            $cctvDedicatedData = $cctvDedicated->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'no' => $item->no,
+                    'pja' => $item->pja,
+                    'cctv_dedicated' => $item->cctv_dedicated,
+                ];
+            })->toArray();
+            
+            // Calculate statistics
+            $totalKaryawan = count($karyawanData);
+            $karyawanAktif = count(array_filter($karyawanData, function($k) {
+                return ($k['status_karyawan'] ?? '0') == '1' || ($k['status_karyawan'] ?? '0') == 1;
+            }));
+            $pjaAktif = count(array_filter($karyawanData, function($k) {
+                return ($k['status_nama_pja'] ?? '0') == '1' || ($k['status_nama_pja'] ?? '0') == 1;
+            }));
+            $totalCctvDedicated = count($cctvDedicatedData);
+            $karyawanDenganCctv = 0;
+            
+            // Count karyawan yang memiliki CCTV dedicated
+            foreach ($karyawanData as $karyawan) {
+                $namaPja = $karyawan['nama_pja'] ?? '';
+                foreach ($cctvDedicatedData as $cctv) {
+                    if ($cctv['pja'] === $namaPja) {
+                        $karyawanDenganCctv++;
+                        break;
+                    }
+                }
+            }
+            
+            $statistics = [
+                'total_karyawan' => $totalKaryawan,
+                'karyawan_aktif' => $karyawanAktif,
+                'pja_aktif' => $pjaAktif,
+                'total_cctv_dedicated' => $totalCctvDedicated,
+                'karyawan_dengan_cctv' => $karyawanDenganCctv,
+                'total_cctv' => $totalCctv,
+                'cctv_dengan_pja' => $cctvWithPjaCount,
+                'persentase_cctv_dengan_pja' => $persentaseCctvDenganPja,
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'karyawan' => $karyawanData,
+                    'cctv_dedicated' => $cctvDedicatedData,
+                ],
+                'statistics' => $statistics,
+                'count' => [
+                    'karyawan' => count($karyawanData),
+                    'cctv_dedicated' => count($cctvDedicatedData),
+                ]
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error fetching kesiapan orang data via API: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'data' => [],
+                'statistics' => [
+                    'total_karyawan' => 0,
+                    'karyawan_aktif' => 0,
+                    'pja_aktif' => 0,
+                    'total_cctv_dedicated' => 0,
+                    'karyawan_dengan_cctv' => 0,
+                    'total_cctv' => 0,
+                    'cctv_dengan_pja' => 0,
+                    'persentase_cctv_dengan_pja' => 0,
+                ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Get area kerja data (Boundary Area Kerja, WMS Links, and CCTV Coverage)
+     */
+    public function getAreaKerjaData(Request $request)
+    {
+        try {
+            // Get total boundary area kerja from geojson_areas where type = 'area_kerja'
+            $totalBoundaryAreaKerja = GeojsonArea::where('type', 'area_kerja')->count();
+            
+            // Get last updated week for area kerja
+            $lastUpdatedAreaKerja = GeojsonArea::where('type', 'area_kerja')
+                ->orderBy('updated_at', 'desc')
+                ->first();
+            $lastWeekAreaKerja = $lastUpdatedAreaKerja ? $lastUpdatedAreaKerja->week : null;
+            $lastYearAreaKerja = $lastUpdatedAreaKerja ? $lastUpdatedAreaKerja->year : null;
+            
+            // Get total WMS links
+            $totalWmsLinks = WmsLink::count();
+            
+            // Get last updated week for WMS links
+            $lastUpdatedWms = WmsLink::orderBy('updated_at', 'desc')->first();
+            $lastWeekWms = $lastUpdatedWms ? $lastUpdatedWms->week : null;
+            $lastYearWms = $lastUpdatedWms ? $lastUpdatedWms->year : null;
+            
+            // Get total CCTV coverage
+            $totalCctvCoverage = CctvCoverage::count();
+            
+            // Get area highrisk from cctv_coverage where kategori_area = 'Area Highrisk'
+            $totalAreaHighrisk = CctvCoverage::where('kategori_area', 'Area Highrisk')->count();
+            
+            // Get area kritis from cctv_coverage where kategori_area = 'Area Kritis'
+            $totalAreaKritis = CctvCoverage::where('kategori_area', 'Area Kritis')->count();
+            
+            // Calculate percentages
+            // Boundary Area Kerja: percentage based on current week coverage vs total
+            $currentWeek = GeojsonArea::getCurrentWeek();
+            $currentYear = GeojsonArea::getCurrentYear();
+            $areasCurrentWeek = GeojsonArea::where('type', 'area_kerja')
+                ->where('year', $currentYear)
+                ->where('week', $currentWeek)
+                ->count();
+            
+            // Calculate percentage: areas with current week data / total areas
+            // If no current week data, use latest week data
+            if ($areasCurrentWeek == 0 && $totalBoundaryAreaKerja > 0) {
+                // Get latest week data
+                $latestArea = GeojsonArea::where('type', 'area_kerja')
+                    ->orderBy('year', 'desc')
+                    ->orderBy('week', 'desc')
+                    ->first();
+                if ($latestArea) {
+                    $latestWeek = $latestArea->week;
+                    $latestYear = $latestArea->year;
+                    $areasLatestWeek = GeojsonArea::where('type', 'area_kerja')
+                        ->where('year', $latestYear)
+                        ->where('week', $latestWeek)
+                        ->count();
+                    $boundaryAreaKerjaPercentage = round(($areasLatestWeek / $totalBoundaryAreaKerja) * 100, 2);
+                } else {
+                    $boundaryAreaKerjaPercentage = 0;
+                }
+            } else {
+                $boundaryAreaKerjaPercentage = $totalBoundaryAreaKerja > 0 
+                    ? round(($areasCurrentWeek / $totalBoundaryAreaKerja) * 100, 2) 
+                    : 0;
+            }
+            
+            // WMS Links: percentage based on coverage (WMS links vs total boundary areas)
+            // Assuming ideal is 1 WMS link per area, or calculate based on current week
+            $wmsLinksCurrentWeek = WmsLink::where('year', $currentYear)
+                ->where('week', $currentWeek)
+                ->count();
+            $wmsLinksPercentage = $totalBoundaryAreaKerja > 0 
+                ? round(($wmsLinksCurrentWeek / max($totalBoundaryAreaKerja, 1)) * 100, 2) 
+                : ($wmsLinksCurrentWeek > 0 ? 100 : 0);
+            
+            // If no current week WMS links, use total vs a baseline
+            if ($wmsLinksCurrentWeek == 0 && $totalWmsLinks > 0) {
+                // Use total WMS links vs total areas as percentage
+                $wmsLinksPercentage = $totalBoundaryAreaKerja > 0 
+                    ? min(round(($totalWmsLinks / $totalBoundaryAreaKerja) * 100, 2), 100) 
+                    : 100;
+            }
+            
+            // Area Highrisk: percentage of total CCTV coverage
+            $areaHighriskPercentage = $totalCctvCoverage > 0 
+                ? round(($totalAreaHighrisk / $totalCctvCoverage) * 100, 2) 
+                : 0;
+            
+            // Area Kritis: percentage of total CCTV coverage
+            $areaKritisPercentage = $totalCctvCoverage > 0 
+                ? round(($totalAreaKritis / $totalCctvCoverage) * 100, 2) 
+                : 0;
+            
+            // Get all CCTV coverage data (for table display) with no_cctv from cctv_data_bmo2
+            $cctvCoverageData = CctvCoverage::select(
+                'cctv_coverage.id',
+                'cctv_coverage.id_cctv',
+                'cctv_coverage.coverage_lokasi',
+                'cctv_coverage.coverage_detail_lokasi',
+                'cctv_coverage.kategori_aktivitas',
+                'cctv_coverage.kategori_area',
+                'cctv_data_bmo2.no_cctv'
+            )
+            ->leftJoin('cctv_data_bmo2', 'cctv_coverage.id_cctv', '=', 'cctv_data_bmo2.id')
+            ->orderBy('cctv_coverage.id', 'desc')
+            ->get()
+            ->map(function ($item) {
+                return [
+                    'id' => $item->id,
+                    'no_cctv' => $item->no_cctv,
+                    'coverage_lokasi' => $item->coverage_lokasi,
+                    'coverage_detail_lokasi' => $item->coverage_detail_lokasi,
+                    'kategori_aktivitas' => $item->kategori_aktivitas,
+                    'kategori_area' => $item->kategori_area,
+                ];
+            });
+            
+            $statistics = [
+                'boundary_area_kerja_percentage' => $boundaryAreaKerjaPercentage,
+                'wms_links_percentage' => $wmsLinksPercentage,
+                'area_highrisk_percentage' => $areaHighriskPercentage,
+                'area_kritis_percentage' => $areaKritisPercentage,
+                'last_week_area_kerja' => $lastWeekAreaKerja,
+                'last_year_area_kerja' => $lastYearAreaKerja,
+                'last_week_wms' => $lastWeekWms,
+                'last_year_wms' => $lastYearWms,
+            ];
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'cctv_coverage' => $cctvCoverageData,
+                ],
+                'statistics' => $statistics,
+                'count' => [
+                    'cctv_coverage' => $cctvCoverageData->count(),
+                ]
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error fetching area kerja data via API: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'data' => [],
+                'statistics' => [
+                    'boundary_area_kerja_percentage' => 0,
+                    'wms_links_percentage' => 0,
+                    'area_highrisk_percentage' => 0,
+                    'area_kritis_percentage' => 0,
+                    'last_week_area_kerja' => null,
+                    'last_year_area_kerja' => null,
+                    'last_week_wms' => null,
+                    'last_year_wms' => null,
+                ]
             ], 500);
         }
     }
@@ -6037,6 +6452,148 @@ class MapBaseController extends Controller
                     'observasi_area_kritis_count' => 0,
                     'area_name' => 'N/A',
                     'area_type' => 'unknown'
+                ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Get Control Room Overview Data - Group by control_room from cctv_data_bmo2
+     */
+    public function getControlRoomOverview(Request $request)
+    {
+        try {
+            // Ambil semua data CCTV dari cctv_data_bmo2 dan group by control_room
+            $query = CctvData::whereNotNull('control_room')
+                ->where('control_room', '!=', '')
+                ->whereRaw("TRIM(COALESCE(control_room, '')) != ''");
+            
+            // Get all CCTV data
+            $allCctvData = $query->get();
+            
+            // Group by control_room
+            $groupedData = $allCctvData->groupBy(function($item) {
+                return trim($item->control_room);
+            });
+            
+            // Get current date and shift for P2H status
+            $today = Carbon::now()->toDateString();
+            $currentShift = $this->getCurrentShift();
+            
+            // Get P2H status for all control rooms
+            $p2hStatusMap = [];
+            $allControlRooms = $groupedData->keys();
+            foreach ($allControlRooms as $controlRoom) {
+                // Check if has P2H today for current shift
+                $hasP2hToday = CctvP2hChecklist::where('control_room', $controlRoom)
+                    ->whereDate('tanggal_pemeriksaan', $today)
+                    ->where('shift', $currentShift)
+                    ->where('status', 'completed')
+                    ->exists();
+                
+                // Get latest P2H
+                $latestP2h = CctvP2hChecklist::where('control_room', $controlRoom)
+                    ->where('status', 'completed')
+                    ->orderBy('tanggal_pemeriksaan', 'desc')
+                    ->orderBy('shift', 'desc')
+                    ->first();
+                
+                $p2hStatusMap[$controlRoom] = [
+                    'has_p2h_today' => $hasP2hToday,
+                    'latest_p2h_date' => $latestP2h ? $latestP2h->tanggal_pemeriksaan->format('Y-m-d') : null,
+                    'latest_p2h_shift' => $latestP2h ? $latestP2h->shift : null,
+                    'latest_p2h_pengawas' => $latestP2h ? $latestP2h->nama_pengawas : null,
+                ];
+            }
+            
+            // Format data untuk response
+            $controlRoomStats = $groupedData->map(function($items, $controlRoom) use ($p2hStatusMap) {
+                $total = $items->count();
+                $aktif = $items->filter(function($item) {
+                    $status = strtolower($item->status ?? '');
+                    $kondisi = strtolower($item->kondisi ?? '');
+                    return in_array($status, ['aktif', 'connected', 'live view']) || 
+                           in_array($kondisi, ['baik']);
+                })->count();
+                $tidakAktif = $total - $aktif;
+                
+                // Format CCTV list untuk detail
+                $cctvList = $items->map(function($item) {
+                    return [
+                        'id' => $item->id,
+                        'no_cctv' => $item->no_cctv ?? null,
+                        'nomor_cctv' => $item->no_cctv ?? null,
+                        'nama_cctv' => $item->nama_cctv ?? null,
+                        'name' => $item->nama_cctv ?? 'CCTV ' . $item->id,
+                        'status' => $item->status ?? $item->kondisi ?? 'Unknown',
+                        'kondisi' => $item->kondisi ?? null,
+                        'site' => $item->site ?? null,
+                        'perusahaan' => $item->perusahaan ?? null,
+                        'perusahaan_cctv' => $item->perusahaan ?? null,
+                    ];
+                })->values()->toArray();
+                
+                // Get P2H status for this control room
+                $p2hStatus = $p2hStatusMap[$controlRoom] ?? [
+                    'has_p2h_today' => false,
+                    'latest_p2h_date' => null,
+                    'latest_p2h_shift' => null,
+                    'latest_p2h_pengawas' => null,
+                ];
+                
+                return [
+                    'name' => $controlRoom,
+                    'total' => $total,
+                    'aktif' => $aktif,
+                    'tidak_aktif' => $tidakAktif,
+                    'cctv_list' => $cctvList,
+                    'p2h_status' => $p2hStatus
+                ];
+            })->values();
+            
+            // Calculate totals
+            $totalControlRooms = $controlRoomStats->count();
+            $totalCctv = $controlRoomStats->sum('total');
+            $totalAktif = $controlRoomStats->sum('aktif');
+            
+            // Calculate P2H statistics
+            $totalSudahP2h = $controlRoomStats->filter(function($room) {
+                return $room['p2h_status']['has_p2h_today'] ?? false;
+            })->count();
+            
+            $totalBelumP2h = $totalControlRooms - $totalSudahP2h;
+            
+            // Calculate P2H percentage
+            $p2hPercentage = $totalControlRooms > 0 
+                ? round(($totalSudahP2h / $totalControlRooms) * 100, 1) 
+                : 0;
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'control_rooms' => $controlRoomStats,
+                    'total_control_rooms' => $totalControlRooms,
+                    'total_cctv' => $totalCctv,
+                    'total_aktif' => $totalAktif,
+                    'total_sudah_p2h' => $totalSudahP2h,
+                    'total_belum_p2h' => $totalBelumP2h,
+                    'p2h_percentage' => $p2hPercentage
+                ]
+            ]);
+            
+        } catch (Exception $e) {
+            Log::error('Error getting control room overview: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error getting control room overview: ' . $e->getMessage(),
+                'data' => [
+                    'control_rooms' => [],
+                    'total_control_rooms' => 0,
+                    'total_cctv' => 0,
+                    'total_aktif' => 0,
+                    'total_sudah_p2h' => 0,
+                    'total_belum_p2h' => 0,
+                    'p2h_percentage' => 0
                 ]
             ], 500);
         }

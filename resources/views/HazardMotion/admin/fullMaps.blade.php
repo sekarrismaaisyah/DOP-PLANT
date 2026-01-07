@@ -1457,11 +1457,6 @@
                 <span class="btn-label">Unit</span>
                 <span class="icon-toolbar-badge" id="iconToolbarUnitCount">0</span>
             </button>
-            <button class="icon-toolbar-btn" data-tab="gps" title="GPS Orang" id="iconToolbarGps">
-                <i class="material-icons-outlined">person_pin</i>
-                <span class="btn-label">GPS</span>
-                <span class="icon-toolbar-badge" id="iconToolbarGpsCount">0</span>
-            </button>
             <div class="icon-toolbar-divider"></div>
             <button class="icon-toolbar-btn" data-tab="controlroom" title="Control Room" id="iconToolbarControlroom">
                 <i class="material-icons-outlined">meeting_room</i>
@@ -1526,11 +1521,6 @@
                                     <!-- Unit Tab Content -->
                                     <div class="tab-content" id="tabContentUnit">
                                         <div class="sidebar-list" id="unitList"></div>
-                                    </div>
-                                    
-                                    <!-- GPS Orang Tab Content -->
-                                    <div class="tab-content" id="tabContentGps">
-                                        <div class="sidebar-list" id="gpsList"></div>
                                     </div>
                                     
                                     <!-- Control Room Tab Content -->
@@ -1934,7 +1924,6 @@
     let grLayer = null;
     let insidenLayer = null;
     let unitVehicleLayer = null;
-    let userGpsLayer = null;
     let popupOverlay = null;
     
     // Site filter - harus didefinisikan sebelum digunakan di style function
@@ -1948,7 +1937,7 @@
         sap: [],
         insiden: [],
         unit: [],
-        gps: [],
+        // gps: [], // Removed - no longer used
         controlroom: [],
         pja: []
     };
@@ -2155,14 +2144,18 @@
 
             console.log(`${layerName}: Successfully parsed ${transformedFeatures.length} features`);
 
+            const source = new ol.source.Vector({
+                features: transformedFeatures
+            });
+            
             return new ol.layer.Vector({
-                source: new ol.source.Vector({
-                    features: transformedFeatures
-                }),
+                source: source,
                 style: styleFunction,
                 name: layerName,
                 zIndex: zIndex,
-                visible: true
+                visible: true,
+                updateWhileAnimating: true, // Update style during animations
+                updateWhileInteracting: true // Update style during interactions
             });
         } catch (error) {
             console.error(`${layerName}: Error parsing GeoJSON:`, error);
@@ -2347,6 +2340,148 @@
     }
 
     // Get risk-based style for area kerja
+    // Pulse animation state untuk boundary
+    let pulseAnimationStartTime = null;
+    let pulseAnimationRunning = false;
+    
+    // Start pulse animation loop - Infinity loop yang tidak pernah berhenti
+    function startPulseAnimation() {
+        if (pulseAnimationRunning) return;
+        pulseAnimationRunning = true;
+        pulseAnimationStartTime = performance.now();
+        
+        function animate() {
+            // Pastikan animasi selalu berjalan
+            if (!pulseAnimationRunning) {
+                pulseAnimationRunning = true;
+            }
+            
+            // Get all area kerja layers dan force update
+            map.getLayers().forEach(layer => {
+                const layerName = layer.get('name') || '';
+                if (layerName && layerName.includes('Area Kerja')) {
+                    const source = layer.getSource();
+                    if (source) {
+                        // Trigger changed event untuk memaksa re-render dengan style baru
+                        // Ini akan memanggil ulang style function untuk semua features
+                        source.changed();
+                    }
+                }
+            });
+            
+            // Update insiden layer untuk pulsating animation
+            if (insidenLayer) {
+                const source = insidenLayer.getSource();
+                if (source) {
+                    source.changed();
+                }
+            }
+            
+            // Trigger map re-render untuk update style
+            if (map) {
+                map.render();
+            }
+            
+            // Continue infinite loop
+            requestAnimationFrame(animate);
+        }
+        
+        // Start infinite loop
+        requestAnimationFrame(animate);
+    }
+    
+    // Get current animation time - Selalu return waktu yang valid untuk infinite loop
+    function getPulseAnimationTime() {
+        if (!pulseAnimationStartTime) {
+            // Jika belum diinisialisasi, inisialisasi sekarang
+            pulseAnimationStartTime = performance.now();
+            return 0;
+        }
+        // Gunakan modulo untuk mencegah overflow dan memastikan infinite loop
+        const elapsed = performance.now() - pulseAnimationStartTime;
+        // Modulo dengan nilai besar untuk mencegah overflow (100 jam)
+        return elapsed % (100 * 60 * 60 * 1000);
+    }
+    
+    // Ease-out easing function (mirip dengan CSS ease-out)
+    function easeOut(t) {
+        return 1 - Math.pow(1 - t, 3);
+    }
+    
+    // Calculate pulse values based on time - Infinite loop seperti CSS @keyframes pulseStrokeFast/Slow
+    // Menggunakan modulo untuk memastikan infinite loop yang tidak pernah berhenti
+    function getPulseValues(time, pulseSpeed = 'fast') {
+        // Fast: 1.0s cycle (semua sekarang fast)
+        const cycle = 1000; // Semua menggunakan cycle 1.0s
+        // Modulo memastikan progress selalu 0-1, membuat infinite loop
+        const progress = (time % cycle) / cycle;
+        
+        let strokeWidth, strokeOpacity;
+        
+        // pulseStrokeFast: 0% → 60% → 100% (sesuai CSS keyframes)
+        // 0%: stroke-width: 2.5, stroke-opacity: 1
+        // 60%: stroke-width: 8, stroke-opacity: 0.18
+        // 100%: stroke-width: 2.5, stroke-opacity: 1
+        if (progress <= 0.6) {
+            // Expanding phase (0-60%)
+            const phaseProgress = progress / 0.6;
+            const eased = easeOut(phaseProgress);
+            strokeWidth = 2.5 + (8 - 2.5) * eased;
+            strokeOpacity = 1 - (1 - 0.18) * eased;
+        } else {
+            // Contracting phase (60-100%)
+            const phaseProgress = (progress - 0.6) / 0.4;
+            const eased = easeOut(phaseProgress);
+            strokeWidth = 8 - (8 - 2.5) * eased;
+            strokeOpacity = 0.18 + (1 - 0.18) * eased;
+        }
+        
+        return { strokeWidth, strokeOpacity };
+    }
+    
+    // Calculate pulsating circle values for insiden markers
+    // Based on CSS animation: pulse-ring and pulse-dot
+    function getPulsatingCircleValues(time) {
+        const cycle = 1250; // 1.25s cycle (matching CSS animation)
+        const progress = (time % cycle) / cycle;
+        
+        // Pulse ring animation (outer expanding circle)
+        // 0%: scale 0.33, opacity 1
+        // 80-100%: opacity 0
+        let ringScale, ringOpacity;
+        if (progress <= 0.8) {
+            // Expanding phase (0-80%)
+            const phaseProgress = progress / 0.8;
+            // Easing: cubic-bezier(0.215, 0.61, 0.355, 1)
+            const eased = 1 - Math.pow(1 - phaseProgress, 3);
+            ringScale = 0.33 + (3.0 - 0.33) * eased; // Scale from 0.33 to 3.0 (300%)
+            ringOpacity = 1 - (progress / 0.8) * 1; // Fade from 1 to 0
+        } else {
+            // Fade out phase (80-100%)
+            ringScale = 3.0;
+            ringOpacity = 0;
+        }
+        
+        // Pulse dot animation (inner dot)
+        // 0%: scale 0.8
+        // 50%: scale 1.0
+        // 100%: scale 0.8
+        // Easing: cubic-bezier(0.455, 0.03, 0.515, 0.955) with -0.4s delay
+        let dotScale;
+        const dotProgress = (progress + 0.4) % 1.0; // Add delay
+        if (dotProgress <= 0.5) {
+            // Expanding (0-50%)
+            const phaseProgress = dotProgress / 0.5;
+            dotScale = 0.8 + (1.0 - 0.8) * phaseProgress;
+        } else {
+            // Contracting (50-100%)
+            const phaseProgress = (dotProgress - 0.5) / 0.5;
+            dotScale = 1.0 - (1.0 - 0.8) * phaseProgress;
+        }
+        
+        return { ringScale, ringOpacity, dotScale };
+    }
+    
     // Style akan menggunakan cached risk level jika sudah dihitung
     // Jika belum, akan menggunakan default MEDIUM (kuning)
     function getRiskBasedAreaKerjaStyle(feature) {
@@ -2354,40 +2489,69 @@
         // Risk level di-set saat popup dibuka dan risk matrix summary dihitung
         const cachedRiskLevel = feature.get('riskLevel');
         
+        let fillColor, strokeColor, pulseSpeed;
+        
         if (cachedRiskLevel) {
             console.log(`[getRiskBasedAreaKerjaStyle] Using cached risk level: ${cachedRiskLevel} for feature: ${feature.get('lokasi') || feature.getId()}`);
-            let fillColor, strokeColor;
             switch(cachedRiskLevel) {
                 case 'HIGH':
-                    fillColor = 'rgba(220, 38, 38, 0.6)'; // Red
-                    strokeColor = '#dc2626';
+                    fillColor = 'rgba(217, 45, 32, 0.22)'; // Red #d92d20 dengan opacity 0.22
+                    strokeColor = '#d92d20'; // Red sesuai contoh
+                    pulseSpeed = 'fast'; // Pulse cepat untuk HIGH risk
                     break;
                 case 'MEDIUM':
-                    fillColor = 'rgba(250, 204, 21, 0.6)'; // Yellow
-                    strokeColor = '#facc15';
+                    fillColor = 'rgba(247, 144, 9, 0.22)'; // Orange #f79009 dengan opacity 0.22
+                    strokeColor = '#f79009'; // Orange sesuai contoh
+                    pulseSpeed = 'fast'; // Pulse cepat untuk MEDIUM risk
                     break;
                 case 'NORMAL':
                 default:
-                    fillColor = 'rgba(34, 197, 94, 0.6)'; // Green
-                    strokeColor = '#22c55e';
+                    fillColor = 'rgba(18, 183, 106, 0.18)'; // Green #12b76a dengan opacity 0.18
+                    strokeColor = '#12b76a'; // Green sesuai contoh
+                    pulseSpeed = null; // Tidak ada pulse untuk NORMAL
                     break;
             }
-            return new ol.style.Style({
-                fill: new ol.style.Fill({ color: fillColor }),
-                stroke: new ol.style.Stroke({ color: strokeColor, width: 3 })
-            });
+        } else {
+            // Default MEDIUM (orange) jika belum dihitung
+            fillColor = 'rgba(247, 144, 9, 0.22)'; // Orange (default) dengan opacity 0.22
+            strokeColor = '#f79009';
+            pulseSpeed = 'fast';
         }
         
-        // Default MEDIUM (kuning) jika belum dihitung
-        // Ini akan berubah menjadi hijau (NORMAL) atau merah (HIGH) setelah risk level dihitung saat popup dibuka
+        // Apply pulse effect untuk HIGH dan MEDIUM risk - Infinite loop blink
+        let strokeWidth = 2.5;
+        let strokeOpacity = 1;
+        
+        // Semua boundary (HIGH, MEDIUM, dan default) akan blink terus menerus
+        if (pulseSpeed && (cachedRiskLevel === 'HIGH' || cachedRiskLevel === 'MEDIUM' || !cachedRiskLevel)) {
+            const pulse = getPulseValues(getPulseAnimationTime(), pulseSpeed);
+            strokeWidth = pulse.strokeWidth;
+            strokeOpacity = pulse.strokeOpacity;
+        }
+        
+        // Convert stroke color to rgba dengan opacity untuk pulse effect
+        let strokeColorWithOpacity = strokeColor;
+        if (strokeOpacity < 1) {
+            // Convert hex to rgba
+            const hex = strokeColor.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            strokeColorWithOpacity = `rgba(${r}, ${g}, ${b}, ${strokeOpacity})`;
+        }
+        
+        // Selalu buat style baru untuk memastikan animasi berjalan
+        // OpenLayers akan memanggil ulang style function jika style object berbeda
+        // Dengan membuat style object baru setiap kali, OpenLayers akan mengenali perubahan
         return new ol.style.Style({
-            fill: new ol.style.Fill({
-                color: 'rgba(250, 204, 21, 0.6)' // Yellow (default)
+            fill: new ol.style.Fill({ color: fillColor }),
+            stroke: new ol.style.Stroke({ 
+                color: strokeColorWithOpacity, 
+                width: strokeWidth,
+                lineCap: 'round',
+                lineJoin: 'round'
             }),
-            stroke: new ol.style.Stroke({
-                color: '#facc15',
-                width: 3
-            })
+            zIndex: strokeOpacity < 1 ? 1 : 0 // Slight z-index adjustment untuk layering
         });
     }
 
@@ -2787,6 +2951,9 @@
 
     // Make map view globally accessible for Google Maps style controls
     window.hazardMapView = map.getView();
+    
+    // Start pulse animation untuk boundary area kerja
+    startPulseAnimation();
 
     // Map Layer Filter - Store base layer reference and create different tile sources
     let baseLayer = map.getLayers().item(0); // Get the first layer (base layer)
@@ -2961,7 +3128,7 @@
     });
     map.addLayer(hazardLayer);
 
-    // Create vector layer for insiden
+    // Create vector layer for insiden with pulsating circle animation
     insidenLayer = new ol.layer.Vector({
         source: new ol.source.Vector(),
         style: function(feature) {
@@ -2978,16 +3145,43 @@
                 }
             }
             
-            return new ol.style.Style({
+            // Get pulsating animation values
+            const animTime = getPulseAnimationTime();
+            const pulse = getPulsatingCircleValues(animTime);
+            
+            // Base radius for the inner dot (15px in CSS, but we'll use 9px to match original)
+            const baseRadius = 9;
+            
+            // Outer pulsating ring (expanding circle)
+            const ringRadius = baseRadius * pulse.ringScale;
+            const ringStyle = new ol.style.Style({
                 image: new ol.style.Circle({
-                    radius: 9,
-                    fill: new ol.style.Fill({ color: '#f97316' }),
+                    radius: ringRadius,
+                    fill: null, // No fill, just stroke like CSS
                     stroke: new ol.style.Stroke({
-                        color: '#ffffff',
+                        color: `rgba(1, 164, 233, ${pulse.ringOpacity})`, // #01a4e9
                         width: 2
                     })
-                })
+                }),
+                zIndex: 0 // Behind the dot
             });
+            
+            // Inner pulsating dot (main circle)
+            const dotRadius = baseRadius * pulse.dotScale;
+            const dotStyle = new ol.style.Style({
+                image: new ol.style.Circle({
+                    radius: dotRadius,
+                    fill: new ol.style.Fill({ color: '#ffffff' }), // White center
+                    stroke: new ol.style.Stroke({
+                        color: '#f97316', // Orange border
+                        width: 2
+                    })
+                }),
+                zIndex: 1 // Above the ring
+            });
+            
+            // Return array of styles (ring + dot) for pulsating effect
+            return [ringStyle, dotStyle];
         },
         zIndex: 1001
     });
@@ -3397,7 +3591,52 @@
             }
             
             const cctv = feature.get('cctvData');
-            const iconUrl = createCCTVIcon(cctv || {});
+            
+            // Determine CCTV status (baik atau tidak baik)
+            const kondisi = (cctv?.kondisi || cctv?.status || '').toString().toLowerCase();
+            const status = (cctv?.status || '').toString().toLowerCase();
+            const connected = (cctv?.connected || '').toString().toLowerCase();
+            
+            // CCTV dianggap baik jika: kondisi = 'baik' atau 'online', status = 'live view', connected = 'yes'
+            const isGood = 
+                kondisi === 'baik' || 
+                kondisi === 'online' ||
+                status === 'baik' ||
+                status === 'live view' ||
+                connected === 'yes' ||
+                cctv?.status === 1 || 
+                cctv?.status_online === 1 ||
+                cctv?.is_online === true;
+            
+            // Determine color based on status
+            let fillColor = "#a142f4"; // Default purple
+            if (isGood) {
+                fillColor = "#12b76a"; // Green untuk baik
+            } else {
+                fillColor = "#dc2626"; // Red untuk tidak baik
+            }
+            
+            const iconUrl = createCCTVIcon({ 
+                fill: fillColor, 
+                live: isGood,
+                isGood: isGood
+            });
+            
+            // Calculate blink opacity untuk CCTV yang tidak baik
+            let iconOpacity = 1;
+            if (!isGood && pulseAnimationStartTime !== null) {
+                const blinkTime = getPulseAnimationTime();
+                const cycle = 500; // 0.5 second cycle untuk blink sangat cepat
+                const progress = (blinkTime % cycle) / cycle;
+                // Blink: opacity dari 1 ke 0.3 dan kembali (smooth sine wave) - lebih intens
+                const sineWave = Math.sin(progress * Math.PI * 2);
+                iconOpacity = 0.65 + (0.35 * (1 + sineWave) / 2); // dari 0.3 ke 1.0 - lebih kontras
+            }
+            
+            // Create style dengan opacity yang berubah untuk animasi blink
+            // Gunakan timestamp kecil untuk memaksa re-render setiap frame
+            const styleKey = isGood ? 'good' : 'bad';
+            const timeKey = pulseAnimationStartTime ? Math.floor(getPulseAnimationTime() / 50) : 0; // Update setiap 50ms
             
             return new ol.style.Style({
                 image: new ol.style.Icon({
@@ -3406,7 +3645,9 @@
                     anchor: [0.5, 1],  // Anchor at bottom center (pin point)
                     anchorXUnits: 'fraction',
                     anchorYUnits: 'fraction',
-                    opacity: 1
+                    opacity: iconOpacity,
+                    // Add rotation kecil untuk memaksa re-render (tidak terlihat)
+                    rotation: timeKey * 0.0001
                 })
             });
         },
@@ -3676,244 +3917,6 @@
     });
     map.addLayer(unitVehicleLayer);
     console.log('Unit vehicle layer created and added to map');
-
-    // Function to create user GPS icon from SVG - using direct data URI
-    const svgIcon = '<svg xmlns="http://www.w3.org/2000/svg" width="64" height="64" viewBox="0 0 64 64"><g><path fill="#506C7F" d="M18,12c0-5.522,4.478-10,10-10h8c5.522,0,10,4.478,10,10v7c0-3.313-2.687-6-6-6h-6c-2.209,0-4-1.791-4-4c0-0.553-0.447-1-1-1s-1,0.447-1,1c0,2.209-1.791,4-4,4c-3.313,0-6,2.687-6,6V12z"></path><path fill="#45AAB8" d="M62,60c0,1.104-0.896,2-2,2H4c-1.104,0-2-0.896-2-2v-8c0-1.104,0.447-2.104,1.172-2.828l-0.004-0.004c4.148-3.343,8.896-5.964,14.046-7.714C20.869,45.467,26.117,48,31.973,48c5.862,0,11.115-2.538,14.771-6.56c5.167,1.75,9.929,4.376,14.089,7.728l-0.004,0.004C61.553,49.896,62,50.896,62,52V60z"></path><g><path fill="#F9EBB2" d="M32,42c-2.853,0-5.502-0.857-7.715-2.322c-1.675,0.283-3.325,0.638-4.934,1.097C22.602,43.989,27.041,46,31.973,46c4.938,0,9.383-2.017,12.634-5.238c-1.595-0.454-3.231-0.803-4.892-1.084C37.502,41.143,34.853,42,32,42z"></path><path fill="#F9EBB2" d="M46,22h-1c-0.553,0-1-0.447-1-1v-1v-1c0-2.209-1.791-4-4-4h-6c-2.088,0-3.926-1.068-5-2.687C27.926,13.932,26.088,15,24,15c-2.209,0-4,1.791-4,4v1v1c0,0.553-0.447,1-1,1h-1c-0.553,0-1,0.447-1,1v2c0,0.553,0.447,1,1,1h1c0.553,0,1,0.447,1,1v1c0,6.627,5.373,12,12,12s12-5.373,12-12v-1c0-0.553,0.447-1,1-1h1c0.553,0,1-0.447,1-1v-2C47,22.447,46.553,22,46,22z"></path></g><path fill="#394240" d="M62.242,47.758l0.014-0.014c-5.847-4.753-12.84-8.137-20.491-9.722C44.374,35.479,46,31.932,46,28c1.657,0,3-1.343,3-3v-2c0-0.886-0.391-1.673-1-2.222V12c0-6.627-5.373-12-12-12h-8c-6.627,0-12,5.373-12,12v8.778c-0.609,0.549-1,1.336-1,2.222v2c0,1.657,1.343,3,3,3c0,3.932,1.626,7.479,4.236,10.022c-7.652,1.586-14.646,4.969-20.492,9.722l0.014,0.014C0.672,48.844,0,50.344,0,52v8c0,2.211,1.789,4,4,4h56c2.211,0,4-1.789,4-4v-8C64,50.344,63.328,48.844,62.242,47.758z M18,12c0-5.522,4.478-10,10-10h8c5.522,0,10,4.478,10,10v7c0-3.313-2.687-6-6-6h-6c-2.209,0-4-1.791-4-4c0-0.553-0.447-1-1-1s-1,0.447-1,1c0,2.209-1.791,4-4,4c-3.313,0-6,2.687-6,6V12z M20,28v-1c0-0.553-0.447-1-1-1h-1c-0.553,0-1-0.447-1-1v-2c0-0.553,0.447-1,1-1h1c0.553,0,1-0.447,1-1v-2c0-2.209,1.791-4,4-4c2.088,0,3.926-1.068,5-2.687C30.074,13.932,31.912,15,34,15h6c2.209,0,4,1.791,4,4v2c0,0.553,0.447,1,1,1h1c0.553,0,1,0.447,1,1v2c0,0.553-0.447,1-1,1h-1c-0.553,0-1,0.447-1,1v1c0,6.627-5.373,12-12,12S20,34.627,20,28z M24.285,39.678C26.498,41.143,29.147,42,32,42s5.502-0.857,7.715-2.322c1.66,0.281,3.297,0.63,4.892,1.084C41.355,43.983,36.911,46,31.973,46c-4.932,0-9.371-2.011-12.621-5.226C20.96,40.315,22.61,39.961,24.285,39.678z M62,60c0,1.104-0.896,2-2,2H4c-1.104,0-2-0.896-2-2v-8c0-1.104,0.447-2.104,1.172-2.828l-0.004-0.004c4.148-3.343,8.896-5.964,14.046-7.714C20.869,45.467,26.117,48,31.973,48c5.862,0,11.115-2.538,14.771-6.56c5.167,1.75,9.929,4.376,14.089,7.728l-0.004,0.004C61.553,49.896,62,50.896,62,52V60z"></path><path fill="#394240" d="M24.537,21.862c0.475,0.255,1.073,0.068,1.345-0.396C25.91,21.419,26.18,21,26.998,21c0.808,0,1.096,0.436,1.111,0.458C28.287,21.803,28.637,22,28.999,22c0.154,0,0.311-0.035,0.457-0.111c0.491-0.253,0.684-0.856,0.431-1.347C29.592,19.969,28.651,19,26.998,19c-1.691,0-2.618,0.983-2.9,1.564C23.864,21.047,24.063,21.609,24.537,21.862z"></path><path fill="#394240" d="M34.539,21.862c0.475,0.255,1.073,0.068,1.345-0.396C35.912,21.419,36.182,21,37,21c0.808,0,1.096,0.436,1.111,0.458C38.289,21.803,38.639,22,39.001,22c0.154,0,0.311-0.035,0.457-0.111c0.491-0.253,0.684-0.856,0.431-1.347C39.594,19.969,38.653,19,37,19c-1.691,0-2.618,0.983-2.9,1.564C33.866,21.047,34.065,21.609,34.539,21.862z"></path></g></svg>';
-    const userGpsIconUrl = 'data:image/svg+xml;base64,' + btoa(svgIcon);
-
-    // Function to calculate dynamic scale based on zoom level
-    function getDynamicScale(zoom) {
-        // Scale dinamis berdasarkan zoom level
-        // Zoom rendah (jauh) = scale kecil, Zoom tinggi (dekat) = scale besar
-        if (zoom <= 10) {
-            return 0.15; // Sangat kecil saat zoom jauh
-        } else if (zoom <= 12) {
-            return 0.2; // Kecil
-        } else if (zoom <= 14) {
-            return 0.3; // Sedang
-        } else if (zoom <= 16) {
-            return 0.4; // Agak besar
-        } else if (zoom <= 18) {
-            return 0.5; // Besar
-        } else {
-            return 0.6; // Sangat besar saat zoom sangat dekat
-        }
-    }
-
-    // Create User GPS Layer
-    userGpsLayer = new ol.layer.Vector({
-        source: new ol.source.Vector(),
-        style: function(feature, resolution) {
-            const userData = feature.get('userData');
-            // Dapatkan zoom level dari map
-            const zoom = map.getView().getZoom();
-            const dynamicScale = getDynamicScale(zoom);
-            
-            // Icon untuk GPS orang - menggunakan SVG dengan scale dinamis
-            const iconStyle = new ol.style.Style({
-                image: new ol.style.Icon({
-                    anchor: [0.5, 1],
-                    anchorXUnits: 'fraction',
-                    anchorYUnits: 'fraction',
-                    src: userGpsIconUrl,
-                    scale: dynamicScale,
-                    rotation: userData?.course ? (userData.course * Math.PI / 180) : 0
-                })
-            });
-            return iconStyle;
-        },
-        zIndex: 100
-    });
-    
-    // Update style saat zoom berubah
-    map.getView().on('change:resolution', function() {
-        if (userGpsLayer) {
-            userGpsLayer.getSource().changed();
-        }
-    });
-    map.addLayer(userGpsLayer);
-    console.log('User GPS layer created and added to map');
-
-    // Function to load user GPS data
-    function loadUserGpsData() {
-        fetch('{{ route("maps.api.user-gps") }}')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.users) {
-                    // Deduplikasi: jika user_id sama, ambil yang terbaru berdasarkan gps_updated_at
-                    const uniqueUsers = [];
-                    const userMap = new Map();
-                    
-                    data.users.forEach(user => {
-                        const userId = user.user_id || user.id;
-                        if (!userId) return;
-                        
-                        const existingUser = userMap.get(userId);
-                        if (!existingUser) {
-                            // User belum ada, tambahkan
-                            userMap.set(userId, user);
-                            uniqueUsers.push(user);
-                        } else {
-                            // User sudah ada, bandingkan timestamp dan ambil yang terbaru
-                            const existingTime = existingUser.gps_updated_at || existingUser.gps_created_at || '';
-                            const currentTime = user.gps_updated_at || user.gps_created_at || '';
-                            
-                            if (currentTime > existingTime) {
-                                // Replace dengan data yang lebih baru
-                                const index = uniqueUsers.indexOf(existingUser);
-                                if (index !== -1) {
-                                    uniqueUsers[index] = user;
-                                    userMap.set(userId, user);
-                                }
-                            }
-                        }
-                    });
-                    
-                    updateUserGpsMarkers(uniqueUsers);
-                    filteredSidebarData.gps = uniqueUsers;
-                    updateTabCounts();
-                    // Render list jika tab GPS sedang aktif
-                    if (currentSidebarTab === 'gps') {
-                        renderGpsList(filteredSidebarData.gps);
-                    }
-                    console.log('User GPS data loaded (hari ini):', uniqueUsers.length, 'unique users (from', data.count, 'total)');
-                } else {
-                    console.error('Error loading user GPS data:', data.error);
-                    // Tampilkan empty state jika error dan tab GPS aktif
-                    if (currentSidebarTab === 'gps') {
-                        const container = document.getElementById('gpsList');
-                        if (container) {
-                            container.innerHTML = `
-                                <div class="empty-state">
-                                    <i class="material-icons-outlined">person_pin</i>
-                                    <p>Tidak ada data GPS Orang hari ini</p>
-                                    ${data.error ? `<p style="font-size: 11px; color: #ef4444; margin-top: 8px;">${data.error}</p>` : ''}
-                                </div>
-                            `;
-                        }
-                    }
-                }
-            })
-            .catch(error => {
-                console.error('Error fetching user GPS data:', error);
-                // Tampilkan error di sidebar jika tab GPS aktif
-                if (currentSidebarTab === 'gps') {
-                    const container = document.getElementById('gpsList');
-                    if (container) {
-                        container.innerHTML = `
-                            <div class="empty-state">
-                                <i class="material-icons-outlined">error_outline</i>
-                                <p>Gagal memuat data GPS Orang</p>
-                                <p style="font-size: 11px; color: #ef4444; margin-top: 8px;">Silakan refresh halaman</p>
-                            </div>
-                        `;
-                    }
-                }
-            });
-    }
-
-    // Function to add/update user GPS markers
-    function updateUserGpsMarkers(users) {
-        if (!userGpsLayer) {
-            console.warn('User GPS layer not initialized');
-            return;
-        }
-        
-        const source = userGpsLayer.getSource();
-        const existingFeatures = source.getFeatures();
-        const existingUsersMap = new Map();
-        
-        // Create map of existing features by userId
-        existingFeatures.forEach(function(feature) {
-            const userId = feature.get('userId');
-            if (userId) {
-                existingUsersMap.set(userId, feature);
-            }
-        });
-        
-        // Process new/updated users
-        const processedUserIds = new Set();
-        let addedCount = 0;
-        let updatedCount = 0;
-        let skippedCount = 0;
-        
-        users.forEach(function(user) {
-            // Validate coordinates
-            if (!user.latitude || !user.longitude || 
-                user.latitude === 0 || user.longitude === 0 ||
-                isNaN(parseFloat(user.latitude)) || isNaN(parseFloat(user.longitude))) {
-                skippedCount++;
-                return;
-            }
-            
-            const userId = user.user_id || user.id;
-            if (!userId) {
-                skippedCount++;
-                return;
-            }
-            
-            processedUserIds.add(userId);
-            
-            // Convert coordinates to map projection
-            const longitude = parseFloat(user.longitude);
-            const latitude = parseFloat(user.latitude);
-            const coordinate = ol.proj.fromLonLat([longitude, latitude]);
-            
-            // Check if feature already exists
-            if (existingUsersMap.has(userId)) {
-                // Update existing feature
-                const feature = existingUsersMap.get(userId);
-                const oldCoord = feature.getGeometry().getCoordinates();
-                
-                // Only update if coordinates changed
-                if (oldCoord[0] !== coordinate[0] || oldCoord[1] !== coordinate[1]) {
-                    feature.getGeometry().setCoordinates(coordinate);
-                    updatedCount++;
-                }
-                
-                // Always update user data
-                feature.set('userData', user);
-                feature.set('userId', userId);
-                feature.set('type', 'user_gps');
-                
-                // Trigger style update
-                feature.changed();
-            } else {
-                // Create new feature
-                const feature = new ol.Feature({
-                    geometry: new ol.geom.Point(coordinate),
-                    type: 'user_gps',
-                    userId: userId,
-                    userData: user
-                });
-                source.addFeature(feature);
-                addedCount++;
-            }
-        });
-        
-        // Remove features that no longer exist in the data
-        let removedCount = 0;
-        existingFeatures.forEach(function(feature) {
-            const userId = feature.get('userId');
-            if (userId && !processedUserIds.has(userId)) {
-                source.removeFeature(feature);
-                removedCount++;
-            }
-        });
-        
-        console.log('User GPS markers updated:', {
-            total: processedUserIds.size,
-            added: addedCount,
-            updated: updatedCount,
-            removed: removedCount,
-            skipped: skippedCount
-        });
-    }
-
-    // Initial load of user GPS data
-    loadUserGpsData();
-    // Refresh every 30 seconds
-    setInterval(loadUserGpsData, 30000);
 
     // Function to add/update unit vehicle markers
     function updateUnitVehicleMarkers(units) {
@@ -4988,6 +4991,23 @@
             const featureType = feature.get('type');
             if (featureType === 'insiden') {
                 const data = feature.get('data');
+                // Ensure area kerja layers remain visible when clicking insiden
+                if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
+                    window.areaKerjaLayers.forEach(layer => {
+                        if (layer) {
+                            layer.setVisible(true);
+                            layer.setOpacity(1.0);
+                        }
+                    });
+                }
+                if (areaKerjaBmo2PamaLayer) {
+                    areaKerjaBmo2PamaLayer.setVisible(true);
+                    areaKerjaBmo2PamaLayer.setOpacity(1.0);
+                }
+                // Force map render to ensure area kerja layers are visible
+                if (map) {
+                    map.render();
+                }
                 showInsidenPopup(evt.coordinate, data);
                 return;
             }
@@ -4996,13 +5016,6 @@
             if (featureType === 'unit_vehicle') {
                 const unitData = feature.get('unitData');
                 showUnitVehiclePopup(evt.coordinate, unitData);
-                return;
-            }
-            
-            // Check if it's a user GPS marker
-            if (featureType === 'user_gps') {
-                const userData = feature.get('userData');
-                showUserGpsPopup(evt.coordinate, userData);
                 return;
             }
             
@@ -6334,6 +6347,24 @@
             return;
         }
 
+        // Ensure area kerja layers remain visible when showing insiden popup
+        if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
+            window.areaKerjaLayers.forEach(layer => {
+                if (layer) {
+                    layer.setVisible(true);
+                    layer.setOpacity(1.0);
+                }
+            });
+        }
+        if (areaKerjaBmo2PamaLayer) {
+            areaKerjaBmo2PamaLayer.setVisible(true);
+            areaKerjaBmo2PamaLayer.setOpacity(1.0);
+        }
+        // Force map render to ensure area kerja layers are visible
+        if (map) {
+            map.render();
+        }
+
         const escapedNo = insiden.no_kecelakaan ? insiden.no_kecelakaan.replace(/"/g, '&quot;') : '';
         const content = `
             <div style="min-width: 220px; background-color: #ffffff !important;">
@@ -7241,386 +7272,6 @@
             return 'N/A';
         }
     }
-
-    function showUserGpsPopup(coordinate, user) {
-        if (!user) {
-            return;
-        }
-
-        const fullname = user.fullname || 'N/A';
-        const npk = user.npk || 'N/A';
-        const email = user.email || 'N/A';
-        const phone = user.phone || 'N/A';
-        const gender = user.gender || 'N/A';
-        const division = user.division_name || 'N/A';
-        const department = user.department_name || 'N/A';
-        const functionalPosition = user.functional_position || 'N/A';
-        const structuralPosition = user.structural_position || 'N/A';
-        const siteAssignment = user.site_assignment || 'N/A';
-        const course = user.course !== null && user.course !== undefined ? user.course + '°' : 'N/A';
-        const battery = user.battery !== null && user.battery !== undefined ? user.battery + '%' : 'N/A';
-        const batteryColor = user.battery < 20 ? '#ef4444' : user.battery < 50 ? '#f59e0b' : '#10b981';
-        const updatedAt = formatDateWIB(user.gps_updated_at);
-        const latitude = user.latitude !== null && user.latitude !== undefined ? user.latitude.toFixed(6) : 'N/A';
-        const longitude = user.longitude !== null && user.longitude !== undefined ? user.longitude.toFixed(6) : 'N/A';
-
-        // Tampilkan loading state dulu
-        const loadingContent = `
-            <div style="min-width: 280px; background-color: #ffffff !important;">
-                <div class="d-flex align-items-center gap-2 mb-2" style="background-color: #ffffff !important;">
-                    <i class="material-icons-outlined text-primary">person_pin</i>
-                    <h6 style="margin: 0; font-weight: 600;">${fullname}</h6>
-                </div>
-                <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px; background-color: #ffffff !important;">
-                    <p style="margin: 5px 0; font-size: 13px; background-color: #ffffff !important;">
-                        <strong>SID:</strong> ${npk}
-                    </p>
-                    <p style="margin: 5px 0; font-size: 13px; color: #6b7280; background-color: #ffffff !important;">
-                        <i class="material-icons-outlined" style="font-size: 14px; vertical-align: middle;">sync</i>
-                        Memuat informasi lokasi...
-                    </p>
-                </div>
-            </div>
-        `;
-
-        document.getElementById('popup-content').innerHTML = loadingContent;
-        popupOverlay.setPosition(coordinate);
-
-        // Load location details
-        const locationId = user.location_id || user.work_area_location_id || null;
-        const employeeId = user.employee_id || user.user_id || user.id || null;
-        
-        fetch(`{{ route('maps.api.gps-user-location-details') }}?latitude=${latitude}&longitude=${longitude}${locationId ? '&location_id=' + locationId : ''}${employeeId ? '&employee_id=' + employeeId : ''}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.data) {
-                    const locationData = data.data;
-                    const workAreaName = locationData.work_area ? locationData.work_area.name : 'Tidak diketahui';
-                    const sapCount = locationData.sap_count || 0;
-                    const sapOpenCount = locationData.sap_open_count || 0;
-                    const cctvCount = locationData.cctv_count || 0;
-                    const pjaCount = locationData.pja_count || 0;
-
-                    const content = `
-                        <div style="min-width: 300px; background-color: #ffffff !important;">
-                            <div class="d-flex align-items-center gap-2 mb-2" style="background-color: #ffffff !important;">
-                                <i class="material-icons-outlined text-primary">person_pin</i>
-                                <h6 style="margin: 0; font-weight: 600;">${fullname}</h6>
-                            </div>
-                            <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px; background-color: #ffffff !important;">
-                                <p style="margin: 5px 0; font-size: 13px;">
-                                    <strong>SID:</strong> ${npk}
-                    </p>
-                    ${email !== 'N/A' ? `<p style="margin: 5px 0; font-size: 13px;"><strong>Email:</strong> ${email}</p>` : ''}
-                    ${phone !== 'N/A' ? `<p style="margin: 5px 0; font-size: 13px;"><strong>Phone:</strong> ${phone}</p>` : ''}
-                    <p style="margin: 5px 0; font-size: 13px;">
-                        <strong>Jenis Kelamin:</strong> ${gender === 'L' ? 'Laki-laki' : gender === 'P' ? 'Perempuan' : gender}
-                    </p>
-                    <p style="margin: 5px 0; font-size: 13px;">
-                        <strong>Divisi:</strong> ${division}
-                    </p>
-                    <p style="margin: 5px 0; font-size: 13px;">
-                        <strong>Departemen:</strong> ${department}
-                    </p>
-                    ${functionalPosition !== 'N/A' ? `<p style="margin: 5px 0; font-size: 13px;"><strong>Jabatan Fungsional:</strong> ${functionalPosition}</p>` : ''}
-                    ${structuralPosition !== 'N/A' ? `<p style="margin: 5px 0; font-size: 13px;"><strong>Jabatan Struktural:</strong> ${structuralPosition}</p>` : ''}
-                    ${siteAssignment !== 'N/A' ? `<p style="margin: 5px 0; font-size: 13px;"><strong>Site Assignment:</strong> ${siteAssignment}</p>` : ''}
-                                
-                    <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px;">
-                        <p style="margin: 5px 0; font-size: 13px;">
-                            <strong>Koordinat:</strong> ${latitude}, ${longitude}
-                        </p>
-                        <p style="margin: 5px 0; font-size: 13px;">
-                            <strong>Course:</strong> ${course}
-                        </p>
-                        <p style="margin: 5px 0; font-size: 13px;">
-                            <strong>Battery:</strong> <span style="color: ${batteryColor};">${battery}</span>
-                        </p>
-                        <p style="margin: 5px 0; font-size: 13px;">
-                            <strong>Update Terakhir:</strong> ${updatedAt}
-                        </p>
-                    </div>
-
-                                <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px; background-color: #f9fafb; padding: 10px; border-radius: 6px;">
-                                    <p style="margin: 5px 0; font-size: 13px; font-weight: 600; color: #1f2937;">
-                                        <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">location_on</i>
-                                        Lokasi Saat Ini
-                                    </p>
-                                    <p style="margin: 5px 0; font-size: 13px;">
-                                        <strong>Area Kerja:</strong> ${workAreaName}
-                                    </p>
-                                    <p style="margin: 5px 0; font-size: 13px;">
-                                        <strong>SAP di Area:</strong> <span style="color: ${sapCount > 0 ? '#ef4444' : '#10b981'}; font-weight: 600;">${sapCount}</span>
-                                    </p>
-                                    <p style="margin: 5px 0; font-size: 13px;">
-                                        <strong>SAP Open:</strong> <span style="color: ${sapOpenCount > 0 ? '#dc2626' : '#10b981'}; font-weight: 600;">${sapOpenCount}</span>
-                                    </p>
-                                    <p style="margin: 5px 0; font-size: 13px;">
-                                        <strong>CCTV Mengcover:</strong> <span style="color: ${cctvCount > 0 ? '#3b82f6' : '#6b7280'}; font-weight: 600;">${cctvCount}</span>
-                                    </p>
-                                    <p style="margin: 5px 0; font-size: 13px;">
-                                        <strong>PJA Lokasi:</strong> <span style="color: ${pjaCount > 0 ? '#8b5cf6' : '#6b7280'}; font-weight: 600;">${pjaCount}</span>
-                                    </p>
-                                </div>
-
-                                <div style="margin-top: 10px;">
-                                    <button class="btn btn-sm btn-primary w-100" onclick="showGpsUserDetailModal(${JSON.stringify(user).replace(/"/g, '&quot;')}, ${JSON.stringify(locationData).replace(/"/g, '&quot;')})">
-                                        <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">info</i>
-                                        Lihat Detail Lengkap
-                                    </button>
-                                </div>
-                </div>
-            </div>
-        `;
-
-        document.getElementById('popup-content').innerHTML = content;
-                } else {
-                    // Fallback jika API error
-                    showUserGpsPopupFallback(coordinate, user);
-                }
-            })
-            .catch(error => {
-                console.error('Error loading location details:', error);
-                showUserGpsPopupFallback(coordinate, user);
-            });
-    }
-
-    function showUserGpsPopupFallback(coordinate, user) {
-        const fullname = user.fullname || 'N/A';
-        const npk = user.npk || 'N/A';
-        const latitude = user.latitude !== null && user.latitude !== undefined ? user.latitude.toFixed(6) : 'N/A';
-        const longitude = user.longitude !== null && user.longitude !== undefined ? user.longitude.toFixed(6) : 'N/A';
-        const workAreaName = user.work_area_name || 'Tidak diketahui';
-
-        const content = `
-            <div style="min-width: 280px; background-color: #ffffff !important;">
-                <div class="d-flex align-items-center gap-2 mb-2" style="background-color: #ffffff !important;">
-                    <i class="material-icons-outlined text-primary">person_pin</i>
-                    <h6 style="margin: 0; font-weight: 600;">${fullname}</h6>
-                </div>
-                <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px; background-color: #ffffff !important;">
-                    <p style="margin: 5px 0; font-size: 13px; background-color: #ffffff !important;">
-                        <strong>SID:</strong> ${npk}
-                    </p>
-                    <p style="margin: 5px 0; font-size: 13px; background-color: #ffffff !important;">
-                        <strong>Area Kerja:</strong> ${workAreaName}
-                    </p>
-                    <p style="margin: 5px 0; font-size: 13px; background-color: #ffffff !important;">
-                        <strong>Koordinat:</strong> ${latitude}, ${longitude}
-                    </p>
-                    <p style="margin: 5px 0; font-size: 12px; color: #6b7280; background-color: #ffffff !important;">
-                        Gagal memuat detail lokasi
-                    </p>
-                </div>
-            </div>
-        `;
-
-        document.getElementById('popup-content').innerHTML = content;
-    }
-
-    // Function to show GPS user detail modal
-    window.showGpsUserDetailModal = function(user, locationData) {
-        // Close popup first
-        popupOverlay.setPosition(undefined);
-        
-        // Create or get modal element
-        let modalElement = document.getElementById('gpsUserDetailModal');
-        if (!modalElement) {
-            modalElement = document.createElement('div');
-            modalElement.id = 'gpsUserDetailModal';
-            modalElement.className = 'modal fade';
-            modalElement.setAttribute('tabindex', '-1');
-            document.body.appendChild(modalElement);
-    }
-
-        const workAreaName = locationData.work_area ? locationData.work_area.name : 'Tidak diketahui';
-        const sapCount = locationData.sap_count || 0;
-        const sapOpenCount = locationData.sap_open_count || 0;
-        const cctvCount = locationData.cctv_count || 0;
-        const pjaCount = locationData.pja_count || 0;
-        const sapList = locationData.sap_list || [];
-        const sapOpenList = locationData.sap_open_list || [];
-        const cctvList = locationData.cctv_list || [];
-        const pjaList = locationData.pja_list || [];
-
-        modalElement.innerHTML = `
-            <div class="modal-dialog modal-lg modal-dialog-scrollable">
-                <div class="modal-content">
-                    <div class="modal-header">
-                        <h5 class="modal-title">
-                            <i class="material-icons-outlined">person_pin</i>
-                            Detail Lokasi: ${user.fullname || 'N/A'}
-                        </h5>
-                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
-                    </div>
-                    <div class="modal-body">
-                        <div class="row mb-3">
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title">
-                                            <i class="material-icons-outlined">location_on</i>
-                                            Lokasi Saat Ini
-                                        </h6>
-                                        <p class="mb-1"><strong>Area Kerja:</strong></p>
-                                        <p class="text-muted">${workAreaName}</p>
-                                        ${locationData.work_area ? `
-                                            <p class="mb-1"><strong>Location ID:</strong></p>
-                                            <p class="text-muted">${locationData.work_area.location_id || 'N/A'}</p>
-                                        ` : ''}
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="card">
-                                    <div class="card-body">
-                                        <h6 class="card-title">
-                                            <i class="material-icons-outlined">info</i>
-                                            Statistik
-                                        </h6>
-                                        <p class="mb-1"><strong>SAP di Area:</strong></p>
-                                        <p class="text-danger" style="font-size: 24px; font-weight: 600;">${sapCount}</p>
-                                        <p class="mb-1"><strong>SAP Open:</strong></p>
-                                        <p class="text-danger" style="font-size: 24px; font-weight: 600;">${sapOpenCount}</p>
-                                        <p class="mb-1"><strong>CCTV Mengcover:</strong></p>
-                                        <p class="text-primary" style="font-size: 24px; font-weight: 600;">${cctvCount}</p>
-                                        <p class="mb-1"><strong>PJA Lokasi:</strong></p>
-                                        <p class="text-purple" style="font-size: 24px; font-weight: 600; color: #8b5cf6;">${pjaCount}</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        ${sapOpenList.length > 0 ? `
-                            <div class="mb-3">
-                                <h6><i class="material-icons-outlined">warning</i> Daftar SAP Open di Area (${sapOpenCount})</h6>
-                                <div class="table-responsive" style="max-height: 300px;">
-                                    <table class="table table-sm table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Task Number</th>
-                                                <th>Jenis</th>
-                                                <th>Lokasi</th>
-                                                <th>Tanggal</th>
-                                                <th>Jarak</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${sapOpenList.map(sap => `
-                                                <tr>
-                                                    <td>${sap.task_number || 'N/A'}</td>
-                                                    <td><span class="badge bg-danger">${sap.source_type || sap.jenis_laporan || 'SAP'}</span></td>
-                                                    <td>${sap.lokasi || sap.detail_lokasi || 'N/A'}</td>
-                                                    <td>${sap.tanggal ? formatDateWIB(sap.tanggal).split(',')[0] : 'N/A'}</td>
-                                                    <td>${sap.distance ? sap.distance + ' m' : 'N/A'}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        ` : ''}
-
-                        ${sapList.length > 0 ? `
-                            <div class="mb-3">
-                                <h6><i class="material-icons-outlined">warning</i> Daftar Semua SAP di Area (${sapCount})</h6>
-                                <div class="table-responsive" style="max-height: 300px;">
-                                    <table class="table table-sm table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Task Number</th>
-                                                <th>Jenis</th>
-                                                <th>Lokasi</th>
-                                                <th>Tanggal</th>
-                                                <th>Jarak</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${sapList.map(sap => `
-                                                <tr>
-                                                    <td>${sap.task_number || 'N/A'}</td>
-                                                    <td><span class="badge bg-warning">${sap.source_type || sap.jenis_laporan || 'SAP'}</span></td>
-                                                    <td>${sap.lokasi || sap.detail_lokasi || 'N/A'}</td>
-                                                    <td>${sap.tanggal ? formatDateWIB(sap.tanggal).split(',')[0] : 'N/A'}</td>
-                                                    <td>${sap.distance ? sap.distance + ' m' : 'N/A'}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        ` : ''}
-
-                        ${cctvList.length > 0 ? `
-                            <div class="mb-3">
-                                <h6><i class="material-icons-outlined">videocam</i> CCTV yang Mengcover Area (${cctvCount})</h6>
-                                <div class="table-responsive" style="max-height: 300px;">
-                                    <table class="table table-sm table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>Nama CCTV</th>
-                                                <th>No CCTV</th>
-                                                <th>Coverage Lokasi</th>
-                                                <th>Jarak</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${cctvList.map(cctv => `
-                                                <tr>
-                                                    <td>${cctv.name || 'N/A'}</td>
-                                                    <td>${cctv.no_cctv || 'N/A'}</td>
-                                                    <td>${cctv.coverage_lokasi || 'N/A'}</td>
-                                                    <td>${cctv.distance ? cctv.distance + ' m' : 'N/A'}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        ` : ''}
-
-                        ${pjaList.length > 0 ? `
-                            <div class="mb-3">
-                                <h6><i class="material-icons-outlined">assignment</i> PJA di Lokasi (${pjaCount})</h6>
-                                <div class="table-responsive" style="max-height: 300px;">
-                                    <table class="table table-sm table-hover">
-                                        <thead>
-                                            <tr>
-                                                <th>PJA ID</th>
-                                                <th>Nama PJA</th>
-                                                <th>Lokasi</th>
-                                                <th>Site</th>
-                                                <th>Type</th>
-                                                <th>Employee</th>
-                                            </tr>
-                                        </thead>
-                                        <tbody>
-                                            ${pjaList.map(pja => `
-                                                <tr>
-                                                    <td>${pja.pja_id || 'N/A'}</td>
-                                                    <td>${pja.nama_pja || 'N/A'}</td>
-                                                    <td>${pja.lokasi || pja.detail_lokasi || 'N/A'}</td>
-                                                    <td>${pja.site || 'N/A'}</td>
-                                                    <td><span class="badge bg-info">${pja.pja_type_name || 'N/A'}</span></td>
-                                                    <td>${pja.employee_name || pja.kode_sid || 'N/A'}</td>
-                                                </tr>
-                                            `).join('')}
-                                        </tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div class="modal-footer">
-                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
-                    </div>
-                </div>
-            </div>
-        `;
-
-        const modal = new bootstrap.Modal(modalElement);
-        modal.show();
-    };
 
     function showUnitVehiclePopup(coordinate, unit) {
         if (!unit) {
@@ -12122,7 +11773,8 @@
                 targetLayer = unitVehicleLayer;
                 break;
             case 'gps':
-                targetLayer = userGpsLayer;
+                // GPS layer removed - no longer used
+                targetLayer = null;
                 break;
         }
         
@@ -12723,7 +12375,7 @@
             filteredSidebarData.unit = [];
             console.log('Unit data is empty, will be loaded by refreshUnitVehicles()');
         }
-        // GPS data akan di-load oleh loadUserGpsData()
+        // GPS data removed - no longer used
         
         // Initialize Control Room data - group CCTV by control_room
         initializeControlRoomData();
@@ -12743,7 +12395,7 @@
         const sapCount = document.getElementById('sapTabCount');
         const insidenCount = document.getElementById('insidenTabCount');
         const unitCount = document.getElementById('unitTabCount');
-        const gpsCount = document.getElementById('gpsTabCount');
+        // GPS tab removed - no longer used
         const pjaCount = document.getElementById('pjaTabCount');
         
         // Update icon toolbar badges
@@ -12752,7 +12404,6 @@
             'sapTabCount': 'iconToolbarSapCount',
             'insidenTabCount': 'iconToolbarInsidenCount',
             'unitTabCount': 'iconToolbarUnitCount',
-            'gpsTabCount': 'iconToolbarGpsCount',
             'pjaTabCount': 'iconToolbarPjaCount',
             'controlroomTabCount': 'iconToolbarControlroomCount'
         };
@@ -12781,7 +12432,7 @@
         }
         if (insidenCount) insidenCount.textContent = filteredSidebarData.insiden.length;
         if (unitCount) unitCount.textContent = filteredSidebarData.unit.length;
-        if (gpsCount) gpsCount.textContent = filteredSidebarData.gps.length;
+        // GPS tab removed - no longer used
         const controlroomCount = document.getElementById('controlroomTabCount');
         if (controlroomCount) controlroomCount.textContent = filteredSidebarData.controlroom.length;
         if (pjaCount) pjaCount.textContent = filteredSidebarData.pja.length;
@@ -13512,348 +13163,6 @@
     // Check if user is admin (from backend)
     const isUserAdmin = @json(auth()->user() && (method_exists(auth()->user(), 'isAdmin') ? auth()->user()->isAdmin() : (isset(auth()->user()->role) && (auth()->user()->role === 'admin' || auth()->user()->role === 'administrator'))));
     
-    // Flag untuk mencegah load history berulang
-    let gpsHistoryLoaded = false;
-    
-    // Render GPS Orang list
-    function renderGpsList(data) {
-        const container = document.getElementById('gpsList');
-        if (!container) return;
-        
-        // Jika user bukan admin, tampilkan history lokasi (hanya sekali)
-        if (!isUserAdmin && !gpsHistoryLoaded) {
-            gpsHistoryLoaded = true;
-            loadUserGpsHistory();
-            return;
-        }
-        
-        if (!data || data.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="material-icons-outlined">person_pin</i>
-                    <p>Tidak ada data GPS Orang hari ini</p>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = data.map((user, index) => {
-            const name = user.fullname || user.npk || `User ${index + 1}`;
-            const npk = user.npk || '';
-            const position = user.functional_position || user.structural_position || '';
-            const department = user.department_name || user.division_name || '';
-            const firstLetter = getFirstLetter(name);
-            const avatarColor = getAvatarColor(firstLetter);
-            const timestamp = formatTimestamp(user.gps_updated_at || user.gps_created_at);
-            const battery = user.battery !== null && user.battery !== undefined ? user.battery : null;
-            const batteryColor = battery < 20 ? '#ef4444' : battery < 50 ? '#f59e0b' : '#10b981';
-            
-            return `
-                <div class="sidebar-list-item" data-type="gps" data-id="${user.user_id || user.id}" data-index="${index}">
-                    <div class="list-item-avatar" style="background-color: ${avatarColor};">
-                        ${firstLetter}
-                    </div>
-                    <div class="list-item-content">
-                        <div class="list-item-title">${name}</div>
-                        <div class="list-item-subtitle">
-                            ${npk ? `SID: ${npk}` : ''} 
-                            ${position ? `- ${position}` : ''}
-                            ${department ? ` (${department})` : ''}
-                        </div>
-                        <div style="display: flex; align-items: center; gap: 8px; margin-top: 4px; font-size: 11px; color: #6b7280;">
-                            ${battery !== null ? `
-                                <span style="display: flex; align-items: center; gap: 4px;">
-                                    <i class="material-icons-outlined" style="font-size: 14px;">battery_charging_full</i>
-                                    <span style="color: ${batteryColor};">${battery}%</span>
-                                </span>
-                            ` : ''}
-                            ${timestamp ? `<span>${timestamp}</span>` : ''}
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
-        // Add click handlers
-        container.querySelectorAll('.sidebar-list-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const userId = this.dataset.id;
-                const userData = data.find(u => (u.user_id || u.id) == userId);
-                if (userData) {
-                    // Highlight item di sidebar
-                    document.querySelectorAll('.sidebar-list-item').forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Jika punya koordinat, zoom ke lokasi
-                    if (userData.latitude && userData.longitude) {
-                        highlightAndZoomToLocation({ lat: userData.latitude, lng: userData.longitude }, 'gps', userData);
-                    }
-                }
-            });
-        });
-    }
-    
-    // Function to load user GPS history (for non-admin users)
-    function loadUserGpsHistory() {
-        const container = document.getElementById('gpsList');
-        if (!container) return;
-        
-        // Show loading state
-        container.innerHTML = `
-            <div class="empty-state">
-                <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
-                    <span class="visually-hidden">Loading...</span>
-                </div>
-                <p style="margin-top: 16px;">Memuat history lokasi...</p>
-            </div>
-        `;
-        
-        fetch('{{ route("maps.api.user-gps-history") }}?days=7')
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.history) {
-                    // Simpan history ke filteredSidebarData
-                    filteredSidebarData.gpsHistory = data.history;
-                    renderGpsHistoryList(data.history);
-                } else {
-                    container.innerHTML = `
-                        <div class="empty-state">
-                            <i class="material-icons-outlined">history</i>
-                            <p>Tidak ada history lokasi</p>
-                            ${data.error ? `<p style="font-size: 11px; color: #ef4444; margin-top: 8px;">${data.error}</p>` : ''}
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading GPS history:', error);
-                container.innerHTML = `
-                    <div class="empty-state">
-                        <i class="material-icons-outlined">error_outline</i>
-                        <p>Gagal memuat history lokasi</p>
-                        <p style="font-size: 11px; color: #ef4444; margin-top: 8px;">Silakan refresh halaman</p>
-                    </div>
-                `;
-            });
-    }
-    
-    // Function to render GPS history list with collapsible
-    function renderGpsHistoryList(history) {
-        const container = document.getElementById('gpsList');
-        if (!container) return;
-        
-        if (!history || history.length === 0) {
-            container.innerHTML = `
-                <div class="empty-state">
-                    <i class="material-icons-outlined">history</i>
-                    <p>Tidak ada history lokasi</p>
-                </div>
-            `;
-            return;
-        }
-        
-        container.innerHTML = history.map((location, index) => {
-            const visitCount = location.visit_count || 0;
-            const firstVisit = location.first_visit ? formatDateWIB(location.first_visit) : 'N/A';
-            const lastVisit = location.last_visit ? formatDateWIB(location.last_visit) : 'N/A';
-            const locationId = `history-loc-${index}`;
-            const detailId = `history-detail-${index}`;
-            
-            return `
-                <div class="sidebar-list-item history-location-item" data-location-key="${location.location_key}" data-index="${index}">
-                    <div class="d-flex align-items-start gap-2 w-100" style="cursor: pointer;" onclick="toggleHistoryDetail('${detailId}', '${locationId}')">
-                        <div class="list-item-avatar" style="background-color: #3b82f6; min-width: 40px; width: 40px; height: 40px;">
-                            <i class="material-icons-outlined" style="color: white; font-size: 20px;">location_on</i>
-                        </div>
-                        <div class="list-item-content flex-grow-1">
-                            <div class="list-item-title">Lokasi ${index + 1}</div>
-                            <div class="list-item-subtitle">
-                                Kunjungan: <strong>${visitCount}x</strong>
-                            </div>
-                            <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
-                                <div>Pertama: ${firstVisit.split(',')[0]}</div>
-                                <div>Terakhir: ${lastVisit.split(',')[0]}</div>
-                            </div>
-                        </div>
-                        <div class="d-flex align-items-center">
-                            <i class="material-icons-outlined history-toggle-icon" id="${locationId}" style="transition: transform 0.3s;">expand_more</i>
-                        </div>
-                    </div>
-                    <div class="history-detail-content" id="${detailId}" style="display: none; margin-top: 12px; padding-top: 12px; border-top: 1px solid #e5e7eb;">
-                        <div class="text-center py-2">
-                            <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
-                            <p class="mt-2 mb-0" style="font-size: 12px; color: #6b7280;">Memuat detail lokasi...</p>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }).join('');
-        
-        // Add click handler untuk zoom ke lokasi
-        container.querySelectorAll('.history-location-item').forEach(item => {
-            const locationData = history[parseInt(item.dataset.index)];
-            if (locationData && locationData.latitude && locationData.longitude) {
-                item.style.cursor = 'pointer';
-                item.addEventListener('click', function(e) {
-                    // Jangan trigger jika klik pada toggle icon atau detail content
-                    if (e.target.closest('.history-detail-content') || e.target.closest('.history-toggle-icon')) {
-                        return;
-                    }
-                    
-                    highlightAndZoomToLocation(
-                        { lat: locationData.latitude, lng: locationData.longitude }, 
-                        'gps', 
-                        locationData
-                    );
-                });
-            }
-        });
-    }
-    
-    // Function to toggle history detail
-    window.toggleHistoryDetail = function(detailId, iconId) {
-        const detailContent = document.getElementById(detailId);
-        const toggleIcon = document.getElementById(iconId);
-        
-        if (!detailContent || !toggleIcon) return;
-        
-        const isExpanded = detailContent.style.display !== 'none';
-        
-        if (isExpanded) {
-            // Collapse
-            detailContent.style.display = 'none';
-            toggleIcon.style.transform = 'rotate(0deg)';
-            toggleIcon.textContent = 'expand_more';
-        } else {
-            // Expand
-            detailContent.style.display = 'block';
-            toggleIcon.style.transform = 'rotate(180deg)';
-            toggleIcon.textContent = 'expand_less';
-            
-            // Load detail lokasi jika belum di-load
-            const locationItem = detailContent.closest('.history-location-item');
-            if (locationItem && !locationItem.dataset.detailLoaded) {
-                loadHistoryLocationDetail(locationItem, detailContent);
-            }
-        }
-    };
-    
-    // Function to load detail for a history location
-    function loadHistoryLocationDetail(locationItem, detailContainer) {
-        const locationIndex = locationItem.dataset.index;
-        const historyData = filteredSidebarData.gpsHistory || [];
-        const location = historyData[locationIndex];
-        
-        if (!location || !location.latitude || !location.longitude) {
-            detailContainer.innerHTML = `
-                <div class="text-center py-2">
-                    <p style="font-size: 12px; color: #ef4444;">Data lokasi tidak valid</p>
-                </div>
-            `;
-            return;
-        }
-        
-        // Load location details
-        fetch(`{{ route('maps.api.gps-user-location-details') }}?latitude=${location.latitude}&longitude=${location.longitude}${location.location_id ? '&location_id=' + location.location_id : ''}`)
-            .then(response => response.json())
-            .then(data => {
-                if (data.success && data.data) {
-                    const locationData = data.data;
-                    const workAreaName = locationData.work_area ? locationData.work_area.name : 'Tidak diketahui';
-                    const sapCount = locationData.sap_count || 0;
-                    const sapOpenCount = locationData.sap_open_count || 0;
-                    const cctvCount = locationData.cctv_count || 0;
-                    const pjaCount = locationData.pja_count || 0;
-                    
-                    // Get visit details
-                    const visits = location.visits || [];
-                    const visitList = visits.slice(0, 10).map(visit => {
-                        const visitDate = visit.date ? formatDateWIB(visit.date) : 'N/A';
-                        return `
-                            <div style="padding: 8px; border-bottom: 1px solid #f3f4f6; font-size: 12px;">
-                                <div style="display: flex; justify-content: space-between;">
-                                    <span>${visitDate.split(',')[0]}</span>
-                                    <span style="color: #6b7280;">${visitDate.split(',')[1] || ''}</span>
-                                </div>
-                            </div>
-                        `;
-                    }).join('');
-                    
-                    detailContainer.innerHTML = `
-                        <div style="background-color: #f9fafb; padding: 12px; border-radius: 6px; margin-bottom: 12px;">
-                            <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600;">
-                                <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">location_on</i>
-                                Area Kerja: ${workAreaName}
-                            </p>
-                            <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 12px;">
-                                <div>
-                                    <span style="color: #6b7280;">SAP:</span>
-                                    <strong style="color: #ef4444;">${sapCount}</strong>
-                                </div>
-                                <div>
-                                    <span style="color: #6b7280;">SAP Open:</span>
-                                    <strong style="color: #dc2626;">${sapOpenCount}</strong>
-                                </div>
-                                <div>
-                                    <span style="color: #6b7280;">CCTV:</span>
-                                    <strong style="color: #3b82f6;">${cctvCount}</strong>
-                                </div>
-                                <div>
-                                    <span style="color: #6b7280;">PJA:</span>
-                                    <strong style="color: #8b5cf6;">${pjaCount}</strong>
-                                </div>
-                            </div>
-                        </div>
-                        
-                        <div style="margin-bottom: 12px;">
-                            <p style="margin: 0 0 8px 0; font-size: 13px; font-weight: 600;">
-                                <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">schedule</i>
-                                Riwayat Kunjungan (${visits.length})
-                            </p>
-                            <div style="max-height: 200px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
-                                ${visitList || '<div style="padding: 12px; text-align: center; color: #6b7280; font-size: 12px;">Tidak ada data kunjungan</div>'}
-                            </div>
-                        </div>
-                        
-                        <button class="btn btn-sm btn-primary w-100" onclick="showHistoryLocationDetailModal(${JSON.stringify(location).replace(/"/g, '&quot;')}, ${JSON.stringify(locationData).replace(/"/g, '&quot;')})">
-                            <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">info</i>
-                            Lihat Detail Lengkap
-                        </button>
-                    `;
-                    
-                    locationItem.dataset.detailLoaded = 'true';
-                } else {
-                    detailContainer.innerHTML = `
-                        <div class="text-center py-2">
-                            <p style="font-size: 12px; color: #ef4444;">Gagal memuat detail lokasi</p>
-                        </div>
-                    `;
-                }
-            })
-            .catch(error => {
-                console.error('Error loading location detail:', error);
-                detailContainer.innerHTML = `
-                    <div class="text-center py-2">
-                        <p style="font-size: 12px; color: #ef4444;">Error: ${error.message}</p>
-                    </div>
-                `;
-            });
-    }
-    
-    // Function to show history location detail modal
-    window.showHistoryLocationDetailModal = function(location, locationData) {
-        // Reuse the same modal function as current location
-        showGpsUserDetailModal(
-            {
-                fullname: location.visits && location.visits[0] ? location.visits[0].nama : 'History Lokasi',
-                latitude: location.latitude,
-                longitude: location.longitude
-            },
-            locationData
-        );
-    };
-    
     // Load PJA data from API
     function loadPjaData() {
         const container = document.getElementById('pjaList');
@@ -14204,7 +13513,7 @@
                 renderUnitList(filteredSidebarData.unit);
                 break;
             case 'gps':
-                renderGpsList(filteredSidebarData.gps);
+                // GPS functionality removed - no longer used
                 break;
             case 'controlroom':
                 renderControlRoomList(filteredSidebarData.controlroom);
@@ -14265,8 +13574,7 @@
             filteredSidebarData.sap = [...(sapData || [])];
             filteredSidebarData.insiden = [...(insidenDataset || [])];
             filteredSidebarData.unit = [...(unitVehicles || [])];
-            // GPS data akan di-reset oleh loadUserGpsData() jika perlu
-            // Jangan reset GPS data jika sudah ada, biarkan dari loadUserGpsData()
+            // GPS data removed - no longer used
             // Reset Control Room data ke original jika sudah ada
             if (originalControlRoomData && originalControlRoomData.length > 0) {
                 filteredSidebarData.controlroom = JSON.parse(JSON.stringify(originalControlRoomData));
@@ -14322,16 +13630,7 @@
                 });
             }
             
-            // Filter GPS data berdasarkan search term
-            if (filteredSidebarData.gps && filteredSidebarData.gps.length > 0) {
-                filteredSidebarData.gps = filteredSidebarData.gps.filter(user => {
-                    const fullname = (user.fullname || '').toLowerCase();
-                    const npk = (user.npk || '').toLowerCase();
-                    const department = (user.department_name || user.division_name || '').toLowerCase();
-                    const position = ((user.functional_position || '') + ' ' + (user.structural_position || '')).toLowerCase();
-                    return fullname.includes(term) || npk.includes(term) || department.includes(term) || position.includes(term);
-                });
-            }
+            // GPS data filtering removed - no longer used
             
             // Filter PJA data berdasarkan search term
             if (originalPjaData && originalPjaData.length > 0) {
@@ -14821,412 +14120,8 @@
     }
 
     // ============================================
-    // Employee Location Monitoring & Telegram Notification
-    // ============================================
-    
-    // Cache untuk menyimpan lokasi user sebelumnya
-    let employeeLocationCache = {};
-    let monitoringInterval = null;
-    let isMonitoringActive = false;
-    
-    /**
-     * Function to find location from user coordinates
-     * Mencari lokasi area kerja berdasarkan koordinat latitude/longitude
-     */
-    function findLocationFromCoordinates(latitude, longitude) {
-        if (!latitude || !longitude || !window.areaKerjaLayers) {
-            return null;
-        }
-        
-        // Convert to number (handle comma as decimal separator)
-        const lat = parseFloat(String(latitude).replace(',', '.'));
-        const lng = parseFloat(String(longitude).replace(',', '.'));
-        
-        if (isNaN(lat) || isNaN(lng)) {
-            return null;
-        }
-        
-        // Iterate through all area kerja layers
-        for (const layer of window.areaKerjaLayers) {
-            if (!layer.getVisible()) continue;
-            
-            const source = layer.getSource();
-            if (!source) continue;
-            
-            const features = source.getFeatures();
-            
-            for (const feature of features) {
-                const geometry = feature.getGeometry();
-                if (!geometry) continue;
-                
-                // Check if coordinate is inside this geometry
-                if (isCoordinateInGeometry(lat, lng, geometry)) {
-                    const props = feature.getProperties();
-                    return {
-                        id_lokasi: props.id_lokasi || null,
-                        lokasi: props.lokasi || '',
-                        site: props.site || '',
-                        perusahaan: props.perusahaan || '',
-                        area_kerja: props.area_kerja || '',
-                        luasan: props.luasan || 0,
-                        geometry: geometry // Keep geometry for further checks
-                    };
-                }
-            }
-        }
-        
-        return null; // No location found
-    }
-    
-    /**
-     * Function to check if should send periodic notification
-     * Mengirim notifikasi periodik setiap 5 menit jika user masih di area yang sama
-     */
-    function shouldSendPeriodicNotification(employeeId) {
-        const cached = employeeLocationCache[employeeId];
-        if (!cached) return false;
-        
-        const now = new Date();
-        const lastNotification = new Date(cached.lastNotificationTime || 0);
-        const minutesDiff = (now - lastNotification) / (1000 * 60);
-        
-        // Send notification every 5 minutes if user is still in the same area
-        return minutesDiff >= 5;
-    }
-    
-    /**
-     * Function to send Telegram notification
-     * Mengirim notifikasi Telegram dengan informasi lokasi, SAP, CCTV, dan PJ
-     */
-    async function sendTelegramNotification(employee, location) {
-        try {
-            console.log(`[Telegram] Preparing notification for ${employee.nama || employee.kode_sid} at ${location.lokasi}`);
-            
-            // Get CSRF token
-            const csrfToken = document.querySelector('meta[name="csrf-token"]')?.content || '{{ csrf_token() }}';
-            
-            // Get location details (SAP count, CCTV count, PJ)
-            const summaryResponse = await fetch('{{ route("maps.api.evaluation-summary") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
-                    type: 'area_kerja',
-                    id_lokasi: location.id_lokasi,
-                    lokasi_name: location.lokasi
-                })
-            });
-            
-            const summaryData = await summaryResponse.json();
-            const summary = summaryData.data || summaryData;
-            
-            // Calculate total SAP
-            const inspeksiCount = summary.inspeksi_count || 0;
-            const hazardCount = summary.hazard_count || 0;
-            const inspeksiHazardCount = inspeksiCount + hazardCount; // Gabungkan Inspeksi dan Hazard
-            const inspeksiHazardOpenCount = (summary.inspeksi_open_count || 0) + (summary.hazard_open_count || 0);
-            const coachingCount = summary.coaching_count || 0;
-            const coachingOpenCount = summary.coaching_open_count || 0;
-            const observasiCount = summary.observasi_count || 0;
-            const observasiOpenCount = summary.observasi_open_count || 0;
-            const observasiAreaKritisCount = summary.observasi_area_kritis_count || 0;
-            const observasiAreaKritisOpenCount = summary.observasi_area_kritis_open_count || 0;
-            const totalSap = inspeksiHazardCount + coachingCount + observasiCount;
-            
-            // Get detail lists
-            const inspeksiHazardList = summary.inspeksi_hazard_list || [];
-            const coachingList = summary.coaching_list || [];
-            const observasiList = summary.observasi_list || [];
-            const observasiAreaKritisList = summary.observasi_area_kritis_list || [];
-            
-            // Format message dengan HTML untuk tampilan card-like yang lebih menarik
-            const lokasiName = location.lokasi || 'Area Kerja';
-            const perusahaan = location.perusahaan || employee.nama_perusahaan || 'N/A';
-            const site = location.site || 'N/A';
-            const areaKerja = location.area_kerja || location.lokasi || 'N/A'; // Use lokasi if area_kerja is empty
-            const cctvCount = summary.cctv_list ? summary.cctv_list.length : 0;
-            const waktu = new Date().toLocaleString('id-ID', { 
-                timeZone: 'Asia/Makassar',
-                day: '2-digit',
-                month: '2-digit',
-                year: 'numeric',
-                hour: '2-digit',
-                minute: '2-digit',
-                second: '2-digit'
-            });
-            const deviceInfo = employee.device_info ? employee.device_info.split('\n')[0].substring(0, 50) + '...' : 'N/A';
-            
-            // Function to create progress bar visualization
-            const createProgressBar = (value, max, length = 10) => {
-                if (max === 0) return '▱'.repeat(length);
-                const filled = Math.round((value / max) * length);
-                const empty = length - filled;
-                return '▰'.repeat(filled) + '▱'.repeat(empty);
-            };
-            
-            // Calculate max value for progress bars (gunakan inspeksiHazardCount yang sudah digabung)
-            const maxSap = Math.max(inspeksiHazardCount, coachingCount, observasiCount, 1);
-            
-            // Format dengan HTML untuk tampilan card-like yang lebih menarik
-            const message = `🔷 <b>USER DI AREA KERJA</b> 🔷
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-👤 <b>INFORMASI USER</b>
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-<b>Nama:</b> ${employee.nama || employee.kode_sid || 'Unknown'}
-<b>Kode SID:</b> <code>${employee.kode_sid || 'N/A'}</code>
-<b>Perusahaan:</b> ${perusahaan}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📍 <b>INFORMASI LOKASI</b>
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-<b>Lokasi:</b> ${lokasiName}
-<b>Site:</b> ${site}
-<b>Area Kerja:</b> ${areaKerja}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📊 <b>STATISTIK AREA</b>
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-
-📈 <b>TOTAL SAP:</b> <b>${totalSap.toLocaleString('id-ID')}</b>
-
-<b>📋 Detail SAP:</b>
-
-🔍⚠️ <b>Inspeksi & Hazard:</b> <b>${inspeksiHazardCount.toLocaleString('id-ID')}</b> | <b>Open:</b> ${inspeksiHazardOpenCount.toLocaleString('id-ID')}
-   ${createProgressBar(inspeksiHazardCount, maxSap)} ${inspeksiHazardCount > 0 ? Math.round((inspeksiHazardCount / maxSap) * 100) : 0}%
-${inspeksiHazardList.length > 0 ? '\n   <b>📝 Top 5:</b>\n' + inspeksiHazardList.slice(0, 5).map((item, idx) => {
-   const nomor = (item.nomor_laporan || 'N/A').toString();
-   const status = (item.status || 'N/A').toString();
-   return `   ${idx + 1}. <code>${nomor.length > 20 ? nomor.substring(0, 20) + '...' : nomor}</code> [${status}]`;
-}).join('\n') : '   <i>Tidak ada data</i>'}
-
-💬 <b>Coaching:</b> <b>${coachingCount.toLocaleString('id-ID')}</b> | <b>Open:</b> ${coachingOpenCount.toLocaleString('id-ID')}
-   ${createProgressBar(coachingCount, maxSap)} ${coachingCount > 0 ? Math.round((coachingCount / maxSap) * 100) : 0}%
-${coachingList.length > 0 ? '\n   <b>📝 Top 5:</b>\n' + coachingList.slice(0, 5).map((item, idx) => {
-   const nomor = (item.nomor_laporan || 'N/A').toString();
-   const status = (item.status || 'N/A').toString();
-   return `   ${idx + 1}. <code>${nomor.length > 20 ? nomor.substring(0, 20) + '...' : nomor}</code> [${status}]`;
-}).join('\n') : '   <i>Tidak ada data</i>'}
-
-👁️ <b>Observasi:</b> <b>${observasiCount.toLocaleString('id-ID')}</b> | <b>Open:</b> ${observasiOpenCount.toLocaleString('id-ID')}
-   ${createProgressBar(observasiCount, maxSap)} ${observasiCount > 0 ? Math.round((observasiCount / maxSap) * 100) : 0}%
-${observasiList.length > 0 ? '\n   <b>📝 Top 5:</b>\n' + observasiList.slice(0, 5).map((item, idx) => {
-   const nomor = (item.nomor_laporan || 'N/A').toString();
-   const status = (item.status || 'N/A').toString();
-   return `   ${idx + 1}. <code>${nomor.length > 20 ? nomor.substring(0, 20) + '...' : nomor}</code> [${status}]`;
-}).join('\n') : '   <i>Tidak ada data</i>'}
-
-⚠️ <b>Observasi Area Kritis:</b> <b>${observasiAreaKritisCount.toLocaleString('id-ID')}</b> | <b>Open:</b> ${observasiAreaKritisOpenCount.toLocaleString('id-ID')}
-${observasiAreaKritisList.length > 0 ? '\n   <b>📝 Top 5:</b>\n' + observasiAreaKritisList.slice(0, 5).map((item, idx) => {
-   const nomor = (item.nomor_laporan || 'N/A').toString();
-   const status = (item.status || 'N/A').toString();
-   return `   ${idx + 1}. <code>${nomor.length > 20 ? nomor.substring(0, 20) + '...' : nomor}</code> [${status}]`;
-}).join('\n') : '   <i>Tidak ada data</i>'}
-
-─────────────────────────────
-
-📹 <b>CCTV Coverage:</b> <b>${cctvCount.toLocaleString('id-ID')}</b> unit <i>(di lokasi ini)</i>
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🕐 <b>Waktu:</b> ${waktu}
-📱 <b>Device:</b> <code>${deviceInfo}</code>`;
-            
-            // Send to Telegram (csrfToken already declared above)
-            const telegramResponse = await fetch('{{ route("maps.api.send-telegram") }}', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-TOKEN': csrfToken
-                },
-                body: JSON.stringify({
-                    chat_id: '{{ config("services.telegram.chat_id") }}', // Use default chat_id from config
-                    message: message,
-                    parse_mode: 'HTML' // Use HTML for better formatting
-                })
-            });
-            
-            // Check if response is OK
-            if (!telegramResponse.ok) {
-                const errorText = await telegramResponse.text();
-                console.error(`[Telegram] ✗ HTTP Error ${telegramResponse.status}:`, errorText);
-                return false;
-            }
-            
-            const telegramResult = await telegramResponse.json();
-            
-            if (telegramResult.success) {
-                console.log(`[Telegram] ✓ Notification sent successfully for ${employee.nama || employee.kode_sid}`);
-                return true;
-            } else {
-                console.error(`[Telegram] ✗ Failed to send notification:`, telegramResult.error || telegramResult.message);
-                return false;
-            }
-            
-        } catch (error) {
-            console.error('[Telegram] Error sending notification:', error);
-            // If error is JSON parse error, log the response
-            if (error.message && error.message.includes('JSON')) {
-                console.error('[Telegram] Response was not valid JSON. Check server error logs.');
-            }
-            return false;
-        }
-    }
-    
-    /**
-     * Function to monitor employees and send Telegram notifications
-     * Memonitor lokasi employee dan mengirim notifikasi ketika masuk area kerja
-     */
-    async function monitorEmployeesAndNotify() {
-        if (!isMonitoringActive) {
-            return;
-        }
-        
-        try {
-            // Get employee location data
-            const response = await fetch('{{ route("maps.api.employee-location") }}?limit=1000');
-            const data = await response.json();
-            
-            if (!data.success || !data.employees || data.employees.length === 0) {
-                console.log('[Monitor] No employee location data available');
-                return;
-            }
-            
-            console.log(`[Monitor] Checking ${data.employees.length} employees...`);
-            
-            // Check if area kerja layers are loaded
-            if (!window.areaKerjaLayers || window.areaKerjaLayers.length === 0) {
-                console.log('[Monitor] Area kerja layers not loaded yet, waiting...');
-                return;
-            }
-            
-            const employees = data.employees;
-            let notificationCount = 0;
-            
-            for (const employee of employees) {
-                const employeeId = employee.employee_id || employee.id;
-                const lat = employee.latitude;
-                const lng = employee.longitude;
-                
-                if (!employeeId || !lat || !lng) continue;
-                
-                // Find location from coordinates
-                const location = findLocationFromCoordinates(lat, lng);
-                
-                if (!location) {
-                    // Employee is outside any work area
-                    if (employeeLocationCache[employeeId]) {
-                        // Employee left an area, clear cache
-                        console.log(`[Monitor] ${employee.nama || employee.kode_sid} left work area`);
-                        delete employeeLocationCache[employeeId];
-                    }
-                    continue;
-                }
-                
-                // Check if employee is in a new location or same location
-                const previousLocation = employeeLocationCache[employeeId];
-                const isNewLocation = !previousLocation || 
-                                     (previousLocation.id_lokasi !== location.id_lokasi);
-                
-                // Update cache
-                const now = new Date();
-                employeeLocationCache[employeeId] = {
-                    ...location,
-                    employee: employee,
-                    timestamp: now,
-                    lastNotificationTime: previousLocation?.lastNotificationTime || null
-                };
-                
-                // Send notification if new location or periodic check
-                if (isNewLocation) {
-                    console.log(`[Monitor] ${employee.nama || employee.kode_sid} entered new area: ${location.lokasi}`);
-                    const sent = await sendTelegramNotification(employee, location);
-                    if (sent) {
-                        employeeLocationCache[employeeId].lastNotificationTime = now;
-                        notificationCount++;
-                    }
-                } else if (shouldSendPeriodicNotification(employeeId)) {
-                    console.log(`[Monitor] ${employee.nama || employee.kode_sid} periodic notification for: ${location.lokasi}`);
-                    const sent = await sendTelegramNotification(employee, location);
-                    if (sent) {
-                        employeeLocationCache[employeeId].lastNotificationTime = now;
-                        notificationCount++;
-                    }
-                }
-            }
-            
-            if (notificationCount > 0) {
-                console.log(`[Monitor] ✓ Sent ${notificationCount} notifications`);
-            }
-            
-        } catch (error) {
-            console.error('[Monitor] Error monitoring employees:', error);
-        }
-    }
-    
-    /**
-     * Start monitoring employees
-     * Memulai monitoring lokasi employee dengan interval tertentu
-     */
-    function startEmployeeMonitoring(intervalSeconds = 30) {
-        if (monitoringInterval) {
-            console.log('[Monitor] Monitoring already active');
-            return;
-        }
-        
-        isMonitoringActive = true;
-        console.log(`[Monitor] Starting employee monitoring (interval: ${intervalSeconds}s)`);
-        
-        // Run immediately
-        monitorEmployeesAndNotify();
-        
-        // Then run at interval
-        monitoringInterval = setInterval(() => {
-            monitorEmployeesAndNotify();
-        }, intervalSeconds * 1000);
-    }
-    
-    /**
-     * Stop monitoring employees
-     */
-    function stopEmployeeMonitoring() {
-        if (monitoringInterval) {
-            clearInterval(monitoringInterval);
-            monitoringInterval = null;
-            isMonitoringActive = false;
-            console.log('[Monitor] Employee monitoring stopped');
-        }
-    }
-    
-    // Auto-start monitoring after area layers are loaded
-    // Wait for area layers to be loaded before starting monitoring
-    let monitoringStartAttempts = 0;
-    const maxMonitoringStartAttempts = 30; // Try for 30 seconds
-    
-    function tryStartMonitoring() {
-        if (window.areaKerjaLayers && window.areaKerjaLayers.length > 0) {
-            // Layers are loaded, start monitoring
-            startEmployeeMonitoring(30); // Check every 30 seconds
-        } else {
-            monitoringStartAttempts++;
-            if (monitoringStartAttempts < maxMonitoringStartAttempts) {
-                // Retry after 1 second
-                setTimeout(tryStartMonitoring, 1000);
-            } else {
-                console.warn('[Monitor] Area kerja layers not loaded after 30 seconds, monitoring not started');
-            }
-        }
-    }
-    
-    // Start trying to start monitoring after page load
-    if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', () => {
-            setTimeout(tryStartMonitoring, 5000); // Wait 5 seconds after DOM ready
-        });
-    } else {
-        setTimeout(tryStartMonitoring, 5000); // Wait 5 seconds
-    }
+    // Employee Location Monitoring & Telegram Notification - REMOVED (no longer used)
+    // All functions related to employee location monitoring have been removed
     
     // Charts menggunakan script dari template index.js
     // Script chart akan di-load dari build/js/index.js

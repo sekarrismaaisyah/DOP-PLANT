@@ -126,6 +126,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('cctv-data-control-room/data', [CctvDataController::class, 'getControlRoomData'])->name('cctv-data.control-room.data');
     Route::post('cctv-data-control-room/pengawas', [CctvDataController::class, 'storePengawasControlRoom'])->name('cctv-data.control-room.pengawas.store');
     Route::get('cctv-data-control-room/pengawas/{controlRoom}', [CctvDataController::class, 'getPengawasControlRoom'])->name('cctv-data.control-room.pengawas.get');
+    Route::get('cctv-data-control-room/users', [CctvDataController::class, 'getUsersFromClickHouse'])->name('cctv-data.control-room.users.get');
+    Route::post('cctv-data-control-room/intervensi', [CctvDataController::class, 'storeIntervensiControlRoom'])->name('cctv-data.control-room.intervensi.store');
+    Route::get('cctv-data-control-room/intervensi', [CctvDataController::class, 'indexIntervensiControlRoom'])->name('cctv-data.intervensi-control-room.index');
+    Route::get('cctv-data-control-room/intervensi/data', [CctvDataController::class, 'getIntervensiControlRoomData'])->name('cctv-data.intervensi-control-room.data');
+    Route::put('cctv-data-control-room/intervensi/{id}/status', [CctvDataController::class, 'updateIntervensiStatus'])->name('cctv-data.intervensi-control-room.status.update');
     Route::delete('cctv-data-control-room/pengawas/{id}', [CctvDataController::class, 'deletePengawasControlRoom'])->name('cctv-data.control-room.pengawas.delete');
     Route::get('cctv-data-pja-cctv-import', [CctvDataController::class, 'importPjaCctvForm'])->name('cctv-data.import-pja-cctv-form');
     Route::post('cctv-data-pja-cctv-import', [CctvDataController::class, 'importPjaCctv'])->name('cctv-data.import-pja-cctv');
@@ -174,6 +179,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/api/company-cctv-data', [HazardDetectionController::class, 'getCompanyCctvData'])->name('api.company-cctv-data');
         Route::get('/api/company-overview', [HazardDetectionController::class, 'getCompanyOverview'])->name('api.company-overview');
         Route::get('/api/cctv-chart-stats', [HazardDetectionController::class, 'getCctvChartStats'])->name('api.cctv-chart-stats');
+        Route::get('/api/control-room-overview', [MapBaseController::class, 'getControlRoomOverview'])->name('api.control-room-overview');
         Route::get('/api/sites-list', [HazardDetectionController::class, 'getSitesList'])->name('api.sites-list');
         Route::get('/api/check-new-apd-detections', [HazardDetectionController::class, 'checkNewApdDetections'])->name('api.check-new-apd-detections');
         Route::get('/api/tasklist-detail', [HazardDetectionController::class, 'getTasklistDetail'])->name('api.tasklist-detail');
@@ -203,6 +209,8 @@ Route::middleware(['auth'])->group(function () {
          Route::get('/api/user-gps-history', [MapBaseController::class, 'getUserGpsHistory'])->name('api.user-gps-history');
          Route::get('/api/unit-vehicles', [MapBaseController::class, 'getUnitVehicles'])->name('api.unit-vehicles');
          Route::get('/api/pja-data', [MapBaseController::class, 'getPjaData'])->name('api.pja-data');
+         Route::get('/api/kesiapan-orang-data', [MapBaseController::class, 'getKesiapanOrangData'])->name('api.kesiapan-orang-data');
+         Route::get('/api/area-kerja-data', [MapBaseController::class, 'getAreaKerjaData'])->name('api.area-kerja-data');
          Route::post('/api/evaluation-summary', [MapBaseController::class, 'getEvaluationSummary'])->name('api.evaluation-summary');
          Route::post('/api/send-telegram', [MapBaseController::class, 'sendTelegramNotification'])->name('api.send-telegram');
     });
