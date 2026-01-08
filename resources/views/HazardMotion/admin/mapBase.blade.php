@@ -766,6 +766,191 @@
         height: 8px;
     }
     
+    /* PJA Item Styles - menggunakan struktur sama dengan CCTV */
+    .sidebar-list-item[data-type="pja"] {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+        overflow: hidden;
+        position: relative;
+        border-radius: 8px;
+        margin-bottom: 8px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-list-item[data-type="pja"]:hover {
+        border-color: #c4b5fd;
+        box-shadow: 0 2px 8px rgba(139, 92, 246, 0.1);
+    }
+    
+    .sidebar-list-item[data-type="pja"].expanded {
+        border-color: #8b5cf6;
+        box-shadow: 0 4px 12px rgba(139, 92, 246, 0.2);
+    }
+    
+    .sidebar-list-item[data-type="pja"] .sidebar-list-item-header {
+        padding: 12px;
+        transition: background-color 0.2s ease;
+        display: flex;
+        align-items: center;
+    }
+    
+    .sidebar-list-item[data-type="pja"]:hover .sidebar-list-item-header {
+        background-color: transparent;
+    }
+    
+    .sidebar-list-item[data-type="pja"]:hover .list-item-expand-icon {
+        background-color: rgba(139, 92, 246, 0.1);
+        color: #8b5cf6;
+    }
+    
+    .sidebar-list-item[data-type="pja"].expanded .list-item-expand-icon {
+        transform: rotate(180deg);
+        background-color: rgba(139, 92, 246, 0.15);
+        color: #8b5cf6;
+    }
+    
+    .pja-detail-section {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+        padding: 0 12px;
+        background: #fafbfc;
+        border-top: 1px solid #e5e7eb;
+    }
+    
+    .sidebar-list-item[data-type="pja"].expanded .pja-detail-section {
+        max-height: 2000px;
+        padding: 16px 12px;
+    }
+    
+    .pja-detail-loading {
+        text-align: center;
+        padding: 24px 20px;
+        color: #6b7280;
+        font-size: 12px;
+    }
+    
+    .pja-detail-loading i {
+        animation: spin 1s linear infinite;
+    }
+    
+    .pja-detail-error {
+        padding: 12px;
+        background: #fef2f2;
+        border: 1px solid #fecaca;
+        border-radius: 6px;
+        color: #991b1b;
+        font-size: 12px;
+        margin-bottom: 12px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+    }
+    
+    .pja-detail-group {
+        margin-bottom: 20px;
+    }
+    
+    .pja-detail-group:last-child {
+        margin-bottom: 0;
+    }
+    
+    .pja-detail-group-title {
+        font-size: 13px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 10px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding-bottom: 6px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+    
+    .pja-detail-group-title i {
+        font-size: 18px;
+        color: #8b5cf6;
+    }
+    
+    .pja-employee-item {
+        padding: 10px 12px;
+        background: #ffffff;
+        border-radius: 6px;
+        margin-bottom: 8px;
+        border-left: 4px solid #8b5cf6;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+    }
+    
+    .pja-employee-item:hover {
+        transform: translateX(2px);
+        box-shadow: 0 2px 6px rgba(139, 92, 246, 0.15);
+    }
+    
+    .pja-employee-item:last-child {
+        margin-bottom: 0;
+    }
+    
+    .pja-employee-name {
+        font-size: 12px;
+        font-weight: 600;
+        color: #111827;
+        margin-bottom: 6px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+    
+    .pja-employee-name::before {
+        content: '👤';
+        font-size: 14px;
+    }
+    
+    .pja-employee-info {
+        font-size: 11px;
+        color: #6b7280;
+        line-height: 1.5;
+        margin-left: 20px;
+    }
+    
+    .pja-type-badge {
+        display: inline-block;
+    }
+    
+    /* Area Kerja Item Styles - menggunakan struktur sama dengan CCTV */
+    .sidebar-list-item[data-type="areakerja"] {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .sidebar-list-item[data-type="areakerja"].expanded {
+        border-color: #10b981;
+        box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+    }
+    
+    .sidebar-list-item[data-type="areakerja"]:hover .sidebar-list-item-header {
+        background-color: transparent;
+    }
+    
+    .sidebar-list-item[data-type="areakerja"]:hover .list-item-expand-icon {
+        background-color: rgba(16, 185, 129, 0.1);
+        color: #10b981;
+    }
+    
+    .sidebar-list-item[data-type="areakerja"].expanded .list-item-expand-icon {
+        transform: rotate(180deg);
+        background-color: rgba(16, 185, 129, 0.15);
+        color: #10b981;
+    }
+    
+    
+    
     .list-item-expand-icon {
         margin-left: auto;
         color: #6b7280;
@@ -989,6 +1174,21 @@
     .cctv-hazard-stat-count {
         font-size: 11px;
         color: #92400e;
+        margin-top: 4px;
+        padding: 4px 8px;
+        background: #fef3c7;
+        border-radius: 4px;
+        display: inline-block;
+        font-weight: 600;
+    }
+    
+    .cctv-no-data {
+        padding: 12px;
+        text-align: center;
+        color: #9ca3af;
+        font-size: 12px;
+        font-style: italic;
+    }
         margin-top: 4px;
         padding: 4px 8px;
         background: #fef3c7;
@@ -2136,29 +2336,21 @@
                             <div class="card rounded-4 w-100">
                                 <div class="card-body">
                                     <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total Karyawan PJA">
-                                        <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">people</span>
-                                        </span>
-                                        <h3 class="mb-0" id="totalKaryawanPja">0</h3>
-                                        <p class="mb-0">Total Karyawan PJA</p>
-                                    </button>
-                                    <div class="vr"></div>
-                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Karyawan Aktif">
-                                        <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
-                                        <span class="material-icons-outlined">check_circle</span>
-                                        </span>
-                                        <h3 class="mb-0" id="karyawanAktif">0</h3>
-                                        <p class="mb-0">Karyawan Aktif</p>
-                                        <small class="text-muted">Status Aktif</small>
-                                    </button>
-                                    <div class="vr"></div>
                                     <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="PJA Aktif">
                                         <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
                                         <span class="material-icons-outlined">verified</span>
                                         </span>
                                         <h3 class="mb-0" id="pjaAktif">0</h3>
                                         <p class="mb-0">PJA Aktif</p>
+                                    </button>
+                                    <div class="vr"></div>
+                                    <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total Onsite">
+                                        <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
+                                        <span class="material-icons-outlined">person_pin_circle</span>
+                                        </span>
+                                        <h3 class="mb-0" id="totalOnsite">0</h3>
+                                        <p class="mb-0">Total Onsite</p>
+                                        <small class="text-muted">Hari Ini</small>
                                     </button>
                                     <div class="vr"></div>
                                     <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total CCTV Dedicated">
@@ -2199,10 +2391,10 @@
                                                     <th style="min-width: 100px;">Tipe PJA</th>
                                                     <th style="min-width: 150px;">Perusahaan</th>
                                                     <th style="min-width: 200px;">Nama Karyawan</th>
-                                                    <th style="min-width: 100px;">Status Karyawan</th>
-                                                    <th style="min-width: 100px;">Status PJA</th>
+                                                    <th style="min-width: 120px;">Onsite</th>
                                                     <th style="min-width: 120px;">PJA Layer</th>
                                                     <th style="min-width: 150px;">CCTV Dedicated</th>
+                                                    <th style="min-width: 120px;">Status PJA</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="tbodyKesiapanOrang">
@@ -2502,18 +2694,10 @@
                                     <li><a class="dropdown-item filter-option" href="javascript:;" data-value="__all__">Semua Perusahaan</a></li>
                                 </ul>
                             </div>
-                            <div class="btn-group position-static">
-                                <button type="button" class="btn btn-filter dropdown-toggle px-3" id="mainFilterSiteBtn" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">location_on</i>
-                                    <span id="mainFilterSiteText">Semua Site</span>
-                                </button>
-                                <ul class="dropdown-menu" id="mainFilterSiteDropdown" style="max-height: 300px; overflow-y: auto;">
-                                    <li><a class="dropdown-item filter-option" href="javascript:;" data-value="__all__">Semua Site</a></li>
-                                </ul>
-                            </div>
+                           
                         </div>
                         <!-- Layer Visibility Toggle Buttons -->
-                        <div class="btn-group position-static" role="group" aria-label="Layer visibility controls">
+                        <!-- <div class="btn-group position-static" role="group" aria-label="Layer visibility controls">
                             <button type="button" class="btn btn-filter px-3 layer-toggle-btn active" id="toggleCctv" data-layer="cctv" title="Toggle CCTV">
                                 <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">videocam</i>
                                 <span>CCTV</span>
@@ -2542,11 +2726,11 @@
                                 <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">assessment</i>
                                 <span>Evaluasi</span>
                             </button>
-                        </div>
-                        <button type="button" class="btn btn-filter px-3" id="btnResetMainFilter">
+                        </div> -->
+                        <!-- <button type="button" class="btn btn-filter px-3" id="btnResetMainFilter">
                             <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">refresh</i>
                             Reset
-                        </button>
+                        </button> -->
                     </div>
                 </div>
                 <div class="position-relative">
@@ -2601,6 +2785,11 @@
                                     <i class="material-icons-outlined">description</i>
                                     <span class="tab-label">PJA</span>
                                     <span class="tab-count" id="pjaTabCount">0</span>
+                                </button>
+                                <button class="sidebar-tab" data-tab="areakerja" title="Area Kerja">
+                                    <i class="material-icons-outlined">location_on</i>
+                                    <span class="tab-label">Area Kerja</span>
+                                    <span class="tab-count" id="areakerjaTabCount">0</span>
                                 </button>
                                 <button class="sidebar-tab" data-tab="evaluasi" title="Evaluasi">
                                     <i class="material-icons-outlined">assessment</i>
@@ -2663,6 +2852,11 @@
                                     <!-- PJA Tab Content -->
                                     <div class="tab-content" id="tabContentPja">
                                         <div class="sidebar-list" id="pjaList"></div>
+                                    </div>
+                                    
+                                    <!-- Area Kerja Tab Content -->
+                                    <div class="tab-content" id="tabContentAreakerja">
+                                        <div class="sidebar-list" id="areakerjaList"></div>
                                     </div>
                                     
                                     <!-- Evaluasi Tab Content -->
@@ -3224,7 +3418,8 @@
         unit: [],
         gps: [],
         controlroom: [],
-        pja: []
+        pja: [],
+        areakerja: []
     };
     
     // Store original Control Room data for filtering
@@ -13539,6 +13734,7 @@
         const gpsCount = document.getElementById('gpsTabCount');
         const controlroomCount = document.getElementById('controlroomTabCount');
         const pjaCount = document.getElementById('pjaTabCount');
+        const areakerjaCount = document.getElementById('areakerjaTabCount');
         
         if (cctvCount) cctvCount.textContent = filteredSidebarData.cctv.length;
         
@@ -13552,6 +13748,7 @@
         
         if (insidenCount) insidenCount.textContent = filteredSidebarData.insiden.length;
         if (unitCount) unitCount.textContent = filteredSidebarData.unit.length;
+        if (areakerjaCount) areakerjaCount.textContent = filteredSidebarData.areakerja.length;
         if (gpsCount) gpsCount.textContent = filteredSidebarData.gps.length;
         if (controlroomCount) controlroomCount.textContent = filteredSidebarData.controlroom.length;
         if (pjaCount) pjaCount.textContent = filteredSidebarData.pja.length;
@@ -14409,12 +14606,19 @@
         `;
         
         // Reset statistics
-        document.getElementById('totalKaryawanPja').textContent = '0';
-        document.getElementById('karyawanAktif').textContent = '0';
-        document.getElementById('pjaAktif').textContent = '0';
-        document.getElementById('totalCctvDedicated').textContent = '0';
-        document.getElementById('persentaseCctvDenganPja').textContent = '0%';
-        document.getElementById('detailCctvDenganPja').textContent = '0 dari 0 CCTV';
+        const karyawanAktifEl = document.getElementById('karyawanAktif');
+        const pjaAktifEl = document.getElementById('pjaAktif');
+        const totalOnsiteEl = document.getElementById('totalOnsite');
+        const totalCctvDedicatedEl = document.getElementById('totalCctvDedicated');
+        const persentaseCctvDenganPjaEl = document.getElementById('persentaseCctvDenganPja');
+        const detailCctvDenganPjaEl = document.getElementById('detailCctvDenganPja');
+        
+        if (karyawanAktifEl) karyawanAktifEl.textContent = '0';
+        if (pjaAktifEl) pjaAktifEl.textContent = '0';
+        if (totalOnsiteEl) totalOnsiteEl.textContent = '0';
+        if (totalCctvDedicatedEl) totalCctvDedicatedEl.textContent = '0';
+        if (persentaseCctvDenganPjaEl) persentaseCctvDenganPjaEl.textContent = '0%';
+        if (detailCctvDenganPjaEl) detailCctvDenganPjaEl.textContent = '0 dari 0 CCTV';
         
         fetch('{{ route("maps.api.kesiapan-orang-data") }}')
             .then(response => {
@@ -14427,29 +14631,36 @@
                 if (data.success && data.data) {
                     // Update statistics
                     if (data.statistics) {
-                        document.getElementById('totalKaryawanPja').textContent = data.statistics.total_karyawan || 0;
-                        document.getElementById('karyawanAktif').textContent = data.statistics.karyawan_aktif || 0;
-                        document.getElementById('pjaAktif').textContent = data.statistics.pja_aktif || 0;
-                        document.getElementById('totalCctvDedicated').textContent = data.statistics.total_cctv_dedicated || 0;
+                        const karyawanAktifEl = document.getElementById('karyawanAktif');
+                        const pjaAktifEl = document.getElementById('pjaAktif');
+                        const totalOnsiteEl = document.getElementById('totalOnsite');
+                        const totalCctvDedicatedEl = document.getElementById('totalCctvDedicated');
+                        const persentaseCctvDenganPjaEl = document.getElementById('persentaseCctvDenganPja');
+                        const detailCctvDenganPjaEl = document.getElementById('detailCctvDenganPja');
+                        
+                        if (karyawanAktifEl) karyawanAktifEl.textContent = data.statistics.karyawan_aktif || 0;
+                        if (pjaAktifEl) pjaAktifEl.textContent = data.statistics.pja_aktif || 0;
+                        if (totalOnsiteEl) totalOnsiteEl.textContent = data.statistics.total_onsite || 0;
+                        if (totalCctvDedicatedEl) totalCctvDedicatedEl.textContent = data.statistics.total_cctv_dedicated || 0;
                         
                         // Update persentase CCTV dengan PJA
                         const persentase = data.statistics.persentase_cctv_dengan_pja || 0;
                         const cctvDenganPja = data.statistics.cctv_dengan_pja || 0;
                         const totalCctv = data.statistics.total_cctv || 0;
-                        document.getElementById('persentaseCctvDenganPja').textContent = persentase.toFixed(2) + '%';
-                        document.getElementById('detailCctvDenganPja').textContent = cctvDenganPja + ' dari ' + totalCctv + ' CCTV';
+                        if (persentaseCctvDenganPjaEl) persentaseCctvDenganPjaEl.textContent = persentase.toFixed(2) + '%';
+                        if (detailCctvDenganPjaEl) detailCctvDenganPjaEl.textContent = cctvDenganPja + ' dari ' + totalCctv + ' CCTV';
                     }
                     
                     // Render table
                     renderKesiapanOrangTable(data.data.karyawan, data.data.cctv_dedicated);
                 } else {
                     tbody.innerHTML = `
-                        <tr>
-                            <td colspan="9" class="text-center text-muted py-4">
-                                <i class="material-icons-outlined">info</i>
-                                <p class="mb-0 mt-2">Tidak ada data kesiapan orang</p>
-                            </td>
-                        </tr>
+                    <tr>
+                        <td colspan="10" class="text-center text-muted py-4">
+                            <i class="material-icons-outlined">info</i>
+                            <p class="mb-0 mt-2">Tidak ada data kesiapan orang</p>
+                        </td>
+                    </tr>
                     `;
                 }
             })
@@ -14457,7 +14668,7 @@
                 console.error('Error loading kesiapan orang data:', error);
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="9" class="text-center text-danger py-4">
+                        <td colspan="10" class="text-center text-danger py-4">
                             <i class="material-icons-outlined">error_outline</i>
                             <p class="mb-0 mt-2">Gagal memuat data kesiapan orang</p>
                             <small style="color: #9ca3af;">${error.message}</small>
@@ -14497,8 +14708,29 @@
         }
         
         // Render table rows
+        // Filter out karyawan dengan status tidak aktif dan PJA dengan status tidak aktif
+        const filteredKaryawanData = karyawanData.filter(karyawan => {
+            const isKaryawanAktif = karyawan.status_karyawan == '1' || karyawan.status_karyawan == 1;
+            const isPjaAktif = karyawan.status_nama_pja == '1' || karyawan.status_nama_pja == 1;
+            // Hanya tampilkan jika karyawan aktif DAN PJA aktif
+            return isKaryawanAktif && isPjaAktif;
+        });
+        
+        // Check if no data after filtering
+        if (filteredKaryawanData.length === 0) {
+            tbody.innerHTML = `
+                <tr>
+                    <td colspan="9" class="text-center text-muted py-4">
+                        <i class="material-icons-outlined">info</i>
+                        <p class="mb-0 mt-2">Tidak ada data karyawan aktif dengan PJA aktif</p>
+                    </td>
+                </tr>
+            `;
+            return;
+        }
+        
         let html = '';
-        karyawanData.forEach(karyawan => {
+        filteredKaryawanData.forEach(karyawan => {
             const namaPja = karyawan.nama_pja || '';
             const cctvList = pjaToCctvMap[namaPja] || [];
             const cctvDisplay = cctvList.length > 0 ? cctvList.join(', ') : '-';
@@ -14511,6 +14743,30 @@
                 ? '<span class="badge bg-info">Aktif</span>' 
                 : '<span class="badge bg-secondary">Tidak Aktif</span>';
             
+            // Status Onsite
+            let statusOnsite = '<span class="badge bg-secondary">Tidak Onsite</span>';
+            if (karyawan.status_onsite) {
+                if (karyawan.status_onsite === 'ONSITE') {
+                    statusOnsite = '<span class="badge bg-success">Onsite</span>';
+                } else if (karyawan.status_onsite === 'SHIFT_1') {
+                    statusOnsite = '<span class="badge bg-primary">Onsite Shift 1</span>';
+                } else if (karyawan.status_onsite === 'SHIFT_2') {
+                    statusOnsite = '<span class="badge bg-warning text-dark">Onsite Shift 2</span>';
+                }
+            }
+            
+            // Status PJA Karyawan (Pass/Not Pass) - dari nitip.aaj_vw_checkinout_rfid (status_passed)
+            // 1 = Pass (status_passed = 'PASSED'), 0 = Not Pass (status_passed != 'PASSED' atau tidak ada data)
+            let statusPjaKaryawan = '<span class="badge bg-danger">Not Pass</span>'; // Default: Not Pass jika tidak ada data
+            if (karyawan.status_pja_karyawan !== null && karyawan.status_pja_karyawan !== undefined) {
+                const statusValue = parseInt(karyawan.status_pja_karyawan);
+                if (statusValue === 1) {
+                    statusPjaKaryawan = '<span class="badge bg-success">Pass</span>';
+                } else {
+                    statusPjaKaryawan = '<span class="badge bg-danger">Not Pass</span>';
+                }
+            }
+            
             html += `
                 <tr>
                     <td>${karyawan.kode_sid || '-'}</td>
@@ -14518,10 +14774,10 @@
                     <td>${karyawan.tipe_pja || '-'}</td>
                     <td>${karyawan.perusahaan || '-'}</td>
                     <td>${karyawan.nama_karyawan || '-'}</td>
-                    <td>${statusKaryawan}</td>
-                    <td>${statusPja}</td>
+                    <td>${statusOnsite}</td>
                     <td>${karyawan.pja_kategory_layer || '-'}</td>
                     <td>${cctvDisplay}</td>
+                    <td>${statusPjaKaryawan}</td>
                 </tr>
             `;
         });
@@ -14660,7 +14916,7 @@
         tbody.innerHTML = html;
     }
     
-    // Render PJA list
+    // Render PJA list - menggunakan struktur sama dengan CCTV
     function renderPjaList(data) {
         const container = document.getElementById('pjaList');
         if (!container) return;
@@ -14668,73 +14924,384 @@
         if (!data || data.length === 0) {
             container.innerHTML = `
                 <div class="empty-state">
-                    <i class="material-icons-outlined">description</i>
+                    <i class="material-icons-outlined">groups</i>
                     <p>Tidak ada data PJA</p>
                 </div>
             `;
             return;
         }
         
-        container.innerHTML = data.map((pja, index) => {
-            const namaPja = pja.nama_pja || `PJA ${pja.pja_id || index + 1}`;
-            const site = pja.site || '';
-            const lokasi = pja.lokasi || '';
-            const detailLokasi = pja.detail_lokasi || '';
-            const pjaType = pja.pja_type_name || '';
-            const pjaCategory = pja.pja_category_name || '';
-            const pjaLayer = pja.pja_layer || '';
-            const employeeName = pja.employee_name || '';
-            const nik = pja.nik || '';
-            const kodeSid = pja.kode_sid || '';
-            const kategoriPja = pja.kategori_pja || '';
+        container.innerHTML = data.map((pjaGroup, index) => {
+            const namaPja = pjaGroup.nama_pja || `PJA ${index + 1}`;
+            const employees = pjaGroup.employees || [];
+            const employeeCount = employees.length;
             const firstLetter = getFirstLetter(namaPja);
-            const avatarColor = '#8b5cf6'; // Purple untuk PJA
+            const avatarColor = getAvatarColor(firstLetter);
+            
+            // Count employees by type for subtitle
+            const mitraKerjaCount = employees.filter(emp => emp.tipe_pja && emp.tipe_pja.toLowerCase().includes('mitra kerja')).length;
+            const bcCount = employees.filter(emp => emp.tipe_pja && emp.tipe_pja.toLowerCase().includes('bc') && !emp.tipe_pja.toLowerCase().includes('mitra kerja')).length;
+            
+            // Build subtitle text
+            let subtitleText = `${employeeCount} Karyawan`;
+            if (mitraKerjaCount > 0 || bcCount > 0) {
+                const parts = [];
+                if (mitraKerjaCount > 0) parts.push(`${mitraKerjaCount} Mitra Kerja`);
+                if (bcCount > 0) parts.push(`${bcCount} BC`);
+                subtitleText += ` (${parts.join(', ')})`;
+            }
             
             return `
-                <div class="sidebar-list-item" data-type="pja" data-id="${pja.pja_id || index}" data-index="${index}">
-                    <div class="list-item-avatar" style="background-color: ${avatarColor};">
-                        ${firstLetter}
+                <div class="sidebar-list-item" data-type="pja" data-nama-pja="${escapeHtml(namaPja)}" data-index="${index}">
+                    <div class="sidebar-list-item-header">
+                        <div class="list-item-avatar" style="background-color: ${avatarColor};">
+                            ${firstLetter}
+                        </div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">${escapeHtml(namaPja)}</div>
+                            <div class="list-item-subtitle">${subtitleText}</div>
+                        </div>
+                        <i class="material-icons-outlined list-item-expand-icon">expand_more</i>
                     </div>
-                    <div class="list-item-content">
-                        <div class="list-item-title">${namaPja}</div>
-                        <div class="list-item-subtitle">
-                            ${site ? `Site: ${site}` : ''} 
-                            ${lokasi ? `- ${lokasi}` : ''}
-                            ${detailLokasi ? ` (${detailLokasi})` : ''}
+                    <div class="pja-detail-section">
+                        <div class="pja-detail-loading">
+                            <i class="material-icons-outlined" style="font-size: 24px; margin-bottom: 8px; opacity: 0.5;">hourglass_empty</i>
+                            <div>Memuat detail...</div>
                         </div>
-                        <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
-                            ${pjaType ? `<span>Type: ${pjaType}</span>` : ''}
-                            ${pjaCategory ? ` | Category: ${pjaCategory}` : ''}
-                            ${pjaLayer ? ` | Layer: ${pjaLayer}` : ''}
-                        </div>
-                        ${employeeName ? `
-                            <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">
-                                ${employeeName} ${nik ? `(${nik})` : ''} ${kodeSid ? `- ${kodeSid}` : ''}
-                            </div>
-                        ` : ''}
-                        ${kategoriPja ? `
-                            <div style="font-size: 11px; color: #6b7280; margin-top: 2px;">
-                                Kategori: ${kategoriPja}
-                            </div>
-                        ` : ''}
                     </div>
                 </div>
             `;
         }).join('');
         
-        // Add click handlers
+        // Add click handlers - toggle expand/collapse dan load details
         container.querySelectorAll('.sidebar-list-item').forEach(item => {
-            item.addEventListener('click', function() {
-                const pjaId = this.dataset.id;
-                const pjaData = data.find(p => (p.pja_id || p.id) == pjaId);
-                if (pjaData) {
-                    // Highlight item di sidebar
-                    document.querySelectorAll('.sidebar-list-item').forEach(i => i.classList.remove('active'));
-                    this.classList.add('active');
-                    this.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    
-                    // Log PJA data for debugging (can be extended to show modal or zoom to location)
-                    console.log('PJA Data:', pjaData);
+            item.addEventListener('click', function(e) {
+                // Prevent event bubbling untuk icon expand
+                if (e.target.classList.contains('list-item-expand-icon')) {
+                    e.stopPropagation();
+                }
+                
+                const namaPja = this.dataset.namaPja;
+                const pjaData = data.find(p => p.nama_pja === namaPja);
+                
+                // Toggle expanded state
+                const isExpanded = this.classList.contains('expanded');
+                
+                if (isExpanded) {
+                    // Collapse
+                    this.classList.remove('expanded');
+                } else {
+                    // Expand - load details
+                    this.classList.add('expanded');
+                    if (pjaData) {
+                        renderPjaDetails(pjaData, this);
+                    }
+                }
+                
+                // Highlight active item
+                document.querySelectorAll('.sidebar-list-item').forEach(i => {
+                    if (i !== this) i.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    }
+    
+    // Render PJA details (daftar karyawan)
+    function renderPjaDetails(pjaData, itemElement) {
+        const detailSection = itemElement.querySelector('.pja-detail-section');
+        if (!detailSection) return;
+        
+        // Check if already loaded
+        if (detailSection.dataset.loaded === 'true') {
+            return;
+        }
+        
+        const employees = pjaData.employees || [];
+        
+        if (employees.length === 0) {
+            detailSection.innerHTML = `
+                <div class="pja-detail-error">
+                    <i class="material-icons-outlined" style="font-size: 18px;">person_off</i>
+                    <span>Tidak ada karyawan</span>
+                </div>
+            `;
+            detailSection.dataset.loaded = 'true';
+            return;
+        }
+        
+        let html = '';
+        html += '<div class="pja-detail-group">';
+        html += '<div class="pja-detail-group-title"><i class="material-icons-outlined">people</i> <span>Daftar Karyawan</span></div>';
+        
+        employees.forEach((employee, empIndex) => {
+            const namaKaryawan = employee.nama_karyawan || 'N/A';
+            const kodeSid = employee.kode_sid || '';
+            const tipePja = employee.tipe_pja || '';
+            const peruashaan = employee.peruashaan || '';
+            const statusOnsite = employee.status_onsite || null;
+            const statusPass = employee.status_pass !== null && employee.status_pass !== undefined ? parseInt(employee.status_pass) : null;
+            
+            // Determine badge based on tipe_pja
+            let badgeText = '';
+            let badgeColor = '#6b7280';
+            if (tipePja && tipePja.toLowerCase().includes('mitra kerja')) {
+                badgeText = 'Mitra Kerja BC';
+                badgeColor = '#3b82f6';
+            } else if (tipePja && tipePja.toLowerCase().includes('bc')) {
+                badgeText = 'BC';
+                badgeColor = '#10b981';
+            } else if (tipePja) {
+                badgeText = tipePja;
+            }
+            
+            // Status Onsite
+            let statusOnsiteHtml = '';
+            if (statusOnsite) {
+                if (statusOnsite === 'SHIFT_1') {
+                    statusOnsiteHtml = '<span class="badge bg-primary" style="font-size: 9px; padding: 2px 6px; margin-left: 6px;">Onsite Shift 1</span>';
+                } else if (statusOnsite === 'SHIFT_2') {
+                    statusOnsiteHtml = '<span class="badge bg-warning text-dark" style="font-size: 9px; padding: 2px 6px; margin-left: 6px;">Onsite Shift 2</span>';
+                }
+            } else {
+                statusOnsiteHtml = '<span class="badge bg-secondary" style="font-size: 9px; padding: 2px 6px; margin-left: 6px;">Tidak Onsite</span>';
+            }
+            
+            // Status Pass/Not Pass
+            let statusPassHtml = '';
+            if (statusPass !== null) {
+                if (statusPass === 1) {
+                    statusPassHtml = '<span class="badge bg-success" style="font-size: 9px; padding: 2px 6px; margin-left: 6px;">Pass</span>';
+                } else {
+                    statusPassHtml = '<span class="badge bg-danger" style="font-size: 9px; padding: 2px 6px; margin-left: 6px;">Not Pass</span>';
+                }
+            } else {
+                statusPassHtml = '<span class="badge bg-secondary" style="font-size: 9px; padding: 2px 6px; margin-left: 6px;">-</span>';
+            }
+            
+            html += `
+                <div class="pja-employee-item">
+                    <div class="pja-employee-name">${escapeHtml(namaKaryawan)}</div>
+                    <div class="pja-employee-info">
+                        ${kodeSid ? `<span style="color: #6b7280; font-size: 11px;">${escapeHtml(kodeSid)}</span>` : ''}
+                        ${badgeText ? `<span class="pja-type-badge" style="background-color: ${badgeColor}15; color: ${badgeColor}; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; margin-left: 8px;">${escapeHtml(badgeText)}</span>` : ''}
+                    </div>
+                    <div style="display: flex; align-items: center; margin-top: 6px; flex-wrap: wrap; gap: 4px;">
+                        ${statusOnsiteHtml}
+                        ${statusPassHtml}
+                    </div>
+                    ${peruashaan ? `<div style="font-size: 10px; color: #9ca3af; margin-top: 4px;">${escapeHtml(peruashaan)}</div>` : ''}
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+        detailSection.innerHTML = html;
+        detailSection.dataset.loaded = 'true';
+    }
+    
+    // Load Area Kerja data from API
+    function loadAreaKerjaData() {
+        const container = document.getElementById('areakerjaList');
+        if (!container) return;
+        
+        // Show loading state
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p style="margin-top: 16px;">Memuat data Area Kerja...</p>
+            </div>
+        `;
+        
+        // Update tab count to show loading
+        const areaKerjaTabCount = document.getElementById('areakerjaTabCount');
+        if (areaKerjaTabCount) areaKerjaTabCount.textContent = '...';
+        
+        fetch('{{ route("maps.api.area-kerja-sidebar-data") }}')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.data) {
+                    filteredSidebarData.areakerja = data.data;
+                    updateTabCounts();
+                    renderAreaKerjaList(filteredSidebarData.areakerja);
+                } else {
+                    filteredSidebarData.areakerja = [];
+                    updateTabCounts();
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="material-icons-outlined">location_off</i>
+                            <p>Tidak ada data Area Kerja</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading Area Kerja data:', error);
+                filteredSidebarData.areakerja = [];
+                updateTabCounts();
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="material-icons-outlined">error_outline</i>
+                        <p>Gagal memuat data Area Kerja</p>
+                        <small style="color: #9ca3af;">${error.message}</small>
+                    </div>
+                `;
+            });
+    }
+    
+    // Render Area Kerja list - menggunakan struktur sama dengan CCTV
+    function renderAreaKerjaList(data) {
+        const container = document.getElementById('areakerjaList');
+        if (!container) return;
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="material-icons-outlined">location_off</i>
+                    <p>Tidak ada data Area Kerja</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = data.map((areaKerja, index) => {
+            const coverageLokasi = areaKerja.coverage_lokasi || `Area Kerja ${index + 1}`;
+            const cctvList = areaKerja.cctv_list || [];
+            const cctvCount = cctvList.length;
+            const firstLetter = getFirstLetter(coverageLokasi);
+            const avatarColor = getAvatarColor(firstLetter);
+            
+            return `
+                <div class="sidebar-list-item" data-type="areakerja" data-coverage-lokasi="${escapeHtml(coverageLokasi)}" data-index="${index}">
+                    <div class="sidebar-list-item-header">
+                        <div class="list-item-avatar" style="background-color: ${avatarColor};">
+                            ${firstLetter}
+                        </div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">${escapeHtml(coverageLokasi)}</div>
+                            <div class="list-item-subtitle">${cctvCount} CCTV</div>
+                        </div>
+                        <i class="material-icons-outlined list-item-expand-icon">expand_more</i>
+                    </div>
+                    <div class="cctv-detail-section">
+                        <div class="cctv-detail-loading">
+                            <i class="material-icons-outlined" style="font-size: 24px; margin-bottom: 8px; opacity: 0.5;">hourglass_empty</i>
+                            <div>Memuat detail...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Add click handlers - toggle expand/collapse dan load details
+        container.querySelectorAll('.sidebar-list-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Prevent event bubbling untuk icon expand
+                if (e.target.classList.contains('list-item-expand-icon')) {
+                    e.stopPropagation();
+                }
+                
+                const coverageLokasi = this.dataset.coverageLokasi;
+                const areaKerjaData = data.find(a => a.coverage_lokasi === coverageLokasi);
+                
+                // Toggle expanded state
+                const isExpanded = this.classList.contains('expanded');
+                
+                if (isExpanded) {
+                    // Collapse
+                    this.classList.remove('expanded');
+                } else {
+                    // Expand - load details
+                    this.classList.add('expanded');
+                    if (areaKerjaData) {
+                        renderAreaKerjaDetails(areaKerjaData, this);
+                    }
+                }
+                
+                // Highlight active item
+                document.querySelectorAll('.sidebar-list-item').forEach(i => {
+                    if (i !== this) i.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    }
+    
+    // Render Area Kerja details (daftar CCTV) - menggunakan struktur sama dengan CCTV detail
+    function renderAreaKerjaDetails(areaKerjaData, itemElement) {
+        const detailSection = itemElement.querySelector('.cctv-detail-section');
+        if (!detailSection) return;
+        
+        // Check if already loaded
+        if (detailSection.dataset.loaded === 'true') {
+            return;
+        }
+        
+        const cctvList = areaKerjaData.cctv_list || [];
+        
+        if (cctvList.length === 0) {
+            detailSection.innerHTML = `
+                <div class="cctv-detail-error">
+                    <i class="material-icons-outlined" style="font-size: 18px;">videocam_off</i>
+                    <span>Tidak ada CCTV</span>
+                </div>
+            `;
+            detailSection.dataset.loaded = 'true';
+            return;
+        }
+        
+        let html = '';
+        html += '<div class="cctv-detail-group">';
+        html += '<div class="cctv-detail-group-title"><i class="material-icons-outlined">videocam</i> <span>Daftar CCTV</span></div>';
+        
+        if (cctvList.length > 0) {
+            cctvList.forEach((cctv, cctvIndex) => {
+                const namaCctv = cctv.nama_cctv || cctv.no_cctv || 'N/A';
+                const noCctv = cctv.no_cctv || '';
+                const kondisi = cctv.kondisi || '';
+                const coverageDetailLokasi = cctv.coverage_detail_lokasi || '';
+                const kategoriAktivitas = cctv.kategori_aktivitas || '';
+                const kategoriArea = cctv.kategori_area || '';
+                const lokasiPemasangan = cctv.lokasi_pemasangan || '';
+                
+                html += `
+                    <div class="cctv-coverage-item" data-cctv-id="${cctv.id}" data-index="${cctvIndex}" style="cursor: pointer;">
+                        <div class="cctv-coverage-lokasi">${escapeHtml(namaCctv)}${noCctv ? ` (${escapeHtml(noCctv)})` : ''}</div>
+                        <div class="cctv-coverage-detail">
+                            ${coverageDetailLokasi ? `${escapeHtml(coverageDetailLokasi)}` : ''}
+                            ${kondisi ? `<br><span style="display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; background-color: ${kondisi === 'Baik' ? '#10b981' : '#ef4444'}15; color: ${kondisi === 'Baik' ? '#10b981' : '#ef4444'};">${escapeHtml(kondisi)}</span>` : ''}
+                            ${kategoriArea ? `<span style="display: inline-block; margin-top: 4px; margin-left: 6px; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; background-color: ${kategoriArea === 'Area Highrisk' ? '#ef4444' : kategoriArea === 'Area Kritis' ? '#f59e0b' : '#6b7280'}15; color: ${kategoriArea === 'Area Highrisk' ? '#ef4444' : kategoriArea === 'Area Kritis' ? '#f59e0b' : '#6b7280'};">${escapeHtml(kategoriArea)}</span>` : ''}
+                            ${lokasiPemasangan ? `<br><span style="font-size: 10px; color: #9ca3af; margin-top: 4px; display: inline-block;">📍 ${escapeHtml(lokasiPemasangan)}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            html += '<div class="cctv-no-data">Tidak ada data CCTV</div>';
+        }
+        
+        html += '</div>';
+        detailSection.innerHTML = html;
+        detailSection.dataset.loaded = 'true';
+        
+        // Add click handlers for CCTV items
+        detailSection.querySelectorAll('.cctv-coverage-item').forEach(cctvItem => {
+            cctvItem.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const cctvId = this.dataset.cctvId;
+                const cctvData = cctvList.find(c => c.id == cctvId);
+                
+                if (cctvData && cctvData.longitude && cctvData.latitude) {
+                    // Zoom to CCTV location
+                    const location = [parseFloat(cctvData.longitude), parseFloat(cctvData.latitude)];
+                    highlightAndZoomToLocation(location, 'cctv', cctvData);
                 }
             });
         });
@@ -14930,7 +15497,12 @@
         });
         
         // Show selected tab content
-        const tabContent = document.getElementById(`tabContent${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`);
+        // Handle special cases for tab name to ID conversion
+        let tabContentId = `tabContent${tabName.charAt(0).toUpperCase() + tabName.slice(1)}`;
+        if (tabName === 'areakerja') {
+            tabContentId = 'tabContentAreakerja';
+        }
+        const tabContent = document.getElementById(tabContentId);
         if (tabContent) {
             tabContent.classList.add('active');
         }
@@ -14963,6 +15535,13 @@
                     loadPjaData();
                 } else {
                     renderPjaList(filteredSidebarData.pja);
+                }
+                break;
+            case 'areakerja':
+                if (filteredSidebarData.areakerja.length === 0) {
+                    loadAreaKerjaData();
+                } else {
+                    renderAreaKerjaList(filteredSidebarData.areakerja);
                 }
                 break;
             case 'evaluasi':

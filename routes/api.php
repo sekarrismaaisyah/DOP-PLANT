@@ -24,3 +24,5 @@ Route::post('/telegram/webhook', TelegramWebhookController::class);
 
 // DMS (Driver Monitoring System) Routes
 Route::post('/dms/safety-score', [SafetyScoreController::class, 'store']);
+Route::post('/dms/calibration', [SafetyScoreController::class, 'storeCalibration']);
+Route::get('/dms/calibrations', [SafetyScoreController::class, 'getCalibrations']);

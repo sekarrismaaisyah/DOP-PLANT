@@ -211,6 +211,7 @@ Route::middleware(['auth'])->group(function () {
          Route::get('/api/pja-data', [MapBaseController::class, 'getPjaData'])->name('api.pja-data');
          Route::get('/api/kesiapan-orang-data', [MapBaseController::class, 'getKesiapanOrangData'])->name('api.kesiapan-orang-data');
          Route::get('/api/area-kerja-data', [MapBaseController::class, 'getAreaKerjaData'])->name('api.area-kerja-data');
+         Route::get('/api/area-kerja-sidebar-data', [MapBaseController::class, 'getAreaKerjaSidebarData'])->name('api.area-kerja-sidebar-data');
          Route::post('/api/evaluation-summary', [MapBaseController::class, 'getEvaluationSummary'])->name('api.evaluation-summary');
          Route::post('/api/send-telegram', [MapBaseController::class, 'sendTelegramNotification'])->name('api.send-telegram');
     });

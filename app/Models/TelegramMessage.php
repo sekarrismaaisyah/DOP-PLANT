@@ -18,6 +18,8 @@ class TelegramMessage extends Model
         'first_name',
         'last_name',
         'text',
+        'is_from_bot',
+        'bot_id',
         'raw_payload',
         'message_date',
     ];

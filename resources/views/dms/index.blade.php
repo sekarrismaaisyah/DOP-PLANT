@@ -14,7 +14,7 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: #f5f7fa;
             min-height: 100vh;
             padding: 20px;
         }
@@ -29,7 +29,7 @@
         }
 
         .header {
-            background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+            background: #4a5568;
             color: white;
             padding: 30px;
             text-align: center;
@@ -109,52 +109,58 @@
         .metric-value {
             font-size: 2.5em;
             font-weight: bold;
-            color: #1e3a8a;
+            color: #2d3748;
         }
 
         .safety-score-card {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            border-left-color: #10b981;
+            background: #e6fffa;
+            border-left-color: #38b2ac;
         }
 
         .safety-score-card.caution {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            border-left-color: #f59e0b;
+            background: #fef5e7;
+            border-left-color: #ed8936;
         }
 
         .safety-score-card.attention {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            border-left-color: #ef4444;
+            background: #fed7d7;
+            border-left-color: #e53e3e;
         }
-
-        .safety-score-card h3,
+        
+        .safety-score-card h3 {
+            color: #2d3748;
+        }
+        
+        .safety-score-card h3 {
+            color: #2d3748;
+        }
+        
         .safety-score-card .metric-value {
-            color: white;
+            color: #2d3748;
         }
 
         .calibration-status {
-            background: #fff3cd;
-            border: 2px solid #ffc107;
+            background: #fef5e7;
+            border: 2px solid #ed8936;
             border-radius: 12px;
             padding: 20px;
             text-align: center;
         }
 
         .calibration-status.active {
-            background: #d1ecf1;
-            border-color: #0dcaf0;
+            background: #e6f3ff;
+            border-color: #4299e1;
         }
 
         .calibration-status.complete {
-            background: #d4edda;
-            border-color: #28a745;
+            background: #e6fffa;
+            border-color: #38b2ac;
         }
 
         .calibration-timer {
             font-size: 2em;
             font-weight: bold;
-            color: #1e3a8a;
+            color: #2d3748;
             margin: 10px 0;
         }
 
@@ -162,8 +168,66 @@
             padding: 20px;
             background: #f8f9fa;
             display: flex;
+            flex-direction: column;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .upload-section {
+            width: 100%;
+            max-width: 600px;
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            border: 2px dashed #cbd5e0;
+            text-align: center;
+        }
+
+        .upload-section.has-video {
+            border-color: #38b2ac;
+            border-style: solid;
+        }
+
+        .file-input-wrapper {
+            position: relative;
+            display: inline-block;
+            width: 100%;
+        }
+
+        .file-input-wrapper input[type="file"] {
+            position: absolute;
+            opacity: 0;
+            width: 100%;
+            height: 100%;
+            cursor: pointer;
+        }
+
+        .file-input-label {
+            display: inline-block;
+            padding: 12px 24px;
+            background: #4299e1;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .file-input-label:hover {
+            background: #3182ce;
+        }
+
+        .video-info {
+            margin-top: 10px;
+            font-size: 0.9em;
+            color: #4a5568;
+        }
+
+        .video-controls {
+            display: flex;
             gap: 10px;
             justify-content: center;
+            flex-wrap: wrap;
         }
 
         button {
@@ -177,22 +241,22 @@
         }
 
         .btn-start {
-            background: #10b981;
+            background: #38b2ac;
             color: white;
         }
 
         .btn-start:hover {
-            background: #059669;
+            background: #319795;
             transform: translateY(-2px);
         }
 
         .btn-stop {
-            background: #ef4444;
+            background: #e53e3e;
             color: white;
         }
 
         .btn-stop:hover {
-            background: #dc2626;
+            background: #c53030;
             transform: translateY(-2px);
         }
 
@@ -211,18 +275,93 @@
         }
 
         .status-safe {
-            background: #10b981;
+            background: #38b2ac;
             color: white;
         }
 
         .status-caution {
-            background: #f59e0b;
+            background: #ed8936;
             color: white;
         }
 
         .status-attention {
-            background: #ef4444;
+            background: #e53e3e;
             color: white;
+        }
+
+        .mode-selection {
+            padding: 20px;
+            background: white;
+            border-radius: 12px;
+            margin-bottom: 15px;
+            border: 2px solid #e2e8f0;
+        }
+
+        .mode-selection h3 {
+            margin-bottom: 15px;
+            color: #2d3748;
+            font-size: 1.1em;
+        }
+
+        .mode-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .btn-mode {
+            flex: 1;
+            padding: 12px 24px;
+            border: 2px solid #cbd5e0;
+            background: white;
+            color: #4a5568;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+        }
+
+        .btn-mode:hover {
+            border-color: #4299e1;
+            color: #4299e1;
+        }
+
+        .btn-mode.active {
+            background: #4299e1;
+            color: white;
+            border-color: #4299e1;
+        }
+
+        .mode-input-group {
+            margin-bottom: 15px;
+        }
+
+        .mode-input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2d3748;
+            font-size: 0.9em;
+        }
+
+        .mode-input-group input,
+        .mode-input-group select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #cbd5e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s;
+        }
+
+        .mode-input-group input:focus,
+        .mode-input-group select:focus {
+            outline: none;
+            border-color: #4299e1;
+        }
+
+        .required-mark {
+            color: #e53e3e;
         }
 
         @media (max-width: 1024px) {
@@ -290,8 +429,69 @@
         </div>
 
         <div class="controls">
-            <button class="btn-start" id="startBtn" onclick="startDetection()">Start Detection</button>
-            <button class="btn-stop" id="stopBtn" onclick="stopDetection()" disabled>Stop Detection</button>
+            <!-- Mode Selection -->
+            <div class="mode-selection">
+                <h3>Mode Operasi</h3>
+                <div class="mode-buttons">
+                    <button id="modeCalibrationBtn" class="btn-mode active" onclick="setMode('calibration')">
+                        Mode Kalibrasi
+                    </button>
+                    <button id="modeDetectionBtn" class="btn-mode" onclick="setMode('detection')">
+                        Mode Deteksi
+                    </button>
+                </div>
+
+                <!-- Input untuk Mode Kalibrasi -->
+                <div id="calibrationInputs" style="display: block;">
+                    <div class="mode-input-group">
+                        <label>
+                            Nama / ID Orang <span class="required-mark">*</span>
+                        </label>
+                        <input type="text" id="driverNameInput" placeholder="Contoh: John Doe / D001">
+                    </div>
+                    <div class="mode-input-group">
+                        <label>
+                            Trip ID (Opsional)
+                        </label>
+                        <input type="text" id="tripIdInput" placeholder="Contoh: T001">
+                    </div>
+                </div>
+
+                <!-- Dropdown untuk Mode Deteksi -->
+                <div id="detectionInputs" style="display: none;">
+                    <div class="mode-input-group">
+                        <label>
+                            Pilih Kalibrasi <span class="required-mark">*</span>
+                        </label>
+                        <select id="calibrationSelect">
+                            <option value="">-- Pilih Kalibrasi --</option>
+                        </select>
+                        <button onclick="loadCalibrations()" 
+                                style="margin-top: 10px; padding: 8px 16px; background: #4299e1; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px;">
+                            🔄 Refresh List
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-section" id="uploadSection">
+                <h3 style="margin-bottom: 15px; color: #2d3748;">Upload Video</h3>
+                <div class="file-input-wrapper">
+                    <input type="file" id="videoFileInput" accept="video/*" onchange="handleVideoUpload(event)">
+                    <label for="videoFileInput" class="file-input-label">Pilih Video File</label>
+                </div>
+                <div class="video-info" id="videoInfo" style="display: none;">
+                    <p><strong>File:</strong> <span id="videoFileName"></span></p>
+                    <p><strong>Duration:</strong> <span id="videoDuration"></span></p>
+                </div>
+            </div>
+            
+            <div class="video-controls">
+                <button class="btn-start" id="startBtn" onclick="startDetection()" disabled>Start Detection</button>
+                <button class="btn-stop" id="stopBtn" onclick="stopDetection()" disabled>Stop Detection</button>
+                <button class="btn-start" id="playBtn" onclick="playVideo()" style="display: none;">Play Video</button>
+                <button class="btn-stop" id="pauseBtn" onclick="pauseVideo()" style="display: none;">Pause Video</button>
+            </div>
         </div>
     </div>
 
@@ -458,7 +658,7 @@
         const CALIBRATION_DURATION = 15 * 60 * 1000; // 15 minutes in ms
         const WINDOW_SIZE = 60 * 1000; // 60 seconds window
         const WINDOW_FRAMES = Math.floor(WINDOW_SIZE / FRAME_INTERVAL); // ~1500 frames at 25Hz
-        const API_INTERVAL = 5000; // Send to API every 5 seconds
+        const API_INTERVAL = 1000; // Send to API every 1 second for real-time storage
         const BLINK_MIN_DURATION = 0.06 * 1000; // 60ms
         const BLINK_MAX_DURATION = 0.35 * 1000; // 350ms
         const MICROSLEEP_DURATION = 1.4 * 1000; // 1.4 seconds
@@ -487,6 +687,15 @@
         let lastApiCall = 0;
         let driverId = 'D123';
         let tripId = 'T' + Date.now();
+        let videoFile = null;
+        let videoUrl = null;
+        let isVideoUploaded = false;
+        let videoLoopCount = 0; // Track how many times video has looped
+        let lastVideoTime = 0; // Track last video time to detect loops
+        
+        // Mode management
+        let currentMode = 'calibration'; // 'calibration' or 'detection'
+        let selectedCalibration = null;
 
         // Initialize
         async function init() {
@@ -629,13 +838,21 @@
             const startTimeMs = performance.now();
 
             // Skip if video not ready
-            if (!video || video.readyState !== 4) {
+            if (!video || (video.readyState < 2 && !videoUrl)) {
+                setTimeout(processFrame, FRAME_INTERVAL);
+                return;
+            }
+
+            // For uploaded video, check if video is playing
+            if (videoUrl && video.paused) {
                 setTimeout(processFrame, FRAME_INTERVAL);
                 return;
             }
 
             try {
-                const results = faceLandmarker.detectForVideo(video, startTimeMs);
+                // For uploaded video, use video currentTime in milliseconds
+                const videoTimeMs = videoUrl ? (video.currentTime * 1000) : startTimeMs;
+                const results = faceLandmarker.detectForVideo(video, videoTimeMs);
 
                 if (results.faceLandmarks && results.faceLandmarks.length > 0) {
                     const landmarks = results.faceLandmarks[0];
@@ -763,7 +980,22 @@
         function handleCalibration(ear, timestamp) {
             calibrationData.push({ ear, timestamp });
 
-            const elapsed = timestamp - calibrationStartTime;
+            // For uploaded video, track total elapsed time including loops
+            let elapsed;
+            if (videoUrl) {
+                // Detect video loop (when currentTime goes back to near 0)
+                if (video.currentTime < lastVideoTime - 1) {
+                    videoLoopCount++;
+                }
+                lastVideoTime = video.currentTime;
+                
+                // Calculate total elapsed time: (loopCount * videoDuration) + currentTime
+                const videoDurationMs = video.duration * 1000;
+                elapsed = (videoLoopCount * videoDurationMs) + (video.currentTime * 1000);
+            } else {
+                elapsed = timestamp - calibrationStartTime;
+            }
+            
             const remaining = Math.max(0, CALIBRATION_DURATION - elapsed);
             const minutes = Math.floor(remaining / 60000);
             const seconds = Math.floor((remaining % 60000) / 1000);
@@ -790,6 +1022,9 @@
                 document.getElementById('calibrationStatus').innerHTML = 
                     '<h3>Kalibrasi Selesai</h3><p>Baseline: T_close=' + baseline.T_close.toFixed(4) + 
                     ', Mean=' + baseline.EAR_mean.toFixed(4) + ', SD=' + baseline.EAR_sd.toFixed(4) + '</p>';
+
+                // Save calibration data to database
+                saveCalibrationToAPI();
             }
         }
 
@@ -1034,6 +1269,43 @@
             }
         }
 
+        // Send calibration data to Laravel API
+        async function saveCalibrationToAPI() {
+            if (!baseline.T_close || !calibrationStartTime) return;
+
+            const payload = {
+                driver_id: driverId,
+                trip_id: tripId,
+                calibration_start_time: new Date(calibrationStartTime).toISOString(),
+                calibration_end_time: new Date(Date.now()).toISOString(),
+                t_close: baseline.T_close,
+                ear_mean: baseline.EAR_mean,
+                ear_sd: baseline.EAR_sd,
+                data_points_count: calibrationData.length,
+                notes: 'Auto-calibration completed'
+            };
+
+            try {
+                const response = await fetch('/api/dms/calibration', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                if (!response.ok) {
+                    const errorText = await response.text();
+                    console.error('Calibration API error:', errorText);
+                } else {
+                    console.log('Calibration data saved successfully');
+                }
+            } catch (error) {
+                console.error('Failed to save calibration to API:', error);
+            }
+        }
+
         // Send data to Laravel API
         async function sendToAPI(metrics, timestamp) {
             if (!metrics) return;
@@ -1070,63 +1342,311 @@
             }
         }
 
+        // Set Mode (Calibration or Detection)
+        function setMode(mode) {
+            currentMode = mode;
+            
+            // Update buttons
+            document.getElementById('modeCalibrationBtn').classList.toggle('active', mode === 'calibration');
+            document.getElementById('modeDetectionBtn').classList.toggle('active', mode === 'detection');
+            
+            // Show/hide inputs
+            document.getElementById('calibrationInputs').style.display = 
+                mode === 'calibration' ? 'block' : 'none';
+            document.getElementById('detectionInputs').style.display = 
+                mode === 'detection' ? 'block' : 'none';
+            
+            // Reset state
+            if (mode === 'detection') {
+                loadCalibrations();
+            } else {
+                // Reset untuk mode kalibrasi
+                driverId = '';
+                tripId = 'T' + Date.now();
+                selectedCalibration = null;
+                baseline = { T_close: null, EAR_mean: null, EAR_sd: null };
+                isCalibrating = true;
+                calibrationData = [];
+                earHistory = [];
+                
+                // Reset calibration status
+                document.getElementById('calibrationStatus').classList.remove('complete');
+                document.getElementById('calibrationStatus').innerHTML = 
+                    '<h3>Kalibrasi</h3><div class="calibration-timer" id="calibrationTimer">00:00</div><p>Mengumpulkan data baseline (15 menit)</p>';
+            }
+        }
+
+        // Load Calibrations dari Database
+        async function loadCalibrations() {
+            try {
+                const response = await fetch('/api/dms/calibrations', {
+                    method: 'GET',
+                    headers: {
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content
+                    }
+                });
+
+                if (!response.ok) {
+                    console.error('Failed to load calibrations');
+                    const select = document.getElementById('calibrationSelect');
+                    select.innerHTML = '<option value="">-- Error loading calibrations --</option>';
+                    return;
+                }
+
+                const data = await response.json();
+                const select = document.getElementById('calibrationSelect');
+                
+                // Clear options
+                select.innerHTML = '<option value="">-- Pilih Kalibrasi --</option>';
+                
+                // Add options
+                if (data.success && data.data && data.data.length > 0) {
+                    data.data.forEach(cal => {
+                        const option = document.createElement('option');
+                        option.value = cal.id;
+                        const date = new Date(cal.calibration_start_time);
+                        option.textContent = `${cal.driver_id} - ${date.toLocaleDateString('id-ID')} ${date.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'})} (EAR: ${parseFloat(cal.ear_mean).toFixed(4)})`;
+                        option.dataset.calibration = JSON.stringify(cal);
+                        select.appendChild(option);
+                    });
+                } else {
+                    select.innerHTML = '<option value="">-- Tidak ada kalibrasi tersedia --</option>';
+                }
+            } catch (error) {
+                console.error('Error loading calibrations:', error);
+                const select = document.getElementById('calibrationSelect');
+                select.innerHTML = '<option value="">-- Error loading calibrations --</option>';
+            }
+        }
+
+        // Load Baseline dari Kalibrasi yang dipilih
+        function loadBaselineFromCalibration(calibration) {
+            baseline.T_close = parseFloat(calibration.t_close);
+            baseline.EAR_mean = parseFloat(calibration.ear_mean);
+            baseline.EAR_sd = parseFloat(calibration.ear_sd);
+            
+            // Set driver_id dan trip_id
+            driverId = calibration.driver_id;
+            tripId = calibration.trip_id || 'T' + Date.now();
+            
+            // Skip kalibrasi, langsung ke deteksi
+            isCalibrating = false;
+            
+            // Update UI
+            document.getElementById('calibrationStatus').classList.add('complete');
+            const date = new Date(calibration.calibration_start_time);
+            document.getElementById('calibrationStatus').innerHTML = 
+                '<h3>Baseline Loaded</h3>' +
+                '<p><strong>Driver:</strong> ' + calibration.driver_id + '</p>' +
+                '<p><strong>Tanggal:</strong> ' + date.toLocaleDateString('id-ID') + ' ' + date.toLocaleTimeString('id-ID', {hour: '2-digit', minute: '2-digit'}) + '</p>' +
+                '<p><strong>T_close:</strong> ' + baseline.T_close.toFixed(4) + '</p>' +
+                '<p><strong>EAR_mean:</strong> ' + baseline.EAR_mean.toFixed(4) + '</p>' +
+                '<p><strong>EAR_sd:</strong> ' + baseline.EAR_sd.toFixed(4) + '</p>';
+            
+            updateStatus('Baseline loaded - Ready for detection');
+        }
+
+        // Event listener untuk calibration select
+        document.addEventListener('DOMContentLoaded', function() {
+            const calibrationSelect = document.getElementById('calibrationSelect');
+            if (calibrationSelect) {
+                calibrationSelect.addEventListener('change', function() {
+                    const selectedOption = this.options[this.selectedIndex];
+                    if (selectedOption && selectedOption.value) {
+                        selectedCalibration = JSON.parse(selectedOption.dataset.calibration);
+                        loadBaselineFromCalibration(selectedCalibration);
+                    } else {
+                        selectedCalibration = null;
+                    }
+                });
+            }
+        });
+
         // Update status
         function updateStatus(status) {
             document.getElementById('detectionStatus').textContent = status;
         }
 
+        // Handle video file upload
+        function handleVideoUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            // Validate file type
+            if (!file.type.startsWith('video/')) {
+                alert('File harus berupa video!');
+                return;
+            }
+
+            videoFile = file;
+            
+            // Clean up previous video URL if exists
+            if (videoUrl) {
+                URL.revokeObjectURL(videoUrl);
+            }
+
+            // Reset video-related variables
+            videoLoopCount = 0;
+            lastVideoTime = 0;
+            isRunning = false;
+            
+            // Only reset calibration if in calibration mode
+            if (currentMode === 'calibration') {
+                isCalibrating = true;
+                calibrationData = [];
+                baseline = { T_close: null, EAR_mean: null, EAR_sd: null };
+            }
+            earHistory = [];
+
+            // Create object URL for video
+            videoUrl = URL.createObjectURL(file);
+            video.src = videoUrl;
+            video.srcObject = null; // Clear any previous stream
+
+            // Update UI
+            document.getElementById('videoFileName').textContent = file.name;
+            document.getElementById('uploadSection').classList.add('has-video');
+            document.getElementById('videoInfo').style.display = 'block';
+            document.getElementById('startBtn').disabled = false;
+
+            // Wait for video metadata
+            video.onloadedmetadata = () => {
+                const duration = video.duration;
+                const minutes = Math.floor(duration / 60);
+                const seconds = Math.floor(duration % 60);
+                document.getElementById('videoDuration').textContent = 
+                    `${minutes}:${String(seconds).padStart(2, '0')}`;
+                
+                // Set canvas dimensions
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                
+                updateStatus('Video loaded - Click Start to begin');
+            };
+
+            video.onerror = () => {
+                alert('Error loading video file');
+                updateStatus('Error loading video');
+            };
+
+            isVideoUploaded = true;
+        }
+
+        // Play video
+        function playVideo() {
+            if (video && videoUrl) {
+                video.play();
+                document.getElementById('playBtn').style.display = 'none';
+                document.getElementById('pauseBtn').style.display = 'inline-block';
+            }
+        }
+
+        // Pause video
+        function pauseVideo() {
+            if (video) {
+                video.pause();
+                document.getElementById('playBtn').style.display = 'inline-block';
+                document.getElementById('pauseBtn').style.display = 'none';
+            }
+        }
+
         // Start detection
         async function startDetection() {
             try {
-                // Request webcam access
-                const stream = await navigator.mediaDevices.getUserMedia({
-                    video: { 
-                        width: { ideal: 1280 },
-                        height: { ideal: 720 },
-                        facingMode: 'user'
+                // Check if video is uploaded
+                if (!isVideoUploaded || !videoUrl) {
+                    alert('Silakan upload video terlebih dahulu!');
+                    return;
+                }
+
+                // Handle mode-specific validation
+                if (currentMode === 'calibration') {
+                    // Mode Kalibrasi: Validasi input nama
+                    const driverName = document.getElementById('driverNameInput').value.trim();
+                    if (!driverName) {
+                        alert('Silakan masukkan Nama / ID Orang untuk kalibrasi!');
+                        return;
                     }
-                });
-                
-                video.srcObject = stream;
-                
-                // Wait for video to be ready
-                await new Promise((resolve, reject) => {
-                    video.onloadedmetadata = () => {
-                        video.play()
-                            .then(() => {
-                                // Ensure video dimensions are set
-                                canvas.width = video.videoWidth;
-                                canvas.height = video.videoHeight;
-                                resolve();
-                            })
-                            .catch(reject);
-                    };
-                    video.onerror = reject;
-                    setTimeout(() => reject(new Error('Video load timeout')), 5000);
-                });
+                    driverId = driverName;
+                    tripId = document.getElementById('tripIdInput').value.trim() || 'T' + Date.now();
+                    
+                    // Reset kalibrasi
+                    isCalibrating = true;
+                    calibrationData = [];
+                    baseline = { T_close: null, EAR_mean: null, EAR_sd: null };
+                    calibrationStartTime = Date.now();
+                    
+                } else {
+                    // Mode Deteksi: Validasi kalibrasi dipilih
+                    if (!selectedCalibration) {
+                        alert('Silakan pilih kalibrasi terlebih dahulu!');
+                        return;
+                    }
+                    
+                    // Baseline sudah di-load dari loadBaselineFromCalibration()
+                    // Skip kalibrasi
+                    isCalibrating = false;
+                }
+
+                // Ensure video is loaded
+                if (video.readyState < 2) {
+                    await new Promise((resolve, reject) => {
+                        video.onloadedmetadata = resolve;
+                        video.onerror = reject;
+                        setTimeout(() => reject(new Error('Video load timeout')), 5000);
+                    });
+                }
+
+                // Play video
+                await video.play();
+
+                // Set canvas dimensions
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+
+                // Handle video end - loop if needed for calibration or detection
+                video.onended = () => {
+                    if (isRunning) {
+                        if (isCalibrating) {
+                            // If still calibrating, loop the video
+                            video.currentTime = 0;
+                            video.play();
+                        } else {
+                            // If detection phase, also loop to continue monitoring
+                            video.currentTime = 0;
+                            video.play();
+                        }
+                    }
+                };
 
                 isRunning = true;
-                calibrationStartTime = Date.now();
-                isCalibrating = true;
-                calibrationData = [];
                 earHistory = [];
                 lastApiCall = Date.now();
+                videoLoopCount = 0;
+                lastVideoTime = 0;
 
                 document.getElementById('startBtn').disabled = true;
                 document.getElementById('stopBtn').disabled = false;
-                document.getElementById('calibrationStatus').classList.remove('complete');
-                document.getElementById('calibrationStatus').classList.add('active');
-                document.getElementById('calibrationStatus').innerHTML = 
-                    '<h3>Kalibrasi</h3><div class="calibration-timer" id="calibrationTimer">00:00</div><p>Mengumpulkan data baseline (15 menit)</p>';
+                document.getElementById('playBtn').style.display = 'none';
+                document.getElementById('pauseBtn').style.display = 'inline-block';
 
-                updateStatus('Calibrating...');
+                // Update UI based on mode
+                if (currentMode === 'calibration') {
+                    document.getElementById('calibrationStatus').classList.remove('complete');
+                    document.getElementById('calibrationStatus').classList.add('active');
+                    document.getElementById('calibrationStatus').innerHTML = 
+                        '<h3>Kalibrasi</h3><div class="calibration-timer" id="calibrationTimer">00:00</div><p>Mengumpulkan data baseline (15 menit)</p>';
+                    updateStatus('Calibrating...');
+                } else {
+                    updateStatus('Detecting...');
+                }
 
                 // Start processing frames
                 processFrame();
             } catch (error) {
-                console.error('Error accessing webcam:', error);
+                console.error('Error starting detection:', error);
                 updateStatus('Error: ' + error.message);
-                alert('Tidak dapat mengakses webcam. Pastikan izin diberikan dan webcam tersedia.');
+                alert('Tidak dapat memulai deteksi. Pastikan video sudah dimuat dengan benar.');
             }
         }
 
@@ -1134,6 +1654,12 @@
         function stopDetection() {
             isRunning = false;
             
+            // Stop video
+            if (video) {
+                video.pause();
+            }
+
+            // Stop webcam stream if exists
             if (video.srcObject) {
                 const tracks = video.srcObject.getTracks();
                 tracks.forEach(track => track.stop());
@@ -1142,6 +1668,8 @@
 
             document.getElementById('startBtn').disabled = false;
             document.getElementById('stopBtn').disabled = true;
+            document.getElementById('playBtn').style.display = 'inline-block';
+            document.getElementById('pauseBtn').style.display = 'none';
             updateStatus('Stopped');
         }
 

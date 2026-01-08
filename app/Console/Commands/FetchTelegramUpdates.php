@@ -25,7 +25,13 @@ class FetchTelegramUpdates extends Command
 
     public function handle(): int
     {
-        $service = TelegramBotService::makeFromConfig();
+        // Use CCTV bot token if available, otherwise fallback to default
+        try {
+            $service = TelegramBotService::makeFromCctvConfig();
+        } catch (\RuntimeException $e) {
+            $service = TelegramBotService::makeFromConfig();
+        }
+        
         $offset = TelegramMessage::max('update_id');
 
         $payload = [
@@ -50,16 +56,21 @@ class FetchTelegramUpdates extends Command
             $message = Arr::get($update, 'message', []);
             $chat = Arr::get($message, 'chat', []);
 
+            $from = Arr::get($message, 'from', []);
+            $isFromBot = Arr::get($from, 'is_bot', false);
+
             TelegramMessage::updateOrCreate(
                 ['update_id' => Arr::get($update, 'update_id')],
                 [
                     'message_id' => Arr::get($message, 'message_id'),
                     'chat_id' => Arr::get($chat, 'id'),
                     'chat_type' => Arr::get($chat, 'type'),
-                    'username' => Arr::get($message, 'from.username'),
-                    'first_name' => Arr::get($message, 'from.first_name'),
-                    'last_name' => Arr::get($message, 'from.last_name'),
+                    'username' => Arr::get($from, 'username'),
+                    'first_name' => Arr::get($from, 'first_name'),
+                    'last_name' => Arr::get($from, 'last_name'),
                     'text' => Arr::get($message, 'text'),
+                    'is_from_bot' => $isFromBot,
+                    'bot_id' => $isFromBot ? Arr::get($from, 'id') : null,
                     'raw_payload' => $update,
                     'message_date' => Arr::has($message, 'date')
                         ? now()->setTimestamp(Arr::get($message, 'date'))

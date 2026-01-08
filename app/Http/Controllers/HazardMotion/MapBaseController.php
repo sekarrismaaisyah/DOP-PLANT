@@ -762,7 +762,7 @@ class MapBaseController extends Controller
     }
 
     /**
-     * Get PJA data from ClickHouse
+     * Get PJA data from ClickHouse - Grouped by nama_pja
      */
     public function getPjaData(Request $request)
     {
@@ -778,52 +778,204 @@ class MapBaseController extends Controller
                 ], 500);
             }
             
-            // Query untuk mengambil data PJA dari tabel nitip.pja_full_hierarchical_view_fix
+            // Query untuk mengambil data PJA dari tabel nitip.wan_vw_pja_karyawan
+            // Group by nama_pja dan include semua karyawan
             $sql = "
                 SELECT 
-                    toString(site) as site,
-                    toString(lokasi) as lokasi,
-                    toString(detail_lokasi) as detail_lokasi,
-                    toString(pja_id) as pja_id,
-                    toString(nama_pja) as nama_pja,
-                    toString(pja_active) as pja_active,
-                    toString(pja_type_name) as pja_type_name,
-                    toString(pja_category_name) as pja_category_name,
-                    toString(pja_layer) as pja_layer,
-                    toString(id_employee) as id_employee,
-                    toString(nik) as nik,
                     toString(kode_sid) as kode_sid,
-                    toString(employee_name) as employee_name,
-                    toString(employee_email) as employee_email,
-                    toString(kategori_pja) as kategori_pja
-                FROM nitip.pja_full_hierarchical_view_fix
-                ORDER BY pja_id DESC
+                    toString(nama_pja) as nama_pja,
+                    toString(tipe_pja) as tipe_pja,
+                    toString(peruashaan) as peruashaan,
+                    toString(nama_karyawan) as nama_karyawan,
+                    toString(status_pja_karyawan) as status_pja_karyawan
+                FROM nitip.wan_vw_pja_karyawan
+                WHERE toString(status_pja_karyawan) = '1'
+                ORDER BY nama_pja, nama_karyawan
                 LIMIT 10000
             ";
             
             $results = $clickhouse->query($sql);
             
-            // Format data untuk frontend
-            $pjaData = [];
+            // Query checkinout_rfid untuk menentukan status onsite dan Pass/Not Pass
+            $onsiteStatusMap = [];
+            $passStatusMap = [];
+            try {
+                $now = Carbon::now();
+                $today = $now->format('Y-m-d');
+                $yesterday = $now->copy()->subDay()->format('Y-m-d');
+                
+                // Query untuk onsite status (hanya yang PASSED)
+                $sqlCheckin = "
+                    SELECT 
+                        toString(nama_karyawan) as nama_karyawan,
+                        date,
+                        status_checkin_out,
+                        toString(status_passed) as status_passed
+                    FROM nitip.aaj_vw_checkinout_rfid
+                    WHERE status_passed = 'PASSED'
+                      AND (
+                          (toDate(date) = '{$today}' AND toHour(date) >= 6 AND toHour(date) < 18)
+                          OR
+                          (toDate(date) = '{$yesterday}' AND toHour(date) >= 18)
+                          OR
+                          (toDate(date) = '{$today}' AND toHour(date) < 6)
+                      )
+                    ORDER BY nama_karyawan, date DESC
+                ";
+                
+                $checkinResults = $clickhouse->query($sqlCheckin);
+                
+                foreach ($checkinResults as $checkin) {
+                    $namaKaryawan = trim($checkin['nama_karyawan'] ?? '');
+                    if (empty($namaKaryawan)) {
+                        continue;
+                    }
+                    
+                    $namaKaryawan = preg_replace('/\s+/', ' ', $namaKaryawan);
+                    
+                    if (isset($onsiteStatusMap[$namaKaryawan])) {
+                        continue;
+                    }
+                    
+                    $checkinDate = $checkin['date'] ?? null;
+                    if (!$checkinDate) {
+                        continue;
+                    }
+                    
+                    $statusPassed = $checkin['status_passed'] ?? '';
+                    if (strtoupper($statusPassed) === 'PASSED') {
+                        $passStatusMap[$namaKaryawan] = 1;
+                    }
+                    
+                    try {
+                        $checkinDateTime = Carbon::parse($checkinDate);
+                        $checkinHour = (int)$checkinDateTime->format('H');
+                        $checkinDateOnly = $checkinDateTime->format('Y-m-d');
+                        
+                        if ($checkinDateOnly === $today) {
+                            if ($checkinHour >= 6 && $checkinHour < 18) {
+                                $onsiteStatusMap[$namaKaryawan] = 'SHIFT_1';
+                            } elseif ($checkinHour < 6) {
+                                $onsiteStatusMap[$namaKaryawan] = 'SHIFT_2';
+                            } elseif ($checkinHour >= 18) {
+                                $onsiteStatusMap[$namaKaryawan] = 'SHIFT_2';
+                            }
+                        } elseif ($checkinDateOnly === $yesterday) {
+                            if ($checkinHour >= 18) {
+                                $onsiteStatusMap[$namaKaryawan] = 'SHIFT_2';
+                            }
+                        }
+                    } catch (Exception $e) {
+                        Log::warning('Error parsing checkin date: ' . $checkinDate . ' - ' . $e->getMessage());
+                        continue;
+                    }
+                }
+                
+                // Query untuk Pass/Not Pass status dari semua check-in terbaru (7 hari terakhir)
+                try {
+                    $sqlPassStatus = "
+                        SELECT 
+                            toString(nama_karyawan) as nama_karyawan,
+                            toString(status_passed) as status_passed,
+                            date
+                        FROM nitip.aaj_vw_checkinout_rfid
+                        WHERE toDate(date) >= toDate(now()) - INTERVAL 7 DAY
+                        ORDER BY nama_karyawan, date DESC
+                    ";
+                    
+                    $passStatusResults = $clickhouse->query($sqlPassStatus);
+                    
+                    $processedNames = [];
+                    foreach ($passStatusResults as $passStatus) {
+                        $namaKaryawan = trim($passStatus['nama_karyawan'] ?? '');
+                        if (empty($namaKaryawan)) {
+                            continue;
+                        }
+                        
+                        $namaKaryawan = preg_replace('/\s+/', ' ', $namaKaryawan);
+                        
+                        if (isset($processedNames[$namaKaryawan])) {
+                            continue;
+                        }
+                        
+                        $processedNames[$namaKaryawan] = true;
+                        
+                        $statusPassed = $passStatus['status_passed'] ?? '';
+                        if (strtoupper($statusPassed) === 'PASSED') {
+                            $passStatusMap[$namaKaryawan] = 1;
+                        } else {
+                            $passStatusMap[$namaKaryawan] = 0;
+                        }
+                    }
+                } catch (Exception $e) {
+                    Log::error('Error querying pass status from checkinout_rfid: ' . $e->getMessage());
+                }
+            } catch (Exception $e) {
+                Log::error('Error querying checkinout_rfid: ' . $e->getMessage());
+            }
+            
+            // Group data by nama_pja
+            $groupedPja = [];
             foreach ($results as $row) {
-                $pjaData[] = [
-                    'site' => $row['site'] ?? null,
-                    'lokasi' => $row['lokasi'] ?? null,
-                    'detail_lokasi' => $row['detail_lokasi'] ?? null,
-                    'pja_id' => $row['pja_id'] ?? null,
-                    'nama_pja' => $row['nama_pja'] ?? null,
-                    'pja_active' => $row['pja_active'] ?? null,
-                    'pja_type_name' => $row['pja_type_name'] ?? null,
-                    'pja_category_name' => $row['pja_category_name'] ?? null,
-                    'pja_layer' => $row['pja_layer'] ?? null,
-                    'id_employee' => $row['id_employee'] ?? null,
-                    'nik' => $row['nik'] ?? null,
+                $namaPja = $row['nama_pja'] ?? 'Unknown PJA';
+                $namaKaryawan = trim($row['nama_karyawan'] ?? '');
+                $namaKaryawanNormalized = preg_replace('/\s+/', ' ', $namaKaryawan);
+                
+                if (!isset($groupedPja[$namaPja])) {
+                    $groupedPja[$namaPja] = [
+                        'nama_pja' => $namaPja,
+                        'employees' => []
+                    ];
+                }
+                
+                // Determine onsite status
+                $statusOnsite = null;
+                if (!empty($namaKaryawanNormalized) && isset($onsiteStatusMap[$namaKaryawanNormalized])) {
+                    $statusOnsite = $onsiteStatusMap[$namaKaryawanNormalized];
+                } else {
+                    if (!empty($namaKaryawan) && isset($onsiteStatusMap[$namaKaryawan])) {
+                        $statusOnsite = $onsiteStatusMap[$namaKaryawan];
+                    } else {
+                        foreach ($onsiteStatusMap as $key => $value) {
+                            if (strcasecmp($namaKaryawanNormalized, $key) === 0) {
+                                $statusOnsite = $value;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Determine Pass/Not Pass status
+                $statusPjaKaryawan = null;
+                if (!empty($namaKaryawanNormalized) && isset($passStatusMap[$namaKaryawanNormalized])) {
+                    $statusPjaKaryawan = $passStatusMap[$namaKaryawanNormalized];
+                } else {
+                    if (!empty($namaKaryawan) && isset($passStatusMap[$namaKaryawan])) {
+                        $statusPjaKaryawan = $passStatusMap[$namaKaryawan];
+                    } else {
+                        foreach ($passStatusMap as $key => $value) {
+                            if (strcasecmp($namaKaryawanNormalized, $key) === 0) {
+                                $statusPjaKaryawan = $value;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Add employee to the group
+                $groupedPja[$namaPja]['employees'][] = [
                     'kode_sid' => $row['kode_sid'] ?? null,
-                    'employee_name' => $row['employee_name'] ?? null,
-                    'employee_email' => $row['employee_email'] ?? null,
-                    'kategori_pja' => $row['kategori_pja'] ?? null,
+                    'nama_karyawan' => $row['nama_karyawan'] ?? null,
+                    'tipe_pja' => $row['tipe_pja'] ?? null,
+                    'peruashaan' => $row['peruashaan'] ?? null,
+                    'status_pja_karyawan' => $row['status_pja_karyawan'] ?? null,
+                    'status_onsite' => $statusOnsite,
+                    'status_pass' => $statusPjaKaryawan, // Pass/Not Pass dari checkinout_rfid
                 ];
             }
+            
+            // Convert to array format for frontend
+            $pjaData = array_values($groupedPja);
             
             return response()->json([
                 'success' => true,
@@ -978,9 +1130,192 @@ class MapBaseController extends Controller
                 $persentaseCctvDenganPja = 0;
             }
             
+            // Query checkinout_rfid untuk menentukan status onsite dan status Pass/Not Pass
+            $onsiteStatusMap = [];
+            $passStatusMap = []; // Map untuk status Pass/Not Pass berdasarkan status_passed
+            try {
+                $now = Carbon::now();
+                $today = $now->format('Y-m-d');
+                $yesterday = $now->copy()->subDay()->format('Y-m-d');
+                
+                // Shift 1: 6:00-18:00 (hari ini) - jika tap antara 6-18 hari ini = onsite shift 1
+                // Shift 2: 18:00-6:00 (dari kemarin 18:00 sampai hari ini 6:00) - jika tap antara 18-6 = onsite shift 2
+                // Query untuk shift 1: hari ini antara 6:00-18:00
+                // Query untuk shift 2: kemarin 18:00 sampai hari ini 6:00
+                
+                $sqlCheckin = "
+                    SELECT 
+                        toString(nama_karyawan) as nama_karyawan,
+                        date,
+                        status_checkin_out,
+                        toString(status_passed) as status_passed
+                    FROM nitip.aaj_vw_checkinout_rfid
+                    WHERE status_passed = 'PASSED'
+                      AND (
+                          -- Shift 1: hari ini antara 6:00-18:00
+                          (toDate(date) = '{$today}' AND toHour(date) >= 6 AND toHour(date) < 18)
+                          OR
+                          -- Shift 2: kemarin setelah 18:00 atau hari ini sebelum 6:00
+                          (toDate(date) = '{$yesterday}' AND toHour(date) >= 18)
+                          OR
+                          (toDate(date) = '{$today}' AND toHour(date) < 6)
+                      )
+                    ORDER BY nama_karyawan, date DESC
+                ";
+                
+                $checkinResults = $clickhouse->query($sqlCheckin);
+                
+                // Group by nama_karyawan and determine shift (ambil check-in terakhir)
+                foreach ($checkinResults as $checkin) {
+                    $namaKaryawan = trim($checkin['nama_karyawan'] ?? '');
+                    if (empty($namaKaryawan)) {
+                        continue;
+                    }
+                    
+                    // Normalize nama_karyawan (remove extra spaces)
+                    $namaKaryawan = preg_replace('/\s+/', ' ', $namaKaryawan);
+                    
+                    // Skip if already processed (take latest check-in per karyawan)
+                    if (isset($onsiteStatusMap[$namaKaryawan])) {
+                        continue;
+                    }
+                    
+                    $checkinDate = $checkin['date'] ?? null;
+                    if (!$checkinDate) {
+                        continue;
+                    }
+                    
+                    // Set status Pass jika status_passed = 'PASSED'
+                    $statusPassed = $checkin['status_passed'] ?? '';
+                    if (strtoupper($statusPassed) === 'PASSED') {
+                        $passStatusMap[$namaKaryawan] = 1; // Pass
+                    }
+                    
+                    try {
+                        $checkinDateTime = Carbon::parse($checkinDate);
+                        $checkinHour = (int)$checkinDateTime->format('H');
+                        $checkinDateOnly = $checkinDateTime->format('Y-m-d');
+                        
+                        // Determine shift berdasarkan waktu tap
+                        if ($checkinDateOnly === $today) {
+                            // Tap hari ini
+                            if ($checkinHour >= 6 && $checkinHour < 18) {
+                                // Shift 1: 6:00-18:00
+                                $onsiteStatusMap[$namaKaryawan] = 'SHIFT_1';
+                            } elseif ($checkinHour < 6) {
+                                // Sebelum 6:00 hari ini = shift 2 (dari kemarin 18:00)
+                                $onsiteStatusMap[$namaKaryawan] = 'SHIFT_2';
+                            } elseif ($checkinHour >= 18) {
+                                // Setelah 18:00 hari ini = shift 2 (untuk shift malam)
+                                $onsiteStatusMap[$namaKaryawan] = 'SHIFT_2';
+                            }
+                        } elseif ($checkinDateOnly === $yesterday) {
+                            // Tap kemarin setelah 18:00 = shift 2
+                            if ($checkinHour >= 18) {
+                                $onsiteStatusMap[$namaKaryawan] = 'SHIFT_2';
+                            }
+                        }
+                    } catch (Exception $e) {
+                        Log::warning('Error parsing checkin date: ' . $checkinDate . ' - ' . $e->getMessage());
+                        continue;
+                    }
+                }
+                
+                // Query untuk mendapatkan status Pass/Not Pass dari semua check-in terbaru
+                // Ambil check-in terbaru per karyawan untuk menentukan Pass/Not Pass (dalam 7 hari terakhir)
+                try {
+                    $sqlPassStatus = "
+                        SELECT 
+                            toString(nama_karyawan) as nama_karyawan,
+                            toString(status_passed) as status_passed,
+                            date
+                        FROM nitip.aaj_vw_checkinout_rfid
+                        WHERE toDate(date) >= toDate(now()) - INTERVAL 7 DAY
+                        ORDER BY nama_karyawan, date DESC
+                    ";
+                    
+                    $passStatusResults = $clickhouse->query($sqlPassStatus);
+                    
+                    // Group by nama_karyawan, ambil yang terbaru (query sudah di ORDER BY date DESC)
+                    $processedNames = [];
+                    foreach ($passStatusResults as $passStatus) {
+                        $namaKaryawan = trim($passStatus['nama_karyawan'] ?? '');
+                        if (empty($namaKaryawan)) {
+                            continue;
+                        }
+                        
+                        // Normalize nama_karyawan
+                        $namaKaryawan = preg_replace('/\s+/', ' ', $namaKaryawan);
+                        
+                        // Skip if already processed (take latest check-in per karyawan)
+                        if (isset($processedNames[$namaKaryawan])) {
+                            continue;
+                        }
+                        
+                        $processedNames[$namaKaryawan] = true;
+                        
+                        // Set status Pass/Not Pass berdasarkan status_passed terbaru
+                        // Ini akan menimpa status dari query sebelumnya jika ada check-in yang lebih baru
+                        $statusPassed = $passStatus['status_passed'] ?? '';
+                        if (strtoupper($statusPassed) === 'PASSED') {
+                            $passStatusMap[$namaKaryawan] = 1; // Pass
+                        } else {
+                            $passStatusMap[$namaKaryawan] = 0; // Not Pass
+                        }
+                    }
+                } catch (Exception $e) {
+                    Log::error('Error querying pass status from checkinout_rfid: ' . $e->getMessage());
+                    // Continue without pass status if query fails
+                }
+            } catch (Exception $e) {
+                Log::error('Error querying checkinout_rfid: ' . $e->getMessage());
+                // Continue without onsite status if query fails
+            }
+            
             // Format data untuk frontend
             $karyawanData = [];
             foreach ($resultsKaryawan as $row) {
+                $namaKaryawan = trim($row['nama_karyawan'] ?? '');
+                $namaKaryawanNormalized = preg_replace('/\s+/', ' ', $namaKaryawan);
+                
+                // Determine onsite status
+                $statusOnsite = null;
+                if (!empty($namaKaryawanNormalized) && isset($onsiteStatusMap[$namaKaryawanNormalized])) {
+                    $statusOnsite = $onsiteStatusMap[$namaKaryawanNormalized];
+                } else {
+                    // Try exact match first
+                    if (!empty($namaKaryawan) && isset($onsiteStatusMap[$namaKaryawan])) {
+                        $statusOnsite = $onsiteStatusMap[$namaKaryawan];
+                    } else {
+                        // Try case-insensitive match
+                        foreach ($onsiteStatusMap as $key => $value) {
+                            if (strcasecmp($namaKaryawanNormalized, $key) === 0) {
+                                $statusOnsite = $value;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
+                // Determine Pass/Not Pass status dari checkinout_rfid
+                $statusPjaKaryawan = null; // null = tidak ada data
+                if (!empty($namaKaryawanNormalized) && isset($passStatusMap[$namaKaryawanNormalized])) {
+                    $statusPjaKaryawan = $passStatusMap[$namaKaryawanNormalized];
+                } else {
+                    // Try exact match first
+                    if (!empty($namaKaryawan) && isset($passStatusMap[$namaKaryawan])) {
+                        $statusPjaKaryawan = $passStatusMap[$namaKaryawan];
+                    } else {
+                        // Try case-insensitive match
+                        foreach ($passStatusMap as $key => $value) {
+                            if (strcasecmp($namaKaryawanNormalized, $key) === 0) {
+                                $statusPjaKaryawan = $value;
+                                break;
+                            }
+                        }
+                    }
+                }
+                
                 $karyawanData[] = [
                     'kode_sid' => $row['kode_sid'] ?? null,
                     'nama_pja' => $row['nama_pja'] ?? null,
@@ -995,10 +1330,11 @@ class MapBaseController extends Controller
                     'status_karyawan' => $row['status_karyawan'] ?? null,
                     'status_nama_pja' => $row['status_nama_pja'] ?? null,
                     'pja_kategory_layer' => $row['pja_kategory_layer'] ?? null,
-                    'status_pja_karyawan' => $row['status_pja_karyawan'] ?? null,
+                    'status_pja_karyawan' => $statusPjaKaryawan, // Dari checkinout_rfid, bukan dari wan_vw_pja_karyawan
                     'tanggal_update_nama_pja' => $row['tanggal_update_nama_pja'] ?? null,
                     'tanggal_update_data_karyawan' => $row['tanggal_update_data_karyawan'] ?? null,
                     'tanggal_update_data_pja_karyawan' => $row['tanggal_update_data_pja_karyawan'] ?? null,
+                    'status_onsite' => $statusOnsite,
                 ];
             }
             
@@ -1020,6 +1356,10 @@ class MapBaseController extends Controller
             $pjaAktif = count(array_filter($karyawanData, function($k) {
                 return ($k['status_nama_pja'] ?? '0') == '1' || ($k['status_nama_pja'] ?? '0') == 1;
             }));
+            // Count total onsite (karyawan yang memiliki status_onsite tidak null)
+            $totalOnsite = count(array_filter($karyawanData, function($k) {
+                return !empty($k['status_onsite']);
+            }));
             $totalCctvDedicated = count($cctvDedicatedData);
             $karyawanDenganCctv = 0;
             
@@ -1038,6 +1378,7 @@ class MapBaseController extends Controller
                 'total_karyawan' => $totalKaryawan,
                 'karyawan_aktif' => $karyawanAktif,
                 'pja_aktif' => $pjaAktif,
+                'total_onsite' => $totalOnsite,
                 'total_cctv_dedicated' => $totalCctvDedicated,
                 'karyawan_dengan_cctv' => $karyawanDenganCctv,
                 'total_cctv' => $totalCctv,
@@ -1240,6 +1581,91 @@ class MapBaseController extends Controller
                     'last_week_wms' => null,
                     'last_year_wms' => null,
                 ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Get Area Kerja data grouped by coverage_lokasi for sidebar
+     */
+    public function getAreaKerjaSidebarData(Request $request)
+    {
+        try {
+            // Get CCTV coverage data grouped by coverage_lokasi
+            $cctvCoverageData = CctvCoverage::select(
+                'cctv_coverage.id',
+                'cctv_coverage.id_cctv',
+                'cctv_coverage.coverage_lokasi',
+                'cctv_coverage.coverage_detail_lokasi',
+                'cctv_coverage.kategori_aktivitas',
+                'cctv_coverage.kategori_area',
+                'cctv_data_bmo2.id as cctv_id',
+                'cctv_data_bmo2.no_cctv',
+                'cctv_data_bmo2.nama_cctv',
+                'cctv_data_bmo2.kondisi',
+                'cctv_data_bmo2.status',
+                'cctv_data_bmo2.lokasi_pemasangan',
+                'cctv_data_bmo2.longitude',
+                'cctv_data_bmo2.latitude',
+                'cctv_data_bmo2.site',
+                'cctv_data_bmo2.perusahaan',
+                'cctv_data_bmo2.control_room',
+                'cctv_data_bmo2.link_akses'
+            )
+            ->leftJoin('cctv_data_bmo2', 'cctv_coverage.id_cctv', '=', 'cctv_data_bmo2.id')
+            ->whereNotNull('cctv_coverage.coverage_lokasi')
+            ->orderBy('cctv_coverage.coverage_lokasi')
+            ->orderBy('cctv_data_bmo2.nama_cctv')
+            ->get();
+            
+            // Group by coverage_lokasi
+            $groupedData = [];
+            foreach ($cctvCoverageData as $item) {
+                $coverageLokasi = $item->coverage_lokasi ?? 'Unknown';
+                
+                if (!isset($groupedData[$coverageLokasi])) {
+                    $groupedData[$coverageLokasi] = [
+                        'coverage_lokasi' => $coverageLokasi,
+                        'cctv_list' => []
+                    ];
+                }
+                
+                // Add CCTV to the group
+                if ($item->cctv_id) {
+                    $groupedData[$coverageLokasi]['cctv_list'][] = [
+                        'id' => $item->cctv_id,
+                        'no_cctv' => $item->no_cctv,
+                        'nama_cctv' => $item->nama_cctv,
+                        'kondisi' => $item->kondisi,
+                        'status' => $item->status,
+                        'lokasi_pemasangan' => $item->lokasi_pemasangan,
+                        'coverage_detail_lokasi' => $item->coverage_detail_lokasi,
+                        'kategori_aktivitas' => $item->kategori_aktivitas,
+                        'kategori_area' => $item->kategori_area,
+                        'longitude' => $item->longitude,
+                        'latitude' => $item->latitude,
+                        'site' => $item->site,
+                        'perusahaan' => $item->perusahaan,
+                        'control_room' => $item->control_room,
+                        'link_akses' => $item->link_akses,
+                    ];
+                }
+            }
+            
+            // Convert to array format for frontend
+            $areaKerjaData = array_values($groupedData);
+            
+            return response()->json([
+                'success' => true,
+                'data' => $areaKerjaData,
+                'count' => count($areaKerjaData)
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error fetching area kerja sidebar data via API: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'data' => []
             ], 500);
         }
     }

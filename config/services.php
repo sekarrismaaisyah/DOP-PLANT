@@ -33,6 +33,7 @@ return [
 
     'telegram' => [
         'bot_token' => env('TELEGRAM_BOT_TOKEN'),
+        'bot_token_cctv' => env('TELEGRAM_BOT_CCTV'),
         'chat_id' => env('TELEGRAM_CHAT_ID'),
         'webhook_secret' => env('TELEGRAM_WEBHOOK_SECRET'),
     ],
