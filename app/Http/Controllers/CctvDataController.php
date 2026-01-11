@@ -4580,6 +4580,52 @@ class CctvDataController extends Controller
     }
 
     /**
+     * Get CCTV list by control room
+     */
+    public function getCctvByControlRoom(Request $request)
+    {
+        try {
+            $controlRoom = $request->get('control_room');
+            
+            if (!$controlRoom) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Control room is required',
+                    'data' => []
+                ], 400);
+            }
+            
+            // Get CCTV data for the control room
+            $cctvList = CctvData::where('control_room', $controlRoom)
+                ->orderBy('nama_cctv')
+                ->get(['id', 'no_cctv', 'nama_cctv', 'lokasi_pemasangan', 'status', 'kondisi'])
+                ->map(function($cctv) {
+                    return [
+                        'id' => $cctv->id,
+                        'no_cctv' => $cctv->no_cctv ?? 'CCTV-' . $cctv->id,
+                        'nama_cctv' => $cctv->nama_cctv ?? 'CCTV ' . $cctv->id,
+                        'lokasi_pemasangan' => $cctv->lokasi_pemasangan ?? '',
+                        'status' => $cctv->status ?? '',
+                        'kondisi' => $cctv->kondisi ?? '',
+                    ];
+                });
+            
+            return response()->json([
+                'success' => true,
+                'data' => $cctvList
+            ]);
+            
+        } catch (Exception $e) {
+            Log::error('Error getting CCTV by control room: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengambil data CCTV.',
+                'data' => []
+            ], 500);
+        }
+    }
+
+    /**
      * Delete pengawas control room
      */
     public function deletePengawasControlRoom($id)
@@ -4620,6 +4666,8 @@ class CctvDataController extends Controller
         try {
             $validated = $request->validate([
                 'control_room' => 'required|string|max:255',
+                'cctv_ids' => 'required|array|min:1',
+                'cctv_ids.*' => 'required|integer|exists:cctv_data_bmo2,id',
                 'pic_id' => 'required|string',
                 'issue' => 'required|string',
             ]);
@@ -4648,18 +4696,42 @@ class CctvDataController extends Controller
             $picData = $clickHouseService->query($sql);
             $picInfo = !empty($picData) ? $picData[0] : null;
 
-            // Store intervensi
+            // Get CCTV information for all selected CCTV
+            $cctvIds = $validated['cctv_ids'];
+            $cctvList = CctvData::whereIn('id', $cctvIds)->get();
+            $cctvNames = $cctvList->map(function($cctv) {
+                $name = $cctv->nama_cctv ?? ('CCTV ' . $cctv->id);
+                if ($cctv->no_cctv) {
+                    $name .= ' (' . $cctv->no_cctv . ')';
+                }
+                return $name;
+            })->implode(', ');
+
+            // Store intervensi (without cctv_id in main table, will use pivot table)
             $intervensi = IntervensiControlRoom::create([
                 'control_room' => $validated['control_room'],
+                'cctv_id' => null, // Keep nullable for backward compatibility, but use pivot table
                 'pic_id' => $picId,
                 'pic_username' => $picInfo['username'] ?? null,
                 'pic_nama' => $picInfo['nama'] ?? null,
                 'pic_telepon' => $picInfo['selular'] ?? null,
                 'issue' => $validated['issue'],
                 'status' => 'open', // Default status
+                'status_done' => 'belum', // Default status_done (for backward compatibility)
                 'created_by' => $createdBy,
                 'created_by_email' => $createdByEmail,
             ]);
+
+            // Store multiple CCTV in pivot table
+            $pivotData = [];
+            foreach ($cctvIds as $cctvId) {
+                $pivotData[$cctvId] = [
+                    'status_done' => 'belum',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            }
+            $intervensi->cctvs()->attach($pivotData);
 
             // Prepare WhatsApp URL
             $whatsappNumber = $picInfo['selular'] ?? null;
@@ -4680,8 +4752,10 @@ class CctvDataController extends Controller
                 $pesan = "Form Intervensi Control Room\n\n";
                 $pesan .= "Pelapor: " . $createdBy . "\n";
                 $pesan .= "Control Room: " . $validated['control_room'] . "\n";
+                $pesan .= "CCTV: " . $cctvNames . "\n";
                 $pesan .= "PIC: " . ($picInfo['username'] ?? '') . " - " . ($picInfo['nama'] ?? '') . "\n";
-                $pesan .= "Issue:\n" . $validated['issue'];
+                $pesan .= "Issue:\n" . $validated['issue'] . "\n\n";
+                $pesan .= "Link: https://besentry-dev.beraucoal.co.id/cctv-data-control-room/intervensi";
                 
                 $whatsappUrl = "https://wa.me/" . $cleanNumber . "?text=" . urlencode($pesan);
             }
@@ -4719,86 +4793,431 @@ class CctvDataController extends Controller
      */
     public function getIntervensiControlRoomData(Request $request)
     {
-        $draw = $request->get('draw');
-        $start = $request->get('start', 0);
-        $length = $request->get('length', 10);
-        $searchValue = $request->get('search')['value'] ?? '';
-        $orderColumn = $request->get('order')[0]['column'] ?? 0;
-        $orderDir = $request->get('order')[0]['dir'] ?? 'desc';
+        try {
+            $draw = $request->get('draw');
+            $start = $request->get('start', 0);
+            $length = $request->get('length', 10);
+            $search = $request->get('search');
+            $searchValue = isset($search['value']) ? $search['value'] : '';
+            $order = $request->get('order');
+            $orderColumn = (isset($order[0]['column'])) ? $order[0]['column'] : 0;
+            $orderDir = (isset($order[0]['dir'])) ? $order[0]['dir'] : 'desc';
 
-        // Column mapping
-        $columns = ['id', 'control_room', 'pic_username', 'pic_nama', 'issue', 'status', 'created_by', 'created_at', 'actions'];
-        $orderColumnName = $columns[$orderColumn] ?? 'created_at';
+            // Column mapping - only map to actual database columns
+            $columns = ['id', 'control_room', 'pic_username', 'pic_nama', 'issue', 'status', 'created_at'];
+            $orderColumnName = isset($columns[$orderColumn]) ? $columns[$orderColumn] : 'created_at';
+            
+            // Ensure order direction is valid
+            $orderDir = in_array(strtolower($orderDir), ['asc', 'desc']) ? strtolower($orderDir) : 'desc';
 
-        // Base query
-        $query = IntervensiControlRoom::query();
+            // Base query - only open issues
+            $query = IntervensiControlRoom::where('status', 'open');
 
-        // Search functionality
-        if (!empty($searchValue)) {
-            $query->where(function($q) use ($searchValue) {
-                $q->where('control_room', 'like', '%' . $searchValue . '%')
-                  ->orWhere('pic_username', 'like', '%' . $searchValue . '%')
-                  ->orWhere('pic_nama', 'like', '%' . $searchValue . '%')
-                  ->orWhere('issue', 'like', '%' . $searchValue . '%')
-                  ->orWhere('created_by', 'like', '%' . $searchValue . '%');
+            // Search functionality
+            if (!empty($searchValue)) {
+                $query->where(function($q) use ($searchValue) {
+                    $q->where('control_room', 'like', '%' . $searchValue . '%')
+                      ->orWhere('pic_username', 'like', '%' . $searchValue . '%')
+                      ->orWhere('pic_nama', 'like', '%' . $searchValue . '%')
+                      ->orWhere('issue', 'like', '%' . $searchValue . '%')
+                      ->orWhere('status', 'like', '%' . $searchValue . '%');
+                });
+            }
+
+            // Get total records
+            try {
+                $recordsTotal = IntervensiControlRoom::where('status', 'open')->count();
+                $recordsFiltered = $query->count();
+            } catch (\Exception $e) {
+                Log::error('Error counting records: ' . $e->getMessage());
+                $recordsTotal = 0;
+                $recordsFiltered = 0;
+            }
+
+            // Order and paginate with eager loading
+            // Use try-catch for eager loading in case relationship has issues
+            try {
+                $intervensiList = $query->with('cctvs')
+                    ->orderBy($orderColumnName, $orderDir)
+                    ->skip($start)
+                    ->take($length)
+                    ->get();
+            } catch (\Exception $e) {
+                // If eager loading fails, try without it
+                Log::warning('Eager loading cctvs failed, loading without: ' . $e->getMessage());
+                $intervensiList = $query->orderBy($orderColumnName, $orderDir)
+                    ->skip($start)
+                    ->take($length)
+                    ->get();
+            }
+
+            // Format data for DataTable
+            $formattedData = $intervensiList->map(function($intervensi, $index) use ($start) {
+                try {
+                    // Status badge
+                    $statusBadge = '';
+                    if ($intervensi->status === 'closed') {
+                        $statusBadge = '<span class="badge bg-success">Closed</span>';
+                    } else {
+                        $statusBadge = '<span class="badge bg-warning">Open</span>';
+                    }
+
+                    // Get CCTV names from pivot table (many-to-many)
+                    $cctvNames = '-';
+                    try {
+                        $cctvs = $intervensi->cctvs;
+                        if ($cctvs && $cctvs->count() > 0) {
+                            $cctvNames = $cctvs->map(function($cctv) {
+                                $name = $cctv->nama_cctv ?? ('CCTV ' . $cctv->id);
+                                if ($cctv->no_cctv) {
+                                    $name .= ' (' . $cctv->no_cctv . ')';
+                                }
+                                return $name;
+                            })->implode(', ');
+                        } elseif ($intervensi->cctv_id) {
+                            // Fallback untuk data lama (backward compatibility)
+                            $cctv = CctvData::find($intervensi->cctv_id);
+                            if ($cctv) {
+                                $cctvNames = $cctv->nama_cctv ?? ('CCTV ' . $cctv->id);
+                                if ($cctv->no_cctv) {
+                                    $cctvNames .= ' (' . $cctv->no_cctv . ')';
+                                }
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Error loading CCTV for intervensi ' . $intervensi->id . ': ' . $e->getMessage());
+                        $cctvNames = '-';
+                    }
+
+                    // Action buttons
+                    $actions = '';
+                    if ($intervensi->status === 'open') {
+                        $actions = '<button class="btn btn-sm btn-success close-intervensi-btn" data-id="' . $intervensi->id . '" title="Close Issue">
+                            <i class="material-icons-outlined" style="font-size: 16px;">check_circle</i> Close
+                        </button>';
+                    } else {
+                        $actions = '<span class="text-muted">Closed</span>';
+                    }
+
+                    // Format tanggal pelaporan: "9 Jan 2026"
+                    $tanggalPelaporan = '-';
+                    if ($intervensi->created_at) {
+                        $date = is_string($intervensi->created_at) ? \Carbon\Carbon::parse($intervensi->created_at) : $intervensi->created_at;
+                        $tanggalPelaporan = $date->format('j M Y'); // Format: 9 Jan 2026
+                    }
+
+                    return [
+                        'id' => $intervensi->id,
+                        'control_room' => $intervensi->control_room ?? '-',
+                        'cctv_name' => $cctvNames,
+                        'pic_username' => $intervensi->pic_username ?? '-',
+                        'pic_nama' => $intervensi->pic_nama ?? '-',
+                        'issue' => '<div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="' . htmlspecialchars($intervensi->issue ?? '') . '">' . htmlspecialchars($intervensi->issue ?? '') . '</div>',
+                        'status' => $statusBadge,
+                        'tanggal_pelaporan' => $tanggalPelaporan,
+                        'actions' => $actions
+                    ];
+                } catch (\Exception $e) {
+                    Log::error('Error formatting intervensi data for ID ' . ($intervensi->id ?? 'unknown') . ': ' . $e->getMessage());
+                    return [
+                        'id' => $intervensi->id ?? '-',
+                        'control_room' => '-',
+                        'cctv_name' => '-',
+                        'pic_username' => '-',
+                        'pic_nama' => '-',
+                        'issue' => 'Error loading data',
+                        'status' => '-',
+                        'tanggal_pelaporan' => '-',
+                        'actions' => '-'
+                    ];
+                }
             });
+
+            return response()->json([
+                'draw' => intval($draw),
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
+                'data' => $formattedData
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error in getIntervensiControlRoomData: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'request' => $request->all()
+            ]);
+            
+            $errorMessage = 'Terjadi kesalahan saat memuat data.';
+            if (config('app.debug')) {
+                $errorMessage .= ' ' . $e->getMessage() . ' (File: ' . basename($e->getFile()) . ', Line: ' . $e->getLine() . ')';
+            }
+            
+            return response()->json([
+                'draw' => intval($request->get('draw', 0)),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => $errorMessage
+            ], 500);
         }
+    }
 
-        // Get total records
-        $recordsTotal = IntervensiControlRoom::count();
-        $recordsFiltered = $query->count();
+    /**
+     * Get done intervensi control room data for DataTable
+     */
+    public function getDoneIntervensiControlRoomData(Request $request)
+    {
+        try {
+            $draw = $request->get('draw');
+            $start = $request->get('start', 0);
+            $length = $request->get('length', 10);
+            $search = $request->get('search');
+            $searchValue = isset($search['value']) ? $search['value'] : '';
+            $order = $request->get('order');
+            $orderColumn = (isset($order[0]['column'])) ? $order[0]['column'] : 0;
+            $orderDir = (isset($order[0]['dir'])) ? $order[0]['dir'] : 'desc';
 
-        // Order and paginate
-        $intervensiList = $query->orderBy($orderColumnName, $orderDir)
-            ->skip($start)
-            ->take($length)
-            ->get();
+            // Column mapping
+            $columns = ['id', 'control_room', 'pic_username', 'pic_nama', 'issue', 'created_at', 'closed_at'];
+            $orderColumnName = isset($columns[$orderColumn]) ? $columns[$orderColumn] : 'closed_at';
+            
+            // Ensure order direction is valid
+            $orderDir = in_array(strtolower($orderDir), ['asc', 'desc']) ? strtolower($orderDir) : 'desc';
 
-        // Format data for DataTable
-        $formattedData = $intervensiList->map(function($intervensi, $index) use ($start) {
-            // Status badge
-            $statusBadge = '';
-            if ($intervensi->status === 'closed') {
-                $statusBadge = '<span class="badge bg-success">Closed</span>';
-            } else {
-                $statusBadge = '<span class="badge bg-warning">Open</span>';
+            // Base query - only closed issues
+            $query = IntervensiControlRoom::where('status', 'closed');
+
+            // Search functionality
+            if (!empty($searchValue)) {
+                $query->where(function($q) use ($searchValue) {
+                    $q->where('control_room', 'like', '%' . $searchValue . '%')
+                      ->orWhere('pic_username', 'like', '%' . $searchValue . '%')
+                      ->orWhere('pic_nama', 'like', '%' . $searchValue . '%')
+                      ->orWhere('issue', 'like', '%' . $searchValue . '%');
+                });
             }
 
-            // Action buttons
-            $actions = '';
-            if ($intervensi->status === 'open') {
-                $actions = '<button class="btn btn-sm btn-success close-intervensi-btn" data-id="' . $intervensi->id . '" title="Close Issue">
-                    <i class="material-icons-outlined" style="font-size: 16px;">check_circle</i> Close
-                </button>';
-            } else {
-                $actions = '<span class="text-muted">Closed</span>';
+            // Get total records
+            try {
+                $recordsTotal = IntervensiControlRoom::where('status', 'closed')->count();
+                $recordsFiltered = $query->count();
+            } catch (\Exception $e) {
+                Log::error('Error counting done records: ' . $e->getMessage());
+                $recordsTotal = 0;
+                $recordsFiltered = 0;
             }
 
-            return [
-                'DT_RowIndex' => $start + $index + 1,
-                'id' => $intervensi->id,
-                'control_room' => $intervensi->control_room,
-                'pic_username' => $intervensi->pic_username ?? '-',
-                'pic_nama' => $intervensi->pic_nama ?? '-',
-                'pic_telepon' => $intervensi->pic_telepon ?? '-',
-                'issue' => '<div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="' . htmlspecialchars($intervensi->issue) . '">' . htmlspecialchars($intervensi->issue) . '</div>',
-                'status' => $statusBadge,
-                'created_by' => $intervensi->created_by ?? '-',
-                'created_by_email' => $intervensi->created_by_email ?? '-',
-                'created_at' => $intervensi->created_at ? $intervensi->created_at->format('Y-m-d H:i:s') : '-',
-                'updated_at' => $intervensi->updated_at ? $intervensi->updated_at->format('Y-m-d H:i:s') : '-',
-                'closed_at' => $intervensi->closed_at ? $intervensi->closed_at->format('Y-m-d H:i:s') : '-',
-                'closed_by' => $intervensi->closed_by ?? '-',
-                'actions' => $actions
-            ];
-        });
+            // Order and paginate with eager loading
+            try {
+                $intervensiList = $query->with('cctvs')
+                    ->orderBy($orderColumnName, $orderDir)
+                    ->skip($start)
+                    ->take($length)
+                    ->get();
+            } catch (\Exception $e) {
+                Log::warning('Eager loading cctvs failed, loading without: ' . $e->getMessage());
+                $intervensiList = $query->orderBy($orderColumnName, $orderDir)
+                    ->skip($start)
+                    ->take($length)
+                    ->get();
+            }
 
-        return response()->json([
-            'draw' => intval($draw),
-            'recordsTotal' => $recordsTotal,
-            'recordsFiltered' => $recordsFiltered,
-            'data' => $formattedData
-        ]);
+            // Format data for DataTable
+            $formattedData = $intervensiList->map(function($intervensi, $index) use ($start) {
+                try {
+                    // Get CCTV names from pivot table (many-to-many)
+                    $cctvNames = '-';
+                    try {
+                        $cctvs = $intervensi->cctvs;
+                        if ($cctvs && $cctvs->count() > 0) {
+                            $cctvNames = $cctvs->map(function($cctv) {
+                                $name = $cctv->nama_cctv ?? ('CCTV ' . $cctv->id);
+                                if ($cctv->no_cctv) {
+                                    $name .= ' (' . $cctv->no_cctv . ')';
+                                }
+                                return $name;
+                            })->implode(', ');
+                        } elseif ($intervensi->cctv_id) {
+                            $cctv = CctvData::find($intervensi->cctv_id);
+                            if ($cctv) {
+                                $cctvNames = $cctv->nama_cctv ?? ('CCTV ' . $cctv->id);
+                                if ($cctv->no_cctv) {
+                                    $cctvNames .= ' (' . $cctv->no_cctv . ')';
+                                }
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Error loading CCTV for intervensi ' . $intervensi->id . ': ' . $e->getMessage());
+                        $cctvNames = '-';
+                    }
+
+                    // Format tanggal pelaporan: "9 Jan 2026"
+                    $tanggalPelaporan = '-';
+                    if ($intervensi->created_at) {
+                        $date = is_string($intervensi->created_at) ? \Carbon\Carbon::parse($intervensi->created_at) : $intervensi->created_at;
+                        $tanggalPelaporan = $date->format('j M Y');
+                    }
+
+                    // Format tanggal selesai: "9 Jan 2026"
+                    $tanggalSelesai = '-';
+                    if ($intervensi->closed_at) {
+                        $date = is_string($intervensi->closed_at) ? \Carbon\Carbon::parse($intervensi->closed_at) : $intervensi->closed_at;
+                        $tanggalSelesai = $date->format('j M Y');
+                    }
+
+                    return [
+                        'id' => $intervensi->id,
+                        'control_room' => $intervensi->control_room ?? '-',
+                        'cctv_name' => $cctvNames,
+                        'pic_username' => $intervensi->pic_username ?? '-',
+                        'pic_nama' => $intervensi->pic_nama ?? '-',
+                        'issue' => '<div style="max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="' . htmlspecialchars($intervensi->issue ?? '') . '">' . htmlspecialchars($intervensi->issue ?? '') . '</div>',
+                        'tanggal_pelaporan' => $tanggalPelaporan,
+                        'tanggal_selesai' => $tanggalSelesai,
+                        'actions' => '<button class="btn btn-sm btn-light border view-done-detail-btn" data-id="' . $intervensi->id . '" title="Lihat Detail">
+                            <i class="material-icons-outlined" style="font-size: 16px;">visibility</i> Detail
+                        </button>'
+                    ];
+                } catch (\Exception $e) {
+                    Log::error('Error formatting done intervensi data for ID ' . ($intervensi->id ?? 'unknown') . ': ' . $e->getMessage());
+                    return [
+                        'id' => $intervensi->id ?? '-',
+                        'control_room' => '-',
+                        'cctv_name' => '-',
+                        'pic_username' => '-',
+                        'pic_nama' => '-',
+                        'issue' => 'Error loading data',
+                        'tanggal_pelaporan' => '-',
+                        'tanggal_selesai' => '-',
+                        'actions' => '-'
+                    ];
+                }
+            });
+
+            return response()->json([
+                'draw' => intval($draw),
+                'recordsTotal' => $recordsTotal,
+                'recordsFiltered' => $recordsFiltered,
+                'data' => $formattedData
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error in getDoneIntervensiControlRoomData: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'request' => $request->all()
+            ]);
+            
+            $errorMessage = 'Terjadi kesalahan saat memuat data.';
+            if (config('app.debug')) {
+                $errorMessage .= ' ' . $e->getMessage() . ' (File: ' . basename($e->getFile()) . ', Line: ' . $e->getLine() . ')';
+            }
+            
+            return response()->json([
+                'draw' => intval($request->get('draw', 0)),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+                'error' => $errorMessage
+            ], 500);
+        }
+    }
+
+    /**
+     * Get detail done intervensi for card display
+     */
+    public function getDoneIntervensiDetail($id)
+    {
+        try {
+            $intervensi = IntervensiControlRoom::with('cctvs')->where('status', 'closed')->findOrFail($id);
+            
+            // Format CCTV data with resolution and evidence
+            $cctvList = $intervensi->cctvs->map(function($cctv) {
+                $cctvName = $cctv->nama_cctv ?? ('CCTV ' . $cctv->id);
+                if ($cctv->no_cctv) {
+                    $cctvName .= ' (' . $cctv->no_cctv . ')';
+                }
+                
+                return [
+                    'id' => $cctv->id,
+                    'nama_cctv' => $cctvName,
+                    'no_cctv' => $cctv->no_cctv ?? null,
+                    'status_done' => isset($cctv->pivot->status_done) ? $cctv->pivot->status_done : 'belum',
+                    'resolution' => isset($cctv->pivot->resolution) ? $cctv->pivot->resolution : null,
+                    'evidence_path' => isset($cctv->pivot->evidence_path) ? $cctv->pivot->evidence_path : null,
+                ];
+            });
+            
+            // Format dates
+            $tanggalPelaporan = $intervensi->created_at ? (is_string($intervensi->created_at) ? \Carbon\Carbon::parse($intervensi->created_at) : $intervensi->created_at)->format('j M Y') : '-';
+            $tanggalSelesai = $intervensi->closed_at ? (is_string($intervensi->closed_at) ? \Carbon\Carbon::parse($intervensi->closed_at) : $intervensi->closed_at)->format('j M Y, H:i') : '-';
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $intervensi->id,
+                    'control_room' => $intervensi->control_room,
+                    'issue' => $intervensi->issue,
+                    'resolution' => $intervensi->resolution,
+                    'evidence_path' => $intervensi->evidence_path,
+                    'pic_username' => $intervensi->pic_username,
+                    'pic_nama' => $intervensi->pic_nama,
+                    'pic_telepon' => $intervensi->pic_telepon,
+                    'created_by' => $intervensi->created_by,
+                    'created_by_email' => $intervensi->created_by_email,
+                    'closed_by' => $intervensi->closed_by,
+                    'tanggal_pelaporan' => $tanggalPelaporan,
+                    'tanggal_selesai' => $tanggalSelesai,
+                    'cctvs' => $cctvList
+                ]
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error getting done intervensi detail: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengambil data intervensi.'
+            ], 500);
+        }
+    }
+
+    /**
+     * Get detail intervensi with CCTV list for close form
+     */
+    public function getIntervensiDetail($id)
+    {
+        try {
+            $intervensi = IntervensiControlRoom::with('cctvs')->findOrFail($id);
+            
+            $cctvList = $intervensi->cctvs->map(function($cctv) {
+                return [
+                    'id' => $cctv->id,
+                    'nama_cctv' => $cctv->nama_cctv ?? ('CCTV ' . $cctv->id),
+                    'no_cctv' => $cctv->no_cctv ?? null,
+                    'status_done' => $cctv->pivot->status_done ?? 'belum',
+                    'resolution' => isset($cctv->pivot->resolution) ? $cctv->pivot->resolution : null,
+                    'evidence_path' => isset($cctv->pivot->evidence_path) ? $cctv->pivot->evidence_path : null,
+                ];
+            });
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $intervensi->id,
+                    'control_room' => $intervensi->control_room,
+                    'issue' => $intervensi->issue,
+                    'resolution' => $intervensi->resolution,
+                    'evidence_path' => $intervensi->evidence_path,
+                    'status' => $intervensi->status,
+                    'cctvs' => $cctvList
+                ]
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error getting intervensi detail: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengambil data intervensi.'
+            ], 500);
+        }
     }
 
     /**
@@ -4807,24 +5226,92 @@ class CctvDataController extends Controller
     public function updateIntervensiStatus(Request $request, $id)
     {
         try {
+            // Validate basic fields first
             $validated = $request->validate([
-                'status' => 'required|in:open,closed'
+                'status' => 'required|in:open,closed',
+                'resolution' => 'nullable|string',
+                'evidence' => 'nullable|file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240', // Max 10MB
+                'cctv_resolutions' => 'nullable|array',
             ]);
+            
+            // Validate CCTV resolutions if provided
+            if ($request->has('cctv_resolutions') && is_array($request->input('cctv_resolutions'))) {
+                foreach ($request->input('cctv_resolutions') as $index => $cctvData) {
+                    $request->validate([
+                        'cctv_resolutions.' . $index . '.cctv_id' => 'required|exists:cctv_data_bmo2,id',
+                        'cctv_resolutions.' . $index . '.status_done' => 'nullable|in:belum,sudah',
+                        'cctv_resolutions.' . $index . '.resolution' => 'nullable|string',
+                    ]);
+                    
+                    // Validate file if exists
+                    if ($request->hasFile('cctv_resolutions.' . $index . '.evidence')) {
+                        $request->validate([
+                            'cctv_resolutions.' . $index . '.evidence' => 'file|mimes:jpg,jpeg,png,pdf,doc,docx|max:10240',
+                        ]);
+                    }
+                }
+            }
 
-            $intervensi = IntervensiControlRoom::findOrFail($id);
+            $intervensi = IntervensiControlRoom::with('cctvs')->findOrFail($id);
             
             // Get authenticated user
             $user = Auth::user();
             $closedBy = $user ? $user->name : 'Unknown';
 
             $intervensi->status = $validated['status'];
+            
             if ($validated['status'] === 'closed') {
                 $intervensi->closed_at = now();
                 $intervensi->closed_by = $closedBy;
+                
+                // Handle resolution
+                if (isset($validated['resolution'])) {
+                    $intervensi->resolution = $validated['resolution'];
+                }
+                
+                // Handle main evidence file
+                if ($request->hasFile('evidence')) {
+                    $evidenceFile = $request->file('evidence');
+                    $evidencePath = $evidenceFile->store('intervensi/evidence', 'public');
+                    $intervensi->evidence_path = $evidencePath;
+                }
+                
+                // Handle CCTV-specific resolutions and evidence
+                if ($request->has('cctv_resolutions') && is_array($request->input('cctv_resolutions'))) {
+                    foreach ($request->input('cctv_resolutions') as $index => $cctvData) {
+                        $cctvId = $cctvData['cctv_id'];
+                        $updateData = [];
+                        
+                        if (isset($cctvData['status_done'])) {
+                            $updateData['status_done'] = $cctvData['status_done'];
+                        }
+                        
+                        if (isset($cctvData['resolution'])) {
+                            $updateData['resolution'] = $cctvData['resolution'];
+                        }
+                        
+                        // Handle evidence file for this CCTV
+                        $evidenceKey = 'cctv_resolutions.' . $index . '.evidence';
+                        if ($request->hasFile($evidenceKey)) {
+                            $evidenceFile = $request->file($evidenceKey);
+                            $evidencePath = $evidenceFile->store('intervensi/cctv-evidence', 'public');
+                            $updateData['evidence_path'] = $evidencePath;
+                        }
+                        
+                        // Update pivot table
+                        if (!empty($updateData)) {
+                            $intervensi->cctvs()->updateExistingPivot($cctvId, $updateData);
+                        }
+                    }
+                }
             } else {
                 $intervensi->closed_at = null;
                 $intervensi->closed_by = null;
+                $intervensi->resolution = null;
+                // Don't delete evidence files when reopening, just clear the path
+                $intervensi->evidence_path = null;
             }
+            
             $intervensi->save();
 
             return response()->json([
@@ -4832,11 +5319,58 @@ class CctvDataController extends Controller
                 'message' => 'Status intervensi berhasil diupdate.'
             ]);
 
-        } catch (Exception $e) {
-            Log::error('Error updating intervensi status: ' . $e->getMessage());
+        } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat mengupdate status.'
+                'message' => 'Validasi gagal: ' . implode(', ', $e->errors())
+            ], 422);
+        } catch (Exception $e) {
+            Log::error('Error updating intervensi status: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengupdate status: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+
+    /**
+     * Update status_done of intervensi control room
+     */
+    public function updateIntervensiStatusDone(Request $request, $id)
+    {
+        try {
+            $validated = $request->validate([
+                'status_done' => 'required|in:belum,sudah'
+            ]);
+
+            $intervensi = IntervensiControlRoom::findOrFail($id);
+            
+            // Update status_done di intervensi (for backward compatibility)
+            $intervensi->status_done = $validated['status_done'];
+            $intervensi->save();
+            
+            // Update status_done di pivot table untuk semua CCTV dalam intervensi ini
+            if ($intervensi->cctvs()->count() > 0) {
+                DB::table('intervensi_control_room_cctv')
+                    ->where('intervensi_id', $id)
+                    ->update([
+                        'status_done' => $validated['status_done'],
+                        'updated_at' => now()
+                    ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Status done berhasil diupdate untuk semua CCTV.'
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error updating intervensi status_done: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengupdate status done.'
             ], 500);
         }
     }

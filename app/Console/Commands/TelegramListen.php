@@ -27,9 +27,21 @@ class TelegramListen extends Command
 
     private int $lastUpdateId = 0;
     private bool $shouldSave = false;
+    private string $lockFile;
 
     public function handle(): int
     {
+        // Create lock file to prevent scheduled tasks from running
+        $this->lockFile = storage_path('framework/schedule-telegram-listen.lock');
+        file_put_contents($this->lockFile, getmypid());
+        
+        // Register shutdown function to clean up lock file
+        register_shutdown_function(function () {
+            if (file_exists($this->lockFile)) {
+                @unlink($this->lockFile);
+            }
+        });
+
         $this->info('🤖 Telegram Bot Listener Started');
         $this->newLine();
 
@@ -53,6 +65,31 @@ class TelegramListen extends Command
             return self::FAILURE;
         }
 
+        // Check if webhook is active (this can cause conflicts)
+        try {
+            $webhookInfo = $service->getWebhookInfo();
+            if (Arr::get($webhookInfo, 'ok')) {
+                $webhookUrl = Arr::get($webhookInfo, 'result.url', '');
+                if (! empty($webhookUrl)) {
+                    $this->newLine();
+                    $this->warn('⚠️  WARNING: A webhook is currently active!');
+                    $this->line('Webhook URL: ' . $webhookUrl);
+                    $this->newLine();
+                    $this->warn('Having both webhook and polling active will cause 409 Conflict errors.');
+                    $this->info('💡 To remove webhook, run: php artisan telegram:webhook remove');
+                    $this->newLine();
+                    
+                    if (! $this->confirm('Do you want to continue anyway? (This may cause errors)', false)) {
+                        $this->info('Cancelled. Please remove webhook first.');
+                        return self::FAILURE;
+                    }
+                    $this->newLine();
+                }
+            }
+        } catch (\Throwable $e) {
+            // Ignore webhook check errors, just continue
+        }
+
         // Get last update ID from database if saving
         if ($this->shouldSave) {
             $this->lastUpdateId = \App\Models\TelegramMessage::max('update_id') ?? 0;
@@ -71,9 +108,10 @@ class TelegramListen extends Command
         $this->newLine();
 
         // Continuous loop
-        while (true) {
-            try {
-                $this->line('⏳ Waiting for new messages...');
+        try {
+            while (true) {
+                try {
+                    $this->line('⏳ Waiting for new messages...');
                 
                 $payload = [
                     'limit' => (int) $this->option('limit'),
@@ -87,6 +125,28 @@ class TelegramListen extends Command
                 $response = $service->getUpdates($payload);
 
                 if (! Arr::get($response, 'ok')) {
+                    $errorCode = Arr::get($response, 'error_code');
+                    $errorDescription = Arr::get($response, 'description', '');
+                    
+                    // Handle 409 Conflict specifically
+                    if ($errorCode === 409) {
+                        $this->error('✗ Error 409 Conflict: Another getUpdates request is already running!');
+                        $this->newLine();
+                        $this->warn('This usually happens when:');
+                        $this->line('  1. Another instance of this command is running');
+                        $this->line('  2. A webhook is configured for this bot');
+                        $this->line('  3. Another script/application is using the same bot token');
+                        $this->newLine();
+                        $this->info('💡 Solutions:');
+                        $this->line('  • Stop all other instances: Check running processes and kill duplicates');
+                        $this->line('  • If using webhook: Remove webhook first with: php artisan telegram:webhook remove');
+                        $this->line('  • Wait a few seconds and try again');
+                        $this->newLine();
+                        $this->line('⏳ Waiting 10 seconds before retry...');
+                        sleep(10);
+                        continue;
+                    }
+                    
                     $this->error('✗ Telegram API error: ' . json_encode($response));
                     $this->newLine();
                     sleep(5); // Wait 5 seconds before retry
@@ -116,6 +176,12 @@ class TelegramListen extends Command
                 $this->error('✗ Error: ' . $e->getMessage());
                 $this->newLine();
                 sleep(5); // Wait 5 seconds before retry
+            }
+            }
+        } finally {
+            // Clean up lock file when command exits
+            if (isset($this->lockFile) && file_exists($this->lockFile)) {
+                @unlink($this->lockFile);
             }
         }
 

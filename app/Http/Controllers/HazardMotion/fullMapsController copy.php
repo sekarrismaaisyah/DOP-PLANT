@@ -2367,10 +2367,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             // Get all daily operation plans
             $plans = DailyOperationPlan::all();
             
-            Log::info('getDailyOperationPlansWithPolygons - Total plans found: ' . $plans->count());
-            
             if ($plans->isEmpty()) {
-                Log::info('getDailyOperationPlansWithPolygons - No plans found');
                 return response()->json([
                     'success' => true,
                     'data' => [
@@ -2381,175 +2378,72 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             }
 
             $clickHouseService = new ClickHouseService();
-            
-            if (!$clickHouseService->isConnected()) {
-                Log::error('getDailyOperationPlansWithPolygons - ClickHouse not connected');
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ClickHouse tidak terhubung',
-                    'data' => [
-                        'type' => 'FeatureCollection',
-                        'features' => []
-                    ]
-                ]);
-            }
-
             $features = [];
-            $processedCount = 0;
-            $foundCount = 0;
-            $geometryCount = 0;
-            $processedLocations = []; // Track lokasi dan detail_lokasi yang sudah diproses untuk deduplikasi
 
             foreach ($plans as $plan) {
                 $lokasi = $plan->lokasi;
                 $detailLokasi = $plan->detail_lokasi;
 
-                // Skip only if both lokasi and detail_lokasi are empty
-                if (empty($lokasi) && empty($detailLokasi)) {
-                    Log::debug("Skipping plan {$plan->id}: both lokasi and detail_lokasi are empty");
-                    continue;
-                }
-
-                $processedCount++;
-
-                // Buat key unik untuk lokasi dan detail_lokasi (case-insensitive, trimmed)
-                $locationKey = strtolower(trim($lokasi ?? '') . '|' . trim($detailLokasi ?? ''));
-                
-                // Skip jika lokasi dan detail_lokasi ini sudah diproses (deduplikasi)
-                if (isset($processedLocations[$locationKey])) {
-                    Log::debug("Skipping duplicate location for plan {$plan->id}", [
-                        'lokasi' => $lokasi,
-                        'detail_lokasi' => $detailLokasi,
-                        'already_processed' => true
-                    ]);
-                    continue;
+                if (!$lokasi || !$detailLokasi) {
+                    continue; // Skip if lokasi or detail_lokasi is empty
                 }
 
                 // Escape single quotes to prevent SQL injection
-                $escapedLokasi = str_replace("'", "''", $lokasi ?? '');
-                $escapedDetailLokasi = str_replace("'", "''", $detailLokasi ?? '');
+                $escapedLokasi = str_replace("'", "''", $lokasi);
+                $escapedDetailLokasi = str_replace("'", "''", $detailLokasi);
 
-                // Query ClickHouse - hanya match lokasi dan Detil_Lokasi
-                // Gunakan data_geometry2 untuk boundary (sudah dalam format FeatureCollection)
+                // Query ClickHouse for polygon geometry
+                // Use ST_AsGeoJSON if available, otherwise use wkt_geometry
+                // Try to get GeoJSON directly from ClickHouse first
                 $sql = "SELECT 
                             lokasi,
                             Detil_Lokasi as detail_lokasi,
-                            data_geometry2,
-                            site
+                            wkt_geometry,
+                            site,
+                            toString(ST_AsGeoJSON(wkt_geometry)) as geo_json
                         FROM nitip.bep_vw_site_lokasi_detil_lokasi 
-                        WHERE trim(lokasi) = trim('{$escapedLokasi}') 
-                        AND trim(Detil_Lokasi) = trim('{$escapedDetailLokasi}')
+                        WHERE lokasi = '{$escapedLokasi}' 
+                        AND Detil_Lokasi = '{$escapedDetailLokasi}'
                         LIMIT 1";
 
                 try {
-                    Log::debug("Querying ClickHouse for plan {$plan->id}", [
-                        'lokasi' => $lokasi,
-                        'detail_lokasi' => $detailLokasi,
-                        'sql' => $sql
-                    ]);
-                    
                     $clickHouseResults = $clickHouseService->query($sql);
                     
-                    Log::debug("ClickHouse query result for plan {$plan->id}", [
-                        'result_count' => count($clickHouseResults),
-                        'has_results' => !empty($clickHouseResults)
-                    ]);
-                    
                     if (!empty($clickHouseResults)) {
-                        $foundCount++;
                         $polygonData = $clickHouseResults[0];
                         $geoJson = null;
                         
-                        Log::debug("Found ClickHouse data for plan {$plan->id}", [
-                            'lokasi' => $lokasi,
-                            'detail_lokasi' => $detailLokasi,
-                            'has_data_geometry2' => !empty($polygonData['data_geometry2']),
-                            'data_geometry2_length' => !empty($polygonData['data_geometry2']) ? strlen($polygonData['data_geometry2']) : 0
-                        ]);
-                        
-                        // Gunakan data_geometry2 dari ClickHouse (sudah dalam format FeatureCollection)
-                        if (!empty($polygonData['data_geometry2'])) {
-                            $dataGeometry2 = $polygonData['data_geometry2'];
-                            $geoJson = null;
-                            
-                            Log::debug("Processing data_geometry2 for plan {$plan->id}", [
-                                'data_geometry2_type' => gettype($dataGeometry2),
-                                'data_geometry2_preview' => is_string($dataGeometry2) ? substr($dataGeometry2, 0, 200) : 'not_string'
-                            ]);
-                            
-                            // Parse sebagai JSON (data_geometry2 sudah dalam format FeatureCollection)
-                            $decoded = json_decode($dataGeometry2, true);
-                            if (json_last_error() === JSON_ERROR_NONE && $decoded && is_array($decoded)) {
-                                Log::debug("Successfully decoded JSON for plan {$plan->id}", [
-                                    'decoded_type' => $decoded['type'] ?? 'unknown',
-                                    'has_features' => isset($decoded['features']),
-                                    'features_count' => isset($decoded['features']) ? count($decoded['features']) : 0
-                                ]);
-                                
-                                // Cek jika ini FeatureCollection
-                                if (isset($decoded['type']) && $decoded['type'] === 'FeatureCollection' && isset($decoded['features'])) {
-                                    // Ambil geometry dari feature pertama
-                                    if (!empty($decoded['features']) && is_array($decoded['features'])) {
-                                        $firstFeature = $decoded['features'][0];
-                                        if (isset($firstFeature['geometry'])) {
-                                            $geoJson = $firstFeature['geometry'];
-                                            Log::debug("Extracted geometry from FeatureCollection for plan {$plan->id}", [
-                                                'geometry_type' => $geoJson['type'] ?? 'unknown',
-                                                'has_coordinates' => isset($geoJson['coordinates'])
-                                            ]);
-                                        } else {
-                                            Log::warning("FeatureCollection feature has no geometry for plan {$plan->id}");
-                                        }
-                                    } else {
-                                        Log::warning("FeatureCollection has no features for plan {$plan->id}");
-                                    }
-                                }
-                                // Cek jika ini langsung Geometry (Polygon, MultiPolygon, dll)
-                                elseif (isset($decoded['type']) && isset($decoded['coordinates'])) {
-                                    $geoJson = $decoded;
-                                    Log::debug("Using GeoJSON geometry from data_geometry2 for plan {$plan->id}", [
-                                        'type' => $decoded['type']
-                                    ]);
-                                }
-                                // Cek jika ini Feature
-                                elseif (isset($decoded['type']) && $decoded['type'] === 'Feature' && isset($decoded['geometry'])) {
-                                    $geoJson = $decoded['geometry'];
-                                    Log::debug("Extracted geometry from Feature for plan {$plan->id}", [
-                                        'geometry_type' => $geoJson['type'] ?? 'unknown'
-                                    ]);
-                                } else {
-                                    Log::warning("Unknown decoded structure for plan {$plan->id}", [
-                                        'decoded_type' => $decoded['type'] ?? 'no_type',
-                                        'decoded_keys' => array_keys($decoded)
-                                    ]);
-                                }
-                            } else {
-                                Log::warning("data_geometry2 is not valid JSON for plan {$plan->id}", [
-                                    'json_error' => json_last_error_msg()
-                                ]);
+                        // Try to use GeoJSON directly from ClickHouse first
+                        if (!empty($polygonData['geo_json'])) {
+                            $geoJsonStr = $polygonData['geo_json'];
+                            // Remove quotes if present
+                            $geoJsonStr = trim($geoJsonStr, '"\'');
+                            $decoded = json_decode($geoJsonStr, true);
+                            if ($decoded && is_array($decoded)) {
+                                $geoJson = $decoded;
                             }
-                        } else {
-                            Log::debug("No data_geometry2 for plan {$plan->id}");
+                        }
+                        
+                        // Fallback to WKT parsing if GeoJSON not available
+                        if (!$geoJson) {
+                            $wktGeometry = $polygonData['wkt_geometry'] ?? null;
+                            if ($wktGeometry) {
+                                // Convert WKT to GeoJSON
+                                // WKT format: MULTIPOLYGON(((lon lat, lon lat, ...)))
+                                // We'll parse it and convert to GeoJSON
+                                $geoJson = $this->wktToGeoJson($wktGeometry);
+                            }
                         }
 
-                        // Jika ada geometry, validasi dan normalisasi sebelum membuat feature
-                        if (!empty($geoJson) && is_array($geoJson)) {
-                            // Pastikan geometry memiliki type dan coordinates yang valid
-                            if (isset($geoJson['type']) && isset($geoJson['coordinates'])) {
-                                $geometryType = $geoJson['type'];
-                                $coordinates = $geoJson['coordinates'];
-                                
-                                // Validasi dan normalisasi coordinates berdasarkan type
-                                $validCoordinates = $this->validateAndNormalizeCoordinates($coordinates, $geometryType);
-                                
-                                if ($validCoordinates !== null) {
-                                    $geometryCount++;
+                        if ($geoJson) {
+                            // Validate geometry coordinates
+                            if ($this->isValidGeometry($geoJson)) {
+                                // Additional check: ensure polygon has valid coordinates (not all same lat/lon)
+                                if ($this->hasValidCoordinateVariation($geoJson)) {
+                                    // Create GeoJSON feature with plan data as properties
                                     $feature = [
                                         'type' => 'Feature',
-                                        'geometry' => [
-                                            'type' => $geometryType,
-                                            'coordinates' => $validCoordinates
-                                        ],
+                                        'geometry' => $geoJson,
                                         'properties' => [
                                             'id' => $plan->id,
                                             'site' => $plan->site ?? $polygonData['site'] ?? null,
@@ -2565,85 +2459,19 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                                         ]
                                     ];
                                     $features[] = $feature;
-                                    $processedLocations[$locationKey] = true; // Mark location as processed
-                                    Log::info("Successfully added feature for plan {$plan->id}", [
-                                        'geometry_type' => $geometryType,
-                                        'location_key' => $locationKey
-                                    ]);
                                 } else {
-                                    // Fallback: gunakan coordinates asli jika validasi gagal (untuk debugging)
-                                    Log::warning("Coordinates validation failed for plan {$plan->id}, using original coordinates", [
-                                        'geometry_type' => $geometryType,
-                                        'coordinates_type' => gettype($coordinates),
-                                        'coordinates_structure' => is_array($coordinates) ? 'array with ' . count($coordinates) . ' items' : 'not_array'
-                                    ]);
-                                    
-                                    // Gunakan coordinates asli sebagai fallback
-                                    $geometryCount++;
-                                    $feature = [
-                                        'type' => 'Feature',
-                                        'geometry' => [
-                                            'type' => $geometryType,
-                                            'coordinates' => $coordinates
-                                        ],
-                                        'properties' => [
-                                            'id' => $plan->id,
-                                            'site' => $plan->site ?? $polygonData['site'] ?? null,
-                                            'pekerjaan' => $plan->pekerjaan ?? null,
-                                            'unit_id' => $plan->unit_id ?? null,
-                                            'lokasi' => $lokasi,
-                                            'detail_lokasi' => $detailLokasi,
-                                            'potensi_resiko' => $plan->potensi_resiko ?? null,
-                                            'pengendalian_bahaya' => $plan->pengendalian_bahaya ?? null,
-                                            'catatan' => $plan->catatan ?? null,
-                                            'tanggal' => $plan->tanggal ? $plan->tanggal->format('Y-m-d') : null,
-                                            'foto_pekerjaan' => $plan->foto_pekerjaan ?? null,
-                                        ]
-                                    ];
-                                    $features[] = $feature;
-                                    $processedLocations[$locationKey] = true; // Mark location as processed
-                                    Log::info("Added feature with original coordinates (validation bypassed) for plan {$plan->id}", [
-                                        'location_key' => $locationKey
-                                    ]);
+                                    Log::warning("Geometry has no coordinate variation for plan {$plan->id} (lokasi: {$lokasi}, detail_lokasi: {$detailLokasi}) - likely a line or invalid polygon");
                                 }
                             } else {
-                                Log::warning("GeoJSON missing type or coordinates for plan {$plan->id}", [
-                                    'has_type' => isset($geoJson['type']),
-                                    'has_coordinates' => isset($geoJson['coordinates']),
-                                    'geoJson_keys' => array_keys($geoJson)
-                                ]);
+                                Log::warning("Invalid geometry for plan {$plan->id} (lokasi: {$lokasi}, detail_lokasi: {$detailLokasi})");
                             }
-                        } else {
-                            Log::debug("No valid geometry for plan {$plan->id}", [
-                                'has_data_geometry' => !empty($polygonData['data_geometry']),
-                                'geoJson_after_processing' => !empty($geoJson),
-                                'geoJson_type' => gettype($geoJson)
-                            ]);
                         }
-                    } else {
-                        Log::debug("No ClickHouse results for plan {$plan->id}", [
-                            'lokasi' => $lokasi,
-                            'detail_lokasi' => $detailLokasi
-                        ]);
                     }
                 } catch (Exception $chError) {
-                    Log::error("ClickHouse query failed for plan {$plan->id}: " . $chError->getMessage(), [
-                        'lokasi' => $lokasi,
-                        'detail_lokasi' => $detailLokasi,
-                        'error' => $chError->getMessage()
-                    ]);
-                    continue;
+                    Log::warning("ClickHouse query failed for plan {$plan->id}: " . $chError->getMessage());
+                    continue; // Skip this plan if ClickHouse query fails
                 }
             }
-
-            Log::info('getDailyOperationPlansWithPolygons - Summary', [
-                'total_plans' => $plans->count(),
-                'processed' => $processedCount,
-                'found_in_clickhouse' => $foundCount,
-                'with_geometry' => $geometryCount,
-                'unique_locations' => count($processedLocations),
-                'features_returned' => count($features)
-            ]);
 
             return response()->json([
                 'success' => true,
@@ -2776,132 +2604,6 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
 
         } catch (Exception $e) {
             Log::error('Error converting WKT to GeoJSON: ' . $e->getMessage());
-            return null;
-        }
-    }
-
-    /**
-     * Validate and normalize coordinates structure for GeoJSON
-     * Ensures coordinates have correct nested array structure
-     */
-    private function validateAndNormalizeCoordinates($coordinates, $geometryType)
-    {
-        if (!is_array($coordinates)) {
-            return null;
-        }
-        
-        try {
-            switch ($geometryType) {
-                case 'Point':
-                    // Point: [lon, lat]
-                    if (count($coordinates) >= 2 && is_numeric($coordinates[0]) && is_numeric($coordinates[1])) {
-                        return [(float)$coordinates[0], (float)$coordinates[1]];
-                    }
-                    return null;
-                    
-                case 'LineString':
-                    // LineString: [[lon, lat], [lon, lat], ...]
-                    $normalized = [];
-                    foreach ($coordinates as $coord) {
-                        if (is_array($coord) && count($coord) >= 2 && is_numeric($coord[0]) && is_numeric($coord[1])) {
-                            $normalized[] = [(float)$coord[0], (float)$coord[1]];
-                        }
-                    }
-                    return count($normalized) >= 2 ? $normalized : null;
-                    
-                case 'Polygon':
-                    // Polygon: [[[lon, lat], [lon, lat], ...], ...] (first ring is exterior, rest are holes)
-                    $normalized = [];
-                    
-                    // Handle case where coordinates might be incorrectly nested
-                    // Sometimes coordinates might be [[[lon, lat], ...]] instead of [[[lon, lat], ...], ...]
-                    if (count($coordinates) === 1 && is_array($coordinates[0])) {
-                        $firstItem = $coordinates[0];
-                        // Check if first item is already a ring (array of [lon, lat])
-                        if (is_array($firstItem) && count($firstItem) > 0) {
-                            if (is_array($firstItem[0]) && count($firstItem[0]) >= 2) {
-                                // Already correct structure: [[[lon, lat], ...]]
-                                $coordinates = [$firstItem];
-                            } elseif (is_numeric($firstItem[0]) && count($firstItem) >= 2) {
-                                // This is a single coordinate pair, wrap it: [[[lon, lat]]]
-                                $coordinates = [[$firstItem]];
-                            }
-                        }
-                    }
-                    
-                    foreach ($coordinates as $ring) {
-                        if (!is_array($ring)) {
-                            Log::warning("Polygon ring is not an array", ['ring_type' => gettype($ring)]);
-                            continue;
-                        }
-                        $normalizedRing = [];
-                        foreach ($ring as $coord) {
-                            if (is_array($coord) && count($coord) >= 2) {
-                                // Ensure both values are numeric
-                                $lon = is_numeric($coord[0]) ? (float)$coord[0] : null;
-                                $lat = is_numeric($coord[1]) ? (float)$coord[1] : null;
-                                if ($lon !== null && $lat !== null) {
-                                    $normalizedRing[] = [$lon, $lat];
-                                }
-                            }
-                        }
-                        if (count($normalizedRing) >= 4) { // Minimum 4 points for closed polygon
-                            // Ensure ring is closed
-                            $first = $normalizedRing[0];
-                            $last = $normalizedRing[count($normalizedRing) - 1];
-                            if (abs($first[0] - $last[0]) > 0.000001 || abs($first[1] - $last[1]) > 0.000001) {
-                                $normalizedRing[] = $first;
-                            }
-                            $normalized[] = $normalizedRing;
-                        } else {
-                            Log::warning("Polygon ring has insufficient points", [
-                                'point_count' => count($normalizedRing),
-                                'minimum_required' => 4
-                            ]);
-                        }
-                    }
-                    return count($normalized) > 0 ? $normalized : null;
-                    
-                case 'MultiPolygon':
-                    // MultiPolygon: [[[[lon, lat], ...], ...], ...]
-                    $normalized = [];
-                    foreach ($coordinates as $polygon) {
-                        if (!is_array($polygon)) {
-                            continue;
-                        }
-                        $normalizedPolygon = [];
-                        foreach ($polygon as $ring) {
-                            if (!is_array($ring)) {
-                                continue;
-                            }
-                            $normalizedRing = [];
-                            foreach ($ring as $coord) {
-                                if (is_array($coord) && count($coord) >= 2 && is_numeric($coord[0]) && is_numeric($coord[1])) {
-                                    $normalizedRing[] = [(float)$coord[0], (float)$coord[1]];
-                                }
-                            }
-                            if (count($normalizedRing) >= 4) {
-                                // Ensure ring is closed
-                                $first = $normalizedRing[0];
-                                $last = $normalizedRing[count($normalizedRing) - 1];
-                                if ($first[0] != $last[0] || $first[1] != $last[1]) {
-                                    $normalizedRing[] = $first;
-                                }
-                                $normalizedPolygon[] = $normalizedRing;
-                            }
-                        }
-                        if (count($normalizedPolygon) > 0) {
-                            $normalized[] = $normalizedPolygon;
-                        }
-                    }
-                    return count($normalized) > 0 ? $normalized : null;
-                    
-                default:
-                    Log::warning("Unsupported geometry type: {$geometryType}");
-                    return null;
-            }
-        } catch (Exception $e) {
-            Log::error("Error validating coordinates: " . $e->getMessage());
             return null;
         }
     }

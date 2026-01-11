@@ -5,6 +5,9 @@
 
 @section('css')
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+<!-- Select2 CSS for PIC dropdown -->
+<link href="{{ URL::asset('build/plugins/select2/css/select2.min.css') }}" rel="stylesheet" />
+<link href="{{ URL::asset('build/plugins/select2/css/select2-bootstrap4.css') }}" rel="stylesheet" />
 <style>
     /* ============================================
    GOOGLE MAPS STYLE INTERFACE (FULL REWORK)
@@ -169,9 +172,300 @@
   justify-content:center;
   cursor:pointer;
   transition: background .15s ease;
+  position: relative;
 }
 .gm-header-icon-btn:hover{ background: rgba(60,64,67,.08); }
 .gm-header-icon-btn i{ font-size: 30px; color:#5f6368; }
+
+/* Notification Bell Icon with Blinking Animation */
+.gm-notification-btn {
+  position: relative;
+  overflow: visible;
+}
+
+.gm-notification-btn i {
+  animation: bellRing 2s ease-in-out infinite;
+  transform-origin: center top;
+  position: relative;
+  z-index: 2;
+}
+
+@keyframes bellRing {
+  0%, 100% {
+    transform: rotate(0deg);
+  }
+  10%, 30% {
+    transform: rotate(-10deg);
+  }
+  20%, 40% {
+    transform: rotate(10deg);
+  }
+  50% {
+    transform: rotate(0deg);
+  }
+}
+
+/* Notification Badge */
+.notification-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #ea4335;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  animation: pulse 2s ease-in-out infinite;
+  z-index: 3;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.7;
+    transform: scale(1.2);
+  }
+}
+
+/* Notification Pulse Effect */
+.notification-pulse {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(234, 67, 53, 0.6);
+  animation: ripple 2s ease-out infinite;
+  z-index: 1;
+}
+
+@keyframes ripple {
+  0% {
+    transform: translate(-50%, -50%) scale(0.8);
+    opacity: 1;
+    background: rgba(234, 67, 53, 0.7);
+  }
+  50% {
+    background: rgba(234, 67, 53, 0.5);
+  }
+  100% {
+    transform: translate(-50%, -50%) scale(1.5);
+    opacity: 0;
+    background: rgba(234, 67, 53, 0.2);
+  }
+}
+
+/* Blinking Effect */
+.gm-notification-btn::before {
+  content: '';
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(234, 67, 53, 0.2);
+  animation: blink 2s ease-in-out infinite;
+  z-index: 0;
+}
+
+@keyframes blink {
+  0%, 100% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.8);
+  }
+  50% {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+/* Notification Panel */
+.gm-notification-panel {
+  position: absolute;
+  top: 70px;
+  right: 0;
+  width: 400px;
+  max-height: 600px;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 4px 16px rgba(60, 64, 67, 0.3);
+  z-index: 1003;
+  display: none;
+  overflow: hidden;
+  font-family: Roboto, Arial, sans-serif;
+}
+
+.gm-notification-panel.active {
+  display: block;
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.gm-notification-panel-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid #e8eaed;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: #f8f9fa;
+}
+
+.gm-notification-panel-title {
+  font-size: 18px;
+  font-weight: 500;
+  color: #202124;
+  margin: 0;
+}
+
+.gm-notification-panel-close {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #5f6368;
+  transition: background 0.15s ease;
+}
+
+.gm-notification-panel-close:hover {
+  background: rgba(60, 64, 67, 0.08);
+}
+
+.gm-notification-panel-body {
+  max-height: 520px;
+  overflow-y: auto;
+  padding: 8px 0;
+}
+
+.gm-notification-category {
+  padding: 12px 20px;
+  border-bottom: 1px solid #f1f3f4;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.gm-notification-category:hover {
+  background: #f8f9fa;
+}
+
+.gm-notification-category-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.gm-notification-category-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-size: 16px;
+  font-weight: 500;
+  color: #202124;
+  flex: 1;
+}
+
+.gm-notification-color-indicator {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.gm-notification-color-indicator.red {
+  background: #d92d20;
+}
+
+.gm-notification-color-indicator.orange {
+  background: #f79009;
+}
+
+.gm-notification-color-indicator.green {
+  background: #12b76a;
+}
+
+.gm-notification-category-count {
+  font-size: 14px;
+  font-weight: 500;
+  color: #5f6368;
+  background: #f1f3f4;
+  padding: 4px 12px;
+  border-radius: 12px;
+}
+
+.gm-notification-location-list {
+  max-height: 200px;
+  overflow-y: auto;
+  margin-top: 8px;
+  padding-left: 28px;
+}
+
+.gm-notification-location-item {
+  padding: 8px 12px;
+  font-size: 14px;
+  color: #3c4043;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.gm-notification-location-item:hover {
+  background: #e8eaed;
+}
+
+.gm-notification-location-item i {
+  font-size: 16px;
+  color: #5f6368;
+}
+
+.gm-notification-empty {
+  padding: 40px 20px;
+  text-align: center;
+  color: #9aa0a6;
+  font-size: 14px;
+}
+
+.gm-notification-category.expanded .gm-notification-location-list {
+  display: block;
+}
+
+.gm-notification-category:not(.expanded) .gm-notification-location-list {
+  display: none;
+}
+
+.gm-notification-category-arrow {
+  transition: transform 0.2s ease;
+  color: #5f6368;
+}
+
+.gm-notification-category.expanded .gm-notification-category-arrow {
+  transform: rotate(90deg);
+}
 
 .gm-profile-btn{
   width: 44px;
@@ -226,6 +520,15 @@
   background:#f8f9fa;
   box-shadow: 0 1px 3px rgba(60,64,67,.24);
 }
+.gm-category-item.active{
+  background:#e8f0fe;
+  border-color: #1a73e8;
+  color: #1a73e8;
+  box-shadow: 0 2px 4px rgba(26,115,232,.2);
+}
+.gm-category-item.active i{
+  color: #1a73e8;
+}
 .gm-category-item i{
   font-size: 22px;
   color: #5f6368;
@@ -249,6 +552,25 @@
   border: none;
   display:flex;
   flex-direction:column;
+}
+
+/* Sidebar backdrop overlay for mobile */
+.gm-sidebar-backdrop{
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.5);
+  z-index: 1002;
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+  transition: opacity .25s ease, visibility .25s ease;
+  display: none; /* Hidden by default on desktop */
+}
+
+.map-fullscreen-container.gm-left-sidebar-open .gm-sidebar-backdrop{
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
 }
 .gm-left-sidebar.collapsed{ 
   transform: translateX(-100%);
@@ -505,192 +827,159 @@
 .gm-copyright a:hover{ text-decoration:underline; }
 
 /* -------------------
-   Map Layer Filter (Bottom Left)
+   Map Layer Filter (Bottom Left) - New Design
    ------------------- */
-.gm-layer-filter-container {
+.gm-layer-wrap {
   position: absolute;
-  bottom: 50px;
+  bottom: 16px;
   left: 16px;
   z-index: 10002;
+}
+
+/* Compact button (Layers) */
+.gm-layer-btn {
   display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  pointer-events: none;
-}
-
-/* Ensure visibility */
-.gm-layer-filter-container {
-  visibility: visible !important;
-  opacity: 1 !important;
-}
-
-.gm-layer-filter-container > * {
-  pointer-events: auto;
-}
-
-/* Layer Filter Button */
-.gm-layer-filter-btn {
-  width: 80px;
-  height: 80px;
-  background: linear-gradient(to bottom, #e8f5e9 0%, #c8e6c9 100%);
-  border: 1px solid #000;
-  border-radius: 8px;
-  display: flex;
-  flex-direction: column;
   align-items: center;
-  justify-content: center;
+  gap: 10px;
+  padding: 10px 14px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, .10);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
   cursor: pointer;
-  box-shadow: 0 2px 8px rgba(0,0,0,.3);
-  transition: all .2s ease;
-  position: relative;
-  overflow: hidden;
-  z-index: 10003;
+  user-select: none;
+  transition: box-shadow .15s ease, transform .12s ease, border-color .15s ease;
 }
 
-.gm-layer-filter-btn:hover {
-  box-shadow: 0 4px 12px rgba(0,0,0,.4);
-  transform: translateY(-2px);
+.gm-layer-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, .14);
 }
 
-.gm-layer-filter-btn .layer-icon {
-  width: 100%;
-  height: 60%;
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin-bottom: 4px;
-  padding: 8px;
+.gm-layer-btn:active {
+  transform: translateY(0px);
 }
 
-.gm-layer-filter-btn .layer-icon::before {
-  content: '';
-  position: absolute;
-  width: 85%;
-  height: 85%;
-  background: linear-gradient(to bottom, #a5d6a7 0%, #81c784 100%);
-  border-radius: 4px;
-  opacity: 0.9;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
+.gm-layer-btn .layer-text {
+  font-weight: 800;
+  color: #111827;
+  letter-spacing: .2px;
 }
 
-.gm-layer-filter-btn .layer-icon::after {
-  content: '';
-  position: absolute;
-  width: 60%;
-  height: 3px;
-  background: #9fa8da;
-  border-radius: 2px;
-  top: 65%;
-  left: 10%;
-  clip-path: polygon(0 0, 100% 0, 85% 100%, 0 100%);
-  box-shadow: 0 1px 2px rgba(0,0,0,.2);
+/* Better icon */
+.gm-layer-icon {
+  width: 24px;
+  height: 24px;
+  stroke: currentColor;
+  fill: none;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  color: #111827;
+  opacity: .92;
 }
 
-/* Water features in top right corner */
-.gm-layer-filter-btn .layer-icon {
-  background-image: 
-    radial-gradient(circle at 75% 20%, #64b5f6 2px, transparent 2px),
-    radial-gradient(circle at 80% 25%, #64b5f6 1.5px, transparent 1.5px),
-    radial-gradient(circle at 85% 18%, #64b5f6 1.5px, transparent 1.5px);
-  background-size: 100% 100%;
-  background-repeat: no-repeat;
-}
-
-.gm-layer-filter-btn .layer-text {
-  font-size: 11px;
-  font-weight: 500;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0,0,0,.3);
-  position: relative;
-  z-index: 1;
-  font-family: Roboto, Arial, sans-serif;
-}
-
-.gm-layer-filter-btn .layer-stack-icon {
-  position: absolute;
-  left: 8px;
-  top: 8px;
-  width: 16px;
-  height: 16px;
-  display: flex;
-  flex-direction: column;
-  gap: 2px;
-  z-index: 2;
-}
-
-.gm-layer-filter-btn .layer-stack-icon span {
-  width: 100%;
-  height: 3px;
-  background: #fff;
-  border-radius: 1px;
-  box-shadow: 0 1px 2px rgba(0,0,0,.2);
-}
-
-/* Layer Filter Menu */
-.gm-layer-filter-menu {
-  position: absolute;
-  bottom: 90px;
-  left: 0;
-  background: #fff;
-  border-radius: 8px;
-  box-shadow: 0 4px 16px rgba(0,0,0,.3);
-  padding: 12px;
-  display: none;
-  flex-direction: row;
-  gap: 8px;
-  min-width: 500px;
-  opacity: 0;
-  transform: translateY(10px);
-  transition: all .2s ease;
-}
-
-.gm-layer-filter-menu.active {
-  display: flex;
+.gm-layer-btn[aria-expanded="true"] .gm-layer-icon {
+  color: #0d6efd;
   opacity: 1;
-  transform: translateY(0);
 }
 
-.gm-layer-option {
-  flex: 1;
-  min-width: 70px;
+/* Dropdown panel */
+.gm-layer-panel {
+  margin-top: 10px;
+  background: rgba(255, 255, 255, .92);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(0, 0, 0, .08);
+  border-radius: 18px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .12);
+  padding: 10px;
+  max-width: min(980px, calc(100vw - 24px));
+}
+
+.gm-layer-scroll {
   display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 8px 4px;
-  border-radius: 6px;
+  gap: 10px;
+  overflow-x: auto;
+  padding: 2px;
+  scrollbar-width: none;
+}
+
+.gm-layer-scroll::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tile toggle */
+.gm-tile {
+  width: 128px;
+  min-width: 128px;
+  border-radius: 14px;
+  border: 2px solid transparent;
+  padding: 8px;
   cursor: pointer;
-  transition: background .15s ease;
-  background: transparent;
-  border: none;
+  user-select: none;
+  background: #fff;
+  transition: transform .12s ease, border-color .12s ease, box-shadow .12s ease;
 }
 
-.gm-layer-option:hover {
-  background: #f5f5f5;
+.gm-tile:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, .10);
 }
 
-.gm-layer-option.active {
-  background: #e8f0fe;
-}
-
-.gm-layer-option-icon {
-  width: 100%;
-  height: 50px;
-  border-radius: 4px;
-  position: relative;
+.gm-thumb {
+  height: 56px;
+  border-radius: 12px;
   overflow: hidden;
-  background: #f5f5f5;
+  border: 1px solid rgba(0, 0, 0, .10);
+  background-size: cover;
+  background-position: center;
 }
 
-.gm-layer-option.satellite .gm-layer-option-icon {
+.gm-label {
+  margin-top: 8px;
+  font-size: .92rem;
+  font-weight: 800;
+  line-height: 1.15;
+  color: #1f2937;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.gm-sub {
+  font-size: .78rem;
+  color: #6b7280;
+  margin-top: 2px;
+}
+
+/* Active state */
+.btn-check:checked + .gm-tile {
+  border-color: #0d6efd;
+  box-shadow: 0 10px 24px rgba(13, 110, 253, .18);
+}
+
+.btn-check:focus + .gm-tile {
+  box-shadow: 0 0 0 .25rem rgba(13, 110, 253, .20);
+}
+
+/* Old layer option styles removed - using new tile design */
   background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect fill="%234caf50" width="100" height="100"/><path fill="%2381c784" d="M20 40 L80 40 L70 60 L30 60 Z"/><circle fill="%2364b5f6" cx="75" cy="25" r="8"/><circle fill="%2364b5f6" cx="25" cy="30" r="5"/></svg>') center/cover;
+  opacity: 0.9;
+}
+
+.gm-layer-option.satellite .gm-layer-option-icon::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: radial-gradient(circle at 75% 20%, rgba(100, 181, 246, 0.4) 0%, transparent 50%);
 }
 
 .gm-layer-option.terrain .gm-layer-option-icon {
-  background: linear-gradient(to bottom, #e0e0e0 0%, #bdbdbd 30%, #9e9e9e 60%, #757575 100%);
+  background: linear-gradient(135deg, #e0e0e0 0%, #bdbdbd 30%, #9e9e9e 60%, #757575 100%);
   position: relative;
 }
 
@@ -702,22 +991,34 @@
   background-image: 
     repeating-linear-gradient(
       0deg,
-      rgba(255,255,255,.15) 0px,
-      rgba(255,255,255,.15) 2px,
+      rgba(255,255,255,.2) 0px,
+      rgba(255,255,255,.2) 2px,
       transparent 2px,
       transparent 8px
     ),
     repeating-linear-gradient(
       90deg,
-      rgba(0,0,0,.1) 0px,
-      rgba(0,0,0,.1) 1px,
+      rgba(0,0,0,.12) 0px,
+      rgba(0,0,0,.12) 1px,
       transparent 1px,
       transparent 6px
     );
+  border-radius: 8px;
+}
+
+.gm-layer-option.terrain .gm-layer-option-icon::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 30%;
+  background: linear-gradient(to top, rgba(117, 117, 117, 0.3) 0%, transparent 100%);
+  border-radius: 0 0 8px 8px;
 }
 
 .gm-layer-option.traffic .gm-layer-option-icon {
-  background: #fff;
+  background: linear-gradient(135deg, #ffffff 0%, #f5f5f5 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -727,15 +1028,27 @@
 .gm-layer-option.traffic .gm-layer-option-icon::before {
   content: '';
   position: absolute;
-  width: 60%;
-  height: 60%;
+  width: 65%;
+  height: 65%;
   background: 
-    linear-gradient(90deg, #4caf50 0%, #4caf50 30%, #ffeb3b 30%, #ffeb3b 60%, #f44336 60%, #f44336 100%);
+    linear-gradient(90deg, #4caf50 0%, #4caf50 33.33%, #ffeb3b 33.33%, #ffeb3b 66.66%, #f44336 66.66%, #f44336 100%);
+  border-radius: 4px;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+}
+
+.gm-layer-option.traffic .gm-layer-option-icon::after {
+  content: '';
+  position: absolute;
+  width: 70%;
+  height: 4px;
+  background: rgba(0,0,0,0.1);
   border-radius: 2px;
+  bottom: 15%;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .gm-layer-option.transit .gm-layer-option-icon {
-  background: #fff;
+  background: linear-gradient(135deg, #ffffff 0%, #e3f2fd 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -746,29 +1059,33 @@
 .gm-layer-option.transit .gm-layer-option-icon::before {
   content: 'M';
   position: absolute;
-  font-size: 20px;
-  font-weight: bold;
+  font-size: 24px;
+  font-weight: 700;
   color: #1976d2;
   line-height: 1;
-  top: 15%;
+  top: 20%;
   left: 50%;
   transform: translateX(-50%);
   z-index: 2;
+  font-family: 'Roboto', Arial, sans-serif;
+  text-shadow: 0 1px 2px rgba(0,0,0,0.1);
 }
 
 .gm-layer-option.transit .gm-layer-option-icon::after {
   content: '';
   position: absolute;
-  width: 80%;
-  height: 3px;
-  background: #1976d2;
-  top: 30%;
-  left: 10%;
+  width: 85%;
+  height: 4px;
+  background: linear-gradient(90deg, #1976d2 0%, #42a5f5 100%);
+  top: 35%;
+  left: 7.5%;
   z-index: 1;
+  border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(25, 118, 210, 0.3);
 }
 
 .gm-layer-option.biking .gm-layer-option-icon {
-  background: #fff;
+  background: linear-gradient(135deg, #ffffff 0%, #e8f5e9 100%);
   position: relative;
   overflow: hidden;
 }
@@ -779,47 +1096,60 @@
   width: 100%;
   height: 100%;
   background: 
-    radial-gradient(circle at 50% 50%, #4caf50 0%, #4caf50 12%, transparent 12%),
-    radial-gradient(circle at 50% 50%, transparent 12%, #4caf50 12%, #4caf50 25%, transparent 25%);
+    radial-gradient(circle at 50% 50%, #4caf50 0%, #4caf50 13%, transparent 13%),
+    radial-gradient(circle at 50% 50%, transparent 13%, #4caf50 13%, #4caf50 26%, transparent 26%);
+  border-radius: 8px;
 }
 
 .gm-layer-option.biking .gm-layer-option-icon::after {
   content: '';
   position: absolute;
-  width: 60%;
-  height: 3px;
-  background: #4caf50;
+  width: 65%;
+  height: 4px;
+  background: linear-gradient(90deg, #4caf50 0%, #66bb6a 100%);
   top: 50%;
-  left: 20%;
+  left: 17.5%;
   border-radius: 2px;
+  box-shadow: 0 1px 3px rgba(76, 175, 80, 0.3);
+  transform: translateY(-50%);
 }
 
 .gm-layer-option.more .gm-layer-option-icon {
-  background: #f5f5f5;
+  background: linear-gradient(135deg, #f5f5f5 0%, #e0e0e0 100%);
   display: flex;
   align-items: center;
   justify-content: center;
+  position: relative;
 }
 
 .gm-layer-option.more .gm-layer-option-icon::before {
   content: '';
-  width: 20px;
-  height: 20px;
-  background: #000;
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #424242 0%, #212121 100%);
   clip-path: polygon(0 0, 100% 0, 80% 100%, 0 100%);
   transform: rotate(45deg);
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
 }
 
 .gm-layer-option-label {
   font-size: 11px;
-  color: #5f6368;
+  color: #616161;
   font-weight: 500;
   text-align: center;
-  font-family: Roboto, Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+  transition: all 0.3s ease;
+  letter-spacing: 0.2px;
+  position: relative;
+  z-index: 1;
+}
+
+.gm-layer-option:hover .gm-layer-option-label {
+  color: #424242;
 }
 
 .gm-layer-option.active .gm-layer-option-label {
-  color: #1a73e8;
+  color: #1976d2;
   font-weight: 600;
 }
 
@@ -930,11 +1260,683 @@
 }
 
 /* Responsive */
+/* Tablet Styles (max-width: 1024px) */
+@media (max-width: 1024px){
+  .gm-search-container{
+    width: 450px;
+    max-width: 450px;
+  }
+  
+  .gm-left-sidebar{ 
+    width: 280px; 
+  }
+  
+  .map-fullscreen-container.gm-left-sidebar-open{ 
+    padding-left: 280px; 
+  }
+  
+  .map-fullscreen-container.gm-left-sidebar-open .gm-header{ 
+    left: 280px; 
+  }
+  
+  .map-fullscreen-container.gm-left-sidebar-open .gm-copyright{ 
+    left: 280px; 
+  }
+  
+  .gm-header-top{
+    padding: 12px 16px;
+    gap: 10px;
+  }
+  
+  .gm-category-filters{
+    gap: 8px;
+    margin: 0 8px;
+  }
+  
+  .gm-category-item{
+    padding: 10px 16px;
+    font-size: 15px;
+  }
+  
+  .gm-layer-filter-btn{
+    width: 70px;
+    height: 70px;
+  }
+}
+
+/* Tablet Styles (max-width: 768px) */
 @media (max-width: 768px){
-  :root{ --gm-top-h: 120px; }
-  .gm-left-sidebar{ width: 280px; }
-  .map-fullscreen-container.gm-left-sidebar-open{ padding-left: 280px; }
-  .map-fullscreen-container.gm-left-sidebar-open .gm-copyright{ left: 280px; }
+  :root{ 
+    --gm-top-h: 140px; 
+  }
+  
+  /* Show backdrop on tablet and mobile */
+  .gm-sidebar-backdrop{
+    display: block;
+  }
+  
+  .gm-left-sidebar{ 
+    width: 100%;
+    max-width: 320px;
+  }
+  
+  .map-fullscreen-container.gm-left-sidebar-open{ 
+    padding-left: 0; 
+  }
+  
+  .map-fullscreen-container.gm-left-sidebar-open .gm-header{ 
+    left: 0; 
+  }
+  
+  .map-fullscreen-container.gm-left-sidebar-open .gm-copyright{ 
+    left: 0; 
+  }
+  
+  .gm-header-top{
+    height: auto;
+    min-height: 80px;
+    padding: 10px 12px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .gm-menu-btn{
+    width: 44px;
+    height: 44px;
+    flex-shrink: 0;
+  }
+  
+  .gm-menu-btn i{
+    font-size: 26px;
+  }
+  
+  .gm-search-container{
+    flex: 1 1 auto;
+    min-width: 0;
+    width: auto;
+    max-width: none;
+    margin-left: 4px;
+  }
+  
+  .gm-search-box{
+    height: 48px;
+    padding: 0 50px 0 50px;
+    font-size: 16px;
+  }
+  
+  .gm-search-icon{
+    left: 16px;
+    font-size: 22px;
+  }
+  
+  .gm-directions-btn{
+    width: 44px;
+    height: 44px;
+    right: 8px;
+  }
+  
+  .gm-directions-btn i{
+    font-size: 22px;
+  }
+  
+  .gm-header-right{
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  
+  .gm-header-icon-btn{
+    width: 44px;
+    height: 44px;
+  }
+  
+  .gm-header-icon-btn i{
+    font-size: 26px;
+  }
+  
+  .notification-badge {
+    width: 7px;
+    height: 7px;
+    top: 6px;
+    right: 6px;
+  }
+  
+  .notification-pulse {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .gm-notification-btn::before {
+    width: 44px;
+    height: 44px;
+  }
+  
+  .gm-profile-btn{
+    width: 40px;
+    height: 40px;
+    font-size: 15px;
+  }
+  
+  .gm-category-filters{
+    order: 3;
+    width: 100%;
+    margin: 0;
+    padding: 8px 12px 0;
+    gap: 6px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+  
+  .gm-category-item{
+    padding: 8px 14px;
+    font-size: 14px;
+    gap: 8px;
+    flex-shrink: 0;
+  }
+  
+  .gm-category-item i{
+    font-size: 20px;
+  }
+  
+  .gm-map-controls{
+    right: 12px;
+    top: 12px;
+  }
+  
+  .gm-control-btn{
+    width: 36px;
+    height: 36px;
+  }
+  
+  .gm-control-btn.compass{
+    width: 40px;
+    height: 40px;
+    margin-bottom: 6px;
+  }
+  
+  .gm-control-btn.compass i{
+    font-size: 18px;
+  }
+  
+  .gm-layer-filter-container{
+    bottom: 40px;
+    left: 12px;
+  }
+  
+  .gm-layer-filter-btn{
+    width: 60px;
+    height: 60px;
+  }
+  
+  .gm-copyright{
+    padding: 4px 8px;
+    font-size: 9px;
+  }
+  
+  .gm-sidebar-nav-item{
+    padding: 10px 14px 10px 16px;
+    font-size: 13px;
+  }
+  
+  /* Popup responsive for tablet */
+  .ol-popup{
+    min-width: 180px;
+    max-width: 90vw;
+    padding: 12px;
+    font-size: 14px;
+  }
+  
+  #popup-content{
+    font-size: 14px;
+  }
+  
+  .ol-popup-closer{
+    font-size: 16px;
+    top: 4px;
+    right: 6px;
+  }
+  
+  .gm-recent-item{
+    padding: 10px 14px 10px 16px;
+  }
+  
+  .gm-recent-icon{
+    width: 44px;
+    height: 44px;
+  }
+  
+  .gm-recent-title{
+    font-size: 13px;
+  }
+  
+  .gm-recent-subtitle{
+    font-size: 11px;
+  }
+}
+
+/* Mobile Styles (max-width: 640px) */
+@media (max-width: 640px){
+  :root{ 
+    --gm-top-h: 160px; 
+  }
+  
+  .gm-header-top{
+    min-height: 100px;
+    padding: 8px 10px;
+    gap: 6px;
+  }
+  
+  .gm-menu-btn{
+    width: 40px;
+    height: 40px;
+  }
+  
+  .gm-menu-btn i{
+    font-size: 24px;
+  }
+  
+  .gm-search-container{
+    order: 2;
+    width: 100%;
+    margin: 0;
+    margin-top: 4px;
+  }
+  
+  .gm-search-box{
+    height: 44px;
+    padding: 0 44px 0 44px;
+    font-size: 15px;
+    border-radius: 22px;
+  }
+  
+  .gm-search-icon{
+    left: 14px;
+    font-size: 20px;
+  }
+  
+  .gm-directions-btn{
+    width: 40px;
+    height: 40px;
+    right: 6px;
+  }
+  
+  .gm-directions-btn i{
+    font-size: 20px;
+  }
+  
+  .gm-header-right{
+    order: 1;
+    margin-left: 0;
+    gap: 4px;
+  }
+  
+  .gm-header-icon-btn{
+    width: 40px;
+    height: 40px;
+  }
+  
+  .gm-header-icon-btn i{
+    font-size: 24px;
+  }
+  
+  .notification-badge {
+    width: 6px;
+    height: 6px;
+    top: 5px;
+    right: 5px;
+  }
+  
+  .notification-pulse {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .gm-notification-btn::before {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .gm-profile-btn{
+    width: 36px;
+    height: 36px;
+    font-size: 14px;
+  }
+  
+  .gm-category-filters{
+    order: 3;
+    padding: 6px 10px 0;
+    gap: 4px;
+  }
+  
+  .gm-category-item{
+    padding: 6px 12px;
+    font-size: 13px;
+    gap: 6px;
+  }
+  
+  .gm-category-item i{
+    font-size: 18px;
+  }
+  
+  .gm-category-item span{
+    display: none;
+  }
+  
+  .gm-category-item:first-of-type span,
+  .gm-category-item:nth-of-type(2) span,
+  .gm-category-item:nth-of-type(3) span{
+    display: inline;
+  }
+  
+  .gm-left-sidebar{
+    width: 100%;
+    max-width: 100%;
+    box-shadow: 4px 0 16px rgba(0,0,0,0.2);
+  }
+  
+  .gm-map-controls{
+    right: 8px;
+    top: 8px;
+  }
+  
+  .gm-control-btn{
+    width: 32px;
+    height: 32px;
+  }
+  
+  .gm-control-btn.compass{
+    width: 36px;
+    height: 36px;
+    margin-bottom: 4px;
+  }
+  
+  .gm-control-btn.compass i{
+    font-size: 16px;
+  }
+  
+  .gm-control-btn i{
+    font-size: 18px;
+  }
+  
+  .gm-layer-filter-container{
+    bottom: 35px;
+    left: 8px;
+  }
+  
+  .gm-layer-filter-btn{
+    width: 50px;
+    height: 50px;
+  }
+  
+  .gm-copyright{
+    padding: 3px 6px;
+    font-size: 8px;
+    line-height: 1.3;
+  }
+  
+  /* Popup responsive for mobile */
+  .ol-popup{
+    min-width: 160px;
+    max-width: 85vw;
+    padding: 10px;
+    font-size: 13px;
+    bottom: 8px;
+    left: -40px;
+  }
+  
+  #popup-content{
+    font-size: 13px;
+  }
+  
+  #popup-content .btn{
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+  
+  .ol-popup-closer{
+    font-size: 16px;
+    top: 2px;
+    right: 4px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  
+  .ol-popup:after{
+    border-width: 8px;
+    left: 40px;
+  }
+  
+  .ol-popup:before{
+    border-width: 9px;
+    left: 40px;
+  }
+  
+  .gm-sidebar-menu-btn{
+    width: 36px;
+    height: 36px;
+    margin: 6px;
+  }
+  
+  .gm-sidebar-menu-btn i{
+    font-size: 22px;
+  }
+  
+  .gm-sidebar-nav-item{
+    padding: 10px 12px 10px 14px;
+    font-size: 13px;
+    gap: 12px;
+  }
+  
+  .gm-sidebar-nav-item i{
+    font-size: 18px;
+  }
+  
+  .gm-recent-item{
+    padding: 10px 12px 10px 14px;
+    gap: 10px;
+  }
+  
+  .gm-recent-icon{
+    width: 40px;
+    height: 40px;
+  }
+  
+  .gm-recent-icon i{
+    font-size: 18px;
+  }
+  
+  .gm-recent-title{
+    font-size: 13px;
+  }
+  
+  .gm-recent-subtitle{
+    font-size: 11px;
+  }
+  
+  .gm-view-more{
+    margin: 6px 10px;
+    padding: 8px 10px;
+    font-size: 13px;
+  }
+  
+  .gm-get-app{
+    padding: 12px 10px;
+  }
+  
+  .gm-get-app-btn{
+    padding: 8px 12px;
+    font-size: 13px;
+    gap: 10px;
+  }
+  
+  .gm-layer-toggle{
+    margin: 0 10px 10px;
+    width: calc(100% - 20px);
+    height: 36px;
+  }
+  
+  #hazardMap{
+    height: 100vh;
+    height: 100dvh; /* Dynamic viewport height for mobile */
+  }
+}
+
+/* Small Mobile Styles (max-width: 480px) */
+@media (max-width: 480px){
+  :root{ 
+    --gm-top-h: 170px; 
+  }
+  
+  .gm-header-top{
+    min-height: 110px;
+    padding: 6px 8px;
+  }
+  
+  .gm-menu-btn{
+    width: 36px;
+    height: 36px;
+  }
+  
+  .gm-menu-btn i{
+    font-size: 22px;
+  }
+  
+  .gm-search-box{
+    height: 40px;
+    padding: 0 40px 0 40px;
+    font-size: 14px;
+  }
+  
+  .gm-search-icon{
+    left: 12px;
+    font-size: 18px;
+  }
+  
+  .gm-directions-btn{
+    width: 36px;
+    height: 36px;
+    right: 4px;
+  }
+  
+  .gm-directions-btn i{
+    font-size: 18px;
+  }
+  
+  .gm-header-icon-btn{
+    width: 36px;
+    height: 36px;
+  }
+  
+  .gm-header-icon-btn i{
+    font-size: 22px;
+  }
+  
+  .notification-badge {
+    width: 5px;
+    height: 5px;
+    top: 4px;
+    right: 4px;
+  }
+  
+  .notification-pulse {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .gm-notification-btn::before {
+    width: 36px;
+    height: 36px;
+  }
+  
+  .gm-profile-btn{
+    width: 32px;
+    height: 32px;
+    font-size: 13px;
+  }
+  
+  .gm-category-item{
+    padding: 5px 10px;
+    font-size: 12px;
+  }
+  
+  .gm-category-item i{
+    font-size: 16px;
+  }
+  
+  .gm-map-controls{
+    right: 6px;
+    top: 6px;
+  }
+  
+  .gm-control-btn{
+    width: 30px;
+    height: 30px;
+  }
+  
+  .gm-control-btn.compass{
+    width: 34px;
+    height: 34px;
+  }
+  
+  .gm-control-btn.compass i{
+    font-size: 15px;
+  }
+  
+  .gm-control-btn i{
+    font-size: 16px;
+  }
+  
+  .gm-layer-filter-container{
+    bottom: 30px;
+    left: 6px;
+  }
+  
+  .gm-layer-filter-btn{
+    width: 45px;
+    height: 45px;
+  }
+  
+  .gm-copyright{
+    font-size: 7px;
+    padding: 2px 4px;
+  }
+  
+  /* Popup responsive for small mobile */
+  .ol-popup{
+    min-width: 140px;
+    max-width: 80vw;
+    padding: 8px;
+    font-size: 12px;
+    bottom: 6px;
+    left: -30px;
+  }
+  
+  #popup-content{
+    font-size: 12px;
+  }
+  
+  #popup-content .btn{
+    padding: 5px 10px;
+    font-size: 11px;
+  }
+  
+  .ol-popup-closer{
+    font-size: 14px;
+    width: 20px;
+    height: 20px;
+  }
+  
+  .ol-popup:after{
+    border-width: 6px;
+    left: 30px;
+  }
+  
+  .ol-popup:before{
+    border-width: 7px;
+    left: 30px;
+  }
 }
 
 </style>
@@ -1155,14 +2157,31 @@
             </div>
             
             <!-- Right Icons -->
-            <div class="gm-header-right">
-                <button class="gm-header-icon-btn" id="gmAppsBtn" title="Google apps">
-                    <i class="material-icons-outlined">apps</i>
+            <div class="gm-header-right bg-white rounded-circle" style="position: relative;">
+                <button class="gm-header-icon-btn gm-notification-btn" id="gmNotificationBtn" title="Notifications">
+                    <i class="material-icons-outlined">notifications</i>
+                    <span class="notification-badge"></span>
+                    <span class="notification-pulse"></span>
                 </button>
-                <button class="gm-profile-btn" id="gmProfileBtn" title="Account">I</button>
+                
+                <!-- Notification Panel -->
+                <div class="gm-notification-panel" id="gmNotificationPanel">
+                    <div class="gm-notification-panel-header">
+                        <h3 class="gm-notification-panel-title">Ringkasan Matrix Risk</h3>
+                        <button class="gm-notification-panel-close" id="gmNotificationPanelClose">
+                            <i class="material-icons-outlined">close</i>
+                        </button>
+                    </div>
+                    <div class="gm-notification-panel-body" id="gmNotificationPanelBody">
+                        <div class="gm-notification-empty">Memuat data...</div>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
+
+    <!-- Sidebar Backdrop (for mobile) -->
+    <div class="gm-sidebar-backdrop" id="gmSidebarBackdrop"></div>
 
     <!-- Google Maps Style Left Sidebar -->
     <div class="gm-left-sidebar collapsed" id="gmLeftSidebar">
@@ -1253,6 +2272,7 @@
             const gmMenuBtn = document.getElementById('gmMenuBtn');
             const gmSidebarMenuBtn = document.getElementById('gmSidebarMenuBtn');
             const gmLeftSidebar = document.getElementById('gmLeftSidebar');
+            const gmSidebarBackdrop = document.getElementById('gmSidebarBackdrop');
             const mapContainer = document.querySelector('.map-fullscreen-container');
             
             function toggleSidebar() {
@@ -1271,12 +2291,24 @@
                 }
             }
             
+            function closeSidebar() {
+                if (gmLeftSidebar && mapContainer) {
+                    gmLeftSidebar.classList.add('collapsed');
+                    mapContainer.classList.remove('gm-left-sidebar-open');
+                }
+            }
+            
             if (gmMenuBtn) {
                 gmMenuBtn.addEventListener('click', toggleSidebar);
             }
             
             if (gmSidebarMenuBtn) {
                 gmSidebarMenuBtn.addEventListener('click', toggleSidebar);
+            }
+            
+            // Close sidebar when clicking backdrop (mobile)
+            if (gmSidebarBackdrop) {
+                gmSidebarBackdrop.addEventListener('click', closeSidebar);
             }
 
             // Search Box Focus
@@ -1368,7 +2400,7 @@
     </script>
     
     <!-- Google Maps Style Right Controls -->
-    <div class="gm-map-controls">
+    <!-- <div class="gm-map-controls">
         <button class="gm-control-btn compass" id="gmCompassBtn" title="Reset bearing">
             <i class="material-icons-outlined">explore</i>
         </button>
@@ -1384,7 +2416,7 @@
         <div class="gm-layer-toggle" id="gmLayerToggle" title="Layers">
             <i class="material-icons-outlined" style="position: relative; z-index: 1; color: #5f6368; font-size: 18px;">layers</i>
         </div>
-    </div>
+    </div> -->
 
  
 
@@ -1397,42 +2429,55 @@
         </div>
         
         <!-- Map Layer Filter (Bottom Left) -->
-        <div class="gm-layer-filter-container">
-            <div class="gm-layer-filter-menu" id="gmLayerFilterMenu">
-                <button class="gm-layer-option satellite" data-layer="satellite" title="Satellite">
-                    <div class="gm-layer-option-icon"></div>
-                    <span class="gm-layer-option-label">Satellite</span>
-                </button>
-                <button class="gm-layer-option terrain" data-layer="terrain" title="Terrain">
-                    <div class="gm-layer-option-icon"></div>
-                    <span class="gm-layer-option-label">Terrain</span>
-                </button>
-                <button class="gm-layer-option traffic" data-layer="traffic" title="Traffic">
-                    <div class="gm-layer-option-icon"></div>
-                    <span class="gm-layer-option-label">Traffic</span>
-                </button>
-                <button class="gm-layer-option transit" data-layer="transit" title="Transit">
-                    <div class="gm-layer-option-icon"></div>
-                    <span class="gm-layer-option-label">Transit</span>
-                </button>
-                <button class="gm-layer-option biking" data-layer="biking" title="Biking">
-                    <div class="gm-layer-option-icon"></div>
-                    <span class="gm-layer-option-label">Biking</span>
-                </button>
-                <button class="gm-layer-option more" data-layer="more" title="More">
-                    <div class="gm-layer-option-icon"></div>
-                    <span class="gm-layer-option-label">More</span>
-                </button>
-            </div>
-            <button class="gm-layer-filter-btn" id="gmLayerFilterBtn" title="Layers">
-                <div class="layer-stack-icon">
-                    <span></span>
-                    <span></span>
-                    <span></span>
-                </div>
-                <div class="layer-icon"></div>
+        <!-- Layer Filter - New Design -->
+        <div class="gm-layer-wrap" id="gmLayerWrap">
+            <!-- Toggle button -->
+            <button type="button" class="gm-layer-btn" id="gmLayerToggleBtn" aria-expanded="false" title="Layers">
+                <!-- Improved Layers Icon -->
+                <svg class="gm-layer-icon" viewBox="0 0 24 24" aria-hidden="true">
+                    <path d="M12 3.5 3.5 8.2 12 12.9 20.5 8.2 12 3.5Z" />
+                    <path d="M3.5 12.0 12 16.7 20.5 12.0" />
+                    <path d="M3.5 15.8 12 20.5 20.5 15.8" />
+                </svg>
                 <span class="layer-text">Layers</span>
             </button>
+            <!-- Panel (Bootstrap Collapse) -->
+            <div class="collapse" id="gmLayerPanel">
+                <div class="gm-layer-panel">
+                    <div class="gm-layer-scroll">
+                        <input class="btn-check" type="checkbox" id="layerSatellite" autocomplete="off" checked>
+                        <label class="gm-tile" for="layerSatellite" data-layer="satellite">
+                            <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1617897711385-df9c86b7dfe3?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
+                            <div class="gm-label">Matriks CCTV</div>
+                            <div class="gm-sub">Satellite</div>
+                        </label>
+                        <input class="btn-check" type="checkbox" id="layerTerrain" autocomplete="off">
+                        <label class="gm-tile" for="layerTerrain" data-layer="terrain">
+                            <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1622645636770-11fbf0611463?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
+                            <div class="gm-label">Unit dan Orang</div>
+                            <div class="gm-sub">Terrain</div>
+                        </label>
+                        <input class="btn-check" type="checkbox" id="layerTraffic" autocomplete="off">
+                        <label class="gm-tile" for="layerTraffic" data-layer="traffic">
+                            <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=60');"></div>
+                            <div class="gm-label">Matriks Area Kerja</div>
+                            <div class="gm-sub">Traffic</div>
+                        </label>
+                        <input class="btn-check" type="checkbox" id="layerTransit" autocomplete="off">
+                        <label class="gm-tile" for="layerTransit" data-layer="transit">
+                            <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1530677003768-e25c2b121303?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
+                            <div class="gm-label">Matriks Sub Kesesuaian SAP</div>
+                            <div class="gm-sub">Transit</div>
+                        </label>
+                        <input class="btn-check" type="checkbox" id="layerBiking" autocomplete="off">
+                        <label class="gm-tile" for="layerBiking" data-layer="biking">
+                            <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1520975693416-35a1f5e2c0e4?auto=format&fit=crop&w=600&q=60');"></div>
+                            <div class="gm-label">Biking</div>
+                            <div class="gm-sub">Biking</div>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
         
         <!-- Icon Toolbar - Left Side -->
@@ -1576,11 +2621,17 @@
 <div class="modal fade" id="areaKerjaSummaryModal" tabindex="-1" aria-labelledby="areaKerjaSummaryModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="areaKerjaSummaryModalLabel">
+            <div class="modal-header d-flex justify-content-between align-items-center">
+                <h5 class="modal-title mb-0" id="areaKerjaSummaryModalLabel">
                     <i class="material-icons-outlined">work</i> Summary Area Kerja
                 </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-primary btn-sm" id="btnIntervensiAreaKerja" title="Kirim Intervensi">
+                        <i class="material-icons-outlined" style="font-size: 18px; vertical-align: middle;">send</i>
+                        <span>Intervensi</span>
+                    </button>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
             </div>
             <div class="modal-body" id="areaKerjaSummaryModalBody">
                 <div class="text-center">
@@ -1596,12 +2647,97 @@
     </div>
 </div>
 
+<!-- Modal Intervensi Area Kerja -->
+<div class="modal fade" id="intervensiAreaKerjaModal" tabindex="-1" aria-labelledby="intervensiAreaKerjaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="intervensiAreaKerjaModalLabel">
+                    <span class="material-icons-outlined me-2">send</span>
+                    Form Intervensi Area Kerja
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="intervensiAreaKerjaForm">
+                    <input type="hidden" id="intervensiAreaKerja" name="area_kerja" value="">
+                    <input type="hidden" id="intervensiLokasi" name="lokasi" value="">
+                    
+                    
+                    <div class="mb-3">
+                        <label for="intervensiLokasiDisplay" class="form-label fw-semibold">Lokasi</label>
+                        <input type="text" class="form-control" id="intervensiLokasiDisplay" readonly>
+                    </div>
+                    
+                    
+                    <div class="mb-3">
+                        <label for="intervensiPICAreaKerja" class="form-label fw-semibold">PIC (Pengawas) <span class="text-danger">*</span></label>
+                        <select class="form-select" id="intervensiPICAreaKerja" name="pic" required>
+                            <option value="">Pilih PIC...</option>
+                        </select>
+                        <div class="form-text">Pilih PIC (Pengawas) dari daftar pengguna</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="intervensiIssueAreaKerja" class="form-label fw-semibold">Issue <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="intervensiIssueAreaKerja" name="issue" rows="5" placeholder="Masukkan issue atau masalah yang ditemukan..." required></textarea>
+                        <div class="form-text">Jelaskan issue atau masalah yang memerlukan intervensi</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="submitIntervensiAreaKerjaBtn">
+                    <span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>
+                    Kirim Intervensi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Control Room -->
+<div class="modal fade" id="controlRoomModal" tabindex="-1" aria-labelledby="controlRoomModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="controlRoomModalLabel">
+                    <i class="material-icons-outlined">museum</i> Control Room
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="controlRoomModalBody">
+                <div class="text-center">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary" onclick="applyControlRoomFilter()">Terapkan Filter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 
 
 
 @endsection
 
 @section('scripts')
+<!-- Ensure jQuery is loaded first (from vendor-scripts) -->
+<script>
+    // Wait for jQuery to be available
+    if (typeof jQuery === 'undefined' && typeof $ === 'undefined') {
+        console.warn('jQuery is not loaded yet, waiting...');
+        // jQuery should be loaded from vendor-scripts.blade.php
+    }
+</script>
+<!-- Select2 JS for PIC dropdown (must be loaded after jQuery) -->
+<script src="{{ URL::asset('build/plugins/select2/js/select2.min.js') }}"></script>
+
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/ol@8.2.0/dist/ol.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/proj4@2.9.0/dist/proj4.js"></script>
@@ -1804,9 +2940,13 @@
     const hazardDetections = sapData; // Alias untuk kompatibilitas dengan kode yang sudah ada
     
     // Data CCTV diambil langsung dari database (tabel cctv_data_bmo2), bukan dari WMS atau GeoJSON
-    // cctvLocations: SEMUA data CCTV (2035) untuk ditampilkan di sidebar
-    // cctvLocationsForMap: Hanya CCTV yang punya koordinat (1789) untuk ditampilkan di map
-    const cctvLocations = @json($cctvLocations);
+    // cctvLocations: Data CCTV yang sudah difilter berdasarkan auth pengawas (DEFAULT)
+    // cctvLocationsForMap: Hanya CCTV yang punya koordinat dan sudah difilter pengawas (DEFAULT)
+    // cctvLocationsForControlRoom: SEMUA CCTV tanpa filter pengawas (untuk filter Control Room)
+    // cctvLocationsForMapAll: SEMUA CCTV dengan koordinat tanpa filter pengawas (untuk filter Control Room)
+    const cctvLocations = @json($cctvLocations ?? []);
+    const cctvLocationsForControlRoom = @json($cctvLocationsForControlRoom ?? []);
+    const cctvLocationsForMapAll = @json($cctvLocationsForMapAll ?? []);
     const cctvLocationsForMap = @json($cctvLocationsForMap ?? $cctvLocations);
     
     const grDetections = @json($grDetections ?? []);
@@ -1924,6 +3064,8 @@
     let grLayer = null;
     let insidenLayer = null;
     let unitVehicleLayer = null;
+    let userGpsLayer = null;
+    let dailyOperationPlansLayer = null;
     let popupOverlay = null;
     
     // Site filter - harus didefinisikan sebelum digunakan di style function
@@ -1949,15 +3091,30 @@
     let originalControlRoomData = [];
     
     // Layer visibility state
-    // Default: SAP dan Unit hidden untuk performa
+    // Default: SAP, Unit, dan GPS Orang hidden untuk performa
     let layerVisibility = {
         cctv: true,
         hazard: false,  // SAP default hidden
         gr: true,
         insiden: true,
         unit: false,    // Unit default hidden
-        gps: true
+        gps: false      // GPS Orang default hidden
     };
+    
+    // SAP toggle state - track if SAP is currently loaded and visible
+    let sapDataLoaded = false;
+    let sapDataCache = []; // Cache untuk menyimpan data SAP yang sudah di-load
+    
+    // Unit Vehicle toggle state - track if Unit is currently visible
+    let unitDataLoaded = false;
+    
+    // GPS Orang toggle state - track if GPS Orang is currently visible
+    let gpsOrangDataLoaded = false;
+    let gpsOrangDataCache = []; // Cache untuk menyimpan data GPS Orang yang sudah di-load
+    
+    // Control Room filter state
+    let activeControlRooms = []; // Array of control room names that are currently active
+    let allControlRooms = []; // Store all control rooms data
     
     // BMO2 PAMA GeoJSON layers
     let areaKerjaBmo2PamaLayer = null;
@@ -1982,6 +3139,54 @@
         attributions: '© Google',
         maxZoom: 20
     });
+
+    // const googleSatelliteSource = new ol.source.XYZ({
+    //     url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    //     attributions: 'Tiles © Esri',
+    //     maxZoom: 19
+    //     });
+
+    // const googleSatelliteSource = new ol.source.XYZ({
+    //     url: 'https://mt0.google.com/vt/lyrs=p&hl=en&x={x}&y={y}&z={z}',
+    //     attributions: '© Google',
+    //     maxZoom: 20
+    //     });
+
+    // const googleSatelliteSource = new ol.source.XYZ({
+    //     url: 'https://{a-d}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+    //     attributions: '© OpenStreetMap contributors, © CARTO',
+    //     maxZoom: 20
+    //     });
+
+        // const googleSatelliteSource = new ol.source.XYZ({
+        //     url: 'https://{a-c}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        //     attributions: '© OpenStreetMap contributors, © OpenTopoMap',
+        //     maxZoom: 17
+        //     });
+
+//         const googleSatelliteSource = new ol.source.XYZ({
+            //   url: 'https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png?api_key=YOUR_KEY',
+            //   attributions: '© Stadia Maps © Stamen Design © OpenMapTiles © OpenStreetMap contributors',
+            //   maxZoom: 20
+            // });
+
+// const googleSatelliteSource = new ol.source.XYZ({
+//   url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+//   attributions: '© OpenStreetMap contributors',
+//   maxZoom: 19
+// });
+
+// const googleSatelliteSource = new ol.source.XYZ({
+//   url: 'https://{a-c}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+//   attributions: '© OpenStreetMap contributors, HOT',
+//   maxZoom: 19
+// });
+
+
+
+
+
+
 
     // Function to create layer from GeoJSON data (for CRS84/EPSG:4326 data)
     function createLayerFromGeoJson(geoJsonData, layerName, styleFunction, zIndex = 300) {
@@ -2372,6 +3577,14 @@
             // Update insiden layer untuk pulsating animation
             if (insidenLayer) {
                 const source = insidenLayer.getSource();
+                if (source) {
+                    source.changed();
+                }
+            }
+            
+            // Update CCTV layer untuk blink animation (CCTV yang rusak akan blink merah)
+            if (cctvLayer) {
+                const source = cctvLayer.getSource();
                 if (source) {
                     source.changed();
                 }
@@ -2960,34 +4173,126 @@
     let currentMapType = 'satellite'; // Default map type
     
     // Create different tile sources for map types
+    // const mapTileSources = {
+    //     satellite: googleSatelliteSource, // Already defined
+    //     terrain: new ol.source.XYZ({
+    //         url: 'http://mt0.google.com/vt/lyrs=p&hl=en&x={x}&y={y}&z={z}',
+    //         attributions: '© Google',
+    //         maxZoom: 20
+    //     }),
+    //     road: new ol.source.XYZ({
+    //         url: 'http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}',
+    //         attributions: '© Google',
+    //         maxZoom: 20
+    //     }),
+    //     traffic: new ol.source.XYZ({
+    //         url: 'http://mt0.google.com/vt/lyrs=m@221097413,traffic&hl=en&x={x}&y={y}&z={z}',
+    //         attributions: '© Google',
+    //         maxZoom: 20
+    //     }),
+    //     transit: new ol.source.XYZ({
+    //         url: 'http://mt0.google.com/vt/lyrs=m@221097413,transit&hl=en&x={x}&y={y}&z={z}',
+    //         attributions: '© Google',
+    //         maxZoom: 20
+    //     }),
+    //     biking: new ol.source.XYZ({
+    //         url: 'http://mt0.google.com/vt/lyrs=m@221097413,bike&hl=en&x={x}&y={y}&z={z}',
+    //         attributions: '© Google',
+    //         maxZoom: 20
+    //     })
+    // };
+
+    // === NON-GOOGLE TILE SOURCES (OpenLayers) ===
+    // Tips: pakai HTTPS + set crossOrigin untuk aman.
+
     const mapTileSources = {
-        satellite: googleSatelliteSource, // Already defined
-        terrain: new ol.source.XYZ({
-            url: 'http://mt0.google.com/vt/lyrs=p&hl=en&x={x}&y={y}&z={z}',
-            attributions: '© Google',
-            maxZoom: 20
-        }),
-        road: new ol.source.XYZ({
-            url: 'http://mt0.google.com/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}',
-            attributions: '© Google',
-            maxZoom: 20
-        }),
-        traffic: new ol.source.XYZ({
-            url: 'http://mt0.google.com/vt/lyrs=m@221097413,traffic&hl=en&x={x}&y={y}&z={z}',
-            attributions: '© Google',
-            maxZoom: 20
-        }),
-        transit: new ol.source.XYZ({
-            url: 'http://mt0.google.com/vt/lyrs=m@221097413,transit&hl=en&x={x}&y={y}&z={z}',
-            attributions: '© Google',
-            maxZoom: 20
-        }),
-        biking: new ol.source.XYZ({
-            url: 'http://mt0.google.com/vt/lyrs=m@221097413,bike&hl=en&x={x}&y={y}&z={z}',
-            attributions: '© Google',
-            maxZoom: 20
-        })
+    // --- SATELLITE ---
+    // Esri World Imagery (satellite)
+    satellite_esri: new ol.source.XYZ({
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        attributions: 'Tiles © Esri',
+        maxZoom: 19,
+        crossOrigin: 'anonymous'
+    }),
+
+    // --- ROAD / BASIC ---
+    // OpenStreetMap Standard (road)
+    road_osm: new ol.source.XYZ({
+        url: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+        attributions: '© OpenStreetMap contributors',
+        maxZoom: 19,
+        crossOrigin: 'anonymous'
+    }),
+
+    // CARTO Voyager (road-ish, lebih “rapi” untuk overlay data)
+    road_carto_voyager: new ol.source.XYZ({
+        url: 'https://tiles.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}.png',
+        attributions: '© OpenStreetMap contributors, © CARTO',
+        maxZoom: 20,
+        crossOrigin: 'anonymous'
+    }),
+
+    // --- TERRAIN / TOPO ---
+    // OpenTopoMap (topo/terrain)
+    terrain_opentopo: new ol.source.XYZ({
+        url: 'https://tile.opentopomap.org/{z}/{x}/{y}.png',
+        attributions: '© OpenStreetMap contributors, © OpenTopoMap',
+        maxZoom: 17,
+        crossOrigin: 'anonymous'
+    }),
+
+    // Esri World Topo Map (topo)
+    topo_esri: new ol.source.XYZ({
+        url: 'https://services.arcgisonline.com/ArcGIS/rest/services/World_Topo_Map/MapServer/tile/{z}/{y}/{x}',
+        attributions: 'Tiles © Esri',
+        maxZoom: 19,
+        crossOrigin: 'anonymous'
+    }),
+
+    // --- LIGHT / DARK (bagus untuk dashboard) ---
+    // CARTO Positron (light)
+    light_carto: new ol.source.XYZ({
+        url: 'https://{a-d}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png',
+        attributions: '© OpenStreetMap contributors, © CARTO',
+        maxZoom: 20,
+        crossOrigin: 'anonymous'
+    }),
+
+    // CARTO Dark Matter (dark)
+    dark_carto: new ol.source.XYZ({
+        url: 'https://{a-d}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png',
+        attributions: '© OpenStreetMap contributors, © CARTO',
+        maxZoom: 20,
+        crossOrigin: 'anonymous'
+    }),
+
+    // --- “SEGALAMACAM” (butuh key) ---
+    // Stadia (hosting style Stamen) - butuh api_key
+    // Contoh: Toner (high contrast)
+    toner_stadia: new ol.source.XYZ({
+        url: 'https://tiles.stadiamaps.com/tiles/stamen_toner/{z}/{x}/{y}.png?api_key=YOUR_STADIA_KEY',
+        attributions: '© Stadia Maps © Stamen Design © OpenMapTiles © OpenStreetMap contributors',
+        maxZoom: 20,
+        crossOrigin: 'anonymous'
+    }),
+
+    // Stadia: Terrain (lebih “terrain” feel)
+    terrain_stadia: new ol.source.XYZ({
+        url: 'https://tiles.stadiamaps.com/tiles/stamen_terrain/{z}/{x}/{y}.png?api_key=YOUR_STADIA_KEY',
+        attributions: '© Stadia Maps © Stamen Design © OpenMapTiles © OpenStreetMap contributors',
+        maxZoom: 20,
+        crossOrigin: 'anonymous'
+    }),
+
+    // Thunderforest: Outdoors/Landscape/Cycle/Transport (butuh apikey)
+    outdoors_thunderforest: new ol.source.XYZ({
+        url: 'https://{a-c}.tile.thunderforest.com/outdoors/{z}/{x}/{y}.png?apikey=YOUR_THUNDERFOREST_KEY',
+        attributions: '© Thunderforest, © OpenStreetMap contributors',
+        maxZoom: 22,
+        crossOrigin: 'anonymous'
+    })
     };
+
 
     // Function to switch map layer
     function switchMapLayer(layerType) {
@@ -3022,59 +4327,141 @@
         console.log(`Switched to ${layerType} map layer`);
     }
 
-    // Layer Filter Toggle Functionality
+    // Layer Filter Toggle Functionality - New Design with Bootstrap Collapse
     function initLayerFilter() {
-        const layerFilterBtn = document.getElementById('gmLayerFilterBtn');
-        const layerFilterMenu = document.getElementById('gmLayerFilterMenu');
-        const layerOptions = document.querySelectorAll('.gm-layer-option');
-
-        if (layerFilterBtn && layerFilterMenu) {
-            console.log('Layer filter initialized');
-            
-            // Toggle menu on button click
-            layerFilterBtn.addEventListener('click', function(e) {
-                e.stopPropagation();
-                layerFilterMenu.classList.toggle('active');
-                console.log('Layer filter button clicked');
-            });
-
-            // Close menu when clicking outside
-            document.addEventListener('click', function(e) {
-                if (layerFilterBtn && layerFilterMenu && 
-                    !layerFilterBtn.contains(e.target) && 
-                    !layerFilterMenu.contains(e.target)) {
-                    layerFilterMenu.classList.remove('active');
-                }
-            });
-
-            // Handle layer option clicks
-            layerOptions.forEach(option => {
-                option.addEventListener('click', function(e) {
-                    e.stopPropagation();
-                    const layerType = this.getAttribute('data-layer');
-                    
-                    if (layerType === 'more') {
-                        // Handle "More" option - could show additional options or do nothing
-                        console.log('More options clicked');
-                        return;
-                    }
-
-                    // Switch map layer
-                    switchMapLayer(layerType);
-                    
-                    // Close menu after selection
-                    layerFilterMenu.classList.remove('active');
-                });
-            });
-
-            // Set initial active state
-            const initialActive = document.querySelector(`.gm-layer-option[data-layer="${currentMapType}"]`);
-            if (initialActive) {
-                initialActive.classList.add('active');
-            }
-        } else {
+        const panelEl = document.getElementById('gmLayerPanel');
+        const btn = document.getElementById('gmLayerToggleBtn');
+        
+        if (!panelEl || !btn) {
             console.warn('Layer filter elements not found');
+            return;
         }
+
+        // Bootstrap collapse instance
+        const collapse = new bootstrap.Collapse(panelEl, { toggle: false });
+
+        // Toggle show/hide panel
+        btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const isShown = panelEl.classList.contains('show');
+            if (isShown) {
+                collapse.hide();
+                btn.setAttribute('aria-expanded', 'false');
+            } else {
+                collapse.show();
+                btn.setAttribute('aria-expanded', 'true');
+            }
+        });
+
+        // Prevent click inside panel from closing
+        panelEl.addEventListener('click', (e) => e.stopPropagation());
+
+        // Click outside to close
+        document.addEventListener('click', () => {
+            if (panelEl.classList.contains('show')) {
+                collapse.hide();
+                btn.setAttribute('aria-expanded', 'false');
+            }
+        });
+
+        // Toggle layer ON/OFF
+        document.querySelectorAll('.btn-check').forEach(cb => {
+            cb.addEventListener('change', () => {
+                const label = document.querySelector(`label[for="${cb.id}"]`);
+                const layerName = label?.dataset?.layer || cb.id;
+                applyLayer(layerName, cb.checked);
+            });
+        });
+
+        // Hook your map control here
+        function applyLayer(layerName, isOn) {
+            console.log('[Layer]', layerName, isOn ? 'ON' : 'OFF');
+            
+            // Special handling for "Unit dan Orang" (terrain layer)
+            if (layerName === 'terrain') {
+                // Hide CCTV first
+                if (cctvLayer && layerVisibility.cctv) {
+                    toggleLayerVisibility('cctv', false);
+                }
+                
+                // Show Unit - use toggleUnitDisplay if available
+                if (typeof toggleUnitDisplay === 'function') {
+                    // Check if unit is already visible, if not show it
+                    if (!layerVisibility.unit || !unitDataLoaded) {
+                        toggleUnitDisplay();
+                    } else {
+                        // Ensure it's visible
+                        toggleLayerVisibility('unit', true);
+                    }
+                } else {
+                    toggleLayerVisibility('unit', true);
+                }
+                
+                // Show GPS Orang - use toggleGpsOrangDisplay if available
+                if (typeof toggleGpsOrangDisplay === 'function') {
+                    // Check if GPS Orang is already visible, if not show it
+                    if (!layerVisibility.gps || !gpsOrangDataLoaded) {
+                        toggleGpsOrangDisplay();
+                    } else {
+                        // Ensure it's visible
+                        toggleLayerVisibility('gps', true);
+                    }
+                } else {
+                    // Fallback: find and click the GPS Orang category item
+                    const gpsOrangCategoryItems = document.querySelectorAll('.gm-category-item');
+                    let gpsOrangClicked = false;
+                    gpsOrangCategoryItems.forEach(function(item) {
+                        const span = item.querySelector('span');
+                        if (span && (span.textContent.trim() === 'Gps Orang' || span.textContent.trim() === 'GPS Orang')) {
+                            if (!layerVisibility.gps || !gpsOrangDataLoaded) {
+                                item.click();
+                                gpsOrangClicked = true;
+                            } else {
+                                toggleLayerVisibility('gps', true);
+                            }
+                        }
+                    });
+                    
+                    // If GPS Orang category item not found, use direct toggle
+                    if (!gpsOrangClicked) {
+                        toggleLayerVisibility('gps', true);
+                    }
+                }
+                
+                console.log('Unit dan Orang layer activated - showing Unit and GPS Orang, hiding CCTV');
+            } else if (layerName === 'satellite') {
+                // Switch to satellite map
+                switchMapLayer('satellite');
+            } else if (layerName === 'traffic') {
+                // Switch to traffic/matriks area kerja
+                switchMapLayer('traffic');
+                
+                // Clear highlighted area kerja layer when toggling traffic layer
+                if (highlightedAreaKerjaLayer) {
+                    map.removeLayer(highlightedAreaKerjaLayer);
+                    highlightedAreaKerjaLayer = null;
+                }
+                
+                // Show/hide daily operation plans layer
+                if (isOn) {
+                    // Load and show daily operation plans
+                    if (dailyOperationPlansLayer) {
+                        dailyOperationPlansLayer.setVisible(true);
+                        loadDailyOperationPlans();
+                    }
+                } else {
+                    // Hide daily operation plans
+                    if (dailyOperationPlansLayer) {
+                        dailyOperationPlansLayer.setVisible(false);
+                    }
+                }
+            } else {
+                // Switch map layer for other options
+                switchMapLayer(layerName);
+            }
+        }
+
+        console.log('Layer filter initialized with new design');
     }
 
     // Initialize when DOM is ready
@@ -3187,6 +4574,265 @@
     });
     map.addLayer(insidenLayer);
 
+    // Create vector layer for Daily Operation Plans (Matriks Area Kerja)
+    dailyOperationPlansLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: false,  // Hidden by default, will be shown when traffic layer is toggled
+        style: function(feature) {
+            const props = feature.getProperties();
+            
+            // Style based on potensi_resiko or use default color
+            let fillColor = 'rgba(59, 130, 246, 0.3)'; // Blue default
+            let strokeColor = '#3b82f6';
+            let strokeWidth = 2;
+            
+            // Different colors based on potensi_resiko if available
+            const potensiResiko = props.potensi_resiko || '';
+            if (potensiResiko.toLowerCase().includes('tinggi') || potensiResiko.toLowerCase().includes('high')) {
+                fillColor = 'rgba(239, 68, 68, 0.4)'; // Red for high risk
+                strokeColor = '#ef4444';
+                strokeWidth = 3;
+            } else if (potensiResiko.toLowerCase().includes('sedang') || potensiResiko.toLowerCase().includes('medium')) {
+                fillColor = 'rgba(245, 158, 11, 0.4)'; // Orange for medium risk
+                strokeColor = '#f59e0b';
+                strokeWidth = 2.5;
+            } else if (potensiResiko.toLowerCase().includes('rendah') || potensiResiko.toLowerCase().includes('low')) {
+                fillColor = 'rgba(16, 185, 129, 0.3)'; // Green for low risk
+                strokeColor = '#10b981';
+            }
+            
+            return new ol.style.Style({
+                fill: new ol.style.Fill({
+                    color: fillColor
+                }),
+                stroke: new ol.style.Stroke({
+                    color: strokeColor,
+                    width: strokeWidth
+                })
+            });
+        },
+        name: 'Daily Operation Plans',
+        zIndex: 450  // Above area kerja layers but below markers
+    });
+    map.addLayer(dailyOperationPlansLayer);
+
+    // Function to load daily operation plans from API
+    function loadDailyOperationPlans() {
+        console.log('Loading daily operation plans...');
+        const source = dailyOperationPlansLayer.getSource();
+        
+        // Clear existing features first to reload
+        source.clear();
+        console.log('Cleared existing features from layer');
+        
+        fetch('{{ url("full-maps/api/daily-operation-plans") }}')
+            .then(response => response.json())
+            .then(data => {
+                console.log('Daily operation plans API response:', data);
+                
+                if (data.success && data.data && data.data.features) {
+                    const geoJsonData = data.data;
+                    console.log(`Received ${geoJsonData.features.length} features from API`);
+                    
+                    // Helper function to get coordinates structure info
+                    function getCoordinatesStructure(coords, type) {
+                        if (!Array.isArray(coords)) return 'not_array';
+                        if (coords.length === 0) return 'empty';
+                        
+                        if (type === 'Polygon') {
+                            // Polygon harus: [[[lon, lat], [lon, lat], ...], ...]
+                            if (coords.length > 0 && Array.isArray(coords[0])) {
+                                if (coords[0].length > 0 && Array.isArray(coords[0][0])) {
+                                    if (coords[0][0].length >= 2 && typeof coords[0][0][0] === 'number') {
+                                        return `Polygon: ${coords.length} rings, first ring has ${coords[0].length} points`;
+                                    } else {
+                                        return `Polygon: invalid nested structure - ring[0] is not [lon, lat]`;
+                                    }
+                                } else {
+                                    return `Polygon: ring[0] is not an array`;
+                                }
+                            } else {
+                                return `Polygon: coords[0] is not an array`;
+                            }
+                        } else if (type === 'MultiPolygon') {
+                            // MultiPolygon harus: [[[[lon, lat], ...], ...], ...]
+                            if (coords.length > 0 && Array.isArray(coords[0])) {
+                                if (coords[0].length > 0 && Array.isArray(coords[0][0])) {
+                                    if (coords[0][0].length > 0 && Array.isArray(coords[0][0][0])) {
+                                        if (coords[0][0][0].length >= 2 && typeof coords[0][0][0][0] === 'number') {
+                                            return `MultiPolygon: ${coords.length} polygons`;
+                                        } else {
+                                            return `MultiPolygon: invalid nested structure`;
+                                        }
+                                    } else {
+                                        return `MultiPolygon: polygon[0][0] is not an array`;
+                                    }
+                                } else {
+                                    return `MultiPolygon: polygon[0] is not an array`;
+                                }
+                            } else {
+                                return `MultiPolygon: coords[0] is not an array`;
+                            }
+                        }
+                        return `unknown_structure: type=${type}, coords.length=${coords.length}`;
+                    }
+                    
+                    // Parse GeoJSON features dengan error handling
+                    let features = [];
+                    try {
+                        // Validasi setiap feature sebelum parsing
+                        if (geoJsonData.features && Array.isArray(geoJsonData.features)) {
+                            geoJsonData.features.forEach((feature, index) => {
+                                try {
+                                    // Validasi feature structure
+                                    if (!feature.geometry) {
+                                        console.warn(`Feature ${index} has no geometry, skipping`);
+                                        return;
+                                    }
+                                    
+                                    if (!feature.geometry.type) {
+                                        console.warn(`Feature ${index} geometry has no type, skipping`);
+                                        return;
+                                    }
+                                    
+                                    if (!feature.geometry.coordinates) {
+                                        console.warn(`Feature ${index} geometry has no coordinates, skipping`);
+                                        return;
+                                    }
+                                    
+                                    // Validasi coordinates structure
+                                    const coords = feature.geometry.coordinates;
+                                    if (!Array.isArray(coords)) {
+                                        console.warn(`Feature ${index} coordinates is not an array:`, typeof coords);
+                                        return;
+                                    }
+                                    
+                                    // Log geometry structure untuk debugging
+                                    const structureInfo = getCoordinatesStructure(coords, feature.geometry.type);
+                                    console.log(`Feature ${index} geometry:`, {
+                                        type: feature.geometry.type,
+                                        coordinates_length: coords.length,
+                                        coordinates_structure: structureInfo,
+                                        coordinates_preview: JSON.stringify(coords).substring(0, 200)
+                                    });
+                                    
+                                    // Jika struktur tidak valid, coba perbaiki
+                                    if (structureInfo.includes('unknown') || structureInfo.includes('invalid')) {
+                                        console.warn(`Feature ${index} has invalid coordinates structure, attempting to fix...`);
+                                        
+                                        // Coba perbaiki struktur untuk Polygon
+                                        if (feature.geometry.type === 'Polygon' && coords.length === 1 && Array.isArray(coords[0])) {
+                                            // Mungkin coordinates adalah [[[lon, lat], ...]] tapi perlu di-wrap lagi
+                                            const firstRing = coords[0];
+                                            if (Array.isArray(firstRing) && firstRing.length > 0) {
+                                                if (Array.isArray(firstRing[0]) && firstRing[0].length >= 2) {
+                                                    // Ini sudah benar, tapi mungkin perlu di-wrap
+                                                    feature.geometry.coordinates = [firstRing];
+                                                    console.log(`Fixed Polygon coordinates structure for feature ${index}`);
+                                                } else if (typeof firstRing[0] === 'number' && firstRing.length >= 2) {
+                                                    // Ini adalah ring yang belum di-wrap: [[lon, lat], ...]
+                                                    feature.geometry.coordinates = [firstRing];
+                                                    console.log(`Fixed Polygon coordinates: wrapped single ring for feature ${index}`);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    
+                                    // Parse single feature
+                                    const parsedFeature = new ol.format.GeoJSON().readFeatures({
+                                        type: 'FeatureCollection',
+                                        features: [feature]
+                                    }, {
+                                        dataProjection: 'EPSG:4326',
+                                        featureProjection: 'EPSG:3857'
+                                    });
+                                    
+                                    if (parsedFeature && parsedFeature.length > 0) {
+                                        features.push(parsedFeature[0]);
+                                    }
+                                } catch (featureError) {
+                                    console.error(`Error parsing feature ${index}:`, featureError);
+                                    console.error('Feature data:', feature);
+                                }
+                            });
+                        }
+                    } catch (parseError) {
+                        console.error('Error parsing GeoJSON:', parseError);
+                        console.error('GeoJSON data:', geoJsonData);
+                    }
+                    
+                    console.log(`Parsed ${features.length} features from GeoJSON`);
+                    
+                    // Debug: log setiap feature
+                    features.forEach((feature, index) => {
+                        const geometry = feature.getGeometry();
+                        const props = feature.getProperties();
+                        console.log(`Feature ${index}:`, {
+                            hasGeometry: !!geometry,
+                            geometryType: geometry ? geometry.getType() : 'none',
+                            properties: props
+                        });
+                        
+                        if (geometry) {
+                            const extent = geometry.getExtent();
+                            console.log(`Feature ${index} extent:`, extent);
+                        }
+                    });
+                    
+                    // Tidak ada validasi ketat - langsung tampilkan semua features yang punya geometry
+                    const validFeatures = features.filter(feature => {
+                        const geometry = feature.getGeometry();
+                        if (!geometry) {
+                            console.warn('Feature has no geometry, skipping:', feature.getProperties());
+                            return false;
+                        }
+                        // Hanya cek apakah ada geometry, tidak ada validasi lainnya
+                        return true;
+                    });
+                    
+                    console.log(`Valid features: ${validFeatures.length} out of ${features.length}`);
+                    
+                    // Add valid features to layer
+                    if (validFeatures.length > 0) {
+                        try {
+                            source.addFeatures(validFeatures);
+                            console.log(`Successfully added ${validFeatures.length} features to layer`);
+                            
+                            // Check if features are actually in the source
+                            const featuresInSource = source.getFeatures();
+                            console.log(`Features in source after add: ${featuresInSource.length}`);
+                            
+                            // Check layer visibility
+                            console.log('Layer visible:', dailyOperationPlansLayer.getVisible());
+                            console.log('Layer source features:', dailyOperationPlansLayer.getSource().getFeatures().length);
+                            
+                            // Fit map to show all plans if there are any
+                            const extent = source.getExtent();
+                            console.log('Source extent:', extent);
+                            if (extent && extent[0] !== Infinity && extent[1] !== Infinity) {
+                                map.getView().fit(extent, {
+                                    padding: [50, 50, 50, 50],
+                                    maxZoom: 18
+                                });
+                                console.log('Map fitted to extent');
+                            } else {
+                                console.warn('Invalid extent, cannot fit map');
+                            }
+                        } catch (error) {
+                            console.error('Error adding features to layer:', error);
+                        }
+                    } else {
+                        console.warn('No valid features to add');
+                    }
+                } else {
+                    console.warn('No daily operation plans data received');
+                }
+            })
+            .catch(error => {
+                console.error('Error loading daily operation plans:', error);
+            });
+    }
+
     // Add SAP markers (mengganti hazard markers) - OPTIMIZED dengan batch rendering
     // Limit jumlah marker untuk performa (maksimal 1000 marker)
     const MAX_SAP_MARKERS = 1000;
@@ -3245,27 +4891,164 @@
         addSapMarkersBatch(sapData);
     }, 500);
 
-    function createCCTVIcon({ fill = "#a142f4", live = false } = {}) {
-  const W = 56, H = 56;
+    // function createCCTVIcon({ fill = "#a142f4", live = false } = {}) {
+    //         const W = 56, H = 56;
+    //         const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+
+    //         const c = document.createElement("canvas");
+    //         c.width = Math.round(W * dpr);
+    //         c.height = Math.round(H * dpr);
+    //         const ctx = c.getContext("2d");
+    //         ctx.setTransform(dpr,0,0,dpr,0,0);
+    //         ctx.clearRect(0,0,W,H);
+
+    //         const cx = 28, cy = 22;
+    //         const Rw = 16.5;     // radius warna
+    //         const Rb = 20.5;     // radius border putih
+    //         const tailH = 12;    // tinggi tail
+    //         const tailW = 16;    // lebar tail
+
+    //         function bubblePath(R){
+    //             const baseY = cy + R * 0.78;
+    //             const dy = baseY - cy;
+    //             const dx = Math.sqrt(Math.max(0, R*R - dy*dy));
+    //             const xL = cx - dx, xR = cx + dx;
+    //             const aL = Math.atan2(dy, -dx);
+    //             const aR = Math.atan2(dy,  dx);
+
+    //             ctx.beginPath();
+    //             ctx.moveTo(xL, baseY);
+    //             ctx.arc(cx, cy, R, aL, aR, true);
+
+    //             const half = tailW / 2;
+    //             const tipX = cx;
+    //             const tipY = baseY + tailH;
+
+    //             ctx.quadraticCurveTo(cx + half, baseY + 2, cx + half*0.7, baseY + tailH*0.55);
+    //             ctx.quadraticCurveTo(cx + half*0.25, baseY + tailH*0.9, tipX, tipY);
+    //             ctx.quadraticCurveTo(cx - half*0.25, baseY + tailH*0.9, cx - half*0.7, baseY + tailH*0.55);
+    //             ctx.quadraticCurveTo(cx - half, baseY + 2, xL, baseY);
+
+    //             ctx.closePath();
+    //         }
+
+    //     // shadow
+    //     ctx.save();
+    //     ctx.shadowColor = "rgba(0,0,0,.28)";
+    //     ctx.shadowBlur = 7;
+    //     ctx.shadowOffsetY = 3;
+    //     bubblePath(Rb);
+    //     ctx.fillStyle = "#fff";
+    //     ctx.fill();
+    //     ctx.restore();
+
+    //     // white border shape
+    //     ctx.save();
+    //     bubblePath(Rb);
+    //     ctx.fillStyle = "#fff";
+    //     ctx.fill();
+    //     ctx.restore();
+
+    //     // inner fill circle
+    //     ctx.save();
+    //     ctx.beginPath();
+    //     ctx.arc(cx, cy, Rw, 0, Math.PI*2);
+    //     ctx.fillStyle = fill;
+    //     ctx.fill();
+    //     ctx.restore();
+
+    //     // camera glyph
+    //     ctx.save();
+    //     ctx.translate(cx, cy);
+    //     ctx.fillStyle = "#fff";
+
+    //     // body
+    //     roundRect(ctx, -10, -6, 20, 12, 3);
+    //     ctx.fill();
+
+    //     // lens hole (purple dot)
+    //     ctx.beginPath();
+    //     ctx.arc(0, 0.5, 4.6, 0, Math.PI*2);
+    //     ctx.fillStyle = fill;
+    //     ctx.fill();
+
+    //     // lens ring
+    //     ctx.beginPath();
+    //     ctx.arc(0, 0.5, 4.6, 0, Math.PI*2);
+    //     ctx.lineWidth = 1.2;
+    //     ctx.strokeStyle = "#fff";
+    //     ctx.stroke();
+
+    //     // viewfinder
+    //     ctx.fillStyle = "#fff";
+    //     roundRect(ctx, -4, -10, 8, 3.5, 1.4);
+    //     ctx.fill();
+
+    //     // plus sign top-left
+    //     ctx.fillRect(-14, -12, 7, 2.2);
+    //     ctx.fillRect(-11.4, -14.6, 2.2, 7);
+
+    //     ctx.restore();
+
+    //     // live dot
+    //     if (live) {
+    //         ctx.save();
+    //         ctx.beginPath();
+    //         ctx.arc(cx + 11.5, cy - 11.5, 4, 0, Math.PI*2);
+    //         ctx.fillStyle = "#10b981";
+    //         ctx.fill();
+    //         ctx.lineWidth = 1.8;
+    //         ctx.strokeStyle = "#fff";
+    //         ctx.stroke();
+    //         ctx.restore();
+    //     }
+
+    //     return c.toDataURL("image/png");
+
+    //     function roundRect(ctx, x,y,w,h,r){
+    //         r = Math.min(r, w/2, h/2);
+    //         ctx.beginPath();
+    //         ctx.moveTo(x+r, y);
+    //         ctx.arcTo(x+w, y, x+w, y+h, r);
+    //         ctx.arcTo(x+w, y+h, x, y+h, r);
+    //         ctx.arcTo(x, y+h, x, y, r);
+    //         ctx.arcTo(x, y, x+w, y, r);
+    //         ctx.closePath();
+    //     }
+    // }
+
+    function createCCTVIcon({
+  fill = "#a142f4",  // Default purple - kompatibel dengan pemanggilan yang menggunakan 'fill'
+  live = false,
+  size = 56,          // 48–64 enak
+  glyph = "camera",   // siap kalau mau tambah nanti
+} = {}) {
+  const W = size, H = size;
   const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
 
   const c = document.createElement("canvas");
   c.width = Math.round(W * dpr);
   c.height = Math.round(H * dpr);
   const ctx = c.getContext("2d");
-  ctx.setTransform(dpr,0,0,dpr,0,0);
-  ctx.clearRect(0,0,W,H);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  ctx.clearRect(0, 0, W, H);
 
-  const cx = 28, cy = 22;
-  const Rw = 16.5;     // radius warna
-  const Rb = 20.5;     // radius border putih
-  const tailH = 12;    // tinggi tail
-  const tailW = 16;    // lebar tail
+  // Geometry (proporsional ke size)
+  const cx = W * 0.5;
+  const cy = H * 0.40;
+  const R_outer = W * 0.37;  // outer white ring shape radius
+  const R_inner = W * 0.30;  // inner colored circle radius
+  const tailH  = H * 0.22;
+  const tailW  = W * 0.30;
 
-  function bubblePath(R){
+  // Alias untuk kompatibilitas (menggunakan 'fill' sebagai parameter utama)
+  const color = fill;
+
+  // ---------- helpers ----------
+  function bubblePath(R) {
     const baseY = cy + R * 0.78;
     const dy = baseY - cy;
-    const dx = Math.sqrt(Math.max(0, R*R - dy*dy));
+    const dx = Math.sqrt(Math.max(0, R * R - dy * dy));
     const xL = cx - dx, xR = cx + dx;
     const aL = Math.atan2(dy, -dx);
     const aR = Math.atan2(dy,  dx);
@@ -3278,98 +5061,155 @@
     const tipX = cx;
     const tipY = baseY + tailH;
 
-    ctx.quadraticCurveTo(cx + half, baseY + 2, cx + half*0.7, baseY + tailH*0.55);
-    ctx.quadraticCurveTo(cx + half*0.25, baseY + tailH*0.9, tipX, tipY);
-    ctx.quadraticCurveTo(cx - half*0.25, baseY + tailH*0.9, cx - half*0.7, baseY + tailH*0.55);
+    ctx.quadraticCurveTo(cx + half, baseY + 2, cx + half * 0.72, baseY + tailH * 0.55);
+    ctx.quadraticCurveTo(cx + half * 0.26, baseY + tailH * 0.92, tipX, tipY);
+    ctx.quadraticCurveTo(cx - half * 0.26, baseY + tailH * 0.92, cx - half * 0.72, baseY + tailH * 0.55);
     ctx.quadraticCurveTo(cx - half, baseY + 2, xL, baseY);
 
     ctx.closePath();
   }
 
-  // shadow
+  function roundRect(x, y, w, h, r) {
+    r = Math.min(r, w / 2, h / 2);
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.arcTo(x + w, y, x + w, y + h, r);
+    ctx.arcTo(x + w, y + h, x, y + h, r);
+    ctx.arcTo(x, y + h, x, y, r);
+    ctx.arcTo(x, y, x + w, y, r);
+    ctx.closePath();
+  }
+
+  function shade(hex, amt) {
+    // amt: -1..1 (gelap..terang)
+    const c = hex.replace("#", "");
+    const n = parseInt(c.length === 3 ? c.split("").map(x => x + x).join("") : c, 16);
+    let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+    r = Math.max(0, Math.min(255, Math.round(r + 255 * amt)));
+    g = Math.max(0, Math.min(255, Math.round(g + 255 * amt)));
+    b = Math.max(0, Math.min(255, Math.round(b + 255 * amt)));
+    return `rgb(${r},${g},${b})`;
+  }
+
+  // ---------- draw shadow ----------
   ctx.save();
-  ctx.shadowColor = "rgba(0,0,0,.28)";
-  ctx.shadowBlur = 7;
-  ctx.shadowOffsetY = 3;
-  bubblePath(Rb);
+  ctx.shadowColor = "rgba(0,0,0,.30)";
+  ctx.shadowBlur = Math.max(6, W * 0.14);
+  ctx.shadowOffsetY = Math.max(2, H * 0.06);
+  bubblePath(R_outer);
   ctx.fillStyle = "#fff";
   ctx.fill();
   ctx.restore();
 
-  // white border shape
+  // ---------- outer white ring ----------
   ctx.save();
-  bubblePath(Rb);
+  bubblePath(R_outer);
   ctx.fillStyle = "#fff";
   ctx.fill();
   ctx.restore();
 
-  // inner fill circle
+  // subtle border stroke (biar crisp)
   ctx.save();
+  bubblePath(R_outer);
+  ctx.lineWidth = Math.max(1, W * 0.02);
+  ctx.strokeStyle = "rgba(0,0,0,.06)";
+  ctx.stroke();
+  ctx.restore();
+
+  // ---------- inner colored circle (gradient + gloss) ----------
+  ctx.save();
+  // Base radial gradient (Google-ish depth)
+  const g = ctx.createRadialGradient(cx - R_inner * 0.35, cy - R_inner * 0.35, R_inner * 0.15, cx, cy, R_inner);
+  g.addColorStop(0.00, shade(color, +0.22));
+  g.addColorStop(0.55, color);
+  g.addColorStop(1.00, shade(color, -0.18));
+
   ctx.beginPath();
-  ctx.arc(cx, cy, Rw, 0, Math.PI*2);
-  ctx.fillStyle = fill;
+  ctx.arc(cx, cy, R_inner, 0, Math.PI * 2);
+  ctx.fillStyle = g;
   ctx.fill();
+
+  // inner ring highlight
+  ctx.lineWidth = Math.max(1.2, W * 0.025);
+  ctx.strokeStyle = "rgba(255,255,255,.35)";
+  ctx.stroke();
+
+  // gloss highlight (setengah atas)
+  ctx.globalCompositeOperation = "screen";
+  ctx.beginPath();
+  ctx.ellipse(cx - R_inner * 0.18, cy - R_inner * 0.22, R_inner * 0.72, R_inner * 0.58, -0.2, 0, Math.PI * 2);
+  const gloss = ctx.createRadialGradient(cx - R_inner * 0.25, cy - R_inner * 0.35, 0, cx, cy, R_inner);
+  gloss.addColorStop(0, "rgba(255,255,255,.40)");
+  gloss.addColorStop(1, "rgba(255,255,255,0)");
+  ctx.fillStyle = gloss;
+  ctx.fill();
+  ctx.globalCompositeOperation = "source-over";
+
   ctx.restore();
 
-  // camera glyph
+  // ---------- glyph (kamera, putih) ----------
   ctx.save();
   ctx.translate(cx, cy);
   ctx.fillStyle = "#fff";
 
   // body
-  roundRect(ctx, -10, -6, 20, 12, 3);
+  const bw = W * 0.36, bh = H * 0.20;
+  roundRect(-bw / 2, -bh / 2 + H * 0.02, bw, bh, W * 0.045);
   ctx.fill();
 
-  // lens hole (purple dot)
+  // lens (hole)
   ctx.beginPath();
-  ctx.arc(0, 0.5, 4.6, 0, Math.PI*2);
-  ctx.fillStyle = fill;
+  ctx.arc(0, H * 0.02, W * 0.085, 0, Math.PI * 2);
+  ctx.fillStyle = shade(color, -0.02);
   ctx.fill();
 
   // lens ring
   ctx.beginPath();
-  ctx.arc(0, 0.5, 4.6, 0, Math.PI*2);
-  ctx.lineWidth = 1.2;
-  ctx.strokeStyle = "#fff";
+  ctx.arc(0, H * 0.02, W * 0.085, 0, Math.PI * 2);
+  ctx.lineWidth = Math.max(1.1, W * 0.02);
+  ctx.strokeStyle = "rgba(255,255,255,.95)";
   ctx.stroke();
 
-  // viewfinder
+  // viewfinder top
   ctx.fillStyle = "#fff";
-  roundRect(ctx, -4, -10, 8, 3.5, 1.4);
+  const vw = W * 0.14, vh = H * 0.05;
+  roundRect(-vw / 2, -bh / 2 - vh * 0.9, vw, vh, W * 0.02);
   ctx.fill();
 
-  // plus sign top-left
-  ctx.fillRect(-14, -12, 7, 2.2);
-  ctx.fillRect(-11.4, -14.6, 2.2, 7);
+  // small plus (optional accent ala contoh kamu)
+  ctx.fillRect(-W * 0.26, -H * 0.23, W * 0.12, H * 0.035);
+  ctx.fillRect(-W * 0.215, -H * 0.265, W * 0.035, H * 0.12);
 
   ctx.restore();
 
-  // live dot
+  // ---------- live dot ----------
   if (live) {
     ctx.save();
+    const lx = cx + R_inner * 0.72;
+    const ly = cy - R_inner * 0.72;
+    const rr = Math.max(3.6, W * 0.075);
+
     ctx.beginPath();
-    ctx.arc(cx + 11.5, cy - 11.5, 4, 0, Math.PI*2);
+    ctx.arc(lx, ly, rr, 0, Math.PI * 2);
     ctx.fillStyle = "#10b981";
     ctx.fill();
-    ctx.lineWidth = 1.8;
+
+    ctx.lineWidth = Math.max(1.6, W * 0.03);
     ctx.strokeStyle = "#fff";
     ctx.stroke();
+
+    // tiny glow
+    ctx.globalAlpha = 0.35;
+    ctx.beginPath();
+    ctx.arc(lx, ly, rr * 1.9, 0, Math.PI * 2);
+    ctx.fillStyle = "#10b981";
+    ctx.fill();
     ctx.restore();
   }
 
   return c.toDataURL("image/png");
-
-  function roundRect(ctx, x,y,w,h,r){
-    r = Math.min(r, w/2, h/2);
-    ctx.beginPath();
-    ctx.moveTo(x+r, y);
-    ctx.arcTo(x+w, y, x+w, y+h, r);
-    ctx.arcTo(x+w, y+h, x, y+h, r);
-    ctx.arcTo(x, y+h, x, y, r);
-    ctx.arcTo(x, y, x+w, y, r);
-    ctx.closePath();
-  }
 }
+   
 
     // Function to create CCTV icon - Google Maps style pin drop shape
 //    function createCCTVIcon(cctv) {
@@ -3611,9 +5451,9 @@
             // Determine color based on status
             let fillColor = "#a142f4"; // Default purple
             if (isGood) {
-                fillColor = "#12b76a"; // Green untuk baik
+                fillColor = "#12b76a"; // Green untuk baik/online
             } else {
-                fillColor = "#dc2626"; // Red untuk tidak baik
+                fillColor = "#dc2626"; // Red untuk rusak/tidak baik (akan blink)
             }
             
             const iconUrl = createCCTVIcon({ 
@@ -3622,15 +5462,16 @@
                 isGood: isGood
             });
             
-            // Calculate blink opacity untuk CCTV yang tidak baik
+            // Calculate blink opacity untuk CCTV yang rusak (tidak baik)
+            // CCTV rusak akan blink dengan opacity berubah dari 0.65 ke 1.0
             let iconOpacity = 1;
             if (!isGood && pulseAnimationStartTime !== null) {
                 const blinkTime = getPulseAnimationTime();
-                const cycle = 500; // 0.5 second cycle untuk blink sangat cepat
+                const cycle = 500; // 0.5 second cycle untuk blink cepat
                 const progress = (blinkTime % cycle) / cycle;
-                // Blink: opacity dari 1 ke 0.3 dan kembali (smooth sine wave) - lebih intens
+                // Blink: opacity dari 0.65 ke 1.0 dan kembali (smooth sine wave)
                 const sineWave = Math.sin(progress * Math.PI * 2);
-                iconOpacity = 0.65 + (0.35 * (1 + sineWave) / 2); // dari 0.3 ke 1.0 - lebih kontras
+                iconOpacity = 0.65 + (0.35 * (1 + sineWave) / 2); // dari 0.65 ke 1.0
             }
             
             // Create style dengan opacity yang berubah untuk animasi blink
@@ -3655,18 +5496,16 @@
     });
     map.addLayer(cctvLayer);
 
-    // Gunakan cctvLocationsForMap untuk map marker (hanya yang punya koordinat)
-    // Sidebar menggunakan cctvLocations (semua data termasuk yang tidak punya koordinat)
-    // OPTIMIZED: Batch rendering untuk CCTV markers
-    function addCctvMarkersBatch() {
-        if (!cctvLocationsForMap || cctvLocationsForMap.length === 0) return;
+    // Helper function to add CCTV markers from any data array
+    function addCctvMarkersFromData(cctvDataArray) {
+        if (!cctvDataArray || cctvDataArray.length === 0) return;
         
         const source = cctvLayer.getSource();
         const features = [];
         const BATCH_SIZE = 100;
         
         // Prepare all features first
-        cctvLocationsForMap.forEach(function(cctv) {
+        cctvDataArray.forEach(function(cctv) {
             if (!cctv.location || !Array.isArray(cctv.location) || cctv.location.length !== 2) {
                 return;
             }
@@ -3699,6 +5538,14 @@
             }
             requestAnimationFrame(addBatch);
         }
+    }
+    
+    // Gunakan cctvLocationsForMap untuk map marker (hanya yang punya koordinat)
+    // Sidebar menggunakan cctvLocations (semua data termasuk yang tidak punya koordinat)
+    // OPTIMIZED: Batch rendering untuk CCTV markers
+    function addCctvMarkersBatch() {
+        if (!cctvLocationsForMap || cctvLocationsForMap.length === 0) return;
+        addCctvMarkersFromData(cctvLocationsForMap);
     }
     
     // Defer CCTV marker rendering
@@ -3824,68 +5671,183 @@
         addGrMarkersBatch();
     }, 600);
 
-    // Function to create vehicle unit icon
+    // Function to create vehicle unit icon (mirip dengan CCTV icon style)
     function createVehicleUnitIcon(unit) {
-        const canvas = document.createElement('canvas');
-        canvas.width = 48;
-        canvas.height = 48;
-        const ctx = canvas.getContext('2d');
-        
-        // Clear canvas
-        ctx.clearRect(0, 0, 48, 48);
-        
         // Determine color based on vehicle type
-        let color = '#3b82f6'; // Default blue
+        let fillColor = '#3b82f6'; // Default blue
         if (unit.vehicle_type) {
             const vehicleType = unit.vehicle_type.toLowerCase();
             if (vehicleType.includes('dump') || vehicleType.includes('truck')) {
-                color = '#f59e0b'; // Orange for trucks
+                fillColor = '#f59e0b'; // Orange for trucks
             } else if (vehicleType.includes('prime') || vehicleType.includes('mover')) {
-                color = '#10b981'; // Green for prime movers
+                fillColor = '#10b981'; // Green for prime movers
             } else if (vehicleType.includes('lube')) {
-                color = '#8b5cf6'; // Purple for lube trucks
+                fillColor = '#8b5cf6'; // Purple for lube trucks
             }
         }
         
-        // Draw vehicle icon (simplified truck shape)
+        // Use same style as CCTV icon but with vehicle glyph
+        const size = 56;
+        const W = size, H = size;
+        const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+
+        const c = document.createElement("canvas");
+        c.width = Math.round(W * dpr);
+        c.height = Math.round(H * dpr);
+        const ctx = c.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+
+        // Geometry (proporsional ke size) - sama dengan CCTV
+        const cx = W * 0.5;
+        const cy = H * 0.40;
+        const R_outer = W * 0.37;  // outer white ring shape radius
+        const R_inner = W * 0.30;  // inner colored circle radius
+        const tailH  = H * 0.22;
+        const tailW  = W * 0.30;
+
+        // Helper functions (sama dengan CCTV)
+        function bubblePath(R) {
+            const baseY = cy + R * 0.78;
+            const dy = baseY - cy;
+            const dx = Math.sqrt(Math.max(0, R * R - dy * dy));
+            const xL = cx - dx, xR = cx + dx;
+            const aL = Math.atan2(dy, -dx);
+            const aR = Math.atan2(dy,  dx);
+
+            ctx.beginPath();
+            ctx.moveTo(xL, baseY);
+            ctx.arc(cx, cy, R, aL, aR, true);
+
+            const half = tailW / 2;
+            const tipX = cx;
+            const tipY = baseY + tailH;
+
+            ctx.quadraticCurveTo(cx + half, baseY + 2, cx + half * 0.72, baseY + tailH * 0.55);
+            ctx.quadraticCurveTo(cx + half * 0.26, baseY + tailH * 0.92, tipX, tipY);
+            ctx.quadraticCurveTo(cx - half * 0.26, baseY + tailH * 0.92, cx - half * 0.72, baseY + tailH * 0.55);
+            ctx.quadraticCurveTo(cx - half, baseY + 2, xL, baseY);
+
+            ctx.closePath();
+        }
+
+        function roundRect(x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        function shade(hex, amt) {
+            const c = hex.replace("#", "");
+            const n = parseInt(c.length === 3 ? c.split("").map(x => x + x).join("") : c, 16);
+            let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+            r = Math.max(0, Math.min(255, Math.round(r + 255 * amt)));
+            g = Math.max(0, Math.min(255, Math.round(g + 255 * amt)));
+            b = Math.max(0, Math.min(255, Math.round(b + 255 * amt)));
+            return `rgb(${r},${g},${b})`;
+        }
+
+        // ---------- draw shadow ----------
         ctx.save();
-        ctx.translate(24, 24);
-        
-        // Main body
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.roundRect(-12, -8, 24, 16, 3);
+        ctx.shadowColor = "rgba(0,0,0,.30)";
+        ctx.shadowBlur = Math.max(6, W * 0.14);
+        ctx.shadowOffsetY = Math.max(2, H * 0.06);
+        bubblePath(R_outer);
+        ctx.fillStyle = "#fff";
         ctx.fill();
-        
-        // Cabin
-        ctx.fillStyle = color;
-        ctx.beginPath();
-        ctx.roundRect(-12, -12, 8, 8, 2);
-        ctx.fill();
-        
-        // Windows
-        ctx.fillStyle = '#1e293b';
-        ctx.fillRect(-10, -10, 4, 4);
-        
-        // Wheels
-        ctx.fillStyle = '#0f172a';
-        ctx.beginPath();
-        ctx.arc(-6, 6, 3, 0, 2 * Math.PI);
-        ctx.fill();
-        ctx.beginPath();
-        ctx.arc(6, 6, 3, 0, 2 * Math.PI);
-        ctx.fill();
-        
-        // Border
-        ctx.strokeStyle = '#ffffff';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-        ctx.roundRect(-12, -12, 24, 20, 3);
-        ctx.stroke();
-        
         ctx.restore();
-        
-        return canvas.toDataURL();
+
+        // ---------- outer white ring ----------
+        ctx.save();
+        bubblePath(R_outer);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        ctx.restore();
+
+        // subtle border stroke
+        ctx.save();
+        bubblePath(R_outer);
+        ctx.lineWidth = Math.max(1, W * 0.02);
+        ctx.strokeStyle = "rgba(0,0,0,.06)";
+        ctx.stroke();
+        ctx.restore();
+
+        // ---------- inner colored circle (gradient + gloss) ----------
+        ctx.save();
+        const g = ctx.createRadialGradient(cx - R_inner * 0.35, cy - R_inner * 0.35, R_inner * 0.15, cx, cy, R_inner);
+        g.addColorStop(0.00, shade(fillColor, +0.22));
+        g.addColorStop(0.55, fillColor);
+        g.addColorStop(1.00, shade(fillColor, -0.18));
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, R_inner, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+
+        // inner ring highlight
+        ctx.lineWidth = Math.max(1.2, W * 0.025);
+        ctx.strokeStyle = "rgba(255,255,255,.35)";
+        ctx.stroke();
+
+        // gloss highlight
+        ctx.globalCompositeOperation = "screen";
+        ctx.beginPath();
+        ctx.ellipse(cx - R_inner * 0.18, cy - R_inner * 0.22, R_inner * 0.72, R_inner * 0.58, -0.2, 0, Math.PI * 2);
+        const gloss = ctx.createRadialGradient(cx - R_inner * 0.25, cy - R_inner * 0.35, 0, cx, cy, R_inner);
+        gloss.addColorStop(0, "rgba(255,255,255,.40)");
+        gloss.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = gloss;
+        ctx.fill();
+        ctx.globalCompositeOperation = "source-over";
+
+        ctx.restore();
+
+        // ---------- glyph (truck/vehicle icon, putih) ----------
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.fillStyle = "#fff";
+
+        // Vehicle body (main rectangle)
+        const vw = W * 0.32, vh = H * 0.16;
+        roundRect(-vw / 2, -vh / 2 + H * 0.02, vw, vh, W * 0.04);
+        ctx.fill();
+
+        // Vehicle cabin (smaller rectangle on left)
+        const cw = W * 0.18, ch = H * 0.14;
+        roundRect(-vw / 2 - cw * 0.1, -ch / 2 + H * 0.02, cw, ch, W * 0.03);
+        ctx.fill();
+
+        // Window (dark rectangle in cabin)
+        ctx.fillStyle = "rgba(30, 41, 59, 0.7)";
+        roundRect(-vw / 2 - cw * 0.05, -ch / 2 + H * 0.025, cw * 0.5, ch * 0.5, W * 0.015);
+        ctx.fill();
+
+        // Wheels (two circles)
+        ctx.fillStyle = "rgba(15, 23, 42, 0.8)";
+        ctx.beginPath();
+        ctx.arc(-vw / 2 + vw * 0.25, vh / 2 + H * 0.02, W * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(vw / 2 - vw * 0.25, vh / 2 + H * 0.02, W * 0.05, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Wheel rims (white circles inside)
+        ctx.fillStyle = "rgba(255, 255, 255, 0.6)";
+        ctx.beginPath();
+        ctx.arc(-vw / 2 + vw * 0.25, vh / 2 + H * 0.02, W * 0.025, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(vw / 2 - vw * 0.25, vh / 2 + H * 0.02, W * 0.025, 0, Math.PI * 2);
+        ctx.fill();
+
+        ctx.restore();
+
+        return c.toDataURL("image/png");
     }
     
     // Create vector layer for unit vehicles
@@ -3904,8 +5866,8 @@
             return new ol.style.Style({
                 image: new ol.style.Icon({
                     src: iconUrl,
-                    scale: 0.8,
-                    anchor: [0.5, 0.5],
+                    scale: 1.0,  // Full scale like CCTV
+                    anchor: [0.5, 1],  // Anchor at bottom center (pin point) - same as CCTV
                     anchorXUnits: 'fraction',
                     anchorYUnits: 'fraction',
                     opacity: 1,
@@ -4022,6 +5984,285 @@
     if (unitVehicles && unitVehicles.length > 0) {
         filteredSidebarData.unit = [...unitVehicles];
         updateTabCounts();
+    }
+    
+    // Function to create GPS Orang icon (mirip dengan CCTV icon style)
+    function createGpsOrangIcon({
+        fill = "#3b82f6",  // Default blue
+        size = 56
+    } = {}) {
+        const W = size, H = size;
+        const dpr = Math.max(1, Math.min(3, window.devicePixelRatio || 1));
+
+        const c = document.createElement("canvas");
+        c.width = Math.round(W * dpr);
+        c.height = Math.round(H * dpr);
+        const ctx = c.getContext("2d");
+        ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        ctx.clearRect(0, 0, W, H);
+
+        // Geometry (proporsional ke size) - sama dengan CCTV
+        const cx = W * 0.5;
+        const cy = H * 0.40;
+        const R_outer = W * 0.37;
+        const R_inner = W * 0.30;
+        const tailH  = H * 0.22;
+        const tailW  = W * 0.30;
+
+        // Helper functions
+        function bubblePath(R) {
+            const baseY = cy + R * 0.78;
+            const dy = baseY - cy;
+            const dx = Math.sqrt(Math.max(0, R * R - dy * dy));
+            const xL = cx - dx, xR = cx + dx;
+            const aL = Math.atan2(dy, -dx);
+            const aR = Math.atan2(dy,  dx);
+
+            ctx.beginPath();
+            ctx.moveTo(xL, baseY);
+            ctx.arc(cx, cy, R, aL, aR, true);
+
+            const half = tailW / 2;
+            const tipX = cx;
+            const tipY = baseY + tailH;
+
+            ctx.quadraticCurveTo(cx + half, baseY + 2, cx + half * 0.72, baseY + tailH * 0.55);
+            ctx.quadraticCurveTo(cx + half * 0.26, baseY + tailH * 0.92, tipX, tipY);
+            ctx.quadraticCurveTo(cx - half * 0.26, baseY + tailH * 0.92, cx - half * 0.72, baseY + tailH * 0.55);
+            ctx.quadraticCurveTo(cx - half, baseY + 2, xL, baseY);
+
+            ctx.closePath();
+        }
+
+        function roundRect(x, y, w, h, r) {
+            r = Math.min(r, w / 2, h / 2);
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.arcTo(x + w, y, x + w, y + h, r);
+            ctx.arcTo(x + w, y + h, x, y + h, r);
+            ctx.arcTo(x, y + h, x, y, r);
+            ctx.arcTo(x, y, x + w, y, r);
+            ctx.closePath();
+        }
+
+        function shade(hex, amt) {
+            const c = hex.replace("#", "");
+            const n = parseInt(c.length === 3 ? c.split("").map(x => x + x).join("") : c, 16);
+            let r = (n >> 16) & 255, g = (n >> 8) & 255, b = n & 255;
+            r = Math.max(0, Math.min(255, Math.round(r + 255 * amt)));
+            g = Math.max(0, Math.min(255, Math.round(g + 255 * amt)));
+            b = Math.max(0, Math.min(255, Math.round(b + 255 * amt)));
+            return `rgb(${r},${g},${b})`;
+        }
+
+        // ---------- draw shadow ----------
+        ctx.save();
+        ctx.shadowColor = "rgba(0,0,0,.30)";
+        ctx.shadowBlur = Math.max(6, W * 0.14);
+        ctx.shadowOffsetY = Math.max(2, H * 0.06);
+        bubblePath(R_outer);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        ctx.restore();
+
+        // ---------- outer white ring ----------
+        ctx.save();
+        bubblePath(R_outer);
+        ctx.fillStyle = "#fff";
+        ctx.fill();
+        ctx.restore();
+
+        // subtle border stroke
+        ctx.save();
+        bubblePath(R_outer);
+        ctx.lineWidth = Math.max(1, W * 0.02);
+        ctx.strokeStyle = "rgba(0,0,0,.06)";
+        ctx.stroke();
+        ctx.restore();
+
+        // ---------- inner colored circle (gradient + gloss) ----------
+        ctx.save();
+        const g = ctx.createRadialGradient(cx - R_inner * 0.35, cy - R_inner * 0.35, R_inner * 0.15, cx, cy, R_inner);
+        g.addColorStop(0.00, shade(fill, +0.22));
+        g.addColorStop(0.55, fill);
+        g.addColorStop(1.00, shade(fill, -0.18));
+
+        ctx.beginPath();
+        ctx.arc(cx, cy, R_inner, 0, Math.PI * 2);
+        ctx.fillStyle = g;
+        ctx.fill();
+
+        // inner ring highlight
+        ctx.lineWidth = Math.max(1.2, W * 0.025);
+        ctx.strokeStyle = "rgba(255,255,255,.35)";
+        ctx.stroke();
+
+        // gloss highlight
+        ctx.globalCompositeOperation = "screen";
+        ctx.beginPath();
+        ctx.ellipse(cx - R_inner * 0.18, cy - R_inner * 0.22, R_inner * 0.72, R_inner * 0.58, -0.2, 0, Math.PI * 2);
+        const gloss = ctx.createRadialGradient(cx - R_inner * 0.25, cy - R_inner * 0.35, 0, cx, cy, R_inner);
+        gloss.addColorStop(0, "rgba(255,255,255,.40)");
+        gloss.addColorStop(1, "rgba(255,255,255,0)");
+        ctx.fillStyle = gloss;
+        ctx.fill();
+        ctx.globalCompositeOperation = "source-over";
+
+        ctx.restore();
+
+        // ---------- glyph (person icon, putih) ----------
+        ctx.save();
+        ctx.translate(cx, cy);
+        ctx.fillStyle = "#fff";
+
+        // Head (circle)
+        ctx.beginPath();
+        ctx.arc(0, -H * 0.08, W * 0.08, 0, Math.PI * 2);
+        ctx.fill();
+
+        // Body (rounded rectangle)
+        const bodyW = W * 0.24, bodyH = H * 0.20;
+        roundRect(-bodyW / 2, H * 0.02, bodyW, bodyH, W * 0.04);
+        ctx.fill();
+
+        ctx.restore();
+
+        return c.toDataURL("image/png");
+    }
+    
+    // Create vector layer for GPS Orang
+    userGpsLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: false,  // Default hidden
+        style: function(feature) {
+            const userData = feature.get('userData');
+            if (!userData) {
+                return null;
+            }
+            
+            // Determine color based on battery level or default
+            let fillColor = '#3b82f6'; // Default blue
+            const battery = userData.battery;
+            if (battery !== null && battery !== undefined) {
+                if (battery < 20) {
+                    fillColor = '#8b5cf6'; // Purple for low battery (instead of red)
+                } else if (battery < 50) {
+                    fillColor = '#f59e0b'; // Orange for medium battery
+                } else {
+                    fillColor = '#10b981'; // Green for good battery
+                }
+            }
+            
+            const iconUrl = createGpsOrangIcon({ fill: fillColor });
+            
+            return new ol.style.Style({
+                image: new ol.style.Icon({
+                    src: iconUrl,
+                    scale: 1.0,
+                    anchor: [0.5, 1],  // Anchor at bottom center (pin point)
+                    anchorXUnits: 'fraction',
+                    anchorYUnits: 'fraction',
+                    opacity: 1
+                })
+            });
+        },
+        zIndex: 1002  // Z-index above CCTV layer
+    });
+    map.addLayer(userGpsLayer);
+    console.log('GPS Orang layer created and added to map');
+    
+    // Function to add/update GPS Orang markers
+    function updateGpsOrangMarkers(users) {
+        if (!userGpsLayer) {
+            console.warn('GPS Orang layer not initialized');
+            return;
+        }
+        
+        const source = userGpsLayer.getSource();
+        const existingFeatures = source.getFeatures();
+        const existingUsersMap = new Map();
+        
+        // Create map of existing features by userId
+        existingFeatures.forEach(function(feature) {
+            const userId = feature.get('userId');
+            if (userId) {
+                existingUsersMap.set(userId, feature);
+            }
+        });
+        
+        // Process new/updated users
+        const processedUserIds = new Set();
+        let addedCount = 0;
+        let updatedCount = 0;
+        let skippedCount = 0;
+        
+        users.forEach(function(user) {
+            // Validate coordinates
+            if (!user.latitude || !user.longitude || 
+                user.latitude === 0 || user.longitude === 0 ||
+                isNaN(parseFloat(user.latitude)) || isNaN(parseFloat(user.longitude))) {
+                skippedCount++;
+                return;
+            }
+            
+            const userId = user.user_id || user.id;
+            if (!userId) {
+                skippedCount++;
+                return;
+            }
+            
+            processedUserIds.add(userId);
+            
+            // Convert coordinates to map projection
+            const longitude = parseFloat(user.longitude);
+            const latitude = parseFloat(user.latitude);
+            const coordinate = ol.proj.fromLonLat([longitude, latitude]);
+            
+            // Check if feature already exists
+            if (existingUsersMap.has(userId)) {
+                const feature = existingUsersMap.get(userId);
+                const oldCoord = feature.getGeometry().getCoordinates();
+                
+                // Only update if coordinates changed
+                if (oldCoord[0] !== coordinate[0] || oldCoord[1] !== coordinate[1]) {
+                    feature.getGeometry().setCoordinates(coordinate);
+                    updatedCount++;
+                }
+                
+                // Always update user data
+                feature.set('userData', user);
+                feature.set('userId', userId);
+                feature.changed();
+            } else {
+                // Create new feature
+                const feature = new ol.Feature({
+                    geometry: new ol.geom.Point(coordinate),
+                    type: 'gps_orang',
+                    userId: userId,
+                    userData: user
+                });
+                source.addFeature(feature);
+                addedCount++;
+            }
+        });
+        
+        // Remove features that no longer exist in the data
+        let removedCount = 0;
+        existingFeatures.forEach(function(feature) {
+            const userId = feature.get('userId');
+            if (userId && !processedUserIds.has(userId)) {
+                source.removeFeature(feature);
+                removedCount++;
+            }
+        });
+        
+        console.log('GPS Orang updated:', {
+            total: processedUserIds.size,
+            added: addedCount,
+            updated: updatedCount,
+            removed: removedCount,
+            skipped: skippedCount
+        });
     }
     
     // Function to refresh unit vehicle data from server
@@ -5019,6 +7260,13 @@
                 return;
             }
             
+            // Check if it's a GPS Orang marker
+            if (featureType === 'gps_orang') {
+                const userData = feature.get('userData');
+                showGpsOrangPopup(evt.coordinate, userData);
+                return;
+            }
+            
             // Check if it's a CCTV marker
             if (featureType === 'cctv') {
                 const cctv = feature.get('cctvData');
@@ -5045,8 +7293,20 @@
                 return;
             }
             
-            // Check if it's a GeoJSON polygon (Area Kerja or Area CCTV)
+            // Check if it's a Daily Operation Plan polygon
             const props = feature.getProperties();
+            if (props.id && props.pekerjaan && props.lokasi && props.detail_lokasi) {
+                // Clear area kerja highlight when clicking daily operation plan
+                if (highlightedAreaKerjaLayer) {
+                    map.removeLayer(highlightedAreaKerjaLayer);
+                    highlightedAreaKerjaLayer = null;
+                }
+                // This is a daily operation plan feature
+                showDailyOperationPlanPopup(evt.coordinate, props);
+                return;
+            }
+            
+            // Check if it's a GeoJSON polygon (Area Kerja or Area CCTV)
             
             // Check for Area CCTV (has nomor_cctv property, even if null)
             const hasNomorCctv = 'nomor_cctv' in props;
@@ -5106,6 +7366,55 @@
         }
     });
 
+    function showDailyOperationPlanPopup(coordinate, plan) {
+        const pekerjaan = plan.pekerjaan || 'N/A';
+        const lokasi = plan.lokasi || 'N/A';
+        const detailLokasi = plan.detail_lokasi || 'N/A';
+        const unitId = plan.unit_id || 'N/A';
+        const potensiResiko = plan.potensi_resiko || 'N/A';
+        const pengendalianBahaya = plan.pengendalian_bahaya || 'N/A';
+        const catatan = plan.catatan || 'N/A';
+        const tanggal = plan.tanggal || 'N/A';
+        const site = plan.site || 'N/A';
+        const fotoPekerjaan = plan.foto_pekerjaan || null;
+        
+        let fotoHtml = '';
+        if (fotoPekerjaan) {
+            const fotoUrl = `{{ asset('storage/') }}/${fotoPekerjaan}`;
+            fotoHtml = `
+                <hr style="margin: 10px 0;">
+                <p style="margin: 5px 0; font-size: 13px;"><strong>Foto Pekerjaan:</strong></p>
+                <img src="${fotoUrl}" alt="Foto Pekerjaan" style="max-width: 100%; height: auto; border-radius: 4px; margin-top: 5px;" onerror="this.style.display='none'">
+            `;
+        }
+        
+        const content = `
+            <div style="min-width: 300px; max-width: 400px; background-color: #ffffff !important;">
+                <h6 style="margin: 0 0 10px 0; color: #1f2937;">Rencana Operasi Harian</h6>
+                <p style="margin: 5px 0; font-size: 13px;"><strong>Pekerjaan:</strong> ${pekerjaan}</p>
+                <p style="margin: 5px 0; font-size: 13px;"><strong>Lokasi:</strong> ${lokasi}</p>
+                <p style="margin: 5px 0; font-size: 13px;"><strong>Detail Lokasi:</strong> ${detailLokasi}</p>
+                <p style="margin: 5px 0; font-size: 13px;"><strong>Site:</strong> ${site}</p>
+                <p style="margin: 5px 0; font-size: 13px;"><strong>Unit ID:</strong> ${unitId}</p>
+                <p style="margin: 5px 0; font-size: 13px;"><strong>Tanggal:</strong> ${tanggal}</p>
+                <hr style="margin: 10px 0;">
+                <p style="margin: 5px 0; font-size: 13px;"><strong>Potensi Risiko:</strong></p>
+                <p style="margin: 5px 0; font-size: 12px; color: #666; background-color: #ffffff !important;">${potensiResiko}</p>
+                <hr style="margin: 10px 0;">
+                <p style="margin: 5px 0; font-size: 13px;"><strong>Pengendalian Bahaya:</strong></p>
+                <p style="margin: 5px 0; font-size: 12px; color: #666; background-color: #ffffff !important;">${pengendalianBahaya}</p>
+                ${catatan !== 'N/A' ? `
+                <hr style="margin: 10px 0;">
+                <p style="margin: 5px 0; font-size: 13px;"><strong>Catatan:</strong></p>
+                <p style="margin: 5px 0; font-size: 12px; color: #666; background-color: #ffffff !important;">${catatan}</p>
+                ` : ''}
+                ${fotoHtml}
+            </div>
+        `;
+        document.getElementById('popup-content').innerHTML = content;
+        popupOverlay.setPosition(coordinate);
+    }
+    
     function showHazardPopup(coordinate, hazard) {
         // Check if it's SAP data (has task_number or jenis_laporan)
         if (hazard.task_number || hazard.jenis_laporan) {
@@ -5131,47 +7440,78 @@
     }
     
     function showSapPopup(coordinate, sap) {
-        const taskNumber = sap.task_number || 'N/A';
-        const jenisLaporan = sap.jenis_laporan || 'N/A';
-        const lokasi = sap.lokasi || 'N/A';
-        const escapedTaskNumber = taskNumber.replace(/"/g, '&quot;');
-        
-        // Format tanggal dengan mengurangi 7 jam
-        let tanggalFormatted = 'N/A';
-        if (sap.tanggal_pelaporan || sap.detected_at) {
-            try {
-                const date = new Date(sap.tanggal_pelaporan || sap.detected_at);
-                // Kurangi 7 jam dari waktu database
-                date.setHours(date.getHours() - 7);
-                const months = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-                tanggalFormatted = `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()} ${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-            } catch (e) {
-                tanggalFormatted = sap.tanggal_pelaporan || sap.detected_at || 'N/A';
-            }
+        // Langsung buka modal detail SAP tanpa menampilkan popup kecil
+        // Close popup overlay jika ada
+        if (popupOverlay) {
+            popupOverlay.setPosition(undefined);
         }
         
-        const content = `
-            <div style="min-width: 250px; background-color: #ffffff !important;">
-                <h6 style="margin: 0 0 10px 0; color: #3b82f6;">${jenisLaporan}</h6>
-                <p style="margin: 5px 0; font-size: 13px; background-color: #ffffff !important;">
-                    <strong>Task Number:</strong> ${taskNumber}<br>
-                    <strong>Aktivitas:</strong> ${sap.aktivitas_pekerjaan || 'N/A'}<br>
-                    <strong>Lokasi:</strong> ${lokasi}<br>
-                    <strong>Tanggal:</strong> ${tanggalFormatted}
-                </p>
-                <button class="btn btn-sm btn-primary w-100 mt-2" data-task-number="${escapedTaskNumber}" onclick="openSapDetailModal(this.dataset.taskNumber)">
-                    <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">info</i> Detail SAP
-                </button>
-            </div>
-        `;
-        document.getElementById('popup-content').innerHTML = content;
-        popupOverlay.setPosition(coordinate);
+        // Buka modal detail SAP langsung
+        const taskNumber = sap.task_number || 'N/A';
+        if (taskNumber && taskNumber !== 'N/A') {
+            // Gunakan data SAP yang sudah ada untuk langsung buka modal
+            const modal = new bootstrap.Modal(document.getElementById('sapDetailModal'));
+            modal.show();
+            
+            // Populate modal dengan data SAP yang diklik
+            populateSapDetailModal(sap);
+        } else {
+            // Fallback: coba cari data dari cache jika task_number tidak ada
+            openSapDetailModalByData(sap);
+        }
+    }
+    
+    // Helper function untuk membuka modal SAP dengan data langsung
+    function openSapDetailModalByData(sapData) {
+        if (!sapData) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Data SAP tidak tersedia',
+                confirmButtonColor: '#3085d6'
+            });
+            return;
+        }
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('sapDetailModal'));
+        modal.show();
+        
+        // Populate modal content
+        populateSapDetailModal(sapData);
     }
     
     // Function to show Area Kerja Summary Modal with TARP
     async function showAreaKerjaSummaryModal(feature, props) {
         // Close popup first
         popupOverlay.setPosition(undefined);
+        
+        // Store area kerja data for intervensi button
+        // Handle null values properly
+        const getValue = (val) => {
+            if (val === null || val === undefined || val === '' || val === 'null') {
+                return null;
+            }
+            return val;
+        };
+        
+        if (props) {
+            window.currentAreaKerjaForIntervensi = {
+                areaKerja: getValue(props.area_kerja) || getValue(props.areaKerja) || '',
+                lokasi: getValue(props.lokasi) || ''
+            };
+        } else if (feature) {
+            // Try to get from feature properties
+            window.currentAreaKerjaForIntervensi = {
+                areaKerja: getValue(feature.get('area_kerja')) || getValue(feature.get('areaKerja')) || '',
+                lokasi: getValue(feature.get('lokasi')) || ''
+            };
+        }
+        
+        // Ensure lokasi is set - it's required
+        if (!window.currentAreaKerjaForIntervensi || !window.currentAreaKerjaForIntervensi.lokasi) {
+            console.warn('Lokasi tidak ditemukan untuk intervensi');
+        }
         
         // Show loading in modal
         const modalBody = document.getElementById('areaKerjaSummaryModalBody');
@@ -5188,14 +7528,6 @@
         const modal = new bootstrap.Modal(document.getElementById('areaKerjaSummaryModal'));
         modal.show();
         
-        // Handle null values properly
-        const getValue = (val) => {
-            if (val === null || val === undefined || val === '' || val === 'null') {
-                return null;
-            }
-            return val;
-        };
-        
         const lokasiNameFinal = getValue(props.lokasi);
         const areaKerjaId = getValue(props.id_lokasi) || getValue(props.fid) || getValue(props.lokasi);
         const site = getValue(props.site);
@@ -5209,29 +7541,348 @@
             // Get risk matrix summary
             const riskSummary = await getRiskMatrixSummary(feature);
             
-            // Get TARP actions based on risk level
-            function getTarpActions(riskLevel, riskSummary) {
-                const actions = [];
+            // Generate AI-based recommendations
+            let aiRecommendations = [];
+            let aiLoading = true;
+            
+            try {
+                // Prepare data for AI API
+                const aiRequestData = {
+                    risk_summary: {
+                        risk_level: riskSummary.riskLevel,
+                        has_sap_report: riskSummary.hasSapReport,
+                        has_online_cctv: riskSummary.hasOnlineCctv,
+                        is_high_risk_area: riskSummary.isHighRiskArea,
+                        has_sap_in_high_risk_area: riskSummary.hasSapInHighRiskArea
+                    },
+                    cctv_list: riskSummary.cctvList.map(cctv => ({
+                        nama_cctv: cctv.nama_cctv || cctv.name || cctv.no_cctv || cctv.nomor_cctv,
+                        no_cctv: cctv.no_cctv || cctv.nomor_cctv,
+                        nomor_cctv: cctv.no_cctv || cctv.nomor_cctv,
+                        kondisi: cctv.kondisi || cctv.status,
+                        status: cctv.status,
+                        connected: cctv.connected,
+                        is_online: cctv.is_online,
+                        status_online: cctv.status_online,
+                        lokasi_pemasangan: cctv.lokasi_pemasangan || cctv.coverage_detail_lokasi || cctv.coverage_lokasi,
+                        coverage_lokasi: cctv.coverage_lokasi,
+                        coverage_detail_lokasi: cctv.coverage_detail_lokasi || cctv.lokasi_pemasangan || cctv.coverage_lokasi
+                    })),
+                    sap_reports: riskSummary.sapReports.map(sap => {
+                        // Get waktu from formatted waktu field, or from jam:menit, or from tanggal
+                        let waktu = sap.waktu || '';
+                        if (!waktu) {
+                            const jam = sap.jam || null;
+                            const menit = sap.menit || null;
+                            if (jam !== null && menit !== null) {
+                                const jamInt = parseInt(jam);
+                                const menitInt = parseInt(menit);
+                                if (jamInt >= 0 && jamInt <= 23 && menitInt >= 0 && menitInt <= 59) {
+                                    waktu = `${String(jamInt).padStart(2, '0')}:${String(menitInt).padStart(2, '0')}`;
+                                }
+                            }
+                        }
+                        if (!waktu) {
+                            const tanggal = sap.tanggal_pelaporan || sap.detected_at;
+                            if (tanggal) {
+                                try {
+                                    const date = new Date(tanggal);
+                                    waktu = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
+                                } catch (e) {}
+                            }
+                        }
+                        
+                        // Prefer nama_lokasi over lokasi
+                        const namaLokasi = sap.nama_lokasi || sap.lokasi || null;
+                        const namaDetailLokasi = sap.nama_detail_lokasi || sap.detail_lokasi || null;
+                        const lokasi = namaLokasi || namaDetailLokasi || 'N/A';
+                        
+                        // Get deskripsi/keterangan
+                        const deskripsi = sap.keterangan || sap.deskripsi || sap.aktivitas_pekerjaan || sap.description || null;
+                        
+                        return {
+                            task_number: sap.task_number || sap.id,
+                            jenis_laporan: sap.jenis_laporan || sap.source_type || sap.type,
+                            lokasi: lokasi,
+                            nama_lokasi: namaLokasi,
+                            nama_detail_lokasi: namaDetailLokasi,
+                            deskripsi: deskripsi,
+                            waktu: waktu,
+                            jam: sap.jam,
+                            menit: sap.menit,
+                            tanggal_pelaporan: sap.tanggal_pelaporan || sap.detected_at
+                        };
+                    }),
+                    area_info: {
+                        lokasi: lokasiNameFinal,
+                        nama_lokasi: lokasiNameFinal,
+                        id_lokasi: areaKerjaId,
+                        site: site,
+                        perusahaan: perusahaan,
+                        area_kerja: areaKerja,
+                        luasan: luasan
+                    }
+                };
                 
-                if (riskLevel === 'HIGH') {
-                    actions.push('Safety dan Mining Superintendet BC memberikan teguran terhadap PJA dan IT Mitra jika tidak ada follow up utilisasi CCTV dan perbaikan status offline CCTV 3 hari berturut-turut.');
-                    actions.push('WKTT menerima laporan dan melakukan koordinasi dengan Dept Head/Project Manager untuk menentukan langkah tindakan perbaikan terkait kondisi yang terjadi di lapangan.');
-                } else if (riskLevel === 'MEDIUM') {
-                    actions.push('Pengawas Control Room wajib melakukan pemeriksaan kondisi aktivitas highrisk 3x/shift.');
-                    actions.push('Koordinasi dengan IT Mitra Kerja dan Berau Coal memfollow up kondisi status offline dan memastikan kondisi jaringan internet lancar dan tersedia.');
-                    actions.push('Monitoring CCTV yang tidak aktif digunakan pengawasan dan Tim PJA terkait wajib mengutilisasi CCTV tersebut dengan dibuktikan laporan SAP.');
-                    actions.push('L3 Pengawas Control Room memberikan teguran terhadap PJA dan IT terkait kondisi dan utilisasi CCTV yang masih rendah atau tidak ada follow up 3x berturut-turut di area kerja Control Room.');
-                    actions.push('Inspektorat Safety BC melaporkan hasil kondisi & utilisasi CCTV pada WA Group K3L Site.');
-                } else if (riskLevel === 'NORMAL') {
-                    actions.push('Pengawas Control Room Wajib melakukan P2H Status CCTV setiap awal shift.');
-                    actions.push('Pengawas Control Room monitoring aktivitas Highrisk.');
-                    actions.push('L2 Control Room wajib memvalidasi hasil pemeriksaan awal shift pengawas control room.');
+                // Call AI API
+                const aiResponse = await fetch('{{ route("full-maps.api.generate-recommendations") }}', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                    },
+                    body: JSON.stringify(aiRequestData)
+                });
+                
+                const aiResult = await aiResponse.json();
+                
+                if (aiResult.success && aiResult.recommendations && aiResult.recommendations.length > 0) {
+                    aiRecommendations = aiResult.recommendations;
+                } else {
+                    // Fallback to static recommendations if AI fails
+                    aiRecommendations = getFallbackRecommendations(riskSummary.riskLevel, riskSummary);
                 }
-                
-                return actions;
+            } catch (aiError) {
+                console.error('Error generating AI recommendations:', aiError);
+                // Fallback to static recommendations
+                aiRecommendations = getFallbackRecommendations(riskSummary.riskLevel, riskSummary);
             }
             
-            const tarpActions = getTarpActions(riskSummary.riskLevel, riskSummary);
+            aiLoading = false;
+            
+            // Fallback function for recommendations - using Context → Insight → Action format
+            function getFallbackRecommendations(riskLevel, riskSummary) {
+                const recommendations = [];
+                const cctvList = riskSummary.cctvList || [];
+                const sapReports = riskSummary.sapReports || [];
+                const cctvCount = cctvList.length;
+                
+                // Get sample CCTV numbers
+                const onlineCctv = cctvList.filter(cctv => {
+                    const kondisi = (cctv.kondisi || cctv.status || '').toLowerCase();
+                    return kondisi === 'baik' || kondisi === 'online' || 
+                           (cctv.status || '').toLowerCase() === 'live view';
+                }).slice(0, 3);
+                
+                const offlineCctv = cctvList.filter(cctv => {
+                    const kondisi = (cctv.kondisi || cctv.status || '').toLowerCase();
+                    return kondisi !== 'baik' && kondisi !== 'online' && 
+                           (cctv.status || '').toLowerCase() !== 'live view';
+                }).slice(0, 2);
+                
+                // Get sample SAP
+                const sampleSap = sapReports.length > 0 ? sapReports[0] : null;
+                
+                if (riskLevel === 'HIGH') {
+                    if (sampleSap) {
+                        const taskNumber = sampleSap.task_number || sampleSap.id || 'N/A';
+                        const jenis = sampleSap.jenis_laporan || sampleSap.source_type || 'SAP';
+                        
+                        // Prefer nama_lokasi over lokasi
+                        const namaLokasi = sampleSap.nama_lokasi || sampleSap.lokasi || null;
+                        const namaDetailLokasi = sampleSap.nama_detail_lokasi || sampleSap.detail_lokasi || null;
+                        const lokasi = namaLokasi || namaDetailLokasi || 'area ini';
+                        
+                        // Get waktu from formatted waktu, or from jam:menit, or from tanggal
+                        let waktuStr = '';
+                        if (sampleSap.waktu) {
+                            waktuStr = ` pukul ${sampleSap.waktu}`;
+                        } else {
+                            const jam = sampleSap.jam || null;
+                            const menit = sampleSap.menit || null;
+                            if (jam !== null && menit !== null) {
+                                const jamInt = parseInt(jam);
+                                const menitInt = parseInt(menit);
+                                if (jamInt >= 0 && jamInt <= 23 && menitInt >= 0 && menitInt <= 59) {
+                                    waktuStr = ` pukul ${String(jamInt).padStart(2, '0')}:${String(menitInt).padStart(2, '0')}`;
+                                }
+                            }
+                        }
+                        
+                        if (!waktuStr && (sampleSap.tanggal_pelaporan || sampleSap.detected_at)) {
+                            try {
+                                const date = new Date(sampleSap.tanggal_pelaporan || sampleSap.detected_at);
+                                waktuStr = ` pukul ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                            } catch (e) {}
+                        }
+                        
+                        // Get deskripsi/keterangan
+                        const deskripsi = sampleSap.keterangan || sampleSap.deskripsi || sampleSap.aktivitas_pekerjaan || sampleSap.description || null;
+                        const deskripsiStr = deskripsi ? ` terkait '${deskripsi}'` : '';
+                        
+                        recommendations.push({
+                            priority: 'HIGH',
+                            action: `Terdapat Temuan ${jenis} #${taskNumber}${deskripsiStr} yang dilaporkan${waktuStr} di ${lokasi}, pastikan temuan (jika ada) telah ditindaklanjuti oleh tim lapangan dan tidak ada kondisi yang memerlukan perhatian khusus.`
+                        });
+                    }
+                    
+                    if (offlineCctv.length > 0) {
+                        const cctvNos = offlineCctv.map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(', ');
+                        recommendations.push({
+                            priority: 'HIGH',
+                            action: `Segera koordinasi dengan IT Mitra untuk memperbaiki CCTV yang offline (${cctvNos}) di area ${lokasiNameFinal || 'ini'}, mengingat area ini memiliki risk level tinggi dan memerlukan monitoring optimal untuk mencegah potensi insiden.`
+                        });
+                    }
+                    
+                    recommendations.push({
+                        priority: 'HIGH',
+                        action: `Koordinasi dengan Safety dan Mining Superintendet BC untuk memberikan teguran terhadap PJA dan IT Mitra jika tidak ada follow up utilisasi CCTV dan perbaikan status offline CCTV 3 hari berturut-turut di area ${lokasiNameFinal || 'ini'}, mengingat area ini memiliki risk level tinggi dan memerlukan monitoring optimal.`
+                    });
+                } else if (riskLevel === 'MEDIUM') {
+                    if (onlineCctv.length > 0 && riskSummary.isHighRiskArea) {
+                        const cctvNos = onlineCctv.slice(0, 2).map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(' dan ');
+                        const lokasiList = onlineCctv.slice(0, 2).map(c => c.lokasi_pemasangan || c.coverage_detail_lokasi || c.coverage_lokasi || lokasiNameFinal).filter((v, i, a) => a.indexOf(v) === i);
+                        const lokasiStr = lokasiList.join(' dan ');
+                        
+                        recommendations.push({
+                            priority: 'MEDIUM',
+                            action: `Fokuskan pemantauan real-time pada aktivitas di ${lokasiStr}, karena kedua lokasi tersebut memiliki CCTV aktif (${cctvNos}) dan termasuk dalam zona kritis meskipun tidak diklasifikasikan sebagai high-risk hari ini.`
+                        });
+                    }
+                    
+                    if (sampleSap) {
+                        const taskNumber = sampleSap.task_number || sampleSap.id || 'N/A';
+                        const jenis = sampleSap.jenis_laporan || sampleSap.source_type || 'SAP';
+                        
+                        // Prefer nama_lokasi over lokasi
+                        const namaLokasi = sampleSap.nama_lokasi || sampleSap.lokasi || null;
+                        const namaDetailLokasi = sampleSap.nama_detail_lokasi || sampleSap.detail_lokasi || null;
+                        const lokasi = namaLokasi || namaDetailLokasi || 'area ini';
+                        
+                        // Get waktu from formatted waktu, or from jam:menit, or from tanggal
+                        let waktuStr = '';
+                        if (sampleSap.waktu) {
+                            waktuStr = ` pukul ${sampleSap.waktu}`;
+                        } else {
+                            const jam = sampleSap.jam || null;
+                            const menit = sampleSap.menit || null;
+                            if (jam !== null && menit !== null) {
+                                const jamInt = parseInt(jam);
+                                const menitInt = parseInt(menit);
+                                if (jamInt >= 0 && jamInt <= 23 && menitInt >= 0 && menitInt <= 59) {
+                                    waktuStr = ` pukul ${String(jamInt).padStart(2, '0')}:${String(menitInt).padStart(2, '0')}`;
+                                }
+                            }
+                        }
+                        
+                        if (!waktuStr && (sampleSap.tanggal_pelaporan || sampleSap.detected_at)) {
+                            try {
+                                const date = new Date(sampleSap.tanggal_pelaporan || sampleSap.detected_at);
+                                waktuStr = ` pukul ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                            } catch (e) {}
+                        }
+                        
+                        // Get deskripsi/keterangan
+                        const deskripsi = sampleSap.keterangan || sampleSap.deskripsi || sampleSap.aktivitas_pekerjaan || sampleSap.description || null;
+                        const deskripsiStr = deskripsi ? ` terkait '${deskripsi}'` : '';
+                        
+                        recommendations.push({
+                            priority: 'MEDIUM',
+                            action: `Terdapat Temuan ${jenis} #${taskNumber}${deskripsiStr} yang dilaporkan${waktuStr} di ${lokasi}, pastikan temuan (jika ada) telah ditindaklanjuti oleh tim lapangan dan tidak ada kondisi yang memerlukan perhatian khusus.`
+                        });
+                    }
+                    
+                    recommendations.push({
+                        priority: 'MEDIUM',
+                        action: `Pengawas Control Room wajib melakukan pemeriksaan kondisi aktivitas highrisk minimal 3 kali dalam shift ini di area ${lokasiNameFinal || 'ini'}, dengan fokus pada area yang memiliki potensi risiko sedang untuk mencegah eskalasi kondisi.`
+                    });
+                    
+                    if (offlineCctv.length > 0) {
+                        const cctvNos = offlineCctv.map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(', ');
+                        recommendations.push({
+                            priority: 'MEDIUM',
+                            action: `Koordinasi dengan IT Mitra Kerja dan Berau Coal untuk memfollow up kondisi status offline CCTV ${cctvNos} dan memastikan kondisi jaringan internet lancar dan tersedia di area ${lokasiNameFinal || 'ini'}, mengingat pentingnya monitoring kontinyu untuk area dengan risk level sedang.`
+                        });
+                    }
+                } else {
+                    // NORMAL/LOW risk - Format Context → Insight → Action
+                    if (onlineCctv.length > 0 && cctvCount > 0) {
+                        const cctvNos = onlineCctv.slice(0, 3).map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(', ');
+                        const lokasiList = onlineCctv.slice(0, 2).map(c => c.lokasi_pemasangan || c.coverage_detail_lokasi || c.coverage_lokasi || lokasiNameFinal).filter((v, i, a) => a.indexOf(v) === i);
+                        const lokasiStr = lokasiList.length > 0 ? lokasiList.join(' dan ') : (lokasiNameFinal || 'area ini');
+                        
+                        recommendations.push({
+                            priority: 'LOW',
+                            action: `Fokuskan pemantauan real-time pada aktivitas di ${lokasiStr}, karena lokasi tersebut memiliki CCTV aktif (${cctvNos}) dan memerlukan monitoring rutin untuk memastikan operasi berjalan sesuai standar keselamatan.`
+                        });
+                    }
+                    
+                    if (cctvCount > 0) {
+                        recommendations.push({
+                            priority: 'LOW',
+                            action: `Dokumentasikan penggunaan seluruh ${cctvCount} CCTV dalam shift ini sebagai bukti utilitas sistem, khususnya untuk kamera yang memantau aktivitas operasional rutin di area ${lokasiNameFinal || 'ini'}.`
+                        });
+                    }
+                    
+                    if (onlineCctv.length > 0) {
+                        const cctvNos = onlineCctv.slice(0, 2).map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(' dan ');
+                        const lokasiList = onlineCctv.slice(0, 2).map(c => c.lokasi_pemasangan || c.coverage_detail_lokasi || c.coverage_lokasi || lokasiNameFinal).filter((v, i, a) => a.indexOf(v) === i);
+                        const lokasiStr = lokasiList.length > 0 ? lokasiList.join(' dan ') : (lokasiNameFinal || 'area ini');
+                        
+                        recommendations.push({
+                            priority: 'LOW',
+                            action: `Gunakan kamera ${cctvNos} untuk melakukan patroli visual rutin terhadap aktivitas di ${lokasiStr}, mengingat pentingnya memastikan prosedur keselamatan diterapkan dengan baik di setiap tahap operasi.`
+                        });
+                    }
+                    
+                    if (riskSummary.hasSapReport && sampleSap) {
+                        const taskNumber = sampleSap.task_number || sampleSap.id || 'N/A';
+                        const jenis = sampleSap.jenis_laporan || sampleSap.source_type || 'SAP';
+                        
+                        // Prefer nama_lokasi over lokasi
+                        const namaLokasi = sampleSap.nama_lokasi || sampleSap.lokasi || null;
+                        const namaDetailLokasi = sampleSap.nama_detail_lokasi || sampleSap.detail_lokasi || null;
+                        const lokasi = namaLokasi || namaDetailLokasi || 'area ini';
+                        
+                        // Get waktu from formatted waktu, or from jam:menit, or from tanggal
+                        let waktuStr = '';
+                        if (sampleSap.waktu) {
+                            waktuStr = ` pukul ${sampleSap.waktu}`;
+                        } else {
+                            const jam = sampleSap.jam || null;
+                            const menit = sampleSap.menit || null;
+                            if (jam !== null && menit !== null) {
+                                const jamInt = parseInt(jam);
+                                const menitInt = parseInt(menit);
+                                if (jamInt >= 0 && jamInt <= 23 && menitInt >= 0 && menitInt <= 59) {
+                                    waktuStr = ` pukul ${String(jamInt).padStart(2, '0')}:${String(menitInt).padStart(2, '0')}`;
+                                }
+                            }
+                        }
+                        
+                        if (!waktuStr && (sampleSap.tanggal_pelaporan || sampleSap.detected_at)) {
+                            try {
+                                const date = new Date(sampleSap.tanggal_pelaporan || sampleSap.detected_at);
+                                waktuStr = ` pukul ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
+                            } catch (e) {}
+                        }
+                        
+                        // Get deskripsi/keterangan
+                        const deskripsi = sampleSap.keterangan || sampleSap.deskripsi || sampleSap.aktivitas_pekerjaan || sampleSap.description || null;
+                        const deskripsiStr = deskripsi ? ` terkait '${deskripsi}'` : '';
+                        
+                        recommendations.push({
+                            priority: 'LOW',
+                            action: `Terdapat temuan ${jenis} #${taskNumber}${deskripsiStr} yang dilaporkan${waktuStr} di ${lokasi}, pastikan temuan (jika ada) telah ditindaklanjuti oleh tim lapangan dan tidak ada kondisi yang memerlukan perhatian khusus.`
+                        });
+                    } else if (cctvCount > 0) {
+                        const cctvNos = onlineCctv.length > 0 ? onlineCctv.slice(0, 3).map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(', ') : '';
+                        if (cctvNos) {
+                            recommendations.push({
+                                priority: 'LOW',
+                                action: `Lakukan verifikasi status dan kualitas sinyal pada kamera ${cctvNos} di awal shift, karena kamera tersebut memantau aktivitas di area ${lokasiNameFinal || 'ini'} dan memerlukan kondisi optimal untuk memastikan monitoring berjalan efektif sepanjang shift.`
+                            });
+                        } else {
+                            recommendations.push({
+                                priority: 'LOW',
+                                action: `Lakukan verifikasi status seluruh ${cctvCount} CCTV di area ${lokasiNameFinal || 'ini'} pada awal shift, pastikan semua kamera dalam kondisi baik dan dapat diakses untuk monitoring aktivitas operasional, mengingat pentingnya visibilitas kontinyu untuk menjaga standar keselamatan.`
+                            });
+                        }
+                    }
+                }
+                
+                return recommendations;
+            }
             
             // Format CCTV list
             const cctvListHtml = riskSummary.cctvList.length > 0 ? riskSummary.cctvList.map((cctv, index) => {
@@ -5387,14 +8038,37 @@
                                 
                                 <hr>
                                 
-                                <h6 class="mb-3"><strong>Tindakan yang Harus Dilakukan oleh Pengawas Control Room:</strong></h6>
+                                <div class="mb-3">
+                                    <h6 class="mb-1"><strong>Rekomendasi Tindakan untuk Pengawas Control Room</strong></h6>
+                                    <small class="text-muted">${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</small>
+                                </div>
                                 
-                                ${tarpActions.length > 0 ? `
-                                <ol class="mb-0">
-                                    ${tarpActions.map((action, index) => `
-                                        <li class="mb-2" style="line-height: 1.6;">${action}</li>
-                                    `).join('')}
-                                </ol>
+                                ${aiLoading ? `
+                                <div class="text-center py-3">
+                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
+                                        <span class="visually-hidden">Loading...</span>
+                                    </div>
+                                    <p class="mt-2 text-muted small">Membangkitkan rekomendasi AI...</p>
+                                </div>
+                                ` : aiRecommendations.length > 0 ? `
+                                <div class="mb-0">
+                                    ${aiRecommendations.map((rec, index) => {
+                                        const priorityColor = rec.priority === 'HIGH' ? '#dc2626' : 
+                                                             rec.priority === 'MEDIUM' ? '#f59e0b' : '#22c55e';
+                                        const priorityText = rec.priority === 'HIGH' ? 'Tinggi' : 
+                                                            rec.priority === 'MEDIUM' ? 'Sedang' : 'Rendah';
+                                        return `
+                                        <div class="mb-3 p-3 border rounded" style="border-left: 4px solid ${priorityColor} !important; background-color: #f8f9fa;">
+                                            <div class="d-flex align-items-start">
+                                                <span class="badge me-2 mt-1" style="background-color: ${priorityColor}; min-width: 60px; font-size: 11px;">${priorityText}</span>
+                                                <div class="flex-grow-1" style="line-height: 1.7;">
+                                                    <p class="mb-0" style="line-height: 1.7; font-size: 14px;">${rec.action}</p>
+                                                </div>
+                                            </div>
+                                        </div>
+                                        `;
+                                    }).join('')}
+                                </div>
                                 ` : '<p class="text-muted">Tidak ada tindakan khusus yang diperlukan.</p>'}
                             </div>
                         </div>
@@ -7278,14 +9952,12 @@
             return;
         }
 
-        const vehicleName = unit.vehicle_name || 'N/A';
         const vehicleNumber = unit.vehicle_number || 'N/A';
         const vehicleType = unit.vehicle_type || 'Unknown';
         const vendorName = unit.vendor_name || 'N/A';
         const speed = unit.speed !== null && unit.speed !== undefined ? unit.speed + ' km/h' : 'N/A';
         const course = unit.course !== null && unit.course !== undefined ? unit.course + '°' : 'N/A';
         const battery = unit.battery !== null && unit.battery !== undefined ? unit.battery + '%' : 'N/A';
-        const updatedAt = unit.updated_at ? new Date(unit.updated_at).toLocaleString('id-ID') : 'N/A';
 
         const content = `
             <div style="min-width: 250px; background-color: #ffffff !important;">
@@ -7310,10 +9982,50 @@
                         <strong>Baterai:</strong> ${battery}
                     </p>
                     <p style="margin: 5px 0; font-size: 12px; color: #666;">
-                        <strong>Update Terakhir:</strong> ${updatedAt}
+                        <strong>Koordinat:</strong> ${unit.latitude?.toFixed(6)}, ${unit.longitude?.toFixed(6)}
+                    </p>
+                </div>
+            </div>
+        `;
+        document.getElementById('popup-content').innerHTML = content;
+        popupOverlay.setPosition(coordinate);
+    }
+    
+    function showGpsOrangPopup(coordinate, user) {
+        if (!user) {
+            return;
+        }
+
+        const fullname = user.fullname || user.name || 'N/A';
+        const sidCode = user.sid_code || user.npk || 'N/A';
+        const position = user.functional_position || user.structural_position || 'N/A';
+        const department = user.department_name || user.division_name || 'N/A';
+        const battery = user.battery !== null && user.battery !== undefined ? user.battery + '%' : 'N/A';
+        const batteryColor = user.battery < 20 ? '#8b5cf6' : user.battery < 50 ? '#f59e0b' : '#10b981';
+        const latitude = user.latitude || 0;
+        const longitude = user.longitude || 0;
+
+        const content = `
+            <div style="min-width: 250px; background-color: #ffffff !important;">
+                <div class="d-flex align-items-center gap-2 mb-2" style="background-color: #ffffff !important;">
+                    <i class="material-icons-outlined text-primary">person_pin</i>
+                    <h6 style="margin: 0; font-weight: 600;">${fullname}</h6>
+                </div>
+                <div style="border-top: 1px solid #e5e7eb; padding-top: 10px; margin-top: 10px; background-color: #ffffff !important;">
+                    <p style="margin: 5px 0; font-size: 13px;">
+                        <strong>SID Code:</strong> ${sidCode}
+                    </p>
+                    <p style="margin: 5px 0; font-size: 13px;">
+                        <strong>Posisi:</strong> ${position}
+                    </p>
+                    <p style="margin: 5px 0; font-size: 13px;">
+                        <strong>Departemen:</strong> ${department}
+                    </p>
+                    <p style="margin: 5px 0; font-size: 13px;">
+                        <strong>Baterai:</strong> <span style="color: ${batteryColor};">${battery}</span>
                     </p>
                     <p style="margin: 5px 0; font-size: 12px; color: #666;">
-                        <strong>Koordinat:</strong> ${unit.latitude?.toFixed(6)}, ${unit.longitude?.toFixed(6)}
+                        <strong>Koordinat:</strong> ${latitude.toFixed(6)}, ${longitude.toFixed(6)}
                     </p>
                 </div>
             </div>
@@ -11872,7 +14584,814 @@
                 toggleEvaluasiVisibility(false);
             });
         }
+        
+        // SAP category item click handler - Toggle functionality
+        const sapCategoryItems = document.querySelectorAll('.gm-category-item');
+        sapCategoryItems.forEach(function(item) {
+            const span = item.querySelector('span');
+            if (span && span.textContent.trim() === 'SAP') {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleSapDisplay();
+                });
+            }
+        });
+        
+        // Control Room category item click handler
+        const controlRoomCategoryItems = document.querySelectorAll('.gm-category-item');
+        controlRoomCategoryItems.forEach(function(item) {
+            const span = item.querySelector('span');
+            if (span && span.textContent.trim() === 'Control Room') {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    showControlRoomModal();
+                });
+            }
+        });
+        
+        // GPS Unit category item click handler - Toggle functionality
+        const gpsUnitCategoryItems = document.querySelectorAll('.gm-category-item');
+        gpsUnitCategoryItems.forEach(function(item) {
+            const span = item.querySelector('span');
+            if (span && span.textContent.trim() === 'Gps Unit') {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleUnitDisplay();
+                });
+            }
+        });
+        
+        // GPS Orang category item click handler - Toggle functionality
+        const gpsOrangCategoryItems = document.querySelectorAll('.gm-category-item');
+        gpsOrangCategoryItems.forEach(function(item) {
+            const span = item.querySelector('span');
+            if (span && span.textContent.trim() === 'Gps Orang') {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleGpsOrangDisplay();
+                });
+            }
+        });
     });
+    
+    // Function to toggle SAP display (show/hide)
+    function toggleSapDisplay() {
+        const sapCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
+            const span = item.querySelector('span');
+            return span && span.textContent.trim() === 'SAP';
+        });
+        
+        // Ensure hazard layer exists
+        if (!hazardLayer) {
+            console.error('Hazard layer not initialized');
+            return;
+        }
+        
+        // Toggle: jika sudah aktif, sembunyikan. Jika belum aktif, tampilkan
+        if (sapDataLoaded && hazardLayer.getVisible()) {
+            // Hide SAP - clear markers but keep data in cache
+            const source = hazardLayer.getSource();
+            const sapCount = source.getFeatures().length;
+            source.clear();
+            hazardLayer.setVisible(false);
+            layerVisibility.hazard = false;
+            sapDataLoaded = false;
+            
+            // Update toggle button if exists
+            const toggleHazardBtn = document.getElementById('toggleHazard');
+            if (toggleHazardBtn) {
+                toggleHazardBtn.classList.remove('active');
+            }
+            
+            // Update visual indicator on SAP category item
+            if (sapCategoryItem) {
+                sapCategoryItem.classList.remove('active');
+            }
+            
+            console.log('SAP layer hidden (data cached)');
+            
+            // Show success alert for hiding SAP
+            Swal.fire({
+                icon: 'info',
+                title: 'SAP Disembunyikan',
+                text: `${sapCount} titik SAP telah disembunyikan dari peta`,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        } else {
+            // Show SAP - load data if not cached, or use cached data
+            if (sapDataCache.length > 0) {
+                // Use cached data
+                const source = hazardLayer.getSource();
+                source.clear();
+                addSapMarkersBatch(sapDataCache);
+                hazardLayer.setVisible(true);
+                layerVisibility.hazard = true;
+                sapDataLoaded = true;
+                
+                // Update toggle button if exists
+                const toggleHazardBtn = document.getElementById('toggleHazard');
+                if (toggleHazardBtn) {
+                    toggleHazardBtn.classList.add('active');
+                }
+                
+                // Update visual indicator on SAP category item
+                if (sapCategoryItem) {
+                    sapCategoryItem.classList.add('active');
+                }
+                
+                console.log(`Displayed ${sapDataCache.length} cached SAP points`);
+                
+                // Show success alert for showing SAP from cache
+                Swal.fire({
+                    icon: 'success',
+                    title: 'SAP Ditampilkan',
+                    html: `Menampilkan <strong>${sapDataCache.length}</strong> titik SAP di peta<br><small>Data dari cache</small>`,
+                    timer: 2500,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    toast: false,
+                    position: 'center'
+                });
+            } else {
+                // Load data from API
+                loadAndDisplaySapData();
+            }
+        }
+    }
+    
+    // Function to toggle Unit display (show/hide)
+    function toggleUnitDisplay() {
+        const unitCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
+            const span = item.querySelector('span');
+            return span && span.textContent.trim() === 'Gps Unit';
+        });
+        
+        // Ensure unit vehicle layer exists
+        if (!unitVehicleLayer) {
+            console.error('Unit vehicle layer not initialized');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Layer unit kendaraan belum diinisialisasi',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+            return;
+        }
+        
+        // Toggle: jika sudah aktif, sembunyikan. Jika belum aktif, tampilkan
+        if (unitDataLoaded && unitVehicleLayer.getVisible()) {
+            // Hide Unit - hide layer but keep data
+            unitVehicleLayer.setVisible(false);
+            layerVisibility.unit = false;
+            unitDataLoaded = false;
+            
+            // Update toggle button if exists
+            const toggleUnitBtn = document.getElementById('toggleUnit');
+            if (toggleUnitBtn) {
+                toggleUnitBtn.classList.remove('active');
+            }
+            
+            // Update visual indicator on Unit category item
+            if (unitCategoryItem) {
+                unitCategoryItem.classList.remove('active');
+            }
+            
+            // Get count of visible units
+            const source = unitVehicleLayer.getSource();
+            const unitCount = source.getFeatures().length;
+            
+            console.log('Unit layer hidden');
+            
+            // Show success alert for hiding Unit
+            Swal.fire({
+                icon: 'info',
+                title: 'GPS Unit Disembunyikan',
+                text: `${unitCount} unit kendaraan telah disembunyikan dari peta`,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        } else {
+            // Show Unit - ensure data is loaded and visible
+            if (!unitVehicles || unitVehicles.length === 0) {
+                Swal.fire({
+                    icon: 'warning',
+                    title: 'Tidak Ada Data Unit',
+                    text: 'Tidak ada data unit kendaraan yang tersedia',
+                    timer: 2500,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    toast: false,
+                    position: 'center'
+                });
+                return;
+            }
+            
+            // Update unit markers if needed
+            updateUnitVehicleMarkers(unitVehicles);
+            
+            // Show unit vehicle layer
+            unitVehicleLayer.setVisible(true);
+            layerVisibility.unit = true;
+            unitDataLoaded = true;
+            
+            // Update toggle button if exists
+            const toggleUnitBtn = document.getElementById('toggleUnit');
+            if (toggleUnitBtn) {
+                toggleUnitBtn.classList.add('active');
+            }
+            
+            // Update visual indicator on Unit category item
+            if (unitCategoryItem) {
+                unitCategoryItem.classList.add('active');
+            }
+            
+            // Get count of visible units
+            const source = unitVehicleLayer.getSource();
+            const unitCount = source.getFeatures().length;
+            
+            console.log(`Displayed ${unitCount} unit vehicles`);
+            
+            // Show success alert for showing Unit
+            Swal.fire({
+                icon: 'success',
+                title: 'GPS Unit Ditampilkan',
+                html: `Menampilkan <strong>${unitCount}</strong> unit kendaraan di peta`,
+                timer: 2500,
+                showConfirmButton: true,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                toast: false,
+                position: 'center'
+            });
+        }
+    }
+    
+    // Function to toggle GPS Orang display (show/hide)
+    function toggleGpsOrangDisplay() {
+        const gpsOrangCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
+            const span = item.querySelector('span');
+            return span && span.textContent.trim() === 'Gps Orang';
+        });
+        
+        // Ensure GPS Orang layer exists
+        if (!userGpsLayer) {
+            console.error('GPS Orang layer not initialized');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Layer GPS Orang belum diinisialisasi',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+            return;
+        }
+        
+        // Toggle: jika sudah aktif, sembunyikan. Jika belum aktif, tampilkan
+        if (gpsOrangDataLoaded && userGpsLayer.getVisible()) {
+            // Hide GPS Orang - hide layer but keep data
+            userGpsLayer.setVisible(false);
+            layerVisibility.gps = false;
+            gpsOrangDataLoaded = false;
+            
+            // Update toggle button if exists
+            const toggleGpsBtn = document.getElementById('toggleGps');
+            if (toggleGpsBtn) {
+                toggleGpsBtn.classList.remove('active');
+            }
+            
+            // Update visual indicator on GPS Orang category item
+            if (gpsOrangCategoryItem) {
+                gpsOrangCategoryItem.classList.remove('active');
+            }
+            
+            // Get count of visible users
+            const source = userGpsLayer.getSource();
+            const userCount = source.getFeatures().length;
+            
+            console.log('GPS Orang layer hidden');
+            
+            // Show success alert for hiding GPS Orang
+            Swal.fire({
+                icon: 'info',
+                title: 'GPS Orang Disembunyikan',
+                text: `${userCount} personel telah disembunyikan dari peta`,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        } else {
+            // Show GPS Orang - load data if not cached, or use cached data
+            if (gpsOrangDataCache.length > 0) {
+                // Use cached data
+                updateGpsOrangMarkers(gpsOrangDataCache);
+                userGpsLayer.setVisible(true);
+                layerVisibility.gps = true;
+                gpsOrangDataLoaded = true;
+                
+                // Update toggle button if exists
+                const toggleGpsBtn = document.getElementById('toggleGps');
+                if (toggleGpsBtn) {
+                    toggleGpsBtn.classList.add('active');
+                }
+                
+                // Update visual indicator on GPS Orang category item
+                if (gpsOrangCategoryItem) {
+                    gpsOrangCategoryItem.classList.add('active');
+                }
+                
+                // Get count of visible users
+                const source = userGpsLayer.getSource();
+                const userCount = source.getFeatures().length;
+                
+                console.log(`Displayed ${userCount} GPS Orang from cache`);
+                
+                // Show success alert for showing GPS Orang from cache
+                Swal.fire({
+                    icon: 'success',
+                    title: 'GPS Orang Ditampilkan',
+                    html: `Menampilkan <strong>${userCount}</strong> personel di peta<br><small>Data dari cache</small>`,
+                    timer: 2500,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    toast: false,
+                    position: 'center'
+                });
+            } else {
+                // Load data from API
+                loadAndDisplayGpsOrangData();
+            }
+        }
+    }
+    
+    // Function to load and display GPS Orang data from API
+    function loadAndDisplayGpsOrangData() {
+        // Show loading indicator
+        const gpsOrangCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
+            const span = item.querySelector('span');
+            return span && span.textContent.trim() === 'Gps Orang';
+        });
+        
+        if (gpsOrangCategoryItem) {
+            gpsOrangCategoryItem.style.opacity = '0.6';
+            gpsOrangCategoryItem.style.pointerEvents = 'none';
+        }
+        
+        // Ensure GPS Orang layer exists
+        if (!userGpsLayer) {
+            console.error('GPS Orang layer not initialized');
+            if (gpsOrangCategoryItem) {
+                gpsOrangCategoryItem.style.opacity = '1';
+                gpsOrangCategoryItem.style.pointerEvents = 'auto';
+            }
+            return;
+        }
+        
+        // Fetch GPS Orang data from API
+        fetch('/maps/api/user-gps')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.users && data.users.length > 0) {
+                    // Deduplikasi: jika user_id sama, ambil yang terbaru berdasarkan gps_updated_at
+                    const uniqueUsers = [];
+                    const userMap = new Map();
+                    
+                    data.users.forEach(user => {
+                        const userId = user.user_id || user.id;
+                        if (!userId) return;
+                        
+                        const existingUser = userMap.get(userId);
+                        if (!existingUser) {
+                            userMap.set(userId, user);
+                            uniqueUsers.push(user);
+                        } else {
+                            const existingTime = existingUser.gps_updated_at || existingUser.gps_created_at || '';
+                            const currentTime = user.gps_updated_at || user.gps_created_at || '';
+                            
+                            if (currentTime > existingTime) {
+                                const index = uniqueUsers.indexOf(existingUser);
+                                if (index !== -1) {
+                                    uniqueUsers[index] = user;
+                                    userMap.set(userId, user);
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Cache the data
+                    gpsOrangDataCache = uniqueUsers;
+                    
+                    // Update markers
+                    updateGpsOrangMarkers(uniqueUsers);
+                    
+                    // Show GPS Orang layer
+                    userGpsLayer.setVisible(true);
+                    layerVisibility.gps = true;
+                    gpsOrangDataLoaded = true;
+                    
+                    // Update toggle button if exists
+                    const toggleGpsBtn = document.getElementById('toggleGps');
+                    if (toggleGpsBtn) {
+                        toggleGpsBtn.classList.add('active');
+                    }
+                    
+                    // Update visual indicator on GPS Orang category item
+                    if (gpsOrangCategoryItem) {
+                        gpsOrangCategoryItem.classList.add('active');
+                    }
+                    
+                    console.log(`Loaded ${uniqueUsers.length} GPS Orang from API`);
+                    
+                    // Show success alert for loading GPS Orang from API
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'GPS Orang Berhasil Dimuat',
+                        html: `Menampilkan <strong>${uniqueUsers.length}</strong> personel di peta<br><small>Data dari database</small>`,
+                        timer: 3000,
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                        toast: false,
+                        position: 'center'
+                    });
+                    
+                    if (gpsOrangCategoryItem) {
+                        gpsOrangCategoryItem.style.opacity = '1';
+                        gpsOrangCategoryItem.style.pointerEvents = 'auto';
+                    }
+                } else {
+                    console.warn('No GPS Orang data received from API');
+                    
+                    // Show warning alert for no data
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Tidak Ada Data GPS Orang',
+                        text: 'Tidak ada data GPS personel yang ditemukan dari database',
+                        timer: 2500,
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                        toast: false,
+                        position: 'center'
+                    });
+                    
+                    if (gpsOrangCategoryItem) {
+                        gpsOrangCategoryItem.style.opacity = '1';
+                        gpsOrangCategoryItem.style.pointerEvents = 'auto';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading GPS Orang data:', error);
+                
+                // Show error alert
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error Memuat GPS Orang',
+                    text: 'Terjadi kesalahan saat memuat data GPS personel dari server',
+                    timer: 3000,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    toast: false,
+                    position: 'center'
+                });
+                
+                if (gpsOrangCategoryItem) {
+                    gpsOrangCategoryItem.style.opacity = '1';
+                    gpsOrangCategoryItem.style.pointerEvents = 'auto';
+                }
+            });
+    }
+    
+    // Function to show Control Room modal
+    function showControlRoomModal() {
+        // Initialize control room data from ALL CCTV (tanpa filter pengawas)
+        // Gunakan cctvLocationsForControlRoom untuk mendapatkan semua control room
+        if (allControlRooms.length === 0) {
+            // Group CCTV by control_room dari data lengkap (tanpa filter pengawas)
+            const controlRoomMap = {};
+            
+            (cctvLocationsForControlRoom || []).forEach(cctv => {
+                const controlRoom = (cctv.control_room && cctv.control_room.trim() !== '') 
+                    ? cctv.control_room.trim() 
+                    : null;
+                
+                // Skip if control_room is null or empty
+                if (!controlRoom) return;
+                
+                if (!controlRoomMap[controlRoom]) {
+                    controlRoomMap[controlRoom] = {
+                        name: controlRoom,
+                        cctv_list: []
+                    };
+                }
+                
+                controlRoomMap[controlRoom].cctv_list.push(cctv);
+            });
+            
+            // Convert to array and sort by name
+            allControlRooms = Object.values(controlRoomMap)
+                .sort((a, b) => a.name.localeCompare(b.name));
+        }
+        
+        const modalBody = document.getElementById('controlRoomModalBody');
+        if (!modalBody) return;
+        
+        if (allControlRooms.length === 0) {
+            modalBody.innerHTML = `
+                <div class="text-center py-5">
+                    <i class="material-icons-outlined" style="font-size: 48px; color: #9ca3af; margin-bottom: 16px;">meeting_room</i>
+                    <p class="text-muted">Tidak ada data Control Room</p>
+                </div>
+            `;
+        } else {
+            // Build HTML for control room list with toggle switches
+            const html = `
+                <div class="mb-3">
+                    <p class="text-muted mb-3">Pilih Control Room untuk menampilkan CCTV di peta:</p>
+                    <div class="list-group">
+                        ${allControlRooms.map((controlRoom, index) => {
+                            const name = controlRoom.name || 'Unknown';
+                            const cctvCount = controlRoom.cctv_list ? controlRoom.cctv_list.length : 0;
+                            const isActive = activeControlRooms.includes(name);
+                            
+                            return `
+                                <div class="list-group-item d-flex justify-content-between align-items-center">
+                                    <div class="flex-grow-1">
+                                        <h6 class="mb-1">${escapeHtml(name)}</h6>
+                                        <small class="text-muted">${cctvCount} CCTV</small>
+                                    </div>
+                                    <div class="form-check form-switch">
+                                        <input class="form-check-input" type="checkbox" 
+                                               id="controlRoomToggle${index}" 
+                                               data-control-room="${escapeHtml(name)}"
+                                               ${isActive ? 'checked' : ''}
+                                               onchange="toggleControlRoom('${escapeHtml(name)}', this.checked)">
+                                        <label class="form-check-label" for="controlRoomToggle${index}"></label>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+                <div class="alert alert-info">
+                    <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">info</i>
+                    <small>Gunakan toggle untuk menampilkan/menyembunyikan CCTV dari Control Room yang dipilih. Klik "Terapkan Filter" untuk mengupdate peta.</small>
+                </div>
+            `;
+            modalBody.innerHTML = html;
+        }
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('controlRoomModal'));
+        modal.show();
+    }
+    
+    // Function to toggle control room (make it globally accessible)
+    window.toggleControlRoom = function(controlRoomName, isActive) {
+        if (isActive) {
+            // Add to active list if not already there
+            if (!activeControlRooms.includes(controlRoomName)) {
+                activeControlRooms.push(controlRoomName);
+            }
+        } else {
+            // Remove from active list
+            activeControlRooms = activeControlRooms.filter(cr => cr !== controlRoomName);
+        }
+    };
+    
+    // Function to apply control room filter (make it globally accessible)
+    window.applyControlRoomFilter = function() {
+        if (!cctvLayer) {
+            console.error('CCTV layer not initialized');
+            return;
+        }
+        
+        const source = cctvLayer.getSource();
+        
+        // Store original style function if not already stored
+        if (!cctvLayer.get('originalStyleFunction')) {
+            cctvLayer.set('originalStyleFunction', cctvLayer.getStyle());
+        }
+        
+        if (activeControlRooms.length === 0) {
+            // If no control room selected, restore to default (filter by auth pengawas)
+            // Clear all features and re-add from default data (cctvLocationsForMap)
+            source.clear();
+            addCctvMarkersFromData(cctvLocationsForMap || []);
+            
+            // Restore original style
+            const originalStyle = cctvLayer.get('originalStyleFunction');
+            if (originalStyle) {
+                cctvLayer.setStyle(originalStyle);
+            }
+            
+            console.log('Restored to default CCTV (filter by auth pengawas)');
+            
+            // Show success alert
+            Swal.fire({
+                icon: 'success',
+                title: 'Filter Direset',
+                text: 'CCTV kembali ditampilkan sesuai dengan filter pengawas default',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        } else {
+            // Filter by Control Room: Replace all CCTV with only selected control rooms
+            // Use ALL CCTV data (cctvLocationsForMapAll) to get CCTV from selected control rooms
+            source.clear();
+            
+            // Filter CCTV from all data based on selected control rooms
+            const filteredCctv = (cctvLocationsForMapAll || []).filter(cctv => {
+                const controlRoom = cctv.control_room ? cctv.control_room.trim() : null;
+                return controlRoom && activeControlRooms.includes(controlRoom);
+            });
+            
+            // Add filtered CCTV to map
+            addCctvMarkersFromData(filteredCctv);
+            
+            // Restore original style
+            const originalStyle = cctvLayer.get('originalStyleFunction');
+            if (originalStyle) {
+                cctvLayer.setStyle(originalStyle);
+            }
+            
+            console.log(`Control Room filter applied: ${filteredCctv.length} CCTV from ${activeControlRooms.length} control room(s)`);
+            console.log('Active Control Rooms:', activeControlRooms);
+            
+            // Show success alert
+            const controlRoomNames = activeControlRooms.join(', ');
+            Swal.fire({
+                icon: 'success',
+                title: 'Filter Berhasil Diterapkan',
+                html: `Menampilkan <strong>${filteredCctv.length}</strong> CCTV dari <strong>${activeControlRooms.length}</strong> Control Room:<br><small>${escapeHtml(controlRoomNames)}</small>`,
+                timer: 3000,
+                showConfirmButton: true,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                toast: false,
+                position: 'center'
+            });
+        }
+        
+        // Force layer redraw
+        cctvLayer.changed();
+        
+        // Update visual indicator on Control Room category item
+        const controlRoomCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
+            const span = item.querySelector('span');
+            return span && span.textContent.trim() === 'Control Room';
+        });
+        
+        if (controlRoomCategoryItem) {
+            if (activeControlRooms.length > 0) {
+                controlRoomCategoryItem.classList.add('active');
+            } else {
+                controlRoomCategoryItem.classList.remove('active');
+            }
+        }
+        
+        // Close modal
+        const modal = bootstrap.Modal.getInstance(document.getElementById('controlRoomModal'));
+        if (modal) {
+            modal.hide();
+        }
+    };
+    
+    // Function to load and display SAP data from API
+    function loadAndDisplaySapData() {
+        // Show loading indicator
+        const sapCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
+            const span = item.querySelector('span');
+            return span && span.textContent.trim() === 'SAP';
+        });
+        
+        if (sapCategoryItem) {
+            sapCategoryItem.style.opacity = '0.6';
+            sapCategoryItem.style.pointerEvents = 'none';
+        }
+        
+        // Ensure hazard layer exists
+        if (!hazardLayer) {
+            console.error('Hazard layer not initialized');
+            if (sapCategoryItem) {
+                sapCategoryItem.style.opacity = '1';
+                sapCategoryItem.style.pointerEvents = 'auto';
+            }
+            return;
+        }
+        
+        // Fetch SAP data from API
+        fetch('/full-maps/api/sap-data?limit=500')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.data && data.data.length > 0) {
+                    // Clear existing SAP markers
+                    const source = hazardLayer.getSource();
+                    source.clear();
+                    
+                    // Cache the data
+                    sapDataCache = data.data;
+                    
+                    // Add new SAP markers
+                    addSapMarkersBatch(data.data);
+                    
+                    // Show hazard layer
+                    hazardLayer.setVisible(true);
+                    layerVisibility.hazard = true;
+                    sapDataLoaded = true;
+                    
+                    // Update toggle button if exists
+                    const toggleHazardBtn = document.getElementById('toggleHazard');
+                    if (toggleHazardBtn) {
+                        toggleHazardBtn.classList.add('active');
+                    }
+                    
+                    // Update visual indicator on SAP category item
+                    if (sapCategoryItem) {
+                        sapCategoryItem.classList.add('active');
+                    }
+                    
+                    console.log(`Loaded ${data.count} SAP points from ClickHouse`);
+                    
+                    // Show success alert for loading SAP from API
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'SAP Berhasil Dimuat',
+                        html: `Menampilkan <strong>${data.count}</strong> titik SAP di peta<br><small>Data dari ClickHouse</small>`,
+                        timer: 3000,
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                        toast: false,
+                        position: 'center'
+                    });
+                    
+                    // Show success message (optional)
+                    if (sapCategoryItem) {
+                        sapCategoryItem.style.opacity = '1';
+                        sapCategoryItem.style.pointerEvents = 'auto';
+                    }
+                } else {
+                    console.warn('No SAP data received from API');
+                    
+                    // Show warning alert for no data
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Tidak Ada Data SAP',
+                        text: 'Tidak ada data SAP yang ditemukan dari database',
+                        timer: 2500,
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                        toast: false,
+                        position: 'center'
+                    });
+                    
+                    if (sapCategoryItem) {
+                        sapCategoryItem.style.opacity = '1';
+                        sapCategoryItem.style.pointerEvents = 'auto';
+                    }
+                }
+            })
+            .catch(error => {
+                console.error('Error loading SAP data:', error);
+                
+                // Show error alert
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error Memuat SAP',
+                    text: 'Terjadi kesalahan saat memuat data SAP dari server',
+                    timer: 3000,
+                    showConfirmButton: true,
+                    confirmButtonText: 'OK',
+                    confirmButtonColor: '#3085d6',
+                    toast: false,
+                    position: 'center'
+                });
+                
+                if (sapCategoryItem) {
+                    sapCategoryItem.style.opacity = '1';
+                    sapCategoryItem.style.pointerEvents = 'auto';
+                }
+            });
+    }
     
     // Global variables for evaluation
     let evaluationOverlays = [];
@@ -14122,6 +17641,793 @@
     // ============================================
     // Employee Location Monitoring & Telegram Notification - REMOVED (no longer used)
     // All functions related to employee location monitoring have been removed
+    
+    // ============================================
+    // Notification Panel - Risk Matrix Summary
+    // ============================================
+    
+    // Function to get all area kerja features from all layers
+    function getAllAreaKerjaFeatures() {
+        const allFeatures = [];
+        
+        // Get features from window.areaKerjaLayers array
+        if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
+            window.areaKerjaLayers.forEach(layer => {
+                if (layer && layer.getSource) {
+                    const features = layer.getSource().getFeatures();
+                    allFeatures.push(...features);
+                }
+            });
+        }
+        
+        // Also check areaKerjaBmo2PamaLayer if it exists
+        if (typeof areaKerjaBmo2PamaLayer !== 'undefined' && areaKerjaBmo2PamaLayer) {
+            const features = areaKerjaBmo2PamaLayer.getSource().getFeatures();
+            allFeatures.push(...features);
+        }
+        
+        return allFeatures;
+    }
+    
+    // Function to count features by risk level
+    function countFeaturesByRiskLevel() {
+        const allFeatures = getAllAreaKerjaFeatures();
+        
+        const counts = {
+            HIGH: [],
+            MEDIUM: [],
+            NORMAL: []
+        };
+        
+        allFeatures.forEach(feature => {
+            const riskLevel = feature.get('riskLevel');
+            const lokasi = feature.get('lokasi') || feature.get('id_lokasi') || 'Unknown Location';
+            const geometry = feature.getGeometry();
+            
+            if (riskLevel) {
+                counts[riskLevel].push({
+                    feature: feature,
+                    lokasi: lokasi,
+                    geometry: geometry
+                });
+            }
+        });
+        
+        return counts;
+    }
+    
+    // Function to update notification badge
+    function updateNotificationBadge() {
+        const badge = document.querySelector('.notification-badge');
+        if (!badge) return;
+        
+        const counts = countFeaturesByRiskLevel();
+        const totalHighRisk = counts.HIGH.length + counts.MEDIUM.length;
+        
+        if (totalHighRisk > 0) {
+            badge.style.display = 'block';
+            // Optionally show count in badge (if you want to display number)
+            // badge.textContent = totalHighRisk > 99 ? '99+' : totalHighRisk;
+        } else {
+            badge.style.display = 'none';
+        }
+    }
+    
+    // Function to render notification panel content
+    function renderNotificationPanel() {
+        const panelBody = document.getElementById('gmNotificationPanelBody');
+        if (!panelBody) return;
+        
+        const counts = countFeaturesByRiskLevel();
+        
+        let html = '';
+        
+        // Red (HIGH) category
+        const redCount = counts.HIGH.length;
+        html += `
+            <div class="gm-notification-category ${redCount > 0 ? 'expanded' : ''}" data-risk="HIGH">
+                <div class="gm-notification-category-header">
+                    <div class="gm-notification-category-title">
+                        <span class="gm-notification-color-indicator red"></span>
+                        <span>Risk Tinggi (Merah)</span>
+                        <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
+                    </div>
+                    <span class="gm-notification-category-count">${redCount}</span>
+                </div>
+                <div class="gm-notification-location-list">
+                    ${redCount > 0 ? counts.HIGH.map((item, index) => `
+                        <div class="gm-notification-location-item" data-lokasi="${item.lokasi}" data-index="${index}">
+                            <i class="material-icons-outlined">location_on</i>
+                            <span>${item.lokasi}</span>
+                        </div>
+                    `).join('') : '<div class="gm-notification-empty">Tidak ada lokasi</div>'}
+                </div>
+            </div>
+        `;
+        
+        // Orange (MEDIUM) category
+        const orangeCount = counts.MEDIUM.length;
+        html += `
+            <div class="gm-notification-category ${orangeCount > 0 ? 'expanded' : ''}" data-risk="MEDIUM">
+                <div class="gm-notification-category-header">
+                    <div class="gm-notification-category-title">
+                        <span class="gm-notification-color-indicator orange"></span>
+                        <span>Risk Sedang (Orange)</span>
+                        <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
+                    </div>
+                    <span class="gm-notification-category-count">${orangeCount}</span>
+                </div>
+                <div class="gm-notification-location-list">
+                    ${orangeCount > 0 ? counts.MEDIUM.map((item, index) => `
+                        <div class="gm-notification-location-item" data-lokasi="${item.lokasi}" data-index="${index}">
+                            <i class="material-icons-outlined">location_on</i>
+                            <span>${item.lokasi}</span>
+                        </div>
+                    `).join('') : '<div class="gm-notification-empty">Tidak ada lokasi</div>'}
+                </div>
+            </div>
+        `;
+        
+        // Green (NORMAL) category
+        const greenCount = counts.NORMAL.length;
+        html += `
+            <div class="gm-notification-category ${greenCount > 0 ? 'expanded' : ''}" data-risk="NORMAL">
+                <div class="gm-notification-category-header">
+                    <div class="gm-notification-category-title">
+                        <span class="gm-notification-color-indicator green"></span>
+                        <span>Risk Normal (Hijau)</span>
+                        <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
+                    </div>
+                    <span class="gm-notification-category-count">${greenCount}</span>
+                </div>
+                <div class="gm-notification-location-list">
+                    ${greenCount > 0 ? counts.NORMAL.map((item, index) => `
+                        <div class="gm-notification-location-item" data-lokasi="${item.lokasi}" data-index="${index}">
+                            <i class="material-icons-outlined">location_on</i>
+                            <span>${item.lokasi}</span>
+                        </div>
+                    `).join('') : '<div class="gm-notification-empty">Tidak ada lokasi</div>'}
+                </div>
+            </div>
+        `;
+        
+        if (redCount === 0 && orangeCount === 0 && greenCount === 0) {
+            html = '<div class="gm-notification-empty">Belum ada data area kerja yang dimuat</div>';
+        }
+        
+        panelBody.innerHTML = html;
+        
+        // Add click handlers for category headers (expand/collapse)
+        const categories = panelBody.querySelectorAll('.gm-notification-category');
+        categories.forEach(category => {
+            const header = category.querySelector('.gm-notification-category-header');
+            if (header) {
+                header.addEventListener('click', function(e) {
+                    // Don't toggle if clicking on count badge
+                    if (e.target.classList.contains('gm-notification-category-count')) {
+                        return;
+                    }
+                    category.classList.toggle('expanded');
+                });
+            }
+        });
+        
+        // Add click handlers for location items (navigate to location)
+        const locationItems = panelBody.querySelectorAll('.gm-notification-location-item');
+        locationItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const lokasi = this.getAttribute('data-lokasi');
+                const index = parseInt(this.getAttribute('data-index'));
+                const risk = this.closest('.gm-notification-category').getAttribute('data-risk');
+                const counts = countFeaturesByRiskLevel();
+                
+                // Find the feature for this location using index
+                const categoryData = counts[risk];
+                if (categoryData && categoryData[index]) {
+                    const locationData = categoryData[index];
+                    if (locationData.geometry) {
+                        navigateToLocation(locationData.geometry, locationData.feature);
+                    }
+                }
+            });
+        });
+        
+        // Update notification badge
+        updateNotificationBadge();
+    }
+    
+    // Function to navigate to a location on the map
+    function navigateToLocation(geometry, feature) {
+        if (!map || !geometry) return;
+        
+        const view = map.getView();
+        
+        // Get the center/extent of the geometry
+        let center;
+        if (geometry.getType() === 'Point') {
+            center = geometry.getCoordinates();
+        } else {
+            // For polygons, get the center of the extent
+            const extent = geometry.getExtent();
+            center = ol.extent.getCenter(extent);
+        }
+        
+        // Animate to location
+        view.animate({
+            center: center,
+            zoom: 16,
+            duration: 600
+        });
+        
+        // Highlight the feature temporarily
+        if (feature) {
+            const originalStyle = feature.getStyle();
+            const highlightStyle = new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#1a73e8',
+                    width: 4
+                }),
+                fill: new ol.style.Fill({
+                    color: 'rgba(26, 115, 232, 0.2)'
+                })
+            });
+            
+            feature.setStyle(highlightStyle);
+            
+            // Reset style after 3 seconds
+            setTimeout(() => {
+                if (originalStyle) {
+                    feature.setStyle(originalStyle);
+                } else {
+                    // Use default style function if no original style
+                    const riskLevel = feature.get('riskLevel');
+                    if (riskLevel) {
+                        feature.setStyle(getRiskBasedAreaKerjaStyle(feature));
+                    }
+                }
+            }, 3000);
+        }
+        
+        // Close notification panel
+        const panel = document.getElementById('gmNotificationPanel');
+        if (panel) {
+            panel.classList.remove('active');
+        }
+    }
+    
+    // Initialize notification panel
+    function initNotificationPanel() {
+        const notificationBtn = document.getElementById('gmNotificationBtn');
+        const notificationPanel = document.getElementById('gmNotificationPanel');
+        const notificationPanelClose = document.getElementById('gmNotificationPanelClose');
+        
+        if (!notificationBtn || !notificationPanel) return;
+        
+        // Toggle panel on button click
+        notificationBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            const isActive = notificationPanel.classList.contains('active');
+            
+            if (isActive) {
+                notificationPanel.classList.remove('active');
+            } else {
+                // Render panel content before showing
+                renderNotificationPanel();
+                notificationPanel.classList.add('active');
+            }
+        });
+        
+        // Close panel on close button click
+        if (notificationPanelClose) {
+            notificationPanelClose.addEventListener('click', function(e) {
+                e.stopPropagation();
+                notificationPanel.classList.remove('active');
+            });
+        }
+        
+        // Close panel when clicking outside
+        document.addEventListener('click', function(e) {
+            if (notificationPanel && notificationBtn &&
+                !notificationPanel.contains(e.target) &&
+                !notificationBtn.contains(e.target)) {
+                notificationPanel.classList.remove('active');
+            }
+        });
+        
+        // Re-render panel when risk levels are updated (after risk calculation)
+        // This will be called after features get their risk levels calculated
+        const originalCalculateRisk = window.calculateRiskForAreaKerja;
+        if (typeof originalCalculateRisk === 'function') {
+            // Wrap the function to trigger panel update
+            window.calculateRiskForAreaKerja = function(...args) {
+                const result = originalCalculateRisk.apply(this, args);
+                // Update panel if it's open and update badge
+                setTimeout(() => {
+                    if (notificationPanel.classList.contains('active')) {
+                        renderNotificationPanel();
+                    } else {
+                        updateNotificationBadge();
+                    }
+                }, 500);
+                return result;
+            };
+        }
+        
+        // Initial badge update
+        setTimeout(updateNotificationBadge, 2000);
+    }
+    
+    // Initialize when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', function() {
+            setTimeout(initNotificationPanel, 1000);
+            // Update badge periodically
+            setInterval(updateNotificationBadge, 5000);
+        });
+    } else {
+        setTimeout(initNotificationPanel, 1000);
+        // Update badge periodically
+        setInterval(updateNotificationBadge, 5000);
+    }
+    
+    // Also re-render when layers are loaded
+    const originalLoadLayers = window.loadAllLayers;
+    if (typeof originalLoadLayers === 'function') {
+        window.loadAllLayers = function(...args) {
+            const result = originalLoadLayers.apply(this, args);
+            setTimeout(() => {
+                const panel = document.getElementById('gmNotificationPanel');
+                if (panel && panel.classList.contains('active')) {
+                    renderNotificationPanel();
+                }
+            }, 2000);
+            return result;
+        };
+    }
+    
+    // ============================================
+    // Intervensi Area Kerja
+    // ============================================
+    
+    // Store current area kerja data for intervensi
+    let currentIntervensiAreaKerja = null;
+    let currentIntervensiLokasi = null;
+    
+    // Function to initialize Select2 for PIC dropdown
+    function initializePICSelect2() {
+        const picSelect = document.getElementById('intervensiPICAreaKerja');
+        if (!picSelect) {
+            console.error('PIC select element not found');
+            return;
+        }
+        
+        let retryCount = 0;
+        const maxRetries = 50; // Try for 5 seconds (50 * 100ms)
+        
+        // Wait for jQuery and Select2 to be available
+        function checkAndInit() {
+            const $ = window.jQuery || window.$;
+            
+            if ($ && typeof $.fn.select2 !== 'undefined') {
+                // jQuery and Select2 are available
+                console.log('jQuery and Select2 are available, initializing...');
+                initSelect2($);
+            } else {
+                retryCount++;
+                if (retryCount < maxRetries) {
+                    // Wait a bit and try again
+                    console.log(`Waiting for jQuery and Select2 to load... (attempt ${retryCount}/${maxRetries})`);
+                    setTimeout(checkAndInit, 100);
+                } else {
+                    console.error('jQuery or Select2 failed to load after', maxRetries, 'attempts');
+                    console.error('jQuery available:', typeof $ !== 'undefined');
+                    console.error('Select2 available:', $ && typeof $.fn.select2 !== 'undefined');
+                }
+            }
+        }
+        
+        function initSelect2($) {
+            if (!$ || !$.fn.select2) {
+                console.error('jQuery or Select2 is still not available in initSelect2');
+                return;
+            }
+        
+            // Destroy existing Select2 instance if any
+            if ($(picSelect).hasClass('select2-hidden-accessible')) {
+                $(picSelect).select2('destroy');
+            }
+            
+            // Clear select options
+            picSelect.innerHTML = '<option value="">Pilih PIC...</option>';
+            picSelect.disabled = false;
+            
+            // Initialize Select2 with AJAX search
+            $(picSelect).select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Ketik untuk mencari PIC (Pengawas)...',
+            allowClear: true,
+            width: '100%',
+            minimumInputLength: 0,
+            ajax: {
+                url: `{{ url('cctv-data-control-room/users') }}`,
+                type: 'GET',
+                dataType: 'json',
+                delay: 300,
+                data: function (params) {
+                    return {
+                        q: params.term || '',
+                        page: params.page || 1
+                    };
+                },
+                processResults: function (data, params) {
+                    console.log('Select2 AJAX response:', data);
+                    if (data.success && data.data) {
+                        const results = data.data.map(user => ({
+                            id: user.id,
+                            text: user.text || (user.username + ' - ' + user.nama),
+                            username: user.username,
+                            nama: user.nama
+                        }));
+                        return {
+                            results: results,
+                            pagination: { more: false }
+                        };
+                    }
+                    if (data.error) {
+                        console.error('Select2 AJAX error:', data.error);
+                        return {
+                            results: [],
+                            pagination: { more: false }
+                        };
+                    }
+                    return {
+                        results: data.results || [],
+                        pagination: {
+                            more: data.pagination && data.pagination.more
+                        }
+                    };
+                },
+                error: function(jqXHR, textStatus, errorThrown) {
+                    console.error('Select2 AJAX error:', textStatus, errorThrown);
+                    console.error('Response:', jqXHR.responseText);
+                },
+                cache: false
+            },
+            dropdownParent: $(picSelect).closest('.modal-body').length ? $(picSelect).closest('.modal-body') : $(document.body),
+            language: {
+                noResults: function() {
+                    return "Tidak ada hasil ditemukan";
+                },
+                searching: function() {
+                    return "Mencari...";
+                },
+                inputTooShort: function() {
+                    return "Ketik untuk mencari";
+                }
+            },
+            escapeMarkup: function (markup) {
+                return markup;
+            },
+            templateResult: function(user) {
+                if (user.loading) {
+                    return "Mencari...";
+                }
+                if (!user.text && user.username && user.nama) {
+                    return user.username + ' - ' + user.nama;
+                }
+                return user.text || user.id;
+            },
+            templateSelection: function(user) {
+                if (user.text) {
+                    return user.text;
+                }
+                if (user.username && user.nama) {
+                    return user.username + ' - ' + user.nama;
+                }
+                return user.id || '';
+            }
+        });
+        
+            // Trigger initial load when dropdown opens
+            $(picSelect).on('select2:open', function() {
+                const $select2 = $(picSelect).data('select2');
+                if ($select2 && !$select2._request) {
+                    $select2.trigger('query', { term: '' });
+                }
+            });
+        }
+        
+        // Start checking for jQuery and Select2
+        checkAndInit();
+    }
+    
+    // Function to load intervensi modal with area kerja data
+    function loadIntervensiAreaKerjaModal(areaKerja, lokasi) {
+        // Set area kerja and lokasi - lokasi is required
+        const lokasiValue = lokasi || '';
+        const areaKerjaValue = areaKerja || '';
+        
+        document.getElementById('intervensiAreaKerja').value = areaKerjaValue;
+        document.getElementById('intervensiLokasi').value = lokasiValue;
+        document.getElementById('intervensiLokasiDisplay').value = lokasiValue;
+        
+        // Store for later use
+        currentIntervensiAreaKerja = areaKerjaValue;
+        currentIntervensiLokasi = lokasiValue;
+        
+        // Reset form but keep lokasi
+        document.getElementById('intervensiIssueAreaKerja').value = '';
+        
+        // Clear PIC dropdown (Select2 will be initialized when modal is shown)
+        const picSelect = document.getElementById('intervensiPICAreaKerja');
+        if (picSelect) {
+            // Destroy existing Select2 instance if any
+            if (typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
+                $(picSelect).select2('destroy');
+            }
+            // Clear select options
+            picSelect.innerHTML = '<option value="">Pilih PIC...</option>';
+            picSelect.disabled = false;
+        }
+    }
+    
+    // Handle modal close to destroy Select2
+    const intervensiAreaKerjaModal = document.getElementById('intervensiAreaKerjaModal');
+    if (intervensiAreaKerjaModal) {
+        intervensiAreaKerjaModal.addEventListener('hidden.bs.modal', function() {
+            const picSelect = document.getElementById('intervensiPICAreaKerja');
+            if (picSelect && typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
+                $(picSelect).select2('destroy');
+            }
+        });
+    }
+    
+    // Handle button intervensi click
+    document.addEventListener('DOMContentLoaded', function() {
+        const btnIntervensiAreaKerja = document.getElementById('btnIntervensiAreaKerja');
+        if (btnIntervensiAreaKerja) {
+            btnIntervensiAreaKerja.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                
+                // Get current area kerja data from global variable
+                if (window.currentAreaKerjaForIntervensi && window.currentAreaKerjaForIntervensi.lokasi) {
+                    // Store data for later use
+                    const areaKerjaData = {
+                        areaKerja: window.currentAreaKerjaForIntervensi.areaKerja || '',
+                        lokasi: window.currentAreaKerjaForIntervensi.lokasi
+                    };
+                    
+                    // Close summary modal first
+                    const summaryModalElement = document.getElementById('areaKerjaSummaryModal');
+                    const summaryModal = bootstrap.Modal.getInstance(summaryModalElement);
+                    
+                    // Function to open intervensi modal
+                    const openIntervensiModal = function() {
+                        // Load data and show intervensi modal
+                        loadIntervensiAreaKerjaModal(areaKerjaData.areaKerja, areaKerjaData.lokasi);
+                        
+                        // Show intervensi modal
+                        const intervensiModalElement = document.getElementById('intervensiAreaKerjaModal');
+                        const intervensiModal = new bootstrap.Modal(intervensiModalElement);
+                        intervensiModal.show();
+                    };
+                    
+                    if (summaryModal) {
+                        // Listen for when summary modal is fully hidden
+                        const handleModalHidden = function() {
+                            // Remove event listener
+                            summaryModalElement.removeEventListener('hidden.bs.modal', handleModalHidden);
+                            // Open intervensi modal
+                            openIntervensiModal();
+                        };
+                        
+                        summaryModalElement.addEventListener('hidden.bs.modal', handleModalHidden);
+                        
+                        // Hide summary modal
+                        summaryModal.hide();
+                    } else {
+                        // If modal instance doesn't exist, just open intervensi modal directly
+                        openIntervensiModal();
+                    }
+                } else {
+                    // Fallback: prompt user
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan!',
+                        text: 'Data lokasi tidak ditemukan. Silakan tutup dan buka kembali modal summary area kerja.'
+                    });
+                }
+            });
+        }
+        
+        // Handle modal shown event to initialize Select2 after modal is fully shown
+        const intervensiAreaKerjaModalElement = document.getElementById('intervensiAreaKerjaModal');
+        if (intervensiAreaKerjaModalElement) {
+            intervensiAreaKerjaModalElement.addEventListener('shown.bs.modal', function() {
+                // Initialize Select2 for PIC when modal is fully shown
+                // Add a small delay to ensure all scripts are loaded
+                setTimeout(function() {
+                    initializePICSelect2();
+                }, 200);
+            });
+        }
+        
+        // Handle submit intervensi form
+        const submitIntervensiAreaKerjaBtn = document.getElementById('submitIntervensiAreaKerjaBtn');
+        if (submitIntervensiAreaKerjaBtn) {
+            console.log('Submit button found, attaching event listener');
+            submitIntervensiAreaKerjaBtn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('Submit button clicked');
+                const form = document.getElementById('intervensiAreaKerjaForm');
+                if (!form) {
+                    console.error('Form not found');
+                    return;
+                }
+                
+                // Get form values
+                const lokasi = document.getElementById('intervensiLokasi').value;
+                const areaKerja = document.getElementById('intervensiAreaKerja').value || null;
+                const picId = document.getElementById('intervensiPICAreaKerja').value;
+                const issue = document.getElementById('intervensiIssueAreaKerja').value;
+                
+                // Validate form
+                if (!lokasi) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan!',
+                        text: 'Lokasi harus diisi.'
+                    });
+                    return;
+                }
+                
+                if (!picId) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan!',
+                        text: 'PIC (Pengawas) harus dipilih.'
+                    });
+                    return;
+                }
+                
+                if (!issue || issue.trim() === '') {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan!',
+                        text: 'Issue harus diisi.'
+                    });
+                    return;
+                }
+                
+                const formData = {
+                    lokasi: lokasi,
+                    area_kerja: areaKerja,
+                    pic_id: picId,
+                    issue: issue
+                };
+                
+                console.log('Submitting intervensi:', formData);
+                
+                // Disable button
+                const submitBtn = this;
+                submitBtn.disabled = true;
+                submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengirim...';
+                
+                // Send AJAX request to save intervensi
+                fetch(`{{ url('full-maps/api/intervensi-area-kerja') }}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                    },
+                    body: JSON.stringify(formData)
+                })
+                    .then(response => {
+                        // Check if response is ok
+                        if (!response.ok) {
+                            return response.json().then(data => {
+                                throw new Error(data.message || 'Server error');
+                            });
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        console.log('Response data:', data);
+                        if (data.success) {
+                            // Show success message with option to open WhatsApp
+                            const whatsappUrl = data.data?.whatsapp_url;
+                            
+                            if (whatsappUrl) {
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: data.message || 'Intervensi berhasil dikirim!',
+                                    showConfirmButton: true,
+                                    showCancelButton: true,
+                                    confirmButtonText: 'Buka WhatsApp',
+                                    cancelButtonText: 'Tutup',
+                                    confirmButtonColor: '#25D366'
+                                }).then((result) => {
+                                    // Close modal
+                                    const modal = bootstrap.Modal.getInstance(document.getElementById('intervensiAreaKerjaModal'));
+                                    if (modal) {
+                                        modal.hide();
+                                    }
+                                    
+                                    // Reset form
+                                    form.reset();
+                                    
+                                    // Reset Select2 for PIC
+                                    const picSelect = document.getElementById('intervensiPICAreaKerja');
+                                    if (picSelect && typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
+                                        $(picSelect).val(null).trigger('change');
+                                    }
+                                    
+                                    // Reset button
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>Kirim Intervensi';
+                                    
+                                    // Open WhatsApp if user clicked confirm
+                                    if (result.isConfirmed && whatsappUrl) {
+                                        window.open(whatsappUrl, '_blank');
+                                    }
+                                });
+                            } else {
+                                // No WhatsApp URL, just show success
+                                Swal.fire({
+                                    icon: 'success',
+                                    title: 'Berhasil!',
+                                    text: data.message || 'Intervensi berhasil dikirim!',
+                                    showConfirmButton: true,
+                                    confirmButtonText: 'OK'
+                                }).then((result) => {
+                                    // Close modal
+                                    const modal = bootstrap.Modal.getInstance(document.getElementById('intervensiAreaKerjaModal'));
+                                    if (modal) {
+                                        modal.hide();
+                                    }
+                                    
+                                    // Reset form
+                                    form.reset();
+                                    
+                                    // Reset Select2 for PIC
+                                    const picSelect = document.getElementById('intervensiPICAreaKerja');
+                                    if (picSelect && typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
+                                        $(picSelect).val(null).trigger('change');
+                                    }
+                                    
+                                    // Reset button
+                                    submitBtn.disabled = false;
+                                    submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>Kirim Intervensi';
+                                });
+                            }
+                        } else {
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Gagal!',
+                                text: data.message || 'Terjadi kesalahan saat mengirim intervensi.',
+                                footer: data.error ? '<small>' + data.error + '</small>' : ''
+                            });
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>Kirim Intervensi';
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error submitting intervensi:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: error.message || 'Terjadi kesalahan saat mengirim intervensi. Silakan coba lagi.'
+                        });
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>Kirim Intervensi';
+                    });
+            });
+        }
+    });
     
     // Charts menggunakan script dari template index.js
     // Script chart akan di-load dari build/js/index.js

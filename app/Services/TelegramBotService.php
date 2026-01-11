@@ -3,7 +3,8 @@
 namespace App\Services;
 
 use GuzzleHttp\Client;
-use Illuminate\Http\Client\RequestException;
+use GuzzleHttp\Exception\ClientException;
+use GuzzleHttp\Exception\RequestException;
 use Illuminate\Support\Arr;
 use Illuminate\Support\Facades\Log;
 
@@ -57,6 +58,27 @@ class TelegramBotService
     public function getMe(): array
     {
         return $this->request('getMe');
+    }
+
+    /**
+     * Get webhook information
+     * @return array<string, mixed>
+     */
+    public function getWebhookInfo(): array
+    {
+        return $this->request('getWebhookInfo');
+    }
+
+    /**
+     * Delete webhook
+     * @param  bool  $dropPendingUpdates Drop all pending updates
+     * @return array<string, mixed>
+     */
+    public function deleteWebhook(bool $dropPendingUpdates = false): array
+    {
+        return $this->request('deleteWebhook', [
+            'drop_pending_updates' => $dropPendingUpdates,
+        ]);
     }
 
     /**
@@ -127,6 +149,40 @@ class TelegramBotService
             $response = $this->client->post($method, ['json' => $payload]);
 
             return json_decode($response->getBody()->getContents(), true, 512, JSON_THROW_ON_ERROR);
+        } catch (ClientException $e) {
+            // Handle HTTP client errors (4xx, 5xx)
+            $statusCode = $e->getResponse()?->getStatusCode();
+            $responseBody = $e->getResponse()?->getBody()?->getContents();
+            
+            // Try to parse Telegram's error response
+            $errorData = [];
+            if ($responseBody) {
+                try {
+                    $errorData = json_decode($responseBody, true, 512, JSON_THROW_ON_ERROR);
+                } catch (\JsonException $jsonException) {
+                    // If JSON parsing fails, use raw response
+                    $errorData = ['description' => $responseBody];
+                }
+            }
+            
+            // If Telegram returned an error response, return it in the expected format
+            if (isset($errorData['ok']) && $errorData['ok'] === false) {
+                return $errorData;
+            }
+            
+            // Otherwise, create a standard error response
+            Log::error('Telegram API call failed', [
+                'method' => $method,
+                'status_code' => $statusCode,
+                'error' => $errorData,
+                'message' => $e->getMessage(),
+            ]);
+
+            return [
+                'ok' => false,
+                'error_code' => $statusCode ?? 0,
+                'description' => $errorData['description'] ?? $e->getMessage(),
+            ];
         } catch (\Throwable $e) {
             Log::error('Telegram API call failed', [
                 'method' => $method,

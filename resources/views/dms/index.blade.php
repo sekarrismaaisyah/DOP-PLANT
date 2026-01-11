@@ -692,10 +692,23 @@
         let isVideoUploaded = false;
         let videoLoopCount = 0; // Track how many times video has looped
         let lastVideoTime = 0; // Track last video time to detect loops
+        let videoStartTimestamp = 0; // Track when video processing started (for monotonically increasing timestamp)
+        let frameCount = 0; // Frame counter for monotonically increasing timestamp
         
         // Mode management
         let currentMode = 'calibration'; // 'calibration' or 'detection'
         let selectedCalibration = null;
+        
+        // Previous metrics for change detection
+        let previousMetrics = {
+            safety_score: null,
+            status: null,
+            fatigue: null,
+            drift: null,
+            perclos_60s: null,
+            blink_60s: null,
+            microsleep_60s: null
+        };
 
         // Initialize
         async function init() {
@@ -850,8 +863,18 @@
             }
 
             try {
-                // For uploaded video, use video currentTime in milliseconds
-                const videoTimeMs = videoUrl ? (video.currentTime * 1000) : startTimeMs;
+                // For MediaPipe, we need monotonically increasing timestamp
+                // For uploaded video, use frame-based timestamp that always increases
+                // For webcam, use performance.now()
+                let videoTimeMs;
+                if (videoUrl) {
+                    // Use frame count * frame interval to ensure monotonically increasing
+                    // This prevents timestamp mismatch when video loops
+                    videoTimeMs = frameCount * FRAME_INTERVAL;
+                    frameCount++;
+                } else {
+                    videoTimeMs = startTimeMs;
+                }
                 const results = faceLandmarker.detectForVideo(video, videoTimeMs);
 
                 if (results.faceLandmarks && results.faceLandmarks.length > 0) {
@@ -1045,10 +1068,19 @@
             // Update UI
             updateMetrics(metrics);
 
-            // Send to API every 5 seconds
-            if (timestamp - lastApiCall >= API_INTERVAL) {
+            // Check if metrics have changed and save to API
+            if (metrics && hasMetricsChanged(metrics)) {
                 sendToAPI(metrics, timestamp);
-                lastApiCall = timestamp;
+                // Update previous metrics
+                previousMetrics = {
+                    safety_score: metrics.safetyScore,
+                    status: metrics.status,
+                    fatigue: metrics.fatigue,
+                    drift: metrics.drift,
+                    perclos_60s: metrics.perclos,
+                    blink_60s: metrics.blinkCount,
+                    microsleep_60s: metrics.microsleepCount
+                };
             }
         }
 
@@ -1236,6 +1268,28 @@
             };
         }
 
+        // Check if metrics have changed
+        function hasMetricsChanged(metrics) {
+            if (!metrics) return false;
+            
+            // Check if any metric has changed
+            const changed = 
+                previousMetrics.safety_score !== metrics.safetyScore ||
+                previousMetrics.status !== metrics.status ||
+                previousMetrics.fatigue !== metrics.fatigue ||
+                previousMetrics.drift !== metrics.drift ||
+                previousMetrics.perclos_60s !== metrics.perclos ||
+                previousMetrics.blink_60s !== metrics.blinkCount ||
+                previousMetrics.microsleep_60s !== metrics.microsleepCount;
+            
+            // If this is the first time (all previous values are null), save it
+            if (previousMetrics.safety_score === null) {
+                return true;
+            }
+            
+            return changed;
+        }
+
         // Update UI metrics
         function updateMetrics(metrics) {
             if (!metrics) return;
@@ -1313,6 +1367,7 @@
             const payload = {
                 driver_id: driverId,
                 trip_id: tripId,
+                calibration_id: selectedCalibration ? selectedCalibration.id : null,
                 timestamp: new Date(timestamp).toISOString(),
                 ear: metrics.ear,
                 perclos_60s: metrics.perclos,
@@ -1489,6 +1544,8 @@
             videoLoopCount = 0;
             lastVideoTime = 0;
             isRunning = false;
+            videoStartTimestamp = 0;
+            frameCount = 0;
             
             // Only reset calibration if in calibration mode
             if (currentMode === 'calibration') {
@@ -1624,6 +1681,19 @@
                 lastApiCall = Date.now();
                 videoLoopCount = 0;
                 lastVideoTime = 0;
+                videoStartTimestamp = performance.now();
+                frameCount = 0; // Reset frame counter
+                
+                // Reset previous metrics
+                previousMetrics = {
+                    safety_score: null,
+                    status: null,
+                    fatigue: null,
+                    drift: null,
+                    perclos_60s: null,
+                    blink_60s: null,
+                    microsleep_60s: null
+                };
 
                 document.getElementById('startBtn').disabled = true;
                 document.getElementById('stopBtn').disabled = false;

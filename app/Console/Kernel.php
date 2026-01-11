@@ -12,7 +12,16 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        $schedule->command('telegram:fetch-updates')->everyMinute()->withoutOverlapping();
+        // Sync Telegram messages every minute (monitoring CCTV alerts)
+        // This command has built-in lock mechanism to prevent conflicts
+        $schedule->command('telegram:sync --once')
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->runInBackground()
+            ->appendOutputTo(storage_path('logs/telegram-sync.log'));
+        
+        // Alternative: If you want to use the old fetch-updates command instead
+        // $schedule->command('telegram:fetch-updates')->everyMinute()->withoutOverlapping();
     }
 
     /**

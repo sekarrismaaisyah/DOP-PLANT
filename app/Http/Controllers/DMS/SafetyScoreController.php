@@ -20,6 +20,7 @@ class SafetyScoreController extends Controller
         $validator = Validator::make($request->all(), [
             'driver_id' => 'required|string|max:50',
             'trip_id' => 'nullable|string|max:50',
+            'calibration_id' => 'nullable|integer|exists:dms_calibrations,id',
             'timestamp' => 'required|date',
             'ear' => 'nullable|numeric',
             'perclos_60s' => 'nullable|numeric|min:0|max:1',

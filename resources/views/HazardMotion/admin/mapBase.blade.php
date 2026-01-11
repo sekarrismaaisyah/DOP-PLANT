@@ -2142,6 +2142,14 @@
                   </div>
                   
                   <div class="mb-3">
+                    <label for="intervensiCCTV" class="form-label fw-semibold">CCTV <span class="text-danger">*</span></label>
+                    <select class="form-select" id="intervensiCCTV" name="cctv_ids[]" multiple required>
+                      <option value="">Pilih CCTV...</option>
+                    </select>
+                    <div class="form-text">Pilih satu atau lebih CCTV yang bermasalah di control room ini (bisa pilih lebih dari 1)</div>
+                  </div>
+                  
+                  <div class="mb-3">
                     <label for="intervensiPIC" class="form-label fw-semibold">PIC (Pengawas) <span class="text-danger">*</span></label>
                     <select class="form-select" id="intervensiPIC" name="pic" required>
                       <option value="">Pilih PIC...</option>
@@ -2766,16 +2774,16 @@
                                     <span class="tab-label">Insiden</span>
                                     <span class="tab-count" id="insidenTabCount">0</span>
                                 </button>
-                                <button class="sidebar-tab" data-tab="unit" title="Unit">
+                                <!-- <button class="sidebar-tab" data-tab="unit" title="Unit">
                                     <i class="material-icons-outlined">directions_car</i>
                                     <span class="tab-label">Unit</span>
                                     <span class="tab-count" id="unitTabCount">0</span>
-                                </button>
-                                <button class="sidebar-tab" data-tab="gps" title="GPS Orang">
+                                </button> -->
+                                <!-- <button class="sidebar-tab" data-tab="gps" title="GPS Orang">
                                     <i class="material-icons-outlined">person_pin</i>
                                     <span class="tab-label">GPS Orang</span>
                                     <span class="tab-count" id="gpsTabCount">0</span>
-                                </button>
+                                </button> -->
                                 <button class="sidebar-tab" data-tab="controlroom" title="Control Room">
                                     <i class="material-icons-outlined">meeting_room</i>
                                     <span class="tab-label">Control Room</span>
@@ -4961,8 +4969,8 @@
         },
         zIndex: 100
     });
-    map.addLayer(userGpsLayer);
-    console.log('User GPS layer created and added to map');
+    // map.addLayer(userGpsLayer); // Disabled: removed dots from people on map
+    console.log('User GPS layer created but not added to map');
 
     // Function to load user GPS data
     function loadUserGpsData() {
@@ -5141,9 +5149,9 @@
     }
 
     // Initial load of user GPS data
-    loadUserGpsData();
+    // loadUserGpsData(); // Disabled: removed dots from people on map
     // Refresh every 30 seconds
-    setInterval(loadUserGpsData, 30000);
+    // setInterval(loadUserGpsData, 30000); // Disabled: removed dots from people on map
 
     // Function to add/update unit vehicle markers
     function updateUnitVehicleMarkers(units) {
@@ -12024,6 +12032,15 @@
         document.getElementById('intervensiControlRoom').value = controlRoom;
         document.getElementById('intervensiControlRoomDisplay').value = controlRoom;
         
+        // Reset Select2 for CCTV if exists
+        const cctvSelectTemp = document.getElementById('intervensiCCTV');
+        if (cctvSelectTemp && $(cctvSelectTemp).hasClass('select2-hidden-accessible')) {
+            $(cctvSelectTemp).val(null).trigger('change');
+        }
+        
+        // Load CCTV list for this control room
+        loadCctvListForControlRoom(controlRoom);
+        
         // Clear and reset PIC dropdown
         const picSelect = document.getElementById('intervensiPIC');
         
@@ -12138,6 +12155,63 @@
         });
     }
     
+    // Function untuk load CCTV list berdasarkan control room
+    function loadCctvListForControlRoom(controlRoom) {
+        const cctvSelect = document.getElementById('intervensiCCTV');
+        
+        // Destroy existing Select2 instance if any
+        if ($(cctvSelect).hasClass('select2-hidden-accessible')) {
+            $(cctvSelect).select2('destroy');
+        }
+        
+        // Clear existing options
+        cctvSelect.innerHTML = '<option value="">Memuat CCTV...</option>';
+        cctvSelect.disabled = true;
+        
+        // Fetch CCTV list from API
+        fetch(`{{ url('cctv-data-control-room/cctv') }}?control_room=${encodeURIComponent(controlRoom)}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Clear options
+            cctvSelect.innerHTML = '';
+            
+            if (data.success && data.data && data.data.length > 0) {
+                // Populate CCTV options
+                data.data.forEach(cctv => {
+                    const option = document.createElement('option');
+                    option.value = cctv.id;
+                    option.textContent = `${cctv.nama_cctv}${cctv.no_cctv ? ' (' + cctv.no_cctv + ')' : ''}${cctv.lokasi_pemasangan ? ' - ' + cctv.lokasi_pemasangan : ''}`;
+                    cctvSelect.appendChild(option);
+                });
+                cctvSelect.disabled = false;
+                
+                // Initialize Select2 with multiple selection
+                $(cctvSelect).select2({
+                    theme: 'bootstrap-5',
+                    placeholder: 'Pilih satu atau lebih CCTV...',
+                    allowClear: true,
+                    width: '100%',
+                    closeOnSelect: false,
+                    dropdownParent: $(cctvSelect).closest('.modal-body') || $(document.body)
+                });
+            } else {
+                cctvSelect.innerHTML = '<option value="">Tidak ada CCTV ditemukan</option>';
+                cctvSelect.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading CCTV list:', error);
+            cctvSelect.innerHTML = '<option value="">Error memuat CCTV</option>';
+            cctvSelect.disabled = false;
+        });
+    }
+    
     // Handle modal close to destroy Select2
     const intervensiModal = document.getElementById('intervensiModal');
     if (intervensiModal) {
@@ -12145,6 +12219,10 @@
             const picSelect = document.getElementById('intervensiPIC');
             if (picSelect && $(picSelect).hasClass('select2-hidden-accessible')) {
                 $(picSelect).select2('destroy');
+            }
+            const cctvSelect = document.getElementById('intervensiCCTV');
+            if (cctvSelect && $(cctvSelect).hasClass('select2-hidden-accessible')) {
+                $(cctvSelect).select2('destroy');
             }
         });
     }
@@ -12155,9 +12233,23 @@
         if (submitIntervensiBtn) {
             submitIntervensiBtn.addEventListener('click', function() {
                 const form = document.getElementById('intervensiForm');
+                // Get selected CCTV IDs (multiple)
+                const cctvSelect = document.getElementById('intervensiCCTV');
+                const selectedCctvIds = Array.from(cctvSelect.selectedOptions).map(option => option.value).filter(val => val !== '');
+                
+                if (selectedCctvIds.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan!',
+                        text: 'Silakan pilih minimal 1 CCTV.'
+                    });
+                    return;
+                }
+                
                 if (form.checkValidity()) {
                     const formData = {
                         control_room: document.getElementById('intervensiControlRoom').value,
+                        cctv_ids: selectedCctvIds,
                         pic_id: document.getElementById('intervensiPIC').value,
                         issue: document.getElementById('intervensiIssue').value
                     };
@@ -12195,6 +12287,18 @@
                                 
                                 // Reset form
                                 form.reset();
+                                
+                                // Reset Select2 for CCTV
+                                const cctvSelect = document.getElementById('intervensiCCTV');
+                                if (cctvSelect && $(cctvSelect).hasClass('select2-hidden-accessible')) {
+                                    $(cctvSelect).val(null).trigger('change');
+                                }
+                                
+                                // Reset Select2 for PIC
+                                const picSelect = document.getElementById('intervensiPIC');
+                                if (picSelect && $(picSelect).hasClass('select2-hidden-accessible')) {
+                                    $(picSelect).val(null).trigger('change');
+                                }
                                 
                                 // Open WhatsApp if URL is available
                                 if (data.data && data.data.whatsapp_url) {

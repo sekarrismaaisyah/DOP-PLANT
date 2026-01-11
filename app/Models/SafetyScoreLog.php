@@ -14,6 +14,7 @@ class SafetyScoreLog extends Model
     protected $fillable = [
         'driver_id',
         'trip_id',
+        'calibration_id',
         'timestamp',
         'ear',
         'perclos_60s',

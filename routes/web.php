@@ -28,6 +28,7 @@ use App\Http\Controllers\HazardMotion\fullMapsController;
 use App\Http\Controllers\HazardMotion\CctvP2hController;
 use App\Http\Controllers\ScoreCard\ScoreCardController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\DailyOperationPlanController;
 
 /*
 |--------------------------------------------------------------------------
@@ -56,6 +57,11 @@ Route::middleware(['auth'])->group(function () {
     });
     Route::get('/full-maps', [fullMapsController::class, 'index'])->name('index');
     Route::get('/full-maps/api/cctv-by-coverage', [fullMapsController::class, 'getCctvByCoverageLocation'])->name('full-maps.api.cctv-by-coverage');
+    Route::get('/full-maps/api/sap-data', [fullMapsController::class, 'getSapDataApi'])->name('full-maps.api.sap-data');
+    Route::post('/full-maps/api/generate-recommendations', [fullMapsController::class, 'generateControlRoomRecommendations'])->name('full-maps.api.generate-recommendations');
+    Route::post('/full-maps/api/intervensi-area-kerja', [fullMapsController::class, 'storeIntervensiAreaKerja'])->name('full-maps.api.intervensi-area-kerja');
+    Route::get('/full-maps/api/cctv-for-area-kerja', [fullMapsController::class, 'getCctvForAreaKerja'])->name('full-maps.api.cctv-for-area-kerja');
+    Route::get('/full-maps/api/daily-operation-plans', [fullMapsController::class, 'getDailyOperationPlansWithPolygons'])->name('full-maps.api.daily-operation-plans');
     Route::get('/clickhouse-status', [HomeController::class, 'checkClickHouseStatus'])->name('clickhouse.status');
     Route::get('/cctv-company-data', [HomeController::class, 'companyCctvData'])->name('cctv.company-data');
     Route::get('/company-cctv-data', [HomeController::class, 'getCompanyCctvData'])->name('company-cctv-data');
@@ -127,10 +133,15 @@ Route::middleware(['auth'])->group(function () {
     Route::post('cctv-data-control-room/pengawas', [CctvDataController::class, 'storePengawasControlRoom'])->name('cctv-data.control-room.pengawas.store');
     Route::get('cctv-data-control-room/pengawas/{controlRoom}', [CctvDataController::class, 'getPengawasControlRoom'])->name('cctv-data.control-room.pengawas.get');
     Route::get('cctv-data-control-room/users', [CctvDataController::class, 'getUsersFromClickHouse'])->name('cctv-data.control-room.users.get');
+    Route::get('cctv-data-control-room/cctv', [CctvDataController::class, 'getCctvByControlRoom'])->name('cctv-data.control-room.cctv.get');
     Route::post('cctv-data-control-room/intervensi', [CctvDataController::class, 'storeIntervensiControlRoom'])->name('cctv-data.control-room.intervensi.store');
     Route::get('cctv-data-control-room/intervensi', [CctvDataController::class, 'indexIntervensiControlRoom'])->name('cctv-data.intervensi-control-room.index');
     Route::get('cctv-data-control-room/intervensi/data', [CctvDataController::class, 'getIntervensiControlRoomData'])->name('cctv-data.intervensi-control-room.data');
+    Route::get('cctv-data-control-room/intervensi/done/data', [CctvDataController::class, 'getDoneIntervensiControlRoomData'])->name('cctv-data.intervensi-control-room.done.data');
+    Route::get('cctv-data-control-room/intervensi/{id}/detail', [CctvDataController::class, 'getIntervensiDetail'])->name('cctv-data.intervensi-control-room.detail');
+    Route::get('cctv-data-control-room/intervensi/{id}/done/detail', [CctvDataController::class, 'getDoneIntervensiDetail'])->name('cctv-data.intervensi-control-room.done.detail');
     Route::put('cctv-data-control-room/intervensi/{id}/status', [CctvDataController::class, 'updateIntervensiStatus'])->name('cctv-data.intervensi-control-room.status.update');
+    Route::put('cctv-data-control-room/intervensi/{id}/status-done', [CctvDataController::class, 'updateIntervensiStatusDone'])->name('cctv-data.intervensi-control-room.status-done.update');
     Route::delete('cctv-data-control-room/pengawas/{id}', [CctvDataController::class, 'deletePengawasControlRoom'])->name('cctv-data.control-room.pengawas.delete');
     Route::get('cctv-data-pja-cctv-import', [CctvDataController::class, 'importPjaCctvForm'])->name('cctv-data.import-pja-cctv-form');
     Route::post('cctv-data-pja-cctv-import', [CctvDataController::class, 'importPjaCctv'])->name('cctv-data.import-pja-cctv');
@@ -296,6 +307,17 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [GrTableController::class, 'index'])->name('index');
         Route::post('/', [GrTableController::class, 'store'])->name('store');
         Route::post('/import', [GrTableController::class, 'import'])->name('import');
+    });
+
+    // Daily Operation Plan (DOP) Routes - HARUS sebelum catch-all route
+    Route::prefix('daily-operation-plan')->name('daily-operation-plan.')->group(function () {
+        Route::get('/', [DailyOperationPlanController::class, 'index'])->name('index');
+        Route::get('/create', [DailyOperationPlanController::class, 'create'])->name('create');
+        Route::post('/', [DailyOperationPlanController::class, 'store'])->name('store');
+        Route::get('/{id}', [DailyOperationPlanController::class, 'show'])->name('show');
+        Route::get('/{id}/edit', [DailyOperationPlanController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [DailyOperationPlanController::class, 'update'])->name('update');
+        Route::delete('/{id}', [DailyOperationPlanController::class, 'destroy'])->name('destroy');
     });
 
     // Insiden Tabel Routes - HARUS sebelum catch-all route

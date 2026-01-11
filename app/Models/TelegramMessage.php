@@ -28,6 +28,53 @@ class TelegramMessage extends Model
         'raw_payload' => 'array',
         'message_date' => 'datetime',
     ];
+
+    /**
+     * Check if this message is a CCTV offline alert
+     */
+    public function isCctvAlert(): bool
+    {
+        return !empty($this->text) && 
+               preg_match('/📡\s*ALERT\s+CCTV\s+OFFLINE/i', $this->text) === 1;
+    }
+
+    /**
+     * Get parsed CCTV alert data
+     */
+    public function getCctvAlertData(): ?array
+    {
+        if (!$this->isCctvAlert()) {
+            return null;
+        }
+
+        return $this->raw_payload['cctv_alert_parsed'] ?? null;
+    }
+
+    /**
+     * Get CCTV alert site
+     */
+    public function getCctvAlertSite(): ?string
+    {
+        $data = $this->getCctvAlertData();
+        return $data['site'] ?? null;
+    }
+
+    /**
+     * Get CCTV alert units
+     */
+    public function getCctvAlertUnits(): array
+    {
+        $data = $this->getCctvAlertData();
+        return $data['units'] ?? [];
+    }
+
+    /**
+     * Scope to filter CCTV alert messages
+     */
+    public function scopeCctvAlerts($query)
+    {
+        return $query->where('text', 'like', '%📡 ALERT CCTV OFFLINE%');
+    }
 }
 
 
