@@ -2452,7 +2452,11 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     
                     Log::debug("ClickHouse query result for plan {$plan->id}", [
                         'result_count' => count($clickHouseResults),
-                        'has_results' => !empty($clickHouseResults)
+                        'has_results' => !empty($clickHouseResults),
+                        'lokasi' => $lokasi,
+                        'detail_lokasi' => $detailLokasi,
+                        'escaped_lokasi' => $escapedLokasi,
+                        'escaped_detail_lokasi' => $escapedDetailLokasi
                     ]);
                     
                     if (!empty($clickHouseResults)) {
@@ -2621,9 +2625,13 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                             ]);
                         }
                     } else {
-                        Log::debug("No ClickHouse results for plan {$plan->id}", [
+                        Log::warning("No ClickHouse results for plan {$plan->id}", [
                             'lokasi' => $lokasi,
-                            'detail_lokasi' => $detailLokasi
+                            'detail_lokasi' => $detailLokasi,
+                            'escaped_lokasi' => $escapedLokasi,
+                            'escaped_detail_lokasi' => $escapedDetailLokasi,
+                            'sql' => $sql,
+                            'message' => 'Kombinasi lokasi dan detail_lokasi tidak ditemukan di ClickHouse'
                         ]);
                     }
                 } catch (Exception $chError) {
@@ -2642,7 +2650,9 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 'found_in_clickhouse' => $foundCount,
                 'with_geometry' => $geometryCount,
                 'unique_locations' => count($processedLocations),
-                'features_returned' => count($features)
+                'features_returned' => count($features),
+                'plans_not_found' => $processedCount - $foundCount,
+                'plans_without_geometry' => $foundCount - $geometryCount
             ]);
 
             return response()->json([
@@ -2650,6 +2660,15 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 'data' => [
                     'type' => 'FeatureCollection',
                     'features' => $features
+                ],
+                'summary' => [
+                    'total_plans' => $plans->count(),
+                    'processed' => $processedCount,
+                    'found_in_clickhouse' => $foundCount,
+                    'with_geometry' => $geometryCount,
+                    'unique_locations' => count($processedLocations),
+                    'features_returned' => count($features),
+                    'plans_not_found' => $processedCount - $foundCount
                 ]
             ]);
 

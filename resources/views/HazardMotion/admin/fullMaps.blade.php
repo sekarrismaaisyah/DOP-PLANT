@@ -334,6 +334,33 @@
   margin: 0;
 }
 
+.gm-notification-panel-pin {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  color: #5f6368;
+  transition: all 0.15s ease;
+}
+
+.gm-notification-panel-pin:hover {
+  background: rgba(60, 64, 67, 0.08);
+}
+
+.gm-notification-panel-pin.pinned {
+  color: #ea4335;
+  transform: rotate(45deg);
+}
+
+.gm-notification-panel-pin.pinned i {
+  color: #ea4335;
+}
+
 .gm-notification-panel-close {
   width: 32px;
   height: 32px;
@@ -2149,7 +2176,7 @@
                 </a>
                 <a href="#" class="gm-category-item">
                     <i class="material-icons-outlined">local_pharmacy</i>
-                    <span>Pharmacy</span>
+                    <span>Insiden</span>
                 </a>
                 <span class="gm-category-item">
                     <i class="material-icons-outlined category-arrow">chevron_right</i>
@@ -2168,9 +2195,14 @@
                 <div class="gm-notification-panel" id="gmNotificationPanel">
                     <div class="gm-notification-panel-header">
                         <h3 class="gm-notification-panel-title">Ringkasan Matrix Risk</h3>
-                        <button class="gm-notification-panel-close" id="gmNotificationPanelClose">
-                            <i class="material-icons-outlined">close</i>
-                        </button>
+                        <div class="d-flex align-items-center gap-2">
+                            <button class="gm-notification-panel-pin" id="gmNotificationPanelPin" title="Pin/Unpin Panel">
+                                <i class="material-icons-outlined">push_pin</i>
+                            </button>
+                            <button class="gm-notification-panel-close" id="gmNotificationPanelClose">
+                                <i class="material-icons-outlined">close</i>
+                            </button>
+                        </div>
                     </div>
                     <div class="gm-notification-panel-body" id="gmNotificationPanelBody">
                         <div class="gm-notification-empty">Memuat data...</div>
@@ -2449,32 +2481,27 @@
                         <label class="gm-tile" for="layerSatellite" data-layer="satellite">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1617897711385-df9c86b7dfe3?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
                             <div class="gm-label">Matriks CCTV</div>
-                            <div class="gm-sub">Satellite</div>
+                            <div class="gm-sub">CCTV MAPS</div>
                         </label>
                         <input class="btn-check" type="checkbox" id="layerTerrain" autocomplete="off">
                         <label class="gm-tile" for="layerTerrain" data-layer="terrain">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1622645636770-11fbf0611463?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
                             <div class="gm-label">Unit dan Orang</div>
-                            <div class="gm-sub">Terrain</div>
+                            <div class="gm-sub">UNIT MAPS</div>
                         </label>
                         <input class="btn-check" type="checkbox" id="layerTraffic" autocomplete="off">
                         <label class="gm-tile" for="layerTraffic" data-layer="traffic">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=60');"></div>
                             <div class="gm-label">Matriks Area Kerja</div>
-                            <div class="gm-sub">Traffic</div>
+                            <div class="gm-sub">AREA KEJA MAPS</div>
                         </label>
                         <input class="btn-check" type="checkbox" id="layerTransit" autocomplete="off">
                         <label class="gm-tile" for="layerTransit" data-layer="transit">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1530677003768-e25c2b121303?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
-                            <div class="gm-label">Matriks Sub Kesesuaian SAP</div>
-                            <div class="gm-sub">Transit</div>
+                            <div class="gm-label">Matriks Sub Ketidaksesuaian SAP</div>
+                        <div class="gm-sub">HAZARD MAPS</div>
                         </label>
-                        <input class="btn-check" type="checkbox" id="layerBiking" autocomplete="off">
-                        <label class="gm-tile" for="layerBiking" data-layer="biking">
-                            <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1520975693416-35a1f5e2c0e4?auto=format&fit=crop&w=600&q=60');"></div>
-                            <div class="gm-label">Biking</div>
-                            <div class="gm-sub">Biking</div>
-                        </label>
+                       
                     </div>
                 </div>
             </div>
@@ -2716,6 +2743,46 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
                 <button type="button" class="btn btn-primary" onclick="applyControlRoomFilter()">Terapkan Filter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal CCTV Stream -->
+<div class="modal fade" id="cctvStreamModal" tabindex="-1" aria-labelledby="cctvStreamModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content bg-dark">
+            <div class="modal-header bg-dark border-secondary">
+                <h5 class="modal-title text-white" id="cctvStreamModalLabel">
+                    <i class="material-icons-outlined me-2">videocam</i> Live Stream
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body bg-dark p-0 position-relative" style="min-height: 400px;">
+                <div id="cctvStreamLoading" class="position-absolute top-50 start-50 translate-middle text-center text-white" style="z-index: 10;">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-2 mb-0">Memuat stream video...</p>
+                </div>
+                <iframe id="cctvStreamFrame" 
+                    style="width: 100%; height: 70vh; border: none; display: none;"
+                    allowfullscreen
+                    allow="autoplay; fullscreen">
+                </iframe>
+                <video id="cctvStreamVideo" 
+                    style="width: 100%; height: 70vh; display: none;"
+                    controls
+                    autoplay
+                    muted>
+                </video>
+            </div>
+            <div class="modal-footer bg-dark border-secondary">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary" onclick="refreshCurrentStream()">
+                    <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">refresh</i>
+                    Refresh
+                </button>
             </div>
         </div>
     </div>
@@ -3590,6 +3657,14 @@
                 }
             }
             
+            // Update DOP layer untuk blink animation (card DOP akan blink merah)
+            if (dailyOperationPlansLayer) {
+                const source = dailyOperationPlansLayer.getSource();
+                if (source) {
+                    source.changed();
+                }
+            }
+            
             // Trigger map re-render untuk update style
             if (map) {
                 map.render();
@@ -4444,15 +4519,67 @@
                 
                 // Show/hide daily operation plans layer
                 if (isOn) {
-                    // Load and show daily operation plans
+                    // Hide all area kerja layers from JS files (GeoJSON)
+                    if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
+                        window.areaKerjaLayers.forEach(layer => {
+                            if (layer) {
+                                layer.setVisible(false);
+                                console.log('Hiding area kerja layer from JS:', layer.get('name') || 'Unknown');
+                            }
+                        });
+                    }
+                    
+                    // Hide areaKerjaBmo2PamaLayer if exists
+                    if (areaKerjaBmo2PamaLayer) {
+                        areaKerjaBmo2PamaLayer.setVisible(false);
+                        console.log('Hiding Area Kerja BMO2 PAMA layer from JS');
+                    }
+                    
+                    // Load and show daily operation plans (from ClickHouse)
                     if (dailyOperationPlansLayer) {
                         dailyOperationPlansLayer.setVisible(true);
                         loadDailyOperationPlans();
+                        console.log('Showing daily operation plans layer (from ClickHouse)');
+                        
+                        // Update notification panel if it's open
+                        setTimeout(() => {
+                            const notificationPanel = document.getElementById('gmNotificationPanel');
+                            if (notificationPanel && notificationPanel.classList.contains('active')) {
+                                renderNotificationPanel();
+                            }
+                        }, 1000);
                     }
                 } else {
                     // Hide daily operation plans
                     if (dailyOperationPlansLayer) {
                         dailyOperationPlansLayer.setVisible(false);
+                        console.log('Hiding daily operation plans layer');
+                        
+                        // Update notification panel if it's open (switch back to risk matrix)
+                        setTimeout(() => {
+                            const notificationPanel = document.getElementById('gmNotificationPanel');
+                            if (notificationPanel && notificationPanel.classList.contains('active')) {
+                                renderNotificationPanel();
+                            }
+                        }, 300);
+                    }
+                    
+                    // Show back all area kerja layers from JS files
+                    if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
+                        window.areaKerjaLayers.forEach(layer => {
+                            if (layer) {
+                                layer.setVisible(true);
+                                layer.setOpacity(1.0);
+                                console.log('Showing area kerja layer from JS:', layer.get('name') || 'Unknown');
+                            }
+                        });
+                    }
+                    
+                    // Show back areaKerjaBmo2PamaLayer if exists
+                    if (areaKerjaBmo2PamaLayer) {
+                        areaKerjaBmo2PamaLayer.setVisible(true);
+                        areaKerjaBmo2PamaLayer.setOpacity(1.0);
+                        console.log('Showing Area Kerja BMO2 PAMA layer from JS');
                     }
                 }
             } else {
@@ -4574,12 +4701,332 @@
     });
     map.addLayer(insidenLayer);
 
+    // Function to get a point inside polygon (ensures point is within boundary)
+    function getPointInPolygon(geometry) {
+        if (!geometry || geometry.getType() === 'Point') {
+            return geometry ? geometry.getCoordinates() : null;
+        }
+        
+        const extent = geometry.getExtent();
+        const center = ol.extent.getCenter(extent);
+        
+        // Check if center is inside polygon
+        if (geometry.intersectsCoordinate(center)) {
+            return center;
+        }
+        
+        // If center is not inside, try to find a point inside
+        // Use the centroid or try points along the diagonal
+        const coords = geometry.getCoordinates();
+        if (geometry.getType() === 'Polygon' && coords[0] && coords[0].length > 0) {
+            // Try to find a point inside by checking multiple points
+            const ring = coords[0];
+            let insidePoint = null;
+            
+            // Try center first
+            if (geometry.intersectsCoordinate(center)) {
+                return center;
+            }
+            
+            // Try points along the ring (every 10th point)
+            for (let i = 0; i < ring.length; i += 10) {
+                const testPoint = ring[i];
+                if (geometry.intersectsCoordinate(testPoint)) {
+                    insidePoint = testPoint;
+                    break;
+                }
+            }
+            
+            // If still not found, use the first coordinate of the ring
+            if (!insidePoint && ring.length > 0) {
+                insidePoint = ring[0];
+            }
+            
+            return insidePoint || center;
+        }
+        
+        return center;
+    }
+    
+    // Function to create card icon with arrow pointing down
+    function createCardIcon(fotoUrl, pekerjaan, callback) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const cardWidth = 200;
+        const cardHeight = 180;
+        const arrowHeight = 20;
+        const totalHeight = cardHeight + arrowHeight;
+        
+        canvas.width = cardWidth;
+        canvas.height = totalHeight;
+        
+        // Draw white card background
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.moveTo(10, 0);
+        ctx.lineTo(cardWidth - 10, 0);
+        ctx.lineTo(cardWidth, 10);
+        ctx.lineTo(cardWidth, cardHeight - 10);
+        ctx.lineTo(cardWidth - 10, cardHeight);
+        ctx.lineTo(10, cardHeight);
+        ctx.lineTo(0, cardHeight - 10);
+        ctx.lineTo(0, 10);
+        ctx.closePath();
+        ctx.fill();
+        
+        // Draw shadow
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+        ctx.shadowBlur = 10;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 2;
+        ctx.fill();
+        
+        // Reset shadow
+        ctx.shadowColor = 'transparent';
+        ctx.shadowBlur = 0;
+        ctx.shadowOffsetX = 0;
+        ctx.shadowOffsetY = 0;
+        
+        // Draw card border (gray border)
+        ctx.strokeStyle = '#e5e7eb';
+        ctx.lineWidth = 1;
+        ctx.stroke();
+        
+        // Draw red blinking border for attention (like notification pulse)
+        ctx.strokeStyle = 'rgba(234, 67, 53, 0.8)'; // Red color like notification
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        
+        // Draw "DOP" text at top
+        ctx.fillStyle = '#1f2937';
+        ctx.font = 'bold 14px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'top';
+        ctx.fillText('DOP', cardWidth / 2, 12);
+        
+        // Draw image placeholder or load actual image
+        const imageY = 35;
+        const imageHeight = 100;
+        const imageWidth = cardWidth - 20;
+        const imageX = 10;
+        
+        if (fotoUrl) {
+            const img = new Image();
+            img.crossOrigin = 'anonymous';
+            img.onload = function() {
+                // Clear canvas and redraw everything
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw white card background
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(10, 0);
+                ctx.lineTo(cardWidth - 10, 0);
+                ctx.lineTo(cardWidth, 10);
+                ctx.lineTo(cardWidth, cardHeight - 10);
+                ctx.lineTo(cardWidth - 10, cardHeight);
+                ctx.lineTo(10, cardHeight);
+                ctx.lineTo(0, cardHeight - 10);
+                ctx.lineTo(0, 10);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Draw shadow
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 2;
+                ctx.fill();
+                
+                // Reset shadow
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                
+                // Draw card border (gray border)
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                // Draw red blinking border for attention (like notification pulse)
+                ctx.strokeStyle = 'rgba(234, 67, 53, 0.8)'; // Red color like notification
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Draw "DOP" text at top
+                ctx.fillStyle = '#1f2937';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText('DOP', cardWidth / 2, 12);
+                
+                // Draw image with rounded corners
+                ctx.save();
+                ctx.beginPath();
+                // Draw rounded rectangle path
+                const radius = 4;
+                ctx.moveTo(imageX + radius, imageY);
+                ctx.lineTo(imageX + imageWidth - radius, imageY);
+                ctx.quadraticCurveTo(imageX + imageWidth, imageY, imageX + imageWidth, imageY + radius);
+                ctx.lineTo(imageX + imageWidth, imageY + imageHeight - radius);
+                ctx.quadraticCurveTo(imageX + imageWidth, imageY + imageHeight, imageX + imageWidth - radius, imageY + imageHeight);
+                ctx.lineTo(imageX + radius, imageY + imageHeight);
+                ctx.quadraticCurveTo(imageX, imageY + imageHeight, imageX, imageY + imageHeight - radius);
+                ctx.lineTo(imageX, imageY + radius);
+                ctx.quadraticCurveTo(imageX, imageY, imageX + radius, imageY);
+                ctx.closePath();
+                ctx.clip();
+                ctx.drawImage(img, imageX, imageY, imageWidth, imageHeight);
+                ctx.restore();
+                
+                // Draw pekerjaan name below image
+                ctx.fillStyle = '#1f2937';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                const pekerjaanText = pekerjaan.length > 25 ? pekerjaan.substring(0, 25) + '...' : pekerjaan;
+                ctx.fillText(pekerjaanText, cardWidth / 2, imageY + imageHeight + 5);
+                
+                // Draw arrow pointing down
+                const arrowX = cardWidth / 2;
+                const arrowY = cardHeight;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(arrowX - 15, arrowY);
+                ctx.lineTo(arrowX, arrowY + arrowHeight);
+                ctx.lineTo(arrowX + 15, arrowY);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Draw arrow border
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                callback(canvas.toDataURL());
+            };
+            img.onerror = function() {
+                // Clear canvas and redraw everything
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw white card background
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(10, 0);
+                ctx.lineTo(cardWidth - 10, 0);
+                ctx.lineTo(cardWidth, 10);
+                ctx.lineTo(cardWidth, cardHeight - 10);
+                ctx.lineTo(cardWidth - 10, cardHeight);
+                ctx.lineTo(10, cardHeight);
+                ctx.lineTo(0, cardHeight - 10);
+                ctx.lineTo(0, 10);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Draw shadow
+                ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+                ctx.shadowBlur = 10;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 2;
+                ctx.fill();
+                
+                // Reset shadow
+                ctx.shadowColor = 'transparent';
+                ctx.shadowBlur = 0;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                
+                // Draw card border (gray border)
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                // Draw red blinking border for attention (like notification pulse)
+                ctx.strokeStyle = 'rgba(234, 67, 53, 0.8)'; // Red color like notification
+                ctx.lineWidth = 3;
+                ctx.stroke();
+                
+                // Draw "DOP" text at top
+                ctx.fillStyle = '#1f2937';
+                ctx.font = 'bold 14px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                ctx.fillText('DOP', cardWidth / 2, 12);
+                
+                // If image fails to load, draw placeholder
+                ctx.fillStyle = '#f3f4f6';
+                ctx.fillRect(imageX, imageY, imageWidth, imageHeight);
+                ctx.fillStyle = '#9ca3af';
+                ctx.font = '11px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText('Gambar tidak tersedia', cardWidth / 2, imageY + imageHeight / 2);
+                
+                // Draw pekerjaan name
+                ctx.fillStyle = '#1f2937';
+                ctx.font = '12px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'top';
+                const pekerjaanText = pekerjaan.length > 25 ? pekerjaan.substring(0, 25) + '...' : pekerjaan;
+                ctx.fillText(pekerjaanText, cardWidth / 2, imageY + imageHeight + 5);
+                
+                // Draw arrow
+                const arrowX = cardWidth / 2;
+                const arrowY = cardHeight;
+                ctx.fillStyle = '#ffffff';
+                ctx.beginPath();
+                ctx.moveTo(arrowX - 15, arrowY);
+                ctx.lineTo(arrowX, arrowY + arrowHeight);
+                ctx.lineTo(arrowX + 15, arrowY);
+                ctx.closePath();
+                ctx.fill();
+                ctx.strokeStyle = '#e5e7eb';
+                ctx.lineWidth = 1;
+                ctx.stroke();
+                
+                callback(canvas.toDataURL());
+            };
+            img.src = fotoUrl;
+        } else {
+            // No image, just show pekerjaan name
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(imageX, imageY, imageWidth, imageHeight);
+            ctx.fillStyle = '#1f2937';
+            ctx.font = '12px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            const pekerjaanText = pekerjaan.length > 30 ? pekerjaan.substring(0, 30) + '...' : pekerjaan;
+            ctx.fillText(pekerjaanText, cardWidth / 2, imageY + imageHeight / 2);
+            
+            // Draw arrow
+            const arrowX = cardWidth / 2;
+            const arrowY = cardHeight;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(arrowX - 15, arrowY);
+            ctx.lineTo(arrowX, arrowY + arrowHeight);
+            ctx.lineTo(arrowX + 15, arrowY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            
+            callback(canvas.toDataURL());
+        }
+    }
+    
+    // Cache for card icons
+    const cardIconCache = {};
+    
     // Create vector layer for Daily Operation Plans (Matriks Area Kerja)
     dailyOperationPlansLayer = new ol.layer.Vector({
-        source: new ol.source.Vector(),
+source: new ol.source.Vector(),
         visible: false,  // Hidden by default, will be shown when traffic layer is toggled
-        style: function(feature) {
+        style: function(feature, resolution) {
             const props = feature.getProperties();
+            const geometry = feature.getGeometry();
             
             // Style based on potensi_resiko or use default color
             let fillColor = 'rgba(59, 130, 246, 0.3)'; // Blue default
@@ -4601,15 +5048,183 @@
                 strokeColor = '#10b981';
             }
             
-            return new ol.style.Style({
-                fill: new ol.style.Fill({
-                    color: fillColor
-                }),
-                stroke: new ol.style.Stroke({
-                    color: strokeColor,
-                    width: strokeWidth
+            const styles = [
+                // Polygon fill and stroke
+                new ol.style.Style({
+                    fill: new ol.style.Fill({
+                        color: fillColor
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: strokeColor,
+                        width: strokeWidth
+                    })
                 })
-            });
+            ];
+            
+            // Get point inside polygon for label placement
+            if (geometry && geometry.getType() !== 'Point') {
+                const pointInPolygon = getPointInPolygon(geometry);
+                
+                if (pointInPolygon) {
+                    // Check if feature has card icon stored
+                    const cardIcon = feature.get('cardIcon');
+                    
+                    if (cardIcon) {
+                        // Calculate blink opacity untuk efek ripple yang lebih menarik
+                        // Multiple ripple circles dengan delay berbeda untuk efek yang lebih dramatis
+                        let blinkTime = 0;
+                        if (pulseAnimationStartTime !== null) {
+                            blinkTime = getPulseAnimationTime();
+                        }
+                        
+                        // Use the card icon
+                        styles.push(new ol.style.Style({
+                            image: new ol.style.Icon({
+                                src: cardIcon,
+                                scale: 0.5, // Scale down for map
+                                anchor: [0.5, 1], // Anchor at bottom center (arrow tip)
+                                anchorXUnits: 'fraction',
+                                anchorYUnits: 'fraction',
+                                opacity: 1
+                            }),
+                            geometry: new ol.geom.Point(pointInPolygon),
+                            zIndex: 1000
+                        }));
+                        
+                        // Add multiple red blinking ripple circles for dramatic effect
+                        // Ripple 1: Outer circle (largest, expanding)
+                        const cycle1 = 2000; // 2 second cycle
+                        const progress1 = ((blinkTime % cycle1) / cycle1);
+                        const ripple1Radius = 40 + (progress1 * 40); // Expand from 40 to 80
+                        const ripple1Opacity = Math.max(0, 0.8 * (1 - progress1)); // Fade out
+                        const ripple1Width = 4;
+                        
+                        styles.push(new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: ripple1Radius,
+                                fill: new ol.style.Fill({
+                                    color: 'rgba(234, 67, 53, 0)'
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: `rgba(234, 67, 53, ${ripple1Opacity})`,
+                                    width: ripple1Width
+                                })
+                            }),
+                            geometry: new ol.geom.Point(pointInPolygon),
+                            zIndex: 998
+                        }));
+                        
+                        // Ripple 2: Middle circle (delayed by 0.4s)
+                        const progress2 = (((blinkTime + 800) % cycle1) / cycle1);
+                        const ripple2Radius = 40 + (progress2 * 40);
+                        const ripple2Opacity = Math.max(0, 0.6 * (1 - progress2));
+                        const ripple2Width = 3;
+                        
+                        styles.push(new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: ripple2Radius,
+                                fill: new ol.style.Fill({
+                                    color: 'rgba(234, 67, 53, 0)'
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: `rgba(234, 67, 53, ${ripple2Opacity})`,
+                                    width: ripple2Width
+                                })
+                            }),
+                            geometry: new ol.geom.Point(pointInPolygon),
+                            zIndex: 997
+                        }));
+                        
+                        // Ripple 3: Inner circle (delayed by 0.8s)
+                        const progress3 = (((blinkTime + 1600) % cycle1) / cycle1);
+                        const ripple3Radius = 40 + (progress3 * 40);
+                        const ripple3Opacity = Math.max(0, 0.5 * (1 - progress3));
+                        const ripple3Width = 2;
+                        
+                        styles.push(new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: ripple3Radius,
+                                fill: new ol.style.Fill({
+                                    color: 'rgba(234, 67, 53, 0)'
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: `rgba(234, 67, 53, ${ripple3Opacity})`,
+                                    width: ripple3Width
+                                })
+                            }),
+                            geometry: new ol.geom.Point(pointInPolygon),
+                            zIndex: 996
+                        }));
+                        
+                        // Pulsing dot at center (always visible, pulsing)
+                        const dotCycle = 1000; // 1 second for faster pulse
+                        const dotProgress = ((blinkTime % dotCycle) / dotCycle);
+                        const dotRadius = 8 + (Math.sin(dotProgress * Math.PI * 2) * 3); // Pulse from 5 to 11
+                        const dotOpacity = 0.7 + (Math.sin(dotProgress * Math.PI * 2) * 0.3); // Pulse opacity
+                        
+                        styles.push(new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: dotRadius,
+                                fill: new ol.style.Fill({
+                                    color: `rgba(234, 67, 53, ${dotOpacity})`
+                                }),
+                                stroke: new ol.style.Stroke({
+                                    color: `rgba(234, 67, 53, ${Math.min(1, dotOpacity + 0.2)})`,
+                                    width: 2
+                                })
+                            }),
+                            geometry: new ol.geom.Point(pointInPolygon),
+                            zIndex: 999
+                        }));
+                        
+                        // Glow effect: Large soft circle for dramatic glow
+                        const glowCycle = 1500; // 1.5 second cycle
+                        const glowProgress = ((blinkTime % glowCycle) / glowCycle);
+                        const glowRadius = 60 + (Math.sin(glowProgress * Math.PI * 2) * 20); // Pulse from 40 to 80
+                        const glowOpacity = 0.3 + (Math.sin(glowProgress * Math.PI * 2) * 0.2); // Pulse opacity 0.1 to 0.5
+                        
+                        styles.push(new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: glowRadius,
+                                fill: new ol.style.Fill({
+                                    color: `rgba(234, 67, 53, ${glowOpacity})`
+                                })
+                            }),
+                            geometry: new ol.geom.Point(pointInPolygon),
+                            zIndex: 995
+                        }));
+                        
+                        // Additional outer glow ring (larger, more transparent)
+                        const outerGlowProgress = ((blinkTime % glowCycle) / glowCycle);
+                        const outerGlowRadius = 80 + (Math.sin(outerGlowProgress * Math.PI * 2) * 30); // Pulse from 50 to 110
+                        const outerGlowOpacity = 0.15 + (Math.sin(outerGlowProgress * Math.PI * 2) * 0.1); // Pulse opacity 0.05 to 0.25
+                        
+                        styles.push(new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: outerGlowRadius,
+                                fill: new ol.style.Fill({
+                                    color: `rgba(234, 67, 53, ${outerGlowOpacity})`
+                                })
+                            }),
+                            geometry: new ol.geom.Point(pointInPolygon),
+                            zIndex: 994
+                        }));
+                    } else {
+                        // Use placeholder while icon is being created
+                        styles.push(new ol.style.Style({
+                            image: new ol.style.Circle({
+                                radius: 8,
+                                fill: new ol.style.Fill({ color: '#ffffff' }),
+                                stroke: new ol.style.Stroke({ color: strokeColor, width: 2 })
+                            }),
+                            geometry: new ol.geom.Point(pointInPolygon),
+                            zIndex: 1000
+                        }));
+                    }
+                }
+            }
+            
+            return styles;
         },
         name: 'Daily Operation Plans',
         zIndex: 450  // Above area kerja layers but below markers
@@ -4627,10 +5242,22 @@
         
         fetch('{{ url("full-maps/api/daily-operation-plans") }}')
             .then(response => response.json())
-            .then(data => {
-                console.log('Daily operation plans API response:', data);
-                
-                if (data.success && data.data && data.data.features) {
+                .then(data => {
+                    console.log('Daily operation plans API response:', data);
+                    
+                    // Log summary if available
+                    if (data.summary) {
+                        console.log('API Summary:', {
+                            total_plans: data.summary.total_plans,
+                            processed: data.summary.processed,
+                            found_in_clickhouse: data.summary.found_in_clickhouse,
+                            with_geometry: data.summary.with_geometry,
+                            features_returned: data.summary.features_returned,
+                            plans_not_found: data.summary.plans_not_found
+                        });
+                    }
+                    
+                    if (data.success && data.data && data.data.features) {
                     const geoJsonData = data.data;
                     console.log(`Received ${geoJsonData.features.length} features from API`);
                     
@@ -4797,6 +5424,50 @@
                         try {
                             source.addFeatures(validFeatures);
                             console.log(`Successfully added ${validFeatures.length} features to layer`);
+                            
+                            // Create card icons for all features
+                            let iconsToCreate = 0;
+                            let iconsCreated = 0;
+                            
+                            validFeatures.forEach((feature) => {
+                                const props = feature.getProperties();
+                                const pekerjaan = props.pekerjaan || 'N/A';
+                                const fotoPekerjaan = props.foto_pekerjaan || null;
+                                const fotoUrl = fotoPekerjaan ? `{{ asset('storage/') }}/${fotoPekerjaan}` : null;
+                                
+                                // Create cache key
+                                const cacheKey = `${fotoUrl || 'no-image'}_${pekerjaan}`;
+                                
+                                // Create icon if not already cached
+                                if (!cardIconCache[cacheKey]) {
+                                    iconsToCreate++;
+                                    createCardIcon(fotoUrl, pekerjaan, function(dataUrl) {
+                                        cardIconCache[cacheKey] = dataUrl;
+                                        feature.set('cardIcon', dataUrl);
+                                        iconsCreated++;
+                                        
+                                        // Trigger layer update when all icons are created
+                                        if (iconsCreated === iconsToCreate) {
+                                            dailyOperationPlansLayer.changed();
+                                        }
+                                    });
+                                } else {
+                                    feature.set('cardIcon', cardIconCache[cacheKey]);
+                                }
+                            });
+                            
+                            // If all icons were already cached, trigger update immediately
+                            if (iconsToCreate === 0) {
+                                dailyOperationPlansLayer.changed();
+                            }
+                            
+                            // Update notification panel if it's open
+                            setTimeout(() => {
+                                const notificationPanel = document.getElementById('gmNotificationPanel');
+                                if (notificationPanel && notificationPanel.classList.contains('active')) {
+                                    renderNotificationPanel();
+                                }
+                            }, 500);
                             
                             // Check if features are actually in the source
                             const featuresInSource = source.getFeatures();
@@ -10198,8 +10869,7 @@
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="mt-2 mb-0">Memuat stream video dari Python...</p>
-                <small class="text-white-50 d-block">Pastikan aplikasi Python berjalan di localhost:5000</small>
+                <p class="mt-2 mb-0">Memuat stream video...</p>
             `;
         }
         
@@ -10211,20 +10881,12 @@
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
         
-        // Build Python app URL with CCTV parameter
-        // Format URL yang didukung:
-        // 1. http://localhost:5000?cctv=CCTV_NAME&rtsp=RTSP_URL
-        // 2. http://localhost:5000/stream?cctv=CCTV_NAME&rtsp=RTSP_URL
-        // 3. http://localhost:5000/video?cctv=CCTV_NAME&rtsp=RTSP_URL
-        // Sesuaikan dengan endpoint yang digunakan aplikasi Python Anda
-        const pythonAppBaseUrl = pythonAppUrl || 'http://localhost:5000';
-        // Jika aplikasi Python menggunakan endpoint khusus, ubah di sini:
-        // const pythonStreamUrl = `${pythonAppBaseUrl}/stream?cctv=${encodeURIComponent(cctvName)}&rtsp=${encodeURIComponent(rtspUrl || '')}`;
-        const pythonStreamUrl = `${pythonAppBaseUrl}?cctv=${encodeURIComponent(cctvName)}&rtsp=${encodeURIComponent(rtspUrl || '')}`;
+        // Use the CCTV stream URL
+        const streamUrl = 'https://cctv-live.beraucoal.com/stream-redzone-ho/smo-101194178/102';
         
         // Set iframe source
         if (streamFrame) {
-            streamFrame.src = pythonStreamUrl;
+            streamFrame.src = streamUrl;
             
             // Handle iframe load
             streamFrame.onload = function() {
@@ -10241,8 +10903,8 @@
                     streamLoading.innerHTML = `
                         <div class="text-center text-white">
                             <i class="material-icons-outlined" style="font-size: 48px; color: #ef4444;">error_outline</i>
-                            <p class="mt-2 mb-1">Gagal memuat stream dari Python</p>
-                            <p class="small">Pastikan aplikasi Python berjalan di ${pythonAppBaseUrl}</p>
+                            <p class="mt-2 mb-1">Gagal memuat stream video</p>
+                            <p class="small">Silakan coba refresh atau periksa koneksi internet</p>
                             <button class="btn btn-sm btn-primary mt-2" onclick="refreshCurrentStream()">
                                 <i class="material-icons-outlined me-1" style="font-size: 16px;">refresh</i>
                                 Coba Lagi
@@ -10285,7 +10947,7 @@
         });
     }
     
-    // Function to refresh Python stream
+    // Function to refresh stream
     function refreshPythonStream(cctvName, rtspUrl) {
         const streamFrame = document.getElementById('cctvStreamFrame');
         const streamLoading = document.getElementById('cctvStreamLoading');
@@ -10297,13 +10959,10 @@
         streamLoading.style.display = 'block';
         streamFrame.style.display = 'none';
         
-        const pythonAppBaseUrl = pythonAppUrl || 'http://localhost:5000';
-        // Gunakan format URL yang sama dengan openCCTVStreamModal
-        // Jika aplikasi Python menggunakan endpoint khusus, ubah di sini juga:
-        // const pythonStreamUrl = `${pythonAppBaseUrl}/stream?cctv=${encodeURIComponent(cctvName)}&rtsp=${encodeURIComponent(rtspUrl || '')}&t=${Date.now()}`;
-        const pythonStreamUrl = `${pythonAppBaseUrl}?cctv=${encodeURIComponent(cctvName)}&rtsp=${encodeURIComponent(rtspUrl || '')}&t=${Date.now()}`;
+        // Use the CCTV stream URL with timestamp to force refresh
+        const streamUrl = 'https://cctv-live.beraucoal.com/stream-redzone-ho/smo-101194178/102?t=' + Date.now();
         
-        streamFrame.src = pythonStreamUrl;
+        streamFrame.src = streamUrl;
         
         // Handle iframe load after refresh
         streamFrame.onload = function() {
@@ -10335,7 +10994,7 @@
                 <div class="spinner-border text-primary" role="status">
                     <span class="visually-hidden">Loading...</span>
                 </div>
-                <p class="mt-2 mb-0">Memuat ulang stream video dari Python...</p>
+                <p class="mt-2 mb-0">Memuat ulang stream video...</p>
                 <small class="text-white-50 d-block">Mohon tunggu</small>
             `;
         }
@@ -14503,6 +15162,36 @@
                 toggleBtn.classList.remove('active');
             }
         }
+        
+        // Update category item state for CCTV
+        if (layerType === 'cctv') {
+            const cctvCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
+                const span = item.querySelector('span');
+                return span && span.textContent.trim() === 'CCTV';
+            });
+            if (cctvCategoryItem) {
+                if (show) {
+                    cctvCategoryItem.classList.add('active');
+                } else {
+                    cctvCategoryItem.classList.remove('active');
+                }
+            }
+        }
+        
+        // Update category item state for Insiden
+        if (layerType === 'insiden') {
+            const insidenCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
+                const span = item.querySelector('span');
+                return span && span.textContent.trim() === 'Insiden';
+            });
+            if (insidenCategoryItem) {
+                if (show) {
+                    insidenCategoryItem.classList.add('active');
+                } else {
+                    insidenCategoryItem.classList.remove('active');
+                }
+            }
+        }
     }
     
     // Event listeners for layer toggle buttons
@@ -14630,6 +15319,40 @@
                     e.preventDefault();
                     toggleGpsOrangDisplay();
                 });
+            }
+        });
+        
+        // CCTV category item click handler - Toggle functionality
+        const cctvCategoryItems = document.querySelectorAll('.gm-category-item');
+        cctvCategoryItems.forEach(function(item) {
+            const span = item.querySelector('span');
+            if (span && span.textContent.trim() === 'CCTV') {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleCctvDisplay();
+                });
+                
+                // Initialize active state for CCTV since it's visible by default
+                if (layerVisibility.cctv && cctvLayer && cctvLayer.getVisible()) {
+                    item.classList.add('active');
+                }
+            }
+        });
+        
+        // Insiden category item click handler - Toggle functionality
+        const insidenCategoryItems = document.querySelectorAll('.gm-category-item');
+        insidenCategoryItems.forEach(function(item) {
+            const span = item.querySelector('span');
+            if (span && span.textContent.trim() === 'Insiden') {
+                item.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    toggleInsidenDisplay();
+                });
+                
+                // Initialize active state for Insiden if visible by default
+                if (layerVisibility.insiden && insidenLayer && insidenLayer.getVisible()) {
+                    item.classList.add('active');
+                }
             }
         });
     });
@@ -14934,6 +15657,190 @@
                 // Load data from API
                 loadAndDisplayGpsOrangData();
             }
+        }
+    }
+    
+    // Function to toggle CCTV display (show/hide)
+    function toggleCctvDisplay() {
+        const cctvCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
+            const span = item.querySelector('span');
+            return span && span.textContent.trim() === 'CCTV';
+        });
+        
+        // Ensure CCTV layer exists
+        if (!cctvLayer) {
+            console.error('CCTV layer not initialized');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Layer CCTV belum diinisialisasi',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+            return;
+        }
+        
+        // Toggle: jika sudah aktif, sembunyikan. Jika belum aktif, tampilkan
+        if (cctvLayer.getVisible() && layerVisibility.cctv) {
+            // Hide CCTV - hide layer but keep data
+            cctvLayer.setVisible(false);
+            layerVisibility.cctv = false;
+            
+            // Update toggle button if exists
+            const toggleCctvBtn = document.getElementById('toggleCctv');
+            if (toggleCctvBtn) {
+                toggleCctvBtn.classList.remove('active');
+            }
+            
+            // Update visual indicator on CCTV category item
+            if (cctvCategoryItem) {
+                cctvCategoryItem.classList.remove('active');
+            }
+            
+            // Get count of visible CCTV
+            const source = cctvLayer.getSource();
+            const cctvCount = source.getFeatures().length;
+            
+            console.log('CCTV layer hidden');
+            
+            // Show success alert for hiding CCTV
+            Swal.fire({
+                icon: 'info',
+                title: 'CCTV Disembunyikan',
+                text: `${cctvCount} kamera CCTV telah disembunyikan dari peta`,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        } else {
+            // Show CCTV - ensure layer is visible
+            cctvLayer.setVisible(true);
+            layerVisibility.cctv = true;
+            
+            // Update toggle button if exists
+            const toggleCctvBtn = document.getElementById('toggleCctv');
+            if (toggleCctvBtn) {
+                toggleCctvBtn.classList.add('active');
+            }
+            
+            // Update visual indicator on CCTV category item
+            if (cctvCategoryItem) {
+                cctvCategoryItem.classList.add('active');
+            }
+            
+            // Get count of visible CCTV
+            const source = cctvLayer.getSource();
+            const cctvCount = source.getFeatures().length;
+            
+            console.log(`Displayed ${cctvCount} CCTV cameras`);
+            
+            // Show success alert for showing CCTV
+            Swal.fire({
+                icon: 'success',
+                title: 'CCTV Ditampilkan',
+                html: `Menampilkan <strong>${cctvCount}</strong> kamera CCTV di peta`,
+                timer: 2500,
+                showConfirmButton: true,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                toast: false,
+                position: 'center'
+            });
+        }
+    }
+    
+    // Function to toggle Insiden display (show/hide)
+    function toggleInsidenDisplay() {
+        const insidenCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
+            const span = item.querySelector('span');
+            return span && span.textContent.trim() === 'Insiden';
+        });
+        
+        // Ensure Insiden layer exists
+        if (!insidenLayer) {
+            console.error('Insiden layer not initialized');
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: 'Layer Insiden belum diinisialisasi',
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+            return;
+        }
+        
+        // Toggle: jika sudah aktif, sembunyikan. Jika belum aktif, tampilkan
+        if (insidenLayer.getVisible() && layerVisibility.insiden) {
+            // Hide Insiden - hide layer but keep data
+            insidenLayer.setVisible(false);
+            layerVisibility.insiden = false;
+            
+            // Update toggle button if exists
+            const toggleInsidenBtn = document.getElementById('toggleInsiden');
+            if (toggleInsidenBtn) {
+                toggleInsidenBtn.classList.remove('active');
+            }
+            
+            // Update visual indicator on Insiden category item
+            if (insidenCategoryItem) {
+                insidenCategoryItem.classList.remove('active');
+            }
+            
+            // Get count of visible Insiden
+            const source = insidenLayer.getSource();
+            const insidenCount = source.getFeatures().length;
+            
+            console.log('Insiden layer hidden');
+            
+            // Show success alert for hiding Insiden
+            Swal.fire({
+                icon: 'info',
+                title: 'Insiden Disembunyikan',
+                text: `${insidenCount} insiden telah disembunyikan dari peta`,
+                timer: 2000,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end'
+            });
+        } else {
+            // Show Insiden - ensure layer is visible
+            insidenLayer.setVisible(true);
+            layerVisibility.insiden = true;
+            
+            // Update toggle button if exists
+            const toggleInsidenBtn = document.getElementById('toggleInsiden');
+            if (toggleInsidenBtn) {
+                toggleInsidenBtn.classList.add('active');
+            }
+            
+            // Update visual indicator on Insiden category item
+            if (insidenCategoryItem) {
+                insidenCategoryItem.classList.add('active');
+            }
+            
+            // Get count of visible Insiden
+            const source = insidenLayer.getSource();
+            const insidenCount = source.getFeatures().length;
+            
+            console.log(`Displayed ${insidenCount} insiden`);
+            
+            // Show success alert for showing Insiden
+            Swal.fire({
+                icon: 'success',
+                title: 'Insiden Ditampilkan',
+                html: `Menampilkan <strong>${insidenCount}</strong> insiden di peta`,
+                timer: 2500,
+                showConfirmButton: true,
+                confirmButtonText: 'OK',
+                confirmButtonColor: '#3085d6',
+                toast: false,
+                position: 'center'
+            });
         }
     }
     
@@ -17713,11 +18620,66 @@
         }
     }
     
+    // Function to determine active matrix
+    function getActiveMatrix() {
+        // Check if daily operation plans layer (matrik area kerja) is visible
+        if (dailyOperationPlansLayer && dailyOperationPlansLayer.getVisible()) {
+            return 'area_kerja';
+        }
+        
+        // Check if satellite layer (matrik CCTV) is active
+        const satelliteCheckbox = document.getElementById('layerSatellite');
+        if (satelliteCheckbox && satelliteCheckbox.checked) {
+            return 'cctv';
+        }
+        
+        // Check if terrain layer (Unit dan Orang) is active
+        const terrainCheckbox = document.getElementById('layerTerrain');
+        if (terrainCheckbox && terrainCheckbox.checked) {
+            return 'unit_dan_orang';
+        }
+        
+        // Default to risk matrix (area kerja risk)
+        return 'risk';
+    }
+    
     // Function to render notification panel content
     function renderNotificationPanel() {
         const panelBody = document.getElementById('gmNotificationPanelBody');
+        const panelTitle = document.querySelector('.gm-notification-panel-title');
         if (!panelBody) return;
         
+        const activeMatrix = getActiveMatrix();
+        
+        // Update panel title based on active matrix
+        if (panelTitle) {
+            switch(activeMatrix) {
+                case 'area_kerja':
+                    panelTitle.textContent = 'Ringkasan Matriks Area Kerja';
+                    break;
+                case 'cctv':
+                    panelTitle.textContent = 'Ringkasan Matriks CCTV';
+                    break;
+                case 'unit_dan_orang':
+                    panelTitle.textContent = 'Ringkasan Matriks Unit dan Orang';
+                    break;
+                default:
+                    panelTitle.textContent = 'Ringkasan Matrix Risk';
+            }
+        }
+        
+        // Render different content based on active matrix
+        if (activeMatrix === 'area_kerja') {
+            renderAreaKerjaNotification(panelBody);
+            return;
+        }
+        
+        if (activeMatrix === 'unit_dan_orang') {
+            renderUnitDanOrangNotification(panelBody);
+            return;
+        }
+        
+        // Default: render risk matrix (existing code)
         const counts = countFeaturesByRiskLevel();
         
         let html = '';
@@ -17837,6 +18799,351 @@
         updateNotificationBadge();
     }
     
+    // Function to render unit dan orang notification (jumlah unit dan orang berdasarkan tipe)
+    function renderUnitDanOrangNotification(panelBody) {
+        // Check if layers are visible
+        const unitVisible = unitVehicleLayer && unitVehicleLayer.getVisible();
+        const gpsVisible = userGpsLayer && userGpsLayer.getVisible();
+        
+        if (!unitVisible && !gpsVisible) {
+            panelBody.innerHTML = '<div class="gm-notification-empty">Layer Unit dan Orang belum diaktifkan. Aktifkan layer "Unit dan Orang" terlebih dahulu.</div>';
+            return;
+        }
+        
+        // Get unit data
+        const unitDataByType = {};
+        let totalUnits = 0;
+        
+        if (unitVisible && unitVehicleLayer) {
+            const unitSource = unitVehicleLayer.getSource();
+            const unitFeatures = unitSource.getFeatures();
+            
+            unitFeatures.forEach(feature => {
+                const unitData = feature.get('unitData');
+                if (unitData) {
+                    const vehicleType = unitData.vehicle_type || 'Unknown';
+                    if (!unitDataByType[vehicleType]) {
+                        unitDataByType[vehicleType] = {
+                            count: 0,
+                            units: []
+                        };
+                    }
+                    unitDataByType[vehicleType].count++;
+                    unitDataByType[vehicleType].units.push(unitData);
+                    totalUnits++;
+                }
+            });
+        }
+        
+        // Get GPS Orang data
+        const orangDataByType = {};
+        let totalOrang = 0;
+        
+        if (gpsVisible && userGpsLayer) {
+            const orangSource = userGpsLayer.getSource();
+            const orangFeatures = orangSource.getFeatures();
+            
+            orangFeatures.forEach(feature => {
+                const userData = feature.get('userData');
+                if (userData) {
+                    // GPS Orang juga punya vehicle_type
+                    const vehicleType = userData.vehicle_type || 'Unknown';
+                    if (!orangDataByType[vehicleType]) {
+                        orangDataByType[vehicleType] = {
+                            count: 0,
+                            orang: []
+                        };
+                    }
+                    orangDataByType[vehicleType].count++;
+                    orangDataByType[vehicleType].orang.push(userData);
+                    totalOrang++;
+                }
+            });
+        }
+        
+        // Build HTML
+        let html = '';
+        
+        // Summary section
+        html += `
+            <div class="gm-notification-category expanded" style="background: #f8f9fa; margin-bottom: 12px; border-radius: 8px;">
+                <div class="gm-notification-category-header">
+                    <div class="gm-notification-category-title">
+                        <i class="material-icons-outlined" style="font-size: 20px; color: #1a73e8;">dashboard</i>
+                        <span>Ringkasan</span>
+                    </div>
+                </div>
+                <div style="padding: 12px 20px;">
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-weight: 500;">Total Unit:</span>
+                        <span style="font-weight: 600; color: #1a73e8;">${totalUnits}</span>
+                    </div>
+                    <div style="display: flex; justify-content: space-between;">
+                        <span style="font-weight: 500;">Total Orang:</span>
+                        <span style="font-weight: 600; color: #10b981;">${totalOrang}</span>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Unit by type
+        if (Object.keys(unitDataByType).length > 0) {
+            html += `
+                <div class="gm-notification-category expanded" style="margin-bottom: 12px;">
+                    <div class="gm-notification-category-header">
+                        <div class="gm-notification-category-title">
+                            <i class="material-icons-outlined" style="font-size: 20px; color: #1a73e8;">directions_bus</i>
+                            <span>Unit Berdasarkan Tipe</span>
+                        </div>
+                        <span class="gm-notification-category-count">${totalUnits}</span>
+                    </div>
+                    <div class="gm-notification-location-list">
+            `;
+            
+            // Sort by count (descending)
+            const sortedUnitTypes = Object.entries(unitDataByType).sort((a, b) => b[1].count - a[1].count);
+            
+            sortedUnitTypes.forEach(([vehicleType, data]) => {
+                html += `
+                    <div class="gm-notification-location-item" style="padding: 12px 20px; border-bottom: 1px solid #eee;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 500; margin-bottom: 4px;">${vehicleType}</div>
+                                <div style="font-size: 12px; color: #666;">
+                                    ${data.units.length} unit
+                                </div>
+                            </div>
+                            <span style="font-size: 18px; font-weight: 600; color: #1a73e8;">${data.count}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+        } else if (unitVisible) {
+            html += `
+                <div class="gm-notification-category">
+                    <div class="gm-notification-category-header">
+                        <div class="gm-notification-category-title">
+                            <i class="material-icons-outlined" style="font-size: 20px; color: #1a73e8;">directions_bus</i>
+                            <span>Unit Berdasarkan Tipe</span>
+                        </div>
+                    </div>
+                    <div class="gm-notification-location-list">
+                        <div class="gm-notification-empty">Tidak ada data unit</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // Orang by type
+        if (Object.keys(orangDataByType).length > 0) {
+            html += `
+                <div class="gm-notification-category expanded" style="margin-bottom: 12px;">
+                    <div class="gm-notification-category-header">
+                        <div class="gm-notification-category-title">
+                            <i class="material-icons-outlined" style="font-size: 20px; color: #10b981;">people</i>
+                            <span>Orang Berdasarkan Tipe</span>
+                        </div>
+                        <span class="gm-notification-category-count">${totalOrang}</span>
+                    </div>
+                    <div class="gm-notification-location-list">
+            `;
+            
+            // Sort by count (descending)
+            const sortedOrangTypes = Object.entries(orangDataByType).sort((a, b) => b[1].count - a[1].count);
+            
+            sortedOrangTypes.forEach(([vehicleType, data]) => {
+                html += `
+                    <div class="gm-notification-location-item" style="padding: 12px 20px; border-bottom: 1px solid #eee;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="flex: 1;">
+                                <div style="font-weight: 500; margin-bottom: 4px;">${vehicleType}</div>
+                                <div style="font-size: 12px; color: #666;">
+                                    ${data.orang.length} orang
+                                </div>
+                            </div>
+                            <span style="font-size: 18px; font-weight: 600; color: #10b981;">${data.count}</span>
+                        </div>
+                    </div>
+                `;
+            });
+            
+            html += `
+                    </div>
+                </div>
+            `;
+        } else if (gpsVisible) {
+            html += `
+                <div class="gm-notification-category">
+                    <div class="gm-notification-category-header">
+                        <div class="gm-notification-category-title">
+                            <i class="material-icons-outlined" style="font-size: 20px; color: #10b981;">people</i>
+                            <span>Orang Berdasarkan Tipe</span>
+                        </div>
+                    </div>
+                    <div class="gm-notification-location-list">
+                        <div class="gm-notification-empty">Tidak ada data orang</div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        if (Object.keys(unitDataByType).length === 0 && Object.keys(orangDataByType).length === 0) {
+            html = '<div class="gm-notification-empty">Belum ada data unit atau orang yang dimuat</div>';
+        }
+        
+        panelBody.innerHTML = html;
+        
+        // Add click handlers for category headers (expand/collapse)
+        const categories = panelBody.querySelectorAll('.gm-notification-category');
+        categories.forEach(category => {
+            const header = category.querySelector('.gm-notification-category-header');
+            if (header) {
+                header.addEventListener('click', function(e) {
+                    // Don't toggle if clicking on count badge
+                    if (e.target.classList.contains('gm-notification-category-count')) {
+                        return;
+                    }
+                    category.classList.toggle('expanded');
+                });
+            }
+        });
+    }
+    
+    // Function to render area kerja notification (list pekerjaan dan area)
+    function renderAreaKerjaNotification(panelBody) {
+        if (!dailyOperationPlansLayer || !dailyOperationPlansLayer.getVisible()) {
+            panelBody.innerHTML = '<div class="gm-notification-empty">Matrik Area Kerja belum diaktifkan. Aktifkan layer "Matriks Area Kerja" terlebih dahulu.</div>';
+            return;
+        }
+        
+        const source = dailyOperationPlansLayer.getSource();
+        const features = source.getFeatures();
+        
+        if (features.length === 0) {
+            panelBody.innerHTML = '<div class="gm-notification-empty">Belum ada data pekerjaan yang dimuat</div>';
+            return;
+        }
+        
+        // Group pekerjaan by lokasi/area
+        const pekerjaanByArea = {};
+        
+        features.forEach((feature, index) => {
+            const props = feature.getProperties();
+            const lokasi = props.lokasi || 'Unknown Location';
+            const detailLokasi = props.detail_lokasi || '';
+            const pekerjaan = props.pekerjaan || 'N/A';
+            const unitId = props.unit_id || 'N/A';
+            const tanggal = props.tanggal || '';
+            
+            // Create area key (lokasi + detail_lokasi if available)
+            const areaKey = detailLokasi ? `${lokasi} - ${detailLokasi}` : lokasi;
+            
+            if (!pekerjaanByArea[areaKey]) {
+                pekerjaanByArea[areaKey] = {
+                    lokasi: lokasi,
+                    detailLokasi: detailLokasi,
+                    pekerjaanList: [],
+                    geometry: feature.getGeometry()
+                };
+            }
+            
+            pekerjaanByArea[areaKey].pekerjaanList.push({
+                pekerjaan: pekerjaan,
+                unitId: unitId,
+                tanggal: tanggal,
+                feature: feature,
+                index: index
+            });
+        });
+        
+        // Convert to array and sort by lokasi
+        const areas = Object.values(pekerjaanByArea).sort((a, b) => {
+            return a.lokasi.localeCompare(b.lokasi);
+        });
+        
+        let html = '';
+        
+        if (areas.length === 0) {
+            html = '<div class="gm-notification-empty">Tidak ada data pekerjaan</div>';
+        } else {
+            areas.forEach((area, areaIndex) => {
+                const areaTitle = area.detailLokasi ? `${area.lokasi} - ${area.detailLokasi}` : area.lokasi;
+                const pekerjaanCount = area.pekerjaanList.length;
+                
+                html += `
+                    <div class="gm-notification-category ${pekerjaanCount > 0 ? 'expanded' : ''}" data-area-index="${areaIndex}">
+                        <div class="gm-notification-category-header">
+                            <div class="gm-notification-category-title">
+                                <i class="material-icons-outlined" style="font-size: 18px; margin-right: 8px;">work</i>
+                                <span>${areaTitle}</span>
+                                <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
+                            </div>
+                            <span class="gm-notification-category-count">${pekerjaanCount}</span>
+                        </div>
+                        <div class="gm-notification-location-list">
+                            ${pekerjaanCount > 0 ? area.pekerjaanList.map((item, pekerjaanIndex) => `
+                                <div class="gm-notification-location-item" 
+                                     data-area-index="${areaIndex}" 
+                                     data-pekerjaan-index="${pekerjaanIndex}"
+                                     style="padding: 10px; border-bottom: 1px solid #eee;">
+                                    <div style="display: flex; align-items: start; gap: 8px;">
+                                        <i class="material-icons-outlined" style="font-size: 16px; color: #666; margin-top: 2px;">assignment</i>
+                                        <div style="flex: 1;">
+                                            <div style="font-weight: 500; margin-bottom: 4px;">${item.pekerjaan}</div>
+                                            <div style="font-size: 12px; color: #666;">
+                                                <span>Unit: ${item.unitId}</span>
+                                                ${item.tanggal ? `<span style="margin-left: 12px;">Tanggal: ${item.tanggal}</span>` : ''}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            `).join('') : '<div class="gm-notification-empty">Tidak ada pekerjaan</div>'}
+                        </div>
+                    </div>
+                `;
+            });
+        }
+        
+        panelBody.innerHTML = html;
+        
+        // Add click handlers for category headers (expand/collapse)
+        const categories = panelBody.querySelectorAll('.gm-notification-category');
+        categories.forEach(category => {
+            const header = category.querySelector('.gm-notification-category-header');
+            if (header) {
+                header.addEventListener('click', function(e) {
+                    // Don't toggle if clicking on count badge
+                    if (e.target.classList.contains('gm-notification-category-count')) {
+                        return;
+                    }
+                    category.classList.toggle('expanded');
+                });
+            }
+        });
+        
+        // Add click handlers for pekerjaan items (navigate to location)
+        const pekerjaanItems = panelBody.querySelectorAll('.gm-notification-location-item');
+        pekerjaanItems.forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const areaIndex = parseInt(this.getAttribute('data-area-index'));
+                const pekerjaanIndex = parseInt(this.getAttribute('data-pekerjaan-index'));
+                
+                if (areas[areaIndex] && areas[areaIndex].pekerjaanList[pekerjaanIndex]) {
+                    const pekerjaanData = areas[areaIndex].pekerjaanList[pekerjaanIndex];
+                    if (pekerjaanData.feature && pekerjaanData.feature.getGeometry()) {
+                        navigateToLocation(pekerjaanData.feature.getGeometry(), pekerjaanData.feature);
+                    }
+                }
+            });
+        });
+    }
+    
     // Function to navigate to a location on the map
     function navigateToLocation(geometry, feature) {
         if (!map || !geometry) return;
@@ -17889,10 +19196,16 @@
             }, 3000);
         }
         
-        // Close notification panel
+        // Close notification panel (hanya jika tidak di-pin)
         const panel = document.getElementById('gmNotificationPanel');
         if (panel) {
-            panel.classList.remove('active');
+            // Cek apakah panel di-pin menggunakan method atau class
+            const panelPin = document.getElementById('gmNotificationPanelPin');
+            const isPinned = (panel.isPinned && panel.isPinned()) || (panelPin && panelPin.classList.contains('pinned'));
+            
+            if (!isPinned) {
+                panel.classList.remove('active');
+            }
         }
     }
     
@@ -17901,8 +19214,12 @@
         const notificationBtn = document.getElementById('gmNotificationBtn');
         const notificationPanel = document.getElementById('gmNotificationPanel');
         const notificationPanelClose = document.getElementById('gmNotificationPanelClose');
+        const notificationPanelPin = document.getElementById('gmNotificationPanelPin');
         
         if (!notificationBtn || !notificationPanel) return;
+        
+        // State untuk track apakah panel di-pin
+        let isPanelPinned = false;
         
         // Toggle panel on button click
         notificationBtn.addEventListener('click', function(e) {
@@ -17910,7 +19227,10 @@
             const isActive = notificationPanel.classList.contains('active');
             
             if (isActive) {
-                notificationPanel.classList.remove('active');
+                // Hanya tutup jika tidak di-pin
+                if (!isPanelPinned) {
+                    notificationPanel.classList.remove('active');
+                }
             } else {
                 // Render panel content before showing
                 renderNotificationPanel();
@@ -17918,22 +19238,65 @@
             }
         });
         
+        // Pin/Unpin panel
+        if (notificationPanelPin) {
+            notificationPanelPin.addEventListener('click', function(e) {
+                e.stopPropagation();
+                isPanelPinned = !isPanelPinned;
+                
+                if (isPanelPinned) {
+                    notificationPanelPin.classList.add('pinned');
+                    notificationPanelPin.title = 'Unpin Panel';
+                } else {
+                    notificationPanelPin.classList.remove('pinned');
+                    notificationPanelPin.title = 'Pin Panel';
+                }
+            });
+        }
+        
         // Close panel on close button click
         if (notificationPanelClose) {
             notificationPanelClose.addEventListener('click', function(e) {
                 e.stopPropagation();
+                // Reset pin state saat tutup
+                isPanelPinned = false;
+                if (notificationPanelPin) {
+                    notificationPanelPin.classList.remove('pinned');
+                    notificationPanelPin.title = 'Pin Panel';
+                }
                 notificationPanel.classList.remove('active');
             });
         }
         
-        // Close panel when clicking outside
+        // Close panel when clicking outside (hanya jika tidak di-pin)
         document.addEventListener('click', function(e) {
             if (notificationPanel && notificationBtn &&
                 !notificationPanel.contains(e.target) &&
                 !notificationBtn.contains(e.target)) {
-                notificationPanel.classList.remove('active');
+                // Hanya tutup jika tidak di-pin
+                if (!isPanelPinned) {
+                    notificationPanel.classList.remove('active');
+                }
             }
         });
+        
+        // Simpan state pin di panel element untuk akses global
+        notificationPanel.isPinned = function() {
+            return isPanelPinned;
+        };
+        
+        notificationPanel.setPinned = function(pinned) {
+            isPanelPinned = pinned;
+            if (notificationPanelPin) {
+                if (pinned) {
+                    notificationPanelPin.classList.add('pinned');
+                    notificationPanelPin.title = 'Unpin Panel';
+                } else {
+                    notificationPanelPin.classList.remove('pinned');
+                    notificationPanelPin.title = 'Pin Panel';
+                }
+            }
+        };
         
         // Re-render panel when risk levels are updated (after risk calculation)
         // This will be called after features get their risk levels calculated
