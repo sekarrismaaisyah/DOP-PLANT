@@ -1,8 +1,8 @@
 @extends('layouts.master')
 
-@section('title', 'Alert Issue Control Room') 
+@section('title', 'Alert Issue Area Kerja') 
 @section('content')
-<x-page-title title="Alert Issue Control Room" pagetitle="Alert Issue Control Room" />
+<x-page-title title="Alert Issue Area Kerja" pagetitle="Alert Issue Area Kerja" />
 
 @if(session('success'))
 <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -36,28 +36,29 @@
 <div class="tab-content" id="intervensiTabContent">
     <!-- Tab: Open Issues -->
     <div class="tab-pane fade show active" id="open-issues" role="tabpanel">
-<div class="row">
-    <div class="col-12">
-        <div class="card rounded-4">
-            <div class="card-body">
-                <div class="d-flex align-items-start justify-content-between mb-3">
-                    <div>
-                        <h5 class="mb-0 fw-bold">Daftar Issue Control Room</h5>
+        <div class="row">
+            <div class="col-12">
+                <div class="card rounded-4">
+                    <div class="card-body">
+                        <div class="d-flex align-items-start justify-content-between mb-3">
+                            <div>
+                                <h5 class="mb-0 fw-bold">Daftar Issue Area Kerja</h5>
                                 <p class="text-muted mb-0">Kelola intervensi yang masih terbuka</p>
-                    </div>
-                </div>
+                            </div>
+                        </div>
 
-                <div class="table-responsive">
-                    <table id="intervensiTable" class="table table-bordered table-hover table-striped" style="width:100%">
-                        <thead>
-                            <tr>
-                                <th style="width: 8%;">ID</th>
-                                <th style="width: 10%;">Control Room</th>
-                                <th style="width: 12%;">CCTV</th>
+                        <div class="table-responsive">
+                            <table id="intervensiTable" class="table table-bordered table-hover table-striped" style="width:100%">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 8%;">ID</th>
+                                        <th style="width: 12%;">Lokasi</th>
+                                        <th style="width: 12%;">Area Kerja</th>
+                                        <th style="width: 12%;">Pelapor</th>
                                         <th style="width: 10%;">SID PIC</th>
                                         <th style="width: 12%;">Nama PIC</th>
-                                <th style="width: 18%;">Issue</th>
-                                <th style="width: 8%;">Status</th>
+                                        <th style="width: 20%;">Issue</th>
+                                        <th style="width: 8%;">Status</th>
                                         <th style="width: 12%;">Tanggal</th>
                                         <th style="width: 5%;">Actions</th>
                                     </tr>
@@ -91,20 +92,21 @@
                                 <thead>
                                     <tr>
                                         <th style="width: 8%;">ID</th>
-                                        <th style="width: 10%;">Control Room</th>
-                                        <th style="width: 12%;">CCTV</th>
+                                        <th style="width: 12%;">Lokasi</th>
+                                        <th style="width: 12%;">Area Kerja</th>
+                                        <th style="width: 12%;">Pelapor</th>
                                         <th style="width: 10%;">SID PIC</th>
                                         <th style="width: 12%;">Nama PIC</th>
-                                        <th style="width: 18%;">Issue</th>
+                                        <th style="width: 20%;">Issue</th>
                                         <th style="width: 12%;">Tanggal Pelaporan</th>
                                         <th style="width: 12%;">Tanggal Selesai</th>
-                                <th style="width: 5%;">Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <!-- Data will be loaded via DataTable -->
-                        </tbody>
-                    </table>
+                                        <th style="width: 5%;">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <!-- Data will be loaded via DataTable -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -148,10 +150,14 @@
                     <div class="mb-4 pb-3 border-bottom">
                         <div class="row g-3">
                             <div class="col-md-6">
-                                <label class="text-muted small mb-1">Control Room</label>
-                                <div class="fw-semibold" id="closeControlRoom">-</div>
+                                <label class="text-muted small mb-1">Lokasi</label>
+                                <div class="fw-semibold" id="closeLokasi">-</div>
                             </div>
                             <div class="col-md-6">
+                                <label class="text-muted small mb-1">Area Kerja</label>
+                                <div class="fw-semibold" id="closeAreaKerja">-</div>
+                            </div>
+                            <div class="col-md-12">
                                 <label class="text-muted small mb-1">Issue</label>
                                 <div id="closeIssue" class="text-break">-</div>
                             </div>
@@ -172,20 +178,6 @@
                         <input type="file" class="form-control" id="evidence" name="evidence" accept="image/*,.pdf,.doc,.docx" onchange="previewFile(this, 'mainEvidencePreview')">
                         <div id="mainEvidencePreview" class="mt-2"></div>
                         <small class="text-muted">Format: JPG, PNG, PDF, DOC, DOCX | Max 10MB</small>
-                    </div>
-
-                    <!-- CCTV List -->
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between align-items-center mb-3">
-                            <label class="form-label mb-0">CCTV yang Terkait</label>
-                            <span class="badge bg-secondary" id="cctvCountBadge">0 CCTV</span>
-                        </div>
-                        <div id="cctvListContainer" style="max-height: 400px; overflow-y: auto; padding-right: 5px;">
-                            <div class="text-center py-3">
-                                <div class="spinner-border spinner-border-sm text-secondary" role="status"></div>
-                                <small class="d-block text-muted mt-2">Memuat data...</small>
-                            </div>
-                        </div>
                     </div>
                 </div>
                 <div class="modal-footer">
@@ -221,40 +213,6 @@
         background: #a0aec0;
     }
     
-    #cctvListContainer {
-        scrollbar-width: thin;
-        scrollbar-color: #cbd5e0 #f7fafc;
-    }
-    
-    #cctvListContainer::-webkit-scrollbar {
-        width: 6px;
-    }
-    
-    #cctvListContainer::-webkit-scrollbar-track {
-        background: #f7fafc;
-        border-radius: 4px;
-    }
-    
-    #cctvListContainer::-webkit-scrollbar-thumb {
-        background: #cbd5e0;
-        border-radius: 4px;
-    }
-    
-    #cctvListContainer::-webkit-scrollbar-thumb:hover {
-        background: #a0aec0;
-    }
-    
-    .cctv-item-card {
-        border: 1px solid #dee2e6;
-        border-left: 3px solid #0d6efd;
-        border-radius: 4px;
-    }
-    
-    .cctv-item-card.checked {
-        border-left-color: #198754;
-        background-color: #f8fff9;
-    }
-    
     .file-preview {
         max-width: 150px;
         max-height: 150px;
@@ -263,8 +221,7 @@
         object-fit: contain;
     }
     
-    #mainEvidencePreview img,
-    #cctvListContainer .file-preview {
+    #mainEvidencePreview img {
         max-width: 150px;
         max-height: 150px;
     }
@@ -316,13 +273,14 @@ $(document).ready(function() {
         processing: true,
         serverSide: true,
         ajax: {
-            url: "{{ route('cctv-data.intervensi-control-room.data') }}",
+            url: "{{ route('intervensi-area-kerja.data') }}",
             type: 'GET'
         },
         columns: [
             { data: 'id', name: 'id' },
-            { data: 'control_room', name: 'control_room' },
-            { data: 'cctv_name', name: 'cctv_name' },
+            { data: 'lokasi', name: 'lokasi' },
+            { data: 'area_kerja', name: 'area_kerja' },
+            { data: 'created_by', name: 'created_by' },
             { data: 'pic_username', name: 'pic_username' },
             { data: 'pic_nama', name: 'pic_nama' },
             { data: 'issue', name: 'issue', orderable: false },
@@ -354,13 +312,14 @@ $(document).ready(function() {
         processing: true,
         serverSide: true,
         ajax: {
-            url: "{{ route('cctv-data.intervensi-control-room.done.data') }}",
+            url: "{{ route('intervensi-area-kerja.done.data') }}",
             type: 'GET'
         },
         columns: [
             { data: 'id', name: 'id' },
-            { data: 'control_room', name: 'control_room' },
-            { data: 'cctv_name', name: 'cctv_name' },
+            { data: 'lokasi', name: 'lokasi' },
+            { data: 'area_kerja', name: 'area_kerja' },
+            { data: 'created_by', name: 'created_by' },
             { data: 'pic_username', name: 'pic_username' },
             { data: 'pic_nama', name: 'pic_nama' },
             { data: 'issue', name: 'issue', orderable: false },
@@ -400,7 +359,7 @@ $(document).ready(function() {
         $('#detailDoneIntervensiModal').modal('show');
         
         $.ajax({
-            url: "{{ url('cctv-data-control-room/intervensi') }}/" + intervensiId + "/done/detail",
+            url: "{{ url('intervensi-area-kerja') }}/" + intervensiId + "/done/detail",
             type: 'GET',
             success: function(response) {
                 if (response.success) {
@@ -415,8 +374,12 @@ $(document).ready(function() {
                     html += '<div class="card-body">';
                     html += '<div class="row g-3">';
                     html += '<div class="col-md-6">';
-                    html += '<label class="text-muted small mb-1">Control Room</label>';
-                    html += '<div class="fw-semibold">' + (data.control_room || '-') + '</div>';
+                    html += '<label class="text-muted small mb-1">Lokasi</label>';
+                    html += '<div class="fw-semibold">' + (data.lokasi || '-') + '</div>';
+                    html += '</div>';
+                    html += '<div class="col-md-6">';
+                    html += '<label class="text-muted small mb-1">Area Kerja</label>';
+                    html += '<div class="fw-semibold">' + (data.area_kerja || '-') + '</div>';
                     html += '</div>';
                     html += '<div class="col-md-6">';
                     html += '<label class="text-muted small mb-1">ID Issue</label>';
@@ -494,63 +457,6 @@ $(document).ready(function() {
                         html += '</div>';
                     }
                     
-                    // CCTV List Card
-                    if (data.cctvs && data.cctvs.length > 0) {
-                        html += '<div class="card border-0 shadow-sm">';
-                        html += '<div class="card-header bg-light">';
-                        html += '<div class="d-flex justify-content-between align-items-center">';
-                        html += '<h6 class="mb-0"><i class="material-icons-outlined me-2 text-primary">videocam</i>CCTV yang Terkait</h6>';
-                        html += '<span class="badge bg-secondary">' + data.cctvs.length + ' CCTV</span>';
-                        html += '</div>';
-                        html += '</div>';
-                        html += '<div class="card-body">';
-                        
-                        data.cctvs.forEach(function(cctv) {
-                            var cardClass = 'cctv-item-card mb-3 p-3';
-                            if (cctv.status_done === 'sudah') {
-                                cardClass += ' checked';
-                            }
-                            
-                            html += '<div class="' + cardClass + '">';
-                            html += '<div class="row g-3">';
-                            
-                            // CCTV Name and Status
-                            html += '<div class="col-12">';
-                            html += '<div class="d-flex justify-content-between align-items-center mb-2">';
-                            html += '<h6 class="mb-0">' + cctv.nama_cctv + '</h6>';
-                            html += '<span class="badge bg-' + (cctv.status_done === 'sudah' ? 'success' : 'warning') + '">' + (cctv.status_done === 'sudah' ? 'Sudah Selesai' : 'Belum Selesai') + '</span>';
-                            html += '</div>';
-                            html += '</div>';
-                            
-                            // Resolution
-                            if (cctv.resolution) {
-                                html += '<div class="col-12">';
-                                html += '<label class="form-label small text-muted">Resolusi</label>';
-                                html += '<div class="small">' + cctv.resolution + '</div>';
-                                html += '</div>';
-                            }
-                            
-                            // Evidence
-                            if (cctv.evidence_path) {
-                                html += '<div class="col-12">';
-                                html += '<label class="form-label small text-muted">Evidence</label><br>';
-                                var cctvEvidenceUrl = "{{ asset('storage/') }}/" + cctv.evidence_path;
-                                if (cctv.evidence_path.match(/\.(jpg|jpeg|png|gif)$/i)) {
-                                    html += '<img src="' + cctvEvidenceUrl + '" class="img-thumbnail mt-2" style="max-width: 250px; max-height: 250px; object-fit: contain;" alt="Evidence CCTV">';
-                                } else {
-                                    html += '<a href="' + cctvEvidenceUrl + '" target="_blank" class="btn btn-sm btn-outline-primary mt-2"><i class="material-icons-outlined me-1">download</i>Download</a>';
-                                }
-                                html += '</div>';
-                            }
-                            
-                            html += '</div>';
-                            html += '</div>';
-                        });
-                        
-                        html += '</div>';
-                        html += '</div>';
-                    }
-                    
                     $('#detailDoneIntervensiBody').html(html);
                 } else {
                     $('#detailDoneIntervensiBody').html('<div class="alert alert-danger">Gagal memuat data intervensi.</div>');
@@ -568,12 +474,11 @@ $(document).ready(function() {
         
         // Reset form
         $('#closeIntervensiForm')[0].reset();
-        $('#cctvListContainer').html('<div class="text-center py-3"><div class="spinner-border spinner-border-sm text-secondary" role="status"></div><small class="d-block text-muted mt-2">Memuat data...</small></div>');
-        $('#cctvCountBadge').text('0 CCTV');
+        $('#mainEvidencePreview').html('');
         
         // Load intervensi detail
         $.ajax({
-            url: "{{ url('cctv-data-control-room/intervensi') }}/" + intervensiId + "/detail",
+            url: "{{ url('intervensi-area-kerja') }}/" + intervensiId + "/detail",
             type: 'GET',
             success: function(response) {
                 if (response.success) {
@@ -581,78 +486,10 @@ $(document).ready(function() {
                     
                     // Set form data
                     $('#closeIntervensiId').val(data.id);
-                    $('#closeControlRoom').text(data.control_room);
-                    $('#closeIssue').text(data.issue);
+                    $('#closeLokasi').text(data.lokasi || '-');
+                    $('#closeAreaKerja').text(data.area_kerja || '-');
+                    $('#closeIssue').text(data.issue || '-');
                     $('#resolution').val(data.resolution || '');
-                    
-                    // Build CCTV list
-                    var cctvHtml = '';
-                    var checkedCount = 0;
-                    if (data.cctvs && data.cctvs.length > 0) {
-                        data.cctvs.forEach(function(cctv, index) {
-                            var cctvName = cctv.nama_cctv;
-                            if (cctv.no_cctv) {
-                                cctvName += ' (' + cctv.no_cctv + ')';
-                            }
-                            var isChecked = cctv.status_done === 'sudah';
-                            if (isChecked) checkedCount++;
-                            
-                            var cardClass = 'cctv-item-card mb-3 p-3';
-                            if (isChecked) {
-                                cardClass += ' checked';
-                            }
-                            
-                            cctvHtml += '<div class="' + cardClass + '" data-cctv-id="' + cctv.id + '">';
-                            cctvHtml += '<div class="row g-3">';
-                            
-                            // Checkbox and Name
-                            cctvHtml += '<div class="col-12">';
-                            cctvHtml += '<div class="form-check form-switch d-flex align-items-center mb-2">';
-                            cctvHtml += '<input class="form-check-input cctv-checkbox" type="checkbox" id="cctv_' + cctv.id + '" value="' + cctv.id + '" ' + (isChecked ? 'checked' : '') + '>';
-                            cctvHtml += '<label class="form-check-label ms-2 fw-semibold" for="cctv_' + cctv.id + '">' + cctvName + '</label>';
-                            cctvHtml += '</div>';
-                            cctvHtml += '</div>';
-                            
-                            // Resolution
-                            cctvHtml += '<div class="col-12">';
-                            cctvHtml += '<label class="form-label small text-muted">Resolusi</label>';
-                            cctvHtml += '<textarea class="form-control form-control-sm" name="cctv_resolutions[' + index + '][resolution]" rows="2" placeholder="Resolusi untuk CCTV ini (opsional)...">' + (cctv.resolution || '') + '</textarea>';
-                            cctvHtml += '<input type="hidden" name="cctv_resolutions[' + index + '][cctv_id]" value="' + cctv.id + '">';
-                            cctvHtml += '<input type="hidden" class="cctv-status-done" name="cctv_resolutions[' + index + '][status_done]" value="' + (cctv.status_done || 'belum') + '">';
-                            cctvHtml += '</div>';
-                            
-                            // Evidence
-                            cctvHtml += '<div class="col-12">';
-                            cctvHtml += '<label class="form-label small text-muted">Evidence</label>';
-                            cctvHtml += '<input type="file" class="form-control form-control-sm" name="cctv_resolutions[' + index + '][evidence]" accept="image/*,.pdf,.doc,.docx" onchange="previewFile(this, \'cctvEvidencePreview_' + cctv.id + '\')">';
-                            cctvHtml += '<div id="cctvEvidencePreview_' + cctv.id + '" class="mt-2"></div>';
-                            cctvHtml += '</div>';
-                            
-                            cctvHtml += '</div>';
-                            cctvHtml += '</div>';
-                        });
-                        
-                        $('#cctvCountBadge').text(data.cctvs.length + ' CCTV');
-                    } else {
-                        cctvHtml = '<div class="text-center py-3 text-muted">Tidak ada CCTV yang terkait</div>';
-                        $('#cctvCountBadge').text('0 CCTV');
-                    }
-                    
-                    $('#cctvListContainer').html(cctvHtml);
-                    
-                    // Handle checkbox change
-                    $('.cctv-checkbox').on('change', function() {
-                        var card = $(this).closest('.cctv-item-card');
-                        var statusDoneInput = card.find('.cctv-status-done');
-                        
-                        if ($(this).is(':checked')) {
-                            statusDoneInput.val('sudah');
-                            card.addClass('checked');
-                        } else {
-                            statusDoneInput.val('belum');
-                            card.removeClass('checked');
-                        }
-                    });
                     
                     // Show modal
                     $('#closeIntervensiModal').modal('show');
@@ -665,7 +502,7 @@ $(document).ready(function() {
                 }
             },
             error: function(xhr) {
-        Swal.fire({
+                Swal.fire({
                     icon: 'error',
                     title: 'Error!',
                     text: 'Terjadi kesalahan saat memuat data intervensi.'
@@ -678,152 +515,67 @@ $(document).ready(function() {
     $('#closeIntervensiForm').on('submit', function(e) {
         e.preventDefault();
         
-        // Update CCTV status_done based on checkbox before submitting
-        $('.cctv-checkbox').each(function() {
-            var card = $(this).closest('.cctv-item-card');
-            var statusDoneInput = card.find('.cctv-status-done');
-            if ($(this).is(':checked')) {
-                statusDoneInput.val('sudah');
-            } else {
-                statusDoneInput.val('belum');
-            }
-        });
-        
         // Get CSRF token
         var csrfToken = $('meta[name="csrf-token"]').attr('content');
         if (!csrfToken) {
-            // Fallback: try to get from form or create one
             csrfToken = $('input[name="_token"]').val() || '{{ csrf_token() }}';
         }
         
         var formData = new FormData(this);
         formData.append('status', 'closed');
-        formData.append('_method', 'PUT');
         formData.append('_token', csrfToken);
         
         var submitBtn = $(this).find('button[type="submit"]');
         var originalText = submitBtn.html();
         submitBtn.prop('disabled', true).html('<span class="spinner-border spinner-border-sm"></span> Memproses...');
         
-                $.ajax({
-            url: "{{ url('cctv-data-control-room/intervensi') }}/" + $('#closeIntervensiId').val() + "/status",
+        $.ajax({
+            url: "{{ url('intervensi-area-kerja') }}/" + $('#closeIntervensiId').val() + "/status",
             type: 'POST',
-                    headers: {
+            headers: {
                 'X-CSRF-TOKEN': csrfToken
-                    },
+            },
             data: formData,
             processData: false,
             contentType: false,
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
+            success: function(response) {
+                if (response.success) {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil!',
                         text: response.message || 'Intervensi berhasil ditutup dengan evidence.',
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
+                        timer: 2000,
+                        showConfirmButton: false
+                    });
                     $('#closeIntervensiModal').modal('hide');
-                            table.ajax.reload();
+                    table.ajax.reload();
                     // Reload done table if tab is active
                     if ($('#done-tab').hasClass('active')) {
                         doneTable.ajax.reload();
                     }
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error!',
                         text: response.message || 'Terjadi kesalahan saat menutup intervensi.'
-                            });
+                    });
                     submitBtn.prop('disabled', false).html(originalText);
-                        }
-                    },
-                    error: function(xhr) {
+                }
+            },
+            error: function(xhr) {
                 var errorMessage = 'Terjadi kesalahan saat menutup intervensi.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: errorMessage
-                        });
-                submitBtn.prop('disabled', false).html(originalText);
-            }
-        });
-    });
-
-    // Handle toggle status done button
-    $(document).on('click', '.toggle-status-done-btn', function() {
-        var intervensiId = $(this).data('id');
-        var currentStatus = $(this).data('status');
-        var newStatus = currentStatus === 'sudah' ? 'belum' : 'sudah';
-        var button = $(this);
-
-        Swal.fire({
-            title: 'Konfirmasi',
-            text: `Apakah Anda yakin ingin mengubah status menjadi "${newStatus === 'sudah' ? 'Sudah' : 'Belum'}"?`,
-            icon: 'question',
-            showCancelButton: true,
-            confirmButtonColor: '#28a745',
-            cancelButtonColor: '#6c757d',
-            confirmButtonText: 'Ya, Ubah',
-            cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                // Disable button
-                button.prop('disabled', true);
-                button.html('<span class="spinner-border spinner-border-sm"></span>');
-
-                // Send AJAX request
-                $.ajax({
-                    url: "{{ url('cctv-data-control-room/intervensi') }}/" + intervensiId + "/status-done",
-                    type: 'PUT',
-                    headers: {
-                        'X-CSRF-TOKEN': $('meta[name="csrf-token"]').attr('content')
-                    },
-                    data: {
-                        status_done: newStatus
-                    },
-                    success: function(response) {
-                        if (response.success) {
-                            Swal.fire({
-                                icon: 'success',
-                                title: 'Berhasil!',
-                                text: response.message || 'Status done berhasil diupdate.',
-                                timer: 2000,
-                                showConfirmButton: false
-                            });
-                            // Reload table
-                            table.ajax.reload();
-                        } else {
-                            Swal.fire({
-                                icon: 'error',
-                                title: 'Error!',
-                                text: response.message || 'Terjadi kesalahan saat mengupdate status.'
-                            });
-                            button.prop('disabled', false);
-                            button.html(newStatus === 'sudah' ? '<span class="badge bg-success">Sudah</span>' : '<span class="badge bg-warning">Belum</span>');
-                        }
-                    },
-                    error: function(xhr) {
-                        var errorMessage = 'Terjadi kesalahan saat mengupdate status.';
-                        if (xhr.responseJSON && xhr.responseJSON.message) {
-                            errorMessage = xhr.responseJSON.message;
-                        }
-                        Swal.fire({
-                            icon: 'error',
-                            title: 'Error!',
-                            text: errorMessage
-                        });
-                        button.prop('disabled', false);
-                        button.html(newStatus === 'sudah' ? '<span class="badge bg-success">Sudah</span>' : '<span class="badge bg-warning">Belum</span>');
-                    }
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMessage = xhr.responseJSON.message;
+                }
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error!',
+                    text: errorMessage
                 });
+                submitBtn.prop('disabled', false).html(originalText);
             }
         });
     });
 });
 </script>
 @endsection
-

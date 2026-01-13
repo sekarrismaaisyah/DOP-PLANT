@@ -55,13 +55,14 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('index');
         Route::get('/data', [DashboardController::class, 'getData'])->name('data');
     });
-    Route::get('/full-maps', [fullMapsController::class, 'index'])->name('index');
+    Route::get('/full-maps', [fullMapsController::class, 'index'])->name('fullmaps');
     Route::get('/full-maps/api/cctv-by-coverage', [fullMapsController::class, 'getCctvByCoverageLocation'])->name('full-maps.api.cctv-by-coverage');
     Route::get('/full-maps/api/sap-data', [fullMapsController::class, 'getSapDataApi'])->name('full-maps.api.sap-data');
     Route::post('/full-maps/api/generate-recommendations', [fullMapsController::class, 'generateControlRoomRecommendations'])->name('full-maps.api.generate-recommendations');
     Route::post('/full-maps/api/intervensi-area-kerja', [fullMapsController::class, 'storeIntervensiAreaKerja'])->name('full-maps.api.intervensi-area-kerja');
     Route::get('/full-maps/api/cctv-for-area-kerja', [fullMapsController::class, 'getCctvForAreaKerja'])->name('full-maps.api.cctv-for-area-kerja');
     Route::get('/full-maps/api/daily-operation-plans', [fullMapsController::class, 'getDailyOperationPlansWithPolygons'])->name('full-maps.api.daily-operation-plans');
+    Route::get('/full-maps/api/location-sap-counts', [fullMapsController::class, 'getLocationSapCounts'])->name('full-maps.api.location-sap-counts');
     Route::get('/clickhouse-status', [HomeController::class, 'checkClickHouseStatus'])->name('clickhouse.status');
     Route::get('/cctv-company-data', [HomeController::class, 'companyCctvData'])->name('cctv.company-data');
     Route::get('/company-cctv-data', [HomeController::class, 'getCompanyCctvData'])->name('company-cctv-data');
@@ -115,6 +116,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('cctv-proxy/rtsp', [CctvProxyController::class, 'rtspStream'])->name('cctv-proxy-rtsp');
     Route::get('cctv-proxy/rtsp-snapshot', [CctvProxyController::class, 'rtspSnapshot'])->name('cctv-proxy-rtsp-snapshot');
     Route::get('cctv-proxy/rtsp-hls', [CctvProxyController::class, 'rtspHls'])->name('cctv-proxy-rtsp-hls');
+    
+    // DMS Video Stream Proxy - untuk bypass CORS
+    Route::get('dms-proxy/video-stream', [CctvProxyController::class, 'videoStream'])->name('dms-proxy-video-stream');
 
     // CCTV Data CRUD Routes - HARUS sebelum catch-all route
     // Routes khusus harus didefinisikan SEBELUM resource route
@@ -143,6 +147,13 @@ Route::middleware(['auth'])->group(function () {
     Route::put('cctv-data-control-room/intervensi/{id}/status', [CctvDataController::class, 'updateIntervensiStatus'])->name('cctv-data.intervensi-control-room.status.update');
     Route::put('cctv-data-control-room/intervensi/{id}/status-done', [CctvDataController::class, 'updateIntervensiStatusDone'])->name('cctv-data.intervensi-control-room.status-done.update');
     Route::delete('cctv-data-control-room/pengawas/{id}', [CctvDataController::class, 'deletePengawasControlRoom'])->name('cctv-data.control-room.pengawas.delete');
+    // Intervensi Area Kerja Routes
+    Route::get('intervensi-area-kerja', [\App\Http\Controllers\IntervensiAreaKerjaController::class, 'index'])->name('intervensi-area-kerja.index');
+    Route::get('intervensi-area-kerja/data', [\App\Http\Controllers\IntervensiAreaKerjaController::class, 'getData'])->name('intervensi-area-kerja.data');
+    Route::get('intervensi-area-kerja/done/data', [\App\Http\Controllers\IntervensiAreaKerjaController::class, 'getDoneData'])->name('intervensi-area-kerja.done.data');
+    Route::get('intervensi-area-kerja/{id}/detail', [\App\Http\Controllers\IntervensiAreaKerjaController::class, 'getDetail'])->name('intervensi-area-kerja.detail');
+    Route::get('intervensi-area-kerja/{id}/done/detail', [\App\Http\Controllers\IntervensiAreaKerjaController::class, 'getDoneDetail'])->name('intervensi-area-kerja.done.detail');
+    Route::post('intervensi-area-kerja/{id}/status', [\App\Http\Controllers\IntervensiAreaKerjaController::class, 'updateStatus'])->name('intervensi-area-kerja.status.update');
     Route::get('cctv-data-pja-cctv-import', [CctvDataController::class, 'importPjaCctvForm'])->name('cctv-data.import-pja-cctv-form');
     Route::post('cctv-data-pja-cctv-import', [CctvDataController::class, 'importPjaCctv'])->name('cctv-data.import-pja-cctv');
     Route::get('cctv-data-pja-cctv-dedicated-import', [CctvDataController::class, 'importPjaCctvDedicatedForm'])->name('cctv-data.import-pja-cctv-dedicated-form');
@@ -356,6 +367,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', function () {
             return view('dms.index');
         })->name('index');
+        Route::get('/dashboard', [\App\Http\Controllers\DMS\DMSDashboardController::class, 'index'])->name('dashboard');
     });
 
     // Route modul VALIDASI TBC & Score Card

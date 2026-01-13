@@ -811,7 +811,7 @@ class MapBaseController extends Controller
                         date,
                         status_checkin_out,
                         toString(status_passed) as status_passed
-                    FROM nitip.aaj_vw_checkinout_rfid
+                    FROM beats.aaj_vw_checkinout_rfid
                     WHERE status_passed = 'PASSED'
                       AND (
                           (toDate(date) = '{$today}' AND toHour(date) >= 6 AND toHour(date) < 18)
@@ -878,7 +878,7 @@ class MapBaseController extends Controller
                             toString(nama_karyawan) as nama_karyawan,
                             toString(status_passed) as status_passed,
                             date
-                        FROM nitip.aaj_vw_checkinout_rfid
+                        FROM beats.aaj_vw_checkinout_rfid
                         WHERE toDate(date) >= toDate(now()) - INTERVAL 7 DAY
                         ORDER BY nama_karyawan, date DESC
                     ";
@@ -1149,7 +1149,7 @@ class MapBaseController extends Controller
                         date,
                         status_checkin_out,
                         toString(status_passed) as status_passed
-                    FROM nitip.aaj_vw_checkinout_rfid
+                    FROM beats.aaj_vw_checkinout_rfid
                     WHERE status_passed = 'PASSED'
                       AND (
                           -- Shift 1: hari ini antara 6:00-18:00
@@ -1229,7 +1229,7 @@ class MapBaseController extends Controller
                             toString(nama_karyawan) as nama_karyawan,
                             toString(status_passed) as status_passed,
                             date
-                        FROM nitip.aaj_vw_checkinout_rfid
+                        FROM beats.aaj_vw_checkinout_rfid
                         WHERE toDate(date) >= toDate(now()) - INTERVAL 7 DAY
                         ORDER BY nama_karyawan, date DESC
                     ";
@@ -1517,6 +1517,7 @@ class MapBaseController extends Controller
                 : 0;
             
             // Get all CCTV coverage data (for table display) with no_cctv from cctv_data_bmo2
+            // Limit to 5000 records to prevent timeout, can be increased if needed
             $cctvCoverageData = CctvCoverage::select(
                 'cctv_coverage.id',
                 'cctv_coverage.id_cctv',
@@ -1528,6 +1529,7 @@ class MapBaseController extends Controller
             )
             ->leftJoin('cctv_data_bmo2', 'cctv_coverage.id_cctv', '=', 'cctv_data_bmo2.id')
             ->orderBy('cctv_coverage.id', 'desc')
+            ->limit(5000)
             ->get()
             ->map(function ($item) {
                 return [
@@ -1560,7 +1562,7 @@ class MapBaseController extends Controller
                 'count' => [
                     'cctv_coverage' => $cctvCoverageData->count(),
                 ]
-            ]);
+            ], 200, [], JSON_UNESCAPED_UNICODE);
         } catch (Exception $e) {
             Log::error('Error fetching area kerja data via API: ' . $e->getMessage(), [
                 'trace' => $e->getTraceAsString(),
@@ -1570,7 +1572,10 @@ class MapBaseController extends Controller
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage(),
-                'data' => [],
+                'message' => 'Gagal memuat data area kerja. Silakan coba lagi.',
+                'data' => [
+                    'cctv_coverage' => [],
+                ],
                 'statistics' => [
                     'boundary_area_kerja_percentage' => 0,
                     'wms_links_percentage' => 0,
@@ -1581,7 +1586,7 @@ class MapBaseController extends Controller
                     'last_week_wms' => null,
                     'last_year_wms' => null,
                 ]
-            ], 500);
+            ], 500, [], JSON_UNESCAPED_UNICODE);
         }
     }
 

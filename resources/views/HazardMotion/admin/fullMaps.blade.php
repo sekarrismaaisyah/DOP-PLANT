@@ -2178,6 +2178,10 @@
                     <i class="material-icons-outlined">local_pharmacy</i>
                     <span>Insiden</span>
                 </a>
+                <a href="#" class="gm-category-item" data-bs-toggle="modal" data-bs-target="#matriksPrediksiInsidenModal" title="Matriks Prediksi Insiden">
+                    <i class="material-icons-outlined">assessment</i>
+                    <span>Matriks Prediksi</span>
+                </a>
                 <span class="gm-category-item">
                     <i class="material-icons-outlined category-arrow">chevron_right</i>
                 </span>
@@ -2480,25 +2484,25 @@
                         <input class="btn-check" type="checkbox" id="layerSatellite" autocomplete="off" checked>
                         <label class="gm-tile" for="layerSatellite" data-layer="satellite">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1617897711385-df9c86b7dfe3?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
-                            <div class="gm-label">Matriks CCTV</div>
-                            <div class="gm-sub">CCTV MAPS</div>
+                            <div class="gm-label">SA CCTV</div>
+                            <div class="gm-sub">SA CCTV</div>
                         </label>
                         <input class="btn-check" type="checkbox" id="layerTerrain" autocomplete="off">
                         <label class="gm-tile" for="layerTerrain" data-layer="terrain">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1622645636770-11fbf0611463?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
-                            <div class="gm-label">Unit dan Orang</div>
-                            <div class="gm-sub">UNIT MAPS</div>
+                            <div class="gm-label"> SA UNIT & ORANG</div>
+                            <div class="gm-sub">SA UNIT</div>
                         </label>
                         <input class="btn-check" type="checkbox" id="layerTraffic" autocomplete="off">
                         <label class="gm-tile" for="layerTraffic" data-layer="traffic">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=60');"></div>
-                            <div class="gm-label">Matriks Area Kerja</div>
-                            <div class="gm-sub">AREA KEJA MAPS</div>
+                            <div class="gm-label">SA AREA KERJA</div>
+                            <div class="gm-sub">SA AREA KEJA</div>
                         </label>
                         <input class="btn-check" type="checkbox" id="layerTransit" autocomplete="off">
                         <label class="gm-tile" for="layerTransit" data-layer="transit">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1530677003768-e25c2b121303?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
-                            <div class="gm-label">Matriks Sub Ketidaksesuaian SAP</div>
+                            <div class="gm-label">SA POTENSI INSIDEN</div>
                         <div class="gm-sub">HAZARD MAPS</div>
                         </label>
                        
@@ -2687,15 +2691,22 @@
             </div>
             <div class="modal-body">
                 <form id="intervensiAreaKerjaForm">
+                    <input type="hidden" id="intervensiControlRoomAreaKerja" name="control_room" value="">
                     <input type="hidden" id="intervensiAreaKerja" name="area_kerja" value="">
                     <input type="hidden" id="intervensiLokasi" name="lokasi" value="">
-                    
                     
                     <div class="mb-3">
                         <label for="intervensiLokasiDisplay" class="form-label fw-semibold">Lokasi</label>
                         <input type="text" class="form-control" id="intervensiLokasiDisplay" readonly>
                     </div>
                     
+                    <div class="mb-3">
+                        <label for="intervensiCCTVAreaKerja" class="form-label fw-semibold">CCTV <span class="text-danger">*</span></label>
+                        <select class="form-select" id="intervensiCCTVAreaKerja" name="cctv_ids[]" multiple required>
+                            <option value="">Pilih CCTV...</option>
+                        </select>
+                        <div class="form-text">Pilih satu atau lebih CCTV yang bermasalah di area kerja ini (bisa pilih lebih dari 1)</div>
+                    </div>
                     
                     <div class="mb-3">
                         <label for="intervensiPICAreaKerja" class="form-label fw-semibold">PIC (Pengawas) <span class="text-danger">*</span></label>
@@ -2782,6 +2793,196 @@
                 <button type="button" class="btn btn-primary" onclick="refreshCurrentStream()">
                     <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">refresh</i>
                     Refresh
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal Matriks Prediksi Insiden -->
+<div class="modal fade" id="matriksPrediksiInsidenModal" tabindex="-1" aria-labelledby="matriksPrediksiInsidenModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-scrollable">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-primary text-white">
+                <h5 class="modal-title d-flex align-items-center" id="matriksPrediksiInsidenModalLabel">
+                    <i class="material-icons-outlined me-2" style="font-size: 24px;">assessment</i>
+                    <div>
+                        <div style="font-size: 18px; font-weight: 600;">Matriks Prediksi Insiden per Lokasi</div>
+                        <small style="font-size: 12px; opacity: 0.9;">Berdasarkan Jumlah SAP (Hazard) per Lokasi dalam 1 Tahun</small>
+                    </div>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4">
+                <div id="matriksPrediksiInsidenLoading" class="text-center py-5">
+                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted fs-5">Memuat data prediksi insiden...</p>
+                </div>
+                <div id="matriksPrediksiInsidenContent" style="display: none;">
+                    <!-- Info Cards -->
+                    <div class="row mb-4" id="matriksPrediksiInsidenStats">
+                        <!-- Stats will be populated by JavaScript -->
+                    </div>
+                    
+                    <!-- Probability Info -->
+                    <div class="card mb-3 border-0 shadow-sm">
+                        <div class="card-header bg-light">
+                            <h6 class="mb-0 d-flex align-items-center">
+                                <i class="material-icons-outlined me-2" style="font-size: 20px;">info</i>
+                                Probabilitas per 1 Hazard Report
+                            </h6>
+                        </div>
+                        <div class="card-body p-3">
+                            <div class="row g-3">
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="border rounded p-2 bg-light">
+                                        <strong class="text-primary">Nearmiss</strong><br>
+                                        <small class="text-muted">0.000232</small><br>
+                                        <small class="text-muted">(1 per 4.309 hazard)</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="border rounded p-2 bg-light">
+                                        <strong class="text-primary">Property Damage</strong><br>
+                                        <small class="text-muted">0.000187</small><br>
+                                        <small class="text-muted">(1 per 5.348 hazard)</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="border rounded p-2 bg-light">
+                                        <strong class="text-primary">First Aid</strong><br>
+                                        <small class="text-muted">0.0000206</small><br>
+                                        <small class="text-muted">(1 per 48.481 hazard)</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="border rounded p-2 bg-light">
+                                        <strong class="text-primary">Fire Case</strong><br>
+                                        <small class="text-muted">0.0000186</small><br>
+                                        <small class="text-muted">(1 per 53.738 hazard)</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="border rounded p-2 bg-light">
+                                        <strong class="text-primary">MTI</strong><br>
+                                        <small class="text-muted">0.0000173</small><br>
+                                        <small class="text-muted">(1 per 57.926 hazard)</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="border rounded p-2 bg-light">
+                                        <strong class="text-primary">RWI</strong><br>
+                                        <small class="text-muted">0.00000381</small><br>
+                                        <small class="text-muted">(1 per 262.369 hazard)</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="border rounded p-2 bg-light">
+                                        <strong class="text-primary">LTI</strong><br>
+                                        <small class="text-muted">0.00000202</small><br>
+                                        <small class="text-muted">(1 per 495.586 hazard)</small>
+                                    </div>
+                                </div>
+                                <div class="col-md-6 col-lg-3">
+                                    <div class="border rounded p-2 bg-light">
+                                        <strong class="text-primary">Fatality</strong><br>
+                                        <small class="text-muted">0.000000673</small><br>
+                                        <small class="text-muted">(1 per 1.486.757 hazard)</small>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Table -->
+                    <div class="card border-0 shadow-sm">
+                        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
+                            <h6 class="mb-0 d-flex align-items-center">
+                                <i class="material-icons-outlined me-2" style="font-size: 20px;">table_chart</i>
+                                Data Prediksi Insiden per Lokasi
+                            </h6>
+                            <div class="text-muted small" id="matriksPrediksiInsidenTableInfo">
+                                <!-- Table info will be populated by DataTables -->
+                            </div>
+                        </div>
+                        <div class="card-body p-0">
+                            <div class="table-responsive" style="max-height: 60vh;">
+                                <table id="matriksPrediksiInsidenTable" class="table table-hover table-sm mb-0" style="font-size: 12px;">
+                                    <thead class="table-dark sticky-top">
+                                        <tr>
+                                            <th style="position: sticky; left: 0; background-color: #212529; z-index: 10; min-width: 200px;">
+                                                <div>Nama Lokasi</div>
+                                            </th>
+                                            <th style="text-align: right; min-width: 100px;">
+                                                <div>Jumlah SAP</div>
+                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">(1 tahun)</small>
+                                            </th>
+                                            <th style="text-align: right; min-width: 90px;" title="Nearmiss: 0.000232 (1 per 4.309 hazard)">
+                                                <div>Nearmiss</div>
+                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.000232</small>
+                                            </th>
+                                            <th style="text-align: right; min-width: 120px;" title="Property Damage: 0.000187 (1 per 5.348 hazard)">
+                                                <div>Property Damage</div>
+                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.000187</small>
+                                            </th>
+                                            <th style="text-align: right; min-width: 90px;" title="First Aid: 0.0000206 (1 per 48.481 hazard)">
+                                                <div>First Aid</div>
+                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.0000206</small>
+                                            </th>
+                                            <th style="text-align: right; min-width: 90px;" title="Fire Case: 0.0000186 (1 per 53.738 hazard)">
+                                                <div>Fire Case</div>
+                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.0000186</small>
+                                            </th>
+                                            <th style="text-align: right; min-width: 70px;" title="MTI: 0.0000173 (1 per 57.926 hazard)">
+                                                <div>MTI</div>
+                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.0000173</small>
+                                            </th>
+                                            <th style="text-align: right; min-width: 70px;" title="RWI: 0.00000381 (1 per 262.369 hazard)">
+                                                <div>RWI</div>
+                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.00000381</small>
+                                            </th>
+                                            <th style="text-align: right; min-width: 70px;" title="LTI: 0.00000202 (1 per 495.586 hazard)">
+                                                <div>LTI</div>
+                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.00000202</small>
+                                            </th>
+                                            <th style="text-align: right; min-width: 80px;" title="Fatality: 0.000000673 (1 per 1.486.757 hazard)">
+                                                <div>Fatality</div>
+                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.000000673</small>
+                                            </th>
+                                            <th style="text-align: right; min-width: 100px; background-color: #343a40;">
+                                                <div>Total Prediksi</div>
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="matriksPrediksiInsidenTableBody">
+                                        <!-- Data will be populated by JavaScript -->
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="matriksPrediksiInsidenError" style="display: none;" class="alert alert-danger d-flex align-items-center">
+                    <i class="material-icons-outlined me-2" style="font-size: 24px;">error</i>
+                    <div>
+                        <strong>Error!</strong>
+                        <div id="matriksPrediksiInsidenErrorMessage"></div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer bg-light border-top">
+                <div class="text-muted small me-auto" id="matriksPrediksiInsidenFooterInfo">
+                    <!-- Footer info will be populated by JavaScript -->
+                </div>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">close</i>
+                    Tutup
+                </button>
+                <button type="button" class="btn btn-primary" onclick="loadMatriksPrediksiInsiden()">
+                    <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">refresh</i>
+                    Refresh Data
                 </button>
             </div>
         </div>
@@ -3133,7 +3334,11 @@
     let unitVehicleLayer = null;
     let userGpsLayer = null;
     let dailyOperationPlansLayer = null;
+    let dopCctvLinesLayer = null; // Layer untuk garis dari DOP ke CCTV
+    let dopCctvMarkersLayer = null; // Layer untuk CCTV markers dari dop_cctv
     let popupOverlay = null;
+    let cctvToHazardLinesLayer = null; // Layer untuk garis arah dari CCTV ke hazard
+    let probabilityOverlays = []; // Array untuk menyimpan probability popup overlays
     
     // Site filter - harus didefinisikan sebelum digunakan di style function
     let currentSiteFilter = '';
@@ -3660,6 +3865,14 @@
             // Update DOP layer untuk blink animation (card DOP akan blink merah)
             if (dailyOperationPlansLayer) {
                 const source = dailyOperationPlansLayer.getSource();
+                if (source) {
+                    source.changed();
+                }
+            }
+            
+            // Update DOP-CCTV lines layer untuk pulse animation
+            if (dopCctvLinesLayer) {
+                const source = dopCctvLinesLayer.getSource();
                 if (source) {
                     source.changed();
                 }
@@ -4439,11 +4652,33 @@
             }
         });
 
-        // Toggle layer ON/OFF
+        // Toggle layer ON/OFF - Only one menu can be active at a time
+        // Define the menu group checkboxes
+        const menuGroupIds = ['layerSatellite', 'layerTerrain', 'layerTraffic', 'layerTransit'];
+        
         document.querySelectorAll('.btn-check').forEach(cb => {
             cb.addEventListener('change', () => {
                 const label = document.querySelector(`label[for="${cb.id}"]`);
                 const layerName = label?.dataset?.layer || cb.id;
+                
+                // If this checkbox is in the menu group and is being checked
+                if (menuGroupIds.includes(cb.id) && cb.checked) {
+                    // Uncheck all other checkboxes in the menu group
+                    menuGroupIds.forEach(menuId => {
+                        if (menuId !== cb.id) {
+                            const otherCheckbox = document.getElementById(menuId);
+                            if (otherCheckbox && otherCheckbox.checked) {
+                                otherCheckbox.checked = false;
+                                // Apply layer OFF for the unchecked menu
+                                const otherLabel = document.querySelector(`label[for="${menuId}"]`);
+                                const otherLayerName = otherLabel?.dataset?.layer || menuId;
+                                applyLayer(otherLayerName, false);
+                            }
+                        }
+                    });
+                }
+                
+                // Apply the layer for the current checkbox
                 applyLayer(layerName, cb.checked);
             });
         });
@@ -4504,6 +4739,20 @@
                 }
                 
                 console.log('Unit dan Orang layer activated - showing Unit and GPS Orang, hiding CCTV');
+            } else if (layerName === 'transit') {
+                // Special handling for "SA POTENSI INSIDEN" (transit layer)
+                if (isOn) {
+                    // Hide CCTV when transit layer is activated
+                    if (cctvLayer && layerVisibility.cctv) {
+                        toggleLayerVisibility('cctv', false);
+                        console.log('SA POTENSI INSIDEN layer activated - hiding CCTV');
+                    }
+                    // Show probability popups for all hazard/SAP locations
+                    showProbabilityPopupsForAllLocations();
+                } else {
+                    // Hide all probability popups when transit layer is deactivated
+                    hideAllProbabilityPopups();
+                }
             } else if (layerName === 'satellite') {
                 // Switch to satellite map
                 switchMapLayer('satellite');
@@ -4641,6 +4890,75 @@
         zIndex: 1000  // Z-index tinggi agar selalu di atas WMS layer
     });
     map.addLayer(hazardLayer);
+
+    // Create vector layer for lines from CCTV to hazard inspections
+    cctvToHazardLinesLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        style: function(feature) {
+            const geometry = feature.getGeometry();
+            
+            // If it's a line (LineString)
+            if (geometry.getType() === 'LineString') {
+                const lineType = feature.get('lineType') || 'default';
+                
+                let strokeColor = '#ef4444'; // Red for default
+                let strokeWidth = 2;
+                let lineDash = [5, 5];
+                
+                if (lineType === 'inspeksi') {
+                    strokeColor = '#10b981'; // Green for inspection
+                } else if (lineType === 'hazard') {
+                    strokeColor = '#ef4444'; // Red for hazard
+                }
+                
+                return new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: strokeColor,
+                        width: strokeWidth,
+                        lineDash: lineDash
+                    })
+                });
+            }
+            
+            // If it's a point (for text label)
+            if (geometry.getType() === 'Point') {
+                const text = feature.get('text');
+                const distance = feature.get('distance');
+                const lineType = feature.get('lineType') || 'default';
+                
+                if (!text) return null;
+                
+                let textColor = '#ef4444';
+                if (lineType === 'inspeksi') {
+                    textColor = '#10b981';
+                }
+                
+                return new ol.style.Style({
+                    text: new ol.style.Text({
+                        text: text,
+                        font: 'bold 12px Arial',
+                        fill: new ol.style.Fill({
+                            color: textColor
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: '#ffffff',
+                            width: 3
+                        }),
+                        backgroundFill: new ol.style.Fill({
+                            color: 'rgba(255, 255, 255, 0.9)'
+                        }),
+                        padding: [4, 8],
+                        offsetY: -20,
+                        overflow: true
+                    })
+                });
+            }
+            
+            return null;
+        },
+        zIndex: 999 // Below markers but above base layers
+    });
+    map.addLayer(cctvToHazardLinesLayer);
 
     // Create vector layer for insiden with pulsating circle animation
     insidenLayer = new ol.layer.Vector({
@@ -5231,6 +5549,89 @@ source: new ol.source.Vector(),
     });
     map.addLayer(dailyOperationPlansLayer);
 
+    // Create layer for lines connecting DOP to CCTV (dotted lines with pulse animation)
+    dopCctvLinesLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        style: function(feature, resolution) {
+            // Get pulse animation values
+            const pulse = getPulseValues(getPulseAnimationTime(), 'fast');
+            
+            // Red color with pulse animation
+            const baseColor = '#ef4444'; // Red color (#ef4444)
+            const strokeWidth = Math.max(4, pulse.strokeWidth * 1.5); // Minimum 4, pulse up to ~12
+            const strokeOpacity = Math.max(0.6, pulse.strokeOpacity); // Minimum opacity 0.6
+            
+            // Convert hex to rgba with opacity
+            const hex = baseColor.replace('#', '');
+            const r = parseInt(hex.substr(0, 2), 16);
+            const g = parseInt(hex.substr(2, 2), 16);
+            const b = parseInt(hex.substr(4, 2), 16);
+            const strokeColor = `rgba(${r}, ${g}, ${b}, ${strokeOpacity})`;
+            
+            // Create main line style with pulse
+            const styles = [
+                new ol.style.Style({
+                    stroke: new ol.style.Stroke({
+                        color: strokeColor,
+                        width: strokeWidth,
+                        lineDash: [8, 8], // Dotted line pattern (larger dashes)
+                        lineCap: 'round',
+                        lineJoin: 'round'
+                    }),
+                    zIndex: 449
+                })
+            ];
+            
+            // Add glow effect for better visibility
+            if (strokeOpacity > 0.7) {
+                styles.push(
+                    new ol.style.Style({
+                        stroke: new ol.style.Stroke({
+                            color: `rgba(${r}, ${g}, ${b}, ${strokeOpacity * 0.3})`,
+                            width: strokeWidth + 4,
+                            lineDash: [8, 8],
+                            lineCap: 'round',
+                            lineJoin: 'round'
+                        }),
+                        zIndex: 448
+                    })
+                );
+            }
+            
+            return styles;
+        },
+        name: 'DOP-CCTV Lines',
+        zIndex: 449,
+        visible: true,
+        updateWhileAnimating: true // Update style during animations
+    });
+    map.addLayer(dopCctvLinesLayer);
+
+    // Create layer for CCTV markers from dop_cctv
+    dopCctvMarkersLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        style: function(feature) {
+            const cctvData = feature.get('cctvData');
+            const iconUrl = createCCTVIcon(cctvData || {});
+            
+            return new ol.style.Style({
+                image: new ol.style.Icon({
+                    src: iconUrl,
+                    scale: 0.75,
+                    anchor: [0.5, 1],
+                    anchorXUnits: 'fraction',
+                    anchorYUnits: 'fraction',
+                    opacity: 1
+                }),
+                zIndex: 1002 // Above regular CCTV layer
+            });
+        },
+        name: 'DOP CCTV Markers',
+        zIndex: 1002,
+        visible: true
+    });
+    map.addLayer(dopCctvMarkersLayer);
+
     // Function to load daily operation plans from API
     function loadDailyOperationPlans() {
         console.log('Loading daily operation plans...');
@@ -5461,6 +5862,9 @@ source: new ol.source.Vector(),
                                 dailyOperationPlansLayer.changed();
                             }
                             
+                            // Process CCTV data and create lines
+                            processDopCctvData(validFeatures, data.cctv_list || []);
+                            
                             // Update notification panel if it's open
                             setTimeout(() => {
                                 const notificationPanel = document.getElementById('gmNotificationPanel');
@@ -5502,6 +5906,142 @@ source: new ol.source.Vector(),
             .catch(error => {
                 console.error('Error loading daily operation plans:', error);
             });
+    }
+
+    // Function to process DOP-CCTV relationships and create lines
+    function processDopCctvData(dopFeatures, cctvList) {
+        console.log('Processing DOP-CCTV data...', {
+            dopFeaturesCount: dopFeatures.length,
+            cctvListCount: cctvList.length
+        });
+
+        // Clear existing lines and CCTV markers
+        const linesSource = dopCctvLinesLayer.getSource();
+        const markersSource = dopCctvMarkersLayer.getSource();
+        linesSource.clear();
+        markersSource.clear();
+
+        // Create a map of DOP ID to feature for quick lookup
+        const dopFeatureMap = new Map();
+        dopFeatures.forEach(feature => {
+            const dopId = feature.get('id');
+            if (dopId) {
+                dopFeatureMap.set(dopId, feature);
+            }
+        });
+
+        // Process CCTV from cctv_list (all CCTV from dop_cctv table)
+        const processedCctvIds = new Set();
+        const lineFeatures = [];
+
+        cctvList.forEach(cctv => {
+            if (!cctv.longitude || !cctv.latitude) {
+                return; // Skip CCTV without coordinates
+            }
+
+            const dopId = cctv.dop_id;
+            const dopFeature = dopFeatureMap.get(dopId);
+
+            if (dopFeature) {
+                // Get DOP polygon center
+                const dopGeometry = dopFeature.getGeometry();
+                if (dopGeometry) {
+                    const dopCenter = ol.extent.getCenter(dopGeometry.getExtent());
+                    
+                    // Create line from DOP center to CCTV location
+                    const cctvCoord = ol.proj.fromLonLat([cctv.longitude, cctv.latitude]);
+                    const line = new ol.geom.LineString([dopCenter, cctvCoord]);
+                    
+                    const lineFeature = new ol.Feature({
+                        geometry: line,
+                        dopId: dopId,
+                        cctvId: cctv.id
+                    });
+                    lineFeatures.push(lineFeature);
+                }
+            }
+
+            // Add CCTV marker if not already processed
+            if (!processedCctvIds.has(cctv.id)) {
+                const cctvFeature = new ol.Feature({
+                    geometry: new ol.geom.Point(
+                        ol.proj.fromLonLat([cctv.longitude, cctv.latitude])
+                    ),
+                    name: cctv.nama_cctv || 'CCTV',
+                    type: 'cctv',
+                    cctvData: {
+                        id: cctv.id,
+                        no_cctv: cctv.no_cctv,
+                        nama_cctv: cctv.nama_cctv,
+                        kondisi: cctv.kondisi,
+                        status: cctv.status,
+                        site: cctv.site,
+                        perusahaan: cctv.perusahaan,
+                        link_akses: cctv.link_akses,
+                        lokasi_pemasangan: cctv.lokasi_pemasangan
+                    }
+                });
+                markersSource.addFeature(cctvFeature);
+                processedCctvIds.add(cctv.id);
+            }
+        });
+
+        // Also process CCTV from DOP feature properties (backup)
+        dopFeatures.forEach(dopFeature => {
+            const props = dopFeature.getProperties();
+            const cctvs = props.cctvs || [];
+            
+            if (cctvs.length > 0) {
+                const dopGeometry = dopFeature.getGeometry();
+                if (dopGeometry) {
+                    const dopCenter = ol.extent.getCenter(dopGeometry.getExtent());
+                    
+                    cctvs.forEach(cctv => {
+                        if (!cctv.longitude || !cctv.latitude) {
+                            return;
+                        }
+
+                        // Create line from DOP center to CCTV
+                        const cctvCoord = ol.proj.fromLonLat([cctv.longitude, cctv.latitude]);
+                        const line = new ol.geom.LineString([dopCenter, cctvCoord]);
+                        
+                        const lineFeature = new ol.Feature({
+                            geometry: line,
+                            dopId: props.id,
+                            cctvId: cctv.id
+                        });
+                        lineFeatures.push(lineFeature);
+
+                        // Add CCTV marker if not already processed
+                        if (!processedCctvIds.has(cctv.id)) {
+                            const cctvFeature = new ol.Feature({
+                                geometry: new ol.geom.Point(cctvCoord),
+                                name: cctv.nama_cctv || 'CCTV',
+                                type: 'cctv',
+                                cctvData: {
+                                    id: cctv.id,
+                                    no_cctv: cctv.no_cctv,
+                                    nama_cctv: cctv.nama_cctv,
+                                    kondisi: cctv.kondisi,
+                                    status: cctv.status,
+                                    lokasi_pemasangan: cctv.lokasi_pemasangan
+                                }
+                            });
+                            markersSource.addFeature(cctvFeature);
+                            processedCctvIds.add(cctv.id);
+                        }
+                    });
+                }
+            }
+        });
+
+        // Add all line features to layer
+        if (lineFeatures.length > 0) {
+            linesSource.addFeatures(lineFeatures);
+            console.log(`Created ${lineFeatures.length} lines from DOP to CCTV`);
+        }
+
+        console.log(`Added ${processedCctvIds.size} CCTV markers from dop_cctv`);
     }
 
     // Add SAP markers (mengganti hazard markers) - OPTIMIZED dengan batch rendering
@@ -7890,14 +8430,24 @@ source: new ol.source.Vector(),
     popupCloser.onclick = function() {
         popupOverlay.setPosition(undefined);
         popupCloser.blur();
+        // Clear CCTV to hazard lines when popup is closed
+        clearCCTVToHazardLines();
         return false;
     };
 
     // Click handler
     map.on('singleclick', async function(evt) {
-        const feature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
+        // Clear CCTV to hazard lines when clicking on map (unless clicking on CCTV)
+        const clickedFeature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
             return feature;
         });
+        
+        // Only clear if not clicking on CCTV
+        if (!clickedFeature || clickedFeature.get('type') !== 'cctv') {
+            clearCCTVToHazardLines();
+        }
+        
+        const feature = clickedFeature;
 
         if (feature) {
             const featureType = feature.get('type');
@@ -7955,6 +8505,15 @@ source: new ol.source.Vector(),
                     map.removeLayer(highlightedAreaKerjaLayer);
                     highlightedAreaKerjaLayer = null;
                 }
+                
+                // Check if transit layer (SA POTENSI INSIDEN) is active
+                const transitCheckbox = document.getElementById('layerTransit');
+                if (transitCheckbox && transitCheckbox.checked) {
+                    // Show probability popup when transit layer is active
+                    showProbabilityPopup(evt.coordinate, data);
+                    return;
+                }
+                
                 // Check if it's SAP data (has task_number or jenis_laporan)
                 if (data.task_number || data.jenis_laporan) {
                     showSapPopup(evt.coordinate, data);
@@ -8059,6 +8618,13 @@ source: new ol.source.Vector(),
             `;
         }
         
+        // Store data for intervensi button
+        window.currentDailyPlanForIntervensi = {
+            lokasi: lokasi,
+            detailLokasi: detailLokasi,
+            site: site
+        };
+        
         const content = `
             <div style="min-width: 300px; max-width: 400px; background-color: #ffffff !important;">
                 <h6 style="margin: 0 0 10px 0; color: #1f2937;">Rencana Operasi Harian</h6>
@@ -8080,6 +8646,10 @@ source: new ol.source.Vector(),
                 <p style="margin: 5px 0; font-size: 12px; color: #666; background-color: #ffffff !important;">${catatan}</p>
                 ` : ''}
                 ${fotoHtml}
+                <hr style="margin: 10px 0;">
+                <button class="btn btn-primary btn-sm w-100" onclick="openIntervensiFromDailyPlan('${lokasi}', '${detailLokasi || lokasi}'); popupOverlay.setPosition(undefined);" style="font-size: 12px;">
+                    <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">send</i> Intervensi
+                </button>
             </div>
         `;
         document.getElementById('popup-content').innerHTML = content;
@@ -8087,6 +8657,14 @@ source: new ol.source.Vector(),
     }
     
     function showHazardPopup(coordinate, hazard) {
+        // Check if transit layer (SA POTENSI INSIDEN) is active
+        const transitCheckbox = document.getElementById('layerTransit');
+        if (transitCheckbox && transitCheckbox.checked) {
+            // Show probability popup instead
+            showProbabilityPopup(coordinate, hazard);
+            return;
+        }
+        
         // Check if it's SAP data (has task_number or jenis_laporan)
         if (hazard.task_number || hazard.jenis_laporan) {
             showSapPopup(coordinate, hazard);
@@ -8108,6 +8686,495 @@ source: new ol.source.Vector(),
         `;
         document.getElementById('popup-content').innerHTML = content;
         popupOverlay.setPosition(coordinate);
+    }
+    
+    // Function to show SAP list by location (make it globally accessible)
+    window.showSapListByLocation = function(coordinate, hazard) {
+        const lokasi = hazard.lokasi || hazard.zone || hazard.detail_lokasi || '';
+        const detailLokasi = hazard.detail_lokasi || hazard.lokasi || '';
+        
+        // Get all SAP data (from global variable)
+        // Try multiple sources to get SAP data
+        let allSap = [];
+        if (typeof allSapData !== 'undefined' && allSapData) {
+            allSap = allSapData;
+        } else if (typeof sapDataAllWeek !== 'undefined' && sapDataAllWeek) {
+            allSap = sapDataAllWeek;
+        } else if (typeof sapData !== 'undefined' && sapData) {
+            allSap = sapData;
+        } else if (window.allSapData) {
+            allSap = window.allSapData;
+        } else if (window.sapDataAllWeek) {
+            allSap = window.sapDataAllWeek;
+        } else if (window.sapData) {
+            allSap = window.sapData;
+        }
+        
+        // Filter SAP by location
+        const filteredSap = allSap.filter(function(sap) {
+            const sapLokasi = (sap.lokasi || '').toLowerCase().trim();
+            const sapDetailLokasi = (sap.detail_lokasi || '').toLowerCase().trim();
+            const targetLokasi = lokasi.toLowerCase().trim();
+            const targetDetailLokasi = detailLokasi.toLowerCase().trim();
+            
+            // Check if SAP lokasi or detail_lokasi matches
+            const lokasiMatch = sapLokasi === targetLokasi || sapLokasi.includes(targetLokasi) || targetLokasi.includes(sapLokasi);
+            const detailLokasiMatch = sapDetailLokasi === targetDetailLokasi || sapDetailLokasi.includes(targetDetailLokasi) || targetDetailLokasi.includes(sapDetailLokasi);
+            const exactMatch = sapLokasi === targetLokasi || sapDetailLokasi === targetDetailLokasi;
+            
+            return lokasiMatch || detailLokasiMatch || exactMatch;
+        });
+        
+        // Sort by date (newest first)
+        filteredSap.sort(function(a, b) {
+            const dateA = new Date(a.tanggal_pelaporan || a.detected_at || 0);
+            const dateB = new Date(b.tanggal_pelaporan || b.detected_at || 0);
+            return dateB - dateA;
+        });
+        
+        // Limit to 20 items for display
+        const displaySap = filteredSap.slice(0, 20);
+        
+        let sapListHtml = '';
+        if (displaySap.length === 0) {
+            sapListHtml = '<tr><td colspan="4" style="text-align: center; padding: 20px; color: #6b7280;">Tidak ada SAP di lokasi ini</td></tr>';
+        } else {
+            displaySap.forEach(function(sap, index) {
+                const taskNumber = sap.task_number || sap.id || 'N/A';
+                const jenisLaporan = sap.jenis_laporan || 'N/A';
+                const tanggal = sap.tanggal_pelaporan || sap.detected_at || 'N/A';
+                const aktivitas = sap.aktivitas_pekerjaan || sap.description || 'N/A';
+                
+                // Format date
+                let tanggalFormatted = 'N/A';
+                if (tanggal !== 'N/A') {
+                    try {
+                        const date = new Date(tanggal);
+                        tanggalFormatted = date.toLocaleDateString('id-ID', { 
+                            year: 'numeric', 
+                            month: 'short', 
+                            day: 'numeric' 
+                        });
+                    } catch(e) {
+                        tanggalFormatted = tanggal;
+                    }
+                }
+                
+                // Color based on jenis laporan
+                let jenisColor = '#6b7280';
+                if (jenisLaporan === 'OBSERVASI') jenisColor = '#3b82f6';
+                else if (jenisLaporan === 'INSPEKSI') jenisColor = '#10b981';
+                else if (jenisLaporan === 'AUDIT') jenisColor = '#f59e0b';
+                
+                // Store SAP data in window for onclick
+                const sapDataKey = 'sap_' + (sap.id || sap.task_number || Date.now() + index);
+                window[sapDataKey] = sap;
+                
+                sapListHtml += `
+                    <tr style="border-bottom: 1px solid #e5e7eb; cursor: pointer;" class="sap-row-item" data-sap-key="${sapDataKey}">
+                        <td style="padding: 10px; font-size: 12px;">${index + 1}</td>
+                        <td style="padding: 10px; font-size: 12px;">
+                            <strong>${taskNumber}</strong><br>
+                            <span style="color: ${jenisColor}; font-size: 11px;">${jenisLaporan}</span>
+                        </td>
+                        <td style="padding: 10px; font-size: 12px;">${aktivitas.length > 50 ? aktivitas.substring(0, 50) + '...' : aktivitas}</td>
+                        <td style="padding: 10px; font-size: 12px; color: #6b7280;">${tanggalFormatted}</td>
+                    </tr>
+                `;
+            });
+        }
+        
+        const lokasiDisplay = lokasi || 'Unknown';
+        const lokasiInfo = hazard.task_number ? `Task: ${hazard.task_number}` : (hazard.description || 'Hazard Report');
+        
+        const content = `
+            <div style="min-width: 600px; max-width: 700px; max-height: 500px; background-color: #ffffff !important;">
+                <h6 style="margin: 0 0 10px 0; color: #1f2937; font-size: 14px; font-weight: 600;">Daftar SAP di Lokasi</h6>
+                <p style="margin: 0 0 15px 0; font-size: 12px; color: #6b7280;">
+                    <strong>Lokasi:</strong> ${lokasiDisplay}<br>
+                    <strong>Info:</strong> ${lokasiInfo}<br>
+                    <strong>Total SAP:</strong> ${filteredSap.length} ${filteredSap.length > 20 ? '(menampilkan 20 terbaru)' : ''}
+                </p>
+                <div style="overflow-x: auto; max-height: 400px;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead style="position: sticky; top: 0; background-color: #f3f4f6;">
+                            <tr style="background-color: #f3f4f6; border-bottom: 2px solid #d1d5db;">
+                                <th style="padding: 10px; text-align: left; font-weight: 600; font-size: 12px; width: 40px;">No</th>
+                                <th style="padding: 10px; text-align: left; font-weight: 600; font-size: 12px;">Task Number / Jenis</th>
+                                <th style="padding: 10px; text-align: left; font-weight: 600; font-size: 12px;">Aktivitas</th>
+                                <th style="padding: 10px; text-align: left; font-weight: 600; font-size: 12px;">Tanggal</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${sapListHtml}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        document.getElementById('popup-content').innerHTML = content;
+        popupOverlay.setPosition(coordinate);
+        
+        // Add click event listeners to SAP rows
+        setTimeout(function() {
+            const sapRows = document.querySelectorAll('.sap-row-item');
+            sapRows.forEach(function(row) {
+                row.addEventListener('click', function() {
+                    const sapKey = this.getAttribute('data-sap-key');
+                    const sapData = window[sapKey];
+                    if (sapData && typeof openSapDetailModalByData === 'function') {
+                        popupOverlay.setPosition(undefined);
+                        openSapDetailModalByData(sapData);
+                    } else if (sapData && typeof showSapPopup === 'function') {
+                        popupOverlay.setPosition(undefined);
+                        showSapPopup(coordinate, sapData);
+                    }
+                });
+            });
+        }, 100);
+    };
+    
+    // Function to show detailed probability popup (make it globally accessible)
+    window.showProbabilityDetailPopup = function(coordinate, hazard) {
+        // Total hazard inspeksi dalam 1 tahun
+        const totalHazardPerYear = 1836683;
+        
+        // Probability data per 1 hazard report
+        const probabilityData = [
+            { kategori: 'Nearmiss', probability: 0.000232, percentage: '0,0232%', equivalent: '~1 kejadian per 4.309 hazard' },
+            { kategori: 'Property Damage', probability: 0.000187, percentage: '0,0187%', equivalent: '~1 per 5.348 hazard' },
+            { kategori: 'First Aid', probability: 0.0000206, percentage: '0,00206%', equivalent: '~1 per 48.481 hazard' },
+            { kategori: 'Fire Case', probability: 0.0000186, percentage: '0,00186%', equivalent: '~1 per 53.738 hazard' },
+            { kategori: 'MTI', probability: 0.0000173, percentage: '0,00173%', equivalent: '~1 per 57.926 hazard' },
+            { kategori: 'RWI', probability: 0.00000381, percentage: '0,000381%', equivalent: '~1 per 262.369 hazard' },
+            { kategori: 'LTI', probability: 0.00000202, percentage: '0,000202%', equivalent: '~1 per 495.586 hazard' },
+            { kategori: 'Fatality', probability: 0.000000673, percentage: '0,0000673%', equivalent: '~1 per 1.486.757 hazard' }
+        ];
+        
+        const lokasi = hazard.lokasi || hazard.zone || hazard.detail_lokasi || 'Unknown';
+        const lokasiInfo = hazard.task_number ? `Task: ${hazard.task_number}` : (hazard.description || 'Hazard Report');
+        
+        // Helper function to format number with comma as decimal separator
+        function formatProbability(num) {
+            return num.toFixed(6).replace('.', ',');
+        }
+        
+        // Helper function to format number with thousand separator (Indonesian format)
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('id-ID');
+        }
+        
+        // Calculate total predicted incidents
+        let totalPredicted = 0;
+        let tableRows = '';
+        probabilityData.forEach(function(item) {
+            // Calculate predicted number of incidents
+            const predictedCount = item.probability * totalHazardPerYear;
+            totalPredicted += predictedCount;
+            
+            tableRows += `
+                <tr style="border-bottom: 1px solid #e5e7eb;">
+                    <td style="padding: 8px; font-size: 12px;">${item.kategori}</td>
+                    <td style="padding: 8px; font-size: 12px; text-align: right;">
+                        <strong style="font-size: 13px; color: #1f2937;">${formatNumber(predictedCount)} kejadian</strong><br>
+                        <span style="color: #6b7280; font-size: 11px;">(${formatProbability(item.probability)} | ${item.percentage})</span>
+                    </td>
+                    <td style="padding: 8px; font-size: 12px;">${item.equivalent}</td>
+                </tr>
+            `;
+        });
+        
+        const content = `
+            <div style="min-width: 500px; max-width: 600px; background-color: #ffffff !important;">
+                <h6 style="margin: 0 0 10px 0; color: #1f2937; font-size: 14px; font-weight: 600;">Prediksi Probabilitas per 1 Tahun</h6>
+                <p style="margin: 0 0 10px 0; font-size: 12px; color: #6b7280;">
+                    <strong>Total Hazard Inspeksi (1 tahun):</strong> ${formatNumber(totalHazardPerYear)}<br>
+                    <strong>Lokasi:</strong> ${lokasi}<br>
+                    <strong>Info:</strong> ${lokasiInfo}
+                </p>
+                <div style="overflow-x: auto;">
+                    <table style="width: 100%; border-collapse: collapse; font-size: 12px;">
+                        <thead>
+                            <tr style="background-color: #f3f4f6; border-bottom: 2px solid #d1d5db;">
+                                <th style="padding: 10px; text-align: left; font-weight: 600; font-size: 12px;">Kategori</th>
+                                <th style="padding: 10px; text-align: right; font-weight: 600; font-size: 12px;">Prediksi Jumlah</th>
+                                <th style="padding: 10px; text-align: left; font-weight: 600; font-size: 12px;">Kira-kira setara</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${tableRows}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        `;
+        document.getElementById('popup-content').innerHTML = content;
+        popupOverlay.setPosition(coordinate);
+    };
+    
+    // Function to show simple probability popup (summary only)
+    function showProbabilityPopup(coordinate, hazard) {
+        // Total hazard inspeksi dalam 1 tahun
+        const totalHazardPerYear = 1836683;
+        
+        // Probability data per 1 hazard report
+        const probabilityData = [
+            { kategori: 'Nearmiss', probability: 0.000232 },
+            { kategori: 'Property Damage', probability: 0.000187 },
+            { kategori: 'First Aid', probability: 0.0000206 },
+            { kategori: 'Fire Case', probability: 0.0000186 },
+            { kategori: 'MTI', probability: 0.0000173 },
+            { kategori: 'RWI', probability: 0.00000381 },
+            { kategori: 'LTI', probability: 0.00000202 },
+            { kategori: 'Fatality', probability: 0.000000673 }
+        ];
+        
+        const lokasi = hazard.lokasi || hazard.zone || hazard.detail_lokasi || 'Unknown';
+        const lokasiInfo = hazard.task_number ? `Task: ${hazard.task_number}` : (hazard.description || 'Hazard Report');
+        
+        // Helper function to format number with thousand separator (Indonesian format)
+        function formatNumber(num) {
+            return Math.round(num).toLocaleString('id-ID');
+        }
+        
+        // Set total predicted to 1 (as requested)
+        const totalPredicted = 1;
+        
+        // Store hazard data for detail popup
+        const hazardDataKey = 'hazard_' + (hazard.id || hazard.task_number || Date.now());
+        window[hazardDataKey] = hazard;
+        
+        const content = `
+            <div style="min-width: 250px; max-width: 300px; background-color: #ffffff !important;">
+                <h6 style="margin: 0 0 10px 0; color: #1f2937; font-size: 14px; font-weight: 600;">Prediksi Insiden</h6>
+                <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">
+                    <strong>Lokasi:</strong> ${lokasi}<br>
+                    <strong>Info:</strong> ${lokasiInfo}
+                </p>
+                <div style="margin: 10px 0; padding: 12px; background-color: #f3f4f6; border-radius: 4px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #ef4444; margin-bottom: 5px;">${totalPredicted}</div>
+                    <div style="font-size: 12px; color: #6b7280;">Total Prediksi Insiden</div>
+                </div>
+                <button class="btn btn-sm btn-primary w-100" onclick="showSapListByLocation(popupOverlay.getPosition(), window['${hazardDataKey}']);" style="margin-top: 8px; font-size: 12px;">
+                    <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">info</i> Detail
+                </button>
+            </div>
+        `;
+        document.getElementById('popup-content').innerHTML = content;
+        popupOverlay.setPosition(coordinate);
+    }
+    
+    // Function to show probability popups for all hazard/SAP locations
+    function showProbabilityPopupsForAllLocations() {
+        // Clear existing probability popups first
+        hideAllProbabilityPopups();
+        
+        if (!hazardLayer) return;
+        
+        const source = hazardLayer.getSource();
+        const features = [];
+        
+        // Collect all hazard/SAP features
+        source.forEachFeature(function(feature) {
+            const data = feature.get('data');
+            if (data) {
+                features.push(feature);
+            }
+        });
+        
+        // Limit to visible features in current viewport to avoid performance issues
+        const view = map.getView();
+        const extent = view.calculateExtent(map.getSize());
+        const visibleFeatures = features.filter(function(feature) {
+            const geometry = feature.getGeometry();
+            if (geometry) {
+                const coord = geometry.getCoordinates();
+                return ol.extent.containsCoordinate(extent, coord);
+            }
+            return false;
+        });
+        
+        // Group features by location to show only 1 popup per location
+        const locationMap = new Map();
+        
+        visibleFeatures.forEach(function(feature) {
+            const geometry = feature.getGeometry();
+            if (!geometry) return;
+            
+            const coordinate = geometry.getCoordinates();
+            const data = feature.get('data');
+            if (!data) return;
+            
+            // Create location key from lokasi or detail_lokasi
+            const lokasi = (data.lokasi || data.zone || '').toLowerCase().trim();
+            const detailLokasi = (data.detail_lokasi || '').toLowerCase().trim();
+            
+            // Use detail_lokasi if available, otherwise use lokasi
+            // If both are empty, use 'Unknown' as fallback
+            const locationKey = detailLokasi || lokasi || 'unknown';
+            
+            // If location not in map, add it
+            if (!locationMap.has(locationKey)) {
+                locationMap.set(locationKey, {
+                    coordinate: coordinate,
+                    data: data,
+                    features: [feature]
+                });
+            } else {
+                // Location already exists, add feature to the group
+                const existing = locationMap.get(locationKey);
+                existing.features.push(feature);
+                // Use first coordinate or average (using first for simplicity)
+            }
+        });
+        
+        // Limit to maximum 50 unique locations for performance
+        const maxPopups = 50;
+        const uniqueLocations = Array.from(locationMap.values()).slice(0, maxPopups);
+        
+        console.log(`Showing probability popups for ${uniqueLocations.length} unique locations (out of ${locationMap.size} total unique locations, from ${features.length} total features)`);
+        
+        // Create popup overlay for each unique location
+        uniqueLocations.forEach(function(locationData) {
+            const coordinate = locationData.coordinate;
+            const data = locationData.data;
+            
+            // Total hazard inspeksi dalam 1 tahun
+            const totalHazardPerYear = 1836683;
+            
+            // Probability data per 1 hazard report
+            const probabilityData = [
+                { kategori: 'Nearmiss', probability: 0.000232 },
+                { kategori: 'Property Damage', probability: 0.000187 },
+                { kategori: 'First Aid', probability: 0.0000206 },
+                { kategori: 'Fire Case', probability: 0.0000186 },
+                { kategori: 'MTI', probability: 0.0000173 },
+                { kategori: 'RWI', probability: 0.00000381 },
+                { kategori: 'LTI', probability: 0.00000202 },
+                { kategori: 'Fatality', probability: 0.000000673 }
+            ];
+            
+            const lokasi = data.lokasi || data.zone || data.detail_lokasi || 'Unknown';
+            const lokasiInfo = data.task_number ? `Task: ${data.task_number}` : (data.description || 'Hazard Report');
+            
+            // Helper function to format number with thousand separator (Indonesian format)
+            function formatNumber(num) {
+                return Math.round(num).toLocaleString('id-ID');
+            }
+            
+            // Set total predicted to 1 (as requested)
+            const totalPredicted = 1;
+            
+            // Store hazard data for detail popup (use first data from location)
+            const hazardDataKey = 'hazard_' + (data.id || data.task_number || Date.now() + Math.random());
+            window[hazardDataKey] = data;
+            
+            // Create popup element
+            const popupElement = document.createElement('div');
+            popupElement.className = 'probability-popup';
+            popupElement.style.cssText = 'background: white; border: 2px solid #ef4444; border-radius: 4px; padding: 10px; max-width: 280px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: relative;';
+            
+            // Create overlay first
+            const overlay = new ol.Overlay({
+                element: popupElement,
+                position: coordinate,
+                positioning: 'bottom-center',
+                stopEvent: false,
+                offset: [0, -10]
+            });
+            
+            popupElement.innerHTML = `
+                <button class="probability-popup-close" style="position: absolute; top: 5px; right: 5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 18px; line-height: 1; z-index: 10;">×</button>
+                <h6 style="margin: 0 0 10px 0; color: #1f2937; font-size: 14px; font-weight: 600;">Prediksi Insiden</h6>
+                <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">
+                    <strong>Lokasi:</strong> ${lokasi}<br>
+                    <strong>Info:</strong> ${lokasiInfo}
+                </p>
+                <div style="margin: 10px 0; padding: 12px; background-color: #f3f4f6; border-radius: 4px; text-align: center;">
+                    <div style="font-size: 24px; font-weight: 700; color: #ef4444; margin-bottom: 5px;">${totalPredicted}</div>
+                    <div style="font-size: 12px; color: #6b7280;">Total Prediksi Insiden</div>
+                </div>
+                <button class="probability-detail-btn btn btn-sm btn-primary w-100" data-hazard-key="${hazardDataKey}" style="margin-top: 8px; font-size: 12px; padding: 6px 12px;">
+                    <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">info</i> Detail
+                </button>
+            `;
+            
+            // Add close button event listener
+            const closeBtn = popupElement.querySelector('.probability-popup-close');
+            if (closeBtn) {
+                closeBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    if (overlay) {
+                        map.removeOverlay(overlay);
+                        const index = probabilityOverlays.indexOf(overlay);
+                        if (index > -1) {
+                            probabilityOverlays.splice(index, 1);
+                        }
+                    }
+                    popupElement.remove();
+                };
+            }
+            
+            // Add detail button event listener
+            const detailBtn = popupElement.querySelector('.probability-detail-btn');
+            if (detailBtn) {
+                detailBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    const hazardKey = this.getAttribute('data-hazard-key');
+                    const hazardData = window[hazardKey];
+                    if (hazardData) {
+                        // Hide all probability popups first
+                        hideAllProbabilityPopups();
+                        // Show SAP list popup
+                        showSapListByLocation(coordinate, hazardData);
+                    }
+                };
+            }
+            
+            // Store reference
+            popupElement.overlay = overlay;
+            probabilityOverlays.push(overlay);
+            
+            // Add to map
+            map.addOverlay(overlay);
+        });
+    }
+    
+    // Function to hide all probability popups
+    function hideAllProbabilityPopups() {
+        probabilityOverlays.forEach(function(overlay) {
+            map.removeOverlay(overlay);
+            if (overlay.getElement()) {
+                overlay.getElement().remove();
+            }
+        });
+        probabilityOverlays = [];
+    }
+    
+    // Update probability popups when viewport changes (if transit layer is active)
+    let updateProbabilityPopupsTimeout = null;
+    if (map && map.getView()) {
+        map.getView().on('change:resolution', function() {
+            const transitCheckbox = document.getElementById('layerTransit');
+            if (transitCheckbox && transitCheckbox.checked) {
+                // Debounce to avoid too many updates
+                clearTimeout(updateProbabilityPopupsTimeout);
+                updateProbabilityPopupsTimeout = setTimeout(function() {
+                    showProbabilityPopupsForAllLocations();
+                }, 300);
+            }
+        });
+        
+        map.getView().on('change:center', function() {
+            const transitCheckbox = document.getElementById('layerTransit');
+            if (transitCheckbox && transitCheckbox.checked) {
+                // Debounce to avoid too many updates
+                clearTimeout(updateProbabilityPopupsTimeout);
+                updateProbabilityPopupsTimeout = setTimeout(function() {
+                    showProbabilityPopupsForAllLocations();
+                }, 300);
+            }
+        });
     }
     
     function showSapPopup(coordinate, sap) {
@@ -10719,6 +11786,9 @@ source: new ol.source.Vector(),
         // Highlight area kerja for this CCTV
         highlightAreaKerjaForCCTV(cctv);
         
+        // Show lines from CCTV to related hazard inspections
+        showCCTVToHazardLines(coordinate, cctv);
+        
         let actionButtons = '';
         // Tombol Stream Video
         if (hasRtspStream) {
@@ -10845,6 +11915,152 @@ source: new ol.source.Vector(),
                 });
             }
         }, 100);
+    }
+    
+    // Function to show lines from CCTV to related hazard inspections
+    function showCCTVToHazardLines(cctvCoordinate, cctv) {
+        if (!cctvToHazardLinesLayer || !hazardLayer) {
+            return;
+        }
+        
+        // Clear existing lines
+        const source = cctvToHazardLinesLayer.getSource();
+        source.clear();
+        
+        // Get CCTV location and detail location
+        const cctvLokasi = cctv.lokasi || cctv.lokasi_pemasangan || cctv.coverage_lokasi || '';
+        const cctvDetailLokasi = cctv.detail_lokasi || cctv.coverage_detail_lokasi || '';
+        
+        if (!cctvLokasi && !cctvDetailLokasi) {
+            return; // No location data to match
+        }
+        
+        // Get all hazard features
+        const hazardSource = hazardLayer.getSource();
+        const hazardFeatures = hazardSource.getFeatures();
+        
+        // Find matching hazards based on location and detail location
+        const matchingHazards = [];
+        
+        hazardFeatures.forEach(feature => {
+            const hazardData = feature.get('data');
+            if (!hazardData) return;
+            
+            // Get hazard location and detail location
+            const hazardLokasi = hazardData.lokasi || hazardData.nama_lokasi || '';
+            const hazardDetailLokasi = hazardData.detail_lokasi || hazardData.nama_detail_lokasi || hazardData.lokasi_detail || '';
+            
+            // Match based on location and detail location
+            let isMatch = false;
+            
+            // Match by detail location (more specific)
+            if (cctvDetailLokasi && hazardDetailLokasi) {
+                if (cctvDetailLokasi.toLowerCase().trim() === hazardDetailLokasi.toLowerCase().trim()) {
+                    isMatch = true;
+                }
+            }
+            
+            // Match by location if detail location doesn't match or is empty
+            if (!isMatch && cctvLokasi && hazardLokasi) {
+                if (cctvLokasi.toLowerCase().trim() === hazardLokasi.toLowerCase().trim()) {
+                    isMatch = true;
+                }
+            }
+            
+            if (isMatch) {
+                const geometry = feature.getGeometry();
+                if (geometry && geometry.getType() === 'Point') {
+                    const hazardCoord = geometry.getCoordinates();
+                    matchingHazards.push({
+                        feature: feature,
+                        coordinate: hazardCoord,
+                        data: hazardData
+                    });
+                }
+            }
+        });
+        
+        // Create lines from CCTV to matching hazards
+        matchingHazards.forEach((hazard, index) => {
+            // Calculate distance in meters
+            const distance = calculateDistance(cctvCoordinate, hazard.coordinate);
+            
+            // Create line geometry
+            const lineGeometry = new ol.geom.LineString([cctvCoordinate, hazard.coordinate]);
+            
+            // Determine line type based on jenis_laporan
+            const jenisLaporan = hazard.data.jenis_laporan || '';
+            let lineType = 'hazard';
+            if (jenisLaporan === 'INSPEKSI') {
+                lineType = 'inspeksi';
+            }
+            
+            // Create line feature
+            const lineFeature = new ol.Feature({
+                geometry: lineGeometry,
+                lineType: lineType,
+                distance: distance,
+                cctvCoordinate: cctvCoordinate,
+                hazardCoordinate: hazard.coordinate
+            });
+            
+            source.addFeature(lineFeature);
+            
+            // Create distance label at midpoint
+            const midPoint = [
+                (cctvCoordinate[0] + hazard.coordinate[0]) / 2,
+                (cctvCoordinate[1] + hazard.coordinate[1]) / 2
+            ];
+            
+            // Create text feature for distance label
+            const textFeature = new ol.Feature({
+                geometry: new ol.geom.Point(midPoint),
+                text: formatDistance(distance),
+                distance: distance,
+                lineType: lineType
+            });
+            
+            source.addFeature(textFeature);
+        });
+        
+        // Show layer if there are matching hazards
+        if (matchingHazards.length > 0) {
+            cctvToHazardLinesLayer.setVisible(true);
+        }
+    }
+    
+    // Function to calculate distance between two coordinates in meters
+    function calculateDistance(coord1, coord2) {
+        const R = 6371000; // Earth radius in meters
+        const lat1 = coord1[1] * Math.PI / 180;
+        const lat2 = coord2[1] * Math.PI / 180;
+        const deltaLat = (coord2[1] - coord1[1]) * Math.PI / 180;
+        const deltaLon = (coord2[0] - coord1[0]) * Math.PI / 180;
+        
+        const a = Math.sin(deltaLat / 2) * Math.sin(deltaLat / 2) +
+                  Math.cos(lat1) * Math.cos(lat2) *
+                  Math.sin(deltaLon / 2) * Math.sin(deltaLon / 2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        
+        return R * c;
+    }
+    
+    // Function to format distance
+    function formatDistance(distanceInMeters) {
+        if (distanceInMeters < 1000) {
+            return distanceInMeters.toFixed(0) + ' m';
+        } else {
+            return (distanceInMeters / 1000).toFixed(2) + ' km';
+        }
+    }
+    
+    // Function to clear CCTV to hazard lines
+    function clearCCTVToHazardLines() {
+        if (cctvToHazardLinesLayer) {
+            const source = cctvToHazardLinesLayer.getSource();
+            source.clear();
+            cctvToHazardLinesLayer.setVisible(false);
+        }
     }
     
     async function openCCTVStreamModal(cctvName, rtspUrl) {
@@ -18864,23 +20080,33 @@ source: new ol.source.Vector(),
         // Build HTML
         let html = '';
         
-        // Summary section
+        // Summary section - menggunakan struktur yang konsisten
         html += `
-            <div class="gm-notification-category expanded" style="background: #f8f9fa; margin-bottom: 12px; border-radius: 8px;">
-                <div class="gm-notification-category-header">
+            <div class="gm-notification-category expanded" style="background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;">
+                <div class="gm-notification-category-header" style="cursor: default;">
                     <div class="gm-notification-category-title">
-                        <i class="material-icons-outlined" style="font-size: 20px; color: #1a73e8;">dashboard</i>
+                        <i class="material-icons-outlined" style="font-size: 18px; color: #1a73e8; margin-right: 8px;">dashboard</i>
                         <span>Ringkasan</span>
                     </div>
                 </div>
-                <div style="padding: 12px 20px;">
-                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
-                        <span style="font-weight: 500;">Total Unit:</span>
-                        <span style="font-weight: 600; color: #1a73e8;">${totalUnits}</span>
+                <div class="gm-notification-location-list">
+                    <div class="gm-notification-location-item" style="padding: 12px 20px; border-bottom: 1px solid #e8eaed;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="material-icons-outlined" style="font-size: 18px; color: #1a73e8;">directions_bus</i>
+                                <span style="font-weight: 500; color: #202124;">Total Unit</span>
+                            </div>
+                            <span style="font-size: 18px; font-weight: 600; color: #1a73e8;">${totalUnits}</span>
+                        </div>
                     </div>
-                    <div style="display: flex; justify-content: space-between;">
-                        <span style="font-weight: 500;">Total Orang:</span>
-                        <span style="font-weight: 600; color: #10b981;">${totalOrang}</span>
+                    <div class="gm-notification-location-item" style="padding: 12px 20px;">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 8px;">
+                                <i class="material-icons-outlined" style="font-size: 18px; color: #10b981;">people</i>
+                                <span style="font-weight: 500; color: #202124;">Total Orang</span>
+                            </div>
+                            <span style="font-size: 18px; font-weight: 600; color: #10b981;">${totalOrang}</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -18889,11 +20115,12 @@ source: new ol.source.Vector(),
         // Unit by type
         if (Object.keys(unitDataByType).length > 0) {
             html += `
-                <div class="gm-notification-category expanded" style="margin-bottom: 12px;">
+                <div class="gm-notification-category expanded">
                     <div class="gm-notification-category-header">
                         <div class="gm-notification-category-title">
-                            <i class="material-icons-outlined" style="font-size: 20px; color: #1a73e8;">directions_bus</i>
+                            <i class="material-icons-outlined" style="font-size: 18px; margin-right: 8px; color: #1a73e8;">directions_bus</i>
                             <span>Unit Berdasarkan Tipe</span>
+                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
                         </div>
                         <span class="gm-notification-category-count">${totalUnits}</span>
                     </div>
@@ -18903,17 +20130,18 @@ source: new ol.source.Vector(),
             // Sort by count (descending)
             const sortedUnitTypes = Object.entries(unitDataByType).sort((a, b) => b[1].count - a[1].count);
             
-            sortedUnitTypes.forEach(([vehicleType, data]) => {
+            sortedUnitTypes.forEach(([vehicleType, data], index) => {
+                const isLast = index === sortedUnitTypes.length - 1;
                 html += `
-                    <div class="gm-notification-location-item" style="padding: 12px 20px; border-bottom: 1px solid #eee;">
+                    <div class="gm-notification-location-item" style="${isLast ? '' : 'border-bottom: 1px solid #f1f3f4;'}">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500; margin-bottom: 4px;">${vehicleType}</div>
-                                <div style="font-size: 12px; color: #666;">
-                                    ${data.units.length} unit
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 500; color: #202124; margin-bottom: 4px; word-wrap: break-word;">${vehicleType}</div>
+                                <div style="font-size: 12px; color: #5f6368;">
+                                    ${data.count} ${data.count === 1 ? 'unit' : 'units'}
                                 </div>
                             </div>
-                            <span style="font-size: 18px; font-weight: 600; color: #1a73e8;">${data.count}</span>
+                            <span style="font-size: 20px; font-weight: 600; color: #1a73e8; margin-left: 12px; flex-shrink: 0;">${data.count}</span>
                         </div>
                     </div>
                 `;
@@ -18928,8 +20156,9 @@ source: new ol.source.Vector(),
                 <div class="gm-notification-category">
                     <div class="gm-notification-category-header">
                         <div class="gm-notification-category-title">
-                            <i class="material-icons-outlined" style="font-size: 20px; color: #1a73e8;">directions_bus</i>
+                            <i class="material-icons-outlined" style="font-size: 18px; margin-right: 8px; color: #1a73e8;">directions_bus</i>
                             <span>Unit Berdasarkan Tipe</span>
+                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
                         </div>
                     </div>
                     <div class="gm-notification-location-list">
@@ -18942,11 +20171,12 @@ source: new ol.source.Vector(),
         // Orang by type
         if (Object.keys(orangDataByType).length > 0) {
             html += `
-                <div class="gm-notification-category expanded" style="margin-bottom: 12px;">
+                <div class="gm-notification-category expanded">
                     <div class="gm-notification-category-header">
                         <div class="gm-notification-category-title">
-                            <i class="material-icons-outlined" style="font-size: 20px; color: #10b981;">people</i>
+                            <i class="material-icons-outlined" style="font-size: 18px; margin-right: 8px; color: #10b981;">people</i>
                             <span>Orang Berdasarkan Tipe</span>
+                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
                         </div>
                         <span class="gm-notification-category-count">${totalOrang}</span>
                     </div>
@@ -18956,17 +20186,18 @@ source: new ol.source.Vector(),
             // Sort by count (descending)
             const sortedOrangTypes = Object.entries(orangDataByType).sort((a, b) => b[1].count - a[1].count);
             
-            sortedOrangTypes.forEach(([vehicleType, data]) => {
+            sortedOrangTypes.forEach(([vehicleType, data], index) => {
+                const isLast = index === sortedOrangTypes.length - 1;
                 html += `
-                    <div class="gm-notification-location-item" style="padding: 12px 20px; border-bottom: 1px solid #eee;">
+                    <div class="gm-notification-location-item" style="${isLast ? '' : 'border-bottom: 1px solid #f1f3f4;'}">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="flex: 1;">
-                                <div style="font-weight: 500; margin-bottom: 4px;">${vehicleType}</div>
-                                <div style="font-size: 12px; color: #666;">
-                                    ${data.orang.length} orang
+                            <div style="flex: 1; min-width: 0;">
+                                <div style="font-weight: 500; color: #202124; margin-bottom: 4px; word-wrap: break-word;">${vehicleType}</div>
+                                <div style="font-size: 12px; color: #5f6368;">
+                                    ${data.count} ${data.count === 1 ? 'orang' : 'orang'}
                                 </div>
                             </div>
-                            <span style="font-size: 18px; font-weight: 600; color: #10b981;">${data.count}</span>
+                            <span style="font-size: 20px; font-weight: 600; color: #10b981; margin-left: 12px; flex-shrink: 0;">${data.count}</span>
                         </div>
                     </div>
                 `;
@@ -18981,8 +20212,9 @@ source: new ol.source.Vector(),
                 <div class="gm-notification-category">
                     <div class="gm-notification-category-header">
                         <div class="gm-notification-category-title">
-                            <i class="material-icons-outlined" style="font-size: 20px; color: #10b981;">people</i>
+                            <i class="material-icons-outlined" style="font-size: 18px; margin-right: 8px; color: #10b981;">people</i>
                             <span>Orang Berdasarkan Tipe</span>
+                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
                         </div>
                     </div>
                     <div class="gm-notification-location-list">
@@ -19505,22 +20737,63 @@ source: new ol.source.Vector(),
         checkAndInit();
     }
     
+    // Function to open intervensi from daily plan popup
+    function openIntervensiFromDailyPlan(lokasi, detailLokasi) {
+        const lokasiValue = lokasi || detailLokasi || '';
+        
+        // Show intervensi modal first
+        const intervensiModalElement = document.getElementById('intervensiAreaKerjaModal');
+        if (!intervensiModalElement) {
+            console.error('Intervensi modal element not found');
+            return;
+        }
+        
+        const intervensiModal = new bootstrap.Modal(intervensiModalElement);
+        
+        // Load data when modal is shown
+        intervensiModalElement.addEventListener('shown.bs.modal', function onModalShown() {
+            // Remove event listener to prevent multiple calls
+            intervensiModalElement.removeEventListener('shown.bs.modal', onModalShown);
+            // Load data after modal is fully shown
+            loadIntervensiAreaKerjaModal(null, lokasiValue);
+        }, { once: true });
+        
+        intervensiModal.show();
+    }
+    
     // Function to load intervensi modal with area kerja data
     function loadIntervensiAreaKerjaModal(areaKerja, lokasi) {
         // Set area kerja and lokasi - lokasi is required
         const lokasiValue = lokasi || '';
         const areaKerjaValue = areaKerja || '';
         
-        document.getElementById('intervensiAreaKerja').value = areaKerjaValue;
-        document.getElementById('intervensiLokasi').value = lokasiValue;
-        document.getElementById('intervensiLokasiDisplay').value = lokasiValue;
+        // Check if all required elements exist
+        const controlRoomInput = document.getElementById('intervensiControlRoomAreaKerja');
+        const areaKerjaInput = document.getElementById('intervensiAreaKerja');
+        const lokasiInput = document.getElementById('intervensiLokasi');
+        const lokasiDisplay = document.getElementById('intervensiLokasiDisplay');
+        const issueTextarea = document.getElementById('intervensiIssueAreaKerja');
+        
+        if (!controlRoomInput || !areaKerjaInput || !lokasiInput || !lokasiDisplay || !issueTextarea) {
+            console.error('Required form elements not found');
+            return;
+        }
+        
+        // Use lokasi as control_room (same as in CCTV matrix)
+        controlRoomInput.value = lokasiValue;
+        areaKerjaInput.value = areaKerjaValue;
+        lokasiInput.value = lokasiValue;
+        lokasiDisplay.value = lokasiValue;
         
         // Store for later use
         currentIntervensiAreaKerja = areaKerjaValue;
         currentIntervensiLokasi = lokasiValue;
         
         // Reset form but keep lokasi
-        document.getElementById('intervensiIssueAreaKerja').value = '';
+        issueTextarea.value = '';
+        
+        // Load CCTV list for this area kerja/lokasi
+        loadCctvListForAreaKerja(lokasiValue, areaKerjaValue);
         
         // Clear PIC dropdown (Select2 will be initialized when modal is shown)
         const picSelect = document.getElementById('intervensiPICAreaKerja');
@@ -19535,6 +20808,74 @@ source: new ol.source.Vector(),
         }
     }
     
+    // Function to load CCTV list for area kerja
+    function loadCctvListForAreaKerja(lokasi, areaKerja) {
+        const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
+        if (!cctvSelect) return;
+        
+        // Destroy existing Select2 instance if any
+        if (typeof $ !== 'undefined' && $(cctvSelect).hasClass('select2-hidden-accessible')) {
+            $(cctvSelect).select2('destroy');
+        }
+        
+        // Clear existing options
+        cctvSelect.innerHTML = '<option value="">Memuat CCTV...</option>';
+        cctvSelect.disabled = true;
+        
+        // Build query parameters
+        const params = new URLSearchParams();
+        if (lokasi) params.append('lokasi', lokasi);
+        if (areaKerja) params.append('area_kerja', areaKerja);
+        
+        // Get CSRF token safely
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+        
+        // Fetch CCTV list from API
+        fetch(`{{ url('full-maps/api/cctv-for-area-kerja') }}?${params.toString()}`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            // Clear options
+            cctvSelect.innerHTML = '';
+            
+            if (data.success && data.data && data.data.length > 0) {
+                // Populate CCTV options
+                data.data.forEach(cctv => {
+                    const option = document.createElement('option');
+                    option.value = cctv.id;
+                    option.textContent = `${cctv.nama_cctv}${cctv.no_cctv ? ' (' + cctv.no_cctv + ')' : ''}${cctv.lokasi_pemasangan ? ' - ' + cctv.lokasi_pemasangan : ''}`;
+                    cctvSelect.appendChild(option);
+                });
+                cctvSelect.disabled = false;
+                
+                // Initialize Select2 with multiple selection
+                if (typeof $ !== 'undefined') {
+                    $(cctvSelect).select2({
+                        theme: 'bootstrap-5',
+                        placeholder: 'Pilih satu atau lebih CCTV...',
+                        allowClear: true,
+                        width: '100%',
+                        closeOnSelect: false,
+                        dropdownParent: $(cctvSelect).closest('.modal-body') || $(document.body)
+                    });
+                }
+            } else {
+                cctvSelect.innerHTML = '<option value="">Tidak ada CCTV ditemukan</option>';
+                cctvSelect.disabled = false;
+            }
+        })
+        .catch(error => {
+            console.error('Error loading CCTV list:', error);
+            cctvSelect.innerHTML = '<option value="">Error memuat CCTV</option>';
+            cctvSelect.disabled = false;
+        });
+    }
+    
     // Handle modal close to destroy Select2
     const intervensiAreaKerjaModal = document.getElementById('intervensiAreaKerjaModal');
     if (intervensiAreaKerjaModal) {
@@ -19542,6 +20883,10 @@ source: new ol.source.Vector(),
             const picSelect = document.getElementById('intervensiPICAreaKerja');
             if (picSelect && typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
                 $(picSelect).select2('destroy');
+            }
+            const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
+            if (cctvSelect && typeof $ !== 'undefined' && $(cctvSelect).hasClass('select2-hidden-accessible')) {
+                $(cctvSelect).select2('destroy');
             }
         });
     }
@@ -19632,17 +20977,31 @@ source: new ol.source.Vector(),
                 }
                 
                 // Get form values
+                const controlRoom = document.getElementById('intervensiControlRoomAreaKerja').value;
                 const lokasi = document.getElementById('intervensiLokasi').value;
                 const areaKerja = document.getElementById('intervensiAreaKerja').value || null;
                 const picId = document.getElementById('intervensiPICAreaKerja').value;
                 const issue = document.getElementById('intervensiIssueAreaKerja').value;
                 
+                // Get selected CCTV IDs (multiple)
+                const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
+                const selectedCctvIds = Array.from(cctvSelect.selectedOptions).map(option => option.value).filter(val => val !== '');
+                
                 // Validate form
-                if (!lokasi) {
+                if (!controlRoom && !lokasi) {
                     Swal.fire({
                         icon: 'warning',
                         title: 'Peringatan!',
                         text: 'Lokasi harus diisi.'
+                    });
+                    return;
+                }
+                
+                if (selectedCctvIds.length === 0) {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Peringatan!',
+                        text: 'Silakan pilih minimal 1 CCTV.'
                     });
                     return;
                 }
@@ -19666,8 +21025,8 @@ source: new ol.source.Vector(),
                 }
                 
                 const formData = {
-                    lokasi: lokasi,
-                    area_kerja: areaKerja,
+                    control_room: controlRoom || lokasi,
+                    cctv_ids: selectedCctvIds,
                     pic_id: picId,
                     issue: issue
                 };
@@ -19679,12 +21038,15 @@ source: new ol.source.Vector(),
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengirim...';
                 
-                // Send AJAX request to save intervensi
-                fetch(`{{ url('full-maps/api/intervensi-area-kerja') }}`, {
+                // Get CSRF token safely
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+                
+                // Send AJAX request to save intervensi (using same endpoint as CCTV matrix)
+                fetch(`{{ url('cctv-data-control-room/intervensi') }}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        'X-CSRF-TOKEN': csrfToken
                     },
                     body: JSON.stringify(formData)
                 })
@@ -19729,6 +21091,12 @@ source: new ol.source.Vector(),
                                         $(picSelect).val(null).trigger('change');
                                     }
                                     
+                                    // Reset Select2 for CCTV
+                                    const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
+                                    if (cctvSelect && typeof $ !== 'undefined' && $(cctvSelect).hasClass('select2-hidden-accessible')) {
+                                        $(cctvSelect).val(null).trigger('change');
+                                    }
+                                    
                                     // Reset button
                                     submitBtn.disabled = false;
                                     submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>Kirim Intervensi';
@@ -19760,6 +21128,12 @@ source: new ol.source.Vector(),
                                     const picSelect = document.getElementById('intervensiPICAreaKerja');
                                     if (picSelect && typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
                                         $(picSelect).val(null).trigger('change');
+                                    }
+                                    
+                                    // Reset Select2 for CCTV
+                                    const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
+                                    if (cctvSelect && typeof $ !== 'undefined' && $(cctvSelect).hasClass('select2-hidden-accessible')) {
+                                        $(cctvSelect).val(null).trigger('change');
                                     }
                                     
                                     // Reset button
@@ -19794,6 +21168,273 @@ source: new ol.source.Vector(),
     
     // Charts menggunakan script dari template index.js
     // Script chart akan di-load dari build/js/index.js
+    
+    // Probability data per 1 hazard report (from the image)
+    const probabilityData = [
+        { kategori: 'Nearmiss', probability: 0.000232, percentage: '0,0232%', equivalent: '1 per 4.309 hazard', equivalentNumber: 4.309 },
+        { kategori: 'Property Damage', probability: 0.000187, percentage: '0,0187%', equivalent: '1 per 5.348 hazard', equivalentNumber: 5.348 },
+        { kategori: 'First Aid', probability: 0.0000206, percentage: '0,00206%', equivalent: '1 per 48.481 hazard', equivalentNumber: 48.481 },
+        { kategori: 'Fire Case', probability: 0.0000186, percentage: '0,00186%', equivalent: '1 per 53.738 hazard', equivalentNumber: 53.738 },
+        { kategori: 'MTI', probability: 0.0000173, percentage: '0,00173%', equivalent: '1 per 57.926 hazard', equivalentNumber: 57.926 },
+        { kategori: 'RWI', probability: 0.00000381, percentage: '0,000381%', equivalent: '1 per 262.369 hazard', equivalentNumber: 262.369 },
+        { kategori: 'LTI', probability: 0.00000202, percentage: '0,000202%', equivalent: '1 per 495.586 hazard', equivalentNumber: 495.586 },
+        { kategori: 'Fatality', probability: 0.000000673, percentage: '0,0000673%', equivalent: '1 per 1.486.757 hazard', equivalentNumber: 1486757 }
+    ];
+    
+    // Function to format number with thousand separator (Indonesian format)
+    function formatNumber(num) {
+        if (num < 0.01) {
+            return num.toFixed(4);
+        }
+        return Math.round(num * 100) / 100;
+    }
+    
+    // Function to format number for display
+    function formatNumberDisplay(num) {
+        if (num < 0.01) {
+            return num.toFixed(4);
+        }
+        return Math.round(num * 100) / 100;
+    }
+    
+    // Function to load and display matriks prediksi insiden
+    window.loadMatriksPrediksiInsiden = function() {
+        const loadingEl = document.getElementById('matriksPrediksiInsidenLoading');
+        const contentEl = document.getElementById('matriksPrediksiInsidenContent');
+        const errorEl = document.getElementById('matriksPrediksiInsidenError');
+        const tableBody = document.getElementById('matriksPrediksiInsidenTableBody');
+        
+        // Show loading, hide content and error
+        loadingEl.style.display = 'block';
+        contentEl.style.display = 'none';
+        errorEl.style.display = 'none';
+        tableBody.innerHTML = '';
+        
+        // Fetch location data with SAP counts
+        fetch('{{ route("full-maps.api.location-sap-counts") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.message || 'Gagal memuat data');
+                }
+                
+                const locations = data.data || [];
+                
+                if (locations.length === 0) {
+                    throw new Error('Tidak ada data lokasi ditemukan');
+                }
+                
+                // Calculate statistics
+                let totalSap = 0;
+                let totalPredictedAll = 0;
+                const categoryTotals = {};
+                
+                // Initialize category totals
+                probabilityData.forEach(function(item) {
+                    categoryTotals[item.kategori] = 0;
+                });
+                
+                // Build table rows and calculate stats
+                let tableRows = '';
+                locations.forEach(function(location) {
+                    const jumlahSap = location.jumlah_sap || 0;
+                    totalSap += jumlahSap;
+                    
+                    // Calculate predicted incidents for each category
+                    const predictions = probabilityData.map(function(item) {
+                        const pred = item.probability * jumlahSap;
+                        categoryTotals[item.kategori] += pred;
+                        return pred;
+                    });
+                    
+                    // Calculate total predicted incidents for this location
+                    const totalPredicted = predictions.reduce(function(sum, pred) {
+                        return sum + pred;
+                    }, 0);
+                    totalPredictedAll += totalPredicted;
+                    
+                    // Build row with better styling
+                    tableRows += '<tr>';
+                    tableRows += '<td style="position: sticky; left: 0; background-color: #fff; z-index: 5; font-weight: 500; border-right: 1px solid #dee2e6;">' + 
+                        (location.nama_lokasi || 'N/A') + '</td>';
+                    tableRows += '<td style="text-align: right; font-weight: 600; background-color: #f8f9fa;">' + 
+                        jumlahSap.toLocaleString('id-ID') + '</td>';
+                    
+                    // Add prediction columns with conditional styling
+                    predictions.forEach(function(pred, index) {
+                        const probData = probabilityData[index];
+                        const displayValue = pred < 0.01 ? pred.toFixed(4) : formatNumberDisplay(pred);
+                        const tooltip = probData.kategori + ': ' + probData.probability + ' (' + probData.equivalent + ')';
+                        
+                        // Color coding based on severity
+                        let cellClass = '';
+                        if (probData.kategori === 'Fatality' || probData.kategori === 'LTI') {
+                            cellClass = 'bg-danger bg-opacity-10';
+                        } else if (probData.kategori === 'RWI' || probData.kategori === 'MTI') {
+                            cellClass = 'bg-warning bg-opacity-10';
+                        } else if (probData.kategori === 'Fire Case' || probData.kategori === 'First Aid') {
+                            cellClass = 'bg-info bg-opacity-10';
+                        }
+                        
+                        tableRows += '<td style="text-align: right;" class="' + cellClass + '" title="' + tooltip + '">' + 
+                            '<span style="font-weight: 500;">' + displayValue + '</span>' + 
+                            '</td>';
+                    });
+                    
+                    // Total predicted
+                    const totalDisplay = totalPredicted < 0.01 ? totalPredicted.toFixed(4) : formatNumberDisplay(totalPredicted);
+                    tableRows += '<td style="text-align: right; font-weight: 700; background-color: #e9ecef; border-left: 2px solid #495057;">' + 
+                        totalDisplay + '</td>';
+                    tableRows += '</tr>';
+                });
+                
+                tableBody.innerHTML = tableRows;
+                
+                // Update statistics cards
+                const statsEl = document.getElementById('matriksPrediksiInsidenStats');
+                statsEl.innerHTML = `
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
+                                            <i class="material-icons-outlined text-primary" style="font-size: 32px;">location_on</i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="text-muted small">Total Lokasi</div>
+                                        <div class="h4 mb-0 fw-bold">${locations.length.toLocaleString('id-ID')}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
+                                            <i class="material-icons-outlined text-warning" style="font-size: 32px;">assignment</i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="text-muted small">Total SAP</div>
+                                        <div class="h4 mb-0 fw-bold">${totalSap.toLocaleString('id-ID')}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-danger bg-opacity-10 rounded-circle p-3">
+                                            <i class="material-icons-outlined text-danger" style="font-size: 32px;">trending_up</i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="text-muted small">Total Prediksi</div>
+                                        <div class="h4 mb-0 fw-bold">${formatNumberDisplay(totalPredictedAll).toLocaleString('id-ID')}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-3 col-sm-6 mb-3">
+                        <div class="card border-0 shadow-sm h-100">
+                            <div class="card-body">
+                                <div class="d-flex align-items-center">
+                                    <div class="flex-shrink-0">
+                                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
+                                            <i class="material-icons-outlined text-success" style="font-size: 32px;">calculate</i>
+                                        </div>
+                                    </div>
+                                    <div class="flex-grow-1 ms-3">
+                                        <div class="text-muted small">Rata-rata SAP/Lokasi</div>
+                                        <div class="h4 mb-0 fw-bold">${Math.round(totalSap / locations.length).toLocaleString('id-ID')}</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                // Update footer info
+                const footerInfoEl = document.getElementById('matriksPrediksiInsidenFooterInfo');
+                footerInfoEl.innerHTML = `
+                    <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">info</i>
+                    <span>Terakhir diperbarui: ${new Date().toLocaleString('id-ID')}</span>
+                `;
+                
+                // Initialize DataTable if not already initialized
+                if ($.fn.DataTable.isDataTable('#matriksPrediksiInsidenTable')) {
+                    $('#matriksPrediksiInsidenTable').DataTable().destroy();
+                }
+                
+                const dtOptions = {
+                    order: [[1, 'desc']], // Sort by jumlah_sap descending
+                    pageLength: 50,
+                    lengthMenu: [[25, 50, 100, 200, -1], [25, 50, 100, 200, "Semua"]],
+                    scrollX: true,
+                    scrollY: '60vh',
+                    scrollCollapse: true,
+                    dom: '<"row"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rt<"row"<"col-sm-12 col-md-5"i><"col-sm-12 col-md-7"p>>',
+                    language: {
+                        search: "Cari:",
+                        lengthMenu: "Tampilkan _MENU_ baris",
+                        info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ lokasi",
+                        infoEmpty: "Menampilkan 0 sampai 0 dari 0 lokasi",
+                        infoFiltered: "(difilter dari _MAX_ total lokasi)",
+                        zeroRecords: "Tidak ada data yang ditemukan",
+                        emptyTable: "Tidak ada data tersedia",
+                        paginate: {
+                            first: "Pertama",
+                            last: "Terakhir",
+                            next: "Selanjutnya",
+                            previous: "Sebelumnya"
+                        }
+                    },
+                    columnDefs: [
+                        { targets: [0], orderable: true },
+                        { targets: '_all', orderable: true }
+                    ]
+                };
+                
+                // Add fixedColumns if available
+                if ($.fn.dataTable.FixedColumns) {
+                    dtOptions.fixedColumns = {
+                        left: 1 // Fix first column (nama_lokasi)
+                    };
+                }
+                
+                $('#matriksPrediksiInsidenTable').DataTable(dtOptions);
+                
+                // Hide loading, show content
+                loadingEl.style.display = 'none';
+                contentEl.style.display = 'block';
+            })
+            .catch(error => {
+                console.error('Error loading matriks prediksi insiden:', error);
+                loadingEl.style.display = 'none';
+                errorEl.style.display = 'block';
+                document.getElementById('matriksPrediksiInsidenErrorMessage').textContent = 
+                    error.message || 'Terjadi kesalahan saat memuat data. Silakan coba lagi.';
+            });
+    };
+    
+    // Auto-load when modal is shown
+    document.addEventListener('DOMContentLoaded', function() {
+        const modal = document.getElementById('matriksPrediksiInsidenModal');
+        if (modal) {
+            modal.addEventListener('show.bs.modal', function() {
+                loadMatriksPrediksiInsiden();
+            });
+        }
+    });
 </script>
 <script src="{{ URL::asset('build/plugins/apexchart/apexcharts.min.js') }}"></script>
 <script src="{{ URL::asset('build/js/index.js') }}"></script>

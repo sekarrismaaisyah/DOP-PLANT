@@ -110,6 +110,114 @@ class SafetyScoreController extends Controller
     }
 
     /**
+     * Create initial calibration record (before calibration starts)
+     */
+    public function createInitialCalibration(Request $request): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'driver_id' => 'required|string|max:50',
+            'trip_id' => 'required|string|max:50',
+            'notes' => 'required|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            // Create initial calibration record with null values for calibration data
+            // These will be updated when calibration completes
+            $calibration = DmsCalibration::create([
+                'driver_id' => $request->driver_id,
+                'trip_id' => $request->trip_id,
+                'calibration_start_time' => now(),
+                'calibration_end_time' => now(), // Will be updated when calibration completes
+                't_close' => 0,
+                'ear_mean' => 0,
+                'ear_sd' => 0,
+                'data_points_count' => 0,
+                'notes' => $request->notes,
+            ]);
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Initial calibration record created successfully',
+                'data' => [
+                    'id' => $calibration->id,
+                    'driver_id' => $calibration->driver_id,
+                    'trip_id' => $calibration->trip_id,
+                    'notes' => $calibration->notes,
+                    'calibration_start_time' => $calibration->calibration_start_time->toISOString(),
+                ],
+            ], 201);
+        } catch (\Exception $e) {
+            Log::error('Failed to create initial calibration', [
+                'error' => $e->getMessage(),
+                'request' => $request->all(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to create initial calibration',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Update calibration record (when calibration completes)
+     */
+    public function updateCalibration(Request $request, $id): JsonResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'driver_id' => 'sometimes|string|max:50',
+            'trip_id' => 'sometimes|string|max:50',
+            'calibration_start_time' => 'sometimes|date',
+            'calibration_end_time' => 'sometimes|date',
+            't_close' => 'sometimes|numeric',
+            'ear_mean' => 'sometimes|numeric',
+            'ear_sd' => 'sometimes|numeric',
+            'data_points_count' => 'sometimes|integer|min:0',
+            'notes' => 'sometimes|string',
+        ]);
+
+        if ($validator->fails()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Validation failed',
+                'errors' => $validator->errors(),
+            ], 422);
+        }
+
+        try {
+            $calibration = DmsCalibration::findOrFail($id);
+            $calibration->update($validator->validated());
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Calibration updated successfully',
+                'data' => $calibration,
+            ], 200);
+        } catch (\Exception $e) {
+            Log::error('Failed to update calibration', [
+                'error' => $e->getMessage(),
+                'id' => $id,
+                'request' => $request->all(),
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to update calibration',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
      * Get list of calibrations
      */
     public function getCalibrations(Request $request): JsonResponse

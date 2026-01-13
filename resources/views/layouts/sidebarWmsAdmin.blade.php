@@ -76,8 +76,9 @@
           </li>
 
 
-            <li class="menu-label">Utilitas</li>
+          <li class="menu-label">Kesiapan Alat</li>
           
+
           <li>
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">camera</i>
@@ -92,6 +93,8 @@
             </ul>
           </li>
 
+          
+
            <li>
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">gps_fixed</i>
@@ -104,22 +107,29 @@
               <li><a href="{{ route('geofencing.monitoring') }}"><i class="material-icons-outlined">arrow_right</i>Boundary Monitoring</a></li>
             </ul>
           </li>
+
+           <li>
+            <a class="" href="{{ route('daily-operation-plan.index') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">picture_as_pdf</i>
+              </div>
+              <div class="menu-title">DOP</div>
+            </a>
+          </li>
           
           <li class="menu-label">Control Room</li>
-        
           <li>
             <a href="{{ route('maps.map') }}">
               <div class="parent-icon"><i class="material-icons-outlined">map</i>
               </div>
-              <div class="menu-title">Live Monitoring</div>
+              <div class="menu-title">Dashboard Readiness</div>
             </a>
           </li>
           
           <li>
-            <a href="{{ route('maps.map') }}">
+            <a href="{{ route('fullmaps') }}">
               <div class="parent-icon"><i class="material-icons-outlined">warning</i>
               </div>
-              <div class="menu-title">Live Maps</div>
+              <div class="menu-title">Smart Alert Maps</div>
             </a>
           </li>
           
@@ -130,26 +140,16 @@
               <div class="menu-title">Real-time Alerts</div>
             </a>
             <ul>
-              <li><a href="{{ route('realtime-alerts.index') }}"><i class="material-icons-outlined">arrow_right</i>Active Alerts</a></li>
-              <li><a href="{{ route('realtime-alerts.history') }}"><i class="material-icons-outlined">arrow_right</i>Alert History</a></li>
-              <li><a href="{{ route('realtime-alerts.settings') }}"><i class="material-icons-outlined">arrow_right</i>Notification Settings</a></li>
+              <li><a href="{{ route('cctv-data.intervensi-control-room.index') }}"><i class="material-icons-outlined">arrow_right</i>Alert CCTV</a></li>
+              {{-- <li><a href="{{ route('realtime-alerts.history') }}"><i class="material-icons-outlined">arrow_right</i>Smart Alert CCTV</a></li> --}}
+              <li><a href="{{ route('intervensi-area-kerja.index') }}"><i class="material-icons-outlined">arrow_right</i>Smart Alert Area Kerja</a></li>
+              {{-- <li><a href="{{ route('realtime-alerts.settings') }}"><i class="material-icons-outlined">arrow_right</i>Smart </a></li> --}}
             </ul>
           </li>
           
          
           
-          <li>
-            <a class="has-arrow" href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">dangerous</i>
-              </div>
-              <div class="menu-title">Violation Tracking</div>
-            </a>
-            <ul>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>Violation Detected</a></li>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>Violation Reports</a></li>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>Violation Analytics</a></li>
-            </ul>
-          </li>
+          
           
           {{-- <li>
             <a class="has-arrow" href="javascript:;">

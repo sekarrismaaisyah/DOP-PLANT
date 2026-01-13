@@ -187,14 +187,14 @@ class DailyOperationPlanController extends Controller
             
             $fotoFile = $request->file('foto_pekerjaan');
             $fotoPath = $fotoFile->store('dop/foto-pekerjaan', 'public');
+            // Add foto_pekerjaan path to validated data
             $validated['foto_pekerjaan'] = $fotoPath;
-        } else {
-            // Keep existing photo if not updated
-            unset($validated['foto_pekerjaan']);
         }
+        // If no file uploaded, foto_pekerjaan is not in validated array, so existing value will be preserved
 
-        // Update DOP
-        $dop->update($validated);
+        // Update DOP with validated data
+        $dop->fill($validated);
+        $dop->save();
 
         // Sync CCTV
         if (isset($validated['cctv_ids'])) {

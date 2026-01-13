@@ -441,6 +441,120 @@ class CctvProxyController extends Controller
         }
     }
 
+    /**
+     * Proxy untuk video stream (bypass CORS)
+     * Untuk DMS video streams yang memiliki CORS issues
+     * Menggunakan streamed response untuk efisiensi dengan live streams
+     */
+    public function videoStream(Request $request)
+    {
+        $streamUrl = $request->get('url');
+        
+        if (!$streamUrl) {
+            return response()->json(['error' => 'Missing stream URL'], 400);
+        }
+        
+        // Decode URL
+        $streamUrl = urldecode($streamUrl);
+        
+        // Validate URL
+        if (!filter_var($streamUrl, FILTER_VALIDATE_URL)) {
+            return response()->json(['error' => 'Invalid URL'], 400);
+        }
+        
+        // Only allow HTTPS/HTTP URLs for security
+        if (!str_starts_with($streamUrl, 'https://') && !str_starts_with($streamUrl, 'http://')) {
+            return response()->json(['error' => 'Only HTTP/HTTPS URLs are allowed'], 400);
+        }
+        
+        try {
+            Log::info('DMS video stream proxy request', [
+                'url' => $this->maskUrl($streamUrl),
+            ]);
+            
+            // Create streamed response for efficient streaming
+            $response = new StreamedResponse(function () use ($streamUrl) {
+                // Create stream context
+                $context = stream_context_create([
+                    'http' => [
+                        'method' => 'GET',
+                        'header' => [
+                            'User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
+                            'Accept: video/*,*/*',
+                            'Accept-Language: en-US,en;q=0.9',
+                            'Connection: keep-alive',
+                        ],
+                        'timeout' => 30,
+                        'follow_location' => true,
+                        'max_redirects' => 5,
+                    ],
+                ]);
+                
+                // Open remote stream
+                $remoteStream = @fopen($streamUrl, 'r', false, $context);
+                
+                if (!$remoteStream) {
+                    Log::error('Failed to open remote stream', [
+                        'url' => $this->maskUrl($streamUrl),
+                        'error' => error_get_last(),
+                    ]);
+                    return;
+                }
+                
+                // Stream data in chunks
+                while (!feof($remoteStream)) {
+                    $chunk = fread($remoteStream, 8192); // 8KB chunks
+                    if ($chunk !== false && $chunk !== '') {
+                        echo $chunk;
+                        
+                        // Flush output
+                        if (function_exists('flush')) {
+                            flush();
+                        }
+                        if (function_exists('ob_flush')) {
+                            @ob_flush();
+                        }
+                    }
+                    
+                    // Check if client disconnected
+                    if (connection_aborted()) {
+                        break;
+                    }
+                }
+                
+                fclose($remoteStream);
+            });
+            
+            // Set headers for video streaming
+            $response->headers->set('Content-Type', 'video/mp4'); // Will be auto-detected by browser
+            $response->headers->set('Cache-Control', 'no-cache, no-store, must-revalidate');
+            $response->headers->set('Pragma', 'no-cache');
+            $response->headers->set('Expires', '0');
+            $response->headers->set('Access-Control-Allow-Origin', '*');
+            $response->headers->set('Access-Control-Allow-Methods', 'GET, OPTIONS');
+            $response->headers->set('Access-Control-Allow-Headers', 'Content-Type');
+            $response->headers->set('X-Accel-Buffering', 'no'); // Disable buffering for nginx
+            
+            return $response;
+            
+        } catch (\Exception $e) {
+            Log::error('DMS video stream proxy error', [
+                'url' => $this->maskUrl($streamUrl),
+                'error' => $e->getMessage(),
+            ]);
+            
+            return response()->json([
+                'error' => 'Proxy error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
+    
+    protected function maskUrl($url)
+    {
+        // Mask sensitive parts of URL (like passwords in query params)
+        return preg_replace('/(password|pass|pwd|token|key)=([^&]+)/i', '$1=***', $url);
+    }
+
     protected function maskRtsp(string $rtspUrl): string
     {
         $parsed = parse_url($rtspUrl);

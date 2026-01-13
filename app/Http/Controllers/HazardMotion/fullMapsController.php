@@ -2364,8 +2364,8 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     public function getDailyOperationPlansWithPolygons(Request $request)
     {
         try {
-            // Get all daily operation plans
-            $plans = DailyOperationPlan::all();
+            // Get all daily operation plans with CCTV relationships
+            $plans = DailyOperationPlan::with('cctvs')->get();
             
             Log::info('getDailyOperationPlansWithPolygons - Total plans found: ' . $plans->count());
             
@@ -2548,6 +2548,26 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                                 
                                 if ($validCoordinates !== null) {
                                     $geometryCount++;
+                                    
+                                    // Get CCTV data for this DOP
+                                    $cctvData = [];
+                                    if ($plan->cctvs && $plan->cctvs->count() > 0) {
+                                        foreach ($plan->cctvs as $cctv) {
+                                            if ($cctv->longitude && $cctv->latitude) {
+                                                $cctvData[] = [
+                                                    'id' => $cctv->id,
+                                                    'no_cctv' => $cctv->no_cctv ?? null,
+                                                    'nama_cctv' => $cctv->nama_cctv ?? null,
+                                                    'longitude' => (float) $cctv->longitude,
+                                                    'latitude' => (float) $cctv->latitude,
+                                                    'lokasi_pemasangan' => $cctv->lokasi_pemasangan ?? null,
+                                                    'kondisi' => $cctv->kondisi ?? null,
+                                                    'status' => $cctv->status ?? null,
+                                                ];
+                                            }
+                                        }
+                                    }
+                                    
                                     $feature = [
                                         'type' => 'Feature',
                                         'geometry' => [
@@ -2566,6 +2586,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                                             'catatan' => $plan->catatan ?? null,
                                             'tanggal' => $plan->tanggal ? $plan->tanggal->format('Y-m-d') : null,
                                             'foto_pekerjaan' => $plan->foto_pekerjaan ?? null,
+                                            'cctvs' => $cctvData, // Include CCTV data
                                         ]
                                     ];
                                     $features[] = $feature;
@@ -2584,6 +2605,26 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                                     
                                     // Gunakan coordinates asli sebagai fallback
                                     $geometryCount++;
+                                    
+                                    // Get CCTV data for this DOP
+                                    $cctvData = [];
+                                    if ($plan->cctvs && $plan->cctvs->count() > 0) {
+                                        foreach ($plan->cctvs as $cctv) {
+                                            if ($cctv->longitude && $cctv->latitude) {
+                                                $cctvData[] = [
+                                                    'id' => $cctv->id,
+                                                    'no_cctv' => $cctv->no_cctv ?? null,
+                                                    'nama_cctv' => $cctv->nama_cctv ?? null,
+                                                    'longitude' => (float) $cctv->longitude,
+                                                    'latitude' => (float) $cctv->latitude,
+                                                    'lokasi_pemasangan' => $cctv->lokasi_pemasangan ?? null,
+                                                    'kondisi' => $cctv->kondisi ?? null,
+                                                    'status' => $cctv->status ?? null,
+                                                ];
+                                            }
+                                        }
+                                    }
+                                    
                                     $feature = [
                                         'type' => 'Feature',
                                         'geometry' => [
@@ -2602,6 +2643,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                                             'catatan' => $plan->catatan ?? null,
                                             'tanggal' => $plan->tanggal ? $plan->tanggal->format('Y-m-d') : null,
                                             'foto_pekerjaan' => $plan->foto_pekerjaan ?? null,
+                                            'cctvs' => $cctvData, // Include CCTV data
                                         ]
                                     ];
                                     $features[] = $feature;
@@ -2644,6 +2686,45 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 }
             }
 
+            // Get all CCTV from dop_cctv table
+            $allDopCctv = DB::table('dop_cctv')
+                ->join('cctv_data_bmo2', 'dop_cctv.cctv_id', '=', 'cctv_data_bmo2.id')
+                ->whereNotNull('cctv_data_bmo2.longitude')
+                ->whereNotNull('cctv_data_bmo2.latitude')
+                ->select(
+                    'cctv_data_bmo2.id',
+                    'cctv_data_bmo2.no_cctv',
+                    'cctv_data_bmo2.nama_cctv',
+                    'cctv_data_bmo2.longitude',
+                    'cctv_data_bmo2.latitude',
+                    'cctv_data_bmo2.lokasi_pemasangan',
+                    'cctv_data_bmo2.kondisi',
+                    'cctv_data_bmo2.status',
+                    'cctv_data_bmo2.site',
+                    'cctv_data_bmo2.perusahaan',
+                    'cctv_data_bmo2.link_akses',
+                    'dop_cctv.dop_id'
+                )
+                ->get();
+
+            // Format CCTV data for frontend
+            $cctvList = $allDopCctv->map(function ($cctv) {
+                return [
+                    'id' => $cctv->id,
+                    'no_cctv' => $cctv->no_cctv ?? null,
+                    'nama_cctv' => $cctv->nama_cctv ?? null,
+                    'longitude' => (float) $cctv->longitude,
+                    'latitude' => (float) $cctv->latitude,
+                    'lokasi_pemasangan' => $cctv->lokasi_pemasangan ?? null,
+                    'kondisi' => $cctv->kondisi ?? null,
+                    'status' => $cctv->status ?? null,
+                    'site' => $cctv->site ?? null,
+                    'perusahaan' => $cctv->perusahaan ?? null,
+                    'link_akses' => $cctv->link_akses ?? null,
+                    'dop_id' => $cctv->dop_id,
+                ];
+            })->toArray();
+
             Log::info('getDailyOperationPlansWithPolygons - Summary', [
                 'total_plans' => $plans->count(),
                 'processed' => $processedCount,
@@ -2652,7 +2733,8 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 'unique_locations' => count($processedLocations),
                 'features_returned' => count($features),
                 'plans_not_found' => $processedCount - $foundCount,
-                'plans_without_geometry' => $foundCount - $geometryCount
+                'plans_without_geometry' => $foundCount - $geometryCount,
+                'cctv_count' => count($cctvList)
             ]);
 
             return response()->json([
@@ -2661,6 +2743,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     'type' => 'FeatureCollection',
                     'features' => $features
                 ],
+                'cctv_list' => $cctvList, // All CCTV from dop_cctv
                 'summary' => [
                     'total_plans' => $plans->count(),
                     'processed' => $processedCount,
@@ -2668,7 +2751,8 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     'with_geometry' => $geometryCount,
                     'unique_locations' => count($processedLocations),
                     'features_returned' => count($features),
-                    'plans_not_found' => $processedCount - $foundCount
+                    'plans_not_found' => $processedCount - $foundCount,
+                    'cctv_count' => count($cctvList)
                 ]
             ]);
 
@@ -3093,6 +3177,59 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
         }
         
         return true;
+    }
+
+    /**
+     * Get location data with SAP counts for incident prediction matrix
+     */
+    public function getLocationSapCounts(Request $request)
+    {
+        try {
+            $clickHouseService = new ClickHouseService();
+            
+            if (!$clickHouseService->isConnected()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ClickHouse tidak terhubung',
+                    'data' => []
+                ]);
+            }
+
+            // Query to get location data with SAP counts grouped by nama_lokasi
+            $sql = "
+                SELECT 
+                    ifNull(toString(nama_lokasi), '') as nama_lokasi,
+                    COUNT(*) AS jumlah_sap
+                FROM nitip.aaj_car_all_year_from_dav
+                WHERE nama_lokasi IS NOT NULL 
+                    AND nama_lokasi != ''
+                GROUP BY nama_lokasi
+                ORDER BY jumlah_sap DESC
+            ";
+
+            $results = $clickHouseService->query($sql);
+            
+            $locations = [];
+            foreach ($results as $row) {
+                $locations[] = [
+                    'nama_lokasi' => $row['nama_lokasi'] ?? '',
+                    'jumlah_sap' => (int)($row['jumlah_sap'] ?? 0)
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $locations
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error getting location SAP counts: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+                'data' => []
+            ]);
+        }
     }
 
 }

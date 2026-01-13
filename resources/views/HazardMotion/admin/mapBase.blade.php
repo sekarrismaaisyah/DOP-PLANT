@@ -52,6 +52,26 @@
         background-color: #e5e7eb;
     }
     
+    /* Dashboard Readiness Button Hover Style */
+    .btn-dashboard-readiness:hover {
+        background-color: #ffffff !important;
+        border-color: #0d6efd;
+        color: #000 !important;
+    }
+    
+    .btn-dashboard-readiness:focus {
+        background-color: #ffffff !important;
+        border-color: #0d6efd;
+        color: #000 !important;
+        box-shadow: 0 0 0 0.2rem rgba(13, 110, 253, 0.25);
+    }
+    
+    .btn-dashboard-readiness:active {
+        background-color: #ffffff !important;
+        border-color: #0d6efd;
+        color: #000 !important;
+    }
+    
     /* Layer Toggle Button Styles */
     .layer-toggle-btn {
         position: relative;
@@ -1882,12 +1902,12 @@
 
 @section('content')
 <div class="hazard-detection-header">
-    <h1 class="hazard-detection-title">Dashboard Overview </h1>
+    <h1 class="hazard-detection-title">Dashboard Readiness</h1>
     <p class="hazard-detection-subtitle">Real-time detection and monitoring of safety hazards in operational areas</p>
     
     <!-- Collapse Header Button -->
     <div class="mb-3">
-        <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardStatsCollapse" aria-expanded="true" aria-controls="dashboardStatsCollapse">
+        <button class="btn btn-outline-primary btn-dashboard-readiness w-100 d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardStatsCollapse" aria-expanded="true" aria-controls="dashboardStatsCollapse">
             <span class="fw-bold d-flex align-items-center">
                 <i class="material-icons-outlined me-2">dashboard</i>
                  Dashboard Readiness
@@ -1904,7 +1924,7 @@
                 <div class="card-body">
                     <div class="d-flex align-items-center justify-content-between mb-3">
                     <h5 class="mb-0 fw-bold">Total Kesiapan Utilitas</h5>
-                    <span class="badge bg-primary" id="coverageBadge">0% Coverage</span>
+                    <!-- <span class="badge bg-primary" id="coverageBadge">0% Coverage</span> -->
                     </div>
                     <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
                         
@@ -1976,21 +1996,21 @@
                     <h3 class="mb-0" id="modalTotalCctv">0</h3>
                     <p class="mb-0">Total CCTV Terpasang</p>
                   </button>
-                  <div class="vr"></div>
+                  <!-- <div class="vr"></div>
                   <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="CCTV Aktif Live View & Connected">
                     <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
                       <span class="material-icons-outlined">check_circle</span>
                     </span>
                     <h3 class="mb-0" id="modalCctvAktif">0</h3>
-                    <p class="mb-0">CCTV Aktif</p>
+                    <p class="mb-0">CCTV Online</p>
                     <small class="text-muted">Live View & Connected</small>
-                  </button>
+                  </button> -->
                   <div class="vr"></div>
                   <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Kondisi Baik">
                     <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
                       <span class="material-icons-outlined">verified</span>
                     </span>
-                    <h3 class="mb-0" id="modalCctvKondisiBaik">0</h3>
+                    <h3 class="mb-0" id="modalCctvKondisiBaik">0%</h3>
                     <p class="mb-0">Kondisi Baik</p>
                   </button>
                   <div class="vr"></div>
@@ -2001,14 +2021,14 @@
                     <h3 class="mb-0" id="modalCctvAutoAlert">0</h3>
                     <p class="mb-0">Dengan Auto Alert</p>
                   </button>
-                  <div class="vr"></div>
-                  <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Kondisi CCTV Tidak Baik">
+                  <!-- <div class="vr"></div> -->
+                  <!-- <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Kondisi CCTV Tidak Baik">
                     <span class="mb-2 wh-48 bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center">
                       <span class="material-icons-outlined">error</span>
                     </span>
                     <h3 class="mb-0" id="modalCctvKondisiTidakBaik">0</h3>
                     <p class="mb-0">Kondisi CCTV Tidak Baik</p>
-                  </button>
+                  </button> -->
                 </div>
               </div>
             </div>
@@ -2360,14 +2380,14 @@
                                         <p class="mb-0">Total Onsite</p>
                                         <small class="text-muted">Hari Ini</small>
                                     </button>
-                                    <div class="vr"></div>
+                                    <!-- <div class="vr"></div>
                                     <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total CCTV Dedicated">
                                         <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
                                         <span class="material-icons-outlined">videocam</span>
                                         </span>
                                         <h3 class="mb-0" id="totalCctvDedicated">0</h3>
                                         <p class="mb-0">Total CCTV Dedicated</p>
-                                    </button>
+                                    </button> -->
                                     <div class="vr"></div>
                                     <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Persentase CCTV dengan PJA">
                                         <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
@@ -2444,18 +2464,18 @@
                                         <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
                                         <span class="material-icons-outlined">map</span>
                                         </span>
-                                        <h3 class="mb-0" id="totalBoundaryAreaKerja">0%</h3>
-                                        <p class="mb-0">Total Boundary Area Kerja</p>
-                                        <small class="text-muted" id="lastWeekAreaKerja">Week -</small>
+                                        <h3 class="mb-0" id="">100%</h3>
+                                        <p class="mb-0">Total digitasi Area Kerja</p>
+                                        <small class="text-muted" id="lastWeekAreaKerja">Week 2 2026</small>
                                     </button>
                                     <div class="vr"></div>
                                     <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total WMS Links">
                                         <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
                                         <span class="material-icons-outlined">link</span>
                                         </span>
-                                        <h3 class="mb-0" id="totalWmsLinks">0%</h3>
-                                        <p class="mb-0">Total WMS Links</p>
-                                        <small class="text-muted" id="lastWeekWms">Week -</small>
+                                        <h3 class="mb-0" id="">100%</h3>
+                                        <p class="mb-0">Total WMS MAPS</p>
+                                        <small class="text-muted" id="lastWeekWms">Week 2 2026</small>
                                     </button>
                                     <div class="vr"></div>
                                     <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Area Highrisk">
@@ -2497,7 +2517,7 @@
                     <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">percent</i>
                     </span>
-                    <h3 class="mb-0" id="coveragePercentage">0%</h3>
+                    <h3 class="mb-0" id="coverageBadge">0%</h3>
                     <p class="mb-0">Coverage</p>
                     <small class="text-muted" id="coverageLabel">persentase</small>
                   </button>
@@ -2642,12 +2662,18 @@
                     
                     // Load data when switching to kesiapan-orang tab
                     if (targetTabId === 'kesiapan-orang') {
-                        loadKesiapanOrangData();
+                        // Small delay to ensure tab is visible
+                        setTimeout(() => {
+                            loadKesiapanOrangData();
+                        }, 100);
                     }
                     
                     // Load data when switching to area-kerja tab
                     if (targetTabId === 'area-kerja') {
-                        loadAreaKerjaData();
+                        // Small delay to ensure tab is visible before loading data
+                        setTimeout(() => {
+                            loadAreaKerjaData();
+                        }, 100);
                     }
                 }
                 
@@ -3141,7 +3167,7 @@
             
             // Update Coverage Badge
             if (coverageBadgeEl) {
-                coverageBadgeEl.textContent = coveragePercentage.toFixed(2) + '% Coverage';
+                coverageBadgeEl.textContent = coveragePercentage.toFixed(2) + '%';
             }
             
             console.log('Area Coverage Calculated:', {
@@ -12490,7 +12516,6 @@
                     // Update KPI Summary Cards with animation
                     animateNumber('modalTotalCctv', data.total || 0, 800);
                     animateNumber('modalCctvAktif', data.cctvAktif || 0, 800);
-                    animateNumber('modalCctvKondisiBaik', data.cctvKondisiBaik || 0, 800);
                     animateNumber('modalCctvAutoAlert', data.cctvAutoAlert || 0, 800);
                     animateNumber('modalCctvKondisiTidakBaik', data.cctvKondisiTidakBaik || 0, 800);
 
@@ -12514,6 +12539,36 @@
                     // CCTV Kondisi Baik
                     const kondisiBaikCount = data.cctvKondisiBaik || 0;
                     const kondisiBaikPercentage = totalCctvMain > 0 ? ((kondisiBaikCount / totalCctvMain) * 100).toFixed(1) : 0;
+                    
+                    // Update modal Kondisi Baik dengan persentase
+                    const modalCctvKondisiBaikEl = document.getElementById('modalCctvKondisiBaik');
+                    if (modalCctvKondisiBaikEl) {
+                        // Animate percentage value with % suffix
+                        const startValue = parseFloat(modalCctvKondisiBaikEl.textContent.replace(/[^\d.]/g, '')) || 0;
+                        const endValue = parseFloat(kondisiBaikPercentage);
+                        const duration = 800;
+                        const startTime = performance.now();
+                        
+                        function easeOutCubic(t) {
+                            return 1 - Math.pow(1 - t, 3);
+                        }
+                        
+                        function animatePercentage(currentTime) {
+                            const elapsed = currentTime - startTime;
+                            const progress = Math.min(elapsed / duration, 1);
+                            const easedProgress = easeOutCubic(progress);
+                            const currentValue = startValue + (endValue - startValue) * easedProgress;
+                            modalCctvKondisiBaikEl.textContent = currentValue.toFixed(1) + '%';
+                            
+                            if (progress < 1) {
+                                requestAnimationFrame(animatePercentage);
+                            } else {
+                                modalCctvKondisiBaikEl.textContent = endValue.toFixed(1) + '%';
+                            }
+                        }
+                        
+                        requestAnimationFrame(animatePercentage);
+                    }
                     animateNumber('statKondisiBaikCount', kondisiBaikCount, 800);
                     const statKondisiBaikChange = document.getElementById('statKondisiBaikChange');
                     const statKondisiBaikText = document.getElementById('statKondisiBaikText');
@@ -14892,7 +14947,29 @@
     // Load Area Kerja data from API
     function loadAreaKerjaData() {
         const tbody = document.getElementById('tbodyAreaKerja');
-        if (!tbody) return;
+        if (!tbody) {
+            console.warn('tbodyAreaKerja element not found');
+            // Retry after a short delay in case tab is not yet visible
+            setTimeout(() => {
+                const retryTbody = document.getElementById('tbodyAreaKerja');
+                if (retryTbody) {
+                    loadAreaKerjaData();
+                } else {
+                    console.error('tbodyAreaKerja still not found after retry');
+                }
+            }, 200);
+            return;
+        }
+        
+        // Check if tab is visible
+        const areaKerjaTab = document.getElementById('area-kerja');
+        if (areaKerjaTab && (areaKerjaTab.style.display === 'none' || !areaKerjaTab.classList.contains('active'))) {
+            console.log('Area kerja tab is not visible, waiting...');
+            setTimeout(() => loadAreaKerjaData(), 200);
+            return;
+        }
+        
+        console.log('Loading Area Kerja data...');
         
         // Show loading state
         tbody.innerHTML = `
@@ -14904,37 +14981,87 @@
             </tr>
         `;
         
-        // Reset statistics
-        document.getElementById('totalBoundaryAreaKerja').textContent = '0%';
-        document.getElementById('totalWmsLinks').textContent = '0%';
-        document.getElementById('totalAreaHighrisk').textContent = '0%';
-        document.getElementById('totalAreaKritis').textContent = '0%';
+        // Reset statistics - with null checks
+        const totalBoundaryEl = document.getElementById('totalBoundaryAreaKerja');
+        const totalWmsEl = document.getElementById('totalWmsLinks');
+        const totalHighriskEl = document.getElementById('totalAreaHighrisk');
+        const totalKritisEl = document.getElementById('totalAreaKritis');
+        
+        if (totalBoundaryEl) totalBoundaryEl.textContent = '0%';
+        if (totalWmsEl) totalWmsEl.textContent = '0%';
+        if (totalHighriskEl) totalHighriskEl.textContent = '0%';
+        if (totalKritisEl) totalKritisEl.textContent = '0%';
+        
         const lastWeekAreaKerjaEl = document.getElementById('lastWeekAreaKerja');
         const lastWeekWmsEl = document.getElementById('lastWeekWms');
         if (lastWeekAreaKerjaEl) lastWeekAreaKerjaEl.textContent = 'Week -';
         if (lastWeekWmsEl) lastWeekWmsEl.textContent = 'Week -';
         
-        fetch('{{ route("maps.api.area-kerja-data") }}')
+        // Create AbortController for timeout
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 seconds timeout
+        
+        fetch('{{ route("maps.api.area-kerja-data") }}', {
+            signal: controller.signal,
+            headers: {
+                'Accept': 'application/json',
+                'X-Requested-With': 'XMLHttpRequest'
+            }
+        })
             .then(response => {
+                clearTimeout(timeoutId);
                 if (!response.ok) {
                     throw new Error(`HTTP error! status: ${response.status}`);
                 }
                 return response.json();
             })
             .then(data => {
+                clearTimeout(timeoutId);
+                console.log('Area Kerja data received:', data);
+                
                 if (data.success && data.data) {
                     // Update statistics
                     if (data.statistics) {
-                        // Update percentages
+                        console.log('Updating statistics:', data.statistics);
+                        
+                        // Update percentages with null checks
                         const boundaryPercentage = data.statistics.boundary_area_kerja_percentage || 0;
                         const wmsPercentage = data.statistics.wms_links_percentage || 0;
                         const highriskPercentage = data.statistics.area_highrisk_percentage || 0;
                         const kritisPercentage = data.statistics.area_kritis_percentage || 0;
                         
-                        document.getElementById('totalBoundaryAreaKerja').textContent = boundaryPercentage.toFixed(2) + '%';
-                        document.getElementById('totalWmsLinks').textContent = wmsPercentage.toFixed(2) + '%';
-                        document.getElementById('totalAreaHighrisk').textContent = highriskPercentage.toFixed(2) + '%';
-                        document.getElementById('totalAreaKritis').textContent = kritisPercentage.toFixed(2) + '%';
+                        const totalBoundaryEl = document.getElementById('totalBoundaryAreaKerja');
+                        const totalWmsEl = document.getElementById('totalWmsLinks');
+                        const totalHighriskEl = document.getElementById('totalAreaHighrisk');
+                        const totalKritisEl = document.getElementById('totalAreaKritis');
+                        
+                        if (totalBoundaryEl) {
+                            totalBoundaryEl.textContent = boundaryPercentage.toFixed(2) + '%';
+                            console.log('Updated totalBoundaryAreaKerja:', boundaryPercentage);
+                        } else {
+                            console.warn('totalBoundaryAreaKerja element not found');
+                        }
+                        
+                        if (totalWmsEl) {
+                            totalWmsEl.textContent = wmsPercentage.toFixed(2) + '%';
+                            console.log('Updated totalWmsLinks:', wmsPercentage);
+                        } else {
+                            console.warn('totalWmsLinks element not found');
+                        }
+                        
+                        if (totalHighriskEl) {
+                            totalHighriskEl.textContent = highriskPercentage.toFixed(2) + '%';
+                            console.log('Updated totalAreaHighrisk:', highriskPercentage);
+                        } else {
+                            console.warn('totalAreaHighrisk element not found');
+                        }
+                        
+                        if (totalKritisEl) {
+                            totalKritisEl.textContent = kritisPercentage.toFixed(2) + '%';
+                            console.log('Updated totalAreaKritis:', kritisPercentage);
+                        } else {
+                            console.warn('totalAreaKritis element not found');
+                        }
                         
                         // Update last week info
                         if (data.statistics.last_week_area_kerja && data.statistics.last_year_area_kerja) {
@@ -14952,29 +15079,65 @@
                         } else if (lastWeekWmsEl) {
                             lastWeekWmsEl.textContent = 'Week -';
                         }
+                    } else {
+                        console.warn('No statistics in response');
                     }
                     
                     // Render table
-                    renderAreaKerjaTable(data.data.cctv_coverage);
+                    const coverageData = data.data.cctv_coverage || [];
+                    console.log('Coverage data count:', coverageData.length);
+                    console.log('Coverage data sample:', coverageData.slice(0, 3));
+                    
+                    if (coverageData.length > 0) {
+                        renderAreaKerjaTable(coverageData);
+                    } else {
+                        console.warn('No coverage data to render');
+                        tbody.innerHTML = `
+                            <tr>
+                                <td colspan="6" class="text-center text-muted py-4">
+                                    <i class="material-icons-outlined">info</i>
+                                    <p class="mb-0 mt-2">Tidak ada data coverage</p>
+                                </td>
+                            </tr>
+                        `;
+                    }
                 } else {
+                    console.warn('No data or unsuccessful response:', data);
+                    const errorMsg = data && data.message ? data.message : (data && data.error ? data.error : 'Tidak ada data area kerja');
                     tbody.innerHTML = `
                         <tr>
                             <td colspan="6" class="text-center text-muted py-4">
                                 <i class="material-icons-outlined">info</i>
-                                <p class="mb-0 mt-2">Tidak ada data area kerja</p>
+                                <p class="mb-0 mt-2">${errorMsg}</p>
+                                <button class="btn btn-sm btn-primary mt-2" onclick="loadAreaKerjaData()">
+                                    <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">refresh</i>
+                                    Coba Lagi
+                                </button>
                             </td>
                         </tr>
                     `;
                 }
             })
             .catch(error => {
+                clearTimeout(timeoutId);
                 console.error('Error loading area kerja data:', error);
+                
+                let errorMessage = 'Gagal memuat data area kerja';
+                if (error.name === 'AbortError') {
+                    errorMessage = 'Request timeout - Data terlalu lama dimuat. Silakan coba lagi.';
+                } else if (error.message) {
+                    errorMessage = error.message;
+                }
+                
                 tbody.innerHTML = `
                     <tr>
                         <td colspan="6" class="text-center text-danger py-4">
                             <i class="material-icons-outlined">error_outline</i>
-                            <p class="mb-0 mt-2">Gagal memuat data area kerja</p>
-                            <small style="color: #9ca3af;">${error.message}</small>
+                            <p class="mb-0 mt-2">${errorMessage}</p>
+                            <button class="btn btn-sm btn-primary mt-2" onclick="loadAreaKerjaData()">
+                                <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">refresh</i>
+                                Coba Lagi
+                            </button>
                         </td>
                     </tr>
                 `;
@@ -14984,9 +15147,15 @@
     // Render Area Kerja table
     function renderAreaKerjaTable(coverageData) {
         const tbody = document.getElementById('tbodyAreaKerja');
-        if (!tbody) return;
+        if (!tbody) {
+            console.error('tbodyAreaKerja not found in renderAreaKerjaTable');
+            return;
+        }
+        
+        console.log('renderAreaKerjaTable called with data:', coverageData);
         
         if (!coverageData || coverageData.length === 0) {
+            console.warn('No coverage data to render');
             tbody.innerHTML = `
                 <tr>
                     <td colspan="6" class="text-center text-muted py-4">
@@ -14998,26 +15167,60 @@
             return;
         }
         
-        const html = coverageData.map(item => {
-            return `
+        // Helper function to escape HTML and handle null/undefined
+        const safeValue = (val) => {
+            if (val === null || val === undefined || val === '') return '-';
+            return String(val);
+        };
+        
+        try {
+            const html = coverageData.map((item, index) => {
+                const kategoriArea = item.kategori_area || '';
+                let badgeClass = 'bg-secondary bg-opacity-10 text-secondary';
+                if (kategoriArea === 'Area Highrisk') {
+                    badgeClass = 'bg-danger bg-opacity-10 text-danger';
+                } else if (kategoriArea === 'Area Kritis') {
+                    badgeClass = 'bg-warning bg-opacity-10 text-warning';
+                }
+                
+                return `
+                    <tr>
+                        <td>${safeValue(item.id)}</td>
+                        <td>${safeValue(item.no_cctv)}</td>
+                        <td>${safeValue(item.coverage_lokasi)}</td>
+                        <td>${safeValue(item.coverage_detail_lokasi)}</td>
+                        <td>${safeValue(item.kategori_aktivitas)}</td>
+                        <td>
+                            ${kategoriArea ? `
+                                <span class="badge ${badgeClass}">
+                                    ${kategoriArea}
+                                </span>
+                            ` : '-'}
+                        </td>
+                    </tr>
+                `;
+            }).join('');
+            
+            tbody.innerHTML = html;
+            
+            // Log success for debugging
+            console.log(`Area Kerja table rendered successfully: ${coverageData.length} records`);
+            
+            // Verify the data is actually in the DOM
+            const renderedRows = tbody.querySelectorAll('tr');
+            console.log(`Rows rendered in DOM: ${renderedRows.length}`);
+        } catch (error) {
+            console.error('Error rendering Area Kerja table:', error);
+            tbody.innerHTML = `
                 <tr>
-                    <td>${item.id || '-'}</td>
-                    <td>${item.no_cctv || '-'}</td>
-                    <td>${item.coverage_lokasi || '-'}</td>
-                    <td>${item.coverage_detail_lokasi || '-'}</td>
-                    <td>${item.kategori_aktivitas || '-'}</td>
-                    <td>
-                        ${item.kategori_area ? `
-                            <span class="badge ${item.kategori_area === 'Area Highrisk' ? 'bg-danger bg-opacity-10 text-danger' : item.kategori_area === 'Area Kritis' ? 'bg-warning bg-opacity-10 text-warning' : 'bg-secondary bg-opacity-10 text-secondary'}">
-                                ${item.kategori_area}
-                            </span>
-                        ` : '-'}
+                    <td colspan="6" class="text-center text-danger py-4">
+                        <i class="material-icons-outlined">error_outline</i>
+                        <p class="mb-0 mt-2">Error rendering data</p>
+                        <small style="color: #9ca3af;">${error.message}</small>
                     </td>
                 </tr>
             `;
-        }).join('');
-        
-        tbody.innerHTML = html;
+        }
     }
     
     // Render PJA list - menggunakan struktur sama dengan CCTV
