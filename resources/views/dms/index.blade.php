@@ -789,6 +789,7 @@
 
     <!-- MediaPipe Face Landmarker from CDN -->
     <!-- Using correct import path based on MediaPipe package structure -->
+    <!-- Note: Using ES module only (bundle script removed due to MIME type issues) -->
     <script type="module">
         (async function() {
             try {
@@ -799,22 +800,29 @@
                 // Try importing from the wasm subdirectory which contains the actual implementation
                 let mediapipeModule;
                 
-                // First try: import from wasm directory (most likely correct)
+                // Try correct import paths for MediaPipe tasks-vision
+                // Use main package entry point first (most reliable)
                 try {
-                    mediapipeModule = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm/index.mjs');
-                    console.log('Loaded from .mjs extension');
+                    mediapipeModule = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3');
+                    console.log('Loaded from main package');
                 } catch (e1) {
                     try {
-                        mediapipeModule = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm/index.js');
-                        console.log('Loaded from .js extension');
+                        // Try with /dist path
+                        mediapipeModule = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/dist/index.js');
+                        console.log('Loaded from /dist/index.js');
                     } catch (e2) {
                         try {
-                            mediapipeModule = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm');
-                            console.log('Loaded from /wasm directory');
+                            // Try unpkg as fallback
+                            mediapipeModule = await import('https://unpkg.com/@mediapipe/tasks-vision@0.10.3');
+                            console.log('Loaded from unpkg main package');
                         } catch (e3) {
-                            // Last resort: try main package
-                            mediapipeModule = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3');
-                            console.log('Loaded from main package');
+                            // Last resort: try older version
+                            try {
+                                mediapipeModule = await import('https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0');
+                                console.log('Loaded from version 0.10.0');
+                            } catch (e4) {
+                                throw new Error('All MediaPipe import paths failed');
+                            }
                         }
                     }
                 }
@@ -889,12 +897,12 @@
             } catch (error) {
                 console.error('Failed to load MediaPipe from jsDelivr:', error);
                 
-                // Try fallback: unpkg with multiple paths
+                // Try fallback: unpkg with correct paths
                 const unpkgPaths = [
-                    'https://unpkg.com/@mediapipe/tasks-vision@0.10.3/wasm/index.mjs',
-                    'https://unpkg.com/@mediapipe/tasks-vision@0.10.3/wasm/index.js',
-                    'https://unpkg.com/@mediapipe/tasks-vision@0.10.3/wasm',
-                    'https://unpkg.com/@mediapipe/tasks-vision@0.10.3'
+                    'https://unpkg.com/@mediapipe/tasks-vision@0.10.3',
+                    'https://unpkg.com/@mediapipe/tasks-vision@0.10.3/dist/index.js',
+                    'https://unpkg.com/@mediapipe/tasks-vision@0.10.0',
+                    'https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0'
                 ];
                 
                 for (const path of unpkgPaths) {
@@ -920,6 +928,9 @@
                         continue;
                     }
                 }
+                
+                // All ES module paths failed
+                // Note: Bundle script fallback removed due to MIME type issues
                 
                 // All paths failed
                 const finalError = new Error(
@@ -1008,9 +1019,15 @@
 
         // Initialize
         async function init() {
-            video = document.getElementById('videoElement');
-            canvas = document.getElementById('canvasElement');
-            ctx = canvas.getContext('2d');
+            // Note: videoElement and canvasElement are legacy - now using card-based system
+            // Only initialize MediaPipe here, video/canvas are handled per-card
+            video = document.getElementById('videoElement'); // May be null - legacy support
+            canvas = document.getElementById('canvasElement'); // May be null - legacy support
+            
+            // Only get context if canvas exists (for legacy support)
+            if (canvas) {
+                ctx = canvas.getContext('2d');
+            }
 
             updateStatus('Loading MediaPipe...');
 
@@ -1096,9 +1113,36 @@
                 updateStatus('Initializing Face Landmarker...');
                 
                 // Initialize MediaPipe Face Landmarker
-                const vision = await window.MediaPipeVision.FilesetResolver.forVisionTasks(
-                    "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm"
-                );
+                // Use correct WASM path - try multiple CDNs
+                let wasmPath = "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.3/wasm";
+                let vision;
+                
+                try {
+                    vision = await window.MediaPipeVision.FilesetResolver.forVisionTasks(wasmPath);
+                } catch (wasmError) {
+                    console.warn('Primary WASM path failed, trying alternatives...', wasmError);
+                    // Try alternative paths
+                    const wasmPaths = [
+                        "https://unpkg.com/@mediapipe/tasks-vision@0.10.3/wasm",
+                        "https://cdn.jsdelivr.net/npm/@mediapipe/tasks-vision@0.10.0/wasm",
+                        "https://unpkg.com/@mediapipe/tasks-vision@0.10.0/wasm"
+                    ];
+                    
+                    for (const path of wasmPaths) {
+                        try {
+                            vision = await window.MediaPipeVision.FilesetResolver.forVisionTasks(path);
+                            console.log('WASM loaded from:', path);
+                            break;
+                        } catch (pathError) {
+                            console.warn('WASM path failed:', path, pathError);
+                            continue;
+                        }
+                    }
+                    
+                    if (!vision) {
+                        throw new Error('Failed to load WASM from all paths');
+                    }
+                }
 
                 faceLandmarker = await window.MediaPipeVision.FaceLandmarker.createFromOptions(vision, {
                     baseOptions: {
@@ -1870,9 +1914,16 @@
             }
         });
 
-        // Update status
+        // Update status (legacy function - for backward compatibility)
+        // Note: This is for legacy single video element, now using card-based system
         function updateStatus(status) {
-            document.getElementById('detectionStatus').textContent = status;
+            const statusEl = document.getElementById('detectionStatus');
+            if (statusEl) {
+                statusEl.textContent = status;
+            } else {
+                // Element doesn't exist (card-based system), just log it
+                console.log('Status (legacy):', status);
+            }
         }
 
         // Handle video file upload
@@ -2525,6 +2576,15 @@
                     if (streamRadio) {
                         streamRadio.checked = true;
                         toggleVideoSource(cardId, 'stream');
+                        
+                        // Auto-load stream after a short delay to ensure UI is ready
+                        setTimeout(() => {
+                            // Try to load stream automatically using iframe mode
+                            if (calibrationData.notes) {
+                                updateCardStatus(cardId, 'Loading stream...');
+                                loadStreamUrlIframe(cardId);
+                            }
+                        }, 500);
                     }
                 }
             }
@@ -2669,17 +2729,72 @@
             setupDisplayContainer(cardId, 'iframe');
             
             // Try to setup hidden video for detection using proxy (background processing)
+            // First try proxy, if fails, try direct URL
             const proxyUrl = `/dms-proxy/video-stream?url=${encodeURIComponent(streamUrl)}`;
+            
+            // Track if video loaded successfully (declare before use)
+            let videoLoaded = false;
+            let statusUpdated = false;
+            let proxyTimeout = null;
             
             // Reset video (keep it hidden for background detection)
             video.src = '';
             video.removeAttribute('crossorigin');
             // Video stays hidden (position: absolute, off-screen)
             
-            // Try to load video via proxy for detection
+            // Function to update status when video is ready
+            const updateVideoReadyStatus = () => {
+                if (statusUpdated) return;
+                statusUpdated = true;
+                
+                const canvas = document.getElementById(cardId + '-canvas');
+                if (canvas && video.videoWidth > 0 && video.videoHeight > 0) {
+                    canvas.width = video.videoWidth;
+                    canvas.height = video.videoHeight;
+                }
+                
+                document.getElementById(cardId + '-detection-mode').textContent = 'Mode: Hybrid (iframe display + video detection)';
+                updateCardStatus(cardId, 'Stream loaded - Ready for detection');
+                console.log('Hybrid mode ready: iframe displaying, video ready for detection');
+            };
+            
+            // Function to handle video error
+            const handleVideoError = () => {
+                if (statusUpdated) return;
+                statusUpdated = true;
+                videoLoaded = false;
+                
+                console.warn('Hidden video for detection failed, detection will be disabled');
+                document.getElementById(cardId + '-detection-mode').textContent = 'Mode: Iframe only (detection disabled)';
+                document.getElementById(cardId + '-startBtn').disabled = true;
+                updateCardStatus(cardId, 'Stream loaded (iframe only - detection unavailable)');
+                console.log('Detection unavailable, but iframe display works');
+            };
+            
+            // Clear proxy timeout when video loads
+            const clearProxyTimeout = () => {
+                if (proxyTimeout) {
+                    clearTimeout(proxyTimeout);
+                    proxyTimeout = null;
+                }
+            };
+            
+            // Try to load video via proxy for detection first
             video.src = proxyUrl;
             video.crossOrigin = 'anonymous';
             video.load();
+            
+            // If proxy fails, try direct URL after timeout
+            proxyTimeout = setTimeout(() => {
+                if (!videoLoaded && video.readyState === 0 && !statusUpdated) {
+                    console.log('Proxy timeout, trying direct stream URL...');
+                    video.src = '';
+                    video.removeAttribute('crossorigin');
+                    video.src = streamUrl;
+                    video.crossOrigin = 'anonymous';
+                    video.load();
+                }
+            }, 5000);
             
             console.log('Hybrid mode: iframe for display, hidden video for detection');
             
@@ -2698,32 +2813,84 @@
             
             // Wait for video to load for detection
             video.addEventListener('loadedmetadata', () => {
-                const canvas = document.getElementById(cardId + '-canvas');
-                if (canvas && video.videoWidth > 0 && video.videoHeight > 0) {
-                    canvas.width = video.videoWidth;
-                    canvas.height = video.videoHeight;
-                    // Canvas stays hidden, only used for processing
+                clearProxyTimeout();
+                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                    videoLoaded = true;
+                    updateVideoReadyStatus();
                 }
-                document.getElementById(cardId + '-detection-mode').textContent = 'Mode: Hybrid (iframe display + video detection)';
-                updateCardStatus(cardId, 'Stream loaded - Ready for detection');
-                console.log('Hybrid mode ready: iframe displaying, video ready for detection');
+            }, { once: true });
+            
+            video.addEventListener('loadeddata', () => {
+                clearProxyTimeout();
+                if (video.videoWidth > 0 && video.videoHeight > 0 && !videoLoaded) {
+                    videoLoaded = true;
+                    updateVideoReadyStatus();
+                }
             }, { once: true });
             
             video.addEventListener('canplay', () => {
-                if (!cardState.isStreamLoaded) {
-                    // Video is ready for detection
-                    document.getElementById(cardId + '-detection-mode').textContent = 'Mode: Hybrid (iframe display + video detection)';
-                    updateCardStatus(cardId, 'Stream loaded - Ready for detection');
+                clearProxyTimeout();
+                if (!statusUpdated && video.readyState >= 2) {
+                    videoLoaded = true;
+                    updateVideoReadyStatus();
                 }
             }, { once: true });
             
             video.addEventListener('error', (e) => {
-                console.warn('Hidden video for detection failed, detection will be disabled:', e);
-                document.getElementById(cardId + '-detection-mode').textContent = 'Mode: Iframe only (detection disabled)';
-                document.getElementById(cardId + '-startBtn').disabled = true;
-                updateCardStatus(cardId, 'Stream loaded (iframe only - detection unavailable)');
-                console.log('Detection unavailable, but iframe display works');
+                clearProxyTimeout();
+                // If proxy failed, try direct URL
+                if (video.src === proxyUrl || video.src.includes('/dms-proxy/')) {
+                    if (!videoLoaded && !statusUpdated) {
+                        console.log('Proxy failed, trying direct stream URL...');
+                        video.src = '';
+                        video.removeAttribute('crossorigin');
+                        video.src = streamUrl;
+                        video.crossOrigin = 'anonymous';
+                        video.load();
+                        
+                        // Reset error handler for direct URL attempt
+                        video.addEventListener('error', () => {
+                            handleVideoError();
+                        }, { once: true });
+                        
+                        // Also add success handlers for direct URL
+                        video.addEventListener('loadedmetadata', () => {
+                            clearProxyTimeout();
+                            if (video.videoWidth > 0 && video.videoHeight > 0) {
+                                videoLoaded = true;
+                                updateVideoReadyStatus();
+                            }
+                        }, { once: true });
+                    } else {
+                        handleVideoError();
+                    }
+                } else {
+                    handleVideoError();
+                }
             }, { once: true });
+            
+            // Timeout: if video doesn't load in 10 seconds, assume iframe-only mode
+            setTimeout(() => {
+                if (!statusUpdated) {
+                    console.warn('Video load timeout - using iframe-only mode');
+                    if (video.readyState === 0 || video.error) {
+                        handleVideoError();
+                    } else if (video.videoWidth > 0 && video.videoHeight > 0) {
+                        updateVideoReadyStatus();
+                    } else {
+                        // Video still loading but no dimensions yet - wait a bit more
+                        setTimeout(() => {
+                            if (!statusUpdated) {
+                                if (video.videoWidth > 0 && video.videoHeight > 0) {
+                                    updateVideoReadyStatus();
+                                } else {
+                                    handleVideoError();
+                                }
+                            }
+                        }, 5000);
+                    }
+                }
+            }, 10000);
             
             if (loadBtn) loadBtn.disabled = false;
             
@@ -3522,8 +3689,15 @@
                         cardState.isStreamLoaded = true;
                         cardState.streamUrl = streamUrl;
                         
-                        // Wait for video to load for detection
-                        video.addEventListener('loadedmetadata', () => {
+                        // Track if video loaded successfully
+                        let fallbackVideoLoaded = false;
+                        let fallbackStatusUpdated = false;
+                        
+                        // Function to update status when video is ready
+                        const updateFallbackVideoReadyStatus = () => {
+                            if (fallbackStatusUpdated) return;
+                            fallbackStatusUpdated = true;
+                            
                             const canvas = document.getElementById(cardId + '-canvas');
                             if (canvas && video.videoWidth > 0 && video.videoHeight > 0) {
                                 canvas.width = video.videoWidth;
@@ -3535,17 +3709,71 @@
                             updateCardStatus(cardId, 'Stream loaded - Ready for detection');
                             if (loadBtn) loadBtn.disabled = false;
                             console.log('Hybrid mode ready: iframe displaying, video ready for detection');
-                        }, { once: true });
+                        };
                         
-                        video.addEventListener('error', (e) => {
-                            console.warn('Hidden video for detection failed:', e);
+                        // Function to handle video error
+                        const handleFallbackVideoError = () => {
+                            if (fallbackStatusUpdated) return;
+                            fallbackStatusUpdated = true;
+                            fallbackVideoLoaded = false;
+                            
+                            console.warn('Hidden video for detection failed');
                             // Iframe still works for display, but detection unavailable
                             setupVideoSuccess('Stream (iframe only - detection unavailable)', true, true);
                             document.getElementById(cardId + '-startBtn').disabled = true;
                             document.getElementById(cardId + '-detection-mode').textContent = 'Mode: Iframe only (detection unavailable)';
                             updateCardStatus(cardId, 'Stream loaded (iframe only - detection unavailable)');
                             if (loadBtn) loadBtn.disabled = false;
+                        };
+                        
+                        // Wait for video to load for detection
+                        video.addEventListener('loadedmetadata', () => {
+                            if (video.videoWidth > 0 && video.videoHeight > 0) {
+                                fallbackVideoLoaded = true;
+                                updateFallbackVideoReadyStatus();
+                            }
                         }, { once: true });
+                        
+                        video.addEventListener('loadeddata', () => {
+                            if (video.videoWidth > 0 && video.videoHeight > 0 && !fallbackVideoLoaded) {
+                                fallbackVideoLoaded = true;
+                                updateFallbackVideoReadyStatus();
+                            }
+                        }, { once: true });
+                        
+                        video.addEventListener('canplay', () => {
+                            if (!fallbackStatusUpdated && video.readyState >= 2) {
+                                fallbackVideoLoaded = true;
+                                updateFallbackVideoReadyStatus();
+                            }
+                        }, { once: true });
+                        
+                        video.addEventListener('error', (e) => {
+                            handleFallbackVideoError();
+                        }, { once: true });
+                        
+                        // Timeout: if video doesn't load in 10 seconds, assume iframe-only mode
+                        setTimeout(() => {
+                            if (!fallbackStatusUpdated) {
+                                console.warn('Video load timeout - using iframe-only mode');
+                                if (video.readyState === 0 || video.error) {
+                                    handleFallbackVideoError();
+                                } else if (video.videoWidth > 0 && video.videoHeight > 0) {
+                                    updateFallbackVideoReadyStatus();
+                                } else {
+                                    // Video still loading but no dimensions yet - wait a bit more
+                                    setTimeout(() => {
+                                        if (!fallbackStatusUpdated) {
+                                            if (video.videoWidth > 0 && video.videoHeight > 0) {
+                                                updateFallbackVideoReadyStatus();
+                                            } else {
+                                                handleFallbackVideoError();
+                                            }
+                                        }
+                                    }, 5000);
+                                }
+                            }
+                        }, 10000);
                     };
                     
                     // Start with content type detection, then fallback to direct load

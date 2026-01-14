@@ -2799,6 +2799,38 @@
     </div>
 </div>
 
+<!-- Modal Detail Insiden -->
+<div class="modal fade" id="insidenDetailModal" tabindex="-1" aria-labelledby="insidenDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-scrollable">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title d-flex align-items-center" id="insidenDetailModalLabel">
+                    <i class="material-icons-outlined me-2" style="font-size: 24px;">warning</i>
+                    <div>
+                        <div style="font-size: 18px; font-weight: 600;">Detail Insiden</div>
+                        <small style="font-size: 12px; opacity: 0.9;">Informasi lengkap mengenai insiden</small>
+                    </div>
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="insidenDetailContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-danger" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted fs-5">Memuat data insiden...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">close</i>
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Matriks Prediksi Insiden -->
 <div class="modal fade" id="matriksPrediksiInsidenModal" tabindex="-1" aria-labelledby="matriksPrediksiInsidenModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-scrollable">
@@ -3558,9 +3590,19 @@
             
             // Transform geometry coordinates recursively
             const transformGeometry = (geometry) => {
-                if (!geometry || !geometry.coordinates) {
-                    console.warn(`${layerName}: Geometry is null or has no coordinates`);
-                    return geometry;
+                if (!geometry) {
+                    console.warn(`${layerName}: Geometry is null or undefined`);
+                    return null;
+                }
+                
+                if (!geometry.coordinates) {
+                    console.warn(`${layerName}: Geometry has no coordinates property`);
+                    return null;
+                }
+                
+                if (!Array.isArray(geometry.coordinates)) {
+                    console.warn(`${layerName}: Geometry coordinates is not an array`);
+                    return null;
                 }
                 
                 const transformCoordinate = (coord) => {
@@ -3572,6 +3614,7 @@
                     if (coord.length >= 2 && 
                         typeof coord[0] === 'number' && 
                         typeof coord[1] === 'number' &&
+                        !isNaN(coord[0]) && !isNaN(coord[1]) &&
                         (coord.length === 2 || (coord.length === 3 && typeof coord[2] === 'number'))) {
                         // This is a coordinate pair [x, y] or [x, y, z]
                         try {
@@ -3596,28 +3639,47 @@
                 
                 try {
                     const transformedGeometry = JSON.parse(JSON.stringify(geometry));
-                    transformedGeometry.coordinates = transformCoordinate(geometry.coordinates);
+                    const transformedCoords = transformCoordinate(geometry.coordinates);
+                    if (!transformedCoords) {
+                        console.warn(`${layerName}: Failed to transform coordinates`);
+                        return null;
+                    }
+                    transformedGeometry.coordinates = transformedCoords;
                     return transformedGeometry;
                 } catch (e) {
                     console.error(`${layerName}: Error cloning geometry:`, e);
-                    return geometry;
+                    return null;
                 }
             };
             
             // Transform all features
-            const transformedFeatures = geoJsonData.features.map(feature => {
-                const transformedFeature = {
-                    type: 'Feature',
-                    properties: feature.properties || {},
-                    geometry: transformGeometry(feature.geometry)
-                };
-                
-                // Read feature with transformed geometry (already in EPSG:3857)
-                return new ol.format.GeoJSON().readFeature(transformedFeature, {
-                    dataProjection: 'EPSG:3857',
-                    featureProjection: 'EPSG:3857'
-                });
-            });
+            const transformedFeatures = geoJsonData.features
+                .filter(feature => feature && feature.geometry && feature.geometry.coordinates)
+                .map(feature => {
+                    try {
+                        const transformedFeature = {
+                            type: 'Feature',
+                            properties: feature.properties || {},
+                            geometry: transformGeometry(feature.geometry)
+                        };
+                        
+                        // Validate transformed geometry
+                        if (!transformedFeature.geometry || !transformedFeature.geometry.coordinates) {
+                            console.warn(`${layerName}: Skipping feature with invalid geometry after transformation`);
+                            return null;
+                        }
+                        
+                        // Read feature with transformed geometry (already in EPSG:3857)
+                        return new ol.format.GeoJSON().readFeature(transformedFeature, {
+                            dataProjection: 'EPSG:3857',
+                            featureProjection: 'EPSG:3857'
+                        });
+                    } catch (error) {
+                        console.warn(`${layerName}: Error processing feature:`, error);
+                        return null;
+                    }
+                })
+                .filter(feature => feature !== null);
 
             console.log(`${layerName}: Successfully parsed ${transformedFeatures.length} features`);
 
@@ -8470,7 +8532,10 @@ source: new ol.source.Vector(),
                 if (map) {
                     map.render();
                 }
-                showInsidenPopup(evt.coordinate, data);
+                // Langsung buka modal detail insiden
+                if (data && data.no_kecelakaan) {
+                    openInsidenModal(data.no_kecelakaan);
+                }
                 return;
             }
             
@@ -13039,7 +13104,30 @@ source: new ol.source.Vector(),
 
         const modalTitle = document.getElementById('insidenDetailModalLabel');
         const modalContent = document.getElementById('insidenDetailContent');
-        modalTitle.textContent = `Detail Insiden - ${insiden.no_kecelakaan}`;
+        modalTitle.textContent = `Detail Insiden - ${escapeHtml(insiden.no_kecelakaan || 'N/A')}`;
+
+        // Format tanggal
+        const formatDate = (dateStr) => {
+            if (!dateStr) return '-';
+            try {
+                const date = new Date(dateStr);
+                return date.toLocaleDateString('id-ID', { 
+                    year: 'numeric', 
+                    month: 'long', 
+                    day: 'numeric' 
+                });
+            } catch (e) {
+                return dateStr;
+            }
+        };
+
+        // Format waktu
+        const formatTime = (jam, menit) => {
+            if (jam === null || jam === undefined) return '-';
+            const h = String(jam).padStart(2, '0');
+            const m = menit !== null && menit !== undefined ? String(menit).padStart(2, '0') : '00';
+            return `${h}:${m}`;
+        };
 
         let rows = '';
         if (insiden.items && insiden.items.length) {
@@ -13047,40 +13135,185 @@ source: new ol.source.Vector(),
                 return `
                     <tr>
                         <td>${index + 1}</td>
-                        <td>${item.layer || '-'}</td>
-                        <td>${item.jenis_item_ipls || '-'}</td>
-                        <td>${item.detail_layer || '-'}</td>
-                        <td>${item.klasifikasi_layer || '-'}</td>
-                        <td>${item.keterangan_layer || '-'}</td>
+                        <td>${escapeHtml(item.layer || '-')}</td>
+                        <td>${escapeHtml(item.jenis_item_ipls || '-')}</td>
+                        <td>${escapeHtml(item.detail_layer || '-')}</td>
+                        <td>${escapeHtml(item.klasifikasi_layer || '-')}</td>
+                        <td>${escapeHtml(item.keterangan_layer || '-')}</td>
                     </tr>
                 `;
             }).join('');
         }
 
         modalContent.innerHTML = `
-            <div class="mb-3">
-                <p class="mb-1"><strong>Site:</strong> ${insiden.site || '-'}</p>
-                <p class="mb-1"><strong>Lokasi:</strong> ${insiden.lokasi || '-'}</p>
-                <p class="mb-1"><strong>Status LPI:</strong> ${insiden.status_lpi || '-'}</p>
-                <p class="mb-1"><strong>Kategori:</strong> ${insiden.kategori || '-'}</p>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-primary text-white">
+                            <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">info</i>Informasi Dasar</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td width="40%"><strong>No. Kecelakaan:</strong></td>
+                                    <td>${escapeHtml(insiden.no_kecelakaan || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Kode BE Investigasi:</strong></td>
+                                    <td>${escapeHtml(insiden.kode_be_investigasi || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Status LPI:</strong></td>
+                                    <td><span class="badge ${insiden.status_lpi === 'Open' ? 'bg-warning' : insiden.status_lpi === 'Closed' ? 'bg-success' : 'bg-secondary'}">${escapeHtml(insiden.status_lpi || '-')}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Kategori:</strong></td>
+                                    <td><span class="badge bg-danger">${escapeHtml(insiden.kategori || '-')}</span></td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Injury Status:</strong></td>
+                                    <td>${escapeHtml(insiden.injury_status || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>High Potential:</strong></td>
+                                    <td>${escapeHtml(insiden.high_potential || '-')}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-info text-white">
+                            <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">location_on</i>Lokasi</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td width="40%"><strong>Site:</strong></td>
+                                    <td>${escapeHtml(insiden.site || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Lokasi:</strong></td>
+                                    <td>${escapeHtml(insiden.lokasi || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Sublokasi:</strong></td>
+                                    <td>${escapeHtml(insiden.sublokasi || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Lokasi Spesifik:</strong></td>
+                                    <td>${escapeHtml(insiden.lokasi_spesifik || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Lokasi Validasi HSECM:</strong></td>
+                                    <td>${escapeHtml(insiden.lokasi_validasi_hsecm || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Koordinat:</strong></td>
+                                    <td>${insiden.latitude && insiden.longitude ? `${insiden.latitude}, ${insiden.longitude}` : '-'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Layer</th>
-                            <th>Jenis Item IPLS</th>
-                            <th>Detail Layer</th>
-                            <th>Klasifikasi</th>
-                            <th>Keterangan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows || '<tr><td colspan="6" class="text-center text-muted">Tidak ada detail tersedia</td></tr>'}
-                    </tbody>
-                </table>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-success text-white">
+                            <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">schedule</i>Waktu Kejadian</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td width="40%"><strong>Tanggal:</strong></td>
+                                    <td>${formatDate(insiden.tanggal)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Hari:</strong></td>
+                                    <td>${escapeHtml(insiden.hari || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Waktu:</strong></td>
+                                    <td>${formatTime(insiden.jam, insiden.menit)}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Shift:</strong></td>
+                                    <td>${escapeHtml(insiden.shift || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Minggu Ke:</strong></td>
+                                    <td>${insiden.minggu_ke || '-'}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border-0 shadow-sm mb-3">
+                        <div class="card-header bg-warning text-white">
+                            <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">business</i>Perusahaan & Departemen</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                <tr>
+                                    <td width="40%"><strong>Perusahaan:</strong></td>
+                                    <td>${escapeHtml(insiden.perusahaan || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Departemen:</strong></td>
+                                    <td>${escapeHtml(insiden.departemen || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>PJA:</strong></td>
+                                    <td>${escapeHtml(insiden.pja || '-')}</td>
+                                </tr>
+                                <tr>
+                                    <td><strong>Insiden dalam Site Mining:</strong></td>
+                                    <td>${escapeHtml(insiden.insiden_dalam_site_mining || '-')}</td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
+            ${insiden.kronologis ? `
+            <div class="card border-0 shadow-sm mb-3">
+                <div class="card-header bg-secondary text-white">
+                    <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">description</i>Kronologis</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">${escapeHtml(insiden.kronologis || '-')}</p>
+                </div>
+            </div>
+            ` : ''}
+            ${insiden.items && insiden.items.length > 0 ? `
+            <div class="card border-0 shadow-sm">
+                <div class="card-header bg-dark text-white">
+                    <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">layers</i>Detail Layer</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Layer</th>
+                                    <th>Jenis Item IPLS</th>
+                                    <th>Detail Layer</th>
+                                    <th>Klasifikasi</th>
+                                    <th>Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
         `;
 
         bootstrap.Modal.getOrCreateInstance(document.getElementById('insidenDetailModal')).show();
@@ -13332,19 +13565,19 @@ source: new ol.source.Vector(),
 
 
         if (viewType === 'hazard') {
-            cardTitle.textContent = 'Laporan Hazard Beats';
+            if (cardTitle) cardTitle.textContent = 'Laporan Hazard Beats';
             resetHazardFilter();
         } else if (viewType === 'cctv') {
-            cardTitle.textContent = 'CCTV Stream';
+            if (cardTitle) cardTitle.textContent = 'CCTV Stream';
             if (cctvLocations && cctvLocations.length > 0 && cctvStreamContainer && cctvStreamContainer.children.length === 0) {
                 renderCCTVStreams();
             }
         } else if (viewType === 'insiden') {
-            cardTitle.textContent = 'Insiden Safety';
+            if (cardTitle) cardTitle.textContent = 'Insiden Safety';
         } else if (viewType === 'gr') {
-            cardTitle.textContent = 'GR (Golden Rule)';
+            if (cardTitle) cardTitle.textContent = 'GR (Golden Rule)';
         } else if (viewType === 'unit') {
-            cardTitle.textContent = 'Unit Kendaraan';
+            if (cardTitle) cardTitle.textContent = 'Unit Kendaraan';
             
             // If unitVehicles is empty, try to refresh data first
             if (!unitVehicles || unitVehicles.length === 0) {
@@ -13381,7 +13614,7 @@ source: new ol.source.Vector(),
                 }
             }
         } else if (viewType === 'python') {
-            cardTitle.textContent = 'Python Application';
+            if (cardTitle) cardTitle.textContent = 'Python Application';
             // Check if Python app is accessible
             checkPythonAppConnection();
         }
@@ -15677,21 +15910,31 @@ source: new ol.source.Vector(),
         const chartElement = document.getElementById('chartSiteBar');
         if (!chartElement) return;
         
+        if (typeof ApexCharts === 'undefined') {
+            console.warn('ApexCharts library not loaded yet');
+            return;
+        }
+        
         const categories = data.map(item => item.label);
         const values = data.map(item => item.value);
         
         if (chartSiteBar) {
-            chartSiteBar.updateOptions({
-                series: [{
-                    name: 'Jumlah CCTV',
-                    data: values
-                }],
-                xaxis: {
-                    categories: categories
-                }
-            });
+            try {
+                chartSiteBar.updateOptions({
+                    series: [{
+                        name: 'Jumlah CCTV',
+                        data: values
+                    }],
+                    xaxis: {
+                        categories: categories
+                    }
+                });
+            } catch (error) {
+                console.error('Error updating Site Bar Chart:', error);
+            }
         } else {
-            chartSiteBar = new ApexCharts(chartElement, {
+            try {
+                chartSiteBar = new ApexCharts(chartElement, {
                 series: [{
                     name: 'Jumlah CCTV',
                     data: values
@@ -15725,7 +15968,10 @@ source: new ol.source.Vector(),
                     }
                 }
             });
-            chartSiteBar.render();
+                chartSiteBar.render();
+            } catch (error) {
+                console.error('Error creating Site Bar Chart:', error);
+            }
         }
     }
     
@@ -15734,16 +15980,26 @@ source: new ol.source.Vector(),
         const chartElement = document.getElementById('chartStatusPie');
         if (!chartElement) return;
         
+        if (typeof ApexCharts === 'undefined') {
+            console.warn('ApexCharts library not loaded yet');
+            return;
+        }
+        
         const labels = data.map(item => item.label);
         const values = data.map(item => item.value);
         
         if (chartStatusPie) {
-            chartStatusPie.updateSeries(values);
-            chartStatusPie.updateOptions({
-                labels: labels
-            });
+            try {
+                chartStatusPie.updateSeries(values);
+                chartStatusPie.updateOptions({
+                    labels: labels
+                });
+            } catch (error) {
+                console.error('Error updating Status Pie Chart:', error);
+            }
         } else {
-            chartStatusPie = new ApexCharts(chartElement, {
+            try {
+                chartStatusPie = new ApexCharts(chartElement, {
                 series: values,
                 chart: {
                     type: 'pie',
@@ -15762,7 +16018,10 @@ source: new ol.source.Vector(),
                     }
                 }
             });
-            chartStatusPie.render();
+                chartStatusPie.render();
+            } catch (error) {
+                console.error('Error creating Status Pie Chart:', error);
+            }
         }
     }
     
@@ -15771,21 +16030,31 @@ source: new ol.source.Vector(),
         const chartElement = document.getElementById('chartCompanyBar');
         if (!chartElement) return;
         
+        if (typeof ApexCharts === 'undefined') {
+            console.warn('ApexCharts library not loaded yet');
+            return;
+        }
+        
         const categories = data.map(item => item.label);
         const values = data.map(item => item.value);
         
         if (chartCompanyBar) {
-            chartCompanyBar.updateOptions({
-                series: [{
-                    name: 'Jumlah CCTV',
-                    data: values
-                }],
-                xaxis: {
-                    categories: categories
-                }
-            });
+            try {
+                chartCompanyBar.updateOptions({
+                    series: [{
+                        name: 'Jumlah CCTV',
+                        data: values
+                    }],
+                    xaxis: {
+                        categories: categories
+                    }
+                });
+            } catch (error) {
+                console.error('Error updating Company Bar Chart:', error);
+            }
         } else {
-            chartCompanyBar = new ApexCharts(chartElement, {
+            try {
+                chartCompanyBar = new ApexCharts(chartElement, {
                 series: [{
                     name: 'Jumlah CCTV',
                     data: values
@@ -15819,7 +16088,10 @@ source: new ol.source.Vector(),
                     }
                 }
             });
-            chartCompanyBar.render();
+                chartCompanyBar.render();
+            } catch (error) {
+                console.error('Error creating Company Bar Chart:', error);
+            }
         }
     }
 
@@ -15887,16 +16159,26 @@ source: new ol.source.Vector(),
         const chartElement = document.getElementById('chartKondisiPie');
         if (!chartElement) return;
         
+        if (typeof ApexCharts === 'undefined') {
+            console.warn('ApexCharts library not loaded yet');
+            return;
+        }
+        
         const labels = data.map(item => item.label);
         const values = data.map(item => item.value);
         
         if (chartKondisiPie) {
-            chartKondisiPie.updateSeries(values);
-            chartKondisiPie.updateOptions({
-                labels: labels
-            });
+            try {
+                chartKondisiPie.updateSeries(values);
+                chartKondisiPie.updateOptions({
+                    labels: labels
+                });
+            } catch (error) {
+                console.error('Error updating Kondisi Pie Chart:', error);
+            }
         } else {
-            chartKondisiPie = new ApexCharts(chartElement, {
+            try {
+                chartKondisiPie = new ApexCharts(chartElement, {
                 series: values,
                 chart: {
                     type: 'pie',
@@ -15915,7 +16197,10 @@ source: new ol.source.Vector(),
                     }
                 }
             });
-            chartKondisiPie.render();
+                chartKondisiPie.render();
+            } catch (error) {
+                console.error('Error creating Kondisi Pie Chart:', error);
+            }
         }
     }
 
@@ -15924,14 +16209,24 @@ source: new ol.source.Vector(),
         const chartElement = document.getElementById('chartKategoriCctvPie');
         if (!chartElement) return;
         
+        if (typeof ApexCharts === 'undefined') {
+            console.warn('ApexCharts library not loaded yet');
+            return;
+        }
+        
         const labels = data.map(item => item.label);
         const values = data.map(item => item.value);
         
         if (chartKategoriCctvPie) {
-            chartKategoriCctvPie.updateSeries(values);
-            chartKategoriCctvPie.updateOptions({ labels: labels });
+            try {
+                chartKategoriCctvPie.updateSeries(values);
+                chartKategoriCctvPie.updateOptions({ labels: labels });
+            } catch (error) {
+                console.error('Error updating Kategori CCTV Pie Chart:', error);
+            }
         } else {
-            chartKategoriCctvPie = new ApexCharts(chartElement, {
+            try {
+                chartKategoriCctvPie = new ApexCharts(chartElement, {
                 series: values,
                 chart: { type: 'pie', height: 350 },
                 labels: labels,
@@ -15939,7 +16234,10 @@ source: new ol.source.Vector(),
                 legend: { position: 'bottom' },
                 tooltip: { y: { formatter: (val) => val + " CCTV" } }
             });
-            chartKategoriCctvPie.render();
+                chartKategoriCctvPie.render();
+            } catch (error) {
+                console.error('Error creating Kategori CCTV Pie Chart:', error);
+            }
         }
     }
 
@@ -15947,6 +16245,11 @@ source: new ol.source.Vector(),
     function updateKategoriAreaPieChart(data) {
         const chartElement = document.getElementById('chartKategoriAreaPie');
         if (!chartElement) return;
+        
+        if (typeof ApexCharts === 'undefined') {
+            console.warn('ApexCharts library not loaded yet');
+            return;
+        }
         
         // Urutkan data: Area Kritis dulu, kemudian Area Non Kritis
         const sortedData = [...data].sort((a, b) => {
@@ -15977,10 +16280,15 @@ source: new ol.source.Vector(),
         });
         
         if (chartKategoriAreaPie) {
-            chartKategoriAreaPie.updateSeries(values);
-            chartKategoriAreaPie.updateOptions({ labels: labels, colors: colors });
+            try {
+                chartKategoriAreaPie.updateSeries(values);
+                chartKategoriAreaPie.updateOptions({ labels: labels, colors: colors });
+            } catch (error) {
+                console.error('Error updating Kategori Area Pie Chart:', error);
+            }
         } else {
-            chartKategoriAreaPie = new ApexCharts(chartElement, {
+            try {
+                chartKategoriAreaPie = new ApexCharts(chartElement, {
                 series: values,
                 chart: { type: 'pie', height: 350 },
                 labels: labels,
@@ -15988,7 +16296,10 @@ source: new ol.source.Vector(),
                 legend: { position: 'bottom' },
                 tooltip: { y: { formatter: (val) => val + " CCTV" } }
             });
-            chartKategoriAreaPie.render();
+                chartKategoriAreaPie.render();
+            } catch (error) {
+                console.error('Error creating Kategori Area Pie Chart:', error);
+            }
         }
     }
 
@@ -15996,6 +16307,11 @@ source: new ol.source.Vector(),
     function updateKategoriAktivitasPieChart(data) {
         const chartElement = document.getElementById('chartKategoriAktivitasPie');
         if (!chartElement) return;
+        
+        if (typeof ApexCharts === 'undefined') {
+            console.warn('ApexCharts library not loaded yet');
+            return;
+        }
         
         const labels = data.map(item => item.label);
         const values = data.map(item => item.value);
@@ -16011,10 +16327,15 @@ source: new ol.source.Vector(),
         });
         
         if (chartKategoriAktivitasPie) {
-            chartKategoriAktivitasPie.updateSeries(values);
-            chartKategoriAktivitasPie.updateOptions({ labels: labels, colors: colors });
+            try {
+                chartKategoriAktivitasPie.updateSeries(values);
+                chartKategoriAktivitasPie.updateOptions({ labels: labels, colors: colors });
+            } catch (error) {
+                console.error('Error updating Kategori Aktivitas Pie Chart:', error);
+            }
         } else {
-            chartKategoriAktivitasPie = new ApexCharts(chartElement, {
+            try {
+                chartKategoriAktivitasPie = new ApexCharts(chartElement, {
                 series: values,
                 chart: { type: 'pie', height: 350 },
                 labels: labels,
@@ -16022,7 +16343,10 @@ source: new ol.source.Vector(),
                 legend: { position: 'bottom' },
                 tooltip: { y: { formatter: (val) => val + " CCTV" } }
             });
-            chartKategoriAktivitasPie.render();
+                chartKategoriAktivitasPie.render();
+            } catch (error) {
+                console.error('Error creating Kategori Aktivitas Pie Chart:', error);
+            }
         }
     }
 
@@ -16031,16 +16355,26 @@ source: new ol.source.Vector(),
         const chartElement = document.getElementById('chartTipeCctvBar');
         if (!chartElement) return;
         
+        if (typeof ApexCharts === 'undefined') {
+            console.warn('ApexCharts library not loaded yet');
+            return;
+        }
+        
         const categories = data.map(item => item.label);
         const values = data.map(item => item.value);
         
         if (chartTipeCctvBar) {
-            chartTipeCctvBar.updateOptions({
-                series: [{ name: 'Jumlah CCTV', data: values }],
-                xaxis: { categories: categories }
-            });
+            try {
+                chartTipeCctvBar.updateOptions({
+                    series: [{ name: 'Jumlah CCTV', data: values }],
+                    xaxis: { categories: categories }
+                });
+            } catch (error) {
+                console.error('Error updating Tipe CCTV Bar Chart:', error);
+            }
         } else {
-            chartTipeCctvBar = new ApexCharts(chartElement, {
+            try {
+                chartTipeCctvBar = new ApexCharts(chartElement, {
                 series: [{ name: 'Jumlah CCTV', data: values }],
                 chart: { type: 'bar', height: 350, toolbar: { show: true } },
                 plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
@@ -16049,7 +16383,10 @@ source: new ol.source.Vector(),
                 colors: ['#06b6d4'],
                 tooltip: { y: { formatter: (val) => val + " CCTV" } }
             });
-            chartTipeCctvBar.render();
+                chartTipeCctvBar.render();
+            } catch (error) {
+                console.error('Error creating Tipe CCTV Bar Chart:', error);
+            }
         }
     }
 
@@ -16058,16 +16395,26 @@ source: new ol.source.Vector(),
         const chartElement = document.getElementById('chartJenisInstalasiBar');
         if (!chartElement) return;
         
+        if (typeof ApexCharts === 'undefined') {
+            console.warn('ApexCharts library not loaded yet');
+            return;
+        }
+        
         const categories = data.map(item => item.label);
         const values = data.map(item => item.value);
         
         if (chartJenisInstalasiBar) {
-            chartJenisInstalasiBar.updateOptions({
-                series: [{ name: 'Jumlah CCTV', data: values }],
-                xaxis: { categories: categories }
-            });
+            try {
+                chartJenisInstalasiBar.updateOptions({
+                    series: [{ name: 'Jumlah CCTV', data: values }],
+                    xaxis: { categories: categories }
+                });
+            } catch (error) {
+                console.error('Error updating Jenis Instalasi Bar Chart:', error);
+            }
         } else {
-            chartJenisInstalasiBar = new ApexCharts(chartElement, {
+            try {
+                chartJenisInstalasiBar = new ApexCharts(chartElement, {
                 series: [{ name: 'Jumlah CCTV', data: values }],
                 chart: { type: 'bar', height: 350, toolbar: { show: true } },
                 plotOptions: { bar: { horizontal: true, borderRadius: 4 } },
@@ -16076,7 +16423,10 @@ source: new ol.source.Vector(),
                 colors: ['#8b5cf6'],
                 tooltip: { y: { formatter: (val) => val + " CCTV" } }
             });
-            chartJenisInstalasiBar.render();
+                chartJenisInstalasiBar.render();
+            } catch (error) {
+                console.error('Error creating Jenis Instalasi Bar Chart:', error);
+            }
         }
     }
 
@@ -16085,26 +16435,39 @@ source: new ol.source.Vector(),
         const chartElement = document.getElementById('chartTimeSeries');
         if (!chartElement) return;
         
+        if (typeof ApexCharts === 'undefined') {
+            console.warn('ApexCharts library not loaded yet');
+            return;
+        }
+        
         const categories = data.map(item => item.label);
         const values = data.map(item => item.value);
         
         if (chartTimeSeries) {
-            chartTimeSeries.updateOptions({
-                series: [{ name: 'Jumlah CCTV', data: values }],
-                xaxis: { categories: categories }
-            });
+            try {
+                chartTimeSeries.updateOptions({
+                    series: [{ name: 'Jumlah CCTV', data: values }],
+                    xaxis: { categories: categories }
+                });
+            } catch (error) {
+                console.error('Error updating Time Series Chart:', error);
+            }
         } else {
-            chartTimeSeries = new ApexCharts(chartElement, {
-                series: [{ name: 'Jumlah CCTV', data: values }],
-                chart: { type: 'area', height: 350, toolbar: { show: true }, zoom: { enabled: true } },
-                dataLabels: { enabled: false },
-                stroke: { curve: 'smooth', width: 2 },
-                fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.3 } },
-                xaxis: { categories: categories },
-                colors: ['#3b82f6'],
-                tooltip: { y: { formatter: (val) => val + " CCTV" } }
-            });
-            chartTimeSeries.render();
+            try {
+                chartTimeSeries = new ApexCharts(chartElement, {
+                    series: [{ name: 'Jumlah CCTV', data: values }],
+                    chart: { type: 'area', height: 350, toolbar: { show: true }, zoom: { enabled: true } },
+                    dataLabels: { enabled: false },
+                    stroke: { curve: 'smooth', width: 2 },
+                    fill: { type: 'gradient', gradient: { shadeIntensity: 1, opacityFrom: 0.7, opacityTo: 0.3 } },
+                    xaxis: { categories: categories },
+                    colors: ['#3b82f6'],
+                    tooltip: { y: { formatter: (val) => val + " CCTV" } }
+                });
+                chartTimeSeries.render();
+            } catch (error) {
+                console.error('Error creating Time Series Chart:', error);
+            }
         }
     }
 
