@@ -2475,7 +2475,7 @@
                     <path d="M3.5 12.0 12 16.7 20.5 12.0" />
                     <path d="M3.5 15.8 12 20.5 20.5 15.8" />
                 </svg>
-                <span class="layer-text">Layers</span>
+                <span class="layer-text">Smart Alert</span>
             </button>
             <!-- Panel (Bootstrap Collapse) -->
             <div class="collapse" id="gmLayerPanel">
@@ -2705,7 +2705,7 @@
                         <select class="form-select" id="intervensiCCTVAreaKerja" name="cctv_ids[]" multiple required>
                             <option value="">Pilih CCTV...</option>
                         </select>
-                        <div class="form-text">Pilih satu atau lebih CCTV yang bermasalah di area kerja ini (bisa pilih lebih dari 1)</div>
+                        <div class="form-text">Pilih satu atau lebih CCTV yang bermasalah (bisa pilih lebih dari 1)</div>
                     </div>
                     
                     <div class="mb-3">
@@ -2803,19 +2803,19 @@
 <div class="modal fade" id="insidenDetailModal" tabindex="-1" aria-labelledby="insidenDetailModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-scrollable">
         <div class="modal-content shadow-lg">
-            <div class="modal-header bg-danger text-white">
+            <div class="modal-header bg-light border-bottom">
                 <h5 class="modal-title d-flex align-items-center" id="insidenDetailModalLabel">
-                    <i class="material-icons-outlined me-2" style="font-size: 24px;">warning</i>
+                    <i class="material-icons-outlined me-2 text-muted" style="font-size: 24px;">info</i>
                     <div>
-                        <div style="font-size: 18px; font-weight: 600;">Detail Insiden</div>
-                        <small style="font-size: 12px; opacity: 0.9;">Informasi lengkap mengenai insiden</small>
+                        <div style="font-size: 18px; font-weight: 600; color: #495057;">Detail Insiden</div>
+                        <small style="font-size: 12px; color: #6c757d;">Informasi lengkap mengenai insiden</small>
                     </div>
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body p-4" id="insidenDetailContent">
                 <div class="text-center py-5">
-                    <div class="spinner-border text-danger" role="status" style="width: 3rem; height: 3rem;">
+                    <div class="spinner-border text-secondary" role="status" style="width: 3rem; height: 3rem;">
                         <span class="visually-hidden">Loading...</span>
                     </div>
                     <p class="mt-3 text-muted fs-5">Memuat data insiden...</p>
@@ -4751,56 +4751,101 @@
             
             // Special handling for "Unit dan Orang" (terrain layer)
             if (layerName === 'terrain') {
-                // Hide CCTV first
-                if (cctvLayer && layerVisibility.cctv) {
-                    toggleLayerVisibility('cctv', false);
-                }
-                
-                // Show Unit - use toggleUnitDisplay if available
-                if (typeof toggleUnitDisplay === 'function') {
-                    // Check if unit is already visible, if not show it
-                    if (!layerVisibility.unit || !unitDataLoaded) {
-                        toggleUnitDisplay();
-                    } else {
-                        // Ensure it's visible
-                        toggleLayerVisibility('unit', true);
+                if (isOn) {
+                    // Hide CCTV first
+                    if (cctvLayer && layerVisibility.cctv) {
+                        toggleLayerVisibility('cctv', false);
                     }
-                } else {
-                    toggleLayerVisibility('unit', true);
-                }
-                
-                // Show GPS Orang - use toggleGpsOrangDisplay if available
-                if (typeof toggleGpsOrangDisplay === 'function') {
-                    // Check if GPS Orang is already visible, if not show it
-                    if (!layerVisibility.gps || !gpsOrangDataLoaded) {
-                        toggleGpsOrangDisplay();
-                    } else {
-                        // Ensure it's visible
-                        toggleLayerVisibility('gps', true);
-                    }
-                } else {
-                    // Fallback: find and click the GPS Orang category item
-                    const gpsOrangCategoryItems = document.querySelectorAll('.gm-category-item');
-                    let gpsOrangClicked = false;
-                    gpsOrangCategoryItems.forEach(function(item) {
-                        const span = item.querySelector('span');
-                        if (span && (span.textContent.trim() === 'Gps Orang' || span.textContent.trim() === 'GPS Orang')) {
-                            if (!layerVisibility.gps || !gpsOrangDataLoaded) {
-                                item.click();
-                                gpsOrangClicked = true;
-                            } else {
-                                toggleLayerVisibility('gps', true);
-                            }
-                        }
-                    });
                     
-                    // If GPS Orang category item not found, use direct toggle
-                    if (!gpsOrangClicked) {
-                        toggleLayerVisibility('gps', true);
+                    // Show Unit - use toggleUnitDisplay if available
+                    // Pastikan data di-load terlebih dahulu jika belum ada
+                    if (typeof refreshUnitVehicles === 'function' && (!unitVehicles || unitVehicles.length === 0)) {
+                        console.log('Loading unit vehicles before showing layer...');
+                        refreshUnitVehicles().then(function() {
+                            if (typeof toggleUnitDisplay === 'function') {
+                                if (!layerVisibility.unit || !unitDataLoaded) {
+                                    toggleUnitDisplay();
+                                } else {
+                                    toggleLayerVisibility('unit', true);
+                                }
+                            } else {
+                                toggleLayerVisibility('unit', true);
+                            }
+                        }).catch(function(error) {
+                            console.error('Error loading unit vehicles:', error);
+                        });
+                    } else {
+                        if (typeof toggleUnitDisplay === 'function') {
+                            // Check if unit is already visible, if not show it
+                            if (!layerVisibility.unit || !unitDataLoaded) {
+                                toggleUnitDisplay();
+                            } else {
+                                // Ensure it's visible
+                                toggleLayerVisibility('unit', true);
+                            }
+                        } else {
+                            toggleLayerVisibility('unit', true);
+                        }
+                    }
+                    
+                    // Show GPS Orang - use toggleGpsOrangDisplay if available
+                    if (typeof toggleGpsOrangDisplay === 'function') {
+                        // Check if GPS Orang is already visible, if not show it
+                        if (!layerVisibility.gps || !gpsOrangDataLoaded) {
+                            toggleGpsOrangDisplay();
+                        } else {
+                            // Ensure it's visible
+                            toggleLayerVisibility('gps', true);
+                        }
+                    } else {
+                        // Fallback: find and click the GPS Orang category item
+                        const gpsOrangCategoryItems = document.querySelectorAll('.gm-category-item');
+                        let gpsOrangClicked = false;
+                        gpsOrangCategoryItems.forEach(function(item) {
+                            const span = item.querySelector('span');
+                            if (span && (span.textContent.trim() === 'Gps Orang' || span.textContent.trim() === 'GPS Orang')) {
+                                if (!layerVisibility.gps || !gpsOrangDataLoaded) {
+                                    item.click();
+                                    gpsOrangClicked = true;
+                                } else {
+                                    toggleLayerVisibility('gps', true);
+                                }
+                            }
+                        });
+                        
+                        // If GPS Orang category item not found, use direct toggle
+                        if (!gpsOrangClicked) {
+                            toggleLayerVisibility('gps', true);
+                        }
+                    }
+                    
+                    // Show unit boundary layer when terrain (SA UNIT) is active
+                    if (unitBoundaryLayer) {
+                        unitBoundaryLayer.setVisible(true);
+                        console.log('Unit boundary layer shown');
+                    }
+                    
+                    // Show unit connection lines layer when terrain (SA UNIT) is active
+                    if (unitConnectionLinesLayer) {
+                        unitConnectionLinesLayer.setVisible(true);
+                        console.log('Unit connection lines layer shown');
+                    }
+                    
+                    console.log('Unit dan Orang layer activated - showing Unit and GPS Orang, hiding CCTV');
+                } else {
+                    // Hide unit boundary layer when terrain (SA UNIT) is deactivated
+                    if (unitBoundaryLayer) {
+                        unitBoundaryLayer.setVisible(false);
+                        console.log('Unit boundary layer hidden');
+                    }
+                    
+                    // Hide unit connection lines layer when terrain (SA UNIT) is deactivated
+                    if (unitConnectionLinesLayer) {
+                        unitConnectionLinesLayer.setVisible(false);
+                        clearUnitConnectionLines();
+                        console.log('Unit connection lines layer hidden');
                     }
                 }
-                
-                console.log('Unit dan Orang layer activated - showing Unit and GPS Orang, hiding CCTV');
             } else if (layerName === 'transit') {
                 // Special handling for "SA POTENSI INSIDEN" (transit layer)
                 if (isOn) {
@@ -7153,6 +7198,458 @@ source: new ol.source.Vector(),
     map.addLayer(unitVehicleLayer);
     console.log('Unit vehicle layer created and added to map');
 
+    // Create vector layer for unit vehicle boundaries (5 meter radius)
+    unitBoundaryLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: false,  // Hidden by default, will be shown when SA UNIT checkbox is active
+        style: function(feature) {
+            const isIntersecting = feature.get('isIntersecting') || false;
+            const unit = feature.get('unitData');
+            
+            if (!unit) {
+                return null;
+            }
+            
+            const geometry = feature.getGeometry();
+            if (!geometry || geometry.getType() !== 'Circle') {
+                return null;
+            }
+            
+            const radius = geometry.getRadius();
+            
+            // Red if intersecting, green if safe
+            // Make fill MUCH more opaque and visible
+            const fillColor = isIntersecting ? 'rgba(239, 68, 68, 0.6)' : 'rgba(34, 197, 94, 0.6)';
+            const strokeColor = isIntersecting ? '#ef4444' : '#22c55e';
+            // Make stroke EXTREMELY thick for maximum visibility (in map units, will scale with zoom)
+            const strokeWidth = isIntersecting ? 20 : 15;
+            
+            // Create multiple outer glow rings for MAXIMUM visibility - MUCH LARGER
+            // Use geometry Circle with expanded radius
+            const outerRing1Radius = radius * 2.0; // 100% larger (2x)
+            const outerRing1Color = isIntersecting ? 'rgba(239, 68, 68, 0.25)' : 'rgba(34, 197, 94, 0.25)';
+            const outerRing1Stroke = isIntersecting ? 'rgba(239, 68, 68, 0.5)' : 'rgba(34, 197, 94, 0.5)';
+            
+            const outerRing2Radius = radius * 2.8; // 180% larger (2.8x)
+            const outerRing2Color = isIntersecting ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)';
+            const outerRing2Stroke = isIntersecting ? 'rgba(239, 68, 68, 0.35)' : 'rgba(34, 197, 94, 0.35)';
+            
+            const outerRing3Radius = radius * 3.5; // 250% larger (3.5x) - EXTRA LARGE
+            const outerRing3Color = isIntersecting ? 'rgba(239, 68, 68, 0.08)' : 'rgba(34, 197, 94, 0.08)';
+            const outerRing3Stroke = isIntersecting ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)';
+            
+            // Return array of styles: multiple outer rings + main circle for MAXIMUM visibility
+            return [
+                // Outermost glow ring (EXTRA LARGE, most transparent)
+                new ol.style.Style({
+                    geometry: new ol.geom.Circle(geometry.getCenter(), outerRing3Radius),
+                    fill: new ol.style.Fill({
+                        color: outerRing3Color
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: outerRing3Stroke,
+                        width: 6
+                    })
+                }),
+                // Second outermost glow ring (LARGE)
+                new ol.style.Style({
+                    geometry: new ol.geom.Circle(geometry.getCenter(), outerRing2Radius),
+                    fill: new ol.style.Fill({
+                        color: outerRing2Color
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: outerRing2Stroke,
+                        width: 7
+                    })
+                }),
+                // Middle glow ring
+                new ol.style.Style({
+                    geometry: new ol.geom.Circle(geometry.getCenter(), outerRing1Radius),
+                    fill: new ol.style.Fill({
+                        color: outerRing1Color
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: outerRing1Stroke,
+                        width: 8
+                    })
+                }),
+                // Main boundary circle (exact 5 meter radius for calculation, but visually VERY prominent)
+                new ol.style.Style({
+                    geometry: geometry,
+                    fill: new ol.style.Fill({
+                        color: fillColor
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: strokeColor,
+                        width: strokeWidth
+                    })
+                })
+            ];
+        },
+        zIndex: 1001  // Below unit markers but above base layers
+    });
+    map.addLayer(unitBoundaryLayer);
+    console.log('Unit boundary layer created and added to map');
+
+    // Create vector layer for unit connection lines (1 km radius)
+    unitConnectionLinesLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: true,
+        style: function(feature) {
+            return new ol.style.Style({
+                stroke: new ol.style.Stroke({
+                    color: '#3b82f6', // Blue color
+                    width: 3, // Thicker line for better visibility
+                    lineDash: [10, 5] // Dotted line pattern (longer dashes)
+                })
+            });
+        },
+        zIndex: 1003  // Above unit markers and boundaries for better visibility
+    });
+    map.addLayer(unitConnectionLinesLayer);
+    console.log('Unit connection lines layer created and added to map');
+
+    // Function to clear all unit connection lines
+    function clearUnitConnectionLines() {
+        if (unitConnectionLinesLayer) {
+            const source = unitConnectionLinesLayer.getSource();
+            source.clear();
+        }
+    }
+
+    // Function to show connection lines from clicked unit to nearby units (within 1 km)
+    function showUnitConnectionLines(clickedUnit) {
+        console.log('showUnitConnectionLines called with unit:', clickedUnit);
+        
+        if (!clickedUnit) {
+            console.warn('showUnitConnectionLines: clickedUnit is null or undefined');
+            return;
+        }
+
+        // Check if unitConnectionLinesLayer exists
+        if (!unitConnectionLinesLayer) {
+            console.warn('showUnitConnectionLines: unitConnectionLinesLayer is not initialized');
+            return;
+        }
+
+        // Clear previous lines
+        clearUnitConnectionLines();
+
+        const clickedUnitId = clickedUnit.unit_id || clickedUnit.id || clickedUnit.integration_id;
+        const clickedLat = parseFloat(clickedUnit.latitude);
+        const clickedLon = parseFloat(clickedUnit.longitude);
+
+        console.log('Clicked unit:', {
+            id: clickedUnitId,
+            lat: clickedLat,
+            lon: clickedLon
+        });
+
+        if (!clickedLat || !clickedLon || clickedLat === 0 || clickedLon === 0 || isNaN(clickedLat) || isNaN(clickedLon)) {
+            console.warn('showUnitConnectionLines: Invalid coordinates', { clickedLat, clickedLon });
+            return;
+        }
+
+        const maxDistanceMeters = 1000; // 1 km radius
+        const source = unitConnectionLinesLayer.getSource();
+        let connectionCount = 0;
+
+        // Get units from layer source (more reliable than global array)
+        let unitsToCheck = [];
+        
+        // Try to get from unitVehicleLayer first (most reliable)
+        if (unitVehicleLayer) {
+            const unitSource = unitVehicleLayer.getSource();
+            const unitFeatures = unitSource.getFeatures();
+            
+            unitFeatures.forEach(function(feature) {
+                const unitData = feature.get('unitData');
+                if (unitData) {
+                    unitsToCheck.push(unitData);
+                }
+            });
+        }
+        
+        // Fallback to global unitVehicles array if layer is empty
+        if (unitsToCheck.length === 0 && unitVehicles && unitVehicles.length > 0) {
+            unitsToCheck = unitVehicles;
+        }
+
+        console.log('Checking', unitsToCheck.length, 'units for connections within', maxDistanceMeters, 'meters');
+
+        if (unitsToCheck.length === 0) {
+            console.warn('showUnitConnectionLines: No units found to check');
+            return;
+        }
+
+        // Find all units within 1 km
+        unitsToCheck.forEach(function(otherUnit) {
+            const otherUnitId = otherUnit.unit_id || otherUnit.id || otherUnit.integration_id;
+            
+            // Skip self
+            if (otherUnitId === clickedUnitId) {
+                return;
+            }
+
+            const otherLat = parseFloat(otherUnit.latitude);
+            const otherLon = parseFloat(otherUnit.longitude);
+
+            if (!otherLat || !otherLon || otherLat === 0 || otherLon === 0 || isNaN(otherLat) || isNaN(otherLon)) {
+                return;
+            }
+
+            // Calculate distance in meters
+            const distance = calculateDistance(clickedLon, clickedLat, otherLon, otherLat);
+
+            console.log(`Checking unit ${otherUnitId}: distance = ${distance.toFixed(2)} meters`);
+
+            // If within 1 km, create connection line
+            if (distance <= maxDistanceMeters) {
+                const clickedCoord = ol.proj.fromLonLat([clickedLon, clickedLat]);
+                const otherCoord = ol.proj.fromLonLat([otherLon, otherLat]);
+
+                // Create line feature
+                const lineFeature = new ol.Feature({
+                    geometry: new ol.geom.LineString([clickedCoord, otherCoord]),
+                    type: 'unit_connection',
+                    distance: distance,
+                    fromUnit: clickedUnitId,
+                    toUnit: otherUnitId
+                });
+
+                source.addFeature(lineFeature);
+                connectionCount++;
+                
+                console.log(`✓ Connection found: ${clickedUnitId} to ${otherUnitId}, distance: ${distance.toFixed(2)} meters`);
+            }
+        });
+
+        console.log(`Unit connection lines created: ${connectionCount} connections within ${maxDistanceMeters} meters (1 km)`);
+        
+        // Ensure layer is visible
+        if (unitConnectionLinesLayer) {
+            unitConnectionLinesLayer.setVisible(true);
+        }
+        
+        // Force map render to ensure lines are visible
+        if (map) {
+            map.render();
+        }
+    }
+
+    // Update boundary radius when zoom changes (resolution changes)
+    map.getView().on('change:resolution', function() {
+        if (unitBoundaryLayer && typeof updateUnitBoundaries === 'function' && unitVehicles) {
+            // Update boundaries to recalculate radius based on new zoom level
+            updateUnitBoundaries(unitVehicles);
+        }
+    });
+
+    // Function to convert meters to pixels for circle radius (accurate for Web Mercator)
+    function metersToPixels(meters, latitude) {
+        // Get current view resolution
+        const view = map.getView();
+        const resolution = view.getResolution();
+        
+        // Convert latitude to radians
+        const latRad = latitude * Math.PI / 180;
+        
+        // Earth radius in meters
+        const earthRadius = 6378137; // meters
+        
+        // In Web Mercator projection:
+        // Resolution is in map units per pixel
+        // At equator: 1 map unit ≈ 1 meter
+        // At latitude lat: meters per map unit = cos(lat) * earthRadius / (2 * PI)
+        // But we need to account for the actual projection
+        
+        // More accurate: use the actual meters per pixel at this latitude
+        // Resolution is in map units per pixel (Web Mercator uses meters at equator as base)
+        // At latitude lat, the actual meters per map unit = cos(lat) * earthRadius
+        const metersPerMapUnit = Math.cos(latRad) * earthRadius;
+        
+        // Resolution is in map units per pixel, so:
+        // meters per pixel = resolution * metersPerMapUnit
+        const metersPerPixel = resolution * metersPerMapUnit;
+        
+        // Convert meters to pixels
+        const pixels = meters / metersPerPixel;
+        
+        return Math.max(1, pixels); // Ensure minimum 1 pixel
+    }
+
+    // Function to calculate distance between two coordinates in meters
+    function calculateDistance(lon1, lat1, lon2, lat2) {
+        return ol.sphere.getDistance([lon1, lat1], [lon2, lat2]);
+    }
+
+    // Function to check if two circles intersect
+    // Two circles intersect if distance between centers < sum of radii
+    function circlesIntersect(lon1, lat1, radius1, lon2, lat2, radius2) {
+        const distance = calculateDistance(lon1, lat1, lon2, lat2);
+        return distance < (radius1 + radius2);
+    }
+
+    // Function to update unit boundaries and detect intersections
+    function updateUnitBoundaries(units) {
+        if (!unitBoundaryLayer) {
+            console.warn('Unit boundary layer not initialized');
+            return;
+        }
+        
+        const source = unitBoundaryLayer.getSource();
+        const existingFeatures = source.getFeatures();
+        const existingBoundariesMap = new Map();
+        
+        // Create map of existing boundaries by unitId
+        existingFeatures.forEach(function(feature) {
+            const unitId = feature.get('unitId');
+            if (unitId) {
+                existingBoundariesMap.set(unitId, feature);
+            }
+        });
+        
+        const boundaryRadiusMeters = 5; // 5 meter radius
+        const processedUnitIds = new Set();
+        let addedCount = 0;
+        let updatedCount = 0;
+        let skippedCount = 0;
+        
+        // First pass: create/update all boundaries
+        units.forEach(function(unit) {
+            // Validate coordinates
+            if (!unit.latitude || !unit.longitude || 
+                unit.latitude === 0 || unit.longitude === 0 ||
+                isNaN(parseFloat(unit.latitude)) || isNaN(parseFloat(unit.longitude))) {
+                skippedCount++;
+                return;
+            }
+            
+            const unitId = unit.unit_id || unit.id || unit.integration_id;
+            if (!unitId) {
+                skippedCount++;
+                return;
+            }
+            
+            processedUnitIds.add(unitId);
+            
+            // Convert coordinates to map projection
+            const longitude = parseFloat(unit.longitude);
+            const latitude = parseFloat(unit.latitude);
+            const coordinate = ol.proj.fromLonLat([longitude, latitude]);
+            
+            // Convert 5 meters to map units for circle radius (geometry Circle uses map units, not pixels)
+            // Use ol.sphere to get accurate radius in map units
+            const radiusInMeters = boundaryRadiusMeters;
+            // Calculate radius in map units using ol.sphere
+            // Create a point 5 meters north of the center to calculate radius in map units
+            // More accurate: use ol.sphere.getDistance to get distance in meters, then convert to map units
+            const centerLonLat = [longitude, latitude];
+            const northPointLonLat = [longitude, latitude + (radiusInMeters / 111320)];
+            const distanceInMeters = ol.sphere.getDistance(centerLonLat, northPointLonLat);
+            
+            // Convert to map units: get the coordinate difference
+            const northPoint = ol.proj.fromLonLat(northPointLonLat);
+            const radiusInMapUnits = ol.coordinate.distance(coordinate, northPoint);
+            
+            // Check if boundary already exists
+            if (existingBoundariesMap.has(unitId)) {
+                const feature = existingBoundariesMap.get(unitId);
+                const geometry = feature.getGeometry();
+                
+                // Update geometry if coordinates changed or radius needs update
+                if (geometry.getType() === 'Circle') {
+                    const center = geometry.getCenter();
+                    const currentRadius = geometry.getRadius();
+                    
+                    // Update if coordinates changed or radius changed (zoom change)
+                    if (center[0] !== coordinate[0] || center[1] !== coordinate[1] || 
+                        Math.abs(currentRadius - radiusInMapUnits) > 0.1) {
+                        geometry.setCenter(coordinate);
+                        geometry.setRadius(radiusInMapUnits);
+                        updatedCount++;
+                    }
+                } else {
+                    // Convert from Point to Circle if needed
+                    feature.setGeometry(new ol.geom.Circle(coordinate, radiusInMapUnits));
+                    updatedCount++;
+                }
+                
+                // Always update unit data
+                feature.set('unitData', unit);
+                feature.set('unitId', unitId);
+                feature.set('longitude', longitude);
+                feature.set('latitude', latitude);
+                feature.changed(); // Trigger style update
+            } else {
+                // Create new boundary feature with Circle geometry
+                const feature = new ol.Feature({
+                    geometry: new ol.geom.Circle(coordinate, radiusInMapUnits),
+                    type: 'unit_boundary',
+                    unitId: unitId,
+                    unitData: unit,
+                    longitude: longitude,
+                    latitude: latitude,
+                    isIntersecting: false
+                });
+                source.addFeature(feature);
+                addedCount++;
+            }
+        });
+        
+        // Second pass: detect intersections
+        const allBoundaries = source.getFeatures();
+        allBoundaries.forEach(function(feature1) {
+            const unitId1 = feature1.get('unitId');
+            const lon1 = feature1.get('longitude');
+            const lat1 = feature1.get('latitude');
+            
+            if (!lon1 || !lat1) return;
+            
+            let isIntersecting = false;
+            
+            // Check against all other boundaries
+            allBoundaries.forEach(function(feature2) {
+                const unitId2 = feature2.get('unitId');
+                
+                // Skip self
+                if (unitId1 === unitId2) return;
+                
+                const lon2 = feature2.get('longitude');
+                const lat2 = feature2.get('latitude');
+                
+                if (!lon2 || !lat2) return;
+                
+                // Check if circles intersect (both have 5 meter radius)
+                if (circlesIntersect(lon1, lat1, boundaryRadiusMeters, lon2, lat2, boundaryRadiusMeters)) {
+                    isIntersecting = true;
+                }
+            });
+            
+            // Update intersection status
+            feature1.set('isIntersecting', isIntersecting);
+            feature1.changed(); // Trigger style update
+        });
+        
+        // Remove boundaries that no longer exist
+        let removedCount = 0;
+        existingFeatures.forEach(function(feature) {
+            const unitId = feature.get('unitId');
+            if (unitId && !processedUnitIds.has(unitId)) {
+                source.removeFeature(feature);
+                removedCount++;
+            }
+        });
+        
+        console.log('Unit boundaries updated:', {
+            total: processedUnitIds.size,
+            added: addedCount,
+            updated: updatedCount,
+            removed: removedCount,
+            skipped: skippedCount
+        });
+    }
+
     // Function to add/update unit vehicle markers
     function updateUnitVehicleMarkers(units) {
         if (!unitVehicleLayer) {
@@ -7248,6 +7745,11 @@ source: new ol.source.Vector(),
             removed: removedCount,
             skipped: skippedCount
         });
+        
+        // Update boundaries after updating markers
+        if (typeof updateUnitBoundaries === 'function') {
+            updateUnitBoundaries(units);
+        }
     }
 
     // Initial load of unit vehicles
@@ -8494,6 +8996,10 @@ source: new ol.source.Vector(),
         popupCloser.blur();
         // Clear CCTV to hazard lines when popup is closed
         clearCCTVToHazardLines();
+        // Clear unit connection lines when popup is closed
+        if (typeof clearUnitConnectionLines === 'function') {
+            clearUnitConnectionLines();
+        }
         return false;
     };
 
@@ -8507,6 +9013,13 @@ source: new ol.source.Vector(),
         // Only clear if not clicking on CCTV
         if (!clickedFeature || clickedFeature.get('type') !== 'cctv') {
             clearCCTVToHazardLines();
+        }
+        
+        // Clear unit connection lines when clicking on map (unless clicking on unit)
+        if (!clickedFeature || clickedFeature.get('type') !== 'unit_vehicle') {
+            if (typeof clearUnitConnectionLines === 'function') {
+                clearUnitConnectionLines();
+            }
         }
         
         const feature = clickedFeature;
@@ -9341,351 +9854,124 @@ source: new ol.source.Vector(),
             : 'N/A';
         
         try {
-            // Get risk matrix summary
-            const riskSummary = await getRiskMatrixSummary(feature);
-            
-            // Generate AI-based recommendations
-            let aiRecommendations = [];
-            let aiLoading = true;
-            
-            try {
-                // Prepare data for AI API
-                const aiRequestData = {
-                    risk_summary: {
-                        risk_level: riskSummary.riskLevel,
-                        has_sap_report: riskSummary.hasSapReport,
-                        has_online_cctv: riskSummary.hasOnlineCctv,
-                        is_high_risk_area: riskSummary.isHighRiskArea,
-                        has_sap_in_high_risk_area: riskSummary.hasSapInHighRiskArea
-                    },
-                    cctv_list: riskSummary.cctvList.map(cctv => ({
-                        nama_cctv: cctv.nama_cctv || cctv.name || cctv.no_cctv || cctv.nomor_cctv,
-                        no_cctv: cctv.no_cctv || cctv.nomor_cctv,
-                        nomor_cctv: cctv.no_cctv || cctv.nomor_cctv,
-                        kondisi: cctv.kondisi || cctv.status,
-                        status: cctv.status,
-                        connected: cctv.connected,
-                        is_online: cctv.is_online,
-                        status_online: cctv.status_online,
-                        lokasi_pemasangan: cctv.lokasi_pemasangan || cctv.coverage_detail_lokasi || cctv.coverage_lokasi,
-                        coverage_lokasi: cctv.coverage_lokasi,
-                        coverage_detail_lokasi: cctv.coverage_detail_lokasi || cctv.lokasi_pemasangan || cctv.coverage_lokasi
-                    })),
-                    sap_reports: riskSummary.sapReports.map(sap => {
-                        // Get waktu from formatted waktu field, or from jam:menit, or from tanggal
-                        let waktu = sap.waktu || '';
-                        if (!waktu) {
-                            const jam = sap.jam || null;
-                            const menit = sap.menit || null;
-                            if (jam !== null && menit !== null) {
-                                const jamInt = parseInt(jam);
-                                const menitInt = parseInt(menit);
-                                if (jamInt >= 0 && jamInt <= 23 && menitInt >= 0 && menitInt <= 59) {
-                                    waktu = `${String(jamInt).padStart(2, '0')}:${String(menitInt).padStart(2, '0')}`;
-                                }
-                            }
-                        }
-                        if (!waktu) {
-                            const tanggal = sap.tanggal_pelaporan || sap.detected_at;
-                            if (tanggal) {
-                                try {
-                                    const date = new Date(tanggal);
-                                    waktu = `${String(date.getHours()).padStart(2, '0')}:${String(date.getMinutes()).padStart(2, '0')}`;
-                                } catch (e) {}
-                            }
-                        }
-                        
-                        // Prefer nama_lokasi over lokasi
-                        const namaLokasi = sap.nama_lokasi || sap.lokasi || null;
-                        const namaDetailLokasi = sap.nama_detail_lokasi || sap.detail_lokasi || null;
-                        const lokasi = namaLokasi || namaDetailLokasi || 'N/A';
-                        
-                        // Get deskripsi/keterangan
-                        const deskripsi = sap.keterangan || sap.deskripsi || sap.aktivitas_pekerjaan || sap.description || null;
-                        
-                        return {
-                            task_number: sap.task_number || sap.id,
-                            jenis_laporan: sap.jenis_laporan || sap.source_type || sap.type,
-                            lokasi: lokasi,
-                            nama_lokasi: namaLokasi,
-                            nama_detail_lokasi: namaDetailLokasi,
-                            deskripsi: deskripsi,
-                            waktu: waktu,
-                            jam: sap.jam,
-                            menit: sap.menit,
-                            tanggal_pelaporan: sap.tanggal_pelaporan || sap.detected_at
-                        };
-                    }),
-                    area_info: {
-                        lokasi: lokasiNameFinal,
-                        nama_lokasi: lokasiNameFinal,
-                        id_lokasi: areaKerjaId,
-                        site: site,
-                        perusahaan: perusahaan,
-                        area_kerja: areaKerja,
-                        luasan: luasan
-                    }
-                };
-                
-                // Call AI API
-                const aiResponse = await fetch('{{ route("full-maps.api.generate-recommendations") }}', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-CSRF-TOKEN': '{{ csrf_token() }}'
-                    },
-                    body: JSON.stringify(aiRequestData)
-                });
-                
-                const aiResult = await aiResponse.json();
-                
-                if (aiResult.success && aiResult.recommendations && aiResult.recommendations.length > 0) {
-                    aiRecommendations = aiResult.recommendations;
-                } else {
-                    // Fallback to static recommendations if AI fails
-                    aiRecommendations = getFallbackRecommendations(riskSummary.riskLevel, riskSummary);
-                }
-            } catch (aiError) {
-                console.error('Error generating AI recommendations:', aiError);
-                // Fallback to static recommendations
-                aiRecommendations = getFallbackRecommendations(riskSummary.riskLevel, riskSummary);
-            }
-            
-            aiLoading = false;
-            
-            // Fallback function for recommendations - using Context → Insight → Action format
-            function getFallbackRecommendations(riskLevel, riskSummary) {
+            // TARP-based recommendations function - based on TARP CCTV Monitoring table
+            function getTARPRecommendations(riskLevel, riskSummary) {
                 const recommendations = [];
                 const cctvList = riskSummary.cctvList || [];
                 const sapReports = riskSummary.sapReports || [];
                 const cctvCount = cctvList.length;
                 
-                // Get sample CCTV numbers
-                const onlineCctv = cctvList.filter(cctv => {
-                    const kondisi = (cctv.kondisi || cctv.status || '').toLowerCase();
-                    return kondisi === 'baik' || kondisi === 'online' || 
-                           (cctv.status || '').toLowerCase() === 'live view';
-                }).slice(0, 3);
-                
+                // Get offline CCTV
                 const offlineCctv = cctvList.filter(cctv => {
                     const kondisi = (cctv.kondisi || cctv.status || '').toLowerCase();
                     return kondisi !== 'baik' && kondisi !== 'online' && 
-                           (cctv.status || '').toLowerCase() !== 'live view';
-                }).slice(0, 2);
+                           (cctv.status || '').toLowerCase() !== 'live view' &&
+                           (cctv.connected || '').toLowerCase() !== 'yes' &&
+                           cctv.status !== 1 && cctv.is_online !== true && cctv.status_online !== 1;
+                });
                 
-                // Get sample SAP
-                const sampleSap = sapReports.length > 0 ? sapReports[0] : null;
+                // Get online CCTV
+                const onlineCctv = cctvList.filter(cctv => {
+                    const kondisi = (cctv.kondisi || cctv.status || '').toLowerCase();
+                    return kondisi === 'baik' || kondisi === 'online' || 
+                           (cctv.status || '').toLowerCase() === 'live view' ||
+                           (cctv.connected || '').toLowerCase() === 'yes' ||
+                           cctv.status === 1 || cctv.is_online === true || cctv.status_online === 1;
+                });
                 
                 if (riskLevel === 'HIGH') {
-                    if (sampleSap) {
-                        const taskNumber = sampleSap.task_number || sampleSap.id || 'N/A';
-                        const jenis = sampleSap.jenis_laporan || sampleSap.source_type || 'SAP';
-                        
-                        // Prefer nama_lokasi over lokasi
-                        const namaLokasi = sampleSap.nama_lokasi || sampleSap.lokasi || null;
-                        const namaDetailLokasi = sampleSap.nama_detail_lokasi || sampleSap.detail_lokasi || null;
-                        const lokasi = namaLokasi || namaDetailLokasi || 'area ini';
-                        
-                        // Get waktu from formatted waktu, or from jam:menit, or from tanggal
-                        let waktuStr = '';
-                        if (sampleSap.waktu) {
-                            waktuStr = ` pukul ${sampleSap.waktu}`;
-                        } else {
-                            const jam = sampleSap.jam || null;
-                            const menit = sampleSap.menit || null;
-                            if (jam !== null && menit !== null) {
-                                const jamInt = parseInt(jam);
-                                const menitInt = parseInt(menit);
-                                if (jamInt >= 0 && jamInt <= 23 && menitInt >= 0 && menitInt <= 59) {
-                                    waktuStr = ` pukul ${String(jamInt).padStart(2, '0')}:${String(menitInt).padStart(2, '0')}`;
-                                }
-                            }
-                        }
-                        
-                        if (!waktuStr && (sampleSap.tanggal_pelaporan || sampleSap.detected_at)) {
-                            try {
-                                const date = new Date(sampleSap.tanggal_pelaporan || sampleSap.detected_at);
-                                waktuStr = ` pukul ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-                            } catch (e) {}
-                        }
-                        
-                        // Get deskripsi/keterangan
-                        const deskripsi = sampleSap.keterangan || sampleSap.deskripsi || sampleSap.aktivitas_pekerjaan || sampleSap.description || null;
-                        const deskripsiStr = deskripsi ? ` terkait '${deskripsi}'` : '';
-                        
-                        recommendations.push({
-                            priority: 'HIGH',
-                            action: `Terdapat Temuan ${jenis} #${taskNumber}${deskripsiStr} yang dilaporkan${waktuStr} di ${lokasi}, pastikan temuan (jika ada) telah ditindaklanjuti oleh tim lapangan dan tidak ada kondisi yang memerlukan perhatian khusus.`
-                        });
-                    }
-                    
-                    if (offlineCctv.length > 0) {
-                        const cctvNos = offlineCctv.map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(', ');
-                        recommendations.push({
-                            priority: 'HIGH',
-                            action: `Segera koordinasi dengan IT Mitra untuk memperbaiki CCTV yang offline (${cctvNos}) di area ${lokasiNameFinal || 'ini'}, mengingat area ini memiliki risk level tinggi dan memerlukan monitoring optimal untuk mencegah potensi insiden.`
-                        });
-                    }
-                    
+                    // HIGH Level - Merah (Red)
+                    // Action 1: Safety dan Mining Superintendent BC memberikan teguran
                     recommendations.push({
                         priority: 'HIGH',
-                        action: `Koordinasi dengan Safety dan Mining Superintendet BC untuk memberikan teguran terhadap PJA dan IT Mitra jika tidak ada follow up utilisasi CCTV dan perbaikan status offline CCTV 3 hari berturut-turut di area ${lokasiNameFinal || 'ini'}, mengingat area ini memiliki risk level tinggi dan memerlukan monitoring optimal.`
+                        action: `Safety dan Mining Superintendent BC memberikan teguran terhadap PJA dan IT Mitra jika tidak ada follow up utilisasi CCTV dan perbaikan status offline CCTV 3 hari berturut-turut di area ${lokasiNameFinal || 'ini'}.`
                     });
+                    
+                    // Action 2: WKTT menerima laporan dan koordinasi
+                    recommendations.push({
+                        priority: 'HIGH',
+                        action: `WKTT menerima laporan dan melakukan koordinasi dengan Dept Head/Project Manager untuk menentukan langkah tindakan perbaikan terkait kondisi yang terjadi di lapangan di area ${lokasiNameFinal || 'ini'}.`
+                    });
+                    
+                    // Additional action if there are offline CCTV
+                    if (offlineCctv.length > 0) {
+                        const cctvNos = offlineCctv.map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(', ');
+                        recommendations.push({
+                            priority: 'HIGH',
+                            action: `Segera koordinasi dengan IT Mitra Kerja dan Berau Coal untuk memperbaiki CCTV yang offline (${cctvNos}) di area ${lokasiNameFinal || 'ini'}.`
+                        });
+                    }
+                    
                 } else if (riskLevel === 'MEDIUM') {
-                    if (onlineCctv.length > 0 && riskSummary.isHighRiskArea) {
-                        const cctvNos = onlineCctv.slice(0, 2).map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(' dan ');
-                        const lokasiList = onlineCctv.slice(0, 2).map(c => c.lokasi_pemasangan || c.coverage_detail_lokasi || c.coverage_lokasi || lokasiNameFinal).filter((v, i, a) => a.indexOf(v) === i);
-                        const lokasiStr = lokasiList.join(' dan ');
-                        
-                        recommendations.push({
-                            priority: 'MEDIUM',
-                            action: `Fokuskan pemantauan real-time pada aktivitas di ${lokasiStr}, karena kedua lokasi tersebut memiliki CCTV aktif (${cctvNos}) dan termasuk dalam zona kritis meskipun tidak diklasifikasikan sebagai high-risk hari ini.`
-                        });
-                    }
-                    
-                    if (sampleSap) {
-                        const taskNumber = sampleSap.task_number || sampleSap.id || 'N/A';
-                        const jenis = sampleSap.jenis_laporan || sampleSap.source_type || 'SAP';
-                        
-                        // Prefer nama_lokasi over lokasi
-                        const namaLokasi = sampleSap.nama_lokasi || sampleSap.lokasi || null;
-                        const namaDetailLokasi = sampleSap.nama_detail_lokasi || sampleSap.detail_lokasi || null;
-                        const lokasi = namaLokasi || namaDetailLokasi || 'area ini';
-                        
-                        // Get waktu from formatted waktu, or from jam:menit, or from tanggal
-                        let waktuStr = '';
-                        if (sampleSap.waktu) {
-                            waktuStr = ` pukul ${sampleSap.waktu}`;
-                        } else {
-                            const jam = sampleSap.jam || null;
-                            const menit = sampleSap.menit || null;
-                            if (jam !== null && menit !== null) {
-                                const jamInt = parseInt(jam);
-                                const menitInt = parseInt(menit);
-                                if (jamInt >= 0 && jamInt <= 23 && menitInt >= 0 && menitInt <= 59) {
-                                    waktuStr = ` pukul ${String(jamInt).padStart(2, '0')}:${String(menitInt).padStart(2, '0')}`;
-                                }
-                            }
-                        }
-                        
-                        if (!waktuStr && (sampleSap.tanggal_pelaporan || sampleSap.detected_at)) {
-                            try {
-                                const date = new Date(sampleSap.tanggal_pelaporan || sampleSap.detected_at);
-                                waktuStr = ` pukul ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-                            } catch (e) {}
-                        }
-                        
-                        // Get deskripsi/keterangan
-                        const deskripsi = sampleSap.keterangan || sampleSap.deskripsi || sampleSap.aktivitas_pekerjaan || sampleSap.description || null;
-                        const deskripsiStr = deskripsi ? ` terkait '${deskripsi}'` : '';
-                        
-                        recommendations.push({
-                            priority: 'MEDIUM',
-                            action: `Terdapat Temuan ${jenis} #${taskNumber}${deskripsiStr} yang dilaporkan${waktuStr} di ${lokasi}, pastikan temuan (jika ada) telah ditindaklanjuti oleh tim lapangan dan tidak ada kondisi yang memerlukan perhatian khusus.`
-                        });
-                    }
-                    
+                    // MEDIUM Level - Orange
+                    // Action 1: Pengawas Control Room wajib melakukan pemeriksaan 3x/shift
                     recommendations.push({
                         priority: 'MEDIUM',
-                        action: `Pengawas Control Room wajib melakukan pemeriksaan kondisi aktivitas highrisk minimal 3 kali dalam shift ini di area ${lokasiNameFinal || 'ini'}, dengan fokus pada area yang memiliki potensi risiko sedang untuk mencegah eskalasi kondisi.`
+                        action: `Pengawas Control Room wajib melakukan pemeriksaan kondisi aktivitas highrisk 3x/shift di area ${lokasiNameFinal || 'ini'}.`
                     });
                     
+                    // Action 2: Koordinasi dengan IT untuk follow up offline CCTV
                     if (offlineCctv.length > 0) {
                         const cctvNos = offlineCctv.map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(', ');
                         recommendations.push({
                             priority: 'MEDIUM',
-                            action: `Koordinasi dengan IT Mitra Kerja dan Berau Coal untuk memfollow up kondisi status offline CCTV ${cctvNos} dan memastikan kondisi jaringan internet lancar dan tersedia di area ${lokasiNameFinal || 'ini'}, mengingat pentingnya monitoring kontinyu untuk area dengan risk level sedang.`
-                        });
-                    }
-                } else {
-                    // NORMAL/LOW risk - Format Context → Insight → Action
-                    if (onlineCctv.length > 0 && cctvCount > 0) {
-                        const cctvNos = onlineCctv.slice(0, 3).map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(', ');
-                        const lokasiList = onlineCctv.slice(0, 2).map(c => c.lokasi_pemasangan || c.coverage_detail_lokasi || c.coverage_lokasi || lokasiNameFinal).filter((v, i, a) => a.indexOf(v) === i);
-                        const lokasiStr = lokasiList.length > 0 ? lokasiList.join(' dan ') : (lokasiNameFinal || 'area ini');
-                        
-                        recommendations.push({
-                            priority: 'LOW',
-                            action: `Fokuskan pemantauan real-time pada aktivitas di ${lokasiStr}, karena lokasi tersebut memiliki CCTV aktif (${cctvNos}) dan memerlukan monitoring rutin untuk memastikan operasi berjalan sesuai standar keselamatan.`
+                            action: `Koordinasi dengan IT Mitra Kerja dan Berau Coal memfollow up kondisi status offline CCTV ${cctvNos} dan memastikan kondisi jaringan internet lancar dan tersedia di area ${lokasiNameFinal || 'ini'}.`
                         });
                     }
                     
+                    // Action 3: Monitoring CCTV yang tidak aktif digunakan
                     if (cctvCount > 0) {
                         recommendations.push({
-                            priority: 'LOW',
-                            action: `Dokumentasikan penggunaan seluruh ${cctvCount} CCTV dalam shift ini sebagai bukti utilitas sistem, khususnya untuk kamera yang memantau aktivitas operasional rutin di area ${lokasiNameFinal || 'ini'}.`
+                            priority: 'MEDIUM',
+                            action: `Monitoring CCTV yang tidak aktif digunakan pengawasan dan Tim PJA terkait wajib mengutilisasi CCTV tersebut dengan dibuktikan laporan SAP di area ${lokasiNameFinal || 'ini'}.`
                         });
                     }
                     
-                    if (onlineCctv.length > 0) {
-                        const cctvNos = onlineCctv.slice(0, 2).map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(' dan ');
-                        const lokasiList = onlineCctv.slice(0, 2).map(c => c.lokasi_pemasangan || c.coverage_detail_lokasi || c.coverage_lokasi || lokasiNameFinal).filter((v, i, a) => a.indexOf(v) === i);
-                        const lokasiStr = lokasiList.length > 0 ? lokasiList.join(' dan ') : (lokasiNameFinal || 'area ini');
-                        
+                    // Action 4: L3 Pengawas Control Room memberikan teguran
+                    recommendations.push({
+                        priority: 'MEDIUM',
+                        action: `L3 Pengawas Control Room memberikan teguran terhadap PJA dan IT terkait kondisi dan utilisasi CCTV yang masih rendah atau tidak ada follow up 3x berturut-turut di area kerja Control Room di area ${lokasiNameFinal || 'ini'}.`
+                    });
+                    
+                    // Action 5: Inspektorat Safety BC melaporkan
+                    recommendations.push({
+                        priority: 'MEDIUM',
+                        action: `Inspektorat Safety BC melaporkan hasil kondisi & utilisasi CCTV pada WA Group K3L Site untuk area ${lokasiNameFinal || 'ini'}.`
+                    });
+                    
+                } else {
+                    // NORMAL Level - Hijau (Green)
+                    // Action 1: P2H Status CCTV setiap awal shift
+                    if (cctvCount > 0) {
                         recommendations.push({
-                            priority: 'LOW',
-                            action: `Gunakan kamera ${cctvNos} untuk melakukan patroli visual rutin terhadap aktivitas di ${lokasiStr}, mengingat pentingnya memastikan prosedur keselamatan diterapkan dengan baik di setiap tahap operasi.`
+                            priority: 'NORMAL',
+                            action: `Pengawas Control Room wajib melakukan P2H Status CCTV setiap awal shift di area ${lokasiNameFinal || 'ini'}.`
                         });
                     }
                     
-                    if (riskSummary.hasSapReport && sampleSap) {
-                        const taskNumber = sampleSap.task_number || sampleSap.id || 'N/A';
-                        const jenis = sampleSap.jenis_laporan || sampleSap.source_type || 'SAP';
-                        
-                        // Prefer nama_lokasi over lokasi
-                        const namaLokasi = sampleSap.nama_lokasi || sampleSap.lokasi || null;
-                        const namaDetailLokasi = sampleSap.nama_detail_lokasi || sampleSap.detail_lokasi || null;
-                        const lokasi = namaLokasi || namaDetailLokasi || 'area ini';
-                        
-                        // Get waktu from formatted waktu, or from jam:menit, or from tanggal
-                        let waktuStr = '';
-                        if (sampleSap.waktu) {
-                            waktuStr = ` pukul ${sampleSap.waktu}`;
-                        } else {
-                            const jam = sampleSap.jam || null;
-                            const menit = sampleSap.menit || null;
-                            if (jam !== null && menit !== null) {
-                                const jamInt = parseInt(jam);
-                                const menitInt = parseInt(menit);
-                                if (jamInt >= 0 && jamInt <= 23 && menitInt >= 0 && menitInt <= 59) {
-                                    waktuStr = ` pukul ${String(jamInt).padStart(2, '0')}:${String(menitInt).padStart(2, '0')}`;
-                                }
-                            }
-                        }
-                        
-                        if (!waktuStr && (sampleSap.tanggal_pelaporan || sampleSap.detected_at)) {
-                            try {
-                                const date = new Date(sampleSap.tanggal_pelaporan || sampleSap.detected_at);
-                                waktuStr = ` pukul ${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
-                            } catch (e) {}
-                        }
-                        
-                        // Get deskripsi/keterangan
-                        const deskripsi = sampleSap.keterangan || sampleSap.deskripsi || sampleSap.aktivitas_pekerjaan || sampleSap.description || null;
-                        const deskripsiStr = deskripsi ? ` terkait '${deskripsi}'` : '';
-                        
+                    // Action 2: Monitoring aktivitas Highrisk
+                    if (riskSummary.isHighRiskArea) {
                         recommendations.push({
-                            priority: 'LOW',
-                            action: `Terdapat temuan ${jenis} #${taskNumber}${deskripsiStr} yang dilaporkan${waktuStr} di ${lokasi}, pastikan temuan (jika ada) telah ditindaklanjuti oleh tim lapangan dan tidak ada kondisi yang memerlukan perhatian khusus.`
+                            priority: 'NORMAL',
+                            action: `Pengawas Control Room monitoring aktivitas Highrisk di area ${lokasiNameFinal || 'ini'}.`
                         });
-                    } else if (cctvCount > 0) {
-                        const cctvNos = onlineCctv.length > 0 ? onlineCctv.slice(0, 3).map(c => c.no_cctv || c.nomor_cctv || c.nama_cctv).join(', ') : '';
-                        if (cctvNos) {
-                            recommendations.push({
-                                priority: 'LOW',
-                                action: `Lakukan verifikasi status dan kualitas sinyal pada kamera ${cctvNos} di awal shift, karena kamera tersebut memantau aktivitas di area ${lokasiNameFinal || 'ini'} dan memerlukan kondisi optimal untuk memastikan monitoring berjalan efektif sepanjang shift.`
-                            });
-                        } else {
-                            recommendations.push({
-                                priority: 'LOW',
-                                action: `Lakukan verifikasi status seluruh ${cctvCount} CCTV di area ${lokasiNameFinal || 'ini'} pada awal shift, pastikan semua kamera dalam kondisi baik dan dapat diakses untuk monitoring aktivitas operasional, mengingat pentingnya visibilitas kontinyu untuk menjaga standar keselamatan.`
-                            });
-                        }
                     }
+                    
+                    // Action 3: L2 Control Room validasi hasil pemeriksaan
+                    recommendations.push({
+                        priority: 'NORMAL',
+                        action: `L2 Control Room wajib memvalidasi hasil pemeriksaan awal shift pengawas control room di area ${lokasiNameFinal || 'ini'}.`
+                    });
                 }
                 
                 return recommendations;
             }
+            
+            // Get risk matrix summary
+            const riskSummary = await getRiskMatrixSummary(feature);
+            
+            // Generate TARP-based recommendations (rule-based, no AI)
+            const aiRecommendations = getTARPRecommendations(riskSummary.riskLevel, riskSummary);
             
             // Format CCTV list
             const cctvListHtml = riskSummary.cctvList.length > 0 ? riskSummary.cctvList.map((cctv, index) => {
@@ -9846,20 +10132,13 @@ source: new ol.source.Vector(),
                                     <small class="text-muted">${new Date().toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}</small>
                                 </div>
                                 
-                                ${aiLoading ? `
-                                <div class="text-center py-3">
-                                    <div class="spinner-border spinner-border-sm text-primary" role="status">
-                                        <span class="visually-hidden">Loading...</span>
-                                    </div>
-                                    <p class="mt-2 text-muted small">Membangkitkan rekomendasi AI...</p>
-                                </div>
-                                ` : aiRecommendations.length > 0 ? `
+                                ${aiRecommendations.length > 0 ? `
                                 <div class="mb-0">
                                     ${aiRecommendations.map((rec, index) => {
                                         const priorityColor = rec.priority === 'HIGH' ? '#dc2626' : 
                                                              rec.priority === 'MEDIUM' ? '#f59e0b' : '#22c55e';
                                         const priorityText = rec.priority === 'HIGH' ? 'Tinggi' : 
-                                                            rec.priority === 'MEDIUM' ? 'Sedang' : 'Rendah';
+                                                            rec.priority === 'MEDIUM' ? 'Sedang' : 'Normal';
                                         return `
                                         <div class="mb-3 p-3 border rounded" style="border-left: 4px solid ${priorityColor} !important; background-color: #f8f9fa;">
                                             <div class="d-flex align-items-start">
@@ -11761,6 +12040,29 @@ source: new ol.source.Vector(),
         const speed = unit.speed !== null && unit.speed !== undefined ? unit.speed + ' km/h' : 'N/A';
         const course = unit.course !== null && unit.course !== undefined ? unit.course + '°' : 'N/A';
         const battery = unit.battery !== null && unit.battery !== undefined ? unit.battery + '%' : 'N/A';
+        
+        // Format Last Aktif berdasarkan updated_at (waktu terakhir update, lebih tepat untuk "Last Aktif")
+        let lastAktif = 'N/A';
+        const lastUpdateTime = unit.updated_at || unit.created_at; // Fallback ke created_at jika updated_at tidak ada
+        if (lastUpdateTime) {
+            try {
+                const updateDate = new Date(lastUpdateTime);
+                if (!isNaN(updateDate.getTime())) {
+                    // Kurangi 8 jam dari waktu
+                    updateDate.setHours(updateDate.getHours() - 8);
+                    lastAktif = updateDate.toLocaleString('id-ID', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                }
+            } catch (e) {
+                console.error('Error parsing updated_at:', e);
+            }
+        }
 
         const content = `
             <div style="min-width: 250px; background-color: #ffffff !important;">
@@ -11784,6 +12086,9 @@ source: new ol.source.Vector(),
                     <p style="margin: 5px 0; font-size: 13px;">
                         <strong>Baterai:</strong> ${battery}
                     </p>
+                    <p style="margin: 5px 0; font-size: 13px;">
+                        <strong>Last Aktif:</strong> <span style="color: #059669;">${lastAktif}</span>
+                    </p>
                     <p style="margin: 5px 0; font-size: 12px; color: #666;">
                         <strong>Koordinat:</strong> ${unit.latitude?.toFixed(6)}, ${unit.longitude?.toFixed(6)}
                     </p>
@@ -11792,6 +12097,31 @@ source: new ol.source.Vector(),
         `;
         document.getElementById('popup-content').innerHTML = content;
         popupOverlay.setPosition(coordinate);
+        
+        // Ensure connection lines layer is visible
+        if (unitConnectionLinesLayer) {
+            unitConnectionLinesLayer.setVisible(true);
+        }
+        
+        // Show connection lines to nearby units (within 1 km)
+        // Use setTimeout to ensure popup is rendered first
+        setTimeout(function() {
+            console.log('Attempting to show unit connection lines...');
+            console.log('Unit data:', unit);
+            console.log('unitConnectionLinesLayer exists:', typeof unitConnectionLinesLayer !== 'undefined');
+            console.log('showUnitConnectionLines function exists:', typeof showUnitConnectionLines === 'function');
+            
+            if (typeof showUnitConnectionLines === 'function') {
+                console.log('Calling showUnitConnectionLines for unit:', unit);
+                try {
+                    showUnitConnectionLines(unit);
+                } catch (error) {
+                    console.error('Error calling showUnitConnectionLines:', error);
+                }
+            } else {
+                console.warn('showUnitConnectionLines function not found');
+            }
+        }, 100);
     }
     
     function showGpsOrangPopup(coordinate, user) {
@@ -11807,6 +12137,30 @@ source: new ol.source.Vector(),
         const batteryColor = user.battery < 20 ? '#8b5cf6' : user.battery < 50 ? '#f59e0b' : '#10b981';
         const latitude = user.latitude || 0;
         const longitude = user.longitude || 0;
+        
+        // Format Last Aktif berdasarkan updated_at (waktu terakhir update, lebih tepat untuk "Last Aktif")
+        // Fallback ke created_at atau gps_created_at jika updated_at tidak ada
+        let lastAktif = 'N/A';
+        const lastUpdateTime = user.updated_at || user.gps_updated_at || user.created_at || user.gps_created_at || null;
+        if (lastUpdateTime) {
+            try {
+                const updateDate = new Date(lastUpdateTime);
+                if (!isNaN(updateDate.getTime())) {
+                    // Kurangi 8 jam dari waktu
+                    updateDate.setHours(updateDate.getHours() - 8);
+                    lastAktif = updateDate.toLocaleString('id-ID', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit',
+                        second: '2-digit'
+                    });
+                }
+            } catch (e) {
+                console.error('Error parsing updated_at:', e);
+            }
+        }
 
         const content = `
             <div style="min-width: 250px; background-color: #ffffff !important;">
@@ -11826,6 +12180,9 @@ source: new ol.source.Vector(),
                     </p>
                     <p style="margin: 5px 0; font-size: 13px;">
                         <strong>Baterai:</strong> <span style="color: ${batteryColor};">${battery}</span>
+                    </p>
+                    <p style="margin: 5px 0; font-size: 13px;">
+                        <strong>Last Aktif:</strong> <span style="color: #059669;">${lastAktif}</span>
                     </p>
                     <p style="margin: 5px 0; font-size: 12px; color: #666;">
                         <strong>Koordinat:</strong> ${latitude.toFixed(6)}, ${longitude.toFixed(6)}
@@ -13148,9 +13505,9 @@ source: new ol.source.Vector(),
         modalContent.innerHTML = `
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <div class="card border-0 shadow-sm mb-3">
-                        <div class="card-header bg-primary text-white">
-                            <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">info</i>Informasi Dasar</h6>
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">info</i>Informasi Dasar</h6>
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless mb-0">
@@ -13164,11 +13521,11 @@ source: new ol.source.Vector(),
                                 </tr>
                                 <tr>
                                     <td><strong>Status LPI:</strong></td>
-                                    <td><span class="badge ${insiden.status_lpi === 'Open' ? 'bg-warning' : insiden.status_lpi === 'Closed' ? 'bg-success' : 'bg-secondary'}">${escapeHtml(insiden.status_lpi || '-')}</span></td>
+                                    <td><span class="badge ${insiden.status_lpi === 'Open' ? 'bg-warning text-dark' : insiden.status_lpi === 'Closed' ? 'bg-success' : 'bg-secondary'}">${escapeHtml(insiden.status_lpi || '-')}</span></td>
                                 </tr>
                                 <tr>
                                     <td><strong>Kategori:</strong></td>
-                                    <td><span class="badge bg-danger">${escapeHtml(insiden.kategori || '-')}</span></td>
+                                    <td><span class="badge bg-light text-danger border border-danger border-opacity-25">${escapeHtml(insiden.kategori || '-')}</span></td>
                                 </tr>
                                 <tr>
                                     <td><strong>Injury Status:</strong></td>
@@ -13183,9 +13540,9 @@ source: new ol.source.Vector(),
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="card border-0 shadow-sm mb-3">
-                        <div class="card-header bg-info text-white">
-                            <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">location_on</i>Lokasi</h6>
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">location_on</i>Lokasi</h6>
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless mb-0">
@@ -13220,9 +13577,9 @@ source: new ol.source.Vector(),
             </div>
             <div class="row mb-4">
                 <div class="col-md-6">
-                    <div class="card border-0 shadow-sm mb-3">
-                        <div class="card-header bg-success text-white">
-                            <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">schedule</i>Waktu Kejadian</h6>
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">schedule</i>Waktu Kejadian</h6>
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless mb-0">
@@ -13251,9 +13608,9 @@ source: new ol.source.Vector(),
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="card border-0 shadow-sm mb-3">
-                        <div class="card-header bg-warning text-white">
-                            <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">business</i>Perusahaan & Departemen</h6>
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">business</i>Perusahaan & Departemen</h6>
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless mb-0">
@@ -13279,9 +13636,9 @@ source: new ol.source.Vector(),
                 </div>
             </div>
             ${insiden.kronologis ? `
-            <div class="card border-0 shadow-sm mb-3">
-                <div class="card-header bg-secondary text-white">
-                    <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">description</i>Kronologis</h6>
+            <div class="card border shadow-sm mb-3">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">description</i>Kronologis</h6>
                 </div>
                 <div class="card-body">
                     <p class="mb-0">${escapeHtml(insiden.kronologis || '-')}</p>
@@ -13289,9 +13646,9 @@ source: new ol.source.Vector(),
             </div>
             ` : ''}
             ${insiden.items && insiden.items.length > 0 ? `
-            <div class="card border-0 shadow-sm">
-                <div class="card-header bg-dark text-white">
-                    <h6 class="mb-0"><i class="material-icons-outlined me-2" style="font-size: 18px;">layers</i>Detail Layer</h6>
+            <div class="card border shadow-sm">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">layers</i>Detail Layer</h6>
                 </div>
                 <div class="card-body">
                     <div class="table-responsive">
@@ -17026,7 +17383,7 @@ source: new ol.source.Vector(),
     }
     
     // Function to toggle Unit display (show/hide)
-    function toggleUnitDisplay() {
+    async function toggleUnitDisplay() {
         const unitCategoryItem = Array.from(document.querySelectorAll('.gm-category-item')).find(item => {
             const span = item.querySelector('span');
             return span && span.textContent.trim() === 'Gps Unit';
@@ -17051,6 +17408,13 @@ source: new ol.source.Vector(),
         if (unitDataLoaded && unitVehicleLayer.getVisible()) {
             // Hide Unit - hide layer but keep data
             unitVehicleLayer.setVisible(false);
+            if (unitBoundaryLayer) {
+                unitBoundaryLayer.setVisible(false);
+            }
+            if (unitConnectionLinesLayer) {
+                unitConnectionLinesLayer.setVisible(false);
+                clearUnitConnectionLines();
+            }
             layerVisibility.unit = false;
             unitDataLoaded = false;
             
@@ -17084,25 +17448,68 @@ source: new ol.source.Vector(),
         } else {
             // Show Unit - ensure data is loaded and visible
             if (!unitVehicles || unitVehicles.length === 0) {
-                Swal.fire({
-                    icon: 'warning',
-                    title: 'Tidak Ada Data Unit',
-                    text: 'Tidak ada data unit kendaraan yang tersedia',
-                    timer: 2500,
-                    showConfirmButton: true,
-                    confirmButtonText: 'OK',
-                    confirmButtonColor: '#3085d6',
-                    toast: false,
-                    position: 'center'
-                });
-                return;
+                // Jika data belum ada, coba load dulu dari server
+                console.log('Unit vehicles data not found, loading from server...');
+                if (typeof refreshUnitVehicles === 'function') {
+                    try {
+                        await refreshUnitVehicles();
+                        // Check again after loading
+                        if (!unitVehicles || unitVehicles.length === 0) {
+                            Swal.fire({
+                                icon: 'warning',
+                                title: 'Tidak Ada Data Unit',
+                                text: 'Tidak ada data unit kendaraan yang tersedia untuk hari ini',
+                                timer: 2500,
+                                showConfirmButton: true,
+                                confirmButtonText: 'OK',
+                                confirmButtonColor: '#3085d6',
+                                toast: false,
+                                position: 'center'
+                            });
+                            return;
+                        }
+                    } catch (error) {
+                        console.error('Error loading unit vehicles:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error Memuat Data Unit',
+                            text: 'Terjadi kesalahan saat memuat data unit kendaraan',
+                            timer: 2500,
+                            showConfirmButton: true,
+                            confirmButtonText: 'OK',
+                            confirmButtonColor: '#3085d6',
+                            toast: false,
+                            position: 'center'
+                        });
+                        return;
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'warning',
+                        title: 'Tidak Ada Data Unit',
+                        text: 'Tidak ada data unit kendaraan yang tersedia',
+                        timer: 2500,
+                        showConfirmButton: true,
+                        confirmButtonText: 'OK',
+                        confirmButtonColor: '#3085d6',
+                        toast: false,
+                        position: 'center'
+                    });
+                    return;
+                }
             }
             
             // Update unit markers if needed
             updateUnitVehicleMarkers(unitVehicles);
             
-            // Show unit vehicle layer
+            // Show unit vehicle layer and boundary layer
             unitVehicleLayer.setVisible(true);
+            if (unitBoundaryLayer) {
+                unitBoundaryLayer.setVisible(true);
+            }
+            if (unitConnectionLinesLayer) {
+                unitConnectionLinesLayer.setVisible(true);
+            }
             layerVisibility.unit = true;
             unitDataLoaded = true;
             
@@ -21046,9 +21453,25 @@ source: new ol.source.Vector(),
                         }
                     };
                 },
-                error: function(jqXHR, textStatus, errorThrown) {
-                    console.error('Select2 AJAX error:', textStatus, errorThrown);
-                    console.error('Response:', jqXHR.responseText);
+                transport: function (params, success, failure) {
+                    const $request = $.ajax(params);
+                    $request.then(function(data) {
+                        success(data);
+                    });
+                    $request.fail(function(jqXHR, textStatus, errorThrown) {
+                        // Ignore abort errors (they happen when user types quickly or closes dropdown)
+                        if (textStatus === 'abort') {
+                            // Silently ignore abort - Select2 will handle it
+                            return;
+                        }
+                        // For other errors, log and call failure
+                        console.error('Select2 AJAX error:', textStatus, errorThrown);
+                        if (jqXHR.responseText) {
+                            console.error('Response:', jqXHR.responseText);
+                        }
+                        failure(jqXHR, textStatus, errorThrown);
+                    });
+                    return $request;
                 },
                 cache: false
             },
@@ -21090,8 +21513,17 @@ source: new ol.source.Vector(),
             // Trigger initial load when dropdown opens
             $(picSelect).on('select2:open', function() {
                 const $select2 = $(picSelect).data('select2');
-                if ($select2 && !$select2._request) {
-                    $select2.trigger('query', { term: '' });
+                if ($select2) {
+                    // Abort any pending request first
+                    if ($select2._request) {
+                        $select2._request.abort();
+                    }
+                    // Trigger query with empty term to load initial results
+                    setTimeout(function() {
+                        if ($select2 && !$select2._request) {
+                            $select2.trigger('query', { term: '' });
+                        }
+                    }, 50);
                 }
             });
         }
@@ -21155,7 +21587,7 @@ source: new ol.source.Vector(),
         // Reset form but keep lokasi
         issueTextarea.value = '';
         
-        // Load CCTV list for this area kerja/lokasi
+        // Load all CCTV list (no location filter)
         loadCctvListForAreaKerja(lokasiValue, areaKerjaValue);
         
         // Clear PIC dropdown (Select2 will be initialized when modal is shown)
@@ -21171,7 +21603,7 @@ source: new ol.source.Vector(),
         }
     }
     
-    // Function to load CCTV list for area kerja
+    // Function to load CCTV list for area kerja (all CCTV, no location filter)
     function loadCctvListForAreaKerja(lokasi, areaKerja) {
         const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
         if (!cctvSelect) return;
@@ -21185,16 +21617,11 @@ source: new ol.source.Vector(),
         cctvSelect.innerHTML = '<option value="">Memuat CCTV...</option>';
         cctvSelect.disabled = true;
         
-        // Build query parameters
-        const params = new URLSearchParams();
-        if (lokasi) params.append('lokasi', lokasi);
-        if (areaKerja) params.append('area_kerja', areaKerja);
-        
         // Get CSRF token safely
         const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
         
-        // Fetch CCTV list from API
-        fetch(`{{ url('full-maps/api/cctv-for-area-kerja') }}?${params.toString()}`, {
+        // Fetch all CCTV list from API (no location filter)
+        fetch(`{{ url('full-maps/api/cctv-for-area-kerja') }}`, {
             method: 'GET',
             headers: {
                 'Content-Type': 'application/json',
@@ -21243,14 +21670,22 @@ source: new ol.source.Vector(),
     const intervensiAreaKerjaModal = document.getElementById('intervensiAreaKerjaModal');
     if (intervensiAreaKerjaModal) {
         intervensiAreaKerjaModal.addEventListener('hidden.bs.modal', function() {
-            const picSelect = document.getElementById('intervensiPICAreaKerja');
-            if (picSelect && typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
-                $(picSelect).select2('destroy');
-            }
-            const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
-            if (cctvSelect && typeof $ !== 'undefined' && $(cctvSelect).hasClass('select2-hidden-accessible')) {
-                $(cctvSelect).select2('destroy');
-            }
+            // Wait a bit before destroying to allow any pending requests to complete
+            setTimeout(function() {
+                const picSelect = document.getElementById('intervensiPICAreaKerja');
+                if (picSelect && typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
+                    // Abort any pending AJAX requests
+                    const $select2 = $(picSelect).data('select2');
+                    if ($select2 && $select2._request) {
+                        $select2._request.abort();
+                    }
+                    $(picSelect).select2('destroy');
+                }
+                const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
+                if (cctvSelect && typeof $ !== 'undefined' && $(cctvSelect).hasClass('select2-hidden-accessible')) {
+                    $(cctvSelect).select2('destroy');
+                }
+            }, 100);
         });
     }
     
@@ -21318,10 +21753,14 @@ source: new ol.source.Vector(),
         if (intervensiAreaKerjaModalElement) {
             intervensiAreaKerjaModalElement.addEventListener('shown.bs.modal', function() {
                 // Initialize Select2 for PIC when modal is fully shown
-                // Add a small delay to ensure all scripts are loaded
+                // Add a delay to ensure all scripts are loaded and modal is fully rendered
                 setTimeout(function() {
-                    initializePICSelect2();
-                }, 200);
+                    // Check if modal is still visible before initializing
+                    const modal = bootstrap.Modal.getInstance(intervensiAreaKerjaModalElement);
+                    if (modal && modal._isShown) {
+                        initializePICSelect2();
+                    }
+                }, 300);
             });
         }
         
@@ -21797,7 +22236,194 @@ source: new ol.source.Vector(),
                 loadMatriksPrediksiInsiden();
             });
         }
+        
+        // Initialize CCTV Alert Notification
+        initCctvAlertNotification();
     });
+    
+    // CCTV Alert Notification System
+    let cctvAlertInterval = null;
+    let lastAlertId = null;
+    
+    function initCctvAlertNotification() {
+        // Create notification container
+        const notificationContainer = document.createElement('div');
+        notificationContainer.id = 'cctvAlertNotification';
+        notificationContainer.style.cssText = `
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            z-index: 9999;
+            max-width: 400px;
+            min-width: 320px;
+            display: none;
+        `;
+        document.body.appendChild(notificationContainer);
+        
+        // Load initial data
+        loadCctvAlert();
+        
+        // Set interval to check every 2 minutes (120000 ms)
+        cctvAlertInterval = setInterval(function() {
+            loadCctvAlert();
+        }, 120000); // 2 minutes
+    }
+    
+    function loadCctvAlert() {
+        const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+        
+        fetch('{{ route("full-maps.api.latest-cctv-alert") }}', {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data) {
+                // Check if this is a new alert (different ID)
+                if (lastAlertId !== data.data.id) {
+                    lastAlertId = data.data.id;
+                    showCctvAlertNotification(data.data);
+                }
+            }
+        })
+        .catch(error => {
+            console.error('Error loading CCTV alert:', error);
+        });
+    }
+    
+    function showCctvAlertNotification(alertData) {
+        const container = document.getElementById('cctvAlertNotification');
+        if (!container) return;
+        
+        // Format tanggal
+        let tanggalFormatted = 'N/A';
+        if (alertData.tanggal) {
+            try {
+                const date = new Date(alertData.tanggal);
+                tanggalFormatted = date.toLocaleString('id-ID', {
+                    day: '2-digit',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            } catch (e) {
+                tanggalFormatted = alertData.tanggal;
+            }
+        }
+        
+        // Calculate percentage
+        const total = parseInt(alertData.jumlah_offline || 0) + parseInt(alertData.jumlah_online || 0);
+        const offlinePercent = total > 0 ? ((parseInt(alertData.jumlah_offline || 0) / total) * 100).toFixed(1) : 0;
+        
+        // Create notification HTML
+        container.innerHTML = `
+            <div class="card shadow-lg border-0" style="border-left: 4px solid #dc2626 !important; animation: slideInRight 0.3s ease-out;">
+                <div class="card-body p-3">
+                    <div class="d-flex justify-content-between align-items-start mb-2">
+                        <div class="d-flex align-items-center">
+                            <div class="me-2" style="width: 40px; height: 40px; background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%); border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+                                <i class="material-icons-outlined text-white" style="font-size: 24px;">videocam_off</i>
+                            </div>
+                            <div>
+                                <h6 class="mb-0 fw-bold" style="color: #1f2937; font-size: 14px;">CCTV Alert</h6>
+                                <small class="text-muted" style="font-size: 11px;">${alertData.site || 'N/A'}</small>
+                            </div>
+                        </div>
+                        <button type="button" class="btn-close btn-close-sm" onclick="closeCctvAlertNotification()" aria-label="Close" style="font-size: 10px;"></button>
+                    </div>
+                    
+                    <div class="row g-2 mb-2">
+                        <div class="col-6">
+                            <div class="p-2 rounded" style="background-color: #fef2f2;">
+                                <div class="d-flex align-items-center">
+                                    <i class="material-icons-outlined text-danger me-1" style="font-size: 16px;">error_outline</i>
+                                    <small class="text-muted" style="font-size: 10px;">Offline</small>
+                                </div>
+                                <div class="fw-bold text-danger" style="font-size: 18px;">${alertData.jumlah_offline || 0}</div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="p-2 rounded" style="background-color: #f0fdf4;">
+                                <div class="d-flex align-items-center">
+                                    <i class="material-icons-outlined text-success me-1" style="font-size: 16px;">check_circle</i>
+                                    <small class="text-muted" style="font-size: 10px;">Online</small>
+                                </div>
+                                <div class="fw-bold text-success" style="font-size: 18px;">${alertData.jumlah_online || 0}</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-2">
+                        <div class="d-flex justify-content-between align-items-center mb-1">
+                            <small class="text-muted" style="font-size: 10px;">Status</small>
+                            <small class="text-muted fw-semibold" style="font-size: 10px;">${offlinePercent}% Offline</small>
+                        </div>
+                        <div class="progress" style="height: 6px;">
+                            <div class="progress-bar bg-danger" role="progressbar" style="width: ${offlinePercent}%"></div>
+                            <div class="progress-bar bg-success" role="progressbar" style="width: ${100 - offlinePercent}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="d-flex justify-content-between align-items-center">
+                        <small class="text-muted" style="font-size: 10px;">
+                            <i class="material-icons-outlined" style="font-size: 12px; vertical-align: middle;">schedule</i>
+                            ${tanggalFormatted}
+                        </small>
+                        <small class="text-muted" style="font-size: 9px;">Auto-update setiap 2 menit</small>
+                    </div>
+                </div>
+            </div>
+        `;
+        
+        // Show notification with animation
+        container.style.display = 'block';
+        
+        // Auto-hide after 10 seconds
+        setTimeout(function() {
+            closeCctvAlertNotification();
+        }, 10000);
+    }
+    
+    function closeCctvAlertNotification() {
+        const container = document.getElementById('cctvAlertNotification');
+        if (container) {
+            container.style.animation = 'slideOutRight 0.3s ease-out';
+            setTimeout(function() {
+                container.style.display = 'none';
+                container.style.animation = '';
+            }, 300);
+        }
+    }
+    
+    // Add CSS animations
+    const style = document.createElement('style');
+    style.textContent = `
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+        @keyframes slideOutRight {
+            from {
+                transform: translateX(0);
+                opacity: 1;
+            }
+            to {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+        }
+    `;
+    document.head.appendChild(style);
 </script>
 <script src="{{ URL::asset('build/plugins/apexchart/apexcharts.min.js') }}"></script>
 <script src="{{ URL::asset('build/js/index.js') }}"></script>

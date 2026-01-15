@@ -221,10 +221,34 @@ class BesigmaDbService
                 return [];
             }
             
-            // Try to use unit_gps_latests first if available (optimized table)
-            // Menggunakan kolom-kolom yang sesuai dengan struktur tabel nitip.unit_gps_latests
-            try {
-                $sql = "SELECT 
+            // Gunakan today() dari ClickHouse untuk menghindari masalah timezone
+            // Ini lebih akurat karena menggunakan timezone server ClickHouse
+            // Gunakan range tanggal untuk memastikan data hari ini terambil (termasuk kemungkinan timezone berbeda)
+            // Perhatikan: latitude dan longitude adalah String di database, jadi perlu casting ke Float64 untuk perbandingan
+            // Gunakan subquery dengan ROW_NUMBER untuk mendapatkan data terbaru per id (menghindari duplikasi)
+            // Ini lebih reliable daripada argMax dengan GROUP BY
+            $sql = "SELECT 
+                toString(id) as id,
+                toString(unit_id) as unit_id,
+                toString(integration_id) as integration_id,
+                toString(latitude) as latitude,
+                toString(longitude) as longitude,
+                toString(course) as course,
+                toString(speed) as speed,
+                toString(heading) as heading,
+                battery,
+                toString(vehicle_type) as vehicle_type,
+                toString(vehicle_number) as vehicle_number,
+                toString(vehicle_name) as vehicle_name,
+                toString(vendor_name) as vendor_name,
+                toString(vendor_type) as vendor_type,
+                toString(user_id) as user_id,
+                is_unit,
+                toString(timezone) as timezone,
+                toString(created_at) as created_at,
+                toString(updated_at) as updated_at
+            FROM (
+                SELECT 
                     id,
                     unit_id,
                     integration_id,
@@ -243,111 +267,137 @@ class BesigmaDbService
                     is_unit,
                     timezone,
                     created_at,
-                    updated_at
+                    updated_at,
+                    ROW_NUMBER() OVER (PARTITION BY id ORDER BY updated_at DESC) as rn
                 FROM {$this->database}.unit_gps_latests
                 WHERE latitude IS NOT NULL 
                     AND longitude IS NOT NULL 
-                    AND latitude != 0 
-                    AND longitude != 0
-                    AND is_unit = true";
+                    AND latitude != ''
+                    AND longitude != ''
+                    AND toFloat64OrNull(latitude) IS NOT NULL
+                    AND toFloat64OrNull(longitude) IS NOT NULL
+                    AND toFloat64OrNull(latitude) != 0 
+                    AND toFloat64OrNull(longitude) != 0
+                    AND is_unit = true
+                    AND toDate(updated_at) >= today() - INTERVAL 1 DAY
+                    AND toDate(updated_at) <= today() + INTERVAL 1 DAY
+            ) ranked
+            WHERE rn = 1";
+            
+            $results = $this->queryWithDatabase($sql, $this->database);
+            
+            // Log raw results untuk debugging
+            Log::info('Unit GPS latests raw query results', [
+                'raw_count' => count($results),
+                'sample_row' => !empty($results) ? [
+                    'id' => $results[0]['id'] ?? 'N/A',
+                    'updated_at' => $results[0]['updated_at'] ?? 'N/A',
+                    'latitude' => $results[0]['latitude'] ?? 'N/A',
+                    'longitude' => $results[0]['longitude'] ?? 'N/A',
+                    'vehicle_number' => $results[0]['vehicle_number'] ?? 'N/A',
+                ] : 'No data'
+            ]);
+            
+            // Filter di PHP untuk memastikan hanya data hari ini (untuk menghindari masalah timezone)
+            // Dan deduplikasi berdasarkan id (ambil yang terbaru berdasarkan updated_at)
+            $today = date('Y-m-d');
+            $filteredResults = [];
+            $idMap = []; // Map untuk menyimpan data terbaru per id
+            $skippedCount = 0;
+            $skippedReasons = [];
+            
+            foreach ($results as $row) {
+                $id = $row['id'] ?? null;
+                $updatedAt = $row['updated_at'] ?? null;
                 
-                $results = $this->queryWithDatabase($sql, $this->database);
-                return $this->formatUnitData($results);
-            } catch (Exception $e) {
-                Log::info('unit_gps_latests table not available, using unit_gps_logs with latest per unit: ' . $e->getMessage());
+                // Parse tanggal dari updated_at - handle berbagai format
+                $updatedDate = null;
+                if (!empty($updatedAt)) {
+                    try {
+                        // Coba parse berbagai format tanggal
+                        if (is_numeric($updatedAt)) {
+                            // Jika timestamp
+                            $updatedDate = date('Y-m-d', $updatedAt);
+                        } else {
+                            // Jika string datetime
+                            $timestamp = strtotime($updatedAt);
+                            if ($timestamp !== false) {
+                                $updatedDate = date('Y-m-d', $timestamp);
+                            } else {
+                                // Coba parse format DateTime64(3) dari ClickHouse
+                                $updatedDate = substr($updatedAt, 0, 10); // Ambil YYYY-MM-DD
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Error parsing updated_at', [
+                            'updated_at' => $updatedAt,
+                            'error' => $e->getMessage()
+                        ]);
+                    }
+                }
                 
-                // Fallback: Get latest GPS log per unit from unit_gps_logs
-                // Use nested subquery to create partition key first, then use it in ROW_NUMBER
-                // Menggunakan kolom-kolom yang sesuai dengan struktur tabel nitip.unit_gps_logs
-                $sql = "SELECT 
-                    id,
-                    unit_id,
-                    integration_id,
-                    latitude,
-                    longitude,
-                    course,
-                    speed,
-                    heading,
-                    battery,
-                    vehicle_type,
-                    vehicle_number,
-                    vehicle_name,
-                    vendor_name,
-                    vendor_type,
-                    user_id,
-                    is_unit,
-                    timezone,
-                    created_at,
-                    updated_at
-                FROM (
-                    SELECT 
-                        id,
-                        unit_id,
-                        integration_id,
-                        latitude,
-                        longitude,
-                        course,
-                        speed,
-                        heading,
-                        battery,
-                        vehicle_type,
-                        vehicle_number,
-                        vehicle_name,
-                        vendor_name,
-                        vendor_type,
-                        user_id,
-                        is_unit,
-                        timezone,
-                        created_at,
-                        updated_at,
-                        partition_key,
-                        ROW_NUMBER() OVER (
-                            PARTITION BY partition_key
-                            ORDER BY updated_at DESC
-                        ) as rn
-                    FROM (
-                        SELECT 
-                            id,
-                            unit_id,
-                            integration_id,
-                            latitude,
-                            longitude,
-                            course,
-                            speed,
-                            heading,
-                            battery,
-                            vehicle_type,
-                            vehicle_number,
-                            vehicle_name,
-                            vendor_name,
-                            vendor_type,
-                            user_id,
-                            is_unit,
-                            timezone,
-                            created_at,
-                            updated_at,
-                            -- Create partition key as String to ensure type consistency
-                            if(integration_id IS NOT NULL AND length(toString(integration_id)) > 0, 
-                                toString(integration_id), 
-                                toString(id)
-                            ) as partition_key
-                        FROM {$this->database}.unit_gps_logs
-                        WHERE latitude IS NOT NULL 
-                            AND longitude IS NOT NULL 
-                            AND latitude != 0 
-                            AND longitude != 0
-                            AND (integration_id IS NOT NULL OR id IS NOT NULL)
-                            AND is_unit = true
-                    ) with_key
-                ) ranked
-                WHERE rn = 1";
-                
-                $results = $this->queryWithDatabase($sql, $this->database);
-                return $this->formatUnitData($results);
+                // Jika tanggal sesuai dengan hari ini
+                if ($updatedDate === $today) {
+                    if ($id) {
+                        // Jika id belum ada atau updated_at lebih baru, simpan/update
+                        if (!isset($idMap[$id])) {
+                            $idMap[$id] = $row;
+                        } else {
+                            // Bandingkan updated_at untuk ambil yang terbaru
+                            $existingUpdatedAt = $idMap[$id]['updated_at'] ?? null;
+                            try {
+                                $currentTimestamp = is_numeric($updatedAt) ? $updatedAt : strtotime($updatedAt);
+                                $existingTimestamp = is_numeric($existingUpdatedAt) ? $existingUpdatedAt : strtotime($existingUpdatedAt);
+                                
+                                if ($currentTimestamp !== false && $existingTimestamp !== false && 
+                                    $currentTimestamp > $existingTimestamp) {
+                                    $idMap[$id] = $row;
+                                }
+                            } catch (\Exception $e) {
+                                // Jika error, tetap gunakan yang baru
+                                $idMap[$id] = $row;
+                            }
+                        }
+                    } else {
+                        // Jika tidak ada id, tambahkan langsung
+                        $filteredResults[] = $row;
+                    }
+                } else {
+                    $skippedCount++;
+                    if ($skippedCount <= 5) {
+                        $skippedReasons[] = [
+                            'id' => $id,
+                            'updated_at' => $updatedAt,
+                            'parsed_date' => $updatedDate,
+                            'today' => $today
+                        ];
+                    }
+                }
             }
-
+            
+            // Convert map ke array
+            $filteredResults = array_merge($filteredResults, array_values($idMap));
+            
+            // Log untuk debugging
+            Log::info('Unit GPS latests query executed', [
+                'raw_count' => count($results),
+                'filtered_count' => count($filteredResults),
+                'skipped_count' => $skippedCount,
+                'today' => $today,
+                'skipped_samples' => $skippedReasons,
+                'sample_updated_at' => !empty($filteredResults) ? ($filteredResults[0]['updated_at'] ?? 'N/A') : 'No data',
+                'sample_vehicle_number' => !empty($filteredResults) ? ($filteredResults[0]['vehicle_number'] ?? 'N/A') : 'No data',
+                'sample_latitude' => !empty($filteredResults) ? ($filteredResults[0]['latitude'] ?? 'N/A') : 'No data',
+                'sample_longitude' => !empty($filteredResults) ? ($filteredResults[0]['longitude'] ?? 'N/A') : 'No data'
+            ]);
+            
+            return $this->formatUnitData($filteredResults);
+            
         } catch (Exception $e) {
-            Log::error('Error fetching latest unit GPS logs from ClickHouse: ' . $e->getMessage());
+            Log::error('Error fetching unit GPS from unit_gps_latests: ' . $e->getMessage(), [
+                'exception' => $e->getTraceAsString()
+            ]);
+            // Return empty array jika error, tidak ada fallback
             return [];
         }
     }
@@ -411,25 +461,39 @@ class BesigmaDbService
     }
 
     /**
-     * Get combined unit data (use units as base, merge with latest GPS logs for real-time tracking)
-     * This method returns all units from units table, with GPS data from unit_gps_logs if available
+     * Get combined unit data - hanya dari unit_gps_latests hari ini
+     * Hanya menampilkan unit yang ada di unit_gps_latests dengan updated_at hari ini
      */
     public function getCombinedUnitData()
     {
         // Check if ClickHouse is connected first
         if (!$this->isConnected()) {
-            // Use info level and log only once here to avoid duplicate messages
             Log::info('ClickHouse is not connected. Unit vehicle tracking is disabled. Please check ClickHouse configuration.');
             return [];
         }
         
-        // Get ALL units from units table (this is the BASE - shows all units)
-        $units = $this->getUnits();
-        
-        // Get latest GPS data from unit_gps_logs (or unit_gps_latests if available)
-        // This provides real-time tracking data (position, speed, battery, updated_at)
+        // Hanya ambil data dari unit_gps_latests hari ini (tidak perlu ambil semua unit dari units table)
+        // Get latest GPS data from unit_gps_latests hari ini saja
         $gpsLogs = $this->getLatestUnitGpsLogs();
-        Log::info('GPS logs fetched', ['count' => count($gpsLogs)]);
+        
+        // Logging detail untuk debugging
+        Log::info('GPS logs fetched from latests (today only)', [
+            'count' => count($gpsLogs),
+            'sample_data' => !empty($gpsLogs) ? [
+                'id' => $gpsLogs[0]['id'] ?? null,
+                'vehicle_number' => $gpsLogs[0]['vehicle_number'] ?? null,
+                'latitude' => $gpsLogs[0]['latitude'] ?? null,
+                'longitude' => $gpsLogs[0]['longitude'] ?? null,
+                'updated_at' => $gpsLogs[0]['updated_at'] ?? null,
+                'is_unit' => $gpsLogs[0]['is_unit'] ?? null,
+            ] : 'No data'
+        ]);
+        
+        // Jika tidak ada data GPS hari ini, return empty
+        if (empty($gpsLogs)) {
+            Log::warning('No GPS logs found for today in unit_gps_latests');
+            return [];
+        }
         
         // Get users data for integration - only fetch users that exist in GPS logs to avoid timeout
         $userIds = [];
@@ -448,109 +512,37 @@ class BesigmaDbService
             }
         }
         
-        // Create a map of GPS data by multiple keys for flexible matching
-        $gpsMap = [];
-        foreach ($gpsLogs as $gpsLog) {
-            // Create multiple keys for flexible matching
-            $keys = [];
-            if (!empty($gpsLog['integration_id'])) {
-                $keys[] = 'integration_id:' . $gpsLog['integration_id'];
-            }
-            if (!empty($gpsLog['unit_id'])) {
-                $keys[] = 'unit_id:' . $gpsLog['unit_id'];
-            }
-            if (!empty($gpsLog['id'])) {
-                $keys[] = 'id:' . $gpsLog['id'];
-            }
-            // Also match by vehicle_number if available
-            if (!empty($gpsLog['vehicle_number'])) {
-                $keys[] = 'vehicle_number:' . $gpsLog['vehicle_number'];
-            }
-            
-            // Store GPS data with all possible keys
-            foreach ($keys as $key) {
-                if (!isset($gpsMap[$key])) {
-                    $gpsMap[$key] = $gpsLog;
-                }
-            }
-        }
-
-        // Start with units as base, then merge with GPS data if available
+        // Langsung gunakan data dari GPS latests sebagai hasil akhir
+        // Tidak perlu merge dengan units table karena data sudah lengkap di latests
         $combined = [];
-        foreach ($units as $unit) {
-            // Try to find matching GPS data using multiple keys
-            $gpsData = null;
-            
-            // Try matching by integration_id
-            if (!empty($unit['integration_id'])) {
-                $key = 'integration_id:' . $unit['integration_id'];
-                if (isset($gpsMap[$key])) {
-                    $gpsData = $gpsMap[$key];
-                }
-            }
-            
-            // Try matching by id if no match yet
-            if (!$gpsData && !empty($unit['id'])) {
-                $key = 'id:' . $unit['id'];
-                if (isset($gpsMap[$key])) {
-                    $gpsData = $gpsMap[$key];
-                }
-            }
-            
-            // Try matching by vehicle_number if no match yet
-            if (!$gpsData && !empty($unit['vehicle_number'])) {
-                $key = 'vehicle_number:' . $unit['vehicle_number'];
-                if (isset($gpsMap[$key])) {
-                    $gpsData = $gpsMap[$key];
-                }
-            }
-            
-            // Get user data if user_id is available in GPS data
+        foreach ($gpsLogs as $gpsLog) {
+            // Get user data if user_id is available
             $userData = null;
-            if (!empty($gpsData['user_id']) && isset($usersMap[$gpsData['user_id']])) {
-                $userData = $usersMap[$gpsData['user_id']];
+            if (!empty($gpsLog['user_id']) && isset($usersMap[$gpsLog['user_id']])) {
+                $userData = $usersMap[$gpsLog['user_id']];
             }
             
-            // Determine which data source to use for coordinates
-            // Priority: GPS data (real-time) > Unit data (master)
-            $finalLatitude = $gpsData['latitude'] ?? $unit['latitude'] ?? 0;
-            $finalLongitude = $gpsData['longitude'] ?? $unit['longitude'] ?? 0;
-            $finalUpdatedAt = $gpsData['updated_at'] ?? $unit['updated_at'] ?? null;
-            
-            // Log if GPS data is found for debugging
-            if ($gpsData && !empty($gpsData['updated_at'])) {
-                Log::debug('GPS data found for unit', [
-                    'vehicle_number' => $unit['vehicle_number'] ?? 'N/A',
-                    'gps_updated_at' => $gpsData['updated_at'],
-                    'unit_updated_at' => $unit['updated_at'] ?? null,
-                    'latitude' => $finalLatitude,
-                    'longitude' => $finalLongitude
-                ]);
-            }
-            
-            // Build combined data: use GPS data if available, otherwise use unit data
+            // Build combined data langsung dari GPS latests
             $combined[] = [
-                'id' => $unit['id'],
-                'unit_id' => $gpsData['unit_id'] ?? null,
-                'integration_id' => $unit['integration_id'],
-                // Use GPS data for position/speed/battery if available, otherwise use unit data
-                'latitude' => $finalLatitude,
-                'longitude' => $finalLongitude,
-                'course' => $gpsData['course'] ?? $unit['course'] ?? 0,
-                'speed' => $gpsData['speed'] ?? $unit['speed'] ?? null,
-                'heading' => $gpsData['heading'] ?? null,
-                'battery' => $gpsData['battery'] ?? $unit['battery'] ?? 0,
-                // Use unit data for vehicle info (more reliable), but GPS data can override
-                'vehicle_type' => $gpsData['vehicle_type'] ?? $unit['vehicle_type'] ?? 'Unknown',
-                'vehicle_number' => $unit['vehicle_number'] ?? $gpsData['vehicle_number'] ?? 'N/A',
-                'vehicle_name' => $unit['vehicle_name'] ?? $gpsData['vehicle_name'] ?? 'N/A',
-                'vendor_name' => $unit['vendor_name'] ?? $gpsData['vendor_name'] ?? 'N/A',
-                'vendor_type' => $unit['vendor_type'] ?? $gpsData['vendor_type'] ?? null,
-                'timezone' => $gpsData['timezone'] ?? $unit['timezone'] ?? null,
-                // Use GPS updated_at if available (real-time tracking), otherwise use unit updated_at
-                'updated_at' => $finalUpdatedAt,
+                'id' => $gpsLog['id'] ?? null,
+                'unit_id' => $gpsLog['unit_id'] ?? null,
+                'integration_id' => $gpsLog['integration_id'] ?? null,
+                'latitude' => $gpsLog['latitude'] ?? 0,
+                'longitude' => $gpsLog['longitude'] ?? 0,
+                'course' => $gpsLog['course'] ?? 0,
+                'speed' => $gpsLog['speed'] ?? null,
+                'heading' => $gpsLog['heading'] ?? null,
+                'battery' => $gpsLog['battery'] ?? 0,
+                'vehicle_type' => $gpsLog['vehicle_type'] ?? 'Unknown',
+                'vehicle_number' => $gpsLog['vehicle_number'] ?? 'N/A',
+                'vehicle_name' => $gpsLog['vehicle_name'] ?? 'N/A',
+                'vendor_name' => $gpsLog['vendor_name'] ?? 'N/A',
+                'vendor_type' => $gpsLog['vendor_type'] ?? null,
+                'timezone' => $gpsLog['timezone'] ?? null,
+                'updated_at' => $gpsLog['updated_at'] ?? null,
+                'created_at' => $gpsLog['created_at'] ?? null,
                 // User data from users table
-                'user_id' => $gpsData['user_id'] ?? null,
+                'user_id' => $gpsLog['user_id'] ?? null,
                 'user' => $userData ? [
                     'id' => $userData['id'],
                     'npk' => $userData['npk'],
@@ -570,19 +562,20 @@ class BesigmaDbService
         }
 
         // Log summary for debugging
-        $gpsMatchedCount = 0;
-        foreach ($combined as $item) {
-            if (!empty($item['updated_at']) && 
-                (!empty($item['latitude']) && $item['latitude'] != 0) &&
-                (!empty($item['longitude']) && $item['longitude'] != 0)) {
-                $gpsMatchedCount++;
-            }
-        }
-        
-        Log::info('Combined unit data prepared', [
+        Log::info('Combined unit data from latests (today only)', [
             'total_units' => count($combined),
-            'units_with_gps' => $gpsMatchedCount,
-            'gps_logs_count' => count($gpsLogs)
+            'units_with_users' => count(array_filter($combined, function($unit) {
+                return !empty($unit['user']);
+            })),
+            'sample_units' => !empty($combined) ? array_slice(array_map(function($unit) {
+                return [
+                    'id' => $unit['id'] ?? null,
+                    'vehicle_number' => $unit['vehicle_number'] ?? null,
+                    'latitude' => $unit['latitude'] ?? null,
+                    'longitude' => $unit['longitude'] ?? null,
+                    'updated_at' => $unit['updated_at'] ?? null,
+                ];
+            }, $combined), 0, 3) : []
         ]);
 
         return $combined;

@@ -63,6 +63,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/full-maps/api/cctv-for-area-kerja', [fullMapsController::class, 'getCctvForAreaKerja'])->name('full-maps.api.cctv-for-area-kerja');
     Route::get('/full-maps/api/daily-operation-plans', [fullMapsController::class, 'getDailyOperationPlansWithPolygons'])->name('full-maps.api.daily-operation-plans');
     Route::get('/full-maps/api/location-sap-counts', [fullMapsController::class, 'getLocationSapCounts'])->name('full-maps.api.location-sap-counts');
+    Route::get('/full-maps/api/latest-cctv-alert', [fullMapsController::class, 'getLatestCctvAlert'])->name('full-maps.api.latest-cctv-alert');
     Route::get('/clickhouse-status', [HomeController::class, 'checkClickHouseStatus'])->name('clickhouse.status');
     Route::get('/cctv-company-data', [HomeController::class, 'companyCctvData'])->name('cctv.company-data');
     Route::get('/company-cctv-data', [HomeController::class, 'getCompanyCctvData'])->name('company-cctv-data');
@@ -234,6 +235,7 @@ Route::middleware(['auth'])->group(function () {
          Route::get('/api/kesiapan-orang-data', [MapBaseController::class, 'getKesiapanOrangData'])->name('api.kesiapan-orang-data');
          Route::get('/api/area-kerja-data', [MapBaseController::class, 'getAreaKerjaData'])->name('api.area-kerja-data');
          Route::get('/api/area-kerja-sidebar-data', [MapBaseController::class, 'getAreaKerjaSidebarData'])->name('api.area-kerja-sidebar-data');
+         Route::get('/api/auto-alert-sidebar-data', [MapBaseController::class, 'getAutoAlertSidebarData'])->name('api.auto-alert-sidebar-data');
          Route::post('/api/evaluation-summary', [MapBaseController::class, 'getEvaluationSummary'])->name('api.evaluation-summary');
          Route::post('/api/send-telegram', [MapBaseController::class, 'sendTelegramNotification'])->name('api.send-telegram');
     });

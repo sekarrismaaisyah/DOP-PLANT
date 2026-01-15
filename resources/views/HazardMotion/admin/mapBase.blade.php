@@ -969,6 +969,35 @@
         color: #10b981;
     }
     
+    /* Auto Alert Item Styles - menggunakan struktur sama dengan Area Kerja */
+    .sidebar-list-item[data-type="autoalert"] {
+        flex-direction: column;
+        align-items: stretch;
+        padding: 0;
+        overflow: hidden;
+        position: relative;
+    }
+    
+    .sidebar-list-item[data-type="autoalert"].expanded {
+        border-color: #f59e0b;
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+    }
+    
+    .sidebar-list-item[data-type="autoalert"]:hover .sidebar-list-item-header {
+        background-color: transparent;
+    }
+    
+    .sidebar-list-item[data-type="autoalert"]:hover .list-item-expand-icon {
+        background-color: rgba(245, 158, 11, 0.1);
+        color: #f59e0b;
+    }
+    
+    .sidebar-list-item[data-type="autoalert"].expanded .list-item-expand-icon {
+        transform: rotate(180deg);
+        background-color: rgba(245, 158, 11, 0.15);
+        color: #f59e0b;
+    }
+    
     
     
     .list-item-expand-icon {
@@ -2790,26 +2819,16 @@
                                     <span class="tab-label">CCTV</span>
                                     <span class="tab-count" id="cctvTabCount">0</span>
                                 </button>
-                                <button class="sidebar-tab" data-tab="sap" title="SAP">
+                                <!-- <button class="sidebar-tab" data-tab="sap" title="SAP">
                                     <i class="material-icons-outlined">assignment</i>
                                     <span class="tab-label">SAP</span>
                                     <span class="tab-count" id="sapTabCount">0</span>
-                                </button>
+                                </button> -->
                                 <button class="sidebar-tab" data-tab="insiden" title="Insiden">
                                     <i class="material-icons-outlined">report_problem</i>
                                     <span class="tab-label">Insiden</span>
                                     <span class="tab-count" id="insidenTabCount">0</span>
                                 </button>
-                                <!-- <button class="sidebar-tab" data-tab="unit" title="Unit">
-                                    <i class="material-icons-outlined">directions_car</i>
-                                    <span class="tab-label">Unit</span>
-                                    <span class="tab-count" id="unitTabCount">0</span>
-                                </button> -->
-                                <!-- <button class="sidebar-tab" data-tab="gps" title="GPS Orang">
-                                    <i class="material-icons-outlined">person_pin</i>
-                                    <span class="tab-label">GPS Orang</span>
-                                    <span class="tab-count" id="gpsTabCount">0</span>
-                                </button> -->
                                 <button class="sidebar-tab" data-tab="controlroom" title="Control Room">
                                     <i class="material-icons-outlined">meeting_room</i>
                                     <span class="tab-label">Control Room</span>
@@ -2825,10 +2844,15 @@
                                     <span class="tab-label">Area Kerja</span>
                                     <span class="tab-count" id="areakerjaTabCount">0</span>
                                 </button>
-                                <button class="sidebar-tab" data-tab="evaluasi" title="Evaluasi">
+                                <button class="sidebar-tab" data-tab="autoalert" title="Auto Alert">
+                                    <i class="material-icons-outlined">notifications_active</i>
+                                    <span class="tab-label">Auto Alert</span>
+                                    <span class="tab-count" id="autoalertTabCount">0</span>
+                                </button>
+                                <!-- <button class="sidebar-tab" data-tab="evaluasi" title="Evaluasi">
                                     <i class="material-icons-outlined">assessment</i>
                                     <span class="tab-label">Evaluasi</span>
-                                </button>
+                                </button> -->
                             </div>
                             
                             <!-- Tab Content -->
@@ -2891,6 +2915,11 @@
                                     <!-- Area Kerja Tab Content -->
                                     <div class="tab-content" id="tabContentAreakerja">
                                         <div class="sidebar-list" id="areakerjaList"></div>
+                                    </div>
+                                    
+                                    <!-- Auto Alert Tab Content -->
+                                    <div class="tab-content" id="tabContentAutoalert">
+                                        <div class="sidebar-list" id="autoalertList"></div>
                                     </div>
                                     
                                     <!-- Evaluasi Tab Content -->
@@ -3453,7 +3482,8 @@
         gps: [],
         controlroom: [],
         pja: [],
-        areakerja: []
+        areakerja: [],
+        autoalert: []
     };
     
     // Store original Control Room data for filtering
@@ -13894,6 +13924,7 @@
         const controlroomCount = document.getElementById('controlroomTabCount');
         const pjaCount = document.getElementById('pjaTabCount');
         const areakerjaCount = document.getElementById('areakerjaTabCount');
+        const autoalertCount = document.getElementById('autoalertTabCount');
         
         if (cctvCount) cctvCount.textContent = filteredSidebarData.cctv.length;
         
@@ -13911,6 +13942,7 @@
         if (gpsCount) gpsCount.textContent = filteredSidebarData.gps.length;
         if (controlroomCount) controlroomCount.textContent = filteredSidebarData.controlroom.length;
         if (pjaCount) pjaCount.textContent = filteredSidebarData.pja.length;
+        if (autoalertCount) autoalertCount.textContent = filteredSidebarData.autoalert.length;
     }
     
     // Get avatar color based on first letter
@@ -15614,6 +15646,231 @@
         });
     }
     
+    // Load Auto Alert data from API
+    function loadAutoAlertData() {
+        const container = document.getElementById('autoalertList');
+        if (!container) return;
+        
+        // Show loading state
+        container.innerHTML = `
+            <div class="empty-state">
+                <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p style="margin-top: 16px;">Memuat data Auto Alert...</p>
+            </div>
+        `;
+        
+        // Update tab count to show loading
+        const autoalertTabCount = document.getElementById('autoalertTabCount');
+        if (autoalertTabCount) autoalertTabCount.textContent = '...';
+        
+        fetch('{{ route("maps.api.auto-alert-sidebar-data") }}')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.json();
+            })
+            .then(data => {
+                if (data.success && data.data) {
+                    filteredSidebarData.autoalert = data.data;
+                    updateTabCounts();
+                    renderAutoAlertList(filteredSidebarData.autoalert);
+                } else {
+                    filteredSidebarData.autoalert = [];
+                    updateTabCounts();
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="material-icons-outlined">notifications_off</i>
+                            <p>Tidak ada data Auto Alert</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(error => {
+                console.error('Error loading Auto Alert data:', error);
+                filteredSidebarData.autoalert = [];
+                updateTabCounts();
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="material-icons-outlined">error_outline</i>
+                        <p>Gagal memuat data Auto Alert</p>
+                        <small style="color: #9ca3af;">${error.message}</small>
+                    </div>
+                `;
+            });
+    }
+    
+    // Render Auto Alert list - menggunakan struktur sama dengan Area Kerja
+    function renderAutoAlertList(data) {
+        const container = document.getElementById('autoalertList');
+        if (!container) return;
+        
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="material-icons-outlined">notifications_off</i>
+                    <p>Tidak ada data Auto Alert</p>
+                </div>
+            `;
+            return;
+        }
+        
+        container.innerHTML = data.map((alert, index) => {
+            const site = alert.site || 'Unknown Site';
+            const tanggal = alert.tanggal || '';
+            const jumlahOffline = alert.jumlah_offline || 0;
+            const jumlahOnline = alert.jumlah_online || 0;
+            const alertId = alert.id || index;
+            const firstLetter = getFirstLetter(site);
+            const avatarColor = getAvatarColor(firstLetter);
+            
+            // Format tanggal
+            let tanggalFormatted = '';
+            if (tanggal) {
+                const date = new Date(tanggal);
+                tanggalFormatted = date.toLocaleDateString('id-ID', { 
+                    day: '2-digit', 
+                    month: '2-digit', 
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                });
+            }
+            
+            return `
+                <div class="sidebar-list-item" data-type="autoalert" data-alert-id="${alertId}" data-index="${index}">
+                    <div class="sidebar-list-item-header">
+                        <div class="list-item-avatar" style="background-color: ${avatarColor};">
+                            ${firstLetter}
+                        </div>
+                        <div class="list-item-content">
+                            <div class="list-item-title">${escapeHtml(site)}</div>
+                            <div class="list-item-subtitle">${jumlahOffline} Offline | ${jumlahOnline} Online</div>
+                            ${tanggalFormatted ? `<div style="font-size: 10px; color: #9ca3af; margin-top: 2px;">${escapeHtml(tanggalFormatted)}</div>` : ''}
+                        </div>
+                        <i class="material-icons-outlined list-item-expand-icon">expand_more</i>
+                    </div>
+                    <div class="cctv-detail-section">
+                        <div class="cctv-detail-loading">
+                            <i class="material-icons-outlined" style="font-size: 24px; margin-bottom: 8px; opacity: 0.5;">hourglass_empty</i>
+                            <div>Memuat detail...</div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        
+        // Add click handlers - toggle expand/collapse dan load details
+        container.querySelectorAll('.sidebar-list-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                // Prevent event bubbling untuk icon expand
+                if (e.target.classList.contains('list-item-expand-icon')) {
+                    e.stopPropagation();
+                }
+                
+                const alertId = this.dataset.alertId;
+                const alertData = data.find(a => a.id == alertId);
+                
+                // Toggle expanded state
+                const isExpanded = this.classList.contains('expanded');
+                
+                if (isExpanded) {
+                    // Collapse
+                    this.classList.remove('expanded');
+                } else {
+                    // Expand - load details
+                    this.classList.add('expanded');
+                    if (alertData) {
+                        renderAutoAlertDetails(alertData, this);
+                    }
+                }
+                
+                // Highlight active item
+                document.querySelectorAll('.sidebar-list-item').forEach(i => {
+                    if (i !== this) i.classList.remove('active');
+                });
+                this.classList.add('active');
+            });
+        });
+    }
+    
+    // Render Auto Alert details (daftar CCTV units) - menggunakan struktur sama dengan Area Kerja detail
+    function renderAutoAlertDetails(alertData, itemElement) {
+        const detailSection = itemElement.querySelector('.cctv-detail-section');
+        if (!detailSection) return;
+        
+        // Check if already loaded
+        if (detailSection.dataset.loaded === 'true') {
+            return;
+        }
+        
+        const cctvUnits = alertData.cctv_units || [];
+        
+        if (cctvUnits.length === 0) {
+            detailSection.innerHTML = `
+                <div class="cctv-detail-error">
+                    <i class="material-icons-outlined" style="font-size: 18px;">videocam_off</i>
+                    <span>Tidak ada CCTV Unit</span>
+                </div>
+            `;
+            detailSection.dataset.loaded = 'true';
+            return;
+        }
+        
+        let html = '';
+        html += '<div class="cctv-detail-group">';
+        html += '<div class="cctv-detail-group-title"><i class="material-icons-outlined">videocam</i> <span>Daftar CCTV Unit</span></div>';
+        
+        if (cctvUnits.length > 0) {
+            cctvUnits.forEach((unit, unitIndex) => {
+                const unitCode = unit.unit_code || 'N/A';
+                const location = unit.location || '';
+                const lastConnect = unit.last_connect || '';
+                const status = unit.status || 'offline';
+                
+                // Format last_connect
+                let lastConnectFormatted = '';
+                if (lastConnect) {
+                    const date = new Date(lastConnect);
+                    lastConnectFormatted = date.toLocaleDateString('id-ID', { 
+                        day: '2-digit', 
+                        month: '2-digit', 
+                        year: 'numeric',
+                        hour: '2-digit',
+                        minute: '2-digit'
+                    });
+                }
+                
+                html += `
+                    <div class="cctv-coverage-item" data-unit-id="${unit.id}" data-index="${unitIndex}" style="cursor: pointer;">
+                        <div class="cctv-coverage-lokasi">${escapeHtml(unitCode)}</div>
+                        <div class="cctv-coverage-detail">
+                            ${location ? `${escapeHtml(location)}` : ''}
+                            <br><span style="display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; background-color: ${status === 'online' ? '#10b981' : '#ef4444'}15; color: ${status === 'online' ? '#10b981' : '#ef4444'};">${escapeHtml(status.toUpperCase())}</span>
+                            ${lastConnectFormatted ? `<br><span style="font-size: 10px; color: #9ca3af; margin-top: 4px; display: inline-block;">🕐 ${escapeHtml(lastConnectFormatted)}</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            });
+        } else {
+            html += '<div class="cctv-no-data">Tidak ada data CCTV Unit</div>';
+        }
+        
+        html += '</div>';
+        detailSection.innerHTML = html;
+        detailSection.dataset.loaded = 'true';
+        
+        // Add click handlers for CCTV unit items (optional - bisa untuk zoom ke lokasi jika ada koordinat)
+        detailSection.querySelectorAll('.cctv-coverage-item').forEach(unitItem => {
+            unitItem.addEventListener('click', function(e) {
+                e.stopPropagation();
+                // Bisa ditambahkan fungsi untuk zoom ke lokasi jika diperlukan
+            });
+        });
+    }
+    
     // Load evaluation summary
     function loadEvaluationSummary(type, idLokasi, lokasiName, nomorCctv, cctvName) {
         // Switch to evaluasi tab
@@ -15809,6 +16066,9 @@
         if (tabName === 'areakerja') {
             tabContentId = 'tabContentAreakerja';
         }
+        if (tabName === 'autoalert') {
+            tabContentId = 'tabContentAutoalert';
+        }
         const tabContent = document.getElementById(tabContentId);
         if (tabContent) {
             tabContent.classList.add('active');
@@ -15849,6 +16109,13 @@
                     loadAreaKerjaData();
                 } else {
                     renderAreaKerjaList(filteredSidebarData.areakerja);
+                }
+                break;
+            case 'autoalert':
+                if (filteredSidebarData.autoalert.length === 0) {
+                    loadAutoAlertData();
+                } else {
+                    renderAutoAlertList(filteredSidebarData.autoalert);
                 }
                 break;
             case 'evaluasi':
@@ -15985,6 +16252,22 @@
                            detailLokasi.includes(term) || employeeName.includes(term) || nik.includes(term) ||
                            kodeSid.includes(term) || pjaType.includes(term) || pjaCategory.includes(term) ||
                            kategoriPja.includes(term);
+                });
+            }
+            
+            // Filter Auto Alert data berdasarkan search term
+            if (filteredSidebarData.autoalert && filteredSidebarData.autoalert.length > 0) {
+                filteredSidebarData.autoalert = filteredSidebarData.autoalert.filter(alert => {
+                    const site = (alert.site || '').toLowerCase();
+                    const tanggal = (alert.tanggal || '').toLowerCase();
+                    const messageId = String(alert.message_id || '').toLowerCase();
+                    // Filter juga berdasarkan unit_code di dalam cctv_units
+                    const hasMatchingUnit = alert.cctv_units && alert.cctv_units.some(unit => {
+                        const unitCode = (unit.unit_code || '').toLowerCase();
+                        const location = (unit.location || '').toLowerCase();
+                        return unitCode.includes(term) || location.includes(term);
+                    });
+                    return site.includes(term) || tanggal.includes(term) || messageId.includes(term) || hasMatchingUnit;
                 });
             }
         }

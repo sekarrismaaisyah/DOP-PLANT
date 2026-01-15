@@ -1676,6 +1676,82 @@ class MapBaseController extends Controller
     }
 
     /**
+     * Get auto alert sidebar data (grouped by alert)
+     */
+    public function getAutoAlertSidebarData(Request $request)
+    {
+        try {
+            // Get CCTV alerts data grouped by alert_id
+            $alerts = DB::table('cctv_alerts')
+                ->select(
+                    'cctv_alerts.id',
+                    'cctv_alerts.site',
+                    'cctv_alerts.tanggal',
+                    'cctv_alerts.jumlah_offline',
+                    'cctv_alerts.jumlah_online',
+                    'cctv_alerts.message_id',
+                    'cctv_alerts.created_at'
+                )
+                ->orderBy('cctv_alerts.tanggal', 'desc')
+                ->orderBy('cctv_alerts.site')
+                ->get();
+            
+            // Get CCTV units for each alert
+            $groupedData = [];
+            foreach ($alerts as $alert) {
+                // Get CCTV units for this alert
+                $cctvUnits = DB::table('cctv_units')
+                    ->where('alert_id', $alert->id)
+                    ->select(
+                        'cctv_units.id',
+                        'cctv_units.alert_id',
+                        'cctv_units.unit_code',
+                        'cctv_units.location',
+                        'cctv_units.last_connect',
+                        'cctv_units.status',
+                        'cctv_units.created_at'
+                    )
+                    ->orderBy('cctv_units.unit_code')
+                    ->get();
+                
+                $groupedData[] = [
+                    'id' => $alert->id,
+                    'site' => $alert->site,
+                    'tanggal' => $alert->tanggal,
+                    'jumlah_offline' => $alert->jumlah_offline,
+                    'jumlah_online' => $alert->jumlah_online,
+                    'message_id' => $alert->message_id,
+                    'created_at' => $alert->created_at,
+                    'cctv_units' => $cctvUnits->map(function($unit) {
+                        return [
+                            'id' => $unit->id,
+                            'alert_id' => $unit->alert_id,
+                            'unit_code' => $unit->unit_code,
+                            'location' => $unit->location,
+                            'last_connect' => $unit->last_connect,
+                            'status' => $unit->status,
+                            'created_at' => $unit->created_at,
+                        ];
+                    })->toArray()
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $groupedData,
+                'count' => count($groupedData)
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error fetching auto alert sidebar data via API: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'data' => []
+            ], 500);
+        }
+    }
+
+    /**
      * Get hazard detections via API (for AJAX requests)
      */
     public function getDetections(Request $request)
@@ -4806,70 +4882,149 @@ class MapBaseController extends Controller
             // Note: timeout diatur di ClickHouseService, tapi kita bisa handle error dengan lebih baik
 
             // Query 1: Ambil data GPS dari nitip.user_gps_latests
-            // Filter latitude/longitude != 0 dilakukan di PHP untuk menghindari konflik tipe
-            // Hanya filter NOT NULL di SQL, filter != 0 di PHP
-            $whereClause = "latitude IS NOT NULL 
-                    AND longitude IS NOT NULL
-                    AND user_id IS NOT NULL
-                    AND user_id != ''";
-            
-            // Kolom numerik sudah bertipe numerik, tidak perlu casting
-            // Hanya gunakan toString() untuk kolom yang perlu di-string-kan
+            // Menggunakan konsep yang sama dengan unit: hanya data hari ini dengan deduplikasi per user_id
+            // Perhatikan: latitude dan longitude adalah String di database, jadi perlu casting ke Float64 untuk perbandingan
+            // Gunakan subquery dengan ROW_NUMBER untuk mendapatkan data terbaru per user_id (menghindari duplikasi)
             $sqlGps = "
                 SELECT 
                     toString(id) as id,
                     toString(user_id) as user_id,
-                    latitude,
-                    longitude,
-                    course,
+                    toString(latitude) as latitude,
+                    toString(longitude) as longitude,
+                    toString(course) as course,
                     battery,
                     toString(timezone) as timezone,
                     toString(created_at) as created_at,
                     toString(updated_at) as updated_at
-                FROM nitip.user_gps_latests
-                WHERE {$whereClause}
-                ORDER BY updated_at DESC
-                LIMIT 5000
+                FROM (
+                    SELECT 
+                        id,
+                        user_id,
+                        latitude,
+                        longitude,
+                        course,
+                        battery,
+                        timezone,
+                        created_at,
+                        updated_at,
+                        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY updated_at DESC) as rn
+                    FROM nitip.user_gps_latests
+                    WHERE latitude IS NOT NULL 
+                        AND longitude IS NOT NULL 
+                        AND latitude != ''
+                        AND longitude != ''
+                        AND user_id IS NOT NULL
+                        AND user_id != ''
+                        AND toFloat64OrNull(latitude) IS NOT NULL
+                        AND toFloat64OrNull(longitude) IS NOT NULL
+                        AND toFloat64OrNull(latitude) != 0 
+                        AND toFloat64OrNull(longitude) != 0
+                        AND toDate(updated_at) >= today() - INTERVAL 1 DAY
+                        AND toDate(updated_at) <= today() + INTERVAL 1 DAY
+                ) ranked
+                WHERE rn = 1
             ";
 
-            // Query dengan retry mechanism untuk handle timeout
-            $limit = 5000;
-            $maxRetries = 2;
-            $gpsResults = [];
+            // Execute query
+            try {
+                $gpsResults = $clickhouse->query($sqlGps);
+            } catch (Exception $queryException) {
+                Log::error('Error fetching user GPS from user_gps_latests: ' . $queryException->getMessage());
+                return response()->json([
+                    'success' => false,
+                    'error' => $queryException->getMessage(),
+                    'users' => [],
+                    'count' => 0
+                ], 500);
+            }
+
+            // Log raw results untuk debugging
+            Log::info('User GPS latests raw query results', [
+                'raw_count' => count($gpsResults),
+                'sample_row' => !empty($gpsResults) ? [
+                    'user_id' => $gpsResults[0]['user_id'] ?? 'N/A',
+                    'updated_at' => $gpsResults[0]['updated_at'] ?? 'N/A',
+                    'created_at' => $gpsResults[0]['created_at'] ?? 'N/A',
+                    'latitude' => $gpsResults[0]['latitude'] ?? 'N/A',
+                    'longitude' => $gpsResults[0]['longitude'] ?? 'N/A',
+                ] : 'No data'
+            ]);
+
+            // Filter di PHP untuk memastikan hanya data hari ini (untuk menghindari masalah timezone)
+            $today = Carbon::now()->format('Y-m-d');
+            $filteredGpsResults = [];
+            $skippedCount = 0;
+            $skippedReasons = [];
             
-            for ($retry = 0; $retry <= $maxRetries; $retry++) {
-                try {
-                    $sqlWithLimit = $sqlGps;
-                    if ($retry > 0) {
-                        $limit = intval($limit / 2);
-                        $sqlWithLimit = preg_replace('/LIMIT \d+/', 'LIMIT ' . $limit, $sqlGps);
-                        Log::info("Retrying GPS query with LIMIT: $limit");
+            foreach ($gpsResults as $row) {
+                $updatedAt = $row['updated_at'] ?? null;
+                
+                // Parse tanggal dari updated_at - handle berbagai format
+                $updatedDate = null;
+                if (!empty($updatedAt)) {
+                    try {
+                        // Coba parse berbagai format tanggal
+                        if (is_numeric($updatedAt)) {
+                            // Jika timestamp
+                            $updatedDate = date('Y-m-d', $updatedAt);
+                        } else {
+                            // Jika string datetime
+                            $timestamp = strtotime($updatedAt);
+                            if ($timestamp !== false) {
+                                $updatedDate = date('Y-m-d', $timestamp);
+                            } else {
+                                // Coba parse format DateTime64(3) dari ClickHouse
+                                $updatedDate = substr($updatedAt, 0, 10); // Ambil YYYY-MM-DD
+                            }
+                        }
+                    } catch (\Exception $e) {
+                        Log::warning('Error parsing updated_at for user GPS', [
+                            'updated_at' => $updatedAt,
+                            'error' => $e->getMessage()
+                        ]);
                     }
-                    
-                    $gpsResults = $clickhouse->query($sqlWithLimit);
-                    break; // Success, exit loop
-                } catch (Exception $queryException) {
-                    $errorMsg = $queryException->getMessage();
-                    if (($retry < $maxRetries) && 
-                        (strpos($errorMsg, 'timeout') !== false || 
-                         strpos($errorMsg, 'timed out') !== false ||
-                         strpos($errorMsg, 'Operation timed out') !== false)) {
-                        Log::warning("GPS query timeout (attempt " . ($retry + 1) . "), retrying with smaller LIMIT");
-                        continue;
-                    } else {
-                        throw $queryException;
+                }
+                
+                // Jika tanggal sesuai dengan hari ini
+                if ($updatedDate === $today) {
+                    $filteredGpsResults[] = $row;
+                } else {
+                    $skippedCount++;
+                    if ($skippedCount <= 5) {
+                        $skippedReasons[] = [
+                            'user_id' => $row['user_id'] ?? null,
+                            'updated_at' => $updatedAt,
+                            'parsed_date' => $updatedDate,
+                            'today' => $today
+                        ];
                     }
                 }
             }
-
-            // Jika tidak ada data GPS, return empty
-            if (empty($gpsResults)) {
+            
+            // Jika tidak ada data GPS setelah filter, return empty
+            if (empty($filteredGpsResults)) {
+                Log::warning('No user GPS logs found for today in user_gps_latests', [
+                    'raw_count' => count($gpsResults),
+                    'skipped_count' => $skippedCount,
+                    'skipped_samples' => $skippedReasons,
+                    'today' => $today
+                ]);
                 return response()->json([
                     'success' => true,
                     'users' => [],
                     'count' => 0
                 ]);
             }
+            
+            // Gunakan filtered results untuk processing selanjutnya
+            $gpsResults = $filteredGpsResults;
+            
+            Log::info('User GPS filtered for today', [
+                'raw_count' => count($gpsResults),
+                'filtered_count' => count($filteredGpsResults),
+                'skipped_count' => $skippedCount,
+                'today' => $today
+            ]);
 
             // Ambil semua user_id yang unik dari hasil GPS
             $userIds = [];
@@ -5029,10 +5184,12 @@ class MapBaseController extends Controller
                     'battery' => isset($row['battery']) && $row['battery'] !== '' ? (int)$row['battery'] : null,
                     'timezone' => $row['timezone'] ?? null,
                     'gps_updated_at' => $row['updated_at'] ?? null,
-                    'gps_created_at' => $row['created_at'] ?? null
+                    'gps_created_at' => $row['created_at'] ?? null,
+                    'created_at' => $row['created_at'] ?? null // Tambahkan created_at untuk Last Aktif
                 ];
                 
                 // Deduplikasi: jika user_id sudah ada, ambil yang terbaru berdasarkan updated_at
+                // Note: Deduplikasi sudah dilakukan di SQL dengan ROW_NUMBER, tapi tetap ada fallback di PHP
                 if (!isset($userGpsDataMap[$userId])) {
                     // User belum ada, tambahkan
                     $userGpsDataMap[$userId] = $combinedData;
@@ -5050,11 +5207,12 @@ class MapBaseController extends Controller
             }
             
             Log::info('GPS data processing completed', [
-                'total_gps_records' => count($gpsResults),
+                'filtered_gps_records' => count($filteredGpsResults ?? []),
                 'processed_count' => $processedCount,
                 'skipped_count' => $skippedCount,
                 'unique_users' => count($userGpsDataMap),
-                'users_with_data' => count($usersMap)
+                'users_with_data' => count($usersMap),
+                'today' => $today ?? Carbon::now()->format('Y-m-d')
             ]);
             
             // Convert map to array

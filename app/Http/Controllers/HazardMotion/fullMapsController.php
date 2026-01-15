@@ -2305,33 +2305,13 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
-     * Get CCTV list for area kerja (based on location/area kerja)
+     * Get CCTV list for area kerja (all CCTV, no location filter)
      */
     public function getCctvForAreaKerja(Request $request)
     {
         try {
-            $lokasi = $request->get('lokasi');
-            $areaKerja = $request->get('area_kerja');
-            
-            if (!$lokasi && !$areaKerja) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Lokasi atau Area Kerja harus diisi'
-                ], 400);
-            }
-
-            // Query CCTV based on lokasi or area_kerja
-            $query = CctvData::query();
-            
-            if ($lokasi) {
-                $query->where('lokasi', 'like', '%' . $lokasi . '%');
-            }
-            
-            if ($areaKerja) {
-                $query->orWhere('area_kerja', 'like', '%' . $areaKerja . '%');
-            }
-            
-            $cctvList = $query->get();
+            // Get all CCTV without location filter
+            $cctvList = CctvData::query()->get();
             
             $cctvData = $cctvList->map(function($cctv) {
                 return [
@@ -3229,6 +3209,47 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 'message' => 'Error: ' . $e->getMessage(),
                 'data' => []
             ]);
+        }
+    }
+
+    /**
+     * Get latest CCTV alert data
+     */
+    public function getLatestCctvAlert()
+    {
+        try {
+            $latestAlert = DB::table('cctv_alerts')
+                ->orderBy('created_at', 'desc')
+                ->first();
+
+            if (!$latestAlert) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'No alert data found',
+                    'data' => null
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'id' => $latestAlert->id,
+                    'site' => $latestAlert->site,
+                    'tanggal' => $latestAlert->tanggal,
+                    'jumlah_offline' => $latestAlert->jumlah_offline,
+                    'jumlah_online' => $latestAlert->jumlah_online,
+                    'message_id' => $latestAlert->message_id,
+                    'created_at' => $latestAlert->created_at
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error getting latest CCTV alert: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error: ' . $e->getMessage(),
+                'data' => null
+            ], 500);
         }
     }
 
