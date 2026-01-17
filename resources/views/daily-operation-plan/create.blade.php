@@ -22,7 +22,99 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
+
+            @if (session('error'))
+                <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
+                    {{ session('error') }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
+
+            @if (session('import_errors') && count(session('import_errors')) > 0)
+                <div class="alert alert-warning alert-dismissible fade show rounded-4" role="alert">
+                    <strong>Error saat import:</strong>
+                    <ul class="mb-0 mt-2">
+                        @foreach (array_slice(session('import_errors'), 0, 10) as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                        @if (count(session('import_errors')) > 10)
+                            <li><em>... dan {{ count(session('import_errors')) - 10 }} error lainnya</em></li>
+                        @endif
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
         </div>
+    </div>
+
+    <!-- Excel Upload Section -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card rounded-4 border-primary">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bx bx-upload"></i> Upload Excel (Bulk Import)
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="row align-items-end">
+                        <div class="col-md-8">
+                            <form method="POST" action="{{ route('daily-operation-plan.import') }}" enctype="multipart/form-data" id="excelImportForm">
+                                @csrf
+                                <label for="excel_file" class="form-label">Pilih File Excel <span class="text-danger">*</span></label>
+                                <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xlsx,.xls" required>
+                                <small class="text-muted d-block mt-1">
+                                    <i class="bx bx-info-circle"></i> Format: .xlsx atau .xls | Max 10MB
+                                </small>
+                            </form>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="d-flex gap-2">
+                                <a href="{{ route('daily-operation-plan.template') }}" class="btn btn-outline-primary">
+                                    <i class="bx bx-download"></i> Download Template
+                                </a>
+                                <button type="submit" form="excelImportForm" class="btn btn-primary">
+                                    <i class="bx bx-upload"></i> Upload Excel
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3 p-3 bg-light rounded">
+                        <h6 class="mb-2"><i class="bx bx-info-circle text-primary"></i> Panduan Upload Excel:</h6>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <ul class="mb-0 small">
+                                    <li><strong>Tanggal:</strong> Format YYYY-MM-DD (contoh: 2026-01-15) <span class="text-danger">*</span></li>
+                                    <li><strong>Pekerjaan:</strong> Nama pekerjaan yang akan dilakukan <span class="text-danger">*</span></li>
+                                    <li><strong>Unit ID:</strong> ID unit yang digunakan <span class="text-danger">*</span></li>
+                                    <li><strong>Lokasi:</strong> Lokasi pekerjaan <span class="text-danger">*</span></li>
+                                    <li><strong>Detail Lokasi:</strong> Detail lokasi (opsional)</li>
+                                    <li><strong>Potensi Risiko:</strong> Pisahkan dengan koma jika lebih dari satu</li>
+                                    <li><strong>Pengendalian Bahaya:</strong> Pisahkan dengan koma jika lebih dari satu</li>
+                                </ul>
+                            </div>
+                            <div class="col-md-6">
+                                <ul class="mb-0 small">
+                                    <li><strong>Catatan:</strong> Catatan tambahan (opsional)</li>
+                                    <li><strong>CCTV IDs:</strong> Pisahkan dengan koma (contoh: 1,2,3)</li>
+                                    <li><strong>PIC Berau Coal:</strong> Shift, Nama PIC, Layer</li>
+                                    <li><strong>Pengawas Mitra Kerja:</strong> Shift, Nama Pengawas, Layer</li>
+                                    <li><strong>Shift:</strong> Gunakan "Shift 1 s/d 2" atau "Shift 2 s/d 1"</li>
+                                    <li><strong>Untuk PIC/Pengawas multiple:</strong> Buat baris baru dengan data yang sama</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <hr class="my-4">
+
+    <div class="text-center mb-3">
+        <h6 class="text-muted">ATAU</h6>
     </div>
 
     <form method="POST" action="{{ route('daily-operation-plan.store') }}" enctype="multipart/form-data">

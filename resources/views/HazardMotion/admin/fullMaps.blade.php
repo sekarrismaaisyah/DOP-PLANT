@@ -763,149 +763,255 @@
 .gm-get-app-btn:hover{ background:#e8eaed; }
 .gm-get-app-btn i{ color:#5f6368; }
 
-/* CCTV Alert Styles */
-.cctv-alert-item {
-    margin: 0 16px 16px;
-    border: 1px solid #e8eaed;
+/* CCTV Alert Styles - Mirip dengan mapBase.blade.php */
+.sidebar-list {
+    padding: 8px;
+}
+
+.sidebar-list-item {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
     border-radius: 8px;
-    background: #fff;
-    overflow: hidden;
-    transition: box-shadow 0.2s ease;
-}
-
-.cctv-alert-item:hover {
-    box-shadow: 0 2px 8px rgba(60, 64, 67, 0.15);
-}
-
-.cctv-alert-header {
-    padding: 12px 16px;
-    background: #f8f9fa;
-    border-bottom: 1px solid #e8eaed;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-}
-
-.cctv-alert-header-left {
-    flex: 1;
-}
-
-.cctv-alert-site {
-    font-size: 14px;
-    font-weight: 500;
-    color: #202124;
-    margin-bottom: 4px;
-    font-family: Roboto, Arial, sans-serif;
-}
-
-.cctv-alert-date {
-    font-size: 12px;
-    color: #5f6368;
-    font-family: Roboto, Arial, sans-serif;
-}
-
-.cctv-alert-stats {
-    display: flex;
-    gap: 12px;
-    align-items: center;
-}
-
-.cctv-alert-stat {
-    text-align: center;
-}
-
-.cctv-alert-stat-value {
-    font-size: 16px;
-    font-weight: 500;
-    color: #202124;
-    font-family: Roboto, Arial, sans-serif;
-}
-
-.cctv-alert-stat-value.offline {
-    color: #ea4335;
-}
-
-.cctv-alert-stat-value.online {
-    color: #34a853;
-}
-
-.cctv-alert-stat-label {
-    font-size: 10px;
-    color: #5f6368;
-    text-transform: uppercase;
-    font-family: Roboto, Arial, sans-serif;
-}
-
-.cctv-alert-units {
-    max-height: 300px;
-    overflow-y: auto;
-}
-
-.cctv-alert-unit-item {
-    padding: 10px 16px;
-    border-bottom: 1px solid #f1f3f4;
-    font-family: Roboto, Arial, sans-serif;
-}
-
-.cctv-alert-unit-item:last-child {
-    border-bottom: none;
-}
-
-.cctv-alert-unit-code {
-    font-size: 13px;
-    font-weight: 500;
-    color: #202124;
-    margin-bottom: 4px;
-}
-
-.cctv-alert-unit-location {
-    font-size: 12px;
-    color: #5f6368;
-    margin-bottom: 4px;
-}
-
-.cctv-alert-unit-meta {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    font-size: 11px;
-    color: #5f6368;
-}
-
-.cctv-alert-unit-status {
-    display: inline-block;
-    padding: 2px 8px;
-    border-radius: 12px;
-    font-size: 10px;
-    font-weight: 500;
-    text-transform: uppercase;
-}
-
-.cctv-alert-unit-status.offline {
-    background: #fce8e6;
-    color: #c5221f;
-}
-
-.cctv-alert-unit-status.online {
-    background: #e6f4ea;
-    color: #137333;
-}
-
-.cctv-alert-toggle {
-    background: none;
-    border: none;
-    color: #1a73e8;
     cursor: pointer;
-    font-size: 12px;
-    padding: 4px 8px;
-    margin: 8px 16px;
-    border-radius: 4px;
-    transition: background 0.15s ease;
-    font-family: Roboto, Arial, sans-serif;
+    transition: all 0.2s ease;
 }
 
-.cctv-alert-toggle:hover {
-    background: #f1f3f4;
+.sidebar-list-item:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.sidebar-list-item.active {
+    background: #eff6ff;
+    border-color: #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+}
+
+.sidebar-list-item[data-type="autoalert"] {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+    overflow: hidden;
+    position: relative;
+}
+
+.sidebar-list-item[data-type="autoalert"].expanded {
+    border-color: #f59e0b;
+    box-shadow: 0 4px 12px rgba(245, 158, 11, 0.2);
+}
+
+.sidebar-list-item[data-type="autoalert"]:hover .sidebar-list-item-header {
+    background-color: transparent;
+}
+
+.sidebar-list-item[data-type="autoalert"]:hover .list-item-expand-icon {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+
+.sidebar-list-item[data-type="autoalert"].expanded .list-item-expand-icon {
+    transform: rotate(180deg);
+    background-color: rgba(245, 158, 11, 0.15);
+    color: #f59e0b;
+}
+
+.list-item-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    font-size: 16px;
+    color: #ffffff;
+    margin-right: 12px;
+    flex-shrink: 0;
+}
+
+.list-item-content {
+    flex: 1;
+    min-width: 0;
+}
+
+.list-item-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+    word-break: break-word;
+}
+
+.list-item-subtitle {
+    font-size: 12px;
+    color: #6b7280;
+    word-break: break-word;
+}
+
+.list-item-time {
+    font-size: 11px;
+    color: #9ca3af;
+    margin-top: 4px;
+}
+
+.list-item-expand-icon {
+    margin-left: auto;
+    color: #6b7280;
+    transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, color 0.2s ease;
+    flex-shrink: 0;
+    font-size: 20px;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+}
+
+.sidebar-list-item-header {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    width: 100%;
+}
+
+.empty-state {
+    padding: 40px 20px;
+    text-align: center;
+    color: #9ca3af;
+}
+
+.empty-state i {
+    font-size: 48px;
+    margin-bottom: 12px;
+    opacity: 0.5;
+}
+
+.empty-state p {
+    font-size: 14px;
+    margin: 0;
+}
+
+.cctv-detail-section {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
+    padding: 0 12px;
+    background: #fafbfc;
+    border-top: 1px solid #e5e7eb;
+}
+
+.sidebar-list-item.expanded .cctv-detail-section {
+    max-height: 2000px;
+    padding: 16px 12px;
+}
+
+.cctv-detail-loading {
+    text-align: center;
+    padding: 24px 20px;
+    color: #6b7280;
+    font-size: 12px;
+}
+
+.cctv-detail-loading i {
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    from { transform: rotate(0deg); }
+    to { transform: rotate(360deg); }
+}
+
+.cctv-detail-error {
+    padding: 12px;
+    background: #fef2f2;
+    border: 1px solid #fecaca;
+    border-radius: 6px;
+    color: #991b1b;
+    font-size: 12px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.cctv-detail-group {
+    margin-bottom: 20px;
+}
+
+.cctv-detail-group:last-child {
+    margin-bottom: 0;
+}
+
+.cctv-detail-group-title {
+    font-size: 13px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 10px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #e5e7eb;
+}
+
+.cctv-detail-group-title i {
+    font-size: 18px;
+    color: #3b82f6;
+}
+
+.cctv-coverage-item {
+    padding: 10px 12px;
+    background: #ffffff;
+    border-radius: 6px;
+    margin-bottom: 8px;
+    border-left: 4px solid #3b82f6;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.cctv-coverage-item:hover {
+    transform: translateX(2px);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
+}
+
+.cctv-coverage-item:last-child {
+    margin-bottom: 0;
+}
+
+.cctv-coverage-lokasi {
+    font-size: 12px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.cctv-coverage-lokasi::before {
+    content: '📍';
+    font-size: 14px;
+}
+
+.cctv-coverage-detail {
+    font-size: 11px;
+    color: #6b7280;
+    margin-left: 20px;
+    line-height: 1.5;
+}
+
+.cctv-no-data {
+    padding: 12px;
+    text-align: center;
+    color: #9ca3af;
+    font-size: 12px;
+    font-style: italic;
 }
 
 /* layers button in sidebar */
@@ -2372,27 +2478,15 @@
         </button>
         
         <!-- CCTV Alerts Section -->
-        <div class="gm-sidebar-section" style="padding: 16px 0;">
+        <div class="gm-sidebar-section" style="padding: 16px 0; flex: 1; overflow-y: auto;">
             <div class="gm-sidebar-section-title" style="padding: 0 16px 12px;">
-                <i class="material-icons-outlined" style="font-size: 20px; vertical-align: middle; margin-right: 8px; color: #ea4335;">security</i>
+                <i class="material-icons-outlined" style="font-size: 20px; vertical-align: middle; margin-right: 8px; color: #ea4335;">notifications_active</i>
                 CCTV Alerts
             </div>
             
-            <!-- Loading State -->
-            <div id="cctvAlertsLoading" style="padding: 16px; text-align: center; color: #5f6368;">
-                <i class="material-icons-outlined" style="font-size: 24px; display: block; margin-bottom: 8px;">hourglass_empty</i>
-                Memuat data...
-            </div>
-            
-            <!-- Empty State -->
-            <div id="cctvAlertsEmpty" style="display: none; padding: 16px; text-align: center; color: #5f6368;">
-                <i class="material-icons-outlined" style="font-size: 24px; display: block; margin-bottom: 8px;">check_circle_outline</i>
-                Tidak ada alert
-            </div>
-            
             <!-- Alerts Container -->
-            <div id="cctvAlertsContainer" style="display: none;">
-                <!-- Alerts will be inserted here -->
+            <div class="sidebar-list" id="cctvAlertsList" style="padding: 8px;">
+                <!-- Loading state will be inserted here by JavaScript -->
             </div>
         </div>
         
@@ -2548,103 +2642,246 @@
                 });
             }
 
-            // Load CCTV Alerts
-            function loadCctvAlerts() {
-                const loadingEl = document.getElementById('cctvAlertsLoading');
-                const emptyEl = document.getElementById('cctvAlertsEmpty');
-                const containerEl = document.getElementById('cctvAlertsContainer');
-                
-                fetch('{{ route("full-maps.api.cctv-alerts-with-units") }}')
-                    .then(response => response.json())
-                    .then(data => {
-                        if (loadingEl) loadingEl.style.display = 'none';
-                        
-                        if (!data.success || !data.data || data.data.length === 0) {
-                            if (emptyEl) emptyEl.style.display = 'block';
-                            if (containerEl) containerEl.style.display = 'none';
-                            return;
-                        }
-                        
-                        if (emptyEl) emptyEl.style.display = 'none';
-                        if (containerEl) {
-                            containerEl.style.display = 'block';
-                            containerEl.innerHTML = '';
-                            
-                            data.data.forEach(alert => {
-                                const alertItem = createAlertItem(alert);
-                                containerEl.appendChild(alertItem);
-                            });
-                        }
-                    })
-                    .catch(error => {
-                        console.error('Error loading CCTV alerts:', error);
-                        if (loadingEl) {
-                            loadingEl.innerHTML = '<i class="material-icons-outlined" style="font-size: 24px; display: block; margin-bottom: 8px;">error_outline</i>Error memuat data';
-                        }
-                    });
+            // Helper functions
+            function escapeHtml(text) {
+                if (!text) return '';
+                const map = {
+                    '&': '&amp;',
+                    '<': '&lt;',
+                    '>': '&gt;',
+                    '"': '&quot;',
+                    "'": '&#039;'
+                };
+                return String(text).replace(/[&<>"']/g, function(m) { return map[m]; });
             }
             
-            function createAlertItem(alert) {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'cctv-alert-item';
+            function getAvatarColor(letter) {
+                const colors = [
+                    '#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6',
+                    '#ec4899', '#06b6d4', '#f97316', '#84cc16', '#6366f1'
+                ];
+                const index = (letter.charCodeAt(0) - 65) % colors.length;
+                return colors[index >= 0 ? index : 0];
+            }
+            
+            function getFirstLetter(text) {
+                if (!text) return '?';
+                const firstChar = text.trim().charAt(0).toUpperCase();
+                return /[A-Z0-9]/.test(firstChar) ? firstChar : '?';
+            }
+
+            // Load CCTV Alerts
+            function loadCctvAlerts() {
+                const container = document.getElementById('cctvAlertsList');
+                if (!container) return;
                 
-                const formattedDate = new Date(alert.tanggal).toLocaleString('id-ID', {
-                    year: 'numeric',
-                    month: 'short',
-                    day: 'numeric',
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                
-                const unitsHtml = alert.cctv_units && alert.cctv_units.length > 0
-                    ? alert.cctv_units.map(unit => {
-                        const lastConnect = unit.last_connect 
-                            ? new Date(unit.last_connect).toLocaleString('id-ID', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                                hour: '2-digit',
-                                minute: '2-digit'
-                            })
-                            : 'N/A';
-                        const statusClass = unit.status === 'offline' ? 'offline' : 'online';
-                        
-                        return `
-                            <div class="cctv-alert-unit-item">
-                                <div class="cctv-alert-unit-code">${unit.unit_code || 'N/A'}</div>
-                                <div class="cctv-alert-unit-location">${unit.location || 'N/A'}</div>
-                                <div class="cctv-alert-unit-meta">
-                                    <span>Last Connect: ${lastConnect}</span>
-                                    <span class="cctv-alert-unit-status ${statusClass}">${unit.status || 'unknown'}</span>
-                                </div>
-                            </div>
-                        `;
-                    }).join('')
-                    : '<div style="padding: 16px; text-align: center; color: #5f6368;">Tidak ada unit</div>';
-                
-                alertDiv.innerHTML = `
-                    <div class="cctv-alert-header">
-                        <div class="cctv-alert-header-left">
-                            <div class="cctv-alert-site">${alert.site || 'N/A'}</div>
-                            <div class="cctv-alert-date">${formattedDate}</div>
+                // Show loading state
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;">
+                            <span class="visually-hidden">Loading...</span>
                         </div>
-                        <div class="cctv-alert-stats">
-                            <div class="cctv-alert-stat">
-                                <div class="cctv-alert-stat-value offline">${alert.jumlah_offline || 0}</div>
-                                <div class="cctv-alert-stat-label">Offline</div>
-                            </div>
-                            <div class="cctv-alert-stat">
-                                <div class="cctv-alert-stat-value online">${alert.jumlah_online || 0}</div>
-                                <div class="cctv-alert-stat-label">Online</div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="cctv-alert-units" id="alert-units-${alert.id}">
-                        ${unitsHtml}
+                        <p style="margin-top: 16px;">Memuat data Auto Alert...</p>
                     </div>
                 `;
                 
-                return alertDiv;
+                fetch('{{ route("full-maps.api.cctv-alerts-with-units") }}')
+                    .then(response => {
+                        if (!response.ok) {
+                            throw new Error(`HTTP error! status: ${response.status}`);
+                        }
+                        return response.json();
+                    })
+                    .then(data => {
+                        if (data.success && data.data) {
+                            renderCctvAlertList(data.data);
+                        } else {
+                            container.innerHTML = `
+                                <div class="empty-state">
+                                    <i class="material-icons-outlined">notifications_off</i>
+                                    <p>Tidak ada data Auto Alert</p>
+                                </div>
+                            `;
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error loading Auto Alert data:', error);
+                        container.innerHTML = `
+                            <div class="empty-state">
+                                <i class="material-icons-outlined">error_outline</i>
+                                <p>Gagal memuat data Auto Alert</p>
+                                <small style="color: #9ca3af;">${error.message}</small>
+                            </div>
+                        `;
+                    });
+            }
+            
+            function renderCctvAlertList(data) {
+                const container = document.getElementById('cctvAlertsList');
+                if (!container) return;
+                
+                if (!data || data.length === 0) {
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="material-icons-outlined">notifications_off</i>
+                            <p>Tidak ada data Auto Alert</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                container.innerHTML = data.map((alert, index) => {
+                    const site = alert.site || 'Unknown Site';
+                    const tanggal = alert.tanggal || '';
+                    const jumlahOffline = alert.jumlah_offline || 0;
+                    const jumlahOnline = alert.jumlah_online || 0;
+                    const alertId = alert.id || index;
+                    const firstLetter = getFirstLetter(site);
+                    const avatarColor = getAvatarColor(firstLetter);
+                    
+                    // Format tanggal
+                    let tanggalFormatted = '';
+                    if (tanggal) {
+                        const date = new Date(tanggal);
+                        tanggalFormatted = date.toLocaleDateString('id-ID', { 
+                            day: '2-digit', 
+                            month: '2-digit', 
+                            year: 'numeric',
+                            hour: '2-digit',
+                            minute: '2-digit'
+                        });
+                    }
+                    
+                    return `
+                        <div class="sidebar-list-item" data-type="autoalert" data-alert-id="${alertId}" data-index="${index}">
+                            <div class="sidebar-list-item-header">
+                                <div class="list-item-avatar" style="background-color: ${avatarColor};">
+                                    ${firstLetter}
+                                </div>
+                                <div class="list-item-content">
+                                    <div class="list-item-title">${escapeHtml(site)}</div>
+                                    <div class="list-item-subtitle">${jumlahOffline} Offline | ${jumlahOnline} Online</div>
+                                    ${tanggalFormatted ? `<div style="font-size: 10px; color: #9ca3af; margin-top: 2px;">${escapeHtml(tanggalFormatted)}</div>` : ''}
+                                </div>
+                                <i class="material-icons-outlined list-item-expand-icon">expand_more</i>
+                            </div>
+                            <div class="cctv-detail-section">
+                                <div class="cctv-detail-loading">
+                                    <i class="material-icons-outlined" style="font-size: 24px; margin-bottom: 8px; opacity: 0.5;">hourglass_empty</i>
+                                    <div>Memuat detail...</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                }).join('');
+                
+                // Add click handlers - toggle expand/collapse dan load details
+                container.querySelectorAll('.sidebar-list-item').forEach(item => {
+                    item.addEventListener('click', function(e) {
+                        // Prevent event bubbling untuk icon expand
+                        if (e.target.classList.contains('list-item-expand-icon')) {
+                            e.stopPropagation();
+                        }
+                        
+                        const alertId = this.dataset.alertId;
+                        const alertData = data.find(a => a.id == alertId);
+                        
+                        // Toggle expanded state
+                        const isExpanded = this.classList.contains('expanded');
+                        
+                        if (isExpanded) {
+                            // Collapse
+                            this.classList.remove('expanded');
+                        } else {
+                            // Expand - load details
+                            this.classList.add('expanded');
+                            if (alertData) {
+                                renderCctvAlertDetails(alertData, this);
+                            }
+                        }
+                        
+                        // Highlight active item
+                        document.querySelectorAll('.sidebar-list-item').forEach(i => {
+                            if (i !== this) i.classList.remove('active');
+                        });
+                        this.classList.add('active');
+                    });
+                });
+            }
+            
+            // Render Auto Alert details (daftar CCTV units) - menggunakan struktur sama dengan Area Kerja detail
+            function renderCctvAlertDetails(alertData, itemElement) {
+                const detailSection = itemElement.querySelector('.cctv-detail-section');
+                if (!detailSection) return;
+                
+                // Check if already loaded
+                if (detailSection.dataset.loaded === 'true') {
+                    return;
+                }
+                
+                const cctvUnits = alertData.cctv_units || [];
+                
+                if (cctvUnits.length === 0) {
+                    detailSection.innerHTML = `
+                        <div class="cctv-detail-error">
+                            <i class="material-icons-outlined" style="font-size: 18px;">videocam_off</i>
+                            <span>Tidak ada CCTV Unit</span>
+                        </div>
+                    `;
+                    detailSection.dataset.loaded = 'true';
+                    return;
+                }
+                
+                let html = '';
+                html += '<div class="cctv-detail-group">';
+                html += '<div class="cctv-detail-group-title"><i class="material-icons-outlined">videocam</i> <span>Daftar CCTV Unit</span></div>';
+                
+                if (cctvUnits.length > 0) {
+                    cctvUnits.forEach((unit, unitIndex) => {
+                        const unitCode = unit.unit_code || 'N/A';
+                        const location = unit.location || '';
+                        const lastConnect = unit.last_connect || '';
+                        const status = unit.status || 'offline';
+                        
+                        // Format last_connect
+                        let lastConnectFormatted = '';
+                        if (lastConnect) {
+                            const date = new Date(lastConnect);
+                            lastConnectFormatted = date.toLocaleDateString('id-ID', { 
+                                day: '2-digit', 
+                                month: '2-digit', 
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        }
+                        
+                        html += `
+                            <div class="cctv-coverage-item" data-unit-id="${unit.id}" data-index="${unitIndex}" style="cursor: pointer;">
+                                <div class="cctv-coverage-lokasi">${escapeHtml(unitCode)}</div>
+                                <div class="cctv-coverage-detail">
+                                    ${location ? `${escapeHtml(location)}` : ''}
+                                    <br><span style="display: inline-block; margin-top: 4px; padding: 2px 8px; border-radius: 12px; font-size: 10px; font-weight: 600; background-color: ${status === 'online' ? '#10b981' : '#ef4444'}15; color: ${status === 'online' ? '#10b981' : '#ef4444'};">${escapeHtml(status.toUpperCase())}</span>
+                                    ${lastConnectFormatted ? `<br><span style="font-size: 10px; color: #9ca3af; margin-top: 4px; display: inline-block;">🕐 ${escapeHtml(lastConnectFormatted)}</span>` : ''}
+                                </div>
+                            </div>
+                        `;
+                    });
+                } else {
+                    html += '<div class="cctv-no-data">Tidak ada data CCTV Unit</div>';
+                }
+                
+                html += '</div>';
+                detailSection.innerHTML = html;
+                detailSection.dataset.loaded = 'true';
+                
+                // Add click handlers for CCTV unit items (optional - bisa untuk zoom ke lokasi jika ada koordinat)
+                detailSection.querySelectorAll('.cctv-coverage-item').forEach(unitItem => {
+                    unitItem.addEventListener('click', function(e) {
+                        e.stopPropagation();
+                        // Bisa ditambahkan fungsi untuk zoom ke lokasi jika diperlukan
+                    });
+                });
             }
             
             // Load alerts on page load

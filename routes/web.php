@@ -328,6 +328,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [DailyOperationPlanController::class, 'index'])->name('index');
         Route::get('/create', [DailyOperationPlanController::class, 'create'])->name('create');
         Route::post('/', [DailyOperationPlanController::class, 'store'])->name('store');
+        Route::get('/template', [DailyOperationPlanController::class, 'downloadTemplate'])->name('template');
+        Route::post('/import', [DailyOperationPlanController::class, 'import'])->name('import');
         Route::get('/{id}', [DailyOperationPlanController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [DailyOperationPlanController::class, 'edit'])->name('edit');
         Route::put('/{id}', [DailyOperationPlanController::class, 'update'])->name('update');
