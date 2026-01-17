@@ -11078,8 +11078,9 @@
     let currentSelectedCompany = '__all__';
     let currentSelectedSite = '__all__';
     
-    // Get allowed company from server (if user has specific role)
+    // Get allowed company and sites from server (if user has specific role)
     const allowedCompany = @json($allowedCompany ?? null);
+    const allowedSites = @json($allowedSites ?? []);
 
     document.addEventListener('DOMContentLoaded', function() {
         switchView('hazard');
@@ -11093,7 +11094,14 @@
             // Admin or other roles, show all companies
             currentSelectedCompany = '__all__';
         }
-        currentSelectedSite = '__all__';
+        
+        // Set default site based on role
+        if (allowedSites.length > 0) {
+            // If user has site restrictions, auto-select first site or '__all__'
+            currentSelectedSite = allowedSites.length === 1 ? allowedSites[0] : '__all__';
+        } else {
+            currentSelectedSite = '__all__';
+        }
         
         // Load filter options untuk halaman utama dan header
         loadMainFilterOptions();
@@ -11119,6 +11127,36 @@
             setTimeout(() => {
                 selectCompanyFilter(allowedCompany);
             }, 500);
+        }
+        
+        // Auto-select and disable site filter if user has specific role with site restrictions
+        if (allowedSites.length > 0) {
+            const headerFilterSiteBtn = document.getElementById('headerFilterSiteBtn');
+            const mainFilterSiteBtn = document.getElementById('mainFilterSiteBtn');
+            
+            if (headerFilterSiteBtn) {
+                if (allowedSites.length === 1) {
+                    headerFilterSiteBtn.disabled = true;
+                    headerFilterSiteBtn.title = 'Filter site terbatas berdasarkan role Anda';
+                } else {
+                    headerFilterSiteBtn.title = 'Hanya site tertentu yang dapat diakses berdasarkan role Anda';
+                }
+            }
+            
+            if (mainFilterSiteBtn) {
+                if (allowedSites.length === 1) {
+                    mainFilterSiteBtn.disabled = true;
+                    mainFilterSiteBtn.title = 'Filter site terbatas berdasarkan role Anda';
+                } else {
+                    mainFilterSiteBtn.title = 'Hanya site tertentu yang dapat diakses berdasarkan role Anda';
+                }
+            }
+            
+            if (allowedSites.length === 1) {
+                setTimeout(() => {
+                    selectSiteFilter(allowedSites[0]);
+                }, 500);
+            }
         }
         
         loadAreaKritisOverview();
@@ -11194,6 +11232,20 @@
                 const target = e.target.closest('.filter-option');
                 if (target) {
                     e.preventDefault();
+                    
+                    // Prevent change if user has specific role with site restrictions
+                    if (allowedSites.length > 0) {
+                        const value = target.getAttribute('data-value');
+                        // If user has site restrictions, only allow selecting from allowed sites
+                        if (value !== '__all__' && !allowedSites.includes(value)) {
+                            // Re-select the first allowed site or '__all__'
+                            if (allowedSites.length === 1) {
+                                selectSiteFilter(allowedSites[0]);
+                            }
+                            return;
+                        }
+                    }
+                    
                     const value = target.getAttribute('data-value');
                     const text = target.textContent.trim();
                     currentSelectedSite = value || '__all__';
@@ -11279,18 +11331,34 @@
                 if (allowedCompany) {
                     // Re-select the allowed company
                     selectCompanyFilter(allowedCompany);
+                    // Also re-select site if user has site restrictions
+                    if (allowedSites.length > 0 && allowedSites.length === 1) {
+                        selectSiteFilter(allowedSites[0]);
+                    }
                     return;
                 }
                 
                 currentSelectedCompany = '__all__';
-                currentSelectedSite = '__all__';
+                
+                // Reset site filter, but respect role restrictions
+                if (allowedSites.length > 0 && allowedSites.length === 1) {
+                    // If user has single site restriction, keep it selected
+                    currentSelectedSite = allowedSites[0];
+                    selectSiteFilter(allowedSites[0]);
+                } else {
+                    currentSelectedSite = '__all__';
+                }
                 
                 // Update button text di header
                 if (headerFilterCompanyText) {
                     headerFilterCompanyText.textContent = 'Semua Perusahaan';
                 }
                 if (headerFilterSiteText) {
-                    headerFilterSiteText.textContent = 'Semua Site';
+                    if (allowedSites.length > 0 && allowedSites.length === 1) {
+                        headerFilterSiteText.textContent = allowedSites[0];
+                    } else {
+                        headerFilterSiteText.textContent = 'Semua Site';
+                    }
                 }
                 
                 // Update button text di map filter juga
@@ -11300,11 +11368,15 @@
                     mainFilterCompanyText.textContent = 'Semua Perusahaan';
                 }
                 if (mainFilterSiteText) {
-                    mainFilterSiteText.textContent = 'Semua Site';
+                    if (allowedSites.length > 0 && allowedSites.length === 1) {
+                        mainFilterSiteText.textContent = allowedSites[0];
+                    } else {
+                        mainFilterSiteText.textContent = 'Semua Site';
+                    }
                 }
                 
                 // Update currentSiteFilter untuk filter map dan hazard list
-                currentSiteFilter = '';
+                currentSiteFilter = (currentSelectedSite !== '__all__') ? currentSelectedSite : '';
                 filterBySite(currentSiteFilter);
                 filterHazardListView(currentSiteFilter);
                 updateStatisticsBySite(currentSiteFilter);
@@ -11316,7 +11388,11 @@
                     modalFilterCompany.value = '__all__';
                 }
                 if (modalFilterSite) {
-                    modalFilterSite.value = '__all__';
+                    if (allowedSites.length > 0 && allowedSites.length === 1) {
+                        modalFilterSite.value = allowedSites[0];
+                    } else {
+                        modalFilterSite.value = '__all__';
+                    }
                 }
                 
                 // Update semua statistik
@@ -11392,6 +11468,20 @@
                 const target = e.target.closest('.filter-option');
                 if (target) {
                     e.preventDefault();
+                    
+                    // Prevent change if user has specific role with site restrictions
+                    if (allowedSites.length > 0) {
+                        const value = target.getAttribute('data-value');
+                        // If user has site restrictions, only allow selecting from allowed sites
+                        if (value !== '__all__' && !allowedSites.includes(value)) {
+                            // Re-select the first allowed site or '__all__'
+                            if (allowedSites.length === 1) {
+                                selectSiteFilter(allowedSites[0]);
+                            }
+                            return;
+                        }
+                    }
+                    
                     const value = target.getAttribute('data-value');
                     const text = target.textContent.trim();
                     currentSelectedSite = value || '__all__';

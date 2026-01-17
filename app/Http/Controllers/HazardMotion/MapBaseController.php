@@ -27,22 +27,76 @@ use Exception;
 class MapBaseController extends Controller
 {
     /**
-     * Get allowed company based on user role
-     * Returns company name if user has specific role, null if all companies allowed
+     * Get allowed company and site based on user role
+     * Returns array with 'company' and 'sites' keys
+     * - 'company': company name if restricted, null if all companies allowed
+     * - 'sites': array of allowed site names, empty array if all sites allowed
      */
-    private function getAllowedCompanyByRole()
+    private function getAllowedCompanyAndSiteByRole()
     {
         $user = Auth::user();
         if (!$user) {
-            return null;
+            return ['company' => null, 'sites' => []];
         }
 
-        // Check if user has control_room_pama role (check both slug and name)
-        if ($user->hasRole('control_room_pama') || $user->hasRole('control-room-pama')) {
-            return 'PT Pamapersada Nusantara';
+        // Role-based access mapping
+        // Format: 'role_slug' => ['company' => 'Company Name', 'sites' => ['Site 1', 'Site 2']]
+        // If 'sites' is empty array, user can access all sites within the company
+        // If 'company' is null, user can access all companies
+        $roleAccessMap = [
+            'control_room_pama' => [
+                'company' => 'PT Pamapersada Nusantara',
+                'sites' => ['BMO 2'] // User dengan role ini hanya bisa akses site BMO 2
+            ],
+            'control-room-pama' => [
+                'company' => 'PT Pamapersada Nusantara',
+                'sites' => ['BMO 2'] // User dengan role ini hanya bisa akses site BMO 2
+            ],
+            // Add more role mappings here as needed
+            // Example:
+            // 'control_room_site_a' => [
+            //     'company' => 'PT Pamapersada Nusantara',
+            //     'sites' => ['BMO 1', 'BMO 2']
+            // ],
+            // 'control_room_company_b' => [
+            //     'company' => 'PT Company B',
+            //     'sites' => ['Site C']
+            // ],
+        ];
+
+        // Check user's roles and return first matching restriction
+        foreach ($roleAccessMap as $roleSlug => $access) {
+            if ($user->hasRole($roleSlug)) {
+                return [
+                    'company' => $access['company'],
+                    'sites' => $access['sites']
+                ];
+            }
         }
 
-        return null; // Admin or other roles can see all companies
+        // Admin or other roles can see all companies and sites
+        return ['company' => null, 'sites' => []];
+    }
+
+    /**
+     * Get allowed company based on user role
+     * Returns company name if user has specific role, null if all companies allowed
+     * @deprecated Use getAllowedCompanyAndSiteByRole() instead for better flexibility
+     */
+    private function getAllowedCompanyByRole()
+    {
+        $access = $this->getAllowedCompanyAndSiteByRole();
+        return $access['company'];
+    }
+
+    /**
+     * Get allowed sites based on user role
+     * Returns array of allowed site names, empty array if all sites allowed
+     */
+    private function getAllowedSitesByRole()
+    {
+        $access = $this->getAllowedCompanyAndSiteByRole();
+        return $access['sites'];
     }
 
     /**
@@ -54,8 +108,10 @@ class MapBaseController extends Controller
         $user = Auth::user();
         $userName = $user ? $user->name : null;
         
-        // Get allowed company based on role
-        $allowedCompany = $this->getAllowedCompanyByRole();
+        // Get allowed company and sites based on role
+        $roleAccess = $this->getAllowedCompanyAndSiteByRole();
+        $allowedCompany = $roleAccess['company'];
+        $allowedSites = $roleAccess['sites'];
         
         // Get control rooms that the logged-in user supervises
         $supervisedControlRooms = [];
@@ -73,6 +129,11 @@ class MapBaseController extends Controller
             $cctvDataAllQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
         }
         
+        // Filter by sites if user has specific role with site restrictions
+        if (!empty($allowedSites)) {
+            $cctvDataAllQuery->whereIn('site', $allowedSites);
+        }
+        
         // Filter CCTV data based on supervised control rooms if user is not admin
         // If user is admin or has no supervised control rooms, show all CCTV
         if ($userName && !empty($supervisedControlRooms)) {
@@ -88,6 +149,11 @@ class MapBaseController extends Controller
         // Filter by company if user has specific role
         if ($allowedCompany) {
             $cctvDataWithLocationQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        
+        // Filter by sites if user has specific role with site restrictions
+        if (!empty($allowedSites)) {
+            $cctvDataWithLocationQuery->whereIn('site', $allowedSites);
         }
         
         // Apply same filter for map data
@@ -176,6 +242,9 @@ class MapBaseController extends Controller
         if ($allowedCompany) {
             $totalCctvCountQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
         }
+        if (!empty($allowedSites)) {
+            $totalCctvCountQuery->whereIn('site', $allowedSites);
+        }
         $totalCctvCount = $totalCctvCountQuery->count();
         
         // Hitung jumlah control room yang unik dari tabel cctv_data_bmo2
@@ -183,6 +252,9 @@ class MapBaseController extends Controller
             ->where('control_room', '!=', '');
         if ($allowedCompany) {
             $totalControlRoomCountQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $totalControlRoomCountQuery->whereIn('site', $allowedSites);
         }
         $totalControlRoomCount = $totalControlRoomCountQuery->distinct('control_room')
             ->count('control_room');
@@ -192,6 +264,9 @@ class MapBaseController extends Controller
             ->where('control_room', '!=', '');
         if ($allowedCompany) {
             $allControlRoomsQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $allControlRoomsQuery->whereIn('site', $allowedSites);
         }
         $allControlRooms = $allControlRoomsQuery->distinct('control_room')
             ->orderBy('control_room')
@@ -206,6 +281,9 @@ class MapBaseController extends Controller
         });
         if ($allowedCompany) {
             $criticalCoverageBaseQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $criticalCoverageBaseQuery->whereIn('site', $allowedSites);
         }
 
         $criticalAreaCount = (clone $criticalCoverageBaseQuery)
@@ -247,6 +325,9 @@ class MapBaseController extends Controller
         $insidenRecordsQuery = InsidenTabel::orderByDesc('created_at');
         if ($allowedCompany) {
             $insidenRecordsQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $insidenRecordsQuery->whereIn('site', $allowedSites);
         }
         $insidenRecords = $insidenRecordsQuery->get();
 
@@ -605,6 +686,7 @@ class MapBaseController extends Controller
             'grDetections',
             'stats',
             'allowedCompany',
+            'allowedSites',
             'insidenGroups',
             'allControlRooms',
             'criticalAreaCount',
@@ -3789,11 +3871,23 @@ class MapBaseController extends Controller
             $company = trim($request->query('company', '__all__'));
             $site = trim($request->query('site', '__all__'));
 
-            // Get allowed company based on role
-            $allowedCompany = $this->getAllowedCompanyByRole();
+            // Get allowed company and sites based on role
+            $roleAccess = $this->getAllowedCompanyAndSiteByRole();
+            $allowedCompany = $roleAccess['company'];
+            $allowedSites = $roleAccess['sites'];
+            
+            // Override company filter if user has specific role
             if ($allowedCompany) {
-                // Override company filter if user has specific role
                 $company = $allowedCompany;
+            }
+            
+            // Override site filter if user has specific role with site restrictions
+            if (!empty($allowedSites)) {
+                // If user has site restrictions, only allow filtering by those sites
+                // If requested site is not in allowed sites, use first allowed site or '__all__'
+                if ($site !== '__all__' && !in_array($site, $allowedSites)) {
+                    $site = !empty($allowedSites) ? $allowedSites[0] : '__all__';
+                }
             }
 
             // Column mapping (sesuai urutan kolom di DataTable)
@@ -3825,6 +3919,11 @@ class MapBaseController extends Controller
                 } else {
                     $query->whereRaw('TRIM(site) = ?', [$site]);
                 }
+            }
+            
+            // Apply role-based site filter if user has site restrictions
+            if (!empty($allowedSites)) {
+                $query->whereIn('site', $allowedSites);
             }
 
             // Get total records before search
@@ -3956,11 +4055,21 @@ class MapBaseController extends Controller
             $company = trim($request->query('company', '__all__'));
             $site = trim($request->query('site', '__all__'));
             
-            // Get allowed company based on role
-            $allowedCompany = $this->getAllowedCompanyByRole();
+            // Get allowed company and sites based on role
+            $roleAccess = $this->getAllowedCompanyAndSiteByRole();
+            $allowedCompany = $roleAccess['company'];
+            $allowedSites = $roleAccess['sites'];
+            
+            // Override company filter if user has specific role
             if ($allowedCompany) {
-                // Override company filter if user has specific role
                 $company = $allowedCompany;
+            }
+            
+            // Override site filter if user has specific role with site restrictions
+            if (!empty($allowedSites)) {
+                if ($site !== '__all__' && !in_array($site, $allowedSites)) {
+                    $site = !empty($allowedSites) ? $allowedSites[0] : '__all__';
+                }
             }
             
             $query = CctvData::query();
@@ -3987,6 +4096,11 @@ class MapBaseController extends Controller
                 } else {
                     $query->whereRaw('TRIM(site) = ?', [$site]);
                 }
+            }
+            
+            // Apply role-based site filter if user has site restrictions
+            if (!empty($allowedSites)) {
+                $query->whereIn('site', $allowedSites);
             }
             
             $total = $query->count();
@@ -6533,11 +6647,21 @@ class MapBaseController extends Controller
             $company = trim($request->get('company', '__all__'));
             $site = trim($request->get('site', '__all__'));
             
-            // Get allowed company based on role
-            $allowedCompany = $this->getAllowedCompanyByRole();
+            // Get allowed company and sites based on role
+            $roleAccess = $this->getAllowedCompanyAndSiteByRole();
+            $allowedCompany = $roleAccess['company'];
+            $allowedSites = $roleAccess['sites'];
+            
+            // Override company filter if user has specific role
             if ($allowedCompany) {
-                // Override company filter if user has specific role
                 $company = $allowedCompany;
+            }
+            
+            // Override site filter if user has specific role with site restrictions
+            if (!empty($allowedSites)) {
+                if ($site !== '__all__' && !in_array($site, $allowedSites)) {
+                    $site = !empty($allowedSites) ? $allowedSites[0] : '__all__';
+                }
             }
             
             $weekStart = $request->get('week_start'); // Filter per week untuk SAP
@@ -6582,6 +6706,11 @@ class MapBaseController extends Controller
                     } else {
                         $cctvQuery->whereRaw('TRIM(site) = ?', [$site]);
                     }
+                }
+                
+                // Apply role-based site filter if user has site restrictions
+                if (!empty($allowedSites)) {
+                    $cctvQuery->whereIn('site', $allowedSites);
                 }
 
                 $cctvData = $cctvQuery->get();
@@ -7341,8 +7470,10 @@ class MapBaseController extends Controller
     public function getControlRoomOverview(Request $request)
     {
         try {
-            // Get allowed company based on role
-            $allowedCompany = $this->getAllowedCompanyByRole();
+            // Get allowed company and sites based on role
+            $roleAccess = $this->getAllowedCompanyAndSiteByRole();
+            $allowedCompany = $roleAccess['company'];
+            $allowedSites = $roleAccess['sites'];
             
             // Ambil semua data CCTV dari cctv_data_bmo2 dan group by control_room
             $query = CctvData::whereNotNull('control_room')
@@ -7352,6 +7483,11 @@ class MapBaseController extends Controller
             // Filter by company if user has specific role
             if ($allowedCompany) {
                 $query->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+            }
+            
+            // Filter by sites if user has specific role with site restrictions
+            if (!empty($allowedSites)) {
+                $query->whereIn('site', $allowedSites);
             }
             
             // Get all CCTV data
