@@ -2116,6 +2116,343 @@
         transition: all 0.2s ease !important;
         cursor: pointer !important;
     }
+
+    /* Map Sidebar Panel Styles */
+    .map-sidebar {
+        position: absolute;
+        top: 0;
+        right: 0;
+        width: 380px;
+        height: 100%;
+        background: #ffffff;
+        box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        display: flex;
+        transition: transform 0.3s ease;
+        transform: translateX(0);
+    }
+    
+    .map-sidebar.collapsed {
+        transform: translateX(calc(100% - 50px));
+    }
+    
+    .sidebar-toggle-btn {
+        position: absolute;
+        left: -40px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 40px;
+        height: 60px;
+        background: #ffffff;
+        border: 1px solid #e5e7eb;
+        border-right: none;
+        border-radius: 8px 0 0 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        z-index: 1001;
+        box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+    }
+    
+    .sidebar-toggle-btn:hover {
+        background: #f9fafb;
+        box-shadow: -2px 0 6px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar-toggle-btn i {
+        font-size: 24px;
+        color: #6b7280;
+        transition: transform 0.3s ease;
+    }
+    
+    .map-sidebar.collapsed .sidebar-toggle-btn i {
+        transform: rotate(180deg);
+    }
+    
+    .sidebar-content {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .sidebar-tabs {
+        display: flex;
+        background: #f8f9fa;
+        border-bottom: 1px solid #e5e7eb;
+        padding: 8px;
+        gap: 4px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: #cbd5e1 #f8f9fa;
+    }
+    
+    .sidebar-tabs::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .sidebar-tabs::-webkit-scrollbar-track {
+        background: #f8f9fa;
+    }
+    
+    .sidebar-tabs::-webkit-scrollbar-thumb {
+        background: #cbd5e1;
+        border-radius: 3px;
+    }
+    
+    .sidebar-tabs::-webkit-scrollbar-thumb:hover {
+        background: #94a3b8;
+    }
+    
+    .sidebar-tab {
+        flex: 0 0 auto;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: 12px 16px;
+        background: transparent;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        position: relative;
+        min-height: 70px;
+        min-width: 80px;
+        max-width: 120px;
+    }
+    
+    .sidebar-tab:hover {
+        background: #e9ecef;
+    }
+    
+    .sidebar-tab.active {
+        background: #ffffff;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    
+    .sidebar-tab i {
+        font-size: 24px;
+        color: #6b7280;
+        margin-bottom: 4px;
+    }
+    
+    .sidebar-tab.active i {
+        color: #3b82f6;
+    }
+    
+    .sidebar-tab .tab-label {
+        font-size: 12px;
+        font-weight: 500;
+        color: #6b7280;
+        margin-bottom: 4px;
+    }
+    
+    .sidebar-tab.active .tab-label {
+        color: #111827;
+        font-weight: 600;
+    }
+    
+    .sidebar-tab .tab-count {
+        font-size: 11px;
+        font-weight: 600;
+        color: #6b7280;
+        background: #e5e7eb;
+        padding: 2px 6px;
+        border-radius: 10px;
+        min-width: 24px;
+        text-align: center;
+    }
+    
+    .sidebar-tab.active .tab-count {
+        background: #3b82f6;
+        color: #ffffff;
+    }
+    
+    .sidebar-body {
+        flex: 1;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+    }
+    
+    .sidebar-search {
+        display: flex;
+        align-items: center;
+        padding: 12px;
+        background: #ffffff;
+        border-bottom: 1px solid #e5e7eb;
+        gap: 8px;
+    }
+    
+    .sidebar-search .search-icon {
+        color: #9ca3af;
+        font-size: 20px;
+    }
+    
+    .sidebar-search-input {
+        flex: 1;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 8px 12px;
+        font-size: 14px;
+        outline: none;
+        transition: border-color 0.2s ease;
+    }
+    
+    .sidebar-search-input:focus {
+        border-color: #3b82f6;
+    }
+    
+    .sidebar-filter-btn {
+        background: transparent;
+        border: 1px solid #e5e7eb;
+        border-radius: 6px;
+        padding: 8px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+    }
+    
+    .sidebar-filter-btn:hover {
+        background: #f9fafb;
+        border-color: #d1d5db;
+    }
+    
+    .sidebar-filter-btn i {
+        font-size: 20px;
+        color: #6b7280;
+    }
+    
+    .sidebar-list-container {
+        flex: 1;
+        overflow-y: auto;
+        overflow-x: hidden;
+    }
+    
+    .tab-content {
+        display: none;
+        height: 100%;
+    }
+    
+    .tab-content.active {
+        display: block;
+    }
+    
+    .sidebar-list {
+        padding: 8px;
+    }
+    
+    .sidebar-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+    
+    .sidebar-table th,
+    .sidebar-table td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+    
+    .sidebar-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+        color: #374151;
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    
+    .sidebar-table tbody tr:hover {
+        background: #f9fafb;
+    }
+    
+    .sidebar-table tbody tr.expanded {
+        background: #eff6ff;
+    }
+    
+    .sidebar-table .unit-details {
+        display: none;
+    }
+    
+    .sidebar-table .unit-details.show {
+        display: table-row;
+    }
+    
+    .empty-state {
+        padding: 40px 20px;
+        text-align: center;
+        color: #9ca3af;
+    }
+    
+    .empty-state i {
+        font-size: 48px;
+        margin-bottom: 12px;
+        opacity: 0.5;
+    }
+    
+    .empty-state p {
+        font-size: 14px;
+        margin: 0;
+    }
+    
+    @media (max-width: 768px) {
+        .map-sidebar {
+            width: 100%;
+            max-width: 320px;
+        }
+        
+        .map-sidebar.collapsed {
+            width: 50px;
+        }
+        
+        .map-sidebar.collapsed .sidebar-content {
+            width: 50px;
+        }
+        
+        .map-sidebar.collapsed .sidebar-tabs {
+            flex-direction: column;
+            padding: 8px 4px;
+            gap: 4px;
+            overflow-x: hidden;
+            overflow-y: auto;
+        }
+        
+        .map-sidebar.collapsed .sidebar-tab {
+            min-height: 50px;
+            padding: 8px 4px;
+            width: 100%;
+            min-width: auto;
+            max-width: none;
+        }
+        
+        .map-sidebar.collapsed .sidebar-tab .tab-label,
+        .map-sidebar.collapsed .sidebar-tab .tab-count {
+            display: none;
+        }
+        
+        .map-sidebar.collapsed .sidebar-tab i {
+            margin-bottom: 0;
+        }
+        
+        .map-sidebar.collapsed .sidebar-body {
+            display: none;
+        }
+        
+        .map-sidebar.collapsed .sidebar-toggle-btn {
+            left: -40px;
+        }
+    }
 </style>
 @endsection
 
@@ -2506,6 +2843,68 @@
                         <div class="gm-sub">Probability Insiden</div>
                         </label>
                        
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Sidebar Panel -->
+        <div id="mapSidebar" class="map-sidebar collapsed">
+            <!-- Toggle Button -->
+            <button id="sidebarToggle" class="sidebar-toggle-btn" type="button">
+                <i class="material-icons-outlined" id="sidebarToggleIcon">chevron_left</i>
+            </button>
+            
+            <!-- Sidebar Content -->
+            <div class="sidebar-content">
+                <!-- Tab Navigation -->
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="autoalert" title="Auto Alert">
+                        <i class="material-icons-outlined">notifications_active</i>
+                        <span class="tab-label">Auto Alert</span>
+                        <span class="tab-count" id="autoalertTabCount">0</span>
+                    </button>
+                </div>
+                
+                <!-- Tab Content -->
+                <div class="sidebar-body">
+                    <!-- Search Bar -->
+                    <div class="sidebar-search">
+                        <i class="material-icons-outlined search-icon">search</i>
+                        <input type="text" id="sidebarSearchInput" class="sidebar-search-input" placeholder="Cari...">
+                        <button type="button" class="sidebar-filter-btn" id="sidebarFilterBtn" title="Filter">
+                            <i class="material-icons-outlined">tune</i>
+                        </button>
+                    </div>
+                    
+                    <!-- List Container -->
+                    <div class="sidebar-list-container">
+                        <!-- Auto Alert Tab Content -->
+                        <div class="tab-content active" id="tabContentAutoalert">
+                            <div class="sidebar-list" id="autoalertList">
+                                <table class="sidebar-table">
+                                    <thead>
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Site</th>
+                                            <th>Tanggal</th>
+                                            <th>Offline</th>
+                                            <th>Online</th>
+                                            <th>Message ID</th>
+                                            <th>Created At</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="cctvAlertsTableBody">
+                                        <tr>
+                                            <td colspan="7" class="empty-state">
+                                                <i class="material-icons-outlined">hourglass_empty</i>
+                                                <p>Memuat data...</p>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -22533,6 +22932,197 @@ source: new ol.source.Vector(),
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <!-- TourGuide JS Script -->
 <script src="https://unpkg.com/@sjmc11/tourguidejs/dist/tour.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+<script>
+    // Sidebar functionality
+    let sidebarCollapsed = true; // Default collapsed
+    
+    // Sidebar event listeners
+    document.addEventListener('DOMContentLoaded', function() {
+        // Toggle sidebar collapse
+        const sidebarToggle = document.getElementById('sidebarToggle');
+        const mapSidebar = document.getElementById('mapSidebar');
+        
+        if (sidebarToggle && mapSidebar) {
+            sidebarToggle.addEventListener('click', function() {
+                sidebarCollapsed = !sidebarCollapsed;
+                if (sidebarCollapsed) {
+                    mapSidebar.classList.add('collapsed');
+                } else {
+                    mapSidebar.classList.remove('collapsed');
+                }
+            });
+        }
+        
+        // Tab switching
+        document.querySelectorAll('.sidebar-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                const tabName = this.dataset.tab;
+                
+                // Update active tab
+                document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                
+                // Update active tab content
+                document.querySelectorAll('.tab-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                const tabContent = document.getElementById('tabContent' + tabName.charAt(0).toUpperCase() + tabName.slice(1));
+                if (tabContent) {
+                    tabContent.classList.add('active');
+                }
+                
+                // Load data if needed
+                if (tabName === 'autoalert') {
+                    loadAutoAlertData();
+                }
+            });
+        });
+        
+        // Load auto alert data on page load
+        loadAutoAlertData();
+    });
+    
+    // Function to load auto alert data
+    function loadAutoAlertData() {
+        const tableBody = document.getElementById('cctvAlertsTableBody');
+        if (!tableBody) return;
+        
+        // Show loading state
+        tableBody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="material-icons-outlined">hourglass_empty</i><p>Memuat data...</p></td></tr>';
+        
+        fetch('{{ route("full-maps.api.auto-alert-sidebar-data") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success) {
+                    throw new Error(data.error || 'Gagal memuat data');
+                }
+                
+                const alerts = data.data || [];
+                
+                // Update tab count
+                const tabCount = document.getElementById('autoalertTabCount');
+                if (tabCount) {
+                    tabCount.textContent = alerts.length;
+                }
+                
+                if (alerts.length === 0) {
+                    tableBody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="material-icons-outlined">inbox</i><p>Tidak ada data alert</p></td></tr>';
+                    return;
+                }
+                
+                // Build table rows
+                let tableRows = '';
+                alerts.forEach(function(alert) {
+                    // Format tanggal
+                    let tanggalFormatted = 'N/A';
+                    if (alert.tanggal) {
+                        try {
+                            const date = new Date(alert.tanggal);
+                            tanggalFormatted = date.toLocaleString('id-ID', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        } catch (e) {
+                            tanggalFormatted = alert.tanggal;
+                        }
+                    }
+                    
+                    // Format created_at
+                    let createdFormatted = 'N/A';
+                    if (alert.created_at) {
+                        try {
+                            const date = new Date(alert.created_at);
+                            createdFormatted = date.toLocaleString('id-ID', {
+                                day: '2-digit',
+                                month: 'short',
+                                year: 'numeric',
+                                hour: '2-digit',
+                                minute: '2-digit'
+                            });
+                        } catch (e) {
+                            createdFormatted = alert.created_at;
+                        }
+                    }
+                    
+                    const unitsCount = alert.cctv_units ? alert.cctv_units.length : 0;
+                    
+                    tableRows += `
+                        <tr class="alert-row" data-alert-id="${alert.id}" style="cursor: pointer;">
+                            <td>${alert.id || 'N/A'}</td>
+                            <td>${alert.site || 'N/A'}</td>
+                            <td>${tanggalFormatted}</td>
+                            <td><span style="color: #dc2626; font-weight: 600;">${alert.jumlah_offline || 0}</span></td>
+                            <td><span style="color: #10b981; font-weight: 600;">${alert.jumlah_online || 0}</span></td>
+                            <td>${alert.message_id || 'N/A'}</td>
+                            <td>${createdFormatted}</td>
+                        </tr>
+                    `;
+                    
+                    // Add units rows (initially hidden)
+                    if (alert.cctv_units && alert.cctv_units.length > 0) {
+                        alert.cctv_units.forEach(function(unit) {
+                            let lastConnectFormatted = 'N/A';
+                            if (unit.last_connect) {
+                                try {
+                                    const date = new Date(unit.last_connect);
+                                    lastConnectFormatted = date.toLocaleString('id-ID', {
+                                        day: '2-digit',
+                                        month: 'short',
+                                        year: 'numeric',
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    });
+                                } catch (e) {
+                                    lastConnectFormatted = unit.last_connect;
+                                }
+                            }
+                            
+                            const statusClass = unit.status === 'offline' ? 'text-danger' : 'text-success';
+                            
+                            tableRows += `
+                                <tr class="unit-details" data-alert-id="${alert.id}" style="display: none; background: #f9fafb;">
+                                    <td style="padding-left: 24px;">${unit.id || 'N/A'}</td>
+                                    <td colspan="2">${unit.unit_code || 'N/A'}</td>
+                                    <td colspan="2">${unit.location || 'N/A'}</td>
+                                    <td>${lastConnectFormatted}</td>
+                                    <td><span class="${statusClass}" style="font-weight: 600;">${unit.status || 'N/A'}</span></td>
+                                </tr>
+                            `;
+                        });
+                    }
+                });
+                
+                tableBody.innerHTML = tableRows;
+                
+                // Add click handler to toggle unit details
+                document.querySelectorAll('.alert-row').forEach(row => {
+                    row.addEventListener('click', function() {
+                        const alertId = this.dataset.alertId;
+                        const unitRows = document.querySelectorAll(`.unit-details[data-alert-id="${alertId}"]`);
+                        
+                        unitRows.forEach(unitRow => {
+                            if (unitRow.style.display === 'none') {
+                                unitRow.style.display = 'table-row';
+                            } else {
+                                unitRow.style.display = 'none';
+                            }
+                        });
+                        
+                        // Toggle expanded class
+                        this.classList.toggle('expanded');
+                    });
+                });
+            })
+            .catch(error => {
+                console.error('Error loading auto alert data:', error);
+                tableBody.innerHTML = '<tr><td colspan="7" class="empty-state"><i class="material-icons-outlined">error_outline</i><p>Error: ' + error.message + '</p></td></tr>';
+            });
+    }
+</script>
 
 @endsection
 

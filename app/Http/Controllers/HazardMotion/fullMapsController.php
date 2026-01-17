@@ -3324,6 +3324,82 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
         }
     }
 
+    /**
+     * Get auto alert sidebar data (grouped by alert)
+     */
+    public function getAutoAlertSidebarData(Request $request)
+    {
+        try {
+            // Get CCTV alerts data grouped by alert_id
+            $alerts = DB::table('cctv_alerts')
+                ->select(
+                    'cctv_alerts.id',
+                    'cctv_alerts.site',
+                    'cctv_alerts.tanggal',
+                    'cctv_alerts.jumlah_offline',
+                    'cctv_alerts.jumlah_online',
+                    'cctv_alerts.message_id',
+                    'cctv_alerts.created_at'
+                )
+                ->orderBy('cctv_alerts.tanggal', 'desc')
+                ->orderBy('cctv_alerts.site')
+                ->get();
+            
+            // Get CCTV units for each alert
+            $groupedData = [];
+            foreach ($alerts as $alert) {
+                // Get CCTV units for this alert
+                $cctvUnits = DB::table('cctv_units')
+                    ->where('alert_id', $alert->id)
+                    ->select(
+                        'cctv_units.id',
+                        'cctv_units.alert_id',
+                        'cctv_units.unit_code',
+                        'cctv_units.location',
+                        'cctv_units.last_connect',
+                        'cctv_units.status',
+                        'cctv_units.created_at'
+                    )
+                    ->orderBy('cctv_units.unit_code')
+                    ->get();
+                
+                $groupedData[] = [
+                    'id' => $alert->id,
+                    'site' => $alert->site,
+                    'tanggal' => $alert->tanggal,
+                    'jumlah_offline' => $alert->jumlah_offline,
+                    'jumlah_online' => $alert->jumlah_online,
+                    'message_id' => $alert->message_id,
+                    'created_at' => $alert->created_at,
+                    'cctv_units' => $cctvUnits->map(function($unit) {
+                        return [
+                            'id' => $unit->id,
+                            'alert_id' => $unit->alert_id,
+                            'unit_code' => $unit->unit_code,
+                            'location' => $unit->location,
+                            'last_connect' => $unit->last_connect,
+                            'status' => $unit->status,
+                            'created_at' => $unit->created_at,
+                        ];
+                    })->toArray()
+                ];
+            }
+            
+            return response()->json([
+                'success' => true,
+                'data' => $groupedData,
+                'count' => count($groupedData)
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error fetching auto alert sidebar data via API: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'data' => []
+            ], 500);
+        }
+    }
+
 }
 
 
