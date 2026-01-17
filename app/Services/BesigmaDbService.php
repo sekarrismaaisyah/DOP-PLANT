@@ -3,6 +3,7 @@
 namespace App\Services;
 
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 use Exception;
 
 class BesigmaDbService
@@ -461,124 +462,177 @@ class BesigmaDbService
     }
 
     /**
-     * Get combined unit data - hanya dari unit_gps_latests hari ini
-     * Hanya menampilkan unit yang ada di unit_gps_latests dengan updated_at hari ini
+     * Get combined unit data - dari MySQL tabel unit_gps_latests
+     * Mengambil 100 unit terbaru
      */
     public function getCombinedUnitData()
     {
-        // Check if ClickHouse is connected first
-        if (!$this->isConnected()) {
-            Log::info('ClickHouse is not connected. Unit vehicle tracking is disabled. Please check ClickHouse configuration.');
-            return [];
-        }
-        
-        // Hanya ambil data dari unit_gps_latests hari ini (tidak perlu ambil semua unit dari units table)
-        // Get latest GPS data from unit_gps_latests hari ini saja
-        $gpsLogs = $this->getLatestUnitGpsLogs();
-        
-        // Logging detail untuk debugging
-        Log::info('GPS logs fetched from latests (today only)', [
-            'count' => count($gpsLogs),
-            'sample_data' => !empty($gpsLogs) ? [
-                'id' => $gpsLogs[0]['id'] ?? null,
-                'vehicle_number' => $gpsLogs[0]['vehicle_number'] ?? null,
-                'latitude' => $gpsLogs[0]['latitude'] ?? null,
-                'longitude' => $gpsLogs[0]['longitude'] ?? null,
-                'updated_at' => $gpsLogs[0]['updated_at'] ?? null,
-                'is_unit' => $gpsLogs[0]['is_unit'] ?? null,
-            ] : 'No data'
-        ]);
-        
-        // Jika tidak ada data GPS hari ini, return empty
-        if (empty($gpsLogs)) {
-            Log::warning('No GPS logs found for today in unit_gps_latests');
-            return [];
-        }
-        
-        // Get users data for integration - only fetch users that exist in GPS logs to avoid timeout
-        $userIds = [];
-        foreach ($gpsLogs as $gpsLog) {
-            if (!empty($gpsLog['user_id'])) {
-                $userIds[] = $gpsLog['user_id'];
-            }
-        }
-        $users = !empty($userIds) ? $this->getUsersByIds($userIds) : [];
-        
-        // Create a map of users by id
-        $usersMap = [];
-        foreach ($users as $user) {
-            if (!empty($user['id'])) {
-                $usersMap[$user['id']] = $user;
-            }
-        }
-        
-        // Langsung gunakan data dari GPS latests sebagai hasil akhir
-        // Tidak perlu merge dengan units table karena data sudah lengkap di latests
-        $combined = [];
-        foreach ($gpsLogs as $gpsLog) {
-            // Get user data if user_id is available
-            $userData = null;
-            if (!empty($gpsLog['user_id']) && isset($usersMap[$gpsLog['user_id']])) {
-                $userData = $usersMap[$gpsLog['user_id']];
+        try {
+            // Ambil data dari MySQL tabel unit_gps_latests
+            // Filter: is_unit = true, latitude dan longitude tidak null, ambil 100 terbaru
+            $gpsLogs = DB::table('unit_gps_latests')
+                ->where('is_unit', true)
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->where('latitude', '!=', '')
+                ->where('longitude', '!=', '')
+                ->whereRaw('CAST(latitude AS DECIMAL(10,8)) IS NOT NULL')
+                ->whereRaw('CAST(longitude AS DECIMAL(10,8)) IS NOT NULL')
+                ->whereRaw('CAST(latitude AS DECIMAL(10,8)) != 0')
+                ->whereRaw('CAST(longitude AS DECIMAL(10,8)) != 0')
+                ->orderBy('updated_at', 'desc')
+                ->limit(100)
+                ->get()
+                ->map(function ($item) {
+                    return [
+                        'id' => $item->id ?? null,
+                        'unit_id' => $item->unit_id ?? null,
+                        'integration_id' => $item->integration_id ?? null,
+                        'latitude' => $item->latitude ?? null,
+                        'longitude' => $item->longitude ?? null,
+                        'course' => $item->course ?? 0,
+                        'speed' => $item->speed ?? null,
+                        'heading' => $item->heading ?? null,
+                        'battery' => $item->battery ?? 0,
+                        'vehicle_type' => $item->vehicle_type ?? 'Unknown',
+                        'vehicle_number' => $item->vehicle_number ?? 'N/A',
+                        'vehicle_name' => $item->vehicle_name ?? 'N/A',
+                        'vendor_name' => $item->vendor_name ?? 'N/A',
+                        'vendor_type' => $item->vendor_type ?? null,
+                        'user_id' => $item->user_id ?? null,
+                        'is_unit' => $item->is_unit ?? true,
+                        'timezone' => $item->timezone ?? null,
+                        'created_at' => $item->created_at ?? null,
+                        'updated_at' => $item->updated_at ?? null,
+                    ];
+                })
+                ->toArray();
+            
+            // Logging detail untuk debugging
+            Log::info('GPS logs fetched from MySQL unit_gps_latests', [
+                'count' => count($gpsLogs),
+                'sample_data' => !empty($gpsLogs) ? [
+                    'id' => $gpsLogs[0]['id'] ?? null,
+                    'vehicle_number' => $gpsLogs[0]['vehicle_number'] ?? null,
+                    'latitude' => $gpsLogs[0]['latitude'] ?? null,
+                    'longitude' => $gpsLogs[0]['longitude'] ?? null,
+                    'updated_at' => $gpsLogs[0]['updated_at'] ?? null,
+                    'is_unit' => $gpsLogs[0]['is_unit'] ?? null,
+                ] : 'No data'
+            ]);
+            
+            // Jika tidak ada data GPS, return empty
+            if (empty($gpsLogs)) {
+                Log::warning('No GPS logs found in MySQL unit_gps_latests');
+                return [];
             }
             
-            // Build combined data langsung dari GPS latests
-            $combined[] = [
-                'id' => $gpsLog['id'] ?? null,
-                'unit_id' => $gpsLog['unit_id'] ?? null,
-                'integration_id' => $gpsLog['integration_id'] ?? null,
-                'latitude' => $gpsLog['latitude'] ?? 0,
-                'longitude' => $gpsLog['longitude'] ?? 0,
-                'course' => $gpsLog['course'] ?? 0,
-                'speed' => $gpsLog['speed'] ?? null,
-                'heading' => $gpsLog['heading'] ?? null,
-                'battery' => $gpsLog['battery'] ?? 0,
-                'vehicle_type' => $gpsLog['vehicle_type'] ?? 'Unknown',
-                'vehicle_number' => $gpsLog['vehicle_number'] ?? 'N/A',
-                'vehicle_name' => $gpsLog['vehicle_name'] ?? 'N/A',
-                'vendor_name' => $gpsLog['vendor_name'] ?? 'N/A',
-                'vendor_type' => $gpsLog['vendor_type'] ?? null,
-                'timezone' => $gpsLog['timezone'] ?? null,
-                'updated_at' => $gpsLog['updated_at'] ?? null,
-                'created_at' => $gpsLog['created_at'] ?? null,
-                // User data from users table
-                'user_id' => $gpsLog['user_id'] ?? null,
-                'user' => $userData ? [
-                    'id' => $userData['id'],
-                    'npk' => $userData['npk'],
-                    'fullname' => $userData['fullname'],
-                    'sid_code' => $userData['sid_code'],
-                    'email' => $userData['email'],
-                    'phone' => $userData['phone'],
-                    'employee_id' => $userData['employee_id'],
-                    'functional_position' => $userData['functional_position'],
-                    'structural_position' => $userData['structural_position'],
-                    'department_name' => $userData['department_name'],
-                    'division_name' => $userData['division_name'],
-                    'site_assignment' => $userData['site_assignment'],
-                    'dedicated_site' => $userData['dedicated_site'],
-                ] : null,
-            ];
-        }
-
-        // Log summary for debugging
-        Log::info('Combined unit data from latests (today only)', [
-            'total_units' => count($combined),
-            'units_with_users' => count(array_filter($combined, function($unit) {
-                return !empty($unit['user']);
-            })),
-            'sample_units' => !empty($combined) ? array_slice(array_map(function($unit) {
-                return [
-                    'id' => $unit['id'] ?? null,
-                    'vehicle_number' => $unit['vehicle_number'] ?? null,
-                    'latitude' => $unit['latitude'] ?? null,
-                    'longitude' => $unit['longitude'] ?? null,
-                    'updated_at' => $unit['updated_at'] ?? null,
+            // Get users data for integration - only fetch users that exist in GPS logs to avoid timeout
+            $userIds = [];
+            foreach ($gpsLogs as $gpsLog) {
+                if (!empty($gpsLog['user_id'])) {
+                    $userIds[] = $gpsLog['user_id'];
+                }
+            }
+            $users = !empty($userIds) ? $this->getUsersByIds($userIds) : [];
+            
+            // Create a map of users by id
+            $usersMap = [];
+            foreach ($users as $user) {
+                if (!empty($user['id'])) {
+                    $usersMap[$user['id']] = $user;
+                }
+            }
+            
+            // Langsung gunakan data dari GPS latests sebagai hasil akhir
+            $combined = [];
+            foreach ($gpsLogs as $gpsLog) {
+                // Get user data if user_id is available
+                $userData = null;
+                if (!empty($gpsLog['user_id']) && isset($usersMap[$gpsLog['user_id']])) {
+                    $userData = $usersMap[$gpsLog['user_id']];
+                }
+                
+                // Convert latitude and longitude to float
+                $latitude = (!empty($gpsLog['latitude']) && is_numeric($gpsLog['latitude'])) 
+                    ? (float) $gpsLog['latitude'] 
+                    : 0;
+                $longitude = (!empty($gpsLog['longitude']) && is_numeric($gpsLog['longitude'])) 
+                    ? (float) $gpsLog['longitude'] 
+                    : 0;
+                
+                // Build combined data langsung dari GPS latests
+                $combined[] = [
+                    'id' => $gpsLog['id'] ?? null,
+                    'unit_id' => $gpsLog['unit_id'] ?? null,
+                    'integration_id' => $gpsLog['integration_id'] ?? null,
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'course' => !empty($gpsLog['course']) && is_numeric($gpsLog['course']) 
+                        ? (float) $gpsLog['course'] 
+                        : 0,
+                    'speed' => !empty($gpsLog['speed']) && is_numeric($gpsLog['speed']) 
+                        ? (float) $gpsLog['speed'] 
+                        : null,
+                    'heading' => !empty($gpsLog['heading']) && is_numeric($gpsLog['heading']) 
+                        ? (float) $gpsLog['heading'] 
+                        : null,
+                    'battery' => !empty($gpsLog['battery']) && is_numeric($gpsLog['battery']) 
+                        ? (float) $gpsLog['battery'] 
+                        : 0,
+                    'vehicle_type' => $gpsLog['vehicle_type'] ?? 'Unknown',
+                    'vehicle_number' => $gpsLog['vehicle_number'] ?? 'N/A',
+                    'vehicle_name' => $gpsLog['vehicle_name'] ?? 'N/A',
+                    'vendor_name' => $gpsLog['vendor_name'] ?? 'N/A',
+                    'vendor_type' => $gpsLog['vendor_type'] ?? null,
+                    'timezone' => $gpsLog['timezone'] ?? null,
+                    'updated_at' => $gpsLog['updated_at'] ?? null,
+                    'created_at' => $gpsLog['created_at'] ?? null,
+                    // User data from users table
+                    'user_id' => $gpsLog['user_id'] ?? null,
+                    'user' => $userData ? [
+                        'id' => $userData['id'],
+                        'npk' => $userData['npk'],
+                        'fullname' => $userData['fullname'],
+                        'sid_code' => $userData['sid_code'],
+                        'email' => $userData['email'],
+                        'phone' => $userData['phone'],
+                        'employee_id' => $userData['employee_id'],
+                        'functional_position' => $userData['functional_position'],
+                        'structural_position' => $userData['structural_position'],
+                        'department_name' => $userData['department_name'],
+                        'division_name' => $userData['division_name'],
+                        'site_assignment' => $userData['site_assignment'],
+                        'dedicated_site' => $userData['dedicated_site'],
+                    ] : null,
                 ];
-            }, $combined), 0, 3) : []
-        ]);
+            }
 
-        return $combined;
+            // Log summary for debugging
+            Log::info('Combined unit data from MySQL unit_gps_latests', [
+                'total_units' => count($combined),
+                'units_with_users' => count(array_filter($combined, function($unit) {
+                    return !empty($unit['user']);
+                })),
+                'sample_units' => !empty($combined) ? array_slice(array_map(function($unit) {
+                    return [
+                        'id' => $unit['id'] ?? null,
+                        'vehicle_number' => $unit['vehicle_number'] ?? null,
+                        'latitude' => $unit['latitude'] ?? null,
+                        'longitude' => $unit['longitude'] ?? null,
+                        'updated_at' => $unit['updated_at'] ?? null,
+                    ];
+                }, $combined), 0, 3) : []
+            ]);
+
+            return $combined;
+            
+        } catch (Exception $e) {
+            Log::error('Error fetching unit data from MySQL: ' . $e->getMessage(), [
+                'exception' => $e->getTraceAsString()
+            ]);
+            return [];
+        }
     }
 
     /**
