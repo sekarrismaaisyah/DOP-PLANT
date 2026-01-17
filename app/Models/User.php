@@ -58,7 +58,11 @@ class User extends Authenticatable
     public function hasRole($role): bool
     {
         if (is_string($role)) {
-            return $this->roles()->where('slug', $role)->exists();
+            // Check both slug and name for flexibility
+            return $this->roles()->where(function($query) use ($role) {
+                $query->where('slug', $role)
+                      ->orWhere('name', $role);
+            })->exists();
         }
         
         return $this->roles()->where('id', $role->id)->exists();

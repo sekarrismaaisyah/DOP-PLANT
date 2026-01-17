@@ -37,8 +37,8 @@ class MapBaseController extends Controller
             return null;
         }
 
-        // Check if user has control_room_pama role
-        if ($user->hasRole('control_room_pama')) {
+        // Check if user has control_room_pama role (check both slug and name)
+        if ($user->hasRole('control_room_pama') || $user->hasRole('control-room-pama')) {
             return 'PT Pamapersada Nusantara';
         }
 
@@ -7341,10 +7341,18 @@ class MapBaseController extends Controller
     public function getControlRoomOverview(Request $request)
     {
         try {
+            // Get allowed company based on role
+            $allowedCompany = $this->getAllowedCompanyByRole();
+            
             // Ambil semua data CCTV dari cctv_data_bmo2 dan group by control_room
             $query = CctvData::whereNotNull('control_room')
                 ->where('control_room', '!=', '')
                 ->whereRaw("TRIM(COALESCE(control_room, '')) != ''");
+            
+            // Filter by company if user has specific role
+            if ($allowedCompany) {
+                $query->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+            }
             
             // Get all CCTV data
             $allCctvData = $query->get();
