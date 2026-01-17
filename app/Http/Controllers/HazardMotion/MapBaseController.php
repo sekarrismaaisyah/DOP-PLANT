@@ -767,24 +767,39 @@ class MapBaseController extends Controller
     public function getPjaData(Request $request)
     {
         try {
-            // Query untuk mengambil data PJA dari ClickHouse baru (IP 10.10.10.38, database hse_automation)
+            // Query untuk mengambil data PJA dari MySQL tabel wan_vw_pja_karyawan
             // Group by nama_pja dan include semua karyawan
-            $sql = "
-                SELECT 
-                    toString(kode_sid) as kode_sid,
-                    toString(nama_pja) as nama_pja,
-                    toString(tipe_pja) as tipe_pja,
-                    toString(peruashaan) as peruashaan,
-                    toString(nama_karyawan) as nama_karyawan,
-                    toString(status_pja_karyawan) as status_pja_karyawan
-                FROM hse_automation.wan_vw_pja_karyawan
-                WHERE toString(status_pja_karyawan) = '1'
-                ORDER BY nama_pja, nama_karyawan
-                LIMIT 10000
-            ";
-            
-            // Use custom ClickHouse connection (IP 10.10.10.38, database hse_automation)
-            $results = $this->queryClickHouseCustom($sql, 'hse_automation');
+            try {
+                $results = DB::table('wan_vw_pja_karyawan')
+                    ->select(
+                        'kode_sid',
+                        'nama_pja',
+                        'tipe_pja',
+                        'peruashaan',
+                        'nama_karyawan',
+                        'status_pja_karyawan'
+                    )
+                    ->where('status_pja_karyawan', '1')
+                    ->orderBy('nama_pja')
+                    ->orderBy('nama_karyawan')
+                    ->limit(10000)
+                    ->get()
+                    ->map(function($row) {
+                        // Convert to array and ensure all values are strings (for compatibility)
+                        return [
+                            'kode_sid' => (string)($row->kode_sid ?? ''),
+                            'nama_pja' => (string)($row->nama_pja ?? ''),
+                            'tipe_pja' => (string)($row->tipe_pja ?? ''),
+                            'peruashaan' => (string)($row->peruashaan ?? ''),
+                            'nama_karyawan' => (string)($row->nama_karyawan ?? ''),
+                            'status_pja_karyawan' => (string)($row->status_pja_karyawan ?? ''),
+                        ];
+                    })
+                    ->toArray();
+            } catch (Exception $e) {
+                Log::error('Error querying wan_vw_pja_karyawan from MySQL: ' . $e->getMessage());
+                $results = [];
+            }
             
             // Query checkinout_rfid untuk menentukan status onsite dan Pass/Not Pass
             // Menggunakan ClickHouse baru (IP 10.10.10.38, database hse_automation)
@@ -796,6 +811,7 @@ class MapBaseController extends Controller
                 $yesterday = $now->copy()->subDay()->format('Y-m-d');
                 
                 // Query untuk onsite status (hanya yang PASSED)
+                // Menggunakan ClickHouse baru dengan database hse_automation
                 $sqlCheckin = "
                     SELECT 
                         toString(nama_karyawan) as nama_karyawan,
