@@ -993,23 +993,69 @@ class MapBaseController extends Controller
     }
 
     /**
+     * Query ClickHouse dengan konfigurasi khusus (IP 10.10.10.38, database hse_automation)
+     * Untuk data Total Onsite hari ini
+     */
+    private function queryClickHouseCustom($sql, $database = 'hse_automation')
+    {
+        try {
+            $host = '10.10.10.38';
+            $port = 8123;
+            $protocol = 'http';
+            $baseUrl = $protocol . '://' . $host . ':' . $port;
+            $username = 'default';
+            $password = 'Zxcdsaqwe321:;';
+            $timeout = 30;
+
+            $url = $baseUrl . '/?database=' . urlencode($database) . '&default_format=JSON';
+            
+            $httpClient = Http::timeout($timeout)
+                ->withBasicAuth($username, $password)
+                ->withBody($sql, 'text/plain');
+            
+            $response = $httpClient->post($url);
+
+            if (!$response->successful()) {
+                Log::error('ClickHouse custom query failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return [];
+            }
+
+            $result = $response->json();
+            
+            // Parse ClickHouse JSON response
+            if (isset($result['data'])) {
+                return $result['data'];
+            } elseif (isset($result[0])) {
+                return $result;
+            } else {
+                // Try to parse as JSON lines format
+                $lines = explode("\n", trim($response->body()));
+                $data = [];
+                foreach ($lines as $line) {
+                    if (!empty(trim($line))) {
+                        $decoded = json_decode($line, true);
+                        if ($decoded !== null) {
+                            $data[] = $decoded;
+                        }
+                    }
+                }
+                return $data;
+            }
+        } catch (Exception $e) {
+            Log::error('Error in queryClickHouseCustom: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
      * Get kesiapan orang data (PJA Karyawan and CCTV Dedicated)
      */
     public function getKesiapanOrangData(Request $request)
     {
         try {
-            $clickhouse = new ClickHouseService();
-            
-            if (!$clickhouse->isConnected()) {
-                Log::warning('ClickHouse is not connected. Returning empty kesiapan orang data.');
-                return response()->json([
-                    'success' => false,
-                    'error' => 'ClickHouse is not connected',
-                    'data' => [],
-                    'statistics' => []
-                ], 500);
-            }
-            
             // Query untuk mengambil data PJA Karyawan dari MySQL tabel wan_vw_pja_karyawan
             try {
                 $resultsKaryawan = DB::table('wan_vw_pja_karyawan')
@@ -1153,6 +1199,7 @@ class MapBaseController extends Controller
             }
             
             // Query checkinout_rfid untuk menentukan status onsite dan status Pass/Not Pass
+            // Menggunakan ClickHouse dengan IP 10.10.10.38, database hse_automation
             $onsiteStatusMap = [];
             $passStatusMap = []; // Map untuk status Pass/Not Pass berdasarkan status_passed
             try {
@@ -1171,7 +1218,7 @@ class MapBaseController extends Controller
                         date,
                         status_checkin_out,
                         toString(status_passed) as status_passed
-                    FROM beats.aaj_vw_checkinout_rfid
+                    FROM hse_automation.aaj_vw_checkinout_rfid
                     WHERE status_passed = 'PASSED'
                       AND (
                           -- Shift 1: hari ini antara 6:00-18:00
@@ -1185,7 +1232,8 @@ class MapBaseController extends Controller
                     ORDER BY nama_karyawan, date DESC
                 ";
                 
-                $checkinResults = $clickhouse->query($sqlCheckin);
+                // Use custom ClickHouse connection (IP 10.10.10.38, database hse_automation)
+                $checkinResults = $this->queryClickHouseCustom($sqlCheckin, 'hse_automation');
                 
                 // Group by nama_karyawan and determine shift (ambil check-in terakhir)
                 foreach ($checkinResults as $checkin) {
@@ -1245,18 +1293,20 @@ class MapBaseController extends Controller
                 
                 // Query untuk mendapatkan status Pass/Not Pass dari semua check-in terbaru
                 // Ambil check-in terbaru per karyawan untuk menentukan Pass/Not Pass (dalam 7 hari terakhir)
+                // Menggunakan ClickHouse dengan IP 10.10.10.38, database hse_automation
                 try {
                     $sqlPassStatus = "
                         SELECT 
                             toString(nama_karyawan) as nama_karyawan,
                             toString(status_passed) as status_passed,
                             date
-                        FROM beats.aaj_vw_checkinout_rfid
+                        FROM hse_automation.aaj_vw_checkinout_rfid
                         WHERE toDate(date) >= toDate(now()) - INTERVAL 7 DAY
                         ORDER BY nama_karyawan, date DESC
                     ";
                     
-                    $passStatusResults = $clickhouse->query($sqlPassStatus);
+                    // Use custom ClickHouse connection (IP 10.10.10.38, database hse_automation)
+                    $passStatusResults = $this->queryClickHouseCustom($sqlPassStatus, 'hse_automation');
                     
                     // Group by nama_karyawan, ambil yang terbaru (query sudah di ORDER BY date DESC)
                     $processedNames = [];
