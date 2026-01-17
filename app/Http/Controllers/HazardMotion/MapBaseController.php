@@ -767,18 +767,7 @@ class MapBaseController extends Controller
     public function getPjaData(Request $request)
     {
         try {
-            $clickhouse = new ClickHouseService();
-            
-            if (!$clickhouse->isConnected()) {
-                Log::warning('ClickHouse is not connected. Returning empty PJA data.');
-                return response()->json([
-                    'success' => false,
-                    'error' => 'ClickHouse is not connected',
-                    'data' => []
-                ], 500);
-            }
-            
-            // Query untuk mengambil data PJA dari tabel nitip.wan_vw_pja_karyawan
+            // Query untuk mengambil data PJA dari ClickHouse baru (IP 10.10.10.38, database hse_automation)
             // Group by nama_pja dan include semua karyawan
             $sql = "
                 SELECT 
@@ -788,15 +777,17 @@ class MapBaseController extends Controller
                     toString(peruashaan) as peruashaan,
                     toString(nama_karyawan) as nama_karyawan,
                     toString(status_pja_karyawan) as status_pja_karyawan
-                FROM nitip.wan_vw_pja_karyawan
+                FROM hse_automation.wan_vw_pja_karyawan
                 WHERE toString(status_pja_karyawan) = '1'
                 ORDER BY nama_pja, nama_karyawan
                 LIMIT 10000
             ";
             
-            $results = $clickhouse->query($sql);
+            // Use custom ClickHouse connection (IP 10.10.10.38, database hse_automation)
+            $results = $this->queryClickHouseCustom($sql, 'hse_automation');
             
             // Query checkinout_rfid untuk menentukan status onsite dan Pass/Not Pass
+            // Menggunakan ClickHouse baru (IP 10.10.10.38, database hse_automation)
             $onsiteStatusMap = [];
             $passStatusMap = [];
             try {
@@ -811,7 +802,7 @@ class MapBaseController extends Controller
                         date,
                         status_checkin_out,
                         toString(status_passed) as status_passed
-                    FROM beats.aaj_vw_checkinout_rfid
+                    FROM hse_automation.aaj_vw_checkinout_rfid
                     WHERE status_passed = 'PASSED'
                       AND (
                           (toDate(date) = '{$today}' AND toHour(date) >= 6 AND toHour(date) < 18)
@@ -823,7 +814,8 @@ class MapBaseController extends Controller
                     ORDER BY nama_karyawan, date DESC
                 ";
                 
-                $checkinResults = $clickhouse->query($sqlCheckin);
+                // Use custom ClickHouse connection (IP 10.10.10.38, database hse_automation)
+                $checkinResults = $this->queryClickHouseCustom($sqlCheckin, 'hse_automation');
                 
                 foreach ($checkinResults as $checkin) {
                     $namaKaryawan = trim($checkin['nama_karyawan'] ?? '');
@@ -872,18 +864,20 @@ class MapBaseController extends Controller
                 }
                 
                 // Query untuk Pass/Not Pass status dari semua check-in terbaru (7 hari terakhir)
+                // Menggunakan ClickHouse baru (IP 10.10.10.38, database hse_automation)
                 try {
                     $sqlPassStatus = "
                         SELECT 
                             toString(nama_karyawan) as nama_karyawan,
                             toString(status_passed) as status_passed,
                             date
-                        FROM beats.aaj_vw_checkinout_rfid
+                        FROM hse_automation.aaj_vw_checkinout_rfid
                         WHERE toDate(date) >= toDate(now()) - INTERVAL 7 DAY
                         ORDER BY nama_karyawan, date DESC
                     ";
                     
-                    $passStatusResults = $clickhouse->query($sqlPassStatus);
+                    // Use custom ClickHouse connection (IP 10.10.10.38, database hse_automation)
+                    $passStatusResults = $this->queryClickHouseCustom($sqlPassStatus, 'hse_automation');
                     
                     $processedNames = [];
                     foreach ($passStatusResults as $passStatus) {
