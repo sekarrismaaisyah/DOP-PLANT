@@ -14,23 +14,7 @@
           <img src="{{ URL::asset('build/images/logo.jpg') }}" class="mb-4" width="145" alt="">
           <h4 class="fw-bold">Get Started Now</h4>
           <p class="mb-0">Enter your credentials to login your account</p>
-          <div class="row gy-2 gx-0 my-4">
-            <div class="col-12 col-lg-12">
-              <button class="btn btn-filter py-2 px-4 font-text1 fw-bold d-flex align-items-center justify-content-center w-100">
-                <span class="auth-social-login"><img src="{{ URL::asset('build/images/apps/05.png') }}" width="20" class="me-2" alt="">Google</span>
-              </button>
-            </div>
-            <div class="col-12 col-lg-12">
-              <button class="btn btn-filter py-2 px-4 font-text1 fw-bold d-flex align-items-center justify-content-center w-100">
-                <span class="auth-social-login"><img src="{{ URL::asset('build/images/apps/17.png') }}" width="20" class="me-2" alt="">Facebook</span>
-              </button>
-            </div>
-            <div class="col-12 col-lg-12">
-              <button class="btn btn-filter py-2 px-4 font-text1 fw-bold d-flex align-items-center justify-content-center w-100">
-                <span class="auth-social-login"><img src="{{ URL::asset('build/images/apps/18.png') }}" width="20" class="me-2" alt="">LinkedIn</span>
-              </button>
-            </div>
-          </div>
+          
 
           <div class="separator">
             <div class="line"></div>
