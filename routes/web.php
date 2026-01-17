@@ -29,6 +29,7 @@ use App\Http\Controllers\HazardMotion\CctvP2hController;
 use App\Http\Controllers\ScoreCard\ScoreCardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DailyOperationPlanController;
+use App\Http\Controllers\RolePermissionController;
 
 /*
 |--------------------------------------------------------------------------
@@ -378,6 +379,30 @@ Route::middleware(['auth'])->group(function () {
     // Route modul VALIDASI TBC & Score Card
     require __DIR__ . '/validasi_tbc.php';
     require __DIR__ . '/scorecard.php';
+
+    // Role & Permission Management Routes
+    Route::prefix('role-permission')->name('role-permission.')->group(function () {
+        Route::get('/', [RolePermissionController::class, 'index'])->name('index');
+        
+        // Role routes
+        Route::post('/role', [RolePermissionController::class, 'storeRole'])->name('role.store');
+        Route::put('/role/{id}', [RolePermissionController::class, 'updateRole'])->name('role.update');
+        Route::delete('/role/{id}', [RolePermissionController::class, 'deleteRole'])->name('role.delete');
+        Route::get('/role/{id}', [RolePermissionController::class, 'getRole'])->name('role.get');
+        Route::post('/role/{id}/permissions', [RolePermissionController::class, 'assignPermissionsToRole'])->name('role.permissions.assign');
+        
+        // Permission routes
+        Route::get('/permissions', [RolePermissionController::class, 'getPermissions'])->name('permissions.list');
+        Route::post('/permission', [RolePermissionController::class, 'storePermission'])->name('permission.store');
+        Route::put('/permission/{id}', [RolePermissionController::class, 'updatePermission'])->name('permission.update');
+        Route::delete('/permission/{id}', [RolePermissionController::class, 'deletePermission'])->name('permission.delete');
+        Route::get('/permission/{id}', [RolePermissionController::class, 'getPermission'])->name('permission.get');
+        
+        // User routes
+        Route::get('/roles', [RolePermissionController::class, 'getRoles'])->name('roles.list');
+        Route::get('/user/{id}', [RolePermissionController::class, 'getUser'])->name('user.get');
+        Route::post('/user/{id}/roles', [RolePermissionController::class, 'assignRolesToUser'])->name('user.roles.assign');
+    });
 
     // Define a GET route with dynamic placeholders for route parameters
     // HARUS di akhir agar tidak menangkap route spesifik di atas
