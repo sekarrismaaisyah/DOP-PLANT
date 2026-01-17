@@ -2339,7 +2339,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
-     * Get daily operation plans with polygons from ClickHouse
+     * Get daily operation plans with polygons from MySQL
      * Returns GeoJSON FeatureCollection for display on map
      */
     public function getDailyOperationPlansWithPolygons(Request $request)
@@ -2361,19 +2361,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 ]);
             }
 
-            $clickHouseService = new ClickHouseService();
-            
-            if (!$clickHouseService->isConnected()) {
-                Log::error('getDailyOperationPlansWithPolygons - ClickHouse not connected');
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ClickHouse tidak terhubung',
-                    'data' => [
-                        'type' => 'FeatureCollection',
-                        'features' => []
-                    ]
-                ]);
-            }
+            // Menggunakan MySQL untuk mengambil data geometry
 
             $features = [];
             $processedCount = 0;
@@ -2406,53 +2394,46 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     continue;
                 }
 
-                // Escape single quotes to prevent SQL injection
-                $escapedLokasi = str_replace("'", "''", $lokasi ?? '');
-                $escapedDetailLokasi = str_replace("'", "''", $detailLokasi ?? '');
-
-                // Query ClickHouse - hanya match lokasi dan Detil_Lokasi
+                // Query MySQL - hanya match lokasi dan Detil_Lokasi
                 // Gunakan data_geometry2 untuk boundary (sudah dalam format FeatureCollection)
-                $sql = "SELECT 
-                            lokasi,
-                            Detil_Lokasi as detail_lokasi,
-                            data_geometry2,
-                            site
-                        FROM nitip.bep_vw_site_lokasi_detil_lokasi 
-                        WHERE trim(lokasi) = trim('{$escapedLokasi}') 
-                        AND trim(Detil_Lokasi) = trim('{$escapedDetailLokasi}')
-                        LIMIT 1";
-
                 try {
-                    Log::debug("Querying ClickHouse for plan {$plan->id}", [
+                    Log::debug("Querying MySQL for plan {$plan->id}", [
                         'lokasi' => $lokasi,
-                        'detail_lokasi' => $detailLokasi,
-                        'sql' => $sql
+                        'detail_lokasi' => $detailLokasi
                     ]);
                     
-                    $clickHouseResults = $clickHouseService->query($sql);
+                    $mysqlResults = DB::table('bep_vw_site_lokasi_detil_lokasi')
+                        ->whereRaw('TRIM(lokasi) = TRIM(?)', [$lokasi])
+                        ->whereRaw('TRIM(Detil_Lokasi) = TRIM(?)', [$detailLokasi])
+                        ->select('lokasi', DB::raw('Detil_Lokasi as detail_lokasi'), 'data_geometry2', 'site')
+                        ->first();
                     
-                    Log::debug("ClickHouse query result for plan {$plan->id}", [
-                        'result_count' => count($clickHouseResults),
-                        'has_results' => !empty($clickHouseResults),
+                    Log::debug("MySQL query result for plan {$plan->id}", [
+                        'has_results' => !empty($mysqlResults),
                         'lokasi' => $lokasi,
-                        'detail_lokasi' => $detailLokasi,
-                        'escaped_lokasi' => $escapedLokasi,
-                        'escaped_detail_lokasi' => $escapedDetailLokasi
+                        'detail_lokasi' => $detailLokasi
                     ]);
                     
-                    if (!empty($clickHouseResults)) {
+                    if (!empty($mysqlResults)) {
                         $foundCount++;
-                        $polygonData = $clickHouseResults[0];
+                        // Convert object to array for compatibility
+                        // Handle both object and array access
+                        $polygonData = [
+                            'lokasi' => $mysqlResults->lokasi ?? null,
+                            'detail_lokasi' => $mysqlResults->detail_lokasi ?? $mysqlResults->Detil_Lokasi ?? null,
+                            'data_geometry2' => $mysqlResults->data_geometry2 ?? null,
+                            'site' => $mysqlResults->site ?? null,
+                        ];
                         $geoJson = null;
                         
-                        Log::debug("Found ClickHouse data for plan {$plan->id}", [
+                        Log::debug("Found MySQL data for plan {$plan->id}", [
                             'lokasi' => $lokasi,
                             'detail_lokasi' => $detailLokasi,
                             'has_data_geometry2' => !empty($polygonData['data_geometry2']),
                             'data_geometry2_length' => !empty($polygonData['data_geometry2']) ? strlen($polygonData['data_geometry2']) : 0
                         ]);
                         
-                        // Gunakan data_geometry2 dari ClickHouse (sudah dalam format FeatureCollection)
+                        // Gunakan data_geometry2 dari MySQL (sudah dalam format FeatureCollection)
                         if (!empty($polygonData['data_geometry2'])) {
                             $dataGeometry2 = $polygonData['data_geometry2'];
                             $geoJson = null;
@@ -2648,20 +2629,17 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                             ]);
                         }
                     } else {
-                        Log::warning("No ClickHouse results for plan {$plan->id}", [
+                        Log::warning("No MySQL results for plan {$plan->id}", [
                             'lokasi' => $lokasi,
                             'detail_lokasi' => $detailLokasi,
-                            'escaped_lokasi' => $escapedLokasi,
-                            'escaped_detail_lokasi' => $escapedDetailLokasi,
-                            'sql' => $sql,
-                            'message' => 'Kombinasi lokasi dan detail_lokasi tidak ditemukan di ClickHouse'
+                            'message' => 'Kombinasi lokasi dan detail_lokasi tidak ditemukan di MySQL'
                         ]);
                     }
-                } catch (Exception $chError) {
-                    Log::error("ClickHouse query failed for plan {$plan->id}: " . $chError->getMessage(), [
+                } catch (Exception $mysqlError) {
+                    Log::error("MySQL query failed for plan {$plan->id}: " . $mysqlError->getMessage(), [
                         'lokasi' => $lokasi,
                         'detail_lokasi' => $detailLokasi,
-                        'error' => $chError->getMessage()
+                        'error' => $mysqlError->getMessage()
                     ]);
                     continue;
                 }
@@ -2709,7 +2687,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             Log::info('getDailyOperationPlansWithPolygons - Summary', [
                 'total_plans' => $plans->count(),
                 'processed' => $processedCount,
-                'found_in_clickhouse' => $foundCount,
+                'found_in_mysql' => $foundCount,
                 'with_geometry' => $geometryCount,
                 'unique_locations' => count($processedLocations),
                 'features_returned' => count($features),
@@ -2728,7 +2706,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 'summary' => [
                     'total_plans' => $plans->count(),
                     'processed' => $processedCount,
-                    'found_in_clickhouse' => $foundCount,
+                    'found_in_mysql' => $foundCount,
                     'with_geometry' => $geometryCount,
                     'unique_locations' => count($processedLocations),
                     'features_returned' => count($features),

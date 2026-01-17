@@ -4913,11 +4913,11 @@
                         console.log('Hiding Area Kerja BMO2 PAMA layer from JS');
                     }
                     
-                    // Load and show daily operation plans (from ClickHouse)
+                    // Load and show daily operation plans (from MySQL)
                     if (dailyOperationPlansLayer) {
                         dailyOperationPlansLayer.setVisible(true);
                         loadDailyOperationPlans();
-                        console.log('Showing daily operation plans layer (from ClickHouse)');
+                        console.log('Showing daily operation plans layer (from MySQL)');
                         
                         // Update notification panel if it's open
                         setTimeout(() => {
