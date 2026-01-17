@@ -4498,52 +4498,43 @@ class CctvDataController extends Controller
     public function getUsersFromClickHouse(Request $request)
     {
         try {
-            $clickHouseService = new ClickHouseService();
-            
             // Get search query from request (Select2 sends 'q' parameter)
             $searchQuery = $request->get('q', '');
             $page = $request->get('page', 1);
             $perPage = 20; // Limit results for better performance
             
-            // Build WHERE clause with search
-            $whereConditions = [
-                "toString(is_active) = '1'",
-                "length(toString(username)) > 0",
-                "username IS NOT NULL",
-                "length(toString(nama)) > 0",
-                "nama IS NOT NULL"
-            ];
+            // Build query using Laravel Query Builder for MySQL
+            $query = DB::table('vw_user')
+                ->where('is_active', 1)
+                ->whereNotNull('username')
+                ->where('username', '!=', '')
+                ->whereNotNull('nama')
+                ->where('nama', '!=', '');
             
             // Add search condition if query provided
             if (!empty($searchQuery) && trim($searchQuery) !== '') {
-                // Escape single quotes for ClickHouse
-                $searchTerm = str_replace("'", "''", trim($searchQuery));
-                // Use LIKE with proper escaping - ClickHouse supports LIKE
-                $whereConditions[] = "(lower(toString(username)) LIKE lower('%{$searchTerm}%') OR lower(toString(nama)) LIKE lower('%{$searchTerm}%'))";
+                $searchTerm = trim($searchQuery);
+                $query->where(function($q) use ($searchTerm) {
+                    $q->where('username', 'LIKE', '%' . $searchTerm . '%')
+                      ->orWhere('nama', 'LIKE', '%' . $searchTerm . '%');
+                });
             }
             
-            $whereClause = implode(' AND ', $whereConditions);
+            // Get total count for pagination
+            $total = $query->count();
             
-            // Query users from ClickHouse nitip.vw_user with search and pagination
-            $sql = "SELECT 
-                        toString(id) as id,
-                        toString(username) as username,
-                        toString(nama) as nama,
-                        toString(email) as email,
-                        toString(selular) as selular,
-                        toString(nik) as nik
-                    FROM nitip.vw_user 
-                    WHERE {$whereClause}
-                    ORDER BY username ASC
-                    LIMIT {$perPage} OFFSET " . (($page - 1) * $perPage);
-            
-            $users = $clickHouseService->query($sql);
+            // Apply pagination
+            $users = $query->select('id', 'username', 'nama', 'email', 'selular', 'nik')
+                ->orderBy('username', 'ASC')
+                ->skip(($page - 1) * $perPage)
+                ->take($perPage)
+                ->get();
             
             // Format data for Select2 AJAX response
             $formattedUsers = [];
             foreach ($users as $user) {
-                $username = trim($user['username'] ?? '');
-                $nama = trim($user['nama'] ?? '');
+                $username = trim($user->username ?? '');
+                $nama = trim($user->nama ?? '');
                 
                 // Skip if username or nama is empty
                 if (empty($username) || empty($nama)) {
@@ -4551,13 +4542,13 @@ class CctvDataController extends Controller
                 }
                 
                 $formattedUsers[] = [
-                    'id' => $user['id'] ?? '',
+                    'id' => (string)($user->id ?? ''),
                     'text' => $username . ' - ' . $nama, // Format: username - nama
                     'username' => $username,
                     'nama' => $nama,
-                    'email' => $user['email'] ?? '',
-                    'selular' => $user['selular'] ?? '',
-                    'nik' => $user['nik'] ?? ''
+                    'email' => $user->email ?? '',
+                    'selular' => $user->selular ?? '',
+                    'nik' => $user->nik ?? ''
                 ];
             }
 
@@ -4570,7 +4561,7 @@ class CctvDataController extends Controller
             ]);
 
         } catch (Exception $e) {
-            Log::error('Error getting users from ClickHouse: ' . $e->getMessage());
+            Log::error('Error getting users from MySQL: ' . $e->getMessage());
             return response()->json([
                 'results' => [],
                 'pagination' => ['more' => false],
@@ -4677,24 +4668,21 @@ class CctvDataController extends Controller
             $createdBy = $user ? $user->name : 'Unknown';
             $createdByEmail = $user ? $user->email : null;
 
-            // Get PIC details from ClickHouse
-            $clickHouseService = new ClickHouseService();
+            // Get PIC details from MySQL
             $picId = $validated['pic_id'];
             
-            // Escape single quotes to prevent SQL injection
-            $escapedPicId = str_replace("'", "''", $picId);
+            $picInfo = DB::table('vw_user')
+                ->where('id', $picId)
+                ->select('id', 'username', 'nama', 'selular')
+                ->first();
             
-            $sql = "SELECT 
-                        toString(id) as id,
-                        toString(username) as username,
-                        toString(nama) as nama,
-                        toString(selular) as selular
-                    FROM nitip.vw_user 
-                    WHERE toString(id) = '{$escapedPicId}'
-                    LIMIT 1";
-            
-            $picData = $clickHouseService->query($sql);
-            $picInfo = !empty($picData) ? $picData[0] : null;
+            // Convert to array format for compatibility
+            $picInfo = $picInfo ? [
+                'id' => (string)($picInfo->id ?? ''),
+                'username' => $picInfo->username ?? '',
+                'nama' => $picInfo->nama ?? '',
+                'selular' => $picInfo->selular ?? ''
+            ] : null;
 
             // Get CCTV information for all selected CCTV
             $cctvIds = $validated['cctv_ids'];

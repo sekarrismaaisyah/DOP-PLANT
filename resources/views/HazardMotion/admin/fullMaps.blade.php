@@ -2484,26 +2484,26 @@
                         <input class="btn-check" type="checkbox" id="layerSatellite" autocomplete="off" checked>
                         <label class="gm-tile" for="layerSatellite" data-layer="satellite">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1617897711385-df9c86b7dfe3?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
-                            <div class="gm-label">SA CCTV</div>
-                            <div class="gm-sub">SA CCTV</div>
+                            <div class="gm-label">Supervisory</div>
+                            <div class="gm-sub">Pengawasan Berjarak</div>
                         </label>
                         <input class="btn-check" type="checkbox" id="layerTerrain" autocomplete="off">
                         <label class="gm-tile" for="layerTerrain" data-layer="terrain">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1622645636770-11fbf0611463?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
-                            <div class="gm-label"> SA UNIT & ORANG</div>
-                            <div class="gm-sub">SA UNIT</div>
+                            <div class="gm-label">Mobility</div>
+                            <div class="gm-sub">Unit & person</div>
                         </label>
                         <input class="btn-check" type="checkbox" id="layerTraffic" autocomplete="off">
                         <label class="gm-tile" for="layerTraffic" data-layer="traffic">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&w=600&q=60');"></div>
-                            <div class="gm-label">SA AREA KERJA</div>
-                            <div class="gm-sub">SA AREA KEJA</div>
+                            <div class="gm-label">Critical Area</div>
+                            <div class="gm-sub">Cov% Dop</div>
                         </label>
                         <input class="btn-check" type="checkbox" id="layerTransit" autocomplete="off">
                         <label class="gm-tile" for="layerTransit" data-layer="transit">
                             <div class="gm-thumb" style="background-image:url('https://images.unsplash.com/photo-1530677003768-e25c2b121303?fm=jpg&q=60&w=3000&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
-                            <div class="gm-label">SA POTENSI INSIDEN</div>
-                        <div class="gm-sub">HAZARD MAPS</div>
+                            <div class="gm-label">Probability</div>
+                        <div class="gm-sub">Probability Insiden</div>
                         </label>
                        
                     </div>
@@ -2834,23 +2834,28 @@
 <!-- Modal Matriks Prediksi Insiden -->
 <div class="modal fade" id="matriksPrediksiInsidenModal" tabindex="-1" aria-labelledby="matriksPrediksiInsidenModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-scrollable">
-        <div class="modal-content shadow-lg">
-            <div class="modal-header bg-primary text-white">
-                <h5 class="modal-title d-flex align-items-center" id="matriksPrediksiInsidenModalLabel">
-                    <i class="material-icons-outlined me-2" style="font-size: 24px;">assessment</i>
+        <div class="modal-content shadow-lg" style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+            <div class="modal-header" style="background: #ffffff; padding: 1.5rem 2rem; border-bottom: 1px solid #e5e7eb;">
+                <h5 class="modal-title d-flex align-items-center" id="matriksPrediksiInsidenModalLabel" style="color: #1f2937;">
+                    <div class="d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: #f3f4f6; border-radius: 8px;">
+                        <i class="material-icons-outlined" style="font-size: 28px; color: #4b5563;">assessment</i>
+                    </div>
                     <div>
-                        <div style="font-size: 18px; font-weight: 600;">Matriks Prediksi Insiden per Lokasi</div>
-                        <small style="font-size: 12px; opacity: 0.9;">Berdasarkan Jumlah SAP (Hazard) per Lokasi dalam 1 Tahun</small>
+                        <div style="font-size: 20px; font-weight: 600; letter-spacing: -0.5px; color: #111827;">Matriks Prediksi Insiden per Lokasi</div>
+                        <small style="font-size: 13px; color: #6b7280; font-weight: 400;">Berdasarkan Jumlah SAP (Hazard) per Lokasi dalam 1 Tahun</small>
                     </div>
                 </h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
-            <div class="modal-body p-4">
+            <div class="modal-body p-4" style="background: #ffffff;">
                 <div id="matriksPrediksiInsidenLoading" class="text-center py-5">
-                    <div class="spinner-border text-primary" role="status" style="width: 3rem; height: 3rem;">
-                        <span class="visually-hidden">Loading...</span>
+                    <div class="d-flex flex-column align-items-center">
+                        <div class="spinner-border text-secondary mb-3" role="status" style="width: 3.5rem; height: 3.5rem; border-width: 4px;">
+                            <span class="visually-hidden">Loading...</span>
+                        </div>
+                        <p class="mt-2 text-muted fs-5 fw-medium">Memuat data prediksi insiden...</p>
+                        <small class="text-muted">Mohon tunggu sebentar</small>
                     </div>
-                    <p class="mt-3 text-muted fs-5">Memuat data prediksi insiden...</p>
                 </div>
                 <div id="matriksPrediksiInsidenContent" style="display: none;">
                     <!-- Info Cards -->
@@ -2859,69 +2864,95 @@
                     </div>
                     
                     <!-- Probability Info -->
-                    <div class="card mb-3 border-0 shadow-sm">
-                        <div class="card-header bg-light">
-                            <h6 class="mb-0 d-flex align-items-center">
-                                <i class="material-icons-outlined me-2" style="font-size: 20px;">info</i>
+                    <div class="card mb-4" style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                        <div class="card-header" style="background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 1.25rem 1.5rem;">
+                            <h6 class="mb-0 d-flex align-items-center" style="font-weight: 600; color: #1f2937;">
+                                <div class="d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; background: #f3f4f6; border-radius: 6px;">
+                                    <i class="material-icons-outlined" style="font-size: 22px; color: #4b5563;">info</i>
+                                </div>
                                 Probabilitas per 1 Hazard Report
                             </h6>
                         </div>
-                        <div class="card-body p-3">
+                        <div class="card-body p-4" style="background: #ffffff;">
                             <div class="row g-3">
                                 <div class="col-md-6 col-lg-3">
-                                    <div class="border rounded p-2 bg-light">
-                                        <strong class="text-primary">Nearmiss</strong><br>
-                                        <small class="text-muted">0.000232</small><br>
-                                        <small class="text-muted">(1 per 4.309 hazard)</small>
+                                    <div class="border rounded-3 p-3 h-100" style="background: #ffffff; border-color: #e5e7eb !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="material-icons-outlined me-2" style="font-size: 20px; color: #6b7280;">warning</i>
+                                            <strong style="color: #374151; font-size: 14px;">Nearmiss</strong>
+                                        </div>
+                                        <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 4px;">0.000232</div>
+                                        <small style="color: #6b7280; font-size: 11px;">(1 per 4.309 hazard)</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-3">
-                                    <div class="border rounded p-2 bg-light">
-                                        <strong class="text-primary">Property Damage</strong><br>
-                                        <small class="text-muted">0.000187</small><br>
-                                        <small class="text-muted">(1 per 5.348 hazard)</small>
+                                    <div class="border rounded-3 p-3 h-100" style="background: #ffffff; border-color: #e5e7eb !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="material-icons-outlined me-2" style="font-size: 20px; color: #6b7280;">build</i>
+                                            <strong style="color: #374151; font-size: 14px;">Property Damage</strong>
+                                        </div>
+                                        <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 4px;">0.000187</div>
+                                        <small style="color: #6b7280; font-size: 11px;">(1 per 5.348 hazard)</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-3">
-                                    <div class="border rounded p-2 bg-light">
-                                        <strong class="text-primary">First Aid</strong><br>
-                                        <small class="text-muted">0.0000206</small><br>
-                                        <small class="text-muted">(1 per 48.481 hazard)</small>
+                                    <div class="border rounded-3 p-3 h-100" style="background: #ffffff; border-color: #e5e7eb !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="material-icons-outlined me-2" style="font-size: 20px; color: #6b7280;">local_hospital</i>
+                                            <strong style="color: #374151; font-size: 14px;">First Aid</strong>
+                                        </div>
+                                        <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 4px;">0.0000206</div>
+                                        <small style="color: #6b7280; font-size: 11px;">(1 per 48.481 hazard)</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-3">
-                                    <div class="border rounded p-2 bg-light">
-                                        <strong class="text-primary">Fire Case</strong><br>
-                                        <small class="text-muted">0.0000186</small><br>
-                                        <small class="text-muted">(1 per 53.738 hazard)</small>
+                                    <div class="border rounded-3 p-3 h-100" style="background: #ffffff; border-color: #e5e7eb !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="material-icons-outlined me-2" style="font-size: 20px; color: #6b7280;">local_fire_department</i>
+                                            <strong style="color: #374151; font-size: 14px;">Fire Case</strong>
+                                        </div>
+                                        <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 4px;">0.0000186</div>
+                                        <small style="color: #6b7280; font-size: 11px;">(1 per 53.738 hazard)</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-3">
-                                    <div class="border rounded p-2 bg-light">
-                                        <strong class="text-primary">MTI</strong><br>
-                                        <small class="text-muted">0.0000173</small><br>
-                                        <small class="text-muted">(1 per 57.926 hazard)</small>
+                                    <div class="border rounded-3 p-3 h-100" style="background: #ffffff; border-color: #e5e7eb !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="material-icons-outlined me-2" style="font-size: 20px; color: #6b7280;">healing</i>
+                                            <strong style="color: #374151; font-size: 14px;">MTI</strong>
+                                        </div>
+                                        <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 4px;">0.0000173</div>
+                                        <small style="color: #6b7280; font-size: 11px;">(1 per 57.926 hazard)</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-3">
-                                    <div class="border rounded p-2 bg-light">
-                                        <strong class="text-primary">RWI</strong><br>
-                                        <small class="text-muted">0.00000381</small><br>
-                                        <small class="text-muted">(1 per 262.369 hazard)</small>
+                                    <div class="border rounded-3 p-3 h-100" style="background: #ffffff; border-color: #e5e7eb !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="material-icons-outlined me-2" style="font-size: 20px; color: #6b7280;">sick</i>
+                                            <strong style="color: #374151; font-size: 14px;">RWI</strong>
+                                        </div>
+                                        <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 4px;">0.00000381</div>
+                                        <small style="color: #6b7280; font-size: 11px;">(1 per 262.369 hazard)</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-3">
-                                    <div class="border rounded p-2 bg-light">
-                                        <strong class="text-primary">LTI</strong><br>
-                                        <small class="text-muted">0.00000202</small><br>
-                                        <small class="text-muted">(1 per 495.586 hazard)</small>
+                                    <div class="border rounded-3 p-3 h-100" style="background: #ffffff; border-color: #e5e7eb !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="material-icons-outlined me-2" style="font-size: 20px; color: #6b7280;">emergency</i>
+                                            <strong style="color: #374151; font-size: 14px;">LTI</strong>
+                                        </div>
+                                        <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 4px;">0.00000202</div>
+                                        <small style="color: #6b7280; font-size: 11px;">(1 per 495.586 hazard)</small>
                                     </div>
                                 </div>
                                 <div class="col-md-6 col-lg-3">
-                                    <div class="border rounded p-2 bg-light">
-                                        <strong class="text-primary">Fatality</strong><br>
-                                        <small class="text-muted">0.000000673</small><br>
-                                        <small class="text-muted">(1 per 1.486.757 hazard)</small>
+                                    <div class="border rounded-3 p-3 h-100" style="background: #ffffff; border-color: #e5e7eb !important; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <i class="material-icons-outlined me-2" style="font-size: 20px; color: #6b7280;">dangerous</i>
+                                            <strong style="color: #374151; font-size: 14px;">Fatality</strong>
+                                        </div>
+                                        <div style="font-size: 18px; font-weight: 600; color: #111827; margin-bottom: 4px;">0.000000673</div>
+                                        <small style="color: #6b7280; font-size: 11px;">(1 per 1.486.757 hazard)</small>
                                     </div>
                                 </div>
                             </div>
@@ -2929,66 +2960,68 @@
                     </div>
                     
                     <!-- Table -->
-                    <div class="card border-0 shadow-sm">
-                        <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-center">
-                            <h6 class="mb-0 d-flex align-items-center">
-                                <i class="material-icons-outlined me-2" style="font-size: 20px;">table_chart</i>
+                    <div class="card" style="border: 1px solid #e5e7eb; border-radius: 8px; overflow: hidden;">
+                        <div class="card-header d-flex justify-content-between align-items-center" style="background: #ffffff; border-bottom: 1px solid #e5e7eb; padding: 1.25rem 1.5rem;">
+                            <h6 class="mb-0 d-flex align-items-center" style="font-weight: 600; color: #1f2937;">
+                                <div class="d-flex align-items-center justify-content-center me-2" style="width: 36px; height: 36px; background: #f3f4f6; border-radius: 6px;">
+                                    <i class="material-icons-outlined" style="font-size: 22px; color: #4b5563;">table_chart</i>
+                                </div>
                                 Data Prediksi Insiden per Lokasi
                             </h6>
-                            <div class="text-muted small" id="matriksPrediksiInsidenTableInfo">
+                            <div class="text-muted small fw-medium" id="matriksPrediksiInsidenTableInfo" style="color: #6b7280;">
                                 <!-- Table info will be populated by DataTables -->
                             </div>
                         </div>
-                        <div class="card-body p-0">
+                        <div class="card-body p-0" style="background: #ffffff;">
                             <div class="table-responsive" style="max-height: 60vh;">
                                 <table id="matriksPrediksiInsidenTable" class="table table-hover table-sm mb-0" style="font-size: 12px;">
-                                    <thead class="table-dark sticky-top">
+                                    <thead class="sticky-top" style="background: #f9fafb; color: #1f2937; border-bottom: 2px solid #e5e7eb;">
                                         <tr>
-                                            <th style="position: sticky; left: 0; background-color: #212529; z-index: 10; min-width: 200px;">
-                                                <div>Nama Lokasi</div>
+                                            <th style="position: sticky; left: 0; background: #f9fafb; z-index: 10; min-width: 200px; padding: 1rem; border-right: 1px solid #e5e7eb;">
+                                                <div style="font-weight: 600; font-size: 13px;">Nama Lokasi</div>
                                             </th>
-                                            <th style="text-align: right; min-width: 100px;">
-                                                <div>Jumlah SAP</div>
-                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">(1 tahun)</small>
+                                            <th style="text-align: right; min-width: 100px; padding: 1rem;">
+                                                <div style="font-weight: 600; font-size: 13px;">Jumlah SAP</div>
+                                                <small style="font-size: 10px; font-weight: normal; color: #6b7280;">(1 tahun)</small>
                                             </th>
-                                            <th style="text-align: right; min-width: 90px;" title="Nearmiss: 0.000232 (1 per 4.309 hazard)">
-                                                <div>Nearmiss</div>
-                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.000232</small>
+                                            <th style="text-align: right; min-width: 90px; padding: 1rem; background: #f9fafb;" title="Nearmiss: 0.000232 (1 per 4.309 hazard)">
+                                                <div style="font-weight: 600; font-size: 13px;">Nearmiss</div>
+                                                <small style="font-size: 10px; font-weight: normal; color: #6b7280;">0.000232</small>
                                             </th>
-                                            <th style="text-align: right; min-width: 120px;" title="Property Damage: 0.000187 (1 per 5.348 hazard)">
-                                                <div>Property Damage</div>
-                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.000187</small>
+                                            <th style="text-align: right; min-width: 120px; padding: 1rem; background: #f9fafb;" title="Property Damage: 0.000187 (1 per 5.348 hazard)">
+                                                <div style="font-weight: 600; font-size: 13px;">Property Damage</div>
+                                                <small style="font-size: 10px; font-weight: normal; color: #6b7280;">0.000187</small>
                                             </th>
-                                            <th style="text-align: right; min-width: 90px;" title="First Aid: 0.0000206 (1 per 48.481 hazard)">
-                                                <div>First Aid</div>
-                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.0000206</small>
+                                            <th style="text-align: right; min-width: 90px; padding: 1rem; background: #f9fafb;" title="First Aid: 0.0000206 (1 per 48.481 hazard)">
+                                                <div style="font-weight: 600; font-size: 13px;">First Aid</div>
+                                                <small style="font-size: 10px; font-weight: normal; color: #6b7280;">0.0000206</small>
                                             </th>
-                                            <th style="text-align: right; min-width: 90px;" title="Fire Case: 0.0000186 (1 per 53.738 hazard)">
-                                                <div>Fire Case</div>
-                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.0000186</small>
+                                            <th style="text-align: right; min-width: 90px; padding: 1rem; background: #f9fafb;" title="Fire Case: 0.0000186 (1 per 53.738 hazard)">
+                                                <div style="font-weight: 600; font-size: 13px;">Fire Case</div>
+                                                <small style="font-size: 10px; font-weight: normal; color: #6b7280;">0.0000186</small>
                                             </th>
-                                            <th style="text-align: right; min-width: 70px;" title="MTI: 0.0000173 (1 per 57.926 hazard)">
-                                                <div>MTI</div>
-                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.0000173</small>
+                                            <th style="text-align: right; min-width: 70px; padding: 1rem; background: #f9fafb;" title="MTI: 0.0000173 (1 per 57.926 hazard)">
+                                                <div style="font-weight: 600; font-size: 13px;">MTI</div>
+                                                <small style="font-size: 10px; font-weight: normal; color: #6b7280;">0.0000173</small>
                                             </th>
-                                            <th style="text-align: right; min-width: 70px;" title="RWI: 0.00000381 (1 per 262.369 hazard)">
-                                                <div>RWI</div>
-                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.00000381</small>
+                                            <th style="text-align: right; min-width: 70px; padding: 1rem; background: #f9fafb;" title="RWI: 0.00000381 (1 per 262.369 hazard)">
+                                                <div style="font-weight: 600; font-size: 13px;">RWI</div>
+                                                <small style="font-size: 10px; font-weight: normal; color: #6b7280;">0.00000381</small>
                                             </th>
-                                            <th style="text-align: right; min-width: 70px;" title="LTI: 0.00000202 (1 per 495.586 hazard)">
-                                                <div>LTI</div>
-                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.00000202</small>
+                                            <th style="text-align: right; min-width: 70px; padding: 1rem; background: #f9fafb;" title="LTI: 0.00000202 (1 per 495.586 hazard)">
+                                                <div style="font-weight: 600; font-size: 13px;">LTI</div>
+                                                <small style="font-size: 10px; font-weight: normal; color: #6b7280;">0.00000202</small>
                                             </th>
-                                            <th style="text-align: right; min-width: 80px;" title="Fatality: 0.000000673 (1 per 1.486.757 hazard)">
-                                                <div>Fatality</div>
-                                                <small style="font-size: 9px; font-weight: normal; opacity: 0.8;">0.000000673</small>
+                                            <th style="text-align: right; min-width: 80px; padding: 1rem; background: #f9fafb;" title="Fatality: 0.000000673 (1 per 1.486.757 hazard)">
+                                                <div style="font-weight: 600; font-size: 13px;">Fatality</div>
+                                                <small style="font-size: 10px; font-weight: normal; color: #6b7280;">0.000000673</small>
                                             </th>
-                                            <th style="text-align: right; min-width: 100px; background-color: #343a40;">
-                                                <div>Total Prediksi</div>
+                                            <th style="text-align: right; min-width: 100px; padding: 1rem; background: #f3f4f6; border-left: 2px solid #e5e7eb;">
+                                                <div style="font-weight: 600; font-size: 13px;">Total Prediksi</div>
                                             </th>
                                         </tr>
                                     </thead>
-                                    <tbody id="matriksPrediksiInsidenTableBody">
+                                    <tbody id="matriksPrediksiInsidenTableBody" style="background: #ffffff;">
                                         <!-- Data will be populated by JavaScript -->
                                     </tbody>
                                 </table>
@@ -2996,23 +3029,25 @@
                         </div>
                     </div>
                 </div>
-                <div id="matriksPrediksiInsidenError" style="display: none;" class="alert alert-danger d-flex align-items-center">
-                    <i class="material-icons-outlined me-2" style="font-size: 24px;">error</i>
+                <div id="matriksPrediksiInsidenError" style="display: none;" class="alert alert-danger d-flex align-items-center" style="border: 1px solid #fecaca; border-radius: 8px; padding: 1.25rem 1.5rem; background: #fef2f2;">
+                    <div class="d-flex align-items-center justify-content-center me-3" style="width: 48px; height: 48px; background: #fee2e2; border-radius: 8px;">
+                        <i class="material-icons-outlined" style="font-size: 28px; color: #dc2626;">error</i>
+                    </div>
                     <div>
-                        <strong>Error!</strong>
-                        <div id="matriksPrediksiInsidenErrorMessage"></div>
+                        <strong style="font-size: 16px; color: #991b1b;">Error!</strong>
+                        <div id="matriksPrediksiInsidenErrorMessage" style="color: #7f1d1d; margin-top: 4px;"></div>
                     </div>
                 </div>
             </div>
-            <div class="modal-footer bg-light border-top">
-                <div class="text-muted small me-auto" id="matriksPrediksiInsidenFooterInfo">
+            <div class="modal-footer border-top" style="background: #ffffff; border-top: 1px solid #e5e7eb !important; padding: 1.25rem 2rem;">
+                <div class="text-muted small me-auto d-flex align-items-center fw-medium" id="matriksPrediksiInsidenFooterInfo" style="color: #6b7280;">
                     <!-- Footer info will be populated by JavaScript -->
                 </div>
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                <button type="button" class="btn btn-light border me-2" data-bs-dismiss="modal" style="border-color: #d1d5db !important; border-radius: 6px; padding: 0.5rem 1.25rem; font-weight: 500; background: #ffffff; color: #374151;">
                     <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">close</i>
                     Tutup
                 </button>
-                <button type="button" class="btn btn-primary" onclick="loadMatriksPrediksiInsiden()">
+                <button type="button" class="btn btn-primary border-0" onclick="loadMatriksPrediksiInsiden()" style="background: #4b5563; border-radius: 6px; padding: 0.5rem 1.25rem; font-weight: 500; color: #ffffff;">
                     <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">refresh</i>
                     Refresh Data
                 </button>
@@ -4825,25 +4860,12 @@
                         console.log('Unit boundary layer shown');
                     }
                     
-                    // Show unit connection lines layer when terrain (SA UNIT) is active
-                    if (unitConnectionLinesLayer) {
-                        unitConnectionLinesLayer.setVisible(true);
-                        console.log('Unit connection lines layer shown');
-                    }
-                    
                     console.log('Unit dan Orang layer activated - showing Unit and GPS Orang, hiding CCTV');
                 } else {
                     // Hide unit boundary layer when terrain (SA UNIT) is deactivated
                     if (unitBoundaryLayer) {
                         unitBoundaryLayer.setVisible(false);
                         console.log('Unit boundary layer hidden');
-                    }
-                    
-                    // Hide unit connection lines layer when terrain (SA UNIT) is deactivated
-                    if (unitConnectionLinesLayer) {
-                        unitConnectionLinesLayer.setVisible(false);
-                        clearUnitConnectionLines();
-                        console.log('Unit connection lines layer hidden');
                     }
                 }
             } else if (layerName === 'transit') {
@@ -7291,152 +7313,6 @@ source: new ol.source.Vector(),
     map.addLayer(unitBoundaryLayer);
     console.log('Unit boundary layer created and added to map');
 
-    // Create vector layer for unit connection lines (1 km radius)
-    unitConnectionLinesLayer = new ol.layer.Vector({
-        source: new ol.source.Vector(),
-        visible: true,
-        style: function(feature) {
-            return new ol.style.Style({
-                stroke: new ol.style.Stroke({
-                    color: '#3b82f6', // Blue color
-                    width: 3, // Thicker line for better visibility
-                    lineDash: [10, 5] // Dotted line pattern (longer dashes)
-                })
-            });
-        },
-        zIndex: 1003  // Above unit markers and boundaries for better visibility
-    });
-    map.addLayer(unitConnectionLinesLayer);
-    console.log('Unit connection lines layer created and added to map');
-
-    // Function to clear all unit connection lines
-    function clearUnitConnectionLines() {
-        if (unitConnectionLinesLayer) {
-            const source = unitConnectionLinesLayer.getSource();
-            source.clear();
-        }
-    }
-
-    // Function to show connection lines from clicked unit to nearby units (within 1 km)
-    function showUnitConnectionLines(clickedUnit) {
-        console.log('showUnitConnectionLines called with unit:', clickedUnit);
-        
-        if (!clickedUnit) {
-            console.warn('showUnitConnectionLines: clickedUnit is null or undefined');
-            return;
-        }
-
-        // Check if unitConnectionLinesLayer exists
-        if (!unitConnectionLinesLayer) {
-            console.warn('showUnitConnectionLines: unitConnectionLinesLayer is not initialized');
-            return;
-        }
-
-        // Clear previous lines
-        clearUnitConnectionLines();
-
-        const clickedUnitId = clickedUnit.unit_id || clickedUnit.id || clickedUnit.integration_id;
-        const clickedLat = parseFloat(clickedUnit.latitude);
-        const clickedLon = parseFloat(clickedUnit.longitude);
-
-        console.log('Clicked unit:', {
-            id: clickedUnitId,
-            lat: clickedLat,
-            lon: clickedLon
-        });
-
-        if (!clickedLat || !clickedLon || clickedLat === 0 || clickedLon === 0 || isNaN(clickedLat) || isNaN(clickedLon)) {
-            console.warn('showUnitConnectionLines: Invalid coordinates', { clickedLat, clickedLon });
-            return;
-        }
-
-        const maxDistanceMeters = 1000; // 1 km radius
-        const source = unitConnectionLinesLayer.getSource();
-        let connectionCount = 0;
-
-        // Get units from layer source (more reliable than global array)
-        let unitsToCheck = [];
-        
-        // Try to get from unitVehicleLayer first (most reliable)
-        if (unitVehicleLayer) {
-            const unitSource = unitVehicleLayer.getSource();
-            const unitFeatures = unitSource.getFeatures();
-            
-            unitFeatures.forEach(function(feature) {
-                const unitData = feature.get('unitData');
-                if (unitData) {
-                    unitsToCheck.push(unitData);
-                }
-            });
-        }
-        
-        // Fallback to global unitVehicles array if layer is empty
-        if (unitsToCheck.length === 0 && unitVehicles && unitVehicles.length > 0) {
-            unitsToCheck = unitVehicles;
-        }
-
-        console.log('Checking', unitsToCheck.length, 'units for connections within', maxDistanceMeters, 'meters');
-
-        if (unitsToCheck.length === 0) {
-            console.warn('showUnitConnectionLines: No units found to check');
-            return;
-        }
-
-        // Find all units within 1 km
-        unitsToCheck.forEach(function(otherUnit) {
-            const otherUnitId = otherUnit.unit_id || otherUnit.id || otherUnit.integration_id;
-            
-            // Skip self
-            if (otherUnitId === clickedUnitId) {
-                return;
-            }
-
-            const otherLat = parseFloat(otherUnit.latitude);
-            const otherLon = parseFloat(otherUnit.longitude);
-
-            if (!otherLat || !otherLon || otherLat === 0 || otherLon === 0 || isNaN(otherLat) || isNaN(otherLon)) {
-                return;
-            }
-
-            // Calculate distance in meters
-            const distance = calculateDistance(clickedLon, clickedLat, otherLon, otherLat);
-
-            console.log(`Checking unit ${otherUnitId}: distance = ${distance.toFixed(2)} meters`);
-
-            // If within 1 km, create connection line
-            if (distance <= maxDistanceMeters) {
-                const clickedCoord = ol.proj.fromLonLat([clickedLon, clickedLat]);
-                const otherCoord = ol.proj.fromLonLat([otherLon, otherLat]);
-
-                // Create line feature
-                const lineFeature = new ol.Feature({
-                    geometry: new ol.geom.LineString([clickedCoord, otherCoord]),
-                    type: 'unit_connection',
-                    distance: distance,
-                    fromUnit: clickedUnitId,
-                    toUnit: otherUnitId
-                });
-
-                source.addFeature(lineFeature);
-                connectionCount++;
-                
-                console.log(`✓ Connection found: ${clickedUnitId} to ${otherUnitId}, distance: ${distance.toFixed(2)} meters`);
-            }
-        });
-
-        console.log(`Unit connection lines created: ${connectionCount} connections within ${maxDistanceMeters} meters (1 km)`);
-        
-        // Ensure layer is visible
-        if (unitConnectionLinesLayer) {
-            unitConnectionLinesLayer.setVisible(true);
-        }
-        
-        // Force map render to ensure lines are visible
-        if (map) {
-            map.render();
-        }
-    }
-
     // Update boundary radius when zoom changes (resolution changes)
     map.getView().on('change:resolution', function() {
         if (unitBoundaryLayer && typeof updateUnitBoundaries === 'function' && unitVehicles) {
@@ -7480,7 +7356,76 @@ source: new ol.source.Vector(),
 
     // Function to calculate distance between two coordinates in meters
     function calculateDistance(lon1, lat1, lon2, lat2) {
-        return ol.sphere.getDistance([lon1, lat1], [lon2, lat2]);
+        // Convert to numbers first
+        const numLon1 = Number(lon1);
+        const numLat1 = Number(lat1);
+        const numLon2 = Number(lon2);
+        const numLat2 = Number(lat2);
+        
+        // Validate inputs
+        if (isNaN(numLon1) || isNaN(numLat1) || isNaN(numLon2) || isNaN(numLat2) ||
+            !isFinite(numLon1) || !isFinite(numLat1) || !isFinite(numLon2) || !isFinite(numLat2)) {
+            console.warn('calculateDistance: Invalid coordinates (NaN or not finite)', { 
+                lon1: numLon1, lat1: numLat1, lon2: numLon2, lat2: numLat2,
+                original: { lon1, lat1, lon2, lat2 }
+            });
+            return Infinity;
+        }
+        
+        // Check if coordinates are valid (longitude: -180 to 180, latitude: -90 to 90)
+        if (numLon1 < -180 || numLon1 > 180 || numLat1 < -90 || numLat1 > 90 ||
+            numLon2 < -180 || numLon2 > 180 || numLat2 < -90 || numLat2 > 90) {
+            console.warn('calculateDistance: Coordinates out of range', { 
+                lon1: numLon1, lat1: numLat1, lon2: numLon2, lat2: numLat2 
+            });
+            return Infinity;
+        }
+        
+        try {
+            // ol.sphere.getDistance expects [lon, lat] format in EPSG:4326
+            const point1 = [numLon1, numLat1];
+            const point2 = [numLon2, numLat2];
+            
+            // Ensure coordinates are in correct format
+            if (!Array.isArray(point1) || !Array.isArray(point2) || 
+                point1.length !== 2 || point2.length !== 2) {
+                console.error('calculateDistance: Invalid point format', { point1, point2 });
+                return Infinity;
+            }
+            
+            let distance;
+            try {
+                distance = ol.sphere.getDistance(point1, point2);
+            } catch (olError) {
+                console.warn('ol.sphere.getDistance failed, using Haversine formula', olError);
+                // Fallback to Haversine formula
+                const R = 6371000; // Earth radius in meters
+                const dLat = (numLat2 - numLat1) * Math.PI / 180;
+                const dLon = (numLon2 - numLon1) * Math.PI / 180;
+                const a = Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+                          Math.cos(numLat1 * Math.PI / 180) * Math.cos(numLat2 * Math.PI / 180) *
+                          Math.sin(dLon / 2) * Math.sin(dLon / 2);
+                const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+                distance = R * c;
+            }
+            
+            if (isNaN(distance) || !isFinite(distance) || distance < 0) {
+                console.error('calculateDistance: Invalid result', { 
+                    distance, 
+                    point1, 
+                    point2,
+                    input: { lon1: numLon1, lat1: numLat1, lon2: numLon2, lat2: numLat2 }
+                });
+                return Infinity;
+            }
+            
+            return distance;
+        } catch (error) {
+            console.error('calculateDistance error:', error, { 
+                lon1: numLon1, lat1: numLat1, lon2: numLon2, lat2: numLat2 
+            });
+            return Infinity;
+        }
     }
 
     // Function to check if two circles intersect
@@ -8996,10 +8941,6 @@ source: new ol.source.Vector(),
         popupCloser.blur();
         // Clear CCTV to hazard lines when popup is closed
         clearCCTVToHazardLines();
-        // Clear unit connection lines when popup is closed
-        if (typeof clearUnitConnectionLines === 'function') {
-            clearUnitConnectionLines();
-        }
         return false;
     };
 
@@ -9013,13 +8954,6 @@ source: new ol.source.Vector(),
         // Only clear if not clicking on CCTV
         if (!clickedFeature || clickedFeature.get('type') !== 'cctv') {
             clearCCTVToHazardLines();
-        }
-        
-        // Clear unit connection lines when clicking on map (unless clicking on unit)
-        if (!clickedFeature || clickedFeature.get('type') !== 'unit_vehicle') {
-            if (typeof clearUnitConnectionLines === 'function') {
-                clearUnitConnectionLines();
-            }
         }
         
         const feature = clickedFeature;
@@ -9490,10 +9424,41 @@ source: new ol.source.Vector(),
         popupOverlay.setPosition(coordinate);
     };
     
-    // Function to show simple probability popup (summary only)
+    // Function to show simple probability popup (summary only) - styled like DOP popup
     function showProbabilityPopup(coordinate, hazard) {
-        // Total hazard inspeksi dalam 1 tahun
-        const totalHazardPerYear = 1836683;
+        const lokasi = hazard.lokasi || hazard.zone || hazard.detail_lokasi || hazard.nama_lokasi || hazard.nama_detail_lokasi || 'Unknown';
+        const detailLokasi = hazard.detail_lokasi || hazard.nama_detail_lokasi || lokasi;
+        
+        // Get SAP count for this location (from all SAP data)
+        let allSap = [];
+        if (typeof allSapData !== 'undefined' && allSapData) {
+            allSap = allSapData;
+        } else if (typeof sapDataAllWeek !== 'undefined' && sapDataAllWeek) {
+            allSap = sapDataAllWeek;
+        } else if (typeof sapData !== 'undefined' && sapData) {
+            allSap = sapData;
+        } else if (window.allSapData) {
+            allSap = window.allSapData;
+        } else if (window.sapDataAllWeek) {
+            allSap = window.sapDataAllWeek;
+        } else if (window.sapData) {
+            allSap = window.sapData;
+        }
+        
+        // Filter SAP by location
+        const filteredSap = allSap.filter(function(sap) {
+            const sapLokasi = (sap.lokasi || sap.nama_lokasi || '').toLowerCase().trim();
+            const sapDetailLokasi = (sap.detail_lokasi || sap.nama_detail_lokasi || '').toLowerCase().trim();
+            const targetLokasi = lokasi.toLowerCase().trim();
+            const targetDetailLokasi = detailLokasi.toLowerCase().trim();
+            
+            const lokasiMatch = sapLokasi === targetLokasi || sapLokasi.includes(targetLokasi) || targetLokasi.includes(sapLokasi);
+            const detailLokasiMatch = sapDetailLokasi === targetDetailLokasi || sapDetailLokasi.includes(targetDetailLokasi) || targetDetailLokasi.includes(sapDetailLokasi);
+            
+            return lokasiMatch || detailLokasiMatch;
+        });
+        
+        const jumlahSap = filteredSap.length;
         
         // Probability data per 1 hazard report
         const probabilityData = [
@@ -9507,35 +9472,54 @@ source: new ol.source.Vector(),
             { kategori: 'Fatality', probability: 0.000000673 }
         ];
         
-        const lokasi = hazard.lokasi || hazard.zone || hazard.detail_lokasi || 'Unknown';
-        const lokasiInfo = hazard.task_number ? `Task: ${hazard.task_number}` : (hazard.description || 'Hazard Report');
+        // Calculate total predicted incidents for this location
+        let totalPredicted = 0;
+        probabilityData.forEach(function(item) {
+            totalPredicted += item.probability * jumlahSap;
+        });
         
-        // Helper function to format number with thousand separator (Indonesian format)
-        function formatNumber(num) {
-            return Math.round(num).toLocaleString('id-ID');
-        }
-        
-        // Set total predicted to 1 (as requested)
-        const totalPredicted = 1;
+        // Format total predicted
+        const totalDisplay = totalPredicted < 0.01 ? totalPredicted.toFixed(4) : totalPredicted.toFixed(2);
         
         // Store hazard data for detail popup
         const hazardDataKey = 'hazard_' + (hazard.id || hazard.task_number || Date.now());
         window[hazardDataKey] = hazard;
         
+        // Truncate location name if too long (for compact popup)
+        const lokasiDisplay = lokasi.length > 20 ? lokasi.substring(0, 20) + '...' : lokasi;
+        
         const content = `
-            <div style="min-width: 250px; max-width: 300px; background-color: #ffffff !important;">
-                <h6 style="margin: 0 0 10px 0; color: #1f2937; font-size: 14px; font-weight: 600;">Prediksi Insiden</h6>
-                <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">
-                    <strong>Lokasi:</strong> ${lokasi}<br>
-                    <strong>Info:</strong> ${lokasiInfo}
-                </p>
-                <div style="margin: 10px 0; padding: 12px; background-color: #f3f4f6; border-radius: 4px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: 700; color: #ef4444; margin-bottom: 5px;">${totalPredicted}</div>
-                    <div style="font-size: 12px; color: #6b7280;">Total Prediksi Insiden</div>
+            <div style="width: 160px; background-color: #ffffff !important; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15);">
+                <!-- Header -->
+                <div style="background-color: #ffffff; padding: 6px 8px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+                    <div style="font-size: 11px; font-weight: 700; color: #1f2937; letter-spacing: 0.3px;">POTENSI INSIDEN</div>
                 </div>
-                <button class="btn btn-sm btn-primary w-100" onclick="showSapListByLocation(popupOverlay.getPosition(), window['${hazardDataKey}']);" style="margin-top: 8px; font-size: 12px;">
-                    <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">info</i> Detail
-                </button>
+                
+                <!-- Location Name -->
+                <div style="padding: 6px 8px; background-color: #ffffff;">
+                    <div style="font-size: 10px; color: #1f2937; font-weight: 500; text-align: center; line-height: 1.3;">
+                        ${lokasiDisplay}
+                    </div>
+                </div>
+                
+                <!-- Prediction Info -->
+                <div style="padding: 8px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-top: 1px solid #e5e7eb; position: relative;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 8px; color: #78350f; font-weight: 600; margin-bottom: 2px;">PREDIKSI</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #92400e; margin-bottom: 2px; line-height: 1;">${totalDisplay}</div>
+                        <div style="font-size: 8px; color: #78350f;">SAP: ${jumlahSap.toLocaleString('id-ID')}</div>
+                    </div>
+                </div>
+                
+                <!-- Arrow pointing down - like DOP card -->
+                <div style="text-align: center; position: relative; height: 12px; margin-top: -1px;">
+                    <div style="display: inline-block; position: relative; width: 22px; height: 12px;">
+                        <!-- Outer border (gray) -->
+                        <div style="position: absolute; left: 0; top: 0; width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent; border-top: 12px solid #e5e7eb;"></div>
+                        <!-- Inner fill (white) -->
+                        <div style="position: absolute; left: 1px; top: 0; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 11px solid #ffffff;"></div>
+                    </div>
+                </div>
             </div>
         `;
         document.getElementById('popup-content').innerHTML = content;
@@ -9575,6 +9559,16 @@ source: new ol.source.Vector(),
         // Group features by location to show only 1 popup per location
         const locationMap = new Map();
         
+        // Helper function to normalize location string
+        function normalizeLocation(str) {
+            if (!str) return '';
+            return str.toLowerCase()
+                .trim()
+                .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                .replace(/[^\w\s]/g, '') // Remove special characters for comparison
+                .trim();
+        }
+        
         visibleFeatures.forEach(function(feature) {
             const geometry = feature.getGeometry();
             if (!geometry) return;
@@ -9583,20 +9577,33 @@ source: new ol.source.Vector(),
             const data = feature.get('data');
             if (!data) return;
             
-            // Create location key from lokasi or detail_lokasi
-            const lokasi = (data.lokasi || data.zone || '').toLowerCase().trim();
-            const detailLokasi = (data.detail_lokasi || '').toLowerCase().trim();
+            // Get location values (prefer nama_lokasi/nama_detail_lokasi)
+            const lokasiRaw = data.nama_lokasi || data.lokasi || data.zone || '';
+            const detailLokasiRaw = data.nama_detail_lokasi || data.detail_lokasi || '';
             
-            // Use detail_lokasi if available, otherwise use lokasi
-            // If both are empty, use 'Unknown' as fallback
-            const locationKey = detailLokasi || lokasi || 'unknown';
+            // Normalize locations
+            const lokasi = normalizeLocation(lokasiRaw);
+            const detailLokasi = normalizeLocation(detailLokasiRaw);
+            
+            // Create unique location key
+            // Use detail_lokasi if available and not empty, otherwise use lokasi
+            // Combine both if both exist to make it more unique
+            let locationKey;
+            if (detailLokasi && lokasi) {
+                // If both exist, use combination to ensure uniqueness
+                locationKey = detailLokasi + '|' + lokasi;
+            } else {
+                locationKey = detailLokasi || lokasi || 'unknown';
+            }
             
             // If location not in map, add it
             if (!locationMap.has(locationKey)) {
                 locationMap.set(locationKey, {
                     coordinate: coordinate,
                     data: data,
-                    features: [feature]
+                    features: [feature],
+                    lokasi: lokasiRaw, // Store original for display
+                    detailLokasi: detailLokasiRaw // Store original for display
                 });
             } else {
                 // Location already exists, add feature to the group
@@ -9610,15 +9617,71 @@ source: new ol.source.Vector(),
         const maxPopups = 50;
         const uniqueLocations = Array.from(locationMap.values()).slice(0, maxPopups);
         
+        // Debug: Log location keys to check for duplicates
+        const locationKeys = Array.from(locationMap.keys());
         console.log(`Showing probability popups for ${uniqueLocations.length} unique locations (out of ${locationMap.size} total unique locations, from ${features.length} total features)`);
+        console.log('Location keys:', locationKeys.slice(0, 10)); // Show first 10 keys for debugging
         
         // Create popup overlay for each unique location
         uniqueLocations.forEach(function(locationData) {
             const coordinate = locationData.coordinate;
             const data = locationData.data;
             
-            // Total hazard inspeksi dalam 1 tahun
-            const totalHazardPerYear = 1836683;
+            // Use stored location values (from first feature in group) for consistency
+            const lokasi = locationData.lokasi || data.lokasi || data.zone || data.detail_lokasi || data.nama_lokasi || data.nama_detail_lokasi || 'Unknown';
+            const detailLokasi = locationData.detailLokasi || data.detail_lokasi || data.nama_detail_lokasi || lokasi;
+            
+            // Get SAP count for this location (from all SAP data)
+            let allSap = [];
+            if (typeof allSapData !== 'undefined' && allSapData) {
+                allSap = allSapData;
+            } else if (typeof sapDataAllWeek !== 'undefined' && sapDataAllWeek) {
+                allSap = sapDataAllWeek;
+            } else if (typeof sapData !== 'undefined' && sapData) {
+                allSap = sapData;
+            } else if (window.allSapData) {
+                allSap = window.allSapData;
+            } else if (window.sapDataAllWeek) {
+                allSap = window.sapDataAllWeek;
+            } else if (window.sapData) {
+                allSap = window.sapData;
+            }
+            
+            // Helper function to normalize location string (same as grouping function)
+            function normalizeLocationForFilter(str) {
+                if (!str) return '';
+                return str.toLowerCase()
+                    .trim()
+                    .replace(/\s+/g, ' ') // Replace multiple spaces with single space
+                    .replace(/[^\w\s]/g, '') // Remove special characters for comparison
+                    .trim();
+            }
+            
+            // Normalize target locations
+            const targetLokasiNormalized = normalizeLocationForFilter(lokasi);
+            const targetDetailLokasiNormalized = normalizeLocationForFilter(detailLokasi);
+            
+            // Filter SAP by location using normalized comparison
+            const filteredSap = allSap.filter(function(sap) {
+                const sapLokasiRaw = sap.nama_lokasi || sap.lokasi || '';
+                const sapDetailLokasiRaw = sap.nama_detail_lokasi || sap.detail_lokasi || '';
+                
+                const sapLokasiNormalized = normalizeLocationForFilter(sapLokasiRaw);
+                const sapDetailLokasiNormalized = normalizeLocationForFilter(sapDetailLokasiRaw);
+                
+                // Match if normalized lokasi or detail_lokasi matches
+                const lokasiMatch = sapLokasiNormalized === targetLokasiNormalized || 
+                                   (targetLokasiNormalized && sapLokasiNormalized.includes(targetLokasiNormalized)) ||
+                                   (sapLokasiNormalized && targetLokasiNormalized.includes(sapLokasiNormalized));
+                
+                const detailLokasiMatch = sapDetailLokasiNormalized === targetDetailLokasiNormalized ||
+                                         (targetDetailLokasiNormalized && sapDetailLokasiNormalized.includes(targetDetailLokasiNormalized)) ||
+                                         (sapDetailLokasiNormalized && targetDetailLokasiNormalized.includes(sapDetailLokasiNormalized));
+                
+                return lokasiMatch || detailLokasiMatch;
+            });
+            
+            const jumlahSap = filteredSap.length;
             
             // Probability data per 1 hazard report
             const probabilityData = [
@@ -9632,49 +9695,69 @@ source: new ol.source.Vector(),
                 { kategori: 'Fatality', probability: 0.000000673 }
             ];
             
-            const lokasi = data.lokasi || data.zone || data.detail_lokasi || 'Unknown';
-            const lokasiInfo = data.task_number ? `Task: ${data.task_number}` : (data.description || 'Hazard Report');
+            // Calculate total predicted incidents for this location
+            let totalPredicted = 0;
+            probabilityData.forEach(function(item) {
+                totalPredicted += item.probability * jumlahSap;
+            });
             
-            // Helper function to format number with thousand separator (Indonesian format)
-            function formatNumber(num) {
-                return Math.round(num).toLocaleString('id-ID');
-            }
+            // Format total predicted
+            const totalDisplay = totalPredicted < 0.01 ? totalPredicted.toFixed(4) : totalPredicted.toFixed(2);
             
-            // Set total predicted to 1 (as requested)
-            const totalPredicted = 1;
+            // Truncate location name if too long (for compact popup)
+            const lokasiDisplay = lokasi.length > 20 ? lokasi.substring(0, 20) + '...' : lokasi;
             
             // Store hazard data for detail popup (use first data from location)
             const hazardDataKey = 'hazard_' + (data.id || data.task_number || Date.now() + Math.random());
             window[hazardDataKey] = data;
             
-            // Create popup element
+            // Create popup element - compact size
             const popupElement = document.createElement('div');
             popupElement.className = 'probability-popup';
-            popupElement.style.cssText = 'background: white; border: 2px solid #ef4444; border-radius: 4px; padding: 10px; max-width: 280px; box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: relative;';
+            popupElement.style.cssText = 'background: white; border-radius: 6px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.15); position: relative; width: 160px;';
             
-            // Create overlay first
+            // Create overlay first - positioned above marker
             const overlay = new ol.Overlay({
                 element: popupElement,
                 position: coordinate,
                 positioning: 'bottom-center',
                 stopEvent: false,
-                offset: [0, -10]
+                offset: [0, -5]
             });
             
             popupElement.innerHTML = `
-                <button class="probability-popup-close" style="position: absolute; top: 5px; right: 5px; background: #ef4444; color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; font-size: 18px; line-height: 1; z-index: 10;">×</button>
-                <h6 style="margin: 0 0 10px 0; color: #1f2937; font-size: 14px; font-weight: 600;">Prediksi Insiden</h6>
-                <p style="margin: 0 0 8px 0; font-size: 12px; color: #6b7280;">
-                    <strong>Lokasi:</strong> ${lokasi}<br>
-                    <strong>Info:</strong> ${lokasiInfo}
-                </p>
-                <div style="margin: 10px 0; padding: 12px; background-color: #f3f4f6; border-radius: 4px; text-align: center;">
-                    <div style="font-size: 24px; font-weight: 700; color: #ef4444; margin-bottom: 5px;">${totalPredicted}</div>
-                    <div style="font-size: 12px; color: #6b7280;">Total Prediksi Insiden</div>
+                <button class="probability-popup-close" style="position: absolute; top: 4px; right: 4px; background: rgba(0,0,0,0.5); color: white; border: none; border-radius: 50%; width: 16px; height: 16px; cursor: pointer; font-size: 12px; line-height: 1; z-index: 10; display: flex; align-items: center; justify-content: center; padding: 0;">×</button>
+                
+                <!-- Header -->
+                <div style="background-color: #ffffff; padding: 6px 8px; text-align: center; border-bottom: 1px solid #e5e7eb;">
+                    <div style="font-size: 11px; font-weight: 700; color: #1f2937; letter-spacing: 0.3px;">POTENSI INSIDEN</div>
                 </div>
-                <button class="probability-detail-btn btn btn-sm btn-primary w-100" data-hazard-key="${hazardDataKey}" style="margin-top: 8px; font-size: 12px; padding: 6px 12px;">
-                    <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">info</i> Detail
-                </button>
+                
+                <!-- Location Name -->
+                <div style="padding: 6px 8px; background-color: #ffffff;">
+                    <div style="font-size: 10px; color: #1f2937; font-weight: 500; text-align: center; line-height: 1.3;">
+                        ${lokasiDisplay}
+                    </div>
+                </div>
+                
+                <!-- Prediction Info -->
+                <div style="padding: 8px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-top: 1px solid #e5e7eb; position: relative;">
+                    <div style="text-align: center;">
+                        <div style="font-size: 8px; color: #78350f; font-weight: 600; margin-bottom: 2px;">PREDIKSI</div>
+                        <div style="font-size: 18px; font-weight: 700; color: #92400e; margin-bottom: 2px; line-height: 1;">${totalDisplay}</div>
+                        <div style="font-size: 8px; color: #78350f;">SAP: ${jumlahSap.toLocaleString('id-ID')}</div>
+                    </div>
+                </div>
+                
+                <!-- Arrow pointing down - like DOP card -->
+                <div style="text-align: center; position: relative; height: 12px; margin-top: -1px;">
+                    <div style="display: inline-block; position: relative; width: 22px; height: 12px;">
+                        <!-- Outer border (gray) -->
+                        <div style="position: absolute; left: 0; top: 0; width: 0; height: 0; border-left: 11px solid transparent; border-right: 11px solid transparent; border-top: 12px solid #e5e7eb;"></div>
+                        <!-- Inner fill (white) -->
+                        <div style="position: absolute; left: 1px; top: 0; width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 11px solid #ffffff;"></div>
+                    </div>
+                </div>
             `;
             
             // Add close button event listener
@@ -12097,31 +12180,6 @@ source: new ol.source.Vector(),
         `;
         document.getElementById('popup-content').innerHTML = content;
         popupOverlay.setPosition(coordinate);
-        
-        // Ensure connection lines layer is visible
-        if (unitConnectionLinesLayer) {
-            unitConnectionLinesLayer.setVisible(true);
-        }
-        
-        // Show connection lines to nearby units (within 1 km)
-        // Use setTimeout to ensure popup is rendered first
-        setTimeout(function() {
-            console.log('Attempting to show unit connection lines...');
-            console.log('Unit data:', unit);
-            console.log('unitConnectionLinesLayer exists:', typeof unitConnectionLinesLayer !== 'undefined');
-            console.log('showUnitConnectionLines function exists:', typeof showUnitConnectionLines === 'function');
-            
-            if (typeof showUnitConnectionLines === 'function') {
-                console.log('Calling showUnitConnectionLines for unit:', unit);
-                try {
-                    showUnitConnectionLines(unit);
-                } catch (error) {
-                    console.error('Error calling showUnitConnectionLines:', error);
-                }
-            } else {
-                console.warn('showUnitConnectionLines function not found');
-            }
-        }, 100);
     }
     
     function showGpsOrangPopup(coordinate, user) {
@@ -17411,10 +17469,6 @@ source: new ol.source.Vector(),
             if (unitBoundaryLayer) {
                 unitBoundaryLayer.setVisible(false);
             }
-            if (unitConnectionLinesLayer) {
-                unitConnectionLinesLayer.setVisible(false);
-                clearUnitConnectionLines();
-            }
             layerVisibility.unit = false;
             unitDataLoaded = false;
             
@@ -17506,9 +17560,6 @@ source: new ol.source.Vector(),
             unitVehicleLayer.setVisible(true);
             if (unitBoundaryLayer) {
                 unitBoundaryLayer.setVisible(true);
-            }
-            if (unitConnectionLinesLayer) {
-                unitConnectionLinesLayer.setVisible(true);
             }
             layerVisibility.unit = true;
             unitDataLoaded = true;
@@ -22056,10 +22107,10 @@ source: new ol.source.Vector(),
                     totalPredictedAll += totalPredicted;
                     
                     // Build row with better styling
-                    tableRows += '<tr>';
-                    tableRows += '<td style="position: sticky; left: 0; background-color: #fff; z-index: 5; font-weight: 500; border-right: 1px solid #dee2e6;">' + 
+                    tableRows += '<tr style="transition: background-color 0.2s;" onmouseover="this.style.backgroundColor=\'#f8f9fa\'" onmouseout="this.style.backgroundColor=\'#ffffff\'">';
+                    tableRows += '<td style="position: sticky; left: 0; background-color: #fff; z-index: 5; font-weight: 600; border-right: 2px solid #e2e8f0; padding: 1rem; color: #1e293b; font-size: 13px;">' + 
                         (location.nama_lokasi || 'N/A') + '</td>';
-                    tableRows += '<td style="text-align: right; font-weight: 600; background-color: #f8f9fa;">' + 
+                    tableRows += '<td style="text-align: right; font-weight: 700; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%); padding: 1rem; color: #0f172a; font-size: 13px;">' + 
                         jumlahSap.toLocaleString('id-ID') + '</td>';
                     
                     // Add prediction columns with conditional styling
@@ -22068,24 +22119,32 @@ source: new ol.source.Vector(),
                         const displayValue = pred < 0.01 ? pred.toFixed(4) : formatNumberDisplay(pred);
                         const tooltip = probData.kategori + ': ' + probData.probability + ' (' + probData.equivalent + ')';
                         
-                        // Color coding based on severity
-                        let cellClass = '';
-                        if (probData.kategori === 'Fatality' || probData.kategori === 'LTI') {
-                            cellClass = 'bg-danger bg-opacity-10';
+                        // Color coding based on severity with better gradients
+                        let cellStyle = 'text-align: right; padding: 1rem; font-weight: 600; font-size: 13px;';
+                        if (probData.kategori === 'Fatality') {
+                            cellStyle += 'background: linear-gradient(135deg, rgba(239, 68, 68, 0.15) 0%, rgba(220, 38, 38, 0.1) 100%); color: #991b1b;';
+                        } else if (probData.kategori === 'LTI') {
+                            cellStyle += 'background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.08) 100%); color: #b91c1c;';
                         } else if (probData.kategori === 'RWI' || probData.kategori === 'MTI') {
-                            cellClass = 'bg-warning bg-opacity-10';
-                        } else if (probData.kategori === 'Fire Case' || probData.kategori === 'First Aid') {
-                            cellClass = 'bg-info bg-opacity-10';
+                            cellStyle += 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%); color: #92400e;';
+                        } else if (probData.kategori === 'Fire Case') {
+                            cellStyle += 'background: linear-gradient(135deg, rgba(239, 68, 68, 0.12) 0%, rgba(220, 38, 38, 0.08) 100%); color: #b91c1c;';
+                        } else if (probData.kategori === 'First Aid') {
+                            cellStyle += 'background: linear-gradient(135deg, rgba(59, 130, 246, 0.12) 0%, rgba(37, 99, 235, 0.08) 100%); color: #1e40af;';
+                        } else if (probData.kategori === 'Property Damage') {
+                            cellStyle += 'background: linear-gradient(135deg, rgba(245, 158, 11, 0.12) 0%, rgba(217, 119, 6, 0.08) 100%); color: #92400e;';
+                        } else if (probData.kategori === 'Nearmiss') {
+                            cellStyle += 'background: linear-gradient(135deg, rgba(14, 165, 233, 0.12) 0%, rgba(2, 132, 199, 0.08) 100%); color: #0369a1;';
                         }
                         
-                        tableRows += '<td style="text-align: right;" class="' + cellClass + '" title="' + tooltip + '">' + 
-                            '<span style="font-weight: 500;">' + displayValue + '</span>' + 
+                        tableRows += '<td style="' + cellStyle + '" title="' + tooltip + '">' + 
+                            '<span>' + displayValue + '</span>' + 
                             '</td>';
                     });
                     
                     // Total predicted
                     const totalDisplay = totalPredicted < 0.01 ? totalPredicted.toFixed(4) : formatNumberDisplay(totalPredicted);
-                    tableRows += '<td style="text-align: right; font-weight: 700; background-color: #e9ecef; border-left: 2px solid #495057;">' + 
+                    tableRows += '<td style="text-align: right; font-weight: 700; background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%); color: white; border-left: 2px solid rgba(255,255,255,0.3); padding: 1rem; font-size: 13px;">' + 
                         totalDisplay + '</td>';
                     tableRows += '</tr>';
                 });
@@ -22096,68 +22155,68 @@ source: new ol.source.Vector(),
                 const statsEl = document.getElementById('matriksPrediksiInsidenStats');
                 statsEl.innerHTML = `
                     <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                            <div class="card-body p-4" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
-                                        <div class="bg-primary bg-opacity-10 rounded-circle p-3">
-                                            <i class="material-icons-outlined text-primary" style="font-size: 32px;">location_on</i>
+                                        <div class="d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(255,255,255,0.2); border-radius: 12px; backdrop-filter: blur(10px);">
+                                            <i class="material-icons-outlined text-white" style="font-size: 32px;">location_on</i>
                                         </div>
                                     </div>
                                     <div class="flex-grow-1 ms-3">
-                                        <div class="text-muted small">Total Lokasi</div>
-                                        <div class="h4 mb-0 fw-bold">${locations.length.toLocaleString('id-ID')}</div>
+                                        <div class="text-white-50 small mb-1" style="font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Total Lokasi</div>
+                                        <div class="h3 mb-0 fw-bold text-white">${locations.length.toLocaleString('id-ID')}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                            <div class="card-body p-4" style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
-                                        <div class="bg-warning bg-opacity-10 rounded-circle p-3">
-                                            <i class="material-icons-outlined text-warning" style="font-size: 32px;">assignment</i>
+                                        <div class="d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(255,255,255,0.2); border-radius: 12px; backdrop-filter: blur(10px);">
+                                            <i class="material-icons-outlined text-white" style="font-size: 32px;">assignment</i>
                                         </div>
                                     </div>
                                     <div class="flex-grow-1 ms-3">
-                                        <div class="text-muted small">Total SAP</div>
-                                        <div class="h4 mb-0 fw-bold">${totalSap.toLocaleString('id-ID')}</div>
+                                        <div class="text-white-50 small mb-1" style="font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Total SAP</div>
+                                        <div class="h3 mb-0 fw-bold text-white">${totalSap.toLocaleString('id-ID')}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                            <div class="card-body p-4" style="background: linear-gradient(135deg, #fa709a 0%, #fee140 100%);">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
-                                        <div class="bg-danger bg-opacity-10 rounded-circle p-3">
-                                            <i class="material-icons-outlined text-danger" style="font-size: 32px;">trending_up</i>
+                                        <div class="d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(255,255,255,0.2); border-radius: 12px; backdrop-filter: blur(10px);">
+                                            <i class="material-icons-outlined text-white" style="font-size: 32px;">trending_up</i>
                                         </div>
                                     </div>
                                     <div class="flex-grow-1 ms-3">
-                                        <div class="text-muted small">Total Prediksi</div>
-                                        <div class="h4 mb-0 fw-bold">${formatNumberDisplay(totalPredictedAll).toLocaleString('id-ID')}</div>
+                                        <div class="text-white-50 small mb-1" style="font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Total Prediksi</div>
+                                        <div class="h3 mb-0 fw-bold text-white">${formatNumberDisplay(totalPredictedAll).toLocaleString('id-ID')}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
                     </div>
                     <div class="col-md-3 col-sm-6 mb-3">
-                        <div class="card border-0 shadow-sm h-100">
-                            <div class="card-body">
+                        <div class="card border-0 shadow-sm h-100" style="border-radius: 12px; overflow: hidden; transition: transform 0.2s, box-shadow 0.2s;" onmouseover="this.style.transform='translateY(-4px)'; this.style.boxShadow='0 8px 16px rgba(0,0,0,0.12)'" onmouseout="this.style.transform='translateY(0)'; this.style.boxShadow='0 2px 4px rgba(0,0,0,0.1)'">
+                            <div class="card-body p-4" style="background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);">
                                 <div class="d-flex align-items-center">
                                     <div class="flex-shrink-0">
-                                        <div class="bg-success bg-opacity-10 rounded-circle p-3">
-                                            <i class="material-icons-outlined text-success" style="font-size: 32px;">calculate</i>
+                                        <div class="d-flex align-items-center justify-content-center" style="width: 56px; height: 56px; background: rgba(255,255,255,0.2); border-radius: 12px; backdrop-filter: blur(10px);">
+                                            <i class="material-icons-outlined text-white" style="font-size: 32px;">calculate</i>
                                         </div>
                                     </div>
                                     <div class="flex-grow-1 ms-3">
-                                        <div class="text-muted small">Rata-rata SAP/Lokasi</div>
-                                        <div class="h4 mb-0 fw-bold">${Math.round(totalSap / locations.length).toLocaleString('id-ID')}</div>
+                                        <div class="text-white-50 small mb-1" style="font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px;">Rata-rata SAP/Lokasi</div>
+                                        <div class="h3 mb-0 fw-bold text-white">${Math.round(totalSap / locations.length).toLocaleString('id-ID')}</div>
                                     </div>
                                 </div>
                             </div>
@@ -22168,8 +22227,12 @@ source: new ol.source.Vector(),
                 // Update footer info
                 const footerInfoEl = document.getElementById('matriksPrediksiInsidenFooterInfo');
                 footerInfoEl.innerHTML = `
-                    <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">info</i>
-                    <span>Terakhir diperbarui: ${new Date().toLocaleString('id-ID')}</span>
+                    <div class="d-flex align-items-center">
+                        <div class="d-flex align-items-center justify-content-center me-2" style="width: 32px; height: 32px; background: rgba(100, 116, 139, 0.1); border-radius: 8px;">
+                            <i class="material-icons-outlined" style="font-size: 18px; color: #64748b;">info</i>
+                        </div>
+                        <span>Terakhir diperbarui: <strong>${new Date().toLocaleString('id-ID')}</strong></span>
+                    </div>
                 `;
                 
                 // Initialize DataTable if not already initialized
