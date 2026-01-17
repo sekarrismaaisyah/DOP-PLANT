@@ -6466,7 +6466,16 @@ class MapBaseController extends Controller
 
             // Get SAP data (mengganti Hazard)
             if ($showHazard || $showSap) {
-                $sapData = $this->getSapDataFromClickHouse($weekStart);
+                // Check if this is for CCTV tab - use new ClickHouse connection for today's data
+                $isForCctv = $request->get('for_cctv', 'false') === 'true';
+                
+                if ($isForCctv) {
+                    // Use new ClickHouse connection for CCTV: IP 10.10.10.38, database hse_automation
+                    $sapData = $this->getSapDataTodayFromClickHouseCctv();
+                } else {
+                    // Use existing ClickHouse connection for other purposes
+                    $sapData = $this->getSapDataFromClickHouse($weekStart);
+                }
                 
                 // Apply filters
                 if ($company !== '__all__' || $site !== '__all__') {
@@ -7331,6 +7340,156 @@ class MapBaseController extends Controller
             return '2';
         } else {
             return '3';
+        }
+    }
+
+    /**
+     * Get SAP data today from ClickHouse for CCTV
+     * Uses specific ClickHouse connection: IP 10.10.10.38, database hse_automation, table aaj_car_all_year_from_dav
+     */
+    private function getSapDataTodayFromClickHouseCctv()
+    {
+        try {
+            // Create ClickHouse connection with specific configuration for CCTV
+            $host = '10.10.10.38';
+            $port = 8123; // Default ClickHouse HTTP port
+            $protocol = 'http';
+            $baseUrl = $protocol . '://' . $host . ':' . $port;
+            $username = 'default';
+            $password = 'Zxcdsaqwe321:;';
+            $database = 'hse_automation';
+            $timeout = 30;
+
+            // Get today's date
+            $today = Carbon::now()->format('Y-m-d');
+            
+            Log::info('getSapDataTodayFromClickHouseCctv - Fetching SAP data for today', [
+                'host' => $host,
+                'database' => $database,
+                'date' => $today
+            ]);
+
+            // Build SQL query for today's SAP data
+            $sql = "
+                SELECT 
+                    toString(id) as task_number,
+                    ifNull(toString(jenis_laporan), 'INSPEKSI_HAZARD') as jenis_laporan,
+                    ifNull(toString(deskripsi), '') as aktivitas_pekerjaan,
+                    ifNull(toString(nama_lokasi), '') as lokasi,
+                    ifNull(toString(nama_detail_lokasi), '') as detail_lokasi,
+                    ifNull(toString(deskripsi), '') as keterangan,
+                    ifNull(toString(tanggal_pembuatan), toString(bedraft_date)) as tanggal_pelaporan,
+                    ifNull(toString(perusahaan_pelapor), '') as perusahaan_pelapor,
+                    ifNull(toString(nama_pelapor), '') as pelapor,
+                    ifNull(toString(sid_pelapor), '') as sid_pelapor,
+                    ifNull(toString(jabatan_fungsional_pelapor), '') as jabatan_fungsional_pelapor,
+                    ifNull(toString(departemen_pelapor), '') as departemen_pelapor,
+                    ifNull(toString(nama_pic), '') as pic,
+                    ifNull(toString(sid_pic), '') as sid_pic,
+                    ifNull(toString(jabatan_fungsional_pic), '') as jabatan_fungsional_pic,
+                    ifNull(toString(perusahaan_pic), '') as perusahaan_pic,
+                    ifNull(toString(departemen_pic), '') as departemen_pic,
+                    ifNull(toString(url_photo), '') as uri_foto,
+                    ifNull(toString(name_tools_observation), '') as tools_pengawasan,
+                    ifNull(toString(tindakan), '') as catatan_tindakan,
+                    ifNull(toString(id_pelapor), '') as nik_pelapor,
+                    ifNull(toString(nama_pelapor), '') as nama_pelapor,
+                    ifNull(toString(perusahaan_pelapor), '') as nama_perusahaan_pelapor_karyawan,
+                    ifNull(toString(jabatan_fungsional_pelapor), '') as jabatan_fungsional_karyawan_pelapor,
+                    ifNull(toString(latitude), '') as latitude,
+                    ifNull(toString(longitude), '') as longitude,
+                    ifNull(toString(nama_site), '') as site,
+                    ifNull(toString(lokasi_detail), '') as keterangan_lokasi
+                FROM hse_automation.aaj_car_all_year_from_dav
+                WHERE (
+                    (tanggal_pembuatan IS NOT NULL 
+                        AND toDate(tanggal_pembuatan) = toDate('{$today}'))
+                    OR (bedraft_date IS NOT NULL 
+                        AND toDate(bedraft_date) = toDate('{$today}'))
+                )
+                ORDER BY 
+                    CASE 
+                        WHEN tanggal_pembuatan IS NOT NULL THEN toDateTime(tanggal_pembuatan)
+                        WHEN bedraft_date IS NOT NULL THEN toDateTime(bedraft_date)
+                        ELSE toDateTime('1970-01-01 00:00:00')
+                    END DESC
+                LIMIT 10000
+            ";
+
+            // Execute query using HTTP client directly
+            $url = $baseUrl . '/?database=' . urlencode($database) . '&default_format=JSON';
+            
+            $httpClient = Http::timeout($timeout)
+                ->withBasicAuth($username, $password)
+                ->withBody($sql, 'text/plain');
+            
+            $response = $httpClient->post($url);
+
+            if (!$response->successful()) {
+                Log::error('getSapDataTodayFromClickHouseCctv - Query failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return [];
+            }
+
+            $result = $response->json();
+            
+            // Parse ClickHouse JSON response
+            $results = [];
+            if (isset($result['data'])) {
+                $results = $result['data'];
+            } elseif (isset($result[0])) {
+                $results = $result;
+            } else {
+                // Try to parse as JSON lines format
+                $lines = explode("\n", trim($response->body()));
+                foreach ($lines as $line) {
+                    if (!empty(trim($line))) {
+                        $decoded = json_decode($line, true);
+                        if ($decoded !== null) {
+                            $results[] = $decoded;
+                        }
+                    }
+                }
+            }
+
+            // Format data using formatSapRow method
+            $sapData = [];
+            foreach ($results as $row) {
+                try {
+                    // Convert object to array if needed
+                    if (is_object($row)) {
+                        $row = (array) $row;
+                    }
+                    
+                    // Map uri_foto to url_foto for formatSapRow compatibility
+                    if (isset($row['uri_foto']) && !isset($row['url_foto'])) {
+                        $row['url_foto'] = $row['uri_foto'];
+                    }
+                    
+                    // Map keterangan_lokasi to keterangan lokasi for formatSapRow
+                    if (isset($row['keterangan_lokasi']) && !isset($row['keterangan lokasi'])) {
+                        $row['keterangan lokasi'] = $row['keterangan_lokasi'];
+                    }
+                    
+                    $formattedRow = $this->formatSapRow($row, 'INSPEKSI_HAZARD');
+                    $sapData[] = $formattedRow;
+                } catch (Exception $e) {
+                    Log::error('Error processing row in getSapDataTodayFromClickHouseCctv: ' . $e->getMessage());
+                }
+            }
+
+            Log::info('getSapDataTodayFromClickHouseCctv - Success', [
+                'total_records' => count($results),
+                'processed_count' => count($sapData)
+            ]);
+
+            return $sapData;
+
+        } catch (Exception $e) {
+            Log::error('Error in getSapDataTodayFromClickHouseCctv: ' . $e->getMessage());
+            return [];
         }
     }
 }

@@ -16302,6 +16302,11 @@
                 document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
                 this.classList.add('active');
                 
+                // If CCTV tab is clicked, load SAP data today from new ClickHouse connection
+                if (tabName === 'cctv') {
+                    loadSapDataTodayForCctv();
+                }
+                
                 // Auto-scroll to active tab if needed (horizontal scroll)
                 const sidebarTabs = document.querySelector('.sidebar-tabs');
                 if (sidebarTabs && !sidebarTabs.closest('.map-sidebar.collapsed')) {
@@ -16476,6 +16481,70 @@
             ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
         }
         return ISOweekStart;
+    }
+    
+    // Load SAP data today for CCTV tab from new ClickHouse connection
+    function loadSapDataTodayForCctv() {
+        // Call API with for_cctv=true parameter to use new ClickHouse connection
+        fetch(`{{ route('maps.api.filtered-data') }}?show_sap=true&show_hazard=true&for_cctv=true`, {
+            method: 'GET',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+            }
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success && data.data && (data.data.sap || data.data.hazard)) {
+                const allSapData = data.data.sap || data.data.hazard || [];
+                
+                // Get today's date
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+                const todayStr = today.toISOString().split('T')[0];
+                
+                // Filter SAP data for today only
+                const sapDataToday = allSapData.filter(sap => {
+                    if (!sap.tanggal_pelaporan && !sap.detected_at) return false;
+                    try {
+                        const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
+                        sapDate.setHours(0, 0, 0, 0);
+                        const sapDateStr = sapDate.toISOString().split('T')[0];
+                        return sapDateStr === todayStr;
+                    } catch (e) {
+                        return false;
+                    }
+                });
+                
+                // Update sidebar data with today's SAP data
+                filteredSidebarData.sap = sapDataToday;
+                sapDataForSidebar = sapDataToday;
+                sapDataAllWeek = sapDataToday; // For CCTV, use today's data
+                
+                // Update tab counts
+                updateTabCounts();
+                
+                // Update SAP markers on map (limit to 1000)
+                const sapDataForMap = sapDataToday.slice(0, 1000);
+                sapData = sapDataForMap;
+                updateSapMarkersOnMap(sapDataForMap);
+                
+                console.log(`[CCTV SAP] Loaded ${sapDataToday.length} SAP items for today from new ClickHouse connection`);
+            } else {
+                console.warn('[CCTV SAP] No SAP data returned from API');
+                filteredSidebarData.sap = [];
+                sapDataForSidebar = [];
+                sapDataAllWeek = [];
+                updateTabCounts();
+            }
+        })
+        .catch(error => {
+            console.error('[CCTV SAP] Error loading SAP data:', error);
+            filteredSidebarData.sap = [];
+            sapDataForSidebar = [];
+            sapDataAllWeek = [];
+            updateTabCounts();
+        });
     }
     
     // Load SAP data berdasarkan week yang dipilih
