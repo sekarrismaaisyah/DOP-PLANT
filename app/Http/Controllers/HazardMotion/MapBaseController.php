@@ -4693,6 +4693,13 @@ class MapBaseController extends Controller
             $company = trim($request->query('company', '__all__'));
             $site = trim($request->query('site', '__all__'));
             
+            // Get allowed company based on role
+            $allowedCompany = $this->getAllowedCompanyByRole();
+            if ($allowedCompany) {
+                // Override company filter if user has specific role
+                $company = $allowedCompany;
+            }
+            
             $query = CctvData::query();
             
             // Filter by company
@@ -7341,10 +7348,31 @@ class MapBaseController extends Controller
     public function getControlRoomOverview(Request $request)
     {
         try {
+            $company = trim($request->query('company', '__all__'));
+            
+            // Get allowed company based on role
+            $allowedCompany = $this->getAllowedCompanyByRole();
+            if ($allowedCompany) {
+                // Override company filter if user has specific role
+                $company = $allowedCompany;
+            }
+            
             // Ambil semua data CCTV dari cctv_data_bmo2 dan group by control_room
             $query = CctvData::whereNotNull('control_room')
                 ->where('control_room', '!=', '')
                 ->whereRaw("TRIM(COALESCE(control_room, '')) != ''");
+            
+            // Filter by company
+            if ($company !== '__all__') {
+                if (strcasecmp($company, 'Tidak Diketahui') === 0) {
+                    $query->where(function ($q) {
+                        $q->whereNull('perusahaan')
+                          ->orWhere('perusahaan', '');
+                    });
+                } else {
+                    $query->whereRaw('TRIM(perusahaan) = ?', [$company]);
+                }
+            }
             
             // Get all CCTV data
             $allCctvData = $query->get();

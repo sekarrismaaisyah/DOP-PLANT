@@ -12003,7 +12003,11 @@
     // Function untuk load control room overview
     // Ambil data langsung dari API yang sudah di-group by control_room dari cctv_data_bmo2
     function loadControlRoomOverview() {
-        fetch(`{{ route('hazard-detection.api.control-room-overview') }}`)
+        // Use allowedCompany if available, otherwise use currentSelectedCompany
+        const company = allowedCompany || currentSelectedCompany || '__all__';
+        const url = `{{ route('hazard-detection.api.control-room-overview') }}?company=${encodeURIComponent(company)}`;
+        
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -12626,8 +12630,9 @@
     
     // Function untuk load chart statistics
     function loadChartStats() {
-        const company = currentSelectedCompany;
-        const site = currentSelectedSite;
+        // Use allowedCompany if available, otherwise use currentSelectedCompany
+        const company = allowedCompany || currentSelectedCompany || '__all__';
+        const site = currentSelectedSite || '__all__';
         
         fetch(`{{ route('hazard-detection.api.cctv-chart-stats') }}?company=${encodeURIComponent(company)}&site=${encodeURIComponent(site)}`)
             .then(response => response.json())
@@ -12785,7 +12790,8 @@
     
     // Function to update total CCTV count dynamically based on filters
     function updateTotalCctvCount() {
-        const company = currentSelectedCompany || '__all__';
+        // Use allowedCompany if available, otherwise use currentSelectedCompany
+        const company = allowedCompany || currentSelectedCompany || '__all__';
         const site = currentSelectedSite || '__all__';
         
         const totalCctvElement = document.getElementById('totalCctvCountDynamic');
