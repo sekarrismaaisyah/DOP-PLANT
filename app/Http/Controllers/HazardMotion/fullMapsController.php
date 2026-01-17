@@ -683,7 +683,7 @@ class fullMapsController extends Controller
                         ifNull(toString(menit), '') as menit,
                         ifNull(toString(nama_lokasi), '') as nama_lokasi,
                         ifNull(toString(nama_detail_lokasi), '') as nama_detail_lokasi
-                    FROM beats.aaj_car_all_year_from_dav
+                    FROM hse_automation.aaj_car_all_year_from_dav
                     WHERE (
                         (tanggal_pembuatan IS NOT NULL 
                             AND toDate(tanggal_pembuatan) >= toDate('{$weekStartStr}') 
@@ -701,7 +701,8 @@ class fullMapsController extends Controller
                     LIMIT 12500
                 ";
                 
-                $resultsInspeksi = $clickhouse->query($sqlInspeksi);
+                // Menggunakan queryClickHouseCustom dengan database 'hse_automation'
+                $resultsInspeksi = $this->queryClickHouseCustom($sqlInspeksi, 'hse_automation');
                 
                 if (!empty($resultsInspeksi) && is_array($resultsInspeksi)) {
                     foreach ($resultsInspeksi as $row) {
@@ -3250,6 +3251,63 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 'message' => 'Error: ' . $e->getMessage(),
                 'data' => null
             ], 500);
+        }
+    }
+
+    /**
+     * Query ClickHouse dengan koneksi custom
+     */
+    private function queryClickHouseCustom($sql, $database = 'hse_automation')
+    {
+        try {
+            $host = '10.10.10.38';
+            $port = 8123;
+            $protocol = 'http';
+            $baseUrl = $protocol . '://' . $host . ':' . $port;
+            $username = 'default';
+            $password = 'Zxcdsaqwe321:;';
+            $timeout = 30;
+
+            $url = $baseUrl . '/?database=' . urlencode($database) . '&default_format=JSON';
+            
+            $httpClient = Http::timeout($timeout)
+                ->withBasicAuth($username, $password)
+                ->withBody($sql, 'text/plain');
+            
+            $response = $httpClient->post($url);
+
+            if (!$response->successful()) {
+                Log::error('ClickHouse custom query failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return [];
+            }
+
+            $result = $response->json();
+            
+            // Parse ClickHouse JSON response
+            if (isset($result['data'])) {
+                return $result['data'];
+            } elseif (isset($result[0])) {
+                return $result;
+            } else {
+                // Try to parse as JSON lines format
+                $lines = explode("\n", trim($response->body()));
+                $data = [];
+                foreach ($lines as $line) {
+                    if (!empty(trim($line))) {
+                        $decoded = json_decode($line, true);
+                        if ($decoded !== null) {
+                            $data[] = $decoded;
+                        }
+                    }
+                }
+                return $data;
+            }
+        } catch (Exception $e) {
+            Log::error('Error in queryClickHouseCustom: ' . $e->getMessage());
+            return [];
         }
     }
 
