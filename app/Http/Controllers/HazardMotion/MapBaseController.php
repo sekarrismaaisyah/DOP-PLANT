@@ -1010,35 +1010,57 @@ class MapBaseController extends Controller
                 ], 500);
             }
             
-            // Query untuk mengambil data PJA Karyawan dari nitip.wan_vw_pja_karyawan
+            // Query untuk mengambil data PJA Karyawan dari MySQL tabel wan_vw_pja_karyawan
             try {
-                $sqlKaryawan = "
-                    SELECT 
-                        toString(kode_sid) as kode_sid,
-                        toString(nama_pja) as nama_pja,
-                        toString(tipe_pja) as tipe_pja,
-                        toString(peruashaan) as perusahaan,
-                        toString(id_employee) as id_employee,
-                        toString(id_nama_pja) as id_nama_pja,
-                        toString(pja_kategori) as pja_kategori,
-                        toString(id_pja_parent) as id_pja_parent,
-                        toString(nama_karyawan) as nama_karyawan,
-                        toString(id_pja_employee) as id_pja_employee,
-                        toString(status_karyawan) as status_karyawan,
-                        toString(status_nama_pja) as status_nama_pja,
-                        toString(pja_kategory_layer) as pja_kategory_layer,
-                        toString(status_pja_karyawan) as status_pja_karyawan,
-                        tanggal_update_nama_pja,
-                        tanggal_update_data_karyawan,
-                        tanggal_update_data_pja_karyawan
-                    FROM nitip.wan_vw_pja_karyawan
-                    ORDER BY nama_pja, nama_karyawan
-                    LIMIT 10000
-                ";
-                
-                $resultsKaryawan = $clickhouse->query($sqlKaryawan);
+                $resultsKaryawan = DB::table('wan_vw_pja_karyawan')
+                    ->select(
+                        'kode_sid',
+                        'nama_pja',
+                        'tipe_pja',
+                        'peruashaan as perusahaan',
+                        'id_employee',
+                        'id_nama_pja',
+                        'pja_kategori',
+                        'id_pja_parent',
+                        'nama_karyawan',
+                        'id_pja_employee',
+                        'status_karyawan',
+                        'status_nama_pja',
+                        'pja_kategory_layer',
+                        'status_pja_karyawan',
+                        'tanggal_update_nama_pja',
+                        'tanggal_update_data_karyawan',
+                        'tanggal_update_data_pja_karyawan'
+                    )
+                    ->orderBy('nama_pja')
+                    ->orderBy('nama_karyawan')
+                    ->limit(10000)
+                    ->get()
+                    ->map(function($row) {
+                        // Convert to array and ensure all values are strings (for compatibility)
+                        return [
+                            'kode_sid' => (string)($row->kode_sid ?? ''),
+                            'nama_pja' => (string)($row->nama_pja ?? ''),
+                            'tipe_pja' => (string)($row->tipe_pja ?? ''),
+                            'perusahaan' => (string)($row->perusahaan ?? ''),
+                            'id_employee' => (string)($row->id_employee ?? ''),
+                            'id_nama_pja' => (string)($row->id_nama_pja ?? ''),
+                            'pja_kategori' => (string)($row->pja_kategori ?? ''),
+                            'id_pja_parent' => (string)($row->id_pja_parent ?? ''),
+                            'nama_karyawan' => (string)($row->nama_karyawan ?? ''),
+                            'id_pja_employee' => (string)($row->id_pja_employee ?? ''),
+                            'status_karyawan' => (string)($row->status_karyawan ?? ''),
+                            'status_nama_pja' => (string)($row->status_nama_pja ?? ''),
+                            'pja_kategory_layer' => (string)($row->pja_kategory_layer ?? ''),
+                            'status_pja_karyawan' => (string)($row->status_pja_karyawan ?? ''),
+                            'tanggal_update_nama_pja' => $row->tanggal_update_nama_pja ?? null,
+                            'tanggal_update_data_karyawan' => $row->tanggal_update_data_karyawan ?? null,
+                            'tanggal_update_data_pja_karyawan' => $row->tanggal_update_data_pja_karyawan ?? null,
+                        ];
+                    })
+                    ->toArray();
             } catch (Exception $e) {
-                Log::error('Error querying wan_vw_pja_karyawan: ' . $e->getMessage());
+                Log::error('Error querying wan_vw_pja_karyawan from MySQL: ' . $e->getMessage());
                 $resultsKaryawan = [];
             }
             
