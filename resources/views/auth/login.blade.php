@@ -25,8 +25,8 @@
             <form class="row g-3" method="POST" action="{{ route('login') }}">
             @csrf
               <div class="col-12">
-                <label for="inputEmailAddress" class="form-label">Email</label>
-                <input type="email" class="form-control @error('email') is-invalid @enderror" id="inputEmailAddress" name="email" value="admin@gmail.com" placeholder="Enter Email">
+                <label for="inputEmailAddress" class="form-label">Email / Username</label>
+                <input type="text" class="form-control @error('email') is-invalid @enderror" id="inputEmailAddress" name="email" value="" placeholder="Enter Email or Username">
                 @error('email')
                     <span class="invalid-feedback" role="alert">
                         <strong>{{ $message }}</strong>
