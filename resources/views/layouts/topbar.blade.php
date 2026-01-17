@@ -258,7 +258,7 @@
               <div class="text-center">
                 <img src="{{ URL::asset('build/images/avatars/01.png') }}" class="rounded-circle p-1 shadow mb-3" width="90" height="90"
                   alt="">
-                <h5 class="user-name mb-0 fw-bold">Hello, admin</h5>
+                <h5 class="user-name mb-0 fw-bold">Hello, {{ Auth::user()->email ?? 'Guest' }}</h5>
               </div>
             </a>
             <hr class="dropdown-divider">
