@@ -27,6 +27,25 @@ use Exception;
 class MapBaseController extends Controller
 {
     /**
+     * Get allowed company based on user role
+     * Returns company name if user has specific role, null if all companies allowed
+     */
+    private function getAllowedCompanyByRole()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return null;
+        }
+
+        // Check if user has control_room_pama role
+        if ($user->hasRole('control_room_pama')) {
+            return 'PT Pamapersada Nusantara';
+        }
+
+        return null; // Admin or other roles can see all companies
+    }
+
+    /**
      * Display the hazard detection page
      */
     public function index()
@@ -34,6 +53,9 @@ class MapBaseController extends Controller
         // Get logged-in user
         $user = Auth::user();
         $userName = $user ? $user->name : null;
+        
+        // Get allowed company based on role
+        $allowedCompany = $this->getAllowedCompanyByRole();
         
         // Get control rooms that the logged-in user supervises
         $supervisedControlRooms = [];
@@ -46,6 +68,11 @@ class MapBaseController extends Controller
         // Model CctvData sudah dikonfigurasi untuk menggunakan tabel cctv_data_bmo2
         $cctvDataAllQuery = CctvData::query();
         
+        // Filter by company if user has specific role
+        if ($allowedCompany) {
+            $cctvDataAllQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        
         // Filter CCTV data based on supervised control rooms if user is not admin
         // If user is admin or has no supervised control rooms, show all CCTV
         if ($userName && !empty($supervisedControlRooms)) {
@@ -57,6 +84,11 @@ class MapBaseController extends Controller
         // Ambil data CCTV yang memiliki koordinat untuk ditampilkan di map
         $cctvDataWithLocationQuery = CctvData::whereNotNull('longitude')
             ->whereNotNull('latitude');
+        
+        // Filter by company if user has specific role
+        if ($allowedCompany) {
+            $cctvDataWithLocationQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
         
         // Apply same filter for map data
         if ($userName && !empty($supervisedControlRooms)) {
@@ -140,18 +172,28 @@ class MapBaseController extends Controller
         })->toArray();
 
         // Statistik area kritis untuk tampilan awal
-        $totalCctvCount = CctvData::count();
+        $totalCctvCountQuery = CctvData::query();
+        if ($allowedCompany) {
+            $totalCctvCountQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        $totalCctvCount = $totalCctvCountQuery->count();
         
         // Hitung jumlah control room yang unik dari tabel cctv_data_bmo2
-        $totalControlRoomCount = CctvData::whereNotNull('control_room')
-            ->where('control_room', '!=', '')
-            ->distinct('control_room')
+        $totalControlRoomCountQuery = CctvData::whereNotNull('control_room')
+            ->where('control_room', '!=', '');
+        if ($allowedCompany) {
+            $totalControlRoomCountQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        $totalControlRoomCount = $totalControlRoomCountQuery->distinct('control_room')
             ->count('control_room');
         
         // Ambil semua control room yang unik untuk ditampilkan di overview
-        $allControlRooms = CctvData::whereNotNull('control_room')
-            ->where('control_room', '!=', '')
-            ->distinct('control_room')
+        $allControlRoomsQuery = CctvData::whereNotNull('control_room')
+            ->where('control_room', '!=', '');
+        if ($allowedCompany) {
+            $allControlRoomsQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        $allControlRooms = $allControlRoomsQuery->distinct('control_room')
             ->orderBy('control_room')
             ->pluck('control_room')
             ->toArray();
@@ -162,6 +204,9 @@ class MapBaseController extends Controller
                   ->orWhere('coverage_lokasi', 'like', '%kritis%')
                   ->orWhere('coverage_lokasi', 'like', '%critical%');
         });
+        if ($allowedCompany) {
+            $criticalCoverageBaseQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
 
         $criticalAreaCount = (clone $criticalCoverageBaseQuery)
             ->whereNotNull('coverage_lokasi')
@@ -199,8 +244,11 @@ class MapBaseController extends Controller
         ];
 
         // Get all insiden records (remove limit to get all data for accurate filtering)
-        $insidenRecords = InsidenTabel::orderByDesc('created_at')
-            ->get();
+        $insidenRecordsQuery = InsidenTabel::orderByDesc('created_at');
+        if ($allowedCompany) {
+            $insidenRecordsQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        $insidenRecords = $insidenRecordsQuery->get();
 
         $insidenGroups = $insidenRecords
             ->groupBy('no_kecelakaan')
@@ -556,6 +604,7 @@ class MapBaseController extends Controller
             'sapData',
             'grDetections',
             'stats',
+            'allowedCompany',
             'insidenGroups',
             'allControlRooms',
             'criticalAreaCount',
@@ -3740,6 +3789,13 @@ class MapBaseController extends Controller
             $company = trim($request->query('company', '__all__'));
             $site = trim($request->query('site', '__all__'));
 
+            // Get allowed company based on role
+            $allowedCompany = $this->getAllowedCompanyByRole();
+            if ($allowedCompany) {
+                // Override company filter if user has specific role
+                $company = $allowedCompany;
+            }
+
             // Column mapping (sesuai urutan kolom di DataTable)
             $columns = ['site', 'perusahaan', 'no_cctv', 'nama_cctv', 'status', 'kondisi', 'coverage_lokasi', 'coverage_detail_lokasi', 'kategori_area_tercapture', 'lokasi_pemasangan'];
             $orderColumnName = $columns[$orderColumn] ?? 'no_cctv';
@@ -3899,6 +3955,13 @@ class MapBaseController extends Controller
         try {
             $company = trim($request->query('company', '__all__'));
             $site = trim($request->query('site', '__all__'));
+            
+            // Get allowed company based on role
+            $allowedCompany = $this->getAllowedCompanyByRole();
+            if ($allowedCompany) {
+                // Override company filter if user has specific role
+                $company = $allowedCompany;
+            }
             
             $query = CctvData::query();
             
@@ -6469,6 +6532,14 @@ class MapBaseController extends Controller
         try {
             $company = trim($request->get('company', '__all__'));
             $site = trim($request->get('site', '__all__'));
+            
+            // Get allowed company based on role
+            $allowedCompany = $this->getAllowedCompanyByRole();
+            if ($allowedCompany) {
+                // Override company filter if user has specific role
+                $company = $allowedCompany;
+            }
+            
             $weekStart = $request->get('week_start'); // Filter per week untuk SAP
             $showCctv = $request->get('show_cctv', 'true') === 'true';
             $showHazard = $request->get('show_hazard', 'true') === 'true';

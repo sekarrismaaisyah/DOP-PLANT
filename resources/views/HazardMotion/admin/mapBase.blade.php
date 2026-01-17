@@ -11077,18 +11077,49 @@
     let companyCctvTable = null;
     let currentSelectedCompany = '__all__';
     let currentSelectedSite = '__all__';
+    
+    // Get allowed company from server (if user has specific role)
+    const allowedCompany = @json($allowedCompany ?? null);
 
     document.addEventListener('DOMContentLoaded', function() {
         switchView('hazard');
         
         // Load area kritis overview data saat halaman pertama kali dimuat
-        // Pastikan filter default ke semua perusahaan & site
-        currentSelectedCompany = '__all__';
+        // Set filter default berdasarkan role user
+        if (allowedCompany) {
+            // User has specific role, auto-select their company
+            currentSelectedCompany = allowedCompany;
+        } else {
+            // Admin or other roles, show all companies
+            currentSelectedCompany = '__all__';
+        }
         currentSelectedSite = '__all__';
         
         // Load filter options untuk halaman utama dan header
         loadMainFilterOptions();
         loadHeaderFilterOptions();
+        
+        // Auto-select company filter if user has specific role
+        if (allowedCompany) {
+            // Disable company filter dropdowns if user has specific role
+            const headerFilterCompanyBtn = document.getElementById('headerFilterCompanyBtn');
+            const mainFilterCompanyBtn = document.getElementById('mainFilterCompanyBtn');
+            
+            if (headerFilterCompanyBtn) {
+                headerFilterCompanyBtn.disabled = true;
+                headerFilterCompanyBtn.title = 'Filter perusahaan terbatas berdasarkan role Anda';
+            }
+            
+            if (mainFilterCompanyBtn) {
+                mainFilterCompanyBtn.disabled = true;
+                mainFilterCompanyBtn.title = 'Filter perusahaan terbatas berdasarkan role Anda';
+            }
+            
+            // Wait for filter options to load, then auto-select
+            setTimeout(() => {
+                selectCompanyFilter(allowedCompany);
+            }, 500);
+        }
         
         loadAreaKritisOverview();
         loadControlRoomOverview();
@@ -11112,6 +11143,14 @@
                 const target = e.target.closest('.filter-option');
                 if (target) {
                     e.preventDefault();
+                    
+                    // Prevent change if user has specific role
+                    if (allowedCompany) {
+                        // Re-select the allowed company
+                        selectCompanyFilter(allowedCompany);
+                        return;
+                    }
+                    
                     const value = target.getAttribute('data-value');
                     const text = target.textContent.trim();
                     currentSelectedCompany = value || '__all__';
@@ -11198,8 +11237,51 @@
             });
         }
         
+        // Function to auto-select company filter
+        function selectCompanyFilter(companyName) {
+            if (!companyName) return;
+            
+            currentSelectedCompany = companyName;
+            
+            // Update button text di header
+            if (headerFilterCompanyText) {
+                headerFilterCompanyText.textContent = companyName;
+            }
+            
+            // Update button text di map filter juga
+            const mainFilterCompanyText = document.getElementById('mainFilterCompanyText');
+            if (mainFilterCompanyText) {
+                mainFilterCompanyText.textContent = companyName;
+            }
+            
+            // Update filter di modal juga jika ada
+            const modalFilterCompany = document.getElementById('filterCompany');
+            if (modalFilterCompany) {
+                modalFilterCompany.value = companyName;
+            }
+            
+            // Trigger click on filter option if exists in dropdown
+            const headerDropdown = document.querySelector(`#headerFilterCompanyDropdown .filter-option[data-value="${companyName}"]`);
+            if (headerDropdown) {
+                headerDropdown.click();
+            } else {
+                // If option not found, manually update statistics
+                loadChartStats();
+                loadAreaKritisOverview();
+                loadControlRoomOverview();
+                updateTotalCctvCount();
+            }
+        }
+        
         if (btnResetHeaderFilter) {
             btnResetHeaderFilter.addEventListener('click', function() {
+                // Don't allow reset if user has specific role
+                if (allowedCompany) {
+                    // Re-select the allowed company
+                    selectCompanyFilter(allowedCompany);
+                    return;
+                }
+                
                 currentSelectedCompany = '__all__';
                 currentSelectedSite = '__all__';
                 
@@ -11259,6 +11341,14 @@
                 const target = e.target.closest('.filter-option');
                 if (target) {
                     e.preventDefault();
+                    
+                    // Prevent change if user has specific role
+                    if (allowedCompany) {
+                        // Re-select the allowed company
+                        selectCompanyFilter(allowedCompany);
+                        return;
+                    }
+                    
                     const value = target.getAttribute('data-value');
                     const text = target.textContent.trim();
                     currentSelectedCompany = value || '__all__';
