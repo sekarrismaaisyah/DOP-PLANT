@@ -67,13 +67,13 @@
       
         <!--navigation-->
         <ul class="metismenu" id="sidenav">
-          <li>
+          {{-- <li>
             <a href="{{ route('hazard-detection.index') }}">
               <div class="parent-icon"><i class="material-icons-outlined">dashboard</i>
               </div>
               <div class="menu-title">Dashboard</div>
             </a>
-          </li>
+          </li> --}}
 
 
           <li class="menu-label">Kesiapan Alat</li>
@@ -253,42 +253,18 @@
             </ul>
           </li> --}}
           
-          <li class="menu-label">Integration & Settings</li>
+          <li class="menu-label">Auto Alert</li>
           
           <li>
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">settings</i>
               </div>
-              <div class="menu-title">System Integration</div>
+              <div class="menu-title">Auto Alert CCTV</div>
             </a>
-            <ul>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>API Management</a></li>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>Data Sources</a></li>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>Third-party Integration</a></li>
-            </ul>
+           
           </li>
           
-          <li>
-            <a class="has-arrow" href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">tune</i>
-              </div>
-              <div class="menu-title">Settings</div>
-            </a>
-            <ul>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>System Settings</a></li>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>User Management</a></li>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>Permissions</a></li>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>Configuration</a></li>
-            </ul>
-          </li>
-          
-          <li>
-            <a href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">help_outline</i>
-              </div>
-              <div class="menu-title">Help & Support</div>
-            </a>
-          </li>
+       
          </ul>
         <!--end navigation-->
     </div>
