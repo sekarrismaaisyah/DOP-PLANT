@@ -5771,25 +5771,48 @@ source: new ol.source.Vector(),
         console.log('Cleared existing features from layer');
         
         fetch('{{ url("full-maps/api/daily-operation-plans") }}')
-            .then(response => response.json())
-                .then(data => {
-                    console.log('Daily operation plans API response:', data);
+            .then(response => {
+                console.log('Daily operation plans API response status:', response.status);
+                return response.json();
+            })
+            .then(data => {
+                console.log('Daily operation plans API response:', data);
+                
+                // Log error if any
+                if (!data.success) {
+                    console.error('Daily operation plans API error:', {
+                        success: data.success,
+                        message: data.message,
+                        error: data.error,
+                        full_response: data
+                    });
                     
-                    // Log summary if available
-                    if (data.summary) {
-                        console.log('API Summary:', {
-                            total_plans: data.summary.total_plans,
-                            processed: data.summary.processed,
-                            found_in_clickhouse: data.summary.found_in_clickhouse,
-                            with_geometry: data.summary.with_geometry,
-                            features_returned: data.summary.features_returned,
-                            plans_not_found: data.summary.plans_not_found
-                        });
-                    }
+                    // Show error alert to user
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error Loading DOP Data',
+                        html: `<strong>Error:</strong> ${data.message || 'Unknown error'}<br><br><small>${data.error || ''}</small>`,
+                        timer: 5000,
+                        showConfirmButton: true
+                    });
+                    return;
+                }
+                
+                // Log summary if available
+                if (data.summary) {
+                    console.log('API Summary:', {
+                        total_plans: data.summary.total_plans,
+                        processed: data.summary.processed,
+                        found_in_mysql: data.summary.found_in_mysql,
+                        with_geometry: data.summary.with_geometry,
+                        features_returned: data.summary.features_returned,
+                        plans_not_found: data.summary.plans_not_found
+                    });
+                }
                     
                     if (data.success && data.data && data.data.features) {
-                    const geoJsonData = data.data;
-                    console.log(`Received ${geoJsonData.features.length} features from API`);
+                        const geoJsonData = data.data;
+                        console.log(`Received ${geoJsonData.features.length} features from API`);
                     
                     // Helper function to get coordinates structure info
                     function getCoordinatesStructure(coords, type) {
@@ -6034,6 +6057,20 @@ source: new ol.source.Vector(),
             })
             .catch(error => {
                 console.error('Error loading daily operation plans:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
+                
+                // Show error alert to user
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Error Loading DOP Data',
+                    html: `<strong>Network/Parse Error:</strong> ${error.message || 'Unknown error'}<br><br><small>Please check console for details</small>`,
+                    timer: 5000,
+                    showConfirmButton: true
+                });
             });
     }
 

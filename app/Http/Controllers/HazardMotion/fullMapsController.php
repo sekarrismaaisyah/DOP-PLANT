@@ -2345,6 +2345,8 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     public function getDailyOperationPlansWithPolygons(Request $request)
     {
         try {
+            Log::info('getDailyOperationPlansWithPolygons - Method called, using MySQL database');
+            
             // Get all daily operation plans with CCTV relationships
             $plans = DailyOperationPlan::with('cctvs')->get();
             
@@ -2361,7 +2363,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 ]);
             }
 
-            // Menggunakan MySQL untuk mengambil data geometry
+            // Menggunakan MySQL untuk mengambil data geometry dari tabel bep_vw_site_lokasi_detil_lokasi
 
             $features = [];
             $processedCount = 0;
@@ -2402,17 +2404,42 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                         'detail_lokasi' => $detailLokasi
                     ]);
                     
-                    $mysqlResults = DB::table('bep_vw_site_lokasi_detil_lokasi')
-                        ->whereRaw('TRIM(lokasi) = TRIM(?)', [$lokasi])
-                        ->whereRaw('TRIM(Detil_Lokasi) = TRIM(?)', [$detailLokasi])
-                        ->select('lokasi', DB::raw('Detil_Lokasi as detail_lokasi'), 'data_geometry2', 'site')
-                        ->first();
-                    
-                    Log::debug("MySQL query result for plan {$plan->id}", [
-                        'has_results' => !empty($mysqlResults),
-                        'lokasi' => $lokasi,
-                        'detail_lokasi' => $detailLokasi
-                    ]);
+                    try {
+                        // Query MySQL untuk mendapatkan geometry dari tabel bep_vw_site_lokasi_detil_lokasi
+                        $mysqlResults = DB::table('bep_vw_site_lokasi_detil_lokasi')
+                            ->whereRaw('TRIM(COALESCE(lokasi, "")) = TRIM(?)', [$lokasi ?? ''])
+                            ->whereRaw('TRIM(COALESCE(Detil_Lokasi, "")) = TRIM(?)', [$detailLokasi ?? ''])
+                            ->select(
+                                'lokasi', 
+                                DB::raw('Detil_Lokasi as detail_lokasi'), 
+                                'data_geometry2', 
+                                'site'
+                            )
+                            ->first();
+                        
+                        Log::debug("MySQL query result for plan {$plan->id}", [
+                            'has_results' => !empty($mysqlResults),
+                            'lokasi' => $lokasi,
+                            'detail_lokasi' => $detailLokasi,
+                            'mysql_result_keys' => !empty($mysqlResults) ? array_keys((array)$mysqlResults) : []
+                        ]);
+                    } catch (\Illuminate\Database\QueryException $dbError) {
+                        Log::error("MySQL query exception for plan {$plan->id}: " . $dbError->getMessage(), [
+                            'lokasi' => $lokasi,
+                            'detail_lokasi' => $detailLokasi,
+                            'sql_error' => $dbError->getMessage(),
+                            'sql_code' => $dbError->getCode(),
+                            'sql_state' => $dbError->errorInfo ?? null
+                        ]);
+                        $mysqlResults = null;
+                    } catch (Exception $e) {
+                        Log::error("General exception for plan {$plan->id}: " . $e->getMessage(), [
+                            'lokasi' => $lokasi,
+                            'detail_lokasi' => $detailLokasi,
+                            'error' => $e->getMessage()
+                        ]);
+                        $mysqlResults = null;
+                    }
                     
                     if (!empty($mysqlResults)) {
                         $foundCount++;
@@ -2716,11 +2743,19 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             ]);
 
         } catch (Exception $e) {
-            Log::error('Error getting daily operation plans with polygons: ' . $e->getMessage());
+            Log::error('Error getting daily operation plans with polygons: ' . $e->getMessage(), [
+                'exception' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
             return response()->json([
                 'success' => false,
-                'message' => 'Terjadi kesalahan saat mengambil data rencana kerja.',
-                'error' => $e->getMessage()
+                'message' => 'Terjadi kesalahan saat mengambil data rencana kerja dari MySQL: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+                'data' => [
+                    'type' => 'FeatureCollection',
+                    'features' => []
+                ]
             ], 500);
         }
     }
