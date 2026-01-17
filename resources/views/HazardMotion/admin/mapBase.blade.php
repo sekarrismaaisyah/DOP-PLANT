@@ -11078,9 +11078,8 @@
     let currentSelectedCompany = '__all__';
     let currentSelectedSite = '__all__';
     
-    // Get allowed company and site from server (if user has specific role)
+    // Get allowed company from server (if user has specific role)
     const allowedCompany = @json($allowedCompany ?? null);
-    const allowedSite = @json($allowedSite ?? null);
 
     document.addEventListener('DOMContentLoaded', function() {
         switchView('hazard');
@@ -11094,19 +11093,13 @@
             // Admin or other roles, show all companies
             currentSelectedCompany = '__all__';
         }
-        if (allowedSite) {
-            // User has specific role, auto-select their site
-            currentSelectedSite = allowedSite;
-        } else {
-            // Admin or other roles, show all sites
-            currentSelectedSite = '__all__';
-        }
+        currentSelectedSite = '__all__';
         
         // Load filter options untuk halaman utama dan header
         loadMainFilterOptions();
         loadHeaderFilterOptions();
         
-        // Auto-select company and site filter if user has specific role
+        // Auto-select company filter if user has specific role
         if (allowedCompany) {
             // Disable company filter dropdowns if user has specific role
             const headerFilterCompanyBtn = document.getElementById('headerFilterCompanyBtn');
@@ -11125,27 +11118,6 @@
             // Wait for filter options to load, then auto-select
             setTimeout(() => {
                 selectCompanyFilter(allowedCompany);
-            }, 500);
-        }
-        
-        if (allowedSite) {
-            // Disable site filter dropdowns if user has specific role
-            const headerFilterSiteBtn = document.getElementById('headerFilterSiteBtn');
-            const mainFilterSiteBtn = document.getElementById('mainFilterSiteBtn');
-            
-            if (headerFilterSiteBtn) {
-                headerFilterSiteBtn.disabled = true;
-                headerFilterSiteBtn.title = 'Filter site terbatas berdasarkan role Anda';
-            }
-            
-            if (mainFilterSiteBtn) {
-                mainFilterSiteBtn.disabled = true;
-                mainFilterSiteBtn.title = 'Filter site terbatas berdasarkan role Anda';
-            }
-            
-            // Wait for filter options to load, then auto-select site
-            setTimeout(() => {
-                selectSiteFilter(allowedSite);
             }, 500);
         }
         
@@ -11290,48 +11262,6 @@
             
             // Trigger click on filter option if exists in dropdown
             const headerDropdown = document.querySelector(`#headerFilterCompanyDropdown .filter-option[data-value="${companyName}"]`);
-            if (headerDropdown) {
-                headerDropdown.click();
-            } else {
-                // If option not found, manually update statistics
-                loadChartStats();
-                loadAreaKritisOverview();
-                loadControlRoomOverview();
-                updateTotalCctvCount();
-            }
-        }
-        
-        // Function to auto-select site filter
-        function selectSiteFilter(siteName) {
-            if (!siteName) return;
-            
-            currentSelectedSite = siteName;
-            
-            // Update button text di header
-            if (headerFilterSiteText) {
-                headerFilterSiteText.textContent = siteName;
-            }
-            
-            // Update button text di map filter juga
-            const mainFilterSiteText = document.getElementById('mainFilterSiteText');
-            if (mainFilterSiteText) {
-                mainFilterSiteText.textContent = siteName;
-            }
-            
-            // Update filter di modal juga jika ada
-            const modalFilterSite = document.getElementById('filterSite');
-            if (modalFilterSite) {
-                modalFilterSite.value = siteName;
-            }
-            
-            // Update currentSiteFilter untuk filter map dan hazard list
-            currentSiteFilter = (siteName !== '__all__') ? siteName : '';
-            filterBySite(currentSiteFilter);
-            filterHazardListView(currentSiteFilter);
-            updateStatisticsBySite(currentSiteFilter);
-            
-            // Trigger click on filter option if exists in dropdown
-            const headerDropdown = document.querySelector(`#headerFilterSiteDropdown .filter-option[data-value="${siteName}"]`);
             if (headerDropdown) {
                 headerDropdown.click();
             } else {
@@ -11997,9 +11927,8 @@
     
     // Function untuk load area kritis overview (untuk section di halaman utama)
     function loadAreaKritisOverview() {
-        // Use allowedCompany and allowedSite if available, otherwise use currentSelectedCompany/Site
-        const company = allowedCompany || currentSelectedCompany || '__all__';
-        const site = allowedSite || currentSelectedSite || '__all__';
+        const company = currentSelectedCompany || '__all__';
+        const site = currentSelectedSite || '__all__';
         
         fetch(`{{ route('hazard-detection.api.cctv-chart-stats') }}?company=${encodeURIComponent(company)}&site=${encodeURIComponent(site)}`)
             .then(response => response.json())
@@ -12074,11 +12003,7 @@
     // Function untuk load control room overview
     // Ambil data langsung dari API yang sudah di-group by control_room dari cctv_data_bmo2
     function loadControlRoomOverview() {
-        // Use allowedCompany if available, otherwise use currentSelectedCompany
-        const company = allowedCompany || currentSelectedCompany || '__all__';
-        const url = `{{ route('hazard-detection.api.control-room-overview') }}?company=${encodeURIComponent(company)}`;
-        
-        fetch(url)
+        fetch(`{{ route('hazard-detection.api.control-room-overview') }}`)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -12701,9 +12626,8 @@
     
     // Function untuk load chart statistics
     function loadChartStats() {
-        // Use allowedCompany and allowedSite if available, otherwise use currentSelectedCompany/Site
-        const company = allowedCompany || currentSelectedCompany || '__all__';
-        const site = allowedSite || currentSelectedSite || '__all__';
+        const company = currentSelectedCompany;
+        const site = currentSelectedSite;
         
         fetch(`{{ route('hazard-detection.api.cctv-chart-stats') }}?company=${encodeURIComponent(company)}&site=${encodeURIComponent(site)}`)
             .then(response => response.json())
@@ -12861,8 +12785,7 @@
     
     // Function to update total CCTV count dynamically based on filters
     function updateTotalCctvCount() {
-        // Use allowedCompany if available, otherwise use currentSelectedCompany
-        const company = allowedCompany || currentSelectedCompany || '__all__';
+        const company = currentSelectedCompany || '__all__';
         const site = currentSelectedSite || '__all__';
         
         const totalCctvElement = document.getElementById('totalCctvCountDynamic');
