@@ -3268,69 +3268,12 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
-     * Query ClickHouse dengan koneksi custom
+     * Get CCTV alerts with units data for sidebar
      */
-    private function queryClickHouseCustom($sql, $database = 'hse_automation')
+    public function getCctvAlertsWithUnits()
     {
         try {
-            $host = '10.10.10.38';
-            $port = 8123;
-            $protocol = 'http';
-            $baseUrl = $protocol . '://' . $host . ':' . $port;
-            $username = 'default';
-            $password = 'Zxcdsaqwe321:;';
-            $timeout = 30;
-
-            $url = $baseUrl . '/?database=' . urlencode($database) . '&default_format=JSON';
-            
-            $httpClient = Http::timeout($timeout)
-                ->withBasicAuth($username, $password)
-                ->withBody($sql, 'text/plain');
-            
-            $response = $httpClient->post($url);
-
-            if (!$response->successful()) {
-                Log::error('ClickHouse custom query failed', [
-                    'status' => $response->status(),
-                    'body' => $response->body()
-                ]);
-                return [];
-            }
-
-            $result = $response->json();
-            
-            // Parse ClickHouse JSON response
-            if (isset($result['data'])) {
-                return $result['data'];
-            } elseif (isset($result[0])) {
-                return $result;
-            } else {
-                // Try to parse as JSON lines format
-                $lines = explode("\n", trim($response->body()));
-                $data = [];
-                foreach ($lines as $line) {
-                    if (!empty(trim($line))) {
-                        $decoded = json_decode($line, true);
-                        if ($decoded !== null) {
-                            $data[] = $decoded;
-                        }
-                    }
-                }
-                return $data;
-            }
-        } catch (Exception $e) {
-            Log::error('Error in queryClickHouseCustom: ' . $e->getMessage());
-            return [];
-        }
-    }
-
-    /**
-     * Get auto alert sidebar data (grouped by alert)
-     */
-    public function getAutoAlertSidebarData(Request $request)
-    {
-        try {
-            // Get CCTV alerts data grouped by alert_id
+            // Get CCTV alerts data
             $alerts = DB::table('cctv_alerts')
                 ->select(
                     'cctv_alerts.id',
@@ -3391,12 +3334,69 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 'count' => count($groupedData)
             ]);
         } catch (Exception $e) {
-            Log::error('Error fetching auto alert sidebar data via API: ' . $e->getMessage());
+            Log::error('Error fetching CCTV alerts with units: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage(),
                 'data' => []
             ], 500);
+        }
+    }
+
+    /**
+     * Query ClickHouse dengan koneksi custom
+     */
+    private function queryClickHouseCustom($sql, $database = 'hse_automation')
+    {
+        try {
+            $host = '10.10.10.38';
+            $port = 8123;
+            $protocol = 'http';
+            $baseUrl = $protocol . '://' . $host . ':' . $port;
+            $username = 'default';
+            $password = 'Zxcdsaqwe321:;';
+            $timeout = 30;
+
+            $url = $baseUrl . '/?database=' . urlencode($database) . '&default_format=JSON';
+            
+            $httpClient = Http::timeout($timeout)
+                ->withBasicAuth($username, $password)
+                ->withBody($sql, 'text/plain');
+            
+            $response = $httpClient->post($url);
+
+            if (!$response->successful()) {
+                Log::error('ClickHouse custom query failed', [
+                    'status' => $response->status(),
+                    'body' => $response->body()
+                ]);
+                return [];
+            }
+
+            $result = $response->json();
+            
+            // Parse ClickHouse JSON response
+            if (isset($result['data'])) {
+                return $result['data'];
+            } elseif (isset($result[0])) {
+                return $result;
+            } else {
+                // Try to parse as JSON lines format
+                $lines = explode("\n", trim($response->body()));
+                $data = [];
+                foreach ($lines as $line) {
+                    if (!empty(trim($line))) {
+                        $decoded = json_decode($line, true);
+                        if ($decoded !== null) {
+                            $data[] = $decoded;
+                        }
+                    }
+                }
+                return $data;
+            }
+        } catch (Exception $e) {
+            Log::error('Error in queryClickHouseCustom: ' . $e->getMessage());
+            return [];
         }
     }
 

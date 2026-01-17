@@ -64,7 +64,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/full-maps/api/daily-operation-plans', [fullMapsController::class, 'getDailyOperationPlansWithPolygons'])->name('full-maps.api.daily-operation-plans');
     Route::get('/full-maps/api/location-sap-counts', [fullMapsController::class, 'getLocationSapCounts'])->name('full-maps.api.location-sap-counts');
     Route::get('/full-maps/api/latest-cctv-alert', [fullMapsController::class, 'getLatestCctvAlert'])->name('full-maps.api.latest-cctv-alert');
-    Route::get('/full-maps/api/auto-alert-sidebar-data', [fullMapsController::class, 'getAutoAlertSidebarData'])->name('full-maps.api.auto-alert-sidebar-data');
+    Route::get('/full-maps/api/cctv-alerts-with-units', [fullMapsController::class, 'getCctvAlertsWithUnits'])->name('full-maps.api.cctv-alerts-with-units');
     Route::get('/clickhouse-status', [HomeController::class, 'checkClickHouseStatus'])->name('clickhouse.status');
     Route::get('/cctv-company-data', [HomeController::class, 'companyCctvData'])->name('cctv.company-data');
     Route::get('/company-cctv-data', [HomeController::class, 'getCompanyCctvData'])->name('company-cctv-data');
