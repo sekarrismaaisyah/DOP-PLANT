@@ -12127,8 +12127,20 @@
                 if (data.success) {
                     const controlRoomData = data.data.control_rooms || [];
                     
-                    // Urutkan: alfabetis
+                    // Urutkan: control room yang harus di-P2H (is_pengawas === true) di atas, kemudian alfabetis
                     const sortedData = [...controlRoomData].sort((a, b) => {
+                        const aIsPengawas = a.p2h_status?.is_pengawas || false;
+                        const bIsPengawas = b.p2h_status?.is_pengawas || false;
+                        
+                        // Jika a adalah pengawas dan b bukan, a harus di atas
+                        if (aIsPengawas && !bIsPengawas) {
+                            return -1;
+                        }
+                        // Jika b adalah pengawas dan a bukan, b harus di atas
+                        if (bIsPengawas && !aIsPengawas) {
+                            return 1;
+                        }
+                        // Jika keduanya pengawas atau keduanya bukan pengawas, urutkan alfabetis
                         return a.name.localeCompare(b.name);
                     });
                     
