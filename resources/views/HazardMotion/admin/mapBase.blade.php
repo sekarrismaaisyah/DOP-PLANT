@@ -12599,6 +12599,33 @@
         });
     }
     
+    // Setup event listener for intervensi kesiapan orang modal (same concept as intervensi control room)
+    const intervensiKesiapanOrangModal = document.getElementById('intervensiKesiapanOrangModal');
+    if (intervensiKesiapanOrangModal) {
+        intervensiKesiapanOrangModal.addEventListener('show.bs.modal', function(event) {
+            // Get the button that triggered the modal
+            const button = event.relatedTarget;
+            if (button && button.classList.contains('btn-intervensi-kesiapan-orang')) {
+                const namaPja = button.getAttribute('data-nama-pja') || '';
+                const tipePja = button.getAttribute('data-tipe-pja') || '';
+                const perusahaan = button.getAttribute('data-perusahaan') || '';
+                const namaKaryawan = button.getAttribute('data-nama-karyawan') || '';
+                const idEmployee = button.getAttribute('data-id-employee') || '';
+                
+                // Load modal dengan data
+                loadIntervensiKesiapanOrangModal(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee);
+            }
+        });
+        
+        intervensiKesiapanOrangModal.addEventListener('hidden.bs.modal', function() {
+            // Reset form when modal is closed
+            const form = document.getElementById('intervensiKesiapanOrangForm');
+            if (form) {
+                form.reset();
+            }
+        });
+    }
+    
     // Handle submit intervensi form
     document.addEventListener('DOMContentLoaded', function() {
         const submitIntervensiBtn = document.getElementById('submitIntervensiBtn');
@@ -15419,8 +15446,8 @@
         
         tbody.innerHTML = html;
         
-        // Attach event listeners to intervensi kesiapan orang buttons
-        attachIntervensiKesiapanOrangButtonListeners();
+        // Note: Event listeners untuk intervensi kesiapan orang buttons sudah di-setup via show.bs.modal event
+        // Tidak perlu attach manual karena menggunakan data-bs-toggle dan data-bs-target
     }
     
     
