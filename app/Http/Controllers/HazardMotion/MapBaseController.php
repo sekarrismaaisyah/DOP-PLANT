@@ -1650,6 +1650,7 @@ class MapBaseController extends Controller
                 'tipe_pja' => 'nullable|string|max:255',
                 'perusahaan' => 'nullable|string|max:255',
                 'id_employee' => 'nullable|string',
+                'pic_id' => 'required|string',
                 'issue' => 'required|string',
             ]);
 
@@ -1658,17 +1659,18 @@ class MapBaseController extends Controller
             $createdBy = $user ? $user->name : 'Unknown';
             $createdByEmail = $user ? $user->email : null;
 
-            // Get PIC details from ClickHouse if id_employee is provided
+            // Get PIC details from ClickHouse using pic_id from form
             $clickHouseService = new ClickHouseService();
-            $picId = null;
+            $picId = $validated['pic_id'];
             $picUsername = null;
             $picNama = null;
             $picTelepon = null;
             $namaKaryawan = null;
 
-            if (!empty($validated['id_employee'])) {
+            // Get PIC details from ClickHouse
+            if (!empty($picId)) {
                 // Escape single quotes to prevent SQL injection
-                $escapedIdEmployee = str_replace("'", "''", $validated['id_employee']);
+                $escapedPicId = str_replace("'", "''", $picId);
                 
                 $sql = "SELECT 
                             toString(id) as id,
@@ -1676,7 +1678,7 @@ class MapBaseController extends Controller
                             toString(nama) as nama,
                             toString(selular) as selular
                         FROM nitip.vw_user 
-                        WHERE toString(id) = '{$escapedIdEmployee}'
+                        WHERE toString(id) = '{$escapedPicId}'
                         LIMIT 1";
                 
                 $picData = $clickHouseService->query($sql);
@@ -1687,7 +1689,26 @@ class MapBaseController extends Controller
                     $picUsername = $picInfo['username'] ?? null;
                     $picNama = $picInfo['nama'] ?? null;
                     $picTelepon = $picInfo['selular'] ?? null;
-                    $namaKaryawan = $picInfo['nama'] ?? null;
+                }
+            }
+            
+            // Get nama karyawan from id_employee if provided
+            if (!empty($validated['id_employee'])) {
+                // Escape single quotes to prevent SQL injection
+                $escapedIdEmployee = str_replace("'", "''", $validated['id_employee']);
+                
+                $sql = "SELECT 
+                            toString(id) as id,
+                            toString(nama) as nama
+                        FROM nitip.vw_user 
+                        WHERE toString(id) = '{$escapedIdEmployee}'
+                        LIMIT 1";
+                
+                $karyawanData = $clickHouseService->query($sql);
+                $karyawanInfo = !empty($karyawanData) ? $karyawanData[0] : null;
+                
+                if ($karyawanInfo) {
+                    $namaKaryawan = $karyawanInfo['nama'] ?? null;
                 }
             }
 

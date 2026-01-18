@@ -2642,6 +2642,14 @@
                   </div>
                   
                   <div class="mb-3">
+                    <label for="intervensiKesiapanOrangPIC" class="form-label fw-semibold">PIC (Pengawas) <span class="text-danger">*</span></label>
+                    <select class="form-select" id="intervensiKesiapanOrangPIC" name="pic_id" required>
+                      <option value="">Pilih PIC...</option>
+                    </select>
+                    <div class="form-text">Pilih PIC (Pengawas) dari daftar pengguna</div>
+                  </div>
+                  
+                  <div class="mb-3">
                     <label for="intervensiKesiapanOrangIssue" class="form-label fw-semibold">Issue <span class="text-danger">*</span></label>
                     <textarea class="form-control" id="intervensiKesiapanOrangIssue" name="issue" rows="5" placeholder="Masukkan issue atau masalah yang ditemukan..." required></textarea>
                     <div class="form-text">Jelaskan issue atau masalah yang memerlukan intervensi</div>
@@ -3177,6 +3185,116 @@
         if (perusahaanEl) perusahaanEl.value = perusahaan || '';
         if (idEmployeeEl) idEmployeeEl.value = idEmployee || '';
         if (issueEl) issueEl.value = '';
+        
+        // Clear and reset PIC dropdown
+        const picSelect = document.getElementById('intervensiKesiapanOrangPIC');
+        if (picSelect) {
+            // Destroy existing Select2 instance if any
+            if ($(picSelect).hasClass('select2-hidden-accessible')) {
+                $(picSelect).select2('destroy');
+            }
+            
+            // Clear select options
+            picSelect.innerHTML = '<option value="">Pilih PIC...</option>';
+            picSelect.disabled = false;
+            
+            // Initialize Select2 with AJAX search for better performance (same as intervensi control room)
+            $(picSelect).select2({
+                theme: 'bootstrap-5',
+                placeholder: 'Ketik untuk mencari PIC (Pengawas)...',
+                allowClear: true,
+                width: '100%',
+                minimumInputLength: 0, // Allow search from start
+                ajax: {
+                    url: `{{ url('cctv-data-control-room/users') }}`,
+                    type: 'GET',
+                    dataType: 'json',
+                    delay: 300, // Debounce 300ms to reduce server requests
+                    data: function (params) {
+                        return {
+                            q: params.term || '', // Search term
+                            page: params.page || 1
+                        };
+                    },
+                    processResults: function (data, params) {
+                        // Handle both old format (success/data) and new format (results)
+                        if (data.success && data.data) {
+                            // Convert old format to new format
+                            const results = data.data.map(user => ({
+                                id: user.id,
+                                text: user.text || (user.username + ' - ' + user.nama),
+                                username: user.username,
+                                nama: user.nama
+                            }));
+                            return {
+                                results: results,
+                                pagination: { more: false }
+                            };
+                        }
+                        // Handle error response
+                        if (data.error) {
+                            return {
+                                results: [],
+                                pagination: { more: false }
+                            };
+                        }
+                        return {
+                            results: data.results || [],
+                            pagination: {
+                                more: data.pagination && data.pagination.more
+                            }
+                        };
+                    },
+                    error: function(jqXHR, textStatus, errorThrown) {
+                        console.error('Select2 AJAX error:', textStatus, errorThrown);
+                    },
+                    cache: false // Disable cache to ensure fresh results
+                },
+                // Trigger AJAX when dropdown opens
+                dropdownParent: $(picSelect).closest('.modal-body') || $(document.body),
+                language: {
+                    noResults: function() {
+                        return "Tidak ada hasil ditemukan";
+                    },
+                    searching: function() {
+                        return "Mencari...";
+                    },
+                    inputTooShort: function() {
+                        return "Ketik untuk mencari";
+                    }
+                },
+                escapeMarkup: function (markup) {
+                    return markup; // Let our custom formatter work
+                },
+                templateResult: function(user) {
+                    if (user.loading) {
+                        return "Mencari...";
+                    }
+                    if (!user.text && user.username && user.nama) {
+                        return user.username + ' - ' + user.nama;
+                    }
+                    return user.text || user.id;
+                },
+                templateSelection: function(user) {
+                    if (user.text) {
+                        return user.text;
+                    }
+                    if (user.username && user.nama) {
+                        return user.username + ' - ' + user.nama;
+                    }
+                    return user.id || '';
+                }
+            });
+            
+            // Trigger initial load when dropdown opens (if minimumInputLength is 0)
+            $(picSelect).on('select2:open', function() {
+                // Force trigger search with empty term to load initial results
+                const $select2 = $(picSelect).data('select2');
+                if ($select2 && !$select2._request) {
+                    $select2.trigger('query', { term: '' });
+                }
+            });
+        }
     }
     
     // Calculate and update area kerja and CCTV coverage
@@ -12634,6 +12752,12 @@
                 if (form) {
                     form.reset();
                 }
+                
+                // Destroy Select2 for PIC
+                const picSelect = document.getElementById('intervensiKesiapanOrangPIC');
+                if (picSelect && $(picSelect).hasClass('select2-hidden-accessible')) {
+                    $(picSelect).select2('destroy');
+                }
             });
         } else {
             console.error('intervensiKesiapanOrangModal element not found');
@@ -12749,11 +12873,25 @@
                 const form = document.getElementById('intervensiKesiapanOrangForm');
                 
                 if (form.checkValidity()) {
+                    // Get PIC ID from Select2
+                    const picSelect = document.getElementById('intervensiKesiapanOrangPIC');
+                    const picId = picSelect ? $(picSelect).val() : '';
+                    
+                    if (!picId) {
+                        Swal.fire({
+                            icon: 'warning',
+                            title: 'Peringatan!',
+                            text: 'Silakan pilih PIC (Pengawas).'
+                        });
+                        return;
+                    }
+                    
                     const formData = {
                         nama_pja: document.getElementById('intervensiKesiapanOrangNamaPja').value,
                         tipe_pja: document.getElementById('intervensiKesiapanOrangTipePja').value,
                         perusahaan: document.getElementById('intervensiKesiapanOrangPerusahaan').value,
                         id_employee: document.getElementById('intervensiKesiapanOrangIdEmployee').value,
+                        pic_id: picId,
                         issue: document.getElementById('intervensiKesiapanOrangIssue').value
                     };
                     
@@ -12790,6 +12928,12 @@
                                 
                                 // Reset form
                                 form.reset();
+                                
+                                // Reset Select2 for PIC
+                                const picSelect = document.getElementById('intervensiKesiapanOrangPIC');
+                                if (picSelect && $(picSelect).hasClass('select2-hidden-accessible')) {
+                                    $(picSelect).val(null).trigger('change');
+                                }
                                 
                                 // Reload kesiapan orang data
                                 loadKesiapanOrangData();
