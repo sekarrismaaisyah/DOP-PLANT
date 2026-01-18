@@ -2184,7 +2184,7 @@
                     <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
                       <span class="material-icons-outlined">notifications_active</span>
                     </span>
-                    <h3 class="mb-0" id="modalCctvAutoAlert">1410</h3>
+                    <h3 class="mb-0" id="">1410</h3>
                     <p class="mb-0">Cctv Fitur Auto Alert</p>
                   </button>
                   <!-- <div class="vr"></div> -->
@@ -16434,44 +16434,22 @@
                     ],
                     initComplete: function(settings, json) {
                         // Setup search handler after DataTable is fully initialized
-                        const searchInput = document.getElementById('areaKerjaTableSearch');
-                        if (searchInput && areaKerjaDataTable) {
-                            // Remove old event listeners by cloning
-                            const newSearchInput = searchInput.cloneNode(true);
-                            searchInput.parentNode.replaceChild(newSearchInput, searchInput);
-                            
-                            // Add event listeners
-                            newSearchInput.addEventListener('input', function() {
-                                if (areaKerjaDataTable) {
-                                    areaKerjaDataTable.search(this.value).draw();
-                                }
-                            });
-                            
-                            newSearchInput.addEventListener('keyup', function() {
-                                if (areaKerjaDataTable) {
-                                    areaKerjaDataTable.search(this.value).draw();
-                                }
-                            });
-                        }
+                        // Use jQuery for better compatibility with DataTables
+                        const api = this.api();
+                        $('#areaKerjaTableSearch').off('input keyup search').on('input keyup search', function() {
+                            const searchValue = $(this).val();
+                            api.search(searchValue).draw();
+                        });
                         
                         // Setup length handler after DataTable is fully initialized
-                        const lengthSelect = document.getElementById('areaKerjaTableLength');
-                        if (lengthSelect && areaKerjaDataTable) {
-                            // Remove old event listeners by cloning
-                            const newLengthSelect = lengthSelect.cloneNode(true);
-                            lengthSelect.parentNode.replaceChild(newLengthSelect, lengthSelect);
-                            
-                            newLengthSelect.addEventListener('change', function() {
-                                if (areaKerjaDataTable) {
-                                    const value = parseInt(this.value);
-                                    if (value === -1) {
-                                        areaKerjaDataTable.page.len(-1).draw();
-                                    } else {
-                                        areaKerjaDataTable.page.len(value).draw();
-                                    }
-                                }
-                            });
-                        }
+                        $('#areaKerjaTableLength').off('change').on('change', function() {
+                            const value = parseInt($(this).val());
+                            if (value === -1) {
+                                api.page.len(-1).draw();
+                            } else {
+                                api.page.len(value).draw();
+                            }
+                        });
                     },
                     drawCallback: function(settings) {
                         // Update custom info text
@@ -16569,6 +16547,29 @@
                         }
                     }
                 });
+                
+                // Setup event listeners after DataTable initialization (backup)
+                setTimeout(function() {
+                    if (areaKerjaDataTable) {
+                        const api = areaKerjaDataTable;
+                        
+                        // Search handler
+                        $('#areaKerjaTableSearch').off('input keyup search').on('input keyup search', function() {
+                            const searchValue = $(this).val();
+                            api.search(searchValue).draw();
+                        });
+                        
+                        // Length handler
+                        $('#areaKerjaTableLength').off('change').on('change', function() {
+                            const value = parseInt($(this).val());
+                            if (value === -1) {
+                                api.page.len(-1).draw();
+                            } else {
+                                api.page.len(value).draw();
+                            }
+                        });
+                    }
+                }, 100);
                 
                 console.log('Area Kerja DataTable initialized');
             } catch (e) {
