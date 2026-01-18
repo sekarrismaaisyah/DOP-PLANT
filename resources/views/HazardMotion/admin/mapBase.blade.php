@@ -2184,7 +2184,7 @@
                     <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
                       <span class="material-icons-outlined">notifications_active</span>
                     </span>
-                    <h3 class="mb-0" id="modalCctvAutoAlert">0</h3>
+                    <h3 class="mb-0" id="modalCctvAutoAlert">1410</h3>
                     <p class="mb-0">Cctv Fitur Auto Alert</p>
                   </button>
                   <!-- <div class="vr"></div> -->
@@ -2539,7 +2539,7 @@
                                         <span class="material-icons-outlined">verified</span>
                                         </span>
                                         <h3 class="mb-0" id="pjaAktif">0</h3>
-                                        <p class="mb-0">Jumlah Pengasawan</p>
+                                        <p class="mb-0">Jumlah Pengawas </p>
                                     </button>
                                     <div class="vr"></div>
                                     <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total Onsite">
@@ -2547,7 +2547,7 @@
                                         <span class="material-icons-outlined">person_pin_circle</span>
                                         </span>
                                         <h3 class="mb-0" id="totalOnsite">0</h3>
-                                        <p class="mb-0">Total Onsite Pengawas</p>
+                                        <p class="mb-0">Jumlah Pengawas Onsite</p>
                                         <small class="text-muted">Hari Ini</small>
                                     </button>
                                     <!-- <div class="vr"></div>
@@ -2635,7 +2635,7 @@
                                         <span class="material-icons-outlined">map</span>
                                         </span>
                                         <h3 class="mb-0" id="totalDigitasiAreaKerja">0%</h3>
-                                        <p class="mb-0">Total digitasi Area Kerja</p>
+                                        <p class="mb-0">Total Area Tedigitasi</p>
                                         <small class="text-muted" id="lastWeekAreaKerja">Week 2 2026</small>
                                     </button>
                                     <div class="vr"></div>
@@ -2644,7 +2644,7 @@
                                         <span class="material-icons-outlined">link</span>
                                         </span>
                                         <h3 class="mb-0" id="totalDigitasiCctv">0%</h3>
-                                        <p class="mb-0">Total digitasi CCTV</p>
+                                        <p class="mb-0">Total Boundary CCT Terdigitasi</p>
                                         <small class="text-muted" id="lastWeekWms">Week 2 2026</small>
                                     </button>
                                     <div class="vr"></div>
@@ -16432,6 +16432,47 @@
                         { targets: [5, 6], orderable: false }, // Kategori Area dan Digitasi tidak bisa di-sort
                         { targets: '_all', className: 'text-start' }
                     ],
+                    initComplete: function(settings, json) {
+                        // Setup search handler after DataTable is fully initialized
+                        const searchInput = document.getElementById('areaKerjaTableSearch');
+                        if (searchInput && areaKerjaDataTable) {
+                            // Remove old event listeners by cloning
+                            const newSearchInput = searchInput.cloneNode(true);
+                            searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+                            
+                            // Add event listeners
+                            newSearchInput.addEventListener('input', function() {
+                                if (areaKerjaDataTable) {
+                                    areaKerjaDataTable.search(this.value).draw();
+                                }
+                            });
+                            
+                            newSearchInput.addEventListener('keyup', function() {
+                                if (areaKerjaDataTable) {
+                                    areaKerjaDataTable.search(this.value).draw();
+                                }
+                            });
+                        }
+                        
+                        // Setup length handler after DataTable is fully initialized
+                        const lengthSelect = document.getElementById('areaKerjaTableLength');
+                        if (lengthSelect && areaKerjaDataTable) {
+                            // Remove old event listeners by cloning
+                            const newLengthSelect = lengthSelect.cloneNode(true);
+                            lengthSelect.parentNode.replaceChild(newLengthSelect, lengthSelect);
+                            
+                            newLengthSelect.addEventListener('change', function() {
+                                if (areaKerjaDataTable) {
+                                    const value = parseInt(this.value);
+                                    if (value === -1) {
+                                        areaKerjaDataTable.page.len(-1).draw();
+                                    } else {
+                                        areaKerjaDataTable.page.len(value).draw();
+                                    }
+                                }
+                            });
+                        }
+                    },
                     drawCallback: function(settings) {
                         // Update custom info text
                         const api = this.api();
@@ -16528,22 +16569,6 @@
                         }
                     }
                 });
-                
-                // Custom search handler
-                const searchInput = document.getElementById('areaKerjaTableSearch');
-                if (searchInput) {
-                    searchInput.addEventListener('keyup', function() {
-                        areaKerjaDataTable.search(this.value).draw();
-                    });
-                }
-                
-                // Custom length handler
-                const lengthSelect = document.getElementById('areaKerjaTableLength');
-                if (lengthSelect) {
-                    lengthSelect.addEventListener('change', function() {
-                        areaKerjaDataTable.page.len(parseInt(this.value)).draw();
-                    });
-                }
                 
                 console.log('Area Kerja DataTable initialized');
             } catch (e) {
