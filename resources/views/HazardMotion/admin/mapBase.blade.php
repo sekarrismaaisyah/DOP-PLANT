@@ -2226,52 +2226,7 @@
         </div>
 
         {{-- Modal Intervensi Kesiapan Orang --}}
-        <div class="modal fade" id="intervensiKesiapanOrangModal" tabindex="-1" aria-labelledby="intervensiKesiapanOrangModalLabel" aria-hidden="true">
-          <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-              <div class="modal-header border-bottom">
-                <h5 class="modal-title fw-bold" id="intervensiKesiapanOrangModalLabel">
-                  <span class="material-icons-outlined me-2">warning</span>
-                  Form Intervensi Kesiapan Orang
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-              </div>
-              <div class="modal-body">
-                <form id="intervensiKesiapanOrangForm">
-                  <input type="hidden" id="intervensiKesiapanOrangIdEmployee" name="id_employee" value="">
-                  
-                  <div class="mb-3">
-                    <label for="intervensiKesiapanOrangNamaPja" class="form-label fw-semibold">Nama PJA</label>
-                    <input type="text" class="form-control" id="intervensiKesiapanOrangNamaPja" readonly>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label for="intervensiKesiapanOrangTipePja" class="form-label fw-semibold">Tipe PJA</label>
-                    <input type="text" class="form-control" id="intervensiKesiapanOrangTipePja" readonly>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label for="intervensiKesiapanOrangPerusahaan" class="form-label fw-semibold">Perusahaan</label>
-                    <input type="text" class="form-control" id="intervensiKesiapanOrangPerusahaan" readonly>
-                  </div>
-                  
-                  <div class="mb-3">
-                    <label for="intervensiKesiapanOrangIssue" class="form-label fw-semibold">Issue <span class="text-danger">*</span></label>
-                    <textarea class="form-control" id="intervensiKesiapanOrangIssue" name="issue" rows="5" placeholder="Masukkan issue atau masalah yang ditemukan..." required></textarea>
-                    <div class="form-text">Jelaskan issue atau masalah yang memerlukan intervensi</div>
-                  </div>
-                </form>
-              </div>
-              <div class="modal-footer border-top">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
-                <button type="button" class="btn btn-primary" id="submitIntervensiKesiapanOrangBtn">
-                  <span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>
-                  Kirim Intervensi
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+      
 
         {{-- Area Kritis Overview Section --}}
         {{-- <div class="card mb-4">
@@ -2381,7 +2336,7 @@
 
       
 
-        {{-- Data Table Section --}}
+        {{-- Data Table Section --}} 
         {{-- <div class="card mb-0">
           <div class="card-body">
             <div class="d-flex align-items-start justify-content-between mb-3">
@@ -2656,6 +2611,53 @@
 
 
 </div>
+
+<div class="modal fade" id="intervensiKesiapanOrangModal" tabindex="-1" aria-labelledby="intervensiKesiapanOrangModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="intervensiKesiapanOrangModalLabel">
+                  <span class="material-icons-outlined me-2">warning</span>
+                  Form Intervensi Kesiapan Orang
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form id="intervensiKesiapanOrangForm">
+                  <input type="hidden" id="intervensiKesiapanOrangIdEmployee" name="id_employee" value="">
+                  
+                  <div class="mb-3">
+                    <label for="intervensiKesiapanOrangNamaPja" class="form-label fw-semibold">Nama PJA</label>
+                    <input type="text" class="form-control" id="intervensiKesiapanOrangNamaPja" readonly>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="intervensiKesiapanOrangTipePja" class="form-label fw-semibold">Tipe PJA</label>
+                    <input type="text" class="form-control" id="intervensiKesiapanOrangTipePja" readonly>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="intervensiKesiapanOrangPerusahaan" class="form-label fw-semibold">Perusahaan</label>
+                    <input type="text" class="form-control" id="intervensiKesiapanOrangPerusahaan" readonly>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="intervensiKesiapanOrangIssue" class="form-label fw-semibold">Issue <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="intervensiKesiapanOrangIssue" name="issue" rows="5" placeholder="Masukkan issue atau masalah yang ditemukan..." required></textarea>
+                    <div class="form-text">Jelaskan issue atau masalah yang memerlukan intervensi</div>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="submitIntervensiKesiapanOrangBtn">
+                  <span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>
+                  Kirim Intervensi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
 
 
