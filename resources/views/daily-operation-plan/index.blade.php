@@ -1,4 +1,4 @@
-@extends('layouts.master')
+ @extends('layouts.master')
 
 @section('title', 'Daily Operation Plan (DOP)')
 
@@ -45,6 +45,8 @@
                                     <th>Pekerjaan</th>
                                     <th>Unit ID</th>
                                     <th>Lokasi</th>
+                                    <th>Latitude</th>
+                                    <th>Longitude</th>
                                     <th>CCTV</th>
                                     <th>Foto</th>
                                     <th>Actions</th>
@@ -58,6 +60,8 @@
                                         <td>{{ $dop->pekerjaan }}</td>
                                         <td>{{ $dop->unit_id }}</td>
                                         <td>{{ $dop->lokasi }}</td>
+                                        <td>{{ $dop->latitude ?? '-' }}</td>
+                                        <td>{{ $dop->longitude ?? '-' }}</td>
                                         <td>
                                             @if($dop->cctvs->count() > 0)
                                                 <span class="badge bg-info">{{ $dop->cctvs->count() }} CCTV</span>
@@ -94,7 +98,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="8" class="text-center text-muted">Belum ada data DOP</td>
+                                        <td colspan="10" class="text-center text-muted">Belum ada data DOP</td>
                                     </tr>
                                 @endforelse
                             </tbody>

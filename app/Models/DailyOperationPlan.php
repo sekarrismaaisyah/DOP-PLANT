@@ -16,6 +16,8 @@ class DailyOperationPlan extends Model
         'foto_pekerjaan',
         'unit_id',
         'lokasi',
+        'latitude',
+        'longitude',
         'detail_lokasi',
         'potensi_resiko',
         'pengendalian_bahaya',

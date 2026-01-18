@@ -89,6 +89,8 @@
                                     <li><strong>Pekerjaan:</strong> Nama pekerjaan yang akan dilakukan <span class="text-danger">*</span></li>
                                     <li><strong>Unit ID:</strong> ID unit yang digunakan <span class="text-danger">*</span></li>
                                     <li><strong>Lokasi:</strong> Lokasi pekerjaan <span class="text-danger">*</span></li>
+                                    <li><strong>Latitude:</strong> Koordinat latitude (opsional, format: -90 sampai 90)</li>
+                                    <li><strong>Longitude:</strong> Koordinat longitude (opsional, format: -180 sampai 180)</li>
                                     <li><strong>Detail Lokasi:</strong> Detail lokasi (opsional)</li>
                                     <li><strong>Potensi Risiko:</strong> Pisahkan dengan koma jika lebih dari satu</li>
                                     <li><strong>Pengendalian Bahaya:</strong> Pisahkan dengan koma jika lebih dari satu</li>
@@ -142,6 +144,16 @@
                             <div class="col-md-6">
                                 <label for="lokasi" class="form-label">Lokasi <span class="text-danger">*</span></label>
                                 <input type="text" name="lokasi" id="lokasi" class="form-control" value="{{ old('lokasi') }}" required>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="latitude" class="form-label">Latitude</label>
+                                <input type="number" step="any" name="latitude" id="latitude" class="form-control" value="{{ old('latitude') }}" placeholder="-2.186253" min="-90" max="90">
+                                <small class="text-muted">Format: -90 sampai 90</small>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="longitude" class="form-label">Longitude</label>
+                                <input type="number" step="any" name="longitude" id="longitude" class="form-control" value="{{ old('longitude') }}" placeholder="117.4539035" min="-180" max="180">
+                                <small class="text-muted">Format: -180 sampai 180</small>
                             </div>
                             <div class="col-12">
                                 <label for="detail_lokasi" class="form-label">Detail Lokasi</label>

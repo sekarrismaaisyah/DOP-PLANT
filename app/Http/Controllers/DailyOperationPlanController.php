@@ -90,6 +90,8 @@ class DailyOperationPlanController extends Controller
             'foto_pekerjaan' => $fotoPath,
             'unit_id' => $validated['unit_id'],
             'lokasi' => $validated['lokasi'],
+            'latitude' => $validated['latitude'] ?? null,
+            'longitude' => $validated['longitude'] ?? null,
             'detail_lokasi' => $validated['detail_lokasi'] ?? null,
             'potensi_resiko' => $validated['potensi_resiko'] ?? null,
             'pengendalian_bahaya' => $validated['pengendalian_bahaya'] ?? null,
@@ -169,6 +171,8 @@ class DailyOperationPlanController extends Controller
             'foto_pekerjaan' => ['nullable', 'image', 'mimes:jpg,jpeg,png', 'max:5120'], // Max 5MB
             'unit_id' => ['required', 'string', 'max:255'],
             'lokasi' => ['required', 'string', 'max:255'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             'detail_lokasi' => ['nullable', 'string'],
             'cctv_ids' => ['nullable', 'array'],
             'cctv_ids.*' => ['exists:cctv_data_bmo2,id'],
@@ -286,17 +290,19 @@ class DailyOperationPlanController extends Controller
             'B1' => 'Pekerjaan',
             'C1' => 'Unit ID',
             'D1' => 'Lokasi',
-            'E1' => 'Detail Lokasi',
-            'F1' => 'Potensi Risiko',
-            'G1' => 'Pengendalian Bahaya',
-            'H1' => 'Catatan',
-            'I1' => 'CCTV IDs (pisahkan dengan koma)',
-            'J1' => 'PIC Berau Coal - Shift',
-            'K1' => 'PIC Berau Coal - Nama PIC',
-            'L1' => 'PIC Berau Coal - Layer',
-            'M1' => 'Pengawas Mitra Kerja - Shift',
-            'N1' => 'Pengawas Mitra Kerja - Nama Pengawas',
-            'O1' => 'Pengawas Mitra Kerja - Layer',
+            'E1' => 'Latitude',
+            'F1' => 'Longitude',
+            'G1' => 'Detail Lokasi',
+            'H1' => 'Potensi Risiko',
+            'I1' => 'Pengendalian Bahaya',
+            'J1' => 'Catatan',
+            'K1' => 'CCTV IDs (pisahkan dengan koma)',
+            'L1' => 'PIC Berau Coal - Shift',
+            'M1' => 'PIC Berau Coal - Nama PIC',
+            'N1' => 'PIC Berau Coal - Layer',
+            'O1' => 'Pengawas Mitra Kerja - Shift',
+            'P1' => 'Pengawas Mitra Kerja - Nama Pengawas',
+            'Q1' => 'Pengawas Mitra Kerja - Layer',
         ];
 
         // Set header values and style
@@ -325,17 +331,19 @@ class DailyOperationPlanController extends Controller
         $sheet->getColumnDimension('B')->setWidth(30);
         $sheet->getColumnDimension('C')->setWidth(15);
         $sheet->getColumnDimension('D')->setWidth(25);
-        $sheet->getColumnDimension('E')->setWidth(30);
-        $sheet->getColumnDimension('F')->setWidth(30);
+        $sheet->getColumnDimension('E')->setWidth(15);
+        $sheet->getColumnDimension('F')->setWidth(15);
         $sheet->getColumnDimension('G')->setWidth(30);
         $sheet->getColumnDimension('H')->setWidth(30);
-        $sheet->getColumnDimension('I')->setWidth(25);
-        $sheet->getColumnDimension('J')->setWidth(20);
+        $sheet->getColumnDimension('I')->setWidth(30);
+        $sheet->getColumnDimension('J')->setWidth(30);
         $sheet->getColumnDimension('K')->setWidth(25);
-        $sheet->getColumnDimension('L')->setWidth(15);
-        $sheet->getColumnDimension('M')->setWidth(20);
-        $sheet->getColumnDimension('N')->setWidth(25);
-        $sheet->getColumnDimension('O')->setWidth(15);
+        $sheet->getColumnDimension('L')->setWidth(20);
+        $sheet->getColumnDimension('M')->setWidth(25);
+        $sheet->getColumnDimension('N')->setWidth(15);
+        $sheet->getColumnDimension('O')->setWidth(20);
+        $sheet->getColumnDimension('P')->setWidth(25);
+        $sheet->getColumnDimension('Q')->setWidth(15);
 
         // Add example row
         $exampleRow = 2;
@@ -343,17 +351,19 @@ class DailyOperationPlanController extends Controller
         $sheet->setCellValue('B' . $exampleRow, 'Pemeliharaan Unit Excavator');
         $sheet->setCellValue('C' . $exampleRow, 'EX-001');
         $sheet->setCellValue('D' . $exampleRow, 'Area Tambang Utara');
-        $sheet->setCellValue('E' . $exampleRow, 'Koordinat: -2.186253, 117.4539035');
-        $sheet->setCellValue('F' . $exampleRow, 'Tenggelam, Terbalik');
-        $sheet->setCellValue('G' . $exampleRow, 'Assessment, JSA, SOP');
-        $sheet->setCellValue('H' . $exampleRow, 'Pekerjaan dilakukan pada shift pagi');
-        $sheet->setCellValue('I' . $exampleRow, '1,2,3');
-        $sheet->setCellValue('J' . $exampleRow, 'Shift 1 s/d 2');
-        $sheet->setCellValue('K' . $exampleRow, 'John Doe');
-        $sheet->setCellValue('L' . $exampleRow, 'Layer 1');
-        $sheet->setCellValue('M' . $exampleRow, 'Shift 1 s/d 2');
-        $sheet->setCellValue('N' . $exampleRow, 'Jane Smith');
-        $sheet->setCellValue('O' . $exampleRow, 'Layer 2');
+        $sheet->setCellValue('E' . $exampleRow, '-2.186253');
+        $sheet->setCellValue('F' . $exampleRow, '117.4539035');
+        $sheet->setCellValue('G' . $exampleRow, 'Koordinat: -2.186253, 117.4539035');
+        $sheet->setCellValue('H' . $exampleRow, 'Tenggelam, Terbalik');
+        $sheet->setCellValue('I' . $exampleRow, 'Assessment, JSA, SOP');
+        $sheet->setCellValue('J' . $exampleRow, 'Pekerjaan dilakukan pada shift pagi');
+        $sheet->setCellValue('K' . $exampleRow, '1,2,3');
+        $sheet->setCellValue('L' . $exampleRow, 'Shift 1 s/d 2');
+        $sheet->setCellValue('M' . $exampleRow, 'John Doe');
+        $sheet->setCellValue('N' . $exampleRow, 'Layer 1');
+        $sheet->setCellValue('O' . $exampleRow, 'Shift 1 s/d 2');
+        $sheet->setCellValue('P' . $exampleRow, 'Jane Smith');
+        $sheet->setCellValue('Q' . $exampleRow, 'Layer 2');
 
         // Add data validation notes
         $noteRow = 4;
@@ -462,16 +472,30 @@ class DailyOperationPlanController extends Controller
                             ->first();
 
                         if (!$dop) {
+                            // Parse latitude and longitude
+                            $latitude = !empty($row[4]) ? (is_numeric($row[4]) ? (float)$row[4] : null) : null;
+                            $longitude = !empty($row[5]) ? (is_numeric($row[5]) ? (float)$row[5] : null) : null;
+                            
+                            // Validate latitude and longitude ranges
+                            if ($latitude !== null && ($latitude < -90 || $latitude > 90)) {
+                                $latitude = null;
+                            }
+                            if ($longitude !== null && ($longitude < -180 || $longitude > 180)) {
+                                $longitude = null;
+                            }
+                            
                             // Create new DOP
                             $dop = DailyOperationPlan::create([
                                 'tanggal' => $tanggal,
                                 'pekerjaan' => $row[1] ?? '',
                                 'unit_id' => $row[2] ?? '',
                                 'lokasi' => $row[3] ?? '',
-                                'detail_lokasi' => $row[4] ?? null,
-                                'potensi_resiko' => $row[5] ?? null,
-                                'pengendalian_bahaya' => $row[6] ?? null,
-                                'catatan' => $row[7] ?? null,
+                                'latitude' => $latitude,
+                                'longitude' => $longitude,
+                                'detail_lokasi' => $row[6] ?? null,
+                                'potensi_resiko' => $row[7] ?? null,
+                                'pengendalian_bahaya' => $row[8] ?? null,
+                                'catatan' => $row[9] ?? null,
                                 'foto_pekerjaan' => null, // Foto tidak bisa diupload via Excel
                             ]);
                             $imported++;
@@ -481,8 +505,8 @@ class DailyOperationPlanController extends Controller
                         $dopCache[$dopKey] = $dop;
 
                         // Handle CCTV IDs (only on first occurrence)
-                        if (!empty($row[8])) {
-                            $cctvIds = array_map('trim', explode(',', $row[8]));
+                        if (!empty($row[10])) {
+                            $cctvIds = array_map('trim', explode(',', $row[10]));
                             $cctvIds = array_filter($cctvIds, function($id) {
                                 return is_numeric($id) && CctvData::where('id', $id)->exists();
                             });
@@ -496,37 +520,37 @@ class DailyOperationPlanController extends Controller
                     }
 
                     // Handle PIC Berau Coal (always add, even if DOP exists)
-                    if (!empty($row[9]) && !empty($row[10])) {
+                    if (!empty($row[11]) && !empty($row[12])) {
                         // Check if PIC already exists
                         $picExists = DopPicBerauCoal::where('dop_id', $dop->id)
-                            ->where('shift', $row[9] ?? null)
-                            ->where('nama_pic', $row[10] ?? '')
+                            ->where('shift', $row[11] ?? null)
+                            ->where('nama_pic', $row[12] ?? '')
                             ->exists();
                         
                         if (!$picExists) {
                             DopPicBerauCoal::create([
                                 'dop_id' => $dop->id,
-                                'shift' => $row[9] ?? null,
-                                'nama_pic' => $row[10] ?? '',
-                                'layer' => $row[11] ?? null,
+                                'shift' => $row[11] ?? null,
+                                'nama_pic' => $row[12] ?? '',
+                                'layer' => $row[13] ?? null,
                             ]);
                         }
                     }
 
                     // Handle Pengawas Mitra Kerja (always add, even if DOP exists)
-                    if (!empty($row[12]) && !empty($row[13])) {
+                    if (!empty($row[14]) && !empty($row[15])) {
                         // Check if Pengawas already exists
                         $pengawasExists = DopPengawasMitraKerja::where('dop_id', $dop->id)
-                            ->where('shift', $row[12] ?? null)
-                            ->where('nama_pengawas', $row[13] ?? '')
+                            ->where('shift', $row[14] ?? null)
+                            ->where('nama_pengawas', $row[15] ?? '')
                             ->exists();
                         
                         if (!$pengawasExists) {
                             DopPengawasMitraKerja::create([
                                 'dop_id' => $dop->id,
-                                'shift' => $row[12] ?? null,
-                                'nama_pengawas' => $row[13] ?? '',
-                                'layer' => $row[14] ?? null,
+                                'shift' => $row[14] ?? null,
+                                'nama_pengawas' => $row[15] ?? '',
+                                'layer' => $row[16] ?? null,
                             ]);
                         }
                     }

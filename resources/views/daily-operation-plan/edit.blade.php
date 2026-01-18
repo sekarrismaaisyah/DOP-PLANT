@@ -52,6 +52,16 @@
                                 <label for="lokasi" class="form-label">Lokasi <span class="text-danger">*</span></label>
                                 <input type="text" name="lokasi" id="lokasi" class="form-control" value="{{ old('lokasi', $dop->lokasi) }}" required>
                             </div>
+                            <div class="col-md-3">
+                                <label for="latitude" class="form-label">Latitude</label>
+                                <input type="number" step="any" name="latitude" id="latitude" class="form-control" value="{{ old('latitude', $dop->latitude) }}" placeholder="-2.186253" min="-90" max="90">
+                                <small class="text-muted">Format: -90 sampai 90</small>
+                            </div>
+                            <div class="col-md-3">
+                                <label for="longitude" class="form-label">Longitude</label>
+                                <input type="number" step="any" name="longitude" id="longitude" class="form-control" value="{{ old('longitude', $dop->longitude) }}" placeholder="117.4539035" min="-180" max="180">
+                                <small class="text-muted">Format: -180 sampai 180</small>
+                            </div>
                             <div class="col-12">
                                 <label for="detail_lokasi" class="form-label">Detail Lokasi</label>
                                 <textarea name="detail_lokasi" id="detail_lokasi" class="form-control" rows="2">{{ old('detail_lokasi', $dop->detail_lokasi) }}</textarea>
