@@ -3161,92 +3161,21 @@
 <script src="{{ asset('js/area_kerja_smo_mtn.js') }}"></script>
 
 <script>
-    // Define openIntervensiKesiapanOrangModal function early in global scope
-    window.openIntervensiKesiapanOrangModal = function(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee) {
-        console.log('openIntervensiKesiapanOrangModal called with:', { namaPja, tipePja, perusahaan, namaKaryawan, idEmployee });
-        try {
-            // Set form values
-            const namaPjaEl = document.getElementById('intervensiKesiapanOrangNamaPja');
-            const tipePjaEl = document.getElementById('intervensiKesiapanOrangTipePja');
-            const perusahaanEl = document.getElementById('intervensiKesiapanOrangPerusahaan');
-            const idEmployeeEl = document.getElementById('intervensiKesiapanOrangIdEmployee');
-            const issueEl = document.getElementById('intervensiKesiapanOrangIssue');
-            
-            console.log('Form elements:', { namaPjaEl, tipePjaEl, perusahaanEl, idEmployeeEl, issueEl });
-            
-            if (namaPjaEl) namaPjaEl.value = namaPja || '';
-            if (tipePjaEl) tipePjaEl.value = tipePja || '';
-            if (perusahaanEl) perusahaanEl.value = perusahaan || '';
-            if (idEmployeeEl) idEmployeeEl.value = idEmployee || '';
-            if (issueEl) issueEl.value = '';
-            
-            // Show modal
-            const modalElement = document.getElementById('intervensiKesiapanOrangModal');
-            console.log('Modal element:', modalElement);
-            
-            if (!modalElement) {
-                console.error('Modal element intervensiKesiapanOrangModal not found');
-                return;
-            }
-            
-            // Dispose any existing modal instance first
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                const existingModal = bootstrap.Modal.getInstance(modalElement);
-                if (existingModal) {
-                    console.log('Disposing existing modal instance');
-                    existingModal.dispose();
-                }
-            }
-            
-            // Remove any existing backdrop
-            const existingBackdrop = document.getElementById('intervensiKesiapanOrangModalBackdrop');
-            if (existingBackdrop) {
-                existingBackdrop.remove();
-            }
-            
-            // Remove modal-open class from body if exists
-            document.body.classList.remove('modal-open');
-            
-            // Create new modal instance and show
-            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-                console.log('Creating new Bootstrap Modal instance');
-                const modal = new bootstrap.Modal(modalElement, {
-                    backdrop: true,
-                    keyboard: true,
-                    focus: true
-                });
-                
-                // Show modal
-                modal.show();
-                
-                // Double check after a short delay
-                setTimeout(function() {
-                    if (!modalElement.classList.contains('show')) {
-                        console.log('Modal still not showing, forcing display...');
-                        modalElement.classList.add('show');
-                        modalElement.style.display = 'block';
-                        modalElement.setAttribute('aria-hidden', 'false');
-                        modalElement.setAttribute('aria-modal', 'true');
-                        
-                        // Ensure backdrop exists
-                        if (!document.querySelector('.modal-backdrop')) {
-                            const backdrop = document.createElement('div');
-                            backdrop.className = 'modal-backdrop fade show';
-                            document.body.appendChild(backdrop);
-                        }
-                        document.body.classList.add('modal-open');
-                    } else {
-                        console.log('Modal is showing successfully');
-                    }
-                }, 200);
-            } else {
-                console.error('Bootstrap Modal not available');
-            }
-        } catch (error) {
-            console.error('Error opening intervensi kesiapan orang modal:', error);
-            console.error('Error stack:', error.stack);
-        }
-    };
+    // Function untuk load modal intervensi kesiapan orang dengan data (same concept as loadIntervensiModal)
+    function loadIntervensiKesiapanOrangModal(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee) {
+        // Set form values
+        const namaPjaEl = document.getElementById('intervensiKesiapanOrangNamaPja');
+        const tipePjaEl = document.getElementById('intervensiKesiapanOrangTipePja');
+        const perusahaanEl = document.getElementById('intervensiKesiapanOrangPerusahaan');
+        const idEmployeeEl = document.getElementById('intervensiKesiapanOrangIdEmployee');
+        const issueEl = document.getElementById('intervensiKesiapanOrangIssue');
+        
+        if (namaPjaEl) namaPjaEl.value = namaPja || '';
+        if (tipePjaEl) tipePjaEl.value = tipePja || '';
+        if (perusahaanEl) perusahaanEl.value = perusahaan || '';
+        if (idEmployeeEl) idEmployeeEl.value = idEmployee || '';
+        if (issueEl) issueEl.value = '';
+    }
     
     // Calculate and update area kerja and CCTV coverage
     function calculateAreaCoverage() {
@@ -15457,10 +15386,16 @@
                 const namaKaryawanEscaped = escapeHtml(karyawan.nama_karyawan || '');
                 const idEmployeeEscaped = escapeHtml(karyawan.id_employee || '');
                 
-                // Use onclick directly with global function for reliability
+                // Use data-bs-toggle and data-bs-target like intervensi control room
                 cctvDedicatedCell = `
                     <button type="button" class="btn btn-sm btn-warning btn-intervensi-kesiapan-orang" 
-                            onclick="if(window.openIntervensiKesiapanOrangModal){window.openIntervensiKesiapanOrangModal('${namaPjaEscaped}','${tipePjaEscaped}','${perusahaanEscaped}','${namaKaryawanEscaped}','${idEmployeeEscaped}');}else{console.error('Function not found');}">
+                            data-bs-toggle="modal" 
+                            data-bs-target="#intervensiKesiapanOrangModal"
+                            data-nama-pja="${namaPjaEscaped.replace(/"/g, '&quot;')}"
+                            data-tipe-pja="${tipePjaEscaped.replace(/"/g, '&quot;')}"
+                            data-perusahaan="${perusahaanEscaped.replace(/"/g, '&quot;')}"
+                            data-nama-karyawan="${namaKaryawanEscaped.replace(/"/g, '&quot;')}"
+                            data-id-employee="${idEmployeeEscaped.replace(/"/g, '&quot;')}">
                         <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">warning</i>
                         Intervensi
                     </button>
@@ -15483,7 +15418,11 @@
         });
         
         tbody.innerHTML = html;
+        
+        // Attach event listeners to intervensi kesiapan orang buttons
+        attachIntervensiKesiapanOrangButtonListeners();
     }
+    
     
     // Load Area Kerja data from API
     function loadAreaKerjaData() {
