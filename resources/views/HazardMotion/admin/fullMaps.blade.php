@@ -2956,7 +2956,17 @@
                     return;
                 }
                 
-                container.innerHTML = data.map((alert, index) => {
+                // Sort data berdasarkan tanggal (terbaru dulu) dan ambil hanya data terbaru
+                const sortedData = [...data].sort((a, b) => {
+                    const dateA = a.tanggal ? new Date(a.tanggal) : new Date(0);
+                    const dateB = b.tanggal ? new Date(b.tanggal) : new Date(0);
+                    return dateB - dateA; // Descending (terbaru dulu)
+                });
+                
+                // Ambil hanya data terbaru (1 data)
+                const latestData = sortedData.slice(0, 1);
+                
+                container.innerHTML = latestData.map((alert, index) => {
                     const site = alert.site || 'Unknown Site';
                     const tanggal = alert.tanggal || '';
                     const jumlahOffline = alert.jumlah_offline || 0;
@@ -3010,7 +3020,7 @@
                         }
                         
                         const alertId = this.dataset.alertId;
-                        const alertData = data.find(a => a.id == alertId);
+                        const alertData = latestData.find(a => a.id == alertId);
                         
                         // Toggle expanded state
                         const isExpanded = this.classList.contains('expanded');
