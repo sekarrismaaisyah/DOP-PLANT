@@ -7528,6 +7528,17 @@ class MapBaseController extends Controller
             $today = Carbon::now()->toDateString();
             $currentShift = $this->getCurrentShift();
             
+            // Get current user name to check if user is pengawas
+            $user = Auth::user();
+            $userName = $user ? $user->name : null;
+            
+            // Get all control rooms where user is pengawas
+            $userSupervisedControlRooms = [];
+            if ($userName) {
+                $pengawasRecords = CctvControlRoomPengawas::where('nama_pengawas', $userName)->get();
+                $userSupervisedControlRooms = $pengawasRecords->pluck('control_room')->filter()->unique()->toArray();
+            }
+            
             // Get P2H status for all control rooms
             $p2hStatusMap = [];
             $allControlRooms = $groupedData->keys();
@@ -7546,11 +7557,15 @@ class MapBaseController extends Controller
                     ->orderBy('shift', 'desc')
                     ->first();
                 
+                // Check if current user is pengawas for this control room
+                $isPengawas = in_array($controlRoom, $userSupervisedControlRooms);
+                
                 $p2hStatusMap[$controlRoom] = [
                     'has_p2h_today' => $hasP2hToday,
                     'latest_p2h_date' => $latestP2h ? $latestP2h->tanggal_pemeriksaan->format('Y-m-d') : null,
                     'latest_p2h_shift' => $latestP2h ? $latestP2h->shift : null,
                     'latest_p2h_pengawas' => $latestP2h ? $latestP2h->nama_pengawas : null,
+                    'is_pengawas' => $isPengawas,
                 ];
             }
             
@@ -7587,6 +7602,7 @@ class MapBaseController extends Controller
                     'latest_p2h_date' => null,
                     'latest_p2h_shift' => null,
                     'latest_p2h_pengawas' => null,
+                    'is_pengawas' => false,
                 ];
                 
                 return [

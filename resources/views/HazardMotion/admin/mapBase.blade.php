@@ -2150,8 +2150,9 @@
                           <th style="width: 10%;" class="text-end">CCTV Aktif</th>
                           <th style="width: 10%;" class="text-end">CCTV Rusak</th>
                           <th style="width: 15%;" class="text-center">Status P2H</th>
+                          <th style="width: 10%;" class="text-center">P2H</th>
                           <th style="width: 12%;" class="text-center">Intervensi</th>
-                          <th style="width: 20%;" class="text-center">Aksi</th>
+                          <th style="width: 10%;" class="text-center">Aksi</th>
                         </tr>
                       </thead>
                       <tbody id="detailControlRoomTableBody">
@@ -12173,7 +12174,7 @@
         if (!controlRoomData || controlRoomData.length === 0) {
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="8" class="text-center text-muted py-4">
+                    <td colspan="9" class="text-center text-muted py-4">
                         Tidak ada data control room.
                     </td>
                 </tr>
@@ -12191,6 +12192,7 @@
             const hasP2hToday = p2hStatus.has_p2h_today || false;
             const latestP2hDate = p2hStatus.latest_p2h_date || null;
             const latestP2hShift = p2hStatus.latest_p2h_shift || null;
+            const isPengawas = p2hStatus.is_pengawas || false;
             
             // Format P2H status badge
             let p2hStatusBadge = '';
@@ -12202,6 +12204,18 @@
                 p2hStatusBadge = `<span class="badge bg-warning px-3 py-2" title="P2H Terakhir: ${formattedDate} Shift ${latestP2hShift}">P2H: ${formattedDate}</span>`;
             } else {
                 p2hStatusBadge = '<span class="badge bg-danger px-3 py-2">Belum P2H</span>';
+            }
+            
+            // Tombol P2H - hanya tampil jika user adalah pengawas untuk control room ini
+            let p2hButton = '';
+            if (isPengawas) {
+                p2hButton = `
+                    <button class="btn btn-sm btn-success p2h-btn" type="button" data-control-room="${escapeHtml(controlRoom.name)}" title="Buka Form P2H">
+                        <span class="material-icons-outlined" style="font-size: 18px;">assignment</span>
+                    </button>
+                `;
+            } else {
+                p2hButton = '<span class="text-muted">-</span>';
             }
             
             rowsHtml += `
@@ -12223,6 +12237,9 @@
                         ${p2hStatusBadge}
                     </td>
                     <td class="text-center">
+                        ${p2hButton}
+                    </td>
+                    <td class="text-center">
                         <button class="btn btn-sm btn-primary intervensi-btn" type="button" data-control-room="${escapeHtml(controlRoom.name)}" data-bs-toggle="modal" data-bs-target="#intervensiModal" title="Kirim Intervensi">
                             <span class="material-icons-outlined" style="font-size: 18px;">send</span>
                         </button>
@@ -12234,7 +12251,7 @@
                     </td>
                 </tr>
                 <tr id="${detailRowId}" class="collapse">
-                    <td colspan="8" class="p-0">
+                    <td colspan="9" class="p-0">
                         <div class="p-3 bg-light">
                             <h6 class="mb-3 fw-bold">Detail CCTV - ${escapeHtml(controlRoom.name)}</h6>
                             <div class="cctv-detail-scroll" style="max-height: 400px; overflow-y: auto;">
@@ -12269,6 +12286,9 @@
         
         // Attach event listeners for intervensi buttons
         attachIntervensiButtonListeners();
+        
+        // Attach event listeners for P2H buttons
+        attachP2hButtonListeners();
     }
     
     // Function untuk attach event listeners pada tombol intervensi
@@ -12279,6 +12299,19 @@
                 const controlRoom = this.getAttribute('data-control-room');
                 if (controlRoom) {
                     loadIntervensiModal(controlRoom);
+                }
+            });
+        });
+    }
+    
+    // Function untuk attach event listeners pada tombol P2H
+    function attachP2hButtonListeners() {
+        const p2hButtons = document.querySelectorAll('.p2h-btn');
+        p2hButtons.forEach(button => {
+            button.addEventListener('click', function() {
+                const controlRoom = this.getAttribute('data-control-room');
+                if (controlRoom) {
+                    openP2hModal(controlRoom);
                 }
             });
         });
