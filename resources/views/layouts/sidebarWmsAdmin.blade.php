@@ -260,8 +260,8 @@
           <li>
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">settings</i>
-              </div>
-              <div class="menu-title">Dashboard On Off CCTV</div>
+              </div>                 
+              <div class="menu-title">On Off CCTV</div>
             </a>
            
           </li>

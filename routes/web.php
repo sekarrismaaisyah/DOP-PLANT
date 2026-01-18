@@ -30,6 +30,7 @@ use App\Http\Controllers\ScoreCard\ScoreCardController;
 use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DailyOperationPlanController;
 use App\Http\Controllers\RolePermissionController;
+use App\Http\Controllers\CctvAlertsDashboardController;
 
 /*
 |--------------------------------------------------------------------------
@@ -55,6 +56,14 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('dashboard')->name('dashboard.')->group(function () {
         Route::get('/', [DashboardController::class, 'index'])->name('index');
         Route::get('/data', [DashboardController::class, 'getData'])->name('data');
+    });
+
+    // CCTV Alerts Dashboard Routes
+    Route::prefix('cctv-alerts-dashboard')->name('cctv-alerts-dashboard.')->group(function () {
+        Route::get('/', [CctvAlertsDashboardController::class, 'index'])->name('index');
+        Route::get('/chart-data', [CctvAlertsDashboardController::class, 'getChartData'])->name('chart-data');
+        Route::get('/data', [CctvAlertsDashboardController::class, 'getDataTableData'])->name('data');
+        Route::get('/sites', [CctvAlertsDashboardController::class, 'getSites'])->name('sites');
     });
     Route::get('/full-maps', [fullMapsController::class, 'index'])->name('fullmaps');
     Route::get('/full-maps/api/cctv-by-coverage', [fullMapsController::class, 'getCctvByCoverageLocation'])->name('full-maps.api.cctv-by-coverage');
