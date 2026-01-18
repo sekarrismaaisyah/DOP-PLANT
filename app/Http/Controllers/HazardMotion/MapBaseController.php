@@ -1591,6 +1591,31 @@ class MapBaseController extends Controller
                 }
             }
             
+            // Get intervensi data untuk mengecek apakah PJA sudah terintervensi
+            $intervensiMap = [];
+            try {
+                $intervensiList = IntervensiKesiapanOrang::select('nama_pja', 'id_employee', 'status')
+                    ->where('status', 'open') // Hanya ambil yang masih open
+                    ->get();
+                
+                foreach ($intervensiList as $intervensi) {
+                    $key = ($intervensi->nama_pja ?? '') . '|' . ($intervensi->id_employee ?? '');
+                    if (!empty($key) && $key !== '|') {
+                        $intervensiMap[$key] = true;
+                    }
+                }
+            } catch (Exception $e) {
+                Log::error('Error querying intervensi kesiapan orang: ' . $e->getMessage());
+                // Continue without intervensi data if query fails
+            }
+            
+            // Add intervensi status to karyawan data
+            foreach ($karyawanData as &$karyawan) {
+                $key = ($karyawan['nama_pja'] ?? '') . '|' . ($karyawan['id_employee'] ?? '');
+                $karyawan['has_intervensi'] = isset($intervensiMap[$key]) && $intervensiMap[$key];
+            }
+            unset($karyawan); // Unset reference
+            
             $statistics = [
                 'total_karyawan' => $totalKaryawan,
                 'karyawan_aktif' => $karyawanAktif,

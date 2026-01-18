@@ -66,6 +66,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/sites', [CctvAlertsDashboardController::class, 'getSites'])->name('sites');
     });
     Route::get('/full-maps', [fullMapsController::class, 'index'])->name('fullmaps');
+    Route::get('/full-maps/api/search-cctv', [fullMapsController::class, 'searchCctv'])->name('full-maps.api.search-cctv');
     Route::get('/full-maps/api/cctv-by-coverage', [fullMapsController::class, 'getCctvByCoverageLocation'])->name('full-maps.api.cctv-by-coverage');
     Route::get('/full-maps/api/sap-data', [fullMapsController::class, 'getSapDataApi'])->name('full-maps.api.sap-data');
     Route::post('/full-maps/api/generate-recommendations', [fullMapsController::class, 'generateControlRoomRecommendations'])->name('full-maps.api.generate-recommendations');

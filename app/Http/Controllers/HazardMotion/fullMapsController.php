@@ -3400,6 +3400,61 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
         }
     }
 
+    public function searchCctv(Request $request)
+    {
+        $query = $request->input('q', '');
+        
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        // Get logged-in user for filtering
+        $user = Auth::user();
+        $userName = $user ? $user->name : null;
+        $supervisedControlRooms = [];
+        
+        if ($userName) {
+            $pengawasRecords = CctvControlRoomPengawas::where('nama_pengawas', $userName)->get();
+            $supervisedControlRooms = $pengawasRecords->pluck('control_room')->filter()->unique()->toArray();
+        }
+
+        // Search in multiple fields
+        $searchQuery = CctvData::where(function($q) use ($query) {
+            $q->where('nama_cctv', 'LIKE', '%' . $query . '%')
+              ->orWhere('no_cctv', 'LIKE', '%' . $query . '%')
+              ->orWhere('lokasi_pemasangan', 'LIKE', '%' . $query . '%')
+              ->orWhere('site', 'LIKE', '%' . $query . '%')
+              ->orWhere('control_room', 'LIKE', '%' . $query . '%')
+              ->orWhere('fungsi_cctv', 'LIKE', '%' . $query . '%')
+              ->orWhere('kategori', 'LIKE', '%' . $query . '%');
+        });
+
+        // Apply filter for supervised control rooms if user is not admin
+        if ($userName && !empty($supervisedControlRooms)) {
+            $searchQuery->whereIn('control_room', $supervisedControlRooms);
+        }
+
+        $results = $searchQuery->limit(20)->get();
+
+        $formattedResults = $results->map(function($cctv) {
+            return [
+                'id' => $cctv->id,
+                'nama_cctv' => $cctv->nama_cctv ?? 'CCTV ' . $cctv->id,
+                'no_cctv' => $cctv->no_cctv ?? null,
+                'lokasi_pemasangan' => $cctv->lokasi_pemasangan ?? null,
+                'site' => $cctv->site ?? null,
+                'control_room' => $cctv->control_room ?? null,
+                'status' => $cctv->status ?? null,
+                'kondisi' => $cctv->kondisi ?? null,
+                'latitude' => $cctv->latitude ?? null,
+                'longitude' => $cctv->longitude ?? null,
+                'has_location' => !is_null($cctv->latitude) && !is_null($cctv->longitude),
+            ];
+        });
+
+        return response()->json($formattedResults);
+    }
+
 }
 
 

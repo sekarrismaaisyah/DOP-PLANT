@@ -104,6 +104,87 @@
   margin-left: 6px;
 }
 
+/* search results dropdown */
+.gm-search-results{
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 0;
+  right: 0;
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(60,64,67,.24);
+  max-height: 400px;
+  overflow-y: auto;
+  z-index: 1003;
+  display: none;
+}
+
+.gm-search-results.show{
+  display: block;
+}
+
+.gm-search-result-item{
+  padding: 12px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid #f1f3f4;
+  transition: background .15s ease;
+}
+
+.gm-search-result-item:last-child{
+  border-bottom: none;
+}
+
+.gm-search-result-item:hover{
+  background: #f8f9fa;
+}
+
+.gm-search-result-item.active{
+  background: #e8f0fe;
+}
+
+.gm-search-result-title{
+  font-size: 15px;
+  font-weight: 500;
+  color: #202124;
+  margin-bottom: 4px;
+}
+
+.gm-search-result-subtitle{
+  font-size: 13px;
+  color: #5f6368;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gm-search-result-badge{
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: 500;
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+
+.gm-search-result-badge.location{
+  background: #e6f4ea;
+  color: #137333;
+}
+
+.gm-search-result-badge.no-location{
+  background: #fce8e6;
+  color: #c5221f;
+}
+
+.gm-search-no-results{
+  padding: 16px;
+  text-align: center;
+  color: #5f6368;
+  font-size: 14px;
+}
+
 /* search input */
 .gm-search-box{
   width: 100%;
@@ -2395,10 +2476,12 @@
             <!-- Search Box -->
             <div class="gm-search-container">
                 <i class="material-icons-outlined gm-search-icon">search</i>
-                <input type="text" class="gm-search-box" id="gmSearchBox" placeholder="Search...">
+                <input type="text" class="gm-search-box" id="gmSearchBox" placeholder="Search CCTV...">
                 <button class="gm-directions-btn" id="gmDirectionsBtn" title="Directions">
                     <i class="material-icons-outlined">directions</i>
                 </button>
+                <!-- Search Results Dropdown -->
+                <div class="gm-search-results" id="gmSearchResults"></div>
             </div>
             
             <!-- Category Filters - Sejajar dengan Search Box -->
@@ -2556,16 +2639,159 @@
                 gmSidebarBackdrop.addEventListener('click', closeSidebar);
             }
 
-            // Search Box Focus
+            // Search Box Focus and Search Functionality
             const gmSearchBox = document.getElementById('gmSearchBox');
+            const gmSearchResults = document.getElementById('gmSearchResults');
+            let searchTimeout = null;
+            let currentSearchResults = [];
+            let selectedIndex = -1;
+
             if (gmSearchBox) {
                 gmSearchBox.addEventListener('focus', function() {
                     this.style.boxShadow = '0 2px 8px 1px rgba(64,60,67,.24)';
+                    if (currentSearchResults.length > 0) {
+                        gmSearchResults.classList.add('show');
+                    }
                 });
                 
                 gmSearchBox.addEventListener('blur', function() {
                     this.style.boxShadow = '0 2px 5px 1px rgba(64,60,67,.16)';
+                    // Delay hiding results to allow click events
+                    setTimeout(() => {
+                        gmSearchResults.classList.remove('show');
+                    }, 200);
                 });
+
+                // Search functionality
+                gmSearchBox.addEventListener('input', function() {
+                    const query = this.value.trim();
+                    
+                    // Clear previous timeout
+                    if (searchTimeout) {
+                        clearTimeout(searchTimeout);
+                    }
+
+                    // Hide results if query is too short
+                    if (query.length < 2) {
+                        gmSearchResults.classList.remove('show');
+                        currentSearchResults = [];
+                        return;
+                    }
+
+                    // Debounce search
+                    searchTimeout = setTimeout(() => {
+                        performSearch(query);
+                    }, 300);
+                });
+
+                // Handle keyboard navigation
+                gmSearchBox.addEventListener('keydown', function(e) {
+                    if (!gmSearchResults.classList.contains('show') || currentSearchResults.length === 0) {
+                        return;
+                    }
+
+                    if (e.key === 'ArrowDown') {
+                        e.preventDefault();
+                        selectedIndex = Math.min(selectedIndex + 1, currentSearchResults.length - 1);
+                        updateSelectedItem();
+                    } else if (e.key === 'ArrowUp') {
+                        e.preventDefault();
+                        selectedIndex = Math.max(selectedIndex - 1, -1);
+                        updateSelectedItem();
+                    } else if (e.key === 'Enter' && selectedIndex >= 0) {
+                        e.preventDefault();
+                        selectSearchResult(currentSearchResults[selectedIndex]);
+                    } else if (e.key === 'Escape') {
+                        gmSearchResults.classList.remove('show');
+                        selectedIndex = -1;
+                    }
+                });
+            }
+
+            function updateSelectedItem() {
+                const items = gmSearchResults.querySelectorAll('.gm-search-result-item');
+                items.forEach((item, index) => {
+                    if (index === selectedIndex) {
+                        item.classList.add('active');
+                        item.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+                    } else {
+                        item.classList.remove('active');
+                    }
+                });
+            }
+
+            function performSearch(query) {
+                fetch(`{{ route('full-maps.api.search-cctv') }}?q=${encodeURIComponent(query)}`)
+                    .then(response => response.json())
+                    .then(data => {
+                        currentSearchResults = data;
+                        displaySearchResults(data);
+                        selectedIndex = -1;
+                    })
+                    .catch(error => {
+                        console.error('Search error:', error);
+                        gmSearchResults.innerHTML = '<div class="gm-search-no-results">Error loading results</div>';
+                    });
+            }
+
+            function displaySearchResults(results) {
+                if (results.length === 0) {
+                    gmSearchResults.innerHTML = '<div class="gm-search-no-results">No results found</div>';
+                    gmSearchResults.classList.add('show');
+                    return;
+                }
+
+                let html = '';
+                results.forEach((item, index) => {
+                    const locationBadge = item.has_location 
+                        ? '<span class="gm-search-result-badge location">Has Location</span>'
+                        : '<span class="gm-search-result-badge no-location">No Location</span>';
+                    
+                    const subtitleParts = [];
+                    if (item.no_cctv) subtitleParts.push(`No: ${item.no_cctv}`);
+                    if (item.site) subtitleParts.push(`Site: ${item.site}`);
+                    if (item.control_room) subtitleParts.push(`CR: ${item.control_room}`);
+                    
+                    html += `
+                        <div class="gm-search-result-item" data-index="${index}" data-id="${item.id}">
+                            <div class="gm-search-result-title">${escapeHtml(item.nama_cctv)}</div>
+                            <div class="gm-search-result-subtitle">
+                                ${subtitleParts.length > 0 ? subtitleParts.join(' • ') : ''}
+                                ${locationBadge}
+                            </div>
+                        </div>
+                    `;
+                });
+
+                gmSearchResults.innerHTML = html;
+                gmSearchResults.classList.add('show');
+
+                // Add click handlers
+                gmSearchResults.querySelectorAll('.gm-search-result-item').forEach(item => {
+                    item.addEventListener('click', function() {
+                        const index = parseInt(this.getAttribute('data-index'));
+                        selectSearchResult(currentSearchResults[index]);
+                    });
+                });
+            }
+
+            function selectSearchResult(item) {
+                // Close search results
+                gmSearchResults.classList.remove('show');
+                gmSearchBox.value = item.nama_cctv;
+                selectedIndex = -1;
+
+                // If item has location, center map on it
+                if (item.has_location && window.hazardMapView && item.latitude && item.longitude) {
+                    window.hazardMapView.animate({
+                        center: [parseFloat(item.longitude), parseFloat(item.latitude)],
+                        zoom: 18,
+                        duration: 500
+                    });
+                }
+
+                // You can add more actions here, like highlighting the marker, etc.
+                console.log('Selected CCTV:', item);
             }
 
             // Drawer JavaScript (keep existing functionality)

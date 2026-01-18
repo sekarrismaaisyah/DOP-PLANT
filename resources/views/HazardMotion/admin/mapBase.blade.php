@@ -1924,6 +1924,143 @@
             transform: scale(1);
         }
     }
+    
+    /* DataTable Area Kerja Custom Styling */
+    #areaKerjaTableControls {
+        background-color: #f8f9fa;
+        padding: 15px;
+        border-radius: 8px;
+        margin-bottom: 15px;
+        border: 1px solid #e9ecef;
+    }
+    
+    #areaKerjaTableControls .dataTables_length label,
+    #areaKerjaTableControls .dataTables_filter label {
+        font-weight: 500;
+        color: #495057;
+        font-size: 14px;
+    }
+    
+    #areaKerjaTableControls .form-select-sm,
+    #areaKerjaTableControls .form-control-sm {
+        margin: 0 5px;
+    }
+    
+    #areaKerjaTableInfo {
+        background-color: #f8f9fa;
+        padding: 12px 15px;
+        border-radius: 8px;
+        border: 1px solid #e9ecef;
+        font-size: 14px;
+    }
+    
+    #areaKerjaTableInfo .dataTables_info {
+        color: #6c757d;
+        font-weight: 500;
+    }
+    
+    #areaKerjaTablePagination {
+        text-align: right;
+    }
+    
+    #areaKerjaTablePagination .paginate_button {
+        display: inline-block;
+        padding: 6px 12px;
+        margin: 0 2px;
+        border: 1px solid #dee2e6;
+        border-radius: 4px;
+        background-color: #fff;
+        color: #495057;
+        text-decoration: none;
+        cursor: pointer;
+        transition: all 0.2s;
+        font-size: 14px;
+    }
+    
+    #areaKerjaTablePagination .paginate_button:hover:not(.disabled):not(.current) {
+        background-color: #e9ecef;
+        border-color: #adb5bd;
+        color: #212529;
+    }
+    
+    #areaKerjaTablePagination .paginate_button.current {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+        color: #fff;
+        font-weight: 600;
+    }
+    
+    #areaKerjaTablePagination .paginate_button.disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        background-color: #f8f9fa;
+    }
+    
+    #areaKerjaTablePagination .ellipsis {
+        padding: 6px 8px;
+        color: #6c757d;
+    }
+    
+    #tableAreaKerja_wrapper {
+        padding: 0;
+        width: 100%;
+    }
+    
+    #tableAreaKerja {
+        margin-top: 0 !important;
+        width: 100% !important;
+        table-layout: auto;
+    }
+    
+    #tableAreaKerja thead th,
+    #tableAreaKerja tbody td {
+        white-space: nowrap;
+    }
+    
+    .table-responsive {
+        width: 100% !important;
+        overflow-x: auto;
+    }
+    
+    .card-body.p-0 {
+        width: 100%;
+    }
+    
+    .row.g-0 {
+        margin-left: 0;
+        margin-right: 0;
+    }
+    
+    .row.g-0 > .col-12 {
+        padding-left: 0;
+        padding-right: 0;
+    }
+    
+    /* Ensure full width for Area Kerja table */
+    #area-kerja .card-body.p-4 {
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+    }
+    
+    #area-kerja .card-body.p-4 > .row:last-child {
+        margin-left: 0;
+        margin-right: 0;
+        width: 100%;
+    }
+    
+    #area-kerja .card-body.p-4 > .row:last-child > .col-12 {
+        padding-left: 1rem;
+        padding-right: 1rem;
+    }
+    
+    #area-kerja .card.w-100 {
+        width: 100% !important;
+        max-width: 100% !important;
+    }
+    
+    #area-kerja .card-body.p-0 {
+        width: 100% !important;
+    }
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@8.2.0/ol.css">
 <link rel="stylesheet" href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}">
@@ -2497,7 +2634,7 @@
                                         <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
                                         <span class="material-icons-outlined">map</span>
                                         </span>
-                                        <h3 class="mb-0" id="">100%</h3>
+                                        <h3 class="mb-0" id="totalDigitasiAreaKerja">0%</h3>
                                         <p class="mb-0">Total digitasi Area Kerja</p>
                                         <small class="text-muted" id="lastWeekAreaKerja">Week 2 2026</small>
                                     </button>
@@ -2506,8 +2643,8 @@
                                         <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
                                         <span class="material-icons-outlined">link</span>
                                         </span>
-                                        <h3 class="mb-0" id="">100%</h3>
-                                        <p class="mb-0">Total WMS MAPS</p>
+                                        <h3 class="mb-0" id="totalDigitasiCctv">0%</h3>
+                                        <p class="mb-0">Total digitasi CCTV</p>
                                         <small class="text-muted" id="lastWeekWms">Week 2 2026</small>
                                     </button>
                                     <div class="vr"></div>
@@ -2562,15 +2699,43 @@
                         </div>
                     </div>
 
-                    <div class="row">
+                    <div class="row g-0">
                         <div class="col-12">
-                            <div class="card">
+                            <div class="card w-100">
                                 <div class="card-header border-bottom">
                                     <h6 class="mb-0 fw-bold">Data Area Kerja</h6>
                                 </div>
-                                <div class="card-body p-0">
-                                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto;">
-                                        <table class="table table-hover table-striped mb-0" id="tableAreaKerja">
+                                <div class="card-body p-0 w-100">
+                                    <!-- DataTable Controls - Outside table -->
+                                    <div class="row mb-3 align-items-center px-3 pt-3" id="areaKerjaTableControls" style="display: none;">
+                                        <div class="col-md-6">
+                                            <div class="dataTables_length">
+                                                <label class="form-label mb-0">
+                                                    Tampilkan 
+                                                    <select name="areaKerjaTableLength" id="areaKerjaTableLength" class="form-select form-select-sm d-inline-block" style="width: auto;">
+                                                        <option value="10">10</option>
+                                                        <option value="25" selected>25</option>
+                                                        <option value="50">50</option>
+                                                        <option value="100">100</option>
+                                                        <option value="-1">Semua</option>
+                                                    </select>
+                                                    data per halaman
+                                                </label>
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 text-md-end">
+                                            <div class="dataTables_filter">
+                                                <label class="form-label mb-0">
+                                                    Cari: 
+                                                    <input type="search" class="form-control form-control-sm d-inline-block" id="areaKerjaTableSearch" placeholder="Cari data..." style="width: 250px;">
+                                                </label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Table Container -->
+                                    <div class="table-responsive" style="max-height: 600px; overflow-y: auto; width: 100%;">
+                                        <table class="table table-hover table-striped mb-0 w-100" id="tableAreaKerja" style="width: 100% !important;">
                                             <thead class="table-light sticky-top">
                                                 <tr>
                                                     <th style="min-width: 100px;">ID</th>
@@ -2579,17 +2744,32 @@
                                                     <th style="min-width: 200px;">Coverage Detail Lokasi</th>
                                                     <th style="min-width: 150px;">Kategori Aktivitas</th>
                                                     <th style="min-width: 150px;">Kategori Area</th>
+                                                    <th style="min-width: 150px;">Digitasi</th>
                                                 </tr>
                                             </thead>
                                             <tbody id="tbodyAreaKerja">
                                                 <tr>
-                                                    <td colspan="6" class="text-center text-muted py-4">
+                                                    <td colspan="7" class="text-center text-muted py-4">
                                                         <div class="spinner-border spinner-border-sm me-2" role="status"></div>
                                                         Memuat data...
                                                     </td>
                                                 </tr>
                                             </tbody>
                                         </table>
+                                    </div>
+                                    
+                                    <!-- DataTable Info and Pagination - Outside table -->
+                                    <div class="row mt-3 align-items-center px-3 pb-3" id="areaKerjaTableInfo" style="display: none;">
+                                        <div class="col-md-6">
+                                            <div class="dataTables_info" id="areaKerjaTableInfoText">
+                                                Menampilkan 0 sampai 0 dari 0 data
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6 text-md-end">
+                                            <div class="dataTables_paginate paging_simple_numbers" id="areaKerjaTablePagination">
+                                                <!-- Pagination will be inserted here -->
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -11263,6 +11443,9 @@
     let currentSelectedCompany = '__all__';
     let currentSelectedSite = '__all__';
     
+    // DataTable untuk Area Kerja
+    let areaKerjaDataTable = null;
+    
     // Get allowed company and sites from server (if user has specific role)
     const allowedCompany = @json($allowedCompany ?? null);
     const allowedSites = @json($allowedSites ?? []);
@@ -12933,6 +13116,11 @@
                                 const picSelect = document.getElementById('intervensiKesiapanOrangPIC');
                                 if (picSelect && $(picSelect).hasClass('select2-hidden-accessible')) {
                                     $(picSelect).val(null).trigger('change');
+                                }
+                                
+                                // Open WhatsApp if URL is available
+                                if (data.data && data.data.whatsapp_url) {
+                                    window.open(data.data.whatsapp_url, '_blank');
                                 }
                                 
                                 // Reload kesiapan orang data
@@ -15550,48 +15738,61 @@
             // CCTV Dedicated - tampilkan tombol intervensi jika "-"
             let cctvDedicatedCell = cctvDisplay;
             if (cctvDisplay === '-') {
-                // Escape string untuk menghindari masalah dengan karakter khusus
-                const escapeHtml = (str) => {
-                    if (!str) return '';
-                    return String(str)
-                        .replace(/\\/g, '\\\\')
-                        .replace(/'/g, "\\'")
-                        .replace(/"/g, '\\"')
-                        .replace(/\n/g, '\\n')
-                        .replace(/\r/g, '\\r');
-                };
+                // Check if already has intervensi
+                const hasIntervensi = karyawan.has_intervensi === true || karyawan.has_intervensi === 'true';
                 
-                const namaPjaEscaped = escapeHtml(karyawan.nama_pja || '');
-                const tipePjaEscaped = escapeHtml(karyawan.tipe_pja || '');
-                const perusahaanEscaped = escapeHtml(karyawan.perusahaan || '');
-                const namaKaryawanEscaped = escapeHtml(karyawan.nama_karyawan || '');
-                const idEmployeeEscaped = escapeHtml(karyawan.id_employee || '');
-                
-                // Use data-bs-toggle and data-bs-target like intervensi control room
-                // Escape HTML entities for data attributes
-                const escapeHtmlAttr = (str) => {
-                    if (!str) return '';
-                    return String(str)
-                        .replace(/&/g, '&amp;')
-                        .replace(/"/g, '&quot;')
-                        .replace(/'/g, '&#39;')
-                        .replace(/</g, '&lt;')
-                        .replace(/>/g, '&gt;');
-                };
-                
-                cctvDedicatedCell = `
-                    <button type="button" class="btn btn-sm btn-warning btn-intervensi-kesiapan-orang" 
-                            data-bs-toggle="modal" 
-                            data-bs-target="#intervensiKesiapanOrangModal"
-                            data-nama-pja="${escapeHtmlAttr(namaPjaEscaped)}"
-                            data-tipe-pja="${escapeHtmlAttr(tipePjaEscaped)}"
-                            data-perusahaan="${escapeHtmlAttr(perusahaanEscaped)}"
-                            data-nama-karyawan="${escapeHtmlAttr(namaKaryawanEscaped)}"
-                            data-id-employee="${escapeHtmlAttr(idEmployeeEscaped)}">
-                        <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">warning</i>
-                        Intervensi
-                    </button>
-                `;
+                if (hasIntervensi) {
+                    // Show "Sudah Terintervensi" button (green, disabled)
+                    cctvDedicatedCell = `
+                        <button type="button" class="btn btn-sm btn-success" disabled>
+                            <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">check_circle</i>
+                            Sudah Terintervensi
+                        </button>
+                    `;
+                } else {
+                    // Escape string untuk menghindari masalah dengan karakter khusus
+                    const escapeHtml = (str) => {
+                        if (!str) return '';
+                        return String(str)
+                            .replace(/\\/g, '\\\\')
+                            .replace(/'/g, "\\'")
+                            .replace(/"/g, '\\"')
+                            .replace(/\n/g, '\\n')
+                            .replace(/\r/g, '\\r');
+                    };
+                    
+                    const namaPjaEscaped = escapeHtml(karyawan.nama_pja || '');
+                    const tipePjaEscaped = escapeHtml(karyawan.tipe_pja || '');
+                    const perusahaanEscaped = escapeHtml(karyawan.perusahaan || '');
+                    const namaKaryawanEscaped = escapeHtml(karyawan.nama_karyawan || '');
+                    const idEmployeeEscaped = escapeHtml(karyawan.id_employee || '');
+                    
+                    // Use data-bs-toggle and data-bs-target like intervensi control room
+                    // Escape HTML entities for data attributes
+                    const escapeHtmlAttr = (str) => {
+                        if (!str) return '';
+                        return String(str)
+                            .replace(/&/g, '&amp;')
+                            .replace(/"/g, '&quot;')
+                            .replace(/'/g, '&#39;')
+                            .replace(/</g, '&lt;')
+                            .replace(/>/g, '&gt;');
+                    };
+                    
+                    cctvDedicatedCell = `
+                        <button type="button" class="btn btn-sm btn-warning btn-intervensi-kesiapan-orang" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#intervensiKesiapanOrangModal"
+                                data-nama-pja="${escapeHtmlAttr(namaPjaEscaped)}"
+                                data-tipe-pja="${escapeHtmlAttr(tipePjaEscaped)}"
+                                data-perusahaan="${escapeHtmlAttr(perusahaanEscaped)}"
+                                data-nama-karyawan="${escapeHtmlAttr(namaKaryawanEscaped)}"
+                                data-id-employee="${escapeHtmlAttr(idEmployeeEscaped)}">
+                            <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">warning</i>
+                            Intervensi
+                        </button>
+                    `;
+                }
             }
             
             html += `
@@ -15643,10 +15844,30 @@
         
         console.log('Loading Area Kerja data...');
         
+        // Destroy existing DataTable if it exists
+        if (areaKerjaDataTable) {
+            try {
+                areaKerjaDataTable.destroy();
+                areaKerjaDataTable = null;
+            } catch (e) {
+                console.warn('Error destroying DataTable during load:', e);
+            }
+        }
+        
+        // Hide controls during loading
+        const controlsEl = document.getElementById('areaKerjaTableControls');
+        const infoEl = document.getElementById('areaKerjaTableInfo');
+        if (controlsEl) controlsEl.style.display = 'none';
+        if (infoEl) infoEl.style.display = 'none';
+        
+        // Clear search input
+        const searchInput = document.getElementById('areaKerjaTableSearch');
+        if (searchInput) searchInput.value = '';
+        
         // Show loading state
         tbody.innerHTML = `
             <tr>
-                <td colspan="6" class="text-center text-muted py-4">
+                <td colspan="7" class="text-center text-muted py-4">
                     <div class="spinner-border spinner-border-sm me-2" role="status"></div>
                     Memuat data...
                 </td>
@@ -15658,11 +15879,15 @@
         const totalWmsEl = document.getElementById('totalWmsLinks');
         const totalHighriskEl = document.getElementById('totalAreaHighrisk');
         const totalKritisEl = document.getElementById('totalAreaKritis');
+        const totalDigitasiEl = document.getElementById('totalDigitasiAreaKerja');
+        const totalDigitasiCctvEl = document.getElementById('totalDigitasiCctv');
         
         if (totalBoundaryEl) totalBoundaryEl.textContent = '0%';
         if (totalWmsEl) totalWmsEl.textContent = '0%';
         if (totalHighriskEl) totalHighriskEl.textContent = '0%';
         if (totalKritisEl) totalKritisEl.textContent = '0%';
+        if (totalDigitasiEl) totalDigitasiEl.textContent = '0%';
+        if (totalDigitasiCctvEl) totalDigitasiCctvEl.textContent = '0%';
         
         const lastWeekAreaKerjaEl = document.getElementById('lastWeekAreaKerja');
         const lastWeekWmsEl = document.getElementById('lastWeekWms');
@@ -15760,25 +15985,99 @@
                     console.log('Coverage data count:', coverageData.length);
                     console.log('Coverage data sample:', coverageData.slice(0, 3));
                     
+                    // Fetch all CCTV data from table to calculate digitization percentage
+                    // Using cctv-data.data endpoint which returns all CCTV from cctv_data_bmo2 table
+                    fetch('{{ route("cctv-data.data") }}?length=10000', {
+                        headers: {
+                            'Accept': 'application/json',
+                            'X-Requested-With': 'XMLHttpRequest'
+                        }
+                    })
+                        .then(response => response.json())
+                        .then(cctvResult => {
+                            if (cctvResult.data && Array.isArray(cctvResult.data)) {
+                                const allCctvData = cctvResult.data.map(item => ({
+                                    no_cctv: item.no_cctv || null,
+                                    nomor_cctv: item.no_cctv || null
+                                })).filter(item => item.no_cctv && item.no_cctv !== '-' && item.no_cctv !== null && item.no_cctv !== '');
+                                
+                                console.log('All CCTV data count:', allCctvData.length);
+                                
+                                // Calculate digitization percentage
+                                calculateCctvDigitizationPercentage(allCctvData);
+                            } else {
+                                console.warn('Failed to fetch CCTV data for digitization calculation');
+                                // Fallback: use coverage data if available
+                                if (coverageData.length > 0) {
+                                    const cctvData = coverageData.map(item => ({
+                                        no_cctv: item.no_cctv || null,
+                                        nomor_cctv: item.no_cctv || null
+                                    })).filter(item => item.no_cctv && item.no_cctv !== '-' && item.no_cctv !== null && item.no_cctv !== '');
+                                    calculateCctvDigitizationPercentage(cctvData);
+                                } else {
+                                    const totalDigitasiCctvEl = document.getElementById('totalDigitasiCctv');
+                                    if (totalDigitasiCctvEl) {
+                                        totalDigitasiCctvEl.textContent = '0%';
+                                    }
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('Error fetching CCTV data for digitization:', error);
+                            // Fallback: use coverage data if available
+                            if (coverageData.length > 0) {
+                                const cctvData = coverageData.map(item => ({
+                                    no_cctv: item.no_cctv || null,
+                                    nomor_cctv: item.no_cctv || null
+                                })).filter(item => item.no_cctv && item.no_cctv !== '-' && item.no_cctv !== null && item.no_cctv !== '');
+                                calculateCctvDigitizationPercentage(cctvData);
+                            } else {
+                                const totalDigitasiCctvEl = document.getElementById('totalDigitasiCctv');
+                                if (totalDigitasiCctvEl) {
+                                    totalDigitasiCctvEl.textContent = '0%';
+                                }
+                            }
+                        });
+                    
                     if (coverageData.length > 0) {
                         renderAreaKerjaTable(coverageData);
                     } else {
                         console.warn('No coverage data to render');
+                        // Destroy existing DataTable if it exists
+                        if (areaKerjaDataTable) {
+                            try {
+                                areaKerjaDataTable.destroy();
+                                areaKerjaDataTable = null;
+                            } catch (e) {
+                                console.warn('Error destroying DataTable:', e);
+                            }
+                        }
                         tbody.innerHTML = `
                             <tr>
-                                <td colspan="6" class="text-center text-muted py-4">
+                                <td colspan="7" class="text-center text-muted py-4">
                                     <i class="material-icons-outlined">info</i>
                                     <p class="mb-0 mt-2">Tidak ada data coverage</p>
                                 </td>
                             </tr>
                         `;
+                        // Initialize empty DataTable
+                        initializeAreaKerjaDataTable();
                     }
                 } else {
                     console.warn('No data or unsuccessful response:', data);
+                    // Destroy existing DataTable if it exists
+                    if (areaKerjaDataTable) {
+                        try {
+                            areaKerjaDataTable.destroy();
+                            areaKerjaDataTable = null;
+                        } catch (e) {
+                            console.warn('Error destroying DataTable:', e);
+                        }
+                    }
                     const errorMsg = data && data.message ? data.message : (data && data.error ? data.error : 'Tidak ada data area kerja');
                     tbody.innerHTML = `
                         <tr>
-                            <td colspan="6" class="text-center text-muted py-4">
+                            <td colspan="7" class="text-center text-muted py-4">
                                 <i class="material-icons-outlined">info</i>
                                 <p class="mb-0 mt-2">${errorMsg}</p>
                                 <button class="btn btn-sm btn-primary mt-2" onclick="loadAreaKerjaData()">
@@ -15788,11 +16087,23 @@
                             </td>
                         </tr>
                     `;
+                    // Initialize empty DataTable
+                    initializeAreaKerjaDataTable();
                 }
             })
             .catch(error => {
                 clearTimeout(timeoutId);
                 console.error('Error loading area kerja data:', error);
+                
+                // Destroy existing DataTable if it exists
+                if (areaKerjaDataTable) {
+                    try {
+                        areaKerjaDataTable.destroy();
+                        areaKerjaDataTable = null;
+                    } catch (e) {
+                        console.warn('Error destroying DataTable during error:', e);
+                    }
+                }
                 
                 let errorMessage = 'Gagal memuat data area kerja';
                 if (error.name === 'AbortError') {
@@ -15803,7 +16114,7 @@
                 
                 tbody.innerHTML = `
                     <tr>
-                        <td colspan="6" class="text-center text-danger py-4">
+                        <td colspan="7" class="text-center text-danger py-4">
                             <i class="material-icons-outlined">error_outline</i>
                             <p class="mb-0 mt-2">${errorMessage}</p>
                             <button class="btn btn-sm btn-primary mt-2" onclick="loadAreaKerjaData()">
@@ -15813,29 +16124,176 @@
                         </td>
                     </tr>
                 `;
+                // Initialize empty DataTable even on error
+                initializeAreaKerjaDataTable();
             });
+    }
+    
+    // Function to check if location is digitized in area kerja JS files
+    function checkLocationDigitized(lokasi) {
+        if (!lokasi || lokasi === '') return false;
+        
+        // List of area kerja JS objects to check
+        const areaKerjaObjects = [
+            window.areaKerjaBmo1Fad,
+            window.areaKerjaBmo1Kdc,
+            window.areaKerjaBmo2Buma,
+            window.areaKerjaBmo3Bar,
+            window.areaKerjaGmoKdc,
+            window.areaKerjaGmoPama,
+            window.areaKerjaLmoBuma,
+            window.areaKerjaLmoFad,
+            window.areaKerjaSmoMtn
+        ];
+        
+        // Normalize location string for comparison (trim and case insensitive)
+        const normalizedLokasi = String(lokasi).trim().toLowerCase();
+        
+        // Check each area kerja object
+        for (const areaKerja of areaKerjaObjects) {
+            if (!areaKerja || !areaKerja.features) continue;
+            
+            // Check each feature in the collection
+            for (const feature of areaKerja.features) {
+                if (feature.properties && feature.properties.lokasi) {
+                    const featureLokasi = String(feature.properties.lokasi).trim().toLowerCase();
+                    // Check if location matches (exact match or contains)
+                    if (featureLokasi === normalizedLokasi || featureLokasi.includes(normalizedLokasi) || normalizedLokasi.includes(featureLokasi)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    // Function to check if CCTV is digitized in area CCTV JS files
+    function checkCctvDigitized(noCctv) {
+        if (!noCctv || noCctv === '' || noCctv === '-') return false;
+        
+        // List of area CCTV JS objects to check (checking both naming conventions)
+        const areaCctvObjects = [
+            window.areaCctvBmo1Fad,
+            window.areaCctvBmo1Kdc,
+            window.areaCctvBmo2Buma,
+            window.areaCctvBmo2Pama,
+            window.areaCctvGeoJsonDataBmo2Pama, // Alternative naming
+            window.areaCctvBmo3Bar,
+            window.areaCctvGmoKdc,
+            window.areaCctvGmoPama,
+            window.areaCctvLmoBuma,
+            window.areaCctvLmoFad,
+            window.areaCctvSmoMtn
+        ];
+        
+        // Normalize CCTV number string for comparison (trim and case insensitive)
+        const normalizedNoCctv = String(noCctv).trim().toLowerCase();
+        
+        // Check each area CCTV object
+        for (const areaCctv of areaCctvObjects) {
+            if (!areaCctv || !areaCctv.features) continue;
+            
+            // Check each feature in the collection
+            for (const feature of areaCctv.features) {
+                if (feature.properties && feature.properties.nomor_cctv) {
+                    const featureNomorCctv = String(feature.properties.nomor_cctv).trim().toLowerCase();
+                    // Check if CCTV number matches (exact match)
+                    if (featureNomorCctv === normalizedNoCctv) {
+                        return true;
+                    }
+                }
+            }
+        }
+        
+        return false;
+    }
+    
+    // Function to calculate and update CCTV digitization percentage
+    function calculateCctvDigitizationPercentage(cctvData) {
+        if (!cctvData || cctvData.length === 0) {
+            const totalDigitasiCctvEl = document.getElementById('totalDigitasiCctv');
+            if (totalDigitasiCctvEl) {
+                totalDigitasiCctvEl.textContent = '0%';
+            }
+            return;
+        }
+        
+        let totalCctv = 0;
+        let cctvTerdigitasi = 0;
+        
+        // Count total CCTV and digitized CCTV
+        cctvData.forEach(item => {
+            const noCctv = item.no_cctv || item.nomor_cctv || null;
+            if (noCctv && noCctv !== '-' && noCctv !== '') {
+                totalCctv++;
+                if (checkCctvDigitized(noCctv)) {
+                    cctvTerdigitasi++;
+                }
+            }
+        });
+        
+        // Calculate percentage
+        const digitasiPercentage = totalCctv > 0 
+            ? ((cctvTerdigitasi / totalCctv) * 100).toFixed(2)
+            : 0;
+        
+        // Update element
+        const totalDigitasiCctvEl = document.getElementById('totalDigitasiCctv');
+        if (totalDigitasiCctvEl) {
+            totalDigitasiCctvEl.textContent = digitasiPercentage + '%';
+            console.log(`Updated totalDigitasiCctv: ${digitasiPercentage}% (${cctvTerdigitasi}/${totalCctv})`);
+        } else {
+            console.warn('totalDigitasiCctv element not found');
+        }
     }
     
     // Render Area Kerja table
     function renderAreaKerjaTable(coverageData) {
         const tbody = document.getElementById('tbodyAreaKerja');
-        if (!tbody) {
-            console.error('tbodyAreaKerja not found in renderAreaKerjaTable');
+        const table = document.getElementById('tableAreaKerja');
+        if (!tbody || !table) {
+            console.error('tbodyAreaKerja or tableAreaKerja not found in renderAreaKerjaTable');
             return;
         }
         
         console.log('renderAreaKerjaTable called with data:', coverageData);
         
+        // Destroy existing DataTable if it exists
+        if (areaKerjaDataTable) {
+            try {
+                areaKerjaDataTable.destroy();
+                areaKerjaDataTable = null;
+            } catch (e) {
+                console.warn('Error destroying DataTable:', e);
+            }
+        }
+        
+        // Hide controls when destroying
+        const controlsEl = document.getElementById('areaKerjaTableControls');
+        const infoEl = document.getElementById('areaKerjaTableInfo');
+        if (controlsEl) controlsEl.style.display = 'none';
+        if (infoEl) infoEl.style.display = 'none';
+        
         if (!coverageData || coverageData.length === 0) {
             console.warn('No coverage data to render');
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center text-muted py-4">
+                    <td colspan="7" class="text-center text-muted py-4">
                         <i class="material-icons-outlined">info</i>
                         <p class="mb-0 mt-2">Tidak ada data coverage</p>
                     </td>
                 </tr>
             `;
+            
+            // Reset digitization percentage when no data
+            const totalDigitasiEl = document.getElementById('totalDigitasiAreaKerja');
+            if (totalDigitasiEl) {
+                totalDigitasiEl.textContent = '0%';
+            }
+            
+            // Initialize empty DataTable
+            initializeAreaKerjaDataTable();
             return;
         }
         
@@ -15846,6 +16304,9 @@
         };
         
         try {
+            let totalLokasi = 0;
+            let lokasiTerdigitasi = 0;
+            
             const html = coverageData.map((item, index) => {
                 const kategoriArea = item.kategori_area || '';
                 let badgeClass = 'bg-secondary bg-opacity-10 text-secondary';
@@ -15855,11 +16316,27 @@
                     badgeClass = 'bg-warning bg-opacity-10 text-warning';
                 }
                 
+                // Check if location is digitized
+                const lokasi = safeValue(item.coverage_lokasi);
+                const isDigitized = checkLocationDigitized(lokasi);
+                
+                // Count for percentage calculation
+                if (lokasi && lokasi !== '-') {
+                    totalLokasi++;
+                    if (isDigitized) {
+                        lokasiTerdigitasi++;
+                    }
+                }
+                
+                const digitasiStatus = isDigitized 
+                    ? '<span class="badge bg-success bg-opacity-10 text-success">Sudah Terdigitasi</span>'
+                    : '<span class="badge bg-secondary bg-opacity-10 text-secondary">Belum Terdigitasi</span>';
+                
                 return `
                     <tr>
                         <td>${safeValue(item.id)}</td>
                         <td>${safeValue(item.no_cctv)}</td>
-                        <td>${safeValue(item.coverage_lokasi)}</td>
+                        <td>${lokasi}</td>
                         <td>${safeValue(item.coverage_detail_lokasi)}</td>
                         <td>${safeValue(item.kategori_aktivitas)}</td>
                         <td>
@@ -15869,29 +16346,239 @@
                                 </span>
                             ` : '-'}
                         </td>
+                        <td>${digitasiStatus}</td>
                     </tr>
                 `;
             }).join('');
             
             tbody.innerHTML = html;
             
+            // Calculate and update digitization percentage
+            const digitasiPercentage = totalLokasi > 0 
+                ? ((lokasiTerdigitasi / totalLokasi) * 100).toFixed(2)
+                : 0;
+            
+            const totalDigitasiEl = document.getElementById('totalDigitasiAreaKerja');
+            if (totalDigitasiEl) {
+                totalDigitasiEl.textContent = digitasiPercentage + '%';
+                console.log(`Updated totalDigitasiAreaKerja: ${digitasiPercentage}% (${lokasiTerdigitasi}/${totalLokasi})`);
+            } else {
+                console.warn('totalDigitasiAreaKerja element not found');
+            }
+            
             // Log success for debugging
             console.log(`Area Kerja table rendered successfully: ${coverageData.length} records`);
+            console.log(`Digitization: ${lokasiTerdigitasi} out of ${totalLokasi} locations (${digitasiPercentage}%)`);
             
             // Verify the data is actually in the DOM
             const renderedRows = tbody.querySelectorAll('tr');
             console.log(`Rows rendered in DOM: ${renderedRows.length}`);
+            
+            // Initialize DataTable after rendering
+            initializeAreaKerjaDataTable();
         } catch (error) {
             console.error('Error rendering Area Kerja table:', error);
             tbody.innerHTML = `
                 <tr>
-                    <td colspan="6" class="text-center text-danger py-4">
+                    <td colspan="7" class="text-center text-danger py-4">
                         <i class="material-icons-outlined">error_outline</i>
                         <p class="mb-0 mt-2">Error rendering data</p>
                         <small style="color: #9ca3af;">${error.message}</small>
                     </td>
                 </tr>
             `;
+            // Initialize empty DataTable even on error
+            initializeAreaKerjaDataTable();
+        }
+    }
+    
+    // Initialize DataTable for Area Kerja
+    function initializeAreaKerjaDataTable() {
+        const tableElement = document.getElementById('tableAreaKerja');
+        if (!tableElement) {
+            console.warn('tableAreaKerja element not found');
+            return;
+        }
+        
+        // Check if DataTable is already initialized
+        if ($.fn.DataTable.isDataTable('#tableAreaKerja')) {
+            if (areaKerjaDataTable) {
+                try {
+                    areaKerjaDataTable.destroy();
+                    areaKerjaDataTable = null;
+                } catch (e) {
+                    console.warn('Error destroying DataTable:', e);
+                }
+            }
+        }
+        
+        // Check if table has data rows (not just loading/error message)
+        const tbody = document.getElementById('tbodyAreaKerja');
+        const hasDataRows = tbody && tbody.querySelectorAll('tr').length > 0 && 
+                           !tbody.querySelector('tr td[colspan="7"]');
+        
+        // Only initialize DataTable if there are actual data rows
+        if (hasDataRows) {
+            try {
+                // Show controls
+                const controlsEl = document.getElementById('areaKerjaTableControls');
+                const infoEl = document.getElementById('areaKerjaTableInfo');
+                if (controlsEl) controlsEl.style.display = 'flex';
+                if (infoEl) infoEl.style.display = 'flex';
+                
+                areaKerjaDataTable = $('#tableAreaKerja').DataTable({
+                    order: [[0, 'asc']], // Order by ID ascending
+                    pageLength: 25,
+                    lengthMenu: [[10, 25, 50, 100, -1], [10, 25, 50, 100, "Semua"]],
+                    responsive: true,
+                    scrollX: true,
+                    scrollCollapse: true,
+                    // Hide default DataTable controls (we use custom ones)
+                    dom: 'rt',
+                    language: {
+                        processing: "Memproses...",
+                        search: "",
+                        lengthMenu: "",
+                        info: "",
+                        infoEmpty: "",
+                        infoFiltered: "",
+                        paginate: {
+                            first: "&laquo;",
+                            last: "&raquo;",
+                            next: "&rsaquo;",
+                            previous: "&lsaquo;"
+                        },
+                        emptyTable: "Tidak ada data yang tersedia",
+                        zeroRecords: "Tidak ada data yang sesuai dengan pencarian"
+                    },
+                    columnDefs: [
+                        { targets: [5, 6], orderable: false }, // Kategori Area dan Digitasi tidak bisa di-sort
+                        { targets: '_all', className: 'text-start' }
+                    ],
+                    drawCallback: function(settings) {
+                        // Update custom info text
+                        const api = this.api();
+                        const pageInfo = api.page.info();
+                        const infoText = `Menampilkan ${pageInfo.start + 1} sampai ${pageInfo.end} dari ${pageInfo.recordsTotal} data`;
+                        const infoEl = document.getElementById('areaKerjaTableInfoText');
+                        if (infoEl) {
+                            if (pageInfo.recordsFiltered !== pageInfo.recordsTotal) {
+                                infoEl.textContent = `${infoText} (disaring dari ${pageInfo.recordsFiltered} total data)`;
+                            } else {
+                                infoEl.textContent = infoText;
+                            }
+                        }
+                        
+                        // Update custom pagination
+                        const paginationEl = document.getElementById('areaKerjaTablePagination');
+                        if (paginationEl) {
+                            paginationEl.innerHTML = '';
+                            if (pageInfo.pages > 1) {
+                                // First button
+                                const firstBtn = document.createElement('a');
+                                firstBtn.className = `paginate_button first ${pageInfo.page === 0 ? 'disabled' : ''}`;
+                                firstBtn.href = '#';
+                                firstBtn.innerHTML = '&laquo;';
+                                firstBtn.onclick = function(e) {
+                                    e.preventDefault();
+                                    if (pageInfo.page > 0) api.page('first').draw('page');
+                                };
+                                paginationEl.appendChild(firstBtn);
+                                
+                                // Previous button
+                                const prevBtn = document.createElement('a');
+                                prevBtn.className = `paginate_button previous ${!api.page.hasPrevious() ? 'disabled' : ''}`;
+                                prevBtn.href = '#';
+                                prevBtn.innerHTML = '&lsaquo;';
+                                prevBtn.onclick = function(e) {
+                                    e.preventDefault();
+                                    if (api.page.hasPrevious()) api.page('previous').draw('page');
+                                };
+                                paginationEl.appendChild(prevBtn);
+                                
+                                // Page numbers
+                                const startPage = Math.max(0, pageInfo.page - 2);
+                                const endPage = Math.min(pageInfo.pages - 1, pageInfo.page + 2);
+                                
+                                if (startPage > 0) {
+                                    const ellipsis = document.createElement('span');
+                                    ellipsis.className = 'ellipsis';
+                                    ellipsis.textContent = '...';
+                                    paginationEl.appendChild(ellipsis);
+                                }
+                                
+                                for (let i = startPage; i <= endPage; i++) {
+                                    const pageBtn = document.createElement('a');
+                                    pageBtn.className = `paginate_button ${i === pageInfo.page ? 'current' : ''}`;
+                                    pageBtn.href = '#';
+                                    pageBtn.textContent = i + 1;
+                                    pageBtn.onclick = function(e) {
+                                        e.preventDefault();
+                                        api.page(i).draw('page');
+                                    };
+                                    paginationEl.appendChild(pageBtn);
+                                }
+                                
+                                if (endPage < pageInfo.pages - 1) {
+                                    const ellipsis = document.createElement('span');
+                                    ellipsis.className = 'ellipsis';
+                                    ellipsis.textContent = '...';
+                                    paginationEl.appendChild(ellipsis);
+                                }
+                                
+                                // Next button
+                                const nextBtn = document.createElement('a');
+                                nextBtn.className = `paginate_button next ${!api.page.hasNext() ? 'disabled' : ''}`;
+                                nextBtn.href = '#';
+                                nextBtn.innerHTML = '&rsaquo;';
+                                nextBtn.onclick = function(e) {
+                                    e.preventDefault();
+                                    if (api.page.hasNext()) api.page('next').draw('page');
+                                };
+                                paginationEl.appendChild(nextBtn);
+                                
+                                // Last button
+                                const lastBtn = document.createElement('a');
+                                lastBtn.className = `paginate_button last ${pageInfo.page === pageInfo.pages - 1 ? 'disabled' : ''}`;
+                                lastBtn.href = '#';
+                                lastBtn.innerHTML = '&raquo;';
+                                lastBtn.onclick = function(e) {
+                                    e.preventDefault();
+                                    if (pageInfo.page < pageInfo.pages - 1) api.page('last').draw('page');
+                                };
+                                paginationEl.appendChild(lastBtn);
+                            }
+                        }
+                    }
+                });
+                
+                // Custom search handler
+                const searchInput = document.getElementById('areaKerjaTableSearch');
+                if (searchInput) {
+                    searchInput.addEventListener('keyup', function() {
+                        areaKerjaDataTable.search(this.value).draw();
+                    });
+                }
+                
+                // Custom length handler
+                const lengthSelect = document.getElementById('areaKerjaTableLength');
+                if (lengthSelect) {
+                    lengthSelect.addEventListener('change', function() {
+                        areaKerjaDataTable.page.len(parseInt(this.value)).draw();
+                    });
+                }
+                
+                console.log('Area Kerja DataTable initialized');
+            } catch (e) {
+                console.error('Error initializing Area Kerja DataTable:', e);
+            }
+        } else {
+            // Hide controls when no data
+            const controlsEl = document.getElementById('areaKerjaTableControls');
+            const infoEl = document.getElementById('areaKerjaTableInfo');
+            if (controlsEl) controlsEl.style.display = 'none';
+            if (infoEl) infoEl.style.display = 'none';
+            console.log('Area Kerja table has no data rows, skipping DataTable initialization');
         }
     }
     
