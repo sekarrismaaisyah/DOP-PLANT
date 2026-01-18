@@ -81,16 +81,16 @@
                                         <td>
                                             <div class="d-flex gap-2">
                                                 <a href="{{ route('daily-operation-plan.show', $dop->id) }}" class="btn btn-sm btn-info rounded-3" title="Detail">
-                                                    <i class="bx bx-show"></i>
+                                                <i class="material-icons-outlined">visibility</i>
                                                 </a>
                                                 <a href="{{ route('daily-operation-plan.edit', $dop->id) }}" class="btn btn-sm btn-warning rounded-3" title="Edit">
-                                                    <i class="bx bx-edit"></i>
+                                                <i class="material-icons-outlined">edit</i>
                                                 </a>
                                                 <form action="{{ route('daily-operation-plan.destroy', $dop->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus DOP ini?');">
                                                     @csrf
                                                     @method('DELETE')
                                                     <button type="submit" class="btn btn-sm btn-danger rounded-3" title="Hapus">
-                                                        <i class="bx bx-trash"></i>
+                                                    <i class="material-icons-outlined">delete</i>
                                                     </button>
                                                 </form>
                                             </div>
