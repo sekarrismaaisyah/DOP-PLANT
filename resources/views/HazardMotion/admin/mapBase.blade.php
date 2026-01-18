@@ -12770,20 +12770,6 @@
         }
     });
     
-    // Function to open intervensi kesiapan orang modal
-    function openIntervensiKesiapanOrangModal(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee) {
-        // Set form values
-        document.getElementById('intervensiKesiapanOrangNamaPja').value = namaPja || '';
-        document.getElementById('intervensiKesiapanOrangTipePja').value = tipePja || '';
-        document.getElementById('intervensiKesiapanOrangPerusahaan').value = perusahaan || '';
-        document.getElementById('intervensiKesiapanOrangIdEmployee').value = idEmployee || '';
-        document.getElementById('intervensiKesiapanOrangIssue').value = '';
-        
-        // Show modal
-        const modal = new bootstrap.Modal(document.getElementById('intervensiKesiapanOrangModal'));
-        modal.show();
-    }
-    
     // Function untuk generate CCTV detail rows
     function generateCctvDetailRows(cctvList) {
         if (!cctvList || cctvList.length === 0) {
@@ -15185,6 +15171,58 @@
             });
     }
     
+    // Function to open intervensi kesiapan orang modal (make it globally accessible)
+    // Define this function early so it's available when buttons are rendered
+    window.openIntervensiKesiapanOrangModal = function(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee) {
+        try {
+            // Set form values
+            const namaPjaEl = document.getElementById('intervensiKesiapanOrangNamaPja');
+            const tipePjaEl = document.getElementById('intervensiKesiapanOrangTipePja');
+            const perusahaanEl = document.getElementById('intervensiKesiapanOrangPerusahaan');
+            const idEmployeeEl = document.getElementById('intervensiKesiapanOrangIdEmployee');
+            const issueEl = document.getElementById('intervensiKesiapanOrangIssue');
+            
+            if (namaPjaEl) namaPjaEl.value = namaPja || '';
+            if (tipePjaEl) tipePjaEl.value = tipePja || '';
+            if (perusahaanEl) perusahaanEl.value = perusahaan || '';
+            if (idEmployeeEl) idEmployeeEl.value = idEmployee || '';
+            if (issueEl) issueEl.value = '';
+            
+            // Show modal
+            const modalElement = document.getElementById('intervensiKesiapanOrangModal');
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                modal.show();
+            } else {
+                console.error('Modal element intervensiKesiapanOrangModal not found');
+            }
+        } catch (error) {
+            console.error('Error opening intervensi kesiapan orang modal:', error);
+        }
+    };
+    
+    // Setup event delegation for intervensi buttons (only once, at document level)
+    if (!window.intervensiKesiapanOrangListenerAttached) {
+        document.addEventListener('click', function(e) {
+            if (e.target.closest('.btn-intervensi-kesiapan-orang')) {
+                const button = e.target.closest('.btn-intervensi-kesiapan-orang');
+                const namaPja = button.getAttribute('data-nama-pja') || '';
+                const tipePja = button.getAttribute('data-tipe-pja') || '';
+                const perusahaan = button.getAttribute('data-perusahaan') || '';
+                const namaKaryawan = button.getAttribute('data-nama-karyawan') || '';
+                const idEmployee = button.getAttribute('data-id-employee') || '';
+                
+                // Call the modal function
+                if (window.openIntervensiKesiapanOrangModal) {
+                    window.openIntervensiKesiapanOrangModal(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee);
+                } else {
+                    console.error('openIntervensiKesiapanOrangModal function not found');
+                }
+            }
+        });
+        window.intervensiKesiapanOrangListenerAttached = true;
+    }
+    
     // Load Kesiapan Orang data from API
     function loadKesiapanOrangData() {
         const tbody = document.getElementById('tbodyKesiapanOrang');
@@ -15382,15 +15420,14 @@
                 const namaKaryawanEscaped = escapeHtml(karyawan.nama_karyawan || '');
                 const idEmployeeEscaped = escapeHtml(karyawan.id_employee || '');
                 
+                // Use data attributes for better security and reliability
                 cctvDedicatedCell = `
-                    <button type="button" class="btn btn-sm btn-warning" 
-                            onclick="openIntervensiKesiapanOrangModal(
-                                '${namaPjaEscaped}',
-                                '${tipePjaEscaped}',
-                                '${perusahaanEscaped}',
-                                '${namaKaryawanEscaped}',
-                                '${idEmployeeEscaped}'
-                            )">
+                    <button type="button" class="btn btn-sm btn-warning btn-intervensi-kesiapan-orang" 
+                            data-nama-pja="${namaPjaEscaped.replace(/"/g, '&quot;')}"
+                            data-tipe-pja="${tipePjaEscaped.replace(/"/g, '&quot;')}"
+                            data-perusahaan="${perusahaanEscaped.replace(/"/g, '&quot;')}"
+                            data-nama-karyawan="${namaKaryawanEscaped.replace(/"/g, '&quot;')}"
+                            data-id-employee="${idEmployeeEscaped.replace(/"/g, '&quot;')}">
                         <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">warning</i>
                         Intervensi
                     </button>
