@@ -3183,15 +3183,68 @@
             // Show modal
             const modalElement = document.getElementById('intervensiKesiapanOrangModal');
             console.log('Modal element:', modalElement);
-            if (modalElement) {
-                const modal = new bootstrap.Modal(modalElement);
-                console.log('Bootstrap Modal instance created, showing...');
-                modal.show();
-            } else {
+            
+            if (!modalElement) {
                 console.error('Modal element intervensiKesiapanOrangModal not found');
+                return;
+            }
+            
+            // Dispose any existing modal instance first
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                const existingModal = bootstrap.Modal.getInstance(modalElement);
+                if (existingModal) {
+                    console.log('Disposing existing modal instance');
+                    existingModal.dispose();
+                }
+            }
+            
+            // Remove any existing backdrop
+            const existingBackdrop = document.getElementById('intervensiKesiapanOrangModalBackdrop');
+            if (existingBackdrop) {
+                existingBackdrop.remove();
+            }
+            
+            // Remove modal-open class from body if exists
+            document.body.classList.remove('modal-open');
+            
+            // Create new modal instance and show
+            if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+                console.log('Creating new Bootstrap Modal instance');
+                const modal = new bootstrap.Modal(modalElement, {
+                    backdrop: true,
+                    keyboard: true,
+                    focus: true
+                });
+                
+                // Show modal
+                modal.show();
+                
+                // Double check after a short delay
+                setTimeout(function() {
+                    if (!modalElement.classList.contains('show')) {
+                        console.log('Modal still not showing, forcing display...');
+                        modalElement.classList.add('show');
+                        modalElement.style.display = 'block';
+                        modalElement.setAttribute('aria-hidden', 'false');
+                        modalElement.setAttribute('aria-modal', 'true');
+                        
+                        // Ensure backdrop exists
+                        if (!document.querySelector('.modal-backdrop')) {
+                            const backdrop = document.createElement('div');
+                            backdrop.className = 'modal-backdrop fade show';
+                            document.body.appendChild(backdrop);
+                        }
+                        document.body.classList.add('modal-open');
+                    } else {
+                        console.log('Modal is showing successfully');
+                    }
+                }, 200);
+            } else {
+                console.error('Bootstrap Modal not available');
             }
         } catch (error) {
             console.error('Error opening intervensi kesiapan orang modal:', error);
+            console.error('Error stack:', error.stack);
         }
     };
     
