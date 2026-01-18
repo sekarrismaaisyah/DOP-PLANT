@@ -81,7 +81,7 @@
                                         <td>
                                             <div class="d-flex gap-2">
                                                 <a href="{{ route('daily-operation-plan.show', $dop->id) }}" class="btn btn-sm btn-info rounded-3" title="Detail">
-                                                <i class="material-icons-outlined">visibility</i>
+                                                <i class="material-icons-outlined text-white">visibility</i>
                                                 </a>
                                                 <a href="{{ route('daily-operation-plan.edit', $dop->id) }}" class="btn btn-sm btn-warning rounded-3" title="Edit">
                                                 <i class="material-icons-outlined">edit</i>
