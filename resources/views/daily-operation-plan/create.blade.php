@@ -51,7 +51,7 @@
     <div class="row mb-4">
         <div class="col-12">
             <div class="card rounded-4 border-primary">
-                <div class="card-header bg-primary text-white">
+                <div class="card-header ">
                     <h5 class="mb-0">
                         <i class="bx bx-upload"></i> Upload Excel (Bulk Import)
                     </h5>
