@@ -2048,7 +2048,7 @@
                       <span class="material-icons-outlined">notifications_active</span>
                     </span>
                     <h3 class="mb-0" id="modalCctvAutoAlert">0</h3>
-                    <p class="mb-0">Dengan Auto Alert</p>
+                    <p class="mb-0">Cctv Fitur Auto Alert</p>
                   </button>
                   <!-- <div class="vr"></div> -->
                   <!-- <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Kondisi CCTV Tidak Baik">
@@ -2749,7 +2749,7 @@
             <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between mb-3">
                     <div class="">
-                        <h5 class="mb-0 fw-bold">Hazard Location Map</h5>
+                        <h5 class="mb-0 fw-bold">Data On Maps</h5>
                     </div>
                     <div class="d-flex align-items-center gap-3 flex-wrap">
                         <div class="btn-group position-static">

@@ -258,7 +258,7 @@
           <li class="menu-label">On Off CCTV</li>
           
           <li>
-            <a class="has-arrow" href="javascript:;">
+            <a class="" href="{{ route('cctv-alerts-dashboard.index') }}">
               <div class="parent-icon"><i class="material-icons-outlined">settings</i>
               </div>                 
               <div class="menu-title">On Off CCTV</div>
