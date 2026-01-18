@@ -130,8 +130,13 @@ class MapBaseController extends Controller
         }
         
         // Filter by sites if user has specific role with site restrictions
+        // Use TRIM to handle any whitespace issues in database
         if (!empty($allowedSites)) {
-            $cctvDataAllQuery->whereIn('site', $allowedSites);
+            $cctvDataAllQuery->where(function($q) use ($allowedSites) {
+                foreach ($allowedSites as $allowedSite) {
+                    $q->orWhereRaw('TRIM(site) = ?', [$allowedSite]);
+                }
+            });
         }
         
         // Filter CCTV data based on supervised control rooms if user is not admin
@@ -152,8 +157,13 @@ class MapBaseController extends Controller
         }
         
         // Filter by sites if user has specific role with site restrictions
+        // Use TRIM to handle any whitespace issues in database
         if (!empty($allowedSites)) {
-            $cctvDataWithLocationQuery->whereIn('site', $allowedSites);
+            $cctvDataWithLocationQuery->where(function($q) use ($allowedSites) {
+                foreach ($allowedSites as $allowedSite) {
+                    $q->orWhereRaw('TRIM(site) = ?', [$allowedSite]);
+                }
+            });
         }
         
         // Apply same filter for map data
@@ -4101,8 +4111,13 @@ class MapBaseController extends Controller
             }
             
             // Apply role-based site filter if user has site restrictions
+            // Use TRIM to handle any whitespace issues in database
             if (!empty($allowedSites)) {
-                $query->whereIn('site', $allowedSites);
+                $query->where(function($q) use ($allowedSites) {
+                    foreach ($allowedSites as $allowedSite) {
+                        $q->orWhereRaw('TRIM(site) = ?', [$allowedSite]);
+                    }
+                });
             }
             
             $total = $query->count();
@@ -4855,8 +4870,13 @@ class MapBaseController extends Controller
             }
             
             // Apply role-based site filter if user has site restrictions (always apply this as additional filter)
+            // Use TRIM to handle any whitespace issues in database
             if (!empty($allowedSites)) {
-                $query->whereIn('site', $allowedSites);
+                $query->where(function($q) use ($allowedSites) {
+                    foreach ($allowedSites as $allowedSite) {
+                        $q->orWhereRaw('TRIM(site) = ?', [$allowedSite]);
+                    }
+                });
             }
             
             $total = $query->count();
@@ -7512,8 +7532,13 @@ class MapBaseController extends Controller
             }
             
             // Filter by sites if user has specific role with site restrictions
+            // Use TRIM to handle any whitespace issues in database
             if (!empty($allowedSites)) {
-                $query->whereIn('site', $allowedSites);
+                $query->where(function($q) use ($allowedSites) {
+                    foreach ($allowedSites as $allowedSite) {
+                        $q->orWhereRaw('TRIM(site) = ?', [$allowedSite]);
+                    }
+                });
             }
             
             // Get all CCTV data

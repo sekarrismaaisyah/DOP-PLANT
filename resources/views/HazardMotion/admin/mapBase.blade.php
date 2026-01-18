@@ -11097,8 +11097,8 @@
         
         // Set default site based on role
         if (allowedSites.length > 0) {
-            // If user has site restrictions, auto-select first site or '__all__'
-            currentSelectedSite = allowedSites.length === 1 ? allowedSites[0] : '__all__';
+            // If user has site restrictions, always use first allowed site (don't use '__all__')
+            currentSelectedSite = allowedSites[0];
         } else {
             currentSelectedSite = '__all__';
         }
@@ -12731,11 +12731,26 @@
     
     // Function untuk load chart statistics
     function loadChartStats() {
-        // Use allowedCompany if available, otherwise use currentSelectedCompany
-        const company = allowedCompany || currentSelectedCompany || '__all__';
-        const site = currentSelectedSite || '__all__';
+        // Backend sudah otomatis memfilter berdasarkan role, jadi tidak perlu kirim query parameter jika user punya role tertentu
+        let url = `{{ route('hazard-detection.api.cctv-chart-stats') }}`;
         
-        fetch(`{{ route('hazard-detection.api.cctv-chart-stats') }}?company=${encodeURIComponent(company)}&site=${encodeURIComponent(site)}`)
+        // Hanya kirim query parameter jika user tidak punya role tertentu (admin atau role lain yang bisa akses semua)
+        if (!allowedCompany) {
+            // User tidak punya role tertentu, gunakan filter dari dropdown
+            const company = currentSelectedCompany || '__all__';
+            const site = currentSelectedSite || '__all__';
+            if (company !== '__all__' || site !== '__all__') {
+                const params = new URLSearchParams();
+                if (company !== '__all__') params.append('company', company);
+                if (site !== '__all__') params.append('site', site);
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+            }
+        }
+        // Jika user punya role tertentu (allowedCompany ada), backend sudah otomatis memfilter, jadi tidak perlu kirim query parameter
+        
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
@@ -12891,9 +12906,24 @@
     
     // Function to update total CCTV count dynamically based on filters
     function updateTotalCctvCount() {
-        // Use allowedCompany if available, otherwise use currentSelectedCompany
-        const company = allowedCompany || currentSelectedCompany || '__all__';
-        const site = currentSelectedSite || '__all__';
+        // Backend sudah otomatis memfilter berdasarkan role, jadi tidak perlu kirim query parameter jika user punya role tertentu
+        let url = `{{ route('hazard-detection.api.total-cctv-count') }}`;
+        
+        // Hanya kirim query parameter jika user tidak punya role tertentu (admin atau role lain yang bisa akses semua)
+        if (!allowedCompany) {
+            // User tidak punya role tertentu, gunakan filter dari dropdown
+            const company = currentSelectedCompany || '__all__';
+            const site = currentSelectedSite || '__all__';
+            if (company !== '__all__' || site !== '__all__') {
+                const params = new URLSearchParams();
+                if (company !== '__all__') params.append('company', company);
+                if (site !== '__all__') params.append('site', site);
+                if (params.toString()) {
+                    url += '?' + params.toString();
+                }
+            }
+        }
+        // Jika user punya role tertentu (allowedCompany ada), backend sudah otomatis memfilter, jadi tidak perlu kirim query parameter
         
         const totalCctvElement = document.getElementById('totalCctvCountDynamic');
         if (!totalCctvElement) return;
@@ -12901,7 +12931,7 @@
         // Add loading animation class
         totalCctvElement.classList.add('updating');
         
-        fetch(`{{ route('hazard-detection.api.total-cctv-count') }}?company=${encodeURIComponent(company)}&site=${encodeURIComponent(site)}`)
+        fetch(url)
             .then(response => response.json())
             .then(data => {
                 if (data.success) {
