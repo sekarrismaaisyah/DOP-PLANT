@@ -4807,6 +4807,23 @@ class MapBaseController extends Controller
             $company = trim($request->query('company', '__all__'));
             $site = trim($request->query('site', '__all__'));
             
+            // Get allowed company and sites based on role
+            $roleAccess = $this->getAllowedCompanyAndSiteByRole();
+            $allowedCompany = $roleAccess['company'];
+            $allowedSites = $roleAccess['sites'];
+            
+            // Override company filter if user has specific role
+            if ($allowedCompany) {
+                $company = $allowedCompany;
+            }
+            
+            // Override site filter if user has specific role with site restrictions
+            if (!empty($allowedSites)) {
+                if ($site !== '__all__' && !in_array($site, $allowedSites)) {
+                    $site = !empty($allowedSites) ? $allowedSites[0] : '__all__';
+                }
+            }
+            
             $query = CctvData::query();
             
             // Filter by company
@@ -4831,6 +4848,11 @@ class MapBaseController extends Controller
                 } else {
                     $query->whereRaw('TRIM(site) = ?', [$site]);
                 }
+            }
+            
+            // Apply role-based site filter if user has site restrictions
+            if (!empty($allowedSites)) {
+                $query->whereIn('site', $allowedSites);
             }
             
             $total = $query->count();

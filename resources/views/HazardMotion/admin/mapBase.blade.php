@@ -12094,9 +12094,19 @@
     // Function untuk load control room overview
     // Ambil data langsung dari API yang sudah di-group by control_room dari cctv_data_bmo2
     function loadControlRoomOverview() {
-        // Use allowedCompany if available, otherwise use currentSelectedCompany
-        const company = allowedCompany || currentSelectedCompany || '__all__';
-        const url = `{{ route('hazard-detection.api.control-room-overview') }}${company !== '__all__' ? '?company=' + encodeURIComponent(company) : ''}`;
+        // Backend sudah otomatis memfilter berdasarkan role, jadi tidak perlu kirim query parameter jika user punya role tertentu
+        // Jika user punya role tertentu, backend akan otomatis filter berdasarkan allowedCompany dan allowedSites
+        let url = `{{ route('hazard-detection.api.control-room-overview') }}`;
+        
+        // Hanya kirim query parameter jika user tidak punya role tertentu (admin atau role lain yang bisa akses semua)
+        if (!allowedCompany) {
+            // User tidak punya role tertentu, gunakan filter dari dropdown
+            const company = currentSelectedCompany || '__all__';
+            if (company !== '__all__') {
+                url += `?company=${encodeURIComponent(company)}`;
+            }
+        }
+        // Jika user punya role tertentu (allowedCompany ada), backend sudah otomatis memfilter, jadi tidak perlu kirim query parameter
         
         fetch(url)
             .then(response => response.json())
