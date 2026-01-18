@@ -4066,9 +4066,11 @@ class MapBaseController extends Controller
             }
             
             // Override site filter if user has specific role with site restrictions
+            // Always apply site filter if user has site restrictions, even if site is '__all__'
             if (!empty($allowedSites)) {
-                if ($site !== '__all__' && !in_array($site, $allowedSites)) {
-                    $site = !empty($allowedSites) ? $allowedSites[0] : '__all__';
+                // If site is '__all__' or not in allowed sites, use first allowed site
+                if ($site === '__all__' || !in_array($site, $allowedSites)) {
+                    $site = $allowedSites[0];
                 }
             }
             
@@ -4818,9 +4820,11 @@ class MapBaseController extends Controller
             }
             
             // Override site filter if user has specific role with site restrictions
+            // Always apply site filter if user has site restrictions, even if site is '__all__'
             if (!empty($allowedSites)) {
-                if ($site !== '__all__' && !in_array($site, $allowedSites)) {
-                    $site = !empty($allowedSites) ? $allowedSites[0] : '__all__';
+                // If site is '__all__' or not in allowed sites, use first allowed site
+                if ($site === '__all__' || !in_array($site, $allowedSites)) {
+                    $site = $allowedSites[0];
                 }
             }
             
@@ -4850,7 +4854,7 @@ class MapBaseController extends Controller
                 }
             }
             
-            // Apply role-based site filter if user has site restrictions
+            // Apply role-based site filter if user has site restrictions (always apply this as additional filter)
             if (!empty($allowedSites)) {
                 $query->whereIn('site', $allowedSites);
             }
