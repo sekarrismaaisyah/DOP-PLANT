@@ -16505,12 +16505,12 @@
                                 
                                 // Previous button
                                 const prevBtn = document.createElement('a');
-                                prevBtn.className = `paginate_button previous ${!api.page.hasPrevious() ? 'disabled' : ''}`;
+                                prevBtn.className = `paginate_button previous ${pageInfo.page === 0 ? 'disabled' : ''}`;
                                 prevBtn.href = '#';
                                 prevBtn.innerHTML = '&lsaquo;';
                                 prevBtn.onclick = function(e) {
                                     e.preventDefault();
-                                    if (api.page.hasPrevious()) api.page('previous').draw('page');
+                                    if (pageInfo.page > 0) api.page('previous').draw('page');
                                 };
                                 paginationEl.appendChild(prevBtn);
                                 
@@ -16546,12 +16546,12 @@
                                 
                                 // Next button
                                 const nextBtn = document.createElement('a');
-                                nextBtn.className = `paginate_button next ${!api.page.hasNext() ? 'disabled' : ''}`;
+                                nextBtn.className = `paginate_button next ${pageInfo.page === pageInfo.pages - 1 ? 'disabled' : ''}`;
                                 nextBtn.href = '#';
                                 nextBtn.innerHTML = '&rsaquo;';
                                 nextBtn.onclick = function(e) {
                                     e.preventDefault();
-                                    if (api.page.hasNext()) api.page('next').draw('page');
+                                    if (pageInfo.page < pageInfo.pages - 1) api.page('next').draw('page');
                                 };
                                 paginationEl.appendChild(nextBtn);
                                 
