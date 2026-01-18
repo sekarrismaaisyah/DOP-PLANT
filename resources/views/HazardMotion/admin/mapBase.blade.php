@@ -2225,6 +2225,54 @@
           </div>
         </div>
 
+        {{-- Modal Intervensi Kesiapan Orang --}}
+        <div class="modal fade" id="intervensiKesiapanOrangModal" tabindex="-1" aria-labelledby="intervensiKesiapanOrangModalLabel" aria-hidden="true">
+          <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+              <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="intervensiKesiapanOrangModalLabel">
+                  <span class="material-icons-outlined me-2">warning</span>
+                  Form Intervensi Kesiapan Orang
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+              </div>
+              <div class="modal-body">
+                <form id="intervensiKesiapanOrangForm">
+                  <input type="hidden" id="intervensiKesiapanOrangIdEmployee" name="id_employee" value="">
+                  
+                  <div class="mb-3">
+                    <label for="intervensiKesiapanOrangNamaPja" class="form-label fw-semibold">Nama PJA</label>
+                    <input type="text" class="form-control" id="intervensiKesiapanOrangNamaPja" readonly>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="intervensiKesiapanOrangTipePja" class="form-label fw-semibold">Tipe PJA</label>
+                    <input type="text" class="form-control" id="intervensiKesiapanOrangTipePja" readonly>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="intervensiKesiapanOrangPerusahaan" class="form-label fw-semibold">Perusahaan</label>
+                    <input type="text" class="form-control" id="intervensiKesiapanOrangPerusahaan" readonly>
+                  </div>
+                  
+                  <div class="mb-3">
+                    <label for="intervensiKesiapanOrangIssue" class="form-label fw-semibold">Issue <span class="text-danger">*</span></label>
+                    <textarea class="form-control" id="intervensiKesiapanOrangIssue" name="issue" rows="5" placeholder="Masukkan issue atau masalah yang ditemukan..." required></textarea>
+                    <div class="form-text">Jelaskan issue atau masalah yang memerlukan intervensi</div>
+                  </div>
+                </form>
+              </div>
+              <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="submitIntervensiKesiapanOrangBtn">
+                  <span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>
+                  Kirim Intervensi
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {{-- Area Kritis Overview Section --}}
         {{-- <div class="card mb-4">
           <div class="card-body">
@@ -12640,7 +12688,101 @@
                 }
             });
         }
+        
+        // Handle submit intervensi kesiapan orang form
+        const submitIntervensiKesiapanOrangBtn = document.getElementById('submitIntervensiKesiapanOrangBtn');
+        if (submitIntervensiKesiapanOrangBtn) {
+            submitIntervensiKesiapanOrangBtn.addEventListener('click', function() {
+                const form = document.getElementById('intervensiKesiapanOrangForm');
+                
+                if (form.checkValidity()) {
+                    const formData = {
+                        nama_pja: document.getElementById('intervensiKesiapanOrangNamaPja').value,
+                        tipe_pja: document.getElementById('intervensiKesiapanOrangTipePja').value,
+                        perusahaan: document.getElementById('intervensiKesiapanOrangPerusahaan').value,
+                        id_employee: document.getElementById('intervensiKesiapanOrangIdEmployee').value,
+                        issue: document.getElementById('intervensiKesiapanOrangIssue').value
+                    };
+                    
+                    // Disable button
+                    const submitBtn = this;
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengirim...';
+                    
+                    // Send AJAX request to save intervensi
+                    fetch(`{{ route('maps.api.intervensi-kesiapan-orang') }}`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').getAttribute('content')
+                        },
+                        body: JSON.stringify(formData)
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Show success message
+                            Swal.fire({
+                                icon: 'success',
+                                title: 'Berhasil!',
+                                text: data.message || 'Intervensi berhasil dikirim!',
+                                showConfirmButton: true,
+                                confirmButtonText: 'OK'
+                            }).then((result) => {
+                                // Close modal
+                                const modal = bootstrap.Modal.getInstance(document.getElementById('intervensiKesiapanOrangModal'));
+                                if (modal) {
+                                    modal.hide();
+                                }
+                                
+                                // Reset form
+                                form.reset();
+                                
+                                // Reload kesiapan orang data
+                                loadKesiapanOrangData();
+                            });
+                        } else {
+                            // Show error message
+                            Swal.fire({
+                                icon: 'error',
+                                title: 'Error!',
+                                text: data.message || 'Terjadi kesalahan saat mengirim intervensi.'
+                            });
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error:', error);
+                        Swal.fire({
+                            icon: 'error',
+                            title: 'Error!',
+                            text: 'Terjadi kesalahan saat mengirim intervensi. Silakan coba lagi.'
+                        });
+                    })
+                    .finally(() => {
+                        // Re-enable button
+                        submitBtn.disabled = false;
+                        submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span> Kirim Intervensi';
+                    });
+                } else {
+                    form.reportValidity();
+                }
+            });
+        }
     });
+    
+    // Function to open intervensi kesiapan orang modal
+    function openIntervensiKesiapanOrangModal(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee) {
+        // Set form values
+        document.getElementById('intervensiKesiapanOrangNamaPja').value = namaPja || '';
+        document.getElementById('intervensiKesiapanOrangTipePja').value = tipePja || '';
+        document.getElementById('intervensiKesiapanOrangPerusahaan').value = perusahaan || '';
+        document.getElementById('intervensiKesiapanOrangIdEmployee').value = idEmployee || '';
+        document.getElementById('intervensiKesiapanOrangIssue').value = '';
+        
+        // Show modal
+        const modal = new bootstrap.Modal(document.getElementById('intervensiKesiapanOrangModal'));
+        modal.show();
+    }
     
     // Function untuk generate CCTV detail rows
     function generateCctvDetailRows(cctvList) {
@@ -15220,6 +15362,41 @@
                 }
             }
             
+            // CCTV Dedicated - tampilkan tombol intervensi jika "-"
+            let cctvDedicatedCell = cctvDisplay;
+            if (cctvDisplay === '-') {
+                // Escape string untuk menghindari masalah dengan karakter khusus
+                const escapeHtml = (str) => {
+                    if (!str) return '';
+                    return String(str)
+                        .replace(/\\/g, '\\\\')
+                        .replace(/'/g, "\\'")
+                        .replace(/"/g, '\\"')
+                        .replace(/\n/g, '\\n')
+                        .replace(/\r/g, '\\r');
+                };
+                
+                const namaPjaEscaped = escapeHtml(karyawan.nama_pja || '');
+                const tipePjaEscaped = escapeHtml(karyawan.tipe_pja || '');
+                const perusahaanEscaped = escapeHtml(karyawan.perusahaan || '');
+                const namaKaryawanEscaped = escapeHtml(karyawan.nama_karyawan || '');
+                const idEmployeeEscaped = escapeHtml(karyawan.id_employee || '');
+                
+                cctvDedicatedCell = `
+                    <button type="button" class="btn btn-sm btn-warning" 
+                            onclick="openIntervensiKesiapanOrangModal(
+                                '${namaPjaEscaped}',
+                                '${tipePjaEscaped}',
+                                '${perusahaanEscaped}',
+                                '${namaKaryawanEscaped}',
+                                '${idEmployeeEscaped}'
+                            )">
+                        <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">warning</i>
+                        Intervensi
+                    </button>
+                `;
+            }
+            
             html += `
                 <tr>
                     <td>${karyawan.kode_sid || '-'}</td>
@@ -15229,7 +15406,7 @@
                     <td>${karyawan.nama_karyawan || '-'}</td>
                     <td>${statusOnsite}</td>
                     <td>${karyawan.pja_kategory_layer || '-'}</td>
-                    <td>${cctvDisplay}</td>
+                    <td>${cctvDedicatedCell}</td>
                     <td>${statusPjaKaryawan}</td>
                 </tr>
             `;

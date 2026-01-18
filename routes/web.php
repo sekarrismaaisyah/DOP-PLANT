@@ -244,6 +244,7 @@ Route::middleware(['auth'])->group(function () {
          Route::get('/api/unit-vehicles', [MapBaseController::class, 'getUnitVehicles'])->name('api.unit-vehicles');
          Route::get('/api/pja-data', [MapBaseController::class, 'getPjaData'])->name('api.pja-data');
          Route::get('/api/kesiapan-orang-data', [MapBaseController::class, 'getKesiapanOrangData'])->name('api.kesiapan-orang-data');
+         Route::post('/api/intervensi-kesiapan-orang', [MapBaseController::class, 'storeIntervensiKesiapanOrang'])->name('api.intervensi-kesiapan-orang');
          Route::get('/api/area-kerja-data', [MapBaseController::class, 'getAreaKerjaData'])->name('api.area-kerja-data');
          Route::get('/api/area-kerja-sidebar-data', [MapBaseController::class, 'getAreaKerjaSidebarData'])->name('api.area-kerja-sidebar-data');
          Route::get('/api/auto-alert-sidebar-data', [MapBaseController::class, 'getAutoAlertSidebarData'])->name('api.auto-alert-sidebar-data');

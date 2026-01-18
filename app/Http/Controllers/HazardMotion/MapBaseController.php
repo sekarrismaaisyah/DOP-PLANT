@@ -13,6 +13,7 @@ use App\Models\GrTable;
 use App\Models\HazardValidation;
 use App\Models\PjaCctvDedicated;
 use App\Models\WmsLink;
+use App\Models\IntervensiKesiapanOrang;
 use App\Services\BesigmaDbService;
 use App\Services\ClickHouseService;
 use App\Services\TelegramBotService;
@@ -908,9 +909,11 @@ class MapBaseController extends Controller
                         'tipe_pja',
                         'peruashaan',
                         'nama_karyawan',
-                        'status_pja_karyawan'
+                        'status_pja_karyawan',
+                        'status_nama_pja'
                     )
                     ->where('status_pja_karyawan', '1')
+                    ->where('status_nama_pja', '1')
                     ->orderBy('nama_pja')
                     ->orderBy('nama_karyawan')
                     ->limit(10000)
@@ -924,6 +927,7 @@ class MapBaseController extends Controller
                             'peruashaan' => (string)($row->peruashaan ?? ''),
                             'nama_karyawan' => (string)($row->nama_karyawan ?? ''),
                             'status_pja_karyawan' => (string)($row->status_pja_karyawan ?? ''),
+                            'status_nama_pja' => (string)($row->status_nama_pja ?? ''),
                         ];
                     })
                     ->toArray();
@@ -1631,6 +1635,134 @@ class MapBaseController extends Controller
                     'cctv_dengan_pja' => 0,
                     'persentase_cctv_dengan_pja' => 0,
                 ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Store intervensi kesiapan orang
+     */
+    public function storeIntervensiKesiapanOrang(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'nama_pja' => 'required|string|max:255',
+                'tipe_pja' => 'nullable|string|max:255',
+                'perusahaan' => 'nullable|string|max:255',
+                'id_employee' => 'nullable|string',
+                'issue' => 'required|string',
+            ]);
+
+            // Get authenticated user
+            $user = Auth::user();
+            $createdBy = $user ? $user->name : 'Unknown';
+            $createdByEmail = $user ? $user->email : null;
+
+            // Get PIC details from ClickHouse if id_employee is provided
+            $clickHouseService = new ClickHouseService();
+            $picId = null;
+            $picUsername = null;
+            $picNama = null;
+            $picTelepon = null;
+            $namaKaryawan = null;
+
+            if (!empty($validated['id_employee'])) {
+                // Escape single quotes to prevent SQL injection
+                $escapedIdEmployee = str_replace("'", "''", $validated['id_employee']);
+                
+                $sql = "SELECT 
+                            toString(id) as id,
+                            toString(username) as username,
+                            toString(nama) as nama,
+                            toString(selular) as selular
+                        FROM nitip.vw_user 
+                        WHERE toString(id) = '{$escapedIdEmployee}'
+                        LIMIT 1";
+                
+                $picData = $clickHouseService->query($sql);
+                $picInfo = !empty($picData) ? $picData[0] : null;
+                
+                if ($picInfo) {
+                    $picId = $picInfo['id'] ?? null;
+                    $picUsername = $picInfo['username'] ?? null;
+                    $picNama = $picInfo['nama'] ?? null;
+                    $picTelepon = $picInfo['selular'] ?? null;
+                    $namaKaryawan = $picInfo['nama'] ?? null;
+                }
+            }
+
+            // Determine lokasi from perusahaan or use default
+            $lokasi = $validated['perusahaan'] ?? 'Unknown';
+
+            // Store intervensi using IntervensiKesiapanOrang model
+            $intervensi = IntervensiKesiapanOrang::create([
+                'lokasi' => $lokasi,
+                'area_kerja' => 'Kesiapan Orang',
+                'nama_pja' => $validated['nama_pja'],
+                'tipe_pja' => $validated['tipe_pja'] ?? null,
+                'perusahaan' => $validated['perusahaan'] ?? null,
+                'id_employee' => $validated['id_employee'] ?? null,
+                'nama_karyawan' => $namaKaryawan,
+                'pic_id' => $picId,
+                'pic_username' => $picUsername,
+                'pic_nama' => $picNama,
+                'pic_telepon' => $picTelepon,
+                'issue' => $validated['issue'],
+                'status' => 'open', // Default status
+                'created_by' => $createdBy,
+                'created_by_email' => $createdByEmail,
+            ]);
+
+            // Prepare WhatsApp URL if PIC telepon is available
+            $whatsappNumber = $picTelepon;
+            $whatsappUrl = null;
+            
+            if ($whatsappNumber) {
+                // Clean phone number (remove non-numeric characters except +)
+                $cleanNumber = preg_replace('/[^0-9+]/', '', $whatsappNumber);
+                // Remove leading 0 and replace with country code if needed
+                if (substr($cleanNumber, 0, 1) === '0') {
+                    $cleanNumber = '62' . substr($cleanNumber, 1);
+                } elseif (substr($cleanNumber, 0, 1) !== '+') {
+                    $cleanNumber = '62' . $cleanNumber;
+                }
+                $cleanNumber = str_replace('+', '', $cleanNumber);
+                
+                // Format pesan WhatsApp
+                $pesan = "Form Intervensi Kesiapan Orang\n\n";
+                $pesan .= "Pelapor: " . $createdBy . "\n";
+                $pesan .= "Nama PJA: " . $validated['nama_pja'] . "\n";
+                if ($validated['tipe_pja']) {
+                    $pesan .= "Tipe PJA: " . $validated['tipe_pja'] . "\n";
+                }
+                if ($validated['perusahaan']) {
+                    $pesan .= "Perusahaan: " . $validated['perusahaan'] . "\n";
+                }
+                if ($picNama) {
+                    $pesan .= "PIC: " . ($picUsername ?? '') . " - " . $picNama . "\n";
+                }
+                $pesan .= "Issue:\n" . $validated['issue'] . "\n\n";
+                $pesan .= "Link: https://besentry-dev.beraucoal.co.id/maps";
+                
+                $whatsappUrl = "https://wa.me/" . $cleanNumber . "?text=" . urlencode($pesan);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => 'Intervensi berhasil dikirim!',
+                'data' => [
+                    'intervensi_id' => $intervensi->id,
+                    'whatsapp_url' => $whatsappUrl,
+                    'pic_telepon' => $whatsappNumber
+                ]
+            ]);
+
+        } catch (Exception $e) {
+            Log::error('Error storing intervensi kesiapan orang: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan intervensi.',
+                'error' => $e->getMessage()
             ], 500);
         }
     }
