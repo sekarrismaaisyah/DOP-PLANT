@@ -54,7 +54,7 @@
     <div class="sidebar-header">
       <div class="logo-icon">
         <img src="{{ URL::asset('build/images/logo-removebg.png') }}" class="logo-img logo-large" alt="">
-        <img src="{{ URL::asset('build/images/icon-kecil.png') }}" class="logo-img logo-small" alt="">
+        <img src="{{ URL::asset('build/images/logo-berau.png') }}" class="logo-img logo-small" alt="">
       </div>
       <!-- <div class="logo-name flex-grow-1">
         <h5 class="mb-0">Berau Coal</h5>
@@ -323,4 +323,25 @@
         </div>
 
     </div>
+    <script>
+      // Set sidebar default tertutup (collapsed)
+      document.addEventListener('DOMContentLoaded', function() {
+        if (!document.body.classList.contains('toggled')) {
+          document.body.classList.add('toggled');
+          
+          // Setup hover event untuk sidebar-wrapper (seperti di main.js)
+          if (window.innerWidth >= 1199) {
+            var sidebarWrapper = document.querySelector('.sidebar-wrapper');
+            if (sidebarWrapper) {
+              sidebarWrapper.addEventListener('mouseenter', function() {
+                document.body.classList.add('sidebar-hovered');
+              });
+              sidebarWrapper.addEventListener('mouseleave', function() {
+                document.body.classList.remove('sidebar-hovered');
+              });
+            }
+          }
+        }
+      });
+    </script>
 </aside>

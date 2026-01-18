@@ -2399,7 +2399,7 @@
                                         <span class="material-icons-outlined">verified</span>
                                         </span>
                                         <h3 class="mb-0" id="pjaAktif">0</h3>
-                                        <p class="mb-0">PJA Aktif</p>
+                                        <p class="mb-0">Jumlah Pengasawan</p>
                                     </button>
                                     <div class="vr"></div>
                                     <button type="button" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2" title="Total Onsite">
@@ -2407,7 +2407,7 @@
                                         <span class="material-icons-outlined">person_pin_circle</span>
                                         </span>
                                         <h3 class="mb-0" id="totalOnsite">0</h3>
-                                        <p class="mb-0">Total Onsite</p>
+                                        <p class="mb-0">Total Onsite Pengawas</p>
                                         <small class="text-muted">Hari Ini</small>
                                     </button>
                                     <!-- <div class="vr"></div>
@@ -15620,11 +15620,17 @@
         
         const employees = pjaData.employees || [];
         
-        if (employees.length === 0) {
+        // Filter hanya karyawan yang onsite (memiliki status_onsite)
+        const onsiteEmployees = employees.filter(employee => {
+            const statusOnsite = employee.status_onsite || null;
+            return statusOnsite !== null && statusOnsite !== undefined && statusOnsite !== '';
+        });
+        
+        if (onsiteEmployees.length === 0) {
             detailSection.innerHTML = `
                 <div class="pja-detail-error">
                     <i class="material-icons-outlined" style="font-size: 18px;">person_off</i>
-                    <span>Tidak ada karyawan</span>
+                    <span>Tidak ada karyawan onsite</span>
                 </div>
             `;
             detailSection.dataset.loaded = 'true';
@@ -15633,9 +15639,9 @@
         
         let html = '';
         html += '<div class="pja-detail-group">';
-        html += '<div class="pja-detail-group-title"><i class="material-icons-outlined">people</i> <span>Daftar Karyawan</span></div>';
+        html += '<div class="pja-detail-group-title"><i class="material-icons-outlined">people</i> <span>Daftar Karyawan Onsite</span></div>';
         
-        employees.forEach((employee, empIndex) => {
+        onsiteEmployees.forEach((employee, empIndex) => {
             const namaKaryawan = employee.nama_karyawan || 'N/A';
             const kodeSid = employee.kode_sid || '';
             const tipePja = employee.tipe_pja || '';
