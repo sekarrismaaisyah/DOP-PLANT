@@ -3161,6 +3161,40 @@
 <script src="{{ asset('js/area_kerja_smo_mtn.js') }}"></script>
 
 <script>
+    // Define openIntervensiKesiapanOrangModal function early in global scope
+    window.openIntervensiKesiapanOrangModal = function(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee) {
+        console.log('openIntervensiKesiapanOrangModal called with:', { namaPja, tipePja, perusahaan, namaKaryawan, idEmployee });
+        try {
+            // Set form values
+            const namaPjaEl = document.getElementById('intervensiKesiapanOrangNamaPja');
+            const tipePjaEl = document.getElementById('intervensiKesiapanOrangTipePja');
+            const perusahaanEl = document.getElementById('intervensiKesiapanOrangPerusahaan');
+            const idEmployeeEl = document.getElementById('intervensiKesiapanOrangIdEmployee');
+            const issueEl = document.getElementById('intervensiKesiapanOrangIssue');
+            
+            console.log('Form elements:', { namaPjaEl, tipePjaEl, perusahaanEl, idEmployeeEl, issueEl });
+            
+            if (namaPjaEl) namaPjaEl.value = namaPja || '';
+            if (tipePjaEl) tipePjaEl.value = tipePja || '';
+            if (perusahaanEl) perusahaanEl.value = perusahaan || '';
+            if (idEmployeeEl) idEmployeeEl.value = idEmployee || '';
+            if (issueEl) issueEl.value = '';
+            
+            // Show modal
+            const modalElement = document.getElementById('intervensiKesiapanOrangModal');
+            console.log('Modal element:', modalElement);
+            if (modalElement) {
+                const modal = new bootstrap.Modal(modalElement);
+                console.log('Bootstrap Modal instance created, showing...');
+                modal.show();
+            } else {
+                console.error('Modal element intervensiKesiapanOrangModal not found');
+            }
+        } catch (error) {
+            console.error('Error opening intervensi kesiapan orang modal:', error);
+        }
+    };
+    
     // Calculate and update area kerja and CCTV coverage
     function calculateAreaCoverage() {
         try {
@@ -15171,57 +15205,7 @@
             });
     }
     
-    // Function to open intervensi kesiapan orang modal (make it globally accessible)
-    // Define this function early so it's available when buttons are rendered
-    window.openIntervensiKesiapanOrangModal = function(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee) {
-        try {
-            // Set form values
-            const namaPjaEl = document.getElementById('intervensiKesiapanOrangNamaPja');
-            const tipePjaEl = document.getElementById('intervensiKesiapanOrangTipePja');
-            const perusahaanEl = document.getElementById('intervensiKesiapanOrangPerusahaan');
-            const idEmployeeEl = document.getElementById('intervensiKesiapanOrangIdEmployee');
-            const issueEl = document.getElementById('intervensiKesiapanOrangIssue');
-            
-            if (namaPjaEl) namaPjaEl.value = namaPja || '';
-            if (tipePjaEl) tipePjaEl.value = tipePja || '';
-            if (perusahaanEl) perusahaanEl.value = perusahaan || '';
-            if (idEmployeeEl) idEmployeeEl.value = idEmployee || '';
-            if (issueEl) issueEl.value = '';
-            
-            // Show modal
-            const modalElement = document.getElementById('intervensiKesiapanOrangModal');
-            if (modalElement) {
-                const modal = new bootstrap.Modal(modalElement);
-                modal.show();
-            } else {
-                console.error('Modal element intervensiKesiapanOrangModal not found');
-            }
-        } catch (error) {
-            console.error('Error opening intervensi kesiapan orang modal:', error);
-        }
-    };
-    
-    // Setup event delegation for intervensi buttons (only once, at document level)
-    if (!window.intervensiKesiapanOrangListenerAttached) {
-        document.addEventListener('click', function(e) {
-            if (e.target.closest('.btn-intervensi-kesiapan-orang')) {
-                const button = e.target.closest('.btn-intervensi-kesiapan-orang');
-                const namaPja = button.getAttribute('data-nama-pja') || '';
-                const tipePja = button.getAttribute('data-tipe-pja') || '';
-                const perusahaan = button.getAttribute('data-perusahaan') || '';
-                const namaKaryawan = button.getAttribute('data-nama-karyawan') || '';
-                const idEmployee = button.getAttribute('data-id-employee') || '';
-                
-                // Call the modal function
-                if (window.openIntervensiKesiapanOrangModal) {
-                    window.openIntervensiKesiapanOrangModal(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee);
-                } else {
-                    console.error('openIntervensiKesiapanOrangModal function not found');
-                }
-            }
-        });
-        window.intervensiKesiapanOrangListenerAttached = true;
-    }
+    // Note: openIntervensiKesiapanOrangModal function is defined at the top of the script section
     
     // Load Kesiapan Orang data from API
     function loadKesiapanOrangData() {
@@ -15420,14 +15404,10 @@
                 const namaKaryawanEscaped = escapeHtml(karyawan.nama_karyawan || '');
                 const idEmployeeEscaped = escapeHtml(karyawan.id_employee || '');
                 
-                // Use data attributes for better security and reliability
+                // Use onclick directly with global function for reliability
                 cctvDedicatedCell = `
                     <button type="button" class="btn btn-sm btn-warning btn-intervensi-kesiapan-orang" 
-                            data-nama-pja="${namaPjaEscaped.replace(/"/g, '&quot;')}"
-                            data-tipe-pja="${tipePjaEscaped.replace(/"/g, '&quot;')}"
-                            data-perusahaan="${perusahaanEscaped.replace(/"/g, '&quot;')}"
-                            data-nama-karyawan="${namaKaryawanEscaped.replace(/"/g, '&quot;')}"
-                            data-id-employee="${idEmployeeEscaped.replace(/"/g, '&quot;')}">
+                            onclick="if(window.openIntervensiKesiapanOrangModal){window.openIntervensiKesiapanOrangModal('${namaPjaEscaped}','${tipePjaEscaped}','${perusahaanEscaped}','${namaKaryawanEscaped}','${idEmployeeEscaped}');}else{console.error('Function not found');}">
                         <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">warning</i>
                         Intervensi
                     </button>
