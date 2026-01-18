@@ -1659,56 +1659,47 @@ class MapBaseController extends Controller
             $createdBy = $user ? $user->name : 'Unknown';
             $createdByEmail = $user ? $user->email : null;
 
-            // Get PIC details from ClickHouse using pic_id from form
-            $clickHouseService = new ClickHouseService();
+            // Get PIC details from MySQL using pic_id from form
             $picId = $validated['pic_id'];
             $picUsername = null;
             $picNama = null;
             $picTelepon = null;
             $namaKaryawan = null;
 
-            // Get PIC details from ClickHouse
+            // Get PIC details from MySQL
             if (!empty($picId)) {
-                // Escape single quotes to prevent SQL injection
-                $escapedPicId = str_replace("'", "''", $picId);
-                
-                $sql = "SELECT 
-                            toString(id) as id,
-                            toString(username) as username,
-                            toString(nama) as nama,
-                            toString(selular) as selular
-                        FROM nitip.vw_user 
-                        WHERE toString(id) = '{$escapedPicId}'
-                        LIMIT 1";
-                
-                $picData = $clickHouseService->query($sql);
-                $picInfo = !empty($picData) ? $picData[0] : null;
-                
-                if ($picInfo) {
-                    $picId = $picInfo['id'] ?? null;
-                    $picUsername = $picInfo['username'] ?? null;
-                    $picNama = $picInfo['nama'] ?? null;
-                    $picTelepon = $picInfo['selular'] ?? null;
+                try {
+                    $picInfo = DB::table('vw_user')
+                        ->where('id', $picId)
+                        ->select('id', 'username', 'nama', 'selular')
+                        ->first();
+                    
+                    if ($picInfo) {
+                        $picId = (string)($picInfo->id ?? '');
+                        $picUsername = $picInfo->username ?? null;
+                        $picNama = $picInfo->nama ?? null;
+                        $picTelepon = $picInfo->selular ?? null;
+                    }
+                } catch (Exception $e) {
+                    Log::error('Error getting PIC details from MySQL: ' . $e->getMessage());
+                    // Continue without PIC details if query fails
                 }
             }
             
             // Get nama karyawan from id_employee if provided
             if (!empty($validated['id_employee'])) {
-                // Escape single quotes to prevent SQL injection
-                $escapedIdEmployee = str_replace("'", "''", $validated['id_employee']);
-                
-                $sql = "SELECT 
-                            toString(id) as id,
-                            toString(nama) as nama
-                        FROM nitip.vw_user 
-                        WHERE toString(id) = '{$escapedIdEmployee}'
-                        LIMIT 1";
-                
-                $karyawanData = $clickHouseService->query($sql);
-                $karyawanInfo = !empty($karyawanData) ? $karyawanData[0] : null;
-                
-                if ($karyawanInfo) {
-                    $namaKaryawan = $karyawanInfo['nama'] ?? null;
+                try {
+                    $karyawanInfo = DB::table('vw_user')
+                        ->where('id', $validated['id_employee'])
+                        ->select('id', 'nama')
+                        ->first();
+                    
+                    if ($karyawanInfo) {
+                        $namaKaryawan = $karyawanInfo->nama ?? null;
+                    }
+                } catch (Exception $e) {
+                    Log::error('Error getting karyawan details from MySQL: ' . $e->getMessage());
+                    // Continue without karyawan name if query fails
                 }
             }
 
