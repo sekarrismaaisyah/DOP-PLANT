@@ -12599,35 +12599,43 @@
         });
     }
     
-    // Setup event listener for intervensi kesiapan orang modal (same concept as intervensi control room)
-    const intervensiKesiapanOrangModal = document.getElementById('intervensiKesiapanOrangModal');
-    if (intervensiKesiapanOrangModal) {
-        intervensiKesiapanOrangModal.addEventListener('show.bs.modal', function(event) {
-            // Get the button that triggered the modal
-            const button = event.relatedTarget;
-            if (button && button.classList.contains('btn-intervensi-kesiapan-orang')) {
-                const namaPja = button.getAttribute('data-nama-pja') || '';
-                const tipePja = button.getAttribute('data-tipe-pja') || '';
-                const perusahaan = button.getAttribute('data-perusahaan') || '';
-                const namaKaryawan = button.getAttribute('data-nama-karyawan') || '';
-                const idEmployee = button.getAttribute('data-id-employee') || '';
-                
-                // Load modal dengan data
-                loadIntervensiKesiapanOrangModal(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee);
-            }
-        });
-        
-        intervensiKesiapanOrangModal.addEventListener('hidden.bs.modal', function() {
-            // Reset form when modal is closed
-            const form = document.getElementById('intervensiKesiapanOrangForm');
-            if (form) {
-                form.reset();
-            }
-        });
-    }
-    
     // Handle submit intervensi form
     document.addEventListener('DOMContentLoaded', function() {
+        // Setup event listener for intervensi kesiapan orang modal (same concept as intervensi control room)
+        const intervensiKesiapanOrangModal = document.getElementById('intervensiKesiapanOrangModal');
+        if (intervensiKesiapanOrangModal) {
+            console.log('Setting up intervensi kesiapan orang modal event listeners');
+            intervensiKesiapanOrangModal.addEventListener('show.bs.modal', function(event) {
+                console.log('show.bs.modal event triggered for intervensi kesiapan orang');
+                // Get the button that triggered the modal
+                const button = event.relatedTarget;
+                console.log('Button that triggered modal:', button);
+                if (button && button.classList.contains('btn-intervensi-kesiapan-orang')) {
+                    const namaPja = button.getAttribute('data-nama-pja') || '';
+                    const tipePja = button.getAttribute('data-tipe-pja') || '';
+                    const perusahaan = button.getAttribute('data-perusahaan') || '';
+                    const namaKaryawan = button.getAttribute('data-nama-karyawan') || '';
+                    const idEmployee = button.getAttribute('data-id-employee') || '';
+                    
+                    console.log('Loading modal with data:', { namaPja, tipePja, perusahaan, namaKaryawan, idEmployee });
+                    
+                    // Load modal dengan data
+                    loadIntervensiKesiapanOrangModal(namaPja, tipePja, perusahaan, namaKaryawan, idEmployee);
+                } else {
+                    console.log('Button not found or does not have correct class');
+                }
+            });
+            
+            intervensiKesiapanOrangModal.addEventListener('hidden.bs.modal', function() {
+                // Reset form when modal is closed
+                const form = document.getElementById('intervensiKesiapanOrangForm');
+                if (form) {
+                    form.reset();
+                }
+            });
+        } else {
+            console.error('intervensiKesiapanOrangModal element not found');
+        }
         const submitIntervensiBtn = document.getElementById('submitIntervensiBtn');
         if (submitIntervensiBtn) {
             submitIntervensiBtn.addEventListener('click', function() {
@@ -15414,15 +15422,26 @@
                 const idEmployeeEscaped = escapeHtml(karyawan.id_employee || '');
                 
                 // Use data-bs-toggle and data-bs-target like intervensi control room
+                // Escape HTML entities for data attributes
+                const escapeHtmlAttr = (str) => {
+                    if (!str) return '';
+                    return String(str)
+                        .replace(/&/g, '&amp;')
+                        .replace(/"/g, '&quot;')
+                        .replace(/'/g, '&#39;')
+                        .replace(/</g, '&lt;')
+                        .replace(/>/g, '&gt;');
+                };
+                
                 cctvDedicatedCell = `
                     <button type="button" class="btn btn-sm btn-warning btn-intervensi-kesiapan-orang" 
                             data-bs-toggle="modal" 
                             data-bs-target="#intervensiKesiapanOrangModal"
-                            data-nama-pja="${namaPjaEscaped.replace(/"/g, '&quot;')}"
-                            data-tipe-pja="${tipePjaEscaped.replace(/"/g, '&quot;')}"
-                            data-perusahaan="${perusahaanEscaped.replace(/"/g, '&quot;')}"
-                            data-nama-karyawan="${namaKaryawanEscaped.replace(/"/g, '&quot;')}"
-                            data-id-employee="${idEmployeeEscaped.replace(/"/g, '&quot;')}">
+                            data-nama-pja="${escapeHtmlAttr(namaPjaEscaped)}"
+                            data-tipe-pja="${escapeHtmlAttr(tipePjaEscaped)}"
+                            data-perusahaan="${escapeHtmlAttr(perusahaanEscaped)}"
+                            data-nama-karyawan="${escapeHtmlAttr(namaKaryawanEscaped)}"
+                            data-id-employee="${escapeHtmlAttr(idEmployeeEscaped)}">
                         <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">warning</i>
                         Intervensi
                     </button>
