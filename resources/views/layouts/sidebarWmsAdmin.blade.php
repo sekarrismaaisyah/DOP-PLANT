@@ -139,12 +139,12 @@
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">notifications_active</i>
               </div>
-              <div class="menu-title">Real-time Alerts</div>
+              <div class="menu-title">Tasklist Issue</div>
             </a>
             <ul>
-              <li><a href="{{ route('cctv-data.intervensi-control-room.index') }}"><i class="material-icons-outlined">arrow_right</i>Alert CCTV</a></li>
+              <li><a href="{{ route('cctv-data.intervensi-control-room.index') }}"><i class="material-icons-outlined">arrow_right</i>Task List Readiness</a></li>
               {{-- <li><a href="{{ route('realtime-alerts.history') }}"><i class="material-icons-outlined">arrow_right</i>Smart Alert CCTV</a></li> --}}
-              <li><a href="{{ route('intervensi-area-kerja.index') }}"><i class="material-icons-outlined">arrow_right</i>Smart Alert Area Kerja</a></li>
+              <li><a href="{{ route('intervensi-area-kerja.index') }}"><i class="material-icons-outlined">arrow_right</i>Task List Operasi</a></li>
               {{-- <li><a href="{{ route('realtime-alerts.settings') }}"><i class="material-icons-outlined">arrow_right</i>Smart </a></li> --}}
             </ul>
           </li>
@@ -255,13 +255,13 @@
             </ul>
           </li> --}}
           
-          <li class="menu-label">Auto Alert</li>
+          <li class="menu-label">On Off CCTV</li>
           
           <li>
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">settings</i>
               </div>
-              <div class="menu-title">Auto Alert CCTV</div>
+              <div class="menu-title">Dashboard On Off CCTV</div>
             </a>
            
           </li>
