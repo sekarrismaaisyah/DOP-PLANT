@@ -5453,6 +5453,16 @@
                 
                 // If this checkbox is in the menu group and is being checked
                 if (menuGroupIds.includes(cb.id) && cb.checked) {
+                    // Update the layer text button with the clicked layer's label
+                    const layerLabelElement = label?.querySelector('.gm-label');
+                    if (layerLabelElement) {
+                        const layerText = layerLabelElement.textContent.trim();
+                        const layerTextSpan = document.querySelector('.layer-text');
+                        if (layerTextSpan) {
+                            layerTextSpan.textContent = layerText;
+                        }
+                    }
+                    
                     // Uncheck all other checkboxes in the menu group
                     menuGroupIds.forEach(menuId => {
                         if (menuId !== cb.id) {
@@ -5656,6 +5666,24 @@
             } else {
                 // Switch map layer for other options
                 switchMapLayer(layerName);
+            }
+        }
+
+        // Initialize layer text on page load based on checked layer
+        const checkedLayer = menuGroupIds.find(id => {
+            const checkbox = document.getElementById(id);
+            return checkbox && checkbox.checked;
+        });
+        
+        if (checkedLayer) {
+            const checkedLabel = document.querySelector(`label[for="${checkedLayer}"]`);
+            const layerLabelElement = checkedLabel?.querySelector('.gm-label');
+            if (layerLabelElement) {
+                const layerText = layerLabelElement.textContent.trim();
+                const layerTextSpan = document.querySelector('.layer-text');
+                if (layerTextSpan) {
+                    layerTextSpan.textContent = layerText;
+                }
             }
         }
 
