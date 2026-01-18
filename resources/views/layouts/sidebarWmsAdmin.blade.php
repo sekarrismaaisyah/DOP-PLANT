@@ -67,13 +67,14 @@
       
         <!--navigation-->
         <ul class="metismenu" id="sidenav">
-          {{-- <li>
+          @if(Auth::check() && Auth::user()->hasRole('admin-hazard-motion'))
+          <li>
             <a href="{{ route('hazard-detection.index') }}">
               <div class="parent-icon"><i class="material-icons-outlined">dashboard</i>
               </div>
               <div class="menu-title">Dashboard</div>
             </a>
-          </li> --}}
+          </li>
 
 
           <li class="menu-label">Kesiapan Alat</li>
@@ -115,6 +116,7 @@
               <div class="menu-title">DOP</div>
             </a>
           </li>
+          @endif
           
           <li class="menu-label">Control Room</li>
           <li>
