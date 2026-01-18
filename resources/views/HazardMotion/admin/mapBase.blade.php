@@ -2998,41 +2998,7 @@
                             </div>
                            
                         </div>
-                        <!-- Layer Visibility Toggle Buttons -->
-                        <!-- <div class="btn-group position-static" role="group" aria-label="Layer visibility controls">
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn active" id="toggleCctv" data-layer="cctv" title="Toggle CCTV">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">videocam</i>
-                                <span>CCTV</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn" id="toggleHazard" data-layer="hazard" title="Toggle SAP">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">assignment</i>
-                                <span>SAP</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn active" id="toggleGr" data-layer="gr" title="Toggle Golden Rule">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">rule</i>
-                                <span>GR</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn active" id="toggleInsiden" data-layer="insiden" title="Toggle Insiden">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">report_problem</i>
-                                <span>Insiden</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn" id="toggleUnit" data-layer="unit" title="Toggle Unit">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">directions_car</i>
-                                <span>Unit</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn active" id="toggleGps" data-layer="gps" title="Toggle GPS Orang">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">person_pin</i>
-                                <span>GPS Orang</span>
-                            </button>
-                            <button type="button" class="btn btn-filter px-3 layer-toggle-btn" id="toggleEvaluasi" data-layer="evaluasi" title="Toggle Evaluasi">
-                                <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">assessment</i>
-                                <span>Evaluasi</span>
-                            </button>
-                        </div> -->
-                        <!-- <button type="button" class="btn btn-filter px-3" id="btnResetMainFilter">
-                            <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">refresh</i>
-                            Reset
-                        </button> -->
+                       
                     </div>
                 </div>
                 <div class="position-relative">
@@ -3325,7 +3291,7 @@
 <script src="{{ asset('js/area-cctv-bmo2-pama.js') }}"></script>
 <script src="{{ asset('js/difference_bmo2-pama.js') }}"></script>
 <script src="{{ asset('js/symmetrical_difference_bmo2-pama.js') }}"></script>
-<script src="{{ asset('js/intersection_bmo2-pama.js') }}"></script>
+{{-- <script src="{{ asset('js/intersection_bmo2-pama.js') }}"></script> --}}
 
 <!-- Load Area CCTV GeoJSON data -->
 <script src="{{ asset('js/area_cctv_bmo1_fad.js') }}"></script>
@@ -5757,7 +5723,7 @@
         console.log('- areaCctvGeoJsonDataBmo2Pama:', typeof window.areaCctvGeoJsonDataBmo2Pama);
         console.log('- difference_bmo2_pama:', typeof window.difference_bmo2_pama);
         console.log('- symmetrical_difference_bmo1_fad:', typeof window.symmetrical_difference_bmo1_fad);
-        console.log('- intersection_bmo1_fad:', typeof window.intersection_bmo1_fad);
+        // console.log('- intersection_bmo1_fad:', typeof window.intersection_bmo1_fad); // DISABLED
 
         // Area Kerja BMO2 PAMA
         if (typeof window.areaKerjaGeoJsonDataPama !== 'undefined' && window.areaKerjaGeoJsonDataPama) {
@@ -5840,25 +5806,25 @@
             console.warn('✗ symmetrical_difference_bmo1_fad not found or undefined');
         }
 
-        // Intersection BMO2 PAMA
-        if (typeof window.intersection_bmo1_fad !== 'undefined' && window.intersection_bmo1_fad) {
-            try {
-                // Note: Variable name is wrong in file, but data is for BMO2 PAMA
-                intersectionBmo2PamaLayer = createLayerFromGeoJson(
-                    window.intersection_bmo1_fad,
-                    'Intersection BMO2 PAMA',
-                    getIntersectionStyle,
-                    370
-                );
-                intersectionBmo2PamaLayer.setVisible(true);
-                map.addLayer(intersectionBmo2PamaLayer);
-                console.log('✓ Intersection BMO2 PAMA layer added, features:', intersectionBmo2PamaLayer.getSource().getFeatures().length);
-            } catch (error) {
-                console.error('Error creating Intersection BMO2 PAMA layer:', error);
-            }
-        } else {
-            console.warn('✗ intersection_bmo1_fad not found or undefined');
-        }
+        // Intersection BMO2 PAMA - DISABLED
+        // if (typeof window.intersection_bmo1_fad !== 'undefined' && window.intersection_bmo1_fad) {
+        //     try {
+        //         // Note: Variable name is wrong in file, but data is for BMO2 PAMA
+        //         intersectionBmo2PamaLayer = createLayerFromGeoJson(
+        //             window.intersection_bmo1_fad,
+        //             'Intersection BMO2 PAMA',
+        //             getIntersectionStyle,
+        //             370
+        //         );
+        //         intersectionBmo2PamaLayer.setVisible(true);
+        //         map.addLayer(intersectionBmo2PamaLayer);
+        //         console.log('✓ Intersection BMO2 PAMA layer added, features:', intersectionBmo2PamaLayer.getSource().getFeatures().length);
+        //     } catch (error) {
+        //         console.error('Error creating Intersection BMO2 PAMA layer:', error);
+        //     }
+        // } else {
+        //     console.warn('✗ intersection_bmo1_fad not found or undefined');
+        // }
         
         // Ensure all area kerja layers are visible by default
         if (areaKerjaBmo2PamaLayer) {
@@ -5875,19 +5841,20 @@
         if (symmetricalDifferenceBmo2PamaLayer) {
             symmetricalDifferenceBmo2PamaLayer.setVisible(true);
         }
-        if (intersectionBmo2PamaLayer) {
-            intersectionBmo2PamaLayer.setVisible(true);
-        }
+        // if (intersectionBmo2PamaLayer) {
+        //     intersectionBmo2PamaLayer.setVisible(true);
+        // }
         
         console.log('Finished loading BMO2 PAMA layers - All area kerja layers are visible');
 
-        if (areaCctvBmo2PamaLayer && intersectionBmo2PamaLayer) {
-            try {
-                populateCoverageTable();
-            } catch (error) {
-                console.error('Error populating coverage table:', error);
-            }
-        }
+        // DISABLED: populateCoverageTable requires intersection layer
+        // if (areaCctvBmo2PamaLayer && intersectionBmo2PamaLayer) {
+        //     try {
+        //         populateCoverageTable();
+        //     } catch (error) {
+        //         console.error('Error populating coverage table:', error);
+        //     }
+        // }
         
         // Load all Area CCTV and Area Kerja layers
         // Wait for proj4js to be available
@@ -6135,16 +6102,24 @@
             return;
         }
         
-        if (!intersectionBmo2PamaLayer || !areaKerjaBmo2PamaLayer) {
-            coverageTableBody.innerHTML = `
-                <tr>
-                    <td colspan="5" class="text-center text-muted py-4">Data belum tersedia</td>
-                </tr>
-            `;
-            return;
-        }
+        // DISABLED: Coverage table requires intersection layer
+        coverageTableBody.innerHTML = `
+            <tr>
+                <td colspan="5" class="text-center text-muted py-4">Data belum tersedia (Intersection layer disabled)</td>
+            </tr>
+        `;
+        return;
+        
+        // if (!intersectionBmo2PamaLayer || !areaKerjaBmo2PamaLayer) {
+        //     coverageTableBody.innerHTML = `
+        //         <tr>
+        //             <td colspan="5" class="text-center text-muted py-4">Data belum tersedia</td>
+        //         </tr>
+        //     `;
+        //     return;
+        // }
 
-        const intersections = intersectionBmo2PamaLayer.getSource().getFeatures();
+        // const intersections = intersectionBmo2PamaLayer.getSource().getFeatures();
         const areaKerjaFeatures = areaKerjaBmo2PamaLayer.getSource().getFeatures();
         
         // Calculate total area kerja using luasan from properties
@@ -6551,14 +6526,15 @@
         });
     }
 
-    const showIntersectionBmo2Pama = document.getElementById('showIntersectionBmo2Pama');
-    if (showIntersectionBmo2Pama) {
-        showIntersectionBmo2Pama.addEventListener('change', function(e) {
-            if (intersectionBmo2PamaLayer) {
-                intersectionBmo2PamaLayer.setVisible(e.target.checked);
-            }
-        });
-    }
+    // DISABLED: Intersection layer event listener
+    // const showIntersectionBmo2Pama = document.getElementById('showIntersectionBmo2Pama');
+    // if (showIntersectionBmo2Pama) {
+    //     showIntersectionBmo2Pama.addEventListener('change', function(e) {
+    //         if (intersectionBmo2PamaLayer) {
+    //             intersectionBmo2PamaLayer.setVisible(e.target.checked);
+    //         }
+    //     });
+    // }
 
     // Popup overlay
     const popupElement = document.getElementById('popup');
@@ -8299,56 +8275,56 @@
                 .trim();
         }
         
-        // Method 1: Search in intersection layer (most accurate)
-        if (intersectionBmo2PamaLayer) {
-            const intersectionSource = intersectionBmo2PamaLayer.getSource();
-            const intersectionFeatures = intersectionSource.getFeatures();
-            
-            console.log('Checking intersection layer, features:', intersectionFeatures.length);
-            
-            intersectionFeatures.forEach(function(feature) {
-                const props = feature.getProperties();
-                const featureCctvName = props.nama_cctv || '';
-                const featureCctvNo = props.nomor_cctv || '';
-                
-                // Normalize names for better matching
-                const normalizedCctvName = normalizeCctvName(cctvName);
-                const normalizedFeatureName = normalizeCctvName(featureCctvName);
-                
-                // Match by CCTV name or number (more flexible matching)
-                const nameMatch = (normalizedCctvName && normalizedFeatureName && 
-                    (normalizedFeatureName.includes(normalizedCctvName) || 
-                     normalizedCctvName.includes(normalizedFeatureName)));
-                const numberMatch = (cctvNo && featureCctvNo && cctvNo === featureCctvNo);
-                const partialMatch = (cctvName && featureCctvName && 
-                    (featureCctvName.toLowerCase().includes(cctvName.toLowerCase()) ||
-                     cctvName.toLowerCase().includes(featureCctvName.toLowerCase())));
-                
-                if (nameMatch || numberMatch || partialMatch) {
-                    console.log('Found match in intersection:', { featureCctvName, featureCctvNo, props });
-                    // Found intersection, now find corresponding area kerja
-                    const idLokasi = props.id_lokasi;
-                    const lokasi = props.lokasi;
-                    
-                    if (idLokasi || lokasi) {
-                        const areaKerjaSource = areaKerjaBmo2PamaLayer.getSource();
-                        const areaKerjaFeatures = areaKerjaSource.getFeatures();
-                        
-                        areaKerjaFeatures.forEach(function(areaKerjaFeature) {
-                            const areaKerjaProps = areaKerjaFeature.getProperties();
-                            if ((idLokasi && areaKerjaProps.id_lokasi === idLokasi) ||
-                                (lokasi && areaKerjaProps.lokasi === lokasi)) {
-                                if (!matchingFeatures.find(f => f === areaKerjaFeature)) {
-                                    matchingFeatures.push(areaKerjaFeature);
-                                }
-                            }
-                        });
-                    }
-                }
-            });
-        }
+        // DISABLED: Method 1: Search in intersection layer (most accurate)
+        // if (intersectionBmo2PamaLayer) {
+        //     const intersectionSource = intersectionBmo2PamaLayer.getSource();
+        //     const intersectionFeatures = intersectionSource.getFeatures();
+        //     
+        //     console.log('Checking intersection layer, features:', intersectionFeatures.length);
+        //     
+        //     intersectionFeatures.forEach(function(feature) {
+        //         const props = feature.getProperties();
+        //         const featureCctvName = props.nama_cctv || '';
+        //         const featureCctvNo = props.nomor_cctv || '';
+        //         
+        //         // Normalize names for better matching
+        //         const normalizedCctvName = normalizeCctvName(cctvName);
+        //         const normalizedFeatureName = normalizeCctvName(featureCctvName);
+        //         
+        //         // Match by CCTV name or number (more flexible matching)
+        //         const nameMatch = (normalizedCctvName && normalizedFeatureName && 
+        //             (normalizedFeatureName.includes(normalizedCctvName) || 
+        //              normalizedCctvName.includes(normalizedFeatureName)));
+        //         const numberMatch = (cctvNo && featureCctvNo && cctvNo === featureCctvNo);
+        //         const partialMatch = (cctvName && featureCctvName && 
+        //             (featureCctvName.toLowerCase().includes(cctvName.toLowerCase()) ||
+        //              cctvName.toLowerCase().includes(featureCctvName.toLowerCase())));
+        //         
+        //         if (nameMatch || numberMatch || partialMatch) {
+        //             console.log('Found match in intersection:', { featureCctvName, featureCctvNo, props });
+        //             // Found intersection, now find corresponding area kerja
+        //             const idLokasi = props.id_lokasi;
+        //             const lokasi = props.lokasi;
+        //             
+        //             if (idLokasi || lokasi) {
+        //                 const areaKerjaSource = areaKerjaBmo2PamaLayer.getSource();
+        //                 const areaKerjaFeatures = areaKerjaSource.getFeatures();
+        //                 
+        //                 areaKerjaFeatures.forEach(function(areaKerjaFeature) {
+        //                     const areaKerjaProps = areaKerjaFeature.getProperties();
+        //                     if ((idLokasi && areaKerjaProps.id_lokasi === idLokasi) ||
+        //                         (lokasi && areaKerjaProps.lokasi === lokasi)) {
+        //                         if (!matchingFeatures.find(f => f === areaKerjaFeature)) {
+        //                             matchingFeatures.push(areaKerjaFeature);
+        //                         }
+        //                     }
+        //                 });
+        //             }
+        //         }
+        //     });
+        // }
         
-        // Method 2: Search in area CCTV layer and find overlapping area kerja
+        // Method 1 (previously Method 2): Search in area CCTV layer and find overlapping area kerja
         if (matchingFeatures.length === 0 && areaCctvBmo2PamaLayer) {
             const areaCctvSource = areaCctvBmo2PamaLayer.getSource();
             const areaCctvFeatures = areaCctvSource.getFeatures();
@@ -9936,10 +9912,11 @@
             layers.remove(symmetricalDifferenceBmo2PamaLayer);
             layers.push(symmetricalDifferenceBmo2PamaLayer);
         }
-        if (intersectionBmo2PamaLayer && layers.getArray().includes(intersectionBmo2PamaLayer)) {
-            layers.remove(intersectionBmo2PamaLayer);
-            layers.push(intersectionBmo2PamaLayer);
-        }
+        // DISABLED: Intersection layer z-index management
+        // if (intersectionBmo2PamaLayer && layers.getArray().includes(intersectionBmo2PamaLayer)) {
+        //     layers.remove(intersectionBmo2PamaLayer);
+        //     layers.push(intersectionBmo2PamaLayer);
+        // }
     }
 
     // Update layer when layer select changes (only if element exists)

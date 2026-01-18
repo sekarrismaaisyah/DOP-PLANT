@@ -2556,7 +2556,7 @@
     <!-- Google Maps Style Left Sidebar -->
     <div class="gm-left-sidebar collapsed" id="gmLeftSidebar">
         <!-- Hamburger Menu in Sidebar -->
-        <button class="gm-sidebar-menu-btn" id="gmSidebarMenuBtn" title="Menu">
+        <button class="gm-sidebar-menu-btn text-white" id="gmSidebarMenuBtn" title="Menu">
             <i class="material-icons-outlined">menu</i>
         </button>
         
@@ -2564,7 +2564,7 @@
         <div class="gm-sidebar-section" style="padding: 16px 0; flex: 1; overflow-y: auto;">
             <div class="gm-sidebar-section-title" style="padding: 0 16px 12px;">
                 <i class="material-icons-outlined" style="font-size: 20px; vertical-align: middle; margin-right: 8px; color: #ea4335;">notifications_active</i>
-                CCTV Alerts
+                Status On Off CCTV
             </div>
             
             <!-- Alerts Container -->
