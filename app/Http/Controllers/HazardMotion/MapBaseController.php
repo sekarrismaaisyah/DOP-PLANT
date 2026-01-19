@@ -2943,11 +2943,11 @@ class MapBaseController extends Controller
                     FROM hse_automation.aaj_car_all_year_from_dav
                     WHERE (
                         (tanggal_pembuatan IS NOT NULL 
-                            AND toDate(tanggal_pembuatan) >= toDate('{$weekStartStr}') 
-                            AND toDate(tanggal_pembuatan) < toDate('{$weekEndStr}'))
+                            AND toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('{$weekStartStr}')
+                            AND toDate(tanggal_pembuatan, 'Asia/Makassar') < toDate('{$weekEndStr}'))
                         OR (bedraft_date IS NOT NULL 
-                            AND toDate(bedraft_date) >= toDate('{$weekStartStr}') 
-                            AND toDate(bedraft_date) < toDate('{$weekEndStr}'))
+                            AND toDate(bedraft_date, 'Asia/Makassar') >= toDate('{$weekStartStr}')
+                            AND toDate(bedraft_date, 'Asia/Makassar') < toDate('{$weekEndStr}'))
                     )
                     ORDER BY 
                         CASE 
@@ -3051,11 +3051,11 @@ class MapBaseController extends Controller
                         FROM hse_automation.aaj_car_all_year_from_dav
                         WHERE (
                             (tanggal_pembuatan IS NOT NULL 
-                                AND toDate(tanggal_pembuatan) >= toDate('{$fallbackStart}') 
-                                AND toDate(tanggal_pembuatan) < toDate('{$fallbackEnd}'))
+                                AND toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('{$fallbackStart}')
+                                AND toDate(tanggal_pembuatan, 'Asia/Makassar') < toDate('{$fallbackEnd}'))
                             OR (bedraft_date IS NOT NULL 
-                                AND toDate(bedraft_date) >= toDate('{$fallbackStart}') 
-                                AND toDate(bedraft_date) < toDate('{$fallbackEnd}'))
+                                AND toDate(bedraft_date, 'Asia/Makassar') >= toDate('{$fallbackStart}')
+                                AND toDate(bedraft_date, 'Asia/Makassar') < toDate('{$fallbackEnd}'))
                         )
                         ORDER BY 
                             CASE 
@@ -7643,9 +7643,9 @@ class MapBaseController extends Controller
                 FROM hse_automation.aaj_car_all_year_from_dav
                 WHERE (
                     (tanggal_pembuatan IS NOT NULL 
-                        AND toDate(tanggal_pembuatan) = toDate('{$today}'))
+                        AND toDate(tanggal_pembuatan, 'Asia/Makassar') = toDate('{$today}'))
                     OR (bedraft_date IS NOT NULL 
-                        AND toDate(bedraft_date) = toDate('{$today}'))
+                        AND toDate(bedraft_date, 'Asia/Makassar') = toDate('{$today}'))
                 )
                 ORDER BY 
                     CASE 
