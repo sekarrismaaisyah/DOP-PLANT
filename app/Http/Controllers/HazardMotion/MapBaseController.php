@@ -2912,8 +2912,18 @@ class MapBaseController extends Controller
             $resultsOak = [];
             $resultsCoaching = [];
             
-            // 1. Query aaj_car_all_year_from_dav
+            // 1. Query aaj_car_all_year_from_dav using direct ClickHouse connection to 10.10.10.38
             try {
+                // Create ClickHouse connection with specific configuration
+                $host = '10.10.10.38';
+                $port = 8123; // Default ClickHouse HTTP port
+                $protocol = 'http';
+                $baseUrl = $protocol . '://' . $host . ':' . $port;
+                $username = 'default';
+                $password = 'Zxcdsaqwe321:;';
+                $database = 'hse_automation';
+                $timeout = 60;
+                
                 $sqlInspeksi = "
                     SELECT 
                         toString(id) as task_number,
@@ -2944,7 +2954,7 @@ class MapBaseController extends Controller
                         ifNull(toString(longitude), '') as longitude,
                         ifNull(toString(nama_site), '') as site,
                         ifNull(toString(lokasi_detail), '') as keterangan_lokasi
-                    FROM nitip.aaj_car_all_year_from_dav
+                    FROM hse_automation.aaj_car_all_year_from_dav
                     WHERE (
                         (tanggal_pembuatan IS NOT NULL 
                             AND toDate(tanggal_pembuatan) >= toDate('{$weekStartStr}') 
@@ -2962,84 +2972,59 @@ class MapBaseController extends Controller
                     LIMIT 12500
                 ";
                 
-                Log::info('Executing query for aaj_car_all_year_from_dav', [
+                Log::info('Executing query for aaj_car_all_year_from_dav using direct ClickHouse connection', [
+                    'host' => $host,
+                    'database' => $database,
                     'week_start' => $weekStartStr,
                     'week_end' => $weekEndStr
                 ]);
                 
-                // First, test query without date filter to see if there's any data
-                $testSql1 = "SELECT COUNT(*) as total FROM nitip.aaj_car_all_year_from_dav";
-                $testSql2 = "SELECT COUNT(*) as total FROM nitip.aaj_car_all_year_from_dav WHERE jenis_laporan = 'INSPEKSI'";
-                $testSql3 = "SELECT COUNT(*) as total FROM nitip.aaj_car_all_year_from_dav WHERE jenis_laporan IS NULL OR jenis_laporan = ''";
+                // Execute query using HTTP client directly
+                $url = $baseUrl . '/?database=' . urlencode($database) . '&default_format=JSON';
                 
-                // Test query with date range to see if any data matches
-                $testSql4 = "
-                    SELECT COUNT(*) as total 
-                    FROM nitip.aaj_car_all_year_from_dav 
-                    WHERE (
-                        (tanggal_pembuatan IS NOT NULL 
-                            AND toDate(tanggal_pembuatan) >= toDate('{$weekStartStr}') 
-                            AND toDate(tanggal_pembuatan) < toDate('{$weekEndStr}'))
-                        OR (bedraft_date IS NOT NULL 
-                            AND toDate(bedraft_date) >= toDate('{$weekStartStr}') 
-                            AND toDate(bedraft_date) < toDate('{$weekEndStr}'))
-                    )
-                ";
+                $httpClient = Http::timeout($timeout)
+                    ->withBasicAuth($username, $password)
+                    ->withBody($sqlInspeksi, 'text/plain');
                 
-                try {
-                    $testResult1 = $clickhouse->query($testSql1);
-                    $testResult2 = $clickhouse->query($testSql2);
-                    $testResult3 = $clickhouse->query($testSql3);
-                    $testResult4 = $clickhouse->query($testSql4);
-                    Log::info('INSPEKSI_HAZARD - Test queries (total records):', [
-                        'all_records' => $testResult1,
-                        'jenis_laporan_INSPEKSI' => $testResult2,
-                        'jenis_laporan_NULL_or_empty' => $testResult3,
-                        'with_date_filter' => $testResult4,
+                $response = $httpClient->post($url);
+                
+                if (!$response->successful()) {
+                    Log::error('INSPEKSI_HAZARD - Query failed', [
+                        'status' => $response->status(),
+                        'body' => $response->body()
+                    ]);
+                    $resultsInspeksi = [];
+                } else {
+                    $result = $response->json();
+                    
+                    // Parse ClickHouse JSON response
+                    if (isset($result['data'])) {
+                        $resultsInspeksi = $result['data'];
+                    } elseif (isset($result[0])) {
+                        $resultsInspeksi = $result;
+                    } else {
+                        // Try to parse as JSON lines format
+                        $lines = explode("\n", trim($response->body()));
+                        $resultsInspeksi = [];
+                        foreach ($lines as $line) {
+                            if (!empty(trim($line))) {
+                                $decoded = json_decode($line, true);
+                                if ($decoded !== null) {
+                                    $resultsInspeksi[] = $decoded;
+                                }
+                            }
+                        }
+                    }
+                    
+                    Log::info('Query result from aaj_car_all_year_from_dav', [
+                        'result_type' => gettype($resultsInspeksi),
+                        'is_array' => is_array($resultsInspeksi),
+                        'count' => is_array($resultsInspeksi) ? count($resultsInspeksi) : 0,
+                        'empty' => empty($resultsInspeksi),
                         'week_start' => $weekStartStr,
                         'week_end' => $weekEndStr
                     ]);
-                    
-                    // Test query with sample data (without date filter)
-                    $sampleSql = "SELECT id, jenis_laporan, tanggal_pembuatan, tanggal, bedraft_date, waktu_verifikasi FROM nitip.aaj_car_all_year_from_dav LIMIT 10";
-                    $sampleResult = $clickhouse->query($sampleSql);
-                    Log::info('INSPEKSI_HAZARD - Sample data (first 10 records, no filter):', [
-                        'sample' => $sampleResult
-                    ]);
-                    
-                    // Test query with sample data (with date filter)
-                    $sampleSqlWithDate = "
-                        SELECT id, jenis_laporan, tanggal_pembuatan, bedraft_date 
-                        FROM nitip.aaj_car_all_year_from_dav 
-                        WHERE (
-                            (tanggal_pembuatan IS NOT NULL 
-                                AND toDate(tanggal_pembuatan) >= toDate('{$weekStartStr}') 
-                                AND toDate(tanggal_pembuatan) < toDate('{$weekEndStr}'))
-                            OR (bedraft_date IS NOT NULL 
-                                AND toDate(bedraft_date) >= toDate('{$weekStartStr}') 
-                                AND toDate(bedraft_date) < toDate('{$weekEndStr}'))
-                        )
-                        LIMIT 10
-                    ";
-                    $sampleResultWithDate = $clickhouse->query($sampleSqlWithDate);
-                    Log::info('INSPEKSI_HAZARD - Sample data (first 10 records, with date filter):', [
-                        'sample' => $sampleResultWithDate,
-                        'count' => is_array($sampleResultWithDate) ? count($sampleResultWithDate) : 0
-                    ]);
-                } catch (Exception $e) {
-                    Log::warning('INSPEKSI_HAZARD - Test query failed: ' . $e->getMessage());
                 }
-                
-                $resultsInspeksi = $clickhouse->query($sqlInspeksi);
-                
-                Log::info('Query result from aaj_car_all_year_from_dav', [
-                    'result_type' => gettype($resultsInspeksi),
-                    'is_array' => is_array($resultsInspeksi),
-                    'count' => is_array($resultsInspeksi) ? count($resultsInspeksi) : 0,
-                    'empty' => empty($resultsInspeksi),
-                    'week_start' => $weekStartStr,
-                    'week_end' => $weekEndStr
-                ]);
                 
                 // If no results, try query without strict date filter (last 30 days as fallback)
                 if (empty($resultsInspeksi) || (is_array($resultsInspeksi) && count($resultsInspeksi) === 0)) {
@@ -3077,7 +3062,7 @@ class MapBaseController extends Controller
                             ifNull(toString(longitude), '') as longitude,
                             ifNull(toString(nama_site), '') as site,
                             ifNull(toString(lokasi_detail), '') as keterangan_lokasi
-                        FROM nitip.aaj_car_all_year_from_dav
+                        FROM hse_automation.aaj_car_all_year_from_dav
                         WHERE (
                             (tanggal_pembuatan IS NOT NULL 
                                 AND toDate(tanggal_pembuatan) >= toDate('{$fallbackStart}') 
@@ -3096,14 +3081,41 @@ class MapBaseController extends Controller
                     ";
                     
                     try {
-                        $fallbackResults = $clickhouse->query($fallbackSql);
-                        Log::info('INSPEKSI_HAZARD - Fallback query result (last 30 days):', [
-                            'count' => is_array($fallbackResults) ? count($fallbackResults) : 0
-                        ]);
+                        $fallbackResponse = Http::timeout($timeout)
+                            ->withBasicAuth($username, $password)
+                            ->withBody($fallbackSql, 'text/plain')
+                            ->post($url);
                         
-                        if (!empty($fallbackResults) && is_array($fallbackResults) && count($fallbackResults) > 0) {
-                            $resultsInspeksi = $fallbackResults;
-                            Log::info('INSPEKSI_HAZARD - Using fallback query results (last 30 days)');
+                        if ($fallbackResponse->successful()) {
+                            $fallbackResult = $fallbackResponse->json();
+                            
+                            // Parse ClickHouse JSON response
+                            $fallbackResults = [];
+                            if (isset($fallbackResult['data'])) {
+                                $fallbackResults = $fallbackResult['data'];
+                            } elseif (isset($fallbackResult[0])) {
+                                $fallbackResults = $fallbackResult;
+                            } else {
+                                // Try to parse as JSON lines format
+                                $lines = explode("\n", trim($fallbackResponse->body()));
+                                foreach ($lines as $line) {
+                                    if (!empty(trim($line))) {
+                                        $decoded = json_decode($line, true);
+                                        if ($decoded !== null) {
+                                            $fallbackResults[] = $decoded;
+                                        }
+                                    }
+                                }
+                            }
+                            
+                            Log::info('INSPEKSI_HAZARD - Fallback query result (last 30 days):', [
+                                'count' => is_array($fallbackResults) ? count($fallbackResults) : 0
+                            ]);
+                            
+                            if (!empty($fallbackResults) && is_array($fallbackResults) && count($fallbackResults) > 0) {
+                                $resultsInspeksi = $fallbackResults;
+                                Log::info('INSPEKSI_HAZARD - Using fallback query results (last 30 days)');
+                            }
                         }
                     } catch (Exception $e) {
                         Log::error('INSPEKSI_HAZARD - Fallback query failed: ' . $e->getMessage());
