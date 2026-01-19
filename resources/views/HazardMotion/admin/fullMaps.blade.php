@@ -14248,66 +14248,80 @@ source: new ol.source.Vector(),
             return null;
         }
 
-        let insiden = insidenDatasetMap.get(noKecelakaan);
-        
         // Ambil semua record dengan no_kecelakaan yang sama
         const allRecords = insidenDataset.filter(item => item.no_kecelakaan === noKecelakaan);
         
-        if (allRecords.length > 0) {
-            // Cari record yang memiliki data paling lengkap (prioritaskan yang punya hari, jam, shift, perusahaan, departemen)
-            const recordWithData = allRecords.find(item => 
-                item.hari || item.jam || item.shift || item.perusahaan || item.departemen || 
-                item.bulan || item.tahun || item.minggu_ke
-            ) || allRecords[0];
-            
-            // Jika insiden belum ada, gunakan recordWithData
-            if (!insiden) {
-                insiden = {...recordWithData};
-            } else {
-                // Gabungkan data: gunakan data dari recordWithData untuk field yang null di insiden
-                const mergedData = {...insiden};
-                Object.keys(recordWithData).forEach(key => {
-                    const recordValue = recordWithData[key];
-                    const insidenValue = insiden[key];
-                    // Gunakan recordWithData jika insiden null/undefined/kosong, atau jika recordWithData lebih lengkap
-                    if ((recordValue !== null && recordValue !== undefined && recordValue !== '' && recordValue !== '\\N') &&
-                        (insidenValue === null || insidenValue === undefined || insidenValue === '' || insidenValue === '\\N')) {
-                        mergedData[key] = recordValue;
-                    }
-                });
-                insiden = mergedData;
-            }
-            
-            // Kumpulkan semua items dari semua record (untuk detail layer)
-            if (!insiden.items) {
-                insiden.items = [];
-            }
-            
-            // Tambahkan items dari semua record yang memiliki layer data
-            allRecords.forEach(record => {
-                if (record.layer || record.jenis_item_ipls || record.detail_layer || 
-                    record.klasifikasi_layer || record.keterangan_layer) {
-                    // Cek apakah item sudah ada (berdasarkan kombinasi layer, jenis_item_ipls, detail_layer)
-                    const existingItem = insiden.items.find(item => 
-                        item.layer === record.layer && 
-                        item.jenis_item_ipls === record.jenis_item_ipls &&
-                        item.detail_layer === record.detail_layer
-                    );
-                    
-                    if (!existingItem) {
-                        insiden.items.push({
-                            layer: record.layer,
-                            jenis_item_ipls: record.jenis_item_ipls,
-                            detail_layer: record.detail_layer,
-                            klasifikasi_layer: record.klasifikasi_layer,
-                            keterangan_layer: record.keterangan_layer
-                        });
-                    }
-                }
-            });
+        if (allRecords.length === 0) {
+            return null;
         }
         
-        return insiden || null;
+        // Prioritas 1: Cari record yang memiliki kode_be_investigasi tidak null
+        let mainRecord = allRecords.find(item => 
+            item.kode_be_investigasi !== null && 
+            item.kode_be_investigasi !== undefined && 
+            item.kode_be_investigasi !== '' && 
+            item.kode_be_investigasi !== '\\N'
+        );
+        
+        // Prioritas 2: Jika tidak ada kode_be_investigasi, cari record yang memiliki data paling lengkap
+        if (!mainRecord) {
+            mainRecord = allRecords.find(item => 
+                item.hari || item.jam || item.shift || item.perusahaan || item.departemen || 
+                item.bulan || item.tahun || item.minggu_ke || item.status_lpi
+            );
+        }
+        
+        // Prioritas 3: Jika masih tidak ada, gunakan record pertama
+        if (!mainRecord) {
+            mainRecord = allRecords[0];
+        }
+        
+        // Gunakan mainRecord sebagai data utama
+        let insiden = {...mainRecord};
+        
+        // Gabungkan data dari semua record untuk melengkapi field yang null
+        allRecords.forEach(record => {
+            Object.keys(record).forEach(key => {
+                const recordValue = record[key];
+                const insidenValue = insiden[key];
+                
+                // Gunakan recordValue jika insiden null/undefined/kosong dan recordValue tidak null
+                if ((recordValue !== null && recordValue !== undefined && recordValue !== '' && recordValue !== '\\N') &&
+                    (insidenValue === null || insidenValue === undefined || insidenValue === '' || insidenValue === '\\N')) {
+                    insiden[key] = recordValue;
+                }
+            });
+        });
+        
+        // Kumpulkan semua items dari semua record (untuk detail layer)
+        if (!insiden.items) {
+            insiden.items = [];
+        }
+        
+        // Tambahkan items dari semua record yang memiliki layer data
+        allRecords.forEach(record => {
+            if (record.layer || record.jenis_item_ipls || record.detail_layer || 
+                record.klasifikasi_layer || record.keterangan_layer) {
+                // Cek apakah item sudah ada (berdasarkan kombinasi layer, jenis_item_ipls, detail_layer)
+                const existingItem = insiden.items.find(item => 
+                    item.layer === record.layer && 
+                    item.jenis_item_ipls === record.jenis_item_ipls &&
+                    item.detail_layer === record.detail_layer
+                );
+                
+                if (!existingItem) {
+                    insiden.items.push({
+                        layer: record.layer,
+                        jenis_item_ipls: record.jenis_item_ipls,
+                        detail_layer: record.detail_layer,
+                        klasifikasi_layer: record.klasifikasi_layer,
+                        keterangan_layer: record.keterangan_layer
+                    });
+                }
+            }
+        });
+        
+        return insiden;
     }
 
     function focusInsidenOnMap(noKecelakaan) {
@@ -14445,30 +14459,42 @@ source: new ol.source.Vector(),
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.no_kecelakaan) ? `
                                 <tr>
                                     <td width="40%"><strong>No. Kecelakaan:</strong></td>
-                                    <td>${escapeHtml(insiden.no_kecelakaan || '-')}</td>
+                                    <td>${escapeHtml(insiden.no_kecelakaan)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.kode_be_investigasi) ? `
                                 <tr>
-                                    <td><strong>Kode BE Investigasi:</strong></td>
-                                    <td>${escapeHtml(insiden.kode_be_investigasi || '-')}</td>
+                                    <td width="40%"><strong>Kode BE Investigasi:</strong></td>
+                                    <td>${escapeHtml(insiden.kode_be_investigasi)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.status_lpi) ? `
                                 <tr>
-                                    <td><strong>Status LPI:</strong></td>
-                                    <td><span class="badge ${insiden.status_lpi === 'Open' ? 'bg-warning text-dark' : insiden.status_lpi === 'Closed' ? 'bg-success' : 'bg-secondary'}">${escapeHtml(insiden.status_lpi || '-')}</span></td>
+                                    <td width="40%"><strong>Status LPI:</strong></td>
+                                    <td><span class="badge ${insiden.status_lpi === 'Open' ? 'bg-warning text-dark' : insiden.status_lpi === 'Closed' ? 'bg-success' : 'bg-secondary'}">${escapeHtml(insiden.status_lpi)}</span></td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.kategori) ? `
                                 <tr>
-                                    <td><strong>Kategori:</strong></td>
-                                    <td><span class="badge bg-light text-danger border border-danger border-opacity-25">${escapeHtml(insiden.kategori || '-')}</span></td>
+                                    <td width="40%"><strong>Kategori:</strong></td>
+                                    <td><span class="badge bg-light text-danger border border-danger border-opacity-25">${escapeHtml(insiden.kategori)}</span></td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.injury_status) ? `
                                 <tr>
-                                    <td><strong>Injury Status:</strong></td>
-                                    <td>${escapeHtml(insiden.injury_status || '-')}</td>
+                                    <td width="40%"><strong>Injury Status:</strong></td>
+                                    <td>${escapeHtml(insiden.injury_status)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.high_potential) ? `
                                 <tr>
-                                    <td><strong>High Potential:</strong></td>
-                                    <td>${escapeHtml(insiden.high_potential || '-')}</td>
+                                    <td width="40%"><strong>High Potential:</strong></td>
+                                    <td>${escapeHtml(insiden.high_potential)}</td>
                                 </tr>
+                                ` : ''}
                             </table>
                         </div>
                     </div>
@@ -14480,30 +14506,42 @@ source: new ol.source.Vector(),
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.site) ? `
                                 <tr>
                                     <td width="40%"><strong>Site:</strong></td>
-                                    <td>${escapeHtml(insiden.site || '-')}</td>
+                                    <td>${escapeHtml(insiden.site)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.lokasi) ? `
                                 <tr>
-                                    <td><strong>Lokasi:</strong></td>
-                                    <td>${escapeHtml(insiden.lokasi || '-')}</td>
+                                    <td width="40%"><strong>Lokasi:</strong></td>
+                                    <td>${escapeHtml(insiden.lokasi)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.sublokasi) ? `
                                 <tr>
-                                    <td><strong>Sublokasi:</strong></td>
-                                    <td>${escapeHtml(insiden.sublokasi || '-')}</td>
+                                    <td width="40%"><strong>Sublokasi:</strong></td>
+                                    <td>${escapeHtml(insiden.sublokasi)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.lokasi_spesifik) ? `
                                 <tr>
-                                    <td><strong>Lokasi Spesifik:</strong></td>
-                                    <td>${escapeHtml(insiden.lokasi_spesifik || '-')}</td>
+                                    <td width="40%"><strong>Lokasi Spesifik:</strong></td>
+                                    <td>${escapeHtml(insiden.lokasi_spesifik)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.lokasi_validasi_hsecm) ? `
                                 <tr>
-                                    <td><strong>Lokasi Validasi HSECM:</strong></td>
-                                    <td>${escapeHtml(insiden.lokasi_validasi_hsecm || '-')}</td>
+                                    <td width="40%"><strong>Lokasi Validasi HSECM:</strong></td>
+                                    <td>${escapeHtml(insiden.lokasi_validasi_hsecm)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.latitude) && hasValue(insiden.longitude) ? `
                                 <tr>
-                                    <td><strong>Koordinat:</strong></td>
-                                    <td>${insiden.latitude && insiden.longitude ? `${insiden.latitude}, ${insiden.longitude}` : '-'}</td>
+                                    <td width="40%"><strong>Koordinat:</strong></td>
+                                    <td>${insiden.latitude}, ${insiden.longitude}</td>
                                 </tr>
+                                ` : ''}
                             </table>
                         </div>
                     </div>
