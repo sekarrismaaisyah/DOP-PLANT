@@ -2800,6 +2800,119 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
+     * Get Daily Operation Plans by coordinates (as point markers)
+     */
+    public function getDailyOperationPlansByCoordinates(Request $request)
+    {
+        try {
+            Log::info('getDailyOperationPlansByCoordinates - Method called');
+            
+            // Get all daily operation plans with coordinates
+            $plans = DailyOperationPlan::whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->where('latitude', '!=', '')
+                ->where('longitude', '!=', '')
+                ->get();
+            
+            Log::info('getDailyOperationPlansByCoordinates - Total plans found: ' . $plans->count());
+            
+            $features = [];
+            
+            foreach ($plans as $plan) {
+                try {
+                    // Convert coordinate format (comma to dot)
+                    $latitude = str_replace(',', '.', $plan->latitude);
+                    $longitude = str_replace(',', '.', $plan->longitude);
+                    
+                    // Validate coordinates
+                    $lat = floatval($latitude);
+                    $lng = floatval($longitude);
+                    
+                    if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
+                        Log::warning("Invalid coordinates for plan {$plan->id}: lat={$lat}, lng={$lng}");
+                        continue;
+                    }
+                    
+                    // Get CCTV data for this DOP
+                    $cctvData = [];
+                    if ($plan->cctvs && $plan->cctvs->count() > 0) {
+                        foreach ($plan->cctvs as $cctv) {
+                            if ($cctv->longitude && $cctv->latitude) {
+                                $cctvData[] = [
+                                    'id' => $cctv->id,
+                                    'no_cctv' => $cctv->no_cctv ?? null,
+                                    'nama_cctv' => $cctv->nama_cctv ?? null,
+                                    'longitude' => (float) $cctv->longitude,
+                                    'latitude' => (float) $cctv->latitude,
+                                    'lokasi_pemasangan' => $cctv->lokasi_pemasangan ?? null,
+                                    'kondisi' => $cctv->kondisi ?? null,
+                                    'status' => $cctv->status ?? null,
+                                ];
+                            }
+                        }
+                    }
+                    
+                    $feature = [
+                        'type' => 'Feature',
+                        'geometry' => [
+                            'type' => 'Point',
+                            'coordinates' => [$lng, $lat]
+                        ],
+                        'properties' => [
+                            'id' => $plan->id,
+                            'site' => $plan->site ?? null,
+                            'pekerjaan' => $plan->pekerjaan ?? null,
+                            'unit_id' => $plan->unit_id ?? null,
+                            'lokasi' => $plan->lokasi ?? null,
+                            'detail_lokasi' => $plan->detail_lokasi ?? null,
+                            'potensi_resiko' => $plan->potensi_resiko ?? null,
+                            'pengendalian_bahaya' => $plan->pengendalian_bahaya ?? null,
+                            'catatan' => $plan->catatan ?? null,
+                            'tanggal' => $plan->tanggal ? $plan->tanggal->format('Y-m-d') : null,
+                            'foto_pekerjaan' => $plan->foto_pekerjaan ?? null,
+                            'cctvs' => $cctvData,
+                        ]
+                    ];
+                    $features[] = $feature;
+                } catch (Exception $e) {
+                    Log::error("Error processing plan {$plan->id}: " . $e->getMessage());
+                    continue;
+                }
+            }
+            
+            Log::info('getDailyOperationPlansByCoordinates - Returning ' . count($features) . ' features');
+            
+            return response()->json([
+                'success' => true,
+                'data' => [
+                    'type' => 'FeatureCollection',
+                    'features' => $features
+                ],
+                'summary' => [
+                    'total_plans' => $plans->count(),
+                    'features_returned' => count($features)
+                ]
+            ]);
+            
+        } catch (Exception $e) {
+            Log::error('Error getting daily operation plans by coordinates: ' . $e->getMessage(), [
+                'exception' => $e->getTraceAsString(),
+                'file' => $e->getFile(),
+                'line' => $e->getLine()
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat mengambil data DOP: ' . $e->getMessage(),
+                'error' => $e->getMessage(),
+                'data' => [
+                    'type' => 'FeatureCollection',
+                    'features' => []
+                ]
+            ], 500);
+        }
+    }
+
+    /**
      * Convert WKT geometry to GeoJSON
      * Supports MULTIPOLYGON format
      */
