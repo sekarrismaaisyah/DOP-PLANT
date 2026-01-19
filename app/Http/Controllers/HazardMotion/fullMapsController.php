@@ -1247,20 +1247,10 @@ class fullMapsController extends Controller
             $limit = $request->input('limit', 500);
             $limit = min($limit, 500); // Max 500
             
-            $clickhouse = new ClickHouseService();
-            
-            if (!$clickhouse->isConnected()) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'ClickHouse is not connected',
-                    'data' => []
-                ], 500);
-            }
-            
             $sapData = [];
             
             // Query all SAP data without week filter, just limit
-            // 1. Query aaj_car_all_year_from_dav
+            // 1. Query aaj_car_all_year_from_dav using direct ClickHouse connection to 10.10.10.38
             try {
                 $sqlInspeksi = "
                     SELECT 
@@ -1292,7 +1282,7 @@ class fullMapsController extends Controller
                         ifNull(toString(longitude), '') as longitude,
                         ifNull(toString(nama_site), '') as site,
                         ifNull(toString(lokasi_detail), '') as keterangan_lokasi
-                    FROM aaj_car_all_year_from_dav
+                    FROM hse_automation.aaj_car_all_year_from_dav
                     WHERE latitude IS NOT NULL 
                         AND longitude IS NOT NULL
                         AND latitude != ''
