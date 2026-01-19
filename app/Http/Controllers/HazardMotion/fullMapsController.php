@@ -258,7 +258,7 @@ class fullMapsController extends Controller
             : 0;
 
         // Ambil data SAP (Safety Action Plan) dari ClickHouse
-        // Mengganti hazard dengan SAP dari tabel nitip.union_sap_all_with_karyawan_full
+        // Mengganti hazard dengan SAP dari tabel hse_automation.aaj_car_all_year_from_dav
         // Default: ambil data untuk week ini (Senin-Senin)
         $today = Carbon::now();
         $weekStart = $today->copy()->startOfWeek(Carbon::MONDAY);
@@ -1317,7 +1317,7 @@ class fullMapsController extends Controller
                         ifNull(toString(longitude), '') as longitude,
                         ifNull(toString(nama_site), '') as site,
                         ifNull(toString(lokasi_detail), '') as keterangan_lokasi
-                    FROM beats.aaj_car_all_year_from_dav
+                    FROM hse_automation.aaj_car_all_year_from_dav
                     WHERE latitude IS NOT NULL 
                         AND longitude IS NOT NULL
                         AND latitude != ''
@@ -1331,7 +1331,8 @@ class fullMapsController extends Controller
                     LIMIT {$limit}
                 ";
                 
-                $resultsInspeksi = $clickhouse->query($sqlInspeksi);
+                // Menggunakan queryClickHouseCustom dengan database 'hse_automation'
+                $resultsInspeksi = $this->queryClickHouseCustom($sqlInspeksi, 'hse_automation');
                 
                 if (!empty($resultsInspeksi) && is_array($resultsInspeksi)) {
                     foreach ($resultsInspeksi as $row) {
@@ -3010,14 +3011,15 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 SELECT 
                     ifNull(toString(nama_lokasi), '') as nama_lokasi,
                     COUNT(*) AS jumlah_sap
-                FROM nitip.aaj_car_all_year_from_dav
+                FROM hse_automation.aaj_car_all_year_from_dav
                 WHERE nama_lokasi IS NOT NULL 
                     AND nama_lokasi != ''
                 GROUP BY nama_lokasi
                 ORDER BY jumlah_sap DESC
             ";
 
-            $results = $clickHouseService->query($sql);
+            // Menggunakan queryClickHouseCustom dengan database 'hse_automation'
+            $results = $this->queryClickHouseCustom($sql, 'hse_automation');
             
             $locations = [];
             foreach ($results as $row) {

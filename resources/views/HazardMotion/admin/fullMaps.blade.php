@@ -3914,7 +3914,7 @@
 </script>
 <script>
     // SAP (Safety Action Plan) data dari ClickHouse
-    // Mengganti hazard dengan SAP dari tabel nitip.union_sap_all_with_karyawan_full
+    // Mengganti hazard dengan SAP dari tabel hse_automation.aaj_car_all_year_from_dav
     // Data ini akan di-overwrite oleh loadSapDataByWeek() berdasarkan week filter
     // Filter hanya SAP hari ini untuk performa (mengurangi lag)
     let allSapData = @json($sapData ?? []);
