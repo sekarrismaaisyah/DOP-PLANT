@@ -11027,14 +11027,7 @@ source: new ol.source.Vector(),
                 
                 ${areaKerjaId ? `
                 <div class="row mt-3">
-                    <div class="col-12">
-                        <button class="btn btn-primary me-2" onclick="filterSapByAreaKerja('${areaKerjaId}', '${String(lokasiNameFinal || '').replace(/'/g, "\\'")}'); bootstrap.Modal.getInstance(document.getElementById('areaKerjaSummaryModal')).hide();">
-                            <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">filter_list</i> Filter SAP di Area Ini
-                        </button>
-                        <button class="btn btn-success" onclick="loadEvaluationSummary('area_kerja', '${areaKerjaId}', '${String(lokasiNameFinal || '').replace(/'/g, "\\'")}', null, null); bootstrap.Modal.getInstance(document.getElementById('areaKerjaSummaryModal')).hide();">
-                            <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">assessment</i> Lihat Evaluasi
-                        </button>
-                    </div>
+                    
                 </div>
                 ` : ''}
             `;
