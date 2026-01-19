@@ -708,9 +708,9 @@ class fullMapsController extends Controller
                     FROM aaj_car_all_year_from_dav
                     WHERE (
                         (tanggal_pembuatan IS NOT NULL 
-                            AND toDate(tanggal_pembuatan) = today())
+                            AND toDate(toTimeZone(tanggal_pembuatan, 'Asia/Makassar')) = toDate(toTimeZone(now(), 'Asia/Makassar')))
                         OR (bedraft_date IS NOT NULL 
-                            AND toDate(bedraft_date) = today())
+                            AND toDate(toTimeZone(bedraft_date, 'Asia/Makassar')) = toDate(toTimeZone(now(), 'Asia/Makassar')))
                     )
                     ORDER BY 
                         CASE 
@@ -816,9 +816,9 @@ class fullMapsController extends Controller
                             FROM aaj_car_all_year_from_dav
                             WHERE (
                                 (tanggal_pembuatan IS NOT NULL 
-                                    AND toDate(tanggal_pembuatan) = today())
+                                    AND toDate(toTimeZone(tanggal_pembuatan, 'Asia/Makassar')) = toDate(toTimeZone(now(), 'Asia/Makassar')))
                                 OR (bedraft_date IS NOT NULL 
-                                    AND toDate(bedraft_date) = today())
+                                    AND toDate(toTimeZone(bedraft_date, 'Asia/Makassar')) = toDate(toTimeZone(now(), 'Asia/Makassar')))
                             )
                             ORDER BY 
                                 CASE 
