@@ -6,7 +6,7 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <!--favicon-->
     <link rel="icon" href="{{ URL::asset('build/images/logo-removebg.png') }}" type="image/png">
-    <title>@yield('title') | Laravel & Bootstrap 5 Admin Dashboard Template</title>
+    <title>@yield('title') | BeSentry Berau Coal</title>
 
     <script>
       (function loadBotpress() {

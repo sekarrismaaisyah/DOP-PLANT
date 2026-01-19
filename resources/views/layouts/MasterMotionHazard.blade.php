@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <!--favicon-->
     <link rel="icon" href="{{ URL::asset('build/images/logo-removebg.png') }}" type="image/png">
-    <title>@yield('title') | Laravel & Bootstrap 5 Admin Dashboard Template</title>
+    <title>@yield('title') | BeSentry Berau Coal</title>
 
     <script>
       (function loadBotpress() {
