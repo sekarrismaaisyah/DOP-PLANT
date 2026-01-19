@@ -290,6 +290,26 @@ class fullMapsController extends Controller
                 $items = $items->values();
                 $first = $items->first();
 
+                // Cari record yang memiliki kode_be_investigasi tidak null
+                $mainRecord = $items->first(function ($item) {
+                    return ! is_null($item->kode_be_investigasi) && $item->kode_be_investigasi !== '';
+                });
+                
+                // Jika tidak ada, gunakan record yang memiliki data paling lengkap
+                if (! $mainRecord) {
+                    $mainRecord = $items->first(function ($item) {
+                        return ! is_null($item->hari) || ! is_null($item->jam) || 
+                               ! is_null($item->shift) || ! is_null($item->perusahaan) || 
+                               ! is_null($item->departemen) || ! is_null($item->bulan) || 
+                               ! is_null($item->tahun) || ! is_null($item->minggu_ke);
+                    });
+                }
+                
+                // Jika masih tidak ada, gunakan record pertama
+                if (! $mainRecord) {
+                    $mainRecord = $first;
+                }
+
                 $latItem = $items->first(function ($item) {
                     return ! is_null($item->latitude);
                 });
@@ -299,17 +319,36 @@ class fullMapsController extends Controller
 
                 return [
                     'no_kecelakaan' => $noKecelakaan,
-                    'site' => $first->site,
-                    'lokasi' => $first->lokasi ?? $first->lokasi_spesifik ?? null,
-                    'status_lpi' => $first->status_lpi,
-                    'layer' => $first->layer,
-                    'jenis_item_ipls' => $first->jenis_item_ipls,
-                    'kategori' => $first->kategori,
-                    'tanggal' => optional($first->tanggal)->format('Y-m-d'),
+                    'kode_be_investigasi' => $mainRecord->kode_be_investigasi,
+                    'status_lpi' => $mainRecord->status_lpi,
+                    'site' => $mainRecord->site,
+                    'lokasi' => $mainRecord->lokasi ?? $mainRecord->lokasi_spesifik ?? null,
+                    'sublokasi' => $mainRecord->sublokasi,
+                    'lokasi_spesifik' => $mainRecord->lokasi_spesifik,
+                    'lokasi_validasi_hsecm' => $mainRecord->lokasi_validasi_hsecm,
+                    'layer' => $mainRecord->layer,
+                    'jenis_item_ipls' => $mainRecord->jenis_item_ipls,
+                    'kategori' => $mainRecord->kategori,
+                    'injury_status' => $mainRecord->injury_status,
+                    'high_potential' => $mainRecord->high_potential,
+                    'kronologis' => $mainRecord->kronologis,
+                    'tanggal' => optional($mainRecord->tanggal)->format('Y-m-d'),
+                    'bulan' => $mainRecord->bulan,
+                    'tahun' => $mainRecord->tahun,
+                    'minggu_ke' => $mainRecord->minggu_ke,
+                    'hari' => $mainRecord->hari,
+                    'jam' => $mainRecord->jam,
+                    'menit' => $mainRecord->menit,
+                    'shift' => $mainRecord->shift,
+                    'perusahaan' => $mainRecord->perusahaan,
+                    'departemen' => $mainRecord->departemen,
+                    'pja' => $mainRecord->pja,
+                    'insiden_dalam_site_mining' => $mainRecord->insiden_dalam_site_mining,
                     'latitude' => $latItem->latitude ?? null,
                     'longitude' => $lonItem->longitude ?? null,
                     'items' => $items->map(function ($item) {
                         return [
+                            'kode_be_investigasi' => $item->kode_be_investigasi,
                             'tasklist' => $item->tasklist ?? null,
                             'layer' => $item->layer,
                             'jenis_item_ipls' => $item->jenis_item_ipls,

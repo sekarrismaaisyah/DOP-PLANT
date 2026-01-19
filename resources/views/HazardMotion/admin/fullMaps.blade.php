@@ -14248,10 +14248,10 @@ source: new ol.source.Vector(),
             return null;
         }
 
-        // Ambil semua record dengan no_kecelakaan yang sama
-        const allRecords = insidenDataset.filter(item => item.no_kecelakaan === noKecelakaan);
+        // Ambil record dengan no_kecelakaan yang sama
+        const insiden = insidenDataset.find(item => item.no_kecelakaan === noKecelakaan);
         
-        if (allRecords.length === 0) {
+        if (!insiden) {
             return null;
         }
         
@@ -14260,58 +14260,17 @@ source: new ol.source.Vector(),
             return val !== null && val !== undefined && val !== '' && val !== '\\N';
         };
         
-        // Prioritas 1: Cari record yang memiliki kode_be_investigasi tidak null
-        // Ini adalah record utama yang akan digunakan untuk informasi dasar, lokasi, waktu kejadian, perusahaan & departemen
-        let mainRecord = allRecords.find(item => hasValue(item.kode_be_investigasi));
-        
-        // Prioritas 2: Jika tidak ada kode_be_investigasi, cari record yang memiliki data paling lengkap
-        if (!mainRecord) {
-            mainRecord = allRecords.find(item => 
-                hasValue(item.hari) || hasValue(item.jam) || hasValue(item.shift) || 
-                hasValue(item.perusahaan) || hasValue(item.departemen) || 
-                hasValue(item.bulan) || hasValue(item.tahun) || hasValue(item.minggu_ke) || 
-                hasValue(item.status_lpi)
-            );
-        }
-        
-        // Prioritas 3: Jika masih tidak ada, gunakan record pertama
-        if (!mainRecord) {
-            mainRecord = allRecords[0];
-        }
-        
-        // Gunakan mainRecord sebagai data utama (TIDAK menggabungkan dengan record lain)
-        // Data utama hanya dari record yang memiliki kode_be_investigasi tidak null
-        let insiden = {...mainRecord};
-        
-        // Kumpulkan semua items dari semua record (untuk detail layer)
-        // Items dikumpulkan dari semua record, bukan hanya dari mainRecord
+        // Pastikan items array ada untuk detail layer
         if (!insiden.items) {
             insiden.items = [];
         }
         
-        // Tambahkan items dari semua record yang memiliki layer data
-        allRecords.forEach(record => {
-            if (hasValue(record.layer) || hasValue(record.jenis_item_ipls) || 
-                hasValue(record.detail_layer) || hasValue(record.klasifikasi_layer) || 
-                hasValue(record.keterangan_layer)) {
-                // Cek apakah item sudah ada (berdasarkan kombinasi layer, jenis_item_ipls, detail_layer)
-                const existingItem = insiden.items.find(item => 
-                    item.layer === record.layer && 
-                    item.jenis_item_ipls === record.jenis_item_ipls &&
-                    item.detail_layer === record.detail_layer
-                );
-                
-                if (!existingItem) {
-                    insiden.items.push({
-                        layer: record.layer,
-                        jenis_item_ipls: record.jenis_item_ipls,
-                        detail_layer: record.detail_layer,
-                        klasifikasi_layer: record.klasifikasi_layer,
-                        keterangan_layer: record.keterangan_layer
-                    });
-                }
-            }
-        });
+        // Filter items untuk detail layer (hanya yang memiliki data layer)
+        insiden.items = insiden.items.filter(item => 
+            hasValue(item.layer) || hasValue(item.jenis_item_ipls) || 
+            hasValue(item.detail_layer) || hasValue(item.klasifikasi_layer) || 
+            hasValue(item.keterangan_layer)
+        );
         
         return insiden;
     }
