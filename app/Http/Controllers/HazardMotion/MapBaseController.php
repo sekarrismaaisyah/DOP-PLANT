@@ -1810,6 +1810,16 @@ class MapBaseController extends Controller
     public function getAreaKerjaData(Request $request)
     {
         try {
+            // Check user role for filtering
+            $user = Auth::user();
+            $isControlRoomPama = false;
+            $isAdminHazardMotion = false;
+            
+            if ($user) {
+                $isControlRoomPama = $user->hasRole('control_room_pama') || $user->hasRole('control-room-pama');
+                $isAdminHazardMotion = $user->hasRole('admin_hazard_motion') || $user->hasRole('admin-hazard-motion');
+            }
+            
             // Get total boundary area kerja from geojson_areas where type = 'area_kerja'
             $totalBoundaryAreaKerja = GeojsonArea::where('type', 'area_kerja')->count();
             
@@ -1900,7 +1910,7 @@ class MapBaseController extends Controller
             
             // Get all CCTV coverage data (for table display) with no_cctv from cctv_data_bmo2
             // Limit to 5000 records to prevent timeout, can be increased if needed
-            $cctvCoverageData = CctvCoverage::select(
+            $cctvCoverageQuery = CctvCoverage::select(
                 'cctv_coverage.id',
                 'cctv_coverage.id_cctv',
                 'cctv_coverage.coverage_lokasi',
@@ -1909,7 +1919,19 @@ class MapBaseController extends Controller
                 'cctv_coverage.kategori_area',
                 'cctv_data_bmo2.no_cctv'
             )
-            ->leftJoin('cctv_data_bmo2', 'cctv_coverage.id_cctv', '=', 'cctv_data_bmo2.id')
+            ->leftJoin('cctv_data_bmo2', 'cctv_coverage.id_cctv', '=', 'cctv_data_bmo2.id');
+            
+            // Apply filter based on user role
+            // If user is control_room_pama, filter by site BMO 2 and perusahaan PT Pamapersada Nusantara
+            if ($isControlRoomPama && !$isAdminHazardMotion) {
+                $cctvCoverageQuery->where(function($query) {
+                    $query->whereRaw('TRIM(cctv_data_bmo2.site) = ?', ['BMO 2'])
+                          ->whereRaw('TRIM(cctv_data_bmo2.perusahaan) = ?', ['PT Pamapersada Nusantara']);
+                });
+            }
+            // If user is admin_hazard_motion, show all data (no filter)
+            
+            $cctvCoverageData = $cctvCoverageQuery
             ->orderBy('cctv_coverage.id', 'desc')
             ->limit(5000)
             ->get()
