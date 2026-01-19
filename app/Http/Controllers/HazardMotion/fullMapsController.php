@@ -722,7 +722,7 @@ class fullMapsController extends Controller
                         ifNull(toString(menit), '') as menit,
                         ifNull(toString(nama_lokasi), '') as nama_lokasi,
                         ifNull(toString(nama_detail_lokasi), '') as nama_detail_lokasi
-                    FROM hse_automation.aaj_car_all_year_from_dav
+                    FROM aaj_car_all_year_from_dav
                     WHERE (
                         (tanggal_pembuatan IS NOT NULL 
                             AND toDate(tanggal_pembuatan) >= toDate('{$weekStartStr}') 
@@ -740,7 +740,7 @@ class fullMapsController extends Controller
                     LIMIT 12500
                 ";
                 
-                // Menggunakan queryClickHouseCustom dengan database 'hse_automation'
+                // Menggunakan queryClickHouseCustom dengan database 'hse_automation' dan koneksi ke 10.10.10.38
                 $resultsInspeksi = $this->queryClickHouseCustom($sqlInspeksi, 'hse_automation');
                 
                 if (!empty($resultsInspeksi) && is_array($resultsInspeksi)) {
@@ -1317,7 +1317,7 @@ class fullMapsController extends Controller
                         ifNull(toString(longitude), '') as longitude,
                         ifNull(toString(nama_site), '') as site,
                         ifNull(toString(lokasi_detail), '') as keterangan_lokasi
-                    FROM hse_automation.aaj_car_all_year_from_dav
+                    FROM aaj_car_all_year_from_dav
                     WHERE latitude IS NOT NULL 
                         AND longitude IS NOT NULL
                         AND latitude != ''
@@ -1331,7 +1331,7 @@ class fullMapsController extends Controller
                     LIMIT {$limit}
                 ";
                 
-                // Menggunakan queryClickHouseCustom dengan database 'hse_automation'
+                // Menggunakan queryClickHouseCustom dengan database 'hse_automation' dan koneksi ke 10.10.10.38
                 $resultsInspeksi = $this->queryClickHouseCustom($sqlInspeksi, 'hse_automation');
                 
                 if (!empty($resultsInspeksi) && is_array($resultsInspeksi)) {
@@ -3011,14 +3011,14 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 SELECT 
                     ifNull(toString(nama_lokasi), '') as nama_lokasi,
                     COUNT(*) AS jumlah_sap
-                FROM hse_automation.aaj_car_all_year_from_dav
+                FROM aaj_car_all_year_from_dav
                 WHERE nama_lokasi IS NOT NULL 
                     AND nama_lokasi != ''
                 GROUP BY nama_lokasi
                 ORDER BY jumlah_sap DESC
             ";
 
-            // Menggunakan queryClickHouseCustom dengan database 'hse_automation'
+            // Menggunakan queryClickHouseCustom dengan database 'hse_automation' dan koneksi ke 10.10.10.38
             $results = $this->queryClickHouseCustom($sql, 'hse_automation');
             
             $locations = [];
