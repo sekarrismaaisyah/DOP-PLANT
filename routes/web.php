@@ -73,7 +73,6 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/full-maps/api/intervensi-area-kerja', [fullMapsController::class, 'storeIntervensiAreaKerja'])->name('full-maps.api.intervensi-area-kerja');
     Route::get('/full-maps/api/cctv-for-area-kerja', [fullMapsController::class, 'getCctvForAreaKerja'])->name('full-maps.api.cctv-for-area-kerja');
     Route::get('/full-maps/api/daily-operation-plans', [fullMapsController::class, 'getDailyOperationPlansWithPolygons'])->name('full-maps.api.daily-operation-plans');
-    Route::get('/full-maps/api/daily-operation-plans-by-coordinates', [fullMapsController::class, 'getDailyOperationPlansByCoordinates'])->name('full-maps.api.daily-operation-plans-by-coordinates');
     Route::get('/full-maps/api/location-sap-counts', [fullMapsController::class, 'getLocationSapCounts'])->name('full-maps.api.location-sap-counts');
     Route::get('/full-maps/api/latest-cctv-alert', [fullMapsController::class, 'getLatestCctvAlert'])->name('full-maps.api.latest-cctv-alert');
     Route::get('/full-maps/api/cctv-alerts-with-units', [fullMapsController::class, 'getCctvAlertsWithUnits'])->name('full-maps.api.cctv-alerts-with-units');

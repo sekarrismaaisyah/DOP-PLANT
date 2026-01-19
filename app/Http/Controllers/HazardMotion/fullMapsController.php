@@ -2402,313 +2402,95 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 ]);
             }
 
-            // Menggunakan MySQL untuk mengambil data geometry dari tabel bep_vw_site_lokasi_detil_lokasi
+            // Menggunakan koordinat langsung dari tabel daily_operation_plans (latitude, longitude)
 
             $features = [];
             $processedCount = 0;
-            $foundCount = 0;
             $geometryCount = 0;
-            $processedLocations = []; // Track lokasi dan detail_lokasi yang sudah diproses untuk deduplikasi
 
             foreach ($plans as $plan) {
                 $lokasi = $plan->lokasi;
                 $detailLokasi = $plan->detail_lokasi;
+                $latitude = $plan->latitude;
+                $longitude = $plan->longitude;
 
-                // Skip only if both lokasi and detail_lokasi are empty
-                if (empty($lokasi) && empty($detailLokasi)) {
-                    Log::debug("Skipping plan {$plan->id}: both lokasi and detail_lokasi are empty");
+                // Skip if no coordinates
+                if (empty($latitude) || empty($longitude)) {
+                    Log::debug("Skipping plan {$plan->id}: missing latitude or longitude", [
+                        'latitude' => $latitude,
+                        'longitude' => $longitude
+                    ]);
                     continue;
                 }
 
                 $processedCount++;
 
-                // Buat key unik untuk lokasi dan detail_lokasi (case-insensitive, trimmed)
-                $locationKey = strtolower(trim($lokasi ?? '') . '|' . trim($detailLokasi ?? ''));
+                // Convert latitude and longitude to float (handle comma as decimal separator)
+                $lat = is_string($latitude) ? (float) str_replace(',', '.', $latitude) : (float) $latitude;
+                $lon = is_string($longitude) ? (float) str_replace(',', '.', $longitude) : (float) $longitude;
+
+                // Validate coordinates
+                if ($lat < -90 || $lat > 90 || $lon < -180 || $lon > 180) {
+                    Log::warning("Invalid coordinates for plan {$plan->id}", [
+                        'latitude' => $lat,
+                        'longitude' => $lon
+                    ]);
+                    continue;
+                }
+
+                $geometryCount++;
                 
-                // Skip jika lokasi dan detail_lokasi ini sudah diproses (deduplikasi)
-                if (isset($processedLocations[$locationKey])) {
-                    Log::debug("Skipping duplicate location for plan {$plan->id}", [
+                // Get CCTV data for this DOP
+                $cctvData = [];
+                if ($plan->cctvs && $plan->cctvs->count() > 0) {
+                    foreach ($plan->cctvs as $cctv) {
+                        if ($cctv->longitude && $cctv->latitude) {
+                            $cctvData[] = [
+                                'id' => $cctv->id,
+                                'no_cctv' => $cctv->no_cctv ?? null,
+                                'nama_cctv' => $cctv->nama_cctv ?? null,
+                                'longitude' => (float) $cctv->longitude,
+                                'latitude' => (float) $cctv->latitude,
+                                'lokasi_pemasangan' => $cctv->lokasi_pemasangan ?? null,
+                                'kondisi' => $cctv->kondisi ?? null,
+                                'status' => $cctv->status ?? null,
+                            ];
+                        }
+                    }
+                }
+                
+                // Create Point geometry from coordinates
+                $feature = [
+                    'type' => 'Feature',
+                    'geometry' => [
+                        'type' => 'Point',
+                        'coordinates' => [$lon, $lat] // GeoJSON format: [longitude, latitude]
+                    ],
+                    'properties' => [
+                        'id' => $plan->id,
+                        'site' => $plan->site ?? null,
+                        'pekerjaan' => $plan->pekerjaan ?? null,
+                        'unit_id' => $plan->unit_id ?? null,
                         'lokasi' => $lokasi,
                         'detail_lokasi' => $detailLokasi,
-                        'already_processed' => true
-                    ]);
-                    continue;
-                }
-
-                // Query MySQL - hanya match lokasi dan Detil_Lokasi
-                // Gunakan data_geometry2 untuk boundary (sudah dalam format FeatureCollection)
-                try {
-                    Log::debug("Querying MySQL for plan {$plan->id}", [
-                        'lokasi' => $lokasi,
-                        'detail_lokasi' => $detailLokasi
-                    ]);
-                    
-                    try {
-                        // Query MySQL untuk mendapatkan geometry dari tabel bep_vw_site_lokasi_detil_lokasi
-                        $mysqlResults = DB::table('bep_vw_site_lokasi_detil_lokasi')
-                            ->whereRaw('TRIM(COALESCE(lokasi, "")) = TRIM(?)', [$lokasi ?? ''])
-                            ->whereRaw('TRIM(COALESCE(Detil_Lokasi, "")) = TRIM(?)', [$detailLokasi ?? ''])
-                            ->select(
-                                'lokasi', 
-                                DB::raw('Detil_Lokasi as detail_lokasi'), 
-                                'data_geometry2', 
-                                'site'
-                            )
-                            ->first();
-                        
-                        Log::debug("MySQL query result for plan {$plan->id}", [
-                            'has_results' => !empty($mysqlResults),
-                            'lokasi' => $lokasi,
-                            'detail_lokasi' => $detailLokasi,
-                            'mysql_result_keys' => !empty($mysqlResults) ? array_keys((array)$mysqlResults) : []
-                        ]);
-                    } catch (\Illuminate\Database\QueryException $dbError) {
-                        Log::error("MySQL query exception for plan {$plan->id}: " . $dbError->getMessage(), [
-                            'lokasi' => $lokasi,
-                            'detail_lokasi' => $detailLokasi,
-                            'sql_error' => $dbError->getMessage(),
-                            'sql_code' => $dbError->getCode(),
-                            'sql_state' => $dbError->errorInfo ?? null
-                        ]);
-                        $mysqlResults = null;
-                    } catch (Exception $e) {
-                        Log::error("General exception for plan {$plan->id}: " . $e->getMessage(), [
-                            'lokasi' => $lokasi,
-                            'detail_lokasi' => $detailLokasi,
-                            'error' => $e->getMessage()
-                        ]);
-                        $mysqlResults = null;
-                    }
-                    
-                    if (!empty($mysqlResults)) {
-                        $foundCount++;
-                        // Convert object to array for compatibility
-                        // Handle both object and array access
-                        $polygonData = [
-                            'lokasi' => $mysqlResults->lokasi ?? null,
-                            'detail_lokasi' => $mysqlResults->detail_lokasi ?? $mysqlResults->Detil_Lokasi ?? null,
-                            'data_geometry2' => $mysqlResults->data_geometry2 ?? null,
-                            'site' => $mysqlResults->site ?? null,
-                        ];
-                        $geoJson = null;
-                        
-                        Log::debug("Found MySQL data for plan {$plan->id}", [
-                            'lokasi' => $lokasi,
-                            'detail_lokasi' => $detailLokasi,
-                            'has_data_geometry2' => !empty($polygonData['data_geometry2']),
-                            'data_geometry2_length' => !empty($polygonData['data_geometry2']) ? strlen($polygonData['data_geometry2']) : 0
-                        ]);
-                        
-                        // Gunakan data_geometry2 dari MySQL (sudah dalam format FeatureCollection)
-                        if (!empty($polygonData['data_geometry2'])) {
-                            $dataGeometry2 = $polygonData['data_geometry2'];
-                            $geoJson = null;
-                            
-                            Log::debug("Processing data_geometry2 for plan {$plan->id}", [
-                                'data_geometry2_type' => gettype($dataGeometry2),
-                                'data_geometry2_preview' => is_string($dataGeometry2) ? substr($dataGeometry2, 0, 200) : 'not_string'
-                            ]);
-                            
-                            // Parse sebagai JSON (data_geometry2 sudah dalam format FeatureCollection)
-                            $decoded = json_decode($dataGeometry2, true);
-                            if (json_last_error() === JSON_ERROR_NONE && $decoded && is_array($decoded)) {
-                                Log::debug("Successfully decoded JSON for plan {$plan->id}", [
-                                    'decoded_type' => $decoded['type'] ?? 'unknown',
-                                    'has_features' => isset($decoded['features']),
-                                    'features_count' => isset($decoded['features']) ? count($decoded['features']) : 0
-                                ]);
-                                
-                                // Cek jika ini FeatureCollection
-                                if (isset($decoded['type']) && $decoded['type'] === 'FeatureCollection' && isset($decoded['features'])) {
-                                    // Ambil geometry dari feature pertama
-                                    if (!empty($decoded['features']) && is_array($decoded['features'])) {
-                                        $firstFeature = $decoded['features'][0];
-                                        if (isset($firstFeature['geometry'])) {
-                                            $geoJson = $firstFeature['geometry'];
-                                            Log::debug("Extracted geometry from FeatureCollection for plan {$plan->id}", [
-                                                'geometry_type' => $geoJson['type'] ?? 'unknown',
-                                                'has_coordinates' => isset($geoJson['coordinates'])
-                                            ]);
-                                        } else {
-                                            Log::warning("FeatureCollection feature has no geometry for plan {$plan->id}");
-                                        }
-                                    } else {
-                                        Log::warning("FeatureCollection has no features for plan {$plan->id}");
-                                    }
-                                }
-                                // Cek jika ini langsung Geometry (Polygon, MultiPolygon, dll)
-                                elseif (isset($decoded['type']) && isset($decoded['coordinates'])) {
-                                    $geoJson = $decoded;
-                                    Log::debug("Using GeoJSON geometry from data_geometry2 for plan {$plan->id}", [
-                                        'type' => $decoded['type']
-                                    ]);
-                                }
-                                // Cek jika ini Feature
-                                elseif (isset($decoded['type']) && $decoded['type'] === 'Feature' && isset($decoded['geometry'])) {
-                                    $geoJson = $decoded['geometry'];
-                                    Log::debug("Extracted geometry from Feature for plan {$plan->id}", [
-                                        'geometry_type' => $geoJson['type'] ?? 'unknown'
-                                    ]);
-                                } else {
-                                    Log::warning("Unknown decoded structure for plan {$plan->id}", [
-                                        'decoded_type' => $decoded['type'] ?? 'no_type',
-                                        'decoded_keys' => array_keys($decoded)
-                                    ]);
-                                }
-                            } else {
-                                Log::warning("data_geometry2 is not valid JSON for plan {$plan->id}", [
-                                    'json_error' => json_last_error_msg()
-                                ]);
-                            }
-                        } else {
-                            Log::debug("No data_geometry2 for plan {$plan->id}");
-                        }
-
-                        // Jika ada geometry, validasi dan normalisasi sebelum membuat feature
-                        if (!empty($geoJson) && is_array($geoJson)) {
-                            // Pastikan geometry memiliki type dan coordinates yang valid
-                            if (isset($geoJson['type']) && isset($geoJson['coordinates'])) {
-                                $geometryType = $geoJson['type'];
-                                $coordinates = $geoJson['coordinates'];
-                                
-                                // Validasi dan normalisasi coordinates berdasarkan type
-                                $validCoordinates = $this->validateAndNormalizeCoordinates($coordinates, $geometryType);
-                                
-                                if ($validCoordinates !== null) {
-                                    $geometryCount++;
-                                    
-                                    // Get CCTV data for this DOP
-                                    $cctvData = [];
-                                    if ($plan->cctvs && $plan->cctvs->count() > 0) {
-                                        foreach ($plan->cctvs as $cctv) {
-                                            if ($cctv->longitude && $cctv->latitude) {
-                                                $cctvData[] = [
-                                                    'id' => $cctv->id,
-                                                    'no_cctv' => $cctv->no_cctv ?? null,
-                                                    'nama_cctv' => $cctv->nama_cctv ?? null,
-                                                    'longitude' => (float) $cctv->longitude,
-                                                    'latitude' => (float) $cctv->latitude,
-                                                    'lokasi_pemasangan' => $cctv->lokasi_pemasangan ?? null,
-                                                    'kondisi' => $cctv->kondisi ?? null,
-                                                    'status' => $cctv->status ?? null,
-                                                ];
-                                            }
-                                        }
-                                    }
-                                    
-                                    $feature = [
-                                        'type' => 'Feature',
-                                        'geometry' => [
-                                            'type' => $geometryType,
-                                            'coordinates' => $validCoordinates
-                                        ],
-                                        'properties' => [
-                                            'id' => $plan->id,
-                                            'site' => $plan->site ?? $polygonData['site'] ?? null,
-                                            'pekerjaan' => $plan->pekerjaan ?? null,
-                                            'unit_id' => $plan->unit_id ?? null,
-                                            'lokasi' => $lokasi,
-                                            'detail_lokasi' => $detailLokasi,
-                                            'potensi_resiko' => $plan->potensi_resiko ?? null,
-                                            'pengendalian_bahaya' => $plan->pengendalian_bahaya ?? null,
-                                            'catatan' => $plan->catatan ?? null,
-                                            'tanggal' => $plan->tanggal ? $plan->tanggal->format('Y-m-d') : null,
-                                            'foto_pekerjaan' => $plan->foto_pekerjaan ?? null,
-                                            'cctvs' => $cctvData, // Include CCTV data
-                                        ]
-                                    ];
-                                    $features[] = $feature;
-                                    $processedLocations[$locationKey] = true; // Mark location as processed
-                                    Log::info("Successfully added feature for plan {$plan->id}", [
-                                        'geometry_type' => $geometryType,
-                                        'location_key' => $locationKey
-                                    ]);
-                                } else {
-                                    // Fallback: gunakan coordinates asli jika validasi gagal (untuk debugging)
-                                    Log::warning("Coordinates validation failed for plan {$plan->id}, using original coordinates", [
-                                        'geometry_type' => $geometryType,
-                                        'coordinates_type' => gettype($coordinates),
-                                        'coordinates_structure' => is_array($coordinates) ? 'array with ' . count($coordinates) . ' items' : 'not_array'
-                                    ]);
-                                    
-                                    // Gunakan coordinates asli sebagai fallback
-                                    $geometryCount++;
-                                    
-                                    // Get CCTV data for this DOP
-                                    $cctvData = [];
-                                    if ($plan->cctvs && $plan->cctvs->count() > 0) {
-                                        foreach ($plan->cctvs as $cctv) {
-                                            if ($cctv->longitude && $cctv->latitude) {
-                                                $cctvData[] = [
-                                                    'id' => $cctv->id,
-                                                    'no_cctv' => $cctv->no_cctv ?? null,
-                                                    'nama_cctv' => $cctv->nama_cctv ?? null,
-                                                    'longitude' => (float) $cctv->longitude,
-                                                    'latitude' => (float) $cctv->latitude,
-                                                    'lokasi_pemasangan' => $cctv->lokasi_pemasangan ?? null,
-                                                    'kondisi' => $cctv->kondisi ?? null,
-                                                    'status' => $cctv->status ?? null,
-                                                ];
-                                            }
-                                        }
-                                    }
-                                    
-                                    $feature = [
-                                        'type' => 'Feature',
-                                        'geometry' => [
-                                            'type' => $geometryType,
-                                            'coordinates' => $coordinates
-                                        ],
-                                        'properties' => [
-                                            'id' => $plan->id,
-                                            'site' => $plan->site ?? $polygonData['site'] ?? null,
-                                            'pekerjaan' => $plan->pekerjaan ?? null,
-                                            'unit_id' => $plan->unit_id ?? null,
-                                            'lokasi' => $lokasi,
-                                            'detail_lokasi' => $detailLokasi,
-                                            'potensi_resiko' => $plan->potensi_resiko ?? null,
-                                            'pengendalian_bahaya' => $plan->pengendalian_bahaya ?? null,
-                                            'catatan' => $plan->catatan ?? null,
-                                            'tanggal' => $plan->tanggal ? $plan->tanggal->format('Y-m-d') : null,
-                                            'foto_pekerjaan' => $plan->foto_pekerjaan ?? null,
-                                            'cctvs' => $cctvData, // Include CCTV data
-                                        ]
-                                    ];
-                                    $features[] = $feature;
-                                    $processedLocations[$locationKey] = true; // Mark location as processed
-                                    Log::info("Added feature with original coordinates (validation bypassed) for plan {$plan->id}", [
-                                        'location_key' => $locationKey
-                                    ]);
-                                }
-                            } else {
-                                Log::warning("GeoJSON missing type or coordinates for plan {$plan->id}", [
-                                    'has_type' => isset($geoJson['type']),
-                                    'has_coordinates' => isset($geoJson['coordinates']),
-                                    'geoJson_keys' => array_keys($geoJson)
-                                ]);
-                            }
-                        } else {
-                            Log::debug("No valid geometry for plan {$plan->id}", [
-                                'has_data_geometry' => !empty($polygonData['data_geometry']),
-                                'geoJson_after_processing' => !empty($geoJson),
-                                'geoJson_type' => gettype($geoJson)
-                            ]);
-                        }
-                    } else {
-                        Log::warning("No MySQL results for plan {$plan->id}", [
-                            'lokasi' => $lokasi,
-                            'detail_lokasi' => $detailLokasi,
-                            'message' => 'Kombinasi lokasi dan detail_lokasi tidak ditemukan di MySQL'
-                        ]);
-                    }
-                } catch (Exception $mysqlError) {
-                    Log::error("MySQL query failed for plan {$plan->id}: " . $mysqlError->getMessage(), [
-                        'lokasi' => $lokasi,
-                        'detail_lokasi' => $detailLokasi,
-                        'error' => $mysqlError->getMessage()
-                    ]);
-                    continue;
-                }
+                        'potensi_resiko' => $plan->potensi_resiko ?? null,
+                        'pengendalian_bahaya' => $plan->pengendalian_bahaya ?? null,
+                        'catatan' => $plan->catatan ?? null,
+                        'tanggal' => $plan->tanggal ? $plan->tanggal->format('Y-m-d') : null,
+                        'foto_pekerjaan' => $plan->foto_pekerjaan ?? null,
+                        'latitude' => $lat,
+                        'longitude' => $lon,
+                        'cctvs' => $cctvData, // Include CCTV data
+                    ]
+                ];
+                $features[] = $feature;
+                
+                Log::info("Successfully added point feature for plan {$plan->id}", [
+                    'latitude' => $lat,
+                    'longitude' => $lon,
+                    'lokasi' => $lokasi,
+                    'detail_lokasi' => $detailLokasi
+                ]);
             }
 
             // Get all CCTV from dop_cctv table
@@ -2753,12 +2535,9 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             Log::info('getDailyOperationPlansWithPolygons - Summary', [
                 'total_plans' => $plans->count(),
                 'processed' => $processedCount,
-                'found_in_mysql' => $foundCount,
-                'with_geometry' => $geometryCount,
-                'unique_locations' => count($processedLocations),
+                'with_coordinates' => $geometryCount,
                 'features_returned' => count($features),
-                'plans_not_found' => $processedCount - $foundCount,
-                'plans_without_geometry' => $foundCount - $geometryCount,
+                'plans_without_coordinates' => $processedCount - $geometryCount,
                 'cctv_count' => count($cctvList)
             ]);
 
@@ -2772,11 +2551,9 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 'summary' => [
                     'total_plans' => $plans->count(),
                     'processed' => $processedCount,
-                    'found_in_mysql' => $foundCount,
-                    'with_geometry' => $geometryCount,
-                    'unique_locations' => count($processedLocations),
+                    'with_coordinates' => $geometryCount,
                     'features_returned' => count($features),
-                    'plans_not_found' => $processedCount - $foundCount,
+                    'plans_without_coordinates' => $processedCount - $geometryCount,
                     'cctv_count' => count($cctvList)
                 ]
             ]);
@@ -2790,119 +2567,6 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             return response()->json([
                 'success' => false,
                 'message' => 'Terjadi kesalahan saat mengambil data rencana kerja dari MySQL: ' . $e->getMessage(),
-                'error' => $e->getMessage(),
-                'data' => [
-                    'type' => 'FeatureCollection',
-                    'features' => []
-                ]
-            ], 500);
-        }
-    }
-
-    /**
-     * Get Daily Operation Plans by coordinates (as point markers)
-     */
-    public function getDailyOperationPlansByCoordinates(Request $request)
-    {
-        try {
-            Log::info('getDailyOperationPlansByCoordinates - Method called');
-            
-            // Get all daily operation plans with coordinates
-            $plans = DailyOperationPlan::whereNotNull('latitude')
-                ->whereNotNull('longitude')
-                ->where('latitude', '!=', '')
-                ->where('longitude', '!=', '')
-                ->get();
-            
-            Log::info('getDailyOperationPlansByCoordinates - Total plans found: ' . $plans->count());
-            
-            $features = [];
-            
-            foreach ($plans as $plan) {
-                try {
-                    // Convert coordinate format (comma to dot)
-                    $latitude = str_replace(',', '.', $plan->latitude);
-                    $longitude = str_replace(',', '.', $plan->longitude);
-                    
-                    // Validate coordinates
-                    $lat = floatval($latitude);
-                    $lng = floatval($longitude);
-                    
-                    if ($lat < -90 || $lat > 90 || $lng < -180 || $lng > 180) {
-                        Log::warning("Invalid coordinates for plan {$plan->id}: lat={$lat}, lng={$lng}");
-                        continue;
-                    }
-                    
-                    // Get CCTV data for this DOP
-                    $cctvData = [];
-                    if ($plan->cctvs && $plan->cctvs->count() > 0) {
-                        foreach ($plan->cctvs as $cctv) {
-                            if ($cctv->longitude && $cctv->latitude) {
-                                $cctvData[] = [
-                                    'id' => $cctv->id,
-                                    'no_cctv' => $cctv->no_cctv ?? null,
-                                    'nama_cctv' => $cctv->nama_cctv ?? null,
-                                    'longitude' => (float) $cctv->longitude,
-                                    'latitude' => (float) $cctv->latitude,
-                                    'lokasi_pemasangan' => $cctv->lokasi_pemasangan ?? null,
-                                    'kondisi' => $cctv->kondisi ?? null,
-                                    'status' => $cctv->status ?? null,
-                                ];
-                            }
-                        }
-                    }
-                    
-                    $feature = [
-                        'type' => 'Feature',
-                        'geometry' => [
-                            'type' => 'Point',
-                            'coordinates' => [$lng, $lat]
-                        ],
-                        'properties' => [
-                            'id' => $plan->id,
-                            'site' => $plan->site ?? null,
-                            'pekerjaan' => $plan->pekerjaan ?? null,
-                            'unit_id' => $plan->unit_id ?? null,
-                            'lokasi' => $plan->lokasi ?? null,
-                            'detail_lokasi' => $plan->detail_lokasi ?? null,
-                            'potensi_resiko' => $plan->potensi_resiko ?? null,
-                            'pengendalian_bahaya' => $plan->pengendalian_bahaya ?? null,
-                            'catatan' => $plan->catatan ?? null,
-                            'tanggal' => $plan->tanggal ? $plan->tanggal->format('Y-m-d') : null,
-                            'foto_pekerjaan' => $plan->foto_pekerjaan ?? null,
-                            'cctvs' => $cctvData,
-                        ]
-                    ];
-                    $features[] = $feature;
-                } catch (Exception $e) {
-                    Log::error("Error processing plan {$plan->id}: " . $e->getMessage());
-                    continue;
-                }
-            }
-            
-            Log::info('getDailyOperationPlansByCoordinates - Returning ' . count($features) . ' features');
-            
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'type' => 'FeatureCollection',
-                    'features' => $features
-                ],
-                'summary' => [
-                    'total_plans' => $plans->count(),
-                    'features_returned' => count($features)
-                ]
-            ]);
-            
-        } catch (Exception $e) {
-            Log::error('Error getting daily operation plans by coordinates: ' . $e->getMessage(), [
-                'exception' => $e->getTraceAsString(),
-                'file' => $e->getFile(),
-                'line' => $e->getLine()
-            ]);
-            return response()->json([
-                'success' => false,
-                'message' => 'Terjadi kesalahan saat mengambil data DOP: ' . $e->getMessage(),
                 'error' => $e->getMessage(),
                 'data' => [
                     'type' => 'FeatureCollection',

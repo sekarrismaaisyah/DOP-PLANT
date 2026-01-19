@@ -4094,7 +4094,6 @@
     let unitVehicleLayer = null;
     let userGpsLayer = null;
     let dailyOperationPlansLayer = null;
-    let dopMarkersLayer = null; // Layer untuk DOP markers berdasarkan koordinat
     let dopCctvLinesLayer = null; // Layer untuk garis dari DOP ke CCTV
     let dopCctvMarkersLayer = null; // Layer untuk CCTV markers dari dop_cctv
     let popupOverlay = null;
@@ -5622,13 +5621,6 @@
                         dailyOperationPlansLayer.setVisible(true);
                         loadDailyOperationPlans();
                         console.log('Showing daily operation plans layer (from MySQL)');
-                    }
-                    
-                    // Load and show DOP markers (from coordinates)
-                    if (dopMarkersLayer) {
-                        dopMarkersLayer.setVisible(true);
-                        loadDopMarkers();
-                        console.log('Showing DOP markers layer (from coordinates)');
                         
                         // Update notification panel if it's open
                         setTimeout(() => {
@@ -5643,21 +5635,15 @@
                     if (dailyOperationPlansLayer) {
                         dailyOperationPlansLayer.setVisible(false);
                         console.log('Hiding daily operation plans layer');
+                        
+                        // Update notification panel if it's open (switch back to risk matrix)
+                        setTimeout(() => {
+                            const notificationPanel = document.getElementById('gmNotificationPanel');
+                            if (notificationPanel && notificationPanel.classList.contains('active')) {
+                                renderNotificationPanel();
+                            }
+                        }, 300);
                     }
-                    
-                    // Hide DOP markers
-                    if (dopMarkersLayer) {
-                        dopMarkersLayer.setVisible(false);
-                        console.log('Hiding DOP markers layer');
-                    }
-                    
-                    // Update notification panel if it's open (switch back to risk matrix)
-                    setTimeout(() => {
-                        const notificationPanel = document.getElementById('gmNotificationPanel');
-                        if (notificationPanel && notificationPanel.classList.contains('active')) {
-                            renderNotificationPanel();
-                        }
-                    }, 300);
                     
                     // Show back all area kerja layers from JS files
                     if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
@@ -6210,200 +6196,145 @@ source: new ol.source.Vector(),
             const props = feature.getProperties();
             const geometry = feature.getGeometry();
             
+            // Skip if not a Point geometry
+            if (!geometry || geometry.getType() !== 'Point') {
+                return [];
+            }
+            
+            const point = geometry.getCoordinates();
+            
             // Style based on potensi_resiko or use default color
-            let fillColor = 'rgba(59, 130, 246, 0.3)'; // Blue default
-            let strokeColor = '#3b82f6';
+            let fillColor = '#3b82f6'; // Blue default
+            let strokeColor = '#ffffff';
             let strokeWidth = 2;
+            let markerRadius = 10;
             
             // Different colors based on potensi_resiko if available
             const potensiResiko = props.potensi_resiko || '';
             if (potensiResiko.toLowerCase().includes('tinggi') || potensiResiko.toLowerCase().includes('high')) {
-                fillColor = 'rgba(239, 68, 68, 0.4)'; // Red for high risk
-                strokeColor = '#ef4444';
+                fillColor = '#ef4444'; // Red for high risk
+                strokeColor = '#ffffff';
                 strokeWidth = 3;
+                markerRadius = 12;
             } else if (potensiResiko.toLowerCase().includes('sedang') || potensiResiko.toLowerCase().includes('medium')) {
-                fillColor = 'rgba(245, 158, 11, 0.4)'; // Orange for medium risk
-                strokeColor = '#f59e0b';
+                fillColor = '#f59e0b'; // Orange for medium risk
+                strokeColor = '#ffffff';
                 strokeWidth = 2.5;
+                markerRadius = 11;
             } else if (potensiResiko.toLowerCase().includes('rendah') || potensiResiko.toLowerCase().includes('low')) {
-                fillColor = 'rgba(16, 185, 129, 0.3)'; // Green for low risk
-                strokeColor = '#10b981';
+                fillColor = '#10b981'; // Green for low risk
+                strokeColor = '#ffffff';
+                strokeWidth = 2;
+                markerRadius = 10;
             }
             
-            const styles = [
-                // Polygon fill and stroke
-                new ol.style.Style({
-                    fill: new ol.style.Fill({
-                        color: fillColor
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: strokeColor,
-                        width: strokeWidth
-                    })
-                })
-            ];
+            const styles = [];
             
-            // Get point inside polygon for label placement
-            if (geometry && geometry.getType() !== 'Point') {
-                const pointInPolygon = getPointInPolygon(geometry);
+            // Calculate blink opacity untuk efek ripple
+            let blinkTime = 0;
+            if (pulseAnimationStartTime !== null) {
+                blinkTime = getPulseAnimationTime();
+            }
+            
+            // Check if feature has card icon stored
+            const cardIcon = feature.get('cardIcon');
+            
+            if (cardIcon) {
+                // Use the card icon
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: cardIcon,
+                        scale: 0.5, // Scale down for map
+                        anchor: [0.5, 1], // Anchor at bottom center (arrow tip)
+                        anchorXUnits: 'fraction',
+                        anchorYUnits: 'fraction',
+                        opacity: 1
+                    }),
+                    geometry: geometry,
+                    zIndex: 1000
+                }));
                 
-                if (pointInPolygon) {
-                    // Check if feature has card icon stored
-                    const cardIcon = feature.get('cardIcon');
-                    
-                    if (cardIcon) {
-                        // Calculate blink opacity untuk efek ripple yang lebih menarik
-                        // Multiple ripple circles dengan delay berbeda untuk efek yang lebih dramatis
-                        let blinkTime = 0;
-                        if (pulseAnimationStartTime !== null) {
-                            blinkTime = getPulseAnimationTime();
-                        }
-                        
-                        // Use the card icon
-                        styles.push(new ol.style.Style({
-                            image: new ol.style.Icon({
-                                src: cardIcon,
-                                scale: 0.5, // Scale down for map
-                                anchor: [0.5, 1], // Anchor at bottom center (arrow tip)
-                                anchorXUnits: 'fraction',
-                                anchorYUnits: 'fraction',
-                                opacity: 1
-                            }),
-                            geometry: new ol.geom.Point(pointInPolygon),
-                            zIndex: 1000
-                        }));
-                        
-                        // Add multiple red blinking ripple circles for dramatic effect
-                        // Ripple 1: Outer circle (largest, expanding)
-                        const cycle1 = 2000; // 2 second cycle
-                        const progress1 = ((blinkTime % cycle1) / cycle1);
-                        const ripple1Radius = 40 + (progress1 * 40); // Expand from 40 to 80
-                        const ripple1Opacity = Math.max(0, 0.8 * (1 - progress1)); // Fade out
-                        const ripple1Width = 4;
-                        
-                        styles.push(new ol.style.Style({
-                            image: new ol.style.Circle({
-                                radius: ripple1Radius,
-                                fill: new ol.style.Fill({
-                                    color: 'rgba(234, 67, 53, 0)'
-                                }),
-                                stroke: new ol.style.Stroke({
-                                    color: `rgba(234, 67, 53, ${ripple1Opacity})`,
-                                    width: ripple1Width
-                                })
-                            }),
-                            geometry: new ol.geom.Point(pointInPolygon),
-                            zIndex: 998
-                        }));
-                        
-                        // Ripple 2: Middle circle (delayed by 0.4s)
-                        const progress2 = (((blinkTime + 800) % cycle1) / cycle1);
-                        const ripple2Radius = 40 + (progress2 * 40);
-                        const ripple2Opacity = Math.max(0, 0.6 * (1 - progress2));
-                        const ripple2Width = 3;
-                        
-                        styles.push(new ol.style.Style({
-                            image: new ol.style.Circle({
-                                radius: ripple2Radius,
-                                fill: new ol.style.Fill({
-                                    color: 'rgba(234, 67, 53, 0)'
-                                }),
-                                stroke: new ol.style.Stroke({
-                                    color: `rgba(234, 67, 53, ${ripple2Opacity})`,
-                                    width: ripple2Width
-                                })
-                            }),
-                            geometry: new ol.geom.Point(pointInPolygon),
-                            zIndex: 997
-                        }));
-                        
-                        // Ripple 3: Inner circle (delayed by 0.8s)
-                        const progress3 = (((blinkTime + 1600) % cycle1) / cycle1);
-                        const ripple3Radius = 40 + (progress3 * 40);
-                        const ripple3Opacity = Math.max(0, 0.5 * (1 - progress3));
-                        const ripple3Width = 2;
-                        
-                        styles.push(new ol.style.Style({
-                            image: new ol.style.Circle({
-                                radius: ripple3Radius,
-                                fill: new ol.style.Fill({
-                                    color: 'rgba(234, 67, 53, 0)'
-                                }),
-                                stroke: new ol.style.Stroke({
-                                    color: `rgba(234, 67, 53, ${ripple3Opacity})`,
-                                    width: ripple3Width
-                                })
-                            }),
-                            geometry: new ol.geom.Point(pointInPolygon),
-                            zIndex: 996
-                        }));
-                        
-                        // Pulsing dot at center (always visible, pulsing)
-                        const dotCycle = 1000; // 1 second for faster pulse
-                        const dotProgress = ((blinkTime % dotCycle) / dotCycle);
-                        const dotRadius = 8 + (Math.sin(dotProgress * Math.PI * 2) * 3); // Pulse from 5 to 11
-                        const dotOpacity = 0.7 + (Math.sin(dotProgress * Math.PI * 2) * 0.3); // Pulse opacity
-                        
-                        styles.push(new ol.style.Style({
-                            image: new ol.style.Circle({
-                                radius: dotRadius,
-                                fill: new ol.style.Fill({
-                                    color: `rgba(234, 67, 53, ${dotOpacity})`
-                                }),
-                                stroke: new ol.style.Stroke({
-                                    color: `rgba(234, 67, 53, ${Math.min(1, dotOpacity + 0.2)})`,
-                                    width: 2
-                                })
-                            }),
-                            geometry: new ol.geom.Point(pointInPolygon),
-                            zIndex: 999
-                        }));
-                        
-                        // Glow effect: Large soft circle for dramatic glow
-                        const glowCycle = 1500; // 1.5 second cycle
-                        const glowProgress = ((blinkTime % glowCycle) / glowCycle);
-                        const glowRadius = 60 + (Math.sin(glowProgress * Math.PI * 2) * 20); // Pulse from 40 to 80
-                        const glowOpacity = 0.3 + (Math.sin(glowProgress * Math.PI * 2) * 0.2); // Pulse opacity 0.1 to 0.5
-                        
-                        styles.push(new ol.style.Style({
-                            image: new ol.style.Circle({
-                                radius: glowRadius,
-                                fill: new ol.style.Fill({
-                                    color: `rgba(234, 67, 53, ${glowOpacity})`
-                                })
-                            }),
-                            geometry: new ol.geom.Point(pointInPolygon),
-                            zIndex: 995
-                        }));
-                        
-                        // Additional outer glow ring (larger, more transparent)
-                        const outerGlowProgress = ((blinkTime % glowCycle) / glowCycle);
-                        const outerGlowRadius = 80 + (Math.sin(outerGlowProgress * Math.PI * 2) * 30); // Pulse from 50 to 110
-                        const outerGlowOpacity = 0.15 + (Math.sin(outerGlowProgress * Math.PI * 2) * 0.1); // Pulse opacity 0.05 to 0.25
-                        
-                        styles.push(new ol.style.Style({
-                            image: new ol.style.Circle({
-                                radius: outerGlowRadius,
-                                fill: new ol.style.Fill({
-                                    color: `rgba(234, 67, 53, ${outerGlowOpacity})`
-                                })
-                            }),
-                            geometry: new ol.geom.Point(pointInPolygon),
-                            zIndex: 994
-                        }));
-                    } else {
-                        // Use placeholder while icon is being created
-                        styles.push(new ol.style.Style({
-                            image: new ol.style.Circle({
-                                radius: 8,
-                                fill: new ol.style.Fill({ color: '#ffffff' }),
-                                stroke: new ol.style.Stroke({ color: strokeColor, width: 2 })
-                            }),
-                            geometry: new ol.geom.Point(pointInPolygon),
-                            zIndex: 1000
-                        }));
-                    }
-                }
+                // Add ripple circles with color based on risk
+                const cycle1 = 2000; // 2 second cycle
+                
+                // Ripple 1: Outer circle (largest, expanding)
+                const progress1 = ((blinkTime % cycle1) / cycle1);
+                const ripple1Radius = 30 + (progress1 * 30); // Expand from 30 to 60
+                const ripple1Opacity = Math.max(0, 0.6 * (1 - progress1)); // Fade out
+                const ripple1Width = 3;
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: ripple1Radius,
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0, 0, 0, 0)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: `${fillColor}${Math.floor(ripple1Opacity * 255).toString(16).padStart(2, '0')}`,
+                            width: ripple1Width
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 998
+                }));
+                
+                // Ripple 2: Middle circle (delayed by 0.4s)
+                const progress2 = (((blinkTime + 800) % cycle1) / cycle1);
+                const ripple2Radius = 30 + (progress2 * 30);
+                const ripple2Opacity = Math.max(0, 0.4 * (1 - progress2));
+                const ripple2Width = 2;
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: ripple2Radius,
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0, 0, 0, 0)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: `${fillColor}${Math.floor(ripple2Opacity * 255).toString(16).padStart(2, '0')}`,
+                            width: ripple2Width
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 997
+                }));
+                
+                // Pulsing dot at center (always visible, pulsing)
+                const dotCycle = 1000; // 1 second for faster pulse
+                const dotProgress = ((blinkTime % dotCycle) / dotCycle);
+                const dotRadius = 6 + (Math.sin(dotProgress * Math.PI * 2) * 2); // Pulse from 4 to 8
+                const dotOpacity = 0.8 + (Math.sin(dotProgress * Math.PI * 2) * 0.2); // Pulse opacity
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: dotRadius,
+                        fill: new ol.style.Fill({
+                            color: fillColor
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: strokeColor,
+                            width: 2
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 999
+                }));
+            } else {
+                // Use colored circle marker while icon is being created
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: markerRadius,
+                        fill: new ol.style.Fill({
+                            color: fillColor
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: strokeColor,
+                            width: strokeWidth
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 1000
+                }));
             }
             
             return styles;
@@ -6496,57 +6427,6 @@ source: new ol.source.Vector(),
     });
     map.addLayer(dopCctvMarkersLayer);
 
-    // Create layer for DOP markers (point markers based on coordinates)
-    dopMarkersLayer = new ol.layer.Vector({
-        source: new ol.source.Vector(),
-        style: function(feature, resolution) {
-            const props = feature.getProperties();
-            
-            // Style based on potensi_resiko or use default color
-            let iconColor = '#3b82f6'; // Blue default
-            let iconSize = 1.0;
-            
-            // Different colors based on potensi_resiko if available
-            const potensiResiko = props.potensi_resiko || '';
-            if (potensiResiko.toLowerCase().includes('tinggi') || potensiResiko.toLowerCase().includes('high')) {
-                iconColor = '#ef4444'; // Red for high risk
-                iconSize = 1.2;
-            } else if (potensiResiko.toLowerCase().includes('sedang') || potensiResiko.toLowerCase().includes('medium')) {
-                iconColor = '#f59e0b'; // Orange for medium risk
-                iconSize = 1.1;
-            } else if (potensiResiko.toLowerCase().includes('rendah') || potensiResiko.toLowerCase().includes('low')) {
-                iconColor = '#10b981'; // Green for low risk
-            }
-            
-            // Create icon style for DOP marker
-            return new ol.style.Style({
-                image: new ol.style.Circle({
-                    radius: 8 * iconSize,
-                    fill: new ol.style.Fill({
-                        color: iconColor
-                    }),
-                    stroke: new ol.style.Stroke({
-                        color: '#ffffff',
-                        width: 2
-                    })
-                }),
-                text: new ol.style.Text({
-                    text: 'DOP',
-                    font: 'bold 10px Arial',
-                    fill: new ol.style.Fill({
-                        color: '#ffffff'
-                    }),
-                    offsetY: 0,
-                    textAlign: 'center'
-                })
-            });
-        },
-        name: 'DOP Markers',
-        zIndex: 1001,
-        visible: false
-    });
-    map.addLayer(dopMarkersLayer);
-
     // Function to load daily operation plans from API
     function loadDailyOperationPlans() {
         console.log('Loading daily operation plans...');
@@ -6605,7 +6485,14 @@ source: new ol.source.Vector(),
                         if (!Array.isArray(coords)) return 'not_array';
                         if (coords.length === 0) return 'empty';
                         
-                        if (type === 'Polygon') {
+                        if (type === 'Point') {
+                            // Point harus: [lon, lat]
+                            if (coords.length >= 2 && typeof coords[0] === 'number' && typeof coords[1] === 'number') {
+                                return `Point: [${coords[0]}, ${coords[1]}]`;
+                            } else {
+                                return `Point: invalid structure - expected [lon, lat]`;
+                            }
+                        } else if (type === 'Polygon') {
                             // Polygon harus: [[[lon, lat], [lon, lat], ...], ...]
                             if (coords.length > 0 && Array.isArray(coords[0])) {
                                 if (coords[0].length > 0 && Array.isArray(coords[0][0])) {
@@ -6682,8 +6569,8 @@ source: new ol.source.Vector(),
                                         coordinates_preview: JSON.stringify(coords).substring(0, 200)
                                     });
                                     
-                                    // Jika struktur tidak valid, coba perbaiki
-                                    if (structureInfo.includes('unknown') || structureInfo.includes('invalid')) {
+                                    // Jika struktur tidak valid, coba perbaiki (hanya untuk Polygon, Point tidak perlu perbaikan)
+                                    if ((structureInfo.includes('unknown') || structureInfo.includes('invalid')) && feature.geometry.type !== 'Point') {
                                         console.warn(`Feature ${index} has invalid coordinates structure, attempting to fix...`);
                                         
                                         // Coba perbaiki struktur untuk Polygon
@@ -6857,95 +6744,6 @@ source: new ol.source.Vector(),
                     timer: 5000,
                     showConfirmButton: true
                 });
-            });
-    }
-    
-    // Function to load DOP markers from API (based on coordinates)
-    function loadDopMarkers() {
-        console.log('Loading DOP markers from coordinates...');
-        const source = dopMarkersLayer.getSource();
-        
-        // Clear existing features first to reload
-        source.clear();
-        console.log('Cleared existing DOP markers from layer');
-        
-        fetch('{{ url("full-maps/api/daily-operation-plans-by-coordinates") }}')
-            .then(response => {
-                console.log('DOP markers API response status:', response.status);
-                return response.json();
-            })
-            .then(data => {
-                console.log('DOP markers API response:', data);
-                
-                // Log error if any
-                if (!data.success) {
-                    console.error('DOP markers API error:', {
-                        success: data.success,
-                        message: data.message,
-                        error: data.error,
-                        full_response: data
-                    });
-                    
-                    // Show error alert to user
-                    Swal.fire({
-                        icon: 'error',
-                        title: 'Error Loading DOP Markers',
-                        html: `<strong>Error:</strong> ${data.message || 'Unknown error'}<br><br><small>${data.error || ''}</small>`,
-                        timer: 5000,
-                        showConfirmButton: true
-                    });
-                    return;
-                }
-                
-                // Log summary if available
-                if (data.summary) {
-                    console.log('DOP Markers API Summary:', {
-                        total_plans: data.summary.total_plans,
-                        features_returned: data.summary.features_returned
-                    });
-                }
-                
-                if (data.success && data.data && data.data.features) {
-                    const geoJsonData = data.data;
-                    console.log(`Received ${geoJsonData.features.length} DOP marker features from API`);
-                    
-                    // Parse GeoJSON features
-                    let features = [];
-                    try {
-                        features = new ol.format.GeoJSON().readFeatures(geoJsonData, {
-                            dataProjection: 'EPSG:4326',
-                            featureProjection: 'EPSG:3857'
-                        });
-                    } catch (parseError) {
-                        console.error('Error parsing DOP markers GeoJSON:', parseError);
-                        console.error('GeoJSON data:', geoJsonData);
-                        return;
-                    }
-                    
-                    console.log(`Parsed ${features.length} DOP marker features from GeoJSON`);
-                    
-                    // Add features to layer
-                    if (features.length > 0) {
-                        try {
-                            // Set feature type for click handling
-                            features.forEach(function(feature) {
-                                feature.set('type', 'dop_marker');
-                            });
-                            
-                            source.addFeatures(features);
-                            console.log(`Added ${features.length} DOP markers to map`);
-                        } catch (addError) {
-                            console.error('Error adding DOP markers to layer:', addError);
-                        }
-                    } else {
-                        console.warn('No DOP marker features received');
-                    }
-                } else {
-                    console.warn('No DOP marker data received');
-                }
-            })
-            .catch(error => {
-                console.error('Error loading DOP markers:', error);
             });
     }
 
@@ -9947,20 +9745,8 @@ source: new ol.source.Vector(),
                 return;
             }
             
-            // Check if it's a DOP marker (point marker based on coordinates)
-            const props = feature.getProperties();
-            if (feature.get('type') === 'dop_marker' || (props.id && props.pekerjaan && props.latitude && props.longitude)) {
-                // Clear area kerja highlight when clicking DOP marker
-                if (highlightedAreaKerjaLayer) {
-                    map.removeLayer(highlightedAreaKerjaLayer);
-                    highlightedAreaKerjaLayer = null;
-                }
-                // This is a DOP marker feature
-                showDailyOperationPlanPopup(evt.coordinate, props);
-                return;
-            }
-            
             // Check if it's a Daily Operation Plan polygon
+            const props = feature.getProperties();
             if (props.id && props.pekerjaan && props.lokasi && props.detail_lokasi) {
                 // Clear area kerja highlight when clicking daily operation plan
                 if (highlightedAreaKerjaLayer) {
