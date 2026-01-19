@@ -4598,38 +4598,67 @@
         const isHighRiskArea = checkIfHighRiskArea(lokasiName, idLokasi);
         const hasSapInHighRiskArea = isHighRiskArea && hasSapReportFromPja;
         
+        // Log untuk debugging
+        console.log(`[Risk Calculation] "${lokasiName}" (ID: ${idLokasi}):`);
+        console.log(`  - SAP Report: ${hasSapReportFromPja}`);
+        console.log(`  - CCTV Online: ${hasOnlineCctv}`);
+        console.log(`  - Is High Risk Area: ${isHighRiskArea}`);
+        console.log(`  - SAP in High Risk: ${hasSapInHighRiskArea}`);
+        
         // Determine risk level based on risk matrix
         // HIGH (Red):
         // - Semua kondisi TIDAK MEMENUHI
         // - Hanya "Terdapat Laporan SAP dari SO PJA CCTV" MEMENUHI
         // - Hanya "Area Highrisk ada Laporan SAP (Critical)" MEMENUHI
         if (!hasSapReportFromPja && !hasOnlineCctv && !hasSapInHighRiskArea) {
+            console.log(`  → Result: HIGH (Semua kondisi TIDAK MEMENUHI)`);
             return 'HIGH'; // Semua TIDAK MEMENUHI
         }
         if (hasSapReportFromPja && !hasOnlineCctv && !hasSapInHighRiskArea) {
+            console.log(`  → Result: HIGH (Hanya SAP MEMENUHI)`);
             return 'HIGH'; // Hanya SAP MEMENUHI
         }
         if (!hasSapReportFromPja && !hasOnlineCctv && hasSapInHighRiskArea) {
+            console.log(`  → Result: HIGH (Hanya High Risk SAP MEMENUHI)`);
             return 'HIGH'; // Hanya High Risk SAP MEMENUHI
         }
         
-        // MEDIUM (Yellow):
+        // MEDIUM (Orange):
         // - "Terdapat Laporan SAP dari SO PJA CCTV" TIDAK MEMENUHI, tapi "Area Highrisk ada Laporan SAP (Critical)" dan "CCTV Kondisi Online (Critical)" MEMENUHI
         // - "Terdapat Laporan SAP dari SO PJA CCTV" MEMENUHI, "Area Highrisk ada Laporan SAP (Critical)" TIDAK MEMENUHI, tapi "CCTV Kondisi Online (Critical)" MEMENUHI
         if (!hasSapReportFromPja && hasSapInHighRiskArea && hasOnlineCctv) {
+            console.log(`  → Result: MEDIUM (SAP TIDAK, High Risk SAP + CCTV MEMENUHI)`);
             return 'MEDIUM';
         }
         if (hasSapReportFromPja && !hasSapInHighRiskArea && hasOnlineCctv) {
+            console.log(`  → Result: MEDIUM (SAP + CCTV MEMENUHI, High Risk TIDAK)`);
             return 'MEDIUM';
         }
         
         // NORMAL (Green):
         // - Semua kondisi MEMENUHI
-        if (hasSapReportFromPja && hasOnlineCctv && (hasSapInHighRiskArea || !isHighRiskArea)) {
+        // - SAP + CCTV MEMENUHI (tidak peduli high risk atau tidak)
+        if (hasSapReportFromPja && hasOnlineCctv) {
+            console.log(`  → Result: NORMAL (SAP + CCTV MEMENUHI)`);
             return 'NORMAL';
         }
         
+        // Additional cases untuk NORMAL:
+        // - Jika area bukan high risk dan ada CCTV online (meskipun tidak ada SAP)
+        if (!isHighRiskArea && hasOnlineCctv) {
+            console.log(`  → Result: NORMAL (Bukan High Risk + CCTV Online)`);
+            return 'NORMAL';
+        }
+        
+        // Additional cases untuk MEDIUM:
+        // - Jika ada SAP tapi tidak ada CCTV dan bukan high risk
+        if (hasSapReportFromPja && !hasOnlineCctv && !isHighRiskArea) {
+            console.log(`  → Result: MEDIUM (SAP MEMENUHI, CCTV TIDAK, Bukan High Risk)`);
+            return 'MEDIUM';
+        }
+        
         // Default to MEDIUM if conditions don't match exactly
+        console.log(`  → Result: MEDIUM (Default)`);
         return 'MEDIUM';
     }
 
@@ -4700,38 +4729,66 @@
             return;
         }
 
-        console.log(`Calculating risk levels for ${features.length} features...`);
+        // Wait for SAP data to be loaded before calculating risk levels
+        // Retry up to 20 times (10 seconds total) if data is not ready
+        let retryCount = 0;
+        const maxRetries = 20;
+        while ((typeof sapDataForSidebar === 'undefined' || !sapDataForSidebar || sapDataForSidebar.length === 0) && retryCount < maxRetries) {
+            console.log(`[Risk Matrix] Waiting for SAP data to load... (attempt ${retryCount + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 500));
+            retryCount++;
+        }
+
+        if (typeof sapDataForSidebar === 'undefined' || !sapDataForSidebar || sapDataForSidebar.length === 0) {
+            console.warn('[Risk Matrix] SAP data not available after waiting, proceeding with calculation anyway');
+            console.warn('[Risk Matrix] This may result in all features showing HIGH risk if no SAP data is available');
+        } else {
+            console.log(`[Risk Matrix] ✓ SAP data loaded: ${sapDataForSidebar.length} items available`);
+        }
+
+        console.log(`[Risk Matrix] Calculating risk levels for ${features.length} features...`);
         
         // Calculate risk level for each feature
         // Process in batches to avoid overwhelming the browser
-        const batchSize = 10;
+        const batchSize = 5; // Reduced batch size for better async handling
+        const riskLevelCounts = { HIGH: 0, MEDIUM: 0, NORMAL: 0 };
+        
         for (let i = 0; i < features.length; i += batchSize) {
             const batch = features.slice(i, i + batchSize);
             
             // Process batch in parallel
             await Promise.all(batch.map(async (feature) => {
                 try {
-                    const riskLevel = await calculateRiskForAreaKerja(feature);
-                    // Set risk level as property on feature
-                    feature.set('riskLevel', riskLevel);
-                    
                     const props = feature.getProperties();
                     const lokasiName = props.lokasi || props.nama_lokasi || props.name || '';
-                    console.log(`[Risk Matrix] Feature "${lokasiName}": ${riskLevel}`);
+                    const idLokasi = props.id_lokasi || props.id || '';
+                    
+                    // Calculate risk level
+                    const riskLevel = await calculateRiskForAreaKerja(feature);
+                    
+                    // Set risk level as property on feature
+                    feature.set('riskLevel', riskLevel);
+                    riskLevelCounts[riskLevel] = (riskLevelCounts[riskLevel] || 0) + 1;
+                    
+                    console.log(`[Risk Matrix] Feature "${lokasiName}" (ID: ${idLokasi}): ${riskLevel}`);
                 } catch (error) {
-                    console.error(`Error calculating risk level for feature:`, error);
+                    console.error(`[Risk Matrix] Error calculating risk level for feature:`, error);
                     // Set default MEDIUM if calculation fails
                     feature.set('riskLevel', 'MEDIUM');
+                    riskLevelCounts.MEDIUM = (riskLevelCounts.MEDIUM || 0) + 1;
                 }
             }));
             
             // Small delay between batches to avoid blocking
             if (i + batchSize < features.length) {
-                await new Promise(resolve => setTimeout(resolve, 50));
+                await new Promise(resolve => setTimeout(resolve, 100));
             }
         }
         
-        console.log(`✓ Finished calculating risk levels for ${features.length} features`);
+        console.log(`[Risk Matrix] ✓ Finished calculating risk levels for ${features.length} features:`);
+        console.log(`[Risk Matrix]   - HIGH (Red): ${riskLevelCounts.HIGH || 0}`);
+        console.log(`[Risk Matrix]   - MEDIUM (Orange): ${riskLevelCounts.MEDIUM || 0}`);
+        console.log(`[Risk Matrix]   - NORMAL (Green): ${riskLevelCounts.NORMAL || 0}`);
     }
 
     // Get risk-based style for area kerja
@@ -4907,11 +4964,16 @@
         // Cek apakah feature sudah punya cached risk level
         // Risk level di-set saat popup dibuka dan risk matrix summary dihitung
         const cachedRiskLevel = feature.get('riskLevel');
+        const props = feature.getProperties();
+        const lokasiName = props.lokasi || props.nama_lokasi || props.name || '';
         
         let fillColor, strokeColor, pulseSpeed;
         
         if (cachedRiskLevel) {
-            console.log(`[getRiskBasedAreaKerjaStyle] Using cached risk level: ${cachedRiskLevel} for feature: ${feature.get('lokasi') || feature.getId()}`);
+            // Log hanya untuk beberapa features pertama untuk menghindari spam console
+            if (Math.random() < 0.01) { // Log hanya 1% dari features
+                console.log(`[getRiskBasedAreaKerjaStyle] Using cached risk level: ${cachedRiskLevel} for feature: ${lokasiName}`);
+            }
             switch(cachedRiskLevel) {
                 case 'HIGH':
                     fillColor = 'rgba(217, 45, 32, 0.22)'; // Red #d92d20 dengan opacity 0.22
@@ -4924,17 +4986,30 @@
                     pulseSpeed = 'fast'; // Pulse cepat untuk MEDIUM risk
                     break;
                 case 'NORMAL':
-                default:
                     fillColor = 'rgba(18, 183, 106, 0.18)'; // Green #12b76a dengan opacity 0.18
                     strokeColor = '#12b76a'; // Green sesuai contoh
                     pulseSpeed = null; // Tidak ada pulse untuk NORMAL
                     break;
+                default:
+                    // Jika risk level tidak dikenal, gunakan MEDIUM
+                    fillColor = 'rgba(247, 144, 9, 0.22)'; // Orange (default) dengan opacity 0.22
+                    strokeColor = '#f79009';
+                    pulseSpeed = 'fast';
+                    console.warn(`[getRiskBasedAreaKerjaStyle] Unknown risk level: ${cachedRiskLevel} for feature: ${lokasiName}, using MEDIUM`);
             }
         } else {
+            // Jika belum dihitung, coba hitung sekarang (synchronous fallback)
+            // Tapi ini tidak ideal karena calculateRiskForAreaKerja adalah async
             // Default MEDIUM (orange) jika belum dihitung
             fillColor = 'rgba(247, 144, 9, 0.22)'; // Orange (default) dengan opacity 0.22
             strokeColor = '#f79009';
             pulseSpeed = 'fast';
+            
+            // Log warning hanya sekali untuk menghindari spam
+            if (!window.riskLevelWarningLogged) {
+                console.warn(`[getRiskBasedAreaKerjaStyle] Risk level not calculated yet for some features. Make sure calculateRiskLevelsForAllFeatures() is called.`);
+                window.riskLevelWarningLogged = true;
+            }
         }
         
         // Apply pulse effect untuk HIGH dan MEDIUM risk - Infinite loop blink
@@ -9151,14 +9226,17 @@ source: new ol.source.Vector(),
                         console.log('✓ Area Kerja BMO2 PAMA extent:', extent);
                         
                         // Calculate risk levels for all features to display matrix colors automatically
+                        // Wait a bit longer to ensure SAP data is loaded
                         if (featureCount > 0) {
-                            calculateRiskLevelsForAllFeatures(areaKerjaBmo2PamaLayer).then(() => {
-                                console.log('✓ Risk levels calculated for Area Kerja BMO2 PAMA layer (fallback)');
-                                areaKerjaBmo2PamaLayer.getSource().changed();
-                                map.render();
-                            }).catch(error => {
-                                console.error('Error calculating risk levels for Area Kerja BMO2 PAMA (fallback):', error);
-                            });
+                            setTimeout(() => {
+                                calculateRiskLevelsForAllFeatures(areaKerjaBmo2PamaLayer).then(() => {
+                                    console.log('✓ Risk levels calculated for Area Kerja BMO2 PAMA layer (fallback)');
+                                    areaKerjaBmo2PamaLayer.getSource().changed();
+                                    map.render();
+                                }).catch(error => {
+                                    console.error('Error calculating risk levels for Area Kerja BMO2 PAMA (fallback):', error);
+                                });
+                            }, 2000); // Wait 2 seconds for SAP data to load
                         }
                     } else {
                         console.error('✗ Failed to create Area Kerja BMO2 PAMA layer');
@@ -9262,13 +9340,16 @@ source: new ol.source.Vector(),
             console.log('✓ Area Kerja BMO2 PAMA layer set to visible with risk matrix style');
             
             // Calculate risk levels for all features to display matrix colors automatically
-            calculateRiskLevelsForAllFeatures(areaKerjaBmo2PamaLayer).then(() => {
-                console.log('✓ Risk levels calculated for Area Kerja BMO2 PAMA layer');
-                areaKerjaBmo2PamaLayer.getSource().changed();
-                map.render();
-            }).catch(error => {
-                console.error('Error calculating risk levels for Area Kerja BMO2 PAMA:', error);
-            });
+            // Wait for SAP data to be loaded
+            setTimeout(() => {
+                calculateRiskLevelsForAllFeatures(areaKerjaBmo2PamaLayer).then(() => {
+                    console.log('✓ Risk levels calculated for Area Kerja BMO2 PAMA layer');
+                    areaKerjaBmo2PamaLayer.getSource().changed();
+                    map.render();
+                }).catch(error => {
+                    console.error('Error calculating risk levels for Area Kerja BMO2 PAMA:', error);
+                });
+            }, 2000); // Wait 2 seconds for SAP data to load
         }
         if (areaCctvBmo2PamaLayer) {
             areaCctvBmo2PamaLayer.setVisible(true);
@@ -9297,13 +9378,16 @@ source: new ol.source.Vector(),
                     console.log('✓ Area Kerja layer from JS set to visible with risk matrix style:', layer.get('name') || 'Unknown');
                     
                     // Calculate risk levels for all features to display matrix colors automatically
-                    calculateRiskLevelsForAllFeatures(layer).then(() => {
-                        console.log(`✓ Risk levels calculated for layer: ${layer.get('name') || 'Unknown'}`);
-                        layer.getSource().changed();
-                        map.render();
-                    }).catch(error => {
-                        console.error(`Error calculating risk levels for layer ${layer.get('name') || 'Unknown'}:`, error);
-                    });
+                    // Wait for SAP data to be loaded
+                    setTimeout(() => {
+                        calculateRiskLevelsForAllFeatures(layer).then(() => {
+                            console.log(`✓ Risk levels calculated for layer: ${layer.get('name') || 'Unknown'}`);
+                            layer.getSource().changed();
+                            map.render();
+                        }).catch(error => {
+                            console.error(`Error calculating risk levels for layer ${layer.get('name') || 'Unknown'}:`, error);
+                        });
+                    }, 2000); // Wait 2 seconds for SAP data to load
                 }
             });
         }
@@ -9465,14 +9549,17 @@ source: new ol.source.Vector(),
                             areaKerjaLayers.push(layer);
                             
                             // Calculate risk levels for all features to display matrix colors automatically
+                            // Wait for SAP data to be loaded
                             if (featureCount > 0) {
-                                calculateRiskLevelsForAllFeatures(layer).then(() => {
-                                    console.log(`✓ Risk levels calculated for ${config.layerName}`);
-                                    layer.getSource().changed();
-                                    map.render();
-                                }).catch(error => {
-                                    console.error(`Error calculating risk levels for ${config.layerName}:`, error);
-                                });
+                                setTimeout(() => {
+                                    calculateRiskLevelsForAllFeatures(layer).then(() => {
+                                        console.log(`✓ Risk levels calculated for ${config.layerName}`);
+                                        layer.getSource().changed();
+                                        map.render();
+                                    }).catch(error => {
+                                        console.error(`Error calculating risk levels for ${config.layerName}:`, error);
+                                    });
+                                }, 2000); // Wait 2 seconds for SAP data to load
                             }
                             
                             // Log layer details
@@ -9519,15 +9606,18 @@ source: new ol.source.Vector(),
                 });
                 
                 // Calculate risk levels for all features to display matrix colors automatically
+                // Wait for SAP data to be loaded
                 const featureCount = areaKerjaBmo2PamaLayer.getSource().getFeatures().length;
                 if (featureCount > 0) {
-                    calculateRiskLevelsForAllFeatures(areaKerjaBmo2PamaLayer).then(() => {
-                        console.log('✓ Risk levels calculated for Area Kerja BMO2 PAMA layer');
-                        areaKerjaBmo2PamaLayer.getSource().changed();
-                        map.render();
-                    }).catch(error => {
-                        console.error('Error calculating risk levels for Area Kerja BMO2 PAMA:', error);
-                    });
+                    setTimeout(() => {
+                        calculateRiskLevelsForAllFeatures(areaKerjaBmo2PamaLayer).then(() => {
+                            console.log('✓ Risk levels calculated for Area Kerja BMO2 PAMA layer');
+                            areaKerjaBmo2PamaLayer.getSource().changed();
+                            map.render();
+                        }).catch(error => {
+                            console.error('Error calculating risk levels for Area Kerja BMO2 PAMA:', error);
+                        });
+                    }, 2000); // Wait 2 seconds for SAP data to load
                 }
             }
             
@@ -9547,14 +9637,17 @@ source: new ol.source.Vector(),
                     console.log(`✓ ${layerName} layer set to visible (${featureCount} features)`);
                     
                     // Calculate risk levels for all features to display matrix colors automatically
+                    // Wait for SAP data to be loaded
                     if (featureCount > 0) {
-                        calculateRiskLevelsForAllFeatures(layer).then(() => {
-                            console.log(`✓ Risk levels calculated for ${layerName}`);
-                            layer.getSource().changed();
-                            map.render();
-                        }).catch(error => {
-                            console.error(`Error calculating risk levels for ${layerName}:`, error);
-                        });
+                        setTimeout(() => {
+                            calculateRiskLevelsForAllFeatures(layer).then(() => {
+                                console.log(`✓ Risk levels calculated for ${layerName}`);
+                                layer.getSource().changed();
+                                map.render();
+                            }).catch(error => {
+                                console.error(`Error calculating risk levels for ${layerName}:`, error);
+                            });
+                        }, 2000); // Wait 2 seconds for SAP data to load
                     }
                 }
             });
