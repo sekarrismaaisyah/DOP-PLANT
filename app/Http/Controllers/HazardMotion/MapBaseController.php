@@ -2865,12 +2865,10 @@ class MapBaseController extends Controller
      */
     /**
      * Get SAP (Safety Action Plan) data from ClickHouse
-     * Mengambil data dari 4 tabel terpisah:
-     * - nitip.tabel_inspeksi_hazard (INSPEKSI, HAZARD)
-     * - nitip.tabel_observasi (OBSERVASI)
-     * - nitip.aaj_vw_car_oak_register_ytd_only (OAK - Table 1 & Table 2)
-     * - nitip.tabel_coaching (COACHING)
+     * Mengambil data dari tabel INSPEKSI_HAZARD:
+     * - hse_automation.aaj_car_all_year_from_dav (INSPEKSI_HAZARD)
      * Filter per week: Senin sampai Senin (1 week)
+     * Menggunakan koneksi langsung ke ClickHouse 10.10.10.38
      */
     private function getSapDataFromClickHouse($weekStart = null)
     {
@@ -2879,15 +2877,6 @@ class MapBaseController extends Controller
         ]);
         
         try {
-            $clickhouse = new ClickHouseService();
-            Log::info('getSapDataFromClickHouse - ClickHouseService instantiated');
-            
-            if (!$clickhouse->isConnected()) {
-                Log::warning('ClickHouse is not connected. Returning empty SAP data.');
-                return [];
-            }
-            
-            Log::info('getSapDataFromClickHouse - ClickHouse is connected');
 
             // Jika weekStart tidak diberikan, gunakan Senin minggu ini
             if (!$weekStart) {
@@ -2908,9 +2897,6 @@ class MapBaseController extends Controller
             
             $sapData = [];
             $resultsInspeksi = [];
-            $resultsObservasi = [];
-            $resultsOak = [];
-            $resultsCoaching = [];
             
             // 1. Query aaj_car_all_year_from_dav using direct ClickHouse connection to 10.10.10.38
             try {
@@ -3148,7 +3134,7 @@ class MapBaseController extends Controller
                                 $row['keterangan lokasi'] = $row['keterangan_lokasi'];
                             }
                             
-                            // Send directly to formatSapRow without additional mapping (consistent with OBSERVASI and OAK)
+                            // Send directly to formatSapRow without additional mapping
                             $formattedRow = $this->formatSapRow($row, 'INSPEKSI_HAZARD');
                             
                             // Log first row for debugging
@@ -3183,288 +3169,6 @@ class MapBaseController extends Controller
                 Log::error('Error querying aaj_car_all_year_from_dav: ' . $e->getMessage());
             }
             
-            // 2. Query tabel_observasi
-            try {
-                $sqlObservasi = "
-                    SELECT 
-                        toString(TaskNumber) as task_number,
-                        toString(`aktivitas pekerjaan diobservasi`) as aktivitas_pekerjaan,
-                        toString(lokasi) as lokasi,
-                        toString(`detail lokasi`) as detail_lokasi,
-                        toString(keterangan) as keterangan,
-                        toString(`tanggal pelaporan`) as tanggal_pelaporan,
-                        toString(`perusahaan pelapor`) as perusahaan_pelapor,
-                        toString(pelapor) as pelapor,
-                        toString(`sid pelapor`) as sid_pelapor,
-                        toString(`jabatan fungsional pelapor`) as jabatan_fungsional_pelapor,
-                        toString(`departemen pelapor`) as departemen_pelapor,
-                        toString(pic) as pic,
-                        toString(`sid pic`) as sid_pic,
-                        toString(`jabatan fungsional pic`) as jabatan_fungsional_pic,
-                        toString(`perusahaan pic`) as perusahaan_pic,
-                        toString(`departemen pic`) as departemen_pic,
-                        toString(`url foto`) as url_foto,
-                        toString(`tools pengawasan`) as tools_pengawasan,
-                        toString(`catatan OBS`) as catatan_tindakan,
-                        toString(pelapor) as nama_pelapor,
-                        toString(`perusahaan pelapor`) as nama_perusahaan_pelapor_karyawan,
-                        toString(`jabatan fungsional pelapor`) as jabatan_fungsional_karyawan_pelapor
-                    FROM nitip.tabel_observasi
-                    WHERE toDate(`tanggal pelaporan`) >= toDate('{$weekStartStr}')
-                        AND toDate(`tanggal pelaporan`) < toDate('{$weekEndStr}')
-                    ORDER BY toDateTime(`tanggal pelaporan`) DESC
-                    LIMIT 12500
-                ";
-                
-                $resultsObservasi = $clickhouse->query($sqlObservasi);
-                if (!empty($resultsObservasi) && is_array($resultsObservasi)) {
-                    $observasiCount = 0;
-                    foreach ($resultsObservasi as $row) {
-                        $formattedRow = $this->formatSapRow($row, 'OBSERVASI');
-                        
-                        // Log first row for debugging
-                        if ($observasiCount === 0 && !empty($formattedRow)) {
-                            Log::info('OBSERVASI - First formatted row sample', [
-                                'task_number' => $formattedRow['task_number'] ?? null,
-                                'tanggal_pelaporan' => $formattedRow['tanggal_pelaporan'] ?? null,
-                                'detected_at' => $formattedRow['detected_at'] ?? null,
-                                'source_type' => $formattedRow['source_type'] ?? null,
-                                'has_location' => !empty($formattedRow['location']['lat']) && !empty($formattedRow['location']['lng']),
-                            ]);
-                        }
-                        
-                        $sapData[] = $formattedRow;
-                        $observasiCount++;
-                    }
-                }
-                Log::info('Observasi: ' . count($resultsObservasi ?? []) . ' records');
-            } catch (Exception $e) {
-                Log::error('Error querying tabel_observasi: ' . $e->getMessage());
-            }
-            
-            // 3. Query aaj_vw_car_oak_register_ytd_only - TEMPORARY: Tanpa filter apapun untuk debugging
-            try {
-                Log::info('OAK Query - Starting query WITHOUT ANY FILTERS for week: ' . $weekStartStr . ' to ' . $weekEndStr);
-                Log::info('OAK Query - ClickHouse connected: ' . ($clickhouse->isConnected() ? 'YES' : 'NO'));
-                
-                // Query sederhana tanpa filter apapun - ambil semua data OAK
-                $sqlOak = "
-                    SELECT 
-                        toString(id) as task_number,
-                        toString(activity) as aktivitas_pekerjaan,
-                        toString(sub_activity) as sub_aktivitas_pekerjaan_oak,
-                        toString(tool_type) as tool_pekerjaan_oak,
-                        toString(location) as lokasi,
-                        toString(detail_location) as detail_lokasi,
-                        toString(conclusion) as hasil_oak,
-                        toString(tools_observasi) as tools_pengawasan,
-                        toString(submit_date) as tanggal_pelaporan,
-                        toString(location_description) as keterangan_lokasi,
-                        toString(shift) as shift_oak,
-                        toString(company_submit_by) as perusahaan_pelapor,
-                        toString(submit_by) as pelapor,
-                        toString(code_sib) as kode_sib_oak,
-                        toString(jabatan_fungsional_submiter) as jabatan_fungsional_pelapor,
-                        toString(url_photo) as url_foto,
-                        toString(material) as material_oak,
-                        toString(conveyance_type) as jenis_alat_angkut_oak,
-                        toString(lifting_equipment) as jenis_alat_angkut_oak_2,
-                        toString(kode_sid_pelapor) as sid_pelapor,
-                        toString(kode_sid_pelapor) as kode_sid_pelapor,
-                        toString(kode_sid_team) as kode_sid_team,
-                        toString(nama_team) as pic,
-                        toString(kode_sid_team) as sid_pic,
-                        toString(company_submit_by) as perusahaan_pic,
-                        toString(jabatan_fungsional_team) as jabatan_fungsional_pic,
-                        toString(tipe) as tipe,
-                        ifNull(toString(latitude), '') as latitude,
-                        ifNull(toString(longitude), '') as longitude,
-                        ifNull(toString(site), '') as site
-                    FROM nitip.aaj_vw_car_oak_register_ytd_only
-                    WHERE submit_date IS NOT NULL
-                        AND toDate(submit_date) >= toDate('{$weekStartStr}')
-                        AND toDate(submit_date) < toDate('{$weekEndStr}')
-                    ORDER BY toDateTime(submit_date) DESC
-                    LIMIT 12500
-                ";
-                
-                Log::info('OAK Query - Executing query WITHOUT FILTERS...');
-                $startTime = microtime(true);
-                $resultsOak = $clickhouse->query($sqlOak);
-                $queryTime = round((microtime(true) - $startTime) * 1000, 2);
-                
-                Log::info('OAK Query - Result: ' . count($resultsOak ?? []) . ' records in ' . $queryTime . 'ms');
-                
-                // Process results
-                $recordsWithPic = 0;
-                $recordsWithoutPic = 0;
-                $recordsAdded = 0;
-                $recordsWithCoordinates = 0;
-                $totalRecords = count($resultsOak ?? []);
-                
-                if (!empty($resultsOak) && is_array($resultsOak)) {
-                    $sapDataCountBefore = count($sapData);
-                    
-                    foreach ($resultsOak as $row) {
-                        // Count records with PIC
-                        if (!empty($row['pic'])) {
-                            $recordsWithPic++;
-                        } else {
-                            $recordsWithoutPic++;
-                        }
-                        
-                        // Count records with coordinates
-                        if (!empty($row['latitude']) && !empty($row['longitude'])) {
-                            $recordsWithCoordinates++;
-                        }
-                        
-                        // Map hasil_oak to keterangan for formatSapRow compatibility
-                        if (isset($row['hasil_oak']) && !isset($row['keterangan'])) {
-                            $row['keterangan'] = $row['hasil_oak'];
-                        }
-                        
-                        $formattedRow = $this->formatSapRow($row, 'OAK');
-                        
-                        // Log first row for debugging
-                        if ($recordsAdded === 0 && !empty($formattedRow)) {
-                            Log::info('OAK - First formatted row sample', [
-                                'task_number' => $formattedRow['task_number'] ?? null,
-                                'tanggal_pelaporan' => $formattedRow['tanggal_pelaporan'] ?? null,
-                                'detected_at' => $formattedRow['detected_at'] ?? null,
-                                'source_type' => $formattedRow['source_type'] ?? null,
-                                'has_location' => !empty($formattedRow['location']['lat']) && !empty($formattedRow['location']['lng']),
-                            ]);
-                        }
-                        
-                        $sapData[] = $formattedRow;
-                        $recordsAdded++;
-                    }
-                    
-                    Log::info('OAK Query - Processed: ' . $recordsAdded . ' records added to SAP');
-                }
-                
-                // Detailed logging
-                Log::info('OAK Query - Results Summary (NO FILTERS)', [
-                    'week_start' => $weekStartStr,
-                    'week_end' => $weekEndStr,
-                    'total_records' => $totalRecords,
-                    'records_with_pic' => $recordsWithPic,
-                    'records_without_pic' => $recordsWithoutPic,
-                    'records_with_coordinates' => $recordsWithCoordinates,
-                    'records_added_to_sap' => $recordsAdded ?? 0,
-                    'query_time_ms' => $queryTime
-                ]);
-                
-                // Log sample data if available
-                if (!empty($resultsOak) && count($resultsOak) > 0) {
-                    // Count by tipe
-                    $tipeDistribution = [];
-                    foreach ($resultsOak as $row) {
-                        $tipe = $row['tipe'] ?? 'NULL';
-                        if (!isset($tipeDistribution[$tipe])) {
-                            $tipeDistribution[$tipe] = 0;
-                        }
-                        $tipeDistribution[$tipe]++;
-                    }
-                    
-                    Log::info('OAK Query - Tipe Distribution (without filters): ' . json_encode($tipeDistribution));
-                    
-                    $sampleRecord = $resultsOak[0];
-                    Log::info('OAK Query - Sample Record (First Record)', [
-                        'task_number' => $sampleRecord['task_number'] ?? 'N/A',
-                        'aktivitas_pekerjaan' => $sampleRecord['aktivitas_pekerjaan'] ?? 'N/A',
-                        'lokasi' => $sampleRecord['lokasi'] ?? 'N/A',
-                        'tanggal_pelaporan' => $sampleRecord['tanggal_pelaporan'] ?? 'N/A',
-                        'pelapor' => $sampleRecord['pelapor'] ?? 'N/A',
-                        'perusahaan_pelapor' => $sampleRecord['perusahaan_pelapor'] ?? 'N/A',
-                        'tipe' => $sampleRecord['tipe'] ?? 'N/A',
-                        'kode_sid_pelapor' => $sampleRecord['kode_sid_pelapor'] ?? 'N/A',
-                        'kode_sid_team' => $sampleRecord['kode_sid_team'] ?? 'N/A',
-                        'has_pic' => !empty($sampleRecord['pic']),
-                        'has_coordinates' => !empty($sampleRecord['latitude']) && !empty($sampleRecord['longitude'])
-                    ]);
-                    
-                    // Log first 5 records for debugging
-                    $firstFive = array_slice($resultsOak, 0, 5);
-                    Log::info('OAK Query - First 5 Records Summary', [
-                        'records' => array_map(function($r) {
-                            return [
-                                'task_number' => $r['task_number'] ?? 'N/A',
-                                'tipe' => $r['tipe'] ?? 'N/A',
-                                'tanggal' => $r['tanggal_pelaporan'] ?? 'N/A'
-                            ];
-                        }, $firstFive)
-                    ]);
-                } else {
-                    Log::warning('OAK Query - No records found (query without filters returned empty)');
-                }
-                
-            } catch (Exception $e) {
-                Log::error('OAK Query - Error occurred', [
-                    'error_message' => $e->getMessage(),
-                    'error_trace' => $e->getTraceAsString(),
-                    'week_start' => $weekStartStr,
-                    'week_end' => $weekEndStr
-                ]);
-                if (isset($sqlOak)) {
-                    Log::error('OAK Query - SQL Query: ' . $sqlOak);
-                } else {
-                    Log::error('OAK Query - SQL Query not defined (error occurred before query construction)');
-                }
-            }
-            
-            // 4. Query coaching from nitip.bep_vw_database_coaching
-            try {
-                $sqlCoaching = "
-                    SELECT 
-                        toString(_Task) as task_number,
-                        toString(topik_coaching) as aktivitas_pekerjaan,
-                        toString(lokasi) as lokasi,
-                        toString(detil_lokasi) as detail_lokasi,
-                        toString(keterangan_lokasi) as keterangan,
-                        toString(Tanggal_Pembuatan) as tanggal_pelaporan,
-                        toString(perusahaan_coachee) as perusahaan_pelapor,
-                        toString(nama_coachee) as pelapor,
-                        toString(nama_coachee) as nama_pelapor,
-                        toString(kode_sid_coachee) as sid_pelapor,
-                        toString(jabatan_fungsional_coachee) as jabatan_fungsional_pelapor,
-                        toString(departement_coachee) as departemen_pelapor,
-                        toString(nama_coach) as pic,
-                        toString(kode_sid_pelapor) as sid_pic,
-                        toString(jabatan_fungsional_coach) as jabatan_fungsional_pic,
-                        toString(perusahaan_coach) as perusahaan_pic,
-                        toString(departement_coach) as departemen_pic,
-                        toString(foto) as url_foto,
-                        toString(tools_pengamatan) as tools_pengawasan,
-                        toString(catatan_coach) as catatan_tindakan,
-                        toString(id_coachee) as nik_pelapor,
-                        toString(divisi_coachee) as divisi_pelapor,
-                        toString(departement_coachee) as departement_pelapor_karyawan,
-                        toString(perusahaan_coachee) as nama_perusahaan_pelapor_karyawan,
-                        toString(jabatan_fungsional_coachee) as jabatan_fungsional_karyawan_pelapor,
-                        toString(jabatan_struktural_coachee) as jabatan_struktural_pelapor,
-                        ifNull(toString(latitude), '') as latitude,
-                        ifNull(toString(longitude), '') as longitude,
-                        ifNull(toString(site), '') as site
-                    FROM nitip.bep_vw_database_coaching
-                    WHERE Tanggal_Pembuatan IS NOT NULL
-                        AND toDate(Tanggal_Pembuatan) >= toDate('{$weekStartStr}')
-                        AND toDate(Tanggal_Pembuatan) < toDate('{$weekEndStr}')
-                    ORDER BY toDateTime(Tanggal_Pembuatan) DESC
-                    LIMIT 12500
-                ";
-                
-                $resultsCoaching = $clickhouse->query($sqlCoaching);
-                if (!empty($resultsCoaching) && is_array($resultsCoaching)) {
-                    foreach ($resultsCoaching as $row) {
-                        $sapData[] = $this->formatSapRow($row, 'COACHING');
-                    }
-                }
-                Log::info('Coaching: ' . count($resultsCoaching ?? []) . ' records');
-            } catch (Exception $e) {
-                Log::error('Error querying bep_vw_database_coaching: ' . $e->getMessage());
-            }
-            
             // Sort by tanggal_pelaporan descending
             usort($sapData, function($a, $b) {
                 $dateA = $a['tanggal_pelaporan'] ?? '';
@@ -3474,10 +3178,7 @@ class MapBaseController extends Controller
             
             // Count by source type
             $countByType = [
-                'INSPEKSI_HAZARD' => 0,
-                'OBSERVASI' => 0,
-                'OAK' => 0,
-                'COACHING' => 0
+                'INSPEKSI_HAZARD' => 0
             ];
             
             foreach ($sapData as $sap) {
@@ -3502,13 +3203,10 @@ class MapBaseController extends Controller
                 }
             }
             
-            Log::info('SAP data fetched: ' . count($sapData) . ' items from 4 tables', [
+            Log::info('SAP data fetched: ' . count($sapData) . ' items from INSPEKSI_HAZARD table', [
                 'week_start' => $weekStartStr,
                 'week_end' => $weekEndStr,
                 'inspeksi_hazard' => count($resultsInspeksi ?? []),
-                'observasi' => count($resultsObservasi ?? []),
-                'oak' => count($resultsOak ?? []),
-                'coaching' => count($resultsCoaching ?? []),
                 'count_by_type' => $countByType,
                 'final_count_by_type' => $finalCountByType,
                 'final_count_with_date' => $finalCountWithDate,
@@ -3567,7 +3265,7 @@ class MapBaseController extends Controller
             'task_number' => $taskNumber,
             'type' => $jenisLaporan,
             'jenis_laporan' => $jenisLaporan,
-            'source_type' => $sourceType, // INSPEKSI_HAZARD, OBSERVASI, OAK, COACHING
+            'source_type' => $sourceType, // INSPEKSI_HAZARD
             'aktivitas_pekerjaan' => $cleanValue($row['aktivitas_pekerjaan'] ?? null),
             'lokasi' => $cleanValue($row['lokasi'] ?? null),
             'detail_lokasi' => $cleanValue($row['detail_lokasi'] ?? null),
