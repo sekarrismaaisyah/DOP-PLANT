@@ -5766,6 +5766,14 @@
                     layerTextSpan.textContent = layerText;
                 }
             }
+            
+            // Auto-apply layer untuk matrix warna yang sudah checked
+            // Tunggu sebentar untuk memastikan semua layer sudah dimuat
+            setTimeout(() => {
+                const layerName = checkedLabel?.dataset?.layer || checkedLayer;
+                console.log('Auto-applying checked layer on page load:', layerName);
+                applyLayer(layerName, true);
+            }, 500);
         }
 
         console.log('Layer filter initialized with new design');
@@ -9172,7 +9180,11 @@ source: new ol.source.Vector(),
         // Ensure all area kerja layers are visible by default
         if (areaKerjaBmo2PamaLayer) {
             areaKerjaBmo2PamaLayer.setVisible(true);
-            console.log('✓ Area Kerja BMO2 PAMA layer set to visible');
+            // Pastikan matrix warna langsung diterapkan
+            areaKerjaBmo2PamaLayer.setStyle(function(feature) {
+                return getRiskBasedAreaKerjaStyle(feature);
+            });
+            console.log('✓ Area Kerja BMO2 PAMA layer set to visible with risk matrix style');
         }
         if (areaCctvBmo2PamaLayer) {
             areaCctvBmo2PamaLayer.setVisible(true);
@@ -9188,7 +9200,27 @@ source: new ol.source.Vector(),
             intersectionBmo2PamaLayer.setVisible(true);
         }
         
-        console.log('Finished loading BMO2 PAMA layers - All area kerja layers are visible');
+        // Pastikan semua area kerja layers dari JS files juga langsung visible dengan matrix warna
+        if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
+            window.areaKerjaLayers.forEach(layer => {
+                if (layer) {
+                    layer.setVisible(true);
+                    layer.setOpacity(1.0);
+                    // Pastikan matrix warna langsung diterapkan
+                    layer.setStyle(function(feature) {
+                        return getRiskBasedAreaKerjaStyle(feature);
+                    });
+                    console.log('✓ Area Kerja layer from JS set to visible with risk matrix style:', layer.get('name') || 'Unknown');
+                }
+            });
+        }
+        
+        // Force refresh untuk menerapkan style baru
+        setTimeout(() => {
+            map.render();
+        }, 100);
+        
+        console.log('Finished loading BMO2 PAMA layers - All area kerja layers are visible with risk matrix colors');
 
         if (areaCctvBmo2PamaLayer && intersectionBmo2PamaLayer) {
             try {
