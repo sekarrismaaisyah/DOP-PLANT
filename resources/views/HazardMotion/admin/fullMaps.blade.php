@@ -14297,19 +14297,71 @@ source: new ol.source.Vector(),
             return `${h}:${m}`;
         };
 
-        let rows = '';
+        // Fungsi untuk mengecek apakah nilai tidak null/undefined/kosong
+        const hasValue = (val) => {
+            return val !== null && val !== undefined && val !== '' && val !== '\\N';
+        };
+
+        // Tentukan kolom mana yang memiliki data
+        let columns = [];
         if (insiden.items && insiden.items.length) {
-            rows = insiden.items.map(function(item, index) {
-                return `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${escapeHtml(item.layer || '-')}</td>
-                        <td>${escapeHtml(item.jenis_item_ipls || '-')}</td>
-                        <td>${escapeHtml(item.detail_layer || '-')}</td>
-                        <td>${escapeHtml(item.klasifikasi_layer || '-')}</td>
-                        <td>${escapeHtml(item.keterangan_layer || '-')}</td>
-                    </tr>
-                `;
+            const columnChecks = {
+                'Layer': (item) => hasValue(item.layer),
+                'Jenis Item IPLS': (item) => hasValue(item.jenis_item_ipls),
+                'Detail Layer': (item) => hasValue(item.detail_layer),
+                'Klasifikasi': (item) => hasValue(item.klasifikasi_layer),
+                'Keterangan': (item) => hasValue(item.keterangan_layer)
+            };
+
+            // Cek setiap kolom apakah ada setidaknya satu item yang memiliki nilai
+            Object.keys(columnChecks).forEach(colName => {
+                const hasData = insiden.items.some(item => columnChecks[colName](item));
+                if (hasData) {
+                    columns.push(colName);
+                }
+            });
+        }
+
+        // Filter items yang memiliki setidaknya satu field yang terisi
+        let filteredItems = [];
+        if (insiden.items && insiden.items.length) {
+            filteredItems = insiden.items.filter(item => {
+                return hasValue(item.layer) || 
+                       hasValue(item.jenis_item_ipls) || 
+                       hasValue(item.detail_layer) || 
+                       hasValue(item.klasifikasi_layer) || 
+                       hasValue(item.keterangan_layer);
+            });
+        }
+
+        let rows = '';
+        if (filteredItems.length > 0) {
+            rows = filteredItems.map(function(item, index) {
+                const cells = [];
+                cells.push(`<td>${index + 1}</td>`);
+                
+                if (columns.includes('Layer')) {
+                    const value = hasValue(item.layer) ? escapeHtml(item.layer) : '-';
+                    cells.push(`<td>${value}</td>`);
+                }
+                if (columns.includes('Jenis Item IPLS')) {
+                    const value = hasValue(item.jenis_item_ipls) ? escapeHtml(item.jenis_item_ipls) : '-';
+                    cells.push(`<td>${value}</td>`);
+                }
+                if (columns.includes('Detail Layer')) {
+                    const value = hasValue(item.detail_layer) ? escapeHtml(item.detail_layer) : '-';
+                    cells.push(`<td>${value}</td>`);
+                }
+                if (columns.includes('Klasifikasi')) {
+                    const value = hasValue(item.klasifikasi_layer) ? escapeHtml(item.klasifikasi_layer) : '-';
+                    cells.push(`<td>${value}</td>`);
+                }
+                if (columns.includes('Keterangan')) {
+                    const value = hasValue(item.keterangan_layer) ? escapeHtml(item.keterangan_layer) : '-';
+                    cells.push(`<td>${value}</td>`);
+                }
+                
+                return `<tr>${cells.join('')}</tr>`;
             }).join('');
         }
 
@@ -14456,7 +14508,7 @@ source: new ol.source.Vector(),
                 </div>
             </div>
             ` : ''}
-            ${insiden.items && insiden.items.length > 0 ? `
+            ${filteredItems.length > 0 && columns.length > 0 ? `
             <div class="card border shadow-sm">
                 <div class="card-header bg-light border-bottom">
                     <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">layers</i>Detail Layer</h6>
@@ -14467,11 +14519,11 @@ source: new ol.source.Vector(),
                             <thead>
                                 <tr>
                                     <th>#</th>
-                                    <th>Layer</th>
-                                    <th>Jenis Item IPLS</th>
-                                    <th>Detail Layer</th>
-                                    <th>Klasifikasi</th>
-                                    <th>Keterangan</th>
+                                    ${columns.includes('Layer') ? '<th>Layer</th>' : ''}
+                                    ${columns.includes('Jenis Item IPLS') ? '<th>Jenis Item IPLS</th>' : ''}
+                                    ${columns.includes('Detail Layer') ? '<th>Detail Layer</th>' : ''}
+                                    ${columns.includes('Klasifikasi') ? '<th>Klasifikasi</th>' : ''}
+                                    ${columns.includes('Keterangan') ? '<th>Keterangan</th>' : ''}
                                 </tr>
                             </thead>
                             <tbody>
