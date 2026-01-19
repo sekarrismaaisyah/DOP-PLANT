@@ -1,6 +1,6 @@
 @extends('layouts.master-home')
 
-@section('title', 'Matoxi')
+@section('title', 'Dashboard')
 
 @section('css')
 <link href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />

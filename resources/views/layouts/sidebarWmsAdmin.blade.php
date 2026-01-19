@@ -98,8 +98,8 @@
           </li>
 
           
-
-           <li>
+          <li>
+             @if(Auth::check() && Auth::user()->hasRole('admin-hazard-motion'))
             <a class="has-arrow" href="javascript:;">
               <div class="parent-icon"><i class="material-icons-outlined">gps_fixed</i>
               </div>
@@ -110,6 +110,7 @@
               <li><a href="{{ route('geofencing.rules') }}"><i class="material-icons-outlined">arrow_right</i>Area Kerja + Area CCTV</a></li>
               <li><a href="{{ route('geofencing.monitoring') }}"><i class="material-icons-outlined">arrow_right</i>Boundary Monitoring</a></li>
             </ul>
+            @endif
           </li>
 
            <li>
