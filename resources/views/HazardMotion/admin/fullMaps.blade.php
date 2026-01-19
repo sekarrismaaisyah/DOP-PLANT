@@ -9839,12 +9839,8 @@ source: new ol.source.Vector(),
                             <p style="margin: 5px 0; font-size: 13px;"><strong>Luasan:</strong> ${luasan} m²</p>
                             <hr style="margin: 10px 0;">
                             ${cctvNo !== 'N/A' ? `
-                            <button class="btn btn-sm btn-primary w-100 mt-2" onclick="filterSapByAreaCctv('${cctvNo}', '${String(cctvName).replace(/'/g, "\\'")}', '${String(cctvLokasi).replace(/'/g, "\\'")}')">
-                                <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">filter_list</i> Filter SAP di Area Ini
-                            </button>
-                            <button class="btn btn-sm btn-success w-100 mt-2" onclick="loadEvaluationSummary('area_cctv', null, null, '${cctvNo}', '${String(cctvName).replace(/'/g, "\\'")}')">
-                                <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">assessment</i> Lihat Evaluasi
-                            </button>
+                          
+                           
                             ` : ''}
                         </div>
                     `;
@@ -10830,13 +10826,18 @@ source: new ol.source.Vector(),
                 return `
                     <div class="card mb-2">
                         <div class="card-body p-2">
-                            <div class="d-flex align-items-center">
+                            <div class="d-flex align-items-center justify-content-between">
                                 <div class="flex-grow-1">
                                     <h6 class="mb-1" style="font-size: 14px;">${cctvName}</h6>
                                     <small class="text-muted">No: ${cctvNo} | <span style="color: ${statusColor};">${statusText}</span></small>
                                     ${cctv.lokasi_pemasangan || cctv.coverage_lokasi || cctv.coverage_detail_lokasi ? `
                                     <br><small class="text-muted">${cctv.coverage_detail_lokasi || cctv.coverage_lokasi || cctv.lokasi_pemasangan}</small>
                                     ` : ''}
+                                </div>
+                                <div class="ms-2">
+                                    <button class="btn btn-sm btn-primary" onclick="openCCTVStreamModal('${cctvName.replace(/'/g, "\\'")}', 'https://cctv-live.beraucoal.com/stream-redzone-ho/smo-101194178/101')" title="Stream CCTV">
+                                        <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">play_circle</i> Stream
+                                    </button>
                                 </div>
                             </div>
                         </div>
@@ -13335,8 +13336,8 @@ source: new ol.source.Vector(),
         const modal = new bootstrap.Modal(modalElement);
         modal.show();
         
-        // Use the CCTV stream URL
-        const streamUrl = 'https://cctv-live.beraucoal.com/stream-redzone-ho/smo-101194178/102';
+        // Use the provided stream URL or default URL
+        const streamUrl = rtspUrl || 'https://cctv-live.beraucoal.com/stream-redzone-ho/smo-101194178/102';
         
         // Set iframe source
         if (streamFrame) {
@@ -13413,8 +13414,9 @@ source: new ol.source.Vector(),
         streamLoading.style.display = 'block';
         streamFrame.style.display = 'none';
         
-        // Use the CCTV stream URL with timestamp to force refresh
-        const streamUrl = 'https://cctv-live.beraucoal.com/stream-redzone-ho/smo-101194178/102?t=' + Date.now();
+        // Use the provided stream URL or stored URL, with timestamp to force refresh
+        const baseUrl = rtspUrl || currentStreamData.rtspUrl || 'https://cctv-live.beraucoal.com/stream-redzone-ho/smo-101194178/102';
+        const streamUrl = baseUrl + (baseUrl.includes('?') ? '&' : '?') + 't=' + Date.now();
         
         streamFrame.src = streamUrl;
         
@@ -21661,50 +21663,63 @@ source: new ol.source.Vector(),
         
         // Summary section - menggunakan struktur yang konsisten dengan statistik merah dan hijau
         html += `
-            <div class="gm-notification-category expanded" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e8eaed;">
-                <div class="gm-notification-category-header" style="cursor: default; padding: 16px 20px; border-bottom: 1px solid #e8eaed;">
-                    <div class="gm-notification-category-title">
-                        <i class="material-icons-outlined" style="font-size: 20px; color: #1a73e8; margin-right: 10px;">dashboard</i>
-                        <span style="font-size: 16px; font-weight: 600; color: #202124;">Ringkasan</span>
+            <div class="gm-notification-category expanded" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e8eaed; overflow: hidden;">
+                <div class="gm-notification-category-header" style="cursor: default; padding: 18px 20px; border-bottom: 1px solid #e8eaed; background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);">
+                    <div class="gm-notification-category-title" style="display: flex; align-items: center;">
+                        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);">
+                            <i class="material-icons-outlined" style="font-size: 22px; color: #ffffff;">dashboard</i>
+                        </div>
+                        <span style="font-size: 17px; font-weight: 700; color: #1e293b; letter-spacing: -0.3px;">Ringkasan</span>
                     </div>
                 </div>
-                <div class="gm-notification-location-list" style="padding: 16px 20px;">
-                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                <div class="gm-notification-location-list" style="padding: 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px;">
                         <!-- Statistik Merah -->
-                        <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 10px; padding: 16px; border: 1px solid #fca5a5; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                <div style="width: 40px; height: 40px; background: #ef4444; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);">
-                                    <i class="material-icons-outlined" style="font-size: 22px; color: #ffffff;">error_outline</i>
+                        <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 12px; padding: 18px; border: 2px solid #fca5a5; box-shadow: 0 4px 12px rgba(239, 68, 68, 0.15); position: relative; overflow: hidden;">
+                            <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(239, 68, 68, 0.1); border-radius: 50%;"></div>
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; position: relative; z-index: 1;">
+                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(239, 68, 68, 0.4);">
+                                    <i class="material-icons-outlined" style="font-size: 24px; color: #ffffff;">error_outline</i>
                                 </div>
-                                <span style="font-size: 13px; font-weight: 500; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Status Merah</span>
+                                <span style="font-size: 12px; font-weight: 600; color: #991b1b; text-transform: uppercase; letter-spacing: 0.8px;">Status Merah</span>
                             </div>
-                            <div style="display: flex; align-items: baseline; gap: 4px;">
-                                <span style="font-size: 32px; font-weight: 700; color: #dc2626; line-height: 1;">0</span>
+                            <div style="position: relative; z-index: 1;">
+                                <span style="font-size: 36px; font-weight: 800; color: #dc2626; line-height: 1; display: block;">0</span>
+                                <span style="font-size: 11px; color: #991b1b; opacity: 0.8; margin-top: 4px; display: block;">Unit bermasalah</span>
                             </div>
                         </div>
                         
                         <!-- Statistik Hijau -->
-                        <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 10px; padding: 16px; border: 1px solid #6ee7b7; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);">
-                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
-                                <div style="width: 40px; height: 40px; background: #10b981; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);">
-                                    <i class="material-icons-outlined" style="font-size: 22px; color: #ffffff;">check_circle</i>
+                        <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 12px; padding: 18px; border: 2px solid #6ee7b7; box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15); position: relative; overflow: hidden;">
+                            <div style="position: absolute; top: -20px; right: -20px; width: 80px; height: 80px; background: rgba(16, 185, 129, 0.1); border-radius: 50%;"></div>
+                            <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 12px; position: relative; z-index: 1;">
+                                <div style="width: 48px; height: 48px; background: linear-gradient(135deg, #10b981 0%, #059669 100%); border-radius: 12px; display: flex; align-items: center; justify-content: center; box-shadow: 0 4px 8px rgba(16, 185, 129, 0.4);">
+                                    <i class="material-icons-outlined" style="font-size: 24px; color: #ffffff;">check_circle</i>
                                 </div>
-                                <span style="font-size: 13px; font-weight: 500; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px;">Status Hijau</span>
+                                <span style="font-size: 12px; font-weight: 600; color: #065f46; text-transform: uppercase; letter-spacing: 0.8px;">Status Hijau</span>
                             </div>
-                            <div style="display: flex; align-items: baseline; gap: 4px;">
-                                <span style="font-size: 32px; font-weight: 700; color: #059669; line-height: 1;">${totalUnits}</span>
+                            <div style="position: relative; z-index: 1;">
+                                <span style="font-size: 36px; font-weight: 800; color: #059669; line-height: 1; display: block;">${totalUnits}</span>
+                                <span style="font-size: 11px; color: #065f46; opacity: 0.8; margin-top: 4px; display: block;">Total unit aktif</span>
                             </div>
                         </div>
                     </div>
                     
                     <!-- Total Orang (Additional Info) -->
-                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e8eaed;">
-                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #ffffff; border-radius: 8px; border: 1px solid #e8eaed;">
-                            <div style="display: flex; align-items: center; gap: 10px;">
-                                <i class="material-icons-outlined" style="font-size: 20px; color: #6366f1;">people</i>
-                                <span style="font-weight: 500; color: #374151; font-size: 14px;">Total Orang</span>
+                    <div style="background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%); border-radius: 12px; padding: 16px; border: 2px solid #c7d2fe; box-shadow: 0 2px 8px rgba(99, 102, 241, 0.1);">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <div style="display: flex; align-items: center; gap: 12px;">
+                                <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);">
+                                    <i class="material-icons-outlined" style="font-size: 22px; color: #ffffff;">people</i>
+                                </div>
+                                <div>
+                                    <span style="font-weight: 600; color: #1e293b; font-size: 15px; display: block;">Total Orang</span>
+                                    <span style="font-size: 11px; color: #64748b; margin-top: 2px; display: block;">Personel terdaftar</span>
+                                </div>
                             </div>
-                            <span style="font-size: 20px; font-weight: 600; color: #6366f1;">${totalOrang}</span>
+                            <div style="background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%); color: #ffffff; padding: 10px 18px; border-radius: 10px; font-size: 22px; font-weight: 700; box-shadow: 0 2px 6px rgba(99, 102, 241, 0.3);">
+                                ${totalOrang}
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -21714,33 +21729,42 @@ source: new ol.source.Vector(),
         // Unit by type
         if (Object.keys(unitDataByType).length > 0) {
             html += `
-                <div class="gm-notification-category expanded">
-                    <div class="gm-notification-category-header">
+                <div class="gm-notification-category expanded" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e8eaed;">
+                    <div class="gm-notification-category-header" style="padding: 16px 20px; border-bottom: 1px solid #e8eaed; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px 12px 0 0;">
                         <div class="gm-notification-category-title">
-                            <i class="material-icons-outlined" style="font-size: 18px; margin-right: 8px; color: #1a73e8;">directions_bus</i>
-                            <span>Unit Berdasarkan Tipe</span>
-                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
+                            <div style="width: 36px; height: 36px; background: #1a73e8; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);">
+                                <i class="material-icons-outlined" style="font-size: 20px; color: #ffffff;">directions_bus</i>
+                            </div>
+                            <span style="font-size: 16px; font-weight: 600; color: #1e40af;">Unit Berdasarkan Tipe</span>
+                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px; color: #1a73e8;">chevron_right</i>
                         </div>
-                        <span class="gm-notification-category-count">${totalUnits}</span>
+                        <span class="gm-notification-category-count" style="background: #1a73e8; color: #ffffff; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 4px rgba(26, 115, 232, 0.3);">${totalUnits}</span>
                     </div>
-                    <div class="gm-notification-location-list">
+                    <div class="gm-notification-location-list" style="padding: 12px 20px;">
             `;
             
             // Sort by count (descending)
             const sortedUnitTypes = Object.entries(unitDataByType).sort((a, b) => b[1].count - a[1].count);
             
             sortedUnitTypes.forEach(([vehicleType, data], index) => {
-                const isLast = index === sortedUnitTypes.length - 1;
                 html += `
-                    <div class="gm-notification-location-item" style="${isLast ? '' : 'border-bottom: 1px solid #f1f3f4;'}">
+                    <div class="gm-notification-location-item" style="background: #ffffff; border: 1px solid #e8eaed; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight: 500; color: #202124; margin-bottom: 4px; word-wrap: break-word;">${vehicleType}</div>
-                                <div style="font-size: 12px; color: #5f6368;">
-                                    ${data.count} ${data.count === 1 ? 'unit' : 'units'}
+                            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                                <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #93c5fd;">
+                                    <i class="material-icons-outlined" style="font-size: 22px; color: #1a73e8;">local_shipping</i>
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px; font-size: 15px; word-wrap: break-word; line-height: 1.3;">${vehicleType}</div>
+                                    <div style="font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                                        <i class="material-icons-outlined" style="font-size: 14px;">inventory_2</i>
+                                        <span>${data.count} ${data.count === 1 ? 'unit' : 'units'}</span>
+                                    </div>
                                 </div>
                             </div>
-                            <span style="font-size: 20px; font-weight: 600; color: #1a73e8; margin-left: 12px; flex-shrink: 0;">${data.count}</span>
+                            <div style="background: linear-gradient(135deg, #1a73e8 0%, #2563eb 100%); color: #ffffff; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; box-shadow: 0 2px 6px rgba(26, 115, 232, 0.3); flex-shrink: 0; margin-left: 12px;">
+                                ${data.count}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -21752,16 +21776,21 @@ source: new ol.source.Vector(),
             `;
         } else if (unitVisible) {
             html += `
-                <div class="gm-notification-category">
-                    <div class="gm-notification-category-header">
+                <div class="gm-notification-category" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e8eaed;">
+                    <div class="gm-notification-category-header" style="padding: 16px 20px; border-bottom: 1px solid #e8eaed; background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%); border-radius: 12px 12px 0 0;">
                         <div class="gm-notification-category-title">
-                            <i class="material-icons-outlined" style="font-size: 18px; margin-right: 8px; color: #1a73e8;">directions_bus</i>
-                            <span>Unit Berdasarkan Tipe</span>
-                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
+                            <div style="width: 36px; height: 36px; background: #1a73e8; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 2px 4px rgba(26, 115, 232, 0.2);">
+                                <i class="material-icons-outlined" style="font-size: 20px; color: #ffffff;">directions_bus</i>
+                            </div>
+                            <span style="font-size: 16px; font-weight: 600; color: #1e40af;">Unit Berdasarkan Tipe</span>
+                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px; color: #1a73e8;">chevron_right</i>
                         </div>
                     </div>
-                    <div class="gm-notification-location-list">
-                        <div class="gm-notification-empty">Tidak ada data unit</div>
+                    <div class="gm-notification-location-list" style="padding: 20px;">
+                        <div class="gm-notification-empty" style="text-align: center; color: #64748b; padding: 20px;">
+                            <i class="material-icons-outlined" style="font-size: 48px; color: #cbd5e1; margin-bottom: 8px; display: block;">inventory_2</i>
+                            <span>Tidak ada data unit</span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -21770,33 +21799,42 @@ source: new ol.source.Vector(),
         // Orang by type
         if (Object.keys(orangDataByType).length > 0) {
             html += `
-                <div class="gm-notification-category expanded">
-                    <div class="gm-notification-category-header">
+                <div class="gm-notification-category expanded" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e8eaed;">
+                    <div class="gm-notification-category-header" style="padding: 16px 20px; border-bottom: 1px solid #e8eaed; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 12px 12px 0 0;">
                         <div class="gm-notification-category-title">
-                            <i class="material-icons-outlined" style="font-size: 18px; margin-right: 8px; color: #10b981;">people</i>
-                            <span>Orang Berdasarkan Tipe</span>
-                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
+                            <div style="width: 36px; height: 36px; background: #10b981; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">
+                                <i class="material-icons-outlined" style="font-size: 20px; color: #ffffff;">people</i>
+                            </div>
+                            <span style="font-size: 16px; font-weight: 600; color: #065f46;">Orang Berdasarkan Tipe</span>
+                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px; color: #10b981;">chevron_right</i>
                         </div>
-                        <span class="gm-notification-category-count">${totalOrang}</span>
+                        <span class="gm-notification-category-count" style="background: #10b981; color: #ffffff; padding: 6px 12px; border-radius: 20px; font-weight: 600; font-size: 14px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.3);">${totalOrang}</span>
                     </div>
-                    <div class="gm-notification-location-list">
+                    <div class="gm-notification-location-list" style="padding: 12px 20px;">
             `;
             
             // Sort by count (descending)
             const sortedOrangTypes = Object.entries(orangDataByType).sort((a, b) => b[1].count - a[1].count);
             
             sortedOrangTypes.forEach(([vehicleType, data], index) => {
-                const isLast = index === sortedOrangTypes.length - 1;
                 html += `
-                    <div class="gm-notification-location-item" style="${isLast ? '' : 'border-bottom: 1px solid #f1f3f4;'}">
+                    <div class="gm-notification-location-item" style="background: #ffffff; border: 1px solid #e8eaed; border-radius: 10px; padding: 14px 16px; margin-bottom: 10px; transition: all 0.2s ease; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="flex: 1; min-width: 0;">
-                                <div style="font-weight: 500; color: #202124; margin-bottom: 4px; word-wrap: break-word;">${vehicleType}</div>
-                                <div style="font-size: 12px; color: #5f6368;">
-                                    ${data.count} ${data.count === 1 ? 'orang' : 'orang'}
+                            <div style="display: flex; align-items: center; gap: 12px; flex: 1; min-width: 0;">
+                                <div style="width: 44px; height: 44px; background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border: 1px solid #6ee7b7;">
+                                    <i class="material-icons-outlined" style="font-size: 22px; color: #10b981;">person</i>
+                                </div>
+                                <div style="flex: 1; min-width: 0;">
+                                    <div style="font-weight: 600; color: #1e293b; margin-bottom: 4px; font-size: 15px; word-wrap: break-word; line-height: 1.3;">${vehicleType}</div>
+                                    <div style="font-size: 12px; color: #64748b; display: flex; align-items: center; gap: 4px;">
+                                        <i class="material-icons-outlined" style="font-size: 14px;">group</i>
+                                        <span>${data.count} ${data.count === 1 ? 'orang' : 'orang'}</span>
+                                    </div>
                                 </div>
                             </div>
-                            <span style="font-size: 20px; font-weight: 600; color: #10b981; margin-left: 12px; flex-shrink: 0;">${data.count}</span>
+                            <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: #ffffff; width: 48px; height: 48px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 700; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3); flex-shrink: 0; margin-left: 12px;">
+                                ${data.count}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -21808,16 +21846,21 @@ source: new ol.source.Vector(),
             `;
         } else if (gpsVisible) {
             html += `
-                <div class="gm-notification-category">
-                    <div class="gm-notification-category-header">
+                <div class="gm-notification-category" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e8eaed;">
+                    <div class="gm-notification-category-header" style="padding: 16px 20px; border-bottom: 1px solid #e8eaed; background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%); border-radius: 12px 12px 0 0;">
                         <div class="gm-notification-category-title">
-                            <i class="material-icons-outlined" style="font-size: 18px; margin-right: 8px; color: #10b981;">people</i>
-                            <span>Orang Berdasarkan Tipe</span>
-                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
+                            <div style="width: 36px; height: 36px; background: #10b981; border-radius: 8px; display: inline-flex; align-items: center; justify-content: center; margin-right: 12px; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.2);">
+                                <i class="material-icons-outlined" style="font-size: 20px; color: #ffffff;">people</i>
+                            </div>
+                            <span style="font-size: 16px; font-weight: 600; color: #065f46;">Orang Berdasarkan Tipe</span>
+                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px; color: #10b981;">chevron_right</i>
                         </div>
                     </div>
-                    <div class="gm-notification-location-list">
-                        <div class="gm-notification-empty">Tidak ada data orang</div>
+                    <div class="gm-notification-location-list" style="padding: 20px;">
+                        <div class="gm-notification-empty" style="text-align: center; color: #64748b; padding: 20px;">
+                            <i class="material-icons-outlined" style="font-size: 48px; color: #cbd5e1; margin-bottom: 8px; display: block;">people_outline</i>
+                            <span>Tidak ada data orang</span>
+                        </div>
                     </div>
                 </div>
             `;
