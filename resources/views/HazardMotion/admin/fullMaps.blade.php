@@ -5012,18 +5012,38 @@
             }
         }
         
-        // Apply pulse effect untuk HIGH dan MEDIUM risk - Infinite loop blink
+        // Apply smooth blink effect untuk HIGH dan MEDIUM risk - Smooth seperti DOP critical area
         let strokeWidth = 2.5;
         let strokeOpacity = 1;
         
-        // Semua boundary (HIGH, MEDIUM, dan default) akan blink terus menerus
+        // Semua boundary (HIGH, MEDIUM, dan default) akan blink dengan smooth ripple effect
         if (pulseSpeed && (cachedRiskLevel === 'HIGH' || cachedRiskLevel === 'MEDIUM' || !cachedRiskLevel)) {
-            const pulse = getPulseValues(getPulseAnimationTime(), pulseSpeed);
-            strokeWidth = pulse.strokeWidth;
-            strokeOpacity = pulse.strokeOpacity;
+            // Gunakan smooth sine wave animation seperti DOP critical area
+            const blinkTime = getPulseAnimationTime();
+            const cycle = 2000; // 2 second cycle untuk smooth animation (sama seperti DOP)
+            const progress = (blinkTime % cycle) / cycle;
+            
+            // Smooth sine wave untuk opacity dengan easing yang lebih natural
+            // Menggunakan cubic ease-in-out untuk transisi yang lebih smooth seperti DOP
+            const sineWave = Math.sin(progress * Math.PI * 2);
+            
+            // Normalize sine wave dari -1..1 ke 0..1
+            const normalizedWave = (sineWave + 1) / 2;
+            
+            // Apply cubic easing untuk transisi yang lebih smooth
+            const easedWave = normalizedWave < 0.5 
+                ? 4 * normalizedWave * normalizedWave * normalizedWave // Ease in
+                : 1 - Math.pow(-2 * normalizedWave + 2, 3) / 2; // Ease out
+            
+            // Opacity range: 0.25 to 1.0 (lebih smooth dengan range yang lebih lebar)
+            strokeOpacity = 0.25 + (0.75 * easedWave);
+            
+            // Smooth stroke width animation dengan easing yang sama
+            // Width range: 2.5 to 6.0 (lebih terlihat seperti DOP)
+            strokeWidth = 2.5 + (3.5 * easedWave);
         }
         
-        // Convert stroke color to rgba dengan opacity untuk pulse effect
+        // Convert stroke color to rgba dengan opacity untuk smooth blink effect
         let strokeColorWithOpacity = strokeColor;
         if (strokeOpacity < 1) {
             // Convert hex to rgba
@@ -5043,7 +5063,8 @@
                 color: strokeColorWithOpacity, 
                 width: strokeWidth,
                 lineCap: 'round',
-                lineJoin: 'round'
+                lineJoin: 'round',
+                lineDash: null // No dash untuk smooth effect
             }),
             zIndex: strokeOpacity < 1 ? 1 : 0 // Slight z-index adjustment untuk layering
         });
