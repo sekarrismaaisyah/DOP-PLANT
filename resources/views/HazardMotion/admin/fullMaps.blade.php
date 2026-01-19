@@ -988,7 +988,7 @@
 }
 
 .sidebar-list-item.expanded .cctv-detail-section {
-    max-height: 2000px;
+    max-height: 999999px !important;
     padding: 16px 12px;
 }
 
@@ -2564,14 +2564,14 @@
         </button>
         
         <!-- CCTV Alerts Section -->
-        <div class="gm-sidebar-section" style="padding: 16px 0; flex: 1; overflow-y: auto; min-height: 0; display: flex; flex-direction: column;">
+        <div class="gm-sidebar-section" style="padding: 16px 0; flex: 1; overflow-y: visible !important; min-height: auto !important; display: flex; flex-direction: column; height: auto;">
             <div class="gm-sidebar-section-title" style="padding: 0 16px 12px; flex-shrink: 0;">
                 <i class="material-icons-outlined" style="font-size: 20px; vertical-align: middle; margin-right: 8px; color: #ea4335;">notifications_active</i>
                 Status On Off CCTV
             </div>
             
             <!-- Alerts Container -->
-            <div class="sidebar-list" id="cctvAlertsList" style="padding: 8px; flex: 1;">
+            <div class="sidebar-list" id="cctvAlertsList" style="padding: 8px; width: 100%; overflow: visible !important; min-height: auto !important; height: auto;">
                 <!-- Loading state will be inserted here by JavaScript -->
             </div>
         </div>
