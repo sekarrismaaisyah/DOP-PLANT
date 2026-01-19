@@ -1039,6 +1039,9 @@ class fullMapsController extends Controller
             
             // Try to parse and reformat to ensure it's valid
             try {
+                // Set timezone to Asia/Makassar (UTC+8)
+                $timezone = new \DateTimeZone('Asia/Makassar');
+                
                 // Try multiple date formats that ClickHouse might return
                 $formats = [
                     'Y-m-d H:i:s',
@@ -1049,11 +1052,13 @@ class fullMapsController extends Controller
                     'Y-m-d',
                 ];
                 
+                $date = null;
                 foreach ($formats as $format) {
                     try {
-                        $date = \DateTime::createFromFormat($format, $dateValue);
+                        // Parse date assuming it's already in Asia/Makassar timezone
+                        $date = \DateTime::createFromFormat($format, $dateValue, $timezone);
                         if ($date !== false) {
-                            return $date->format('Y-m-d H:i:s');
+                            break;
                         }
                     } catch (\Exception $e) {
                         continue;
@@ -1061,8 +1066,13 @@ class fullMapsController extends Controller
                 }
                 
                 // If format matching fails, try standard DateTime parsing
-                $date = new \DateTime($dateValue);
-                return $date->format('Y-m-d H:i:s');
+                if ($date === false || $date === null) {
+                    // Assume the date from ClickHouse is in Asia/Makassar timezone
+                    $date = new \DateTime($dateValue, $timezone);
+                }
+                
+                // Return ISO 8601 format with timezone (e.g., "2026-01-19T19:06:43+08:00")
+                return $date->format('c'); // 'c' format = ISO 8601 with timezone
             } catch (\Exception $e) {
                 // If all parsing fails, return original value (might be in different format that JS can handle)
                 Log::warning('Could not parse date value: ' . $dateValue . ' - Error: ' . $e->getMessage());
