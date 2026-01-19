@@ -2184,7 +2184,15 @@
                     <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
                       <span class="material-icons-outlined">notifications_active</span>
                     </span>
-                    <h3 class="mb-0" id="">1410</h3>
+                    <h3 class="mb-0" id="">
+                      @if(Auth::check() && (Auth::user()->hasRole('control_room_pama') || Auth::user()->hasRole('control-room-pama')))
+                        218
+                      @elseif(Auth::check() && (Auth::user()->hasRole('admin_hazard_motion') || Auth::user()->hasRole('admin-hazard-motion')))
+                        1410
+                      @else
+                        1410
+                      @endif
+                    </h3>
                     <p class="mb-0">Cctv Fitur Auto Alert</p>
                   </button>
                   <!-- <div class="vr"></div> -->
