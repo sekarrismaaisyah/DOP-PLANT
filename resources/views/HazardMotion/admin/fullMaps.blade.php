@@ -2571,7 +2571,7 @@
             </div>
             
             <!-- Alerts Container -->
-            <div class="sidebar-list" id="cctvAlertsList" style="padding: 8px; flex: 1; overflow-y: auto; min-height: 0;">
+            <div class="sidebar-list" id="cctvAlertsList" style="padding: 8px; flex: 1;">
                 <!-- Loading state will be inserted here by JavaScript -->
             </div>
         </div>
