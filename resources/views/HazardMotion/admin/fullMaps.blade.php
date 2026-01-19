@@ -4970,10 +4970,6 @@
         let fillColor, strokeColor, pulseSpeed;
         
         if (cachedRiskLevel) {
-            // Log hanya untuk beberapa features pertama untuk menghindari spam console
-            if (Math.random() < 0.01) { // Log hanya 1% dari features
-                console.log(`[getRiskBasedAreaKerjaStyle] Using cached risk level: ${cachedRiskLevel} for feature: ${lokasiName}`);
-            }
             switch(cachedRiskLevel) {
                 case 'HIGH':
                     fillColor = 'rgba(217, 45, 32, 0.22)'; // Red #d92d20 dengan opacity 0.22
@@ -4995,7 +4991,6 @@
                     fillColor = 'rgba(247, 144, 9, 0.22)'; // Orange (default) dengan opacity 0.22
                     strokeColor = '#f79009';
                     pulseSpeed = 'fast';
-                    console.warn(`[getRiskBasedAreaKerjaStyle] Unknown risk level: ${cachedRiskLevel} for feature: ${lokasiName}, using MEDIUM`);
             }
         } else {
             // Jika belum dihitung, coba hitung sekarang (synchronous fallback)
@@ -5004,12 +4999,6 @@
             fillColor = 'rgba(247, 144, 9, 0.22)'; // Orange (default) dengan opacity 0.22
             strokeColor = '#f79009';
             pulseSpeed = 'fast';
-            
-            // Log warning hanya sekali untuk menghindari spam
-            if (!window.riskLevelWarningLogged) {
-                console.warn(`[getRiskBasedAreaKerjaStyle] Risk level not calculated yet for some features. Make sure calculateRiskLevelsForAllFeatures() is called.`);
-                window.riskLevelWarningLogged = true;
-            }
         }
         
         // Apply pulse effect untuk HIGH dan MEDIUM risk - Infinite loop blink
