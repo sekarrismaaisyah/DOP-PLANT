@@ -259,10 +259,8 @@ class fullMapsController extends Controller
 
         // Ambil data SAP (Safety Action Plan) dari ClickHouse
         // Mengganti hazard dengan SAP dari tabel hse_automation.aaj_car_all_year_from_dav
-        // Default: ambil data untuk week ini (Senin-Senin)
-        $today = Carbon::now();
-        $weekStart = $today->copy()->startOfWeek(Carbon::MONDAY);
-        $sapData = $this->getSapDataFromClickHouse($weekStart);
+        // Default: ambil data hari ini saja
+        $sapData = $this->getSapDataFromClickHouse();
 
         // Ambil data GR detections dari PostgreSQL
         $grDetections = $this->getGrDetectionsFromPostgres();
@@ -646,37 +644,19 @@ class fullMapsController extends Controller
     /**
      * Get SAP data from ClickHouse
      */
-    private function getSapDataFromClickHouse($weekStart = null)
+    private function getSapDataFromClickHouse()
     {
-        Log::info('getSapDataFromClickHouse - Method called', [
-            'weekStart' => $weekStart ? (is_string($weekStart) ? $weekStart : $weekStart->format('Y-m-d H:i:s')) : 'NULL'
-        ]);
+        Log::info('getSapDataFromClickHouse - Method called (filter: today only)');
         
         try {
             // Menggunakan koneksi langsung ke ClickHouse 10.10.10.38
             // Tidak menggunakan ClickHouseService karena menggunakan koneksi custom
             Log::info('getSapDataFromClickHouse - Using custom ClickHouse connection to 10.10.10.38');
-
-            // Jika weekStart tidak diberikan, gunakan Senin minggu ini
-            if (!$weekStart) {
-                $today = Carbon::now();
-                $weekStart = $today->copy()->startOfWeek(Carbon::MONDAY)->setTime(0, 0, 0);
-            } else {
-                // Parse weekStart string (format: YYYY-MM-DD HH:MM:SS atau YYYY-MM-DD)
-                if (is_string($weekStart)) {
-                    $weekStart = Carbon::parse($weekStart)->startOfWeek(Carbon::MONDAY)->setTime(0, 0, 0);
-                } else {
-                    $weekStart = $weekStart->copy()->startOfWeek(Carbon::MONDAY)->setTime(0, 0, 0);
-                }
-            }
             
-            // Week end adalah Senin berikutnya (7 hari setelah weekStart) pada 00:00:00
-            $weekEnd = $weekStart->copy()->addDays(7)->setTime(0, 0, 0);
+            $today = Carbon::now();
+            $todayStr = $today->format('Y-m-d');
             
-            $weekStartStr = $weekStart->format('Y-m-d');
-            $weekEndStr = $weekEnd->format('Y-m-d');
-            
-            Log::info('SAP Query - Week Start: ' . $weekStartStr . ', Week End: ' . $weekEndStr);
+            Log::info('SAP Query - Filter: Today only (' . $todayStr . ')');
             
             $sapData = [];
             $resultsInspeksi = [];
@@ -728,11 +708,9 @@ class fullMapsController extends Controller
                     FROM aaj_car_all_year_from_dav
                     WHERE (
                         (tanggal_pembuatan IS NOT NULL 
-                            AND toDate(tanggal_pembuatan) >= toDate('{$weekStartStr}') 
-                            AND toDate(tanggal_pembuatan) < toDate('{$weekEndStr}'))
+                            AND toDate(tanggal_pembuatan) = today())
                         OR (bedraft_date IS NOT NULL 
-                            AND toDate(bedraft_date) >= toDate('{$weekStartStr}') 
-                            AND toDate(bedraft_date) < toDate('{$weekEndStr}'))
+                            AND toDate(bedraft_date) = today())
                     )
                     ORDER BY 
                         CASE 
@@ -743,10 +721,9 @@ class fullMapsController extends Controller
                     LIMIT 12500
                 ";
                 
-                Log::info('Executing SAP query', [
+                Log::info('Executing SAP query (today only)', [
                     'sql_preview' => substr($sqlInspeksi, 0, 300) . '...',
-                    'week_start' => $weekStartStr,
-                    'week_end' => $weekEndStr
+                    'filter_date' => $todayStr
                 ]);
                 
                 // Menggunakan queryClickHouseCustom dengan database 'hse_automation' dan koneksi ke 10.10.10.38
@@ -837,7 +814,12 @@ class fullMapsController extends Controller
                                 ifNull(toString(nama_lokasi), '') as nama_lokasi,
                                 ifNull(toString(nama_detail_lokasi), '') as nama_detail_lokasi
                             FROM aaj_car_all_year_from_dav
-                            WHERE tanggal_pembuatan IS NOT NULL OR bedraft_date IS NOT NULL
+                            WHERE (
+                                (tanggal_pembuatan IS NOT NULL 
+                                    AND toDate(tanggal_pembuatan) = today())
+                                OR (bedraft_date IS NOT NULL 
+                                    AND toDate(bedraft_date) = today())
+                            )
                             ORDER BY 
                                 CASE 
                                     WHEN tanggal_pembuatan IS NOT NULL THEN toDateTime(tanggal_pembuatan)
@@ -900,8 +882,7 @@ class fullMapsController extends Controller
             
             Log::info('getSapDataFromClickHouse - Method completed', [
                 'sap_records_count' => count($sapData),
-                'week_start' => $weekStartStr,
-                'week_end' => $weekEndStr
+                'filter_date' => $todayStr
             ]);
             
             return $sapData;
