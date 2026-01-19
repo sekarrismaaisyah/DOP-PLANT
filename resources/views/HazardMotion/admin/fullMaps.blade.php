@@ -3923,9 +3923,44 @@
     // Data ini akan di-overwrite oleh loadSapDataByWeek() berdasarkan week filter
     // Filter hanya SAP hari ini untuk performa (mengurangi lag)
     let allSapData = @json($sapData ?? []);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const todayStr = today.toISOString().split('T')[0]; // Format: YYYY-MM-DD
+    
+    // Helper function untuk mendapatkan tanggal hari ini dalam timezone Asia/Makassar (WITA, UTC+8)
+    function getTodayInMakassar() {
+        const now = new Date();
+        // Convert ke timezone Asia/Makassar (UTC+8)
+        // Format: YYYY-MM-DD dalam timezone Asia/Makassar
+        const makassarOffset = 8 * 60; // UTC+8 dalam menit
+        const utcTime = now.getTime() + (now.getTimezoneOffset() * 60000);
+        const makassarTime = new Date(utcTime + (makassarOffset * 60000));
+        const year = makassarTime.getUTCFullYear();
+        const month = String(makassarTime.getUTCMonth() + 1).padStart(2, '0');
+        const day = String(makassarTime.getUTCDate()).padStart(2, '0');
+        return `${year}-${month}-${day}`;
+    }
+    
+    // Helper function untuk membandingkan tanggal SAP dengan tanggal hari ini dalam timezone Asia/Makassar
+    function isDateTodayInMakassar(dateString) {
+        if (!dateString) return false;
+        try {
+            // Extract date part only (handle various formats)
+            let datePart = dateString.toString().trim();
+            if (datePart.includes(' ')) {
+                datePart = datePart.split(' ')[0];
+            }
+            if (datePart.includes('T')) {
+                datePart = datePart.split('T')[0];
+            }
+            
+            // Parse tanggal dari string (format: YYYY-MM-DD)
+            // Anggap tanggal sudah dalam format yang benar dari backend (timezone Asia/Makassar)
+            const todayStr = getTodayInMakassar();
+            return datePart === todayStr;
+        } catch (e) {
+            return false;
+        }
+    }
+    
+    const todayStr = getTodayInMakassar(); // Format: YYYY-MM-DD dalam timezone Asia/Makassar
     
     // OPTIMIZED: Filter hanya SAP hari ini dengan early exit untuk performa
     // Sidebar: hanya data hari ini, Map: maksimal 1000 terbaru
@@ -3935,22 +3970,15 @@
     var sapDataAllWeek = []; // Semua data per week (untuk count di tab)
     
     if (allSapData && allSapData.length > 0) {
-        // Filter data hari ini (semua data, tidak dibatasi)
+        // Filter data hari ini (semua data, tidak dibatasi) menggunakan timezone Asia/Makassar
         const todaySapData = [];
         for (let i = 0; i < allSapData.length; i++) {
             const sap = allSapData[i];
             if (!sap.tanggal_pelaporan && !sap.detected_at) continue;
             
-            try {
-                const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
-                sapDate.setHours(0, 0, 0, 0);
-                const sapDateStr = sapDate.toISOString().split('T')[0];
-                if (sapDateStr === todayStr) {
-                    todaySapData.push(sap);
-                }
-            } catch (e) {
-                // Skip invalid dates
-                continue;
+            // Gunakan helper function untuk membandingkan tanggal dengan timezone Asia/Makassar
+            if (isDateTodayInMakassar(sap.tanggal_pelaporan || sap.detected_at)) {
+                todaySapData.push(sap);
             }
         }
         
@@ -4002,7 +4030,7 @@
             console.log('Tanggal distribution:', dates);
         }
         
-        // Filter INSPEKSI_HAZARD hari ini
+        // Filter INSPEKSI_HAZARD hari ini menggunakan timezone Asia/Makassar
         const inspeksiHazardToday = allSapData.filter(function(sap) {
             // Filter berdasarkan source_type = 'INSPEKSI_HAZARD'
             const isInspeksiHazard = sap.source_type === 'INSPEKSI_HAZARD' || 
@@ -4011,21 +4039,14 @@
             
             if (!isInspeksiHazard) return false;
             
-            // Filter berdasarkan tanggal hari ini
+            // Filter berdasarkan tanggal hari ini menggunakan timezone Asia/Makassar
             if (!sap.tanggal_pelaporan && !sap.detected_at) {
                 console.warn('⚠️ INSPEKSI_HAZARD tanpa tanggal:', sap.task_number || sap.id || 'N/A');
                 return false;
             }
             
-            try {
-                const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
-                sapDate.setHours(0, 0, 0, 0);
-                const sapDateStr = sapDate.toISOString().split('T')[0];
-                return sapDateStr === todayStr;
-            } catch (e) {
-                console.error('❌ Error parsing date:', sap.tanggal_pelaporan || sap.detected_at, e);
-                return false;
-            }
+            // Gunakan helper function untuk membandingkan tanggal dengan timezone Asia/Makassar
+            return isDateTodayInMakassar(sap.tanggal_pelaporan || sap.detected_at);
         });
         
         console.log(`✅ Total INSPEKSI_HAZARD hari ini (${todayStr}): ${inspeksiHazardToday.length} items`);
@@ -19919,22 +19940,15 @@ source: new ol.source.Vector(),
             return false;
         }
         
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayStr = today.toISOString().split('T')[0];
+        // Gunakan helper function untuk mendapatkan tanggal hari ini dalam timezone Asia/Makassar
+        const todayStr = getTodayInMakassar();
         
-        // Filter SAP data for today
+        // Filter SAP data for today menggunakan timezone Asia/Makassar
         // Mengecek semua jenis SAP: Hazard, Inspeksi (INSPEKSI_HAZARD), Observasi, Coaching, OAK
         const sapToday = sapDataForSidebar.filter(sap => {
             if (!sap.tanggal_pelaporan && !sap.detected_at) return false;
-            try {
-                const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
-                sapDate.setHours(0, 0, 0, 0);
-                const sapDateStr = sapDate.toISOString().split('T')[0];
-                return sapDateStr === todayStr;
-            } catch (e) {
-                return false;
-            }
+            // Gunakan helper function untuk membandingkan tanggal dengan timezone Asia/Makassar
+            return isDateTodayInMakassar(sap.tanggal_pelaporan || sap.detected_at);
         });
         
         console.log(`${logPrefix} Total SAP hari ini: ${sapToday.length} dari ${sapDataForSidebar.length} total`);

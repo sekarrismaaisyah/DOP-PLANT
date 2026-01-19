@@ -1240,7 +1240,7 @@ class fullMapsController extends Controller
             
             $sapData = [];
             
-            // Query all SAP data without week filter, just limit
+            // Query SAP data with today filter using timezone Asia/Makassar
             // 1. Query aaj_car_all_year_from_dav using direct ClickHouse connection to 10.10.10.38
             try {
                 $sqlInspeksi = "
@@ -1278,6 +1278,12 @@ class fullMapsController extends Controller
                         AND longitude IS NOT NULL
                         AND latitude != ''
                         AND longitude != ''
+                        AND (
+                            (tanggal_pembuatan IS NOT NULL 
+                                AND toDate(tanggal_pembuatan, 'Asia/Makassar') = toDate(toTimeZone(now(), 'Asia/Makassar')))
+                            OR (bedraft_date IS NOT NULL 
+                                AND toDate(bedraft_date, 'Asia/Makassar') = toDate(toTimeZone(now(), 'Asia/Makassar')))
+                        )
                     ORDER BY 
                         CASE 
                             WHEN tanggal_pembuatan IS NOT NULL THEN toDateTime(toTimeZone(tanggal_pembuatan, 'Asia/Makassar'))
