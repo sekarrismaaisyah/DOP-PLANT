@@ -4687,6 +4687,53 @@
         return highRiskKeywords.some(keyword => areaName.includes(keyword));
     }
 
+    // Calculate risk levels for all features in a layer to display matrix colors automatically
+    async function calculateRiskLevelsForAllFeatures(layer) {
+        if (!layer || !layer.getSource()) {
+            console.warn('Layer or source is null, cannot calculate risk levels');
+            return;
+        }
+
+        const features = layer.getSource().getFeatures();
+        if (!features || features.length === 0) {
+            console.warn('No features found in layer');
+            return;
+        }
+
+        console.log(`Calculating risk levels for ${features.length} features...`);
+        
+        // Calculate risk level for each feature
+        // Process in batches to avoid overwhelming the browser
+        const batchSize = 10;
+        for (let i = 0; i < features.length; i += batchSize) {
+            const batch = features.slice(i, i + batchSize);
+            
+            // Process batch in parallel
+            await Promise.all(batch.map(async (feature) => {
+                try {
+                    const riskLevel = await calculateRiskForAreaKerja(feature);
+                    // Set risk level as property on feature
+                    feature.set('riskLevel', riskLevel);
+                    
+                    const props = feature.getProperties();
+                    const lokasiName = props.lokasi || props.nama_lokasi || props.name || '';
+                    console.log(`[Risk Matrix] Feature "${lokasiName}": ${riskLevel}`);
+                } catch (error) {
+                    console.error(`Error calculating risk level for feature:`, error);
+                    // Set default MEDIUM if calculation fails
+                    feature.set('riskLevel', 'MEDIUM');
+                }
+            }));
+            
+            // Small delay between batches to avoid blocking
+            if (i + batchSize < features.length) {
+                await new Promise(resolve => setTimeout(resolve, 50));
+            }
+        }
+        
+        console.log(`✓ Finished calculating risk levels for ${features.length} features`);
+    }
+
     // Get risk-based style for area kerja
     // Pulse animation state untuk boundary
     let pulseAnimationStartTime = null;
@@ -9053,6 +9100,17 @@ source: new ol.source.Vector(),
                     // Log extent to verify layer is loaded correctly
                     const extent = areaKerjaBmo2PamaLayer.getSource().getExtent();
                     console.log('✓ Area Kerja Geotagging extent:', extent);
+                    
+                    // Calculate risk level for all features to display matrix colors automatically
+                    console.log('Calculating risk levels for all features to display matrix colors...');
+                    calculateRiskLevelsForAllFeatures(areaKerjaBmo2PamaLayer).then(() => {
+                        console.log('✓ Risk levels calculated for all features, matrix colors should now be visible');
+                        // Force style refresh
+                        areaKerjaBmo2PamaLayer.getSource().changed();
+                        map.render();
+                    }).catch(error => {
+                        console.error('Error calculating risk levels:', error);
+                    });
                 } else {
                     console.error('✗ Failed to create Area Kerja Geotagging layer');
                 }
@@ -9076,6 +9134,12 @@ source: new ol.source.Vector(),
                     if (areaKerjaBmo2PamaLayer) {
                         areaKerjaBmo2PamaLayer.setVisible(true);
                         areaKerjaBmo2PamaLayer.setOpacity(1.0);
+                        
+                        // Pastikan matrix warna langsung diterapkan
+                        areaKerjaBmo2PamaLayer.setStyle(function(feature) {
+                            return getRiskBasedAreaKerjaStyle(feature);
+                        });
+                        
                         map.addLayer(areaKerjaBmo2PamaLayer);
                         const featureCount = areaKerjaBmo2PamaLayer.getSource().getFeatures().length;
                         console.log('✓ Area Kerja BMO2 PAMA layer added, features:', featureCount);
@@ -9085,6 +9149,17 @@ source: new ol.source.Vector(),
                         // Log extent to verify layer is loaded correctly
                         const extent = areaKerjaBmo2PamaLayer.getSource().getExtent();
                         console.log('✓ Area Kerja BMO2 PAMA extent:', extent);
+                        
+                        // Calculate risk levels for all features to display matrix colors automatically
+                        if (featureCount > 0) {
+                            calculateRiskLevelsForAllFeatures(areaKerjaBmo2PamaLayer).then(() => {
+                                console.log('✓ Risk levels calculated for Area Kerja BMO2 PAMA layer (fallback)');
+                                areaKerjaBmo2PamaLayer.getSource().changed();
+                                map.render();
+                            }).catch(error => {
+                                console.error('Error calculating risk levels for Area Kerja BMO2 PAMA (fallback):', error);
+                            });
+                        }
                     } else {
                         console.error('✗ Failed to create Area Kerja BMO2 PAMA layer');
                     }
@@ -9185,6 +9260,15 @@ source: new ol.source.Vector(),
                 return getRiskBasedAreaKerjaStyle(feature);
             });
             console.log('✓ Area Kerja BMO2 PAMA layer set to visible with risk matrix style');
+            
+            // Calculate risk levels for all features to display matrix colors automatically
+            calculateRiskLevelsForAllFeatures(areaKerjaBmo2PamaLayer).then(() => {
+                console.log('✓ Risk levels calculated for Area Kerja BMO2 PAMA layer');
+                areaKerjaBmo2PamaLayer.getSource().changed();
+                map.render();
+            }).catch(error => {
+                console.error('Error calculating risk levels for Area Kerja BMO2 PAMA:', error);
+            });
         }
         if (areaCctvBmo2PamaLayer) {
             areaCctvBmo2PamaLayer.setVisible(true);
@@ -9211,6 +9295,15 @@ source: new ol.source.Vector(),
                         return getRiskBasedAreaKerjaStyle(feature);
                     });
                     console.log('✓ Area Kerja layer from JS set to visible with risk matrix style:', layer.get('name') || 'Unknown');
+                    
+                    // Calculate risk levels for all features to display matrix colors automatically
+                    calculateRiskLevelsForAllFeatures(layer).then(() => {
+                        console.log(`✓ Risk levels calculated for layer: ${layer.get('name') || 'Unknown'}`);
+                        layer.getSource().changed();
+                        map.render();
+                    }).catch(error => {
+                        console.error(`Error calculating risk levels for layer ${layer.get('name') || 'Unknown'}:`, error);
+                    });
                 }
             });
         }
@@ -9362,8 +9455,25 @@ source: new ol.source.Vector(),
                             layer.setVisible(true);
                             layer.setOpacity(1.0);
                             layer.setZIndex(config.zIndex);
+                            
+                            // Pastikan matrix warna langsung diterapkan
+                            layer.setStyle(function(feature) {
+                                return getRiskBasedAreaKerjaStyle(feature);
+                            });
+                            
                             map.addLayer(layer);
                             areaKerjaLayers.push(layer);
+                            
+                            // Calculate risk levels for all features to display matrix colors automatically
+                            if (featureCount > 0) {
+                                calculateRiskLevelsForAllFeatures(layer).then(() => {
+                                    console.log(`✓ Risk levels calculated for ${config.layerName}`);
+                                    layer.getSource().changed();
+                                    map.render();
+                                }).catch(error => {
+                                    console.error(`Error calculating risk levels for ${config.layerName}:`, error);
+                                });
+                            }
                             
                             // Log layer details
                             const extent = layer.getSource().getExtent();
@@ -9402,16 +9512,50 @@ source: new ol.source.Vector(),
                 // Ensure it's visible
                 areaKerjaBmo2PamaLayer.setVisible(true);
                 areaKerjaBmo2PamaLayer.setOpacity(1.0);
+                
+                // Pastikan matrix warna langsung diterapkan
+                areaKerjaBmo2PamaLayer.setStyle(function(feature) {
+                    return getRiskBasedAreaKerjaStyle(feature);
+                });
+                
+                // Calculate risk levels for all features to display matrix colors automatically
+                const featureCount = areaKerjaBmo2PamaLayer.getSource().getFeatures().length;
+                if (featureCount > 0) {
+                    calculateRiskLevelsForAllFeatures(areaKerjaBmo2PamaLayer).then(() => {
+                        console.log('✓ Risk levels calculated for Area Kerja BMO2 PAMA layer');
+                        areaKerjaBmo2PamaLayer.getSource().changed();
+                        map.render();
+                    }).catch(error => {
+                        console.error('Error calculating risk levels for Area Kerja BMO2 PAMA:', error);
+                    });
+                }
             }
             
-            // Ensure all area kerja layers are visible
+            // Ensure all area kerja layers are visible and calculate risk levels
             areaKerjaLayers.forEach(layer => {
                 if (layer) {
                     layer.setVisible(true);
                     layer.setOpacity(1.0);
+                    
+                    // Pastikan matrix warna langsung diterapkan
+                    layer.setStyle(function(feature) {
+                        return getRiskBasedAreaKerjaStyle(feature);
+                    });
+                    
                     const layerName = layer.get('name') || 'Area Kerja';
                     const featureCount = layer.getSource().getFeatures().length;
                     console.log(`✓ ${layerName} layer set to visible (${featureCount} features)`);
+                    
+                    // Calculate risk levels for all features to display matrix colors automatically
+                    if (featureCount > 0) {
+                        calculateRiskLevelsForAllFeatures(layer).then(() => {
+                            console.log(`✓ Risk levels calculated for ${layerName}`);
+                            layer.getSource().changed();
+                            map.render();
+                        }).catch(error => {
+                            console.error(`Error calculating risk levels for ${layerName}:`, error);
+                        });
+                    }
                 }
             });
             
