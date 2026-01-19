@@ -2516,7 +2516,7 @@
                     <i class="material-icons-outlined">assessment</i>
                     <span>Matriks Prediksi</span>
                 </a>
-                <a href="{{ route('maps.index') }}">
+                <a href="{{ route('maps.maps') }}">
                 <span class="gm-category-item">
                     <i class="material-icons-outlined category-arrow">chevron_right</i>
                 </span>
