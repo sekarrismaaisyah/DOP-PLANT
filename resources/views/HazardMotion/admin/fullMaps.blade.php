@@ -3795,6 +3795,8 @@
 <script src="{{ asset('js/area_cctv_smo_mtn.js') }}"></script> --}}
 
 <!-- Load Area Kerja GeoJSON data -->
+<!-- Menggunakan geotaging.js untuk boundary area kerja -->
+<script src="{{ asset('js/geotaging.js') }}"></script>
 <script src="{{ asset('js/area_kerja_bmo1_fad.js') }}"></script>
 <script src="{{ asset('js/area_kerja_bmo1_kdc.js') }}"></script>
 <script src="{{ asset('js/area_kerja_bmo2_buma.js') }}"></script>
@@ -9007,15 +9009,26 @@ source: new ol.source.Vector(),
         console.log('- symmetrical_difference_bmo1_fad:', typeof window.symmetrical_difference_bmo1_fad);
         console.log('- intersection_bmo1_fad:', typeof window.intersection_bmo1_fad);
 
-        // Area Kerja BMO2 PAMA
-        // Note: Using createLayerFromGeoJson32650 because coordinates are in EPSG:32650 (UTM Zone 50N)
-        // even though CRS in file is declared as CRS84
-        if (typeof window.areaKerjaGeoJsonDataPama !== 'undefined' && window.areaKerjaGeoJsonDataPama) {
+        // Area Kerja dari geotaging.js
+        // Menggunakan geotagging_beats dari geotaging.js untuk boundary area kerja
+        if (typeof window.geotagging_beats !== 'undefined' && window.geotagging_beats) {
             try {
-                console.log('Loading Area Kerja BMO2 PAMA with EPSG:32650 transformation...');
+                console.log('Loading Area Kerja from geotaging.js with EPSG:32650 transformation...');
+                // Convert geotagging_beats to GeoJSON format if needed
+                let geotaggingGeoJson = window.geotagging_beats;
+                
+                // If geotagging_beats is already in GeoJSON format, use it directly
+                // Otherwise, wrap it in FeatureCollection format
+                if (!geotaggingGeoJson.type || geotaggingGeoJson.type !== 'FeatureCollection') {
+                    geotaggingGeoJson = {
+                        type: 'FeatureCollection',
+                        features: Array.isArray(geotaggingGeoJson) ? geotaggingGeoJson : geotaggingGeoJson.features || []
+                    };
+                }
+                
                 areaKerjaBmo2PamaLayer = createLayerFromGeoJson32650(
-                    window.areaKerjaGeoJsonDataPama,
-                    'Area Kerja BMO2 PAMA',
+                    geotaggingGeoJson,
+                    'Area Kerja Geotagging',
                     getAreaKerjaStyle,
                     410
                 );
@@ -9025,22 +9038,55 @@ source: new ol.source.Vector(),
                     areaKerjaBmo2PamaLayer.setOpacity(1.0);
                     map.addLayer(areaKerjaBmo2PamaLayer);
                     const featureCount = areaKerjaBmo2PamaLayer.getSource().getFeatures().length;
-                    console.log('✓ Area Kerja BMO2 PAMA layer added, features:', featureCount);
-                    console.log('✓ Area Kerja BMO2 PAMA layer visible:', areaKerjaBmo2PamaLayer.getVisible());
-                    console.log('✓ Area Kerja BMO2 PAMA layer opacity:', areaKerjaBmo2PamaLayer.getOpacity());
+                    console.log('✓ Area Kerja Geotagging layer added, features:', featureCount);
+                    console.log('✓ Area Kerja Geotagging layer visible:', areaKerjaBmo2PamaLayer.getVisible());
+                    console.log('✓ Area Kerja Geotagging layer opacity:', areaKerjaBmo2PamaLayer.getOpacity());
                     
                     // Log extent to verify layer is loaded correctly
                     const extent = areaKerjaBmo2PamaLayer.getSource().getExtent();
-                    console.log('✓ Area Kerja BMO2 PAMA extent:', extent);
+                    console.log('✓ Area Kerja Geotagging extent:', extent);
                 } else {
-                    console.error('✗ Failed to create Area Kerja BMO2 PAMA layer');
+                    console.error('✗ Failed to create Area Kerja Geotagging layer');
                 }
             } catch (error) {
-                console.error('Error creating Area Kerja BMO2 PAMA layer:', error);
+                console.error('Error creating Area Kerja Geotagging layer:', error);
                 console.error('Error stack:', error.stack);
             }
         } else {
-            console.warn('✗ areaKerjaGeoJsonDataPama not found or undefined');
+            console.warn('✗ geotagging_beats not found or undefined, trying fallback to areaKerjaGeoJsonDataPama...');
+            // Fallback to original areaKerjaGeoJsonDataPama if geotagging_beats is not available
+            if (typeof window.areaKerjaGeoJsonDataPama !== 'undefined' && window.areaKerjaGeoJsonDataPama) {
+                try {
+                    console.log('Loading Area Kerja BMO2 PAMA with EPSG:32650 transformation...');
+                    areaKerjaBmo2PamaLayer = createLayerFromGeoJson32650(
+                        window.areaKerjaGeoJsonDataPama,
+                        'Area Kerja BMO2 PAMA',
+                        getAreaKerjaStyle,
+                        410
+                    );
+                    // Ensure layer is visible
+                    if (areaKerjaBmo2PamaLayer) {
+                        areaKerjaBmo2PamaLayer.setVisible(true);
+                        areaKerjaBmo2PamaLayer.setOpacity(1.0);
+                        map.addLayer(areaKerjaBmo2PamaLayer);
+                        const featureCount = areaKerjaBmo2PamaLayer.getSource().getFeatures().length;
+                        console.log('✓ Area Kerja BMO2 PAMA layer added, features:', featureCount);
+                        console.log('✓ Area Kerja BMO2 PAMA layer visible:', areaKerjaBmo2PamaLayer.getVisible());
+                        console.log('✓ Area Kerja BMO2 PAMA layer opacity:', areaKerjaBmo2PamaLayer.getOpacity());
+                        
+                        // Log extent to verify layer is loaded correctly
+                        const extent = areaKerjaBmo2PamaLayer.getSource().getExtent();
+                        console.log('✓ Area Kerja BMO2 PAMA extent:', extent);
+                    } else {
+                        console.error('✗ Failed to create Area Kerja BMO2 PAMA layer');
+                    }
+                } catch (error) {
+                    console.error('Error creating Area Kerja BMO2 PAMA layer:', error);
+                    console.error('Error stack:', error.stack);
+                }
+            } else {
+                console.warn('✗ areaKerjaGeoJsonDataPama also not found or undefined');
+            }
         }
 
         // Area CCTV BMO2 PAMA
