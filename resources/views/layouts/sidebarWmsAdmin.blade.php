@@ -75,6 +75,7 @@
               <div class="menu-title">Dashboard</div>
             </a>
           </li>
+          @endif
 
 
           <li class="menu-label">Kesiapan Alat</li>
@@ -87,9 +88,11 @@
               <div class="menu-title">CCTV Management</div>
             </a>
             <ul>
+            @if(Auth::check() && Auth::user()->hasRole('admin-hazard-motion'))
               <li><a href="{{ route('cctv-data.index') }}"><i class="material-icons-outlined">arrow_right</i>CCTV Database</a></li>
               <li><a href="{{ route('cctv-data.pja-cctv-dedicated.index') }}"><i class="material-icons-outlined">arrow_right</i>CCTV PJA DEDICATED</a></li>
               <li><a href="{{ route('cctv-data.import-coverage-form') }}"><i class="material-icons-outlined">arrow_right</i>CCTV COVERAGE</a></li>
+            @endif
               <li><a href="{{ route('cctv-data.control-room.index') }}"><i class="material-icons-outlined">arrow_right</i>Pengawas Control Room</a></li>
             </ul>
           </li>
@@ -116,7 +119,7 @@
               <div class="menu-title">DOP</div>
             </a>
           </li>
-          @endif
+         
           
           <li class="menu-label">Control Room</li>
           <li>
