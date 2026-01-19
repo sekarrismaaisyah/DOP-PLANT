@@ -14255,19 +14255,22 @@ source: new ol.source.Vector(),
             return null;
         }
         
+        // Fungsi untuk mengecek apakah nilai tidak null/undefined/kosong
+        const hasValue = (val) => {
+            return val !== null && val !== undefined && val !== '' && val !== '\\N';
+        };
+        
         // Prioritas 1: Cari record yang memiliki kode_be_investigasi tidak null
-        let mainRecord = allRecords.find(item => 
-            item.kode_be_investigasi !== null && 
-            item.kode_be_investigasi !== undefined && 
-            item.kode_be_investigasi !== '' && 
-            item.kode_be_investigasi !== '\\N'
-        );
+        // Ini adalah record utama yang akan digunakan untuk informasi dasar, lokasi, waktu kejadian, perusahaan & departemen
+        let mainRecord = allRecords.find(item => hasValue(item.kode_be_investigasi));
         
         // Prioritas 2: Jika tidak ada kode_be_investigasi, cari record yang memiliki data paling lengkap
         if (!mainRecord) {
             mainRecord = allRecords.find(item => 
-                item.hari || item.jam || item.shift || item.perusahaan || item.departemen || 
-                item.bulan || item.tahun || item.minggu_ke || item.status_lpi
+                hasValue(item.hari) || hasValue(item.jam) || hasValue(item.shift) || 
+                hasValue(item.perusahaan) || hasValue(item.departemen) || 
+                hasValue(item.bulan) || hasValue(item.tahun) || hasValue(item.minggu_ke) || 
+                hasValue(item.status_lpi)
             );
         }
         
@@ -14276,32 +14279,21 @@ source: new ol.source.Vector(),
             mainRecord = allRecords[0];
         }
         
-        // Gunakan mainRecord sebagai data utama
+        // Gunakan mainRecord sebagai data utama (TIDAK menggabungkan dengan record lain)
+        // Data utama hanya dari record yang memiliki kode_be_investigasi tidak null
         let insiden = {...mainRecord};
         
-        // Gabungkan data dari semua record untuk melengkapi field yang null
-        allRecords.forEach(record => {
-            Object.keys(record).forEach(key => {
-                const recordValue = record[key];
-                const insidenValue = insiden[key];
-                
-                // Gunakan recordValue jika insiden null/undefined/kosong dan recordValue tidak null
-                if ((recordValue !== null && recordValue !== undefined && recordValue !== '' && recordValue !== '\\N') &&
-                    (insidenValue === null || insidenValue === undefined || insidenValue === '' || insidenValue === '\\N')) {
-                    insiden[key] = recordValue;
-                }
-            });
-        });
-        
         // Kumpulkan semua items dari semua record (untuk detail layer)
+        // Items dikumpulkan dari semua record, bukan hanya dari mainRecord
         if (!insiden.items) {
             insiden.items = [];
         }
         
         // Tambahkan items dari semua record yang memiliki layer data
         allRecords.forEach(record => {
-            if (record.layer || record.jenis_item_ipls || record.detail_layer || 
-                record.klasifikasi_layer || record.keterangan_layer) {
+            if (hasValue(record.layer) || hasValue(record.jenis_item_ipls) || 
+                hasValue(record.detail_layer) || hasValue(record.klasifikasi_layer) || 
+                hasValue(record.keterangan_layer)) {
                 // Cek apakah item sudah ada (berdasarkan kombinasi layer, jenis_item_ipls, detail_layer)
                 const existingItem = insiden.items.find(item => 
                     item.layer === record.layer && 
