@@ -14248,7 +14248,66 @@ source: new ol.source.Vector(),
             return null;
         }
 
-        return insidenDatasetMap.get(noKecelakaan) || null;
+        let insiden = insidenDatasetMap.get(noKecelakaan);
+        
+        // Ambil semua record dengan no_kecelakaan yang sama
+        const allRecords = insidenDataset.filter(item => item.no_kecelakaan === noKecelakaan);
+        
+        if (allRecords.length > 0) {
+            // Cari record yang memiliki data paling lengkap (prioritaskan yang punya hari, jam, shift, perusahaan, departemen)
+            const recordWithData = allRecords.find(item => 
+                item.hari || item.jam || item.shift || item.perusahaan || item.departemen || 
+                item.bulan || item.tahun || item.minggu_ke
+            ) || allRecords[0];
+            
+            // Jika insiden belum ada, gunakan recordWithData
+            if (!insiden) {
+                insiden = {...recordWithData};
+            } else {
+                // Gabungkan data: gunakan data dari recordWithData untuk field yang null di insiden
+                const mergedData = {...insiden};
+                Object.keys(recordWithData).forEach(key => {
+                    const recordValue = recordWithData[key];
+                    const insidenValue = insiden[key];
+                    // Gunakan recordWithData jika insiden null/undefined/kosong, atau jika recordWithData lebih lengkap
+                    if ((recordValue !== null && recordValue !== undefined && recordValue !== '' && recordValue !== '\\N') &&
+                        (insidenValue === null || insidenValue === undefined || insidenValue === '' || insidenValue === '\\N')) {
+                        mergedData[key] = recordValue;
+                    }
+                });
+                insiden = mergedData;
+            }
+            
+            // Kumpulkan semua items dari semua record (untuk detail layer)
+            if (!insiden.items) {
+                insiden.items = [];
+            }
+            
+            // Tambahkan items dari semua record yang memiliki layer data
+            allRecords.forEach(record => {
+                if (record.layer || record.jenis_item_ipls || record.detail_layer || 
+                    record.klasifikasi_layer || record.keterangan_layer) {
+                    // Cek apakah item sudah ada (berdasarkan kombinasi layer, jenis_item_ipls, detail_layer)
+                    const existingItem = insiden.items.find(item => 
+                        item.layer === record.layer && 
+                        item.jenis_item_ipls === record.jenis_item_ipls &&
+                        item.detail_layer === record.detail_layer
+                    );
+                    
+                    if (!existingItem) {
+                        insiden.items.push({
+                            layer: record.layer,
+                            jenis_item_ipls: record.jenis_item_ipls,
+                            detail_layer: record.detail_layer,
+                            klasifikasi_layer: record.klasifikasi_layer,
+                            keterangan_layer: record.keterangan_layer
+                        });
+                    }
+                }
+            });
+        }
+        
+        return insiden || null;
     }
 
     function focusInsidenOnMap(noKecelakaan) {
@@ -14275,18 +14334,30 @@ source: new ol.source.Vector(),
         modalTitle.textContent = `Detail Insiden - ${escapeHtml(insiden.no_kecelakaan || 'N/A')}`;
 
         // Format tanggal
-        const formatDate = (dateStr) => {
-            if (!dateStr) return '-';
-            try {
-                const date = new Date(dateStr);
-                return date.toLocaleDateString('id-ID', { 
-                    year: 'numeric', 
-                    month: 'long', 
-                    day: 'numeric' 
-                });
-            } catch (e) {
-                return dateStr;
+        const formatDate = (dateStr, bulan, tahun) => {
+            if (dateStr) {
+                try {
+                    const date = new Date(dateStr);
+                    return date.toLocaleDateString('id-ID', { 
+                        year: 'numeric', 
+                        month: 'long', 
+                        day: 'numeric' 
+                    });
+                } catch (e) {
+                    return dateStr;
+                }
             }
+            // Jika tanggal null, coba buat dari bulan dan tahun
+            if (bulan && tahun) {
+                const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 
+                                  'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                const monthIndex = parseInt(bulan) - 1;
+                if (monthIndex >= 0 && monthIndex < 12) {
+                    return `${monthNames[monthIndex]} ${tahun}`;
+                }
+                return `${bulan}/${tahun}`;
+            }
+            return '-';
         };
 
         // Format waktu
@@ -14446,26 +14517,36 @@ source: new ol.source.Vector(),
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.tanggal) || hasValue(insiden.bulan) || hasValue(insiden.tahun) ? `
                                 <tr>
                                     <td width="40%"><strong>Tanggal:</strong></td>
-                                    <td>${formatDate(insiden.tanggal)}</td>
+                                    <td>${formatDate(insiden.tanggal, insiden.bulan, insiden.tahun)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.hari) ? `
                                 <tr>
-                                    <td><strong>Hari:</strong></td>
-                                    <td>${escapeHtml(insiden.hari || '-')}</td>
+                                    <td width="40%"><strong>Hari:</strong></td>
+                                    <td>${escapeHtml(insiden.hari)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.jam) || hasValue(insiden.menit) ? `
                                 <tr>
-                                    <td><strong>Waktu:</strong></td>
+                                    <td width="40%"><strong>Waktu:</strong></td>
                                     <td>${formatTime(insiden.jam, insiden.menit)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.shift) ? `
                                 <tr>
-                                    <td><strong>Shift:</strong></td>
-                                    <td>${escapeHtml(insiden.shift || '-')}</td>
+                                    <td width="40%"><strong>Shift:</strong></td>
+                                    <td>${escapeHtml(insiden.shift)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.minggu_ke) ? `
                                 <tr>
-                                    <td><strong>Minggu Ke:</strong></td>
-                                    <td>${insiden.minggu_ke || '-'}</td>
+                                    <td width="40%"><strong>Minggu Ke:</strong></td>
+                                    <td>${insiden.minggu_ke}</td>
                                 </tr>
+                                ` : ''}
                             </table>
                         </div>
                     </div>
@@ -14477,22 +14558,30 @@ source: new ol.source.Vector(),
                         </div>
                         <div class="card-body">
                             <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.perusahaan) ? `
                                 <tr>
                                     <td width="40%"><strong>Perusahaan:</strong></td>
-                                    <td>${escapeHtml(insiden.perusahaan || '-')}</td>
+                                    <td>${escapeHtml(insiden.perusahaan)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.departemen) ? `
                                 <tr>
-                                    <td><strong>Departemen:</strong></td>
-                                    <td>${escapeHtml(insiden.departemen || '-')}</td>
+                                    <td width="40%"><strong>Departemen:</strong></td>
+                                    <td>${escapeHtml(insiden.departemen)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.pja) ? `
                                 <tr>
-                                    <td><strong>PJA:</strong></td>
-                                    <td>${escapeHtml(insiden.pja || '-')}</td>
+                                    <td width="40%"><strong>PJA:</strong></td>
+                                    <td>${escapeHtml(insiden.pja)}</td>
                                 </tr>
+                                ` : ''}
+                                ${hasValue(insiden.insiden_dalam_site_mining) ? `
                                 <tr>
-                                    <td><strong>Insiden dalam Site Mining:</strong></td>
-                                    <td>${escapeHtml(insiden.insiden_dalam_site_mining || '-')}</td>
+                                    <td width="40%"><strong>Insiden dalam Site Mining:</strong></td>
+                                    <td>${escapeHtml(insiden.insiden_dalam_site_mining)}</td>
                                 </tr>
+                                ` : ''}
                             </table>
                         </div>
                     </div>
