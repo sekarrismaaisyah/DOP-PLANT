@@ -4598,28 +4598,18 @@
         const isHighRiskArea = checkIfHighRiskArea(lokasiName, idLokasi);
         const hasSapInHighRiskArea = isHighRiskArea && hasSapReportFromPja;
         
-        // Log untuk debugging
-        console.log(`[Risk Calculation] "${lokasiName}" (ID: ${idLokasi}):`);
-        console.log(`  - SAP Report: ${hasSapReportFromPja}`);
-        console.log(`  - CCTV Online: ${hasOnlineCctv}`);
-        console.log(`  - Is High Risk Area: ${isHighRiskArea}`);
-        console.log(`  - SAP in High Risk: ${hasSapInHighRiskArea}`);
-        
         // Determine risk level based on risk matrix
         // HIGH (Red):
         // - Semua kondisi TIDAK MEMENUHI
         // - Hanya "Terdapat Laporan SAP dari SO PJA CCTV" MEMENUHI
         // - Hanya "Area Highrisk ada Laporan SAP (Critical)" MEMENUHI
         if (!hasSapReportFromPja && !hasOnlineCctv && !hasSapInHighRiskArea) {
-            console.log(`  → Result: HIGH (Semua kondisi TIDAK MEMENUHI)`);
             return 'HIGH'; // Semua TIDAK MEMENUHI
         }
         if (hasSapReportFromPja && !hasOnlineCctv && !hasSapInHighRiskArea) {
-            console.log(`  → Result: HIGH (Hanya SAP MEMENUHI)`);
             return 'HIGH'; // Hanya SAP MEMENUHI
         }
         if (!hasSapReportFromPja && !hasOnlineCctv && hasSapInHighRiskArea) {
-            console.log(`  → Result: HIGH (Hanya High Risk SAP MEMENUHI)`);
             return 'HIGH'; // Hanya High Risk SAP MEMENUHI
         }
         
@@ -4627,11 +4617,9 @@
         // - "Terdapat Laporan SAP dari SO PJA CCTV" TIDAK MEMENUHI, tapi "Area Highrisk ada Laporan SAP (Critical)" dan "CCTV Kondisi Online (Critical)" MEMENUHI
         // - "Terdapat Laporan SAP dari SO PJA CCTV" MEMENUHI, "Area Highrisk ada Laporan SAP (Critical)" TIDAK MEMENUHI, tapi "CCTV Kondisi Online (Critical)" MEMENUHI
         if (!hasSapReportFromPja && hasSapInHighRiskArea && hasOnlineCctv) {
-            console.log(`  → Result: MEDIUM (SAP TIDAK, High Risk SAP + CCTV MEMENUHI)`);
             return 'MEDIUM';
         }
         if (hasSapReportFromPja && !hasSapInHighRiskArea && hasOnlineCctv) {
-            console.log(`  → Result: MEDIUM (SAP + CCTV MEMENUHI, High Risk TIDAK)`);
             return 'MEDIUM';
         }
         
@@ -4639,26 +4627,22 @@
         // - Semua kondisi MEMENUHI
         // - SAP + CCTV MEMENUHI (tidak peduli high risk atau tidak)
         if (hasSapReportFromPja && hasOnlineCctv) {
-            console.log(`  → Result: NORMAL (SAP + CCTV MEMENUHI)`);
             return 'NORMAL';
         }
         
         // Additional cases untuk NORMAL:
         // - Jika area bukan high risk dan ada CCTV online (meskipun tidak ada SAP)
         if (!isHighRiskArea && hasOnlineCctv) {
-            console.log(`  → Result: NORMAL (Bukan High Risk + CCTV Online)`);
             return 'NORMAL';
         }
         
         // Additional cases untuk MEDIUM:
         // - Jika ada SAP tapi tidak ada CCTV dan bukan high risk
         if (hasSapReportFromPja && !hasOnlineCctv && !isHighRiskArea) {
-            console.log(`  → Result: MEDIUM (SAP MEMENUHI, CCTV TIDAK, Bukan High Risk)`);
             return 'MEDIUM';
         }
         
         // Default to MEDIUM if conditions don't match exactly
-        console.log(`  → Result: MEDIUM (Default)`);
         return 'MEDIUM';
     }
 
@@ -4669,7 +4653,6 @@
         const cctvInArea = await getCctvInArea(lokasiName, idLokasi, geometry);
         
         if (cctvInArea.length === 0) {
-            console.log(`[Risk Matrix] No CCTV found in area: ${lokasiName}`);
             return false;
         }
         
@@ -4695,14 +4678,9 @@
                 (cctv.kondisi && cctv.kondisi.toString().toLowerCase() === 'baik') ||
                 (cctv.status && cctv.status.toString().toLowerCase() === 'live view');
             
-            if (isOnline) {
-                console.log(`[Risk Matrix] CCTV Online found: ${cctv.nama_cctv || cctv.no_cctv} - kondisi: ${kondisi}, status: ${status}, connected: ${connected}`);
-            }
-            
             return isOnline;
         });
         
-        console.log(`[Risk Matrix] Area: ${lokasiName}, CCTV in area: ${cctvInArea.length}, Has online: ${hasOnline}`);
         return hasOnline;
     }
 
@@ -4734,19 +4712,13 @@
         let retryCount = 0;
         const maxRetries = 20;
         while ((typeof sapDataForSidebar === 'undefined' || !sapDataForSidebar || sapDataForSidebar.length === 0) && retryCount < maxRetries) {
-            console.log(`[Risk Matrix] Waiting for SAP data to load... (attempt ${retryCount + 1}/${maxRetries})`);
             await new Promise(resolve => setTimeout(resolve, 500));
             retryCount++;
         }
 
         if (typeof sapDataForSidebar === 'undefined' || !sapDataForSidebar || sapDataForSidebar.length === 0) {
-            console.warn('[Risk Matrix] SAP data not available after waiting, proceeding with calculation anyway');
-            console.warn('[Risk Matrix] This may result in all features showing HIGH risk if no SAP data is available');
-        } else {
-            console.log(`[Risk Matrix] ✓ SAP data loaded: ${sapDataForSidebar.length} items available`);
+            // SAP data not available, proceeding with calculation anyway
         }
-
-        console.log(`[Risk Matrix] Calculating risk levels for ${features.length} features...`);
         
         // Calculate risk level for each feature
         // Process in batches to avoid overwhelming the browser
@@ -4769,10 +4741,7 @@
                     // Set risk level as property on feature
                     feature.set('riskLevel', riskLevel);
                     riskLevelCounts[riskLevel] = (riskLevelCounts[riskLevel] || 0) + 1;
-                    
-                    console.log(`[Risk Matrix] Feature "${lokasiName}" (ID: ${idLokasi}): ${riskLevel}`);
                 } catch (error) {
-                    console.error(`[Risk Matrix] Error calculating risk level for feature:`, error);
                     // Set default MEDIUM if calculation fails
                     feature.set('riskLevel', 'MEDIUM');
                     riskLevelCounts.MEDIUM = (riskLevelCounts.MEDIUM || 0) + 1;
@@ -4784,11 +4753,6 @@
                 await new Promise(resolve => setTimeout(resolve, 100));
             }
         }
-        
-        console.log(`[Risk Matrix] ✓ Finished calculating risk levels for ${features.length} features:`);
-        console.log(`[Risk Matrix]   - HIGH (Red): ${riskLevelCounts.HIGH || 0}`);
-        console.log(`[Risk Matrix]   - MEDIUM (Orange): ${riskLevelCounts.MEDIUM || 0}`);
-        console.log(`[Risk Matrix]   - NORMAL (Green): ${riskLevelCounts.NORMAL || 0}`);
     }
 
     // Get risk-based style for area kerja
@@ -5212,7 +5176,6 @@
         // Check if at least one CCTV is online dari data yang sudah diambil
         // Gunakan data dari API untuk akurasi yang lebih baik
         // Logika HARUS SAMA PERSIS dengan yang digunakan di popup (line 5151-5154) untuk konsistensi
-        console.log(`[getRiskMatrixSummary] Checking online status for ${cctvList.length} CCTV(s)`);
         
         const hasOnlineCctv = cctvList.some(cctv => {
             // Gunakan logika yang SAMA PERSIS dengan popup (line 5149-5154)
@@ -5229,16 +5192,8 @@
                 cctv.is_online === true || 
                 cctv.status_online === 1;
             
-            if (isOnline) {
-                console.log(`[getRiskMatrixSummary] ✓ CCTV Online found: ${cctv.nama_cctv || cctv.no_cctv || cctv.id} - kondisi: "${kondisi}", status: "${cctv.status}", connected: "${cctv.connected}"`);
-            } else {
-                console.log(`[getRiskMatrixSummary] ✗ CCTV Offline: ${cctv.nama_cctv || cctv.no_cctv || cctv.id} - kondisi: "${kondisi}", status: "${cctv.status}", connected: "${cctv.connected}"`);
-            }
-            
             return isOnline;
         });
-        
-        console.log(`[getRiskMatrixSummary] Has Online CCTV: ${hasOnlineCctv} (out of ${cctvList.length} CCTV)`);
         
         // Calculate all criteria
         const hasSapReportFromPja = hasSapReportToday('area_kerja', idLokasi, lokasiName, null, null, geometry);
@@ -5265,8 +5220,6 @@
                 riskColor = '#22c55e'; // Green
                 break;
         }
-        
-        console.log(`[getRiskMatrixSummary] Area: ${lokasiName}, CCTV Count: ${cctvCount}, Has Online: ${hasOnlineCctv}, Risk Level: ${riskLevel}`);
         
         // Simpan risk level ke feature untuk digunakan oleh styling
         feature.set('riskLevel', riskLevel);
