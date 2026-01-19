@@ -3969,7 +3969,38 @@
     console.log(`Filtered SAP data: Sidebar (today) ${sapDataForSidebar.length} items | Map ${sapData.length} items (limited to 1000) for today (${todayStr}) out of ${allSapData.length} total`);
     
     // DEBUG: Filter dan tampilkan data INSPEKSI_HAZARD hari ini dari hse_automation.aaj_car_all_year_from_dav
+    console.log('🔍 === DEBUG INSPEKSI_HAZARD HARI INI (Page Load) ===');
+    console.log('📊 Total allSapData:', allSapData ? allSapData.length : 0);
+    console.log('📅 Today String:', todayStr);
+    
     if (allSapData && allSapData.length > 0) {
+        // Tampilkan semua source_type yang ada untuk debugging
+        const sourceTypes = {};
+        allSapData.forEach(function(sap) {
+            const sourceType = sap.source_type || sap.jenis_laporan || sap.type || 'UNKNOWN';
+            sourceTypes[sourceType] = (sourceTypes[sourceType] || 0) + 1;
+        });
+        console.log('📋 Source Type Distribution:', sourceTypes);
+        
+        // Filter semua INSPEKSI_HAZARD (tanpa filter tanggal dulu)
+        const allInspeksiHazard = allSapData.filter(function(sap) {
+            return sap.source_type === 'INSPEKSI_HAZARD' || 
+                   sap.jenis_laporan === 'INSPEKSI_HAZARD' ||
+                   sap.type === 'INSPEKSI_HAZARD';
+        });
+        console.log('📦 Total INSPEKSI_HAZARD (semua tanggal):', allInspeksiHazard.length);
+        
+        if (allInspeksiHazard.length > 0) {
+            console.log('📅 Tanggal-tanggal INSPEKSI_HAZARD yang ada:');
+            const dates = {};
+            allInspeksiHazard.forEach(function(sap) {
+                const date = sap.tanggal_pelaporan || sap.detected_at || 'NO_DATE';
+                dates[date] = (dates[date] || 0) + 1;
+            });
+            console.log('Tanggal distribution:', dates);
+        }
+        
+        // Filter INSPEKSI_HAZARD hari ini
         const inspeksiHazardToday = allSapData.filter(function(sap) {
             // Filter berdasarkan source_type = 'INSPEKSI_HAZARD'
             const isInspeksiHazard = sap.source_type === 'INSPEKSI_HAZARD' || 
@@ -3979,7 +4010,10 @@
             if (!isInspeksiHazard) return false;
             
             // Filter berdasarkan tanggal hari ini
-            if (!sap.tanggal_pelaporan && !sap.detected_at) return false;
+            if (!sap.tanggal_pelaporan && !sap.detected_at) {
+                console.warn('⚠️ INSPEKSI_HAZARD tanpa tanggal:', sap.task_number || sap.id || 'N/A');
+                return false;
+            }
             
             try {
                 const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
@@ -3987,29 +4021,28 @@
                 const sapDateStr = sapDate.toISOString().split('T')[0];
                 return sapDateStr === todayStr;
             } catch (e) {
+                console.error('❌ Error parsing date:', sap.tanggal_pelaporan || sap.detected_at, e);
                 return false;
             }
         });
         
-        console.log('=== DEBUG INSPEKSI_HAZARD HARI INI ===');
-        console.log(`Total INSPEKSI_HAZARD hari ini (${todayStr}): ${inspeksiHazardToday.length} items`);
-        console.log('Data INSPEKSI_HAZARD hari ini:', inspeksiHazardToday);
+        console.log(`✅ Total INSPEKSI_HAZARD hari ini (${todayStr}): ${inspeksiHazardToday.length} items`);
+        console.log('📦 Data INSPEKSI_HAZARD hari ini:', inspeksiHazardToday);
         
         // Tampilkan detail setiap item
         if (inspeksiHazardToday.length > 0) {
-            console.log('Detail INSPEKSI_HAZARD hari ini:');
+            console.log('📝 Detail INSPEKSI_HAZARD hari ini:');
             inspeksiHazardToday.forEach(function(item, index) {
-                console.log(`[${index + 1}] Task: ${item.task_number || 'N/A'} | Lokasi: ${item.nama_lokasi || item.lokasi || 'N/A'} | Detail: ${item.nama_detail_lokasi || item.detail_lokasi || 'N/A'} | Tanggal: ${item.tanggal_pelaporan || item.detected_at || 'N/A'} | Source: ${item.source_type || item.jenis_laporan || 'N/A'}`);
+                console.log(`[${index + 1}] Task: ${item.task_number || 'N/A'} | Lokasi: ${item.nama_lokasi || item.lokasi || 'N/A'} | Detail: ${item.nama_detail_lokasi || item.detail_lokasi || 'N/A'} | Tanggal: ${item.tanggal_pelaporan || item.detected_at || 'N/A'} | Source: ${item.source_type || item.jenis_laporan || item.type || 'N/A'}`);
             });
         } else {
             console.warn('⚠️ Tidak ada data INSPEKSI_HAZARD ditemukan untuk hari ini!');
-            console.log('Total allSapData:', allSapData.length);
-            console.log('Sample allSapData source_type:', allSapData.slice(0, 10).map(s => s.source_type || s.jenis_laporan || s.type));
+            console.log('💡 Tips: Cek apakah ada data INSPEKSI_HAZARD dengan tanggal berbeda');
         }
-        console.log('=== END DEBUG INSPEKSI_HAZARD ===');
     } else {
         console.warn('⚠️ allSapData kosong atau tidak terdefinisi!');
     }
+    console.log('🔍 === END DEBUG INSPEKSI_HAZARD ===');
     
     const hazardDetections = sapData; // Alias untuk kompatibilitas dengan kode yang sudah ada
     
@@ -21407,9 +21440,40 @@ source: new ol.source.Vector(),
                         console.log('SAP data loaded:', filteredSapData.length, 'items for week', weekValue, 'out of', newSapData.length, 'total');
                         
                         // DEBUG: Filter dan tampilkan data INSPEKSI_HAZARD hari ini
+                        console.log('🔍 === DEBUG INSPEKSI_HAZARD HARI INI (loadSapDataByWeek) ===');
+                        console.log('📊 Week:', weekValue);
+                        console.log('📊 Total filteredSapData:', filteredSapData.length);
+                        
                         const debugToday = new Date();
                         debugToday.setHours(0, 0, 0, 0);
                         const debugTodayStr = debugToday.toISOString().split('T')[0];
+                        console.log('📅 Today String:', debugTodayStr);
+                        
+                        // Tampilkan semua source_type yang ada untuk debugging
+                        const sourceTypes = {};
+                        filteredSapData.forEach(function(sap) {
+                            const sourceType = sap.source_type || sap.jenis_laporan || sap.type || 'UNKNOWN';
+                            sourceTypes[sourceType] = (sourceTypes[sourceType] || 0) + 1;
+                        });
+                        console.log('📋 Source Type Distribution:', sourceTypes);
+                        
+                        // Filter semua INSPEKSI_HAZARD (tanpa filter tanggal dulu)
+                        const allInspeksiHazard = filteredSapData.filter(function(sap) {
+                            return sap.source_type === 'INSPEKSI_HAZARD' || 
+                                   sap.jenis_laporan === 'INSPEKSI_HAZARD' ||
+                                   sap.type === 'INSPEKSI_HAZARD';
+                        });
+                        console.log('📦 Total INSPEKSI_HAZARD (semua tanggal dalam week):', allInspeksiHazard.length);
+                        
+                        if (allInspeksiHazard.length > 0) {
+                            console.log('📅 Tanggal-tanggal INSPEKSI_HAZARD yang ada:');
+                            const dates = {};
+                            allInspeksiHazard.forEach(function(sap) {
+                                const date = sap.tanggal_pelaporan || sap.detected_at || 'NO_DATE';
+                                dates[date] = (dates[date] || 0) + 1;
+                            });
+                            console.log('Tanggal distribution:', dates);
+                        }
                         
                         const inspeksiHazardToday = filteredSapData.filter(function(sap) {
                             // Filter berdasarkan source_type = 'INSPEKSI_HAZARD'
@@ -21420,7 +21484,10 @@ source: new ol.source.Vector(),
                             if (!isInspeksiHazard) return false;
                             
                             // Filter berdasarkan tanggal hari ini
-                            if (!sap.tanggal_pelaporan && !sap.detected_at) return false;
+                            if (!sap.tanggal_pelaporan && !sap.detected_at) {
+                                console.warn('⚠️ INSPEKSI_HAZARD tanpa tanggal:', sap.task_number || sap.id || 'N/A');
+                                return false;
+                            }
                             
                             try {
                                 const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
@@ -21428,25 +21495,24 @@ source: new ol.source.Vector(),
                                 const sapDateStr = sapDate.toISOString().split('T')[0];
                                 return sapDateStr === debugTodayStr;
                             } catch (e) {
+                                console.error('❌ Error parsing date:', sap.tanggal_pelaporan || sap.detected_at, e);
                                 return false;
                             }
                         });
                         
-                        console.log('=== DEBUG INSPEKSI_HAZARD HARI INI (loadSapDataByWeek) ===');
-                        console.log(`Week: ${weekValue} | Total INSPEKSI_HAZARD hari ini (${debugTodayStr}): ${inspeksiHazardToday.length} items`);
-                        console.log('Data INSPEKSI_HAZARD hari ini:', inspeksiHazardToday);
+                        console.log(`✅ Week: ${weekValue} | Total INSPEKSI_HAZARD hari ini (${debugTodayStr}): ${inspeksiHazardToday.length} items`);
+                        console.log('📦 Data INSPEKSI_HAZARD hari ini:', inspeksiHazardToday);
                         
                         if (inspeksiHazardToday.length > 0) {
-                            console.log('Detail INSPEKSI_HAZARD hari ini:');
+                            console.log('📝 Detail INSPEKSI_HAZARD hari ini:');
                             inspeksiHazardToday.forEach(function(item, index) {
                                 console.log(`[${index + 1}] Task: ${item.task_number || 'N/A'} | Lokasi: ${item.nama_lokasi || item.lokasi || 'N/A'} | Detail: ${item.nama_detail_lokasi || item.detail_lokasi || 'N/A'} | Tanggal: ${item.tanggal_pelaporan || item.detected_at || 'N/A'} | Source: ${item.source_type || item.jenis_laporan || item.type || 'N/A'}`);
                             });
                         } else {
                             console.warn(`⚠️ Tidak ada data INSPEKSI_HAZARD ditemukan untuk hari ini (${debugTodayStr})!`);
-                            console.log('Total filteredSapData:', filteredSapData.length);
-                            console.log('Sample filteredSapData source_type:', filteredSapData.slice(0, 10).map(s => s.source_type || s.jenis_laporan || s.type));
+                            console.log('💡 Tips: Cek apakah ada data INSPEKSI_HAZARD dengan tanggal berbeda');
                         }
-                        console.log('=== END DEBUG INSPEKSI_HAZARD ===');
+                        console.log('🔍 === END DEBUG INSPEKSI_HAZARD ===');
                         
                         // Simpan semua data per week untuk count di tab
                         sapDataAllWeek = [...filteredSapData];

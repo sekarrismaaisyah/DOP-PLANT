@@ -653,15 +653,9 @@ class fullMapsController extends Controller
         ]);
         
         try {
-            $clickhouse = new ClickHouseService();
-            Log::info('getSapDataFromClickHouse - ClickHouseService instantiated');
-            
-            if (!$clickhouse->isConnected()) {
-                Log::warning('ClickHouse is not connected. Returning empty SAP data.');
-                return [];
-            }
-            
-            Log::info('getSapDataFromClickHouse - ClickHouse is connected');
+            // Menggunakan koneksi langsung ke ClickHouse 10.10.10.38
+            // Tidak menggunakan ClickHouseService karena menggunakan koneksi custom
+            Log::info('getSapDataFromClickHouse - Using custom ClickHouse connection to 10.10.10.38');
 
             // Jika weekStart tidak diberikan, gunakan Senin minggu ini
             if (!$weekStart) {
@@ -669,7 +663,11 @@ class fullMapsController extends Controller
                 $weekStart = $today->copy()->startOfWeek(Carbon::MONDAY)->setTime(0, 0, 0);
             } else {
                 // Parse weekStart string (format: YYYY-MM-DD HH:MM:SS atau YYYY-MM-DD)
-                $weekStart = Carbon::parse($weekStart)->startOfWeek(Carbon::MONDAY)->setTime(0, 0, 0);
+                if (is_string($weekStart)) {
+                    $weekStart = Carbon::parse($weekStart)->startOfWeek(Carbon::MONDAY)->setTime(0, 0, 0);
+                } else {
+                    $weekStart = $weekStart->copy()->startOfWeek(Carbon::MONDAY)->setTime(0, 0, 0);
+                }
             }
             
             // Week end adalah Senin berikutnya (7 hari setelah weekStart) pada 00:00:00
@@ -682,12 +680,17 @@ class fullMapsController extends Controller
             
             $sapData = [];
             $resultsInspeksi = [];
-            $resultsObservasi = [];
-            $resultsOak = [];
-            $resultsCoaching = [];
             
             // 1. Query aaj_car_all_year_from_dav
             try {
+                // First, test connection with a simple count query
+                $testSql = "SELECT count() as total FROM aaj_car_all_year_from_dav LIMIT 1";
+                $testResult = $this->queryClickHouseCustom($testSql, 'hse_automation');
+                Log::info('ClickHouse connection test', [
+                    'test_result' => $testResult,
+                    'test_count' => is_array($testResult) && isset($testResult[0]) ? $testResult[0] : null
+                ]);
+                
                 $sqlInspeksi = "
                     SELECT 
                         toString(id) as task_number,
@@ -740,15 +743,34 @@ class fullMapsController extends Controller
                     LIMIT 12500
                 ";
                 
+                Log::info('Executing SAP query', [
+                    'sql_preview' => substr($sqlInspeksi, 0, 300) . '...',
+                    'week_start' => $weekStartStr,
+                    'week_end' => $weekEndStr
+                ]);
+                
                 // Menggunakan queryClickHouseCustom dengan database 'hse_automation' dan koneksi ke 10.10.10.38
                 $resultsInspeksi = $this->queryClickHouseCustom($sqlInspeksi, 'hse_automation');
                 
+                Log::info('SAP query result', [
+                    'result_type' => gettype($resultsInspeksi),
+                    'result_count' => is_array($resultsInspeksi) ? count($resultsInspeksi) : 0,
+                    'result_preview' => is_array($resultsInspeksi) && !empty($resultsInspeksi) ? array_slice($resultsInspeksi, 0, 2) : null
+                ]);
+                
                 if (!empty($resultsInspeksi) && is_array($resultsInspeksi)) {
-                    foreach ($resultsInspeksi as $row) {
+                    Log::info('INSPEKSI_HAZARD data retrieved: ' . count($resultsInspeksi) . ' records');
+                    foreach ($resultsInspeksi as $index => $row) {
                         try {
                             // Convert object to array if needed
                             if (is_object($row)) {
                                 $row = (array) $row;
+                            }
+                            
+                            // Ensure row is an array
+                            if (!is_array($row)) {
+                                Log::warning('Skipping non-array row', ['index' => $index, 'type' => gettype($row)]);
+                                continue;
                             }
                             
                             // Map uri_foto to url_foto for formatSapRow compatibility
@@ -764,163 +786,109 @@ class fullMapsController extends Controller
                             $formattedRow = $this->formatSapRow($row, 'INSPEKSI_HAZARD');
                             $sapData[] = $formattedRow;
                         } catch (Exception $e) {
-                            Log::error('Error processing row in aaj_car_all_year_from_dav: ' . $e->getMessage());
+                            Log::error('Error processing row in aaj_car_all_year_from_dav', [
+                                'index' => $index,
+                                'error' => $e->getMessage(),
+                                'row_preview' => is_array($row) ? array_slice($row, 0, 5) : $row
+                            ]);
                         }
                     }
-                }
-            } catch (Exception $e) {
-                Log::error('Error querying aaj_car_all_year_from_dav: ' . $e->getMessage());
-            }
-            
-            // 2. Query tabel_observasi
-            try {
-                $sqlObservasi = "
-                    SELECT 
-                        toString(TaskNumber) as task_number,
-                        toString(`aktivitas pekerjaan diobservasi`) as aktivitas_pekerjaan,
-                        toString(lokasi) as lokasi,
-                        toString(`detail lokasi`) as detail_lokasi,
-                        toString(keterangan) as keterangan,
-                        toString(`tanggal pelaporan`) as tanggal_pelaporan,
-                        toString(`perusahaan pelapor`) as perusahaan_pelapor,
-                        toString(pelapor) as pelapor,
-                        toString(`sid pelapor`) as sid_pelapor,
-                        toString(`jabatan fungsional pelapor`) as jabatan_fungsional_pelapor,
-                        toString(`departemen pelapor`) as departemen_pelapor,
-                        toString(pic) as pic,
-                        toString(`sid pic`) as sid_pic,
-                        toString(`jabatan fungsional pic`) as jabatan_fungsional_pic,
-                        toString(`perusahaan pic`) as perusahaan_pic,
-                        toString(`departemen pic`) as departemen_pic,
-                        toString(`url foto`) as url_foto,
-                        toString(`tools pengawasan`) as tools_pengawasan,
-                        toString(`catatan OBS`) as catatan_tindakan,
-                        toString(pelapor) as nama_pelapor,
-                        toString(`perusahaan pelapor`) as nama_perusahaan_pelapor_karyawan,
-                        toString(`jabatan fungsional pelapor`) as jabatan_fungsional_karyawan_pelapor
-                    FROM beats.aaj_database_observasi_from_bep_ytd_only
-                    WHERE toDate(`tanggal pelaporan`) >= toDate('{$weekStartStr}')
-                        AND toDate(`tanggal pelaporan`) < toDate('{$weekEndStr}')
-                    ORDER BY toDateTime(`tanggal pelaporan`) DESC
-                    LIMIT 12500
-                ";
-                
-                $resultsObservasi = $clickhouse->query($sqlObservasi);
-                if (!empty($resultsObservasi) && is_array($resultsObservasi)) {
-                    foreach ($resultsObservasi as $row) {
-                        $sapData[] = $this->formatSapRow($row, 'OBSERVASI');
-                    }
-                }
-            } catch (Exception $e) {
-                Log::error('Error querying tabel_observasi: ' . $e->getMessage());
-            }
-            
-            // 3. Query aaj_vw_car_oak_register_ytd_only
-            try {
-                $sqlOak = "
-                    SELECT 
-                        toString(id) as task_number,
-                        toString(activity) as aktivitas_pekerjaan,
-                        toString(sub_activity) as sub_aktivitas_pekerjaan_oak,
-                        toString(tool_type) as tool_pekerjaan_oak,
-                        toString(location) as lokasi,
-                        toString(detail_location) as detail_lokasi,
-                        toString(conclusion) as hasil_oak,
-                        toString(tools_observasi) as tools_pengawasan,
-                        toString(submit_date) as tanggal_pelaporan,
-                        toString(location_description) as keterangan_lokasi,
-                        toString(shift) as shift_oak,
-                        toString(company_submit_by) as perusahaan_pelapor,
-                        toString(submit_by) as pelapor,
-                        toString(code_sib) as kode_sib_oak,
-                        toString(jabatan_fungsional_submiter) as jabatan_fungsional_pelapor,
-                        toString(url_photo) as url_foto,
-                        toString(material) as material_oak,
-                        toString(conveyance_type) as jenis_alat_angkut_oak,
-                        toString(lifting_equipment) as jenis_alat_angkut_oak_2,
-                        toString(kode_sid_pelapor) as sid_pelapor,
-                        toString(kode_sid_pelapor) as kode_sid_pelapor,
-                        toString(kode_sid_team) as kode_sid_team,
-                        toString(nama_team) as pic,
-                        toString(kode_sid_team) as sid_pic,
-                        toString(company_submit_by) as perusahaan_pic,
-                        toString(jabatan_fungsional_team) as jabatan_fungsional_pic,
-                        toString(tipe) as tipe,
-                        ifNull(toString(latitude), '') as latitude,
-                        ifNull(toString(longitude), '') as longitude,
-                        ifNull(toString(site), '') as site
-                    FROM beats.aaj_vw_car_oak_register_ytd_only
-                    WHERE submit_date IS NOT NULL
-                        AND toDate(submit_date) >= toDate('{$weekStartStr}')
-                        AND toDate(submit_date) < toDate('{$weekEndStr}')
-                    ORDER BY toDateTime(submit_date) DESC
-                    LIMIT 12500
-                ";
-                
-                $resultsOak = $clickhouse->query($sqlOak);
-                if (!empty($resultsOak) && is_array($resultsOak)) {
-                    foreach ($resultsOak as $row) {
-                        // Map hasil_oak to keterangan for formatSapRow compatibility
-                        if (isset($row['hasil_oak']) && !isset($row['keterangan'])) {
-                            $row['keterangan'] = $row['hasil_oak'];
-                        }
+                } else {
+                    Log::warning('INSPEKSI_HAZARD query returned empty result', [
+                        'result_type' => gettype($resultsInspeksi),
+                        'result' => $resultsInspeksi
+                    ]);
+                    
+                    // Fallback: Try querying without date filter to see if there's any data
+                    Log::info('Trying fallback query without date filter');
+                    try {
+                        $fallbackSql = "
+                            SELECT 
+                                toString(id) as task_number,
+                                ifNull(toString(jenis_laporan), 'INSPEKSI_HAZARD') as jenis_laporan,
+                                ifNull(toString(deskripsi), '') as aktivitas_pekerjaan,
+                                ifNull(toString(nama_lokasi), '') as lokasi,
+                                ifNull(toString(nama_detail_lokasi), '') as detail_lokasi,
+                                ifNull(toString(deskripsi), '') as keterangan,
+                                ifNull(toString(tanggal_pembuatan), toString(bedraft_date)) as tanggal_pelaporan,
+                                ifNull(toString(perusahaan_pelapor), '') as perusahaan_pelapor,
+                                ifNull(toString(nama_pelapor), '') as pelapor,
+                                ifNull(toString(sid_pelapor), '') as sid_pelapor,
+                                ifNull(toString(jabatan_fungsional_pelapor), '') as jabatan_fungsional_pelapor,
+                                ifNull(toString(departemen_pelapor), '') as departemen_pelapor,
+                                ifNull(toString(nama_pic), '') as pic,
+                                ifNull(toString(sid_pic), '') as sid_pic,
+                                ifNull(toString(jabatan_fungsional_pic), '') as jabatan_fungsional_pic,
+                                ifNull(toString(perusahaan_pic), '') as perusahaan_pic,
+                                ifNull(toString(departemen_pic), '') as departemen_pic,
+                                ifNull(toString(url_photo), '') as uri_foto,
+                                ifNull(toString(name_tools_observation), '') as tools_pengawasan,
+                                ifNull(toString(tindakan), '') as catatan_tindakan,
+                                ifNull(toString(id_pelapor), '') as nik_pelapor,
+                                ifNull(toString(nama_pelapor), '') as nama_pelapor,
+                                ifNull(toString(perusahaan_pelapor), '') as nama_perusahaan_pelapor_karyawan,
+                                ifNull(toString(jabatan_fungsional_pelapor), '') as jabatan_fungsional_karyawan_pelapor,
+                                ifNull(toString(latitude), '') as latitude,
+                                ifNull(toString(longitude), '') as longitude,
+                                ifNull(toString(nama_site), '') as site,
+                                ifNull(toString(lokasi_detail), '') as keterangan_lokasi,
+                                ifNull(toString(jam), '') as jam,
+                                ifNull(toString(menit), '') as menit,
+                                ifNull(toString(nama_lokasi), '') as nama_lokasi,
+                                ifNull(toString(nama_detail_lokasi), '') as nama_detail_lokasi
+                            FROM aaj_car_all_year_from_dav
+                            WHERE tanggal_pembuatan IS NOT NULL OR bedraft_date IS NOT NULL
+                            ORDER BY 
+                                CASE 
+                                    WHEN tanggal_pembuatan IS NOT NULL THEN toDateTime(tanggal_pembuatan)
+                                    WHEN bedraft_date IS NOT NULL THEN toDateTime(bedraft_date)
+                                    ELSE toDateTime('1970-01-01 00:00:00')
+                                END DESC
+                            LIMIT 1000
+                        ";
                         
-                        $sapData[] = $this->formatSapRow($row, 'OAK');
+                        $fallbackResults = $this->queryClickHouseCustom($fallbackSql, 'hse_automation');
+                        
+                        if (!empty($fallbackResults) && is_array($fallbackResults)) {
+                            Log::info('Fallback query returned ' . count($fallbackResults) . ' records');
+                            foreach ($fallbackResults as $index => $row) {
+                                try {
+                                    if (is_object($row)) {
+                                        $row = (array) $row;
+                                    }
+                                    
+                                    if (!is_array($row)) {
+                                        continue;
+                                    }
+                                    
+                                    // Map uri_foto to url_foto for formatSapRow compatibility
+                                    if (isset($row['uri_foto']) && !isset($row['url_foto'])) {
+                                        $row['url_foto'] = $row['uri_foto'];
+                                    }
+                                    
+                                    // Map keterangan_lokasi to keterangan lokasi for formatSapRow
+                                    if (isset($row['keterangan_lokasi']) && !isset($row['keterangan lokasi'])) {
+                                        $row['keterangan lokasi'] = $row['keterangan_lokasi'];
+                                    }
+                                    
+                                    $formattedRow = $this->formatSapRow($row, 'INSPEKSI_HAZARD');
+                                    $sapData[] = $formattedRow;
+                                } catch (Exception $e) {
+                                    Log::error('Error processing fallback row: ' . $e->getMessage());
+                                }
+                            }
+                        } else {
+                            Log::warning('Fallback query also returned empty result');
+                        }
+                    } catch (Exception $fallbackError) {
+                        Log::error('Fallback query failed: ' . $fallbackError->getMessage());
                     }
                 }
             } catch (Exception $e) {
-                Log::error('Error querying aaj_vw_car_oak_register_ytd_only: ' . $e->getMessage());
-            }
-            
-            // 4. Query coaching from nitip.bep_vw_database_coaching
-            try {
-                $sqlCoaching = "
-                    SELECT 
-                        toString(_Task) as task_number,
-                        toString(topik_coaching) as aktivitas_pekerjaan,
-                        toString(lokasi) as lokasi,
-                        toString(detil_lokasi) as detail_lokasi,
-                        toString(keterangan_lokasi) as keterangan,
-                        toString(Tanggal_Pembuatan) as tanggal_pelaporan,
-                        toString(perusahaan_coachee) as perusahaan_pelapor,
-                        toString(nama_coachee) as pelapor,
-                        toString(nama_coachee) as nama_pelapor,
-                        toString(kode_sid_coachee) as sid_pelapor,
-                        toString(jabatan_fungsional_coachee) as jabatan_fungsional_pelapor,
-                        toString(departement_coachee) as departemen_pelapor,
-                        toString(nama_coach) as pic,
-                        toString(kode_sid_pelapor) as sid_pic,
-                        toString(jabatan_fungsional_coach) as jabatan_fungsional_pic,
-                        toString(perusahaan_coach) as perusahaan_pic,
-                        toString(departement_coach) as departemen_pic,
-                        toString(foto) as url_foto,
-                        toString(tools_pengamatan) as tools_pengawasan,
-                        toString(catatan_coach) as catatan_tindakan,
-                        toString(id_coachee) as nik_pelapor,
-                        toString(divisi_coachee) as divisi_pelapor,
-                        toString(departement_coachee) as departement_pelapor_karyawan,
-                        toString(perusahaan_coachee) as nama_perusahaan_pelapor_karyawan,
-                        toString(jabatan_fungsional_coachee) as jabatan_fungsional_karyawan_pelapor,
-                        toString(jabatan_struktural_coachee) as jabatan_struktural_pelapor,
-                        ifNull(toString(latitude), '') as latitude,
-                        ifNull(toString(longitude), '') as longitude,
-                        ifNull(toString(site), '') as site
-                    FROM nitip.bep_vw_database_coaching
-                    WHERE Tanggal_Pembuatan IS NOT NULL
-                        AND toDate(Tanggal_Pembuatan) >= toDate('{$weekStartStr}')
-                        AND toDate(Tanggal_Pembuatan) < toDate('{$weekEndStr}')
-                    ORDER BY toDateTime(Tanggal_Pembuatan) DESC
-                    LIMIT 12500
-                ";
-                
-                $resultsCoaching = $clickhouse->query($sqlCoaching);
-                if (!empty($resultsCoaching) && is_array($resultsCoaching)) {
-                    foreach ($resultsCoaching as $row) {
-                        $sapData[] = $this->formatSapRow($row, 'COACHING');
-                    }
-                }
-            } catch (Exception $e) {
-                Log::error('Error querying bep_vw_database_coaching: ' . $e->getMessage());
+                Log::error('Error querying aaj_car_all_year_from_dav', [
+                    'error' => $e->getMessage(),
+                    'trace' => $e->getTraceAsString()
+                ]);
             }
             
             // Sort by tanggal_pelaporan descending
@@ -930,12 +898,19 @@ class fullMapsController extends Controller
                 return strcmp($dateB, $dateA);
             });
             
-            Log::info('getSapDataFromClickHouse - Method completed, returning ' . count($sapData) . ' SAP records');
+            Log::info('getSapDataFromClickHouse - Method completed', [
+                'sap_records_count' => count($sapData),
+                'week_start' => $weekStartStr,
+                'week_end' => $weekEndStr
+            ]);
             
             return $sapData;
 
         } catch (Exception $e) {
-            Log::error('Error fetching SAP data from ClickHouse: ' . $e->getMessage());
+            Log::error('Error fetching SAP data from ClickHouse', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return [];
         }
     }
@@ -1358,170 +1333,6 @@ class fullMapsController extends Controller
                 }
             } catch (Exception $e) {
                 Log::error('Error querying aaj_car_all_year_from_dav: ' . $e->getMessage());
-            }
-            
-            // 2. Query tabel_observasi
-            try {
-                $remainingLimit = $limit - count($sapData);
-                if ($remainingLimit > 0) {
-                    $sqlObservasi = "
-                        SELECT 
-                            toString(TaskNumber) as task_number,
-                            toString(`aktivitas pekerjaan diobservasi`) as aktivitas_pekerjaan,
-                            toString(lokasi) as lokasi,
-                            toString(`detail lokasi`) as detail_lokasi,
-                            toString(keterangan) as keterangan,
-                            toString(`tanggal pelaporan`) as tanggal_pelaporan,
-                            toString(`perusahaan pelapor`) as perusahaan_pelapor,
-                            toString(pelapor) as pelapor,
-                            toString(`sid pelapor`) as sid_pelapor,
-                            toString(`jabatan fungsional pelapor`) as jabatan_fungsional_pelapor,
-                            toString(`departemen pelapor`) as departemen_pelapor,
-                            toString(pic) as pic,
-                            toString(`sid pic`) as sid_pic,
-                            toString(`jabatan fungsional pic`) as jabatan_fungsional_pic,
-                            toString(`perusahaan pic`) as perusahaan_pic,
-                            toString(`departemen pic`) as departemen_pic,
-                            toString(`url foto`) as url_foto,
-                            toString(`tools pengawasan`) as tools_pengawasan,
-                            toString(`catatan OBS`) as catatan_tindakan,
-                            toString(pelapor) as nama_pelapor,
-                            toString(`perusahaan pelapor`) as nama_perusahaan_pelapor_karyawan,
-                            toString(`jabatan fungsional pelapor`) as jabatan_fungsional_karyawan_pelapor,
-                            ifNull(toString(latitude), '') as latitude,
-                            ifNull(toString(longitude), '') as longitude
-                        FROM beats.aaj_database_observasi_from_bep_ytd_only
-                        WHERE latitude IS NOT NULL 
-                            AND longitude IS NOT NULL
-                            AND latitude != ''
-                            AND longitude != ''
-                        ORDER BY toDateTime(`tanggal pelaporan`) DESC
-                        LIMIT {$remainingLimit}
-                    ";
-                    
-                    $resultsObservasi = $clickhouse->query($sqlObservasi);
-                    if (!empty($resultsObservasi) && is_array($resultsObservasi)) {
-                        foreach ($resultsObservasi as $row) {
-                            $sapData[] = $this->formatSapRow($row, 'OBSERVASI');
-                        }
-                    }
-                }
-            } catch (Exception $e) {
-                Log::error('Error querying tabel_observasi: ' . $e->getMessage());
-            }
-            
-            // 3. Query aaj_vw_car_oak_register_ytd_only
-            try {
-                $remainingLimit = $limit - count($sapData);
-                if ($remainingLimit > 0) {
-                    $sqlOak = "
-                        SELECT 
-                            toString(id) as task_number,
-                            toString(activity) as aktivitas_pekerjaan,
-                            toString(sub_activity) as sub_aktivitas_pekerjaan_oak,
-                            toString(tool_type) as tool_pekerjaan_oak,
-                            toString(location) as lokasi,
-                            toString(detail_location) as detail_lokasi,
-                            toString(conclusion) as hasil_oak,
-                            toString(tools_observasi) as tools_pengawasan,
-                            toString(submit_date) as tanggal_pelaporan,
-                            toString(location_description) as keterangan_lokasi,
-                            toString(shift) as shift_oak,
-                            toString(company_submit_by) as perusahaan_pelapor,
-                            toString(submit_by) as pelapor,
-                            toString(code_sib) as kode_sib_oak,
-                            toString(jabatan_fungsional_submiter) as jabatan_fungsional_pelapor,
-                            toString(url_photo) as url_foto,
-                            toString(material) as material_oak,
-                            toString(conveyance_type) as jenis_alat_angkut_oak,
-                            toString(lifting_equipment) as jenis_alat_angkut_oak_2,
-                            toString(kode_sid_pelapor) as sid_pelapor,
-                            toString(kode_sid_pelapor) as kode_sid_pelapor,
-                            toString(kode_sid_team) as kode_sid_team,
-                            toString(nama_team) as pic,
-                            toString(kode_sid_team) as sid_pic,
-                            toString(company_submit_by) as perusahaan_pic,
-                            toString(jabatan_fungsional_team) as jabatan_fungsional_pic,
-                            toString(tipe) as tipe,
-                            ifNull(toString(latitude), '') as latitude,
-                            ifNull(toString(longitude), '') as longitude,
-                            ifNull(toString(site), '') as site
-                        FROM beats.aaj_vw_car_oak_register_ytd_only
-                        WHERE latitude IS NOT NULL 
-                            AND longitude IS NOT NULL
-                            AND latitude != ''
-                            AND longitude != ''
-                        ORDER BY toDateTime(submit_date) DESC
-                        LIMIT {$remainingLimit}
-                    ";
-                    
-                    $resultsOak = $clickhouse->query($sqlOak);
-                    if (!empty($resultsOak) && is_array($resultsOak)) {
-                        foreach ($resultsOak as $row) {
-                            if (isset($row['hasil_oak']) && !isset($row['keterangan'])) {
-                                $row['keterangan'] = $row['hasil_oak'];
-                            }
-                            $sapData[] = $this->formatSapRow($row, 'OAK');
-                        }
-                    }
-                }
-            } catch (Exception $e) {
-                Log::error('Error querying aaj_vw_car_oak_register_ytd_only: ' . $e->getMessage());
-            }
-            
-            // 4. Query coaching from nitip.bep_vw_database_coaching
-            try {
-                $remainingLimit = $limit - count($sapData);
-                if ($remainingLimit > 0) {
-                    $sqlCoaching = "
-                        SELECT 
-                            toString(_Task) as task_number,
-                            toString(topik_coaching) as aktivitas_pekerjaan,
-                            toString(lokasi) as lokasi,
-                            toString(detil_lokasi) as detail_lokasi,
-                            toString(keterangan_lokasi) as keterangan,
-                            toString(Tanggal_Pembuatan) as tanggal_pelaporan,
-                            toString(perusahaan_coachee) as perusahaan_pelapor,
-                            toString(nama_coachee) as pelapor,
-                            toString(nama_coachee) as nama_pelapor,
-                            toString(kode_sid_coachee) as sid_pelapor,
-                            toString(jabatan_fungsional_coachee) as jabatan_fungsional_pelapor,
-                            toString(departement_coachee) as departemen_pelapor,
-                            toString(nama_coach) as pic,
-                            toString(kode_sid_pelapor) as sid_pic,
-                            toString(jabatan_fungsional_coach) as jabatan_fungsional_pic,
-                            toString(perusahaan_coach) as perusahaan_pic,
-                            toString(departement_coach) as departemen_pic,
-                            toString(foto) as url_foto,
-                            toString(tools_pengamatan) as tools_pengawasan,
-                            toString(catatan_coach) as catatan_tindakan,
-                            toString(id_coachee) as nik_pelapor,
-                            toString(divisi_coachee) as divisi_pelapor,
-                            toString(departement_coachee) as departement_pelapor_karyawan,
-                            toString(perusahaan_coachee) as nama_perusahaan_pelapor_karyawan,
-                            toString(jabatan_fungsional_coachee) as jabatan_fungsional_karyawan_pelapor,
-                            toString(jabatan_struktural_coachee) as jabatan_struktural_pelapor,
-                            ifNull(toString(latitude), '') as latitude,
-                            ifNull(toString(longitude), '') as longitude,
-                            ifNull(toString(site), '') as site
-                        FROM nitip.bep_vw_database_coaching
-                        WHERE latitude IS NOT NULL 
-                            AND longitude IS NOT NULL
-                            AND latitude != ''
-                            AND longitude != ''
-                        ORDER BY toDateTime(Tanggal_Pembuatan) DESC
-                        LIMIT {$remainingLimit}
-                    ";
-                    
-                    $resultsCoaching = $clickhouse->query($sqlCoaching);
-                    if (!empty($resultsCoaching) && is_array($resultsCoaching)) {
-                        foreach ($resultsCoaching as $row) {
-                            $sapData[] = $this->formatSapRow($row, 'COACHING');
-                        }
-                    }
-                }
-            } catch (Exception $e) {
-                Log::error('Error querying bep_vw_database_coaching: ' . $e->getMessage());
             }
             
             // Sort by tanggal_pelaporan descending
@@ -3173,9 +2984,15 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             $baseUrl = $protocol . '://' . $host . ':' . $port;
             $username = 'default';
             $password = 'Zxcdsaqwe321:;';
-            $timeout = 30;
+            $timeout = 60; // Increase timeout for large queries
 
             $url = $baseUrl . '/?database=' . urlencode($database) . '&default_format=JSON';
+            
+            Log::info('ClickHouse Query', [
+                'url' => $url,
+                'database' => $database,
+                'sql_preview' => substr($sql, 0, 200) . '...'
+            ]);
             
             $httpClient = Http::timeout($timeout)
                 ->withBasicAuth($username, $password)
@@ -3186,34 +3003,75 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             if (!$response->successful()) {
                 Log::error('ClickHouse custom query failed', [
                     'status' => $response->status(),
-                    'body' => $response->body()
+                    'body' => substr($response->body(), 0, 500),
+                    'url' => $url
                 ]);
                 return [];
             }
 
-            $result = $response->json();
+            $body = $response->body();
+            Log::debug('ClickHouse response body preview', [
+                'body_length' => strlen($body),
+                'body_preview' => substr($body, 0, 500)
+            ]);
+
+            // Try to parse as JSON
+            $result = json_decode($body, true);
             
-            // Parse ClickHouse JSON response
-            if (isset($result['data'])) {
-                return $result['data'];
-            } elseif (isset($result[0])) {
-                return $result;
-            } else {
-                // Try to parse as JSON lines format
-                $lines = explode("\n", trim($response->body()));
+            // Check for JSON decode errors
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                Log::warning('ClickHouse response is not valid JSON', [
+                    'json_error' => json_last_error_msg(),
+                    'body_preview' => substr($body, 0, 500)
+                ]);
+                
+                // Try to parse as JSON lines format (NDJSON)
+                $lines = explode("\n", trim($body));
                 $data = [];
                 foreach ($lines as $line) {
-                    if (!empty(trim($line))) {
+                    $line = trim($line);
+                    if (!empty($line)) {
                         $decoded = json_decode($line, true);
-                        if ($decoded !== null) {
+                        if ($decoded !== null && json_last_error() === JSON_ERROR_NONE) {
                             $data[] = $decoded;
                         }
                     }
                 }
-                return $data;
+                
+                if (!empty($data)) {
+                    Log::info('Parsed ClickHouse response as JSON Lines', ['count' => count($data)]);
+                    return $data;
+                }
+                
+                return [];
             }
+            
+            // Parse ClickHouse JSON response
+            // ClickHouse returns array of objects directly when using JSON format
+            if (is_array($result)) {
+                if (isset($result['data'])) {
+                    Log::info('ClickHouse response has data key', ['count' => count($result['data'])]);
+                    return $result['data'];
+                } elseif (!empty($result) && isset($result[0])) {
+                    Log::info('ClickHouse response is array', ['count' => count($result)]);
+                    return $result;
+                } elseif (empty($result)) {
+                    Log::info('ClickHouse response is empty array');
+                    return [];
+                }
+            }
+            
+            Log::warning('ClickHouse response format unexpected', [
+                'result_type' => gettype($result),
+                'result_preview' => is_array($result) ? array_slice($result, 0, 3) : $result
+            ]);
+            
+            return [];
         } catch (Exception $e) {
-            Log::error('Error in queryClickHouseCustom: ' . $e->getMessage());
+            Log::error('Error in queryClickHouseCustom', [
+                'message' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
             return [];
         }
     }
