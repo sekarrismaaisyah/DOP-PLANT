@@ -1280,8 +1280,8 @@ class fullMapsController extends Controller
                         AND longitude != ''
                     ORDER BY 
                         CASE 
-                            WHEN tanggal_pembuatan IS NOT NULL THEN toDateTime(tanggal_pembuatan)
-                            WHEN bedraft_date IS NOT NULL THEN toDateTime(bedraft_date)
+                            WHEN tanggal_pembuatan IS NOT NULL THEN toDateTime(toTimeZone(tanggal_pembuatan, 'Asia/Makassar'))
+                            WHEN bedraft_date IS NOT NULL THEN toDateTime(toTimeZone(bedraft_date, 'Asia/Makassar'))
                             ELSE toDateTime('1970-01-01 00:00:00')
                         END DESC
                     LIMIT {$limit}
