@@ -6254,14 +6254,33 @@ source: new ol.source.Vector(),
                     zIndex: 1000
                 }));
                 
-                // Add ripple circles with color based on risk
-                const cycle1 = 2000; // 2 second cycle
+                // Green splash effect with multiple ripple circles
+                const greenColor = '#10b981'; // Green color
+                const greenColorRgb = '16, 185, 129'; // RGB for rgba
+                const cycle1 = 2500; // 2.5 second cycle for smoother animation
                 
-                // Ripple 1: Outer circle (largest, expanding)
+                // Outer glow - Large soft circle (background glow)
+                const glowCycle = 2000;
+                const glowProgress = ((blinkTime % glowCycle) / glowCycle);
+                const glowRadius = 80 + (Math.sin(glowProgress * Math.PI * 2) * 30); // Pulse from 50 to 110
+                const glowOpacity = 0.15 + (Math.sin(glowProgress * Math.PI * 2) * 0.1); // Pulse opacity 0.05 to 0.25
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: glowRadius,
+                        fill: new ol.style.Fill({
+                            color: `rgba(${greenColorRgb}, ${glowOpacity})`
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 994
+                }));
+                
+                // Ripple 1: Outer circle (largest, expanding) - Green
                 const progress1 = ((blinkTime % cycle1) / cycle1);
-                const ripple1Radius = 30 + (progress1 * 30); // Expand from 30 to 60
-                const ripple1Opacity = Math.max(0, 0.6 * (1 - progress1)); // Fade out
-                const ripple1Width = 3;
+                const ripple1Radius = 40 + (progress1 * 50); // Expand from 40 to 90
+                const ripple1Opacity = Math.max(0, 0.7 * (1 - progress1)); // Fade out
+                const ripple1Width = 4;
                 
                 styles.push(new ol.style.Style({
                     image: new ol.style.Circle({
@@ -6270,19 +6289,20 @@ source: new ol.source.Vector(),
                             color: 'rgba(0, 0, 0, 0)'
                         }),
                         stroke: new ol.style.Stroke({
-                            color: `${fillColor}${Math.floor(ripple1Opacity * 255).toString(16).padStart(2, '0')}`,
-                            width: ripple1Width
+                            color: `rgba(${greenColorRgb}, ${ripple1Opacity})`,
+                            width: ripple1Width,
+                            lineCap: 'round'
                         })
                     }),
                     geometry: geometry,
                     zIndex: 998
                 }));
                 
-                // Ripple 2: Middle circle (delayed by 0.4s)
-                const progress2 = (((blinkTime + 800) % cycle1) / cycle1);
-                const ripple2Radius = 30 + (progress2 * 30);
-                const ripple2Opacity = Math.max(0, 0.4 * (1 - progress2));
-                const ripple2Width = 2;
+                // Ripple 2: Middle circle (delayed by 0.5s) - Green
+                const progress2 = (((blinkTime + 1250) % cycle1) / cycle1);
+                const ripple2Radius = 40 + (progress2 * 50);
+                const ripple2Opacity = Math.max(0, 0.6 * (1 - progress2));
+                const ripple2Width = 3;
                 
                 styles.push(new ol.style.Style({
                     image: new ol.style.Circle({
@@ -6291,39 +6311,173 @@ source: new ol.source.Vector(),
                             color: 'rgba(0, 0, 0, 0)'
                         }),
                         stroke: new ol.style.Stroke({
-                            color: `${fillColor}${Math.floor(ripple2Opacity * 255).toString(16).padStart(2, '0')}`,
-                            width: ripple2Width
+                            color: `rgba(${greenColorRgb}, ${ripple2Opacity})`,
+                            width: ripple2Width,
+                            lineCap: 'round'
                         })
                     }),
                     geometry: geometry,
                     zIndex: 997
                 }));
                 
-                // Pulsing dot at center (always visible, pulsing)
-                const dotCycle = 1000; // 1 second for faster pulse
+                // Ripple 3: Inner circle (delayed by 1s) - Green
+                const progress3 = (((blinkTime + 2500) % cycle1) / cycle1);
+                const ripple3Radius = 40 + (progress3 * 50);
+                const ripple3Opacity = Math.max(0, 0.5 * (1 - progress3));
+                const ripple3Width = 2.5;
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: ripple3Radius,
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0, 0, 0, 0)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: `rgba(${greenColorRgb}, ${ripple3Opacity})`,
+                            width: ripple3Width,
+                            lineCap: 'round'
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 996
+                }));
+                
+                // Medium glow circle - Semi-transparent fill
+                const mediumGlowRadius = 50 + (Math.sin(glowProgress * Math.PI * 2) * 15); // Pulse from 35 to 65
+                const mediumGlowOpacity = 0.25 + (Math.sin(glowProgress * Math.PI * 2) * 0.15); // Pulse opacity 0.1 to 0.4
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: mediumGlowRadius,
+                        fill: new ol.style.Fill({
+                            color: `rgba(${greenColorRgb}, ${mediumGlowOpacity})`
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 995
+                }));
+                
+                // Pulsing dot at center (always visible, pulsing) - Green
+                const dotCycle = 1200; // 1.2 second for smoother pulse
                 const dotProgress = ((blinkTime % dotCycle) / dotCycle);
-                const dotRadius = 6 + (Math.sin(dotProgress * Math.PI * 2) * 2); // Pulse from 4 to 8
-                const dotOpacity = 0.8 + (Math.sin(dotProgress * Math.PI * 2) * 0.2); // Pulse opacity
+                const dotRadius = 8 + (Math.sin(dotProgress * Math.PI * 2) * 3); // Pulse from 5 to 11
+                const dotOpacity = 0.9 + (Math.sin(dotProgress * Math.PI * 2) * 0.1); // Pulse opacity 0.8 to 1.0
                 
                 styles.push(new ol.style.Style({
                     image: new ol.style.Circle({
                         radius: dotRadius,
                         fill: new ol.style.Fill({
-                            color: fillColor
+                            color: `rgba(${greenColorRgb}, ${dotOpacity})`
                         }),
                         stroke: new ol.style.Stroke({
-                            color: strokeColor,
-                            width: 2
+                            color: '#ffffff',
+                            width: 2.5
                         })
                     }),
                     geometry: geometry,
                     zIndex: 999
                 }));
-            } else {
-                // Use colored circle marker while icon is being created
+                
+                // Inner bright circle - Small bright center
+                const innerRadius = 4 + (Math.sin(dotProgress * Math.PI * 2) * 1.5); // Pulse from 2.5 to 5.5
                 styles.push(new ol.style.Style({
                     image: new ol.style.Circle({
-                        radius: markerRadius,
+                        radius: innerRadius,
+                        fill: new ol.style.Fill({
+                            color: '#ffffff'
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 1000
+                }));
+            } else {
+                // Use colored circle marker with green splash effect while icon is being created
+                const greenColorRgb = '16, 185, 129'; // RGB for rgba
+                const cycle1 = 2500; // 2.5 second cycle
+                
+                // Outer glow - Large soft circle
+                const glowCycle = 2000;
+                const glowProgress = ((blinkTime % glowCycle) / glowCycle);
+                const glowRadius = 60 + (Math.sin(glowProgress * Math.PI * 2) * 25); // Pulse from 35 to 85
+                const glowOpacity = 0.15 + (Math.sin(glowProgress * Math.PI * 2) * 0.1);
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: glowRadius,
+                        fill: new ol.style.Fill({
+                            color: `rgba(${greenColorRgb}, ${glowOpacity})`
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 994
+                }));
+                
+                // Ripple 1: Outer circle - Green
+                const progress1 = ((blinkTime % cycle1) / cycle1);
+                const ripple1Radius = 30 + (progress1 * 40); // Expand from 30 to 70
+                const ripple1Opacity = Math.max(0, 0.6 * (1 - progress1));
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: ripple1Radius,
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0, 0, 0, 0)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: `rgba(${greenColorRgb}, ${ripple1Opacity})`,
+                            width: 3,
+                            lineCap: 'round'
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 998
+                }));
+                
+                // Ripple 2: Middle circle - Green
+                const progress2 = (((blinkTime + 1250) % cycle1) / cycle1);
+                const ripple2Radius = 30 + (progress2 * 40);
+                const ripple2Opacity = Math.max(0, 0.5 * (1 - progress2));
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: ripple2Radius,
+                        fill: new ol.style.Fill({
+                            color: 'rgba(0, 0, 0, 0)'
+                        }),
+                        stroke: new ol.style.Stroke({
+                            color: `rgba(${greenColorRgb}, ${ripple2Opacity})`,
+                            width: 2.5,
+                            lineCap: 'round'
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 997
+                }));
+                
+                // Medium glow circle
+                const mediumGlowRadius = 40 + (Math.sin(glowProgress * Math.PI * 2) * 12);
+                const mediumGlowOpacity = 0.2 + (Math.sin(glowProgress * Math.PI * 2) * 0.1);
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: mediumGlowRadius,
+                        fill: new ol.style.Fill({
+                            color: `rgba(${greenColorRgb}, ${mediumGlowOpacity})`
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 995
+                }));
+                
+                // Main marker circle with pulse
+                const dotCycle = 1200;
+                const dotProgress = ((blinkTime % dotCycle) / dotCycle);
+                const pulseRadius = markerRadius + (Math.sin(dotProgress * Math.PI * 2) * 2);
+                const pulseOpacity = 0.9 + (Math.sin(dotProgress * Math.PI * 2) * 0.1);
+                
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: pulseRadius,
                         fill: new ol.style.Fill({
                             color: fillColor
                         }),
@@ -6333,7 +6487,7 @@ source: new ol.source.Vector(),
                         })
                     }),
                     geometry: geometry,
-                    zIndex: 1000
+                    zIndex: 999
                 }));
             }
             
