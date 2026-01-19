@@ -3968,6 +3968,49 @@
     
     console.log(`Filtered SAP data: Sidebar (today) ${sapDataForSidebar.length} items | Map ${sapData.length} items (limited to 1000) for today (${todayStr}) out of ${allSapData.length} total`);
     
+    // DEBUG: Filter dan tampilkan data INSPEKSI_HAZARD hari ini dari hse_automation.aaj_car_all_year_from_dav
+    if (allSapData && allSapData.length > 0) {
+        const inspeksiHazardToday = allSapData.filter(function(sap) {
+            // Filter berdasarkan source_type = 'INSPEKSI_HAZARD'
+            const isInspeksiHazard = sap.source_type === 'INSPEKSI_HAZARD' || 
+                                    sap.jenis_laporan === 'INSPEKSI_HAZARD' ||
+                                    sap.type === 'INSPEKSI_HAZARD';
+            
+            if (!isInspeksiHazard) return false;
+            
+            // Filter berdasarkan tanggal hari ini
+            if (!sap.tanggal_pelaporan && !sap.detected_at) return false;
+            
+            try {
+                const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
+                sapDate.setHours(0, 0, 0, 0);
+                const sapDateStr = sapDate.toISOString().split('T')[0];
+                return sapDateStr === todayStr;
+            } catch (e) {
+                return false;
+            }
+        });
+        
+        console.log('=== DEBUG INSPEKSI_HAZARD HARI INI ===');
+        console.log(`Total INSPEKSI_HAZARD hari ini (${todayStr}): ${inspeksiHazardToday.length} items`);
+        console.log('Data INSPEKSI_HAZARD hari ini:', inspeksiHazardToday);
+        
+        // Tampilkan detail setiap item
+        if (inspeksiHazardToday.length > 0) {
+            console.log('Detail INSPEKSI_HAZARD hari ini:');
+            inspeksiHazardToday.forEach(function(item, index) {
+                console.log(`[${index + 1}] Task: ${item.task_number || 'N/A'} | Lokasi: ${item.nama_lokasi || item.lokasi || 'N/A'} | Detail: ${item.nama_detail_lokasi || item.detail_lokasi || 'N/A'} | Tanggal: ${item.tanggal_pelaporan || item.detected_at || 'N/A'} | Source: ${item.source_type || item.jenis_laporan || 'N/A'}`);
+            });
+        } else {
+            console.warn('⚠️ Tidak ada data INSPEKSI_HAZARD ditemukan untuk hari ini!');
+            console.log('Total allSapData:', allSapData.length);
+            console.log('Sample allSapData source_type:', allSapData.slice(0, 10).map(s => s.source_type || s.jenis_laporan || s.type));
+        }
+        console.log('=== END DEBUG INSPEKSI_HAZARD ===');
+    } else {
+        console.warn('⚠️ allSapData kosong atau tidak terdefinisi!');
+    }
+    
     const hazardDetections = sapData; // Alias untuk kompatibilitas dengan kode yang sudah ada
     
     // Data CCTV diambil langsung dari database (tabel cctv_data_bmo2), bukan dari WMS atau GeoJSON
@@ -21362,6 +21405,48 @@ source: new ol.source.Vector(),
                         });
                         
                         console.log('SAP data loaded:', filteredSapData.length, 'items for week', weekValue, 'out of', newSapData.length, 'total');
+                        
+                        // DEBUG: Filter dan tampilkan data INSPEKSI_HAZARD hari ini
+                        const debugToday = new Date();
+                        debugToday.setHours(0, 0, 0, 0);
+                        const debugTodayStr = debugToday.toISOString().split('T')[0];
+                        
+                        const inspeksiHazardToday = filteredSapData.filter(function(sap) {
+                            // Filter berdasarkan source_type = 'INSPEKSI_HAZARD'
+                            const isInspeksiHazard = sap.source_type === 'INSPEKSI_HAZARD' || 
+                                                    sap.jenis_laporan === 'INSPEKSI_HAZARD' ||
+                                                    sap.type === 'INSPEKSI_HAZARD';
+                            
+                            if (!isInspeksiHazard) return false;
+                            
+                            // Filter berdasarkan tanggal hari ini
+                            if (!sap.tanggal_pelaporan && !sap.detected_at) return false;
+                            
+                            try {
+                                const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
+                                sapDate.setHours(0, 0, 0, 0);
+                                const sapDateStr = sapDate.toISOString().split('T')[0];
+                                return sapDateStr === debugTodayStr;
+                            } catch (e) {
+                                return false;
+                            }
+                        });
+                        
+                        console.log('=== DEBUG INSPEKSI_HAZARD HARI INI (loadSapDataByWeek) ===');
+                        console.log(`Week: ${weekValue} | Total INSPEKSI_HAZARD hari ini (${debugTodayStr}): ${inspeksiHazardToday.length} items`);
+                        console.log('Data INSPEKSI_HAZARD hari ini:', inspeksiHazardToday);
+                        
+                        if (inspeksiHazardToday.length > 0) {
+                            console.log('Detail INSPEKSI_HAZARD hari ini:');
+                            inspeksiHazardToday.forEach(function(item, index) {
+                                console.log(`[${index + 1}] Task: ${item.task_number || 'N/A'} | Lokasi: ${item.nama_lokasi || item.lokasi || 'N/A'} | Detail: ${item.nama_detail_lokasi || item.detail_lokasi || 'N/A'} | Tanggal: ${item.tanggal_pelaporan || item.detected_at || 'N/A'} | Source: ${item.source_type || item.jenis_laporan || item.type || 'N/A'}`);
+                            });
+                        } else {
+                            console.warn(`⚠️ Tidak ada data INSPEKSI_HAZARD ditemukan untuk hari ini (${debugTodayStr})!`);
+                            console.log('Total filteredSapData:', filteredSapData.length);
+                            console.log('Sample filteredSapData source_type:', filteredSapData.slice(0, 10).map(s => s.source_type || s.jenis_laporan || s.type));
+                        }
+                        console.log('=== END DEBUG INSPEKSI_HAZARD ===');
                         
                         // Simpan semua data per week untuk count di tab
                         sapDataAllWeek = [...filteredSapData];
