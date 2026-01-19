@@ -21659,32 +21659,52 @@ source: new ol.source.Vector(),
         // Build HTML
         let html = '';
         
-        // Summary section - menggunakan struktur yang konsisten
+        // Summary section - menggunakan struktur yang konsisten dengan statistik merah dan hijau
         html += `
-            <div class="gm-notification-category expanded" style="background: #f8f9fa; border-radius: 8px; margin-bottom: 8px;">
-                <div class="gm-notification-category-header" style="cursor: default;">
+            <div class="gm-notification-category expanded" style="background: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%); border-radius: 12px; margin-bottom: 12px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); border: 1px solid #e8eaed;">
+                <div class="gm-notification-category-header" style="cursor: default; padding: 16px 20px; border-bottom: 1px solid #e8eaed;">
                     <div class="gm-notification-category-title">
-                        <i class="material-icons-outlined" style="font-size: 18px; color: #1a73e8; margin-right: 8px;">dashboard</i>
-                        <span>Ringkasan</span>
+                        <i class="material-icons-outlined" style="font-size: 20px; color: #1a73e8; margin-right: 10px;">dashboard</i>
+                        <span style="font-size: 16px; font-weight: 600; color: #202124;">Ringkasan</span>
                     </div>
                 </div>
-                <div class="gm-notification-location-list">
-                    <div class="gm-notification-location-item" style="padding: 12px 20px; border-bottom: 1px solid #e8eaed;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <i class="material-icons-outlined" style="font-size: 18px; color: #1a73e8;">directions_bus</i>
-                                <span style="font-weight: 500; color: #202124;">Total Unit</span>
+                <div class="gm-notification-location-list" style="padding: 16px 20px;">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+                        <!-- Statistik Merah -->
+                        <div style="background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%); border-radius: 10px; padding: 16px; border: 1px solid #fca5a5; box-shadow: 0 2px 4px rgba(239, 68, 68, 0.1);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <div style="width: 40px; height: 40px; background: #ef4444; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(239, 68, 68, 0.3);">
+                                    <i class="material-icons-outlined" style="font-size: 22px; color: #ffffff;">error_outline</i>
+                                </div>
+                                <span style="font-size: 13px; font-weight: 500; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Status Merah</span>
                             </div>
-                            <span style="font-size: 18px; font-weight: 600; color: #1a73e8;">${totalUnits}</span>
+                            <div style="display: flex; align-items: baseline; gap: 4px;">
+                                <span style="font-size: 32px; font-weight: 700; color: #dc2626; line-height: 1;">0</span>
+                            </div>
+                        </div>
+                        
+                        <!-- Statistik Hijau -->
+                        <div style="background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%); border-radius: 10px; padding: 16px; border: 1px solid #6ee7b7; box-shadow: 0 2px 4px rgba(16, 185, 129, 0.1);">
+                            <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                <div style="width: 40px; height: 40px; background: #10b981; border-radius: 10px; display: flex; align-items: center; justify-content: center; box-shadow: 0 2px 6px rgba(16, 185, 129, 0.3);">
+                                    <i class="material-icons-outlined" style="font-size: 22px; color: #ffffff;">check_circle</i>
+                                </div>
+                                <span style="font-size: 13px; font-weight: 500; color: #065f46; text-transform: uppercase; letter-spacing: 0.5px;">Status Hijau</span>
+                            </div>
+                            <div style="display: flex; align-items: baseline; gap: 4px;">
+                                <span style="font-size: 32px; font-weight: 700; color: #059669; line-height: 1;">${totalUnits}</span>
+                            </div>
                         </div>
                     </div>
-                    <div class="gm-notification-location-item" style="padding: 12px 20px;">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <div style="display: flex; align-items: center; gap: 8px;">
-                                <i class="material-icons-outlined" style="font-size: 18px; color: #10b981;">people</i>
-                                <span style="font-weight: 500; color: #202124;">Total Orang</span>
+                    
+                    <!-- Total Orang (Additional Info) -->
+                    <div style="margin-top: 16px; padding-top: 16px; border-top: 1px solid #e8eaed;">
+                        <div style="display: flex; justify-content: space-between; align-items: center; padding: 12px 16px; background: #ffffff; border-radius: 8px; border: 1px solid #e8eaed;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="material-icons-outlined" style="font-size: 20px; color: #6366f1;">people</i>
+                                <span style="font-weight: 500; color: #374151; font-size: 14px;">Total Orang</span>
                             </div>
-                            <span style="font-size: 18px; font-weight: 600; color: #10b981;">${totalOrang}</span>
+                            <span style="font-size: 20px; font-weight: 600; color: #6366f1;">${totalOrang}</span>
                         </div>
                     </div>
                 </div>
