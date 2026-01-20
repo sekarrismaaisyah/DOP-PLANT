@@ -3920,9 +3920,10 @@
 <script>
     // SAP (Safety Action Plan) data dari ClickHouse
     // Mengganti hazard dengan SAP dari tabel hse_automation.aaj_car_all_year_from_dav
-    // Data ini akan di-overwrite oleh loadSapDataByWeek() berdasarkan week filter
-    // Filter hanya SAP hari ini untuk performa (mengurangi lag)
+    // ✅ allSapData berisi SEMUA data tanpa filter (untuk probability calculation)
+    // JANGAN di-overwrite dengan data yang sudah difilter week
     let allSapData = @json($sapData ?? []);
+    window.allSapData = allSapData; // Simpan di window untuk akses global
     
     // Helper function untuk mendapatkan tanggal hari ini dalam timezone Asia/Makassar (WITA, UTC+8)
     function getTodayInMakassar() {
@@ -3997,6 +3998,7 @@
     }
     
     console.log(`Filtered SAP data: Sidebar (today) ${sapDataForSidebar.length} items | Map ${sapData.length} items (limited to 1000) for today (${todayStr}) out of ${allSapData.length} total`);
+    console.log(`[allSapData] Total SAP data (untuk probability): ${allSapData.length} items - TIDAK DIFILTER, langsung tersedia untuk probability popup`);
     
     // DEBUG: Filter dan tampilkan data INSPEKSI_HAZARD hari ini dari hse_automation.aaj_car_all_year_from_dav
     console.log('🔍 === DEBUG INSPEKSI_HAZARD HARI INI (Page Load) ===');
@@ -10779,6 +10781,13 @@ source: new ol.source.Vector(),
     function showProbabilityPopupsForAllLocations() {
         // Clear existing probability popups first
         hideAllProbabilityPopups();
+        
+        // ✅ Log allSapData untuk memastikan langsung tersedia
+        console.log('[showProbabilityPopupsForAllLocations] allSapData tersedia:', {
+            allSapData: typeof allSapData !== 'undefined' ? allSapData.length : 0,
+            windowAllSapData: window.allSapData ? window.allSapData.length : 0,
+            ready: (typeof allSapData !== 'undefined' && allSapData && allSapData.length > 0) || (window.allSapData && window.allSapData.length > 0)
+        });
         
         if (!hazardLayer) return;
         
@@ -21738,11 +21747,10 @@ source: new ol.source.Vector(),
                         
                         console.log('SAP data loaded:', filteredSapData.length, 'items for week', weekValue, 'out of', newSapData.length, 'total');
                         
-                        // ✅ Update allSapData global dengan semua data per week (untuk probability calculation)
-                        // Ini memastikan allSapData selalu berisi data terbaru setelah week filter dipilih
-                        allSapData = [...filteredSapData];
-                        window.allSapData = allSapData; // Juga simpan di window untuk akses global
-                        console.log('[loadSapDataByWeek] Updated allSapData:', allSapData.length, 'items');
+                        // ✅ JANGAN update allSapData di sini karena allSapData harus berisi SEMUA data tanpa filter week
+                        // allSapData tetap menggunakan data awal dari backend (@json($sapData ?? []))
+                        // Ini memastikan probability popup menggunakan semua data, bukan hanya data per week
+                        console.log('[loadSapDataByWeek] allSapData tetap menggunakan semua data:', typeof allSapData !== 'undefined' ? allSapData.length : 0, 'items (tidak difilter week)');
                         
                         // DEBUG: Filter dan tampilkan data INSPEKSI_HAZARD hari ini
                         console.log('🔍 === DEBUG INSPEKSI_HAZARD HARI INI (loadSapDataByWeek) ===');
@@ -21834,9 +21842,11 @@ source: new ol.source.Vector(),
                         // Update global sapData (untuk map)
                         sapData = sapDataForMap;
                         
-                        // ✅ allSapData sudah di-update di atas setelah filteredSapData dibuat
-                        // Pastikan window.allSapData juga ter-update
-                        window.allSapData = allSapData;
+                        // ✅ allSapData TIDAK di-update di sini karena harus berisi SEMUA data tanpa filter week
+                        // Pastikan window.allSapData tetap menggunakan data awal dari backend
+                        if (!window.allSapData || window.allSapData.length === 0) {
+                            window.allSapData = allSapData; // Hanya set jika belum ada
+                        }
                         
                         // Update filtered sidebar data (hanya data hari ini untuk sidebar)
                         filteredSidebarData.sap = sapDataToday;
