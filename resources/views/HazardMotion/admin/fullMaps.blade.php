@@ -10668,21 +10668,31 @@ source: new ol.source.Vector(),
         const lokasi = hazard.lokasi || hazard.zone || hazard.detail_lokasi || hazard.nama_lokasi || hazard.nama_detail_lokasi || 'Unknown';
         const detailLokasi = hazard.detail_lokasi || hazard.nama_detail_lokasi || lokasi;
         
-        // Get SAP count for this location (from all SAP data)
+        // ✅ Get SAP count for this location (prioritaskan allSapData yang berisi semua data)
         let allSap = [];
-        if (typeof allSapData !== 'undefined' && allSapData) {
+        // Prioritaskan allSapData karena berisi semua data SAP (tidak hanya hari ini atau per week)
+        if (typeof allSapData !== 'undefined' && allSapData && allSapData.length > 0) {
             allSap = allSapData;
-        } else if (typeof sapDataAllWeek !== 'undefined' && sapDataAllWeek) {
-            allSap = sapDataAllWeek;
-        } else if (typeof sapData !== 'undefined' && sapData) {
-            allSap = sapData;
-        } else if (window.allSapData) {
+        } else if (window.allSapData && window.allSapData.length > 0) {
             allSap = window.allSapData;
-        } else if (window.sapDataAllWeek) {
+        } else if (typeof sapDataAllWeek !== 'undefined' && sapDataAllWeek && sapDataAllWeek.length > 0) {
+            allSap = sapDataAllWeek;
+        } else if (window.sapDataAllWeek && window.sapDataAllWeek.length > 0) {
             allSap = window.sapDataAllWeek;
-        } else if (window.sapData) {
+        } else if (typeof sapData !== 'undefined' && sapData && sapData.length > 0) {
+            allSap = sapData;
+        } else if (window.sapData && window.sapData.length > 0) {
             allSap = window.sapData;
         }
+        
+        // Debug logging untuk timezone dan data SAP
+        console.log('[showProbabilityPopup] SAP Data Check:', {
+            allSapData: typeof allSapData !== 'undefined' ? allSapData.length : 0,
+            sapDataAllWeek: typeof sapDataAllWeek !== 'undefined' ? sapDataAllWeek.length : 0,
+            sapData: typeof sapData !== 'undefined' ? sapData.length : 0,
+            selected: allSap.length,
+            location: lokasi
+        });
         
         // Filter SAP by location
         const filteredSap = allSap.filter(function(sap) {
@@ -10870,19 +10880,20 @@ source: new ol.source.Vector(),
             const lokasi = locationData.lokasi || data.lokasi || data.zone || data.detail_lokasi || data.nama_lokasi || data.nama_detail_lokasi || 'Unknown';
             const detailLokasi = locationData.detailLokasi || data.detail_lokasi || data.nama_detail_lokasi || lokasi;
             
-            // Get SAP count for this location (from all SAP data)
+            // ✅ Get SAP count for this location (prioritaskan allSapData yang berisi semua data)
             let allSap = [];
-            if (typeof allSapData !== 'undefined' && allSapData) {
+            // Prioritaskan allSapData karena berisi semua data SAP (tidak hanya hari ini atau per week)
+            if (typeof allSapData !== 'undefined' && allSapData && allSapData.length > 0) {
                 allSap = allSapData;
-            } else if (typeof sapDataAllWeek !== 'undefined' && sapDataAllWeek) {
-                allSap = sapDataAllWeek;
-            } else if (typeof sapData !== 'undefined' && sapData) {
-                allSap = sapData;
-            } else if (window.allSapData) {
+            } else if (window.allSapData && window.allSapData.length > 0) {
                 allSap = window.allSapData;
-            } else if (window.sapDataAllWeek) {
+            } else if (typeof sapDataAllWeek !== 'undefined' && sapDataAllWeek && sapDataAllWeek.length > 0) {
+                allSap = sapDataAllWeek;
+            } else if (window.sapDataAllWeek && window.sapDataAllWeek.length > 0) {
                 allSap = window.sapDataAllWeek;
-            } else if (window.sapData) {
+            } else if (typeof sapData !== 'undefined' && sapData && sapData.length > 0) {
+                allSap = sapData;
+            } else if (window.sapData && window.sapData.length > 0) {
                 allSap = window.sapData;
             }
             
@@ -21727,6 +21738,12 @@ source: new ol.source.Vector(),
                         
                         console.log('SAP data loaded:', filteredSapData.length, 'items for week', weekValue, 'out of', newSapData.length, 'total');
                         
+                        // ✅ Update allSapData global dengan semua data per week (untuk probability calculation)
+                        // Ini memastikan allSapData selalu berisi data terbaru setelah week filter dipilih
+                        allSapData = [...filteredSapData];
+                        window.allSapData = allSapData; // Juga simpan di window untuk akses global
+                        console.log('[loadSapDataByWeek] Updated allSapData:', allSapData.length, 'items');
+                        
                         // DEBUG: Filter dan tampilkan data INSPEKSI_HAZARD hari ini
                         console.log('🔍 === DEBUG INSPEKSI_HAZARD HARI INI (loadSapDataByWeek) ===');
                         console.log('📊 Week:', weekValue);
@@ -21816,6 +21833,10 @@ source: new ol.source.Vector(),
                         
                         // Update global sapData (untuk map)
                         sapData = sapDataForMap;
+                        
+                        // ✅ allSapData sudah di-update di atas setelah filteredSapData dibuat
+                        // Pastikan window.allSapData juga ter-update
+                        window.allSapData = allSapData;
                         
                         // Update filtered sidebar data (hanya data hari ini untuk sidebar)
                         filteredSidebarData.sap = sapDataToday;
