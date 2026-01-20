@@ -5733,14 +5733,26 @@
             } else if (layerName === 'transit') {
                 // Special handling for "SA POTENSI INSIDEN" (transit layer)
                 if (isOn) {
+                    console.log('[applyLayer] Transit layer activated - showing probability popups');
                     // Hide CCTV when transit layer is activated
                     if (cctvLayer && layerVisibility.cctv) {
                         toggleLayerVisibility('cctv', false);
                         console.log('SA POTENSI INSIDEN layer activated - hiding CCTV');
                     }
+                    // ✅ Pastikan hazardLayer visible untuk probability popup
+                    if (hazardLayer && !hazardLayer.getVisible()) {
+                        hazardLayer.setVisible(true);
+                        layerVisibility.hazard = true;
+                        console.log('[applyLayer] hazardLayer set to visible for probability popups');
+                    }
                     // Show probability popups for all hazard/SAP locations
-                    showProbabilityPopupsForAllLocations();
+                    // Tambahkan delay kecil untuk memastikan hazardLayer sudah terisi
+                    setTimeout(function() {
+                        console.log('[applyLayer] Calling showProbabilityPopupsForAllLocations after delay');
+                        showProbabilityPopupsForAllLocations();
+                    }, 100);
                 } else {
+                    console.log('[applyLayer] Transit layer deactivated - hiding probability popups');
                     // Hide all probability popups when transit layer is deactivated
                     hideAllProbabilityPopups();
                 }
@@ -10779,6 +10791,8 @@ source: new ol.source.Vector(),
     
     // Function to show probability popups for all hazard/SAP locations
     function showProbabilityPopupsForAllLocations() {
+        console.log('[showProbabilityPopupsForAllLocations] Function called');
+        
         // Clear existing probability popups first
         hideAllProbabilityPopups();
         
@@ -10789,9 +10803,19 @@ source: new ol.source.Vector(),
             ready: (typeof allSapData !== 'undefined' && allSapData && allSapData.length > 0) || (window.allSapData && window.allSapData.length > 0)
         });
         
-        if (!hazardLayer) return;
+        if (!hazardLayer) {
+            console.error('[showProbabilityPopupsForAllLocations] ERROR: hazardLayer is null or undefined');
+            return;
+        }
+        
+        console.log('[showProbabilityPopupsForAllLocations] hazardLayer found:', hazardLayer);
         
         const source = hazardLayer.getSource();
+        if (!source) {
+            console.error('[showProbabilityPopupsForAllLocations] ERROR: hazardLayer source is null or undefined');
+            return;
+        }
+        
         const features = [];
         
         // Collect all hazard/SAP features
@@ -10801,6 +10825,8 @@ source: new ol.source.Vector(),
                 features.push(feature);
             }
         });
+        
+        console.log('[showProbabilityPopupsForAllLocations] Total features found:', features.length);
         
         // Limit to visible features in current viewport to avoid performance issues
         const view = map.getView();
@@ -10877,10 +10903,16 @@ source: new ol.source.Vector(),
         
         // Debug: Log location keys to check for duplicates
         const locationKeys = Array.from(locationMap.keys());
-        console.log(`Showing probability popups for ${uniqueLocations.length} unique locations (out of ${locationMap.size} total unique locations, from ${features.length} total features)`);
-        console.log('Location keys:', locationKeys.slice(0, 10)); // Show first 10 keys for debugging
+        console.log(`[showProbabilityPopupsForAllLocations] Showing probability popups for ${uniqueLocations.length} unique locations (out of ${locationMap.size} total unique locations, from ${features.length} total features)`);
+        console.log('[showProbabilityPopupsForAllLocations] Location keys:', locationKeys.slice(0, 10)); // Show first 10 keys for debugging
+        
+        if (uniqueLocations.length === 0) {
+            console.warn('[showProbabilityPopupsForAllLocations] WARNING: No unique locations found. Check if hazardLayer has features and they are visible in viewport.');
+            return;
+        }
         
         // Create popup overlay for each unique location
+        let popupCount = 0;
         uniqueLocations.forEach(function(locationData) {
             const coordinate = locationData.coordinate;
             const data = locationData.data;
@@ -11057,7 +11089,10 @@ source: new ol.source.Vector(),
             
             // Add to map
             map.addOverlay(overlay);
+            popupCount++;
         });
+        
+        console.log(`[showProbabilityPopupsForAllLocations] Successfully created ${popupCount} probability popups out of ${uniqueLocations.length} unique locations`);
     }
     
     // Function to hide all probability popups
@@ -19968,12 +20003,7 @@ source: new ol.source.Vector(),
     //   - cctvName: Nama CCTV untuk area CCTV
     //   - featureGeometry: OpenLayers geometry dari feature area (optional, untuk pengecekan koordinat)
     function hasSapReportToday(areaType, idLokasi, lokasiName, nomorCctv, cctvName, featureGeometry) {
-        // Logging untuk debugging
-        const logPrefix = `[SAP Check] ${areaType} - ${lokasiName || cctvName || nomorCctv || 'Unknown'}:`;
-        console.log(`${logPrefix} Memulai pengecekan...`);
-        
         if (!sapDataForSidebar || sapDataForSidebar.length === 0) {
-            console.log(`${logPrefix} Tidak ada data SAP di sidebar`);
             return false;
         }
         
@@ -19988,10 +20018,7 @@ source: new ol.source.Vector(),
             return isDateTodayInMakassar(sap.tanggal_pelaporan || sap.detected_at);
         });
         
-        console.log(`${logPrefix} Total SAP hari ini: ${sapToday.length} dari ${sapDataForSidebar.length} total`);
-        
         if (sapToday.length === 0) {
-            console.log(`${logPrefix} Tidak ada SAP hari ini`);
             return false;
         }
         
@@ -20003,20 +20030,10 @@ source: new ol.source.Vector(),
             normalizedAreaName = normalizeLocationName(cctvName || nomorCctv || '');
         }
         
-        console.log(`${logPrefix} Nama area dinormalisasi: "${normalizedAreaName}"`);
-        
         // Check if any SAP (dari semua jenis: Hazard, Inspeksi, Observasi, Coaching, OAK) matches the area
-        let matchCount = 0;
-        let coordinateMatchCount = 0;
-        let nameMatchCount = 0;
-        
         for (const sap of sapToday) {
             const sapLokasi = normalizeLocationName(sap.lokasi || '');
             const sapDetailLokasi = normalizeLocationName(sap.detail_lokasi || '');
-            const jenisLaporan = sap.jenis_laporan || sap.source_type || sap.type || 'SAP';
-            
-            let matched = false;
-            let matchReason = '';
             
             // Method 1: Check coordinate geografis (jika ada geometry dan koordinat SAP)
             if (featureGeometry) {
@@ -20025,17 +20042,13 @@ source: new ol.source.Vector(),
                 
                 if (sapLat && sapLng && !isNaN(parseFloat(sapLat)) && !isNaN(parseFloat(sapLng))) {
                     if (isCoordinateInGeometry(parseFloat(sapLat), parseFloat(sapLng), featureGeometry)) {
-                        matched = true;
-                        matchReason = `Koordinat (${sapLat}, ${sapLng})`;
-                        coordinateMatchCount++;
-                        console.log(`${logPrefix} ✓ MATCH via koordinat - ${jenisLaporan} #${sap.task_number || 'N/A'}: ${matchReason}`);
                         return true; // Return immediately if coordinate matches
                     }
                 }
             }
             
             // Method 2: Check nama lokasi (normalized string matching)
-            if (!matched && normalizedAreaName) {
+            if (normalizedAreaName) {
                 // Check if normalized area name matches SAP location
                 const nameMatch = (
                     (sapLokasi && (sapLokasi.includes(normalizedAreaName) || normalizedAreaName.includes(sapLokasi))) ||
@@ -20043,17 +20056,10 @@ source: new ol.source.Vector(),
                 );
                 
                 if (nameMatch) {
-                    matched = true;
-                    matchReason = `Nama lokasi: "${sapLokasi || sapDetailLokasi}"`;
-                    nameMatchCount++;
-                    console.log(`${logPrefix} ✓ MATCH via nama - ${jenisLaporan} #${sap.task_number || 'N/A'}: ${matchReason}`);
                     return true; // Return immediately if name matches
                 }
             }
         }
-        
-        // Log summary
-        console.log(`${logPrefix} Tidak ada match. Pengecekan: ${sapToday.length} SAP, ${coordinateMatchCount} match koordinat, ${nameMatchCount} match nama`);
         
         return false;
     }
