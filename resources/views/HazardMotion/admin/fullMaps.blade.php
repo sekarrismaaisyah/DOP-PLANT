@@ -2514,7 +2514,7 @@
                 </a>
                 <a href="#" class="gm-category-item" data-bs-toggle="modal" data-bs-target="#matriksPrediksiInsidenModal" title="Matriks Prediksi Insiden">
                     <i class="material-icons-outlined">assessment</i>
-                    <span>Matriks Prediksi</span>
+                    <span>Matriks Probability</span>
                 </a>
                 <a href="{{ route('maps.map') }}">
                 <span class="gm-category-item">
@@ -10768,7 +10768,7 @@ source: new ol.source.Vector(),
                 <!-- Prediction Info -->
                 <div style="padding: 8px; background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%); border-top: 1px solid #e5e7eb; position: relative;">
                     <div style="text-align: center;">
-                        <div style="font-size: 8px; color: #78350f; font-weight: 600; margin-bottom: 2px;">PREDIKSI</div>
+                        <div style="font-size: 8px; color: #78350f; font-weight: 600; margin-bottom: 2px;">Probability</div>
                         <div style="font-size: 18px; font-weight: 700; color: #92400e; margin-bottom: 2px; line-height: 1;">${totalDisplay}</div>
                         <div style="font-size: 8px; color: #78350f;">SAP: ${jumlahSap.toLocaleString('id-ID')}</div>
                     </div>
