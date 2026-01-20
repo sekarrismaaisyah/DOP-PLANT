@@ -5128,21 +5128,12 @@
             return [];
         }
         
-        const today = new Date();
-        today.setHours(0, 0, 0, 0);
-        const todayStr = today.toISOString().split('T')[0];
-        
-        // Filter SAP data for today
+        // ✅ GUNAKAN TIMEZONE ASIA/MAKASSAR (sama dengan hasSapReportToday)
+        // Filter SAP data for today menggunakan timezone Asia/Makassar
         const sapToday = sapDataForSidebar.filter(sap => {
             if (!sap.tanggal_pelaporan && !sap.detected_at) return false;
-            try {
-                const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
-                sapDate.setHours(0, 0, 0, 0);
-                const sapDateStr = sapDate.toISOString().split('T')[0];
-                return sapDateStr === todayStr;
-            } catch (e) {
-                return false;
-            }
+            // ✅ Gunakan helper function yang sama dengan hasSapReportToday()
+            return isDateTodayInMakassar(sap.tanggal_pelaporan || sap.detected_at);
         });
         
         if (sapToday.length === 0) {
@@ -7217,20 +7208,47 @@ source: new ol.source.Vector(),
     const BATCH_SIZE = 100; // Render dalam batch untuk performa
     
     function addSapMarkersBatch(sapDataArray) {
-        if (!sapDataArray || sapDataArray.length === 0) return;
+        if (!sapDataArray || sapDataArray.length === 0) {
+            console.warn('[SAP DEBUG] addSapMarkersBatch: No data provided');
+            return;
+        }
         
         let markerCount = 0;
         const source = hazardLayer.getSource();
         const features = [];
+        let skippedNoLocation = 0;
+        let skippedInvalidCoords = 0;
         
         // Filter dan prepare features
         sapDataArray.forEach(function(sap) {
             if (markerCount >= MAX_SAP_MARKERS) return;
-            if (!sap.location || !sap.location.lat || !sap.location.lng) return;
+            
+            // Check for location structure
+            if (!sap.location) {
+                skippedNoLocation++;
+                return;
+            }
+            
+            // Check for valid coordinates
+            const lat = sap.location.lat;
+            const lng = sap.location.lng;
+            
+            if (!lat || !lng || isNaN(parseFloat(lat)) || isNaN(parseFloat(lng))) {
+                skippedInvalidCoords++;
+                return;
+            }
+            
+            // Validate coordinate ranges
+            const latNum = parseFloat(lat);
+            const lngNum = parseFloat(lng);
+            if (latNum < -90 || latNum > 90 || lngNum < -180 || lngNum > 180) {
+                skippedInvalidCoords++;
+                return;
+            }
             
             const feature = new ol.Feature({
                 geometry: new ol.geom.Point(
-                    ol.proj.fromLonLat([sap.location.lng, sap.location.lat])
+                    ol.proj.fromLonLat([lngNum, latNum])
                 ),
                 id: sap.id,
                 task_number: sap.task_number,
@@ -7243,6 +7261,8 @@ source: new ol.source.Vector(),
             features.push(feature);
             markerCount++;
         });
+        
+        console.log(`[SAP DEBUG] addSapMarkersBatch: Processed ${sapDataArray.length} items, created ${features.length} markers, skipped ${skippedNoLocation} (no location), ${skippedInvalidCoords} (invalid coords)`);
         
         // Batch add features untuk performa
         if (features.length > 0) {
@@ -7261,6 +7281,8 @@ source: new ol.source.Vector(),
                 }
             }
             requestAnimationFrame(addBatch);
+        } else {
+            console.warn('[SAP DEBUG] No valid markers to add. Check if data has valid coordinates.');
         }
     }
     
@@ -11907,21 +11929,11 @@ source: new ol.source.Vector(),
                         return dateB - dateA; // Terbaru di atas
                     });
                     
-                    // Filter data hari ini untuk sidebar
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const todayStr = today.toISOString().split('T')[0];
-                    
+                    // ✅ Filter data hari ini untuk sidebar menggunakan timezone Asia/Makassar
                     const sapDataToday = sortedSapAll.filter(sap => {
                         if (!sap.tanggal_pelaporan && !sap.detected_at) return false;
-                        try {
-                            const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
-                            sapDate.setHours(0, 0, 0, 0);
-                            const sapDateStr = sapDate.toISOString().split('T')[0];
-                            return sapDateStr === todayStr;
-                        } catch (e) {
-                            return false;
-                        }
+                        // ✅ Gunakan helper function yang konsisten dengan timezone Asia/Makassar
+                        return isDateTodayInMakassar(sap.tanggal_pelaporan || sap.detected_at);
                     });
                     
                     // Map: Hanya tampilkan 1000 data terbaru dari semua data hasil filter
@@ -12258,21 +12270,11 @@ source: new ol.source.Vector(),
                         return dateB - dateA; // Terbaru di atas
                     });
                     
-                    // Filter data hari ini untuk sidebar
-                    const today = new Date();
-                    today.setHours(0, 0, 0, 0);
-                    const todayStr = today.toISOString().split('T')[0];
-                    
+                    // ✅ Filter data hari ini untuk sidebar menggunakan timezone Asia/Makassar
                     const sapDataToday = sortedSapAll.filter(sap => {
                         if (!sap.tanggal_pelaporan && !sap.detected_at) return false;
-                        try {
-                            const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
-                            sapDate.setHours(0, 0, 0, 0);
-                            const sapDateStr = sapDate.toISOString().split('T')[0];
-                            return sapDateStr === todayStr;
-                        } catch (e) {
-                            return false;
-                        }
+                        // ✅ Gunakan helper function yang konsisten dengan timezone Asia/Makassar
+                        return isDateTodayInMakassar(sap.tanggal_pelaporan || sap.detected_at);
                     });
                     
                     // Map: Hanya tampilkan 1000 data terbaru dari semua data hasil filter
@@ -19591,7 +19593,22 @@ source: new ol.source.Vector(),
         fetch('/full-maps/api/sap-data?limit=500')
             .then(response => response.json())
             .then(data => {
+                console.log('[SAP DEBUG] API Response:', data);
                 if (data.success && data.data && data.data.length > 0) {
+                    // Debug: Check data structure
+                    console.log('[SAP DEBUG] Total data received:', data.data.length);
+                    console.log('[SAP DEBUG] First item structure:', data.data[0]);
+                    
+                    // Check how many items have location
+                    const withLocation = data.data.filter(sap => sap.location && sap.location.lat && sap.location.lng);
+                    const withoutLocation = data.data.filter(sap => !sap.location || !sap.location.lat || !sap.location.lng);
+                    console.log('[SAP DEBUG] Items with location:', withLocation.length);
+                    console.log('[SAP DEBUG] Items without location:', withoutLocation.length);
+                    
+                    if (withoutLocation.length > 0) {
+                        console.log('[SAP DEBUG] Sample items without location:', withoutLocation.slice(0, 3));
+                    }
+                    
                     // Clear existing SAP markers
                     const source = hazardLayer.getSource();
                     source.clear();
@@ -19618,7 +19635,7 @@ source: new ol.source.Vector(),
                         sapCategoryItem.classList.add('active');
                     }
                     
-                    console.log(`Loaded ${data.count} SAP points from ClickHouse`);
+                    console.log(`Loaded ${data.count} SAP points from ClickHouse, ${withLocation.length} with valid coordinates`);
                     
                     // Show success alert for loading SAP from API
                     Swal.fire({
@@ -21715,10 +21732,9 @@ source: new ol.source.Vector(),
                         console.log('📊 Week:', weekValue);
                         console.log('📊 Total filteredSapData:', filteredSapData.length);
                         
-                        const debugToday = new Date();
-                        debugToday.setHours(0, 0, 0, 0);
-                        const debugTodayStr = debugToday.toISOString().split('T')[0];
-                        console.log('📅 Today String:', debugTodayStr);
+                        // ✅ Gunakan timezone Asia/Makassar untuk konsistensi
+                        const debugTodayStr = getTodayInMakassar();
+                        console.log('📅 Today String (Asia/Makassar):', debugTodayStr);
                         
                         // Tampilkan semua source_type yang ada untuk debugging
                         const sourceTypes = {};
@@ -21754,21 +21770,14 @@ source: new ol.source.Vector(),
                             
                             if (!isInspeksiHazard) return false;
                             
-                            // Filter berdasarkan tanggal hari ini
+                            // ✅ Filter berdasarkan tanggal hari ini menggunakan timezone Asia/Makassar
                             if (!sap.tanggal_pelaporan && !sap.detected_at) {
                                 console.warn('⚠️ INSPEKSI_HAZARD tanpa tanggal:', sap.task_number || sap.id || 'N/A');
                                 return false;
                             }
                             
-                            try {
-                                const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
-                                sapDate.setHours(0, 0, 0, 0);
-                                const sapDateStr = sapDate.toISOString().split('T')[0];
-                                return sapDateStr === debugTodayStr;
-                            } catch (e) {
-                                console.error('❌ Error parsing date:', sap.tanggal_pelaporan || sap.detected_at, e);
-                                return false;
-                            }
+                            // ✅ Gunakan helper function yang konsisten dengan timezone Asia/Makassar
+                            return isDateTodayInMakassar(sap.tanggal_pelaporan || sap.detected_at);
                         });
                         
                         console.log(`✅ Week: ${weekValue} | Total INSPEKSI_HAZARD hari ini (${debugTodayStr}): ${inspeksiHazardToday.length} items`);
@@ -21795,21 +21804,11 @@ source: new ol.source.Vector(),
                             return dateB - dateA; // Terbaru di atas
                         });
                         
-                        // Filter data hari ini untuk sidebar
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        const todayStr = today.toISOString().split('T')[0];
-                        
+                        // ✅ Filter data hari ini untuk sidebar menggunakan timezone Asia/Makassar
                         const sapDataToday = sortedSapDataAll.filter(sap => {
                             if (!sap.tanggal_pelaporan && !sap.detected_at) return false;
-                            try {
-                                const sapDate = new Date(sap.tanggal_pelaporan || sap.detected_at);
-                                sapDate.setHours(0, 0, 0, 0);
-                                const sapDateStr = sapDate.toISOString().split('T')[0];
-                                return sapDateStr === todayStr;
-                            } catch (e) {
-                                return false;
-                            }
+                            // ✅ Gunakan helper function yang konsisten dengan timezone Asia/Makassar
+                            return isDateTodayInMakassar(sap.tanggal_pelaporan || sap.detected_at);
                         });
                         
                         // Map: Hanya tampilkan 1000 data terbaru dari semua data per week

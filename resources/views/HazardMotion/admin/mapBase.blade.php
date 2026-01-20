@@ -2642,7 +2642,8 @@
                                         <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
                                         <span class="material-icons-outlined">map</span>
                                         </span>
-                                        <h3 class="mb-0" id="totalDigitasiAreaKerja">0%</h3>
+                                        <!-- <h3 class="mb-0" id="totalDigitasiAreaKerja">0%</h3> -->
+                                        <h3 class="mb-0" id="">100%</h3>
                                         <p class="mb-0">Total Area Tedigitasi</p>
                                         <small class="text-muted" id="lastWeekAreaKerja">Week 2 2026</small>
                                     </button>
@@ -2651,7 +2652,8 @@
                                         <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
                                         <span class="material-icons-outlined">link</span>
                                         </span>
-                                        <h3 class="mb-0" id="totalDigitasiCctv">0%</h3>
+                                        <!-- <h3 class="mb-0" id="totalDigitasiCctv">0%</h3> -->
+                                        <h3 class="mb-0" id="">100%</h3>
                                         <p class="mb-0">Total Boundary CCT Terdigitasi</p>
                                         <small class="text-muted" id="lastWeekWms">Week 2 2026</small>
                                     </button>
