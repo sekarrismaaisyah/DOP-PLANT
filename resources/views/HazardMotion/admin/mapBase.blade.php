@@ -18377,7 +18377,24 @@
             },
             body: JSON.stringify(data)
         })
-        .then(response => response.json())
+        .then(async response => {
+            // Cek content-type untuk memastikan response adalah JSON
+            const contentType = response.headers.get('content-type');
+            if (!contentType || !contentType.includes('application/json')) {
+                // Jika bukan JSON, ambil sebagai text untuk debugging
+                const text = await response.text();
+                console.error('Non-JSON response received:', text.substring(0, 200));
+                throw new Error('Server mengembalikan response yang tidak valid. Pastikan route dan controller sudah benar.');
+            }
+            
+            // Jika status tidak OK, coba parse error message dari JSON
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({}));
+                throw new Error(errorData.message || `Error ${response.status}: ${response.statusText}`);
+            }
+            
+            return response.json();
+        })
         .then(result => {
             if (result.success) {
                 // Close modal first
@@ -18419,7 +18436,7 @@
             modalBody.innerHTML = `
                 <div class="alert alert-danger">
                     <i class="material-icons-outlined me-2">error</i>
-                    Terjadi kesalahan saat menyimpan data.
+                    ${error.message || 'Terjadi kesalahan saat menyimpan data. Pastikan koneksi internet stabil dan coba lagi.'}
                 </div>
             `;
             

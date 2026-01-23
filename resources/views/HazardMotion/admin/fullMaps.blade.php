@@ -4197,6 +4197,10 @@
     let insidenLayer = null;
     let unitVehicleLayer = null;
     let userGpsLayer = null;
+    let hardcodePersonLayer = null; // Layer untuk marker orang hardcode dengan boundary merah berkedip
+    let hardcodePersonBoundaryLayer = null; // Layer untuk boundary merah berkedip pada marker orang hardcode
+    let hardcodeUnitLayer = null; // Layer untuk unit hardcode
+    let hardcodeUnitBoundaryLayer = null; // Layer untuk boundary unit hardcode
     let dailyOperationPlansLayer = null;
     let dopCctvLinesLayer = null; // Layer untuk garis dari DOP ke CCTV
     let dopCctvMarkersLayer = null; // Layer untuk CCTV markers dari dop_cctv
@@ -4835,6 +4839,14 @@
             // Update DOP-CCTV lines layer untuk pulse animation
             if (dopCctvLinesLayer) {
                 const source = dopCctvLinesLayer.getSource();
+                if (source) {
+                    source.changed();
+                }
+            }
+            
+            // Update hardcode person boundary layer untuk animasi berkedip merah
+            if (hardcodePersonBoundaryLayer) {
+                const source = hardcodePersonBoundaryLayer.getSource();
                 if (source) {
                     source.changed();
                 }
@@ -5722,12 +5734,44 @@
                         console.log('Unit boundary layer shown');
                     }
                     
+                    // Show hardcode person marker dengan boundary merah berkedip
+                    if (hardcodePersonLayer && hardcodePersonBoundaryLayer) {
+                        addHardcodePersonMarker();
+                        hardcodePersonLayer.setVisible(true);
+                        hardcodePersonBoundaryLayer.setVisible(true);
+                        console.log('Hardcode person marker dengan boundary merah berkedip ditampilkan');
+                    }
+                    
+                    // Show hardcode unit marker di sebelah orang
+                    if (hardcodeUnitLayer && hardcodeUnitBoundaryLayer) {
+                        addHardcodeUnitMarker();
+                        hardcodeUnitLayer.setVisible(true);
+                        hardcodeUnitBoundaryLayer.setVisible(true);
+                        console.log('Hardcode unit marker ditampilkan di sebelah orang');
+                    }
+                    
                     console.log('Unit dan Orang layer activated - showing Unit and GPS Orang, hiding CCTV');
                 } else {
                     // Hide unit boundary layer when terrain (SA UNIT) is deactivated
                     if (unitBoundaryLayer) {
                         unitBoundaryLayer.setVisible(false);
                         console.log('Unit boundary layer hidden');
+                    }
+                    
+                    // Hide hardcode person marker ketika layer terrain dimatikan
+                    if (hardcodePersonLayer) {
+                        hardcodePersonLayer.setVisible(false);
+                    }
+                    if (hardcodePersonBoundaryLayer) {
+                        hardcodePersonBoundaryLayer.setVisible(false);
+                    }
+                    
+                    // Hide hardcode unit marker ketika layer terrain dimatikan
+                    if (hardcodeUnitLayer) {
+                        hardcodeUnitLayer.setVisible(false);
+                    }
+                    if (hardcodeUnitBoundaryLayer) {
+                        hardcodeUnitBoundaryLayer.setVisible(false);
                     }
                 }
             } else if (layerName === 'transit') {
@@ -8393,6 +8437,54 @@ source: new ol.source.Vector(),
             // Update boundaries to recalculate radius based on new zoom level
             updateUnitBoundaries(unitVehicles);
         }
+        
+        // Update hardcode person boundary radius ketika zoom berubah
+        if (hardcodePersonBoundaryLayer && hardcodePersonBoundaryLayer.getVisible()) {
+            const features = hardcodePersonBoundaryLayer.getSource().getFeatures();
+            features.forEach(function(feature) {
+                if (feature.getGeometry().getType() === 'Circle') {
+                    const center = feature.getGeometry().getCenter();
+                    const centerLonLat = ol.proj.toLonLat(center);
+                    const latitude = centerLonLat[1];
+                    const longitude = centerLonLat[0];
+                    
+                    // Recalculate radius menggunakan metode yang sama dengan addHardcodePersonMarker
+                    const radiusInMeters = 50; // 50 meter radius
+                    const northPointLonLat = [longitude, latitude + (radiusInMeters / 111320)];
+                    const northPointCoord = ol.proj.fromLonLat(northPointLonLat);
+                    const radiusInMapUnits = Math.sqrt(
+                        Math.pow(northPointCoord[0] - center[0], 2) +
+                        Math.pow(northPointCoord[1] - center[1], 2)
+                    );
+                    
+                    feature.getGeometry().setRadius(radiusInMapUnits);
+                }
+            });
+        }
+        
+        // Update hardcode unit boundary radius ketika zoom berubah
+        if (hardcodeUnitBoundaryLayer && hardcodeUnitBoundaryLayer.getVisible()) {
+            const features = hardcodeUnitBoundaryLayer.getSource().getFeatures();
+            features.forEach(function(feature) {
+                if (feature.getGeometry().getType() === 'Circle') {
+                    const center = feature.getGeometry().getCenter();
+                    const centerLonLat = ol.proj.toLonLat(center);
+                    const latitude = centerLonLat[1];
+                    const longitude = centerLonLat[0];
+                    
+                    // Recalculate radius menggunakan metode yang sama dengan addHardcodeUnitMarker
+                    const radiusInMeters = 5; // 5 meter radius (sama seperti unit biasa)
+                    const northPointLonLat = [longitude, latitude + (radiusInMeters / 111320)];
+                    const northPointCoord = ol.proj.fromLonLat(northPointLonLat);
+                    const radiusInMapUnits = Math.sqrt(
+                        Math.pow(northPointCoord[0] - center[0], 2) +
+                        Math.pow(northPointCoord[1] - center[1], 2)
+                    );
+                    
+                    feature.getGeometry().setRadius(radiusInMapUnits);
+                }
+            });
+        }
     });
 
     // Function to convert meters to pixels for circle radius (accurate for Web Mercator)
@@ -8964,6 +9056,305 @@ source: new ol.source.Vector(),
     });
     map.addLayer(userGpsLayer);
     console.log('GPS Orang layer created and added to map');
+    
+    // Create layer untuk marker orang hardcode dengan boundary merah berkedip
+    hardcodePersonLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: false,  // Default hidden
+        style: function(feature) {
+            // Style untuk marker orang (menggunakan icon GPS Orang)
+            const fillColor = '#ef4444'; // Merah untuk bahaya
+            const iconUrl = createGpsOrangIcon({ fill: fillColor });
+            
+            return new ol.style.Style({
+                image: new ol.style.Icon({
+                    src: iconUrl,
+                    scale: 1.0,
+                    anchor: [0.5, 1],  // Anchor at bottom center (pin point)
+                    anchorXUnits: 'fraction',
+                    anchorYUnits: 'fraction',
+                    opacity: 1
+                })
+            });
+        },
+        zIndex: 1003  // Z-index di atas GPS Orang layer
+    });
+    map.addLayer(hardcodePersonLayer);
+    console.log('Hardcode Person layer created and added to map');
+    
+    // Create layer untuk boundary merah berkedip pada marker orang hardcode
+    hardcodePersonBoundaryLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: false,  // Default hidden
+        style: function(feature) {
+            const geometry = feature.getGeometry();
+            if (!geometry || geometry.getType() !== 'Circle') {
+                return null;
+            }
+            
+            const radius = geometry.getRadius();
+            const center = geometry.getCenter();
+            
+            // Get pulsating animation values untuk efek berkedip
+            const animTime = getPulseAnimationTime();
+            const pulse = getPulsatingCircleValues(animTime);
+            
+            // Boundary merah berkedip dengan efek pulsating
+            const baseRadius = radius;
+            const ringRadius = baseRadius * pulse.ringScale;
+            const ringOpacity = pulse.ringOpacity;
+            
+            // Multiple rings untuk efek berkedip yang lebih jelas
+            return [
+                // Outermost pulsating ring (merah transparan)
+                new ol.style.Style({
+                    geometry: new ol.geom.Circle(center, ringRadius * 1.5),
+                    fill: new ol.style.Fill({
+                        color: `rgba(239, 68, 68, ${ringOpacity * 0.3})`
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: `rgba(239, 68, 68, ${ringOpacity * 0.6})`,
+                        width: 3
+                    })
+                }),
+                // Middle pulsating ring (merah lebih jelas)
+                new ol.style.Style({
+                    geometry: new ol.geom.Circle(center, ringRadius),
+                    fill: new ol.style.Fill({
+                        color: `rgba(239, 68, 68, ${ringOpacity * 0.4})`
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: `rgba(239, 68, 68, ${ringOpacity})`,
+                        width: 4
+                    })
+                }),
+                // Main boundary circle (merah solid dengan stroke yang berkedip)
+                new ol.style.Style({
+                    geometry: geometry,
+                    fill: new ol.style.Fill({
+                        color: 'rgba(239, 68, 68, 0.3)'
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: `rgba(239, 68, 68, ${0.5 + ringOpacity * 0.5})`,
+                        width: 5 + (pulse.dotScale - 0.8) * 10 // Stroke width berubah dengan animasi
+                    })
+                })
+            ];
+        },
+        zIndex: 1002  // Di bawah marker tapi di atas base layers
+    });
+    map.addLayer(hardcodePersonBoundaryLayer);
+    console.log('Hardcode Person Boundary layer created and added to map');
+    
+    // Create layer untuk unit hardcode
+    hardcodeUnitLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: false,  // Default hidden
+        style: function(feature) {
+            const unit = feature.get('unitData');
+            if (!unit) {
+                return null;
+            }
+            
+            const iconUrl = createVehicleUnitIcon(unit);
+            const course = parseFloat(unit.course) || 0;
+            
+            return new ol.style.Style({
+                image: new ol.style.Icon({
+                    src: iconUrl,
+                    scale: 1.0,
+                    anchor: [0.5, 1],  // Anchor at bottom center (pin point)
+                    anchorXUnits: 'fraction',
+                    anchorYUnits: 'fraction',
+                    opacity: 1,
+                    rotation: course * Math.PI / 180 // Rotate based on course
+                })
+            });
+        },
+        zIndex: 1003  // Z-index di atas GPS Orang layer
+    });
+    map.addLayer(hardcodeUnitLayer);
+    console.log('Hardcode Unit layer created and added to map');
+    
+    // Create layer untuk boundary unit hardcode
+    hardcodeUnitBoundaryLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: false,  // Default hidden
+        style: function(feature) {
+            const geometry = feature.getGeometry();
+            if (!geometry || geometry.getType() !== 'Circle') {
+                return null;
+            }
+            
+            const radius = geometry.getRadius();
+            const center = geometry.getCenter();
+            
+            // Green boundary untuk unit (tidak berkedip, hanya solid)
+            const fillColor = 'rgba(34, 197, 94, 0.4)';
+            const strokeColor = '#22c55e';
+            const strokeWidth = 15;
+            
+            // Multiple outer glow rings untuk visibility
+            const outerRing1Radius = radius * 2.0;
+            const outerRing1Color = 'rgba(34, 197, 94, 0.15)';
+            const outerRing1Stroke = 'rgba(34, 197, 94, 0.3)';
+            
+            const outerRing2Radius = radius * 2.8;
+            const outerRing2Color = 'rgba(34, 197, 94, 0.08)';
+            const outerRing2Stroke = 'rgba(34, 197, 94, 0.2)';
+            
+            return [
+                // Outermost glow ring
+                new ol.style.Style({
+                    geometry: new ol.geom.Circle(center, outerRing2Radius),
+                    fill: new ol.style.Fill({
+                        color: outerRing2Color
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: outerRing2Stroke,
+                        width: 6
+                    })
+                }),
+                // Middle glow ring
+                new ol.style.Style({
+                    geometry: new ol.geom.Circle(center, outerRing1Radius),
+                    fill: new ol.style.Fill({
+                        color: outerRing1Color
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: outerRing1Stroke,
+                        width: 7
+                    })
+                }),
+                // Main boundary circle
+                new ol.style.Style({
+                    geometry: geometry,
+                    fill: new ol.style.Fill({
+                        color: fillColor
+                    }),
+                    stroke: new ol.style.Stroke({
+                        color: strokeColor,
+                        width: strokeWidth
+                    })
+                })
+            ];
+        },
+        zIndex: 1002  // Di bawah marker tapi di atas base layers
+    });
+    map.addLayer(hardcodeUnitBoundaryLayer);
+    console.log('Hardcode Unit Boundary layer created and added to map');
+    
+    // Function to add hardcode person marker
+    function addHardcodePersonMarker() {
+        if (!hardcodePersonLayer || !hardcodePersonBoundaryLayer) {
+            console.warn('Hardcode Person layers not initialized');
+            return;
+        }
+        
+        // Koordinat hardcode: 2.141963, 117.467292
+        const latitude = 2.141963;
+        const longitude = 117.467292;
+        const coordinate = ol.proj.fromLonLat([longitude, latitude]);
+        
+        // Clear existing features
+        hardcodePersonLayer.getSource().clear();
+        hardcodePersonBoundaryLayer.getSource().clear();
+        
+        // Create marker feature untuk orang
+        const personFeature = new ol.Feature({
+            geometry: new ol.geom.Point(coordinate),
+            type: 'hardcode_person',
+            isDanger: true
+        });
+        hardcodePersonLayer.getSource().addFeature(personFeature);
+        
+        // Create boundary circle (radius 50 meter)
+        // Menggunakan metode yang sama dengan unit boundary untuk akurasi
+        const radiusInMeters = 50; // 50 meter radius
+        // Create a point 50 meters north of the center to calculate radius in map units
+        // 1 degree latitude ≈ 111320 meters
+        const northPointLonLat = [longitude, latitude + (radiusInMeters / 111320)];
+        const northPointCoord = ol.proj.fromLonLat(northPointLonLat);
+        // Calculate radius in map units
+        const radiusInMapUnits = Math.sqrt(
+            Math.pow(northPointCoord[0] - coordinate[0], 2) +
+            Math.pow(northPointCoord[1] - coordinate[1], 2)
+        );
+        
+        const boundaryFeature = new ol.Feature({
+            geometry: new ol.geom.Circle(coordinate, radiusInMapUnits),
+            type: 'hardcode_person_boundary',
+            isDanger: true
+        });
+        hardcodePersonBoundaryLayer.getSource().addFeature(boundaryFeature);
+        
+        console.log('Hardcode person marker added at:', latitude, longitude, 'with 50m boundary');
+    }
+    
+    // Function to add hardcode unit marker di sebelah orang
+    function addHardcodeUnitMarker() {
+        if (!hardcodeUnitLayer || !hardcodeUnitBoundaryLayer) {
+            console.warn('Hardcode Unit layers not initialized');
+            return;
+        }
+        
+        // Koordinat unit hardcode: sekitar 100 meter ke timur dari orang
+        // Koordinat orang: 2.141963, 117.467292
+        const personLatitude = 2.141963;
+        const personLongitude = 117.467292;
+        
+        // Unit di sebelah timur orang (sekitar 100 meter)
+        // 1 degree longitude ≈ 111320 * cos(latitude) meters
+        const metersPerDegreeLon = 111320 * Math.cos(personLatitude * Math.PI / 180);
+        const offsetMeters = 100; // 100 meter ke timur
+        const unitLatitude = personLatitude;
+        const unitLongitude = personLongitude + (offsetMeters / metersPerDegreeLon);
+        
+        const coordinate = ol.proj.fromLonLat([unitLongitude, unitLatitude]);
+        
+        // Clear existing features
+        hardcodeUnitLayer.getSource().clear();
+        hardcodeUnitBoundaryLayer.getSource().clear();
+        
+        // Create unit data object (hardcode)
+        const unitData = {
+            unit_id: 'hardcode_unit_001',
+            integration_id: 'hardcode_unit_001',
+            vehicle_type: 'Dump Truck',
+            course: 90, // Menghadap ke timur
+            latitude: unitLatitude,
+            longitude: unitLongitude
+        };
+        
+        // Create marker feature untuk unit
+        const unitFeature = new ol.Feature({
+            geometry: new ol.geom.Point(coordinate),
+            type: 'hardcode_unit',
+            unitId: 'hardcode_unit_001',
+            unitData: unitData
+        });
+        hardcodeUnitLayer.getSource().addFeature(unitFeature);
+        
+        // Create boundary circle (radius 5 meter, sama seperti unit biasa)
+        const radiusInMeters = 5; // 5 meter radius
+        const northPointLonLat = [unitLongitude, unitLatitude + (radiusInMeters / 111320)];
+        const northPointCoord = ol.proj.fromLonLat(northPointLonLat);
+        const radiusInMapUnits = Math.sqrt(
+            Math.pow(northPointCoord[0] - coordinate[0], 2) +
+            Math.pow(northPointCoord[1] - coordinate[1], 2)
+        );
+        
+        const boundaryFeature = new ol.Feature({
+            geometry: new ol.geom.Circle(coordinate, radiusInMapUnits),
+            type: 'hardcode_unit_boundary',
+            unitId: 'hardcode_unit_001',
+            unitData: unitData,
+            isIntersecting: false // Tidak intersecting dengan unit lain
+        });
+        hardcodeUnitBoundaryLayer.getSource().addFeature(boundaryFeature);
+        
+        console.log('Hardcode unit marker added at:', unitLatitude, unitLongitude, 'with 5m boundary');
+    }
     
     // Function to add/update GPS Orang markers
     function updateGpsOrangMarkers(users) {

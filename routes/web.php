@@ -385,6 +385,9 @@ Route::middleware(['auth'])->group(function () {
             return view('dms.index');
         })->name('index');
         Route::get('/dashboard', [\App\Http\Controllers\DMS\DMSDashboardController::class, 'index'])->name('dashboard');
+        Route::get('/dashboard-static', function () {
+            return view('dms.dashboard-static');
+        })->name('dashboard-static');
     });
 
     // Route modul VALIDASI TBC & Score Card

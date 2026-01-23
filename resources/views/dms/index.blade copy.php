@@ -306,7 +306,6 @@
             transition: all 0.3s;
             width: 100%;
             text-align: center;
-            
         }
 
         .card-file-input-label:hover {
@@ -366,55 +365,6 @@
             grid-template-columns: repeat(2, 1fr);
             gap: 16px;
             margin-bottom: 20px;
-        }
-        
-        /* Layout khusus untuk detection mode - video dan metrics bersebelahan */
-        #detectionVideoMetricsRow {
-            display: flex !important;
-            flex-direction: row !important;
-            flex-wrap: nowrap !important;
-            gap: 15px !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            align-items: flex-start !important;
-            box-sizing: border-box !important;
-        }
-        
-        .detection-video-col {
-            flex: 0 0 calc(50% - 7.5px) !important;
-            width: calc(50% - 7.5px) !important;
-            max-width: calc(50% - 7.5px) !important;
-            box-sizing: border-box !important;
-            min-width: 0 !important;
-        }
-        
-        .detection-metrics-col {
-            flex: 0 0 calc(50% - 7.5px) !important;
-            width: calc(50% - 7.5px) !important;
-            max-width: calc(50% - 7.5px) !important;
-            box-sizing: border-box !important;
-            min-width: 0 !important;
-        }
-        
-        #detectionVideoMetricsRow .metrics-grid {
-            width: 100% !important;
-            max-width: 100% !important;
-            grid-template-columns: 1fr !important;
-            margin-bottom: 0 !important;
-            display: grid !important;
-            box-sizing: border-box !important;
-        }
-        
-        #detectionVideoMetricsRow .video-section {
-            width: 100% !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-        }
-        
-        /* Pastikan parent container tidak membatasi */
-        #detectionVideoMetricsRow,
-        #detectionVideoMetricsRow * {
-            box-sizing: border-box !important;
         }
         .metric-item {
             display: flex;
@@ -724,371 +674,6 @@
                 grid-template-columns: 1fr;
             }
         }
-
-        /* Mobile Responsive Styles */
-        @media (max-width: 768px) {
-            /* Cards Container */
-            .cards-container {
-                grid-template-columns: 1fr;
-                gap: 15px;
-            }
-
-            /* Driver Card */
-            .driver-card {
-                margin-bottom: 16px;
-            }
-
-            .driver-card-header {
-                padding: 16px;
-                flex-direction: column;
-                align-items: flex-start;
-                gap: 12px;
-            }
-
-            .driver-card-title {
-                font-size: 18px;
-            }
-
-            .driver-card-body {
-                padding: 16px;
-            }
-
-            /* Video Section */
-            .card-video-section {
-                margin-bottom: 12px;
-            }
-
-            .card-status-overlay {
-                top: 8px;
-                left: 8px;
-                padding: 6px 10px;
-                font-size: 11px;
-            }
-
-            /* Video Controls */
-            .card-video-controls {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .card-video-controls button {
-                width: 100%;
-                padding: 10px 16px;
-                font-size: 14px;
-            }
-
-            /* Upload Section */
-            .card-upload-section {
-                padding: 10px;
-            }
-
-            .video-source-toggle {
-                flex-direction: column;
-                gap: 8px;
-                padding: 8px;
-            }
-
-            .video-source-toggle label {
-                font-size: 13px;
-            }
-
-            .stream-input-group input {
-                font-size: 14px;
-                padding: 8px;
-            }
-
-            .btn-load-stream {
-                padding: 10px 16px;
-                font-size: 13px;
-            }
-
-            /* Metrics Grid */
-            .metrics-grid {
-                grid-template-columns: 1fr;
-                gap: 12px;
-            }
-
-            .metric-item {
-                padding: 10px;
-            }
-
-            .metric-label {
-                font-size: 10px;
-            }
-
-            .metric-value {
-                font-size: 20px;
-            }
-
-            .metric-value.orange {
-                font-size: 24px;
-            }
-
-            .metric-value.small {
-                font-size: 14px;
-            }
-
-            /* Detection Mode Layout */
-            #detectionVideoMetricsRow {
-                flex-direction: column !important;
-                gap: 15px !important;
-            }
-
-            .detection-video-col,
-            .detection-metrics-col {
-                flex: 1 1 100% !important;
-                width: 100% !important;
-                max-width: 100% !important;
-            }
-
-            /* Mode Selection */
-            .mode-selection {
-                padding: 15px;
-            }
-
-            .mode-selection h3 {
-                font-size: 16px;
-                margin-bottom: 12px;
-            }
-
-            .mode-buttons {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .btn-mode {
-                padding: 10px 16px;
-                font-size: 14px;
-            }
-
-            .mode-input-group {
-                margin-bottom: 12px;
-            }
-
-            .mode-input-group label {
-                font-size: 13px;
-            }
-
-            .mode-input-group input,
-            .mode-input-group select {
-                padding: 8px;
-                font-size: 14px;
-            }
-
-            /* Video Controls */
-            .video-controls {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .video-controls button {
-                width: 100%;
-                padding: 12px 24px;
-                font-size: 14px;
-            }
-
-            /* Status Badge */
-            .status-badge {
-                padding: 4px 12px;
-                font-size: 11px;
-            }
-
-            /* Calibration Status */
-            .calibration-status {
-                padding: 12px;
-            }
-
-            .calibration-timer {
-                font-size: 1.2em;
-            }
-
-            /* Add Card Section */
-            .add-card-section {
-                padding: 15px;
-            }
-
-            .btn-add-card {
-                width: 100%;
-                padding: 12px 20px;
-                font-size: 14px;
-            }
-
-            /* Modal Responsive */
-            .modal-dialog {
-                margin: 10px;
-            }
-
-            .modal-content {
-                border-radius: 8px;
-            }
-
-            .modal-header {
-                padding: 15px;
-            }
-
-            .modal-title {
-                font-size: 18px;
-            }
-
-            .modal-body {
-                padding: 15px;
-            }
-
-            .modal-footer {
-                padding: 15px;
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            .modal-footer .btn {
-                width: 100%;
-                margin: 0;
-            }
-
-            /* Form Controls */
-            .form-control {
-                font-size: 14px;
-                padding: 8px 12px;
-            }
-
-            .form-label {
-                font-size: 13px;
-                margin-bottom: 6px;
-            }
-
-            /* Video Element */
-            #detectionVideoElement,
-            .card-video-element {
-                width: 100%;
-                height: auto;
-            }
-
-            /* Status Overlay untuk Detection */
-            .status-overlay {
-                top: 10px;
-                left: 10px;
-                padding: 8px 12px;
-                font-size: 11px;
-            }
-
-            /* File Input */
-            .card-file-input-label {
-                padding: 10px 14px;
-                font-size: 13px;
-            }
-
-            /* Video Info */
-            .card-video-info {
-                font-size: 12px;
-            }
-
-            /* Detection Controls */
-            #detectionControls {
-                flex-direction: column;
-                gap: 8px;
-            }
-
-            #detectionControls button {
-                width: 100%;
-            }
-        }
-
-        @media (max-width: 576px) {
-            /* Extra Small Mobile */
-            .driver-card-header {
-                padding: 12px;
-            }
-
-            .driver-card-title {
-                font-size: 16px;
-            }
-
-            .driver-card-body {
-                padding: 12px;
-            }
-
-            .card-status-overlay {
-                top: 5px;
-                left: 5px;
-                padding: 5px 8px;
-                font-size: 10px;
-            }
-
-            .metric-value {
-                font-size: 18px;
-            }
-
-            .metric-value.orange {
-                font-size: 22px;
-            }
-
-            .mode-selection {
-                padding: 12px;
-            }
-
-            .mode-selection h3 {
-                font-size: 15px;
-            }
-
-            .btn-mode {
-                padding: 8px 14px;
-                font-size: 13px;
-            }
-
-            .video-controls button {
-                padding: 10px 20px;
-                font-size: 13px;
-            }
-
-            .calibration-timer {
-                font-size: 1.1em;
-            }
-
-            .modal-dialog {
-                margin: 5px;
-            }
-
-            .modal-header,
-            .modal-body,
-            .modal-footer {
-                padding: 12px;
-            }
-
-            .modal-title {
-                font-size: 16px;
-            }
-
-            /* Status Overlay */
-            .status-overlay {
-                top: 5px;
-                left: 5px;
-                padding: 6px 10px;
-                font-size: 10px;
-            }
-
-            .card-status-overlay {
-                top: 4px;
-                left: 4px;
-                padding: 4px 8px;
-                font-size: 9px;
-            }
-
-            /* File Input */
-            .card-file-input-label {
-                padding: 8px 12px;
-                font-size: 12px;
-            }
-
-            /* Video Info */
-            .card-video-info {
-                font-size: 11px;
-            }
-
-            /* Stream Input Group */
-            .stream-input-group p {
-                font-size: 11px;
-            }
-        }
     </style>
 
 <div class="row">
@@ -1157,13 +742,16 @@
                 <div class="mode-selection">
                     <h3>Mode Operasi</h3>
                     <div class="mode-buttons">
-                        <button id="modeDetectionBtn" class="btn-mode active" onclick="setMode('detection')">
+                        <button id="modeCalibrationBtn" class="btn-mode active" onclick="setMode('calibration')">
+                            Mode Kalibrasi
+                        </button>
+                        <button id="modeDetectionBtn" class="btn-mode" onclick="setMode('detection')">
                             Mode Deteksi
                         </button>
                     </div>
 
                     <!-- Input untuk Mode Kalibrasi -->
-                    <div id="calibrationInputs" style="display: none;">
+                    <div id="calibrationInputs" style="display: block;">
                         <div class="mode-input-group">
                             <label>
                                 Nama / ID Orang <span class="required-mark">*</span>
@@ -1179,7 +767,7 @@
                     </div>
 
                     <!-- Dropdown untuk Mode Deteksi -->
-                    <div id="detectionInputs" style="display: block;">
+                    <div id="detectionInputs" style="display: none;">
                         <div class="mode-input-group">
                             <label>
                                 Pilih Kalibrasi <span class="required-mark">*</span>
@@ -1231,57 +819,50 @@
                             </div>
                         </div>
                         
+                        <!-- Video Player untuk Detection -->
+                        <div class="video-section mt-3" id="detectionVideoSection" style="display: none; position: relative; background: #000; border-radius: 12px; overflow: hidden;">
+                            <div style="position: relative; width: 100%; background: #000; aspect-ratio: 16/9;">
+                                <video id="detectionVideoElement" autoplay playsinline style="width: 100%; height: 100%; display: block; object-fit: contain;"></video>
+                                <canvas id="detectionCanvasElement" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: block;"></canvas>
+                            </div>
+                            <div class="status-overlay">
+                                <div>Status: <span id="detectionStatus">Ready</span></div>
+                                <div>EAR: <span id="detectionEAR">--</span></div>
+                            </div>
+                        </div>
+                        
                         <!-- Controls untuk Detection -->
                         <div class="video-controls mt-3" id="detectionControls" style="display: none;">
                             <button class="btn-start" id="detectionStartBtn" onclick="startDetectionMode()">Start</button>
                             <button class="btn-stop" id="detectionStopBtn" onclick="stopDetectionMode()" disabled>Stop</button>
                         </div>
                         
-                        <!-- Row untuk Video dan Metrics bersebelahan -->
-                        <div class="mt-3" id="detectionVideoMetricsRow" style="display: none;">
-                            <!-- Video Player untuk Detection - Col 6 -->
-                            <div class="detection-video-col">
-                                <div class="video-section" id="detectionVideoSection" style="position: relative; background: #000; border-radius: 12px; overflow: hidden;">
-                                    <div style="position: relative; width: 100%; background: #000; aspect-ratio: 16/9;">
-                                        <video id="detectionVideoElement" autoplay playsinline style="width: 100%; height: 100%; display: block; object-fit: contain;"></video>
-                                        <canvas id="detectionCanvasElement" style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; display: block;"></canvas>
-                                    </div>
-                                    <div class="status-overlay">
-                                        <div>Status: <span id="detectionStatus">Ready</span></div>
-                                        <div>EAR: <span id="detectionEAR">--</span></div>
-                                    </div>
-                                </div>
+                        <!-- Metrics untuk Detection -->
+                        <div class="metrics-grid mt-3" id="detectionMetrics" style="display: none;">
+                            <div class="metric-item" data-metric="safety-score">
+                                <div class="metric-label">Safety Score</div>
+                                <div class="metric-value orange" id="detectionSafetyScore">--</div>
+                                <span class="status-badge safe mt-2" id="detectionStatusBadge" style="display: inline-block; width: fit-content;">Safe</span>
                             </div>
-                            
-                            <!-- Metrics untuk Detection - Col 6 -->
-                            <div class="detection-metrics-col">
-                                <div class="metrics-grid" id="detectionMetrics">
-                                    <div class="metric-item" data-metric="safety-score">
-                                        <div class="metric-label">Safety Score</div>
-                                        <div class="metric-value orange" id="detectionSafetyScore">--</div>
-                                        <span class="status-badge safe mt-2" id="detectionStatusBadge" style="display: inline-block; width: fit-content;">Safe</span>
-                                    </div>
-                                    <div class="metric-item" data-metric="fatigue">
-                                        <div class="metric-label">Fatigue Score</div>
-                                        <div class="metric-value" id="detectionFatigueScore">--</div>
-                                    </div>
-                                    <div class="metric-item" data-metric="drift">
-                                        <div class="metric-label">Drift Score</div>
-                                        <div class="metric-value" id="detectionDriftScore">--</div>
-                                    </div>
-                                    <div class="metric-item" data-metric="perclos">
-                                        <div class="metric-label">PERCLOS (60s)</div>
-                                        <div class="metric-value" id="detectionPerclosValue">--</div>
-                                    </div>
-                                    <div class="metric-item" data-metric="blink-count">
-                                        <div class="metric-label">Blink Count (60s)</div>
-                                        <div class="metric-value" id="detectionBlinkCount">0</div>
-                                    </div>
-                                    <div class="metric-item" data-metric="microsleep">
-                                        <div class="metric-label">Microsleep (60s)</div>
-                                        <div class="metric-value" id="detectionMicrosleepCount">0</div>
-                                    </div>
-                                </div>
+                            <div class="metric-item" data-metric="fatigue">
+                                <div class="metric-label">Fatigue Score</div>
+                                <div class="metric-value" id="detectionFatigueScore">--</div>
+                            </div>
+                            <div class="metric-item" data-metric="drift">
+                                <div class="metric-label">Drift Score</div>
+                                <div class="metric-value" id="detectionDriftScore">--</div>
+                            </div>
+                            <div class="metric-item" data-metric="perclos">
+                                <div class="metric-label">PERCLOS (60s)</div>
+                                <div class="metric-value" id="detectionPerclosValue">--</div>
+                            </div>
+                            <div class="metric-item" data-metric="blink-count">
+                                <div class="metric-label">Blink Count (60s)</div>
+                                <div class="metric-value" id="detectionBlinkCount">0</div>
+                            </div>
+                            <div class="metric-item" data-metric="microsleep">
+                                <div class="metric-label">Microsleep (60s)</div>
+                                <div class="metric-value" id="detectionMicrosleepCount">0</div>
                             </div>
                         </div>
                     </div>
@@ -1507,7 +1088,7 @@
         let frameCount = 0; // Frame counter for monotonically increasing timestamp
         
         // Mode management
-        let currentMode = 'detection'; // 'calibration' or 'detection'
+        let currentMode = 'calibration'; // 'calibration' or 'detection'
         let selectedCalibration = null;
         
         // Previous metrics for change detection
@@ -2389,10 +1970,12 @@
             currentMode = mode;
             
             // Update buttons
+            document.getElementById('modeCalibrationBtn').classList.toggle('active', mode === 'calibration');
             document.getElementById('modeDetectionBtn').classList.toggle('active', mode === 'detection');
             
             // Show/hide inputs
-            document.getElementById('calibrationInputs').style.display = 'none';
+            document.getElementById('calibrationInputs').style.display = 
+                mode === 'calibration' ? 'block' : 'none';
             document.getElementById('detectionInputs').style.display = 
                 mode === 'detection' ? 'block' : 'none';
             
@@ -2420,8 +2003,9 @@
                 selectedCalibration = null; // Reset selected calibration
                 
                 // Hide video section and controls
-                document.getElementById('detectionVideoMetricsRow').style.display = 'none';
+                document.getElementById('detectionVideoSection').style.display = 'none';
                 document.getElementById('detectionControls').style.display = 'none';
+                document.getElementById('detectionMetrics').style.display = 'none';
                 document.getElementById('detectionVideoInfo').style.display = 'none';
                 
                 // Reset video element
@@ -2550,9 +2134,6 @@
 
         // Event listener untuk calibration select
         document.addEventListener('DOMContentLoaded', function() {
-            // Load calibrations saat halaman dimuat karena mode detection langsung aktif
-            loadCalibrations();
-            
             const calibrationSelect = document.getElementById('calibrationSelect');
             if (calibrationSelect) {
                 calibrationSelect.addEventListener('change', function() {
@@ -2626,8 +2207,9 @@
             detectionModeState.streamUrl = null;
             
             // Hide video section
-            document.getElementById('detectionVideoMetricsRow').style.display = 'none';
+            document.getElementById('detectionVideoSection').style.display = 'none';
             document.getElementById('detectionControls').style.display = 'none';
+            document.getElementById('detectionMetrics').style.display = 'none';
         }
 
         // Handle video upload untuk detection mode
@@ -2667,7 +2249,7 @@
             video.removeAttribute('crossorigin');
 
             // Show video section
-            document.getElementById('detectionVideoMetricsRow').style.display = 'flex';
+            document.getElementById('detectionVideoSection').style.display = 'block';
             document.getElementById('detectionControls').style.display = 'block';
 
             // Update UI
@@ -2742,7 +2324,7 @@
             video.load();
 
             // Show video section
-            document.getElementById('detectionVideoMetricsRow').style.display = 'flex';
+            document.getElementById('detectionVideoSection').style.display = 'block';
             document.getElementById('detectionControls').style.display = 'block';
 
             video.onloadedmetadata = () => {
@@ -2886,7 +2468,6 @@
             document.getElementById('detectionStartBtn').disabled = true;
             document.getElementById('detectionStopBtn').disabled = false;
             document.getElementById('detectionStatus').textContent = 'Detecting...';
-            document.getElementById('detectionVideoMetricsRow').style.display = 'flex';
             document.getElementById('detectionMetrics').style.display = 'grid';
 
             // Start processing frames

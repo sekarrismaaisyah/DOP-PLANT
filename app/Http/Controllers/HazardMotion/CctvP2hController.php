@@ -9,6 +9,7 @@ use App\Models\CctvControlRoomPengawas;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Carbon\Carbon;
 use Exception;
 
@@ -178,7 +179,8 @@ class CctvP2hController extends Controller
                 $p2hId = $p2h->id;
             }
             
-            if ($request->ajax()) {
+            // Check if request wants JSON response (AJAX or API request)
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => true,
                     'message' => $message,
@@ -192,13 +194,28 @@ class CctvP2hController extends Controller
             return redirect()->route('maps.map')
                 ->with('success', $message);
                 
-        } catch (Exception $e) {
-            Log::error('Error storing P2H checklist: ' . $e->getMessage());
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            // Handle validation errors
+            Log::error('Validation error storing P2H checklist: ' . $e->getMessage());
             
-            if ($request->ajax()) {
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
                 return response()->json([
                     'success' => false,
-                    'message' => 'Terjadi kesalahan saat menyimpan data.'
+                    'message' => 'Validasi gagal: ' . $e->getMessage(),
+                    'errors' => $e->errors()
+                ], 422);
+            }
+            
+            return back()->withErrors($e->errors())->withInput();
+            
+        } catch (Exception $e) {
+            Log::error('Error storing P2H checklist: ' . $e->getMessage());
+            Log::error('Stack trace: ' . $e->getTraceAsString());
+            
+            if ($request->ajax() || $request->wantsJson() || $request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Terjadi kesalahan saat menyimpan data: ' . $e->getMessage()
                 ], 500);
             }
             
