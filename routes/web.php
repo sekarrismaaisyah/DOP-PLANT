@@ -31,6 +31,7 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DailyOperationPlanController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\CctvAlertsDashboardController;
+use App\Http\Controllers\UserController;
 
 /*
 |--------------------------------------------------------------------------
@@ -416,6 +417,16 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/roles', [RolePermissionController::class, 'getRoles'])->name('roles.list');
         Route::get('/user/{id}', [RolePermissionController::class, 'getUser'])->name('user.get');
         Route::post('/user/{id}/roles', [RolePermissionController::class, 'assignRolesToUser'])->name('user.roles.assign');
+    });
+
+    // User Management Routes - HARUS sebelum catch-all route
+    Route::prefix('users')->name('users.')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::get('/create', [UserController::class, 'create'])->name('create');
+        Route::post('/', [UserController::class, 'store'])->name('store');
+        Route::get('/{user}/edit', [UserController::class, 'edit'])->name('edit');
+        Route::put('/{user}', [UserController::class, 'update'])->name('update');
+        Route::delete('/{user}', [UserController::class, 'destroy'])->name('destroy');
     });
 
     // Define a GET route with dynamic placeholders for route parameters
