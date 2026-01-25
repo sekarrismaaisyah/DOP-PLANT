@@ -2308,12 +2308,15 @@
   min-width: 320px;
   height: 100vh;
   background: #ffffff;
-  box-shadow: 2px 0 8px rgba(0, 0, 0, 0.15);
+  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
   z-index: 10000;
   transform: translateX(-100%);
-  transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
   overflow-y: auto;
   overflow-x: hidden;
+  will-change: transform;
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
 }
 
 .insiden-sidebar.open {
@@ -2325,32 +2328,44 @@
   top: 0;
   background: #ffffff;
   border-bottom: 1px solid #e5e7eb;
-  padding: 16px;
+  padding: 12px 16px;
   z-index: 10001;
   display: flex;
   justify-content: flex-end;
   align-items: center;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .insiden-sidebar-close {
   background: transparent;
   border: none;
   cursor: pointer;
-  padding: 8px;
+  padding: 10px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
   color: #5f6368;
-  transition: background-color 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  width: 40px;
+  height: 40px;
 }
 
 .insiden-sidebar-close:hover {
   background-color: #f1f3f4;
+  color: #202124;
+  transform: scale(1.05);
+}
+
+.insiden-sidebar-close:active {
+  transform: scale(0.95);
 }
 
 .insiden-sidebar-close i {
   font-size: 24px;
+  transition: transform 0.2s;
 }
 
 .insiden-sidebar-content {
@@ -2364,33 +2379,48 @@
 /* Sidebar Image */
 .insiden-sidebar-image {
   width: 100%;
-  height: 250px;
+  height: 280px;
   object-fit: cover;
   display: block;
+  transition: opacity 0.3s ease;
 }
 
 .insiden-sidebar-image-placeholder {
   width: 100%;
-  height: 250px;
+  height: 280px;
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
   font-size: 48px;
+  transition: opacity 0.3s ease;
 }
 
 /* Sidebar Title */
 .insiden-sidebar-title {
   padding: 20px 20px 12px 20px;
+  animation: fadeInUp 0.4s ease 0.1s both;
 }
 
 .insiden-sidebar-title h2 {
-  font-size: 24px;
-  font-weight: 600;
+  font-size: 26px;
+  font-weight: 500;
   color: #202124;
   margin: 0;
-  line-height: 1.3;
+  line-height: 1.4;
+  letter-spacing: -0.3px;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* Rating & Info */
@@ -2400,30 +2430,44 @@
   align-items: center;
   gap: 12px;
   flex-wrap: wrap;
+  animation: fadeInUp 0.4s ease 0.15s both;
 }
 
 .insiden-sidebar-rating-stars {
   display: flex;
   align-items: center;
-  gap: 4px;
+  gap: 2px;
 }
 
 .insiden-sidebar-rating-stars .material-icons-outlined {
   font-size: 20px;
   color: #fbbc04;
+  transition: transform 0.2s;
+}
+
+.insiden-sidebar-rating-stars .material-icons-outlined:hover {
+  transform: scale(1.1);
 }
 
 .insiden-sidebar-rating-text {
   font-size: 14px;
   color: #5f6368;
+  font-weight: 400;
 }
 
 .insiden-sidebar-category {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   font-size: 14px;
   color: #5f6368;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: background-color 0.2s;
+}
+
+.insiden-sidebar-category:hover {
+  background-color: #f1f3f4;
 }
 
 .insiden-sidebar-category i {
@@ -2434,7 +2478,9 @@
 .insiden-sidebar-tabs {
   display: flex;
   border-bottom: 1px solid #e5e7eb;
-  padding: 0 20px;
+  padding: 0;
+  background: #ffffff;
+  animation: fadeInUp 0.4s ease 0.2s both;
 }
 
 .insiden-sidebar-tab {
@@ -2446,62 +2492,92 @@
   font-size: 15px;
   font-weight: 500;
   color: #5f6368;
-  transition: color 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
   bottom: -1px;
+  flex: 1;
+  text-align: center;
 }
 
 .insiden-sidebar-tab:hover {
   color: #202124;
+  background-color: #f8f9fa;
 }
 
 .insiden-sidebar-tab.active {
   color: #1a73e8;
   border-bottom-color: #1a73e8;
+  font-weight: 600;
+}
+
+.insiden-sidebar-tab.active:hover {
+  background-color: transparent;
 }
 
 /* Action Buttons */
 .insiden-sidebar-actions {
-  padding: 16px 20px;
+  padding: 20px;
   display: flex;
-  gap: 16px;
+  gap: 8px;
   flex-wrap: wrap;
+  justify-content: space-between;
   border-bottom: 1px solid #e5e7eb;
+  animation: fadeInUp 0.4s ease 0.25s both;
 }
 
 .insiden-sidebar-action-btn {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px;
+  padding: 12px 8px;
   border-radius: 50%;
-  transition: background-color 0.2s;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   min-width: 64px;
+  flex: 1;
+  max-width: 80px;
 }
 
 .insiden-sidebar-action-btn:hover {
   background-color: #f1f3f4;
+  transform: translateY(-2px);
+}
+
+.insiden-sidebar-action-btn:active {
+  transform: translateY(0);
+  background-color: #e8eaed;
 }
 
 .insiden-sidebar-action-btn i {
   font-size: 24px;
   color: #5f6368;
+  transition: color 0.2s;
+}
+
+.insiden-sidebar-action-btn:hover i {
+  color: #1a73e8;
 }
 
 .insiden-sidebar-action-btn span {
-  font-size: 12px;
+  font-size: 11px;
   color: #5f6368;
   text-align: center;
+  font-weight: 400;
+  transition: color 0.2s;
+}
+
+.insiden-sidebar-action-btn:hover span {
+  color: #1a73e8;
 }
 
 /* Address */
 .insiden-sidebar-address {
   padding: 16px 20px;
   border-bottom: 1px solid #e5e7eb;
+  animation: fadeInUp 0.4s ease 0.3s both;
 }
 
 .insiden-sidebar-address-content {
@@ -2510,7 +2586,12 @@
   gap: 12px;
   font-size: 14px;
   color: #202124;
-  line-height: 1.5;
+  line-height: 1.6;
+  transition: color 0.2s;
+}
+
+.insiden-sidebar-address-content:hover {
+  color: #1a73e8;
 }
 
 .insiden-sidebar-address-content i {
@@ -2518,30 +2599,54 @@
   color: #5f6368;
   margin-top: 2px;
   flex-shrink: 0;
+  transition: color 0.2s;
+}
+
+.insiden-sidebar-address-content:hover i {
+  color: #1a73e8;
 }
 
 /* Tab Content */
 .insiden-sidebar-tab-content {
   padding: 20px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .insiden-sidebar-section {
-  margin-bottom: 24px;
+  margin-bottom: 28px;
+  animation: fadeInUp 0.4s ease both;
 }
+
+.insiden-sidebar-section:nth-child(1) { animation-delay: 0.1s; }
+.insiden-sidebar-section:nth-child(2) { animation-delay: 0.15s; }
+.insiden-sidebar-section:nth-child(3) { animation-delay: 0.2s; }
+.insiden-sidebar-section:nth-child(4) { animation-delay: 0.25s; }
+.insiden-sidebar-section:nth-child(5) { animation-delay: 0.3s; }
 
 .insiden-sidebar-section-title {
   font-size: 16px;
   font-weight: 600;
   color: #202124;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
+  letter-spacing: -0.2px;
 }
 
 .insiden-sidebar-section-title i {
   font-size: 20px;
   color: #5f6368;
+  transition: color 0.2s;
 }
 
 .insiden-sidebar-info-table {
@@ -2551,11 +2656,17 @@
 
 .insiden-sidebar-info-table tr {
   border-bottom: 1px solid #f1f3f4;
+  transition: background-color 0.15s;
+}
+
+.insiden-sidebar-info-table tr:hover {
+  background-color: #f8f9fa;
 }
 
 .insiden-sidebar-info-table td {
-  padding: 10px 0;
+  padding: 12px 0;
   font-size: 14px;
+  transition: color 0.2s;
 }
 
 .insiden-sidebar-info-table td:first-child {
@@ -2603,6 +2714,22 @@
   gap: 12px;
   overflow-x: auto;
   border-top: 1px solid #e5e7eb;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: #dadce0 transparent;
+}
+
+.insiden-sidebar-thumbnails::-webkit-scrollbar {
+  height: 6px;
+}
+
+.insiden-sidebar-thumbnails::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.insiden-sidebar-thumbnails::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 3px;
 }
 
 .insiden-sidebar-thumbnail {
@@ -2611,12 +2738,14 @@
   object-fit: cover;
   border-radius: 8px;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
   flex-shrink: 0;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 .insiden-sidebar-thumbnail:hover {
-  transform: scale(1.05);
+  transform: scale(1.08);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
 }
 
 /* Overlay */
@@ -2626,16 +2755,39 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
   z-index: 9999;
   opacity: 0;
   visibility: hidden;
-  transition: opacity 0.3s, visibility 0.3s;
+  transition: opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
+              visibility 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  will-change: opacity;
 }
 
 .insiden-sidebar-overlay.show {
   opacity: 1;
   visibility: visible;
+}
+
+/* Smooth scrollbar styling */
+.insiden-sidebar::-webkit-scrollbar {
+  width: 8px;
+}
+
+.insiden-sidebar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.insiden-sidebar::-webkit-scrollbar-thumb {
+  background: #dadce0;
+  border-radius: 4px;
+  transition: background 0.2s;
+}
+
+.insiden-sidebar::-webkit-scrollbar-thumb:hover {
+  background: #bdc1c6;
 }
 
 /* Responsive */
@@ -2644,14 +2796,21 @@
     width: 100%;
     max-width: 100%;
     min-width: 100%;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
   }
   
   .insiden-sidebar-actions {
     justify-content: space-around;
+    padding: 16px;
   }
   
   .insiden-sidebar-action-btn {
     min-width: 60px;
+    max-width: 70px;
+  }
+  
+  .insiden-sidebar-title h2 {
+    font-size: 22px;
   }
 }
 
@@ -15655,7 +15814,7 @@ source: new ol.source.Vector(),
         const sidebarContent = document.getElementById('insidenSidebarContent');
         sidebarContent.innerHTML = `
             <!-- Image Placeholder -->
-            <div class="insiden-sidebar-image-placeholder">
+            <div class="insiden-sidebar-image-placeholder" style="animation: fadeIn 0.4s ease;">
                 <i class="material-icons-outlined">image</i>
             </div>
             
@@ -15724,7 +15883,7 @@ source: new ol.source.Vector(),
             <!-- Tab Content -->
             <div class="insiden-sidebar-tab-content">
                 <!-- Overview Tab -->
-                <div class="insiden-tab-panel" data-panel="overview" style="display: block;">
+                <div class="insiden-tab-panel" data-panel="overview" style="display: block; opacity: 1;">
                     <!-- Informasi Dasar -->
                     <div class="insiden-sidebar-section">
                         <div class="insiden-sidebar-section-title">
@@ -15939,14 +16098,14 @@ source: new ol.source.Vector(),
                 </div>
                 
                 <!-- Reviews Tab -->
-                <div class="insiden-tab-panel" data-panel="reviews" style="display: none;">
+                <div class="insiden-tab-panel" data-panel="reviews" style="display: none; opacity: 0;">
                     <div class="insiden-sidebar-section">
                         <p style="color: #5f6368; font-size: 14px;">Reviews belum tersedia</p>
                     </div>
                 </div>
                 
                 <!-- About Tab -->
-                <div class="insiden-tab-panel" data-panel="about" style="display: none;">
+                <div class="insiden-tab-panel" data-panel="about" style="display: none; opacity: 0;">
                     <div class="insiden-sidebar-section">
                         <p style="color: #5f6368; font-size: 14px;">Informasi tambahan tentang insiden ini.</p>
                     </div>
@@ -15959,18 +16118,36 @@ source: new ol.source.Vector(),
             </div>
         `;
 
+        // Trigger reflow untuk memastikan animasi berjalan
+        sidebarContent.offsetHeight;
+
         // Tab switching functionality
         sidebarContent.querySelectorAll('.insiden-sidebar-tab').forEach(tab => {
             tab.addEventListener('click', function() {
                 const tabName = this.dataset.tab;
                 
-                // Update active tab
-                sidebarContent.querySelectorAll('.insiden-sidebar-tab').forEach(t => t.classList.remove('active'));
+                // Update active tab with smooth transition
+                sidebarContent.querySelectorAll('.insiden-sidebar-tab').forEach(t => {
+                    t.classList.remove('active');
+                });
                 this.classList.add('active');
                 
-                // Show/hide panels
+                // Show/hide panels with fade effect
                 sidebarContent.querySelectorAll('.insiden-tab-panel').forEach(panel => {
-                    panel.style.display = panel.dataset.panel === tabName ? 'block' : 'none';
+                    if (panel.dataset.panel === tabName) {
+                        panel.style.display = 'block';
+                        panel.style.opacity = '0';
+                        setTimeout(() => {
+                            panel.style.transition = 'opacity 0.3s ease';
+                            panel.style.opacity = '1';
+                        }, 10);
+                    } else {
+                        panel.style.transition = 'opacity 0.2s ease';
+                        panel.style.opacity = '0';
+                        setTimeout(() => {
+                            panel.style.display = 'none';
+                        }, 200);
+                    }
                 });
             });
         });
@@ -15987,31 +16164,45 @@ source: new ol.source.Vector(),
     function openInsidenSidebarPanel() {
         const sidebar = document.getElementById('insidenSidebar');
         const overlay = document.getElementById('insidenSidebarOverlay');
+        
+        // Trigger reflow untuk memastikan animasi berjalan
+        sidebar.offsetHeight;
+        
         sidebar.classList.add('open');
         overlay.classList.add('show');
+        
+        // Prevent body scroll when sidebar is open
+        document.body.style.overflow = 'hidden';
     }
 
     function closeInsidenSidebar() {
         const sidebar = document.getElementById('insidenSidebar');
         const overlay = document.getElementById('insidenSidebarOverlay');
+        
         sidebar.classList.remove('open');
         overlay.classList.remove('show');
+        
+        // Restore body scroll
+        document.body.style.overflow = '';
     }
 
     // Event listeners untuk sidebar
     document.addEventListener('DOMContentLoaded', function() {
         const sidebarCloseBtn = document.getElementById('insidenSidebarClose');
         const sidebarOverlay = document.getElementById('insidenSidebarOverlay');
+        const sidebar = document.getElementById('insidenSidebar');
         
         if (sidebarCloseBtn) {
             sidebarCloseBtn.addEventListener('click', function(e) {
                 e.preventDefault();
+                e.stopPropagation();
                 closeInsidenSidebar();
             });
         }
         
         if (sidebarOverlay) {
-            sidebarOverlay.addEventListener('click', function() {
+            sidebarOverlay.addEventListener('click', function(e) {
+                e.preventDefault();
                 closeInsidenSidebar();
             });
         }
@@ -16021,6 +16212,25 @@ source: new ol.source.Vector(),
         if (sidebarContent) {
             sidebarContent.addEventListener('click', function(e) {
                 e.stopPropagation();
+            });
+        }
+        
+        // Close sidebar on Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape' && sidebar && sidebar.classList.contains('open')) {
+                closeInsidenSidebar();
+            }
+        });
+        
+        // Smooth scroll behavior for sidebar
+        if (sidebar) {
+            sidebar.addEventListener('scroll', function() {
+                // Add subtle shadow on scroll
+                if (this.scrollTop > 10) {
+                    this.style.boxShadow = '2px 0 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)';
+                } else {
+                    this.style.boxShadow = '2px 0 16px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05)';
+                }
             });
         }
     });
