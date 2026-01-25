@@ -2298,529 +2298,6 @@
   }
 }
 
-/* Sidebar Detail Insiden - Google Maps Style */
-.insiden-sidebar {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 35%;
-  max-width: 500px;
-  min-width: 320px;
-  height: 100vh;
-  background: #ffffff;
-  box-shadow: 2px 0 16px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05);
-  z-index: 10000;
-  transform: translateX(-100%);
-  transition: transform 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  overflow-y: auto;
-  overflow-x: hidden;
-  will-change: transform;
-  -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
-}
-
-.insiden-sidebar.open {
-  transform: translateX(0);
-}
-
-.insiden-sidebar-header {
-  position: sticky;
-  top: 0;
-  background: #ffffff;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 12px 16px;
-  z-index: 10001;
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.insiden-sidebar-close {
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  padding: 10px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #5f6368;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  width: 40px;
-  height: 40px;
-}
-
-.insiden-sidebar-close:hover {
-  background-color: #f1f3f4;
-  color: #202124;
-  transform: scale(1.05);
-}
-
-.insiden-sidebar-close:active {
-  transform: scale(0.95);
-}
-
-.insiden-sidebar-close i {
-  font-size: 24px;
-  transition: transform 0.2s;
-}
-
-.insiden-sidebar-content {
-  padding: 0;
-}
-
-.insiden-sidebar-placeholder {
-  padding: 40px 20px;
-}
-
-/* Sidebar Image */
-.insiden-sidebar-image {
-  width: 100%;
-  height: 280px;
-  object-fit: cover;
-  display: block;
-  transition: opacity 0.3s ease;
-}
-
-.insiden-sidebar-image-placeholder {
-  width: 100%;
-  height: 280px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: white;
-  font-size: 48px;
-  transition: opacity 0.3s ease;
-}
-
-/* Sidebar Title */
-.insiden-sidebar-title {
-  padding: 20px 20px 12px 20px;
-  animation: fadeInUp 0.4s ease 0.1s both;
-}
-
-.insiden-sidebar-title h2 {
-  font-size: 26px;
-  font-weight: 500;
-  color: #202124;
-  margin: 0;
-  line-height: 1.4;
-  letter-spacing: -0.3px;
-}
-
-@keyframes fadeInUp {
-  from {
-    opacity: 0;
-    transform: translateY(10px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
-}
-
-/* Rating & Info */
-.insiden-sidebar-rating {
-  padding: 0 20px 16px 20px;
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-wrap: wrap;
-  animation: fadeInUp 0.4s ease 0.15s both;
-}
-
-.insiden-sidebar-rating-stars {
-  display: flex;
-  align-items: center;
-  gap: 2px;
-}
-
-.insiden-sidebar-rating-stars .material-icons-outlined {
-  font-size: 20px;
-  color: #fbbc04;
-  transition: transform 0.2s;
-}
-
-.insiden-sidebar-rating-stars .material-icons-outlined:hover {
-  transform: scale(1.1);
-}
-
-.insiden-sidebar-rating-text {
-  font-size: 14px;
-  color: #5f6368;
-  font-weight: 400;
-}
-
-.insiden-sidebar-category {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 14px;
-  color: #5f6368;
-  padding: 4px 8px;
-  border-radius: 4px;
-  transition: background-color 0.2s;
-}
-
-.insiden-sidebar-category:hover {
-  background-color: #f1f3f4;
-}
-
-.insiden-sidebar-category i {
-  font-size: 18px;
-}
-
-/* Tabs Navigation */
-.insiden-sidebar-tabs {
-  display: flex;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 0;
-  background: #ffffff;
-  animation: fadeInUp 0.4s ease 0.2s both;
-}
-
-.insiden-sidebar-tab {
-  padding: 16px 20px;
-  background: none;
-  border: none;
-  border-bottom: 3px solid transparent;
-  cursor: pointer;
-  font-size: 15px;
-  font-weight: 500;
-  color: #5f6368;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  position: relative;
-  bottom: -1px;
-  flex: 1;
-  text-align: center;
-}
-
-.insiden-sidebar-tab:hover {
-  color: #202124;
-  background-color: #f8f9fa;
-}
-
-.insiden-sidebar-tab.active {
-  color: #1a73e8;
-  border-bottom-color: #1a73e8;
-  font-weight: 600;
-}
-
-.insiden-sidebar-tab.active:hover {
-  background-color: transparent;
-}
-
-/* Action Buttons */
-.insiden-sidebar-actions {
-  padding: 20px;
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  border-bottom: 1px solid #e5e7eb;
-  animation: fadeInUp 0.4s ease 0.25s both;
-}
-
-.insiden-sidebar-action-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  background: none;
-  border: none;
-  cursor: pointer;
-  padding: 12px 8px;
-  border-radius: 50%;
-  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
-  min-width: 64px;
-  flex: 1;
-  max-width: 80px;
-}
-
-.insiden-sidebar-action-btn:hover {
-  background-color: #f1f3f4;
-  transform: translateY(-2px);
-}
-
-.insiden-sidebar-action-btn:active {
-  transform: translateY(0);
-  background-color: #e8eaed;
-}
-
-.insiden-sidebar-action-btn i {
-  font-size: 24px;
-  color: #5f6368;
-  transition: color 0.2s;
-}
-
-.insiden-sidebar-action-btn:hover i {
-  color: #1a73e8;
-}
-
-.insiden-sidebar-action-btn span {
-  font-size: 11px;
-  color: #5f6368;
-  text-align: center;
-  font-weight: 400;
-  transition: color 0.2s;
-}
-
-.insiden-sidebar-action-btn:hover span {
-  color: #1a73e8;
-}
-
-/* Address */
-.insiden-sidebar-address {
-  padding: 16px 20px;
-  border-bottom: 1px solid #e5e7eb;
-  animation: fadeInUp 0.4s ease 0.3s both;
-}
-
-.insiden-sidebar-address-content {
-  display: flex;
-  align-items: flex-start;
-  gap: 12px;
-  font-size: 14px;
-  color: #202124;
-  line-height: 1.6;
-  transition: color 0.2s;
-}
-
-.insiden-sidebar-address-content:hover {
-  color: #1a73e8;
-}
-
-.insiden-sidebar-address-content i {
-  font-size: 20px;
-  color: #5f6368;
-  margin-top: 2px;
-  flex-shrink: 0;
-  transition: color 0.2s;
-}
-
-.insiden-sidebar-address-content:hover i {
-  color: #1a73e8;
-}
-
-/* Tab Content */
-.insiden-sidebar-tab-content {
-  padding: 20px;
-  animation: fadeIn 0.3s ease;
-}
-
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-  }
-  to {
-    opacity: 1;
-  }
-}
-
-.insiden-sidebar-section {
-  margin-bottom: 28px;
-  animation: fadeInUp 0.4s ease both;
-}
-
-.insiden-sidebar-section:nth-child(1) { animation-delay: 0.1s; }
-.insiden-sidebar-section:nth-child(2) { animation-delay: 0.15s; }
-.insiden-sidebar-section:nth-child(3) { animation-delay: 0.2s; }
-.insiden-sidebar-section:nth-child(4) { animation-delay: 0.25s; }
-.insiden-sidebar-section:nth-child(5) { animation-delay: 0.3s; }
-
-.insiden-sidebar-section-title {
-  font-size: 16px;
-  font-weight: 600;
-  color: #202124;
-  margin-bottom: 14px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  letter-spacing: -0.2px;
-}
-
-.insiden-sidebar-section-title i {
-  font-size: 20px;
-  color: #5f6368;
-  transition: color 0.2s;
-}
-
-.insiden-sidebar-info-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.insiden-sidebar-info-table tr {
-  border-bottom: 1px solid #f1f3f4;
-  transition: background-color 0.15s;
-}
-
-.insiden-sidebar-info-table tr:hover {
-  background-color: #f8f9fa;
-}
-
-.insiden-sidebar-info-table td {
-  padding: 12px 0;
-  font-size: 14px;
-  transition: color 0.2s;
-}
-
-.insiden-sidebar-info-table td:first-child {
-  width: 40%;
-  color: #5f6368;
-  font-weight: 500;
-}
-
-.insiden-sidebar-info-table td:last-child {
-  color: #202124;
-}
-
-.insiden-sidebar-badge {
-  display: inline-block;
-  padding: 4px 12px;
-  border-radius: 16px;
-  font-size: 12px;
-  font-weight: 500;
-}
-
-.insiden-sidebar-badge-warning {
-  background-color: #fef3c7;
-  color: #92400e;
-}
-
-.insiden-sidebar-badge-success {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
-.insiden-sidebar-badge-secondary {
-  background-color: #f3f4f6;
-  color: #374151;
-}
-
-.insiden-sidebar-badge-danger {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
-/* Thumbnail Images */
-.insiden-sidebar-thumbnails {
-  padding: 16px 20px;
-  display: flex;
-  gap: 12px;
-  overflow-x: auto;
-  border-top: 1px solid #e5e7eb;
-  -webkit-overflow-scrolling: touch;
-  scrollbar-width: thin;
-  scrollbar-color: #dadce0 transparent;
-}
-
-.insiden-sidebar-thumbnails::-webkit-scrollbar {
-  height: 6px;
-}
-
-.insiden-sidebar-thumbnails::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.insiden-sidebar-thumbnails::-webkit-scrollbar-thumb {
-  background: #dadce0;
-  border-radius: 3px;
-}
-
-.insiden-sidebar-thumbnail {
-  width: 80px;
-  height: 80px;
-  object-fit: cover;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-  flex-shrink: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-}
-
-.insiden-sidebar-thumbnail:hover {
-  transform: scale(1.08);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
-}
-
-/* Overlay */
-.insiden-sidebar-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background: rgba(0, 0, 0, 0.4);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  z-index: 9999;
-  opacity: 0;
-  visibility: hidden;
-  transition: opacity 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94), 
-              visibility 0.35s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  will-change: opacity;
-}
-
-.insiden-sidebar-overlay.show {
-  opacity: 1;
-  visibility: visible;
-}
-
-/* Smooth scrollbar styling */
-.insiden-sidebar::-webkit-scrollbar {
-  width: 8px;
-}
-
-.insiden-sidebar::-webkit-scrollbar-track {
-  background: transparent;
-}
-
-.insiden-sidebar::-webkit-scrollbar-thumb {
-  background: #dadce0;
-  border-radius: 4px;
-  transition: background 0.2s;
-}
-
-.insiden-sidebar::-webkit-scrollbar-thumb:hover {
-  background: #bdc1c6;
-}
-
-/* Responsive */
-@media (max-width: 768px) {
-  .insiden-sidebar {
-    width: 100%;
-    max-width: 100%;
-    min-width: 100%;
-    box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05);
-  }
-  
-  .insiden-sidebar-actions {
-    justify-content: space-around;
-    padding: 16px;
-  }
-  
-  .insiden-sidebar-action-btn {
-    min-width: 60px;
-    max-width: 70px;
-  }
-  
-  .insiden-sidebar-title h2 {
-    font-size: 22px;
-  }
-}
-
-@media (max-width: 1024px) {
-  .insiden-sidebar {
-    width: 40%;
-    max-width: 400px;
-  }
-}
-
 </style>
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/ol@8.2.0/ol.css">
 <link rel="stylesheet" href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}">
@@ -4018,23 +3495,37 @@
     </div>
 </div>
 
-<!-- Sidebar Detail Insiden -->
-<div id="insidenSidebar" class="insiden-sidebar">
-    <div class="insiden-sidebar-header">
-        <button type="button" class="insiden-sidebar-close" id="insidenSidebarClose" aria-label="Close">
-            <i class="material-icons-outlined">close</i>
-        </button>
-    </div>
-    <div class="insiden-sidebar-content" id="insidenSidebarContent">
-        <div class="insiden-sidebar-placeholder">
-            <div class="text-center py-5">
-                <i class="material-icons-outlined" style="font-size: 64px; color: #9ca3af; margin-bottom: 16px;">info</i>
-                <p class="text-muted fs-5 mb-0">Pilih insiden untuk melihat detail</p>
+<!-- Modal Detail Insiden -->
+<div class="modal fade" id="insidenDetailModal" tabindex="-1" aria-labelledby="insidenDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-scrollable">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title d-flex align-items-center" id="insidenDetailModalLabel">
+                    <i class="material-icons-outlined me-2 text-muted" style="font-size: 24px;">info</i>
+                    <div>
+                        <div style="font-size: 18px; font-weight: 600; color: #495057;">Detail Insiden</div>
+                        <small style="font-size: 12px; color: #6c757d;">Informasi lengkap mengenai insiden</small>
+                    </div>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="insidenDetailContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-secondary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted fs-5">Memuat data insiden...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">close</i>
+                    Tutup
+                </button>
             </div>
         </div>
     </div>
 </div>
-<div id="insidenSidebarOverlay" class="insiden-sidebar-overlay"></div>
 
 <!-- Modal Matriks Prediksi Insiden -->
 <div class="modal fade" id="matriksPrediksiInsidenModal" tabindex="-1" aria-labelledby="matriksPrediksiInsidenModalLabel" aria-hidden="true">
@@ -13376,10 +12867,24 @@ source: new ol.source.Vector(),
             map.render();
         }
 
-        // Langsung buka sidebar detail insiden
-        if (insiden.no_kecelakaan) {
-            openInsidenSidebar(insiden.no_kecelakaan);
-        }
+        const escapedNo = insiden.no_kecelakaan ? insiden.no_kecelakaan.replace(/"/g, '&quot;') : '';
+        const content = `
+            <div style="min-width: 220px; background-color: #ffffff !important;">
+                <h6 style="margin: 0 0 8px 0;">${insiden.no_kecelakaan}</h6>
+                <p style="margin: 5px 0; font-size: 13px; background-color: #ffffff !important;">
+                    <strong>Site:</strong> ${insiden.site || 'N/A'}<br>
+                    <strong>Layer:</strong> ${insiden.layer || 'N/A'}<br>
+                    <strong>Kategori:</strong> ${insiden.kategori || 'N/A'}<br>
+                    <strong>Status LPI:</strong> ${insiden.status_lpi || 'N/A'}
+                </p>
+                <button class="btn btn-sm btn-primary w-100" data-no-kec="${escapedNo}" onclick="openInsidenModal(this.dataset.noKec)">
+                    Detail Insiden
+                </button>
+            </div>
+        `;
+
+        document.getElementById('popup-content').innerHTML = content;
+        popupOverlay.setPosition(coordinate);
     }
 
     // Function to populate site filter dropdown - ambil dari database
@@ -15694,11 +15199,15 @@ source: new ol.source.Vector(),
         showInsidenPopup(coordinate, insiden);
     }
 
-    function openInsidenSidebar(noKecelakaan) {
+    function openInsidenModal(noKecelakaan) {
         const insiden = getInsidenData(noKecelakaan);
         if (!insiden) {
             return;
         }
+
+        const modalTitle = document.getElementById('insidenDetailModalLabel');
+        const modalContent = document.getElementById('insidenDetailContent');
+        modalTitle.textContent = `Detail Insiden - ${escapeHtml(insiden.no_kecelakaan || 'N/A')}`;
 
         // Format tanggal
         const formatDate = (dateStr, bulan, tahun) => {
@@ -15803,437 +15312,221 @@ source: new ol.source.Vector(),
             }).join('');
         }
 
-        // Build address string
-        const addressParts = [];
-        if (hasValue(insiden.lokasi_spesifik)) addressParts.push(escapeHtml(insiden.lokasi_spesifik));
-        if (hasValue(insiden.sublokasi)) addressParts.push(escapeHtml(insiden.sublokasi));
-        if (hasValue(insiden.lokasi)) addressParts.push(escapeHtml(insiden.lokasi));
-        if (hasValue(insiden.site)) addressParts.push(escapeHtml(insiden.site));
-        const address = addressParts.length > 0 ? addressParts.join(', ') : 'Lokasi tidak tersedia';
-
-        const sidebarContent = document.getElementById('insidenSidebarContent');
-        sidebarContent.innerHTML = `
-            <!-- Image Placeholder -->
-            <div class="insiden-sidebar-image-placeholder" style="animation: fadeIn 0.4s ease;">
-                <i class="material-icons-outlined">image</i>
-            </div>
-            
-            <!-- Title -->
-            <div class="insiden-sidebar-title">
-                <h2>${escapeHtml(insiden.no_kecelakaan || 'Detail Insiden')}</h2>
-            </div>
-            
-            <!-- Rating & Info -->
-            <div class="insiden-sidebar-rating">
-                <div class="insiden-sidebar-rating-stars">
-                    <i class="material-icons-outlined">star</i>
-                    <i class="material-icons-outlined">star</i>
-                    <i class="material-icons-outlined">star</i>
-                    <i class="material-icons-outlined">star</i>
-                    <i class="material-icons-outlined">star_half</i>
-                </div>
-                <span class="insiden-sidebar-rating-text">(101)</span>
-                ${hasValue(insiden.kategori) ? `
-                <div class="insiden-sidebar-category">
-                    <i class="material-icons-outlined">category</i>
-                    <span>${escapeHtml(insiden.kategori)}</span>
-                </div>
-                ` : ''}
-            </div>
-            
-            <!-- Tabs -->
-            <div class="insiden-sidebar-tabs">
-                <button class="insiden-sidebar-tab active" data-tab="overview">Overview</button>
-                <button class="insiden-sidebar-tab" data-tab="reviews">Reviews</button>
-                <button class="insiden-sidebar-tab" data-tab="about">About</button>
-            </div>
-            
-            <!-- Action Buttons -->
-            <div class="insiden-sidebar-actions">
-                <button class="insiden-sidebar-action-btn" title="Directions">
-                    <i class="material-icons-outlined">directions</i>
-                    <span>Directions</span>
-                </button>
-                <button class="insiden-sidebar-action-btn" title="Save">
-                    <i class="material-icons-outlined">bookmark_border</i>
-                    <span>Save</span>
-                </button>
-                <button class="insiden-sidebar-action-btn" title="Nearby">
-                    <i class="material-icons-outlined">near_me</i>
-                    <span>Nearby</span>
-                </button>
-                <button class="insiden-sidebar-action-btn" title="Send to phone">
-                    <i class="material-icons-outlined">phone_android</i>
-                    <span>Send to phone</span>
-                </button>
-                <button class="insiden-sidebar-action-btn" title="Share">
-                    <i class="material-icons-outlined">share</i>
-                    <span>Share</span>
-                </button>
-            </div>
-            
-            <!-- Address -->
-            <div class="insiden-sidebar-address">
-                <div class="insiden-sidebar-address-content">
-                    <i class="material-icons-outlined">location_on</i>
-                    <span>${address}</span>
-                </div>
-            </div>
-            
-            <!-- Tab Content -->
-            <div class="insiden-sidebar-tab-content">
-                <!-- Overview Tab -->
-                <div class="insiden-tab-panel" data-panel="overview" style="display: block; opacity: 1;">
-                    <!-- Informasi Dasar -->
-                    <div class="insiden-sidebar-section">
-                        <div class="insiden-sidebar-section-title">
-                            <i class="material-icons-outlined">info</i>
-                            <span>Informasi Dasar</span>
+        modalContent.innerHTML = `
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">info</i>Informasi Dasar</h6>
                         </div>
-                        <table class="insiden-sidebar-info-table">
-                            ${hasValue(insiden.no_kecelakaan) ? `
-                            <tr>
-                                <td>No. Kecelakaan:</td>
-                                <td>${escapeHtml(insiden.no_kecelakaan)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.kode_be_investigasi) ? `
-                            <tr>
-                                <td>Kode BE Investigasi:</td>
-                                <td>${escapeHtml(insiden.kode_be_investigasi)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.status_lpi) ? `
-                            <tr>
-                                <td>Status LPI:</td>
-                                <td>
-                                    <span class="insiden-sidebar-badge ${insiden.status_lpi === 'Open' ? 'insiden-sidebar-badge-warning' : insiden.status_lpi === 'Closed' ? 'insiden-sidebar-badge-success' : 'insiden-sidebar-badge-secondary'}">
-                                        ${escapeHtml(insiden.status_lpi)}
-                                    </span>
-                                </td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.kategori) ? `
-                            <tr>
-                                <td>Kategori:</td>
-                                <td>
-                                    <span class="insiden-sidebar-badge insiden-sidebar-badge-danger">
-                                        ${escapeHtml(insiden.kategori)}
-                                    </span>
-                                </td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.injury_status) ? `
-                            <tr>
-                                <td>Injury Status:</td>
-                                <td>${escapeHtml(insiden.injury_status)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.high_potential) ? `
-                            <tr>
-                                <td>High Potential:</td>
-                                <td>${escapeHtml(insiden.high_potential)}</td>
-                            </tr>
-                            ` : ''}
-                        </table>
-                    </div>
-                    
-                    <!-- Lokasi -->
-                    <div class="insiden-sidebar-section">
-                        <div class="insiden-sidebar-section-title">
-                            <i class="material-icons-outlined">location_on</i>
-                            <span>Lokasi</span>
-                        </div>
-                        <table class="insiden-sidebar-info-table">
-                            ${hasValue(insiden.site) ? `
-                            <tr>
-                                <td>Site:</td>
-                                <td>${escapeHtml(insiden.site)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.lokasi) ? `
-                            <tr>
-                                <td>Lokasi:</td>
-                                <td>${escapeHtml(insiden.lokasi)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.sublokasi) ? `
-                            <tr>
-                                <td>Sublokasi:</td>
-                                <td>${escapeHtml(insiden.sublokasi)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.lokasi_spesifik) ? `
-                            <tr>
-                                <td>Lokasi Spesifik:</td>
-                                <td>${escapeHtml(insiden.lokasi_spesifik)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.lokasi_validasi_hsecm) ? `
-                            <tr>
-                                <td>Lokasi Validasi HSECM:</td>
-                                <td>${escapeHtml(insiden.lokasi_validasi_hsecm)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.latitude) && hasValue(insiden.longitude) ? `
-                            <tr>
-                                <td>Koordinat:</td>
-                                <td>${insiden.latitude}, ${insiden.longitude}</td>
-                            </tr>
-                            ` : ''}
-                        </table>
-                    </div>
-                    
-                    <!-- Waktu Kejadian -->
-                    <div class="insiden-sidebar-section">
-                        <div class="insiden-sidebar-section-title">
-                            <i class="material-icons-outlined">schedule</i>
-                            <span>Waktu Kejadian</span>
-                        </div>
-                        <table class="insiden-sidebar-info-table">
-                            ${hasValue(insiden.tanggal) || hasValue(insiden.bulan) || hasValue(insiden.tahun) ? `
-                            <tr>
-                                <td>Tanggal:</td>
-                                <td>${formatDate(insiden.tanggal, insiden.bulan, insiden.tahun)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.hari) ? `
-                            <tr>
-                                <td>Hari:</td>
-                                <td>${escapeHtml(insiden.hari)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.jam) || hasValue(insiden.menit) ? `
-                            <tr>
-                                <td>Waktu:</td>
-                                <td>${formatTime(insiden.jam, insiden.menit)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.shift) ? `
-                            <tr>
-                                <td>Shift:</td>
-                                <td>${escapeHtml(insiden.shift)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.minggu_ke) ? `
-                            <tr>
-                                <td>Minggu Ke:</td>
-                                <td>${insiden.minggu_ke}</td>
-                            </tr>
-                            ` : ''}
-                        </table>
-                    </div>
-                    
-                    <!-- Perusahaan & Departemen -->
-                    <div class="insiden-sidebar-section">
-                        <div class="insiden-sidebar-section-title">
-                            <i class="material-icons-outlined">business</i>
-                            <span>Perusahaan & Departemen</span>
-                        </div>
-                        <table class="insiden-sidebar-info-table">
-                            ${hasValue(insiden.perusahaan) ? `
-                            <tr>
-                                <td>Perusahaan:</td>
-                                <td>${escapeHtml(insiden.perusahaan)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.departemen) ? `
-                            <tr>
-                                <td>Departemen:</td>
-                                <td>${escapeHtml(insiden.departemen)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.pja) ? `
-                            <tr>
-                                <td>PJA:</td>
-                                <td>${escapeHtml(insiden.pja)}</td>
-                            </tr>
-                            ` : ''}
-                            ${hasValue(insiden.insiden_dalam_site_mining) ? `
-                            <tr>
-                                <td>Insiden dalam Site Mining:</td>
-                                <td>${escapeHtml(insiden.insiden_dalam_site_mining)}</td>
-                            </tr>
-                            ` : ''}
-                        </table>
-                    </div>
-                    
-                    ${insiden.kronologis ? `
-                    <div class="insiden-sidebar-section">
-                        <div class="insiden-sidebar-section-title">
-                            <i class="material-icons-outlined">description</i>
-                            <span>Kronologis</span>
-                        </div>
-                        <p style="font-size: 14px; color: #202124; line-height: 1.6; margin: 0;">
-                            ${escapeHtml(insiden.kronologis || '-')}
-                        </p>
-                    </div>
-                    ` : ''}
-                    
-                    ${filteredItems.length > 0 && columns.length > 0 ? `
-                    <div class="insiden-sidebar-section">
-                        <div class="insiden-sidebar-section-title">
-                            <i class="material-icons-outlined">layers</i>
-                            <span>Detail Layer</span>
-                        </div>
-                        <div style="overflow-x: auto;">
-                            <table class="insiden-sidebar-info-table">
-                                <thead>
-                                    <tr>
-                                        <th style="padding: 10px 0; font-weight: 600; color: #202124;">#</th>
-                                        ${columns.includes('Layer') ? '<th style="padding: 10px 0; font-weight: 600; color: #202124;">Layer</th>' : ''}
-                                        ${columns.includes('Jenis Item IPLS') ? '<th style="padding: 10px 0; font-weight: 600; color: #202124;">Jenis Item IPLS</th>' : ''}
-                                        ${columns.includes('Detail Layer') ? '<th style="padding: 10px 0; font-weight: 600; color: #202124;">Detail Layer</th>' : ''}
-                                        ${columns.includes('Klasifikasi') ? '<th style="padding: 10px 0; font-weight: 600; color: #202124;">Klasifikasi</th>' : ''}
-                                        ${columns.includes('Keterangan') ? '<th style="padding: 10px 0; font-weight: 600; color: #202124;">Keterangan</th>' : ''}
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    ${rows}
-                                </tbody>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.no_kecelakaan) ? `
+                                <tr>
+                                    <td width="40%"><strong>No. Kecelakaan:</strong></td>
+                                    <td>${escapeHtml(insiden.no_kecelakaan)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.kode_be_investigasi) ? `
+                                <tr>
+                                    <td width="40%"><strong>Kode BE Investigasi:</strong></td>
+                                    <td>${escapeHtml(insiden.kode_be_investigasi)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.status_lpi) ? `
+                                <tr>
+                                    <td width="40%"><strong>Status LPI:</strong></td>
+                                    <td><span class="badge ${insiden.status_lpi === 'Open' ? 'bg-warning text-dark' : insiden.status_lpi === 'Closed' ? 'bg-success' : 'bg-secondary'}">${escapeHtml(insiden.status_lpi)}</span></td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.kategori) ? `
+                                <tr>
+                                    <td width="40%"><strong>Kategori:</strong></td>
+                                    <td><span class="badge bg-light text-danger border border-danger border-opacity-25">${escapeHtml(insiden.kategori)}</span></td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.injury_status) ? `
+                                <tr>
+                                    <td width="40%"><strong>Injury Status:</strong></td>
+                                    <td>${escapeHtml(insiden.injury_status)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.high_potential) ? `
+                                <tr>
+                                    <td width="40%"><strong>High Potential:</strong></td>
+                                    <td>${escapeHtml(insiden.high_potential)}</td>
+                                </tr>
+                                ` : ''}
                             </table>
                         </div>
                     </div>
-                    ` : ''}
                 </div>
-                
-                <!-- Reviews Tab -->
-                <div class="insiden-tab-panel" data-panel="reviews" style="display: none; opacity: 0;">
-                    <div class="insiden-sidebar-section">
-                        <p style="color: #5f6368; font-size: 14px;">Reviews belum tersedia</p>
-                    </div>
-                </div>
-                
-                <!-- About Tab -->
-                <div class="insiden-tab-panel" data-panel="about" style="display: none; opacity: 0;">
-                    <div class="insiden-sidebar-section">
-                        <p style="color: #5f6368; font-size: 14px;">Informasi tambahan tentang insiden ini.</p>
+                <div class="col-md-6">
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">location_on</i>Lokasi</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.site) ? `
+                                <tr>
+                                    <td width="40%"><strong>Site:</strong></td>
+                                    <td>${escapeHtml(insiden.site)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.lokasi) ? `
+                                <tr>
+                                    <td width="40%"><strong>Lokasi:</strong></td>
+                                    <td>${escapeHtml(insiden.lokasi)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.sublokasi) ? `
+                                <tr>
+                                    <td width="40%"><strong>Sublokasi:</strong></td>
+                                    <td>${escapeHtml(insiden.sublokasi)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.lokasi_spesifik) ? `
+                                <tr>
+                                    <td width="40%"><strong>Lokasi Spesifik:</strong></td>
+                                    <td>${escapeHtml(insiden.lokasi_spesifik)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.lokasi_validasi_hsecm) ? `
+                                <tr>
+                                    <td width="40%"><strong>Lokasi Validasi HSECM:</strong></td>
+                                    <td>${escapeHtml(insiden.lokasi_validasi_hsecm)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.latitude) && hasValue(insiden.longitude) ? `
+                                <tr>
+                                    <td width="40%"><strong>Koordinat:</strong></td>
+                                    <td>${insiden.latitude}, ${insiden.longitude}</td>
+                                </tr>
+                                ` : ''}
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
-            
-            <!-- Thumbnails -->
-            <div class="insiden-sidebar-thumbnails">
-                <!-- Placeholder thumbnails -->
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">schedule</i>Waktu Kejadian</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.tanggal) || hasValue(insiden.bulan) || hasValue(insiden.tahun) ? `
+                                <tr>
+                                    <td width="40%"><strong>Tanggal:</strong></td>
+                                    <td>${formatDate(insiden.tanggal, insiden.bulan, insiden.tahun)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.hari) ? `
+                                <tr>
+                                    <td width="40%"><strong>Hari:</strong></td>
+                                    <td>${escapeHtml(insiden.hari)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.jam) || hasValue(insiden.menit) ? `
+                                <tr>
+                                    <td width="40%"><strong>Waktu:</strong></td>
+                                    <td>${formatTime(insiden.jam, insiden.menit)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.shift) ? `
+                                <tr>
+                                    <td width="40%"><strong>Shift:</strong></td>
+                                    <td>${escapeHtml(insiden.shift)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.minggu_ke) ? `
+                                <tr>
+                                    <td width="40%"><strong>Minggu Ke:</strong></td>
+                                    <td>${insiden.minggu_ke}</td>
+                                </tr>
+                                ` : ''}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">business</i>Perusahaan & Departemen</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.perusahaan) ? `
+                                <tr>
+                                    <td width="40%"><strong>Perusahaan:</strong></td>
+                                    <td>${escapeHtml(insiden.perusahaan)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.departemen) ? `
+                                <tr>
+                                    <td width="40%"><strong>Departemen:</strong></td>
+                                    <td>${escapeHtml(insiden.departemen)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.pja) ? `
+                                <tr>
+                                    <td width="40%"><strong>PJA:</strong></td>
+                                    <td>${escapeHtml(insiden.pja)}</td>
+                                </tr>
+                                ` : ''}
+                                ${hasValue(insiden.insiden_dalam_site_mining) ? `
+                                <tr>
+                                    <td width="40%"><strong>Insiden dalam Site Mining:</strong></td>
+                                    <td>${escapeHtml(insiden.insiden_dalam_site_mining)}</td>
+                                </tr>
+                                ` : ''}
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
+            ${insiden.kronologis ? `
+            <div class="card border shadow-sm mb-3">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">description</i>Kronologis</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">${escapeHtml(insiden.kronologis || '-')}</p>
+                </div>
+            </div>
+            ` : ''}
+            ${filteredItems.length > 0 && columns.length > 0 ? `
+            <div class="card border shadow-sm">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">layers</i>Detail Layer</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    ${columns.includes('Layer') ? '<th>Layer</th>' : ''}
+                                    ${columns.includes('Jenis Item IPLS') ? '<th>Jenis Item IPLS</th>' : ''}
+                                    ${columns.includes('Detail Layer') ? '<th>Detail Layer</th>' : ''}
+                                    ${columns.includes('Klasifikasi') ? '<th>Klasifikasi</th>' : ''}
+                                    ${columns.includes('Keterangan') ? '<th>Keterangan</th>' : ''}
+                                </tr>
+                            </thead>
+                            <tbody>
+                                ${rows}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
         `;
 
-        // Trigger reflow untuk memastikan animasi berjalan
-        sidebarContent.offsetHeight;
-
-        // Tab switching functionality
-        sidebarContent.querySelectorAll('.insiden-sidebar-tab').forEach(tab => {
-            tab.addEventListener('click', function() {
-                const tabName = this.dataset.tab;
-                
-                // Update active tab with smooth transition
-                sidebarContent.querySelectorAll('.insiden-sidebar-tab').forEach(t => {
-                    t.classList.remove('active');
-                });
-                this.classList.add('active');
-                
-                // Show/hide panels with fade effect
-                sidebarContent.querySelectorAll('.insiden-tab-panel').forEach(panel => {
-                    if (panel.dataset.panel === tabName) {
-                        panel.style.display = 'block';
-                        panel.style.opacity = '0';
-                        setTimeout(() => {
-                            panel.style.transition = 'opacity 0.3s ease';
-                            panel.style.opacity = '1';
-                        }, 10);
-                    } else {
-                        panel.style.transition = 'opacity 0.2s ease';
-                        panel.style.opacity = '0';
-                        setTimeout(() => {
-                            panel.style.display = 'none';
-                        }, 200);
-                    }
-                });
-            });
-        });
-
-        // Show sidebar
-        openInsidenSidebarPanel();
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('insidenDetailModal')).show();
     }
-
-    // Alias untuk backward compatibility
-    function openInsidenModal(noKecelakaan) {
-        openInsidenSidebar(noKecelakaan);
-    }
-
-    function openInsidenSidebarPanel() {
-        const sidebar = document.getElementById('insidenSidebar');
-        const overlay = document.getElementById('insidenSidebarOverlay');
-        
-        // Trigger reflow untuk memastikan animasi berjalan
-        sidebar.offsetHeight;
-        
-        sidebar.classList.add('open');
-        overlay.classList.add('show');
-        
-        // Prevent body scroll when sidebar is open
-        document.body.style.overflow = 'hidden';
-    }
-
-    function closeInsidenSidebar() {
-        const sidebar = document.getElementById('insidenSidebar');
-        const overlay = document.getElementById('insidenSidebarOverlay');
-        
-        sidebar.classList.remove('open');
-        overlay.classList.remove('show');
-        
-        // Restore body scroll
-        document.body.style.overflow = '';
-    }
-
-    // Event listeners untuk sidebar
-    document.addEventListener('DOMContentLoaded', function() {
-        const sidebarCloseBtn = document.getElementById('insidenSidebarClose');
-        const sidebarOverlay = document.getElementById('insidenSidebarOverlay');
-        const sidebar = document.getElementById('insidenSidebar');
-        
-        if (sidebarCloseBtn) {
-            sidebarCloseBtn.addEventListener('click', function(e) {
-                e.preventDefault();
-                e.stopPropagation();
-                closeInsidenSidebar();
-            });
-        }
-        
-        if (sidebarOverlay) {
-            sidebarOverlay.addEventListener('click', function(e) {
-                e.preventDefault();
-                closeInsidenSidebar();
-            });
-        }
-        
-        // Prevent sidebar content click from closing sidebar
-        const sidebarContent = document.getElementById('insidenSidebarContent');
-        if (sidebarContent) {
-            sidebarContent.addEventListener('click', function(e) {
-                e.stopPropagation();
-            });
-        }
-        
-        // Close sidebar on Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape' && sidebar && sidebar.classList.contains('open')) {
-                closeInsidenSidebar();
-            }
-        });
-        
-        // Smooth scroll behavior for sidebar
-        if (sidebar) {
-            sidebar.addEventListener('scroll', function() {
-                // Add subtle shadow on scroll
-                if (this.scrollTop > 10) {
-                    this.style.boxShadow = '2px 0 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(0, 0, 0, 0.05)';
-                } else {
-                    this.style.boxShadow = '2px 0 16px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(0, 0, 0, 0.05)';
-                }
-            });
-        }
-    });
 
     // Function to add WMS layer to map
     function addWMSLayerToMap(layerName = '', serverKey = currentWmsServer) {
