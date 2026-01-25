@@ -26,56 +26,143 @@ use Illuminate\Support\Facades\File;
 class CctvDataController extends Controller
 {
     /**
+     * Get allowed company and site based on user permission
+     * Returns array with 'company' and 'sites' keys
+     * - 'company': company name if restricted, null if all companies allowed
+     * - 'sites': array of allowed site names, empty array if all sites allowed
+     */
+    private function getAllowedCompanyAndSiteByPermission()
+    {
+        $user = Auth::user();
+        if (!$user) {
+            return ['company' => null, 'sites' => []];
+        }
+
+        // Permission-based access mapping
+        // Format: 'permission_slug' => ['company' => 'Company Name', 'sites' => ['Site 1', 'Site 2']]
+        // If 'sites' is empty array, user can access all sites within the company
+        // If 'company' is null, user can access all companies
+        $permissionAccessMap = [
+            'hazard-motion-it-pama' => [
+                'company' => 'PT Pamapersada Nusantara',
+                'sites' => ['BMO 2'] // User dengan permission ini hanya bisa akses site BMO 2
+            ],
+            // Add more permission mappings here as needed
+        ];
+
+        // Check user's permissions and return first matching restriction
+        foreach ($permissionAccessMap as $permissionSlug => $access) {
+            if ($user->hasPermission($permissionSlug)) {
+                return [
+                    'company' => $access['company'],
+                    'sites' => $access['sites']
+                ];
+            }
+        }
+
+        // Admin or other users can see all companies and sites
+        return ['company' => null, 'sites' => []];
+    }
+
+    /**
      * Display a listing of the resource.
      */
     public function index()
     {
+        // Get allowed company and sites based on permission
+        $permissionAccess = $this->getAllowedCompanyAndSiteByPermission();
+        $allowedCompany = $permissionAccess['company'];
+        $allowedSites = $permissionAccess['sites'];
+        
+        // Base query dengan filter permission
+        $baseQuery = CctvData::query();
+        
+        // Filter by company if user has specific permission
+        if ($allowedCompany) {
+            $baseQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        
+        // Filter by sites if user has specific permission with site restrictions
+        if (!empty($allowedSites)) {
+            $baseQuery->whereIn('site', $allowedSites);
+        }
+        
         // Get statistics for dashboard
-        $totalCctv = CctvData::count();
-        $cctvBaik = CctvData::where('kondisi', 'Baik')->count();
-        $cctvRusak = CctvData::where('kondisi', 'Breakdown')->count();
-        $cctvLive = CctvData::where('status', 'Live View')->count();
-        $cctvWithLink = CctvData::whereNotNull('link_akses')->where('link_akses', '!=', '')->count();
-        $cctvWithCoordinates = CctvData::whereNotNull('longitude')->whereNotNull('latitude')->count();
+        $totalCctv = (clone $baseQuery)->count();
+        $cctvBaik = (clone $baseQuery)->where('kondisi', 'Baik')->count();
+        $cctvRusak = (clone $baseQuery)->where('kondisi', 'Breakdown')->count();
+        $cctvLive = (clone $baseQuery)->where('status', 'Live View')->count();
+        $cctvWithLink = (clone $baseQuery)->whereNotNull('link_akses')->where('link_akses', '!=', '')->count();
+        $cctvWithCoordinates = (clone $baseQuery)->whereNotNull('longitude')->whereNotNull('latitude')->count();
         
         // Distribution by site
-        $distributionBySite = CctvData::select('site', DB::raw('COUNT(*) as count'))
+        $distributionBySiteQuery = CctvData::select('site', DB::raw('COUNT(*) as count'))
             ->whereNotNull('site')
-            ->where('site', '!=', '')
-            ->groupBy('site')
+            ->where('site', '!=', '');
+        if ($allowedCompany) {
+            $distributionBySiteQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $distributionBySiteQuery->whereIn('site', $allowedSites);
+        }
+        $distributionBySite = $distributionBySiteQuery->groupBy('site')
             ->orderByDesc('count')
             ->limit(10)
             ->get();
         
         // Distribution by perusahaan
-        $distributionByPerusahaan = CctvData::select('perusahaan', DB::raw('COUNT(*) as count'))
+        $distributionByPerusahaanQuery = CctvData::select('perusahaan', DB::raw('COUNT(*) as count'))
             ->whereNotNull('perusahaan')
-            ->where('perusahaan', '!=', '')
-            ->groupBy('perusahaan')
+            ->where('perusahaan', '!=', '');
+        if ($allowedCompany) {
+            $distributionByPerusahaanQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $distributionByPerusahaanQuery->whereIn('site', $allowedSites);
+        }
+        $distributionByPerusahaan = $distributionByPerusahaanQuery->groupBy('perusahaan')
             ->orderByDesc('count')
             ->limit(10)
             ->get();
         
         // Distribution by kondisi
-        $distributionByKondisi = CctvData::select('kondisi', DB::raw('COUNT(*) as count'))
+        $distributionByKondisiQuery = CctvData::select('kondisi', DB::raw('COUNT(*) as count'))
             ->whereNotNull('kondisi')
-            ->where('kondisi', '!=', '')
-            ->groupBy('kondisi')
+            ->where('kondisi', '!=', '');
+        if ($allowedCompany) {
+            $distributionByKondisiQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $distributionByKondisiQuery->whereIn('site', $allowedSites);
+        }
+        $distributionByKondisi = $distributionByKondisiQuery->groupBy('kondisi')
             ->orderByDesc('count')
             ->get();
         
         // Distribution by status
-        $distributionByStatus = CctvData::select('status', DB::raw('COUNT(*) as count'))
+        $distributionByStatusQuery = CctvData::select('status', DB::raw('COUNT(*) as count'))
             ->whereNotNull('status')
-            ->where('status', '!=', '')
-            ->groupBy('status')
+            ->where('status', '!=', '');
+        if ($allowedCompany) {
+            $distributionByStatusQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $distributionByStatusQuery->whereIn('site', $allowedSites);
+        }
+        $distributionByStatus = $distributionByStatusQuery->groupBy('status')
             ->orderByDesc('count')
             ->get();
         
         // Control rooms count
-        $totalControlRooms = CctvData::whereNotNull('control_room')
-            ->where('control_room', '!=', '')
-            ->distinct('control_room')
+        $totalControlRoomsQuery = CctvData::whereNotNull('control_room')
+            ->where('control_room', '!=', '');
+        if ($allowedCompany) {
+            $totalControlRoomsQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $totalControlRoomsQuery->whereIn('site', $allowedSites);
+        }
+        $totalControlRooms = $totalControlRoomsQuery->distinct('control_room')
             ->count('control_room');
         
         $stats = [
@@ -116,8 +203,23 @@ class CctvDataController extends Controller
             $orderColumnName = $columns[$orderColumn] ?? 'id';
         }
 
+        // Get allowed company and sites based on permission
+        $permissionAccess = $this->getAllowedCompanyAndSiteByPermission();
+        $allowedCompany = $permissionAccess['company'];
+        $allowedSites = $permissionAccess['sites'];
+
         // Base query
         $query = CctvData::query();
+        
+        // Filter by company if user has specific permission
+        if ($allowedCompany) {
+            $query->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        
+        // Filter by sites if user has specific permission with site restrictions
+        if (!empty($allowedSites)) {
+            $query->whereIn('site', $allowedSites);
+        }
 
         // Search functionality
         if (!empty($searchValue)) {
@@ -131,8 +233,15 @@ class CctvDataController extends Controller
             });
         }
 
-        // Get total records
-        $recordsTotal = CctvData::count();
+        // Get total records dengan filter permission
+        $recordsTotalQuery = CctvData::query();
+        if ($allowedCompany) {
+            $recordsTotalQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $recordsTotalQuery->whereIn('site', $allowedSites);
+        }
+        $recordsTotal = $recordsTotalQuery->count();
         $recordsFiltered = $query->count();
 
         // Order and paginate
