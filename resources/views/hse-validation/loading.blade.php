@@ -17,7 +17,7 @@
                     </div>
                 </div>
                 
-                <h4 class="mb-3">Memproses Validasi HSE dengan AI</h4>
+                <h4 class="mb-3">Memproses Validasi Inspeksi hazard dengan AI</h4>
                 <p class="text-muted mb-4">Mohon tunggu, sistem sedang memvalidasi setiap baris data...</p>
 
                 <!-- Progress Bar -->

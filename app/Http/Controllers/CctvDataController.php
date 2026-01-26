@@ -587,7 +587,7 @@ class CctvDataController extends Controller
             // Proses data (mulai dari baris kedua)
             $successCount = 0;
             $errorCount = 0;
-            $skippedCount = 0;
+            $updatedCount = 0;
             $errors = [];
 
             DB::beginTransaction();
@@ -634,19 +634,26 @@ class CctvDataController extends Controller
                     }
 
                     // Cek apakah data dengan no_cctv sudah ada di database
-                    // Hanya cek jika no_cctv ada nilainya
+                    // Jika sudah ada, update data yang ada dengan nilai baru
                     if (!empty($data['no_cctv'])) {
                         $existingData = CctvData::where('no_cctv', $data['no_cctv'])
                                               ->first();
 
-                        // Skip jika data sudah ada
+                        // Update jika data sudah ada
                         if ($existingData) {
-                            $skippedCount++;
-                            continue;
+                            try {
+                                $existingData->update($data);
+                                $updatedCount++;
+                                continue;
+                            } catch (Exception $e) {
+                                $errorCount++;
+                                $errors[] = "Baris " . ($i + 1) . ": " . $e->getMessage();
+                                continue;
+                            }
                         }
                     }
 
-                    // Simpan data
+                    // Simpan data baru jika no_cctv belum ada
                     try {
                         $newCctvData = CctvData::create($data);
                         $successCount++;
@@ -658,9 +665,9 @@ class CctvDataController extends Controller
 
                 DB::commit();
 
-                $message = "Import berhasil! {$successCount} data berhasil diimpor.";
-                if ($skippedCount > 0) {
-                    $message .= " {$skippedCount} data di-skip (sudah ada di database).";
+                $message = "Import berhasil! {$successCount} data baru berhasil diimpor.";
+                if ($updatedCount > 0) {
+                    $message .= " {$updatedCount} data berhasil di-update.";
                 }
                 if ($errorCount > 0) {
                     $message .= " {$errorCount} data gagal diimpor.";

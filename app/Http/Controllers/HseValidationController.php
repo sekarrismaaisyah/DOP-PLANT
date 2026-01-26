@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Services\QwenAIService;
+use App\Models\HseAiValidation;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -11,6 +12,8 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Carbon;
 use Exception;
 
 class HseValidationController extends Controller
@@ -23,77 +26,36 @@ class HseValidationController extends Controller
     }
 
     /**
-     * Tampilkan halaman upload
+     * Tampilkan halaman validasi (tidak perlu upload, langsung ambil dari ClickHouse)
      */
     public function index()
     {
-        return view('hse-validation.index');
+        // Cek apakah ada data hari ini yang sudah divalidasi
+        $today = Carbon::now()->format('Y-m-d');
+        $validatedCount = HseAiValidation::where('validation_date', $today)->count();
+        
+        return view('hse-validation.index', [
+            'validated_count' => $validatedCount,
+            'validation_date' => $today
+        ]);
     }
 
     /**
-     * Proses upload dan validasi file
+     * Proses validasi data dari ClickHouse (hari ini)
      */
     public function process(Request $request)
     {
-        $request->validate([
-            'file' => 'required|file|mimes:xlsx,xls,csv|max:10240', // Max 10MB
-        ]);
-
         try {
-            $file = $request->file('file');
-            $extension = strtolower($file->getClientOriginalExtension());
+            // Ambil data dari ClickHouse untuk hari ini
+            $today = Carbon::now()->format('Y-m-d');
+            $clickHouseData = $this->getTodayDataFromClickHouse($today);
             
-            // Baca file Excel/CSV
-            // Untuk CSV, gunakan reader khusus
-            if ($extension === 'csv') {
-                $reader = IOFactory::createReader('Csv');
-                $reader->setInputEncoding('UTF-8');
-                $reader->setDelimiter(',');
-                $reader->setEnclosure('"');
-                $spreadsheet = $reader->load($file->getRealPath());
-            } else {
-                $spreadsheet = IOFactory::load($file->getRealPath());
-            }
-            
-            $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray();
-            
-            if (count($rows) < 2) {
-                return back()->withErrors(['file' => 'File harus memiliki minimal header dan 1 baris data.']);
-            }
-
-            // Ambil header
-            $headers = array_map('strtolower', array_map('trim', $rows[0]));
-            
-            // Cari kolom Deskripsi dan Url Photo
-            $deskripsiIndex = null;
-            $urlPhotoIndex = null;
-            
-            foreach ($headers as $index => $header) {
-                if (strpos($header, 'deskripsi') !== false || strpos($header, 'description') !== false) {
-                    $deskripsiIndex = $index;
-                }
-                if (strpos($header, 'url photo') !== false || strpos($header, 'url_photo') !== false || 
-                    strpos($header, 'photo') !== false || strpos($header, 'url') !== false) {
-                    $urlPhotoIndex = $index;
-                }
-            }
-
-            if ($deskripsiIndex === null) {
-                return back()->withErrors(['file' => 'Kolom "Deskripsi" tidak ditemukan dalam file.']);
-            }
-
-            if ($urlPhotoIndex === null) {
-                return back()->withErrors(['file' => 'Kolom "Url Photo" tidak ditemukan dalam file.']);
+            if (empty($clickHouseData)) {
+                return back()->withErrors(['message' => 'Tidak ada data untuk divalidasi hari ini.']);
             }
 
             // Hitung total baris yang akan diproses
-            $totalRows = 0;
-            for ($i = 1; $i < count($rows); $i++) {
-                if (!empty($rows[$i][$deskripsiIndex])) {
-                    $totalRows++;
-                }
-            }
+            $totalRows = count($clickHouseData);
 
             // Generate unique ID untuk proses ini
             $processId = uniqid('hse_validation_', true);
@@ -104,18 +66,138 @@ class HseValidationController extends Controller
                 'processed' => 0,
                 'current_row' => 0,
                 'status' => 'processing',
-                'headers' => $headers,
                 'results' => [],
-                'deskripsi_index' => $deskripsiIndex,
-                'url_photo_index' => $urlPhotoIndex,
-                'rows' => $rows,
+                'clickhouse_data' => $clickHouseData,
+                'validation_date' => $today,
             ], now()->addHours(2));
 
             // Redirect ke halaman loading dengan process ID
             return redirect()->route('hse-validation.loading', ['processId' => $processId]);
 
         } catch (Exception $e) {
-            return back()->withErrors(['file' => 'Error processing file: ' . $e->getMessage()]);
+            Log::error('Error processing ClickHouse data', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return back()->withErrors(['message' => 'Error processing data: ' . $e->getMessage()]);
+        }
+    }
+    
+    /**
+     * Ambil data hari ini dari ClickHouse
+     */
+    private function getTodayDataFromClickHouse($today)
+    {
+        try {
+            $host = '10.10.10.38';
+            $port = 8123;
+            $protocol = 'http';
+            $baseUrl = $protocol . '://' . $host . ':' . $port;
+            $username = 'default';
+            $password = 'Zxcdsaqwe321:;';
+            $database = 'hse_automation';
+            $timeout = 60;
+
+            $sql = "
+                SELECT 
+                    toString(id) as task_number,
+                    ifNull(toString(jenis_laporan), 'INSPEKSI_HAZARD') as jenis_laporan,
+                    ifNull(toString(deskripsi), '') as aktivitas_pekerjaan,
+                    ifNull(toString(nama_lokasi), '') as lokasi,
+                    ifNull(toString(nama_detail_lokasi), '') as detail_lokasi,
+                    ifNull(toString(deskripsi), '') as keterangan,
+                    ifNull(toString(tanggal_pembuatan), toString(bedraft_date)) as tanggal_pelaporan,
+                    ifNull(toString(perusahaan_pelapor), '') as perusahaan_pelapor,
+                    ifNull(toString(nama_pelapor), '') as pelapor,
+                    ifNull(toString(sid_pelapor), '') as sid_pelapor,
+                    ifNull(toString(jabatan_fungsional_pelapor), '') as jabatan_fungsional_pelapor,
+                    ifNull(toString(departemen_pelapor), '') as departemen_pelapor,
+                    ifNull(toString(nama_pic), '') as pic,
+                    ifNull(toString(sid_pic), '') as sid_pic,
+                    ifNull(toString(jabatan_fungsional_pic), '') as jabatan_fungsional_pic,
+                    ifNull(toString(perusahaan_pic), '') as perusahaan_pic,
+                    ifNull(toString(departemen_pic), '') as departemen_pic,
+                    ifNull(toString(url_photo), '') as uri_foto,
+                    ifNull(toString(name_tools_observation), '') as tools_pengawasan,
+                    ifNull(toString(tindakan), '') as catatan_tindakan,
+                    ifNull(toString(id_pelapor), '') as nik_pelapor,
+                    ifNull(toString(nama_pelapor), '') as nama_pelapor,
+                    ifNull(toString(perusahaan_pelapor), '') as nama_perusahaan_pelapor_karyawan,
+                    ifNull(toString(jabatan_fungsional_pelapor), '') as jabatan_fungsional_karyawan_pelapor,
+                    ifNull(toString(latitude), '') as latitude,
+                    ifNull(toString(longitude), '') as longitude,
+                    ifNull(toString(nama_site), '') as site,
+                    ifNull(toString(lokasi_detail), '') as keterangan_lokasi,
+                    ifNull(toString(jam), '') as jam,
+                    ifNull(toString(menit), '') as menit,
+                    ifNull(toString(nama_lokasi), '') as nama_lokasi,
+                    ifNull(toString(nama_detail_lokasi), '') as nama_detail_lokasi
+                FROM aaj_car_all_year_from_dav
+                WHERE (
+                    (tanggal_pembuatan IS NOT NULL 
+                        AND toDate(toTimeZone(tanggal_pembuatan, 'Asia/Makassar')) = toDate('{$today}'))
+                    OR (bedraft_date IS NOT NULL 
+                        AND toDate(toTimeZone(bedraft_date, 'Asia/Makassar')) = toDate('{$today}'))
+                )
+                ORDER BY 
+                    CASE 
+                        WHEN tanggal_pembuatan IS NOT NULL THEN toDateTime(tanggal_pembuatan)
+                        WHEN bedraft_date IS NOT NULL THEN toDateTime(bedraft_date)
+                        ELSE toDateTime('1970-01-01 00:00:00')
+                    END DESC
+                LIMIT 12500
+            ";
+
+            $url = $baseUrl . '/?database=' . urlencode($database) . '&default_format=JSON';
+            
+            $httpClient = Http::timeout($timeout)
+                ->withBasicAuth($username, $password)
+                ->withBody($sql, 'text/plain');
+            
+            $response = $httpClient->post($url);
+
+            if (!$response->successful()) {
+                Log::error('ClickHouse query failed', [
+                    'status' => $response->status(),
+                    'body' => substr($response->body(), 0, 500)
+                ]);
+                return [];
+            }
+
+            $body = $response->body();
+            $result = json_decode($body, true);
+            
+            if (json_last_error() !== JSON_ERROR_NONE) {
+                // Try to parse as JSON lines format
+                $lines = explode("\n", trim($body));
+                $data = [];
+                foreach ($lines as $line) {
+                    $line = trim($line);
+                    if (!empty($line)) {
+                        $decoded = json_decode($line, true);
+                        if ($decoded !== null && json_last_error() === JSON_ERROR_NONE) {
+                            $data[] = $decoded;
+                        }
+                    }
+                }
+                return $data;
+            }
+            
+            if (is_array($result)) {
+                if (isset($result['data'])) {
+                    return $result['data'];
+                } elseif (!empty($result) && isset($result[0])) {
+                    return $result;
+                }
+            }
+            
+            return [];
+        } catch (Exception $e) {
+            Log::error('Error getting data from ClickHouse', [
+                'error' => $e->getMessage(),
+                'trace' => $e->getTraceAsString()
+            ]);
+            return [];
         }
     }
 
@@ -184,46 +266,117 @@ class HseValidationController extends Controller
         }
 
         // Proses baris berikutnya
-        $rows = $processData['rows'];
-        $deskripsiIndex = $processData['deskripsi_index'];
-        $urlPhotoIndex = $processData['url_photo_index'];
-        $results = $processData['results'];
-        $processed = $processData['processed'];
-        $currentRow = $processData['current_row'];
+        $clickHouseData = $processData['clickhouse_data'] ?? [];
+        $results = $processData['results'] ?? [];
+        $processed = $processData['processed'] ?? 0;
+        $currentRow = $processData['current_row'] ?? 0;
+        $validationDate = $processData['validation_date'] ?? Carbon::now()->format('Y-m-d');
 
         // Proses beberapa baris sekaligus (batch processing)
         $batchSize = 1; // Proses 1 baris per request untuk update progress lebih smooth
         $batchCount = 0;
 
         // Cek apakah sudah mencapai akhir baris
-        $totalRowsCount = count($rows) - 1; // Exclude header
-        $isCompleted = ($currentRow + 1) >= $totalRowsCount;
+        $totalRowsCount = count($clickHouseData);
+        $isCompleted = ($currentRow) >= $totalRowsCount;
 
-        // Mulai dari baris berikutnya (currentRow + 1 karena currentRow adalah index terakhir yang diproses)
+        // Mulai dari baris berikutnya
         if (!$isCompleted) {
-            for ($i = $currentRow + 1; $i < count($rows) && $batchCount < $batchSize; $i++) {
-                $row = $rows[$i];
+            for ($i = $currentRow; $i < $totalRowsCount && $batchCount < $batchSize; $i++) {
+                $row = $clickHouseData[$i];
                 
                 // Skip baris kosong
-                if (empty($row[$deskripsiIndex])) {
-                    $currentRow = $i; // Update currentRow meskipun skip
-                    // Cek apakah ini baris terakhir
-                    if ($i >= $totalRowsCount) {
+                $deskripsi = $row['keterangan'] ?? $row['aktivitas_pekerjaan'] ?? '';
+                if (empty($deskripsi)) {
+                    $currentRow = $i + 1;
+                    if ($i >= $totalRowsCount - 1) {
                         $isCompleted = true;
                     }
                     continue;
                 }
 
-                $deskripsi = $row[$deskripsiIndex] ?? '';
-                $urlPhoto = $row[$urlPhotoIndex] ?? '';
+                $urlPhoto = $row['uri_foto'] ?? '';
 
                 try {
                     // Validasi menggunakan AI
                     $validationResult = $this->qwenService->validateFinding($deskripsi, $urlPhoto);
 
-                    // Tambahkan hasil validasi ke baris
+                    // Parse tanggal_pelaporan
+                    $tanggalPelaporan = null;
+                    if (!empty($row['tanggal_pelaporan'])) {
+                        try {
+                            $tanggalPelaporan = Carbon::parse($row['tanggal_pelaporan'])->format('Y-m-d H:i:s');
+                        } catch (\Exception $e) {
+                            $tanggalPelaporan = null;
+                        }
+                    }
+
+                    // Parse latitude dan longitude
+                    $latitude = null;
+                    $longitude = null;
+                    if (!empty($row['latitude']) && is_numeric($row['latitude'])) {
+                        $latitude = floatval($row['latitude']);
+                    }
+                    if (!empty($row['longitude']) && is_numeric($row['longitude'])) {
+                        $longitude = floatval($row['longitude']);
+                    }
+
+                    // Simpan ke database
+                    HseAiValidation::create([
+                        // Original data from ClickHouse
+                        'task_number' => $row['task_number'] ?? null,
+                        'jenis_laporan' => $row['jenis_laporan'] ?? null,
+                        'aktivitas_pekerjaan' => $row['aktivitas_pekerjaan'] ?? null,
+                        'lokasi' => $row['lokasi'] ?? null,
+                        'detail_lokasi' => $row['detail_lokasi'] ?? null,
+                        'keterangan' => $deskripsi,
+                        'tanggal_pelaporan' => $tanggalPelaporan,
+                        'perusahaan_pelapor' => $row['perusahaan_pelapor'] ?? null,
+                        'pelapor' => $row['pelapor'] ?? null,
+                        'sid_pelapor' => $row['sid_pelapor'] ?? null,
+                        'jabatan_fungsional_pelapor' => $row['jabatan_fungsional_pelapor'] ?? null,
+                        'departemen_pelapor' => $row['departemen_pelapor'] ?? null,
+                        'pic' => $row['pic'] ?? null,
+                        'sid_pic' => $row['sid_pic'] ?? null,
+                        'jabatan_fungsional_pic' => $row['jabatan_fungsional_pic'] ?? null,
+                        'perusahaan_pic' => $row['perusahaan_pic'] ?? null,
+                        'departemen_pic' => $row['departemen_pic'] ?? null,
+                        'uri_foto' => $urlPhoto,
+                        'tools_pengawasan' => $row['tools_pengawasan'] ?? null,
+                        'catatan_tindakan' => $row['catatan_tindakan'] ?? null,
+                        'nik_pelapor' => $row['nik_pelapor'] ?? null,
+                        'nama_pelapor' => $row['nama_pelapor'] ?? null,
+                        'nama_perusahaan_pelapor_karyawan' => $row['nama_perusahaan_pelapor_karyawan'] ?? null,
+                        'jabatan_fungsional_karyawan_pelapor' => $row['jabatan_fungsional_karyawan_pelapor'] ?? null,
+                        'latitude' => $latitude,
+                        'longitude' => $longitude,
+                        'site' => $row['site'] ?? null,
+                        'keterangan_lokasi' => $row['keterangan_lokasi'] ?? null,
+                        'jam' => $row['jam'] ?? null,
+                        'menit' => $row['menit'] ?? null,
+                        'nama_lokasi' => $row['nama_lokasi'] ?? null,
+                        'nama_detail_lokasi' => $row['nama_detail_lokasi'] ?? null,
+                        
+                        // AI Validation Results
+                        'ai_match_found' => $validationResult['match_found'] ?? false,
+                        'ai_main_category' => $validationResult['main_category'] ?? null,
+                        'ai_sub_category' => $validationResult['sub_category'] ?? null,
+                        'ai_tbc' => $validationResult['concern_level']['TBC'] ?? false,
+                        'ai_pspp' => $validationResult['concern_level']['PSPP'] ?? false,
+                        'ai_gr' => $validationResult['concern_level']['GR'] ?? false,
+                        'ai_incident' => $validationResult['concern_level']['Incident'] ?? false,
+                        'ai_justification' => $validationResult['justification'] ?? null,
+                        'ai_confidence_score' => $validationResult['confidence_score'] ?? null,
+                        
+                        // Metadata
+                        'validation_date' => $validationDate,
+                        'validated_by' => Auth::id(),
+                    ]);
+
+                    // Tambahkan hasil validasi ke results untuk ditampilkan
                     $rowData = [
                         'row_number' => $i + 1,
+                        'task_number' => $row['task_number'] ?? null,
                         'deskripsi' => $deskripsi,
                         'url_photo' => $urlPhoto,
                         'validasi_main_category' => $validationResult['main_category'] ?? null,
@@ -237,18 +390,13 @@ class HseValidationController extends Controller
                         'match_found' => $validationResult['match_found'] ?? false,
                     ];
 
-                    // Simpan semua kolom original
-                    foreach ($row as $colIndex => $value) {
-                        $rowData['original_' . $colIndex] = $value;
-                    }
-
                     $results[] = $rowData;
                     $processed++;
-                    $currentRow = $i;
+                    $currentRow = $i + 1;
                     $batchCount++;
 
                     // Cek apakah ini baris terakhir
-                    if ($i >= $totalRowsCount) {
+                    if ($i >= $totalRowsCount - 1) {
                         $isCompleted = true;
                     }
 
@@ -256,11 +404,13 @@ class HseValidationController extends Controller
                     // Jika error, skip baris ini dan lanjut
                     Log::error('Error processing row', [
                         'row' => $i,
-                        'error' => $e->getMessage()
+                        'task_number' => $row['task_number'] ?? null,
+                        'error' => $e->getMessage(),
+                        'trace' => $e->getTraceAsString()
                     ]);
-                    $currentRow = $i; // Update currentRow meskipun error
+                    $currentRow = $i + 1;
                     // Cek apakah ini baris terakhir
-                    if ($i >= $totalRowsCount) {
+                    if ($i >= $totalRowsCount - 1) {
                         $isCompleted = true;
                     }
                     continue;
@@ -269,7 +419,7 @@ class HseValidationController extends Controller
         }
 
         // Update progress - pastikan completed jika sudah mencapai akhir
-        if (($currentRow + 1) >= $totalRowsCount) {
+        if ($currentRow >= $totalRowsCount) {
             $isCompleted = true;
         }
         
@@ -278,21 +428,19 @@ class HseValidationController extends Controller
             'processed' => $processed,
             'current_row' => $currentRow,
             'status' => $isCompleted ? 'completed' : 'processing',
-            'headers' => $processData['headers'],
             'results' => $results,
-            'deskripsi_index' => $deskripsiIndex,
-            'url_photo_index' => $urlPhotoIndex,
-            'rows' => $rows,
+            'clickhouse_data' => $clickHouseData,
+            'validation_date' => $validationDate,
         ], now()->addHours(2));
 
         // Jika selesai, simpan ke session
         if ($isCompleted) {
             session(['hse_validation_results' => $results]);
-            session(['hse_validation_headers' => $processData['headers']]);
             Log::info('HSE Validation completed', [
                 'processId' => $processId,
                 'total_results' => count($results),
-                'processed' => $processed
+                'processed' => $processed,
+                'validation_date' => $validationDate
             ]);
         }
 

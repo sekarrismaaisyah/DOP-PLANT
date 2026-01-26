@@ -11,10 +11,10 @@
     <div class="col-12">
         <div class="card rounded-4">
             <div class="card-body">
-                <h5 class="mb-3 fw-bold">Upload File Excel/CSV</h5>
+                <h5 class="mb-3 fw-bold">Validasi HSE Hari Ini</h5>
                 <p class="text-muted mb-4">
-                    Upload file Excel atau CSV yang berisi kolom <strong>Deskripsi</strong> dan <strong>Url Photo</strong>.
-                    Sistem akan melakukan validasi otomatis menggunakan AI untuk setiap baris data.
+                    Sistem akan mengambil data dari ClickHouse database untuk hari ini (<strong>{{ $validation_date }}</strong>)
+                    dan melakukan validasi otomatis menggunakan AI untuk setiap temuan HSE.
                 </p>
 
                 @if ($errors->any())
@@ -28,27 +28,36 @@
                     </div>
                 @endif
 
-                <form action="{{ route('hse-validation.process') }}" method="POST" enctype="multipart/form-data">
+                @if (session('success'))
+                    <div class="alert alert-success alert-dismissible fade show" role="alert">
+                        {{ session('success') }}
+                        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                    </div>
+                @endif
+
+                <div class="mb-3">
+                    <div class="alert alert-info">
+                        <h6 class="alert-heading">Informasi Validasi:</h6>
+                        <ul class="mb-0">
+                            <li>Data diambil dari tabel <strong>hse_automation.aaj_car_all_year_from_dav</strong> di ClickHouse</li>
+                            <li>Hanya data dengan tanggal hari ini yang akan divalidasi</li>
+                            <li>Hasil validasi akan disimpan ke database dengan semua field original + hasil klasifikasi AI</li>
+                            <li>Klasifikasi AI meliputi: TBC, PSPP, GR, dan Incident</li>
+                        </ul>
+                    </div>
+                </div>
+
+                @if($validated_count > 0)
+                    <div class="alert alert-warning">
+                        <strong>Perhatian:</strong> Sudah ada <strong>{{ $validated_count }}</strong> data yang divalidasi untuk hari ini. 
+                        Memulai validasi lagi akan memproses ulang semua data hari ini.
+                    </div>
+                @endif
+
+                <form action="{{ route('hse-validation.process') }}" method="POST">
                     @csrf
-                    <div class="mb-3">
-                        <label for="file" class="form-label">Pilih File <span class="text-danger">*</span></label>
-                        <input type="file" class="form-control" id="file" name="file" accept=".xlsx,.xls,.csv" required>
-                        <small class="form-text text-muted">Format yang didukung: .xlsx, .xls, .csv (Maksimal 10MB)</small>
-                    </div>
-
-                    <div class="mb-3">
-                        <div class="alert alert-info">
-                            <h6 class="alert-heading">Format File:</h6>
-                            <p class="mb-0">File harus memiliki kolom berikut:</p>
-                            <ul class="mb-0">
-                                <li><strong>Deskripsi</strong> - Teks temuan HSE</li>
-                                <li><strong>Url Photo</strong> - Tautan ke foto temuan</li>
-                            </ul>
-                        </div>
-                    </div>
-
-                    <button type="submit" class="btn btn-primary">
-                        <i class="ri-upload-cloud-2-line me-1"></i> Upload dan Validasi
+                    <button type="submit" class="btn btn-primary btn-lg">
+                        <i class="ri-play-circle-line me-1"></i> Mulai Validasi Data Hari Ini
                     </button>
                 </form>
             </div>
