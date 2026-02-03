@@ -5026,7 +5026,7 @@ class MapBaseController extends Controller
         try {
             // Ambil data GPS orang dari tabel user_gps_latests (cara sama seperti unit: Query Builder langsung)
             $gpsLogs = DB::connection('mysql')
-                ->table('user_gps_latests')
+                ->table('user_gps_logs')
                 ->whereNotNull('latitude')
                 ->whereNotNull('longitude')
                 ->whereNotNull('user_id')
