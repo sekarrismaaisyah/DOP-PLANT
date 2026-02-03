@@ -2516,6 +2516,10 @@
                     <i class="material-icons-outlined">assessment</i>
                     <span>Matriks Probability</span>
                 </a>
+                <a href="#" class="gm-category-item" id="photoGalleryToggleCategoryBtn" onclick="togglePhotoGalleryFromCategory(); return false;" title="Toggle Photo Gallery">
+                    <i class="material-icons-outlined" id="photoGalleryToggleCategoryIcon">photo_library</i>
+                    <span id="photoGalleryToggleCategoryText">Photo Gallery</span>
+                </a>
                 <a href="{{ route('maps.map') }}">
                 <span class="gm-category-item">
                     <i class="material-icons-outlined category-arrow">chevron_right</i>
@@ -3149,6 +3153,13 @@
             <i class="material-icons-outlined" style="position: relative; z-index: 1; color: #5f6368; font-size: 18px;">layers</i>
         </div>
     </div> -->
+    
+    <!-- Photo Gallery Toggle Button in Map Controls -->
+    <div class="gm-map-controls" style="bottom: 16px; top: auto;">
+        <button class="gm-control-btn" id="photoGalleryToggleBtn" title="Toggle Photo Gallery" onclick="togglePhotoGallery()" style="margin-top: 8px;">
+            <i class="material-icons-outlined" id="photoGalleryToggleIcon" style="font-size: 20px; color: #5f6368;">photo_library</i>
+        </button>
+    </div>
 
  
 
@@ -4098,96 +4109,20 @@
         rtspUrl: null
     };
 
-    // WMS Server Configuration
+    // WMS Server Configuration - Single All Site Server
     const wmsServers = {
-        smo: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_SMO_BLOCK_B1_2510/MapServer/WMSServer',
-            name: 'SMO Block B1',
-            bbox: [117.402228, 2.150819, 117.505579, 2.221687],
-            center: [117.4539035, 2.186253]
-        },
-        smoA: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_SMO_BLOCK_A/MapServer/WMSServer',
-            name: 'SMO Block A',
-            bbox: [117.378740, 2.154163, 117.409737, 2.199252],
-            center: [117.3942385, 2.1767075]
-        },
-        smoBEastWest: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_SMO_BLOCK_B_EAST_WEST/MapServer/WMSServer',
-            name: 'SMO Block B East-West',
-            bbox: [117.333284, 2.166645, 117.420828, 2.333354],
-            center: [117.377056, 2.2499995]
-        },
-        bmo: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_BMO_BLOCK_1_4/MapServer/WMSServer',
-            name: 'BMO Block 1-4',
-            bbox: [117.437891, 2.026662, 117.483348, 2.122948],
-            center: [117.4606195, 2.074805]
-        },
-        bmo56: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_BMO_BLOCK_5_6/MapServer/WMSServer',
-            name: 'BMO Block 5-6',
-            bbox: [117.405839, 1.971650, 117.475021, 2.095264],
-            center: [117.44043, 2.033457]
-        },
-        bmo7: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_BMO_BLOCK_7/MapServer/WMSServer',
-            name: 'BMO Block 7',
-            bbox: [117.312358, 1.941393, 117.426208, 2.036692],
-            center: [117.369283, 1.9890425]
-        },
-        bmo8: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_BMO_BLOCK_8/MapServer/WMSServer',
-            name: 'BMO Block 8',
-            bbox: [117.143050, 1.873312, 117.353350, 2.000030],
-            center: [117.2482, 1.936671]
-        },
-        bmo9: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_BMO_BLOCK_9/MapServer/WMSServer',
-            name: 'BMO Block 9',
-            bbox: [117.129991, 1.936764, 117.183360, 2.043340],
-            center: [117.1566755, 1.990052]
-        },
-        bmo10: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_BMO_BLOCK_10/MapServer/WMSServer',
-            name: 'BMO Block 10',
-            bbox: [117.166646, 2.033321, 117.241680, 2.132808],
-            center: [117.204163, 2.0830645]
-        },
-        bmoParapatan: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_BMO_BLOCK_PARAPATAN/MapServer/WMSServer',
-            name: 'BMO Block Parapatan',
-            bbox: [117.431663, 2.090234, 117.483621, 2.146128],
-            center: [117.457642, 2.118181]
-        },
-        gurimbang: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_GURIMBANG/MapServer/WMSServer',
-            name: 'Gurimbang',
-            bbox: [117.483325, 2.091636, 117.625039, 2.212991],
-            center: [117.554182, 2.1523135]
-        },
-        khdtk: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_KHDTK/MapServer/WMSServer',
-            name: 'KHDTK',
-            bbox: [117.175827, 1.900871, 117.241266, 1.948915],
-            center: [117.2085465, 1.924893]
-        },
-        punan: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_PUNAN/MapServer/WMSServer',
-            name: 'Punan',
-            bbox: [117.204989, 2.166649, 117.333347, 2.248363],
-            center: [117.269168, 2.207506]
-        },
-        lati: {
-            url: 'https://sgi.beraucoal.co.id/server/services/Basemap_Layer_LATI_2510/MapServer/WMSServer',
-            name: 'Lati',
-            bbox: [117.509916, 2.189945, 117.638408, 2.418367],
-            center: [117.574162, 2.304156]
+        allsite: {
+            url: 'http://10.10.10.61:8080/geoserver/basemap/wms',
+            name: 'All Site Basemap',
+            layerName: 'basemap:basemap_allsite',
+            
+            bbox: [117.129991, 1.873312, 117.638408, 2.418367],
+            center: [117.3841995, 2.1458395] 
         }
     };
     
     // Current WMS server
-    let currentWmsServer = 'smo';
+    let currentWmsServer = 'allsite';
     let wmsUrl = wmsServers[currentWmsServer].url;
     let currentLayer = '';
     let wmsLayer = null;
@@ -5333,19 +5268,23 @@
     // Function to create WMS layer
     function createWMSLayer(layerName = '', serverKey = currentWmsServer) {
         const server = wmsServers[serverKey];
+        // Gunakan layer name dari server config jika tidak ada parameter
+        const layerParam = layerName || server.layerName || 'basemap:basemap_allsite';
+        
         const params = {
-            'LAYERS': layerName || '0',
+            'LAYERS': layerParam,
             'VERSION': '1.1.1',
             'FORMAT': 'image/png',
             'TRANSPARENT': true,
-            'TILED': true
+            'TILED': true,
+            'SRS': 'EPSG:4326'
         };
         
         return new ol.layer.Tile({
             source: new ol.source.TileWMS({
                 url: server.url,
                 params: params,
-                serverType: 'mapserver',
+                serverType: 'geoserver', // Ubah dari 'mapserver' ke 'geoserver'
                 crossOrigin: 'anonymous',
                 tileGrid: new ol.tilegrid.TileGrid({
                     extent: ol.proj.transformExtent(
@@ -5394,7 +5333,7 @@
         ],
         view: new ol.View({
             center: ol.proj.fromLonLat(wmsServers[currentWmsServer].center),
-            zoom: 15
+            zoom: 13 // Zoom level yang lebih rendah untuk melihat semua site
         }),
         controls: [
             new ol.control.Zoom(),
@@ -15545,7 +15484,7 @@ source: new ol.source.Vector(),
         const server = wmsServers[serverKey];
         const view = map.getView();
         view.setCenter(ol.proj.fromLonLat(server.center));
-        view.setZoom(15);
+        view.setZoom(13); // Zoom level yang lebih rendah untuk melihat semua site
         
         // Pastikan hazard dan CCTV layer selalu di atas WMS layer
         const layers = map.getLayers();
@@ -15606,15 +15545,17 @@ source: new ol.source.Vector(),
     }
 
     // Update WMS server when server select changes (only if element exists)
+    // DISABLED: Single server configuration, no need for server selector
     const wmsServerSelect = document.getElementById('wmsServerSelect');
     if (wmsServerSelect) {
-        wmsServerSelect.addEventListener('change', function(e) {
-            currentWmsServer = e.target.value;
-            wmsUrl = wmsServers[currentWmsServer].url;
-            
-            // Reload layers dari server yang baru
-            loadWMSLayers();
-        });
+        // Hide the selector since we only have one server
+        wmsServerSelect.style.display = 'none';
+        // Remove event listener - no longer needed
+        // wmsServerSelect.addEventListener('change', function(e) {
+        //     currentWmsServer = e.target.value;
+        //     wmsUrl = wmsServers[currentWmsServer].url;
+        //     loadWMSLayers();
+        // });
     }
 
     // Update projection when projection select changes (only if element exists)
@@ -15630,11 +15571,11 @@ source: new ol.source.Vector(),
             if (projection === 'EPSG:4326') {
                 view.setProjection('EPSG:4326');
                 view.setCenter(newCenter);
-                view.setZoom(15);
+                view.setZoom(13); // Zoom level yang lebih rendah untuk melihat semua site
             } else {
                 view.setProjection('EPSG:3857');
                 view.setCenter(ol.proj.fromLonLat(newCenter));
-                view.setZoom(15);
+                view.setZoom(13); // Zoom level yang lebih rendah untuk melihat semua site
             }
         });
     }
@@ -15642,12 +15583,15 @@ source: new ol.source.Vector(),
     // Try to get capabilities to list available layers
     async function loadWMSLayers(serverKey = currentWmsServer) {
         const layerSelect = document.getElementById('layerSelect');
-        if (!layerSelect) {
-            return; // Layer select not available
-        }
-        layerSelect.innerHTML = '<option value="">Loading...</option>';
-        
         const server = wmsServers[serverKey];
+        
+        if (!layerSelect) {
+            // Jika tidak ada layer select, langsung load layer default
+            addWMSLayerToMap(server.layerName, serverKey);
+            return;
+        }
+        
+        layerSelect.innerHTML = '<option value="">Loading...</option>';
         const serverUrl = server.url;
         
         try {
@@ -15693,27 +15637,29 @@ source: new ol.source.Vector(),
                     }
                 });
                 
-                // Auto-select first layer
-                if (layers.length > 0) {
+                // Auto-select basemap:basemap_allsite jika ada, atau layer pertama
+                const allsiteLayer = Array.from(layers).find(l => l.textContent.trim() === 'basemap:basemap_allsite');
+                if (allsiteLayer) {
+                    layerSelect.value = 'basemap:basemap_allsite';
+                    addWMSLayerToMap('basemap:basemap_allsite', serverKey);
+                } else if (layers.length > 0) {
                     const firstLayerName = layers[0].textContent.trim();
                     layerSelect.value = firstLayerName;
                     addWMSLayerToMap(firstLayerName, serverKey);
                 }
             } else {
-                // Fallback jika tidak ada layer ditemukan
-                const server = wmsServers[serverKey];
-                layerSelect.innerHTML = `<option value="0">${server.name} - Layer 0</option>`;
-                addWMSLayerToMap('0', serverKey);
+                // Fallback ke layer default
+                layerSelect.innerHTML = `<option value="${server.layerName}">${server.name}</option>`;
+                addWMSLayerToMap(server.layerName, serverKey);
             }
         } catch (error) {
             console.warn('Could not load WMS capabilities:', error);
-            console.info('Using default layer "0"');
+            console.info('Using default layer:', server.layerName);
             
-            // Fallback ke layer 0
-            const server = wmsServers[serverKey];
-            layerSelect.innerHTML = `<option value="0">${server.name} - Layer 0</option>`;
-            layerSelect.value = '0';
-            addWMSLayerToMap('0', serverKey);
+            // Fallback ke layer default
+            layerSelect.innerHTML = `<option value="${server.layerName}">${server.name}</option>`;
+            layerSelect.value = server.layerName;
+            addWMSLayerToMap(server.layerName, serverKey);
         }
     }
 
@@ -24390,6 +24336,509 @@ source: new ol.source.Vector(),
     `;
     document.head.appendChild(style);
 </script>
+
+<!-- Photo Gallery Footer -->
+<style>
+    /* Photo Gallery Footer Styles */
+    .photo-gallery-footer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: #ffffff;
+        border-top: 1px solid #e5e7eb;
+        box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.1);
+        z-index: 1000;
+        transition: transform 0.3s ease-in-out;
+        padding: 12px 16px;
+    }
+
+    .photo-gallery-footer.hidden {
+        transform: translateY(100%);
+        display: none !important;
+    }
+
+    .photo-gallery-header {
+        display: flex;
+        justify-content: flex-end;
+        align-items: center;
+        margin-bottom: 12px;
+        padding: 0 4px;
+    }
+
+    .photo-gallery-toggle-photos-btn {
+        background: #f3f4f6;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        padding: 6px 12px;
+        font-size: 12px;
+        color: #4b5563;
+        cursor: pointer;
+        transition: all 0.2s;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+    }
+
+    .photo-gallery-toggle-photos-btn:hover {
+        background: #e5e7eb;
+        color: #1f2937;
+    }
+
+    .photo-gallery-toggle-photos-btn.active {
+        background: #e8f0fe;
+        border-color: #1a73e8;
+        color: #1a73e8;
+    }
+
+    .photo-gallery-container {
+        display: flex;
+        gap: 12px;
+        overflow-x: auto;
+        overflow-y: hidden;
+        padding: 4px 0;
+        scroll-behavior: smooth;
+        -webkit-overflow-scrolling: touch;
+    }
+
+    .photo-gallery-container::-webkit-scrollbar {
+        height: 6px;
+    }
+
+    .photo-gallery-container::-webkit-scrollbar-track {
+        background: #f3f4f6;
+        border-radius: 3px;
+    }
+
+    .photo-gallery-container::-webkit-scrollbar-thumb {
+        background: #9ca3af;
+        border-radius: 3px;
+    }
+
+    .photo-gallery-container::-webkit-scrollbar-thumb:hover {
+        background: #6b7280;
+    }
+
+    .photo-gallery-card {
+        flex: 0 0 auto;
+        width: 200px;
+        height: 150px;
+        border-radius: 8px;
+        overflow: hidden;
+        background: #ffffff;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        cursor: pointer;
+        transition: all 0.2s;
+        position: relative;
+        padding: 0;
+        margin: 0;
+    }
+
+    .photo-gallery-card:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        transform: translateY(-2px);
+    }
+
+    .photo-gallery-card-image {
+        width: 100%;
+        height: 120px;
+        object-fit: cover;
+        background: #f3f4f6;
+        display: block;
+        border: none;
+        border-radius: 0;
+        margin: 0;
+        padding: 0;
+    }
+
+    .photo-gallery-card-image[src=""],
+    .photo-gallery-card-image:not([src]) {
+        background: #f3f4f6 url('data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' width=\'200\' height=\'150\'%3E%3Crect fill=\'%23f3f4f6\' width=\'200\' height=\'150\'/%3E%3Ctext x=\'50%25\' y=\'50%25\' text-anchor=\'middle\' dy=\'.3em\' fill=\'%239ca3af\' font-family=\'sans-serif\' font-size=\'12\'%3ELoading...%3C/text%3E%3C/svg%3E') center/contain no-repeat;
+    }
+
+    .image-error {
+        height: 120px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        color: #999;
+        font-size: 11px;
+        padding: 10px;
+        background: #f3f4f6;
+        margin: 0;
+        border-radius: 0;
+    }
+
+    .image-error i {
+        font-size: 24px;
+        display: block;
+        margin-bottom: 5px;
+        color: #9ca3af;
+    }
+
+    .photo-gallery-card-label {
+        padding: 6px 8px;
+        font-size: 11px;
+        color: #374151;
+        font-weight: 500;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        background: #ffffff;
+        display: flex;
+        align-items: center;
+        gap: 4px;
+        margin: 0;
+        border-top: 1px solid #e5e7eb;
+    }
+
+    .photo-gallery-card-label i {
+        font-size: 14px;
+        color: #6b7280;
+        flex-shrink: 0;
+    }
+
+    .photo-gallery-loading {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        color: #6b7280;
+        font-size: 14px;
+    }
+
+    .photo-gallery-empty {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        padding: 20px;
+        color: #9ca3af;
+        font-size: 13px;
+    }
+
+    /* Adjust map container when gallery is visible */
+    .map-fullscreen-container.has-gallery {
+        padding-bottom: 180px;
+    }
+
+    /* Photo Gallery Toggle Button Style */
+    #photoGalleryToggleBtn {
+        margin-top: 8px;
+    }
+
+    #photoGalleryToggleBtn.active {
+        background: #e8f0fe;
+    }
+
+    #photoGalleryToggleBtn.active i {
+        color: #1a73e8 !important;
+    }
+</style>
+
+<div id="photoGalleryFooter" class="photo-gallery-footer">
+    <!-- <div class="photo-gallery-header">
+        <button type="button" class="photo-gallery-toggle-photos-btn" id="photoGalleryTogglePhotosBtn" onclick="togglePhotosDisplay()" title="Toggle Photos">
+            <i class="material-icons-outlined" id="photoGalleryTogglePhotosIcon" style="font-size: 16px;">visibility</i>
+            <span id="photoGalleryTogglePhotosText">Hide Photos</span>
+        </button>
+    </div> -->
+    <div class="photo-gallery-container" id="photoGalleryContainer">
+        <div class="photo-gallery-loading">
+            <i class="material-icons-outlined" style="font-size: 20px; margin-right: 8px;">hourglass_empty</i>
+            Loading photos...
+        </div>
+    </div>
+</div>
+
+<script>
+    let photoGalleryVisible = true;
+    let photosDisplayVisible = true;
+
+    // Load photo gallery on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        loadPhotoGallery();
+        // Add class to map container for padding adjustment
+        const mapContainer = document.querySelector('.map-fullscreen-container');
+        if (mapContainer) {
+            mapContainer.classList.add('has-gallery');
+        }
+        // Update category button state on load
+        updateCategoryButtonState();
+    });
+
+    function loadPhotoGallery() {
+        const container = document.getElementById('photoGalleryContainer');
+        
+        fetch('{{ route("full-maps.api.photo-gallery") }}?limit=20')
+            .then(response => response.json())
+            .then(data => {
+                if (data.success && data.photos && data.photos.length > 0) {
+                    renderPhotoGallery(data.photos);
+                } else {
+                    container.innerHTML = '<div class="photo-gallery-empty">No photos available</div>';
+                }
+            })
+            .catch(error => {
+                console.error('Error loading photo gallery:', error);
+                container.innerHTML = '<div class="photo-gallery-empty">Error loading photos</div>';
+            });
+    }
+
+    function renderPhotoGallery(photos) {
+        const container = document.getElementById('photoGalleryContainer');
+        
+        if (!photos || photos.length === 0) {
+            container.innerHTML = '<div class="photo-gallery-empty">No photos available</div>';
+            return;
+        }
+
+        container.innerHTML = photos.map((photo, index) => {
+            const label = photo.keterangan || photo.lokasi || 'Photo';
+            const truncatedLabel = label.length > 25 ? label.substring(0, 25) + '...' : label;
+            // Escape special characters for HTML and JavaScript
+            const safeLabel = String(label).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"').replace(/\n/g, " ").replace(/\r/g, "");
+            const safeUrl = String(photo.photo_url).replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/"/g, '\\"');
+            
+            return `
+                <div class="photo-gallery-card" onclick="openPhotoModal('${safeUrl}', '${safeLabel}')">
+                    <img src="${safeUrl}" alt="${safeLabel}" class="photo-gallery-card-image" 
+                         loading="lazy"
+                         onerror="handleImageError(this, '${safeUrl}')">
+                    <div class="photo-gallery-card-label">
+                        <i class="material-icons-outlined" style="font-size: 14px;">photo_camera</i>
+                        <span>${truncatedLabel}</span>
+                    </div>
+                </div>
+            `;
+        }).join('');
+    }
+
+    function togglePhotosDisplay() {
+        photosDisplayVisible = !photosDisplayVisible;
+        const container = document.getElementById('photoGalleryContainer');
+        const toggleBtn = document.getElementById('photoGalleryTogglePhotosBtn');
+        const toggleIcon = document.getElementById('photoGalleryTogglePhotosIcon');
+        const toggleText = document.getElementById('photoGalleryTogglePhotosText');
+        
+        if (container) {
+            const images = container.querySelectorAll('.photo-gallery-card-image');
+            images.forEach(img => {
+                if (photosDisplayVisible) {
+                    img.style.display = 'block';
+                    toggleIcon.textContent = 'visibility';
+                    toggleText.textContent = 'Hide Photos';
+                    toggleBtn.classList.remove('active');
+                } else {
+                    img.style.display = 'none';
+                    toggleIcon.textContent = 'visibility_off';
+                    toggleText.textContent = 'Show Photos';
+                    toggleBtn.classList.add('active');
+                }
+            });
+        }
+    }
+
+    function handleImageError(img, originalUrl) {
+        // Show error message similar to hse-ai-validation
+        const parent = img.parentElement;
+        if (parent && !parent.querySelector('.image-error')) {
+            const label = img.alt || 'Photo';
+            const truncatedLabel = label.length > 25 ? label.substring(0, 25) + '...' : label;
+            parent.innerHTML = `
+                <div class="image-error" style="height: 120px; display: flex; flex-direction: column; align-items: center; justify-content: center; color: #999; font-size: 11px; padding: 10px; background: #f3f4f6; margin: 0; border-radius: 0;">
+                    <i class="material-icons-outlined" style="font-size: 24px; display: block; margin-bottom: 5px; color: #9ca3af;">broken_image</i>
+                    <span>Gambar tidak dapat dimuat</span>
+                </div>
+                <div class="photo-gallery-card-label">
+                    <i class="material-icons-outlined" style="font-size: 14px;">photo_camera</i>
+                    <span>${truncatedLabel}</span>
+                </div>
+            `;
+        }
+    }
+
+    function togglePhotoGallery() {
+        const footer = document.getElementById('photoGalleryFooter');
+        const toggleIcon = document.getElementById('photoGalleryToggleIcon');
+        const toggleBtn = document.getElementById('photoGalleryToggleBtn');
+        const mapContainer = document.querySelector('.map-fullscreen-container');
+        
+        photoGalleryVisible = !photoGalleryVisible;
+        
+        if (photoGalleryVisible) {
+            footer.classList.remove('hidden');
+            footer.style.display = 'block';
+            toggleIcon.textContent = 'photo_library';
+            toggleIcon.style.color = '#1a73e8';
+            if (toggleBtn) {
+                toggleBtn.classList.add('active');
+            }
+            if (mapContainer) {
+                mapContainer.classList.add('has-gallery');
+            }
+        } else {
+            footer.classList.add('hidden');
+            footer.style.display = 'none';
+            toggleIcon.textContent = 'photo_library';
+            toggleIcon.style.color = '#5f6368';
+            if (toggleBtn) {
+                toggleBtn.classList.remove('active');
+            }
+            if (mapContainer) {
+                mapContainer.classList.remove('has-gallery');
+            }
+        }
+        
+        // Update category button state
+        updateCategoryButtonState();
+    }
+
+    function togglePhotoGalleryFromCategory() {
+        const footer = document.getElementById('photoGalleryFooter');
+        const mapContainer = document.querySelector('.map-fullscreen-container');
+        
+        photoGalleryVisible = !photoGalleryVisible;
+        
+        if (photoGalleryVisible) {
+            footer.classList.remove('hidden');
+            footer.style.display = 'block';
+            if (mapContainer) {
+                mapContainer.classList.add('has-gallery');
+            }
+        } else {
+            footer.classList.add('hidden');
+            footer.style.display = 'none';
+            if (mapContainer) {
+                mapContainer.classList.remove('has-gallery');
+            }
+        }
+        
+        // Update category button state
+        updateCategoryButtonState();
+        
+        // Update map control button state
+        const toggleIcon = document.getElementById('photoGalleryToggleIcon');
+        const toggleBtn = document.getElementById('photoGalleryToggleBtn');
+        if (toggleIcon) {
+            toggleIcon.style.color = photoGalleryVisible ? '#1a73e8' : '#5f6368';
+        }
+        if (toggleBtn) {
+            if (photoGalleryVisible) {
+                toggleBtn.classList.add('active');
+            } else {
+                toggleBtn.classList.remove('active');
+            }
+        }
+    }
+
+    function updateCategoryButtonState() {
+        const categoryBtn = document.getElementById('photoGalleryToggleCategoryBtn');
+        const categoryIcon = document.getElementById('photoGalleryToggleCategoryIcon');
+        const categoryText = document.getElementById('photoGalleryToggleCategoryText');
+        
+        if (categoryBtn && categoryIcon && categoryText) {
+            if (photoGalleryVisible) {
+                categoryIcon.textContent = 'photo_library';
+                categoryText.textContent = 'Photo Gallery';
+                categoryBtn.style.opacity = '1';
+            } else {
+                categoryIcon.textContent = 'photo_library';
+                categoryText.textContent = 'Show Gallery';
+                categoryBtn.style.opacity = '0.6';
+            }
+        }
+    }
+
+    function openPhotoModal(photoUrl, title) {
+        // Create modal for viewing full-size photo
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            cursor: pointer;
+        `;
+        
+        const img = document.createElement('img');
+        img.src = photoUrl;
+        img.style.cssText = `
+            max-width: 90%;
+            max-height: 90%;
+            object-fit: contain;
+            border-radius: 8px;
+        `;
+        img.onerror = function() {
+            img.alt = 'Image not available';
+        };
+        
+        const closeBtn = document.createElement('button');
+        closeBtn.innerHTML = '<i class="material-icons-outlined" style="color: white; font-size: 32px;">close</i>';
+        closeBtn.style.cssText = `
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            border: none;
+            border-radius: 50%;
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: background 0.2s;
+        `;
+        closeBtn.onmouseover = function() {
+            this.style.background = 'rgba(0, 0, 0, 0.7)';
+        };
+        closeBtn.onmouseout = function() {
+            this.style.background = 'rgba(0, 0, 0, 0.5)';
+        };
+        
+        const titleDiv = document.createElement('div');
+        titleDiv.textContent = title;
+        titleDiv.style.cssText = `
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 6px;
+            font-size: 14px;
+            max-width: 80%;
+            text-align: center;
+        `;
+        
+        modal.appendChild(img);
+        modal.appendChild(closeBtn);
+        modal.appendChild(titleDiv);
+        
+        const closeModal = function() {
+            document.body.removeChild(modal);
+        };
+        
+        closeBtn.onclick = closeModal;
+        modal.onclick = function(e) {
+            if (e.target === modal) {
+                closeModal();
+            }
+        };
+        
+        document.body.appendChild(modal);
+    }
+</script>
+
 <script src="{{ URL::asset('build/plugins/apexchart/apexcharts.min.js') }}"></script>
 <script src="{{ URL::asset('build/js/index.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/peity/jquery.peity.min.js') }}"></script>

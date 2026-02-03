@@ -31,6 +31,8 @@ use App\Http\Controllers\DashboardController;
 use App\Http\Controllers\DailyOperationPlanController;
 use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\CctvAlertsDashboardController;
+use App\Http\Controllers\InsidenCcrController;
+use App\Http\Controllers\InsidenLpiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -76,6 +78,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/full-maps/api/location-sap-counts', [fullMapsController::class, 'getLocationSapCounts'])->name('full-maps.api.location-sap-counts');
     Route::get('/full-maps/api/latest-cctv-alert', [fullMapsController::class, 'getLatestCctvAlert'])->name('full-maps.api.latest-cctv-alert');
     Route::get('/full-maps/api/cctv-alerts-with-units', [fullMapsController::class, 'getCctvAlertsWithUnits'])->name('full-maps.api.cctv-alerts-with-units');
+    Route::get('/full-maps/api/photo-gallery', [fullMapsController::class, 'getPhotoGallery'])->name('full-maps.api.photo-gallery');
     Route::get('/clickhouse-status', [HomeController::class, 'checkClickHouseStatus'])->name('clickhouse.status');
     Route::get('/cctv-company-data', [HomeController::class, 'companyCctvData'])->name('cctv.company-data');
     Route::get('/company-cctv-data', [HomeController::class, 'getCompanyCctvData'])->name('company-cctv-data');
@@ -104,6 +107,13 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/results/{processId}', [HseValidationController::class, 'results'])->name('results.with-id'); // Route dengan processId
         Route::get('/results', [HseValidationController::class, 'results'])->name('results'); // Route tanpa processId
         Route::get('/download', [HseValidationController::class, 'download'])->name('download');
+    });
+
+    // HSE AI Validation Display Routes - HARUS sebelum catch-all route
+    Route::prefix('hse-ai-validation')->name('hse-ai-validation.')->group(function () {
+        Route::get('/', [App\Http\Controllers\HseAiValidationDisplayController::class, 'index'])->name('index');
+        Route::get('/data/{site}', [App\Http\Controllers\HseAiValidationDisplayController::class, 'getSiteData'])->name('data');
+        Route::put('/update/{id}', [App\Http\Controllers\HseAiValidationDisplayController::class, 'update'])->name('update');
     });
 
     // Report Weekly Routes - HARUS sebelum catch-all route
@@ -357,6 +367,31 @@ Route::middleware(['auth'])->group(function () {
         Route::put('/{insidenTabel}', [InsidenTabelController::class, 'update'])->name('update');
         Route::delete('/{insidenTabel}', [InsidenTabelController::class, 'destroy'])->name('destroy');
         Route::post('/import', [InsidenTabelController::class, 'import'])->name('import');
+    });
+
+    // Insiden CCR Routes - HARUS sebelum catch-all route
+    Route::prefix('insiden-ccr')->name('insiden-ccr.')->group(function () {
+        Route::get('/', [InsidenCcrController::class, 'index'])->name('index');
+        Route::get('/create', [InsidenCcrController::class, 'create'])->name('create');
+        Route::post('/', [InsidenCcrController::class, 'store'])->name('store');
+        Route::get('/template', [InsidenCcrController::class, 'downloadTemplate'])->name('template');
+        Route::get('/{insidenCcr}/edit', [InsidenCcrController::class, 'edit'])->name('edit');
+        Route::put('/{insidenCcr}', [InsidenCcrController::class, 'update'])->name('update');
+        Route::delete('/{insidenCcr}', [InsidenCcrController::class, 'destroy'])->name('destroy');
+        Route::post('/import', [InsidenCcrController::class, 'import'])->name('import');
+    });
+
+    // Insiden LPI Routes - HARUS sebelum catch-all route
+    Route::prefix('insiden-lpi')->name('insiden-lpi.')->group(function () {
+        Route::get('/', [InsidenLpiController::class, 'index'])->name('index');
+        Route::get('/create', [InsidenLpiController::class, 'create'])->name('create');
+        Route::post('/', [InsidenLpiController::class, 'store'])->name('store');
+        Route::get('/template', [InsidenLpiController::class, 'downloadTemplate'])->name('template');
+        Route::get('/ccr-data/{insidenCcr}', [InsidenLpiController::class, 'getCcrData'])->name('ccr-data');
+        Route::get('/{insidenLpi}/edit', [InsidenLpiController::class, 'edit'])->name('edit');
+        Route::put('/{insidenLpi}', [InsidenLpiController::class, 'update'])->name('update');
+        Route::delete('/{insidenLpi}', [InsidenLpiController::class, 'destroy'])->name('destroy');
+        Route::post('/import', [InsidenLpiController::class, 'import'])->name('import');
     });
 
     // Hazard Validation Routes - HARUS sebelum catch-all route

@@ -61,6 +61,11 @@ class HseAiValidation extends Model
         // Metadata
         'validation_date',
         'validated_by',
+        
+        // Manual validation fields
+        'tbc',
+        'gr',
+        'catatan',
     ];
 
     protected $casts = [

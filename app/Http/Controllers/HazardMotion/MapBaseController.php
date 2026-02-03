@@ -5019,103 +5019,80 @@ class MapBaseController extends Controller
      * API endpoint untuk mendapatkan data yang sudah difilter untuk ditampilkan di map
      */
     /**
-     * Get user GPS data from ClickHouse (nitip.v_employee_location)
+     * Get user GPS data from MySQL default connection (user_gps_latests joined with users_besigma)
      */
     public function getUserGps(Request $request)
     {
         try {
-            $clickhouse = new ClickHouseService();
-            
-            if (!$clickhouse->isConnected()) {
-                Log::warning('ClickHouse is not connected. Returning empty user GPS data.');
+            // Gunakan koneksi MySQL default (config database.php 'mysql')
+            try {
+                DB::connection('mysql')->getPdo();
+            } catch (Exception $connException) {
+                Log::warning('MySQL (default) is not connected. Returning empty user GPS data.');
                 return response()->json([
                     'success' => false,
-                    'error' => 'ClickHouse is not connected',
+                    'error' => 'MySQL is not connected: ' . $connException->getMessage(),
                     'users' => []
                 ], 500);
             }
-            
-            // Cek apakah user adalah admin
-            $user = auth()->user();
-            $isAdmin = false;
-            $userEmail = null;
-            $userKodeSid = null;
-            
-            if ($user) {
-                $userEmail = $user->email;
-                
-                // Opsi 1: Menggunakan method isAdmin() dari model User (disarankan)
-                // Pastikan kolom 'role' sudah ditambahkan di tabel users
-                if (method_exists($user, 'isAdmin')) {
-                    $isAdmin = $user->isAdmin();
-                } else {
-                    // Fallback: Cek kolom role langsung
-                    $isAdmin = isset($user->role) && ($user->role === 'admin' || $user->role === 'administrator');
-                }
-                
-                // Opsi 2: Jika menggunakan kolom is_admin (boolean)
-                // $isAdmin = isset($user->is_admin) && $user->is_admin === true;
-                
-                // Fallback: Jika kolom role/is_admin belum ada, gunakan pengecekan email
-                if (!$isAdmin && !isset($user->role) && !isset($user->is_admin)) {
-                    $isAdmin = stripos($userEmail, 'admin') !== false || 
-                              $userEmail === 'admin@gmail.com' ||
-                              $userEmail === 'administrator@gmail.com';
-                }
-            }
-            
-            // Set timeout lebih lama untuk query yang besar (60 detik)
-            // Note: timeout diatur di ClickHouseService, tapi kita bisa handle error dengan lebih baik
 
-            // Query 1: Ambil data GPS dari nitip.user_gps_latests
-            // Menggunakan konsep yang sama dengan unit: hanya data hari ini dengan deduplikasi per user_id
-            // Perhatikan: latitude dan longitude adalah String di database, jadi perlu casting ke Float64 untuk perbandingan
-            // Gunakan subquery dengan ROW_NUMBER untuk mendapatkan data terbaru per user_id (menghindari duplikasi)
-            $sqlGps = "
-                SELECT 
-                    toString(id) as id,
-                    toString(user_id) as user_id,
-                    toString(latitude) as latitude,
-                    toString(longitude) as longitude,
-                    toString(course) as course,
-                    battery,
-                    toString(timezone) as timezone,
-                    toString(created_at) as created_at,
-                    toString(updated_at) as updated_at
-                FROM (
-                    SELECT 
-                        id,
-                        user_id,
-                        latitude,
-                        longitude,
-                        course,
-                        battery,
-                        timezone,
-                        created_at,
-                        updated_at,
-                        ROW_NUMBER() OVER (PARTITION BY user_id ORDER BY updated_at DESC) as rn
-                    FROM nitip.user_gps_latests
-                    WHERE latitude IS NOT NULL 
-                        AND longitude IS NOT NULL 
-                        AND latitude != ''
-                        AND longitude != ''
-                        AND user_id IS NOT NULL
-                        AND user_id != ''
-                        AND toFloat64OrNull(latitude) IS NOT NULL
-                        AND toFloat64OrNull(longitude) IS NOT NULL
-                        AND toFloat64OrNull(latitude) != 0 
-                        AND toFloat64OrNull(longitude) != 0
-                        AND toDate(updated_at) >= today() - INTERVAL 1 DAY
-                        AND toDate(updated_at) <= today() + INTERVAL 1 DAY
-                ) ranked
-                WHERE rn = 1
+            $today = Carbon::now()->format('Y-m-d');
+
+            // Ambil data GPS dari MySQL (koneksi default): user_gps_latests di-join dengan users_besigma
+            // Satu posisi terbaru per user_id (subquery GROUP BY user_id, MAX(updated_at))
+            $sql = "
+                SELECT
+                    g.id,
+                    g.user_id,
+                    g.latitude,
+                    g.longitude,
+                    g.course,
+                    g.battery,
+                    g.timezone,
+                    g.created_at,
+                    g.updated_at,
+                    u.id AS u_id,
+                    u.nik,
+                    u.npk,
+                    u.email,
+                    u.phone,
+                    u.fullname,
+                    u.sid_code,
+                    u.username,
+                    u.employee_id,
+                    u.division_name,
+                    u.department_name,
+                    u.site_assignment,
+                    u.functional_position,
+                    u.structural_position,
+                    u.company_id
+                FROM user_gps_latests g
+                INNER JOIN (
+                    SELECT user_id, MAX(updated_at) AS max_updated
+                    FROM user_gps_latests
+                    WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND user_id IS NOT NULL
+                      AND CAST(COALESCE(latitude, 0) AS DECIMAL(10,6)) != 0
+                      AND CAST(COALESCE(longitude, 0) AS DECIMAL(10,6)) != 0
+                      AND DATE(updated_at) >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+                      AND DATE(updated_at) <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)
+                    GROUP BY user_id
+                ) latest ON g.user_id = latest.user_id AND g.updated_at = latest.max_updated
+                INNER JOIN users_besigma u ON u.id = g.user_id
+                WHERE g.latitude IS NOT NULL AND g.longitude IS NOT NULL AND g.user_id IS NOT NULL
+                  AND CAST(COALESCE(g.latitude, 0) AS DECIMAL(10,6)) != 0
+                  AND CAST(COALESCE(g.longitude, 0) AS DECIMAL(10,6)) != 0
+                  AND DATE(g.updated_at) >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
+                  AND DATE(g.updated_at) <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)
             ";
 
-            // Execute query
             try {
-                $gpsResults = $clickhouse->query($sqlGps);
+                $gpsResults = DB::connection('mysql')->select($sql);
+                // Convert stdClass to array for consistent handling
+                $gpsResults = array_map(function ($row) {
+                    return (array) $row;
+                }, $gpsResults);
             } catch (Exception $queryException) {
-                Log::error('Error fetching user GPS from user_gps_latests: ' . $queryException->getMessage());
+                Log::error('Error fetching user GPS from MySQL (user_gps_latests): ' . $queryException->getMessage());
                 return response()->json([
                     'success' => false,
                     'error' => $queryException->getMessage(),
@@ -5124,75 +5101,18 @@ class MapBaseController extends Controller
                 ], 500);
             }
 
-            // Log raw results untuk debugging
-            Log::info('User GPS latests raw query results', [
+            Log::info('User GPS latests raw query results (MySQL default)', [
                 'raw_count' => count($gpsResults),
                 'sample_row' => !empty($gpsResults) ? [
                     'user_id' => $gpsResults[0]['user_id'] ?? 'N/A',
                     'updated_at' => $gpsResults[0]['updated_at'] ?? 'N/A',
-                    'created_at' => $gpsResults[0]['created_at'] ?? 'N/A',
                     'latitude' => $gpsResults[0]['latitude'] ?? 'N/A',
                     'longitude' => $gpsResults[0]['longitude'] ?? 'N/A',
                 ] : 'No data'
             ]);
 
-            // Filter di PHP untuk memastikan hanya data hari ini (untuk menghindari masalah timezone)
-            $today = Carbon::now()->format('Y-m-d');
-            $filteredGpsResults = [];
-            $skippedCount = 0;
-            $skippedReasons = [];
-            
-            foreach ($gpsResults as $row) {
-                $updatedAt = $row['updated_at'] ?? null;
-                
-                // Parse tanggal dari updated_at - handle berbagai format
-                $updatedDate = null;
-                if (!empty($updatedAt)) {
-                    try {
-                        // Coba parse berbagai format tanggal
-                        if (is_numeric($updatedAt)) {
-                            // Jika timestamp
-                            $updatedDate = date('Y-m-d', $updatedAt);
-                        } else {
-                            // Jika string datetime
-                            $timestamp = strtotime($updatedAt);
-                            if ($timestamp !== false) {
-                                $updatedDate = date('Y-m-d', $timestamp);
-                            } else {
-                                // Coba parse format DateTime64(3) dari ClickHouse
-                                $updatedDate = substr($updatedAt, 0, 10); // Ambil YYYY-MM-DD
-                            }
-                        }
-                    } catch (\Exception $e) {
-                        Log::warning('Error parsing updated_at for user GPS', [
-                            'updated_at' => $updatedAt,
-                            'error' => $e->getMessage()
-                        ]);
-                    }
-                }
-                
-                // Jika tanggal sesuai dengan hari ini
-                if ($updatedDate === $today) {
-                    $filteredGpsResults[] = $row;
-                } else {
-                    $skippedCount++;
-                    if ($skippedCount <= 5) {
-                        $skippedReasons[] = [
-                            'user_id' => $row['user_id'] ?? null,
-                            'updated_at' => $updatedAt,
-                            'parsed_date' => $updatedDate,
-                            'today' => $today
-                        ];
-                    }
-                }
-            }
-            
-            // Jika tidak ada data GPS setelah filter, return empty
-            if (empty($filteredGpsResults)) {
-                Log::warning('No user GPS logs found for today in user_gps_latests', [
-                    'raw_count' => count($gpsResults),
-                    'skipped_count' => $skippedCount,
-                    'skipped_samples' => $skippedReasons,
+            if (empty($gpsResults)) {
+                Log::warning('No user GPS logs found for today in user_gps_latests (MySQL default)', [
                     'today' => $today
                 ]);
                 return response()->json([
@@ -5201,105 +5121,8 @@ class MapBaseController extends Controller
                     'count' => 0
                 ]);
             }
-            
-            // Gunakan filtered results untuk processing selanjutnya
-            $gpsResults = $filteredGpsResults;
-            
-            Log::info('User GPS filtered for today', [
-                'raw_count' => count($gpsResults),
-                'filtered_count' => count($filteredGpsResults),
-                'skipped_count' => $skippedCount,
-                'today' => $today
-            ]);
 
-            // Ambil semua user_id yang unik dari hasil GPS
-            $userIds = [];
-            foreach ($gpsResults as $row) {
-                $userId = $row['user_id'] ?? null;
-                if ($userId) {
-                    $userIds[] = $userId;
-                }
-            }
-            $userIds = array_unique($userIds);
-
-            // Query 2: Ambil data user dari nitip.users berdasarkan user_id
-            $usersMap = [];
-            if (!empty($userIds)) {
-                // Buat IN clause dengan toString untuk menghindari konflik tipe
-                // Batasi maksimal 1000 user_id per query untuk menghindari query terlalu panjang
-                $userIdsChunks = array_chunk($userIds, 1000);
-                
-                foreach ($userIdsChunks as $chunkIndex => $chunk) {
-                    // Gunakan format string untuk IN clause di ClickHouse
-                    // Pastikan semua user_id adalah string yang valid
-                    $validUserIds = array_filter($chunk, function($id) {
-                        return !empty($id) && is_string($id);
-                    });
-                    
-                    if (empty($validUserIds)) {
-                        continue;
-                    }
-                    
-                    $userIdsStr = implode(',', array_map(function($id) {
-                        return "'" . addslashes(trim($id)) . "'";
-                    }, $validUserIds));
-                    
-                    // Query users - gunakan toString pada id di WHERE clause untuk memastikan tipe data sama
-                    // Convert id ke String untuk menghindari konflik tipe dengan user_id dari GPS
-                    $sqlUsers = "
-                        SELECT 
-                            toString(id) as id,
-                            toString(nik) as nik,
-                            toString(npk) as npk,
-                            toString(email) as email,
-                            toString(phone) as phone,
-                            toString(fullname) as fullname,
-                            toString(sid_code) as sid_code,
-                            toString(username) as username,
-                            toString(employee_id) as employee_id,
-                            toString(division_name) as division_name,
-                            toString(department_name) as department_name,
-                            toString(site_assignment) as site_assignment,
-                            toString(functional_position) as functional_position,
-                            toString(structural_position) as structural_position,
-                            toString(company_id) as company_id
-                        FROM nitip.users
-                        WHERE toString(id) IN ({$userIdsStr})
-                    ";
-
-                    try {
-                        $userResults = $clickhouse->query($sqlUsers);
-                        // Buat map user_id => user data
-                        if (is_array($userResults)) {
-                            foreach ($userResults as $userRow) {
-                                $userId = $userRow['id'] ?? null;
-                                if ($userId) {
-                                    $usersMap[$userId] = $userRow;
-                                }
-                            }
-                        }
-                        Log::info('Fetched user data chunk', [
-                            'chunk_index' => $chunkIndex,
-                            'chunk_size' => count($chunk),
-                            'users_found' => is_array($userResults) ? count($userResults) : 0
-                        ]);
-                    } catch (Exception $userQueryException) {
-                        Log::warning('Error fetching user data chunk', [
-                            'chunk_index' => $chunkIndex,
-                            'chunk_size' => count($chunk),
-                            'error' => $userQueryException->getMessage()
-                        ]);
-                        // Continue dengan chunk berikutnya jika query gagal
-                    }
-                }
-                
-                Log::info('User data fetch completed', [
-                    'total_user_ids' => count($userIds),
-                    'users_found' => count($usersMap)
-                ]);
-            }
-
-            // Format data untuk frontend - gabungkan data GPS dengan data user
+            // Format data untuk frontend - gabungkan data GPS dengan data user (user data sudah ada di setiap row dari join)
             // Gunakan Map untuk deduplikasi berdasarkan user_id (ambil yang terbaru)
             $userGpsDataMap = [];
             $processedCount = 0;
@@ -5338,19 +5161,22 @@ class MapBaseController extends Controller
                     $skippedCount++;
                     continue;
                 }
-                
-                // Ambil data user dari map jika ada
-                $userData = $usersMap[$userId] ?? [];
-                
-                // Map fields from user_gps_latests and users to expected frontend format
+
+                // Data user sudah ada di $row dari join users_besigma
+                $userData = $row;
+
+                // Cast user_id ke string untuk konsistensi dengan frontend
+                $userIdStr = (string) $userId;
+
+                // Map fields from user_gps_latests and users_besigma to expected frontend format
                 $combinedData = [
-                    'id' => $userId,
-                    'user_id' => $userId,
+                    'id' => $userIdStr,
+                    'user_id' => $userIdStr,
                     'employee_id' => $userData['employee_id'] ?? null,
                     'npk' => $userData['npk'] ?? null,
                     'nik' => $userData['nik'] ?? null,
                     'sid_code' => $userData['sid_code'] ?? null,
-                    'fullname' => $userData['fullname'] ?? 'User ' . substr($userId, 0, 8), // Fallback jika tidak ada fullname
+                    'fullname' => $userData['fullname'] ?? 'User ' . substr($userIdStr, 0, 8), // Fallback jika tidak ada fullname
                     'email' => $userData['email'] ?? null,
                     'phone' => $userData['phone'] ?? null,
                     'username' => $userData['username'] ?? null,
@@ -5393,70 +5219,16 @@ class MapBaseController extends Controller
             }
             
             Log::info('GPS data processing completed', [
-                'filtered_gps_records' => count($filteredGpsResults ?? []),
+                'gps_rows_from_mysql' => count($gpsResults),
                 'processed_count' => $processedCount,
                 'skipped_count' => $skippedCount,
                 'unique_users' => count($userGpsDataMap),
-                'users_with_data' => count($usersMap),
                 'today' => $today ?? Carbon::now()->format('Y-m-d')
             ]);
             
             // Convert map to array
             $userGpsData = array_values($userGpsDataMap);
-            
-            // Jika bukan admin, filter hanya data user sendiri
-            // Filter berdasarkan user_id, email, atau npk yang sesuai dengan user
-            if (!$isAdmin && $user) {
-                $userName = strtolower(trim($user->name ?? ''));
-                $userEmail = strtolower(trim($user->email ?? ''));
-                $userId = $user->id ?? null;
-                $filteredData = [];
-                
-                foreach ($userGpsData as $userData) {
-                    $employeeName = strtolower(trim($userData['fullname'] ?? ''));
-                    $employeeEmail = strtolower(trim($userData['email'] ?? ''));
-                    $employeeUserId = $userData['user_id'] ?? null;
-                    $employeeNpk = trim($userData['npk'] ?? '');
-                    $employeeSidCode = trim($userData['sid_code'] ?? '');
-                    
-                    // Match berdasarkan:
-                    // 1. User ID (exact match) - paling akurat
-                    // 2. Email (exact match)
-                    // 3. Nama (fuzzy match)
-                    // 4. NPK atau SID Code (jika user memiliki npk/sid_code di profile)
-                    $userIdMatch = $userId && $employeeUserId && $employeeUserId === $userId;
-                    $emailMatch = $userEmail && $employeeEmail && $employeeEmail === $userEmail;
-                    $nameMatch = $userName && $employeeName && 
-                                (stripos($employeeName, $userName) !== false || 
-                                 stripos($userName, $employeeName) !== false ||
-                                 $employeeName === $userName);
-                    
-                    // Jika ada npk atau sid_code di user (dari request atau profile), match dengan npk/sid_code employee
-                    $npkMatch = false;
-                    if ($request->has('user_npk') || $request->has('user_sid_code')) {
-                        $userNpk = trim($request->input('user_npk', ''));
-                        $userSidCode = trim($request->input('user_sid_code', ''));
-                        $npkMatch = ($userNpk && $employeeNpk && $employeeNpk === $userNpk) ||
-                                   ($userSidCode && $employeeSidCode && $employeeSidCode === $userSidCode);
-                    }
-                    
-                    if ($userIdMatch || $emailMatch || $nameMatch || $npkMatch) {
-                        $filteredData[] = $userData;
-                    }
-                }
-                
-                $userGpsData = $filteredData;
-                
-                // Log untuk debugging
-                Log::info('GPS data filtered for user', [
-                    'user_id' => $user->id,
-                    'user_name' => $userName,
-                    'user_email' => $userEmail,
-                    'filtered_count' => count($filteredData),
-                    'total_count' => count($userGpsDataMap)
-                ]);
-            }
-            
+
             // Deteksi area kerja untuk setiap user menggunakan PostGIS
             // Batch check untuk performa yang lebih baik
             // Cek koneksi PostgreSQL sekali di awal untuk menghindari spam log
@@ -5524,7 +5296,7 @@ class MapBaseController extends Controller
             ]);
 
         } catch (Exception $e) {
-            Log::error('Error fetching user GPS data from ClickHouse: ' . $e->getMessage());
+            Log::error('Error fetching user GPS data from MySQL: ' . $e->getMessage());
             return response()->json([
                 'success' => false,
                 'error' => $e->getMessage(),

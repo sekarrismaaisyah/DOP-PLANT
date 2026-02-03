@@ -5,13 +5,13 @@
     <link href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
 @endsection 
 @section('content')
-<x-page-title title="HSE Validation" pagetitle="Validasi Laporan HSE Berbasis AI" />
+<x-page-title title="HSE Validation" pagetitle="Validasi Laporan Inspeksi Berbasis AI" />
 
 <div class="row">
     <div class="col-12">
         <div class="card rounded-4">
             <div class="card-body">
-                <h5 class="mb-3 fw-bold">Validasi HSE Hari Ini</h5>
+                <h5 class="mb-3 fw-bold">Validasi Laporan Inspeksi Berbasis AI</h5>
                 <p class="text-muted mb-4">
                     Sistem akan mengambil data dari ClickHouse database untuk hari ini (<strong>{{ $validation_date }}</strong>)
                     dan melakukan validasi otomatis menggunakan AI untuk setiap temuan HSE.

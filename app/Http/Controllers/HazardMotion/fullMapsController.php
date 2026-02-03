@@ -14,6 +14,7 @@ use App\Models\PjaCctvDedicated;
 use App\Models\IntervensiControlRoom;
 use App\Models\IntervensiAreaKerja;
 use App\Models\DailyOperationPlan;
+use App\Models\HseAiValidation;
 use App\Services\BesigmaDbService;
 use App\Services\ClickHouseService;
 use App\Services\TelegramBotService;
@@ -3116,6 +3117,165 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
         });
 
         return response()->json($formattedResults);
+    }
+
+    /**
+     * Get photos from hse_ai_validations for gallery
+     */
+    public function getPhotoGallery(Request $request)
+    {
+        try {
+            $limit = $request->get('limit', 20); // Default 20 photos
+            
+            // Get photos from hse_ai_validations where uri_foto is not empty
+            $photos = HseAiValidation::whereNotNull('uri_foto')
+                ->where('uri_foto', '!=', '')
+                ->orderBy('tanggal_pelaporan', 'desc')
+                ->limit($limit)
+                ->get()
+                ->map(function($validation) {
+                    // Extract foto temuan from photoCar URL if needed (same as hse-ai-validation)
+                    $fotoUrl = $this->extractFotoTemuan($validation->uri_foto ?? '');
+                    
+                    // Skip if no valid photo URL
+                    if (empty($fotoUrl)) {
+                        return null;
+                    }
+                    
+                    return [
+                        'id' => $validation->id,
+                        'photo_url' => $fotoUrl,
+                        'keterangan' => $validation->keterangan ?? $validation->aktivitas_pekerjaan ?? 'No description',
+                        'lokasi' => $validation->lokasi ?? $validation->nama_lokasi ?? 'Unknown location',
+                        'tanggal' => $validation->tanggal_pelaporan ? $validation->tanggal_pelaporan->format('Y-m-d') : null,
+                    ];
+                })
+                ->filter(function($photo) {
+                    // Filter out null values and invalid URLs
+                    return $photo !== null && 
+                           !empty($photo['photo_url']) && 
+                           (strpos($photo['photo_url'], 'http://') === 0 || strpos($photo['photo_url'], 'https://') === 0);
+                });
+            
+            return response()->json([
+                'success' => true,
+                'photos' => $photos->values(), // Re-index array
+                'count' => $photos->count()
+            ]);
+        } catch (\Exception $e) {
+            Log::error('Error fetching photo gallery: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Error fetching photos',
+                'photos' => [],
+                'count' => 0
+            ], 500);
+        }
+    }
+
+    /**
+     * Extract Foto Temuan URL from photoCar page (same method as HseAiValidationDisplayController)
+     */
+    private function extractFotoTemuan($uriFoto)
+    {
+        if (empty($uriFoto)) {
+            return '';
+        }
+
+        // If URL is already a direct image URL (beats2/file), return it
+        if (strpos($uriFoto, 'beats2/file') !== false) {
+            // Make sure it's absolute URL
+            if (strpos($uriFoto, 'http') !== 0) {
+                if (strpos($uriFoto, '/') === 0) {
+                    return 'https://hseautomation.beraucoal.co.id' . $uriFoto;
+                } else {
+                    return 'https://hseautomation.beraucoal.co.id/' . ltrim($uriFoto, '/');
+                }
+            }
+            return $uriFoto;
+        }
+
+        // If URL is photoCar page, extract foto temuan
+        if (strpos($uriFoto, 'hseautomation.beraucoal.co.id/report/photoCar') !== false) {
+            try {
+                $response = Http::timeout(10)->get($uriFoto);
+                
+                if (!$response->successful()) {
+                    Log::warning('Failed to fetch photoCar page', ['url' => $uriFoto]);
+                    return $uriFoto; // Return original URL as fallback
+                }
+
+                $html = $response->body();
+
+                // Check if page has "No Photo"
+                if (stripos($html, 'No Photo') !== false && stripos($html, 'Foto Temuan') === false) {
+                    return ''; // No photo available
+                }
+
+                // Extract Foto Temuan URL
+                $fotoTemuanUrl = null;
+
+                // Pattern untuk mencari URL foto di section Foto Temuan (prioritas tertinggi)
+                $patterns = [
+                    // Cari link "Unduh" di section Foto Temuan
+                    '/Foto Temuan[^>]*>.*?<a[^>]+href=["\']([^"\']*beats2\/file[^"\']*)["\']/is',
+                    // Cari img src di section Foto Temuan
+                    '/Foto Temuan[^>]*>.*?<img[^>]+src=["\']([^"\']*beats2\/file[^"\']*)["\']/is',
+                    // Cari img data-src di section Foto Temuan
+                    '/Foto Temuan[^>]*>.*?<img[^>]+data-src=["\']([^"\']*beats2\/file[^"\']*)["\']/is',
+                ];
+
+                foreach ($patterns as $pattern) {
+                    if (preg_match($pattern, $html, $matches)) {
+                        $fotoTemuanUrl = $matches[1];
+                        break;
+                    }
+                }
+
+                // Fallback: cari semua link dengan beats2/file, ambil yang pertama
+                if (!$fotoTemuanUrl) {
+                    if (preg_match_all('/<a[^>]+href=["\']([^"\']*beats2\/file[^"\']*)["\']/i', $html, $allMatches)) {
+                        if (isset($allMatches[1][0])) {
+                            $fotoTemuanUrl = $allMatches[1][0];
+                        }
+                    }
+                }
+
+                // Fallback: cari semua img dengan beats2/file, ambil yang pertama
+                if (!$fotoTemuanUrl) {
+                    if (preg_match_all('/<img[^>]+(?:src|data-src)=["\']([^"\']*beats2\/file[^"\']*)["\']/i', $html, $imgMatches)) {
+                        if (isset($imgMatches[1][0])) {
+                            $fotoTemuanUrl = $imgMatches[1][0];
+                        }
+                    }
+                }
+
+                if ($fotoTemuanUrl) {
+                    // Make sure it's absolute URL
+                    if (strpos($fotoTemuanUrl, 'http') !== 0) {
+                        if (strpos($fotoTemuanUrl, '/') === 0) {
+                            $fotoTemuanUrl = 'https://hseautomation.beraucoal.co.id' . $fotoTemuanUrl;
+                        } else {
+                            $fotoTemuanUrl = 'https://hseautomation.beraucoal.co.id/' . ltrim($fotoTemuanUrl, '/');
+                        }
+                    }
+                    return $fotoTemuanUrl;
+                }
+
+                // If no foto temuan found, return empty
+                return '';
+
+            } catch (Exception $e) {
+                Log::error('Error extracting foto temuan', [
+                    'url' => $uriFoto,
+                    'error' => $e->getMessage()
+                ]);
+                return $uriFoto; // Return original URL as fallback
+            }
+        }
+
+        // For other URLs, return as is
+        return $uriFoto;
     }
 
 }
