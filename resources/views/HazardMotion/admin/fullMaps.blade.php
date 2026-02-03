@@ -13798,29 +13798,8 @@ source: new ol.source.Vector(),
         const latitude = user.latitude || 0;
         const longitude = user.longitude || 0;
         
-        // Format Last Aktif berdasarkan updated_at (waktu terakhir update, lebih tepat untuk "Last Aktif")
-        // Fallback ke created_at atau gps_created_at jika updated_at tidak ada
-        let lastAktif = 'N/A';
-        const lastUpdateTime = user.updated_at || user.gps_updated_at || user.created_at || user.gps_created_at || null;
-        if (lastUpdateTime) {
-            try {
-                const updateDate = new Date(lastUpdateTime);
-                if (!isNaN(updateDate.getTime())) {
-                    // Kurangi 8 jam dari waktu
-                    updateDate.setHours(updateDate.getHours() - 8);
-                    lastAktif = updateDate.toLocaleString('id-ID', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                        hour: '2-digit',
-                        minute: '2-digit',
-                        second: '2-digit'
-                    });
-                }
-            } catch (e) {
-                console.error('Error parsing updated_at:', e);
-            }
-        }
+        // Last Aktif ditampilkan N/A
+        const lastAktif = 'N/A';
 
         const content = `
             <div style="min-width: 250px; background-color: #ffffff !important;">
