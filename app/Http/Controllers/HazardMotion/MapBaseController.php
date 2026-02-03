@@ -5019,102 +5019,29 @@ class MapBaseController extends Controller
      * API endpoint untuk mendapatkan data yang sudah difilter untuk ditampilkan di map
      */
     /**
-     * Get user GPS data from MySQL default connection (user_gps_latests joined with users_besigma)
+     * Get user GPS data dari tabel user_gps_latests + users_besigma (MySQL, pola sama seperti unit/gps unit).
      */
     public function getUserGps(Request $request)
     {
         try {
-            // Gunakan koneksi MySQL default (config database.php 'mysql')
-            try {
-                DB::connection('mysql')->getPdo();
-            } catch (Exception $connException) {
-                Log::warning('MySQL (default) is not connected. Returning empty user GPS data.');
-                return response()->json([
-                    'success' => false,
-                    'error' => 'MySQL is not connected: ' . $connException->getMessage(),
-                    'users' => []
-                ], 500);
-            }
+            // Ambil data GPS orang dari tabel user_gps_latests (cara sama seperti unit: Query Builder langsung)
+            $gpsLogs = DB::connection('mysql')
+                ->table('user_gps_latests')
+                ->whereNotNull('latitude')
+                ->whereNotNull('longitude')
+                ->whereNotNull('user_id')
+                ->where('latitude', '!=', '')
+                ->where('longitude', '!=', '')
+                ->whereRaw('CAST(COALESCE(latitude, 0) AS DECIMAL(10,8)) IS NOT NULL')
+                ->whereRaw('CAST(COALESCE(longitude, 0) AS DECIMAL(10,8)) IS NOT NULL')
+                ->whereRaw('CAST(COALESCE(latitude, 0) AS DECIMAL(10,8)) != 0')
+                ->whereRaw('CAST(COALESCE(longitude, 0) AS DECIMAL(10,8)) != 0')
+                ->orderBy('updated_at', 'desc')
+                ->limit(500)
+                ->get();
 
-            $today = Carbon::now()->format('Y-m-d');
-
-            // Ambil data GPS dari MySQL (koneksi default): user_gps_latests di-join dengan users_besigma
-            // Satu posisi terbaru per user_id (subquery GROUP BY user_id, MAX(updated_at))
-            $sql = "
-                SELECT
-                    g.id,
-                    g.user_id,
-                    g.latitude,
-                    g.longitude,
-                    g.course,
-                    g.battery,
-                    g.timezone,
-                    g.created_at,
-                    g.updated_at,
-                    u.id AS u_id,
-                    u.nik,
-                    u.npk,
-                    u.email,
-                    u.phone,
-                    u.fullname,
-                    u.sid_code,
-                    u.username,
-                    u.employee_id,
-                    u.division_name,
-                    u.department_name,
-                    u.site_assignment,
-                    u.functional_position,
-                    u.structural_position,
-                    u.company_id
-                FROM user_gps_latests g
-                INNER JOIN (
-                    SELECT user_id, MAX(updated_at) AS max_updated
-                    FROM user_gps_latests
-                    WHERE latitude IS NOT NULL AND longitude IS NOT NULL AND user_id IS NOT NULL
-                      AND CAST(COALESCE(latitude, 0) AS DECIMAL(10,6)) != 0
-                      AND CAST(COALESCE(longitude, 0) AS DECIMAL(10,6)) != 0
-                      AND DATE(updated_at) >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-                      AND DATE(updated_at) <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-                    GROUP BY user_id
-                ) latest ON g.user_id = latest.user_id AND g.updated_at = latest.max_updated
-                INNER JOIN users_besigma u ON u.id = g.user_id
-                WHERE g.latitude IS NOT NULL AND g.longitude IS NOT NULL AND g.user_id IS NOT NULL
-                  AND CAST(COALESCE(g.latitude, 0) AS DECIMAL(10,6)) != 0
-                  AND CAST(COALESCE(g.longitude, 0) AS DECIMAL(10,6)) != 0
-                  AND DATE(g.updated_at) >= DATE_SUB(CURDATE(), INTERVAL 1 DAY)
-                  AND DATE(g.updated_at) <= DATE_ADD(CURDATE(), INTERVAL 1 DAY)
-            ";
-
-            try {
-                $gpsResults = DB::connection('mysql')->select($sql);
-                // Convert stdClass to array for consistent handling
-                $gpsResults = array_map(function ($row) {
-                    return (array) $row;
-                }, $gpsResults);
-            } catch (Exception $queryException) {
-                Log::error('Error fetching user GPS from MySQL (user_gps_latests): ' . $queryException->getMessage());
-                return response()->json([
-                    'success' => false,
-                    'error' => $queryException->getMessage(),
-                    'users' => [],
-                    'count' => 0
-                ], 500);
-            }
-
-            Log::info('User GPS latests raw query results (MySQL default)', [
-                'raw_count' => count($gpsResults),
-                'sample_row' => !empty($gpsResults) ? [
-                    'user_id' => $gpsResults[0]['user_id'] ?? 'N/A',
-                    'updated_at' => $gpsResults[0]['updated_at'] ?? 'N/A',
-                    'latitude' => $gpsResults[0]['latitude'] ?? 'N/A',
-                    'longitude' => $gpsResults[0]['longitude'] ?? 'N/A',
-                ] : 'No data'
-            ]);
-
-            if (empty($gpsResults)) {
-                Log::warning('No user GPS logs found for today in user_gps_latests (MySQL default)', [
-                    'today' => $today
-                ]);
+            if ($gpsLogs->isEmpty()) {
+                Log::info('No user GPS logs in MySQL user_gps_latests');
                 return response()->json([
                     'success' => true,
                     'users' => [],
@@ -5122,112 +5049,82 @@ class MapBaseController extends Controller
                 ]);
             }
 
-            // Format data untuk frontend - gabungkan data GPS dengan data user (user data sudah ada di setiap row dari join)
-            // Gunakan Map untuk deduplikasi berdasarkan user_id (ambil yang terbaru)
-            $userGpsDataMap = [];
-            $processedCount = 0;
-            $skippedCount = 0;
-            
-            foreach ($gpsResults as $row) {
-                // Filter latitude/longitude != 0 di PHP
-                // Handle berbagai format data (string, float, dll)
-                $latitude = null;
-                $longitude = null;
-                
-                if (isset($row['latitude'])) {
-                    if (is_numeric($row['latitude'])) {
-                        $latitude = (float)$row['latitude'];
-                    } elseif (is_string($row['latitude']) && $row['latitude'] !== '') {
-                        $latitude = (float)str_replace(',', '.', $row['latitude']);
-                    }
-                }
-                
-                if (isset($row['longitude'])) {
-                    if (is_numeric($row['longitude'])) {
-                        $longitude = (float)$row['longitude'];
-                    } elseif (is_string($row['longitude']) && $row['longitude'] !== '') {
-                        $longitude = (float)str_replace(',', '.', $row['longitude']);
-                    }
-                }
-                
-                if ($latitude === null || $longitude === null || $latitude == 0 || $longitude == 0) {
-                    $skippedCount++;
-                    continue;
-                }
-                
-                // Use user_id as primary identifier
-                $userId = $row['user_id'] ?? null;
+            // Deduplikasi per user_id: ambil yang terbaru (urutan sudah updated_at desc)
+            $gpsByUser = [];
+            foreach ($gpsLogs as $row) {
+                $userId = $row->user_id ?? null;
                 if (!$userId) {
-                    $skippedCount++;
                     continue;
                 }
-
-                // Data user sudah ada di $row dari join users_besigma
-                $userData = $row;
-
-                // Cast user_id ke string untuk konsistensi dengan frontend
-                $userIdStr = (string) $userId;
-
-                // Map fields from user_gps_latests and users_besigma to expected frontend format
-                $combinedData = [
-                    'id' => $userIdStr,
-                    'user_id' => $userIdStr,
-                    'employee_id' => $userData['employee_id'] ?? null,
-                    'npk' => $userData['npk'] ?? null,
-                    'nik' => $userData['nik'] ?? null,
-                    'sid_code' => $userData['sid_code'] ?? null,
-                    'fullname' => $userData['fullname'] ?? 'User ' . substr($userIdStr, 0, 8), // Fallback jika tidak ada fullname
-                    'email' => $userData['email'] ?? null,
-                    'phone' => $userData['phone'] ?? null,
-                    'username' => $userData['username'] ?? null,
-                    'division_name' => $userData['division_name'] ?? null,
-                    'department_name' => $userData['department_name'] ?? null,
-                    'site_assignment' => $userData['site_assignment'] ?? null,
-                    'functional_position' => $userData['functional_position'] ?? null,
-                    'structural_position' => $userData['structural_position'] ?? null,
-                    'company_id' => $userData['company_id'] ?? null,
-                    'latitude' => $latitude,
-                    'longitude' => $longitude,
-                    'location' => [
-                        'lat' => $latitude,
-                        'lng' => $longitude
-                    ],
-                    'course' => isset($row['course']) && $row['course'] !== '' ? (float)str_replace(',', '.', $row['course']) : null,
-                    'battery' => isset($row['battery']) && $row['battery'] !== '' ? (int)$row['battery'] : null,
-                    'timezone' => $row['timezone'] ?? null,
-                    'gps_updated_at' => $row['updated_at'] ?? null,
-                    'gps_created_at' => $row['created_at'] ?? null,
-                    'created_at' => $row['created_at'] ?? null // Tambahkan created_at untuk Last Aktif
-                ];
-                
-                // Deduplikasi: jika user_id sudah ada, ambil yang terbaru berdasarkan updated_at
-                // Note: Deduplikasi sudah dilakukan di SQL dengan ROW_NUMBER, tapi tetap ada fallback di PHP
-                if (!isset($userGpsDataMap[$userId])) {
-                    // User belum ada, tambahkan
-                    $userGpsDataMap[$userId] = $combinedData;
-                    $processedCount++;
-                } else {
-                    // User sudah ada, bandingkan timestamp dan ambil yang terbaru
-                    $existingTime = $userGpsDataMap[$userId]['gps_updated_at'] ?? '';
-                    $currentTime = $combinedData['gps_updated_at'] ?? '';
-                    
-                    if ($currentTime > $existingTime) {
-                        // Replace dengan data yang lebih baru
-                        $userGpsDataMap[$userId] = $combinedData;
-                    }
+                if (!isset($gpsByUser[$userId])) {
+                    $gpsByUser[$userId] = $row;
                 }
             }
-            
-            Log::info('GPS data processing completed', [
-                'gps_rows_from_mysql' => count($gpsResults),
-                'processed_count' => $processedCount,
-                'skipped_count' => $skippedCount,
-                'unique_users' => count($userGpsDataMap),
-                'today' => $today ?? Carbon::now()->format('Y-m-d')
+
+            $userIds = array_keys($gpsByUser);
+
+            // Ambil data user dari tabel users_besigma (MySQL, sama seperti unit ambil user)
+            $usersRows = DB::connection('mysql')
+                ->table('users_besigma')
+                ->whereIn('id', $userIds)
+                ->get()
+                ->keyBy('id');
+
+            // Format data untuk frontend (format sama seperti sebelumnya)
+            $userGpsData = [];
+            foreach ($gpsByUser as $userId => $row) {
+                $latitude = null;
+                $longitude = null;
+                if (isset($row->latitude)) {
+                    $latitude = is_numeric($row->latitude)
+                        ? (float) $row->latitude
+                        : (float) str_replace(',', '.', (string) $row->latitude);
+                }
+                if (isset($row->longitude)) {
+                    $longitude = is_numeric($row->longitude)
+                        ? (float) $row->longitude
+                        : (float) str_replace(',', '.', (string) $row->longitude);
+                }
+                if ($latitude === null || $longitude === null || $latitude == 0 || $longitude == 0) {
+                    continue;
+                }
+
+                $userIdStr = (string) $userId;
+                $userRow = $usersRows->get($userId);
+
+                $userGpsData[] = [
+                    'id' => $userIdStr,
+                    'user_id' => $userIdStr,
+                    'employee_id' => optional($userRow)->employee_id,
+                    'npk' => optional($userRow)->npk,
+                    'nik' => optional($userRow)->nik,
+                    'sid_code' => optional($userRow)->sid_code,
+                    'fullname' => optional($userRow)->fullname ?? ('User ' . substr($userIdStr, 0, 8)),
+                    'email' => optional($userRow)->email,
+                    'phone' => optional($userRow)->phone,
+                    'username' => optional($userRow)->username,
+                    'division_name' => optional($userRow)->division_name,
+                    'department_name' => optional($userRow)->department_name,
+                    'site_assignment' => optional($userRow)->site_assignment,
+                    'functional_position' => optional($userRow)->functional_position,
+                    'structural_position' => optional($userRow)->structural_position,
+                    'company_id' => optional($userRow)->company_id,
+                    'latitude' => $latitude,
+                    'longitude' => $longitude,
+                    'location' => ['lat' => $latitude, 'lng' => $longitude],
+                    'course' => isset($row->course) && $row->course !== '' ? (float) str_replace(',', '.', $row->course) : null,
+                    'battery' => isset($row->battery) && $row->battery !== '' ? (int) $row->battery : null,
+                    'timezone' => $row->timezone ?? null,
+                    'gps_updated_at' => $row->updated_at ?? null,
+                    'gps_created_at' => $row->created_at ?? null,
+                    'created_at' => $row->created_at ?? null,
+                ];
+            }
+
+            Log::info('User GPS from MySQL user_gps_latests + users_besigma', [
+                'unique_users' => count($userGpsData),
+                'raw_rows' => $gpsLogs->count(),
             ]);
-            
-            // Convert map to array
-            $userGpsData = array_values($userGpsDataMap);
 
             // Deteksi area kerja untuk setiap user menggunakan PostGIS
             // Batch check untuk performa yang lebih baik
