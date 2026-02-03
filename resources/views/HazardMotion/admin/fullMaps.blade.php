@@ -4972,25 +4972,81 @@
         });
     }
 
+    // Cache key untuk localStorage (CCTV by coverage per lokasi)
+    function getCctvByCoverageCacheKey(lokasiName) {
+        const normalized = String(lokasiName || '').trim().replace(/\s+/g, '_');
+        return 'fullMaps_cctv_by_coverage_' + (normalized || 'default');
+    }
+
+    // Merge data API ke cache: tambahkan item yang belum ada di cache (by id atau no_cctv)
+    function mergeCctvCoverageCache(cachedList, newList) {
+        if (!Array.isArray(newList) || newList.length === 0) return cachedList || [];
+        const base = Array.isArray(cachedList) ? [...cachedList] : [];
+        newList.forEach(c => {
+            const id = c.id != null ? c.id : c.no_cctv;
+            const exists = base.some(m => (m.id != null && m.id === id) || (m.no_cctv != null && m.no_cctv === id));
+            if (id != null && !exists) base.push(c);
+        });
+        return base;
+    }
+
     // Get CCTV list in area
     // Menggunakan API untuk mengambil CCTV dari tabel cctv_coverage berdasarkan coverage_lokasi
-    // Kemudian join dengan cctv_data_bmo2 untuk mendapatkan data lengkap
+    // Hasil disimpan di localStorage; saat pindah tab dan kembali, pakai cache dulu lalu merge dengan data baru
     async function getCctvInArea(lokasiName, idLokasi, geometry) {
         if (!lokasiName) {
             console.log('[getCctvInArea] No location name provided');
             return [];
         }
         
+        const cacheKey = getCctvByCoverageCacheKey(lokasiName);
+        let cachedData = [];
+        try {
+            const raw = localStorage.getItem(cacheKey);
+            if (raw) {
+                const parsed = JSON.parse(raw);
+                if (Array.isArray(parsed)) cachedData = parsed;
+            }
+        } catch (e) {
+            console.warn('[getCctvInArea] localStorage read error:', e);
+        }
+
+        // Jika sudah ada di cache, kembalikan dulu (tanpa tunggu API) lalu refresh di background
+        if (cachedData.length > 0) {
+            console.log(`[getCctvInArea] Using cache for "${lokasiName}" (${cachedData.length} items)`);
+            (async () => {
+                try {
+                    const response = await fetch(`{{ route('full-maps.api.cctv-by-coverage') }}?lokasi_name=${encodeURIComponent(lokasiName)}`);
+                    const result = await response.json();
+                    if (result.success && result.data && Array.isArray(result.data)) {
+                        const merged = mergeCctvCoverageCache(cachedData, result.data);
+                        localStorage.setItem(cacheKey, JSON.stringify(merged));
+                        if (merged.length !== cachedData.length) {
+                            console.log(`[getCctvInArea] Background merge for "${lokasiName}": ${cachedData.length} -> ${merged.length}`);
+                        }
+                    }
+                } catch (err) {
+                    console.warn('[getCctvInArea] Background refresh failed:', err);
+                }
+            })();
+            return cachedData;
+        }
+        
         console.log(`[getCctvInArea] Searching for area: "${lokasiName}"`);
         
         try {
-            // Ambil CCTV dari API berdasarkan coverage_lokasi
             const response = await fetch(`{{ route('full-maps.api.cctv-by-coverage') }}?lokasi_name=${encodeURIComponent(lokasiName)}`);
             const result = await response.json();
             
             if (result.success && result.data && result.data.length > 0) {
                 console.log(`[getCctvInArea] Found ${result.data.length} CCTV(s) from API for area "${lokasiName}"`);
-                return result.data;
+                const merged = mergeCctvCoverageCache(cachedData, result.data);
+                try {
+                    localStorage.setItem(cacheKey, JSON.stringify(merged));
+                } catch (e) {
+                    console.warn('[getCctvInArea] localStorage write error:', e);
+                }
+                return merged;
             } else {
                 console.log(`[getCctvInArea] No CCTV found from API for area "${lokasiName}"`);
                 
@@ -5060,6 +5116,11 @@
                     });
                     
                     console.log(`[getCctvInArea] Found ${matchedCctv.length} CCTV(s) from fallback for area "${lokasiName}"`);
+                    try {
+                        localStorage.setItem(cacheKey, JSON.stringify(matchedCctv));
+                    } catch (e) {
+                        console.warn('[getCctvInArea] localStorage write error (fallback):', e);
+                    }
                     return matchedCctv;
                 }
             }
@@ -5067,6 +5128,7 @@
             return [];
         } catch (error) {
             console.error('[getCctvInArea] Error fetching CCTV from API:', error);
+            if (cachedData.length > 0) return cachedData;
             return [];
         }
     }
