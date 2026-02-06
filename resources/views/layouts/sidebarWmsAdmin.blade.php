@@ -88,7 +88,8 @@
               <div class="menu-title">CCTV Management</div>
             </a>
             <ul>
-            @if(Auth::check() && Auth::user()->hasRole('admin-hazard-motion'))
+            {{-- @if(Auth::check() && Auth::user()->hasRole('admin-hazard-motion')) --}}
+            @if(Auth::check() && (Auth::user()->hasRole('admin-hazard-motion') || Auth::user()->hasRole('hazard-motion-it-pama')))
               <li><a href="{{ route('cctv-data.index') }}"><i class="material-icons-outlined">arrow_right</i>CCTV Database</a></li>
               <li><a href="{{ route('cctv-data.pja-cctv-dedicated.index') }}"><i class="material-icons-outlined">arrow_right</i>CCTV PJA DEDICATED</a></li>
               <li><a href="{{ route('cctv-data.import-coverage-form') }}"><i class="material-icons-outlined">arrow_right</i>CCTV COVERAGE</a></li>

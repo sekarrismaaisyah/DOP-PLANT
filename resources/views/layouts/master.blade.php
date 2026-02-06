@@ -47,7 +47,7 @@
 <body>
 
 @include('layouts.topbar')
-@include('layouts.sidebarWmsAdmin')
+@include('layouts.sidebarEar')
 
 <!--start main wrapper-->
 <main class="main-wrapper">

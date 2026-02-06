@@ -1,734 +1,532 @@
-@extends('layouts.master')
-
-@section('title', 'DMS Dashboard - Static')
-@section('content')
-<x-page-title title="DMS Dashboard" pagetitle="Driver Monitoring System - Static Data" />
-
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EAR Dashboard – Data Riil</title>
 <style>
-    .operator-card {
-        border-radius: 16px;
-        border: 1px solid #e5e7eb;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-        transition: all 0.3s ease;
-        background: #ffffff;
-        overflow: hidden;
-        position: relative;
-        margin-bottom: 24px;
-    }
-    .operator-card:hover {
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-    }
-    .operator-header {
-        padding: 20px 24px;
-        border-bottom: 1px solid #f3f4f6;
-        background: #ffffff;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-    }
-    .operator-title {
-        font-size: 20px;
-        font-weight: 600;
-        color: #111827;
-        margin: 0;
-    }
-    .status-badge {
-        padding: 6px 16px;
-        border-radius: 20px;
-        font-size: 13px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .status-badge.safe {
-        background: #d1fae5;
-        color: #065f46;
-    }
-    .status-badge.caution {
-        background: #fed7aa;
-        color: #92400e;
-    }
-    .status-badge.attention {
-        background: #fee2e2;
-        color: #991b1b;
-    }
-    .status-badge.medium {
-        background: #fef3c7;
-        color: #78350f;
-    }
-    .operator-body {
-        padding: 24px;
-    }
-    .metrics-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 16px;
-        margin-bottom: 20px;
-    }
-    .metric-item {
-        display: flex;
-        flex-direction: column;
-        padding: 12px;
-        background: #f9fafb;
-        border-radius: 8px;
-        border: 1px solid #e5e7eb;
-        transition: all 0.2s ease;
-    }
-    .metric-item:hover {
-        background: #f3f4f6;
-        border-color: #d1d5db;
-    }
-    .metric-label {
-        font-size: 11px;
-        color: #6b7280;
-        margin-bottom: 6px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .metric-value {
-        font-size: 22px;
-        font-weight: 700;
-        color: #111827;
-        line-height: 1.2;
-    }
-    .metric-value.orange {
-        color: #f97316;
-        font-size: 28px;
-    }
-    .metric-value.small {
-        font-size: 16px;
-        font-weight: 600;
-    }
-    .indicator-section {
-        margin-top: 16px;
-        padding-top: 16px;
-        border-top: 1px solid #e5e7eb;
-    }
-    .indicator-item {
-        margin-bottom: 12px;
-    }
-    .indicator-item:last-child {
-        margin-bottom: 0;
-    }
-    .indicator-label {
-        font-size: 11px;
-        color: #6b7280;
-        margin-bottom: 4px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-    }
-    .indicator-value {
-        font-size: 14px;
-        color: #9ca3af;
-        font-style: italic;
-    }
-    .chart-container {
-        position: relative;
-        height: 250px;
-        margin-top: 16px;
-        background: #ffffff;
-        border-radius: 12px;
-        padding: 16px;
-        border: 1px solid #e5e7eb;
-    }
-    .chart-wrapper {
-        position: relative;
-        height: 100%;
-        width: 100%;
-    }
-    .chart-wrapper canvas {
-        width: 100%;
-        height: 100%;
-        border-radius: 8px;
-    }
-    .detail-btn {
-        margin-top: 20px;
-        padding: 12px 20px;
-        background: #ffffff;
-        border: 1.5px solid #e5e7eb;
-        border-radius: 8px;
-        color: #374151;
-        font-size: 14px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        width: 100%;
-    }
-    .detail-btn:hover {
-        background: #f9fafb;
-        border-color: #3b82f6;
-        color: #3b82f6;
-        transform: translateY(-1px);
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-    }
-    .detail-btn:active {
-        transform: translateY(0);
-    }
-
-    /* Responsive untuk mobile */
-    @media (max-width: 768px) {
-        .operator-card {
-            margin-bottom: 16px;
-        }
-        .operator-header {
-            padding: 16px;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: 12px;
-        }
-        .operator-title {
-            font-size: 18px;
-        }
-        .status-badge {
-            padding: 5px 12px;
-            font-size: 11px;
-            align-self: flex-end;
-        }
-        .operator-body {
-            padding: 16px;
-        }
-        .metrics-grid {
-            grid-template-columns: 1fr;
-            gap: 12px;
-        }
-        .metric-item {
-            padding: 10px;
-        }
-        .metric-value {
-            font-size: 20px;
-        }
-        .metric-value.orange {
-            font-size: 24px;
-        }
-        .metric-value.small {
-            font-size: 14px;
-        }
-        .chart-container {
-            height: 200px;
-            padding: 12px;
-            margin-top: 12px;
-        }
-        .indicator-section {
-            margin-top: 12px;
-            padding-top: 12px;
-        }
-        .detail-btn {
-            margin-top: 16px;
-            padding: 10px 16px;
-            font-size: 13px;
-        }
-    }
-
-    @media (max-width: 576px) {
-        .operator-header {
-            padding: 12px;
-        }
-        .operator-title {
-            font-size: 16px;
-        }
-        .operator-body {
-            padding: 12px;
-        }
-        .chart-container {
-            height: 180px;
-            padding: 8px;
-        }
-        .metrics-grid {
-            gap: 10px;
-        }
-        .metric-item {
-            padding: 8px;
-        }
-        .metric-label {
-            font-size: 10px;
-        }
-        .metric-value {
-            font-size: 18px;
-        }
-        .metric-value.orange {
-            font-size: 22px;
-        }
-        .metric-value.small {
-            font-size: 13px;
-        }
-        .indicator-label {
-            font-size: 10px;
-        }
-        .indicator-value {
-            font-size: 12px;
-        }
-    }
+  :root{--bg:#fff;--fg:#111;--muted:#666;--grid:#e5e7eb;--primary:#111827;--amber:#f59e0b;--blue:#3b82f6;--red:#ef4444;--green:#10b981}
+  *{box-sizing:border-box}
+  body{margin:0;padding:16px;font-family:system-ui,-apple-system,Segoe UI,Roboto,Ubuntu,Cantarell,Noto Sans,sans-serif;background:var(--bg);color:var(--fg)}
+  .wrap{max-width:1200px;margin:0 auto;display:flex;flex-direction:column;gap:16px}
+  .row{display:grid;gap:12px}
+  .row.ops{grid-template-columns:repeat(1,minmax(0,1fr))}
+  @media (min-width:800px){.row.ops{grid-template-columns:repeat(2,minmax(0,1fr))}}
+  @media (min-width:1100px){.row.ops{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .card{border:1px solid #ddd;border-radius:14px;padding:12px}
+  .muted{color:var(--muted)}
+  .tag{padding:2px 8px;border-radius:999px;color:#fff;font-size:12px}
+  .tag.high{background:#dc2626}.tag.med{background:#d97706}.tag.low{background:#059669}
+  .btn{border:1px solid #ddd;border-radius:10px;padding:6px 10px;background:#fff;cursor:pointer}
+  .kpi{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:8px}
+  .kpi .label{font-size:10px;text-transform:uppercase;letter-spacing:.04em;color:#6b7280}
+  .kpi .val{font-weight:600}
+  .flex{display:flex;align-items:center;gap:8px}
+  .between{display:flex;align-items:center;justify-content:space-between}
+  .summary{display:grid;grid-template-columns:repeat(1,minmax(0,1fr));gap:12px}
+  @media (min-width:900px){.summary{grid-template-columns:repeat(4,minmax(0,1fr))}}
+  .tooltip{display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border:1px solid #cbd5e1;border-radius:999px;font-size:10px;color:#475569;margin-left:4px}
+  #testStatus{font-size:12px}
 </style>
+</head>
+<body>
+<div class="wrap">
+  <header class="between">
+    <h1 style="margin:0;font-size:20px;font-weight:700">EAR Dashboard – Data Riil Multi Operator</h1>
+    <div id="opButtons" class="flex"></div>
+  </header>
 
-<div class="row">
-    <div class="col-12">
-        <div class="card rounded-4">
-            <div class="card-body">
-                <div class="d-flex flex-column flex-md-row justify-content-between align-items-start align-items-md-center mb-4">
-                    <div>
-                        <h5 class="mb-1">Monitoring</h5>
-                        <p class="text-muted mb-0">Data statis untuk demo</p>
-                    </div>
-                </div>
+  <section class="row ops" id="opCards"></section>
 
-                <div class="row" id="operatorsContainer">
-                    <!-- Cards will be rendered here -->
-                </div>
-            </div>
+  <section class="card">
+    <div class="between" style="margin-bottom:6px">
+      <div>
+        <div id="detailTitle" style="font-weight:600">Detail Waveform</div>
+        <div class="muted" style="font-size:12px">
+          Garis hitam = EAR historis (60 detik terakhir);
+          garis ungu putus-putus = prediksi EAR (60 detik ke depan);
+          garis kuning putus-putus = T_close;
+          band hijau = rentang EAR personal;
+          garis biru vertikal = blink;
+          blok merah = microsleep.
         </div>
+      </div>
+      <div class="muted" id="timeNow" style="font-size:12px"></div>
     </div>
+    <canvas id="bigCanvas" width="1200" height="260" style="width:100%;height:260px;border:1px solid #ddd;border-radius:12px"></canvas>
+    <div id="detailKPIs" class="kpi" style="grid-template-columns:repeat(8,minmax(0,1fr));margin-top:10px"></div>
+
+    <div class="row" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:12px">
+      <div class="card">
+        <div style="font-weight:600;margin-bottom:4px">Indikator Fatigue</div>
+        <ul id="fatigueList" style="margin:0;padding-left:18px;line-height:1.4"></ul>
+      </div>
+      <div class="card">
+        <div style="font-weight:600;margin-bottom:4px">Indikator Drift Pattern</div>
+        <ul id="driftList" style="margin:0;padding-left:18px;line-height:1.4"></ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="between" style="margin-bottom:6px">
+      <div style="font-weight:600">Summary Insight</div>
+      <div id="testStatus" class="muted"></div>
+    </div>
+    <div id="summary" class="summary"></div>
+  </section>
+
+  <footer class="muted" style="font-size:12px">Data riil dari API DMS. Diperbarui setiap 2 detik. Sumber: /api/dms/dashboard/realtime</footer>
+</div>
+
+<!-- Modal Detail Log Driver (optional, for "Lihat detail" logs) -->
+<div id="driverDetailModal" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:9999;align-items:center;justify-content:center;padding:20px">
+  <div style="background:var(--bg);border-radius:14px;max-width:900px;width:100%;max-height:90vh;overflow:auto;box-shadow:0 4px 24px rgba(0,0,0,.15)">
+    <div style="padding:16px;border-bottom:1px solid #e5e7eb;display:flex;justify-content:space-between;align-items:center">
+      <strong id="driverDetailModalTitle">Detail Safety Score Logs</strong>
+      <button type="button" id="driverDetailModalClose" class="btn">Tutup</button>
+    </div>
+    <div style="padding:16px">
+      <div id="driverDetailLoading" style="text-align:center;padding:24px;color:var(--muted)">Memuat data...</div>
+      <div id="driverDetailContent" style="display:none">
+        <div style="overflow-x:auto">
+          <table style="width:100%;border-collapse:collapse;font-size:12px">
+            <thead><tr style="background:#f3f4f6;text-align:left">
+              <th style="padding:8px;border:1px solid #e5e7eb">ID</th>
+              <th style="padding:8px;border:1px solid #e5e7eb">Driver ID</th>
+              <th style="padding:8px;border:1px solid #e5e7eb">Timestamp</th>
+              <th style="padding:8px;border:1px solid #e5e7eb">EAR</th>
+              <th style="padding:8px;border:1px solid #e5e7eb">PERCLOS (60s)</th>
+              <th style="padding:8px;border:1px solid #e5e7eb">Blink (60s)</th>
+              <th style="padding:8px;border:1px solid #e5e7eb">Microsleep (60s)</th>
+              <th style="padding:8px;border:1px solid #e5e7eb">Fatigue</th>
+              <th style="padding:8px;border:1px solid #e5e7eb">Drift</th>
+              <th style="padding:8px;border:1px solid #e5e7eb">Safety Score</th>
+              <th style="padding:8px;border:1px solid #e5e7eb">Status</th>
+            </tr></thead>
+            <tbody id="driverLogsTableBody"></tbody>
+          </table>
+        </div>
+      </div>
+      <div id="driverDetailError" style="display:none;padding:12px;background:#fee2e2;color:#991b1b;border-radius:8px">Gagal memuat data.</div>
+    </div>
+  </div>
 </div>
 
 <script>
-    let canvasData = {};
+(function(){
+  const $ = (id) => document.getElementById(id);
+  const API_REALTIME = '/api/dms/dashboard/realtime?minutes=60&limit=100';
+  const POLL_MS = 2000;
 
-    // Function to get status badge class
-    function getStatusClass(status) {
-        const statusLower = (status || '').toLowerCase();
-        if (statusLower === 'safe') return 'safe';
-        if (statusLower === 'caution') return 'caution';
-        if (statusLower === 'attention') return 'attention';
-        return 'medium';
+  let operatorsData = [];
+  let selectedIndex = 0;
+  let pollTimer = null;
+
+  function safeNum(v, def){ return v != null && !isNaN(parseFloat(v)) ? parseFloat(v) : (def ?? 0); }
+  function safeToFixed(v, d){ return safeNum(v, 0).toFixed(d ?? 0); }
+  function getStatusClass(s){
+    const t = (s || '').toLowerCase();
+    if(t === 'safe') return 'safe'; if(t === 'caution') return 'caution'; if(t === 'attention') return 'attention';
+    return 'medium';
+  }
+  function formatStatus(s){
+    const t = (s || '').toLowerCase();
+    if(t === 'safe') return 'Safe'; if(t === 'caution') return 'Caution'; if(t === 'attention') return 'Attention';
+    return 'Medium';
+  }
+  function safetyBand(score){
+    const s = safeNum(score, 0);
+    return s >= 80 ? 'Safe' : s >= 60 ? 'Caution' : 'Attention';
+  }
+  function safetyColor(score){
+    const s = safeNum(score, 0);
+    return s >= 80 ? 'color:var(--green)' : s >= 60 ? 'color:#d97706' : 'color:#dc2626';
+  }
+  function priority(fatigue){
+    const f = safeNum(fatigue, 0);
+    return f >= 70 ? 'High' : f >= 40 ? 'Medium' : 'Low';
+  }
+  function badge(p){ return p === 'High' ? 'high' : p === 'Medium' ? 'med' : 'low'; }
+
+  const minEAR = 0.05, maxEAR = 0.4;
+  const PRED_SEC = 60; // prediksi 60 detik ke depan
+  const PRED_POINTS = 60; // 1 titik per detik
+
+  /** Prediksi EAR 60 detik ke depan dari slope (konsep sama seperti sebelumnya, horizon diperpanjang) */
+  function buildEarPred(earBuf, slopePerMin, threshold, earBandLow, earBandHigh){
+    if(!earBuf || earBuf.length === 0) return [];
+    const last = earBuf[earBuf.length - 1];
+    const slopePerSec = (slopePerMin || 0) / 60;
+    const midBand = ((earBandLow || 0.22) + (earBandHigh || 0.3)) / 2;
+    const k = 0.55;
+    const preds = [];
+    let x = last;
+    const dt = PRED_SEC / Math.max(1, PRED_POINTS);
+    for(let i = 1; i <= PRED_POINTS; i++){
+      const proj = x + slopePerSec * dt;
+      x = proj + (midBand - proj) * (1 - Math.exp(-k * dt));
+      x = Math.max(minEAR, Math.min(maxEAR, x));
+      preds.push(x);
     }
+    return preds;
+  }
 
-    // Function to format status text
-    function formatStatus(status) {
-        const statusLower = (status || '').toLowerCase();
-        if (statusLower === 'safe') return 'Safe';
-        if (statusLower === 'caution') return 'Caution';
-        if (statusLower === 'attention') return 'Attention';
-        return 'Medium';
+  /** Grafik kecil di kartu – mengikuti desain.blade.php: grid vertikal 8px, band hijau (rentang EAR), garis EAR #111827, T_close putus-putus */
+  function drawSmall(earData, threshold, earBandLow, earBandHigh, canvasId){
+    const canvas = document.getElementById(canvasId);
+    if(!canvas) return;
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.strokeStyle = '#e5e7eb';
+    ctx.lineWidth = 1;
+    for(let x = 0; x < W; x += 8){ ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    const yOf = (v) => H - ((v - minEAR) / (maxEAR - minEAR)) * H;
+    if(earBandLow != null && earBandHigh != null){
+      ctx.fillStyle = '#a7f3d0';
+      ctx.globalAlpha = 0.25;
+      const yHigh = yOf(earBandLow), yLow = yOf(earBandHigh);
+      ctx.fillRect(0, Math.min(yHigh, yLow), W, Math.abs(yLow - yHigh));
+      ctx.globalAlpha = 1;
     }
-
-    // Function to generate EAR data with different patterns
-    function generateEARDataPattern1(count = 100) {
-        // Pattern 1: Fluctuating dengan banyak turun naik (untuk attention status)
-        const data = [];
-        for (let i = 0; i < count; i++) {
-            const base = 0.18;
-            const variation = Math.sin(i / 8) * 0.12 + Math.cos(i / 15) * 0.08 + Math.random() * 0.06;
-            data.push(Math.max(0.1, Math.min(0.35, base + variation)));
-        }
-        return data;
+    if(earData && earData.length > 0){
+      ctx.strokeStyle = '#111827';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath();
+      for(let i = 0; i < earData.length; i++){
+        const x = (i / earData.length) * W;
+        const y = yOf(earData[i]);
+        if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
     }
-
-    function generateEARDataPattern2(count = 100) {
-        // Pattern 2: Stabil di atas threshold (untuk safe status)
-        const data = [];
-        for (let i = 0; i < count; i++) {
-            const base = 0.28;
-            const variation = Math.sin(i / 20) * 0.04 + Math.random() * 0.02;
-            data.push(Math.max(0.22, Math.min(0.35, base + variation)));
-        }
-        return data;
+    if(threshold != null){
+      ctx.setLineDash([3, 3]);
+      ctx.strokeStyle = '#f59e0b';
+      ctx.beginPath();
+      ctx.moveTo(0, yOf(threshold));
+      ctx.lineTo(W, yOf(threshold));
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
+  }
 
-    function generateEARDataPattern3(count = 100) {
-        // Pattern 3: Sedang turun naik dengan tren menurun (untuk caution status)
-        const data = [];
-        for (let i = 0; i < count; i++) {
-            const base = 0.24 - (i / count) * 0.06;
-            const variation = Math.sin(i / 12) * 0.08 + Math.random() * 0.04;
-            data.push(Math.max(0.15, Math.min(0.32, base + variation)));
-        }
-        return data;
+  /** Grafik besar detail – sesuai case:
+   *  - Garis hitam solid  : EAR historis (60 detik terakhir)
+   *  - Garis ungu putus   : Prediksi EAR (60 detik ke depan)
+   *  - Garis kuning putus : Threshold T_close
+   *  - Area hijau         : Band EAR personal
+   *  - Garis biru vertikal: Waktu blink
+   *  - Area merah         : Waktu microsleep
+   */
+  function drawBig(earBuf, earPred, threshold, earBandLow, earBandHigh, blinkCount, microCount){
+    const cvs = document.getElementById('bigCanvas');
+    if(!cvs) return;
+    const ctx = cvs.getContext('2d');
+    const W = cvs.width, H = cvs.height;
+    ctx.clearRect(0, 0, W, H);
+    ctx.lineWidth = 1;
+    ctx.strokeStyle = getComputedStyle(document.body).getPropertyValue('--grid') || '#e5e7eb';
+    for(let x = 0; x < W; x += 10){ ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+    for(let y = 0; y < H; y += 10){ ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); }
+    const yOf = (v) => H - ((v - minEAR) / (maxEAR - minEAR)) * H;
+    if(earBandLow != null && earBandHigh != null){
+      ctx.fillStyle = '#a7f3d0';
+      ctx.globalAlpha = 0.25;
+      const yHigh = yOf(earBandLow), yLow = yOf(earBandHigh);
+      ctx.fillRect(0, Math.min(yHigh, yLow), W, Math.abs(yLow - yHigh));
+      ctx.globalAlpha = 1;
     }
-
-    function generateEARDataPattern4(count = 100) {
-        // Pattern 4: Spiky dengan banyak spike rendah (untuk attention status)
-        const data = [];
-        for (let i = 0; i < count; i++) {
-            let base = 0.22;
-            // Create spikes every 15-20 points
-            if (i % 18 < 3) {
-                base = 0.12 + Math.random() * 0.05; // Low spike
-            } else {
-                base = 0.25 + Math.sin(i / 10) * 0.06 + Math.random() * 0.03;
-            }
-            data.push(Math.max(0.1, Math.min(0.35, base)));
-        }
-        return data;
+    if(threshold != null){
+      ctx.setLineDash([4, 4]);
+      ctx.strokeStyle = '#facc15'; // kuning
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, yOf(threshold));
+      ctx.lineTo(W, yOf(threshold));
+      ctx.stroke();
+      ctx.setLineDash([]);
     }
-
-    // Function to draw EAR waveform chart on canvas
-    function drawEARChart(canvasId, earData, timeData, threshold, earBandLow, earBandHigh) {
-        const canvas = document.getElementById(canvasId);
-        if (!canvas) return;
-
-        const ctx = canvas.getContext('2d');
-        if (!ctx) return;
-
-        // Set canvas size based on container
-        const container = canvas.parentElement;
-        let W, H;
-        
-        if (container) {
-            const rect = container.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-            const displayWidth = rect.width;
-            const displayHeight = rect.height;
-            
-            // Set internal size (scaled for device pixel ratio)
-            canvas.width = displayWidth * dpr;
-            canvas.height = displayHeight * dpr;
-            
-            // Set display size (CSS pixels)
-            canvas.style.width = displayWidth + 'px';
-            canvas.style.height = displayHeight + 'px';
-            
-            // Scale context to match device pixel ratio
-            ctx.scale(dpr, dpr);
-            
-            // Use display dimensions for drawing
-            W = displayWidth;
-            H = displayHeight;
-        } else {
-            // Fallback
-            const rect = canvas.getBoundingClientRect();
-            W = rect.width;
-            H = rect.height;
-            canvas.width = W;
-            canvas.height = H;
-        }
-
-        // Clear canvas
-        ctx.clearRect(0, 0, W, H);
-
-        // Draw grid background (optimized)
-        ctx.strokeStyle = '#e5e7eb';
-        ctx.lineWidth = 1;
-        
-        // Batch draw vertical lines
+    const totalN = (earBuf ? earBuf.length : 0) + (earPred && earPred.length ? earPred.length : 0);
+    const xOf = (i) => (i / Math.max(1, totalN - 1)) * W;
+    // microsleep blocks (area merah transparan, disebar merata sepanjang sumbu X menggunakan agregat 60 detik)
+    if(microCount && microCount > 0){
+      const span = W / (microCount + 1);
+      const blockW = Math.max(4, span * 0.5);
+      ctx.save();
+      ctx.fillStyle = '#ef4444';
+      ctx.globalAlpha = 0.15;
+      for(let k = 0; k < microCount; k++){
+        const center = (k + 1) * span;
+        const x0 = Math.max(0, center - blockW / 2);
+        ctx.fillRect(x0, 0, Math.min(blockW, W - x0), H);
+      }
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+    if(earBuf && earBuf.length > 0){
+      ctx.strokeStyle = '#111827';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      for(let i = 0; i < earBuf.length; i++){
+        const x = xOf(i), y = yOf(earBuf[i]);
+        if(i === 0) ctx.moveTo(x, y); else ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    }
+    if(earPred && earPred.length > 0 && earBuf && earBuf.length > 0){
+      ctx.save();
+      ctx.strokeStyle = '#8b5cf6';
+      ctx.setLineDash([6, 4]);
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(xOf(earBuf.length - 1), yOf(earBuf[earBuf.length - 1]));
+      for(let j = 0; j < earPred.length; j++) ctx.lineTo(xOf(earBuf.length + j), yOf(earPred[j]));
+      ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.restore();
+      const xStart = xOf(earBuf.length);
+      ctx.save();
+      ctx.fillStyle = '#8b5cf6';
+      ctx.globalAlpha = 0.08;
+      ctx.fillRect(xStart, 0, W - xStart, H);
+      ctx.globalAlpha = 1;
+      ctx.restore();
+    }
+    // blink markers (garis biru vertikal, disebar merata sepanjang sumbu X menggunakan agregat 60 detik)
+    if(blinkCount && blinkCount > 0){
+      ctx.save();
+      ctx.strokeStyle = '#3b82f6';
+      ctx.lineWidth = 1.5;
+      for(let k = 0; k < blinkCount; k++){
+        const t = (k + 1) / (blinkCount + 1);
+        const x = t * W;
         ctx.beginPath();
-        for (let x = 0; x < W; x += 10) {
-            ctx.moveTo(x, 0);
-            ctx.lineTo(x, H);
-        }
+        ctx.moveTo(x, 0);
+        ctx.lineTo(x, H);
         ctx.stroke();
-        
-        // Batch draw horizontal lines
-        ctx.beginPath();
-        for (let y = 0; y < H; y += 10) {
-            ctx.moveTo(0, y);
-            ctx.lineTo(W, y);
-        }
-        ctx.stroke();
-
-        if (!earData || earData.length === 0) return;
-
-        // EAR range
-        const minEAR = 0.05;
-        const maxEAR = 0.4;
-
-        // Convert EAR value to Y coordinate
-        const yOf = (v) => H - ((v - minEAR) / (maxEAR - minEAR)) * H;
-
-        // Draw EAR band area (green semi-transparent)
-        if (earBandLow !== null && earBandHigh !== null) {
-            ctx.fillStyle = '#a7f3d0';
-            ctx.globalAlpha = 0.25;
-            const yHigh = yOf(earBandLow);
-            const yLow = yOf(earBandHigh);
-            ctx.fillRect(0, Math.min(yHigh, yLow), W, Math.abs(yLow - yHigh));
-            ctx.globalAlpha = 1;
-        }
-
-        // Draw threshold line (orange dashed)
-        if (threshold !== null) {
-            ctx.setLineDash([4, 4]);
-            ctx.strokeStyle = '#f59e0b';
-            ctx.lineWidth = 2;
-            ctx.beginPath();
-            const yThr = yOf(threshold);
-            ctx.moveTo(0, yThr);
-            ctx.lineTo(W, yThr);
-            ctx.stroke();
-            ctx.setLineDash([]);
-        }
-
-        // Draw EAR data line (dark grey/black)
-        ctx.strokeStyle = '#111827';
-        ctx.lineWidth = 2;
-        ctx.beginPath();
-
-        for (let i = 0; i < earData.length; i++) {
-            const x = (i / earData.length) * W;
-            const y = yOf(earData[i]);
-
-            if (i === 0) {
-                ctx.moveTo(x, y);
-            } else {
-                ctx.lineTo(x, y);
-            }
-        }
-        ctx.stroke();
-
-        // Store data for later use (events, etc.)
-        canvasData[canvasId] = {
-            earData,
-            timeData,
-            threshold,
-            earBandLow,
-            earBandHigh,
-            W,
-            H,
-            minEAR,
-            maxEAR
-        };
+      }
+      ctx.restore();
     }
+  }
 
-    // Helper function to safely format numbers
-    function safeToFixed(value, decimals = 0) {
-        if (value === null || value === undefined || isNaN(value)) {
-            return '0';
-        }
-        const num = parseFloat(value);
-        if (isNaN(num)) {
-            return '0';
-        }
-        return num.toFixed(decimals);
-    }
-
-    // Static data for operators
-    const staticOperatorsData = [
-        {
-            driver_id: 'Driver-001',
-            latest: {
-                safety_score: 13,
-                fatigue: 57,
-                drift: 26,
-                perclos_60s: 0.258,
-                slope_ear_per_min: 5.4497,
-                blink_60s: 0,
-                microsleep_60s: 4,
-                status: 'attention',
-                ear_threshold: 0.2,
-                ear_band_low: 0.22,
-                ear_band_high: 0.3
-            }
-        },
-        {
-            driver_id: 'Driver-002',
-            latest: {
-                safety_score: 75,
-                fatigue: 25,
-                drift: 12,
-                perclos_60s: 0.15,
-                slope_ear_per_min: 2.1234,
-                blink_60s: 15,
-                microsleep_60s: 0,
-                status: 'safe',
-                ear_threshold: 0.2,
-                ear_band_low: 0.22,
-                ear_band_high: 0.3
-            }
-        },
-        {
-            driver_id: 'Driver-003',
-            latest: {
-                safety_score: 45,
-                fatigue: 42,
-                drift: 18,
-                perclos_60s: 0.22,
-                slope_ear_per_min: 3.5678,
-                blink_60s: 8,
-                microsleep_60s: 2,
-                status: 'caution',
-                ear_threshold: 0.2,
-                ear_band_low: 0.22,
-                ear_band_high: 0.3
-            }
-        },
-        {
-            driver_id: 'Driver-004',
-            latest: {
-                safety_score: 35,
-                fatigue: 55,
-                drift: 22,
-                perclos_60s: 0.28,
-                slope_ear_per_min: 4.2345,
-                blink_60s: 5,
-                microsleep_60s: 3,
-                status: 'attention',
-                ear_threshold: 0.2,
-                ear_band_low: 0.22,
-                ear_band_high: 0.3
-            }
-        }
-    ];
-
-    // Function to render operator card
-    function renderOperatorCard(operatorData) {
-        const { driver_id, latest } = operatorData;
-        const statusClass = getStatusClass(latest.status);
-        const statusText = formatStatus(latest.status);
-        const canvasId = `chart-${driver_id.replace(/\s+/g, '-')}`;
-
-        // Safely get values with defaults
-        const safetyScore = latest.safety_score || 0;
-        const fatigue = latest.fatigue || 0;
-        const drift = latest.drift || 0;
-        const perclos = latest.perclos_60s || 0;
-        const slopeEar = latest.slope_ear_per_min || 0;
-        const blinkCount = latest.blink_60s || 0;
-        const microsleep = latest.microsleep_60s || 0;
-
-        return `
-            <div class="col-12 col-md-6">
-                <div class="operator-card" id="operator-card-${driver_id.replace(/\s+/g, '-')}">
-                    <div class="operator-header">
-                        <h3 class="operator-title">${driver_id}</h3>
-                        <span class="status-badge ${statusClass}">${statusText}</span>
-                    </div>
-                    <div class="operator-body">
-                        <div class="chart-container">
-                            <div class="chart-wrapper">
-                                <canvas id="${canvasId}" style="width: 100%; height: 100%;"></canvas>
-                            </div>
-                        </div>
-                        <div class="metrics-grid mt-2">
-                            <div class="metric-item" data-metric="safety-score">
-                                <div class="metric-label">Safety Score</div>
-                                <div class="metric-value orange">${safeToFixed(safetyScore, 0)}</div>
-                            </div>
-                            <div class="metric-item" data-metric="safety-band">
-                                <div class="metric-label">Safety Band</div>
-                                <div class="metric-value small">${statusText}</div>
-                            </div>
-                            <div class="metric-item" data-metric="fatigue">
-                                <div class="metric-label">Fatigue</div>
-                                <div class="metric-value">${safeToFixed(fatigue, 0)}</div>
-                            </div>
-                            <div class="metric-item" data-metric="drift">
-                                <div class="metric-label">Drift</div>
-                                <div class="metric-value">${safeToFixed(drift, 0)}</div>
-                            </div>
-                            <div class="metric-item" data-metric="perclos">
-                                <div class="metric-label">PERCLOS</div>
-                                <div class="metric-value">${safeToFixed(perclos * 100, 1)}%</div>
-                            </div>
-                            <div class="metric-item" data-metric="slope-ear">
-                                <div class="metric-label">Slope EAR (/MIN)</div>
-                                <div class="metric-value">${safeToFixed(slopeEar, 4)}</div>
-                            </div>
-                            <div class="metric-item" data-metric="blink-count">
-                                <div class="metric-label">Blink Count (60s)</div>
-                                <div class="metric-value">${blinkCount}</div>
-                            </div>
-                            <div class="metric-item" data-metric="microsleep">
-                                <div class="metric-label">Microsleep (60s)</div>
-                                <div class="metric-value">${microsleep}</div>
-                            </div>
-                        </div>
-                        <div class="indicator-section">
-                            <div class="indicator-item" data-indicator="fatigue">
-                                <div class="indicator-label">Indikator Fatigue</div>
-                                <div class="indicator-value">-</div>
-                            </div>
-                            <div class="indicator-item" data-indicator="drift">
-                                <div class="indicator-label">Drift Pattern</div>
-                                <div class="indicator-value">-</div>
-                            </div>
-                        </div>
-                        <button class="detail-btn w-100" onclick="viewDetails('${driver_id}')">
-                            <span>Lihat detail</span>
-                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="margin-left: 8px;">
-                                <path d="M5 12h14M12 5l7 7-7 7"/>
-                            </svg>
-                        </button>
-                    </div>
-                </div>
-            </div>
-        `;
-    }
-
-    // Function to render all static cards
-    function renderStaticCards() {
-        const container = document.getElementById('operatorsContainer');
-        if (!container) return;
-
-        let html = '';
-        staticOperatorsData.forEach(operatorData => {
-            html += renderOperatorCard(operatorData);
-        });
-
-        container.innerHTML = html;
-
-        // Draw charts after a short delay to ensure DOM is ready
-        setTimeout(() => {
-            staticOperatorsData.forEach((operatorData, index) => {
-                const { driver_id, latest } = operatorData;
-                const canvasId = `chart-${driver_id.replace(/\s+/g, '-')}`;
-                
-                // Generate different pattern for each card
-                let earData;
-                switch(index) {
-                    case 0:
-                        earData = generateEARDataPattern1(100); // Fluctuating untuk Driver-001
-                        break;
-                    case 1:
-                        earData = generateEARDataPattern2(100); // Stabil untuk Driver-002
-                        break;
-                    case 2:
-                        earData = generateEARDataPattern3(100); // Menurun untuk Driver-003
-                        break;
-                    case 3:
-                        earData = generateEARDataPattern4(100); // Spiky untuk Driver-004
-                        break;
-                    default:
-                        earData = generateEARDataPattern1(100);
-                }
-                
-                const timeData = earData.map((_, i) => i);
-                const threshold = latest.ear_threshold || 0.2;
-                const earBandLow = latest.ear_band_low || 0.22;
-                const earBandHigh = latest.ear_band_high || 0.3;
-
-                drawEARChart(canvasId, earData, timeData, threshold, earBandLow, earBandHigh);
-            });
-        }, 100);
-    }
-
-    // Function to view details (simplified for static version)
-    function viewDetails(driverId) {
-        alert(`Detail untuk ${driverId}\n\nIni adalah versi statis. Data detail tidak tersedia.`);
-    }
-
-    // Initialize on page load
-    document.addEventListener('DOMContentLoaded', function() {
-        // Render static cards
-        renderStaticCards();
-
-        // Handle window resize with debounce
-        let resizeTimeout;
-        window.addEventListener('resize', function() {
-            clearTimeout(resizeTimeout);
-            resizeTimeout = setTimeout(function() {
-                // Redraw all charts on resize using stored data
-                staticOperatorsData.forEach((operatorData, index) => {
-                    const { driver_id, latest } = operatorData;
-                    const canvasId = `chart-${driver_id.replace(/\s+/g, '-')}`;
-                    const data = canvasData[canvasId];
-                    if (data) {
-                        drawEARChart(
-                            canvasId,
-                            data.earData,
-                            data.timeData,
-                            data.threshold,
-                            data.earBandLow,
-                            data.earBandHigh
-                        );
-                    }
-                });
-            }, 250);
-        });
+  function renderOperatorButtons(){
+    const wrap = $('opButtons');
+    wrap.innerHTML = '';
+    operatorsData.forEach((op, i) => {
+      const f = safeNum(op.latest.fatigue, 0);
+      const p = priority(f);
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.textContent = op.driver_id;
+      b.style.color = '#fff';
+      b.style.background = p === 'High' ? '#dc2626' : p === 'Medium' ? '#d97706' : '#059669';
+      b.onclick = () => { selectedIndex = i; updateDetail(); };
+      wrap.appendChild(b);
     });
+  }
+
+  function renderCards(){
+    const container = $('opCards');
+    container.innerHTML = '';
+    operatorsData.forEach((op, i) => {
+      const l = op.latest;
+      const cd = op.chart_data || {};
+      const ear = cd.ear || [];
+      const thr = safeNum(l.ear_threshold, 0.2);
+      const bandLow = safeNum(l.ear_band_low, 0.22);
+      const bandHigh = safeNum(l.ear_band_high, 0.3);
+      const safety = safeNum(l.safety_score, 0);
+      const fatigue = safeNum(l.fatigue, 0);
+      const drift = safeNum(l.drift, 0);
+      const perclos = safeNum(l.perclos_60s, 0);
+      const blink = safeNum(l.blink_60s, 0);
+      const micro = safeNum(l.microsleep_60s, 0);
+      const slope = safeNum(l.slope_ear_per_min, 0);
+      const statusText = formatStatus(l.status);
+      const p = priority(fatigue);
+      const canvasId = 'small-' + i;
+      const card = document.createElement('div');
+      card.className = 'card';
+      if(i === selectedIndex) card.style.boxShadow = '0 0 0 2px rgba(0,0,0,.05)';
+      card.innerHTML = `
+        <div class="between" style="margin-bottom:6px">
+          <div style="font-weight:600">${op.driver_id}</div>
+          <span class="tag ${badge(p)}">${p}</span>
+        </div>
+        <canvas id="${canvasId}" width="320" height="90" style="width:100%;height:90px;border:1px solid #ddd;border-radius:8px"></canvas>
+        <div class="kpi">
+          <div><div class="label">SafetyScore</div><div class="val" style="${safetyColor(safety)}">${safeToFixed(safety,0)}</div></div>
+          <div><div class="label">Fatigue</div><div class="val">${safeToFixed(fatigue,0)}</div></div>
+          <div><div class="label">Drift</div><div class="val">${safeToFixed(drift,0)}</div></div>
+          <div><div class="label">PERCLOS</div><div class="val">${safeToFixed(perclos * 100, 1)}%</div></div>
+          <div><div class="label">Blink (60s)</div><div class="val">${blink}</div></div>
+          <div><div class="label">Microsleep (60s)</div><div class="val">${micro}</div></div>
+          <div><div class="label">Slope EAR/min</div><div class="val">${safeToFixed(slope, 4)}</div></div>
+          <div><div class="label">Status</div><div class="val" style="${safetyColor(safety)}">${statusText}</div></div>
+        </div>
+        <div class="row" style="grid-template-columns:repeat(2,minmax(0,1fr));gap:8px;margin-top:6px;font-size:12px">
+          <div><div style="font-weight:600">Indikator Fatigue</div><div class="muted">Data dari API (PERCLOS, blink, microsleep)</div></div>
+          <div><div style="font-weight:600">Drift Pattern</div><div class="muted">Slope EAR: ${safeToFixed(slope, 4)}</div></div>
+        </div>
+        <div class="flex" style="margin-top:8px">
+          <button class="btn" data-driver="${op.driver_id.replace(/"/g, '&quot;')}">Lihat detail log</button>
+        </div>
+      `;
+      container.appendChild(card);
+      drawSmall(ear, thr, bandLow, bandHigh, canvasId);
+      card.querySelector('button[data-driver]').onclick = () => { viewDetails(op.driver_id); };
+    });
+  }
+
+  function updateDetail(){
+    if(!operatorsData.length){ $('detailTitle').textContent = 'Detail Waveform'; $('timeNow').textContent = ''; return; }
+    const op = operatorsData[selectedIndex];
+    const l = op.latest;
+    const cd = op.chart_data || {};
+    const ear = cd.ear || [];
+    const labels = cd.labels || [];
+    const thr = safeNum(l.ear_threshold, 0.2);
+    const bandLow = safeNum(l.ear_band_low, 0.22);
+    const bandHigh = safeNum(l.ear_band_high, 0.3);
+    const safety = safeNum(l.safety_score, 0);
+    const fatigue = safeNum(l.fatigue, 0);
+    const drift = safeNum(l.drift, 0);
+    const perclos = safeNum(l.perclos_60s, 0);
+    const blink = safeNum(l.blink_60s, 0);
+    const micro = safeNum(l.microsleep_60s, 0);
+    const slope = safeNum(l.slope_ear_per_min, 0);
+    const lastTime = labels.length ? labels[labels.length - 1] : '';
+
+    $('detailTitle').textContent = 'Detail Waveform – ' + op.driver_id;
+    $('timeNow').textContent = labels.length ? 'Terakhir: ' + lastTime : '';
+
+    const earPred = buildEarPred(ear, slope, thr, bandLow, bandHigh);
+    drawBig(ear, earPred, thr, bandLow, bandHigh, blink, micro);
+
+    const dk = $('detailKPIs');
+    dk.innerHTML = `
+      <div><div class="label">Driver SafetyScore</div><div class="val" style="${safetyColor(safety)}">${safeToFixed(safety,0)}</div></div>
+      <div><div class="label">Fatigue</div><div class="val">${safeToFixed(fatigue,0)}</div></div>
+      <div><div class="label">Drift</div><div class="val">${safeToFixed(drift,0)}</div></div>
+      <div><div class="label">PERCLOS (60s)</div><div class="val">${safeToFixed(perclos * 100, 1)}%</div></div>
+      <div><div class="label">Blink (60s)</div><div class="val">${blink}</div></div>
+      <div><div class="label">Microsleep (60s)</div><div class="val">${micro}</div></div>
+      <div><div class="label">Slope EAR/min</div><div class="val">${safeToFixed(slope, 4)}</div></div>
+      <div><div class="label">Status</div><div class="val" style="${safetyColor(safety)}">${safeToFixed(safety,0)} · ${safetyBand(safety)}</div></div>
+    `;
+
+    const fl = $('fatigueList');
+    fl.innerHTML = `
+      <li>PERCLOS: ${safeToFixed(perclos * 100, 1)}%</li>
+      <li>Blink (60s): ${blink}</li>
+      <li>Microsleep (60s): ${micro}</li>
+      <li>Data dari API realtime (timestamp: ${l.timestamp || '-'})</li>
+    `;
+
+    const dl = $('driftList');
+    dl.innerHTML = `
+      <li>Slope EAR (/min): ${safeToFixed(slope, 4)}</li>
+      <li>EAR band: ${safeToFixed(bandLow, 3)} – ${safeToFixed(bandHigh, 3)}</li>
+      <li>Threshold (T_close): ${safeToFixed(thr, 3)}</li>
+    `;
+
+    const summary = $('summary');
+    summary.innerHTML = '';
+    operatorsData.forEach((o) => {
+      const ll = o.latest;
+      const safetyVal = safeNum(ll.safety_score, 0);
+      const items = [];
+      if(safeNum(ll.microsleep_60s, 0) > 0) items.push('Microsleep terdeteksi');
+      if(safeNum(ll.perclos_60s, 0) >= 0.2) items.push('PERCLOS tinggi');
+      if(safeNum(ll.slope_ear_per_min, 0) < -0.02) items.push('EAR menurun (slope negatif)');
+      if(items.length === 0) items.push('Stabil');
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.innerHTML =
+        '<div class="between" style="margin-bottom:6px"><div style="font-weight:600">' + o.driver_id + '</div><div style="' + safetyColor(safetyVal) + '">' + safeToFixed(safetyVal, 0) + ' · ' + safetyBand(safetyVal) + '</div></div>' +
+        '<ul style="margin:0;padding-left:18px;line-height:1.4">' + items.map(t => '<li>' + t + '</li>').join('') + '</ul>';
+      summary.appendChild(card);
+    });
+  }
+
+  async function fetchRealtimeData(){
+    try {
+      const response = await fetch(API_REALTIME);
+      const result = await response.json();
+      if(result.success && result.data && Array.isArray(result.data)){
+        operatorsData = result.data;
+        if(operatorsData.length === 0){
+          $('opCards').innerHTML = '<div class="card muted" style="text-align:center;padding:24px">Tidak ada data operator saat ini.</div>';
+          $('detailTitle').textContent = 'Detail Waveform';
+          $('timeNow').textContent = '';
+          $('summary').innerHTML = '';
+          $('testStatus').textContent = 'Terakhir diperbarui: ' + new Date().toLocaleTimeString('id-ID');
+          return;
+        }
+        renderOperatorButtons();
+        renderCards();
+        updateDetail();
+        $('testStatus').textContent = 'Terakhir diperbarui: ' + new Date().toLocaleTimeString('id-ID');
+        $('testStatus').style.color = 'var(--green)';
+      } else {
+        $('testStatus').textContent = 'Gagal memuat data';
+        $('testStatus').style.color = '#dc2626';
+      }
+    } catch(err){
+      console.error('fetchRealtimeData', err);
+      $('testStatus').textContent = 'Error: ' + (err.message || 'Gagal memuat');
+      $('testStatus').style.color = '#dc2626';
+    }
+  }
+
+  async function viewDetails(driverId){
+    const modal = document.getElementById('driverDetailModal');
+    const titleEl = document.getElementById('driverDetailModalTitle');
+    const loadingEl = document.getElementById('driverDetailLoading');
+    const contentEl = document.getElementById('driverDetailContent');
+    const errorEl = document.getElementById('driverDetailError');
+    const tbody = document.getElementById('driverLogsTableBody');
+    if(!modal) return;
+    titleEl.textContent = 'Detail Safety Score Logs – ' + driverId;
+    modal.style.display = 'flex';
+    loadingEl.style.display = 'block';
+    contentEl.style.display = 'none';
+    errorEl.style.display = 'none';
+    tbody.innerHTML = '';
+    try {
+      const res = await fetch('/api/dms/dashboard/driver-logs?driver_id=' + encodeURIComponent(driverId) + '&limit=1000');
+      const result = await res.json();
+      loadingEl.style.display = 'none';
+      if(result.success && result.data && result.data.length){
+        tbody.innerHTML = result.data.map(log => {
+          const sc = getStatusClass(log.status);
+          return '<tr><td>' + (log.id || '-') + '</td><td>' + (log.driver_id || '-') + '</td><td>' + (log.timestamp || '-') + '</td><td>' + (log.ear ?? '-') + '</td><td>' + (log.perclos_60s ?? '-') + '</td><td>' + (log.blink_60s ?? '-') + '</td><td>' + (log.microsleep_60s ?? '-') + '</td><td>' + (log.fatigue ?? '-') + '</td><td>' + (log.drift ?? '-') + '</td><td>' + (log.safety_score ?? '-') + '</td><td><span class="tag ' + sc + '">' + (log.status || '-') + '</span></td></tr>';
+        }).join('');
+        contentEl.style.display = 'block';
+      } else {
+        tbody.innerHTML = '<tr><td colspan="11" style="padding:16px;text-align:center" class="muted">Tidak ada data untuk driver ini.</td></tr>';
+        contentEl.style.display = 'block';
+      }
+    } catch(e){
+      loadingEl.style.display = 'none';
+      errorEl.style.display = 'block';
+      errorEl.textContent = 'Gagal memuat data. ' + (e.message || '');
+    }
+  }
+
+  document.getElementById('driverDetailModalClose').onclick = function(){
+    document.getElementById('driverDetailModal').style.display = 'none';
+  };
+  document.getElementById('driverDetailModal').addEventListener('click', function(e){
+    if(e.target === this) this.style.display = 'none';
+  });
+
+  fetchRealtimeData();
+  pollTimer = setInterval(fetchRealtimeData, POLL_MS);
+  window.addEventListener('beforeunload', function(){ if(pollTimer) clearInterval(pollTimer); });
+})();
 </script>
-
-@endsection
-
+</body>
+</html>

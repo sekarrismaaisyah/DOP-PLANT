@@ -67,7 +67,7 @@
       
         <!--navigation-->
         <ul class="metismenu" id="sidenav">
-        
+          
           <li>
             <a href="{{ route('hazard-detection.index') }}">
               <div class="parent-icon"><i class="material-icons-outlined">dashboard</i>
@@ -75,168 +75,42 @@
               <div class="menu-title">Dashboard</div>
             </a>
           </li>
- 
 
 
-          <li class="menu-label">Validasi TBC</li>
-          
-
-          <li>
-            <a class="" href="">
-              <div class="parent-icon"><i class="material-icons-outlined">camera</i>
-              </div>
-              <div class="menu-title">Validasi TBC BC</div>
-            </a>
-           
-          </li>
-
-           <li>
-            <a class="" href="{{ route('cctv-alerts-dashboard.index') }}">
-              <div class="parent-icon"><i class="material-icons-outlined">settings</i>
-              </div>                 
-              <div class="menu-title">Validasi BTC Mitra</div>
-            </a>
-           
-          </li>
-
-
-          <li class="menu-label">Validasi Insiden</li>
+          <li class="menu-label">Deteksi Fatigue</li>
           
 
           <li>
             <a class="" href="">
               <div class="parent-icon"><i class="material-icons-outlined">camera</i>
               </div>
-              <div class="menu-title">Data BeInestigasi</div>
+              <div class="menu-title">Kalibrasi Operator</div>
             </a>
-           
+          </li>
+
+          
+          <li>
+            <a class="" href="">
+              <div class="parent-icon"><i class="material-icons-outlined">gps_fixed</i>
+              </div>
+              <div class="menu-title">Deteksi Operator</div>
+            </a>
           </li>
 
            <li>
-            <a class="" href="">
-              <div class="parent-icon"><i class="material-icons-outlined">settings</i>
-              </div>                 
-              <div class="menu-title">Data Input LPI</div>
+            <a class="" href="{{ route('daily-operation-plan.index') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">picture_as_pdf</i>
+              </div>
+              <div class="menu-title">Report</div>
             </a>
-           
           </li>
-
-
-          
-       
-
-       
-         
          
           
+      
          
           
           
           
-          {{-- <li>
-            <a class="has-arrow" href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">location_on</i>
-              </div>
-              <div class="menu-title">Spatial Analysis</div>
-            </a>
-            <ul>
-              <li><a href="{{ route('spatial-analysis.heatmap') }}"><i class="material-icons-outlined">arrow_right</i>Heat Map</a></li>
-              <li><a href="{{ route('spatial-analysis.zone') }}"><i class="material-icons-outlined">arrow_right</i>Zone Analysis</a></li>
-              <li><a href="{{ route('spatial-analysis.movement') }}"><i class="material-icons-outlined">arrow_right</i>Movement Patterns</a></li>
-              <li><a href="{{ route('spatial-analysis.risk') }}"><i class="material-icons-outlined">arrow_right</i>Risk Assessment</a></li>
-            </ul>
-          </li> --}}
-          
-          {{-- <li>
-            <a class="has-arrow" href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">supervisor_account</i>
-              </div>
-              <div class="menu-title">Supervisory Control</div>
-            </a>
-            <ul>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>Control Panel</a></li>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>System Status</a></li>
-              <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>Operational Control</a></li>
-            </ul>
-          </li> --}}
-          
-          {{-- <li>
-            <a href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">join_right</i>
-              </div>
-              <div class="menu-title">Timeline & Events</div>
-            </a>
-          </li> --}}
-          
-          {{-- <li>
-            <a class="has-arrow" href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">analytics</i>
-              </div>
-              <div class="menu-title">Reporting & Analytics</div>
-            </a>
-            <ul>
-              <li><a href="{{ route('reporting.dashboard') }}"><i class="material-icons-outlined">arrow_right</i>Dashboard Reports</a></li>
-              <li><a href="{{ route('reporting.operational') }}"><i class="material-icons-outlined">arrow_right</i>Operational Reports</a></li>
-              <li><a href="{{ route('reporting.safety') }}"><i class="material-icons-outlined">arrow_right</i>Safety Reports</a></li>
-              <li><a href="{{ route('reporting.custom') }}"><i class="material-icons-outlined">arrow_right</i>Custom Reports</a></li>
-            </ul>
-          </li> --}}
-          
-        
-        
-          
-         
-          
-          {{-- <li>
-            <a href="{{ route('hazard-detection.p2h.evaluation') }}">
-              <div class="parent-icon"><i class="material-icons-outlined">assessment</i>
-              </div>
-              <div class="menu-title">Evaluasi Pelaksanaan P2H</div>
-            </a>
-          </li> --}}
-          
-          {{-- <li>
-            <a class="has-arrow" href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">meeting_room</i>
-              </div>
-              <div class="menu-title">Control Room</div>
-            </a>
-            <ul>
-              @forelse($controlRooms ?? [] as $controlRoom)
-                <li>
-                  <a class="has-arrow" href="javascript:;">
-                    <i class="material-icons-outlined">arrow_right</i>
-                    {{ $controlRoom['name'] }} 
-                    <span class="badge bg-primary rounded-pill ms-2">{{ $controlRoom['cctv_count'] }}</span>
-                  </a>
-                  <ul>
-                    @foreach($controlRoom['cctv_list'] as $cctv)
-                      <li>
-                        <a href="javascript:;" 
-                           @if($cctv['link_akses']) 
-                             onclick="window.open('{{ $cctv['link_akses'] }}', '_blank');" 
-                           @endif
-                           title="{{ $cctv['lokasi_pemasangan'] ?? '' }}">
-                          <i class="material-icons-outlined">camera_alt</i>
-                          {{ $cctv['nama_cctv'] ?? $cctv['no_cctv'] ?? 'CCTV #' . $cctv['id'] }}
-                          @if($cctv['kondisi'] === 'Baik')
-                            <span class="badge bg-success rounded-pill ms-2">Baik</span>
-                          @elseif($cctv['kondisi'] === 'Rusak')
-                            <span class="badge bg-danger rounded-pill ms-2">Rusak</span>
-                          @endif
-                        </a>
-                      </li>
-                    @endforeach
-                  </ul>
-                </li>
-              @empty
-                <li><a href="javascript:;"><i class="material-icons-outlined">arrow_right</i>No Control Room Available</a></li>
-              @endforelse
-            </ul>
-          </li> --}}
-          
-          
-         
           
        
          </ul>
