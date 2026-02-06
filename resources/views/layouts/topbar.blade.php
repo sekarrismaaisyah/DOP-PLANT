@@ -70,7 +70,7 @@
         
         <li class="nav-item dropdown">
           <a href="javascrpt:;" class="dropdown-toggle dropdown-toggle-nocaret" data-bs-toggle="dropdown">
-             <img src="https://cdn-icons-png.flaticon.com/512/6522/6522516.png}" class="rounded-circle p-1 border" width="45" height="45">
+             <img src="https://cdn-icons-png.flaticon.com/512/6522/6522516.png" class="rounded-circle p-1 border" width="45" height="45">
           </a>
           <div class="dropdown-menu dropdown-user dropdown-menu-end shadow">
             <a class="dropdown-item  gap-2 py-2" href="javascript:;">
