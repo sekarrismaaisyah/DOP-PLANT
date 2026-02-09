@@ -2188,9 +2188,47 @@
                         </div>
                     </div>
 
-                    {{-- Section 3: OAK --}}
+                    {{-- Section 3: OAK + Intervensi Layer 2, 3, 4 --}}
                     <div class="intervensi-section">
                         <h6 class="text-warning text-dark border-bottom pb-2 mb-3"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">visibility</i> OAK <span class="badge bg-warning text-dark ms-1" id="intervensiBadgeOak">0</span></h6>
+                        {{-- Intervensi OAK: Layer 2, Layer 3, Layer 4 — 3 tombol intervensi by WA --}}
+                        <div id="intervensiOakLayersWrap" class="card border-warning mb-3">
+                            <div class="card-header bg-warning bg-opacity-10 py-2">
+                                <span class="material-icons-outlined align-middle me-1 text-warning">notifications_active</span>
+                                <strong>Intervensi OAK — Layer 2, 3, 4</strong>
+                            </div>
+                            <div class="card-body py-3">
+                                <div class="row g-3">
+                                    <div class="col-md-4">
+                                        <div class="border rounded p-2 bg-light">
+                                            <p class="small mb-1 fw-semibold">Layer 2</p>
+                                            <p class="small mb-1 text-muted"><strong>Nama:</strong> <span id="intervensiOakLayer2Name" class="text-dark">—</span></p>
+                                            <div id="intervensiOakLayer2Users" class="d-flex flex-wrap gap-1"></div>
+                                            <div id="intervensiOakLayer2Empty" class="text-muted small d-none">Tidak ada user.</div>
+                                            <div id="intervensiOakLayer2Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1"></span>Memuat...</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="border rounded p-2 bg-light">
+                                            <p class="small mb-1 fw-semibold">Layer 3</p>
+                                            <p class="small mb-1 text-muted"><strong>Nama:</strong> <span id="intervensiOakLayer3Name" class="text-dark">—</span></p>
+                                            <div id="intervensiOakLayer3Users" class="d-flex flex-wrap gap-1"></div>
+                                            <div id="intervensiOakLayer3Empty" class="text-muted small d-none">Tidak ada user.</div>
+                                            <div id="intervensiOakLayer3Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1"></span>Memuat...</div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="border rounded p-2 bg-light">
+                                            <p class="small mb-1 fw-semibold">Layer 4</p>
+                                            <p class="small mb-1 text-muted"><strong>Nama:</strong> <span id="intervensiOakLayer4Name" class="text-dark">—</span></p>
+                                            <div id="intervensiOakLayer4Users" class="d-flex flex-wrap gap-1"></div>
+                                            <div id="intervensiOakLayer4Empty" class="text-muted small d-none">Tidak ada user.</div>
+                                            <div id="intervensiOakLayer4Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1"></span>Memuat...</div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div id="intervensiOakLoading" class="text-center py-3 d-none"><div class="spinner-border text-warning spinner-border-sm" role="status"></div><p class="text-muted mb-0 mt-2 small">Memuat data OAK...</p></div>
                         <div id="intervensiOakEmpty" class="text-center py-3 d-none"><span class="material-icons-outlined text-muted" style="font-size: 32px;">inbox</span><p class="text-muted mt-2 mb-0 small">Tidak ada data OAK.</p></div>
                         <div id="intervensiOakTableWrap" class="d-none">
@@ -2235,6 +2273,7 @@
 (function() {
     var modalApiUrl = @json(route('dopmikk.api.ikk-modal-data'));
     var layer1UsersApiUrl = @json(route('dopmikk.api.layer1-users'));
+    var layers234UsersApiUrl = @json(route('dopmikk.api.layers234-users'));
     var ipkFormLink = 'https://docs.google.com/forms/d/e/1FAIpQLSddTpsj6qbXN3pSpHvhZvPJdM4CU10H3oY9k3MEg6NTzRublA/viewform';
     var modalEl = document.getElementById('detailDopmModal');
     var intervensiModalEl = document.getElementById('intervensiDopmModal');
@@ -2356,6 +2395,16 @@
             document.getElementById('intervensiOakLoading').classList.remove('d-none');
             document.getElementById('intervensiOakEmpty').classList.add('d-none');
             document.getElementById('intervensiOakTableWrap').classList.add('d-none');
+            [2, 3, 4].forEach(function(n) {
+                var usersEl = document.getElementById('intervensiOakLayer' + n + 'Users');
+                var emptyEl = document.getElementById('intervensiOakLayer' + n + 'Empty');
+                var loadingEl = document.getElementById('intervensiOakLayer' + n + 'Loading');
+                var nameEl = document.getElementById('intervensiOakLayer' + n + 'Name');
+                if (usersEl) usersEl.innerHTML = '';
+                if (emptyEl) { emptyEl.classList.add('d-none'); }
+                if (loadingEl) { loadingEl.classList.remove('d-none'); }
+                if (nameEl) nameEl.textContent = '—';
+            });
             var layer1Wrap = document.getElementById('intervensiLayer1Wrap');
             var layer1UsersEl = document.getElementById('intervensiLayer1Users');
             var layer1EmptyEl = document.getElementById('intervensiLayer1Empty');
@@ -2499,8 +2548,60 @@
                     });
             }
 
+            function doOakLayers234Fetch() {
+                var qs = new URLSearchParams();
+                qs.set('sid_layer_2', data.sid_layer_2 || '');
+                qs.set('sid_layer_3', data.sid_layer_3 || '');
+                qs.set('sid_layer_4', data.sid_layer_4 || '');
+                qs.set('nama_layer_2', data.nama_layer_2 || '');
+                qs.set('nama_layer_3', data.nama_layer_3 || '');
+                qs.set('nama_layer_4', data.nama_layer_4 || '');
+                fetch(layers234UsersApiUrl + '?' + qs.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        [2, 3, 4].forEach(function(n) {
+                            var key = 'layer_' + n;
+                            var usersEl = document.getElementById('intervensiOakLayer' + n + 'Users');
+                            var emptyEl = document.getElementById('intervensiOakLayer' + n + 'Empty');
+                            var loadingEl = document.getElementById('intervensiOakLayer' + n + 'Loading');
+                            var nameEl = document.getElementById('intervensiOakLayer' + n + 'Name');
+                            if (loadingEl) loadingEl.classList.add('d-none');
+                            var layerData = res && res[key] ? res[key] : { users: [], nama_layer: '' };
+                            var users = layerData.users || [];
+                            var displayName = layerData.nama_layer || '—';
+                            if (nameEl) nameEl.textContent = displayName;
+                            if (!usersEl) return;
+                            usersEl.innerHTML = '';
+                            var oakMsg = (displayName !== '—' ? displayName : 'PIC') + ', mohon perhatian untuk OAK (Observasi Aktivitas Kerja) sesuai IKK ini.';
+                            users.forEach(function(u) {
+                                var num = normalizeWaNumber(u.selular);
+                                if (!num) return;
+                                var label = u.nama || u.username || 'User';
+                                var a = document.createElement('a');
+                                a.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(oakMsg);
+                                a.target = '_blank';
+                                a.rel = 'noopener';
+                                a.className = 'btn btn-sm btn-warning text-dark';
+                                a.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:14px;">send</i> Intervensi by WA';
+                                a.title = label;
+                                usersEl.appendChild(a);
+                            });
+                            if (users.length === 0 && emptyEl) emptyEl.classList.remove('d-none');
+                        });
+                    })
+                    .catch(function() {
+                        [2, 3, 4].forEach(function(n) {
+                            var loadingEl = document.getElementById('intervensiOakLayer' + n + 'Loading');
+                            var emptyEl = document.getElementById('intervensiOakLayer' + n + 'Empty');
+                            if (loadingEl) loadingEl.classList.add('d-none');
+                            if (emptyEl) emptyEl.classList.remove('d-none');
+                        });
+                    });
+            }
+
             doIntervensiFetch();
             doLayer1Fetch();
+            doOakLayers234Fetch();
             return;
         }
 

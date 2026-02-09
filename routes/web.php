@@ -400,6 +400,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('dopmikk')->name('dopmikk.')->group(function () {
         Route::get('api/ikk-modal-data', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getDetailModalData'])->name('api.ikk-modal-data');
         Route::get('api/layer1-users', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getLayer1Users'])->name('api.layer1-users');
+        Route::get('api/layers234-users', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getLayers234Users'])->name('api.layers234-users');
         // DOPM
         Route::prefix('dopm')->name('dopm.')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'dashboard'])->name('dashboard');

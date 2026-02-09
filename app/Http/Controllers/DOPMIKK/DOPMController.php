@@ -275,6 +275,77 @@ class DOPMController extends Controller
     }
 
     /**
+     * API untuk modal Intervensi OAK: ambil user Layer 2, 3, 4 dari vw_user (by SID/nama).
+     * Return layer_2, layer_3, layer_4 masing-masing berisi users + nama_layer untuk WA.
+     */
+    public function getLayers234Users(Request $request): JsonResponse
+    {
+        $layers = [
+            'layer_2' => ['sid' => trim((string) $request->input('sid_layer_2', '')), 'nama' => trim((string) $request->input('nama_layer_2', ''))],
+            'layer_3' => ['sid' => trim((string) $request->input('sid_layer_3', '')), 'nama' => trim((string) $request->input('nama_layer_3', ''))],
+            'layer_4' => ['sid' => trim((string) $request->input('sid_layer_4', '')), 'nama' => trim((string) $request->input('nama_layer_4', ''))],
+        ];
+
+        $result = ['success' => true, 'layer_2' => ['users' => [], 'nama_layer' => $layers['layer_2']['nama']], 'layer_3' => ['users' => [], 'nama_layer' => $layers['layer_3']['nama']], 'layer_4' => ['users' => [], 'nama_layer' => $layers['layer_4']['nama']]];
+
+        try {
+            foreach (['layer_2', 'layer_3', 'layer_4'] as $key) {
+                $sid = $layers[$key]['sid'];
+                $nama = $layers[$key]['nama'];
+                if ($sid === '' && $nama === '') {
+                    continue;
+                }
+
+                $query = \Illuminate\Support\Facades\DB::table('vw_user')
+                    ->where('is_active', 1)
+                    ->whereNotNull('username')
+                    ->where('username', '!=', '')
+                    ->whereNotNull('nama')
+                    ->where('nama', '!=', '');
+
+                if ($sid !== '') {
+                    $sids = array_map('trim', preg_split('/[\s,;]+/', $sid, -1, PREG_SPLIT_NO_EMPTY));
+                    $sids = array_unique(array_filter($sids));
+                    if (!empty($sids)) {
+                        $query->whereIn('username', $sids);
+                    } else {
+                        $query->where('username', '=', $sid);
+                    }
+                } else {
+                    $query->where(function ($q) use ($nama) {
+                        $q->where('nama', 'LIKE', '%' . $nama . '%')
+                            ->orWhere('username', 'LIKE', '%' . $nama . '%');
+                    });
+                }
+
+                $users = $query->select('id', 'username', 'nama', 'email', 'selular', 'nik')
+                    ->orderBy('username', 'ASC')
+                    ->limit(50)
+                    ->get()
+                    ->map(function ($row) {
+                        return [
+                            'id' => $row->id,
+                            'username' => trim($row->username ?? ''),
+                            'nama' => trim($row->nama ?? ''),
+                            'email' => trim($row->email ?? ''),
+                            'selular' => trim($row->selular ?? ''),
+                            'nik' => trim($row->nik ?? ''),
+                        ];
+                    })
+                    ->values()
+                    ->toArray();
+
+                $result[$key] = ['users' => $users, 'nama_layer' => $nama];
+            }
+
+            return response()->json($result);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('DOPMController getLayers234Users: ' . $e->getMessage());
+            return response()->json(array_merge($result, ['success' => false, 'message' => $e->getMessage()]), 500);
+        }
+    }
+
+    /**
      * Display DOPM entries with search and pagination.
      */
     public function index(Request $request): View
