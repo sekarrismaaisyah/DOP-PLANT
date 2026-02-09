@@ -69,7 +69,7 @@
         <ul class="metismenu" id="sidenav">
           
           <li>
-            <a href="{{ route('hazard-detection.index') }}">
+            <a href="{{ route('dms.dashboard-static') }}">
               <div class="parent-icon"><i class="material-icons-outlined">dashboard</i>
               </div>
               <div class="menu-title">Dashboard</div>
@@ -81,7 +81,7 @@
           
 
           <li>
-            <a class="" href="">
+            <a class="" href="{{ route('dms.index') }}">
               <div class="parent-icon"><i class="material-icons-outlined">camera</i>
               </div>
               <div class="menu-title">Kalibrasi Operator</div>
@@ -90,7 +90,7 @@
 
           
           <li>
-            <a class="" href="">
+            <a class="" href="{{ route('dms.detection') }}">
               <div class="parent-icon"><i class="material-icons-outlined">gps_fixed</i>
               </div>
               <div class="menu-title">Deteksi Operator</div>
@@ -104,15 +104,9 @@
               <div class="menu-title">Report</div>
             </a>
           </li>
+
          
-          
-      
          
-          
-          
-          
-          
-       
          </ul>
         <!--end navigation-->
     </div>

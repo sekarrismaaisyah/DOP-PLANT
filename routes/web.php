@@ -75,6 +75,8 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/full-maps/api/intervensi-area-kerja', [fullMapsController::class, 'storeIntervensiAreaKerja'])->name('full-maps.api.intervensi-area-kerja');
     Route::get('/full-maps/api/cctv-for-area-kerja', [fullMapsController::class, 'getCctvForAreaKerja'])->name('full-maps.api.cctv-for-area-kerja');
     Route::get('/full-maps/api/daily-operation-plans', [fullMapsController::class, 'getDailyOperationPlansWithPolygons'])->name('full-maps.api.daily-operation-plans');
+    Route::get('/full-maps/api/dopm-ikk-today', [fullMapsController::class, 'getDopmIkkToday'])->name('full-maps.api.dopm-ikk-today');
+    Route::get('/full-maps/api/ikk-modal-data', [fullMapsController::class, 'getIkkModalData'])->name('full-maps.api.ikk-modal-data');
     Route::get('/full-maps/api/location-sap-counts', [fullMapsController::class, 'getLocationSapCounts'])->name('full-maps.api.location-sap-counts');
     Route::get('/full-maps/api/latest-cctv-alert', [fullMapsController::class, 'getLatestCctvAlert'])->name('full-maps.api.latest-cctv-alert');
     Route::get('/full-maps/api/cctv-alerts-with-units', [fullMapsController::class, 'getCctvAlertsWithUnits'])->name('full-maps.api.cctv-alerts-with-units');
@@ -394,6 +396,46 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/import', [InsidenLpiController::class, 'import'])->name('import');
     });
 
+    // DOPM$IKK Routes - DOPM, IPK-IKK, OKK
+    Route::prefix('dopmikk')->name('dopmikk.')->group(function () {
+        Route::get('api/ikk-modal-data', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getDetailModalData'])->name('api.ikk-modal-data');
+        Route::get('api/layer1-users', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getLayer1Users'])->name('api.layer1-users');
+        // DOPM
+        Route::prefix('dopm')->name('dopm.')->group(function () {
+            Route::get('/dashboard', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'dashboard'])->name('dashboard');
+            Route::get('/', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'create'])->name('create');
+            Route::get('/download-template', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'downloadTemplate'])->name('download-template');
+            Route::post('/', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'store'])->name('store');
+            Route::post('/import', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'import'])->name('import');
+            Route::get('/{dopm}/edit', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'edit'])->name('edit');
+            Route::put('/{dopm}', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'update'])->name('update');
+            Route::delete('/{dopm}', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'destroy'])->name('destroy');
+        });
+        // IPK-IKK
+        Route::prefix('ipk-ikk')->name('ipk-ikk.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\DOPMIKK\IPKIKKController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\DOPMIKK\IPKIKKController::class, 'create'])->name('create');
+            Route::get('/download-template', [\App\Http\Controllers\DOPMIKK\IPKIKKController::class, 'downloadTemplate'])->name('download-template');
+            Route::post('/', [\App\Http\Controllers\DOPMIKK\IPKIKKController::class, 'store'])->name('store');
+            Route::post('/import', [\App\Http\Controllers\DOPMIKK\IPKIKKController::class, 'import'])->name('import');
+            Route::get('/{ipkIkk}/edit', [\App\Http\Controllers\DOPMIKK\IPKIKKController::class, 'edit'])->name('edit');
+            Route::put('/{ipkIkk}', [\App\Http\Controllers\DOPMIKK\IPKIKKController::class, 'update'])->name('update');
+            Route::delete('/{ipkIkk}', [\App\Http\Controllers\DOPMIKK\IPKIKKController::class, 'destroy'])->name('destroy');
+        });
+        // OKK
+        Route::prefix('okk')->name('okk.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\DOPMIKK\OKKController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\DOPMIKK\OKKController::class, 'create'])->name('create');
+            Route::get('/download-template', [\App\Http\Controllers\DOPMIKK\OKKController::class, 'downloadTemplate'])->name('download-template');
+            Route::post('/', [\App\Http\Controllers\DOPMIKK\OKKController::class, 'store'])->name('store');
+            Route::post('/import', [\App\Http\Controllers\DOPMIKK\OKKController::class, 'import'])->name('import');
+            Route::get('/{okk}/edit', [\App\Http\Controllers\DOPMIKK\OKKController::class, 'edit'])->name('edit');
+            Route::put('/{okk}', [\App\Http\Controllers\DOPMIKK\OKKController::class, 'update'])->name('update');
+            Route::delete('/{okk}', [\App\Http\Controllers\DOPMIKK\OKKController::class, 'destroy'])->name('destroy');
+        });
+    });
+
     // Hazard Validation Routes - HARUS sebelum catch-all route
     Route::prefix('hazard-validation')->name('hazard-validation.')->group(function () {
         Route::get('/', [HazardValidationController::class, 'index'])->name('index');
@@ -419,6 +461,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', function () {
             return view('dms.index');
         })->name('index');
+        Route::get('/detection', [\App\Http\Controllers\DMS\DetectionController::class, 'index'])->name('detection');
         Route::get('/dashboard', [\App\Http\Controllers\DMS\DMSDashboardController::class, 'index'])->name('dashboard');
         Route::get('/dashboard-static', function () {
             return view('dms.dashboard-static');

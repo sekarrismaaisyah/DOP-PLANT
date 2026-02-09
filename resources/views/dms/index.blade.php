@@ -1149,7 +1149,7 @@
     </div>
 </div>
 
-<div class="row mt-4">
+{{-- <div class="row mt-4">
     <div class="col-12">
         <div class="card rounded-4">
             <div class="card-body">
@@ -1289,7 +1289,7 @@
             </div>
         </div>
     </div>
-</div>
+</div> --}}
 
     <!-- MediaPipe Face Landmarker from CDN -->
     <!-- Using correct import path based on MediaPipe package structure -->

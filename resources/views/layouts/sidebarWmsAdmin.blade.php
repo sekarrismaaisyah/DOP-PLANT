@@ -121,6 +121,32 @@
               <div class="menu-title">DOP</div>
             </a>
           </li>
+
+          <li class="menu-label">DOPM$IKK</li>
+          <li>
+            <a href="{{ route('dopmikk.dopm.dashboard') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">dashboard</i></div>
+              <div class="menu-title">Dashboard DOPM & IKK</div>
+            </a>
+          </li>
+          <li>
+            <a href="{{ route('dopmikk.dopm.index') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">assignment</i></div>
+              <div class="menu-title">DOPM</div>
+            </a>
+          </li>
+          <li>
+            <a href="{{ route('dopmikk.ipk-ikk.index') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">checklist</i></div>
+              <div class="menu-title">IPK-IKK</div>
+            </a>
+          </li>
+          <li>
+            <a href="{{ route('dopmikk.okk.index') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">folder_open</i></div>
+              <div class="menu-title">OKK</div>
+            </a>
+          </li>
          
           
           <li class="menu-label">Control Room</li>

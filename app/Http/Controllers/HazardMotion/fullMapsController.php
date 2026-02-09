@@ -14,7 +14,10 @@ use App\Models\PjaCctvDedicated;
 use App\Models\IntervensiControlRoom;
 use App\Models\IntervensiAreaKerja;
 use App\Models\DailyOperationPlan;
+use App\Models\Dopm;
 use App\Models\HseAiValidation;
+use App\Models\IpkIkk;
+use App\Models\Okk;
 use App\Services\BesigmaDbService;
 use App\Services\ClickHouseService;
 use App\Services\TelegramBotService;
@@ -2372,6 +2375,198 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     'type' => 'FeatureCollection',
                     'features' => []
                 ]
+            ], 500);
+        }
+    }
+
+    /**
+     * Get DOPM (IKK) data where tanggal_dop = today for full maps IKK layer
+     * Uses Asia/Jakarta so "hari ini" matches user date in Indonesia.
+     */
+    public function getDopmIkkToday(Request $request)
+    {
+        try {
+            $tz = config('app.timezone') === 'UTC' ? 'Asia/Jakarta' : config('app.timezone');
+            $today = Carbon::today($tz)->format('Y-m-d');
+            $entries = Dopm::whereDate('tanggal_dop', $today)
+                ->orderBy('detail_lokasi')
+                ->orderBy('id_dop')
+                ->get();
+
+            $data = $entries->map(function ($dopm) {
+                return [
+                    'id' => $dopm->id,
+                    'id_dop' => $dopm->id_dop,
+                    'timestamp' => $dopm->timestamp?->format('Y-m-d H:i:s'),
+                    'site_ijin_kerja_khusus' => $dopm->site_ijin_kerja_khusus,
+                    'perusahaan_ijin_kerja_khusus' => $dopm->perusahaan_ijin_kerja_khusus,
+                    'jenis_ijin_kerja_khusus' => $dopm->jenis_ijin_kerja_khusus,
+                    'kode_ikk' => $dopm->kode_ikk,
+                    'tanggal_selesai_ijin' => $dopm->tanggal_selesai_ijin?->format('Y-m-d'),
+                    'nama_pekerjaan' => $dopm->nama_pekerjaan,
+                    'tanggal_dop' => $dopm->tanggal_dop?->format('Y-m-d'),
+                    'status_pengiriman_notif' => $dopm->status_pengiriman_notif,
+                    'status' => $dopm->status,
+                    'deskripsi_atau_alasan_cancel' => $dopm->deskripsi_atau_alasan_cancel,
+                    'sid_layer_2' => $dopm->sid_layer_2,
+                    'nama_layer_2' => $dopm->nama_layer_2,
+                    'sid_layer_3' => $dopm->sid_layer_3,
+                    'nama_layer_3' => $dopm->nama_layer_3,
+                    'sid_layer_4' => $dopm->sid_layer_4,
+                    'nama_layer_4' => $dopm->nama_layer_4,
+                    'jenis_pengawasan_layer' => $dopm->jenis_pengawasan_layer,
+                    'detail_lokasi' => $dopm->detail_lokasi,
+                ];
+            })->toArray();
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'summary' => [
+                    'tanggal' => $today,
+                    'total' => count($data),
+                ],
+            ]);
+        } catch (Exception $e) {
+            Log::error('getDopmIkkToday error: ' . $e->getMessage(), [
+                'exception' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data IKK: ' . $e->getMessage(),
+                'data' => [],
+            ], 500);
+        }
+    }
+
+    /**
+     * Map jenis_ijin_kerja_khusus (DOPM) to Activity / Sub Activity for ClickHouse OAK
+     */
+    private function mapJenisIjinToOakActivity(string $jenis): array
+    {
+        $j = $jenis;
+        if (stripos($j, 'IKDP') !== false || stripos($j, 'Ijin Kerja Dengan Panas') !== false) {
+            return ['activity' => 'Bekerja dengan Panas', 'sub_activity' => null];
+        }
+        if (stripos($j, 'IKDA') !== false || stripos($j, 'Dekat/Atas Air') !== false) {
+            return ['activity' => 'Bekerja di Dekat Air', 'sub_activity' => null];
+        }
+        if (stripos($j, 'IKPM') !== false || stripos($j, 'Pengangkatan') !== false) {
+            return ['activity' => 'Pengangkatan & Pengangkutan Unit/Material', 'sub_activity' => null];
+        }
+        if (stripos($j, 'IKDW') !== false || stripos($j, 'Diluar Workshop') !== false) {
+            return ['activity' => 'Perbaikan, Perawatan & Fabrikasi Unit/Fasilitas Tambang', 'sub_activity' => null];
+        }
+        if (stripos($j, 'IKDK') !== false || stripos($j, 'Ketinggian') !== false) {
+            $sub = null;
+            if (stripos($j, 'Perancah') !== false && stripos($j, '10 Meter') !== false && (stripos($j, 'Diatas') !== false || stripos($j, '>10') !== false)) {
+                $sub = 'Ketinggian >10 m'; // with Perancah
+            } elseif (stripos($j, 'Perancah') !== false && (stripos($j, 'Dibawah') !== false || stripos($j, '<10') !== false)) {
+                $sub = 'Ketinggian <10 m';
+            } elseif (stripos($j, 'Diatas 10') !== false || stripos($j, '>10') !== false) {
+                $sub = 'Ketinggian >10 m';
+            } elseif (stripos($j, 'Dibawah 10') !== false || stripos($j, '<10') !== false) {
+                $sub = 'Ketinggian <10 m';
+            }
+            return ['activity' => 'Bekerja di Ketinggian', 'sub_activity' => $sub];
+        }
+        return ['activity' => null, 'sub_activity' => null];
+    }
+
+    /**
+     * Get data for IKK modal: IPK IKK (by kode_ikk), OKK (by kode_ikk), OAK from ClickHouse (by Activity from jenis_ijin + SID)
+     */
+    public function getIkkModalData(Request $request)
+    {
+        try {
+            $kodeIkk = $request->input('kode_ikk');
+            $jenisIjin = $request->input('jenis_ijin_kerja_khusus', '');
+            $namaLayer2 = $request->input('nama_layer_2', '');
+            $namaLayer3 = $request->input('nama_layer_3', '');
+            $namaLayer4 = $request->input('nama_layer_4', '');
+            $sidLayer2 = $request->input('sid_layer_2', '');
+            $sidLayer3 = $request->input('sid_layer_3', '');
+            $sidLayer4 = $request->input('sid_layer_4', '');
+
+            $ipkIkk = [];
+            $okk = [];
+            $oak = [];
+
+            if ($kodeIkk) {
+                $ipkIkk = IpkIkk::where('kode_ikk', $kodeIkk)->orderBy('ts', 'desc')->get()->map(function ($row) {
+                    return $row->toArray();
+                })->toArray();
+                $okk = Okk::where('kode_ikk', $kodeIkk)->orderBy('ts', 'desc')->get()->map(function ($row) {
+                    return $row->toArray();
+                })->toArray();
+            }
+
+            $mapped = $this->mapJenisIjinToOakActivity($jenisIjin);
+            $activity = $mapped['activity'];
+            $subActivity = $mapped['sub_activity'];
+
+            if ($activity) {
+                $sids = array_filter([$sidLayer2, $sidLayer3, $sidLayer4]);
+                $names = array_filter([$namaLayer2, $namaLayer3, $namaLayer4]);
+                $sql = "
+                    SELECT 
+                        toString(id) as id,
+                        toString(activity) as activity,
+                        toString(sub_activity) as sub_activity,
+                        toString(tool_type) as tool_type,
+                        toString(location) as location,
+                        toString(detail_location) as detail_location,
+                        toString(conclusion) as conclusion,
+                        toString(submit_date) as submit_date,
+                        toString(company_submit_by) as company_submit_by,
+                        toString(submit_by) as submit_by,
+                        toString(kode_sid_pelapor) as kode_sid_pelapor,
+                        toString(kode_sid_team) as kode_sid_team,
+                        toString(nama_team) as nama_team,
+                        ifNull(toString(latitude), '') as latitude,
+                        ifNull(toString(longitude), '') as longitude,
+                        ifNull(toString(site), '') as site
+                    FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                    WHERE 1=1
+                    AND trim(lower(toString(activity))) = trim(lower('" . addslashes($activity) . "'))
+                ";
+                if ($subActivity) {
+                    $sql .= " AND trim(lower(toString(sub_activity))) LIKE trim(lower('%" . addslashes($subActivity) . "%'))";
+                }
+                if (!empty($sids)) {
+                    $inList = implode(',', array_map(function ($s) {
+                        return "'" . addslashes($s) . "'";
+                    }, $sids));
+                    $sql .= " AND (toString(kode_sid_pelapor) IN ({$inList}) OR toString(kode_sid_team) IN ({$inList}))";
+                }
+                $sql .= " ORDER BY toDateTime(submit_date) DESC LIMIT 100";
+                $oak = $this->queryClickHouseCustom($sql, 'hse_automation');
+                if (!is_array($oak)) {
+                    $oak = [];
+                }
+            }
+
+            return response()->json([
+                'success' => true,
+                'ipk_ikk' => $ipkIkk,
+                'okk' => $okk,
+                'oak' => $oak,
+                'dopm_context' => [
+                    'nama_layer_2' => $namaLayer2,
+                    'nama_layer_3' => $namaLayer3,
+                    'nama_layer_4' => $namaLayer4,
+                ],
+            ]);
+        } catch (Exception $e) {
+            Log::error('getIkkModalData error: ' . $e->getMessage(), [
+                'trace' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'ipk_ikk' => [],
+                'okk' => [],
+                'oak' => [],
             ], 500);
         }
     }

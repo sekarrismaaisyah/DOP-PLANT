@@ -1618,6 +1618,21 @@
   color: #000;
 }
 
+/* Modal IKK: pastikan di atas backdrop dan bisa diklik */
+.modal-backdrop {
+  z-index: 10550 !important;
+}
+#ikkModal.modal {
+  z-index: 10600 !important;
+  pointer-events: auto;
+}
+#ikkModal .modal-dialog {
+  pointer-events: auto;
+}
+#ikkModal .modal-content {
+  pointer-events: auto;
+}
+
 /* Responsive */
 /* Tablet Styles (max-width: 1024px) */
 @media (max-width: 1024px){
@@ -2560,6 +2575,55 @@
     <!-- Sidebar Backdrop (for mobile) -->
     <div class="gm-sidebar-backdrop" id="gmSidebarBackdrop"></div>
 
+    <!-- Modal IKK (IPK IKK, OKK, OAK) - di luar map container agar z-index di atas backdrop -->
+    <div class="modal fade" id="ikkModal" tabindex="-1" aria-labelledby="ikkModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true" style="z-index: 10600;">
+        <div class="modal-dialog modal-xl modal-dialog-scrollable">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="ikkModalLabel">
+                        <i class="material-icons-outlined align-middle me-1">assignment</i>
+                        Detail IKK - <span id="ikkModalKodeIkk">-</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body p-0">
+                    <ul class="nav nav-tabs px-3 pt-2" id="ikkModalTabs" role="tablist">
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link active" id="ikk-tab-ipk" data-bs-toggle="tab" data-bs-target="#ikk-pane-ipk" type="button" role="tab">IPK IKK</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="ikk-tab-okk" data-bs-toggle="tab" data-bs-target="#ikk-pane-okk" type="button" role="tab">OKK</button>
+                        </li>
+                        <li class="nav-item" role="presentation">
+                            <button class="nav-link" id="ikk-tab-oak" data-bs-toggle="tab" data-bs-target="#ikk-pane-oak" type="button" role="tab">OAK</button>
+                        </li>
+                    </ul>
+                    <div class="tab-content p-3" id="ikkModalTabContent">
+                        <div class="tab-pane fade show active" id="ikk-pane-ipk" role="tabpanel">
+                            <div id="ikkModalIpkIkkBody" class="small">
+                                <p class="text-muted mb-0">Memuat data IPK IKK...</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="ikk-pane-okk" role="tabpanel">
+                            <div id="ikkModalOkkBody" class="small">
+                                <p class="text-muted mb-0">Memuat data OKK...</p>
+                            </div>
+                        </div>
+                        <div class="tab-pane fade" id="ikk-pane-oak" role="tabpanel">
+                            <div class="mb-2">
+                                <span class="text-muted">Layer 2–4:</span>
+                                <span id="ikkModalOakLayerNames">-</span>
+                            </div>
+                            <div id="ikkModalOakBody" class="small">
+                                <p class="text-muted mb-0">Memuat data OAK...</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Google Maps Style Left Sidebar -->
     <div class="gm-left-sidebar collapsed" id="gmLeftSidebar">
         <!-- Hamburger Menu in Sidebar -->
@@ -3212,7 +3276,12 @@
                             <div class="gm-label">Probability</div>
                         <div class="gm-sub">Probability Insiden</div>
                         </label>
-                       
+                        <input class="btn-check" type="checkbox" id="layerIkk" autocomplete="off">
+                        <label class="gm-tile" for="layerIkk" data-layer="ikk">
+                            <div class="gm-thumb" style="background-image:url('https://plus.unsplash.com/premium_photo-1681691912442-68c4179c530c?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
+                            <div class="gm-label">IKK</div>
+                            <div class="gm-sub">Data IKK Hari Ini</div>
+                        </label>
                     </div>
                 </div>
             </div>
@@ -4137,6 +4206,8 @@
     let hardcodeUnitLayer = null; // Layer untuk unit hardcode
     let hardcodeUnitBoundaryLayer = null; // Layer untuk boundary unit hardcode
     let dailyOperationPlansLayer = null;
+    let ikkLayer = null; // Layer untuk data IKK (DOPM) hari ini
+    let ikkDopmTodayData = []; // Data DOPM tanggal_dop = hari ini untuk panel card
     let dopCctvLinesLayer = null; // Layer untuk garis dari DOP ke CCTV
     let dopCctvMarkersLayer = null; // Layer untuk CCTV markers dari dop_cctv
     let popupOverlay = null;
@@ -5616,7 +5687,7 @@
 
         // Toggle layer ON/OFF - Only one menu can be active at a time
         // Define the menu group checkboxes
-        const menuGroupIds = ['layerSatellite', 'layerTerrain', 'layerTraffic', 'layerTransit'];
+        const menuGroupIds = ['layerSatellite', 'layerTerrain', 'layerTraffic', 'layerTransit', 'layerIkk'];
         
         document.querySelectorAll('.btn-check').forEach(cb => {
             cb.addEventListener('change', () => {
@@ -5877,6 +5948,26 @@
                         areaKerjaBmo2PamaLayer.setVisible(true);
                         areaKerjaBmo2PamaLayer.setOpacity(1.0);
                         console.log('Showing Area Kerja BMO2 PAMA layer from JS');
+                    }
+                }
+            } else if (layerName === 'ikk') {
+                if (ikkLayer) {
+                    if (isOn) {
+                        ikkLayer.setVisible(true);
+                        loadIkkDopmToday();
+                        setTimeout(() => {
+                            const notificationPanel = document.getElementById('gmNotificationPanel');
+                            if (notificationPanel && notificationPanel.classList.contains('active')) {
+                                renderNotificationPanel();
+                            }
+                        }, 500);
+                    } else {
+                        ikkLayer.setVisible(false);
+                        ikkDopmTodayData = [];
+                        const notificationPanel = document.getElementById('gmNotificationPanel');
+                        if (notificationPanel && notificationPanel.classList.contains('active')) {
+                            renderNotificationPanel();
+                        }
                     }
                 }
             } else {
@@ -6408,10 +6499,82 @@
             callback(canvas.toDataURL());
         }
     }
-    
+
+    // Create IKK card icon (same visual concept as DOP card: header "IKK", text area, arrow)
+    function createIkkCardIcon(namaPekerjaan, detailLokasi, callback) {
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+        const cardWidth = 200;
+        const cardHeight = 180;
+        const arrowHeight = 20;
+        const totalHeight = cardHeight + arrowHeight;
+        canvas.width = cardWidth;
+        canvas.height = totalHeight;
+        const imageY = 35;
+        const imageHeight = 100;
+        const imageWidth = cardWidth - 20;
+        const imageX = 10;
+
+        function drawCard() {
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(10, 0);
+            ctx.lineTo(cardWidth - 10, 0);
+            ctx.lineTo(cardWidth, 10);
+            ctx.lineTo(cardWidth, cardHeight - 10);
+            ctx.lineTo(cardWidth - 10, cardHeight);
+            ctx.lineTo(10, cardHeight);
+            ctx.lineTo(0, cardHeight - 10);
+            ctx.lineTo(0, 10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+            ctx.shadowBlur = 10;
+            ctx.shadowOffsetY = 2;
+            ctx.fill();
+            ctx.shadowColor = 'transparent';
+            ctx.shadowBlur = 0;
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            ctx.strokeStyle = 'rgba(234, 67, 53, 0.8)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+            ctx.fillStyle = '#1f2937';
+            ctx.font = 'bold 14px Arial';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'top';
+            ctx.fillText('IKK', cardWidth / 2, 12);
+            ctx.fillStyle = '#f3f4f6';
+            ctx.fillRect(imageX, imageY, imageWidth, imageHeight);
+            ctx.fillStyle = '#1f2937';
+            ctx.font = '12px Arial';
+            ctx.textBaseline = 'middle';
+            const text = (namaPekerjaan || detailLokasi || 'N/A').trim();
+            const line1 = text.length > 28 ? text.substring(0, 28) + '...' : text;
+            ctx.textAlign = 'center';
+            ctx.fillText(line1, cardWidth / 2, imageY + imageHeight / 2);
+            const arrowX = cardWidth / 2;
+            const arrowY = cardHeight;
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.moveTo(arrowX - 15, arrowY);
+            ctx.lineTo(arrowX, arrowY + arrowHeight);
+            ctx.lineTo(arrowX + 15, arrowY);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#e5e7eb';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+        drawCard();
+        if (typeof callback === 'function') callback(canvas.toDataURL());
+    }
+
     // Cache for card icons
     const cardIconCache = {};
-    
+    const ikkCardIconCache = {};
+
     // Create vector layer for Daily Operation Plans (Matriks Area Kerja)
     dailyOperationPlansLayer = new ol.layer.Vector({
 source: new ol.source.Vector(),
@@ -6721,6 +6884,171 @@ source: new ol.source.Vector(),
         zIndex: 450  // Above area kerja layers but below markers
     });
     map.addLayer(dailyOperationPlansLayer);
+
+    // IKK Layer - Data DOPM dengan tanggal_dop = hari ini (card + green ripple seperti DOP)
+    ikkLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        visible: false,
+        style: function(feature, resolution) {
+            const geometry = feature.getGeometry();
+            if (!geometry || geometry.getType() !== 'Point') return [];
+            const styles = [];
+            let blinkTime = 0;
+            if (typeof getPulseAnimationTime === 'function' && pulseAnimationStartTime !== null) {
+                blinkTime = getPulseAnimationTime();
+            }
+            const greenColorRgb = '16, 185, 129';
+            const cycle1 = 2500;
+            const glowCycle = 2000;
+            const glowProgress = ((blinkTime % glowCycle) / glowCycle);
+
+            const cardIcon = feature.get('cardIcon');
+            if (cardIcon) {
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Icon({
+                        src: cardIcon,
+                        scale: 0.5,
+                        anchor: [0.5, 1],
+                        anchorXUnits: 'fraction',
+                        anchorYUnits: 'fraction',
+                        opacity: 1
+                    }),
+                    geometry: geometry,
+                    zIndex: 1000
+                }));
+                const glowRadius = 80 + (Math.sin(glowProgress * Math.PI * 2) * 30);
+                const glowOpacity = 0.15 + (Math.sin(glowProgress * Math.PI * 2) * 0.1);
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: glowRadius,
+                        fill: new ol.style.Fill({ color: `rgba(${greenColorRgb}, ${glowOpacity})` })
+                    }),
+                    geometry: geometry,
+                    zIndex: 994
+                }));
+                const progress1 = ((blinkTime % cycle1) / cycle1);
+                const ripple1Radius = 40 + (progress1 * 50);
+                const ripple1Opacity = Math.max(0, 0.7 * (1 - progress1));
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: ripple1Radius,
+                        fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, 0)' }),
+                        stroke: new ol.style.Stroke({
+                            color: `rgba(${greenColorRgb}, ${ripple1Opacity})`,
+                            width: 4,
+                            lineCap: 'round'
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 998
+                }));
+                const progress2 = (((blinkTime + 1250) % cycle1) / cycle1);
+                const ripple2Radius = 40 + (progress2 * 50);
+                const ripple2Opacity = Math.max(0, 0.6 * (1 - progress2));
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: ripple2Radius,
+                        fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, 0)' }),
+                        stroke: new ol.style.Stroke({
+                            color: `rgba(${greenColorRgb}, ${ripple2Opacity})`,
+                            width: 3,
+                            lineCap: 'round'
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 997
+                }));
+                const progress3 = (((blinkTime + 2500) % cycle1) / cycle1);
+                const ripple3Radius = 40 + (progress3 * 50);
+                const ripple3Opacity = Math.max(0, 0.5 * (1 - progress3));
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: ripple3Radius,
+                        fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, 0)' }),
+                        stroke: new ol.style.Stroke({
+                            color: `rgba(${greenColorRgb}, ${ripple3Opacity})`,
+                            width: 2.5,
+                            lineCap: 'round'
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 996
+                }));
+                const mediumGlowRadius = 50 + (Math.sin(glowProgress * Math.PI * 2) * 15);
+                const mediumGlowOpacity = 0.25 + (Math.sin(glowProgress * Math.PI * 2) * 0.15);
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: mediumGlowRadius,
+                        fill: new ol.style.Fill({ color: `rgba(${greenColorRgb}, ${mediumGlowOpacity})` })
+                    }),
+                    geometry: geometry,
+                    zIndex: 995
+                }));
+                const dotCycle = 1200;
+                const dotProgress = ((blinkTime % dotCycle) / dotCycle);
+                const dotRadius = 8 + (Math.sin(dotProgress * Math.PI * 2) * 3);
+                const dotOpacity = 0.9 + (Math.sin(dotProgress * Math.PI * 2) * 0.1);
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: dotRadius,
+                        fill: new ol.style.Fill({ color: `rgba(${greenColorRgb}, ${dotOpacity})` }),
+                        stroke: new ol.style.Stroke({ color: '#ffffff', width: 2.5 })
+                    }),
+                    geometry: geometry,
+                    zIndex: 999
+                }));
+                const innerRadius = 4 + (Math.sin(dotProgress * Math.PI * 2) * 1.5);
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: innerRadius,
+                        fill: new ol.style.Fill({ color: '#ffffff' })
+                    }),
+                    geometry: geometry,
+                    zIndex: 1000
+                }));
+            } else {
+                const glowRadius = 60 + (Math.sin(glowProgress * Math.PI * 2) * 25);
+                const glowOpacity = 0.15 + (Math.sin(glowProgress * Math.PI * 2) * 0.1);
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: glowRadius,
+                        fill: new ol.style.Fill({ color: `rgba(${greenColorRgb}, ${glowOpacity})` })
+                    }),
+                    geometry: geometry,
+                    zIndex: 994
+                }));
+                const progress1 = ((blinkTime % cycle1) / cycle1);
+                const ripple1Radius = 30 + (progress1 * 40);
+                const ripple1Opacity = Math.max(0, 0.6 * (1 - progress1));
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: ripple1Radius,
+                        fill: new ol.style.Fill({ color: 'rgba(0, 0, 0, 0)' }),
+                        stroke: new ol.style.Stroke({
+                            color: `rgba(${greenColorRgb}, ${ripple1Opacity})`,
+                            width: 3,
+                            lineCap: 'round'
+                        })
+                    }),
+                    geometry: geometry,
+                    zIndex: 998
+                }));
+                styles.push(new ol.style.Style({
+                    image: new ol.style.Circle({
+                        radius: 10,
+                        fill: new ol.style.Fill({ color: '#2563eb' }),
+                        stroke: new ol.style.Stroke({ color: '#ffffff', width: 2 })
+                    }),
+                    geometry: geometry,
+                    zIndex: 999
+                }));
+            }
+            return styles;
+        },
+        name: 'IKK (DOPM Hari Ini)',
+        zIndex: 451
+    });
+    map.addLayer(ikkLayer);
 
     // Create layer for lines connecting DOP to CCTV (dotted lines with pulse animation)
     dopCctvLinesLayer = new ol.layer.Vector({
@@ -7122,6 +7450,122 @@ source: new ol.source.Vector(),
                     timer: 5000,
                     showConfirmButton: true
                 });
+            });
+    }
+
+    // Resolve coordinates for DOPM detail_lokasi from area kerja layers (centroid of matching feature)
+    function getCoordinatesForDetailLokasi(detailLokasi) {
+        if (!detailLokasi || typeof detailLokasi !== 'string') return null;
+        const allFeatures = typeof getAllAreaKerjaFeatures === 'function' ? getAllAreaKerjaFeatures() : [];
+        const search = String(detailLokasi || '').toLowerCase().trim();
+        if (!search) return null;
+        for (let i = 0; i < allFeatures.length; i++) {
+            const f = allFeatures[i];
+            const geom = f.getGeometry();
+            if (!geom) continue;
+            const lokasi = String(f.get('lokasi') || f.get('nama_lokasi') || '').toLowerCase().trim();
+            const detail = String(f.get('detail_lokasi') || f.get('nama_detail_lokasi') || '').toLowerCase().trim();
+            const idLokasi = String(f.get('id_lokasi') ?? '').toLowerCase().trim();
+            const matches = (lokasi && (lokasi.indexOf(search) >= 0 || search.indexOf(lokasi) >= 0)) ||
+                (detail && (detail.indexOf(search) >= 0 || search.indexOf(detail) >= 0)) ||
+                (idLokasi && (idLokasi.indexOf(search) >= 0 || search.indexOf(idLokasi) >= 0));
+            if (matches) {
+                const extent = geom.getExtent();
+                const center = ol.extent.getCenter(extent);
+                return center; // already in EPSG:3857
+            }
+        }
+        return null;
+    }
+
+    function loadIkkDopmToday() {
+        if (!ikkLayer) return;
+        console.log('Loading IKK (DOPM) data for today...');
+        const source = ikkLayer.getSource();
+        source.clear();
+        ikkDopmTodayData = [];
+        fetch('{{ url("full-maps/api/dopm-ikk-today") }}')
+            .then(response => response.json())
+            .then(data => {
+                if (!data.success || !data.data) {
+                    console.warn('IKK API error or no data:', data);
+                    return;
+                }
+                ikkDopmTodayData = data.data;
+                const featuresToAdd = [];
+                data.data.forEach(function(row) {
+                    const detailLokasi = row.detail_lokasi || '';
+                    const coords = getCoordinatesForDetailLokasi(detailLokasi);
+                    if (coords) {
+                        const feature = new ol.Feature({
+                            geometry: new ol.geom.Point(coords),
+                            type: 'ikk',
+                            id: row.id,
+                            id_dop: row.id_dop,
+                            nama_pekerjaan: row.nama_pekerjaan,
+                            detail_lokasi: detailLokasi,
+                            perusahaan_ijin_kerja_khusus: row.perusahaan_ijin_kerja_khusus,
+                            jenis_ijin_kerja_khusus: row.jenis_ijin_kerja_khusus,
+                            kode_ikk: row.kode_ikk,
+                            status: row.status,
+                            tanggal_dop: row.tanggal_dop,
+                            jenis_pengawasan_layer: row.jenis_pengawasan_layer,
+                            site_ijin_kerja_khusus: row.site_ijin_kerja_khusus,
+                            nama_layer_2: row.nama_layer_2,
+                            nama_layer_3: row.nama_layer_3,
+                            nama_layer_4: row.nama_layer_4,
+                            tanggal_selesai_ijin: row.tanggal_selesai_ijin,
+                            status_pengiriman_notif: row.status_pengiriman_notif,
+                            ...row
+                        });
+                        featuresToAdd.push(feature);
+                    }
+                });
+                source.addFeatures(featuresToAdd);
+
+                var iconsToCreate = 0;
+                var iconsCreated = 0;
+                var keyToFeatures = {};
+                featuresToAdd.forEach(function(feature) {
+                    const namaPekerjaan = feature.get('nama_pekerjaan') || '';
+                    const detailLokasi = feature.get('detail_lokasi') || '';
+                    const cacheKey = 'ikk_' + (detailLokasi || '') + '_' + (namaPekerjaan || '');
+                    if (!keyToFeatures[cacheKey]) keyToFeatures[cacheKey] = [];
+                    keyToFeatures[cacheKey].push(feature);
+                });
+                Object.keys(keyToFeatures).forEach(function(cacheKey) {
+                    if (!ikkCardIconCache[cacheKey]) {
+                        iconsToCreate++;
+                        var feats = keyToFeatures[cacheKey];
+                        var first = feats[0];
+                        var namaPekerjaan = first.get('nama_pekerjaan') || '';
+                        var detailLokasi = first.get('detail_lokasi') || '';
+                        createIkkCardIcon(namaPekerjaan, detailLokasi, function(dataUrl) {
+                            ikkCardIconCache[cacheKey] = dataUrl;
+                            feats.forEach(function(f) { f.set('cardIcon', dataUrl); });
+                            iconsCreated++;
+                            if (iconsCreated === iconsToCreate && ikkLayer) ikkLayer.changed();
+                        });
+                    } else {
+                        keyToFeatures[cacheKey].forEach(function(f) { f.set('cardIcon', ikkCardIconCache[cacheKey]); });
+                    }
+                });
+                if (iconsToCreate === 0 && ikkLayer) ikkLayer.changed();
+                if (featuresToAdd.length > 0) {
+                    const extent = source.getExtent();
+                    if (extent && extent[0] !== Infinity) {
+                        map.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 18 });
+                    }
+                }
+                setTimeout(function() {
+                    const panel = document.getElementById('gmNotificationPanel');
+                    if (panel && panel.classList.contains('active')) {
+                        renderNotificationPanel();
+                    }
+                }, 300);
+            })
+            .catch(function(err) {
+                console.error('Error loading IKK data:', err);
             });
     }
 
@@ -10684,6 +11128,17 @@ source: new ol.source.Vector(),
                 return;
             }
             
+            // Check if it's an IKK (DOPM hari ini) feature
+            if (feature.get('type') === 'ikk') {
+                if (highlightedAreaKerjaLayer) {
+                    map.removeLayer(highlightedAreaKerjaLayer);
+                    highlightedAreaKerjaLayer = null;
+                }
+                popupOverlay.setPosition(undefined);
+                openIkkModal(feature.getProperties());
+                return;
+            }
+
             // Check if it's a Daily Operation Plan polygon
             const props = feature.getProperties();
             if (props.id && props.pekerjaan && props.lokasi && props.detail_lokasi) {
@@ -10812,7 +11267,130 @@ source: new ol.source.Vector(),
         document.getElementById('popup-content').innerHTML = content;
         popupOverlay.setPosition(coordinate);
     }
-    
+
+    function openIkkModal(ikk) {
+        const modal = document.getElementById('ikkModal');
+        if (!modal) return;
+        if (document.body !== modal.parentNode) {
+            document.body.appendChild(modal);
+        }
+        const kodeIkk = ikk.kode_ikk || '-';
+        document.getElementById('ikkModalKodeIkk').textContent = kodeIkk;
+        document.getElementById('ikkModalIpkIkkBody').innerHTML = '<p class="text-muted mb-0">Memuat data IPK IKK...</p>';
+        document.getElementById('ikkModalOkkBody').innerHTML = '<p class="text-muted mb-0">Memuat data OKK...</p>';
+        document.getElementById('ikkModalOakBody').innerHTML = '<p class="text-muted mb-0">Memuat data OAK...</p>';
+        document.getElementById('ikkModalOakLayerNames').textContent = [ikk.nama_layer_2, ikk.nama_layer_3, ikk.nama_layer_4].filter(Boolean).join(' / ') || '-';
+        const params = new URLSearchParams({
+            kode_ikk: ikk.kode_ikk || '',
+            jenis_ijin_kerja_khusus: ikk.jenis_ijin_kerja_khusus || '',
+            nama_layer_2: ikk.nama_layer_2 || '',
+            nama_layer_3: ikk.nama_layer_3 || '',
+            nama_layer_4: ikk.nama_layer_4 || '',
+            sid_layer_2: ikk.sid_layer_2 || '',
+            sid_layer_3: ikk.sid_layer_3 || '',
+            sid_layer_4: ikk.sid_layer_4 || ''
+        });
+        const BootstrapModal = window.bootstrap && window.bootstrap.Modal;
+        const bootstrapModal = BootstrapModal ? (BootstrapModal.getOrCreateInstance ? BootstrapModal.getOrCreateInstance(modal) : new BootstrapModal(modal)) : null;
+        if (bootstrapModal) bootstrapModal.show();
+        fetch('{{ url("full-maps/api/ikk-modal-data") }}?' + params.toString())
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (!res.success) {
+                    document.getElementById('ikkModalIpkIkkBody').innerHTML = '<p class="text-danger">Gagal memuat: ' + (res.message || '') + '</p>';
+                    document.getElementById('ikkModalOkkBody').innerHTML = '<p class="text-danger">Gagal memuat</p>';
+                    document.getElementById('ikkModalOakBody').innerHTML = '<p class="text-danger">Gagal memuat</p>';
+                    return;
+                }
+                renderIkkModalIpkIkk(res.ipk_ikk || []);
+                renderIkkModalOkk(res.okk || []);
+                renderIkkModalOak(res.oak || [], res.dopm_context || {});
+            })
+            .catch(function(err) {
+                document.getElementById('ikkModalIpkIkkBody').innerHTML = '<p class="text-danger">Error: ' + (err.message || '') + '</p>';
+                document.getElementById('ikkModalOkkBody').innerHTML = '<p class="text-danger">Error memuat OKK</p>';
+                document.getElementById('ikkModalOakBody').innerHTML = '<p class="text-danger">Error memuat OAK</p>';
+            });
+    }
+
+    function renderIkkModalIpkIkk(rows) {
+        const el = document.getElementById('ikkModalIpkIkkBody');
+        if (!rows.length) {
+            el.innerHTML = '<p class="text-muted">Tidak ada data IPK IKK untuk kode IKK ini.</p>';
+            return;
+        }
+        const keys = Object.keys(rows[0]).filter(function(k) { return k !== 'created_at' && k !== 'updated_at'; });
+        let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr>';
+        keys.forEach(function(k) {
+            html += '<th>' + k.replace(/_/g, ' ') + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        rows.forEach(function(row) {
+            html += '<tr>';
+            keys.forEach(function(k) {
+                var v = row[k];
+                if (v === null || v === undefined) v = '';
+                if (typeof v === 'object' && v !== null && v.date) v = v.date;
+                html += '<td>' + (String(v).substring(0, 200)) + '</td>';
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        el.innerHTML = html;
+    }
+
+    function renderIkkModalOkk(rows) {
+        const el = document.getElementById('ikkModalOkkBody');
+        if (!rows.length) {
+            el.innerHTML = '<p class="text-muted">Tidak ada data OKK untuk kode IKK ini.</p>';
+            return;
+        }
+        const keys = Object.keys(rows[0]).filter(function(k) { return k !== 'created_at' && k !== 'updated_at'; });
+        let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr>';
+        keys.forEach(function(k) {
+            html += '<th>' + k.replace(/_/g, ' ') + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        rows.forEach(function(row) {
+            html += '<tr>';
+            keys.forEach(function(k) {
+                var v = row[k];
+                if (v === null || v === undefined) v = '';
+                if (typeof v === 'object' && v !== null && v.date) v = v.date;
+                html += '<td>' + (String(v).substring(0, 200)) + '</td>';
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        el.innerHTML = html;
+    }
+
+    function renderIkkModalOak(rows, context) {
+        const el = document.getElementById('ikkModalOakBody');
+        if (!rows.length) {
+            el.innerHTML = '<p class="text-muted">Tidak ada data OAK (ClickHouse) yang cocok dengan jenis ijin / layer ini.</p>';
+            return;
+        }
+        const keys = ['activity', 'sub_activity', 'submit_date', 'location', 'detail_location', 'conclusion', 'company_submit_by', 'submit_by', 'kode_sid_pelapor', 'kode_sid_team', 'nama_team', 'site'];
+        const allKeys = Object.keys(rows[0]);
+        let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr>';
+        allKeys.forEach(function(k) {
+            html += '<th>' + k.replace(/_/g, ' ') + '</th>';
+        });
+        html += '</tr></thead><tbody>';
+        rows.forEach(function(row) {
+            html += '<tr>';
+            allKeys.forEach(function(k) {
+                var v = row[k];
+                if (v === null || v === undefined) v = '';
+                html += '<td>' + (String(v).substring(0, 150)) + '</td>';
+            });
+            html += '</tr>';
+        });
+        html += '</tbody></table></div>';
+        el.innerHTML = html;
+    }
+
     function showHazardPopup(coordinate, hazard) {
         // Check if transit layer (SA POTENSI INSIDEN) is active
         const transitCheckbox = document.getElementById('layerTransit');
@@ -22487,6 +23065,10 @@ source: new ol.source.Vector(),
     
     // Function to determine active matrix
     function getActiveMatrix() {
+        // Check if IKK layer is visible
+        if (ikkLayer && ikkLayer.getVisible()) {
+            return 'ikk';
+        }
         // Check if daily operation plans layer (matrik area kerja) is visible
         if (dailyOperationPlansLayer && dailyOperationPlansLayer.getVisible()) {
             return 'area_kerja';
@@ -22519,6 +23101,9 @@ source: new ol.source.Vector(),
         // Update panel title based on active matrix
         if (panelTitle) {
             switch(activeMatrix) {
+                case 'ikk':
+                    panelTitle.textContent = 'Data IKK Hari Ini (DOPM)';
+                    break;
                 case 'area_kerja':
                     panelTitle.textContent = 'Ringkasan Matriks Area Kerja';
                     break;
@@ -22534,6 +23119,10 @@ source: new ol.source.Vector(),
         }
         
         // Render different content based on active matrix
+        if (activeMatrix === 'ikk') {
+            renderIkkNotification(panelBody);
+            return;
+        }
         if (activeMatrix === 'area_kerja') {
             renderAreaKerjaNotification(panelBody);
             return;
@@ -22956,6 +23545,91 @@ source: new ol.source.Vector(),
         });
     }
     
+    // Function to render IKK (DOPM hari ini) notification - card per detail_lokasi
+    function renderIkkNotification(panelBody) {
+        if (!ikkLayer || !ikkLayer.getVisible()) {
+            panelBody.innerHTML = '<div class="gm-notification-empty">Layer IKK belum diaktifkan. Aktifkan layer "IKK" terlebih dahulu.</div>';
+            return;
+        }
+        const data = ikkDopmTodayData || [];
+        if (data.length === 0) {
+            panelBody.innerHTML = '<div class="gm-notification-empty">Tidak ada data IKK untuk hari ini (tanggal_dop = hari ini)</div>';
+            return;
+        }
+        const byLokasi = {};
+        data.forEach(function(row) {
+            const key = row.detail_lokasi || 'Lokasi tidak disebutkan';
+            if (!byLokasi[key]) byLokasi[key] = [];
+            byLokasi[key].push(row);
+        });
+        const areas = Object.keys(byLokasi).sort();
+        let html = '';
+        areas.forEach(function(areaTitle, areaIndex) {
+            const items = byLokasi[areaTitle];
+            html += `
+                <div class="gm-notification-category ${items.length > 0 ? 'expanded' : ''}" data-ikk-area-index="${areaIndex}">
+                    <div class="gm-notification-category-header">
+                        <div class="gm-notification-category-title">
+                            <i class="material-icons-outlined" style="font-size: 18px; margin-right: 8px;">place</i>
+                            <span>${areaTitle}</span>
+                            <i class="material-icons-outlined gm-notification-category-arrow" style="font-size: 18px; margin-left: 8px;">chevron_right</i>
+                        </div>
+                        <span class="gm-notification-category-count">${items.length}</span>
+                    </div>
+                    <div class="gm-notification-location-list">
+                        ${items.map((item, idx) => `
+                            <div class="gm-notification-location-item" data-ikk-area="${areaTitle}" data-ikk-index="${idx}" style="padding: 10px; border-bottom: 1px solid #eee;">
+                                <div style="display: flex; align-items: start; gap: 8px;">
+                                    <i class="material-icons-outlined" style="font-size: 16px; color: #666; margin-top: 2px;">assignment</i>
+                                    <div style="flex: 1;">
+                                        <div style="font-weight: 500; margin-bottom: 4px;">${item.nama_pekerjaan || 'N/A'}</div>
+                                        <div style="font-size: 12px; color: #666;">
+                                            <span>${item.id_dop || ''}</span>
+                                            ${item.perusahaan_ijin_kerja_khusus ? `<span style="margin-left: 8px;">${item.perusahaan_ijin_kerja_khusus}</span>` : ''}
+                                            ${item.jenis_ijin_kerja_khusus ? `<span style="margin-left: 8px;">${item.jenis_ijin_kerja_khusus}</span>` : ''}
+                                            ${item.status ? `<span class="badge bg-secondary ms-1">${item.status}</span>` : ''}
+                                        </div>
+                                        ${item.kode_ikk ? `<div style="font-size: 11px; color: #888; margin-top: 2px;">Kode IKK: ${item.kode_ikk}</div>` : ''}
+                                    </div>
+                                </div>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            `;
+        });
+        panelBody.innerHTML = html;
+        const categories = panelBody.querySelectorAll('.gm-notification-category');
+        categories.forEach(function(category) {
+            const header = category.querySelector('.gm-notification-category-header');
+            if (header) {
+                header.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('gm-notification-category-count')) return;
+                    category.classList.toggle('expanded');
+                });
+            }
+        });
+        const locationItems = panelBody.querySelectorAll('.gm-notification-location-item');
+        locationItems.forEach(function(itemEl) {
+            itemEl.addEventListener('click', function(e) {
+                e.stopPropagation();
+                const areaTitle = this.getAttribute('data-ikk-area');
+                const idx = parseInt(this.getAttribute('data-ikk-index'), 10);
+                const areaItems = byLokasi[areaTitle];
+                if (!areaItems || !areaItems[idx]) return;
+                const row = areaItems[idx];
+                const source = ikkLayer.getSource();
+                const features = source.getFeatures();
+                const feature = features.find(function(f) {
+                    return f.get('id') === row.id && f.get('detail_lokasi') === row.detail_lokasi;
+                });
+                if (feature && feature.getGeometry()) {
+                    navigateToLocation(feature.getGeometry(), feature);
+                }
+            });
+        });
+    }
+
     // Function to render area kerja notification (list pekerjaan dan area)
     function renderAreaKerjaNotification(panelBody) {
         if (!dailyOperationPlansLayer || !dailyOperationPlansLayer.getVisible()) {
