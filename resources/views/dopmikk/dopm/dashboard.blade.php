@@ -1286,6 +1286,25 @@
     .notification-item.hiding {
         animation: slideOutRight 0.3s ease-out forwards;
     }
+    /* Modal Detail & Intervensi: tampil full dengan Bootstrap standar */
+    #detailDopmModal .modal-dialog,
+    #intervensiDopmModal .modal-dialog {
+        max-width: 90%;
+        margin: 0.5rem auto;
+    }
+    #detailDopmModal .modal-content,
+    #intervensiDopmModal .modal-content {
+        min-height: 85vh;
+        max-height: 90vh;
+        display: flex;
+        flex-direction: column;
+    }
+    #detailDopmModal .modal-body,
+    #intervensiDopmModal .modal-body {
+        flex: 1 1 auto;
+        overflow-y: auto;
+        min-height: 400px;
+    }
     #detailDopmModal .modal-content { background: #fff; }
     #detailDopmModal .modal-header { background: #fff; color: #111827; border-bottom: 1px solid #e5e7eb; }
     #detailDopmModal .modal-body { background: #fff; }
@@ -1295,7 +1314,7 @@
     #detailDopmModal .nav-pills .nav-link { color: #4b5563; background: #f9fafb; border: 1px solid #e5e7eb; }
     #detailDopmModal .nav-pills .nav-link:hover { background: #f3f4f6; color: #111827; }
     #detailDopmModal .nav-pills .nav-link.active { background: #fff; color: #111827; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
-    #detailDopmModal .modal-tab-table-scroll { max-height: 380px; overflow-y: auto; min-height: 120px; }
+    #detailDopmModal .modal-tab-table-scroll { max-height: 360px; overflow-y: auto; min-height: 120px; }
 #detailDopmModal #ipkIkkTableWrap.d-none,
 #detailDopmModal #okkTableWrap.d-none,
 #detailDopmModal #oakTableWrap.d-none { display: none !important; }
@@ -1311,11 +1330,13 @@
 #detailDopmModal #ipkIkkEmpty.d-none,
 #detailDopmModal #okkEmpty.d-none,
 #detailDopmModal #oakEmpty.d-none { display: none !important; }
-#detailDopmModal .tab-pane { min-height: 280px; }
+#detailDopmModal .tab-pane { min-height: 260px; }
 #detailDopmModal .tab-pane.active { display: block !important; }
 #detailDopmModal #tableIpkIkk,
 #detailDopmModal #tableOkk,
 #detailDopmModal #tableOak { width: 100%; background: #fff; }
+    #intervensiDopmModal .modal-body .tab-content { min-height: 300px; }
+    #intervensiDopmModal .tab-pane { min-height: 260px; }
     #tableDopmHarian thead th { white-space: nowrap; }
     
     .cctv-icon-marker.live::before {
@@ -1834,9 +1855,9 @@
 
 </div>
 
-    {{-- Modal Detail DOPM: 3 tab IPK-IKK, OKK, OAK --}}
-    <div class="modal fade" id="detailDopmModal" tabindex="-1" aria-labelledby="detailDopmModalLabel" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+    {{-- Modal Detail DOPM: 3 tab IPK-IKK, OKK, OAK (Bootstrap modal full) --}}
+    <div class="modal fade" id="detailDopmModal" tabindex="-1" aria-labelledby="detailDopmModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content rounded-4 shadow-lg border border-light">
                 <div class="modal-header rounded-top-4 py-3">
                     <div class="d-flex align-items-center flex-grow-1">
@@ -1978,9 +1999,9 @@
         </div>
     </div>
 
-    {{-- Modal Intervensi DOPM: 3 tab IPK-IKK, OKK, OAK + Layer 1 kirim WA pengingat IPK --}}
-    <div class="modal fade" id="intervensiDopmModal" tabindex="-1" aria-labelledby="intervensiDopmModalLabel" aria-hidden="true" data-bs-backdrop="static">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable modal-dialog-centered">
+    {{-- Modal Intervensi DOPM: 3 tab IPK-IKK, OKK, OAK + Layer 1 kirim WA pengingat IPK (Bootstrap modal full) --}}
+    <div class="modal fade" id="intervensiDopmModal" tabindex="-1" aria-labelledby="intervensiDopmModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
+        <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content rounded-4 shadow-lg border border-light">
                 <div class="modal-header rounded-top-4 py-3 bg-warning bg-opacity-10">
                     <div class="d-flex align-items-center flex-grow-1">

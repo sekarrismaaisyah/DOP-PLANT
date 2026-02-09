@@ -98,7 +98,7 @@ class DOPMController extends Controller
         $pctIkkAdaIpk = $totalIkkUnikHarian > 0 ? round($ikkAdaIpkCount / $totalIkkUnikHarian * 100, 1) : 0;
         $pctIkkAdaOkk = $totalIkkUnikHarian > 0 ? round($ikkAdaOkkCount / $totalIkkUnikHarian * 100, 1) : 0;
 
-        return view('dopmikk.dopm.Dashboard', [
+        return view('dopmikk.dopm.dashboard', [
             'filterDate' => $filterDate,
             'totalDopmHarian' => $totalDopmHarian,
             'totalIkkHarian' => $totalIkkHarian,
