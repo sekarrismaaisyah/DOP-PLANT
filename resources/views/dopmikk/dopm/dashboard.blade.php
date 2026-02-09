@@ -1335,9 +1335,31 @@
 #detailDopmModal #tableIpkIkk,
 #detailDopmModal #tableOkk,
 #detailDopmModal #tableOak { width: 100%; background: #fff; }
-    #intervensiDopmModal .modal-body .tab-content { min-height: 300px; }
-    #intervensiDopmModal .tab-pane { min-height: 260px; }
+    #intervensiDopmModal .intervensi-section { display: block !important; min-height: 120px; }
+    #intervensiDopmModal .intervensi-section .card { margin-bottom: 1rem; }
+    #intervensiDopmModal #intervensiIpkLoading:not(.d-none),
+    #intervensiDopmModal #intervensiOkkLoading:not(.d-none),
+    #intervensiDopmModal #intervensiOakLoading:not(.d-none) { display: block !important; }
+    #intervensiDopmModal #intervensiIpkEmpty:not(.d-none),
+    #intervensiDopmModal #intervensiOkkEmpty:not(.d-none),
+    #intervensiDopmModal #intervensiOakEmpty:not(.d-none) { display: block !important; }
+    #intervensiDopmModal #intervensiIpkTableWrap:not(.d-none),
+    #intervensiDopmModal #intervensiOkkTableWrap:not(.d-none),
+    #intervensiDopmModal #intervensiOakTableWrap:not(.d-none) { display: block !important; }
     #tableDopmHarian thead th { white-space: nowrap; }
+
+    /* Summary harian per site */
+    .dopm-summary-card { border-radius: 1rem; overflow: hidden; border: 1px solid #e5e7eb; }
+    .dopm-summary-card .card-header { font-weight: 600; padding: 0.875rem 1rem; border-bottom: 1px solid #e5e7eb; }
+    .dopm-summary-table { font-size: 0.8125rem; }
+    .dopm-summary-table thead th { white-space: nowrap; font-weight: 600; padding: 0.5rem 0.75rem; }
+    .dopm-summary-table tbody td { padding: 0.5rem 0.75rem; vertical-align: middle; }
+    .dopm-summary-table tbody tr:hover { background-color: #f8fafc; }
+    .dopm-summary-total { font-weight: 700; background-color: #f1f5f9 !important; }
+    .dopm-summary-badge-hijau { background-color: #dcfce7; color: #166534; font-weight: 600; }
+    .dopm-summary-badge-kuning { background-color: #fef9c3; color: #854d0e; font-weight: 600; }
+    .dopm-summary-badge-merah { background-color: #fee2e2; color: #991b1b; font-weight: 600; }
+    .dopm-summary-jenis-col { max-width: 10rem; overflow: hidden; text-overflow: ellipsis; }
     
     .cctv-icon-marker.live::before {
         background: #10b981;
@@ -1467,6 +1489,96 @@
             </div>
         </div>
 
+        {{-- Summary harian per site: Jenis IJK & Status Matriks --}}
+        @if(count($summaryBySite ?? []) > 0)
+        <div class="row mt-3 g-3">
+            <div class="col-12">
+                <h5 class="mb-2 fw-bold d-flex align-items-center gap-2">
+                    <span class="material-icons-outlined text-primary">summarize</span>
+                    Ringkasan Ijin Kerja Khusus per Site — {{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('l, d F Y') }}
+                </h5>
+            </div>
+            <div class="col-12 col-xl-7">
+                <div class="card dopm-summary-card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white d-flex align-items-center gap-2">
+                        <span class="material-icons-outlined text-primary" style="font-size: 1.25rem;">category</span>
+                        Jumlah per Jenis IJK per Site
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover dopm-summary-table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Site</th>
+                                        @foreach($summaryJenisKeys as $jk)
+                                            <th class="text-center dopm-summary-jenis-col" title="{{ $jk }}">{{ strlen($jk) > 20 ? substr($jk, 0, 17) . '…' : $jk }}</th>
+                                        @endforeach
+                                        <th class="text-end fw-bold">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($summaryBySite as $site => $row)
+                                        <tr>
+                                            <td class="fw-semibold">{{ $site }}</td>
+                                            @foreach($summaryJenisKeys as $jk)
+                                                @php $cnt = $row['jenis'][$jk] ?? 0; @endphp
+                                                <td class="text-center">{{ $cnt > 0 ? $cnt : '—' }}</td>
+                                            @endforeach
+                                            <td class="text-end dopm-summary-total">{{ $row['total'] ?? 0 }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="col-12 col-xl-5">
+                <div class="card dopm-summary-card border-0 shadow-sm h-100">
+                    <div class="card-header bg-white d-flex align-items-center gap-2">
+                        <span class="material-icons-outlined text-success" style="font-size: 1.25rem;">pie_chart</span>
+                        Status Matriks per Site
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover dopm-summary-table align-middle mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Site</th>
+                                        <th class="text-center" style="background-color: #dcfce7;">Hijau</th>
+                                        <th class="text-center" style="background-color: #fef9c3;">Kuning</th>
+                                        <th class="text-center" style="background-color: #fee2e2;">Merah</th>
+                                        <th class="text-end fw-bold">Total</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($summaryBySite as $site => $row)
+                                        @php
+                                            $total = $row['total'] ?? 0;
+                                            $h = $row['hijau'] ?? 0;
+                                            $k = $row['kuning'] ?? 0;
+                                            $m = $row['merah'] ?? 0;
+                                            $pctH = $total > 0 ? round($h / $total * 100, 0) : 0;
+                                            $pctK = $total > 0 ? round($k / $total * 100, 0) : 0;
+                                            $pctM = $total > 0 ? round($m / $total * 100, 0) : 0;
+                                        @endphp
+                                        <tr>
+                                            <td class="fw-semibold">{{ $site }}</td>
+                                            <td class="text-center dopm-summary-badge-hijau">{{ $pctH }}% <span class="d-block small">({{ $h }})</span></td>
+                                            <td class="text-center dopm-summary-badge-kuning">{{ $pctK }}% <span class="d-block small">({{ $k }})</span></td>
+                                            <td class="text-center dopm-summary-badge-merah">{{ $pctM }}% <span class="d-block small">({{ $m }})</span></td>
+                                            <td class="text-end dopm-summary-total">100% <span class="d-block small">({{ $total }})</span></td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        @endif
+
         {{-- Data DOPM harian (tampil langsung) --}}
         <div class="row mt-3">
             <div class="col-12">
@@ -1489,6 +1601,7 @@
                                             <th>Perusahaan</th>
                                             <th>Status</th>
                                             <th>Status Matriks</th>
+                                            <th>Nama Layer 1</th>
                                             <th>Layer 2 / 3 / 4</th>
                                             <th class="text-end">Intervensi</th>
                                             <th class="text-end">Aksi</th>
@@ -1511,6 +1624,7 @@
                                                     @endphp
                                                     <span class="badge {{ $badgeClass }}" title="IKK ada IPK: {{ isset($dopm->is_ikk_ada_ipk) ? ($dopm->is_ikk_ada_ipk ? 'Ya' : 'Tidak') : '-' }}, IKK ada OKK: {{ isset($dopm->is_ikk_ada_okk) ? ($dopm->is_ikk_ada_okk ? 'Ya' : 'Tidak') : '-' }}">{{ $matriks }}</span>
                                                 </td>
+                                                <td><small class="text-primary">{{ $dopm->nama_layer_1 ?? '-' }}</small></td>
                                                 <td><small>{{ $dopm->nama_layer_2 ?? '-' }} / {{ $dopm->nama_layer_3 ?? '-' }} / {{ $dopm->nama_layer_4 ?? '-' }}</small></td>
                                                 <td class="text-end">
                                                     @php
@@ -1999,9 +2113,9 @@
         </div>
     </div>
 
-    {{-- Modal Intervensi DOPM: 3 tab IPK-IKK, OKK, OAK + Layer 1 kirim WA pengingat IPK (Bootstrap modal full) --}}
+    {{-- Modal Intervensi DOPM: satu modal, 3 section (IPK-IKK, OKK, OAK) + Layer masing-masing, tanpa tab --}}
     <div class="modal fade" id="intervensiDopmModal" tabindex="-1" aria-labelledby="intervensiDopmModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
-        <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
             <div class="modal-content rounded-4 shadow-lg border border-light">
                 <div class="modal-header rounded-top-4 py-3 bg-warning bg-opacity-10">
                     <div class="d-flex align-items-center flex-grow-1">
@@ -2015,72 +2129,76 @@
                     </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0">
-                    <ul class="nav nav-pills nav-fill px-3 pt-3 pb-0 gap-2 border-bottom rounded-0" id="intervensiDopmTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active rounded-3 fw-semibold" id="intervensi-tab-ipk" data-bs-toggle="tab" data-bs-target="#intervensi-panel-ipk" type="button" role="tab">
-                                <i class="material-icons-outlined align-middle me-1" style="font-size: 18px;">checklist</i> IPK-IKK <span class="badge bg-primary ms-1" id="intervensiBadgeIpk">0</span>
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-3 fw-semibold" id="intervensi-tab-okk" data-bs-toggle="tab" data-bs-target="#intervensi-panel-okk" type="button" role="tab">
-                                <i class="material-icons-outlined align-middle me-1" style="font-size: 18px;">folder_open</i> OKK <span class="badge bg-success ms-1" id="intervensiBadgeOkk">0</span>
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-3 fw-semibold" id="intervensi-tab-oak" data-bs-toggle="tab" data-bs-target="#intervensi-panel-oak" type="button" role="tab">
-                                <i class="material-icons-outlined align-middle me-1" style="font-size: 18px;">visibility</i> OAK <span class="badge bg-warning text-dark ms-1" id="intervensiBadgeOak">0</span>
-                            </button>
-                        </li>
-                    </ul>
-                    <div class="tab-content p-4 bg-white" id="intervensiDopmTabContent">
-                        <div class="tab-pane fade show active" id="intervensi-panel-ipk" role="tabpanel">
-                            {{-- Layer 1: Pengingat WA isi IPK (hanya tampil jika ada nama_layer_1) --}}
-                            <div id="intervensiLayer1Wrap" class="card border-warning mb-4 d-none">
-                                <div class="card-header bg-warning bg-opacity-10 py-2">
-                                    <span class="material-icons-outlined align-middle me-1 text-warning">notifications_active</span>
-                                    <strong>Layer 1 — Pengingat Isi IPK (INSPEKSI PRA KERJA)</strong>
-                                </div>
-                                <div class="card-body py-3">
-                                    <p class="small text-muted mb-2">Kirim pengingat WA ke PIC Layer 1 untuk mengisi form IPK:</p>
-                                    <div id="intervensiLayer1Users" class="d-flex flex-wrap gap-2"></div>
-                                    <div id="intervensiLayer1Empty" class="text-muted small d-none">Tidak ada user terdaftar untuk Layer 1 ini.</div>
-                                    <div id="intervensiLayer1Loading" class="text-muted small d-none">Memuat...</div>
-                                </div>
+                <div class="modal-body p-4 bg-white">
+                    {{-- Section 1: IPK-IKK + Layer 1 --}}
+                    <div class="intervensi-section mb-4">
+                        <h6 class="text-primary border-bottom pb-2 mb-3"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">checklist</i> IPK-IKK <span class="badge bg-primary ms-1" id="intervensiBadgeIpk">0</span></h6>
+                        <div id="intervensiLayer1Wrap" class="card border-warning mb-3">
+                            <div class="card-header bg-warning bg-opacity-10 py-2">
+                                <span class="material-icons-outlined align-middle me-1 text-warning">notifications_active</span>
+                                <strong>Layer 1 — Pengingat Isi IPK (INSPEKSI PRA KERJA)</strong>
                             </div>
-                            <div id="intervensiIpkLoading" class="text-center py-4 d-none"><div class="spinner-border text-primary" role="status"></div><p class="text-muted mb-0 mt-2">Memuat data IPK-IKK...</p></div>
-                            <div id="intervensiIpkEmpty" class="text-center py-4 d-none"><span class="material-icons-outlined text-muted" style="font-size: 48px;">inbox</span><p class="text-muted mt-2 mb-0">Tidak ada data IPK-IKK.</p></div>
-                            <div id="intervensiIpkTableWrap" class="d-none">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableIpk">
-                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Status</th></tr></thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
+                            <div class="card-body py-3">
+                                <p class="small mb-2"><strong>Nama Layer:</strong> <span id="intervensiLayer1NameDisplay" class="text-dark">—</span></p>
+                                <p class="small text-muted mb-2">Kirim pengingat WA ke PIC Layer 1 untuk mengisi form IPK:</p>
+                                <div id="intervensiLayer1Users" class="d-flex flex-wrap gap-2"></div>
+                                <div id="intervensiLayer1Empty" class="text-muted small d-none">Tidak ada user terdaftar untuk Layer 1 ini.</div>
+                                <div id="intervensiLayer1NoName" class="text-muted small d-none">Kolom <strong>SID Layer 1</strong> atau <strong>Nama Layer 1</strong> untuk DOPM ini belum diisi. Silakan edit data DOPM untuk menampilkan daftar PIC dan tombol Intervensi by WA.</div>
+                                <div id="intervensiLayer1Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat daftar PIC Layer 1...</div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="intervensi-panel-okk" role="tabpanel">
-                            <div id="intervensiOkkLoading" class="text-center py-4 d-none"><div class="spinner-border text-success" role="status"></div><p class="text-muted mb-0 mt-2">Memuat data OKK...</p></div>
-                            <div id="intervensiOkkEmpty" class="text-center py-4 d-none"><span class="material-icons-outlined text-muted" style="font-size: 48px;">inbox</span><p class="text-muted mt-2 mb-0">Tidak ada data OKK.</p></div>
-                            <div id="intervensiOkkTableWrap" class="d-none">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableOkk">
-                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
+                        <div id="intervensiIpkLoading" class="text-center py-3 d-none"><div class="spinner-border text-primary spinner-border-sm" role="status"></div><p class="text-muted mb-0 mt-2 small">Memuat data IPK-IKK...</p></div>
+                        <div id="intervensiIpkEmpty" class="text-center py-3 d-none"><span class="material-icons-outlined text-muted" style="font-size: 32px;">inbox</span><p class="text-muted mt-2 mb-0 small">Tidak ada data IPK-IKK.</p></div>
+                        <div id="intervensiIpkTableWrap" class="d-none">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableIpk">
+                                    <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Status</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="intervensi-panel-oak" role="tabpanel">
-                            <div id="intervensiOakLoading" class="text-center py-4 d-none"><div class="spinner-border text-warning" role="status"></div><p class="text-muted mb-0 mt-2">Memuat data OAK...</p></div>
-                            <div id="intervensiOakEmpty" class="text-center py-4 d-none"><span class="material-icons-outlined text-muted" style="font-size: 48px;">inbox</span><p class="text-muted mt-2 mb-0">Tidak ada data OAK.</p></div>
-                            <div id="intervensiOakTableWrap" class="d-none">
-                                <div class="table-responsive">
-                                    <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableOak">
-                                        <thead class="table-light"><tr><th>Activity</th><th>Sub Activity</th><th>Submit Date</th><th>Submit By</th><th>SID Pelapor</th><th>SID Team</th><th>Conclusion</th><th>Site</th></tr></thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
+                    </div>
+
+                    {{-- Section 2: OKK + Layer 1 --}}
+                    <div class="intervensi-section mb-4">
+                        <h6 class="text-success border-bottom pb-2 mb-3"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">folder_open</i> OKK <span class="badge bg-success ms-1" id="intervensiBadgeOkk">0</span></h6>
+                        <div id="intervensiOkkLayer1Wrap" class="card border-success mb-3">
+                            <div class="card-header bg-success bg-opacity-10 py-2">
+                                <span class="material-icons-outlined align-middle me-1 text-success">notifications_active</span>
+                                <strong>Layer 1 — Intervensi OKK (OBSERVASI KEGIATAN KERJA)</strong>
+                            </div>
+                            <div class="card-body py-3">
+                                <p class="small mb-2"><strong>Nama Layer:</strong> <span id="intervensiOkkLayer1NameDisplay" class="text-dark">—</span></p>
+                                <p class="small text-muted mb-2">Kirim pengingat WA ke PIC Layer 1 untuk OKK:</p>
+                                <div id="intervensiOkkLayer1Users" class="d-flex flex-wrap gap-2"></div>
+                                <div id="intervensiOkkLayer1Empty" class="text-muted small d-none">Tidak ada user terdaftar untuk Layer 1 ini.</div>
+                                <div id="intervensiOkkLayer1NoName" class="text-muted small d-none">Kolom <strong>SID Layer 1</strong> atau <strong>Nama Layer 1</strong> untuk DOPM ini belum diisi.</div>
+                                <div id="intervensiOkkLayer1Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat daftar PIC Layer 1...</div>
+                            </div>
+                        </div>
+                        <div id="intervensiOkkLoading" class="text-center py-3 d-none"><div class="spinner-border text-success spinner-border-sm" role="status"></div><p class="text-muted mb-0 mt-2 small">Memuat data OKK...</p></div>
+                        <div id="intervensiOkkEmpty" class="text-center py-3 d-none"><span class="material-icons-outlined text-muted" style="font-size: 32px;">inbox</span><p class="text-muted mt-2 mb-0 small">Tidak ada data OKK.</p></div>
+                        <div id="intervensiOkkTableWrap" class="d-none">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableOkk">
+                                    <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Section 3: OAK --}}
+                    <div class="intervensi-section">
+                        <h6 class="text-warning text-dark border-bottom pb-2 mb-3"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">visibility</i> OAK <span class="badge bg-warning text-dark ms-1" id="intervensiBadgeOak">0</span></h6>
+                        <div id="intervensiOakLoading" class="text-center py-3 d-none"><div class="spinner-border text-warning spinner-border-sm" role="status"></div><p class="text-muted mb-0 mt-2 small">Memuat data OAK...</p></div>
+                        <div id="intervensiOakEmpty" class="text-center py-3 d-none"><span class="material-icons-outlined text-muted" style="font-size: 32px;">inbox</span><p class="text-muted mt-2 mb-0 small">Tidak ada data OAK.</p></div>
+                        <div id="intervensiOakTableWrap" class="d-none">
+                            <div class="table-responsive">
+                                <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableOak">
+                                    <thead class="table-light"><tr><th>Activity</th><th>Sub Activity</th><th>Submit Date</th><th>Submit By</th><th>SID Pelapor</th><th>SID Team</th><th>Conclusion</th><th>Site</th></tr></thead>
+                                    <tbody></tbody>
+                                </table>
                             </div>
                         </div>
                     </div>
@@ -2138,7 +2256,7 @@
                 infoFiltered: '(filter dari _MAX_ data)',
                 paginate: { first: 'Awal', last: 'Akhir', next: 'Selanjutnya', previous: 'Sebelumnya' }
             },
-            columnDefs: [{ targets: [8, 9], orderable: false }],
+            columnDefs: [{ targets: [9, 10], orderable: false }],
             dom: '<"row mb-2"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
         });
     }
@@ -2222,6 +2340,8 @@
         if (btnIntervensi && intervensiModal) {
             var data = JSON.parse(btnIntervensi.getAttribute('data-dopm') || '{}');
             var namaLayer1 = (data.nama_layer_1 || '').trim();
+            var sidLayer1 = (data.sid_layer_1 || '').trim();
+            var hasLayer1 = sidLayer1 !== '' || namaLayer1 !== '';
             document.getElementById('intervensiDopmTitle').textContent = (data.id_dop || 'Intervensi') + ' — ' + (data.nama_pekerjaan || 'DOPM').substring(0, 50);
             document.getElementById('intervensiDopmSubtitle').textContent = 'Kode IKK: ' + (data.kode_ikk || '—');
             document.getElementById('intervensiBadgeIpk').textContent = '0';
@@ -2239,39 +2359,30 @@
             var layer1Wrap = document.getElementById('intervensiLayer1Wrap');
             var layer1UsersEl = document.getElementById('intervensiLayer1Users');
             var layer1EmptyEl = document.getElementById('intervensiLayer1Empty');
+            var layer1NoNameEl = document.getElementById('intervensiLayer1NoName');
             var layer1LoadingEl = document.getElementById('intervensiLayer1Loading');
-            layer1Wrap.classList.add('d-none');
+            var okkLayer1Wrap = document.getElementById('intervensiOkkLayer1Wrap');
+            var okkLayer1NameDisplay = document.getElementById('intervensiOkkLayer1NameDisplay');
+            var okkLayer1UsersEl = document.getElementById('intervensiOkkLayer1Users');
+            var okkLayer1EmptyEl = document.getElementById('intervensiOkkLayer1Empty');
+            var okkLayer1NoNameEl = document.getElementById('intervensiOkkLayer1NoName');
+            var okkLayer1LoadingEl = document.getElementById('intervensiOkkLayer1Loading');
+            layer1Wrap.classList.remove('d-none');
             layer1UsersEl.innerHTML = '';
+            document.getElementById('intervensiLayer1NameDisplay').textContent = namaLayer1 || '—';
             layer1EmptyEl.classList.add('d-none');
+            layer1NoNameEl.classList.add('d-none');
             layer1LoadingEl.classList.add('d-none');
-            if (namaLayer1) {
-                layer1Wrap.classList.remove('d-none');
+            if (okkLayer1Wrap) { okkLayer1Wrap.classList.remove('d-none'); okkLayer1UsersEl.innerHTML = ''; okkLayer1NameDisplay.textContent = namaLayer1 || '—'; okkLayer1EmptyEl.classList.add('d-none'); okkLayer1NoNameEl.classList.add('d-none'); okkLayer1LoadingEl.classList.add('d-none'); }
+            if (!hasLayer1) {
+                layer1NoNameEl.classList.remove('d-none');
+                if (okkLayer1NoNameEl) okkLayer1NoNameEl.classList.remove('d-none');
+            } else {
                 layer1LoadingEl.classList.remove('d-none');
-                fetch(layer1UsersApiUrl + '?nama_layer_1=' + encodeURIComponent(namaLayer1), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-                    .then(function(r) { return r.json(); })
-                    .then(function(res) {
-                        layer1LoadingEl.classList.add('d-none');
-                        var users = (res && res.success && res.users) ? res.users : [];
-                        var msg = namaLayer1 + ', anda harus mengisi INSPEKSI PRA KERJA (IPK)\\n' + ipkFormLink;
-                        users.forEach(function(u) {
-                            var num = normalizeWaNumber(u.selular);
-                            if (!num) return;
-                            var a = document.createElement('a');
-                            a.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(namaLayer1 + ', anda harus mengisi INSPEKSI PRA KERJA (IPK)\n' + ipkFormLink);
-                            a.target = '_blank';
-                            a.rel = 'noopener';
-                            a.className = 'btn btn-sm btn-success';
-                            a.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> Kirim WA ke ' + (u.nama || u.username || 'User');
-                            layer1UsersEl.appendChild(a);
-                        });
-                        if (users.length === 0) layer1EmptyEl.classList.remove('d-none');
-                    })
-                    .catch(function() {
-                        layer1LoadingEl.classList.add('d-none');
-                        layer1EmptyEl.classList.remove('d-none');
-                    });
+                if (okkLayer1LoadingEl) okkLayer1LoadingEl.classList.remove('d-none');
             }
             intervensiModal.show();
+
             var params = new URLSearchParams({
                 kode_ikk: data.kode_ikk || '',
                 jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '',
@@ -2282,6 +2393,7 @@
                 nama_layer_3: data.nama_layer_3 || '',
                 nama_layer_4: data.nama_layer_4 || ''
             });
+
             function doIntervensiFetch() {
                 fetch(modalApiUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
                     .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
@@ -2294,21 +2406,24 @@
                         document.getElementById('intervensiIpkLoading').classList.add('d-none');
                         document.getElementById('intervensiOkkLoading').classList.add('d-none');
                         document.getElementById('intervensiOakLoading').classList.add('d-none');
-                        if (ipk.length === 0) { document.getElementById('intervensiIpkEmpty').classList.remove('d-none'); } else {
+                        if (ipk.length === 0) { document.getElementById('intervensiIpkEmpty').classList.remove('d-none'); document.getElementById('intervensiIpkTableWrap').classList.add('d-none'); } else {
+                            document.getElementById('intervensiIpkEmpty').classList.add('d-none');
                             document.getElementById('intervensiIpkTableWrap').classList.remove('d-none');
                             var tbody = document.querySelector('#intervensiTableIpk tbody');
                             if (tbody) { tbody.innerHTML = ''; ipk.forEach(function(r) {
                                 tbody.appendChild(tr([formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk), safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.durasi_jam), safeStr(r.cctv_terekam), safeStr(r.kategori_ijk, 35), safeStr(r.status_pekerjaan)]));
                             }); }
                         }
-                        if (okk.length === 0) { document.getElementById('intervensiOkkEmpty').classList.remove('d-none'); } else {
+                        if (okk.length === 0) { document.getElementById('intervensiOkkEmpty').classList.remove('d-none'); document.getElementById('intervensiOkkTableWrap').classList.add('d-none'); } else {
+                            document.getElementById('intervensiOkkEmpty').classList.add('d-none');
                             document.getElementById('intervensiOkkTableWrap').classList.remove('d-none');
                             var tbody = document.querySelector('#intervensiTableOkk tbody');
                             if (tbody) { tbody.innerHTML = ''; okk.forEach(function(r) {
                                 tbody.appendChild(tr([formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk), safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.jenis_ijk, 35), safeStr(r.layer_pengawas)]));
                             }); }
                         }
-                        if (oak.length === 0) { document.getElementById('intervensiOakEmpty').classList.remove('d-none'); } else {
+                        if (oak.length === 0) { document.getElementById('intervensiOakEmpty').classList.remove('d-none'); document.getElementById('intervensiOakTableWrap').classList.add('d-none'); } else {
+                            document.getElementById('intervensiOakEmpty').classList.add('d-none');
                             document.getElementById('intervensiOakTableWrap').classList.remove('d-none');
                             var tbody = document.querySelector('#intervensiTableOak tbody');
                             if (tbody) { tbody.innerHTML = ''; oak.forEach(function(r) {
@@ -2326,10 +2441,66 @@
                         if (typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Gagal memuat', text: err.message || 'Gagal memuat data.' });
                     });
             }
-            intervensiModalEl.addEventListener('shown.bs.modal', function onShown() {
-                intervensiModalEl.removeEventListener('shown.bs.modal', onShown);
-                doIntervensiFetch();
-            }, { once: true });
+
+            function doLayer1Fetch() {
+                if (!hasLayer1) return;
+                var layer1UsersEl2 = document.getElementById('intervensiLayer1Users');
+                var layer1EmptyEl2 = document.getElementById('intervensiLayer1Empty');
+                var layer1LoadingEl2 = document.getElementById('intervensiLayer1Loading');
+                var okkLayer1UsersEl2 = document.getElementById('intervensiOkkLayer1Users');
+                var okkLayer1EmptyEl2 = document.getElementById('intervensiOkkLayer1Empty');
+                var okkLayer1LoadingEl2 = document.getElementById('intervensiOkkLayer1Loading');
+                layer1LoadingEl2.classList.remove('d-none');
+                layer1UsersEl2.innerHTML = '';
+                layer1EmptyEl2.classList.add('d-none');
+                if (okkLayer1LoadingEl2) { okkLayer1LoadingEl2.classList.remove('d-none'); okkLayer1UsersEl2.innerHTML = ''; okkLayer1EmptyEl2.classList.add('d-none'); }
+                var qs = new URLSearchParams();
+                if (sidLayer1) qs.set('sid_layer_1', sidLayer1);
+                if (namaLayer1) qs.set('nama_layer_1', namaLayer1);
+                fetch(layer1UsersApiUrl + '?' + qs.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        layer1LoadingEl2.classList.add('d-none');
+                        if (okkLayer1LoadingEl2) okkLayer1LoadingEl2.classList.add('d-none');
+                        var users = (res && res.success && res.users) ? res.users : [];
+                        var displayName = (res && res.nama_layer_1) ? res.nama_layer_1 : namaLayer1;
+                        document.getElementById('intervensiLayer1NameDisplay').textContent = displayName || '—';
+                        if (document.getElementById('intervensiOkkLayer1NameDisplay')) document.getElementById('intervensiOkkLayer1NameDisplay').textContent = displayName || '—';
+                        var ipkMsg = (displayName || 'PIC') + ', anda harus mengisi INSPEKSI PRA KERJA (IPK)\n' + ipkFormLink;
+                        var okkMsg = (displayName || 'PIC') + ', mohon perhatian untuk OBSERVASI KEGIATAN KERJA (OKK) sesuai IKK ini.';
+                        users.forEach(function(u) {
+                            var num = normalizeWaNumber(u.selular);
+                            var label = u.nama || u.username || 'User';
+                            if (num) {
+                                var aIpk = document.createElement('a');
+                                aIpk.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(ipkMsg);
+                                aIpk.target = '_blank';
+                                aIpk.rel = 'noopener';
+                                aIpk.className = 'btn btn-sm btn-success';
+                                aIpk.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> Intervensi by WA — ' + label;
+                                layer1UsersEl2.appendChild(aIpk);
+                            }
+                            if (okkLayer1UsersEl2 && num) {
+                                var aOkk = document.createElement('a');
+                                aOkk.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(okkMsg);
+                                aOkk.target = '_blank';
+                                aOkk.rel = 'noopener';
+                                aOkk.className = 'btn btn-sm btn-success';
+                                aOkk.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> Intervensi by WA — ' + label;
+                                okkLayer1UsersEl2.appendChild(aOkk);
+                            }
+                        });
+                        if (users.length === 0) { layer1EmptyEl2.classList.remove('d-none'); if (okkLayer1EmptyEl2) okkLayer1EmptyEl2.classList.remove('d-none'); }
+                    })
+                    .catch(function() {
+                        layer1LoadingEl2.classList.add('d-none');
+                        layer1EmptyEl2.classList.remove('d-none');
+                        if (okkLayer1LoadingEl2) { okkLayer1LoadingEl2.classList.add('d-none'); if (okkLayer1EmptyEl2) okkLayer1EmptyEl2.classList.remove('d-none'); }
+                    });
+            }
+
+            doIntervensiFetch();
+            doLayer1Fetch();
             return;
         }
 

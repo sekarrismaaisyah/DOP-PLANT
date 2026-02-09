@@ -98,6 +98,38 @@ class DOPMController extends Controller
         $pctIkkAdaIpk = $totalIkkUnikHarian > 0 ? round($ikkAdaIpkCount / $totalIkkUnikHarian * 100, 1) : 0;
         $pctIkkAdaOkk = $totalIkkUnikHarian > 0 ? round($ikkAdaOkkCount / $totalIkkUnikHarian * 100, 1) : 0;
 
+        // Summary harian per site: jumlah per jenis IJK + status Hijau/Kuning/Merah
+        $summaryBySite = [];
+        $allJenis = [];
+        foreach ($dopmListHarian as $dopm) {
+            $site = trim($dopm->site_ijin_kerja_khusus ?? '') ?: 'Lainnya';
+            $jenis = trim($dopm->jenis_ijin_kerja_khusus ?? '') ?: '-';
+            $matriks = $dopm->status_matriks ?? 'Merah';
+
+            if (!isset($summaryBySite[$site])) {
+                $summaryBySite[$site] = [
+                    'jenis' => [],
+                    'hijau' => 0,
+                    'kuning' => 0,
+                    'merah' => 0,
+                ];
+            }
+            $summaryBySite[$site]['hijau'] += ($matriks === 'Hijau' ? 1 : 0);
+            $summaryBySite[$site]['kuning'] += ($matriks === 'Kuning' ? 1 : 0);
+            $summaryBySite[$site]['merah'] += ($matriks === 'Merah' ? 1 : 0);
+            $summaryBySite[$site]['jenis'][$jenis] = ($summaryBySite[$site]['jenis'][$jenis] ?? 0) + 1;
+            $allJenis[$jenis] = true;
+        }
+        foreach ($summaryBySite as $site => &$row) {
+            $row['total'] = $row['hijau'] + $row['kuning'] + $row['merah'];
+        }
+        unset($row);
+        ksort($summaryBySite, SORT_NATURAL);
+        $summaryJenisKeys = array_keys($allJenis);
+        usort($summaryJenisKeys, function ($a, $b) {
+            return strnatcasecmp($a, $b);
+        });
+
         return view('dopmikk.dopm.dashboard', [
             'filterDate' => $filterDate,
             'totalDopmHarian' => $totalDopmHarian,
@@ -110,6 +142,8 @@ class DOPMController extends Controller
             'pctIkkAdaOkk' => $pctIkkAdaOkk,
             'ikkAdaIpkCount' => $ikkAdaIpkCount,
             'ikkAdaOkkCount' => $ikkAdaOkkCount,
+            'summaryBySite' => $summaryBySite,
+            'summaryJenisKeys' => $summaryJenisKeys,
         ]);
     }
 
@@ -174,15 +208,17 @@ class DOPMController extends Controller
     }
 
     /**
-     * API untuk modal Intervensi: ambil user vw_user yang match Layer 1 (nama_layer_1)
+     * API untuk modal Intervensi: ambil user Layer 1 dari vw_user dengan join by SID (sid_layer_1).
      * Kriteria sama seperti CctvDataController getUsersFromClickHouse: is_active=1, username/nama tidak kosong.
-     * Digunakan untuk kirim pengingat WA isi IPK.
+     * Return id, username, nama, email, selular, nik untuk tampilan dan kirim WA (IPK/OKK).
      */
     public function getLayer1Users(Request $request): JsonResponse
     {
+        $sidLayer1 = trim((string) $request->input('sid_layer_1', ''));
         $namaLayer1 = trim((string) $request->input('nama_layer_1', ''));
-        if ($namaLayer1 === '') {
-            return response()->json(['success' => true, 'users' => []]);
+
+        if ($sidLayer1 === '' && $namaLayer1 === '') {
+            return response()->json(['success' => true, 'users' => [], 'nama_layer_1' => '']);
         }
 
         try {
@@ -193,28 +229,45 @@ class DOPMController extends Controller
                 ->whereNotNull('nama')
                 ->where('nama', '!=', '');
 
-            $query->where(function ($q) use ($namaLayer1) {
-                $q->where('nama', 'LIKE', '%' . $namaLayer1 . '%')
-                    ->orWhere('username', 'LIKE', '%' . $namaLayer1 . '%');
-            });
+            // Resolve by SID: username = sid_layer_1, atau banyak SID dipisah koma
+            if ($sidLayer1 !== '') {
+                $sids = array_map('trim', preg_split('/[\s,;]+/', $sidLayer1, -1, PREG_SPLIT_NO_EMPTY));
+                $sids = array_unique(array_filter($sids));
+                if (!empty($sids)) {
+                    $query->whereIn('username', $sids);
+                } else {
+                    $query->where('username', '=', $sidLayer1);
+                }
+            } else {
+                // Fallback: cari by nama (nama_layer_1) seperti sebelumnya
+                $query->where(function ($q) use ($namaLayer1) {
+                    $q->where('nama', 'LIKE', '%' . $namaLayer1 . '%')
+                        ->orWhere('username', 'LIKE', '%' . $namaLayer1 . '%');
+                });
+            }
 
-            $users = $query->select('id', 'username', 'nama', 'selular')
-                ->orderBy('nama')
+            $users = $query->select('id', 'username', 'nama', 'email', 'selular', 'nik')
+                ->orderBy('username', 'ASC')
                 ->limit(50)
                 ->get()
                 ->map(function ($row) {
-                    $selular = trim($row->selular ?? '');
                     return [
                         'id' => $row->id,
                         'username' => trim($row->username ?? ''),
                         'nama' => trim($row->nama ?? ''),
-                        'selular' => $selular,
+                        'email' => trim($row->email ?? ''),
+                        'selular' => trim($row->selular ?? ''),
+                        'nik' => trim($row->nik ?? ''),
                     ];
                 })
                 ->values()
                 ->toArray();
 
-            return response()->json(['success' => true, 'users' => $users]);
+            return response()->json([
+                'success' => true,
+                'users' => $users,
+                'nama_layer_1' => $namaLayer1,
+            ]);
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::error('DOPMController getLayer1Users: ' . $e->getMessage());
             return response()->json(['success' => false, 'users' => [], 'message' => $e->getMessage()], 500);
