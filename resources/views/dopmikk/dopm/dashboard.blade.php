@@ -1581,7 +1581,7 @@
 
         {{-- Data DOPM harian (tampil langsung) --}}
         <div class="row mt-3">
-            <div class="col-12">
+            <div class="col-12 px-3 px-md-4">
                 <div class="card rounded-4 border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom">
                         <h5 class="mb-0 fw-bold">Data DOPM — {{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('l, d F Y') }}</h5>
