@@ -1310,31 +1310,24 @@
     #detailDopmModal .modal-body { background: #fff; }
     #detailDopmModal .modal-stat-cards { background: #fff; border-bottom: 1px solid #e5e7eb; }
     #detailDopmModal .stat-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 10px; }
-    #detailDopmModal .nav-pills { background: #fff; }
-    #detailDopmModal .nav-pills .nav-link { color: #4b5563; background: #f9fafb; border: 1px solid #e5e7eb; }
-    #detailDopmModal .nav-pills .nav-link:hover { background: #f3f4f6; color: #111827; }
-    #detailDopmModal .nav-pills .nav-link.active { background: #fff; color: #111827; border-color: #3b82f6; box-shadow: 0 0 0 2px rgba(59,130,246,0.25); }
-    #detailDopmModal .modal-tab-table-scroll { max-height: 360px; overflow-y: auto; min-height: 120px; }
-#detailDopmModal #ipkIkkTableWrap.d-none,
-#detailDopmModal #okkTableWrap.d-none,
-#detailDopmModal #oakTableWrap.d-none { display: none !important; }
-#detailDopmModal #ipkIkkTableWrap:not(.d-none),
-#detailDopmModal #okkTableWrap:not(.d-none),
-#detailDopmModal #oakTableWrap:not(.d-none) { display: block !important; }
-#detailDopmModal #ipkIkkLoading.d-none,
-#detailDopmModal #okkLoading.d-none,
-#detailDopmModal #oakLoading.d-none { display: none !important; }
-#detailDopmModal #ipkIkkEmpty:not(.d-none),
-#detailDopmModal #okkEmpty:not(.d-none),
-#detailDopmModal #oakEmpty:not(.d-none) { display: block !important; }
-#detailDopmModal #ipkIkkEmpty.d-none,
-#detailDopmModal #okkEmpty.d-none,
-#detailDopmModal #oakEmpty.d-none { display: none !important; }
-#detailDopmModal .tab-pane { min-height: 260px; }
-#detailDopmModal .tab-pane.active { display: block !important; }
-#detailDopmModal #tableIpkIkk,
-#detailDopmModal #tableOkk,
-#detailDopmModal #tableOak { width: 100%; background: #fff; }
+    #detailDopmModal #ipkIkkTableWrap.d-none,
+    #detailDopmModal #okkTableWrap.d-none,
+    #detailDopmModal #oakTableWrap.d-none { display: none !important; }
+    #detailDopmModal #ipkIkkTableWrap:not(.d-none),
+    #detailDopmModal #okkTableWrap:not(.d-none),
+    #detailDopmModal #oakTableWrap:not(.d-none) { display: block !important; }
+    #detailDopmModal #ipkIkkLoading.d-none,
+    #detailDopmModal #okkLoading.d-none,
+    #detailDopmModal #oakLoading.d-none { display: none !important; }
+    #detailDopmModal #ipkIkkEmpty:not(.d-none),
+    #detailDopmModal #okkEmpty:not(.d-none),
+    #detailDopmModal #oakEmpty:not(.d-none) { display: block !important; }
+    #detailDopmModal #ipkIkkEmpty.d-none,
+    #detailDopmModal #okkEmpty.d-none,
+    #detailDopmModal #oakEmpty.d-none { display: none !important; }
+    #detailDopmModal #tableIpkIkk,
+    #detailDopmModal #tableOkk,
+    #detailDopmModal #tableOak { width: 100%; background: #fff; }
     #intervensiDopmModal .intervensi-section { display: block !important; min-height: 120px; }
     #intervensiDopmModal .intervensi-section .card { margin-bottom: 1rem; }
     #intervensiDopmModal #intervensiIpkLoading:not(.d-none),
@@ -1969,7 +1962,7 @@
 
 </div>
 
-    {{-- Modal Detail DOPM: 3 tab IPK-IKK, OKK, OAK (Bootstrap modal full) --}}
+    {{-- Modal Detail DOPM: Menampilkan IPK-IKK, OKK, OAK dalam satu tampilan tanpa tab --}}
     <div class="modal fade" id="detailDopmModal" tabindex="-1" aria-labelledby="detailDopmModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
         <div class="modal-dialog modal-xl modal-dialog-centered">
             <div class="modal-content rounded-4 shadow-lg border border-light">
@@ -2025,37 +2018,24 @@
                     </div>
                 </div>
                 <div class="modal-body p-0">
-                    <p class="small fw-semibold text-muted px-4 pt-2 mb-0">Detail Data</p>
-                    <ul class="nav nav-pills nav-fill px-3 pt-2 pb-0 gap-2 border-bottom rounded-0" id="detailDopmTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active rounded-3 fw-semibold" id="tab-ipk-ikk" data-bs-toggle="tab" data-bs-target="#panel-ipk-ikk" type="button" role="tab">
-                                <i class="material-icons-outlined align-middle me-1" style="font-size: 18px;">checklist</i> IPK-IKK <span class="badge bg-primary ms-1" id="badgeIpkIkk">0</span>
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-3 fw-semibold" id="tab-okk" data-bs-toggle="tab" data-bs-target="#panel-okk" type="button" role="tab">
-                                <i class="material-icons-outlined align-middle me-1" style="font-size: 18px;">folder_open</i> OKK <span class="badge bg-success ms-1" id="badgeOkk">0</span>
-                            </button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link rounded-3 fw-semibold" id="tab-oak" data-bs-toggle="tab" data-bs-target="#panel-oak" type="button" role="tab">
-                                <i class="material-icons-outlined align-middle me-1" style="font-size: 18px;">visibility</i> OAK <span class="badge bg-warning text-dark ms-1" id="badgeOak">0</span>
-                            </button>
-                        </li>
-                    </ul>
-                    <div class="tab-content p-4 bg-white" id="detailDopmTabContent">
-                        <div class="tab-pane fade show active" id="panel-ipk-ikk" role="tabpanel">
-                            <div id="ipkIkkLoading" class="text-center py-5 d-none bg-white">
+                    <div class="p-4 bg-white" id="detailDopmContent" style="max-height: 600px; overflow-y: auto;">
+                        {{-- Section IPK-IKK --}}
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="material-icons-outlined text-primary me-2" style="font-size: 20px;">checklist</i>
+                                <h6 class="mb-0 fw-bold">IPK-IKK <span class="badge bg-primary ms-2" id="badgeIpkIkk">0</span></h6>
+                            </div>
+                            <div id="ipkIkkLoading" class="text-center py-4 d-none bg-white">
                                 <div class="spinner-border text-primary mb-2" role="status"></div>
                                 <p class="text-muted mb-0">Memuat data IPK-IKK...</p>
                             </div>
-                            <div id="ipkIkkEmpty" class="text-center py-5 d-none bg-white">
-                                <span class="material-icons-outlined text-muted" style="font-size: 56px;">inbox</span>
+                            <div id="ipkIkkEmpty" class="text-center py-4 d-none bg-white">
+                                <span class="material-icons-outlined text-muted" style="font-size: 48px;">inbox</span>
                                 <p class="text-muted mt-2 mb-0">Tidak ada data IPK-IKK untuk kode IKK ini.</p>
                             </div>
                             <div id="ipkIkkTableWrap" class="d-none bg-white">
-                                <p class="small text-muted mb-2"><strong>Detail IPK-IKK</strong> — Tabel di bawah menampilkan seluruh data IPK-IKK dengan kode IKK ini.</p>
-                                <div class="table-responsive modal-tab-table-scroll">
+                                <p class="small text-muted mb-2">Tabel di bawah menampilkan seluruh data IPK-IKK dengan kode IKK ini.</p>
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                                     <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableIpkIkk">
                                         <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Status</th></tr></thead>
                                         <tbody></tbody>
@@ -2063,18 +2043,24 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="panel-okk" role="tabpanel">
-                            <div id="okkLoading" class="text-center py-5 d-none bg-white">
+
+                        {{-- Section OKK --}}
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="material-icons-outlined text-success me-2" style="font-size: 20px;">folder_open</i>
+                                <h6 class="mb-0 fw-bold">OKK <span class="badge bg-success ms-2" id="badgeOkk">0</span></h6>
+                            </div>
+                            <div id="okkLoading" class="text-center py-4 d-none bg-white">
                                 <div class="spinner-border text-success mb-2" role="status"></div>
                                 <p class="text-muted mb-0">Memuat data OKK...</p>
                             </div>
-                            <div id="okkEmpty" class="text-center py-5 d-none bg-white">
-                                <span class="material-icons-outlined text-muted" style="font-size: 56px;">inbox</span>
+                            <div id="okkEmpty" class="text-center py-4 d-none bg-white">
+                                <span class="material-icons-outlined text-muted" style="font-size: 48px;">inbox</span>
                                 <p class="text-muted mt-2 mb-0">Tidak ada data OKK untuk kode IKK ini.</p>
                             </div>
                             <div id="okkTableWrap" class="d-none bg-white">
-                                <p class="small text-muted mb-2"><strong>Detail OKK</strong> — Tabel di bawah menampilkan seluruh data OKK dengan kode IKK ini.</p>
-                                <div class="table-responsive modal-tab-table-scroll">
+                                <p class="small text-muted mb-2">Tabel di bawah menampilkan seluruh data OKK dengan kode IKK ini.</p>
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                                     <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableOkk">
                                         <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
                                         <tbody></tbody>
@@ -2082,24 +2068,30 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="panel-oak" role="tabpanel">
+
+                        {{-- Section OAK --}}
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="material-icons-outlined text-warning me-2" style="font-size: 20px;">visibility</i>
+                                <h6 class="mb-0 fw-bold">OAK <span class="badge bg-warning text-dark ms-2" id="badgeOak">0</span></h6>
+                            </div>
                             <div id="oakContext" class="card border mb-3 d-none bg-white">
                                 <div class="card-body py-2 px-3">
                                     <small class="text-muted fw-semibold">Layer 2 / 3 / 4:</small>
                                     <span id="oakLayerNames" class="ms-1">—</span>
                                 </div>
                             </div>
-                            <div id="oakLoading" class="text-center py-5 d-none bg-white">
+                            <div id="oakLoading" class="text-center py-4 d-none bg-white">
                                 <div class="spinner-border text-warning mb-2" role="status"></div>
                                 <p class="text-muted mb-0">Memuat data OAK...</p>
                             </div>
-                            <div id="oakEmpty" class="text-center py-5 d-none bg-white">
-                                <span class="material-icons-outlined text-muted" style="font-size: 56px;">inbox</span>
+                            <div id="oakEmpty" class="text-center py-4 d-none bg-white">
+                                <span class="material-icons-outlined text-muted" style="font-size: 48px;">inbox</span>
                                 <p class="text-muted mt-2 mb-0">Tidak ada data OAK untuk kriteria ini.</p>
                             </div>
                             <div id="oakTableWrap" class="d-none bg-white">
-                                <p class="small text-muted mb-2"><strong>Detail OAK</strong> — Tabel di bawah menampilkan data Observasi Area Kerja sesuai activity dan SID.</p>
-                                <div class="table-responsive modal-tab-table-scroll">
+                                <p class="small text-muted mb-2">Tabel di bawah menampilkan data Observasi Area Kerja sesuai activity dan SID.</p>
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                                     <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableOak">
                                         <thead class="table-light"><tr><th>Activity</th><th>Sub Activity</th><th>Submit Date</th><th>Submit By</th><th>SID Pelapor</th><th>SID Team</th><th>Conclusion</th><th>Site</th></tr></thead>
                                         <tbody></tbody>
@@ -2350,19 +2342,6 @@
         return s;
     }
 
-    // Saat ganti tab, pastikan konten (empty atau tabel) tampil
-    var tabContainer = document.querySelector('#detailDopmModal #detailDopmTabs');
-    if (tabContainer) {
-        tabContainer.addEventListener('shown.bs.tab', function(ev) {
-            var targetId = ev.target.getAttribute('data-bs-target');
-            if (!targetId) return;
-            var pane = document.getElementById(targetId.replace('#', ''));
-            if (!pane) pane = document.querySelector(targetId);
-            if (!pane) return;
-            var visible = pane.querySelector('[id$="Empty"]:not(.d-none), [id$="TableWrap"]:not(.d-none)');
-            if (visible) { visible.style.display = 'block'; visible.classList.remove('d-none'); }
-        });
-    }
 
     // Normalisasi nomor untuk wa.me: 08xxx -> 62xxx
     function normalizeWaNumber(selular) {
@@ -2705,15 +2684,6 @@
                                 safeStr(r.kode_sid_pelapor), safeStr(r.kode_sid_team), safeStr(r.conclusion, 50), safeStr(r.site)
                             ]));
                         });
-                    }
-                }
-                // Paksa tampilkan wrap tabel di tab aktif (kadang Bootstrap belum update visibility)
-                var activePane = modalDoc.querySelector('#detailDopmTabs + .tab-content .tab-pane.active');
-                if (activePane) {
-                    var wrap = activePane.querySelector('[id$="TableWrap"]');
-                    if (wrap && !wrap.classList.contains('d-none')) {
-                        wrap.style.display = 'block';
-                        wrap.classList.remove('d-none');
                     }
                 }
             })

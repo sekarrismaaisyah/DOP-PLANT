@@ -30,10 +30,18 @@ class DOPMController extends Controller
         }
 
         // Data harian: hitung per tanggal terpilih
+        // Catatan: exclude DOPM dengan status "Cancel" agar tidak ikut ringkasan
         $totalDopmHarian = Dopm::where(function ($q) use ($filterDate) {
             $q->whereDate('tanggal_dop', $filterDate)->orWhereDate('timestamp', $filterDate);
-        })->count();
+        })
+            ->where(function ($q) {
+                $q->whereNull('status')
+                    ->orWhereNotIn('status', ['Cancel', 'CANCEL']);
+            })
+            ->count();
 
+        // Hitung IPK-IKK dan OKK harian (semua data, relasi ke DOPM via kode_ikk)
+        // Cancel hanya di-takeout di level DOPM, bukan di tabel IPK/OKK
         $totalIkkHarian = IpkIkk::whereDate('ts', $filterDate)->count();
         $totalOkkHarian = Okk::whereDate('ts', $filterDate)->count();
 
@@ -53,9 +61,17 @@ class DOPMController extends Controller
         }
 
         // Daftar DOPM untuk tanggal terpilih (tampil langsung)
+        // Exclude status "Cancel" agar tidak muncul di tabel harian
         $dopmListHarian = Dopm::where(function ($q) use ($filterDate) {
             $q->whereDate('tanggal_dop', $filterDate)->orWhereDate('timestamp', $filterDate);
-        })->orderBy('tanggal_dop')->orderBy('id')->get();
+        })
+            ->where(function ($q) {
+                $q->whereNull('status')
+                    ->orWhereNotIn('status', ['Cancel', 'CANCEL']);
+            })
+            ->orderBy('tanggal_dop')
+            ->orderBy('id')
+            ->get();
 
         // Status matriks per DOPM: Is IKK ada IPK, Is IKK ada OKK (by kode_ikk + filterDate)
         $kodeIkks = $dopmListHarian->pluck('kode_ikk')->filter()->unique()->values()->all();
@@ -166,12 +182,24 @@ class DOPMController extends Controller
         $oak = [];
 
         if ($kodeIkk !== '' && $kodeIkk !== null) {
-            $ipkIkk = IpkIkk::where('kode_ikk', $kodeIkk)->orderByDesc('ts')->get()->map(function ($row) {
-                return $row->toArray();
-            })->values()->toArray();
-            $okk = Okk::where('kode_ikk', $kodeIkk)->orderByDesc('ts')->get()->map(function ($row) {
-                return $row->toArray();
-            })->values()->toArray();
+            // IPK-IKK dan OKK di modal: tampilkan semua data yang berelasi dengan kode_ikk
+            $ipkIkk = IpkIkk::where('kode_ikk', $kodeIkk)
+                ->orderByDesc('ts')
+                ->get()
+                ->map(function ($row) {
+                    return $row->toArray();
+                })
+                ->values()
+                ->toArray();
+
+            $okk = Okk::where('kode_ikk', $kodeIkk)
+                ->orderByDesc('ts')
+                ->get()
+                ->map(function ($row) {
+                    return $row->toArray();
+                })
+                ->values()
+                ->toArray();
         }
 
         try {
