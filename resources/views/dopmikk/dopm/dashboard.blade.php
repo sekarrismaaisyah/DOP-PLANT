@@ -2612,6 +2612,7 @@
 
 
 <script src="{{ URL::asset('build/plugins/apexchart/apexcharts.min.js') }}"></script>
+<script>window.skipChart4 = true;</script>
 <script src="{{ URL::asset('build/js/index.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/peity/jquery.peity.min.js') }}"></script>
 <script>
@@ -2621,9 +2622,10 @@
   var ipkData = @json($chartIpkPerJenis ?? []);
   var okkData = @json($chartOkkPerJenis ?? []);
   setTimeout(function() {
-    try { if (typeof ApexCharts !== 'undefined') ApexCharts.exec('chart4', 'destroy'); } catch (e) {}
     var el = document.querySelector('#chart4');
     if (!el || typeof ApexCharts === 'undefined') return;
+    try { ApexCharts.exec('chart4', 'destroy'); } catch (e) {}
+    el.innerHTML = '';
     new ApexCharts(el, {
       chart: { id: 'chart4', height: 235, type: 'bar', toolbar: { show: false }, fontFamily: 'inherit' },
       plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },

@@ -284,7 +284,7 @@ $(function () {
   };
 
   var chart4El = document.querySelector("#chart4");
-  if (chart4El) {
+  if (chart4El && !window.skipChart4) {
     var chart = new ApexCharts(chart4El, options);
     chart.render();
   }
