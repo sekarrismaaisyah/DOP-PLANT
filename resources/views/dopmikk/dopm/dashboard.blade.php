@@ -1416,9 +1416,9 @@
     <p class="hazard-detection-subtitle">Statistik harian DOPM, IPK-IKK, OKK, dan OAK (Observasi Area Kerja)</p>
 
     {{-- Filter tanggal --}}
-    <div class="card rounded-4 mb-3">
+    <!-- <div class="card rounded-4 mb-3 w-100">
         <div class="card-body py-3">
-            <form method="get" action="{{ route('dopmikk.dopm.dashboard') }}" class="row g-2 align-items-end" id="dashboardFilterForm">
+            <form method="get" action="{{ route('dopmikk.dopm.dashboard') }}" class="row g-10 align-items-end w-100" id="dashboardFilterForm">
                 <div class="col-auto">
                     <label for="filterDate" class="form-label mb-0 small fw-semibold">Tampilkan data tanggal</label>
                     <input type="date" name="date" id="filterDate" class="form-control" value="{{ $filterDate ?? now()->toDateString() }}">
@@ -1430,7 +1430,35 @@
                 </div>
             </form>
         </div>
+    </div> -->
+
+    <div class="card rounded-4 mb-3 w-100">
+    <div class="card-body py-3">
+        <form method="get" action="{{ route('dopmikk.dopm.dashboard') }}" id="dashboardFilterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md">
+                    <label for="filterDate" class="form-label mb-2 small fw-semibold text-muted">
+                        <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">calendar_today</i>
+                        Tampilkan data tanggal
+                    </label>
+                    <input type="date" 
+                           name="date" 
+                           id="filterDate" 
+                           class="form-control rounded-3" 
+                           value="{{ $filterDate ?? now()->toDateString() }}">
+                </div>
+                <div class="col-12 col-md-auto">
+                    <button type="submit" class="btn btn-primary rounded-3 px-4" id="dashboardFilterBtn">
+                        <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">search</i> 
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
+</div>
+    
+</div>
 
     {{-- <div class="mb-3">
         <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardStatsCollapse" aria-expanded="true" aria-controls="dashboardStatsCollapse">
@@ -1574,20 +1602,23 @@
                <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between mb-3">
                   <div class="">
-                    <h5 class="mb-0 fw-bold">DOP VS OAK</h5>
+                    <h5 class="mb-0 fw-bold">DOPM vs IPK-IKK vs OKK</h5>
                   </div>
-               
                  </div>
                   <div id="chart4"></div>
-                  <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
-                    <div class="d-flex align-items-center gap-4">
-                      <div class="">
-                        <p class="mb-0 data-attributes">
-                          <span
-                            data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>Data DOP VS OAK Pada Hari Ini </span>
-                        </p>
-                      </div>
-                      
+                  <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3">
+                    <span class="small text-muted">Per jenis ijin kerja khusus (tanggal terpilih):</span>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:#0d6efd;"></span>
+                      <span class="small">DOPM</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:#02c27a;"></span>
+                      <span class="small">IPK-IKK</span>
+                    </div>
+                    <div class="d-flex align-items-center gap-2">
+                      <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:#6f42c1;"></span>
+                      <span class="small">OKK</span>
                     </div>
                   </div>
                </div>
@@ -2583,7 +2614,36 @@
 <script src="{{ URL::asset('build/plugins/apexchart/apexcharts.min.js') }}"></script>
 <script src="{{ URL::asset('build/js/index.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/peity/jquery.peity.min.js') }}"></script>
-
+<script>
+(function() {
+  var categories = @json($chartJenisLabels ?? []);
+  var dopmData = @json($chartDopmPerJenis ?? []);
+  var ipkData = @json($chartIpkPerJenis ?? []);
+  var okkData = @json($chartOkkPerJenis ?? []);
+  setTimeout(function() {
+    try { if (typeof ApexCharts !== 'undefined') ApexCharts.exec('chart4', 'destroy'); } catch (e) {}
+    var el = document.querySelector('#chart4');
+    if (!el || typeof ApexCharts === 'undefined') return;
+    new ApexCharts(el, {
+      chart: { id: 'chart4', height: 235, type: 'bar', toolbar: { show: false }, fontFamily: 'inherit' },
+      plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
+      dataLabels: { enabled: false },
+      stroke: { show: true, width: 2, colors: ['transparent'] },
+      series: [
+        { name: 'DOPM', data: dopmData },
+        { name: 'IPK-IKK', data: ipkData },
+        { name: 'OKK', data: okkData }
+      ],
+      xaxis: { categories: categories, labels: { style: { colors: '#a1acb8' } } },
+      yaxis: { labels: { style: { colors: '#a1acb8' } } },
+      colors: ['#0d6efd', '#02c27a', '#6f42c1'],
+      grid: { borderColor: 'rgba(0,0,0,0.05)', strokeDashArray: 4 },
+      legend: { show: true, position: 'top', horizontalAlign: 'right' },
+      tooltip: { y: { formatter: function(v) { return v; } } }
+    }).render();
+  }, 150);
+})();
+</script>
 
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>

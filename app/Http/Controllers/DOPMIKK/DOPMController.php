@@ -199,6 +199,27 @@ class DOPMController extends Controller
             return strnatcasecmp($a, $b);
         });
 
+        // Chart DOPM vs IPK vs OKK per jenis_ijin_kerja_khusus (3 bar per jenis)
+        $chartJenisLabels = [];
+        $chartDopmPerJenis = [];
+        $chartIpkPerJenis = [];
+        $chartOkkPerJenis = [];
+        foreach ($summaryJenisKeys as $jenis) {
+            $chartJenisLabels[] = self::singkatJenisIjin($jenis);
+            $dopmPerJenis = $dopmListHarian->filter(function ($d) use ($jenis) {
+                $j = trim($d->jenis_ijin_kerja_khusus ?? '') ?: '-';
+                return $j === $jenis;
+            });
+            $chartDopmPerJenis[] = $dopmPerJenis->count();
+            $kodeIkksJenis = $dopmPerJenis->pluck('kode_ikk')->filter()->unique()->values()->all();
+            $chartIpkPerJenis[] = empty($kodeIkksJenis)
+                ? 0
+                : IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $kodeIkksJenis)->count();
+            $chartOkkPerJenis[] = empty($kodeIkksJenis)
+                ? 0
+                : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $kodeIkksJenis)->count();
+        }
+
         return view('dopmikk.dopm.dashboard', [
             'filterDate' => $filterDate,
             'totalDopmHarian' => $totalDopmHarian,
@@ -220,6 +241,10 @@ class DOPMController extends Controller
             'ikkAdaOkkCount' => $ikkAdaOkkCount,
             'summaryBySite' => $summaryBySite,
             'summaryJenisKeys' => $summaryJenisKeys,
+            'chartJenisLabels' => $chartJenisLabels,
+            'chartDopmPerJenis' => $chartDopmPerJenis,
+            'chartIpkPerJenis' => $chartIpkPerJenis,
+            'chartOkkPerJenis' => $chartOkkPerJenis,
         ]);
     }
 
@@ -674,6 +699,24 @@ class DOPMController extends Controller
         header('Cache-Control: max-age=0');
         $writer->save('php://output');
         exit;
+    }
+
+    /**
+     * Singkatan label jenis ijin kerja khusus untuk chart (maks 12 karakter).
+     */
+    public static function singkatJenisIjin(string $jenis): string
+    {
+        $s = trim($jenis);
+        if ($s === '' || $s === '-') {
+            return $s ?: '-';
+        }
+        $s = preg_replace('/\s*ijin\s+kerja\s+khusus\s*/iu', 'IKK ', $s);
+        $s = preg_replace('/\s*-\s*/u', ' ', trim($s));
+        $s = trim($s);
+        if (mb_strlen($s) > 12) {
+            $s = mb_substr($s, 0, 11) . '…';
+        }
+        return $s ?: '-';
     }
 
     /**

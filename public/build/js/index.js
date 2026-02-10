@@ -248,64 +248,33 @@ $(function () {
 
 
 
-  // chart 4
-
+  // chart 4: DOPM vs IPK-IKK vs OKK (data can be replaced by page e.g. DOPM dashboard)
   var options = {
     series: [{
-      name: "Sales",
-      data: [20, 5, 60, 10, 30, 20, 25, 15, 31]
-    },
-    {
-      name: "Views",
-      data: [17, 10, 45, 15, 25, 15, 40, 10, 24]
+      name: "Jumlah",
+      data: [0, 0, 0]
     }],
     chart: {
-      //width:150,
+      id: 'chart4',
       foreColor: "#9ba7b2",
       height: 235,
       type: 'bar',
-      toolbar: {
-        show: !1,
-      },
-      sparkline: {
-        enabled: !1
-      },
-      zoom: {
-        enabled: false
-      }
+      toolbar: { show: false },
+      sparkline: { enabled: false },
+      zoom: { enabled: false }
     },
-    dataLabels: {
-      enabled: false
-    },
+    dataLabels: { enabled: false },
     stroke: {
-      width: 4,
-      curve: 'smooth',
+      show: true,
+      width: 2,
       colors: ['transparent']
     },
-    fill: {
-      type: 'gradient',
-      gradient: {
-        shade: 'dark',
-        gradientToColors: ['#0d6efd', '#6f42c1'],
-        shadeIntensity: 1,
-        type: 'vertical',
-        //opacityFrom: 0.8,
-        //opacityTo: 0.1,
-        stops: [0, 100, 100, 100]
-      },
-    },
-    colors: ['#0d6efd', "#6f42c1"],
+    fill: { opacity: 1, colors: ['#0d6efd', '#02c27a', '#6f42c1'] },
+    colors: ['#0d6efd', '#02c27a', '#6f42c1'],
     plotOptions: {
-      // bar: {
-      //   horizontal: !1,
-      //   columnWidth: "55%",
-      //   endingShape: "rounded"
-      // }
       bar: {
         horizontal: false,
         borderRadius: 4,
-        borderRadiusApplication: 'around',
-        borderRadiusWhenStacked: 'last',
         columnWidth: '55%',
       }
     },
@@ -316,30 +285,21 @@ $(function () {
     },
     tooltip: {
       theme: "dark",
-      fixed: {
-        enabled: !0
-      },
-      x: {
-        show: !0
-      },
-      y: {
-        title: {
-          formatter: function (e) {
-            return ""
-          }
-        }
-      },
-      marker: {
-        show: !1
-      }
+      fixed: { enabled: true },
+      x: { show: true },
+      y: { formatter: function (v) { return v; } },
+      marker: { show: false }
     },
     xaxis: {
-      categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep'],
+      categories: ['DOPM', 'IPK-IKK', 'OKK'],
     }
   };
 
-  var chart = new ApexCharts(document.querySelector("#chart4"), options);
-  chart.render();
+  var chart4El = document.querySelector("#chart4");
+  if (chart4El) {
+    var chart = new ApexCharts(chart4El, options);
+    chart.render();
+  }
 
 
 
