@@ -1,4 +1,4 @@
-@extends('layouts.master')
+@extends('layouts.masterDopm')
 
 @section('title', 'Tambah IPK-IKK')
 

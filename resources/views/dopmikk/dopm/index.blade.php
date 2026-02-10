@@ -1,4 +1,4 @@
-@extends('layouts.masterMotionHazardAdmin')
+@extends('layouts.masterDopm')
 
 @section('title', 'DOPM')
 

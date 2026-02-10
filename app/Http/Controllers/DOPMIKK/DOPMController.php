@@ -40,10 +40,35 @@ class DOPMController extends Controller
             })
             ->count();
 
+        // DOPM dengan status Cancel di hari ini (untuk tampilan "Dopm Cancel")
+        $totalDopmCancelHarian = Dopm::where(function ($q) use ($filterDate) {
+            $q->whereDate('tanggal_dop', $filterDate)->orWhereDate('timestamp', $filterDate);
+        })
+            ->whereIn('status', ['Cancel', 'CANCEL'])
+            ->count();
+
+        // Total DOPM minggu ini (Senin–Minggu, berdasarkan tanggal terpilih), tanpa status Cancel
+        $mingguStart = Carbon::parse($filterDate)->startOfWeek(Carbon::MONDAY);
+        $mingguEnd = $mingguStart->copy()->addDays(6)->endOfDay();
+        $totalDopmMingguIni = Dopm::where(function ($q) use ($mingguStart, $mingguEnd) {
+            $q->whereBetween('tanggal_dop', [$mingguStart, $mingguEnd])
+                ->orWhereBetween('timestamp', [$mingguStart, $mingguEnd]);
+        })
+            ->where(function ($q) {
+                $q->whereNull('status')
+                    ->orWhereNotIn('status', ['Cancel', 'CANCEL']);
+            })
+            ->count();
+
         // Hitung IPK-IKK dan OKK harian (semua data, relasi ke DOPM via kode_ikk)
         // Cancel hanya di-takeout di level DOPM, bukan di tabel IPK/OKK
         $totalIkkHarian = IpkIkk::whereDate('ts', $filterDate)->count();
         $totalOkkHarian = Okk::whereDate('ts', $filterDate)->count();
+
+        // IPK-IKK dengan status_pekerjaan Batal di hari ini (untuk tampilan "Pekerjaan Cancel")
+        $totalPekerjaanBatalHarian = IpkIkk::whereDate('ts', $filterDate)
+            ->whereIn('status_pekerjaan', ['Batal', 'BATAL'])
+            ->count();
 
         // Daftar DOPM untuk tanggal terpilih (tampil langsung)
         // Exclude status "Cancel" agar tidak muncul di tabel harian
@@ -132,6 +157,16 @@ class DOPMController extends Controller
         $pctIkkAdaIpk = $totalIkkUnikHarian > 0 ? round($ikkAdaIpkCount / $totalIkkUnikHarian * 100, 1) : 0;
         $pctIkkAdaOkk = $totalIkkUnikHarian > 0 ? round($ikkAdaOkkCount / $totalIkkUnikHarian * 100, 1) : 0;
 
+        // Presentase dari total DOPM: berapa banyak DOPM yang IKK-nya punya IPK / OKK (basis = total DOPM, bukan IKK unik)
+        $dopmAdaIpkCount = $dopmListHarian->where('is_ikk_ada_ipk', true)->count();
+        $dopmAdaOkkCount = $dopmListHarian->where('is_ikk_ada_okk', true)->count();
+        $pctDopmAdaIpk = $totalDopmHarian > 0 ? round($dopmAdaIpkCount / $totalDopmHarian * 100, 1) : 0;
+        $pctDopmAdaOkk = $totalDopmHarian > 0 ? round($dopmAdaOkkCount / $totalDopmHarian * 100, 1) : 0;
+        // OAK: rasio laporan OAK vs DOPM (min 100%), lalu dijadikan persen untuk dirata-ratakan dengan IPK & OKK
+        $pctDopmOak = $totalDopmHarian > 0 ? min(100.0, round($totalOakHarian / $totalDopmHarian * 100, 1)) : 0;
+        // Satu presentase gabungan: rata-rata IPK, OKK & OAK
+        $pctPengisianRataRata = round(($pctDopmAdaIpk + $pctDopmAdaOkk + $pctDopmOak) / 3, 1);
+
         // Summary harian per site: jumlah per jenis IJK + status Hijau/Kuning/Merah
         $summaryBySite = [];
         $allJenis = [];
@@ -167,6 +202,9 @@ class DOPMController extends Controller
         return view('dopmikk.dopm.dashboard', [
             'filterDate' => $filterDate,
             'totalDopmHarian' => $totalDopmHarian,
+            'totalDopmCancelHarian' => $totalDopmCancelHarian,
+            'totalDopmMingguIni' => $totalDopmMingguIni,
+            'totalPekerjaanBatalHarian' => $totalPekerjaanBatalHarian,
             'totalIkkHarian' => $totalIkkHarian,
             'totalOkkHarian' => $totalOkkHarian,
             'totalOakHarian' => $totalOakHarian,
@@ -174,6 +212,10 @@ class DOPMController extends Controller
             'totalIkkUnikHarian' => $totalIkkUnikHarian,
             'pctIkkAdaIpk' => $pctIkkAdaIpk,
             'pctIkkAdaOkk' => $pctIkkAdaOkk,
+            'pctDopmAdaIpk' => $pctDopmAdaIpk,
+            'pctDopmAdaOkk' => $pctDopmAdaOkk,
+            'pctDopmOak' => $pctDopmOak,
+            'pctPengisianRataRata' => $pctPengisianRataRata,
             'ikkAdaIpkCount' => $ikkAdaIpkCount,
             'ikkAdaOkkCount' => $ikkAdaOkkCount,
             'summaryBySite' => $summaryBySite,

@@ -1,4 +1,4 @@
-@extends('layouts.masterMotionHazardAdmin')
+@extends('layouts.masterDopm')
 
 @section('title', 'DOPM & IKK - Dashboard')
 
@@ -1353,6 +1353,17 @@
     .dopm-summary-badge-kuning { background-color: #fef9c3; color: #854d0e; font-weight: 600; }
     .dopm-summary-badge-merah { background-color: #fee2e2; color: #991b1b; font-weight: 600; }
     .dopm-summary-jenis-col { max-width: 10rem; overflow: hidden; text-overflow: ellipsis; }
+
+    /* Scroll area kartu matriks: tinggi tetap, scrollbar disembunyikan */
+    .dopm-matriks-list-scroll {
+        max-height: 320px;
+        overflow-y: auto;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+    }
+    .dopm-matriks-list-scroll::-webkit-scrollbar {
+        display: none;
+    }
     
     .cctv-icon-marker.live::before {
         background: #10b981;
@@ -1421,7 +1432,7 @@
         </div>
     </div>
 
-    <div class="mb-3">
+    {{-- <div class="mb-3">
         <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardStatsCollapse" aria-expanded="true" aria-controls="dashboardStatsCollapse">
             <span class="fw-bold d-flex align-items-center">
                 <i class="material-icons-outlined me-2">dashboard</i>
@@ -1429,10 +1440,322 @@
             </span>
             <i class="material-icons-outlined collapse-icon">expand_less</i>
         </button>
-    </div>
+    </div> --}}
+    
+        <div class="row">
+          <div class="col-12 col-xl-4 d-flex">
+             <div class="card rounded-4 w-100">
+               <div class="card-body">
+                 <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="">
+                      <h2 class="mb-0">{{ number_format($totalDopmMingguIni ?? 0) }}</h2>
+                    </div>
+                    <div class="">
+                      <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-danger text-danger bg-opacity-10"><span class="material-icons-outlined fs-6">arrow_downward</span>8.6%</p>
+                    </div>
+                  </div>
+                  <p class="mb-0">Total Week ini</p>
+                   <div id="chart1"></div>
+               </div>
+             </div>
+          </div>
+          <div class="col-12 col-xl-8 d-flex">
+            <div class="card rounded-4 w-100">
+              <div class="card-body">
+                <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
+                  <div class="d-flex flex-column align-items-center justify-content-center gap-2">
+                    <a href="javascript:;" class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="material-icons-outlined">assignment</i>
+                    </a>
+                    <h3 class="mb-0">{{ number_format($totalDopmHarian ?? 0) }}</h3>
+                    <p class="mb-0">DOPM</p>
+                     <small class="text-muted">Data Hari ini</small>
+                  </div>
+                  <div class="vr"></div>
+                  <div class="d-flex flex-column align-items-center justify-content-center gap-2">
+                    <a href="javascript:;" class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="material-icons-outlined">checklist</i>
+                    </a>
+                    <h3 class="mb-0">{{ $pctIkkAdaIpk ?? 0 }}%</h3>
+                                <p class="mb-0">IKK ada IPK</p>
+                                <small class="text-muted">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }} belum IPK-IKK</small>
+                  </div>
+                  <div class="vr"></div>
+                  <div class="d-flex flex-column align-items-center justify-content-center gap-2">
+                    <a href="javascript:;" class="mb-2 wh-48 bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="material-icons-outlined">folder_open</i>
+                    </a>
+                    <h3 class="mb-0">{{ $pctIkkAdaOkk ?? 0 }}%</h3>
+                                <p class="mb-0">IKK ada OKK</p>
+                                <small class="text-muted">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaOkkCount ?? 0) }} belum OKK</small>
+                  </div>
+                  <div class="vr"></div>
+                  
+                  <div class="d-flex flex-column align-items-center justify-content-center gap-2">
+                    <a href="javascript:;" class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="material-icons-outlined">visibility</i>
+                    </a>
+                   <h3 class="mb-0">{{ number_format($totalOakHarian ?? 0) }}</h3>
+                                <p class="mb-0">OAK</p>
+                                <small class="text-muted">Data Hari ini (OBSERVE, Layer 2/3/4)</small>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div><!--end row-->
+        
+        <div class="row">
+          <div class="col-12 col-xl-5 col-xxl-4 d-flex">
+            <div class="card rounded-4 w-100 shadow-none bg-transparent border-0">
+               <div class="card-body p-0">
+                 <div class="row g-4">
+                    <div class="col-12 col-xl-6 d-flex">
+                      <div class="card mb-0 rounded-4 w-100">
+                       <div class="card-body">
+                         <div class=" mb-2">
+                           <h5 class="mb-0 fw-bold">Dopm Cancel</h5>
+                           <p class="mb-0 text-muted small">Total DOPM Cancel Hari ini</p>
+                         </div>
+                         <div class="text-center py-3 mt-4">
+                           <h1 class="mb-0 display-5 fw-bold">{{ number_format($totalDopmCancelHarian ?? 0) }} Cancel</h1>
+                         </div>
+                         <div class="text-center mt-3">
+                           <p class="mb-0"><span class="text-success me-1">{{ number_format($totalDopmCancelHarian ?? 0) }}</span> Cancel pada hari ini</p>
+                         </div>
+                       </div>
+                      </div>
+                   </div>
+                   <div class="col-12 col-xl-6 d-flex">
+                    <div class="card mb-0 rounded-4 w-100">
+                     <div class="card-body">
+                       <div class="mb-2">
+                         <h5 class="mb-0 fw-bold">Pekerjaan Batal</h5>
+                         <p class="mb-0 text-muted small">Total IPK-IKK Status Batal Hari ini</p>
+                       </div>
+                       <div class="text-center py-3 mt-4">
+                         <h1 class="mb-0 display-5 fw-bold">{{ number_format($totalPekerjaanBatalHarian ?? 0) }} Cancel</h1>
+                       </div>
+                       <div class="text-center mt-3">
+                         <p class="mb-0 text-muted small">Data dari IPK-IKK</p>
+                       </div>
+                     </div>
+                    </div>
+                 </div>
+                   <div class="col-12 col-xl-12">
+                    <div class="card rounded-4 mb-0">
+                      <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                           <div class="">
+                             <h2 class="mb-0">{{ $pctPengisianRataRata ?? 0 }}%</h2>
+                           </div>
+                           <div class="">
+                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata</p>
+                           </div>
+                         </div>
+                         <p class="mb-0">Presentase Pengisian (IPK, OKK & OAK)</p>
+                         <p class="mb-0 small text-muted">Rata-rata dari IPK {{ $pctDopmAdaIpk ?? 0 }}% · OKK {{ $pctDopmAdaOkk ?? 0 }}% · OAK {{ $pctDopmOak ?? 0 }}%</p>
+                          <div class="mt-4">
+                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK + OAK <span class="">{{ $pctPengisianRataRata ?? 0 }}%</span></p>
+                            <div class="progress w-100" style="height: 7px;">
+                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRata ?? 0) }}%"></div>
+                            </div>
+                          </div>
+                      </div>
+                    </div>
+                  </div>
+
+                 </div><!--end row-->
+               </div>
+            </div>  
+          </div> 
+          <div class="col-12 col-xl-7 col-xxl-8 d-flex">
+            <div class="card w-100 rounded-4">
+               <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <div class="">
+                    <h5 class="mb-0 fw-bold">DOP VS OAK</h5>
+                  </div>
+               
+                 </div>
+                  <div id="chart4"></div>
+                  <div class="d-flex flex-column flex-lg-row align-items-start justify-content-around border p-3 rounded-4 mt-3 gap-3">
+                    <div class="d-flex align-items-center gap-4">
+                      <div class="">
+                        <p class="mb-0 data-attributes">
+                          <span
+                            data-peity='{ "fill": ["#0d6efd", "rgb(0 0 0 / 10%)"], "innerRadius": 32, "radius": 40 }'>Data DOP VS OAK Pada Hari Ini </span>
+                        </p>
+                      </div>
+                      
+                    </div>
+                  </div>
+               </div>
+            </div>  
+          </div> 
+        </div><!--end row-->
+
+        <div class="row">
+           <div class="col-12 col-xl-4 d-flex">
+            <div class="card w-100 rounded-4">
+               <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <div class="">
+                    <h5 class="mb-0 fw-bold">Need Action</h5>
+                  </div>
+                  <div class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                      data-bs-toggle="dropdown">
+                      <span class="material-icons-outlined fs-5">more_vert</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                    </ul>
+                  </div>
+                 </div>
+                  <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
+                    @php
+                        $dopmMerah = collect($dopmListHarian ?? [])->where('status_matriks', 'Merah')->values();
+                    @endphp
+                    @forelse($dopmMerah as $dopm)
+                     <div class="d-flex align-items-center gap-4">
+                       <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0">
+                        <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-danger bg-opacity-10 text-danger">
+                          <span class="material-icons-outlined" style="font-size: 28px;">warning</span>
+                        </div>
+                          <div class="min-w-0">
+                            <h6 class="mb-0 fw-bold text-truncate" title="{{ $dopm->id_dop ?? '-' }}">{{ $dopm->id_dop ?? '-' }}</h6>
+                            <p class="mb-0 text-muted small text-truncate" title="{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}">{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}</p>
+                          </div>
+                       </div>
+                       <div class="progress w-25 flex-shrink-0" style="height: 5px;">
+                          <div class="progress-bar bg-danger" style="width: 0%"></div>
+                       </div>
+                       <div class="flex-shrink-0">
+                        <p class="mb-0 fs-6">0%</p>
+                       </div>
+                     </div>
+                    @empty
+                     <div class="text-center py-4 text-muted">
+                        <span class="material-icons-outlined" style="font-size: 48px;">check_circle</span>
+                        <p class="mb-0 mt-2 small">Tidak ada DOPM matriks Merah untuk tanggal ini.</p>
+                     </div>
+                    @endforelse
+                  </div>
+               </div>
+             </div>
+           </div>
+
+           <div class="col-12 col-xl-4 d-flex">
+            <div class="card w-100 rounded-4">
+              <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <div class="">
+                    <h5 class="mb-0 fw-bold">Warning</h5>
+                  </div>
+                  <div class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                      data-bs-toggle="dropdown">
+                      <span class="material-icons-outlined fs-5">more_vert</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                    </ul>
+                  </div>
+                 </div>
+                <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
+                  @php
+                      $dopmKuning = collect($dopmListHarian ?? [])->where('status_matriks', 'Kuning')->values();
+                  @endphp
+                  @forelse($dopmKuning as $dopm)
+                  <div class="d-flex align-items-center gap-4">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0">
+                      <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-warning bg-opacity-10 text-warning">
+                        <span class="material-icons-outlined" style="font-size: 28px;">info</span>
+                      </div>
+                      <div class="min-w-0">
+                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $dopm->id_dop ?? '-' }}">{{ $dopm->id_dop ?? '-' }}</h6>
+                        <p class="mb-0 text-muted small text-truncate" title="{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}">{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}</p>
+                      </div>
+                    </div>
+                    <div class="progress w-25 flex-shrink-0" style="height: 5px;">
+                      <div class="progress-bar bg-warning text-dark" style="width: 50%"></div>
+                    </div>
+                    <div class="flex-shrink-0">
+                      <p class="mb-0 fs-6">50%</p>
+                    </div>
+                  </div>
+                  @empty
+                  <div class="text-center py-4 text-muted">
+                    <span class="material-icons-outlined" style="font-size: 48px;">check_circle</span>
+                    <p class="mb-0 mt-2 small">Tidak ada DOPM matriks Kuning untuk tanggal ini.</p>
+                  </div>
+                  @endforelse
+                </div>
+              </div>
+            </div>  
+          </div>
+
+           <div class="col-12 col-xl-4 d-flex">
+            <div class="card w-100 rounded-4">
+              <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <div class="">
+                    <h5 class="mb-0 fw-bold">Complete</h5>
+                  </div>
+                  <div class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                      data-bs-toggle="dropdown">
+                      <span class="material-icons-outlined fs-5">more_vert</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                    </ul>
+                  </div>
+                 </div>
+                <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
+                  @php
+                      $dopmHijau = collect($dopmListHarian ?? [])->where('status_matriks', 'Hijau')->values();
+                  @endphp
+                  @forelse($dopmHijau as $dopm)
+                  <div class="d-flex align-items-center gap-4">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0">
+                      <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-success bg-opacity-10 text-success">
+                        <span class="material-icons-outlined" style="font-size: 28px;">check_circle</span>
+                      </div>
+                      <div class="min-w-0">
+                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $dopm->id_dop ?? '-' }}">{{ $dopm->id_dop ?? '-' }}</h6>
+                        <p class="mb-0 text-muted small text-truncate" title="{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}">{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}</p>
+                      </div>
+                    </div>
+                    <div class="progress w-25 flex-shrink-0" style="height: 5px;">
+                      <div class="progress-bar bg-success" style="width: 100%"></div>
+                    </div>
+                    <div class="flex-shrink-0">
+                      <p class="mb-0 fs-6">100%</p>
+                    </div>
+                  </div>
+                  @empty
+                  <div class="text-center py-4 text-muted">
+                    <span class="material-icons-outlined" style="font-size: 48px;">inbox</span>
+                    <p class="mb-0 mt-2 small">Tidak ada DOPM matriks Hijau untuk tanggal ini.</p>
+                  </div>
+                  @endforelse
+                </div>
+              </div>
+            </div>
+         </div>
+
+         
 
     <div class="collapse show" id="dashboardStatsCollapse">
-        <div class="row">
+        {{-- <div class="row">
             <div class="col-12 d-flex">
                 <div class="card rounded-4 w-100">
                     <div class="card-body">
@@ -1441,7 +1764,7 @@
                             <span class="badge bg-primary">{{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('d M Y') }}</span>
                         </div>
                         <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
-                            <a href="{{ route('dopmikk.dopm.index') }}" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 text-decoration-none text-dark" title="Data DOPM tanggal terpilih">
+                            <a href="" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 text-decoration-none text-dark" title="Data DOPM tanggal terpilih">
                                 <span class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
                                     <i class="material-icons-outlined">assignment</i>
                                 </span>
@@ -1450,7 +1773,7 @@
                                 <small class="text-muted">Data Hari ini</small>
                             </a>
                             <div class="vr"></div>
-                            <a href="{{ route('dopmikk.ipk-ikk.index') }}" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 text-decoration-none text-dark" title="Presentase IKK yang ada IPK ({{ $ikkAdaIpkCount ?? 0 }}/{{ $totalIkkUnikHarian ?? 0 }} IKK)">
+                            <a href="" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 text-decoration-none text-dark" title="Presentase IKK yang ada IPK ({{ $ikkAdaIpkCount ?? 0 }}/{{ $totalIkkUnikHarian ?? 0 }} IKK)">
                                 <span class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
                                     <i class="material-icons-outlined">checklist</i>
                                 </span>
@@ -1459,7 +1782,7 @@
                                 <small class="text-muted">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }} belum IPK-IKK</small>
                             </a>
                             <div class="vr"></div>
-                            <a href="{{ route('dopmikk.okk.index') }}" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 text-decoration-none text-dark" title="Presentase IKK yang ada OKK ({{ $ikkAdaOkkCount ?? 0 }}/{{ $totalIkkUnikHarian ?? 0 }} IKK)">
+                            <a href="" class="btn p-0 border-0 bg-transparent d-flex flex-column align-items-center justify-content-center gap-2 text-decoration-none text-dark" title="Presentase IKK yang ada OKK ({{ $ikkAdaOkkCount ?? 0 }}/{{ $totalIkkUnikHarian ?? 0 }} IKK)">
                                 <span class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
                                     <i class="material-icons-outlined">folder_open</i>
                                 </span>
@@ -1480,10 +1803,10 @@
                     </div>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         {{-- Summary harian per site: Jenis IJK & Status Matriks --}}
-        @if(count($summaryBySite ?? []) > 0)
+        {{-- @if(count($summaryBySite ?? []) > 0)
         <div class="row mt-3 g-3">
             <div class="col-12">
                 <h5 class="mb-2 fw-bold d-flex align-items-center gap-2">
@@ -1570,7 +1893,7 @@
                 </div>
             </div>
         </div>
-        @endif
+        @endif --}}
 
         {{-- Data DOPM harian (tampil langsung) --}}
         <div class="row mt-3">
@@ -1961,6 +2284,8 @@
 
 
 </div>
+
+
 
     {{-- Modal Detail DOPM: Menampilkan IPK-IKK, OKK, OAK dalam satu tampilan tanpa tab --}}
     <div class="modal fade" id="detailDopmModal" tabindex="-1" aria-labelledby="detailDopmModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
