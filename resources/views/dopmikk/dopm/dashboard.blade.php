@@ -1339,6 +1339,8 @@
     #intervensiDopmModal #intervensiIpkTableWrap:not(.d-none),
     #intervensiDopmModal #intervensiOkkTableWrap:not(.d-none),
     #intervensiDopmModal #intervensiOakTableWrap:not(.d-none) { display: block !important; }
+    .dopm-matriks-row.hover-border:hover { border-color: rgba(0,0,0,0.1) !important; background: rgba(0,0,0,0.02); }
+    .dopm-matriks-row.cursor-pointer { cursor: pointer; }
     #tableDopmHarian thead th { white-space: nowrap; }
 
     /* Summary harian per site */
@@ -1663,9 +1665,30 @@
                         $dopmMerah = collect($dopmListHarian ?? [])->where('status_matriks', 'Merah')->values();
                     @endphp
                     @forelse($dopmMerah as $dopm)
-                     <div class="d-flex align-items-center gap-4">
-                       <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0">
-                        <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-danger bg-opacity-10 text-danger">
+                     @php
+                        $dopmJson = [
+                            'kode_ikk' => $dopm->kode_ikk,
+                            'jenis_ijin_kerja_khusus' => $dopm->jenis_ijin_kerja_khusus,
+                            'sid_layer_2' => $dopm->sid_layer_2,
+                            'sid_layer_3' => $dopm->sid_layer_3,
+                            'sid_layer_4' => $dopm->sid_layer_4,
+                            'nama_layer_2' => $dopm->nama_layer_2,
+                            'nama_layer_3' => $dopm->nama_layer_3,
+                            'nama_layer_4' => $dopm->nama_layer_4,
+                            'nama_layer_1' => $dopm->nama_layer_1 ?? null,
+                            'sid_layer_1' => $dopm->sid_layer_1 ?? null,
+                            'id_dop' => $dopm->id_dop,
+                            'nama_pekerjaan' => $dopm->nama_pekerjaan,
+                            'site_ijin_kerja_khusus' => $dopm->site_ijin_kerja_khusus ?? null,
+                            'perusahaan_ijin_kerja_khusus' => $dopm->perusahaan_ijin_kerja_khusus ?? null,
+                            'tanggal_dop' => $dopm->tanggal_dop ? (\Carbon\Carbon::parse($dopm->tanggal_dop)->format('Y-m-d')) : null,
+                            'timestamp' => $dopm->timestamp ? $dopm->timestamp->format('Y-m-d H:i') : null,
+                            'status' => $dopm->status ?? null,
+                        ];
+                     @endphp
+                     <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                       <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
+                        <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-danger bg-opacity-10 text-danger flex-shrink-0">
                           <span class="material-icons-outlined" style="font-size: 28px;">warning</span>
                         </div>
                           <div class="min-w-0">
@@ -1676,7 +1699,8 @@
                        <div class="progress w-25 flex-shrink-0" style="height: 5px;">
                           <div class="progress-bar bg-danger" style="width: 0%"></div>
                        </div>
-                       <div class="flex-shrink-0">
+                       <div class="flex-shrink-0 d-flex align-items-center gap-2">
+                       
                         <p class="mb-0 fs-6">0%</p>
                        </div>
                      </div>
@@ -1715,9 +1739,30 @@
                       $dopmKuning = collect($dopmListHarian ?? [])->where('status_matriks', 'Kuning')->values();
                   @endphp
                   @forelse($dopmKuning as $dopm)
-                  <div class="d-flex align-items-center gap-4">
-                    <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0">
-                      <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-warning bg-opacity-10 text-warning">
+                  @php
+                    $dopmJsonK = [
+                        'kode_ikk' => $dopm->kode_ikk,
+                        'jenis_ijin_kerja_khusus' => $dopm->jenis_ijin_kerja_khusus,
+                        'sid_layer_2' => $dopm->sid_layer_2,
+                        'sid_layer_3' => $dopm->sid_layer_3,
+                        'sid_layer_4' => $dopm->sid_layer_4,
+                        'nama_layer_2' => $dopm->nama_layer_2,
+                        'nama_layer_3' => $dopm->nama_layer_3,
+                        'nama_layer_4' => $dopm->nama_layer_4,
+                        'nama_layer_1' => $dopm->nama_layer_1 ?? null,
+                        'sid_layer_1' => $dopm->sid_layer_1 ?? null,
+                        'id_dop' => $dopm->id_dop,
+                        'nama_pekerjaan' => $dopm->nama_pekerjaan,
+                        'site_ijin_kerja_khusus' => $dopm->site_ijin_kerja_khusus ?? null,
+                        'perusahaan_ijin_kerja_khusus' => $dopm->perusahaan_ijin_kerja_khusus ?? null,
+                        'tanggal_dop' => $dopm->tanggal_dop ? (\Carbon\Carbon::parse($dopm->tanggal_dop)->format('Y-m-d')) : null,
+                        'timestamp' => $dopm->timestamp ? $dopm->timestamp->format('Y-m-d H:i') : null,
+                        'status' => $dopm->status ?? null,
+                    ];
+                  @endphp
+                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
+                      <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-warning bg-opacity-10 text-warning flex-shrink-0">
                         <span class="material-icons-outlined" style="font-size: 28px;">info</span>
                       </div>
                       <div class="min-w-0">
@@ -1728,7 +1773,8 @@
                     <div class="progress w-25 flex-shrink-0" style="height: 5px;">
                       <div class="progress-bar bg-warning text-dark" style="width: 50%"></div>
                     </div>
-                    <div class="flex-shrink-0">
+                    <div class="flex-shrink-0 d-flex align-items-center gap-2">
+                     
                       <p class="mb-0 fs-6">50%</p>
                     </div>
                   </div>
@@ -1767,9 +1813,30 @@
                       $dopmHijau = collect($dopmListHarian ?? [])->where('status_matriks', 'Hijau')->values();
                   @endphp
                   @forelse($dopmHijau as $dopm)
-                  <div class="d-flex align-items-center gap-4">
-                    <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0">
-                      <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-success bg-opacity-10 text-success">
+                  @php
+                    $dopmJsonH = [
+                        'kode_ikk' => $dopm->kode_ikk,
+                        'jenis_ijin_kerja_khusus' => $dopm->jenis_ijin_kerja_khusus,
+                        'sid_layer_2' => $dopm->sid_layer_2,
+                        'sid_layer_3' => $dopm->sid_layer_3,
+                        'sid_layer_4' => $dopm->sid_layer_4,
+                        'nama_layer_2' => $dopm->nama_layer_2,
+                        'nama_layer_3' => $dopm->nama_layer_3,
+                        'nama_layer_4' => $dopm->nama_layer_4,
+                        'nama_layer_1' => $dopm->nama_layer_1 ?? null,
+                        'sid_layer_1' => $dopm->sid_layer_1 ?? null,
+                        'id_dop' => $dopm->id_dop,
+                        'nama_pekerjaan' => $dopm->nama_pekerjaan,
+                        'site_ijin_kerja_khusus' => $dopm->site_ijin_kerja_khusus ?? null,
+                        'perusahaan_ijin_kerja_khusus' => $dopm->perusahaan_ijin_kerja_khusus ?? null,
+                        'tanggal_dop' => $dopm->tanggal_dop ? (\Carbon\Carbon::parse($dopm->tanggal_dop)->format('Y-m-d')) : null,
+                        'timestamp' => $dopm->timestamp ? $dopm->timestamp->format('Y-m-d H:i') : null,
+                        'status' => $dopm->status ?? null,
+                    ];
+                  @endphp
+                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
+                      <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-success bg-opacity-10 text-success flex-shrink-0">
                         <span class="material-icons-outlined" style="font-size: 28px;">check_circle</span>
                       </div>
                       <div class="min-w-0">
@@ -1780,7 +1847,8 @@
                     <div class="progress w-25 flex-shrink-0" style="height: 5px;">
                       <div class="progress-bar bg-success" style="width: 100%"></div>
                     </div>
-                    <div class="flex-shrink-0">
+                    <div class="flex-shrink-0 d-flex align-items-center gap-2">
+                    
                       <p class="mb-0 fs-6">100%</p>
                     </div>
                   </div>
@@ -2000,6 +2068,11 @@
                                                             'sid_layer_1' => $dopm->sid_layer_1 ?? null,
                                                             'id_dop' => $dopm->id_dop,
                                                             'nama_pekerjaan' => $dopm->nama_pekerjaan,
+                                                            'site_ijin_kerja_khusus' => $dopm->site_ijin_kerja_khusus ?? null,
+                                                            'perusahaan_ijin_kerja_khusus' => $dopm->perusahaan_ijin_kerja_khusus ?? null,
+                                                            'tanggal_dop' => $dopm->tanggal_dop ? (\Carbon\Carbon::parse($dopm->tanggal_dop)->format('Y-m-d')) : null,
+                                                            'timestamp' => $dopm->timestamp ? $dopm->timestamp->format('Y-m-d H:i') : null,
+                                                            'status' => $dopm->status ?? null,
                                                         ];
                                                     @endphp
                                                     <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-dopm" data-dopm="{{ json_encode($dopmJson) }}" title="Intervensi (IPK-IKK, OKK, OAK)">
@@ -2387,6 +2460,35 @@
                 </div>
                 <div class="modal-body p-0">
                     <div class="p-4 bg-white" id="detailDopmContent" style="max-height: 600px; overflow-y: auto;">
+                        {{-- Data DOPM (dari database) --}}
+                        <div class="card border mb-4 bg-light">
+                            <div class="card-body py-3">
+                                <h6 class="fw-bold mb-3 text-dark"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">description</i> Data DOPM</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-striped align-middle mb-0 small">
+                                        <tbody>
+                                            <tr><td class="text-muted fw-semibold" style="width: 140px;">ID DOP</td><td id="detailDopmId">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Kode IKK</td><td id="detailDopmKodeIkk">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Nama Pekerjaan</td><td id="detailDopmNamaPekerjaan" class="text-break">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Site</td><td id="detailDopmSite">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Perusahaan</td><td id="detailDopmPerusahaan" class="text-break">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Jenis IJK</td><td id="detailDopmJenisIjk" class="text-break">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Tanggal DOP</td><td id="detailDopmTanggal">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Status</td><td id="detailDopmStatus">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 1</td><td id="detailDopmLayer1">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 2</td><td id="detailDopmLayer2">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 3</td><td id="detailDopmLayer3">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 4</td><td id="detailDopmLayer4">—</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                                <div class="mt-3">
+                                    <button type="button" class="btn btn-warning btn-sm btn-intervensi-from-detail" id="btnIntervensiFromDetailTop" title="Intervensi (IPK-IKK, OKK, OAK)">
+                                        <i class="material-icons-outlined align-middle me-1" style="font-size: 16px;">campaign</i> Intervensi
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
                         {{-- Section IPK-IKK --}}
                         <div class="mb-4">
                             <div class="d-flex align-items-center mb-3">
@@ -2468,6 +2570,12 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="modal-footer border-top py-3 px-4 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-warning btn-intervensi-from-detail" id="btnIntervensiFromDetail" title="Intervensi (IPK-IKK, OKK, OAK)">
+                        <i class="material-icons-outlined align-middle me-1" style="font-size: 18px;">campaign</i> Intervensi
+                    </button>
                 </div>
             </div>
         </div>
@@ -3002,12 +3110,26 @@
             return;
         }
 
-        var btn = e.target.closest('.btn-detail-dopm');
+        var btn = e.target.closest('.btn-detail-dopm') || (e.target.closest('.dopm-matriks-row') && !e.target.closest('.btn-intervensi-dopm') ? e.target.closest('.dopm-matriks-row') : null);
         if (!btn) return;
         var data = JSON.parse(btn.getAttribute('data-dopm') || '{}');
+        window._lastDetailDopmData = data;
         var modalDoc = document.getElementById('detailDopmModal');
         document.getElementById('detailDopmTitle').textContent = (data.id_dop || 'Detail') + ' — ' + (data.nama_pekerjaan || 'DOPM').substring(0, 50);
         document.getElementById('detailDopmSubtitle').textContent = 'Kode IKK: ' + (data.kode_ikk || '—');
+        function dash(val) { return (val == null || val === '' || val === undefined) ? '—' : String(val); }
+        document.getElementById('detailDopmId').textContent = dash(data.id_dop);
+        document.getElementById('detailDopmKodeIkk').textContent = dash(data.kode_ikk);
+        document.getElementById('detailDopmNamaPekerjaan').textContent = dash(data.nama_pekerjaan);
+        document.getElementById('detailDopmSite').textContent = dash(data.site_ijin_kerja_khusus);
+        document.getElementById('detailDopmPerusahaan').textContent = dash(data.perusahaan_ijin_kerja_khusus);
+        document.getElementById('detailDopmJenisIjk').textContent = dash(data.jenis_ijin_kerja_khusus);
+        document.getElementById('detailDopmTanggal').textContent = dash(data.tanggal_dop);
+        document.getElementById('detailDopmStatus').textContent = dash(data.status);
+        document.getElementById('detailDopmLayer1').textContent = dash(data.nama_layer_1);
+        document.getElementById('detailDopmLayer2').textContent = dash(data.nama_layer_2);
+        document.getElementById('detailDopmLayer3').textContent = dash(data.nama_layer_3);
+        document.getElementById('detailDopmLayer4').textContent = dash(data.nama_layer_4);
         document.getElementById('badgeIpkIkk').textContent = '0';
         document.getElementById('badgeOkk').textContent = '0';
         document.getElementById('badgeOak').textContent = '0';
@@ -3119,6 +3241,30 @@
         }, { once: true });
     });
 
+    // Tombol Intervensi (footer + di dalam modal): tutup detail, buka modal Intervensi dengan data yang sama
+    function openIntervensiFromDetail() {
+        var data = window._lastDetailDopmData;
+        if (!data || !intervensiModal) return;
+        if (modal && modal.hide) modal.hide();
+        var fake = document.createElement('button');
+        fake.className = 'btn-intervensi-dopm d-none';
+        fake.setAttribute('data-dopm', JSON.stringify(data));
+        document.body.appendChild(fake);
+        fake.click();
+        fake.remove();
+    }
+    [document.getElementById('btnIntervensiFromDetail'), document.getElementById('btnIntervensiFromDetailTop')].forEach(function(btn) {
+        if (btn && intervensiModal) btn.addEventListener('click', openIntervensiFromDetail);
+    });
+
+    // Klik Enter pada baris matriks (Need Action / Warning / Complete) buka detail
+    document.addEventListener('keydown', function(e) {
+        if (e.key !== 'Enter') return;
+        var row = e.target.closest('.dopm-matriks-row');
+        if (!row || e.target.closest('.btn-intervensi-dopm')) return;
+        e.preventDefault();
+        row.click();
+    });
 })();
 </script>
 @endsection
