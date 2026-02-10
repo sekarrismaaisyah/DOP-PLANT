@@ -28,60 +28,80 @@ class DOPMController extends Controller
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $filterDate)) {
             $filterDate = now()->toDateString();
         }
+        $filterSite = $request->get('site', '');
 
-        // Data harian: hitung per tanggal terpilih
-        // Catatan: exclude DOPM dengan status "Cancel" agar tidak ikut ringkasan
-        $totalDopmHarian = Dopm::where(function ($q) use ($filterDate) {
+        // Scope tanggal & status (exclude Cancel)
+        $scopeDate = function ($q) use ($filterDate) {
             $q->whereDate('tanggal_dop', $filterDate)->orWhereDate('timestamp', $filterDate);
-        })
-            ->where(function ($q) {
-                $q->whereNull('status')
-                    ->orWhereNotIn('status', ['Cancel', 'CANCEL']);
-            })
-            ->count();
+        };
+        $scopeNotCancel = function ($q) {
+            $q->whereNull('status')->orWhereNotIn('status', ['Cancel', 'CANCEL']);
+        };
+        $scopeSite = function ($q) use ($filterSite) {
+            if ($filterSite === '') {
+                return;
+            }
+            if ($filterSite === 'Lainnya') {
+                $q->where(function ($q2) {
+                    $q2->whereNull('site_ijin_kerja_khusus')
+                        ->orWhereRaw("TRIM(COALESCE(site_ijin_kerja_khusus, '')) = ''");
+                });
+            } else {
+                $q->whereRaw("TRIM(COALESCE(site_ijin_kerja_khusus, '')) = ?", [$filterSite]);
+            }
+        };
 
-        // DOPM dengan status Cancel di hari ini (untuk tampilan "Dopm Cancel")
-        $totalDopmCancelHarian = Dopm::where(function ($q) use ($filterDate) {
-            $q->whereDate('tanggal_dop', $filterDate)->orWhereDate('timestamp', $filterDate);
-        })
+        // Daftar site untuk dropdown (tanggal terpilih, bukan Cancel)
+        $siteList = Dopm::where($scopeDate)
+            ->where($scopeNotCancel)
+            ->get()
+            ->map(fn ($d) => trim($d->site_ijin_kerja_khusus ?? '') ?: 'Lainnya')
+            ->unique()
+            ->sort()
+            ->values()
+            ->all();
+
+        // Data harian: hitung per tanggal (+ optional site)
+        $totalDopmHarian = Dopm::where($scopeDate)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->count();
+
+        // DOPM dengan status Cancel di hari ini
+        $totalDopmCancelHarian = Dopm::where($scopeDate)
             ->whereIn('status', ['Cancel', 'CANCEL'])
+            ->when($filterSite !== '', $scopeSite)
             ->count();
 
-        // Total DOPM minggu ini (Senin–Minggu, berdasarkan tanggal terpilih), tanpa status Cancel
+        // Total DOPM minggu ini (Senin–Minggu), tanpa status Cancel
         $mingguStart = Carbon::parse($filterDate)->startOfWeek(Carbon::MONDAY);
         $mingguEnd = $mingguStart->copy()->addDays(6)->endOfDay();
-        $totalDopmMingguIni = Dopm::where(function ($q) use ($mingguStart, $mingguEnd) {
+        $scopeWeek = function ($q) use ($mingguStart, $mingguEnd) {
             $q->whereBetween('tanggal_dop', [$mingguStart, $mingguEnd])
                 ->orWhereBetween('timestamp', [$mingguStart, $mingguEnd]);
-        })
-            ->where(function ($q) {
-                $q->whereNull('status')
-                    ->orWhereNotIn('status', ['Cancel', 'CANCEL']);
-            })
-            ->count();
+        };
+        $totalDopmMingguIni = Dopm::where($scopeWeek)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->count();
 
-        // Hitung IPK-IKK dan OKK harian (semua data, relasi ke DOPM via kode_ikk)
-        // Cancel hanya di-takeout di level DOPM, bukan di tabel IPK/OKK
+        // IPK-IKK dan OKK harian: setelah dapat DOPM list, hitung dari kode_ikk yang ada di list (agar konsisten dengan filter site)
         $totalIkkHarian = IpkIkk::whereDate('ts', $filterDate)->count();
         $totalOkkHarian = Okk::whereDate('ts', $filterDate)->count();
 
-        // IPK-IKK dengan status_pekerjaan Batal di hari ini (untuk tampilan "Pekerjaan Cancel")
+        // IPK-IKK dengan status_pekerjaan Batal di hari ini
         $totalPekerjaanBatalHarian = IpkIkk::whereDate('ts', $filterDate)
             ->whereIn('status_pekerjaan', ['Batal', 'BATAL'])
             ->count();
 
-        // Daftar DOPM untuk tanggal terpilih (tampil langsung)
-        // Exclude status "Cancel" agar tidak muncul di tabel harian
-        $dopmListHarian = Dopm::where(function ($q) use ($filterDate) {
-            $q->whereDate('tanggal_dop', $filterDate)->orWhereDate('timestamp', $filterDate);
-        })
-            ->where(function ($q) {
-                $q->whereNull('status')
-                    ->orWhereNotIn('status', ['Cancel', 'CANCEL']);
-            })
+        // Daftar DOPM untuk tanggal terpilih (+ optional site)
+        $dopmListHarian = Dopm::where($scopeDate)
+            ->where($scopeNotCancel)
+            ->when($filterSite !== '', $scopeSite)
             ->orderBy('tanggal_dop')
             ->orderBy('id')
             ->get();
+
+        // Hitung total IKK/OKK hanya dari kode_ikk yang ada di DOPM terfilter (konsisten dengan filter site)
+        $kodeIkksAll = $dopmListHarian->pluck('kode_ikk')->filter()->unique()->values()->all();
+        if ($filterSite !== '' && !empty($kodeIkksAll)) {
+            $totalIkkHarian = IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $kodeIkksAll)->count();
+            $totalOkkHarian = Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $kodeIkksAll)->count();
+        }
 
         // Status matriks per DOPM: Is IKK ada IPK, Is IKK ada OKK (by kode_ikk + filterDate)
         $kodeIkks = $dopmListHarian->pluck('kode_ikk')->filter()->unique()->values()->all();
@@ -222,6 +242,8 @@ class DOPMController extends Controller
 
         return view('dopmikk.dopm.dashboard', [
             'filterDate' => $filterDate,
+            'filterSite' => $filterSite,
+            'siteList' => $siteList,
             'totalDopmHarian' => $totalDopmHarian,
             'totalDopmCancelHarian' => $totalDopmCancelHarian,
             'totalDopmMingguIni' => $totalDopmMingguIni,

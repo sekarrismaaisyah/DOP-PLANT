@@ -1447,6 +1447,18 @@
                            class="form-control rounded-3" 
                            value="{{ $filterDate ?? now()->toDateString() }}">
                 </div>
+                <div class="col-12 col-md">
+                    <label for="filterSite" class="form-label mb-2 small fw-semibold text-muted">
+                        <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">place</i>
+                        Site
+                    </label>
+                    <select name="site" id="filterSite" class="form-select rounded-3">
+                        <option value="">Semua Site</option>
+                        @foreach($siteList ?? [] as $site)
+                            <option value="{{ $site }}" {{ ($filterSite ?? '') === $site ? 'selected' : '' }}>{{ $site }}</option>
+                        @endforeach
+                    </select>
+                </div>
                 <div class="col-12 col-md-auto">
                     <button type="submit" class="btn btn-primary rounded-3 px-4" id="dashboardFilterBtn">
                         <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">search</i> 
@@ -1607,7 +1619,7 @@
                  </div>
                   <div id="chart4"></div>
                   <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3">
-                    <span class="small text-muted">Per jenis ijin kerja khusus (tanggal terpilih):</span>
+                    <span class="small text-muted text-center">Per jenis ijin kerja khusus (tanggal terpilih):</span>
                     <div class="d-flex align-items-center gap-2">
                       <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:#0d6efd;"></span>
                       <span class="small">DOPM</span>
