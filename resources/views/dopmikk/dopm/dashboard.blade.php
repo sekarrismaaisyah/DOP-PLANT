@@ -1407,13 +1407,13 @@
     {{-- Filter tanggal --}}
     <div class="card rounded-4 mb-3">
         <div class="card-body py-3">
-            <form method="get" action="{{ route('dopmikk.dopm.dashboard') }}" class="row g-2 align-items-end">
+            <form method="get" action="{{ route('dopmikk.dopm.dashboard') }}" class="row g-2 align-items-end" id="dashboardFilterForm">
                 <div class="col-auto">
                     <label for="filterDate" class="form-label mb-0 small fw-semibold">Tampilkan data tanggal</label>
                     <input type="date" name="date" id="filterDate" class="form-control" value="{{ $filterDate ?? now()->toDateString() }}">
                 </div>
                 <div class="col-auto">
-                    <button type="submit" class="btn btn-primary rounded-3">
+                    <button type="submit" class="btn btn-primary rounded-3" id="dashboardFilterBtn">
                         <i class="material-icons-outlined me-1" style="font-size: 18px;">search</i> Filter
                     </button>
                 </div>
@@ -1468,13 +1468,13 @@
                                 <small class="text-muted">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaOkkCount ?? 0) }} belum OKK</small>
                             </a>
                             <div class="vr"></div>
-                            <div class="d-flex flex-column align-items-center justify-content-center gap-2" title="OAK (Observasi Area Kerja) tanggal terpilih">
+                            <div class="d-flex flex-column align-items-center justify-content-center gap-2" title="OAK (Observasi Area Kerja) dari ClickHouse — tipe OBSERVE, layer 2/3/4 DOPM">
                                 <span class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
                                     <i class="material-icons-outlined">visibility</i>
                                 </span>
-                                <h3 class="mb-0">{{ isset($totalOakHarian) && $totalOakHarian !== null ? number_format($totalOakHarian) : '—' }}</h3>
+                                <h3 class="mb-0">{{ number_format($totalOakHarian ?? 0) }}</h3>
                                 <p class="mb-0">OAK</p>
-                                <small class="text-muted">Data Hari ini</small>
+                                <small class="text-muted">Data Hari ini (OBSERVE, Layer 2/3/4)</small>
                             </div>
                         </div>
                     </div>
@@ -2263,6 +2263,25 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 (function() {
+    // Loading SweetAlert saat submit filter tanggal
+    var filterForm = document.getElementById('dashboardFilterForm');
+    if (filterForm && typeof Swal !== 'undefined') {
+        filterForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            Swal.fire({
+                title: 'Memuat data...',
+                html: 'Menampilkan data untuk tanggal yang dipilih.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: function() {
+                    Swal.showLoading();
+                }
+            });
+            filterForm.submit();
+        });
+    }
+
     var modalApiUrl = @json(route('dopmikk.api.ikk-modal-data'));
     var layer1UsersApiUrl = @json(route('dopmikk.api.layer1-users'));
     var layers234UsersApiUrl = @json(route('dopmikk.api.layers234-users'));

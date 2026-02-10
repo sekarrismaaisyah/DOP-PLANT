@@ -45,21 +45,6 @@ class DOPMController extends Controller
         $totalIkkHarian = IpkIkk::whereDate('ts', $filterDate)->count();
         $totalOkkHarian = Okk::whereDate('ts', $filterDate)->count();
 
-        $totalOakHarian = null;
-        try {
-            if (class_exists(\App\Services\ClickHouseService::class)) {
-                $clickHouse = app(\App\Services\ClickHouseService::class);
-                if (method_exists($clickHouse, 'query')) {
-                    $result = $clickHouse->query(
-                        "SELECT count() as cnt FROM hse_automation.aaj_vw_car_oak_register_ytd_only WHERE toDate(submit_date) = '" . addslashes($filterDate) . "'"
-                    );
-                    $totalOakHarian = isset($result[0]['cnt']) ? (int) $result[0]['cnt'] : null;
-                }
-            }
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::debug('Dashboard OAK harian skip: ' . $e->getMessage());
-        }
-
         // Daftar DOPM untuk tanggal terpilih (tampil langsung)
         // Exclude status "Cancel" agar tidak muncul di tabel harian
         $dopmListHarian = Dopm::where(function ($q) use ($filterDate) {
@@ -105,6 +90,39 @@ class DOPMController extends Controller
             $dopm->status_matriks = self::hitungStatusMatriks($hasIpk, $hasOkk);
             $dopm->is_ikk_ada_ipk = $hasIpk;
             $dopm->is_ikk_ada_okk = $hasOkk;
+        }
+
+        // OAK dari ClickHouse: tipe OBSERVE/OBSERVEE, laporan dari layer 2/3/4 yang ada di DOPM hari ini
+        $totalOakHarian = 0;
+        $layerSidsForOak = [];
+        foreach ($dopmListHarian as $dopm) {
+            foreach (['sid_layer_2', 'sid_layer_3', 'sid_layer_4'] as $key) {
+                $v = trim((string) ($dopm->{$key} ?? ''));
+                if ($v !== '') {
+                    $layerSidsForOak[$v] = true;
+                }
+            }
+        }
+        $layerSidsForOak = array_keys($layerSidsForOak);
+        if (!empty($layerSidsForOak)) {
+            try {
+                if (class_exists(\App\Services\ClickHouseService::class)) {
+                    $clickHouse = app(\App\Services\ClickHouseService::class);
+                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                        $sidsIn = implode(',', array_map(function ($s) {
+                            return "'" . addslashes($s) . "'";
+                        }, $layerSidsForOak));
+                        $sql = "SELECT count() as cnt FROM hse_automation.aaj_vw_car_oak_register_ytd_only"
+                            . " WHERE toDate(submit_date) = '" . addslashes($filterDate) . "'"
+                            . " AND (trim(lower(toString(tipe))) = 'observe' OR trim(lower(toString(tipe))) = 'observee')"
+                            . " AND ((toString(kode_sid) IN ({$sidsIn})) OR (toString(kode_sid_pelapor) IN ({$sidsIn})) OR (toString(kode_sid_team) IN ({$sidsIn})))";
+                        $result = $clickHouse->query($sql);
+                        $totalOakHarian = isset($result[0]['cnt']) ? (int) $result[0]['cnt'] : 0;
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::debug('Dashboard OAK harian skip: ' . $e->getMessage());
+            }
         }
 
         // Persentase IKK yang ada IPK / ada OKK (dasar: jumlah IKK unik dari DOPM tanggal terpilih)

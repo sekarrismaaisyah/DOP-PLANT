@@ -2528,6 +2528,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                         ifNull(toString(site), '') as site
                     FROM hse_automation.aaj_vw_car_oak_register_ytd_only
                     WHERE 1=1
+                    AND (trim(lower(toString(tipe))) = 'observe' OR trim(lower(toString(tipe))) = 'observee')
                     AND trim(lower(toString(activity))) = trim(lower('" . addslashes($activity) . "'))
                 ";
                 if ($subActivity) {
@@ -2537,7 +2538,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     $inList = implode(',', array_map(function ($s) {
                         return "'" . addslashes($s) . "'";
                     }, $sids));
-                    $sql .= " AND (toString(kode_sid_pelapor) IN ({$inList}) OR toString(kode_sid_team) IN ({$inList}))";
+                    $sql .= " AND (toString(kode_sid) IN ({$inList}) OR toString(kode_sid_pelapor) IN ({$inList}) OR toString(kode_sid_team) IN ({$inList}))";
                 }
                 $sql .= " ORDER BY toDateTime(submit_date) DESC LIMIT 100";
                 $oak = $this->queryClickHouseCustom($sql, 'hse_automation');
