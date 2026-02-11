@@ -241,6 +241,137 @@ class DOPMController extends Controller
                 : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $kodeIkksJenis)->count();
         }
 
+        // Data IKK (work permit) dari ClickHouse untuk tampilan harian
+        $ikkClickhouseListHarian = [];
+        try {
+            if (class_exists(\App\Services\ClickHouseService::class)) {
+                /** @var \App\Services\ClickHouseService $clickHouse */
+                $clickHouse = app(\App\Services\ClickHouseService::class);
+                if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                    // Ambil work permit harian berdasarkan start_date
+                    $dateStr = addslashes($filterDate);
+                    $siteFilterClause = '';
+                    if ($filterSite !== '' && $filterSite !== null) {
+                        if ($filterSite === 'Lainnya') {
+                            $siteFilterClause = " AND trim(COALESCE(ra_site_name, '')) = ''";
+                        } else {
+                            $siteFilterClause = " AND trim(COALESCE(ra_site_name, '')) = '" . addslashes($filterSite) . "'";
+                        }
+                    }
+
+                    $sqlWorkPermits = "
+                        SELECT
+                            id,
+                            code,
+                            name,
+                            ra_site_name,
+                            company_name,
+                            status,
+                            m_job_id
+                        FROM hse_automation.ikk_work_permit
+                        WHERE toDate(start_date) = '{$dateStr}'
+                        {$siteFilterClause}
+                    ";
+                    $wpRows = $clickHouse->query($sqlWorkPermits);
+
+                    if (!empty($wpRows)) {
+                        // Map job_id -> job_name
+                        $jobIds = array_values(array_unique(array_filter(array_column($wpRows, 'm_job_id'))));
+                        $jobNamesById = [];
+                        if (!empty($jobIds)) {
+                            $inJobs = implode(',', array_map(function ($id) {
+                                return "'" . addslashes($id) . "'";
+                            }, $jobIds));
+                            $sqlJobs = "
+                                SELECT id, name
+                                FROM hse_automation.ikk_m_job
+                                WHERE id IN ({$inJobs})
+                            ";
+                            $jobRows = $clickHouse->query($sqlJobs);
+                            foreach ($jobRows as $jr) {
+                                if (!isset($jr['id'])) {
+                                    continue;
+                                }
+                                $jobId = $jr['id'];
+                                $jobNamesById[$jobId] = $jr['name'] ?? null;
+                            }
+                        }
+
+                        // Ambil employee per work permit untuk layer 1/2/3/4
+                        $wpIds = array_values(array_unique(array_column($wpRows, 'id')));
+                        $layersByWp = [];
+                        if (!empty($wpIds)) {
+                            $inWpIds = implode(',', array_map(function ($id) {
+                                return "'" . addslashes($id) . "'";
+                            }, $wpIds));
+                            $sqlEmp = "
+                                SELECT work_permit_id, layer, employee_name
+                                FROM hse_automation.ikk_work_permit_employee
+                                WHERE work_permit_id IN ({$inWpIds})
+                            ";
+                            $empRows = $clickHouse->query($sqlEmp);
+
+                            foreach ($empRows as $er) {
+                                $wpId = $er['work_permit_id'] ?? null;
+                                if ($wpId === null || $wpId === '') {
+                                    continue;
+                                }
+                                $layerRaw = $er['layer'] ?? null;
+                                if ($layerRaw === null || $layerRaw === '') {
+                                    continue;
+                                }
+                                $layerNum = (int) $layerRaw;
+                                if (!in_array($layerNum, [1, 2, 3, 4], true)) {
+                                    continue;
+                                }
+                                if (!isset($layersByWp[$wpId])) {
+                                    $layersByWp[$wpId] = [];
+                                }
+                                // Ambil nama pertama per layer
+                                if (!isset($layersByWp[$wpId][$layerNum])) {
+                                    $layersByWp[$wpId][$layerNum] = trim((string) ($er['employee_name'] ?? ''));
+                                }
+                            }
+                        }
+
+                        foreach ($wpRows as $row) {
+                            $wpId = $row['id'] ?? null;
+                            if ($wpId === null || $wpId === '') {
+                                continue;
+                            }
+                            $layers = $layersByWp[$wpId] ?? [];
+                            $namaLayer1 = $layers[1] ?? null;
+                            $namaLayer2 = $layers[2] ?? null;
+                            $namaLayer3 = $layers[3] ?? null;
+                            $namaLayer4 = $layers[4] ?? null;
+
+                            $status = $row['status'] ?? null;
+                            $matriks = self::hitungStatusMatriksIkkClickhouse($status);
+
+                            $ikkClickhouseListHarian[] = (object) [
+                                'id' => $wpId,
+                                'code' => $row['code'] ?? null,
+                                'site' => $row['ra_site_name'] ?? null,
+                                'jenis_ijin_kerja_khusus' => isset($row['m_job_id']) && $row['m_job_id']
+                                    ? ($jobNamesById[$row['m_job_id']] ?? null)
+                                    : null,
+                                'nama_pekerjaan' => $row['name'] ?? null,
+                                'perusahaan' => $row['company_name'] ?? null,
+                                'status' => $status,
+                                'status_matriks' => $matriks,
+                                'nama_layer_1' => $namaLayer1,
+                                'nama_layer_2' => $namaLayer2,
+                                'nama_layer_3' => $namaLayer3,
+                                'nama_layer_4' => $namaLayer4,
+                            ];
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::debug('Dashboard IKK ClickHouse skip: ' . $e->getMessage());
+        }
+
         return view('dopmikk.dopm.dashboard', [
             'filterDate' => $filterDate,
             'filterSite' => $filterSite,
@@ -268,6 +399,7 @@ class DOPMController extends Controller
             'chartDopmPerJenis' => $chartDopmPerJenis,
             'chartIpkPerJenis' => $chartIpkPerJenis,
             'chartOkkPerJenis' => $chartOkkPerJenis,
+            'ikkClickhouseListHarian' => $ikkClickhouseListHarian,
         ]);
     }
 
@@ -809,5 +941,39 @@ class DOPMController extends Controller
         }
         // ELSE 'Merah'
         return 'Merah';
+    }
+
+    /**
+     * Hitung status matriks untuk data IKK (work permit) dari ClickHouse
+     * berdasarkan kolom status di tabel ikk_work_permit.
+     * Returns: 'Hijau' | 'Kuning' | 'Merah'
+     */
+    public static function hitungStatusMatriksIkkClickhouse(?string $status): string
+    {
+        if ($status === null) {
+            return 'Merah';
+        }
+        $s = strtoupper(trim($status));
+        if ($s === '') {
+            return 'Merah';
+        }
+
+        // Status baik / hijau
+        if (in_array($s, ['ACTIVE', 'APPROVED', 'ONGOING', 'IN PROGRESS'], true)) {
+            return 'Hijau';
+        }
+
+        // Status kuning (masih berjalan / menunggu)
+        if (in_array($s, ['PENDING', 'SUBMITTED', 'EXTEND', 'EXTENDED', 'WAITING APPROVAL'], true)) {
+            return 'Kuning';
+        }
+
+        // Status merah (selesai / kadaluarsa / batal)
+        if (in_array($s, ['EXPIRED', 'REJECTED', 'CANCELLED', 'CANCELED', 'CLOSED'], true)) {
+            return 'Merah';
+        }
+
+        // Default: kuning sebagai tengah
+        return 'Kuning';
     }
 }

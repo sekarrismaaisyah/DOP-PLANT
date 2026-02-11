@@ -1342,6 +1342,7 @@
     .dopm-matriks-row.hover-border:hover { border-color: rgba(0,0,0,0.1) !important; background: rgba(0,0,0,0.02); }
     .dopm-matriks-row.cursor-pointer { cursor: pointer; }
     #tableDopmHarian thead th { white-space: nowrap; }
+    #tableIkkClickhouseHarian thead th { white-space: nowrap; }
 
     /* Summary harian per site */
     .dopm-summary-card { border-radius: 1rem; overflow: hidden; border: 1px solid #e5e7eb; }
@@ -1620,8 +1621,8 @@
                   </div>
                  </div>
                   <div id="chart4"></div>
-                  <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3">
-                    <span class="small text-muted text-center">Per jenis ijin kerja khusus (tanggal terpilih):</span>
+                  <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-center">
+                    <span class="small text-muted ">Per jenis ijin kerja khusus (tanggal terpilih):</span>
                     <div class="d-flex align-items-center gap-2">
                       <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:#0d6efd;"></span>
                       <span class="small">DOPM</span>
@@ -2093,6 +2094,74 @@
                             <div class="p-4 text-center text-muted">
                                 <i class="material-icons-outlined" style="font-size: 48px;">inbox</i>
                                 <p class="mb-0 mt-2">Tidak ada data DOPM untuk tanggal ini.</p>
+                            </div>
+                        @endif
+                    </div>
+                </div>
+
+                {{-- Tabel IKK dari ClickHouse (ikk_work_permit) --}}
+                <div class="card rounded-4 border-0 shadow-sm mt-4">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0 fw-bold">
+                            Data IKK (ClickHouse) —
+                            {{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('l, d F Y') }}
+                        </h5>
+                        <small class="text-muted">Data IKK harian dari tabel ClickHouse `hse_automation.ikk_work_permit`.</small>
+                    </div>
+                    <div class="card-body p-0">
+                        @if(count($ikkClickhouseListHarian ?? []) > 0)
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped align-middle mb-0 w-100" id="tableIkkClickhouseHarian">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>ID</th>
+                                            <th>Kode IKK</th>
+                                            <th>Site</th>
+                                            <th>Jenis Ijin Kerja Khusus</th>
+                                            <th>Nama Pekerjaan</th>
+                                            <th>Perusahaan</th>
+                                            <th>Status</th>
+                                            <th>Status Matriks</th>
+                                            <th>Nama Layer 1</th>
+                                            <th>Layer 2 / 3 / 4</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        @foreach($ikkClickhouseListHarian as $ikk)
+                                            @php
+                                                $matriksIkk = $ikk->status_matriks ?? 'Merah';
+                                                $badgeClassIkk = $matriksIkk === 'Hijau'
+                                                    ? 'bg-success'
+                                                    : ($matriksIkk === 'Kuning' ? 'bg-warning text-dark' : 'bg-danger');
+                                            @endphp
+                                            <tr>
+                                                <td>{{ $ikk->id ?? '-' }}</td>
+                                                <td>{{ $ikk->code ?? '-' }}</td>
+                                                <td>{{ $ikk->site ?? '-' }}</td>
+                                                <td>{{ $ikk->jenis_ijin_kerja_khusus ?? '-' }}</td>
+                                                <td>{{ $ikk->nama_pekerjaan ?? '-' }}</td>
+                                                <td>{{ $ikk->perusahaan ?? '-' }}</td>
+                                                <td><span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span></td>
+                                                <td>
+                                                    <span class="badge {{ $badgeClassIkk }}">{{ $matriksIkk }}</span>
+                                                </td>
+                                                <td><small class="text-primary">{{ $ikk->nama_layer_1 ?? '-' }}</small></td>
+                                                <td>
+                                                    <small>
+                                                        {{ $ikk->nama_layer_2 ?? '-' }} /
+                                                        {{ $ikk->nama_layer_3 ?? '-' }} /
+                                                        {{ $ikk->nama_layer_4 ?? '-' }}
+                                                    </small>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
+                            </div>
+                        @else
+                            <div class="p-4 text-center text-muted">
+                                <i class="material-icons-outlined" style="font-size: 48px;">inbox</i>
+                                <p class="mb-0 mt-2">Tidak ada data IKK dari ClickHouse untuk tanggal ini.</p>
                             </div>
                         @endif
                     </div>
@@ -2814,6 +2883,24 @@
                 paginate: { first: 'Awal', last: 'Akhir', next: 'Selanjutnya', previous: 'Sebelumnya' }
             },
             columnDefs: [{ targets: [9, 10], orderable: false }],
+            dom: '<"row mb-2"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
+        });
+    }
+
+    // DataTables untuk tabel IKK ClickHouse harian
+    if ($.fn.DataTable && document.getElementById('tableIkkClickhouseHarian')) {
+        $('#tableIkkClickhouseHarian').DataTable({
+            order: [[0, 'asc']],
+            pageLength: 25,
+            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+            language: {
+                search: 'Cari:',
+                lengthMenu: 'Tampilkan _MENU_ baris',
+                info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
+                infoEmpty: 'Tidak ada data',
+                infoFiltered: '(filter dari _MAX_ data)',
+                paginate: { first: 'Awal', last: 'Akhir', next: 'Selanjutnya', previous: 'Sebelumnya' }
+            },
             dom: '<"row mb-2"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
         });
     }
