@@ -243,6 +243,8 @@ class DOPMController extends Controller
 
         // Data IKK (work permit) dari ClickHouse untuk tampilan harian
         $ikkClickhouseListHarian = [];
+        // Total work permit harian (APPROVED) dari ClickHouse, mengikuti filter tanggal & site
+        $totalWorkPermitApprovedHarian = 0;
         try {
             if (class_exists(\App\Services\ClickHouseService::class)) {
                 /** @var \App\Services\ClickHouseService $clickHouse */
@@ -347,6 +349,10 @@ class DOPMController extends Controller
                             $namaLayer4 = $layers[4] ?? null;
 
                             $status = $row['status'] ?? null;
+                            // Hitung hanya work permit dengan status APPROVED
+                            if ($status !== null && strtoupper(trim((string) $status)) === 'APPROVED') {
+                                $totalWorkPermitApprovedHarian++;
+                            }
                             $matriks = self::hitungStatusMatriksIkkClickhouse($status);
 
                             $ikkClickhouseListHarian[] = (object) [
@@ -378,6 +384,7 @@ class DOPMController extends Controller
             'filterSite' => $filterSite,
             'siteList' => $siteList,
             'totalDopmHarian' => $totalDopmHarian,
+            'totalWorkPermitApprovedHarian' => $totalWorkPermitApprovedHarian,
             'totalDopmCancelHarian' => $totalDopmCancelHarian,
             'totalDopmMingguIni' => $totalDopmMingguIni,
             'totalPekerjaanBatalHarian' => $totalPekerjaanBatalHarian,

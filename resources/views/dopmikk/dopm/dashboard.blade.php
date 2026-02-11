@@ -1510,7 +1510,7 @@
                     <a href="javascript:;" class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">assignment</i>
                     </a>
-                    <h3 class="mb-0">{{ number_format($totalDopmHarian ?? 0) }}</h3>
+                    <h3 class="mb-0">{{ number_format($totalWorkPermitApprovedHarian ?? 0) }}</h3>
                     <p class="mb-0">DOPM</p>
                      <small class="text-muted">Data Hari ini</small>
                   </div>
