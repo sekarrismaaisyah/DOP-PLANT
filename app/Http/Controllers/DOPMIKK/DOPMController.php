@@ -250,7 +250,7 @@ class DOPMController extends Controller
                 /** @var \App\Services\ClickHouseService $clickHouse */
                 $clickHouse = app(\App\Services\ClickHouseService::class);
                 if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                    // Ambil work permit harian berdasarkan start_date
+                    // Ambil work permit yang rentang tanggalnya (start_date–end_date) mencakup tanggal filter
                     $dateStr = addslashes($filterDate);
                     $siteFilterClause = '';
                     if ($filterSite !== '' && $filterSite !== null) {
@@ -262,21 +262,21 @@ class DOPMController extends Controller
                     }
 
                     $sqlWorkPermits = "
-                       SELECT
-                                id,
-                                code,
-                                name,
-                                ra_site_name,
-                                company_name,
-                                status,
-                                m_job_id
-                            FROM hse_automation.ikk_work_permit
-                            WHERE toDate(start_date) = today()
-                            ORDER BY start_date ASC;
-                        {$siteFilterClause}
+                        SELECT
+                            id,
+                            code,
+                            name,
+                            ra_site_name,
+                            company_name,
+                            status,
+                            m_job_id
+                        FROM hse_automation.ikk_work_permit
+                        WHERE toDate(start_date) <= toDate('{$dateStr}')
+                          AND toDate(end_date)   >= toDate('{$dateStr}')
+                          {$siteFilterClause}
+                        ORDER BY start_date ASC
                     ";
 
-                    
                     $wpRows = $clickHouse->query($sqlWorkPermits);
 
                     if (!empty($wpRows)) {
@@ -350,12 +350,28 @@ class DOPMController extends Controller
                             $namaLayer3 = $layers[3] ?? null;
                             $namaLayer4 = $layers[4] ?? null;
 
-                            $status = $row['status'] ?? null;
+                            // Normalisasi & mapping status untuk tampilan
+                            $rawStatus = $row['status'] ?? null;
+                            $statusUpper = $rawStatus !== null ? strtoupper(trim((string) $rawStatus)) : null;
+
+                            // Tidak menampilkan status DRAFT
+                            if ($statusUpper === 'DRAFT') {
+                                continue;
+                            }
+
                             // Hitung hanya work permit dengan status APPROVED
-                            if ($status !== null && strtoupper(trim((string) $status)) === 'APPROVED') {
+                            if ($statusUpper === 'APPROVED') {
                                 $totalWorkPermitApprovedHarian++;
                             }
-                            $matriks = self::hitungStatusMatriksIkkClickhouse($status);
+
+                            // Label status untuk UI
+                            if ($statusUpper === 'APPROVED') {
+                                $statusLabel = 'Berlaku';
+                            } elseif ($statusUpper === 'EXPIRED') {
+                                $statusLabel = 'Kadaluarsa';
+                            } else {
+                                $statusLabel = $rawStatus;
+                            }
 
                             $ikkClickhouseListHarian[] = (object) [
                                 'id' => $wpId,
@@ -366,8 +382,9 @@ class DOPMController extends Controller
                                     : null,
                                 'nama_pekerjaan' => $row['name'] ?? null,
                                 'perusahaan' => $row['company_name'] ?? null,
-                                'status' => $status,
-                                'status_matriks' => $matriks,
+                                'status' => $statusLabel,
+                                // status_matriks akan diisi ulang berdasarkan IPK/OKK di bawah
+                                'status_matriks' => null,
                                 'nama_layer_1' => $namaLayer1,
                                 'nama_layer_2' => $namaLayer2,
                                 'nama_layer_3' => $namaLayer3,
@@ -379,6 +396,61 @@ class DOPMController extends Controller
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::debug('Dashboard IKK ClickHouse skip: ' . $e->getMessage());
+        }
+
+        // Hitung status_matriks untuk IKK ClickHouse berdasarkan ada/tidaknya IPK & OKK (menggunakan hitungStatusMatriks)
+        if (!empty($ikkClickhouseListHarian)) {
+            // Kumpulkan semua kode IKK (code) dari hasil ClickHouse
+            $ikkCodesClickhouse = collect($ikkClickhouseListHarian)
+                ->pluck('code')
+                ->filter()
+                ->unique()
+                ->values()
+                ->all();
+
+            $isIkkAdaIpkByCode = [];
+            $isIkkAdaOkkByCode = [];
+
+            if (!empty($ikkCodesClickhouse)) {
+                // IKK yang punya IPK di tanggal filter
+                $ipkCodes = IpkIkk::whereIn('kode_ikk', $ikkCodesClickhouse)
+                    ->whereDate('ts', $filterDate)
+                    ->select('kode_ikk')
+                    ->distinct()
+                    ->pluck('kode_ikk')
+                    ->all();
+
+                foreach ($ipkCodes as $c) {
+                    $isIkkAdaIpkByCode[$c] = true;
+                }
+
+                // IKK yang punya OKK di tanggal filter
+                $okkCodes = Okk::whereIn('kode_ikk', $ikkCodesClickhouse)
+                    ->whereDate('ts', $filterDate)
+                    ->select('kode_ikk')
+                    ->distinct()
+                    ->pluck('kode_ikk')
+                    ->all();
+
+                foreach ($okkCodes as $c) {
+                    $isIkkAdaOkkByCode[$c] = true;
+                }
+            }
+
+            // Override status_matriks di setiap item IKK ClickHouse
+            foreach ($ikkClickhouseListHarian as $ikk) {
+                $code = $ikk->code ?? null;
+
+                if ($code === null || $code === '') {
+                    $isIpk = null;
+                    $isOkk = null;
+                } else {
+                    $isIpk = $isIkkAdaIpkByCode[$code] ?? false;
+                    $isOkk = $isIkkAdaOkkByCode[$code] ?? false;
+                }
+
+                $ikk->status_matriks = self::hitungStatusMatriks($isIpk, $isOkk);
+            }
         }
 
         return view('dopmikk.dopm.dashboard', [

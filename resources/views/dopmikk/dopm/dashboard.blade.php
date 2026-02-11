@@ -1881,7 +1881,7 @@
                                     <i class="material-icons-outlined">assignment</i>
                                 </span>
                                 <h3 class="mb-0">{{ number_format($totalDopmHarian ?? 0) }}</h3>
-                                <p class="mb-0">DOPM</p>
+                                <p class="mb-0">IKK</p>
                                 <small class="text-muted">Data Hari ini</small>
                             </a>
                             <div class="vr"></div>
@@ -2010,7 +2010,7 @@
         {{-- Data DOPM harian (tampil langsung) --}}
         <div class="row mt-3">
             <div class="col-12 px-3 px-md-4">
-                <div class="card rounded-4 border-0 shadow-sm">
+                <!-- <div class="card rounded-4 border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom">
                         <h5 class="mb-0 fw-bold">Data DOPM — {{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('l, d F Y') }}</h5>
                         <small class="text-muted">Klik Detail untuk melihat IPK-IKK, OKK, OAK per DOPM</small>
@@ -2097,10 +2097,10 @@
                             </div>
                         @endif
                     </div>
-                </div>
+                </div> -->
 
                 {{-- Tabel IKK dari ClickHouse (ikk_work_permit) --}}
-                <div class="card rounded-4 border-0 shadow-sm mt-4">
+                <div class="card rounded-4 border-0 shadow-sm mt-2">
                     <div class="card-header bg-white border-bottom">
                         <h5 class="mb-0 fw-bold">
                             Data IKK 
@@ -2117,9 +2117,9 @@
                         @if(count($ikkClickhouseListHarian ?? []) > 0)
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped align-middle mb-0 w-100" id="tableIkkClickhouseHarian">
-                                    <thead class="table-light">
-                                        <tr>
-                                            <th>ID</th>
+                                   <thead class="table-light">
+                                       <tr>
+                                           <th>No</th>
                                             <th>Kode IKK</th>
                                             <th>Site</th>
                                             <th>Jenis Ijin Kerja Khusus</th>
@@ -2131,16 +2131,16 @@
                                             <th>Layer 2 / 3 / 4</th>
                                         </tr>
                                     </thead>
-                                    <tbody>
+                                    <tbody class="py-2">
                                         @foreach($ikkClickhouseListHarian as $ikk)
                                             @php
                                                 $matriksIkk = $ikk->status_matriks ?? 'Merah';
                                                 $badgeClassIkk = $matriksIkk === 'Hijau'
                                                     ? 'bg-success'
                                                     : ($matriksIkk === 'Kuning' ? 'bg-warning text-dark' : 'bg-danger');
-                                            @endphp
-                                            <tr>
-                                                <td>{{ $ikk->id ?? '-' }}</td>
+                                           @endphp
+                                           <tr>
+                                               <td>{{ $loop->iteration }}</td>
                                                 <td>{{ $ikk->code ?? '-' }}</td>
                                                 <td>{{ $ikk->site ?? '-' }}</td>
                                                 <td>{{ $ikk->jenis_ijin_kerja_khusus ?? '-' }}</td>
