@@ -1455,7 +1455,7 @@
                         Site
                     </label>
                     <select name="site" id="filterSite" class="form-select rounded-3">
-                        <option value="">Semua Site</option>
+                        <option value="" {{ ($filterSite ?? '') === '' ? 'selected' : '' }}>Semua Site</option>
                         @foreach($siteList ?? [] as $site)
                             <option value="{{ $site }}" {{ ($filterSite ?? '') === $site ? 'selected' : '' }}>{{ $site }}</option>
                         @endforeach
