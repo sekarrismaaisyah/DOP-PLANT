@@ -243,6 +243,8 @@ class DOPMController extends Controller
 
         // Data IKK (work permit) dari ClickHouse untuk tampilan harian
         $ikkClickhouseListHarian = [];
+        // Total work permit dengan status APPROVED (harian / sesuai filterDate & filterSite)
+        $totalIkkApprovedHarian = 0;
         try {
             if (class_exists(\App\Services\ClickHouseService::class)) {
                 /** @var \App\Services\ClickHouseService $clickHouse */
@@ -269,7 +271,8 @@ class DOPMController extends Controller
                             status,
                             m_job_id
                         FROM hse_automation.ikk_work_permit
-                        WHERE toDate(start_date) = '{$dateStr}'
+                        WHERE start_date >= toDateTime('{$dateStr} 00:00:00')
+                          AND start_date <  addDays(toDateTime('{$dateStr} 00:00:00'), 1)
                         {$siteFilterClause}
                     ";
                     $wpRows = $clickHouse->query($sqlWorkPermits);
@@ -346,6 +349,10 @@ class DOPMController extends Controller
                             $namaLayer4 = $layers[4] ?? null;
 
                             $status = $row['status'] ?? null;
+                            // Hitung total APPROVED harian dari ClickHouse (sesuai filter tanggal & site)
+                            if ($status !== null && strtoupper(trim($status)) === 'APPROVED') {
+                                $totalIkkApprovedHarian++;
+                            }
                             $matriks = self::hitungStatusMatriksIkkClickhouse($status);
 
                             $ikkClickhouseListHarian[] = (object) [
@@ -383,6 +390,7 @@ class DOPMController extends Controller
             'totalIkkHarian' => $totalIkkHarian,
             'totalOkkHarian' => $totalOkkHarian,
             'totalOakHarian' => $totalOakHarian,
+            'totalIkkApprovedHarian' => $totalIkkApprovedHarian,
             'dopmListHarian' => $dopmListHarian,
             'totalIkkUnikHarian' => $totalIkkUnikHarian,
             'pctIkkAdaIpk' => $pctIkkAdaIpk,

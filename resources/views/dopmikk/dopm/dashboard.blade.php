@@ -1510,8 +1510,9 @@
                     <a href="javascript:;" class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">assignment</i>
                     </a>
-                    <h3 class="mb-0">{{ number_format($totalDopmHarian ?? 0) }}</h3>
-                    <p class="mb-0">DOPM</p>
+                    {{-- Jumlah work permit dari ClickHouse dengan status APPROVED pada hari ini / sesuai filter tanggal --}}
+                    <h3 class="mb-0">{{ number_format($totalIkkApprovedHarian ?? 0) }}</h3>
+                    <p class="mb-0">BeIKK</p>
                      <small class="text-muted">Data Hari ini</small>
                   </div>
                   <div class="vr"></div>
@@ -2109,6 +2110,11 @@
                         <small class="text-muted">Data IKK harian dari tabel ClickHouse `hse_automation.ikk_work_permit`.</small>
                     </div>
                     <div class="card-body p-0">
+                        {{-- Debug: kirim data IKK ClickHouse ke browser console --}}
+                        <script>
+                            console.log('ikkClickhouseListHarian (Blade)', @json($ikkClickhouseListHarian ?? []));
+                            console.log('ikkClickhouseListHarian count', {{ count($ikkClickhouseListHarian ?? []) }});
+                        </script>
                         @if(count($ikkClickhouseListHarian ?? []) > 0)
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped align-middle mb-0 w-100" id="tableIkkClickhouseHarian">
