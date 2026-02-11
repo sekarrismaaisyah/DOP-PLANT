@@ -262,19 +262,21 @@ class DOPMController extends Controller
                     }
 
                     $sqlWorkPermits = "
-                        SELECT
-                            id,
-                            code,
-                            name,
-                            ra_site_name,
-                            company_name,
-                            status,
-                            m_job_id
-                        FROM hse_automation.ikk_work_permit
-                        WHERE start_date >= toDateTime('{$dateStr} 00:00:00')
-                          AND start_date <  addDays(toDateTime('{$dateStr} 00:00:00'), 1)
+                       SELECT
+                                id,
+                                code,
+                                name,
+                                ra_site_name,
+                                company_name,
+                                status,
+                                m_job_id
+                            FROM hse_automation.ikk_work_permit
+                            WHERE toDate(start_date) = today()
+                            ORDER BY start_date ASC;
                         {$siteFilterClause}
                     ";
+
+                    
                     $wpRows = $clickHouse->query($sqlWorkPermits);
 
                     if (!empty($wpRows)) {

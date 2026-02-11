@@ -2103,7 +2103,7 @@
                 <div class="card rounded-4 border-0 shadow-sm mt-4">
                     <div class="card-header bg-white border-bottom">
                         <h5 class="mb-0 fw-bold">
-                            Data IKK (ClickHouse) —
+                            Data IKK 
                             {{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('l, d F Y') }}
                         </h5>
                         <small class="text-muted">Data IKK harian dari tabel ClickHouse `hse_automation.ikk_work_permit`.</small>
