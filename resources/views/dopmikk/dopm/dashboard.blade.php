@@ -1662,29 +1662,30 @@
                   </div>
                  </div>
                   <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
-                    @php
-                        $dopmMerah = collect($dopmListHarian ?? [])->where('status_matriks', 'Merah')->values();
+                  @php
+                        // Gunakan data IKK (work permit) dari ClickHouse untuk Need Action (Merah)
+                        $ikkMerah = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Merah')->values();
                     @endphp
-                    @forelse($dopmMerah as $dopm)
+                    @forelse($ikkMerah as $ikk)
                      @php
                         $dopmJson = [
-                            'kode_ikk' => $dopm->kode_ikk,
-                            'jenis_ijin_kerja_khusus' => $dopm->jenis_ijin_kerja_khusus,
-                            'sid_layer_2' => $dopm->sid_layer_2,
-                            'sid_layer_3' => $dopm->sid_layer_3,
-                            'sid_layer_4' => $dopm->sid_layer_4,
-                            'nama_layer_2' => $dopm->nama_layer_2,
-                            'nama_layer_3' => $dopm->nama_layer_3,
-                            'nama_layer_4' => $dopm->nama_layer_4,
-                            'nama_layer_1' => $dopm->nama_layer_1 ?? null,
-                            'sid_layer_1' => $dopm->sid_layer_1 ?? null,
-                            'id_dop' => $dopm->id_dop,
-                            'nama_pekerjaan' => $dopm->nama_pekerjaan,
-                            'site_ijin_kerja_khusus' => $dopm->site_ijin_kerja_khusus ?? null,
-                            'perusahaan_ijin_kerja_khusus' => $dopm->perusahaan_ijin_kerja_khusus ?? null,
-                            'tanggal_dop' => $dopm->tanggal_dop ? (\Carbon\Carbon::parse($dopm->tanggal_dop)->format('Y-m-d')) : null,
-                            'timestamp' => $dopm->timestamp ? $dopm->timestamp->format('Y-m-d H:i') : null,
-                            'status' => $dopm->status ?? null,
+                            'kode_ikk' => $ikk->code ?? null,
+                            'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
+                            'sid_layer_2' => null,
+                            'sid_layer_3' => null,
+                            'sid_layer_4' => null,
+                            'nama_layer_2' => $ikk->nama_layer_2 ?? null,
+                            'nama_layer_3' => $ikk->nama_layer_3 ?? null,
+                            'nama_layer_4' => $ikk->nama_layer_4 ?? null,
+                            'nama_layer_1' => $ikk->nama_layer_1 ?? null,
+                            'sid_layer_1' => null,
+                            'id_dop' => $ikk->code ?? null,
+                            'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
+                            'site_ijin_kerja_khusus' => $ikk->site ?? null,
+                            'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
+                            'tanggal_dop' => $filterDate ?? null,
+                            'timestamp' => null,
+                            'status' => $ikk->status ?? null,
                         ];
                      @endphp
                      <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
@@ -1693,8 +1694,8 @@
                           <span class="material-icons-outlined" style="font-size: 28px;">warning</span>
                         </div>
                           <div class="min-w-0">
-                            <h6 class="mb-0 fw-bold text-truncate" title="{{ $dopm->id_dop ?? '-' }}">{{ $dopm->id_dop ?? '-' }}</h6>
-                            <p class="mb-0 text-muted small text-truncate" title="{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}">{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}</p>
+                            <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->code ?? '-' }}">{{ $ikk->code ?? '-' }}</h6>
+                            <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
                           </div>
                        </div>
                        <div class="progress w-25 flex-shrink-0" style="height: 5px;">
@@ -1737,28 +1738,29 @@
                  </div>
                 <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
                   @php
-                      $dopmKuning = collect($dopmListHarian ?? [])->where('status_matriks', 'Kuning')->values();
+                      // Gunakan data IKK (work permit) dari ClickHouse untuk Warning (Kuning)
+                      $ikkKuning = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Kuning')->values();
                   @endphp
-                  @forelse($dopmKuning as $dopm)
+                  @forelse($ikkKuning as $ikk)
                   @php
                     $dopmJsonK = [
-                        'kode_ikk' => $dopm->kode_ikk,
-                        'jenis_ijin_kerja_khusus' => $dopm->jenis_ijin_kerja_khusus,
-                        'sid_layer_2' => $dopm->sid_layer_2,
-                        'sid_layer_3' => $dopm->sid_layer_3,
-                        'sid_layer_4' => $dopm->sid_layer_4,
-                        'nama_layer_2' => $dopm->nama_layer_2,
-                        'nama_layer_3' => $dopm->nama_layer_3,
-                        'nama_layer_4' => $dopm->nama_layer_4,
-                        'nama_layer_1' => $dopm->nama_layer_1 ?? null,
-                        'sid_layer_1' => $dopm->sid_layer_1 ?? null,
-                        'id_dop' => $dopm->id_dop,
-                        'nama_pekerjaan' => $dopm->nama_pekerjaan,
-                        'site_ijin_kerja_khusus' => $dopm->site_ijin_kerja_khusus ?? null,
-                        'perusahaan_ijin_kerja_khusus' => $dopm->perusahaan_ijin_kerja_khusus ?? null,
-                        'tanggal_dop' => $dopm->tanggal_dop ? (\Carbon\Carbon::parse($dopm->tanggal_dop)->format('Y-m-d')) : null,
-                        'timestamp' => $dopm->timestamp ? $dopm->timestamp->format('Y-m-d H:i') : null,
-                        'status' => $dopm->status ?? null,
+                        'kode_ikk' => $ikk->code ?? null,
+                        'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
+                        'sid_layer_2' => null,
+                        'sid_layer_3' => null,
+                        'sid_layer_4' => null,
+                        'nama_layer_2' => $ikk->nama_layer_2 ?? null,
+                        'nama_layer_3' => $ikk->nama_layer_3 ?? null,
+                        'nama_layer_4' => $ikk->nama_layer_4 ?? null,
+                        'nama_layer_1' => $ikk->nama_layer_1 ?? null,
+                        'sid_layer_1' => null,
+                        'id_dop' => $ikk->code ?? null,
+                        'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
+                        'site_ijin_kerja_khusus' => $ikk->site ?? null,
+                        'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
+                        'tanggal_dop' => $filterDate ?? null,
+                        'timestamp' => null,
+                        'status' => $ikk->status ?? null,
                     ];
                   @endphp
                   <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
@@ -1767,8 +1769,8 @@
                         <span class="material-icons-outlined" style="font-size: 28px;">info</span>
                       </div>
                       <div class="min-w-0">
-                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $dopm->id_dop ?? '-' }}">{{ $dopm->id_dop ?? '-' }}</h6>
-                        <p class="mb-0 text-muted small text-truncate" title="{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}">{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}</p>
+                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->code ?? '-' }}">{{ $ikk->code ?? '-' }}</h6>
+                        <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
                       </div>
                     </div>
                     <div class="progress w-25 flex-shrink-0" style="height: 5px;">
@@ -1811,28 +1813,29 @@
                  </div>
                 <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
                   @php
-                      $dopmHijau = collect($dopmListHarian ?? [])->where('status_matriks', 'Hijau')->values();
+                      // Gunakan data IKK (work permit) dari ClickHouse untuk Complete (Hijau)
+                      $ikkHijau = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Hijau')->values();
                   @endphp
-                  @forelse($dopmHijau as $dopm)
+                  @forelse($ikkHijau as $ikk)
                   @php
                     $dopmJsonH = [
-                        'kode_ikk' => $dopm->kode_ikk,
-                        'jenis_ijin_kerja_khusus' => $dopm->jenis_ijin_kerja_khusus,
-                        'sid_layer_2' => $dopm->sid_layer_2,
-                        'sid_layer_3' => $dopm->sid_layer_3,
-                        'sid_layer_4' => $dopm->sid_layer_4,
-                        'nama_layer_2' => $dopm->nama_layer_2,
-                        'nama_layer_3' => $dopm->nama_layer_3,
-                        'nama_layer_4' => $dopm->nama_layer_4,
-                        'nama_layer_1' => $dopm->nama_layer_1 ?? null,
-                        'sid_layer_1' => $dopm->sid_layer_1 ?? null,
-                        'id_dop' => $dopm->id_dop,
-                        'nama_pekerjaan' => $dopm->nama_pekerjaan,
-                        'site_ijin_kerja_khusus' => $dopm->site_ijin_kerja_khusus ?? null,
-                        'perusahaan_ijin_kerja_khusus' => $dopm->perusahaan_ijin_kerja_khusus ?? null,
-                        'tanggal_dop' => $dopm->tanggal_dop ? (\Carbon\Carbon::parse($dopm->tanggal_dop)->format('Y-m-d')) : null,
-                        'timestamp' => $dopm->timestamp ? $dopm->timestamp->format('Y-m-d H:i') : null,
-                        'status' => $dopm->status ?? null,
+                        'kode_ikk' => $ikk->code ?? null,
+                        'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
+                        'sid_layer_2' => null,
+                        'sid_layer_3' => null,
+                        'sid_layer_4' => null,
+                        'nama_layer_2' => $ikk->nama_layer_2 ?? null,
+                        'nama_layer_3' => $ikk->nama_layer_3 ?? null,
+                        'nama_layer_4' => $ikk->nama_layer_4 ?? null,
+                        'nama_layer_1' => $ikk->nama_layer_1 ?? null,
+                        'sid_layer_1' => null,
+                        'id_dop' => $ikk->code ?? null,
+                        'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
+                        'site_ijin_kerja_khusus' => $ikk->site ?? null,
+                        'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
+                        'tanggal_dop' => $filterDate ?? null,
+                        'timestamp' => null,
+                        'status' => $ikk->status ?? null,
                     ];
                   @endphp
                   <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
@@ -1841,8 +1844,8 @@
                         <span class="material-icons-outlined" style="font-size: 28px;">check_circle</span>
                       </div>
                       <div class="min-w-0">
-                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $dopm->id_dop ?? '-' }}">{{ $dopm->id_dop ?? '-' }}</h6>
-                        <p class="mb-0 text-muted small text-truncate" title="{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}">{{ $dopm->kode_ikk ?? '-' }} • {{ $dopm->site_ijin_kerja_khusus ?? '-' }}</p>
+                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->code ?? '-' }}">{{ $ikk->code ?? '-' }}</h6>
+                        <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
                       </div>
                     </div>
                     <div class="progress w-25 flex-shrink-0" style="height: 5px;">
