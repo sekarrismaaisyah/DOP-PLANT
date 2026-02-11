@@ -28,7 +28,8 @@ class DOPMController extends Controller
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $filterDate)) {
             $filterDate = now()->toDateString();
         }
-        $filterSite = $request->get('site', '');
+        // Normalisasi: null / kosong / spasi = Semua Site (jangan filter by site)
+        $filterSite = trim((string) ($request->query('site') ?? ''));
 
         // Scope tanggal & status (exclude Cancel)
         $scopeDate = function ($q) use ($filterDate) {
@@ -38,7 +39,7 @@ class DOPMController extends Controller
             $q->whereNull('status')->orWhereNotIn('status', ['Cancel', 'CANCEL']);
         };
         $scopeSite = function ($q) use ($filterSite) {
-            if ($filterSite === '') {
+            if ($filterSite === '' || $filterSite === null) {
                 return;
             }
             if ($filterSite === 'Lainnya') {
