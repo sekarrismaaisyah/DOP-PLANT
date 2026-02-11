@@ -1686,6 +1686,8 @@
                             'tanggal_dop' => $filterDate ?? null,
                             'timestamp' => null,
                             'status' => $ikk->status ?? null,
+                            'location_name' => $ikk->location_name ?? null,
+                            'location_detail_name' => $ikk->location_detail_name ?? null,
                         ];
                      @endphp
                      <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
@@ -1761,6 +1763,8 @@
                         'tanggal_dop' => $filterDate ?? null,
                         'timestamp' => null,
                         'status' => $ikk->status ?? null,
+                        'location_name' => $ikk->location_name ?? null,
+                        'location_detail_name' => $ikk->location_detail_name ?? null,
                     ];
                   @endphp
                   <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
@@ -1836,6 +1840,8 @@
                         'tanggal_dop' => $filterDate ?? null,
                         'timestamp' => null,
                         'status' => $ikk->status ?? null,
+                        'location_name' => $ikk->location_name ?? null,
+                        'location_detail_name' => $ikk->location_detail_name ?? null,
                     ];
                   @endphp
                   <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
@@ -3244,7 +3250,10 @@
             sid_layer_4: data.sid_layer_4 || '',
             nama_layer_2: data.nama_layer_2 || '',
             nama_layer_3: data.nama_layer_3 || '',
-            nama_layer_4: data.nama_layer_4 || ''
+            nama_layer_4: data.nama_layer_4 || '',
+            location_name: data.location_name || '',
+            location_detail_name: data.location_detail_name || '',
+            tanggal_dop: data.tanggal_dop || ''
         });
         function doFetch() {
         fetch(modalApiUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })

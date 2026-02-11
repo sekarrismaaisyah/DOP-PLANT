@@ -269,7 +269,11 @@ class DOPMController extends Controller
                             ra_site_name,
                             company_name,
                             status,
-                            m_job_id
+                            m_job_id,
+                            start_date,
+                            end_date,
+                            location_name,
+                            location_detail_name
                         FROM hse_automation.ikk_work_permit
                         WHERE toDate(start_date) <= toDate('{$dateStr}')
                           AND toDate(end_date)   >= toDate('{$dateStr}')
@@ -383,12 +387,16 @@ class DOPMController extends Controller
                                 'nama_pekerjaan' => $row['name'] ?? null,
                                 'perusahaan' => $row['company_name'] ?? null,
                                 'status' => $statusLabel,
-                                // status_matriks akan diisi ulang berdasarkan IPK/OKK di bawah
+                                // status_matriks akan diisi ulang berdasarkan IPK/OKK/OAK di bawah
                                 'status_matriks' => null,
                                 'nama_layer_1' => $namaLayer1,
                                 'nama_layer_2' => $namaLayer2,
                                 'nama_layer_3' => $namaLayer3,
                                 'nama_layer_4' => $namaLayer4,
+                                'start_date' => $row['start_date'] ?? null,
+                                'end_date' => $row['end_date'] ?? null,
+                                'location_name' => $row['location_name'] ?? null,
+                                'location_detail_name' => $row['location_detail_name'] ?? null,
                             ];
                         }
                     }
@@ -398,58 +406,20 @@ class DOPMController extends Controller
             \Illuminate\Support\Facades\Log::debug('Dashboard IKK ClickHouse skip: ' . $e->getMessage());
         }
 
-        // Hitung status_matriks untuk IKK ClickHouse berdasarkan ada/tidaknya IPK & OKK (menggunakan hitungStatusMatriks)
+        // Hitung status_matriks untuk IKK ClickHouse berdasarkan matriks lengkap (IPK + OKK + OAK)
         if (!empty($ikkClickhouseListHarian)) {
-            // Kumpulkan semua kode IKK (code) dari hasil ClickHouse
-            $ikkCodesClickhouse = collect($ikkClickhouseListHarian)
-                ->pluck('code')
-                ->filter()
-                ->unique()
-                ->values()
-                ->all();
-
-            $isIkkAdaIpkByCode = [];
-            $isIkkAdaOkkByCode = [];
-
-            if (!empty($ikkCodesClickhouse)) {
-                // IKK yang punya IPK di tanggal filter
-                $ipkCodes = IpkIkk::whereIn('kode_ikk', $ikkCodesClickhouse)
-                    ->whereDate('ts', $filterDate)
-                    ->select('kode_ikk')
-                    ->distinct()
-                    ->pluck('kode_ikk')
-                    ->all();
-
-                foreach ($ipkCodes as $c) {
-                    $isIkkAdaIpkByCode[$c] = true;
-                }
-
-                // IKK yang punya OKK di tanggal filter
-                $okkCodes = Okk::whereIn('kode_ikk', $ikkCodesClickhouse)
-                    ->whereDate('ts', $filterDate)
-                    ->select('kode_ikk')
-                    ->distinct()
-                    ->pluck('kode_ikk')
-                    ->all();
-
-                foreach ($okkCodes as $c) {
-                    $isIkkAdaOkkByCode[$c] = true;
-                }
-            }
-
-            // Override status_matriks di setiap item IKK ClickHouse
+            // Override status_matriks di setiap item IKK ClickHouse menggunakan matriks lengkap
             foreach ($ikkClickhouseListHarian as $ikk) {
                 $code = $ikk->code ?? null;
+                $locationName = $ikk->location_name ?? null;
+                $locationDetailName = $ikk->location_detail_name ?? null;
 
-                if ($code === null || $code === '') {
-                    $isIpk = null;
-                    $isOkk = null;
-                } else {
-                    $isIpk = $isIkkAdaIpkByCode[$code] ?? false;
-                    $isOkk = $isIkkAdaOkkByCode[$code] ?? false;
-                }
-
-                $ikk->status_matriks = self::hitungStatusMatriks($isIpk, $isOkk);
+                $ikk->status_matriks = self::hitungStatusMatriksLengkap(
+                    $code,
+                    $locationName,
+                    $locationDetailName,
+                    $filterDate
+                );
             }
         }
 
@@ -498,6 +468,8 @@ class DOPMController extends Controller
         $sidLayer2 = $request->input('sid_layer_2', '');
         $sidLayer3 = $request->input('sid_layer_3', '');
         $sidLayer4 = $request->input('sid_layer_4', '');
+        $locationName = $request->input('location_name', '');
+        $locationDetailName = $request->input('location_detail_name', '');
 
         $ipkIkk = [];
         $okk = [];
@@ -524,24 +496,79 @@ class DOPMController extends Controller
                 ->toArray();
         }
 
-        try {
-            $fullMapsUrl = route('full-maps.api.ikk-modal-data') . '?' . http_build_query([
-                'kode_ikk' => $kodeIkk,
-                'jenis_ijin_kerja_khusus' => $jenisIjin,
-                'nama_layer_2' => $namaLayer2,
-                'nama_layer_3' => $namaLayer3,
-                'nama_layer_4' => $namaLayer4,
-                'sid_layer_2' => $sidLayer2,
-                'sid_layer_3' => $sidLayer3,
-                'sid_layer_4' => $sidLayer4,
-            ]);
-            $response = Http::timeout(15)->get($fullMapsUrl);
-            if ($response->successful()) {
-                $body = $response->json();
-                $oak = $body['oak'] ?? [];
+        // Ambil OAK berdasarkan lokasi jika location_name dan location_detail_name tersedia
+        if ($locationName !== '' && $locationDetailName !== '') {
+            try {
+                if (class_exists(\App\Services\ClickHouseService::class)) {
+                    $clickHouse = app(\App\Services\ClickHouseService::class);
+                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                        // Ambil tanggal dari request atau gunakan hari ini
+                        $tanggalDop = $request->input('tanggal_dop', '');
+                        if ($tanggalDop === '') {
+                            $filterDate = date('Y-m-d');
+                        } else {
+                            // Pastikan format tanggal Y-m-d
+                            try {
+                                $filterDate = \Carbon\Carbon::parse($tanggalDop)->format('Y-m-d');
+                            } catch (\Exception $e) {
+                                $filterDate = date('Y-m-d');
+                            }
+                        }
+                        
+                        $locationNameEscaped = addslashes(trim($locationName));
+                        $locationDetailEscaped = addslashes(trim($locationDetailName));
+
+                        $sqlOak = "
+                            SELECT 
+                                toString(id) as id,
+                                toString(activity) as activity,
+                                toString(sub_activity) as sub_activity,
+                                toString(submit_date) as submit_date,
+                                toString(submit_by) as submit_by,
+                                toString(kode_sid_pelapor) as kode_sid_pelapor,
+                                toString(kode_sid_team) as kode_sid_team,
+                                toString(conclusion) as conclusion,
+                                toString(site) as site,
+                                toString(location) as location,
+                                toString(detail_location) as detail_location
+                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                            WHERE toDate(submit_date) = '{$filterDate}'
+                              AND (trim(lower(toString(tipe))) = 'observe' OR trim(lower(toString(tipe))) = 'observee')
+                              AND trim(toString(location)) = '{$locationNameEscaped}'
+                              AND trim(toString(detail_location)) = '{$locationDetailEscaped}'
+                            ORDER BY toDateTime(submit_date) DESC
+                            LIMIT 100
+                        ";
+                        $oakResult = $clickHouse->query($sqlOak);
+                        $oak = is_array($oakResult) ? $oakResult : [];
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::debug('Dashboard modal OAK by location fetch: ' . $e->getMessage());
             }
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::debug('Dashboard modal OAK fetch: ' . $e->getMessage());
+        }
+
+        // Jika OAK belum diambil berdasarkan lokasi, coba ambil dari full-maps API (berdasarkan SID)
+        if (empty($oak)) {
+            try {
+                $fullMapsUrl = route('full-maps.api.ikk-modal-data') . '?' . http_build_query([
+                    'kode_ikk' => $kodeIkk,
+                    'jenis_ijin_kerja_khusus' => $jenisIjin,
+                    'nama_layer_2' => $namaLayer2,
+                    'nama_layer_3' => $namaLayer3,
+                    'nama_layer_4' => $namaLayer4,
+                    'sid_layer_2' => $sidLayer2,
+                    'sid_layer_3' => $sidLayer3,
+                    'sid_layer_4' => $sidLayer4,
+                ]);
+                $response = Http::timeout(15)->get($fullMapsUrl);
+                if ($response->successful()) {
+                    $body = $response->json();
+                    $oak = $body['oak'] ?? [];
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::debug('Dashboard modal OAK fetch: ' . $e->getMessage());
+            }
         }
 
         return response()->json([
@@ -1056,6 +1083,162 @@ class DOPMController extends Controller
         }
 
         // Default: kuning sebagai tengah
+        return 'Kuning';
+    }
+
+    /**
+     * Hitung status matriks lengkap untuk IKK ClickHouse berdasarkan matriks:
+     * - IPK (ada/tidak, dengan durasi_jam)
+     * - OKK (ada/tidak, sesuai target durasi, fraud detection)
+     * - OAK (ada/tidak, lengkap berdasarkan lokasi)
+     * 
+     * Returns: 'Hijau' | 'Kuning' | 'Merah'
+     * 
+     * @param string|null $kodeIkk Kode IKK (code dari work permit)
+     * @param string|null $locationName Location name dari work permit
+     * @param string|null $locationDetailName Location detail name dari work permit
+     * @param string $filterDate Tanggal filter (format Y-m-d)
+     * @return string
+     */
+    public static function hitungStatusMatriksLengkap(
+        ?string $kodeIkk,
+        ?string $locationName,
+        ?string $locationDetailName,
+        string $filterDate
+    ): string {
+        if ($kodeIkk === null || $kodeIkk === '') {
+            return 'Merah';
+        }
+
+        // 1. Cek IPK dan ambil durasi_jam
+        $ipk = IpkIkk::where('kode_ikk', $kodeIkk)
+            ->whereDate('ts', $filterDate)
+            ->first();
+
+        $hasIpk = $ipk !== null;
+        $durasiJam = $hasIpk ? ($ipk->durasi_jam ?? null) : null;
+
+        // 2. Cek OKK dan ambil semua data untuk fraud detection
+        $okkList = Okk::where('kode_ikk', $kodeIkk)
+            ->whereDate('ts', $filterDate)
+            ->orderBy('ts')
+            ->get();
+
+        $hasOkk = $okkList->count() > 0;
+        $okkCount = $okkList->count();
+
+        // 3. Fraud detection untuk OKK berdasarkan durasi
+        $isOkkFraud = false;
+        $isOkkSesuaiTarget = false;
+
+        if ($hasOkk && $durasiJam !== null) {
+            // Parse durasi_jam (format: "3-6", "6-9", dll)
+            $durasiParts = explode('-', trim($durasiJam));
+            if (count($durasiParts) === 2) {
+                $durasiMin = (float) trim($durasiParts[0]);
+                $durasiMax = (float) trim($durasiParts[1]);
+                $durasiRata = ($durasiMin + $durasiMax) / 2;
+
+                // Tentukan target OKK dan jarak waktu
+                $targetOkkCount = 0;
+                $jarakMenit = 0;
+
+                if ($durasiRata >= 3 && $durasiRata <= 6) {
+                    $targetOkkCount = 2;
+                    $jarakMenit = 30;
+                } elseif ($durasiRata > 6 && $durasiRata <= 9) {
+                    $targetOkkCount = 3;
+                    $jarakMenit = 60;
+                }
+
+                // Cek apakah jumlah OKK sesuai target
+                $isOkkSesuaiTarget = ($targetOkkCount > 0 && $okkCount >= $targetOkkCount);
+
+                // Cek jarak waktu antar OKK untuk fraud detection
+                if ($targetOkkCount > 0 && $okkCount >= $targetOkkCount) {
+                    $tsList = $okkList->pluck('ts')->sort()->values()->all();
+                    $isValidJarak = true;
+
+                    for ($i = 1; $i < count($tsList); $i++) {
+                        $diffMinutes = $tsList[$i]->diffInMinutes($tsList[$i - 1]);
+                        if ($diffMinutes < $jarakMenit) {
+                            $isValidJarak = false;
+                            break;
+                        }
+                    }
+
+                    $isOkkFraud = !$isValidJarak;
+                } else {
+                    // Jika jumlah OKK kurang dari target, dianggap fraud
+                    $isOkkFraud = true;
+                }
+            }
+        }
+
+        // 4. Cek OAK berdasarkan lokasi
+        $hasOak = false;
+        $isOakLengkap = false;
+
+        if ($locationName !== null && $locationName !== '' && 
+            $locationDetailName !== null && $locationDetailName !== '') {
+            try {
+                if (class_exists(\App\Services\ClickHouseService::class)) {
+                    $clickHouse = app(\App\Services\ClickHouseService::class);
+                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                        $locationNameEscaped = addslashes(trim($locationName));
+                        $locationDetailEscaped = addslashes(trim($locationDetailName));
+
+                        $sqlOak = "
+                            SELECT count() as cnt
+                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                            WHERE toDate(submit_date) = '{$filterDate}'
+                              AND (trim(lower(toString(tipe))) = 'observe' OR trim(lower(toString(tipe))) = 'observee')
+                              AND trim(toString(location)) = '{$locationNameEscaped}'
+                              AND trim(toString(detail_location)) = '{$locationDetailEscaped}'
+                        ";
+                        $oakResult = $clickHouse->query($sqlOak);
+                        $oakCount = isset($oakResult[0]['cnt']) ? (int) $oakResult[0]['cnt'] : 0;
+
+                        $hasOak = $oakCount > 0;
+
+                        // OAK lengkap jika ada minimal 1 OAK dari BC atau mitra
+                        // (untuk sekarang, jika ada OAK dianggap lengkap, bisa ditambah logika lebih detail jika perlu)
+                        $isOakLengkap = $hasOak;
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::debug('Dashboard OAK check skip: ' . $e->getMessage());
+            }
+        }
+
+        // 5. Hitung status matriks berdasarkan kondisi
+
+        // MERAH: Tidak ada IPK ATAU tidak ada OKK sama sekali, atau ada IPK+OKK tapi tidak ada OAK
+        if (!$hasIpk || !$hasOkk) {
+            return 'Merah';
+        }
+        if ($hasIpk && $hasOkk && !$hasOak) {
+            return 'Merah';
+        }
+
+        // HIJAU: Ada IPK, OKK sesuai target durasi, OAK lengkap, tidak ada fraud
+        if ($hasIpk && $isOkkSesuaiTarget && $isOakLengkap && !$isOkkFraud) {
+            return 'Hijau';
+        }
+
+        // KUNING: Ada IPK+OKK sesuai target durasi, ada minimal 1 OAK, DAN (terdeteksi fraud ATAU OAK tidak lengkap)
+        // Atau: Ada IPK+OKK (meski tidak sesuai target), ada minimal 1 OAK
+        if ($hasIpk && $hasOkk && $hasOak) {
+            if ($isOkkSesuaiTarget && ($isOkkFraud || !$isOakLengkap)) {
+                return 'Kuning';
+            }
+            // Jika OKK tidak sesuai target tapi ada OAK, tetap Kuning
+            if (!$isOkkSesuaiTarget) {
+                return 'Kuning';
+            }
+        }
+
+        // Default: Kuning untuk kondisi lainnya
         return 'Kuning';
     }
 }
