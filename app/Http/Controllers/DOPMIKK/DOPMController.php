@@ -368,15 +368,16 @@ class DOPMController extends Controller
                                 continue;
                             }
 
-                            // Sembunyikan jika end_date sudah lewat dari jam sekarang (meskipun status Berlaku/Approved)
+                            // Sembunyikan jika end_date sudah lewat/sama dengan jam sekarang (meskipun status Berlaku/Approved)
                             $endDateRaw = self::getClickHouseRowValue($row, 'end_date');
                             if ($endDateRaw !== null && $endDateRaw !== '') {
                                 $endDate = self::parseEndDate($endDateRaw);
-                                if ($endDate !== null && $endDate->lt(\Carbon\Carbon::now())) {
-                                    continue; // end_date sudah lewat → jangan tampilkan
-                                }
                                 if ($endDate === null) {
                                     continue; // tidak bisa parse end_date → sembunyikan agar konsisten
+                                }
+                                $now = \Carbon\Carbon::now(config('app.timezone'));
+                                if ($endDate->lte($now)) {
+                                    continue; // end_date <= sekarang → jangan tampilkan
                                 }
                             }
 
@@ -454,6 +455,39 @@ class DOPMController extends Controller
                     $filterDate
                 );
             }
+        }
+
+        // Persentase IKK ada IPK / IKK ada OKK: dasar = work permit (code) yang sama dengan kode_ikk di IPK & OKK
+        $workPermitCodes = array_values(array_unique(array_filter(array_map(function ($ikk) {
+            $c = $ikk->code ?? '';
+            return $c !== '' && $c !== null ? $c : null;
+        }, $ikkClickhouseListHarian))));
+        if (!empty($workPermitCodes)) {
+            $ipkKodesWp = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
+                ->whereDate('ts', $filterDate)
+                ->select('kode_ikk')
+                ->distinct()
+                ->pluck('kode_ikk')
+                ->flip()
+                ->all();
+            $okkKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
+                ->whereDate('ts', $filterDate)
+                ->select('kode_ikk')
+                ->distinct()
+                ->pluck('kode_ikk')
+                ->flip()
+                ->all();
+            $totalIkkUnikHarian = count($workPermitCodes);
+            $ikkAdaIpkCount = count(array_intersect_key($ipkKodesWp, array_flip($workPermitCodes)));
+            $ikkAdaOkkCount = count(array_intersect_key($okkKodesWp, array_flip($workPermitCodes)));
+            $pctIkkAdaIpk = $totalIkkUnikHarian > 0 ? round($ikkAdaIpkCount / $totalIkkUnikHarian * 100, 1) : 0;
+            $pctIkkAdaOkk = $totalIkkUnikHarian > 0 ? round($ikkAdaOkkCount / $totalIkkUnikHarian * 100, 1) : 0;
+        } else {
+            $totalIkkUnikHarian = 0;
+            $ikkAdaIpkCount = 0;
+            $ikkAdaOkkCount = 0;
+            $pctIkkAdaIpk = 0;
+            $pctIkkAdaOkk = 0;
         }
 
         return view('dopmikk.dopm.dashboard', [
@@ -1349,20 +1383,22 @@ class DOPMController extends Controller
 
     /**
      * Parse end_date dari ClickHouse (string, timestamp, atau object) ke Carbon; null jika gagal.
+     * Menggunakan app timezone agar konsisten dengan perbandingan "sekarang".
      */
     private static function parseEndDate(mixed $value): ?\Carbon\Carbon
     {
         if ($value === null || $value === '') {
             return null;
         }
+        $tz = config('app.timezone', 'UTC');
         try {
             if (is_numeric($value)) {
-                return \Carbon\Carbon::createFromTimestamp((int) $value);
+                return \Carbon\Carbon::createFromTimestamp((int) $value, $tz);
             }
             if ($value instanceof \DateTimeInterface) {
-                return \Carbon\Carbon::instance($value);
+                return \Carbon\Carbon::instance($value)->setTimezone($tz);
             }
-            return \Carbon\Carbon::parse($value);
+            return \Carbon\Carbon::parse($value, $tz);
         } catch (\Throwable $e) {
             return null;
         }
