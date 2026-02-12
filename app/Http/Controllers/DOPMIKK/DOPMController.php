@@ -496,28 +496,65 @@ class DOPMController extends Controller
                 ->toArray();
         }
 
-        // Ambil OAK berdasarkan lokasi jika location_name dan location_detail_name tersedia
+        // Normalisasi lokasi (trim) dan pastikan tidak null
+        $locationName = trim((string) $locationName);
+        $locationDetailName = trim((string) $locationDetailName);
+
+        // Jika lokasi kosong, coba ambil dari ClickHouse work permit by code + tanggal
+        if (($locationName === '' || $locationDetailName === '') && $kodeIkk !== '') {
+            $tanggalDop = $request->input('tanggal_dop', '');
+            try {
+                $filterDateForWp = $tanggalDop !== '' ? \Carbon\Carbon::parse($tanggalDop)->format('Y-m-d') : date('Y-m-d');
+            } catch (\Exception $e) {
+                $filterDateForWp = date('Y-m-d');
+            }
+            try {
+                if (class_exists(\App\Services\ClickHouseService::class)) {
+                    $clickHouse = app(\App\Services\ClickHouseService::class);
+                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                        $codeEscaped = addslashes($kodeIkk);
+                        $sqlWp = "
+                            SELECT location_name, location_detail_name
+                            FROM hse_automation.ikk_work_permit
+                            WHERE trim(toString(code)) = '{$codeEscaped}'
+                              AND toDate(start_date) <= toDate('{$filterDateForWp}')
+                              AND toDate(end_date)   >= toDate('{$filterDateForWp}')
+                            LIMIT 1
+                        ";
+                        $wpLoc = $clickHouse->query($sqlWp);
+                        if (!empty($wpLoc[0])) {
+                            $row = $wpLoc[0];
+                            $locationName = trim((string) ($row['location_name'] ?? $row['Location_name'] ?? ''));
+                            $locationDetailName = trim((string) ($row['location_detail_name'] ?? $row['Location_detail_name'] ?? ''));
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::debug('Dashboard modal OAK fallback location from WP: ' . $e->getMessage());
+            }
+        }
+
+        // Ambil OAK: di tanggal filter (submit_date), yang location & detail_location sama dengan work permit
         if ($locationName !== '' && $locationDetailName !== '') {
             try {
                 if (class_exists(\App\Services\ClickHouseService::class)) {
                     $clickHouse = app(\App\Services\ClickHouseService::class);
                     if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                        // Ambil tanggal dari request atau gunakan hari ini
                         $tanggalDop = $request->input('tanggal_dop', '');
                         if ($tanggalDop === '') {
                             $filterDate = date('Y-m-d');
                         } else {
-                            // Pastikan format tanggal Y-m-d
                             try {
                                 $filterDate = \Carbon\Carbon::parse($tanggalDop)->format('Y-m-d');
                             } catch (\Exception $e) {
                                 $filterDate = date('Y-m-d');
                             }
                         }
-                        
-                        $locationNameEscaped = addslashes(trim($locationName));
-                        $locationDetailEscaped = addslashes(trim($locationDetailName));
 
+                        $locationNameEscaped = addslashes($locationName);
+                        $locationDetailEscaped = addslashes($locationDetailName);
+
+                        // Semua tipe OAK di tanggal itu yang lokasi + detail lokasi match work permit
                         $sqlOak = "
                             SELECT 
                                 toString(id) as id,
@@ -533,7 +570,6 @@ class DOPMController extends Controller
                                 toString(detail_location) as detail_location
                             FROM hse_automation.aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) = '{$filterDate}'
-                              AND (trim(lower(toString(tipe))) = 'observe' OR trim(lower(toString(tipe))) = 'observee')
                               AND trim(toString(location)) = '{$locationNameEscaped}'
                               AND trim(toString(detail_location)) = '{$locationDetailEscaped}'
                             ORDER BY toDateTime(submit_date) DESC
