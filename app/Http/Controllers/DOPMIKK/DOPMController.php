@@ -569,13 +569,14 @@ class DOPMController extends Controller
                         $locationNameEscaped = addslashes($locationName);
                         $locationDetailEscaped = addslashes($locationDetailName);
 
-                        // OAK di tanggal filter (submit_date) yang location & detail_location match work permit (case-insensitive + trim)
+                        // OAK di tanggal filter (submit_date) yang location & detail_location match work permit (case-insensitive + trim).
+                        // Pakai alias submit_date_str agar tidak bentrok dengan kolom submit_date (DateTime) dari view (AMBIGUOUS_COLUMN_NAME).
                         $sqlOak = "
                             SELECT 
                                 toString(id) as id,
                                 toString(activity) as activity,
                                 toString(sub_activity) as sub_activity,
-                                toString(submit_date) as submit_date,
+                                toString(submit_date) as submit_date_str,
                                 toString(submit_by) as submit_by,
                                 toString(kode_sid_pelapor) as kode_sid_pelapor,
                                 toString(kode_sid_team) as kode_sid_team,
@@ -1331,7 +1332,11 @@ class DOPMController extends Controller
         $keys = ['activity', 'sub_activity', 'submit_date', 'submit_by', 'kode_sid_pelapor', 'kode_sid_team', 'conclusion', 'site'];
         $out = [];
         foreach ($keys as $key) {
-            $out[$key] = self::getClickHouseRowValue($row, $key) ?? '';
+            if ($key === 'submit_date') {
+                $out[$key] = self::getClickHouseRowValue($row, 'submit_date_str') ?? self::getClickHouseRowValue($row, 'submit_date') ?? '';
+            } else {
+                $out[$key] = self::getClickHouseRowValue($row, $key) ?? '';
+            }
         }
         return $out;
     }
