@@ -2821,7 +2821,7 @@
 <script>
 (function() {
   var categories = @json($chartJenisLabels ?? []);
-  var dopmData = @json($chartDopmPerJenis ?? []);
+  var ikkData = @json($chartIkkPerJenis ?? []);
   var ipkData = @json($chartIpkPerJenis ?? []);
   var okkData = @json($chartOkkPerJenis ?? []);
   setTimeout(function() {
@@ -2835,7 +2835,7 @@
       dataLabels: { enabled: false },
       stroke: { show: true, width: 2, colors: ['transparent'] },
       series: [
-        { name: 'DOPM', data: dopmData },
+        { name: 'IKK', data: ikkData },
         { name: 'IPK-IKK', data: ipkData },
         { name: 'OKK', data: okkData }
       ],

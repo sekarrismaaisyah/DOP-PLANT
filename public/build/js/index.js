@@ -248,7 +248,7 @@ $(function () {
 
 
 
-  // chart 4: DOPM vs IPK-IKK vs OKK (data can be replaced by page e.g. DOPM dashboard)
+  // chart 4: IKK vs IPK-IKK vs OKK (data can be replaced by page e.g. DOPM dashboard)
   var options = {
     series: [{
       name: "Jumlah",
@@ -291,7 +291,7 @@ $(function () {
       marker: { show: false }
     },
     xaxis: {
-      categories: ['DOPM', 'IPK-IKK', 'OKK'],
+      categories: ['IKK', 'IPK-IKK', 'OKK'],
     }
   };
 

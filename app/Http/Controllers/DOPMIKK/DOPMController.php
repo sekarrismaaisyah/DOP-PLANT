@@ -490,6 +490,28 @@ class DOPMController extends Controller
             $pctIkkAdaOkk = 0;
         }
 
+        // Chart per jenis: pakai data IKK (work permit) bukan DOPM; IPK/OKK dihitung dari kode IKK per jenis
+        $chartIkkPerJenis = [];
+        $chartIpkPerJenis = [];
+        $chartOkkPerJenis = [];
+        foreach ($summaryJenisKeys as $jenis) {
+            $ikkPerJenis = array_filter($ikkClickhouseListHarian, function ($ikk) use ($jenis) {
+                $j = trim((string) ($ikk->jenis_ijin_kerja_khusus ?? '')) ?: '-';
+                return $j === $jenis;
+            });
+            $chartIkkPerJenis[] = count($ikkPerJenis);
+            $codesJenis = array_values(array_unique(array_filter(array_map(function ($ikk) {
+                $c = $ikk->code ?? '';
+                return $c !== '' && $c !== null ? $c : null;
+            }, $ikkPerJenis))));
+            $chartIpkPerJenis[] = empty($codesJenis)
+                ? 0
+                : IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count();
+            $chartOkkPerJenis[] = empty($codesJenis)
+                ? 0
+                : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count();
+        }
+
         return view('dopmikk.dopm.dashboard', [
             'filterDate' => $filterDate,
             'filterSite' => $filterSite,
@@ -516,6 +538,7 @@ class DOPMController extends Controller
             'summaryJenisKeys' => $summaryJenisKeys,
             'chartJenisLabels' => $chartJenisLabels,
             'chartDopmPerJenis' => $chartDopmPerJenis,
+            'chartIkkPerJenis' => $chartIkkPerJenis,
             'chartIpkPerJenis' => $chartIpkPerJenis,
             'chartOkkPerJenis' => $chartOkkPerJenis,
             'ikkClickhouseListHarian' => $ikkClickhouseListHarian,
