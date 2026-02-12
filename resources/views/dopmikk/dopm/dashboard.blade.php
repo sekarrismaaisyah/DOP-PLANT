@@ -1557,14 +1557,14 @@
                       <div class="card mb-0 rounded-4 w-100">
                        <div class="card-body">
                          <div class=" mb-2">
-                           <h5 class="mb-0 fw-bold">IKK Cancel</h5>
-                           <p class="mb-0 text-muted small">Total DOPM Cancel Hari ini</p>
+                           <h5 class="mb-0 fw-bold">IKK Need Verification</h5>
+                           <p class="mb-0 text-muted small">Total IKK Need Verification</p>
                          </div>
                          <div class="text-center py-3 mt-4">
-                           <h1 class="mb-0 display-5 fw-bold">{{ number_format($totalDopmCancelHarian ?? 0) }} Cancel</h1>
+                           <h1 class="mb-0 display-5 fw-bold">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</h1>
                          </div>
                          <div class="text-center mt-3">
-                           <p class="mb-0"><span class="text-success me-1">{{ number_format($totalDopmCancelHarian ?? 0) }}</span> Cancel pada hari ini</p>
+                           <p class="mb-0"><span class="text-success me-1">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</span> Need Verification pada hari ini</p>
                          </div>
                        </div>
                       </div>
@@ -1590,7 +1590,7 @@
                       <div class="card-body">
                         <div class="d-flex align-items-center gap-3 mb-2">
                            <div class="">
-                             <h2 class="mb-0">{{ $pctPengisianRataRata ?? 0 }}%</h2>
+                             <h2 class="mb-0">{{ $pctPengisianRataRata ?? 0 }}% Compliance</h2>
                            </div>
                            <div class="">
                              <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata</p>
@@ -1696,7 +1696,7 @@
                           <span class="material-icons-outlined" style="font-size: 28px;">warning</span>
                         </div>
                           <div class="min-w-0">
-                            <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->code ?? '-' }}">{{ $ikk->code ?? '-' }}</h6>
+                            <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}">{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}</h6>
                             <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
                           </div>
                        </div>
@@ -1773,7 +1773,7 @@
                         <span class="material-icons-outlined" style="font-size: 28px;">info</span>
                       </div>
                       <div class="min-w-0">
-                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->code ?? '-' }}">{{ $ikk->code ?? '-' }}</h6>
+                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}">{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}</h6>
                         <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
                       </div>
                     </div>
@@ -1850,7 +1850,7 @@
                         <span class="material-icons-outlined" style="font-size: 28px;">check_circle</span>
                       </div>
                       <div class="min-w-0">
-                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->code ?? '-' }}">{{ $ikk->code ?? '-' }}</h6>
+                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}">{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}</h6>
                         <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
                       </div>
                     </div>
@@ -3125,7 +3125,25 @@
                     .then(function(res) {
                         layer1LoadingEl2.classList.add('d-none');
                         if (okkLayer1LoadingEl2) okkLayer1LoadingEl2.classList.add('d-none');
-                        var users = (res && res.success && res.users) ? res.users : [];
+                        var usersRaw = (res && res.success && res.users) ? res.users : [];
+                        // Deduplikasi users: berdasarkan ID (jika ada), atau kombinasi nomor WA + nama + username
+                        var seen = {};
+                        var users = [];
+                        usersRaw.forEach(function(u) {
+                            var key = null;
+                            if (u.id) {
+                                key = 'id_' + u.id;
+                            } else {
+                                var num = normalizeWaNumber(u.selular);
+                                var nama = (u.nama || '').trim();
+                                var username = (u.username || '').trim();
+                                key = 'wa_' + (num || '') + '_n_' + nama + '_u_' + username;
+                            }
+                            if (key && !seen[key]) {
+                                seen[key] = true;
+                                users.push(u);
+                            }
+                        });
                         var displayName = (res && res.nama_layer_1) ? res.nama_layer_1 : namaLayer1;
                         document.getElementById('intervensiLayer1NameDisplay').textContent = displayName || '—';
                         if (document.getElementById('intervensiOkkLayer1NameDisplay')) document.getElementById('intervensiOkkLayer1NameDisplay').textContent = displayName || '—';
@@ -3181,7 +3199,25 @@
                             var nameEl = document.getElementById('intervensiOakLayer' + n + 'Name');
                             if (loadingEl) loadingEl.classList.add('d-none');
                             var layerData = res && res[key] ? res[key] : { users: [], nama_layer: '' };
-                            var users = layerData.users || [];
+                            var usersRaw = layerData.users || [];
+                            // Deduplikasi users: berdasarkan ID (jika ada), atau kombinasi nomor WA + nama + username
+                            var seen = {};
+                            var users = [];
+                            usersRaw.forEach(function(u) {
+                                var key = null;
+                                if (u.id) {
+                                    key = 'id_' + u.id;
+                                } else {
+                                    var num = normalizeWaNumber(u.selular);
+                                    var nama = (u.nama || '').trim();
+                                    var username = (u.username || '').trim();
+                                    key = 'wa_' + (num || '') + '_n_' + nama + '_u_' + username;
+                                }
+                                if (key && !seen[key]) {
+                                    seen[key] = true;
+                                    users.push(u);
+                                }
+                            });
                             var displayName = layerData.nama_layer || '—';
                             if (nameEl) nameEl.textContent = displayName;
                             if (!usersEl) return;

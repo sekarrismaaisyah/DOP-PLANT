@@ -138,38 +138,8 @@ class DOPMController extends Controller
             $dopm->is_ikk_ada_okk = $hasOkk;
         }
 
-        // OAK dari ClickHouse: tipe OBSERVE/OBSERVEE, laporan dari layer 2/3/4 yang ada di DOPM hari ini
+        // Total OAK harian dihitung nanti dari IKK (lokasi + detail lokasi), sama seperti di modal detail
         $totalOakHarian = 0;
-        $layerSidsForOak = [];
-        foreach ($dopmListHarian as $dopm) {
-            foreach (['sid_layer_2', 'sid_layer_3', 'sid_layer_4'] as $key) {
-                $v = trim((string) ($dopm->{$key} ?? ''));
-                if ($v !== '') {
-                    $layerSidsForOak[$v] = true;
-                }
-            }
-        }
-        $layerSidsForOak = array_keys($layerSidsForOak);
-        if (!empty($layerSidsForOak)) {
-            try {
-                if (class_exists(\App\Services\ClickHouseService::class)) {
-                    $clickHouse = app(\App\Services\ClickHouseService::class);
-                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                        $sidsIn = implode(',', array_map(function ($s) {
-                            return "'" . addslashes($s) . "'";
-                        }, $layerSidsForOak));
-                        $sql = "SELECT count() as cnt FROM hse_automation.aaj_vw_car_oak_register_ytd_only"
-                            . " WHERE toDate(submit_date) = '" . addslashes($filterDate) . "'"
-                            . " AND (trim(lower(toString(tipe))) = 'observe' OR trim(lower(toString(tipe))) = 'observee')"
-                            . " AND ((toString(kode_sid) IN ({$sidsIn})) OR (toString(kode_sid_pelapor) IN ({$sidsIn})) OR (toString(kode_sid_team) IN ({$sidsIn})))";
-                        $result = $clickHouse->query($sql);
-                        $totalOakHarian = isset($result[0]['cnt']) ? (int) $result[0]['cnt'] : 0;
-                    }
-                }
-            } catch (\Throwable $e) {
-                \Illuminate\Support\Facades\Log::debug('Dashboard OAK harian skip: ' . $e->getMessage());
-            }
-        }
 
         // Persentase IKK yang ada IPK / ada OKK (dasar: jumlah IKK unik dari DOPM tanggal terpilih)
         $totalIkkUnikHarian = count($kodeIkks);
@@ -521,6 +491,45 @@ class DOPMController extends Controller
             $chartOkkPerJenis[] = empty($codesJenis)
                 ? 0
                 : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count();
+        }
+
+        // Total OAK harian: dari IKK (lokasi + detail lokasi), sama konsep dengan modal — match OAK by location & detail_location
+        $locationPairs = [];
+        foreach ($ikkClickhouseListHarian as $ikk) {
+            $loc = trim((string) ($ikk->location_name ?? ''));
+            $det = trim((string) ($ikk->location_detail_name ?? ''));
+            if ($loc !== '' && $det !== '') {
+                $key = $loc . '|' . $det;
+                $locationPairs[$key] = [$loc, $det];
+            }
+        }
+        $locationPairs = array_values($locationPairs);
+        if (!empty($locationPairs)) {
+            try {
+                if (class_exists(\App\Services\ClickHouseService::class)) {
+                    $clickHouse = app(\App\Services\ClickHouseService::class);
+                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                        $dateEsc = addslashes($filterDate);
+                        $conditions = [];
+                        foreach ($locationPairs as $pair) {
+                            $locEsc = addslashes($pair[0]);
+                            $detEsc = addslashes($pair[1]);
+                            $conditions[] = "(lower(trim(toString(location))) = lower('{$locEsc}') AND lower(trim(toString(detail_location))) = lower('{$detEsc}'))";
+                        }
+                        $whereLoc = implode(' OR ', $conditions);
+                        $sqlOakCount = "SELECT count() as cnt FROM hse_automation.aaj_vw_car_oak_register_ytd_only"
+                            . " WHERE toDate(submit_date) = '{$dateEsc}'"
+                            . " AND lower(trim(toString(tipe))) = 'observer'"
+                            . " AND ({$whereLoc})";
+                        $oakCountResult = $clickHouse->query($sqlOakCount);
+                        $totalOakHarian = isset($oakCountResult[0]['cnt']) ? (int) $oakCountResult[0]['cnt'] : 0;
+                        $pctDopmOak = $totalDopmHarian > 0 ? min(100.0, round($totalOakHarian / $totalDopmHarian * 100, 1)) : 0;
+                        $pctPengisianRataRata = round(($pctDopmAdaIpk + $pctDopmAdaOkk + $pctDopmOak) / 3, 1);
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::debug('Dashboard OAK harian by IKK location: ' . $e->getMessage());
+            }
         }
 
         return view('dopmikk.dopm.dashboard', [
