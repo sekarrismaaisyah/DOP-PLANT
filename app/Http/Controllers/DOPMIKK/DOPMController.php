@@ -363,8 +363,8 @@ class DOPMController extends Controller
                                 continue;
                             }
 
-                            // Hanya tampilkan status Berlaku (APPROVED); sembunyikan Kadaluarsa/Expired
-                            if ($statusUpper === 'EXPIRED') {
+                            // Hanya tampilkan status Berlaku (APPROVED); sembunyikan Kadaluarsa, Pending, Rejected
+                            if (in_array($statusUpper, ['EXPIRED', 'PENDING', 'REJECTED'], true)) {
                                 continue;
                             }
 
