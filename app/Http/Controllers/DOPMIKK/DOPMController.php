@@ -395,8 +395,8 @@ class DOPMController extends Controller
                                 'nama_layer_4' => $namaLayer4,
                                 'start_date' => $row['start_date'] ?? null,
                                 'end_date' => $row['end_date'] ?? null,
-                                'location_name' => $row['location_name'] ?? null,
-                                'location_detail_name' => $row['location_detail_name'] ?? null,
+                                'location_name' => self::getClickHouseRowValue($row, 'location_name'),
+                                'location_detail_name' => self::getClickHouseRowValue($row, 'location_detail_name'),
                             ];
                         }
                     }
@@ -524,8 +524,8 @@ class DOPMController extends Controller
                         $wpLoc = $clickHouse->query($sqlWp);
                         if (!empty($wpLoc[0])) {
                             $row = $wpLoc[0];
-                            $locationName = trim((string) ($row['location_name'] ?? $row['Location_name'] ?? ''));
-                            $locationDetailName = trim((string) ($row['location_detail_name'] ?? $row['Location_detail_name'] ?? ''));
+                            $locationName = trim((string) self::getClickHouseRowValue($row, 'location_name'));
+                            $locationDetailName = trim((string) self::getClickHouseRowValue($row, 'location_detail_name'));
                         }
                     }
                 }
@@ -554,7 +554,7 @@ class DOPMController extends Controller
                         $locationNameEscaped = addslashes($locationName);
                         $locationDetailEscaped = addslashes($locationDetailName);
 
-                        // Semua tipe OAK di tanggal itu yang lokasi + detail lokasi match work permit
+                        // OAK di tanggal filter (submit_date) yang location & detail_location match work permit (case-insensitive + trim)
                         $sqlOak = "
                             SELECT 
                                 toString(id) as id,
@@ -570,13 +570,13 @@ class DOPMController extends Controller
                                 toString(detail_location) as detail_location
                             FROM hse_automation.aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) = '{$filterDate}'
-                              AND trim(toString(location)) = '{$locationNameEscaped}'
-                              AND trim(toString(detail_location)) = '{$locationDetailEscaped}'
+                              AND lower(trim(toString(location))) = lower('{$locationNameEscaped}')
+                              AND lower(trim(toString(detail_location))) = lower('{$locationDetailEscaped}')
                             ORDER BY toDateTime(submit_date) DESC
                             LIMIT 100
                         ";
                         $oakResult = $clickHouse->query($sqlOak);
-                        $oak = is_array($oakResult) ? $oakResult : [];
+                        $oak = is_array($oakResult) ? array_map([self::class, 'normalizeOakRow'], $oakResult) : [];
                     }
                 }
             } catch (\Throwable $e) {
@@ -1276,5 +1276,33 @@ class DOPMController extends Controller
 
         // Default: Kuning untuk kondisi lainnya
         return 'Kuning';
+    }
+
+    /**
+     * Ambil nilai dari satu row hasil query ClickHouse dengan fallback key (case / snake).
+     * ClickHouse/HTTP bisa mengembalikan key dengan casing berbeda.
+     */
+    private static function getClickHouseRowValue(array $row, string $key): mixed
+    {
+        $keyLower = strtolower($key);
+        foreach ($row as $k => $v) {
+            if (strtolower((string) $k) === $keyLower) {
+                return $v;
+            }
+        }
+        return $row[$key] ?? null;
+    }
+
+    /**
+     * Normalisasi satu row OAK dari ClickHouse agar key konsisten (activity, sub_activity, dll) untuk frontend.
+     */
+    private static function normalizeOakRow(array $row): array
+    {
+        $keys = ['activity', 'sub_activity', 'submit_date', 'submit_by', 'kode_sid_pelapor', 'kode_sid_team', 'conclusion', 'site'];
+        $out = [];
+        foreach ($keys as $key) {
+            $out[$key] = self::getClickHouseRowValue($row, $key) ?? '';
+        }
+        return $out;
     }
 }
