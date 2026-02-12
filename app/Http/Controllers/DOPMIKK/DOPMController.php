@@ -368,13 +368,13 @@ class DOPMController extends Controller
                                 continue;
                             }
 
-                            // Sembunyikan jika end_date sudah lewat (lebih awal dari tanggal dan jam sekarang)
+                            // Sembunyikan jika end_date sudah lewat dari jam sekarang (meskipun status Berlaku/Approved)
                             $endDateRaw = $row['end_date'] ?? null;
                             if ($endDateRaw !== null && $endDateRaw !== '') {
                                 try {
                                     $endDate = \Carbon\Carbon::parse($endDateRaw);
                                     if ($endDate->lt(\Carbon\Carbon::now())) {
-                                        continue;
+                                        continue; // end_date sudah lewat → jangan tampilkan
                                     }
                                 } catch (\Throwable $e) {
                                     // Jika parse gagal, tetap tampilkan (jangan drop row)
