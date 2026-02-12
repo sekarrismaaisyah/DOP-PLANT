@@ -368,6 +368,19 @@ class DOPMController extends Controller
                                 continue;
                             }
 
+                            // Sembunyikan jika end_date sudah lewat (lebih awal dari tanggal dan jam sekarang)
+                            $endDateRaw = $row['end_date'] ?? null;
+                            if ($endDateRaw !== null && $endDateRaw !== '') {
+                                try {
+                                    $endDate = \Carbon\Carbon::parse($endDateRaw);
+                                    if ($endDate->lt(\Carbon\Carbon::now())) {
+                                        continue;
+                                    }
+                                } catch (\Throwable $e) {
+                                    // Jika parse gagal, tetap tampilkan (jangan drop row)
+                                }
+                            }
+
                             // Kumpulkan code yang APPROVED untuk hitung unik (distinct by code)
                             if ($statusUpper === 'APPROVED') {
                                 $code = $row['code'] ?? null;
