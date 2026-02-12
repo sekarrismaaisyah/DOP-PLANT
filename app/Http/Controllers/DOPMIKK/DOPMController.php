@@ -411,6 +411,39 @@ class DOPMController extends Controller
         }
         $ikkClickhouseListHarian = array_values($byCode);
 
+        // Tambahkan status_pekerjaan (dari tabel ipk_ikk) per kode IKK:
+        // relasi: ikk_work_permit.code = ipk_ikk.kode_ikk, ambil status_pekerjaan terbaru (ts paling baru).
+        if (!empty($ikkClickhouseListHarian)) {
+            $kodeIkksForStatus = array_values(array_unique(array_filter(array_map(function ($ikk) {
+                return $ikk->code ?? null;
+            }, $ikkClickhouseListHarian))));
+
+            if (!empty($kodeIkksForStatus)) {
+                $statusRows = IpkIkk::whereIn('kode_ikk', $kodeIkksForStatus)
+                    ->orderByDesc('ts')
+                    ->get(['kode_ikk', 'status_pekerjaan', 'ts']);
+
+                $statusByKode = [];
+                foreach ($statusRows as $row) {
+                    $kode = $row->kode_ikk;
+                    if ($kode === null || $kode === '') {
+                        continue;
+                    }
+                    // Ambil record pertama (ts paling baru) per kode_ikk
+                    if (!isset($statusByKode[$kode])) {
+                        $statusByKode[$kode] = $row->status_pekerjaan;
+                    }
+                }
+
+                foreach ($ikkClickhouseListHarian as $ikk) {
+                    $code = $ikk->code ?? null;
+                    $ikk->status_pekerjaan = ($code !== null && isset($statusByKode[$code]))
+                        ? $statusByKode[$code]
+                        : null;
+                }
+            }
+        }
+
         // Hitung status_matriks untuk IKK ClickHouse berdasarkan matriks lengkap (IPK + OKK + OAK)
         // sekaligus siapkan data chart jumlah izin kerja per status matriks (Hijau/Kuning/Merah)
         $chartMatriksLabels = ['Hijau', 'Kuning', 'Merah'];

@@ -2123,16 +2123,17 @@
                                    <thead class="table-light">
                                        <tr>
                                            <th>No</th>
-                                            <th>Kode IKK</th>
-                                            <th>Site</th>
-                                            <th>Jenis Ijin Kerja Khusus</th>
-                                            <th>Nama Pekerjaan</th>
-                                            <th>Perusahaan</th>
-                                            <th>Status</th>
-                                            <th>Status Matriks</th>
-                                            <th>Nama Layer 1</th>
-                                            <th>Layer 2 / 3 / 4</th>
-                                        </tr>
+                                           <th>Kode IKK</th>
+                                           <th>Site</th>
+                                           <th>Jenis Ijin Kerja Khusus</th>
+                                           <th>Nama Pekerjaan</th>
+                                           <th>Perusahaan</th>
+                                           <th>Status WP</th>
+                                           <th>Status Pekerjaan</th>
+                                           <th>Status Matriks</th>
+                                           <th>Nama Layer 1</th>
+                                           <th>Layer 2 / 3 / 4</th>
+                                       </tr>
                                     </thead>
                                     <tbody class="py-2">
                                         @foreach($ikkClickhouseListHarian as $ikk)
@@ -2148,9 +2149,14 @@
                                                 <td>{{ $ikk->site ?? '-' }}</td>
                                                 <td>{{ $ikk->jenis_ijin_kerja_khusus ?? '-' }}</td>
                                                 <td>{{ $ikk->nama_pekerjaan ?? '-' }}</td>
-                                                <td>{{ $ikk->perusahaan ?? '-' }}</td>
-                                                <td><span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span></td>
-                                                <td>
+                                               <td>{{ $ikk->perusahaan ?? '-' }}</td>
+                                               <td><span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span></td>
+                                               <td>
+                                                   <span class="badge bg-info text-dark">
+                                                       {{ $ikk->status_pekerjaan ?? '-' }}
+                                                   </span>
+                                               </td>
+                                               <td>
                                                     <span class="badge {{ $badgeClassIkk }}">{{ $matriksIkk }}</span>
                                                 </td>
                                                 <td><small class="text-primary">{{ $ikk->nama_layer_1 ?? '-' }}</small></td>
@@ -2685,8 +2691,20 @@
                             </div>
                             <div class="card-body py-3">
                                 <p class="small mb-2"><strong>Nama Layer:</strong> <span id="intervensiLayer1NameDisplay" class="text-dark">—</span></p>
-                                <p class="small text-muted mb-2">Kirim pengingat WA ke PIC Layer 1 untuk mengisi form IPK:</p>
-                                <div id="intervensiLayer1Users" class="d-flex flex-wrap gap-2"></div>
+                                <p class="small text-muted mb-2">Pilih PIC Layer 1 yang akan diintervensi, lalu klik tombol Intervensi.</p>
+                                <div class="row g-2 align-items-center mb-2">
+                                    <div class="col-md-6">
+                                        <select id="intervensiLayer1Select" class="form-select form-select-sm d-none">
+                                            <option value="">Pilih PIC Layer 1...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="button" id="intervensiLayer1Btn" class="btn btn-sm btn-success w-100 d-none">
+                                            <i class="material-icons-outlined me-1" style="font-size:16px;">send</i> Intervensi by WA (IPK)
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="intervensiLayer1Users" class="d-flex flex-wrap gap-2 d-none"></div>
                                 <div id="intervensiLayer1Empty" class="text-muted small d-none">Tidak ada user terdaftar untuk Layer 1 ini.</div>
                                 <div id="intervensiLayer1NoName" class="text-muted small d-none">Kolom <strong>SID Layer 1</strong> atau <strong>Nama Layer 1</strong> untuk DOPM ini belum diisi. Silakan edit data DOPM untuk menampilkan daftar PIC dan tombol Intervensi by WA.</div>
                                 <div id="intervensiLayer1Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat daftar PIC Layer 1...</div>
@@ -2714,8 +2732,20 @@
                             </div>
                             <div class="card-body py-3">
                                 <p class="small mb-2"><strong>Nama Layer:</strong> <span id="intervensiOkkLayer1NameDisplay" class="text-dark">—</span></p>
-                                <p class="small text-muted mb-2">Kirim pengingat WA ke PIC Layer 1 untuk OKK:</p>
-                                <div id="intervensiOkkLayer1Users" class="d-flex flex-wrap gap-2"></div>
+                                <p class="small text-muted mb-2">Pilih PIC Layer 1 yang akan diintervensi untuk OKK, lalu klik tombol Intervensi.</p>
+                                <div class="row g-2 align-items-center mb-2">
+                                    <div class="col-md-6">
+                                        <select id="intervensiOkkLayer1Select" class="form-select form-select-sm d-none">
+                                            <option value="">Pilih PIC Layer 1...</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <button type="button" id="intervensiOkkLayer1Btn" class="btn btn-sm btn-success w-100 d-none">
+                                            <i class="material-icons-outlined me-1" style="font-size:16px;">send</i> Intervensi by WA (OKK)
+                                        </button>
+                                    </div>
+                                </div>
+                                <div id="intervensiOkkLayer1Users" class="d-flex flex-wrap gap-2 d-none"></div>
                                 <div id="intervensiOkkLayer1Empty" class="text-muted small d-none">Tidak ada user terdaftar untuk Layer 1 ini.</div>
                                 <div id="intervensiOkkLayer1NoName" class="text-muted small d-none">Kolom <strong>SID Layer 1</strong> atau <strong>Nama Layer 1</strong> untuk DOPM ini belum diisi.</div>
                                 <div id="intervensiOkkLayer1Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat daftar PIC Layer 1...</div>
@@ -3044,19 +3074,34 @@
             var layer1EmptyEl = document.getElementById('intervensiLayer1Empty');
             var layer1NoNameEl = document.getElementById('intervensiLayer1NoName');
             var layer1LoadingEl = document.getElementById('intervensiLayer1Loading');
+            var layer1SelectEl = document.getElementById('intervensiLayer1Select');
+            var layer1BtnEl = document.getElementById('intervensiLayer1Btn');
             var okkLayer1Wrap = document.getElementById('intervensiOkkLayer1Wrap');
             var okkLayer1NameDisplay = document.getElementById('intervensiOkkLayer1NameDisplay');
             var okkLayer1UsersEl = document.getElementById('intervensiOkkLayer1Users');
             var okkLayer1EmptyEl = document.getElementById('intervensiOkkLayer1Empty');
             var okkLayer1NoNameEl = document.getElementById('intervensiOkkLayer1NoName');
             var okkLayer1LoadingEl = document.getElementById('intervensiOkkLayer1Loading');
+            var okkLayer1SelectEl = document.getElementById('intervensiOkkLayer1Select');
+            var okkLayer1BtnEl = document.getElementById('intervensiOkkLayer1Btn');
             layer1Wrap.classList.remove('d-none');
             layer1UsersEl.innerHTML = '';
             document.getElementById('intervensiLayer1NameDisplay').textContent = namaLayer1 || '—';
             layer1EmptyEl.classList.add('d-none');
             layer1NoNameEl.classList.add('d-none');
             layer1LoadingEl.classList.add('d-none');
-            if (okkLayer1Wrap) { okkLayer1Wrap.classList.remove('d-none'); okkLayer1UsersEl.innerHTML = ''; okkLayer1NameDisplay.textContent = namaLayer1 || '—'; okkLayer1EmptyEl.classList.add('d-none'); okkLayer1NoNameEl.classList.add('d-none'); okkLayer1LoadingEl.classList.add('d-none'); }
+            if (layer1SelectEl) { layer1SelectEl.classList.add('d-none'); layer1SelectEl.innerHTML = '<option value=\"\">Pilih PIC Layer 1...</option>'; }
+            if (layer1BtnEl) { layer1BtnEl.classList.add('d-none'); layer1BtnEl.removeAttribute('data-message'); }
+            if (okkLayer1Wrap) {
+                okkLayer1Wrap.classList.remove('d-none');
+                okkLayer1UsersEl.innerHTML = '';
+                okkLayer1NameDisplay.textContent = namaLayer1 || '—';
+                okkLayer1EmptyEl.classList.add('d-none');
+                okkLayer1NoNameEl.classList.add('d-none');
+                okkLayer1LoadingEl.classList.add('d-none');
+                if (okkLayer1SelectEl) { okkLayer1SelectEl.classList.add('d-none'); okkLayer1SelectEl.innerHTML = '<option value=\"\">Pilih PIC Layer 1...</option>'; }
+                if (okkLayer1BtnEl) { okkLayer1BtnEl.classList.add('d-none'); okkLayer1BtnEl.removeAttribute('data-message'); }
+            }
             if (!hasLayer1) {
                 layer1NoNameEl.classList.remove('d-none');
                 if (okkLayer1NoNameEl) okkLayer1NoNameEl.classList.remove('d-none');
@@ -3082,7 +3127,33 @@
                     .then(function(r) { if (!r.ok) throw new Error('HTTP ' + r.status); return r.json(); })
                     .then(function(res) {
                         if (!res || !res.success) throw new Error('Request failed');
-                        var ipk = res.ipk_ikk || [], okk = res.okk || [], oak = res.oak || [];
+
+                        // Hanya tampilkan intervensi untuk Layer 1 di IPK-IKK & OKK.
+                        // Sumber penentuan Layer 1 mengacu pada kolom employee_type (ikk_work_permit_employee).
+                        var ipkAll = res.ipk_ikk || [];
+                        var okkAll = res.okk || [];
+                        var oak = res.oak || [];
+
+                        function isLayer1Row(row) {
+                            // Prioritas utama: employee_type dari ikk_work_permit_employee (jika tersedia di payload).
+                            var raw = (row.employee_type !== undefined && row.employee_type !== null && row.employee_type !== '')
+                                ? row.employee_type
+                                // Fallback lama: layer_pengawas kalau tidak ada employee_type.
+                                : (row.layer_pengawas || '');
+
+                            var lv = raw.toString().trim().toLowerCase();
+                            return lv === 'layer 1' || lv === 'layer1' || lv === '1';
+                        }
+
+                        var ipk = ipkAll.filter(function (r) {
+                            // Jika tidak ada info layer sama sekali, biarkan lewat supaya tidak menghilangkan data lama.
+                            if (r.employee_type === undefined && r.layer_pengawas === undefined) return true;
+                            return isLayer1Row(r);
+                        });
+                        var okk = okkAll.filter(function (r) {
+                            if (r.employee_type === undefined && r.layer_pengawas === undefined) return true;
+                            return isLayer1Row(r);
+                        });
                         document.getElementById('intervensiBadgeIpk').textContent = ipk.length;
                         document.getElementById('intervensiBadgeOkk').textContent = okk.length;
                         document.getElementById('intervensiBadgeOak').textContent = oak.length;
@@ -3127,16 +3198,28 @@
 
             function doLayer1Fetch() {
                 if (!hasLayer1) return;
-                var layer1UsersEl2 = document.getElementById('intervensiLayer1Users');
-                var layer1EmptyEl2 = document.getElementById('intervensiLayer1Empty');
-                var layer1LoadingEl2 = document.getElementById('intervensiLayer1Loading');
-                var okkLayer1UsersEl2 = document.getElementById('intervensiOkkLayer1Users');
-                var okkLayer1EmptyEl2 = document.getElementById('intervensiOkkLayer1Empty');
-                var okkLayer1LoadingEl2 = document.getElementById('intervensiOkkLayer1Loading');
-                layer1LoadingEl2.classList.remove('d-none');
-                layer1UsersEl2.innerHTML = '';
-                layer1EmptyEl2.classList.add('d-none');
-                if (okkLayer1LoadingEl2) { okkLayer1LoadingEl2.classList.remove('d-none'); okkLayer1UsersEl2.innerHTML = ''; okkLayer1EmptyEl2.classList.add('d-none'); }
+            var layer1UsersEl2 = document.getElementById('intervensiLayer1Users');
+            var layer1EmptyEl2 = document.getElementById('intervensiLayer1Empty');
+            var layer1LoadingEl2 = document.getElementById('intervensiLayer1Loading');
+            var layer1SelectEl2 = document.getElementById('intervensiLayer1Select');
+            var layer1BtnEl2 = document.getElementById('intervensiLayer1Btn');
+            var okkLayer1UsersEl2 = document.getElementById('intervensiOkkLayer1Users');
+            var okkLayer1EmptyEl2 = document.getElementById('intervensiOkkLayer1Empty');
+            var okkLayer1LoadingEl2 = document.getElementById('intervensiOkkLayer1Loading');
+            var okkLayer1SelectEl2 = document.getElementById('intervensiOkkLayer1Select');
+            var okkLayer1BtnEl2 = document.getElementById('intervensiOkkLayer1Btn');
+            layer1LoadingEl2.classList.remove('d-none');
+            layer1UsersEl2.innerHTML = '';
+            layer1EmptyEl2.classList.add('d-none');
+            if (layer1SelectEl2) { layer1SelectEl2.classList.add('d-none'); layer1SelectEl2.innerHTML = '<option value=\"\">Pilih PIC Layer 1...</option>'; }
+            if (layer1BtnEl2) { layer1BtnEl2.classList.add('d-none'); layer1BtnEl2.removeAttribute('data-message'); }
+            if (okkLayer1LoadingEl2) {
+                okkLayer1LoadingEl2.classList.remove('d-none');
+                okkLayer1UsersEl2.innerHTML = '';
+                okkLayer1EmptyEl2.classList.add('d-none');
+                if (okkLayer1SelectEl2) { okkLayer1SelectEl2.classList.add('d-none'); okkLayer1SelectEl2.innerHTML = '<option value=\"\">Pilih PIC Layer 1...</option>'; }
+                if (okkLayer1BtnEl2) { okkLayer1BtnEl2.classList.add('d-none'); okkLayer1BtnEl2.removeAttribute('data-message'); }
+            }
                 var qs = new URLSearchParams();
                 if (sidLayer1) qs.set('sid_layer_1', sidLayer1);
                 if (namaLayer1) qs.set('nama_layer_1', namaLayer1);
@@ -3169,29 +3252,78 @@
                         if (document.getElementById('intervensiOkkLayer1NameDisplay')) document.getElementById('intervensiOkkLayer1NameDisplay').textContent = displayName || '—';
                         var ipkMsg = (displayName || 'PIC') + ', anda harus mengisi INSPEKSI PRA KERJA (IPK)\n' + ipkFormLink;
                         var okkMsg = (displayName || 'PIC') + ', mohon perhatian untuk OBSERVASI KEGIATAN KERJA (OKK) sesuai IKK ini.';
-                        users.forEach(function(u) {
-                            var num = normalizeWaNumber(u.selular);
-                            var label = u.nama || u.username || 'User';
-                            if (num) {
-                                var aIpk = document.createElement('a');
-                                aIpk.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(ipkMsg);
-                                aIpk.target = '_blank';
-                                aIpk.rel = 'noopener';
-                                aIpk.className = 'btn btn-sm btn-success';
-                                aIpk.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> Intervensi by WA — ' + label;
-                                layer1UsersEl2.appendChild(aIpk);
+
+                        if (users.length === 0) {
+                            layer1EmptyEl2.classList.remove('d-none');
+                            if (okkLayer1EmptyEl2) okkLayer1EmptyEl2.classList.remove('d-none');
+                            return;
+                        }
+
+                        // Isi dropdown IPK
+                        if (layer1SelectEl2) {
+                            users.forEach(function (u) {
+                                var num = normalizeWaNumber(u.selular);
+                                var label = u.nama || u.username || 'User';
+                                if (!num) return;
+                                var opt = document.createElement('option');
+                                opt.value = num;
+                                opt.textContent = label + ' (' + num + ')';
+                                opt.setAttribute('data-label', label);
+                                layer1SelectEl2.appendChild(opt);
+                            });
+                            if (layer1SelectEl2.options.length > 1) {
+                                layer1SelectEl2.classList.remove('d-none');
+                                if (layer1BtnEl2) {
+                                    layer1BtnEl2.classList.remove('d-none');
+                                    layer1BtnEl2.dataset.message = ipkMsg;
+                                    if (!layer1BtnEl2._bound) {
+                                        layer1BtnEl2.addEventListener('click', function () {
+                                            var sel = layer1SelectEl2;
+                                            if (!sel || sel.value === '') return;
+                                            var num = sel.value;
+                                            var msg = layer1BtnEl2.dataset.message || ipkMsg;
+                                            window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
+                                        });
+                                        layer1BtnEl2._bound = true;
+                                    }
+                                }
+                            } else {
+                                layer1EmptyEl2.classList.remove('d-none');
                             }
-                            if (okkLayer1UsersEl2 && num) {
-                                var aOkk = document.createElement('a');
-                                aOkk.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(okkMsg);
-                                aOkk.target = '_blank';
-                                aOkk.rel = 'noopener';
-                                aOkk.className = 'btn btn-sm btn-success';
-                                aOkk.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> Intervensi by WA — ' + label;
-                                okkLayer1UsersEl2.appendChild(aOkk);
+                        }
+
+                        // Isi dropdown OKK (pakai list user yang sama)
+                        if (okkLayer1SelectEl2) {
+                            users.forEach(function (u) {
+                                var num = normalizeWaNumber(u.selular);
+                                var label = u.nama || u.username || 'User';
+                                if (!num) return;
+                                var opt = document.createElement('option');
+                                opt.value = num;
+                                opt.textContent = label + ' (' + num + ')';
+                                opt.setAttribute('data-label', label);
+                                okkLayer1SelectEl2.appendChild(opt);
+                            });
+                            if (okkLayer1SelectEl2.options.length > 1) {
+                                okkLayer1SelectEl2.classList.remove('d-none');
+                                if (okkLayer1BtnEl2) {
+                                    okkLayer1BtnEl2.classList.remove('d-none');
+                                    okkLayer1BtnEl2.dataset.message = okkMsg;
+                                    if (!okkLayer1BtnEl2._bound) {
+                                        okkLayer1BtnEl2.addEventListener('click', function () {
+                                            var sel = okkLayer1SelectEl2;
+                                            if (!sel || sel.value === '') return;
+                                            var num = sel.value;
+                                            var msg = okkLayer1BtnEl2.dataset.message || okkMsg;
+                                            window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
+                                        });
+                                        okkLayer1BtnEl2._bound = true;
+                                    }
+                                }
+                            } else if (okkLayer1EmptyEl2) {
+                                okkLayer1EmptyEl2.classList.remove('d-none');
                             }
-                        });
-                        if (users.length === 0) { layer1EmptyEl2.classList.remove('d-none'); if (okkLayer1EmptyEl2) okkLayer1EmptyEl2.classList.remove('d-none'); }
+                        }
                     })
                     .catch(function() {
                         layer1LoadingEl2.classList.add('d-none');
