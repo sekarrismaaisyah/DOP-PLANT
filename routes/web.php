@@ -404,6 +404,8 @@ Route::middleware(['auth'])->group(function () {
         // DOPM
         Route::prefix('dopm')->name('dopm.')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'dashboard'])->name('dashboard');
+            // Dashboard Weekly menggunakan controller khusus agar bisa menampilkan status APPROVED & EXPIRED
+            Route::get('/dashboard-weekly', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'dashboard'])->name('dashboard-weekly');
             Route::get('/', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'create'])->name('create');
             Route::get('/download-template', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'downloadTemplate'])->name('download-template');

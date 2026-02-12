@@ -103,18 +103,20 @@
       </a>
     </div>
     <div class="module-card" data-module-name="subscribers">
+      <a href="{{ route('dopmikk.dopm.dashboard') }}">
       <div class="card rounded-4 shadow-none border mb-0">
         <div class="card-body">
           <div class="d-flex align-items-start gap-3">
             <img src="{{ URL::asset('build/images/daily.png') }}" width="40" alt="">
             <div class="mega-menu-content">
-              <h5>Daily Report</h5>
+              <h5>Monitoring IKK</h5>
               <p class="mb-0 f-14">In publishing and graphic design, Lorem ipsum is a placeholder text commonly used to demonstrate
                 the visual form of a document.</p>
             </div>
           </div>
         </div>
       </div>
+      </a>
     </div>
     <div class="module-card" data-module-name="hubspot">
       <div class="card rounded-4 shadow-none border mb-0">

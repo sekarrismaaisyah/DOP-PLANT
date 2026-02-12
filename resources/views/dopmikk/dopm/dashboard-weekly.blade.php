@@ -1343,6 +1343,7 @@
     .dopm-matriks-row.cursor-pointer { cursor: pointer; }
     #tableDopmHarian thead th { white-space: nowrap; }
     #tableIkkClickhouseHarian thead th { white-space: nowrap; }
+    #tableIkkClickhouseHarian tbody tr.ikk-row-clickable { cursor: pointer; }
 
     /* Summary harian per site */
     .dopm-summary-card { border-radius: 1rem; overflow: hidden; border: 1px solid #e5e7eb; }
@@ -1415,29 +1416,13 @@
 
 @section('content')
 <div class="hazard-detection-header">
-    <h1 class="hazard-detection-title">DOPM & IKK - Dashboard</h1>
+    <h1 class="hazard-detection-title">DOPM & IKK - Dashboard Weekly</h1>
     <p class="hazard-detection-subtitle">Statistik harian DOPM, IPK-IKK, OKK, dan OAK (Observasi Area Kerja)</p>
 
     {{-- Filter tanggal --}}
-    <!-- <div class="card rounded-4 mb-3 w-100">
-        <div class="card-body py-3">
-            <form method="get" action="{{ route('dopmikk.dopm.dashboard') }}" class="row g-10 align-items-end w-100" id="dashboardFilterForm">
-                <div class="col-auto">
-                    <label for="filterDate" class="form-label mb-0 small fw-semibold">Tampilkan data tanggal</label>
-                    <input type="date" name="date" id="filterDate" class="form-control" value="{{ $filterDate ?? now()->toDateString() }}">
-                </div>
-                <div class="col-auto">
-                    <button type="submit" class="btn btn-primary rounded-3" id="dashboardFilterBtn">
-                        <i class="material-icons-outlined me-1" style="font-size: 18px;">search</i> Filter
-                    </button>
-                </div>
-            </form>
-        </div>
-    </div> -->
-
     <div class="card rounded-4 mb-3 w-100">
     <div class="card-body py-3">
-        <form method="get" action="{{ route('dopmikk.dopm.dashboard') }}" id="dashboardFilterForm">
+        <form method="get" action="{{ route('dopmikk.dopm.dashboard-weekly') }}" id="dashboardFilterForm">
             <div class="row g-3 align-items-end">
                 <div class="col-12 col-md">
                     <label for="filterDate" class="form-label mb-2 small fw-semibold text-muted">
@@ -1448,7 +1433,7 @@
                            name="date" 
                            id="filterDate" 
                            class="form-control rounded-3" 
-                           value="{{ $filterDate ?? now()->toDateString() }}" readonly>
+                           value="{{ $filterDate ?? now()->toDateString() }}" >
                 </div>
                 <div class="col-12 col-md">
                     <label for="filterSite" class="form-label mb-2 small fw-semibold text-muted">
@@ -1513,7 +1498,7 @@
                     <a href="javascript:;" class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">assignment</i>
                     </a>
-                    <h3 class="mb-0">{{ number_format($totalWorkPermitApprovedHarian ?? 0) }}</h3>
+                    <h3 class="mb-0">{{ number_format(count($ikkClickhouseListHarian ?? [])) }}</h3>
                     <p class="mb-0">IKK</p>
                      <small class="text-muted">Data Hari ini</small>
                   </div>
@@ -2109,14 +2094,9 @@
                             Data IKK 
                             {{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('l, d F Y') }}
                         </h5>
-                        <small class="text-muted">Data IKK harian dari tabel ClickHouse `hse_automation.ikk_work_permit`.</small>
+                        <small class="text-muted">Data IKK harian (work permit) yang semua PIC-nya berstatus APPROVED di <code>ikk_work_permit_pic</code>. Klik salah satu kolom pada baris untuk melihat detail lengkap.</small>
                     </div>
                     <div class="card-body p-0">
-                        {{-- Debug: kirim data IKK ClickHouse ke browser console --}}
-                        <script>
-                            console.log('ikkClickhouseListHarian (Blade)', @json($ikkClickhouseListHarian ?? []));
-                            console.log('ikkClickhouseListHarian count', {{ count($ikkClickhouseListHarian ?? []) }});
-                        </script>
                         @if(count($ikkClickhouseListHarian ?? []) > 0)
                             <div class="table-responsive">
                                 <table class="table table-hover table-striped align-middle mb-0 w-100" id="tableIkkClickhouseHarian">
@@ -2128,9 +2108,10 @@
                                            <th>Jenis Ijin Kerja Khusus</th>
                                            <th>Nama Pekerjaan</th>
                                            <th>Perusahaan</th>
-                                           <th>Status IKK</th>
+                                           <th>Status WP</th>
                                            <th>Status Pekerjaan</th>
                                            <th>Status Matriks</th>
+                                           <th>PIC Approver</th>
                                            <th>Nama Layer 1</th>
                                            <th>Layer 2 / 3 / 4</th>
                                        </tr>
@@ -2142,8 +2123,31 @@
                                                 $badgeClassIkk = $matriksIkk === 'Hijau'
                                                     ? 'bg-success'
                                                     : ($matriksIkk === 'Kuning' ? 'bg-warning text-dark' : 'bg-danger');
-                                           @endphp
-                                           <tr>
+                                                $ikkModal = [
+                                                    'code' => $ikk->code ?? '-',
+                                                    'site' => $ikk->site ?? '-',
+                                                    'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? '-',
+                                                    'nama_pekerjaan' => $ikk->nama_pekerjaan ?? '-',
+                                                    'perusahaan' => $ikk->perusahaan ?? '-',
+                                                    'status' => $ikk->status ?? '-',
+                                                    'status_pekerjaan' => $ikk->status_pekerjaan ?? 'Tidak ada IPK',
+                                                    'status_matriks' => $matriksIkk,
+                                                    'pic_approver_name' => $ikk->pic_approver_name ?? '-',
+                                                    'nama_layer_1' => $ikk->nama_layer_1 ?? '-',
+                                                    'nama_layer_2' => $ikk->nama_layer_2 ?? '-',
+                                                    'nama_layer_3' => $ikk->nama_layer_3 ?? '-',
+                                                    'nama_layer_4' => $ikk->nama_layer_4 ?? '-',
+                                                    'location_name' => $ikk->location_name ?? '-',
+                                                    'location_detail_name' => $ikk->location_detail_name ?? '-',
+                                                ];
+                                                try {
+                                                    $ikkModal['start_date'] = $ikk->start_date ? \Carbon\Carbon::parse($ikk->start_date)->format('d/m/Y') : '-';
+                                                } catch (\Throwable $e) { $ikkModal['start_date'] = '-'; }
+                                                try {
+                                                    $ikkModal['end_date'] = $ikk->end_date ? \Carbon\Carbon::parse($ikk->end_date)->format('d/m/Y') : '-';
+                                                } catch (\Throwable $e) { $ikkModal['end_date'] = '-'; }
+                                            @endphp
+                                           <tr class="ikk-row-clickable" role="button" tabindex="0" data-ikk="{{ e(json_encode($ikkModal)) }}">
                                                <td>{{ $loop->iteration }}</td>
                                                 <td>{{ $ikk->code ?? '-' }}</td>
                                                 <td>{{ $ikk->site ?? '-' }}</td>
@@ -2152,12 +2156,19 @@
                                                <td>{{ $ikk->perusahaan ?? '-' }}</td>
                                                <td><span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span></td>
                                                <td>
-                                                   <span class="">
-                                                       {{ $ikk->status_pekerjaan ?? '-' }}
+                                                   <span class="badge bg-info text-dark">
+                                                       {{ $ikk->status_pekerjaan ?? 'Tidak ada IPK' }}
                                                    </span>
                                                </td>
                                                <td>
                                                     <span class="badge {{ $badgeClassIkk }}">{{ $matriksIkk }}</span>
+                                                </td>
+                                                <td>
+                                                    @if(!empty($ikk->pic_approver_name))
+                                                        <span class="fw-semibold text-primary" title="{{ $ikk->pic_approver_name }}">{{ $ikk->pic_approver_name }}</span>
+                                                    @else
+                                                        <span class="text-muted">-</span>
+                                                    @endif
                                                 </td>
                                                 <td><small class="text-primary">{{ $ikk->nama_layer_1 ?? '-' }}</small></td>
                                                 <td>
@@ -2175,9 +2186,65 @@
                         @else
                             <div class="p-4 text-center text-muted">
                                 <i class="material-icons-outlined" style="font-size: 48px;">inbox</i>
-                                <p class="mb-0 mt-2">Tidak ada data IKK dari ClickHouse untuk tanggal ini.</p>
+                                <p class="mb-0 mt-2">Tidak ada data IKK (semua PIC APPROVED) untuk tanggal ini.</p>
                             </div>
                         @endif
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        {{-- Modal Detail Work Permit IKK (full) --}}
+        <div class="modal fade" id="modalIkkWorkPermitDetail" tabindex="-1" aria-labelledby="modalIkkWorkPermitDetailLabel" aria-hidden="true">
+            <div class="modal-dialog modal-lg modal-dialog-centered modal-dialog-scrollable">
+                <div class="modal-content rounded-4 shadow-lg border">
+                    <div class="modal-header bg-light rounded-top-4">
+                        <h5 class="modal-title fw-bold text-dark" id="modalIkkWorkPermitDetailLabel">Detail Work Permit IKK</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                    </div>
+                    <div class="modal-body p-4">
+                        <div class="row g-3">
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-2">Identitas</h6>
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr><td class="text-muted" style="width: 42%;">Kode IKK</td><td class="fw-semibold" id="wpModalCode">—</td></tr>
+                                    <tr><td class="text-muted">Site</td><td id="wpModalSite">—</td></tr>
+                                    <tr><td class="text-muted">Jenis Ijin Kerja Khusus</td><td id="wpModalJenis">—</td></tr>
+                                    <tr><td class="text-muted">Nama Pekerjaan</td><td id="wpModalNamaPekerjaan">—</td></tr>
+                                    <tr><td class="text-muted">Perusahaan</td><td id="wpModalPerusahaan">—</td></tr>
+                                </table>
+                            </div>
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-2">Periode & Status</h6>
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr><td class="text-muted" style="width: 42%;">Tanggal Mulai</td><td id="wpModalStartDate">—</td></tr>
+                                    <tr><td class="text-muted">Tanggal Selesai</td><td id="wpModalEndDate">—</td></tr>
+                                    <tr><td class="text-muted">Status WP</td><td><span class="badge bg-secondary" id="wpModalStatus">—</span></td></tr>
+                                    <tr><td class="text-muted">Status Pekerjaan</td><td><span class="badge bg-info text-dark" id="wpModalStatusPekerjaan">—</span></td></tr>
+                                    <tr><td class="text-muted">Status Matriks</td><td><span class="badge" id="wpModalStatusMatriks">—</span></td></tr>
+                                </table>
+                            </div>
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-2">Lokasi</h6>
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr><td class="text-muted" style="width: 42%;">Lokasi</td><td id="wpModalLocationName">—</td></tr>
+                                    <tr><td class="text-muted">Detail Lokasi</td><td id="wpModalLocationDetail">—</td></tr>
+                                </table>
+                            </div>
+                            <div class="col-12">
+                                <h6 class="text-muted border-bottom pb-2 mb-2">Layer & PIC</h6>
+                                <table class="table table-sm table-borderless mb-0">
+                                    <tr><td class="text-muted" style="width: 42%;">PIC Approver</td><td class="fw-semibold text-primary" id="wpModalPicApprover">—</td></tr>
+                                    <tr><td class="text-muted">Layer 1</td><td id="wpModalLayer1">—</td></tr>
+                                    <tr><td class="text-muted">Layer 2</td><td id="wpModalLayer2">—</td></tr>
+                                    <tr><td class="text-muted">Layer 3</td><td id="wpModalLayer3">—</td></tr>
+                                    <tr><td class="text-muted">Layer 4</td><td id="wpModalLayer4">—</td></tr>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-top">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
                     </div>
                 </div>
             </div>
@@ -2681,23 +2748,6 @@
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body p-4 bg-white">
-                    {{-- Section PJO: Intervensi by WA ke ra_pjo_name (PJO Work Permit) --}}
-                    <div id="intervensiPjoWrap" class="intervensi-section mb-4 d-none">
-                        <h6 class="text-info border-bottom pb-2 mb-3"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">person</i> PJO — Intervensi by WA</h6>
-                        <div class="card border-info mb-3">
-                            <div class="card-header bg-info bg-opacity-10 py-2">
-                                <span class="material-icons-outlined align-middle me-1 text-info">contact_phone</span>
-                                <strong>PJO Work Permit: <span id="intervensiPjoNameDisplay" class="text-dark">—</span></strong>
-                            </div>
-                            <div class="card-body py-3">
-                                <p class="small text-muted mb-2">Kirim intervensi via WhatsApp ke nomor PJO yang terdaftar (pencarian by nama).</p>
-                                <div id="intervensiPjoUsers" class="d-flex flex-wrap gap-2"></div>
-                                <div id="intervensiPjoEmpty" class="text-muted small d-none">Tidak ada user terdaftar dengan nama tersebut.</div>
-                                <div id="intervensiPjoLoading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat nomor PJO...</div>
-                            </div>
-                        </div>
-                    </div>
-
                     {{-- Section 1: IPK-IKK + Layer 1 --}}
                     <div class="intervensi-section mb-4">
                         <h6 class="text-primary border-bottom pb-2 mb-3"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">checklist</i> IPK-IKK <span class="badge bg-primary ms-1" id="intervensiBadgeIpk">0</span></h6>
@@ -2954,8 +3004,7 @@
     var modalEl = document.getElementById('detailDopmModal');
     var intervensiModalEl = document.getElementById('intervensiDopmModal');
     var intervensiModal = intervensiModalEl ? new bootstrap.Modal(intervensiModalEl) : null;
-    if (!modalEl) return;
-    var modal = new bootstrap.Modal(modalEl);
+    var modal = modalEl ? new bootstrap.Modal(modalEl) : null;
 
     // DataTables untuk tabel DOPM harian
     if ($.fn.DataTable && document.getElementById('tableDopmHarian')) {
@@ -2993,6 +3042,58 @@
             dom: '<"row mb-2"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
         });
     }
+
+    // Modal detail Work Permit IKK: klik baris tabel → tampilkan data lengkap
+    (function() {
+        var modalEl = document.getElementById('modalIkkWorkPermitDetail');
+        if (!modalEl) return;
+        function setEl(id, text) {
+            var el = document.getElementById(id);
+            if (el) el.textContent = text != null && text !== '' ? String(text) : '—';
+        }
+        function openIkkDetailModal(rowEl) {
+            var raw = rowEl.getAttribute ? rowEl.getAttribute('data-ikk') : $(rowEl).attr('data-ikk');
+            if (!raw) return;
+            var data;
+            try { data = typeof raw === 'string' ? JSON.parse(raw) : raw; } catch (e) { return; }
+            setEl('wpModalCode', data.code);
+            setEl('wpModalSite', data.site);
+            setEl('wpModalJenis', data.jenis_ijin_kerja_khusus);
+            setEl('wpModalNamaPekerjaan', data.nama_pekerjaan);
+            setEl('wpModalPerusahaan', data.perusahaan);
+            setEl('wpModalStartDate', data.start_date);
+            setEl('wpModalEndDate', data.end_date);
+            var statusEl = document.getElementById('wpModalStatus');
+            if (statusEl) statusEl.textContent = data.status || '—';
+            var statusPekerjaanEl = document.getElementById('wpModalStatusPekerjaan');
+            if (statusPekerjaanEl) statusPekerjaanEl.textContent = data.status_pekerjaan || 'Tidak ada IPK';
+            var matriksEl = document.getElementById('wpModalStatusMatriks');
+            if (matriksEl) {
+                matriksEl.textContent = data.status_matriks || '—';
+                matriksEl.className = 'badge ' + (data.status_matriks === 'Hijau' ? 'bg-success' : (data.status_matriks === 'Kuning' ? 'bg-warning text-dark' : 'bg-danger'));
+            }
+            setEl('wpModalLocationName', data.location_name);
+            setEl('wpModalLocationDetail', data.location_detail_name);
+            setEl('wpModalPicApprover', data.pic_approver_name);
+            setEl('wpModalLayer1', data.nama_layer_1);
+            setEl('wpModalLayer2', data.nama_layer_2);
+            setEl('wpModalLayer3', data.nama_layer_3);
+            setEl('wpModalLayer4', data.nama_layer_4);
+            var modalInstance = typeof bootstrap !== 'undefined' && bootstrap.Modal ? bootstrap.Modal.getOrCreateInstance(modalEl) : null;
+            if (modalInstance) modalInstance.show();
+        }
+        // Klik salah satu kolom (seluruh baris) → buka modal detail (delegate: tr dengan data-ikk)
+        $(document).on('click', '#tableIkkClickhouseHarian tbody tr[data-ikk]', function(e) {
+            e.preventDefault();
+            openIkkDetailModal(this);
+        });
+        $(document).on('keydown', '#tableIkkClickhouseHarian tbody tr[data-ikk]', function(e) {
+            if (e.key === 'Enter' || e.key === ' ') {
+                e.preventDefault();
+                openIkkDetailModal(this);
+            }
+        });
+    })();
 
     function showLoading(panel) {
         var loadingEl = document.getElementById(panel + 'Loading');
@@ -3067,24 +3168,6 @@
             document.getElementById('intervensiBadgeIpk').textContent = '0';
             document.getElementById('intervensiBadgeOkk').textContent = '0';
             document.getElementById('intervensiBadgeOak').textContent = '0';
-            var raPjoName = (data.ra_pjo_name || '').trim();
-            var pjoWrap = document.getElementById('intervensiPjoWrap');
-            var pjoNameDisplay = document.getElementById('intervensiPjoNameDisplay');
-            var pjoUsers = document.getElementById('intervensiPjoUsers');
-            var pjoEmpty = document.getElementById('intervensiPjoEmpty');
-            var pjoLoading = document.getElementById('intervensiPjoLoading');
-            var hasKodeIkk = (data.kode_ikk || '').trim() !== '';
-            if (pjoWrap) {
-                if (raPjoName === '' && !hasKodeIkk) {
-                    pjoWrap.classList.add('d-none');
-                } else {
-                    pjoWrap.classList.remove('d-none');
-                    if (pjoNameDisplay) pjoNameDisplay.textContent = raPjoName || 'Memuat...';
-                    if (pjoUsers) pjoUsers.innerHTML = '';
-                    if (pjoEmpty) pjoEmpty.classList.add('d-none');
-                    if (pjoLoading) pjoLoading.classList.remove('d-none');
-                }
-            }
             document.getElementById('intervensiIpkLoading').classList.remove('d-none');
             document.getElementById('intervensiIpkEmpty').classList.add('d-none');
             document.getElementById('intervensiIpkTableWrap').classList.add('d-none');
@@ -3439,87 +3522,8 @@
             doIntervensiFetch();
             doLayer1Fetch();
             doOakLayers234Fetch();
-            if (raPjoName !== '') {
-                doPjoFetch(raPjoName);
-            } else if (hasKodeIkk) {
-                doPjoFetchFromApi(data);
-            }
             return;
         }
-
-            function doPjoFetchFromApi(data) {
-                var pjoNameDisplay = document.getElementById('intervensiPjoNameDisplay');
-                var pjoUsersEl = document.getElementById('intervensiPjoUsers');
-                var pjoEmptyEl = document.getElementById('intervensiPjoEmpty');
-                var pjoLoadingEl = document.getElementById('intervensiPjoLoading');
-                if (!pjoLoadingEl) return;
-                var params = new URLSearchParams({
-                    kode_ikk: data.kode_ikk || '',
-                    jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '',
-                    location_name: data.location_name || '',
-                    location_detail_name: data.location_detail_name || '',
-                    tanggal_dop: data.tanggal_dop || ''
-                });
-                fetch(modalApiUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-                    .then(function(r) { return r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status)); })
-                    .then(function(res) {
-                        var name = (res && res.ra_pjo_name) ? String(res.ra_pjo_name).trim() : '';
-                        if (pjoNameDisplay) pjoNameDisplay.textContent = name || '—';
-                        pjoLoadingEl.classList.add('d-none');
-                        if (name !== '') {
-                            doPjoFetch(name);
-                        } else {
-                            if (pjoUsersEl) pjoUsersEl.innerHTML = '';
-                            if (pjoEmptyEl) { pjoEmptyEl.textContent = 'Tidak ada data PJO untuk IKK ini.'; pjoEmptyEl.classList.remove('d-none'); }
-                        }
-                    })
-                    .catch(function() {
-                        pjoLoadingEl.classList.add('d-none');
-                        if (pjoNameDisplay) pjoNameDisplay.textContent = '—';
-                        if (pjoUsersEl) pjoUsersEl.innerHTML = '';
-                        if (pjoEmptyEl) { pjoEmptyEl.textContent = 'Gagal memuat data PJO.'; pjoEmptyEl.classList.remove('d-none'); }
-                    });
-            }
-
-            function doPjoFetch(pjoName) {
-                var pjoUsersEl = document.getElementById('intervensiPjoUsers');
-                var pjoEmptyEl = document.getElementById('intervensiPjoEmpty');
-                var pjoLoadingEl = document.getElementById('intervensiPjoLoading');
-                if (!pjoUsersEl || !pjoLoadingEl) return;
-                pjoUsersEl.innerHTML = '';
-                if (pjoEmptyEl) pjoEmptyEl.classList.add('d-none');
-                pjoLoadingEl.classList.remove('d-none');
-                var qs = new URLSearchParams({ nama_layer_1: pjoName });
-                fetch(layer1UsersApiUrl + '?' + qs.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-                    .then(function(r) { return r.json(); })
-                    .then(function(res) {
-                        pjoLoadingEl.classList.add('d-none');
-                        var users = (res && res.success && res.users) ? res.users : [];
-                        pjoUsersEl.innerHTML = '';
-                        var intervensiMsg = 'Assalamu\'alaikum. Intervensi DOPM/IKK: mohon perhatian untuk kelengkapan IPK-IKK, OKK, dan OAK. Terima kasih.';
-                        users.forEach(function(u) {
-                            var selular = (u.selular || '').trim();
-                            if (!selular) return;
-                            var num = normalizeWaNumber(selular);
-                            if (!num) return;
-                            var nama = (u.nama || u.username || 'PJO').trim();
-                            var a = document.createElement('a');
-                            a.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(intervensiMsg);
-                            a.target = '_blank';
-                            a.rel = 'noopener';
-                            a.className = 'btn btn-sm btn-outline-success';
-                            a.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA ke ' + (nama.length > 25 ? nama.substring(0, 22) + '...' : nama);
-                            pjoUsersEl.appendChild(a);
-                        });
-                        if (pjoEmptyEl) {
-                            if (users.length === 0) pjoEmptyEl.classList.remove('d-none'); else pjoEmptyEl.classList.add('d-none');
-                        }
-                    })
-                    .catch(function() {
-                        if (pjoLoadingEl) pjoLoadingEl.classList.add('d-none');
-                        if (pjoEmptyEl) pjoEmptyEl.classList.remove('d-none');
-                    });
-            }
 
         var btn = e.target.closest('.btn-detail-dopm') || (e.target.closest('.dopm-matriks-row') && !e.target.closest('.btn-intervensi-dopm') ? e.target.closest('.dopm-matriks-row') : null);
         if (!btn) return;
@@ -3551,7 +3555,7 @@
         showLoading('okk');
         showLoading('oak');
         document.getElementById('oakContext').classList.add('d-none');
-        modal.show();
+        if (modal) modal.show();
         var params = new URLSearchParams({
             kode_ikk: data.kode_ikk || '',
             jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '',
@@ -3577,7 +3581,6 @@
             })
             .then(function(res) {
                 if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Request failed');
-                if (window._lastDetailDopmData) window._lastDetailDopmData.ra_pjo_name = res.ra_pjo_name || '';
                 var ipk = res.ipk_ikk || [];
                 var okk = res.okk || [];
                 var oak = res.oak || [];
@@ -3654,10 +3657,12 @@
                 if (typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Gagal memuat', text: err.message || 'Gagal memuat data detail.' });
             });
         }
-        modalEl.addEventListener('shown.bs.modal', function onShown() {
-            modalEl.removeEventListener('shown.bs.modal', onShown);
-            doFetch();
-        }, { once: true });
+        if (modalEl) {
+            modalEl.addEventListener('shown.bs.modal', function onShown() {
+                modalEl.removeEventListener('shown.bs.modal', onShown);
+                doFetch();
+            }, { once: true });
+        }
     });
 
     // Tombol Intervensi (footer + di dalam modal): tutup detail, buka modal Intervensi dengan data yang sama
