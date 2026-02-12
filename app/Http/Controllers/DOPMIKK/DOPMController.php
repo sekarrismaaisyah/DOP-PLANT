@@ -586,6 +586,7 @@ class DOPMController extends Controller
                                 toString(detail_location) as detail_location
                             FROM hse_automation.aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) = '{$filterDate}'
+                              AND lower(trim(toString(tipe))) = 'observer'
                               AND lower(trim(toString(location))) = lower('{$locationNameEscaped}')
                               AND lower(trim(toString(detail_location))) = lower('{$locationDetailEscaped}')
                             ORDER BY toDateTime(submit_date) DESC
