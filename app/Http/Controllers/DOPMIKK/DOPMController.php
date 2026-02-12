@@ -363,6 +363,11 @@ class DOPMController extends Controller
                                 continue;
                             }
 
+                            // Hanya tampilkan status Berlaku (APPROVED); sembunyikan Kadaluarsa/Expired
+                            if ($statusUpper === 'EXPIRED') {
+                                continue;
+                            }
+
                             // Kumpulkan code yang APPROVED untuk hitung unik (distinct by code)
                             if ($statusUpper === 'APPROVED') {
                                 $code = $row['code'] ?? null;
