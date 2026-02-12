@@ -572,25 +572,26 @@ class DOPMController extends Controller
                         // OAK di tanggal filter (submit_date) yang location & detail_location match work permit (case-insensitive + trim).
                         // Pakai alias submit_date_str agar tidak bentrok dengan kolom submit_date (DateTime) dari view (AMBIGUOUS_COLUMN_NAME).
                         $sqlOak = "
-                            SELECT 
-                                toString(id) as id,
-                                toString(activity) as activity,
-                                toString(sub_activity) as sub_activity,
-                                toString(submit_date) as submit_date_str,
-                                toString(submit_by) as submit_by,
-                                toString(kode_sid_pelapor) as kode_sid_pelapor,
-                                toString(kode_sid_team) as kode_sid_team,
-                                toString(conclusion) as conclusion,
-                                toString(site) as site,
-                                toString(location) as location,
-                                toString(detail_location) as detail_location
-                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
-                            WHERE toDate(submit_date) = '{$filterDate}'
-                              AND lower(trim(toString(tipe))) = 'observer'
-                              AND lower(trim(toString(location))) = lower('{$locationNameEscaped}')
-                              AND lower(trim(toString(detail_location))) = lower('{$locationDetailEscaped}')
-                            ORDER BY toDateTime(submit_date) DESC
-                            LIMIT 100
+                           SELECT 
+    id,
+    argMax(activity, submit_date) as activity,
+    argMax(sub_activity, submit_date) as sub_activity,
+    toString(argMax(submit_date, submit_date)) as submit_date_str,
+    argMax(submit_by, submit_date) as submit_by,
+    argMax(kode_sid_pelapor, submit_date) as kode_sid_pelapor,
+    argMax(kode_sid_team, submit_date) as kode_sid_team,
+    argMax(conclusion, submit_date) as conclusion,
+    argMax(site, submit_date) as site,
+    argMax(location, submit_date) as location,
+    argMax(detail_location, submit_date) as detail_location
+FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+WHERE toDate(submit_date) = '{$filterDate}'
+  AND lower(trim(toString(tipe))) = 'observer'
+  AND lower(trim(toString(location))) = lower('{$locationNameEscaped}')
+  AND lower(trim(toString(detail_location))) = lower('{$locationDetailEscaped}')
+GROUP BY id
+ORDER BY max(submit_date) DESC
+LIMIT 100
                         ";
                         \Illuminate\Support\Facades\Log::debug('OAK modal: running OAK query', [
                             'filter_date' => $filterDate,
