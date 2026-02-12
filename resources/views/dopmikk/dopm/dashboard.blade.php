@@ -1617,15 +1617,15 @@
                <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between mb-3">
                   <div class="">
-                    <h5 class="mb-0 fw-bold">DOPM vs IPK-IKK vs OKK</h5>
+                    <h5 class="mb-0 fw-bold">IKK vs IPK-IKK vs OKK</h5>
                   </div>
                  </div>
                   <div id="chart4"></div>
                   <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-center">
-                    <span class="small text-muted ">Per jenis ijin kerja khusus (tanggal terpilih):</span>
+                    <span class="small text-muted ">Per jenis ijin kerja khusus (tanggal terpilih, data IKK dari ClickHouse):</span>
                     <div class="d-flex align-items-center gap-2">
                       <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:#0d6efd;"></span>
-                      <span class="small">DOPM</span>
+                      <span class="small">IKK</span>
                     </div>
                     <div class="d-flex align-items-center gap-2">
                       <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:#02c27a;"></span>
@@ -2820,10 +2820,18 @@
 <script src="{{ URL::asset('build/plugins/peity/jquery.peity.min.js') }}"></script>
 <script>
 (function() {
+  // Chart IKK vs IPK-IKK vs OKK — data IKK dari ClickHouse (work permit), IPK/OKK dari DB per kode IKK
   var categories = @json($chartJenisLabels ?? []);
   var ikkData = @json($chartIkkPerJenis ?? []);
   var ipkData = @json($chartIpkPerJenis ?? []);
   var okkData = @json($chartOkkPerJenis ?? []);
+  var len = categories.length;
+  if (ikkData.length !== len) ikkData = ikkData.slice(0, len);
+  if (ipkData.length !== len) ipkData = ipkData.slice(0, len);
+  if (okkData.length !== len) okkData = okkData.slice(0, len);
+  while (ikkData.length < len) ikkData.push(0);
+  while (ipkData.length < len) ipkData.push(0);
+  while (okkData.length < len) okkData.push(0);
   setTimeout(function() {
     var el = document.querySelector('#chart4');
     if (!el || typeof ApexCharts === 'undefined') return;
@@ -2846,7 +2854,7 @@
       legend: { show: true, position: 'top', horizontalAlign: 'right' },
       tooltip: { y: { formatter: function(v) { return v; } } }
     }).render();
-  }, 150);
+  }, 300);
 })();
 </script>
 
