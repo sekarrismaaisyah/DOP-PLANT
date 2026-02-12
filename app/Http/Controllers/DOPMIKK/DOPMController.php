@@ -490,11 +490,22 @@ class DOPMController extends Controller
             $pctIkkAdaOkk = 0;
         }
 
-        // Chart per jenis: pakai data IKK (work permit) bukan DOPM; IPK/OKK dihitung dari kode IKK per jenis
+        // Chart per jenis: 100% data IKK (work permit) — kategori & nilai dari ClickHouse IKK, bukan DOPM
+        $chartJenisLabels = [];
         $chartIkkPerJenis = [];
         $chartIpkPerJenis = [];
         $chartOkkPerJenis = [];
-        foreach ($summaryJenisKeys as $jenis) {
+        $jenisFromIkk = [];
+        foreach ($ikkClickhouseListHarian as $ikk) {
+            $j = trim((string) ($ikk->jenis_ijin_kerja_khusus ?? '')) ?: '-';
+            $jenisFromIkk[$j] = true;
+        }
+        $chartJenisKeysFromIkk = array_keys($jenisFromIkk);
+        usort($chartJenisKeysFromIkk, function ($a, $b) {
+            return strnatcasecmp($a, $b);
+        });
+        foreach ($chartJenisKeysFromIkk as $jenis) {
+            $chartJenisLabels[] = self::singkatJenisIjin($jenis);
             $ikkPerJenis = array_filter($ikkClickhouseListHarian, function ($ikk) use ($jenis) {
                 $j = trim((string) ($ikk->jenis_ijin_kerja_khusus ?? '')) ?: '-';
                 return $j === $jenis;
