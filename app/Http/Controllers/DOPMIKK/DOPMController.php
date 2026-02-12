@@ -62,8 +62,8 @@ class DOPMController extends Controller
             ->values()
             ->all();
 
-        // Data harian: hitung unik per kode_ikk (distinct)
-        $totalDopmHarian = (int) Dopm::where($scopeDate)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->selectRaw('count(distinct kode_ikk) as cnt')->value('cnt');
+        // Data harian: hitung unik per kode_ikk (distinct) per tanggal (+ optional site)
+        $totalDopmHarian = (int) Dopm::where($scopeDate)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->selectRaw('COUNT(DISTINCT kode_ikk) as cnt')->value('cnt');
 
         // DOPM dengan status Cancel di hari ini
         $totalDopmCancelHarian = Dopm::where($scopeDate)
@@ -71,14 +71,14 @@ class DOPMController extends Controller
             ->when($filterSite !== '', $scopeSite)
             ->count();
 
-        // Total DOPM minggu ini (Senin–Minggu), tanpa status Cancel, distinct kode_ikk
+        // Total DOPM minggu ini (Senin–Minggu), tanpa status Cancel
         $mingguStart = Carbon::parse($filterDate)->startOfWeek(Carbon::MONDAY);
         $mingguEnd = $mingguStart->copy()->addDays(6)->endOfDay();
         $scopeWeek = function ($q) use ($mingguStart, $mingguEnd) {
             $q->whereBetween('tanggal_dop', [$mingguStart, $mingguEnd])
                 ->orWhereBetween('timestamp', [$mingguStart, $mingguEnd]);
         };
-        $totalDopmMingguIni = (int) Dopm::where($scopeWeek)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->selectRaw('count(distinct kode_ikk) as cnt')->value('cnt');
+        $totalDopmMingguIni = Dopm::where($scopeWeek)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->count();
 
         // IPK-IKK dan OKK harian: setelah dapat DOPM list, hitung dari kode_ikk yang ada di list (agar konsisten dengan filter site)
         $totalIkkHarian = IpkIkk::whereDate('ts', $filterDate)->count();
@@ -243,9 +243,8 @@ class DOPMController extends Controller
 
         // Data IKK (work permit) dari ClickHouse untuk tampilan harian
         $ikkClickhouseListHarian = [];
-        // Total work permit harian (APPROVED) dari ClickHouse, distinct by code (kode_ikk)
-        $totalWorkPermitApprovedHarian = 0;
-        $approvedCodesSeen = [];
+        // Total work permit harian (APPROVED) unik berdasarkan code, mengikuti filter tanggal & site
+        $approvedCodes = [];
         try {
             if (class_exists(\App\Services\ClickHouseService::class)) {
                 /** @var \App\Services\ClickHouseService $clickHouse */
@@ -364,12 +363,11 @@ class DOPMController extends Controller
                                 continue;
                             }
 
-                            // Hitung unik by code untuk status APPROVED
+                            // Kumpulkan code yang APPROVED untuk hitung unik (distinct by code)
                             if ($statusUpper === 'APPROVED') {
                                 $code = $row['code'] ?? null;
-                                if ($code !== null && $code !== '' && !isset($approvedCodesSeen[$code])) {
-                                    $approvedCodesSeen[$code] = true;
-                                    $totalWorkPermitApprovedHarian++;
+                                if ($code !== null && $code !== '') {
+                                    $approvedCodes[] = is_object($code) ? (string) $code : $code;
                                 }
                             }
 
@@ -410,6 +408,19 @@ class DOPMController extends Controller
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::debug('Dashboard IKK ClickHouse skip: ' . $e->getMessage());
         }
+
+        // Total IKK (work permit APPROVED) unik berdasarkan code
+        $totalWorkPermitApprovedHarian = count(array_unique(array_filter($approvedCodes ?? [])));
+
+        // Daftar IKK unik berdasarkan code (satu baris per code)
+        $byCode = [];
+        foreach ($ikkClickhouseListHarian as $ikk) {
+            $c = $ikk->code ?? '';
+            if ($c !== '' && $c !== null && !isset($byCode[$c])) {
+                $byCode[$c] = $ikk;
+            }
+        }
+        $ikkClickhouseListHarian = array_values($byCode);
 
         // Hitung status_matriks untuk IKK ClickHouse berdasarkan matriks lengkap (IPK + OKK + OAK)
         if (!empty($ikkClickhouseListHarian)) {
