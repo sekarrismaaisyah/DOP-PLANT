@@ -62,8 +62,8 @@ class DOPMController extends Controller
             ->values()
             ->all();
 
-        // Data harian: hitung per tanggal (+ optional site)
-        $totalDopmHarian = Dopm::where($scopeDate)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->count();
+        // Data harian: hitung unik per kode_ikk (distinct)
+        $totalDopmHarian = (int) Dopm::where($scopeDate)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->selectRaw('count(distinct kode_ikk) as cnt')->value('cnt');
 
         // DOPM dengan status Cancel di hari ini
         $totalDopmCancelHarian = Dopm::where($scopeDate)
@@ -71,14 +71,14 @@ class DOPMController extends Controller
             ->when($filterSite !== '', $scopeSite)
             ->count();
 
-        // Total DOPM minggu ini (Senin–Minggu), tanpa status Cancel
+        // Total DOPM minggu ini (Senin–Minggu), tanpa status Cancel, distinct kode_ikk
         $mingguStart = Carbon::parse($filterDate)->startOfWeek(Carbon::MONDAY);
         $mingguEnd = $mingguStart->copy()->addDays(6)->endOfDay();
         $scopeWeek = function ($q) use ($mingguStart, $mingguEnd) {
             $q->whereBetween('tanggal_dop', [$mingguStart, $mingguEnd])
                 ->orWhereBetween('timestamp', [$mingguStart, $mingguEnd]);
         };
-        $totalDopmMingguIni = Dopm::where($scopeWeek)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->count();
+        $totalDopmMingguIni = (int) Dopm::where($scopeWeek)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->selectRaw('count(distinct kode_ikk) as cnt')->value('cnt');
 
         // IPK-IKK dan OKK harian: setelah dapat DOPM list, hitung dari kode_ikk yang ada di list (agar konsisten dengan filter site)
         $totalIkkHarian = IpkIkk::whereDate('ts', $filterDate)->count();
@@ -243,8 +243,9 @@ class DOPMController extends Controller
 
         // Data IKK (work permit) dari ClickHouse untuk tampilan harian
         $ikkClickhouseListHarian = [];
-        // Total work permit harian (APPROVED) dari ClickHouse, mengikuti filter tanggal & site
+        // Total work permit harian (APPROVED) dari ClickHouse, distinct by code (kode_ikk)
         $totalWorkPermitApprovedHarian = 0;
+        $approvedCodesSeen = [];
         try {
             if (class_exists(\App\Services\ClickHouseService::class)) {
                 /** @var \App\Services\ClickHouseService $clickHouse */
@@ -363,9 +364,13 @@ class DOPMController extends Controller
                                 continue;
                             }
 
-                            // Hitung hanya work permit dengan status APPROVED
+                            // Hitung unik by code untuk status APPROVED
                             if ($statusUpper === 'APPROVED') {
-                                $totalWorkPermitApprovedHarian++;
+                                $code = $row['code'] ?? null;
+                                if ($code !== null && $code !== '' && !isset($approvedCodesSeen[$code])) {
+                                    $approvedCodesSeen[$code] = true;
+                                    $totalWorkPermitApprovedHarian++;
+                                }
                             }
 
                             // Label status untuk UI
@@ -1334,7 +1339,7 @@ class DOPMController extends Controller
      */
     private static function normalizeOakRow(array $row): array
     {
-        $keys = ['activity', 'sub_activity', 'submit_date', 'submit_by', 'kode_sid_pelapor', 'kode_sid_team', 'conclusion', 'site'];
+        $keys = ['activity', 'sub_activity', 'submit_date', 'submit_by', 'kode_sid_pelapor', 'location', 'detail_location', 'conclusion', 'site'];
         $out = [];
         foreach ($keys as $key) {
             if ($key === 'submit_date') {

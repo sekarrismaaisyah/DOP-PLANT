@@ -1511,7 +1511,7 @@
                       <i class="material-icons-outlined">assignment</i>
                     </a>
                     <h3 class="mb-0">{{ number_format($totalWorkPermitApprovedHarian ?? 0) }}</h3>
-                    <p class="mb-0">DOPM</p>
+                    <p class="mb-0">IKK</p>
                      <small class="text-muted">Data Hari ini</small>
                   </div>
                   <div class="vr"></div>
@@ -1557,7 +1557,7 @@
                       <div class="card mb-0 rounded-4 w-100">
                        <div class="card-body">
                          <div class=" mb-2">
-                           <h5 class="mb-0 fw-bold">Dopm Cancel</h5>
+                           <h5 class="mb-0 fw-bold">IKK Cancel</h5>
                            <p class="mb-0 text-muted small">Total DOPM Cancel Hari ini</p>
                          </div>
                          <div class="text-center py-3 mt-4">
@@ -2646,7 +2646,7 @@
                                 <p class="small text-muted mb-2">Tabel di bawah menampilkan data Observasi Area Kerja sesuai activity dan SID.</p>
                                 <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                                     <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableOak">
-                                        <thead class="table-light"><tr><th>Activity</th><th>Sub Activity</th><th>Submit Date</th><th>Submit By</th><th>SID Pelapor</th><th>SID Team</th><th>Conclusion</th><th>Site</th></tr></thead>
+                                        <thead class="table-light"><tr><th>Activity</th><th>Sub Activity</th><th>Submit Date</th><th>Submit By</th><th>SID Pelapor</th><th>Lokasi</th><th>Detail Lokasi</th><th>Conclusion</th><th>Site</th></tr></thead>
                                         <tbody></tbody>
                                     </table>
                                 </div>
@@ -2785,7 +2785,7 @@
                         <div id="intervensiOakTableWrap" class="d-none">
                             <div class="table-responsive">
                                 <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableOak">
-                                    <thead class="table-light"><tr><th>Activity</th><th>Sub Activity</th><th>Submit Date</th><th>Submit By</th><th>SID Pelapor</th><th>SID Team</th><th>Conclusion</th><th>Site</th></tr></thead>
+                                    <thead class="table-light"><tr><th>Activity</th><th>Sub Activity</th><th>Submit Date</th><th>Submit By</th><th>SID Pelapor</th><th>Lokasi</th><th>Detail Lokasi</th><th>Conclusion</th><th>Site</th></tr></thead>
                                     <tbody></tbody>
                                 </table>
                             </div>
@@ -3082,7 +3082,7 @@
                             document.getElementById('intervensiOakTableWrap').classList.remove('d-none');
                             var tbody = document.querySelector('#intervensiTableOak tbody');
                             if (tbody) { tbody.innerHTML = ''; oak.forEach(function(r) {
-                                tbody.appendChild(tr([safeStr(r.activity), safeStr(r.sub_activity), safeStr(r.submit_date), safeStr(r.submit_by), safeStr(r.kode_sid_pelapor), safeStr(r.kode_sid_team), safeStr(r.conclusion, 50), safeStr(r.site)]));
+                                tbody.appendChild(tr([safeStr(r.activity), safeStr(r.sub_activity), safeStr(r.submit_date), safeStr(r.submit_by), safeStr(r.kode_sid_pelapor), safeStr(r.location), safeStr(r.detail_location), safeStr(r.conclusion, 50), safeStr(r.site)]));
                             }); }
                         }
                     })
@@ -3329,7 +3329,7 @@
                         oak.forEach(function(r) {
                             tbodyOak.appendChild(tr([
                                 safeStr(r.activity), safeStr(r.sub_activity), safeStr(r.submit_date), safeStr(r.submit_by),
-                                safeStr(r.kode_sid_pelapor), safeStr(r.kode_sid_team), safeStr(r.conclusion, 50), safeStr(r.site)
+                                safeStr(r.kode_sid_pelapor), safeStr(r.location), safeStr(r.detail_location), safeStr(r.conclusion, 50), safeStr(r.site)
                             ]));
                         });
                     }
