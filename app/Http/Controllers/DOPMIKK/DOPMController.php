@@ -570,28 +570,26 @@ class DOPMController extends Controller
                         $locationDetailEscaped = addslashes($locationDetailName);
 
                         // OAK di tanggal filter (submit_date) yang location & detail_location match work permit (case-insensitive + trim).
-                        // GROUP BY id agar tidak duplikat per id; argMax memilih nilai dari baris dengan submit_date terbaru.
                         // Pakai alias submit_date_str agar tidak bentrok dengan kolom submit_date (DateTime) dari view (AMBIGUOUS_COLUMN_NAME).
                         $sqlOak = "
                             SELECT 
                                 toString(id) as id,
-                                toString(argMax(activity, toDateTime(submit_date))) as activity,
-                                toString(argMax(sub_activity, toDateTime(submit_date))) as sub_activity,
-                                toString(argMax(submit_date, toDateTime(submit_date))) as submit_date_str,
-                                toString(argMax(submit_by, toDateTime(submit_date))) as submit_by,
-                                toString(argMax(kode_sid_pelapor, toDateTime(submit_date))) as kode_sid_pelapor,
-                                toString(argMax(kode_sid_team, toDateTime(submit_date))) as kode_sid_team,
-                                toString(argMax(conclusion, toDateTime(submit_date))) as conclusion,
-                                toString(argMax(site, toDateTime(submit_date))) as site,
-                                toString(argMax(location, toDateTime(submit_date))) as location,
-                                toString(argMax(detail_location, toDateTime(submit_date))) as detail_location
+                                toString(activity) as activity,
+                                toString(sub_activity) as sub_activity,
+                                toString(submit_date) as submit_date_str,
+                                toString(submit_by) as submit_by,
+                                toString(kode_sid_pelapor) as kode_sid_pelapor,
+                                toString(kode_sid_team) as kode_sid_team,
+                                toString(conclusion) as conclusion,
+                                toString(site) as site,
+                                toString(location) as location,
+                                toString(detail_location) as detail_location
                             FROM hse_automation.aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) = '{$filterDate}'
                               AND lower(trim(toString(tipe))) = 'observer'
                               AND lower(trim(toString(location))) = lower('{$locationNameEscaped}')
                               AND lower(trim(toString(detail_location))) = lower('{$locationDetailEscaped}')
-                            GROUP BY id
-                            ORDER BY max(toDateTime(submit_date)) DESC
+                            ORDER BY toDateTime(submit_date) DESC
                             LIMIT 100
                         ";
                         \Illuminate\Support\Facades\Log::debug('OAK modal: running OAK query', [
@@ -635,21 +633,6 @@ class DOPMController extends Controller
                 if ($response->successful()) {
                     $body = $response->json();
                     $oak = $body['oak'] ?? [];
-                    // Deduplikasi OAK by id jika dari full-maps API (ambil per id unik)
-                    if (!empty($oak) && is_array($oak)) {
-                        $seen = [];
-                        $oak = array_values(array_filter($oak, function ($r) use (&$seen) {
-                            $id = isset($r['id']) ? $r['id'] : (isset($r['ID']) ? $r['ID'] : null);
-                            if ($id === null) {
-                                return true;
-                            }
-                            if (isset($seen[$id])) {
-                                return false;
-                            }
-                            $seen[$id] = true;
-                            return true;
-                        }));
-                    }
                 }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::debug('Dashboard modal OAK fetch: ' . $e->getMessage());
