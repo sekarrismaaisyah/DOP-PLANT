@@ -369,15 +369,14 @@ class DOPMController extends Controller
                             }
 
                             // Sembunyikan jika end_date sudah lewat dari jam sekarang (meskipun status Berlaku/Approved)
-                            $endDateRaw = $row['end_date'] ?? null;
+                            $endDateRaw = self::getClickHouseRowValue($row, 'end_date');
                             if ($endDateRaw !== null && $endDateRaw !== '') {
-                                try {
-                                    $endDate = \Carbon\Carbon::parse($endDateRaw);
-                                    if ($endDate->lt(\Carbon\Carbon::now())) {
-                                        continue; // end_date sudah lewat → jangan tampilkan
-                                    }
-                                } catch (\Throwable $e) {
-                                    // Jika parse gagal, tetap tampilkan (jangan drop row)
+                                $endDate = self::parseEndDate($endDateRaw);
+                                if ($endDate !== null && $endDate->lt(\Carbon\Carbon::now())) {
+                                    continue; // end_date sudah lewat → jangan tampilkan
+                                }
+                                if ($endDate === null) {
+                                    continue; // tidak bisa parse end_date → sembunyikan agar konsisten
                                 }
                             }
 
@@ -1346,6 +1345,27 @@ class DOPMController extends Controller
 
         // Default: Kuning untuk kondisi lainnya
         return 'Kuning';
+    }
+
+    /**
+     * Parse end_date dari ClickHouse (string, timestamp, atau object) ke Carbon; null jika gagal.
+     */
+    private static function parseEndDate(mixed $value): ?\Carbon\Carbon
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        try {
+            if (is_numeric($value)) {
+                return \Carbon\Carbon::createFromTimestamp((int) $value);
+            }
+            if ($value instanceof \DateTimeInterface) {
+                return \Carbon\Carbon::instance($value);
+            }
+            return \Carbon\Carbon::parse($value);
+        } catch (\Throwable $e) {
+            return null;
+        }
     }
 
     /**
