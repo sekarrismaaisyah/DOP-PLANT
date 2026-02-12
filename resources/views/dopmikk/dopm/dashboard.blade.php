@@ -1448,7 +1448,7 @@
                            name="date" 
                            id="filterDate" 
                            class="form-control rounded-3" 
-                           value="{{ $filterDate ?? now()->toDateString() }}">
+                           value="{{ $filterDate ?? now()->toDateString() }}" readonly>
                 </div>
                 <div class="col-12 col-md">
                     <label for="filterSite" class="form-label mb-2 small fw-semibold text-muted">
@@ -1457,7 +1457,10 @@
                     </label>
                     <select name="site" id="filterSite" class="form-select rounded-3">
                         <option value="" {{ ($filterSite ?? '') === '' ? 'selected' : '' }}>Semua Site</option>
-                        @foreach($siteList ?? [] as $site)
+                        @php
+                            $staticSites = ['BMO 1', 'BMO 2', 'GMO', 'LMO', 'SMO', 'BMO 3'];
+                        @endphp
+                        @foreach($staticSites as $site)
                             <option value="{{ $site }}" {{ ($filterSite ?? '') === $site ? 'selected' : '' }}>{{ $site }}</option>
                         @endforeach
                     </select>
@@ -1617,24 +1620,15 @@
                <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between mb-3">
                   <div class="">
-                    <h5 class="mb-0 fw-bold">IKK vs IPK-IKK vs OKK</h5>
+                    <h5 class="mb-0 fw-bold">Sumarry Matriks Evaluasi</h5>
                   </div>
                  </div>
                   <div id="chart4"></div>
-                  <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-center">
-                    <span class="small text-muted ">Per jenis ijin kerja khusus (tanggal terpilih, data IKK dari ClickHouse):</span>
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:#0d6efd;"></span>
-                      <span class="small">IKK</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:#02c27a;"></span>
-                      <span class="small">IPK-IKK</span>
-                    </div>
-                    <div class="d-flex align-items-center gap-2">
-                      <span class="rounded-circle d-inline-block" style="width:12px;height:12px;background:#6f42c1;"></span>
-                      <span class="small">OKK</span>
-                    </div>
+                  <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-start">
+                    <span class="small text-muted">
+                      Sumbu X = jenis ijin kerja khusus, tinggi bar = jumlah izin kerja (IKK) per jenis.
+                      Warna bar mengikuti status matriks agregat per jenis (Merah, Kuning, Hijau).
+                    </span>
                   </div>
                </div>
             </div>  
@@ -2820,18 +2814,37 @@
 <script src="{{ URL::asset('build/plugins/peity/jquery.peity.min.js') }}"></script>
 <script>
 (function() {
-  // Chart IKK vs IPK-IKK vs OKK — data IKK dari ClickHouse (work permit), IPK/OKK dari DB per kode IKK
+  // Chart jumlah izin kerja per jenis, warna bar mengikuti status matriks (Merah/Kuning/Hijau)
   var categories = @json($chartJenisLabels ?? []);
-  var ikkData = @json($chartIkkPerJenis ?? []);
-  var ipkData = @json($chartIpkPerJenis ?? []);
-  var okkData = @json($chartOkkPerJenis ?? []);
+  var categoriesFull = @json($chartJenisLabelsFull ?? []);
+  var izinData = @json($chartIzinKerjaPerJenis ?? []);
+  var matriksPerJenis = @json($chartMatriksPerJenis ?? []);
   var len = categories.length;
-  if (ikkData.length !== len) ikkData = ikkData.slice(0, len);
-  if (ipkData.length !== len) ipkData = ipkData.slice(0, len);
-  if (okkData.length !== len) okkData = okkData.slice(0, len);
-  while (ikkData.length < len) ikkData.push(0);
-  while (ipkData.length < len) ipkData.push(0);
-  while (okkData.length < len) okkData.push(0);
+
+  if (izinData.length !== len) izinData = izinData.slice(0, len);
+  while (izinData.length < len) izinData.push(0);
+  if (matriksPerJenis.length !== len) matriksPerJenis = matriksPerJenis.slice(0, len);
+  while (matriksPerJenis.length < len) matriksPerJenis.push('Merah');
+
+  var matriksColors = {
+    'Hijau': '#02c27a',
+    'Kuning': '#ffc107',
+    'Merah': '#dc3545'
+  };
+
+  // Gunakan data point objek dengan fillColor per bar & label lengkap untuk tooltip
+  var seriesData = izinData.map(function(value, idx) {
+    var status = matriksPerJenis[idx] || 'Merah';
+    var color = matriksColors[status] || '#dc3545';
+    var fullLabel = categoriesFull[idx] || categories[idx] || '';
+    return {
+      x: categories[idx] || '',
+      y: value,
+      fillColor: color,
+      fullLabel: fullLabel
+    };
+  });
+
   setTimeout(function() {
     var el = document.querySelector('#chart4');
     if (!el || typeof ApexCharts === 'undefined') return;
@@ -2839,20 +2852,27 @@
     el.innerHTML = '';
     new ApexCharts(el, {
       chart: { id: 'chart4', height: 235, type: 'bar', toolbar: { show: false }, fontFamily: 'inherit' },
-      plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4 } },
+      plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4, distributed: true } },
       dataLabels: { enabled: false },
       stroke: { show: true, width: 2, colors: ['transparent'] },
       series: [
-        { name: 'IKK', data: ikkData },
-        { name: 'IPK-IKK', data: ipkData },
-        { name: 'OKK', data: okkData }
+        { name: 'Jumlah Izin Kerja', data: seriesData }
       ],
-      xaxis: { categories: categories, labels: { style: { colors: '#a1acb8' } } },
+      xaxis: { labels: { style: { colors: '#a1acb8' } } },
       yaxis: { labels: { style: { colors: '#a1acb8' } } },
-      colors: ['#0d6efd', '#02c27a', '#6f42c1'],
       grid: { borderColor: 'rgba(0,0,0,0.05)', strokeDashArray: 4 },
-      legend: { show: true, position: 'top', horizontalAlign: 'right' },
-      tooltip: { y: { formatter: function(v) { return v; } } }
+      legend: { show: false },
+      tooltip: {
+        y: {
+          formatter: function(v, opts) {
+            var idx = opts.dataPointIndex;
+            var status = matriksPerJenis[idx] || '-';
+            var point = opts.w.config.series[opts.seriesIndex].data[idx] || {};
+            var fullLabel = point.fullLabel || point.x || '';
+            return fullLabel + ': ' + v + ' izin kerja (' + status + ')';
+          }
+        }
+      }
     }).render();
   }, 300);
 })();

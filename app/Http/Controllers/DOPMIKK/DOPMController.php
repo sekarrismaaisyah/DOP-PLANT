@@ -412,8 +412,20 @@ class DOPMController extends Controller
         $ikkClickhouseListHarian = array_values($byCode);
 
         // Hitung status_matriks untuk IKK ClickHouse berdasarkan matriks lengkap (IPK + OKK + OAK)
+        // sekaligus siapkan data chart jumlah izin kerja per status matriks (Hijau/Kuning/Merah)
+        $chartMatriksLabels = ['Hijau', 'Kuning', 'Merah'];
+        $chartIzinKerjaPerMatriks = [0, 0, 0];
+
         if (!empty($ikkClickhouseListHarian)) {
+            // Map nama status ke index pada array chartIzinKerjaPerMatriks
+            $matriksIndex = [
+                'Hijau' => 0,
+                'Kuning' => 1,
+                'Merah' => 2,
+            ];
+
             // Override status_matriks di setiap item IKK ClickHouse menggunakan matriks lengkap
+            // lalu hitung total work permit per status matriks
             foreach ($ikkClickhouseListHarian as $ikk) {
                 $code = $ikk->code ?? null;
                 $locationName = $ikk->location_name ?? null;
@@ -429,6 +441,12 @@ class DOPMController extends Controller
                     $ikk->nama_layer_3 ?? null,
                     $ikk->nama_layer_4 ?? null
                 );
+
+                $status = $ikk->status_matriks ?? 'Merah';
+                $status = in_array($status, ['Hijau', 'Kuning', 'Merah'], true) ? $status : 'Merah';
+
+                $idx = $matriksIndex[$status];
+                $chartIzinKerjaPerMatriks[$idx] = ($chartIzinKerjaPerMatriks[$idx] ?? 0) + 1;
             }
         }
 
@@ -470,6 +488,9 @@ class DOPMController extends Controller
         $chartIkkPerJenis = [];
         $chartIpkPerJenis = [];
         $chartOkkPerJenis = [];
+        $chartIzinKerjaPerJenis = [];
+        $chartMatriksPerJenis = [];
+        $chartJenisLabelsFull = [];
         $jenisFromIkk = [];
         foreach ($ikkClickhouseListHarian as $ikk) {
             $j = trim((string) ($ikk->jenis_ijin_kerja_khusus ?? '')) ?: '-';
@@ -481,11 +502,40 @@ class DOPMController extends Controller
         });
         foreach ($chartJenisKeysFromIkk as $jenis) {
             $chartJenisLabels[] = self::singkatJenisIjin($jenis);
+            $chartJenisLabelsFull[] = $jenis;
             $ikkPerJenis = array_filter($ikkClickhouseListHarian, function ($ikk) use ($jenis) {
                 $j = trim((string) ($ikk->jenis_ijin_kerja_khusus ?? '')) ?: '-';
                 return $j === $jenis;
             });
-            $chartIkkPerJenis[] = count($ikkPerJenis);
+
+            // Jumlah izin kerja (IKK) per jenis
+            $izinCount = count($ikkPerJenis);
+            $chartIkkPerJenis[] = $izinCount;
+            $chartIzinKerjaPerJenis[] = $izinCount;
+
+            // Status matriks agregat per jenis (pakai "terburuk": Merah > Kuning > Hijau)
+            $statusScore = -1;
+            foreach ($ikkPerJenis as $ikkRow) {
+                $st = $ikkRow->status_matriks ?? 'Merah';
+                if ($st === 'Merah') {
+                    $score = 2;
+                } elseif ($st === 'Kuning') {
+                    $score = 1;
+                } else {
+                    $score = 0; // Hijau atau lainnya dianggap Hijau
+                }
+                if ($score > $statusScore) {
+                    $statusScore = $score;
+                }
+            }
+            if ($statusScore <= 0) {
+                $chartMatriksPerJenis[] = 'Hijau';
+            } elseif ($statusScore === 1) {
+                $chartMatriksPerJenis[] = 'Kuning';
+            } else {
+                $chartMatriksPerJenis[] = 'Merah';
+            }
+
             $codesJenis = array_values(array_unique(array_filter(array_map(function ($ikk) {
                 $c = $ikk->code ?? '';
                 return $c !== '' && $c !== null ? $c : null;
@@ -562,10 +612,15 @@ class DOPMController extends Controller
             'summaryBySite' => $summaryBySite,
             'summaryJenisKeys' => $summaryJenisKeys,
             'chartJenisLabels' => $chartJenisLabels,
+            'chartJenisLabelsFull' => $chartJenisLabelsFull,
             'chartDopmPerJenis' => $chartDopmPerJenis,
             'chartIkkPerJenis' => $chartIkkPerJenis,
             'chartIpkPerJenis' => $chartIpkPerJenis,
             'chartOkkPerJenis' => $chartOkkPerJenis,
+            'chartIzinKerjaPerJenis' => $chartIzinKerjaPerJenis,
+            'chartMatriksPerJenis' => $chartMatriksPerJenis,
+            'chartMatriksLabels' => $chartMatriksLabels,
+            'chartIzinKerjaPerMatriks' => $chartIzinKerjaPerMatriks,
             'ikkClickhouseListHarian' => $ikkClickhouseListHarian,
         ]);
     }
