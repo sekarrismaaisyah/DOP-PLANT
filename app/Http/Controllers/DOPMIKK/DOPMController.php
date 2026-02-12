@@ -500,6 +500,13 @@ class DOPMController extends Controller
         $locationName = trim((string) $locationName);
         $locationDetailName = trim((string) $locationDetailName);
 
+        \Illuminate\Support\Facades\Log::debug('OAK modal: request params', [
+            'kode_ikk' => $kodeIkk,
+            'location_name' => $locationName,
+            'location_detail_name' => $locationDetailName,
+            'tanggal_dop' => $request->input('tanggal_dop', ''),
+        ]);
+
         // Jika lokasi kosong, coba ambil dari ClickHouse work permit by code + tanggal
         if (($locationName === '' || $locationDetailName === '') && $kodeIkk !== '') {
             $tanggalDop = $request->input('tanggal_dop', '');
@@ -522,10 +529,18 @@ class DOPMController extends Controller
                             LIMIT 1
                         ";
                         $wpLoc = $clickHouse->query($sqlWp);
+                        \Illuminate\Support\Facades\Log::debug('OAK modal: fallback WP query result', [
+                            'wp_rows_count' => is_array($wpLoc) ? count($wpLoc) : 0,
+                            'first_row_keys' => !empty($wpLoc[0]) ? array_keys($wpLoc[0]) : [],
+                        ]);
                         if (!empty($wpLoc[0])) {
                             $row = $wpLoc[0];
                             $locationName = trim((string) self::getClickHouseRowValue($row, 'location_name'));
                             $locationDetailName = trim((string) self::getClickHouseRowValue($row, 'location_detail_name'));
+                            \Illuminate\Support\Facades\Log::debug('OAK modal: after fallback', [
+                                'location_name' => $locationName,
+                                'location_detail_name' => $locationDetailName,
+                            ]);
                         }
                     }
                 }
@@ -575,13 +590,28 @@ class DOPMController extends Controller
                             ORDER BY toDateTime(submit_date) DESC
                             LIMIT 100
                         ";
+                        \Illuminate\Support\Facades\Log::debug('OAK modal: running OAK query', [
+                            'filter_date' => $filterDate,
+                            'location_name_escaped' => $locationNameEscaped,
+                            'location_detail_escaped' => $locationDetailEscaped,
+                        ]);
                         $oakResult = $clickHouse->query($sqlOak);
                         $oak = is_array($oakResult) ? array_map([self::class, 'normalizeOakRow'], $oakResult) : [];
+                        \Illuminate\Support\Facades\Log::debug('OAK modal: OAK result', [
+                            'raw_count' => is_array($oakResult) ? count($oakResult) : 0,
+                            'oak_count' => count($oak),
+                            'first_raw_keys' => !empty($oakResult[0]) ? array_keys($oakResult[0]) : [],
+                        ]);
                     }
                 }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::debug('Dashboard modal OAK by location fetch: ' . $e->getMessage());
             }
+        } else {
+            \Illuminate\Support\Facades\Log::debug('OAK modal: skip OAK query (location empty)', [
+                'location_name_empty' => $locationName === '',
+                'location_detail_empty' => $locationDetailName === '',
+            ]);
         }
 
         // Jika OAK belum diambil berdasarkan lokasi, coba ambil dari full-maps API (berdasarkan SID)

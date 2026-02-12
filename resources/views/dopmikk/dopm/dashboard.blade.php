@@ -3255,6 +3255,8 @@
             location_detail_name: data.location_detail_name || '',
             tanggal_dop: data.tanggal_dop || ''
         });
+        console.log('[OAK] Modal request params (data-dopm):', { location_name: data.location_name, location_detail_name: data.location_detail_name, tanggal_dop: data.tanggal_dop, kode_ikk: data.kode_ikk });
+        console.log('[OAK] Modal API URL params:', params.toString());
         function doFetch() {
         fetch(modalApiUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
             .then(function(r) {
@@ -3268,6 +3270,8 @@
                 var ipk = res.ipk_ikk || [];
                 var okk = res.okk || [];
                 var oak = res.oak || [];
+                console.log('[OAK] API response:', { oakCount: oak.length, oak: oak, fullResKeys: res ? Object.keys(res) : [] });
+                if (oak.length > 0 && oak[0]) console.log('[OAK] First OAK row keys:', Object.keys(oak[0]), 'sample:', oak[0]);
                 var ctx = res.dopm_context || {};
                 var layerNames = [ctx.nama_layer_2, ctx.nama_layer_3, ctx.nama_layer_4].filter(Boolean).join(' / ') || '—';
                 document.getElementById('oakLayerNames').textContent = layerNames;
