@@ -1662,17 +1662,18 @@
                     @endphp
                     @forelse($ikkMerah as $ikk)
                      @php
+                        // Data dari IKK/work permit (bukan DOPM)
                         $dopmJson = [
                             'kode_ikk' => $ikk->code ?? null,
                             'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
-                            'sid_layer_2' => null,
-                            'sid_layer_3' => null,
-                            'sid_layer_4' => null,
+                            'sid_layer_2' => $ikk->sid_layer_2 ?? null,
+                            'sid_layer_3' => $ikk->sid_layer_3 ?? null,
+                            'sid_layer_4' => $ikk->sid_layer_4 ?? null,
                             'nama_layer_2' => $ikk->nama_layer_2 ?? null,
                             'nama_layer_3' => $ikk->nama_layer_3 ?? null,
                             'nama_layer_4' => $ikk->nama_layer_4 ?? null,
                             'nama_layer_1' => $ikk->nama_layer_1 ?? null,
-                            'sid_layer_1' => null,
+                            'sid_layer_1' => $ikk->sid_layer_1 ?? null,
                             'id_dop' => $ikk->code ?? null,
                             'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
                             'site_ijin_kerja_khusus' => $ikk->site ?? null,
@@ -1682,6 +1683,7 @@
                             'status' => $ikk->status ?? null,
                             'location_name' => $ikk->location_name ?? null,
                             'location_detail_name' => $ikk->location_detail_name ?? null,
+                            'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
                         ];
                      @endphp
                      <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
@@ -1739,17 +1741,18 @@
                   @endphp
                   @forelse($ikkKuning as $ikk)
                   @php
+                    // Data dari IKK/work permit (bukan DOPM)
                     $dopmJsonK = [
                         'kode_ikk' => $ikk->code ?? null,
                         'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
-                        'sid_layer_2' => null,
-                        'sid_layer_3' => null,
-                        'sid_layer_4' => null,
+                        'sid_layer_2' => $ikk->sid_layer_2 ?? null,
+                        'sid_layer_3' => $ikk->sid_layer_3 ?? null,
+                        'sid_layer_4' => $ikk->sid_layer_4 ?? null,
                         'nama_layer_2' => $ikk->nama_layer_2 ?? null,
                         'nama_layer_3' => $ikk->nama_layer_3 ?? null,
                         'nama_layer_4' => $ikk->nama_layer_4 ?? null,
                         'nama_layer_1' => $ikk->nama_layer_1 ?? null,
-                        'sid_layer_1' => null,
+                        'sid_layer_1' => $ikk->sid_layer_1 ?? null,
                         'id_dop' => $ikk->code ?? null,
                         'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
                         'site_ijin_kerja_khusus' => $ikk->site ?? null,
@@ -1759,6 +1762,7 @@
                         'status' => $ikk->status ?? null,
                         'location_name' => $ikk->location_name ?? null,
                         'location_detail_name' => $ikk->location_detail_name ?? null,
+                        'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
                     ];
                   @endphp
                   <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
@@ -1816,17 +1820,18 @@
                   @endphp
                   @forelse($ikkHijau as $ikk)
                   @php
+                    // Data dari IKK/work permit (bukan DOPM)
                     $dopmJsonH = [
                         'kode_ikk' => $ikk->code ?? null,
                         'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
-                        'sid_layer_2' => null,
-                        'sid_layer_3' => null,
-                        'sid_layer_4' => null,
+                        'sid_layer_2' => $ikk->sid_layer_2 ?? null,
+                        'sid_layer_3' => $ikk->sid_layer_3 ?? null,
+                        'sid_layer_4' => $ikk->sid_layer_4 ?? null,
                         'nama_layer_2' => $ikk->nama_layer_2 ?? null,
                         'nama_layer_3' => $ikk->nama_layer_3 ?? null,
                         'nama_layer_4' => $ikk->nama_layer_4 ?? null,
                         'nama_layer_1' => $ikk->nama_layer_1 ?? null,
-                        'sid_layer_1' => null,
+                        'sid_layer_1' => $ikk->sid_layer_1 ?? null,
                         'id_dop' => $ikk->code ?? null,
                         'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
                         'site_ijin_kerja_khusus' => $ikk->site ?? null,
@@ -1836,6 +1841,7 @@
                         'status' => $ikk->status ?? null,
                         'location_name' => $ikk->location_name ?? null,
                         'location_detail_name' => $ikk->location_detail_name ?? null,
+                        'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
                     ];
                   @endphp
                   <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
@@ -2133,6 +2139,7 @@
                                            <th>Status Matriks</th>
                                            <th>Nama Layer 1</th>
                                            <th>Layer 2 / 3 / 4</th>
+                                           <th class="text-end">Intervensi</th>
                                        </tr>
                                     </thead>
                                     <tbody class="py-2">
@@ -2142,6 +2149,29 @@
                                                 $badgeClassIkk = $matriksIkk === 'Hijau'
                                                     ? 'bg-success'
                                                     : ($matriksIkk === 'Kuning' ? 'bg-warning text-dark' : 'bg-danger');
+                                                // Data modal Intervensi dari IKK/work permit (bukan DOPM)
+                                                $ikkJson = [
+                                                    'kode_ikk' => $ikk->code ?? null,
+                                                    'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
+                                                    'sid_layer_2' => $ikk->sid_layer_2 ?? null,
+                                                    'sid_layer_3' => $ikk->sid_layer_3 ?? null,
+                                                    'sid_layer_4' => $ikk->sid_layer_4 ?? null,
+                                                    'nama_layer_2' => $ikk->nama_layer_2 ?? null,
+                                                    'nama_layer_3' => $ikk->nama_layer_3 ?? null,
+                                                    'nama_layer_4' => $ikk->nama_layer_4 ?? null,
+                                                    'nama_layer_1' => $ikk->nama_layer_1 ?? null,
+                                                    'sid_layer_1' => $ikk->sid_layer_1 ?? null,
+                                                    'id_dop' => $ikk->code ?? null,
+                                                    'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
+                                                    'site_ijin_kerja_khusus' => $ikk->site ?? null,
+                                                    'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
+                                                    'tanggal_dop' => $filterDate ?? null,
+                                                    'timestamp' => null,
+                                                    'status' => $ikk->status ?? null,
+                                                    'location_name' => $ikk->location_name ?? null,
+                                                    'location_detail_name' => $ikk->location_detail_name ?? null,
+                                                    'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
+                                                ];
                                            @endphp
                                            <tr>
                                                <td>{{ $loop->iteration }}</td>
@@ -2166,6 +2196,11 @@
                                                         {{ $ikk->nama_layer_3 ?? '-' }} /
                                                         {{ $ikk->nama_layer_4 ?? '-' }}
                                                     </small>
+                                                </td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-dopm" data-dopm="{{ json_encode($ikkJson) }}" title="Intervensi (IPK-IKK, OKK, OAK) — data dari IKK/Work Permit">
+                                                        <i class="material-icons-outlined" style="font-size: 16px;">campaign</i> Intervensi
+                                                    </button>
                                                 </td>
                                             </tr>
                                         @endforeach
@@ -2708,20 +2743,8 @@
                             </div>
                             <div class="card-body py-3">
                                 <p class="small mb-2"><strong>Nama Layer:</strong> <span id="intervensiLayer1NameDisplay" class="text-dark">—</span></p>
-                                <p class="small text-muted mb-2">Pilih PIC Layer 1 yang akan diintervensi, lalu klik tombol Intervensi.</p>
-                                <div class="row g-2 align-items-center mb-2">
-                                    <div class="col-md-6">
-                                        <select id="intervensiLayer1Select" class="form-select form-select-sm d-none">
-                                            <option value="">Pilih PIC Layer 1...</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <button type="button" id="intervensiLayer1Btn" class="btn btn-sm btn-success w-100 d-none">
-                                            <i class="material-icons-outlined me-1" style="font-size:16px;">send</i> Intervensi by WA (IPK)
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="intervensiLayer1Users" class="d-flex flex-wrap gap-2 d-none"></div>
+                                <p class="small text-muted mb-2">Klik tombol di bawah untuk langsung kirim intervensi via WhatsApp.</p>
+                                <div id="intervensiLayer1Users" class="d-flex flex-wrap gap-2"></div>
                                 <div id="intervensiLayer1Empty" class="text-muted small d-none">Tidak ada user terdaftar untuk Layer 1 ini.</div>
                                 <div id="intervensiLayer1NoName" class="text-muted small d-none">Kolom <strong>SID Layer 1</strong> atau <strong>Nama Layer 1</strong> untuk DOPM ini belum diisi. Silakan edit data DOPM untuk menampilkan daftar PIC dan tombol Intervensi by WA.</div>
                                 <div id="intervensiLayer1Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat daftar PIC Layer 1...</div>
@@ -2749,20 +2772,8 @@
                             </div>
                             <div class="card-body py-3">
                                 <p class="small mb-2"><strong>Nama Layer:</strong> <span id="intervensiOkkLayer1NameDisplay" class="text-dark">—</span></p>
-                                <p class="small text-muted mb-2">Pilih PIC Layer 1 yang akan diintervensi untuk OKK, lalu klik tombol Intervensi.</p>
-                                <div class="row g-2 align-items-center mb-2">
-                                    <div class="col-md-6">
-                                        <select id="intervensiOkkLayer1Select" class="form-select form-select-sm d-none">
-                                            <option value="">Pilih PIC Layer 1...</option>
-                                        </select>
-                                    </div>
-                                    <div class="col-md-3">
-                                        <button type="button" id="intervensiOkkLayer1Btn" class="btn btn-sm btn-success w-100 d-none">
-                                            <i class="material-icons-outlined me-1" style="font-size:16px;">send</i> Intervensi by WA (OKK)
-                                        </button>
-                                    </div>
-                                </div>
-                                <div id="intervensiOkkLayer1Users" class="d-flex flex-wrap gap-2 d-none"></div>
+                                <p class="small text-muted mb-2">Klik tombol di bawah untuk langsung kirim intervensi via WhatsApp.</p>
+                                <div id="intervensiOkkLayer1Users" class="d-flex flex-wrap gap-2"></div>
                                 <div id="intervensiOkkLayer1Empty" class="text-muted small d-none">Tidak ada user terdaftar untuk Layer 1 ini.</div>
                                 <div id="intervensiOkkLayer1NoName" class="text-muted small d-none">Kolom <strong>SID Layer 1</strong> atau <strong>Nama Layer 1</strong> untuk DOPM ini belum diisi.</div>
                                 <div id="intervensiOkkLayer1Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat daftar PIC Layer 1...</div>
@@ -2990,6 +3001,7 @@
                 infoFiltered: '(filter dari _MAX_ data)',
                 paginate: { first: 'Awal', last: 'Akhir', next: 'Selanjutnya', previous: 'Sebelumnya' }
             },
+            columnDefs: [{ targets: [9, 10, 11], orderable: false }],
             dom: '<"row mb-2"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
         });
     }
@@ -3109,24 +3121,18 @@
             var layer1EmptyEl = document.getElementById('intervensiLayer1Empty');
             var layer1NoNameEl = document.getElementById('intervensiLayer1NoName');
             var layer1LoadingEl = document.getElementById('intervensiLayer1Loading');
-            var layer1SelectEl = document.getElementById('intervensiLayer1Select');
-            var layer1BtnEl = document.getElementById('intervensiLayer1Btn');
             var okkLayer1Wrap = document.getElementById('intervensiOkkLayer1Wrap');
             var okkLayer1NameDisplay = document.getElementById('intervensiOkkLayer1NameDisplay');
             var okkLayer1UsersEl = document.getElementById('intervensiOkkLayer1Users');
             var okkLayer1EmptyEl = document.getElementById('intervensiOkkLayer1Empty');
             var okkLayer1NoNameEl = document.getElementById('intervensiOkkLayer1NoName');
             var okkLayer1LoadingEl = document.getElementById('intervensiOkkLayer1Loading');
-            var okkLayer1SelectEl = document.getElementById('intervensiOkkLayer1Select');
-            var okkLayer1BtnEl = document.getElementById('intervensiOkkLayer1Btn');
             layer1Wrap.classList.remove('d-none');
             layer1UsersEl.innerHTML = '';
             document.getElementById('intervensiLayer1NameDisplay').textContent = namaLayer1 || '—';
             layer1EmptyEl.classList.add('d-none');
             layer1NoNameEl.classList.add('d-none');
             layer1LoadingEl.classList.add('d-none');
-            if (layer1SelectEl) { layer1SelectEl.classList.add('d-none'); layer1SelectEl.innerHTML = '<option value=\"\">Pilih PIC Layer 1...</option>'; }
-            if (layer1BtnEl) { layer1BtnEl.classList.add('d-none'); layer1BtnEl.removeAttribute('data-message'); }
             if (okkLayer1Wrap) {
                 okkLayer1Wrap.classList.remove('d-none');
                 okkLayer1UsersEl.innerHTML = '';
@@ -3134,8 +3140,6 @@
                 okkLayer1EmptyEl.classList.add('d-none');
                 okkLayer1NoNameEl.classList.add('d-none');
                 okkLayer1LoadingEl.classList.add('d-none');
-                if (okkLayer1SelectEl) { okkLayer1SelectEl.classList.add('d-none'); okkLayer1SelectEl.innerHTML = '<option value=\"\">Pilih PIC Layer 1...</option>'; }
-                if (okkLayer1BtnEl) { okkLayer1BtnEl.classList.add('d-none'); okkLayer1BtnEl.removeAttribute('data-message'); }
             }
             if (!hasLayer1) {
                 layer1NoNameEl.classList.remove('d-none');
@@ -3236,24 +3240,16 @@
             var layer1UsersEl2 = document.getElementById('intervensiLayer1Users');
             var layer1EmptyEl2 = document.getElementById('intervensiLayer1Empty');
             var layer1LoadingEl2 = document.getElementById('intervensiLayer1Loading');
-            var layer1SelectEl2 = document.getElementById('intervensiLayer1Select');
-            var layer1BtnEl2 = document.getElementById('intervensiLayer1Btn');
             var okkLayer1UsersEl2 = document.getElementById('intervensiOkkLayer1Users');
             var okkLayer1EmptyEl2 = document.getElementById('intervensiOkkLayer1Empty');
             var okkLayer1LoadingEl2 = document.getElementById('intervensiOkkLayer1Loading');
-            var okkLayer1SelectEl2 = document.getElementById('intervensiOkkLayer1Select');
-            var okkLayer1BtnEl2 = document.getElementById('intervensiOkkLayer1Btn');
             layer1LoadingEl2.classList.remove('d-none');
             layer1UsersEl2.innerHTML = '';
             layer1EmptyEl2.classList.add('d-none');
-            if (layer1SelectEl2) { layer1SelectEl2.classList.add('d-none'); layer1SelectEl2.innerHTML = '<option value=\"\">Pilih PIC Layer 1...</option>'; }
-            if (layer1BtnEl2) { layer1BtnEl2.classList.add('d-none'); layer1BtnEl2.removeAttribute('data-message'); }
             if (okkLayer1LoadingEl2) {
                 okkLayer1LoadingEl2.classList.remove('d-none');
                 okkLayer1UsersEl2.innerHTML = '';
                 okkLayer1EmptyEl2.classList.add('d-none');
-                if (okkLayer1SelectEl2) { okkLayer1SelectEl2.classList.add('d-none'); okkLayer1SelectEl2.innerHTML = '<option value=\"\">Pilih PIC Layer 1...</option>'; }
-                if (okkLayer1BtnEl2) { okkLayer1BtnEl2.classList.add('d-none'); okkLayer1BtnEl2.removeAttribute('data-message'); }
             }
                 var qs = new URLSearchParams();
                 if (sidLayer1) qs.set('sid_layer_1', sidLayer1);
@@ -3294,71 +3290,37 @@
                             return;
                         }
 
-                        // Isi dropdown IPK
-                        if (layer1SelectEl2) {
-                            users.forEach(function (u) {
-                                var num = normalizeWaNumber(u.selular);
-                                var label = u.nama || u.username || 'User';
-                                if (!num) return;
-                                var opt = document.createElement('option');
-                                opt.value = num;
-                                opt.textContent = label + ' (' + num + ')';
-                                opt.setAttribute('data-label', label);
-                                layer1SelectEl2.appendChild(opt);
+                        // Satu tombol per user: klik langsung buka WA (IPK)
+                        users.forEach(function (u) {
+                            var num = normalizeWaNumber(u.selular);
+                            var label = u.nama || u.username || 'User';
+                            if (!num) return;
+                            var btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'btn btn-sm btn-success';
+                            btn.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA (IPK) → ' + label;
+                            btn.title = 'Kirim intervensi IPK ke ' + label;
+                            btn.addEventListener('click', function () {
+                                window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(ipkMsg), '_blank');
                             });
-                            if (layer1SelectEl2.options.length > 1) {
-                                layer1SelectEl2.classList.remove('d-none');
-                                if (layer1BtnEl2) {
-                                    layer1BtnEl2.classList.remove('d-none');
-                                    layer1BtnEl2.dataset.message = ipkMsg;
-                                    if (!layer1BtnEl2._bound) {
-                                        layer1BtnEl2.addEventListener('click', function () {
-                                            var sel = layer1SelectEl2;
-                                            if (!sel || sel.value === '') return;
-                                            var num = sel.value;
-                                            var msg = layer1BtnEl2.dataset.message || ipkMsg;
-                                            window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
-                                        });
-                                        layer1BtnEl2._bound = true;
-                                    }
-                                }
-                            } else {
-                                layer1EmptyEl2.classList.remove('d-none');
-                            }
-                        }
+                            layer1UsersEl2.appendChild(btn);
+                        });
 
-                        // Isi dropdown OKK (pakai list user yang sama)
-                        if (okkLayer1SelectEl2) {
-                            users.forEach(function (u) {
-                                var num = normalizeWaNumber(u.selular);
-                                var label = u.nama || u.username || 'User';
-                                if (!num) return;
-                                var opt = document.createElement('option');
-                                opt.value = num;
-                                opt.textContent = label + ' (' + num + ')';
-                                opt.setAttribute('data-label', label);
-                                okkLayer1SelectEl2.appendChild(opt);
+                        // Satu tombol per user: klik langsung buka WA (OKK)
+                        users.forEach(function (u) {
+                            var num = normalizeWaNumber(u.selular);
+                            var label = u.nama || u.username || 'User';
+                            if (!num) return;
+                            var btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'btn btn-sm btn-success';
+                            btn.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA (OKK) → ' + label;
+                            btn.title = 'Kirim intervensi OKK ke ' + label;
+                            btn.addEventListener('click', function () {
+                                window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(okkMsg), '_blank');
                             });
-                            if (okkLayer1SelectEl2.options.length > 1) {
-                                okkLayer1SelectEl2.classList.remove('d-none');
-                                if (okkLayer1BtnEl2) {
-                                    okkLayer1BtnEl2.classList.remove('d-none');
-                                    okkLayer1BtnEl2.dataset.message = okkMsg;
-                                    if (!okkLayer1BtnEl2._bound) {
-                                        okkLayer1BtnEl2.addEventListener('click', function () {
-                                            var sel = okkLayer1SelectEl2;
-                                            if (!sel || sel.value === '') return;
-                                            var num = sel.value;
-                                            var msg = okkLayer1BtnEl2.dataset.message || okkMsg;
-                                            window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(msg), '_blank');
-                                        });
-                                        okkLayer1BtnEl2._bound = true;
-                                    }
-                                }
-                            } else if (okkLayer1EmptyEl2) {
-                                okkLayer1EmptyEl2.classList.remove('d-none');
-                            }
-                        }
+                            okkLayer1UsersEl2.appendChild(btn);
+                        });
                     })
                     .catch(function() {
                         layer1LoadingEl2.classList.add('d-none');

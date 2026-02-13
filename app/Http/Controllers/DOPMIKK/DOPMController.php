@@ -285,7 +285,7 @@ class DOPMController extends Controller
                                 return "'" . addslashes($id) . "'";
                             }, $wpIds));
                             $sqlEmp = "
-                                SELECT work_permit_id, layer, employee_name
+                                SELECT work_permit_id, layer, employee_name, employee_sid
                                 FROM hse_automation.ikk_work_permit_employee
                                 WHERE work_permit_id IN ({$inWpIds})
                             ";
@@ -307,9 +307,11 @@ class DOPMController extends Controller
                                 if (!isset($layersByWp[$wpId])) {
                                     $layersByWp[$wpId] = [];
                                 }
-                                // Ambil nama pertama per layer
                                 if (!isset($layersByWp[$wpId][$layerNum])) {
-                                    $layersByWp[$wpId][$layerNum] = trim((string) ($er['employee_name'] ?? ''));
+                                    $layersByWp[$wpId][$layerNum] = [
+                                        'name' => trim((string) ($er['employee_name'] ?? '')),
+                                        'sid' => trim((string) ($er['employee_sid'] ?? '')),
+                                    ];
                                 }
                             }
                         }
@@ -320,10 +322,14 @@ class DOPMController extends Controller
                                 continue;
                             }
                             $layers = $layersByWp[$wpId] ?? [];
-                            $namaLayer1 = $layers[1] ?? null;
-                            $namaLayer2 = $layers[2] ?? null;
-                            $namaLayer3 = $layers[3] ?? null;
-                            $namaLayer4 = $layers[4] ?? null;
+                            $namaLayer1 = isset($layers[1]) ? $layers[1]['name'] : null;
+                            $sidLayer1 = isset($layers[1]) ? $layers[1]['sid'] : null;
+                            $namaLayer2 = isset($layers[2]) ? $layers[2]['name'] : null;
+                            $sidLayer2 = isset($layers[2]) ? $layers[2]['sid'] : null;
+                            $namaLayer3 = isset($layers[3]) ? $layers[3]['name'] : null;
+                            $sidLayer3 = isset($layers[3]) ? $layers[3]['sid'] : null;
+                            $namaLayer4 = isset($layers[4]) ? $layers[4]['name'] : null;
+                            $sidLayer4 = isset($layers[4]) ? $layers[4]['sid'] : null;
 
                             // Normalisasi & mapping status untuk tampilan
                             $rawStatus = $row['status'] ?? null;
@@ -382,9 +388,13 @@ class DOPMController extends Controller
                                 // status_matriks akan diisi ulang berdasarkan IPK/OKK/OAK di bawah
                                 'status_matriks' => null,
                                 'nama_layer_1' => $namaLayer1,
+                                'sid_layer_1' => $sidLayer1,
                                 'nama_layer_2' => $namaLayer2,
+                                'sid_layer_2' => $sidLayer2,
                                 'nama_layer_3' => $namaLayer3,
+                                'sid_layer_3' => $sidLayer3,
                                 'nama_layer_4' => $namaLayer4,
+                                'sid_layer_4' => $sidLayer4,
                                 'start_date' => $row['start_date'] ?? null,
                                 'end_date' => $row['end_date'] ?? null,
                                 'location_name' => self::getClickHouseRowValue($row, 'location_name'),
@@ -961,7 +971,7 @@ class DOPMController extends Controller
                                 return "'" . addslashes($id) . "'";
                             }, $wpIds));
                             $sqlEmp = "
-                                SELECT work_permit_id, layer, employee_name
+                                SELECT work_permit_id, layer, employee_name, employee_sid
                                 FROM hse_automation.ikk_work_permit_employee
                                 WHERE work_permit_id IN ({$inWpIds})
                             ";
@@ -983,9 +993,11 @@ class DOPMController extends Controller
                                 if (!isset($layersByWp[$wpId])) {
                                     $layersByWp[$wpId] = [];
                                 }
-                                // Ambil nama pertama per layer
                                 if (!isset($layersByWp[$wpId][$layerNum])) {
-                                    $layersByWp[$wpId][$layerNum] = trim((string) ($er['employee_name'] ?? ''));
+                                    $layersByWp[$wpId][$layerNum] = [
+                                        'name' => trim((string) ($er['employee_name'] ?? '')),
+                                        'sid' => trim((string) ($er['employee_sid'] ?? '')),
+                                    ];
                                 }
                             }
                         }
@@ -996,10 +1008,14 @@ class DOPMController extends Controller
                                 continue;
                             }
                             $layers = $layersByWp[$wpId] ?? [];
-                            $namaLayer1 = $layers[1] ?? null;
-                            $namaLayer2 = $layers[2] ?? null;
-                            $namaLayer3 = $layers[3] ?? null;
-                            $namaLayer4 = $layers[4] ?? null;
+                            $namaLayer1 = isset($layers[1]) ? $layers[1]['name'] : null;
+                            $sidLayer1 = isset($layers[1]) ? $layers[1]['sid'] : null;
+                            $namaLayer2 = isset($layers[2]) ? $layers[2]['name'] : null;
+                            $sidLayer2 = isset($layers[2]) ? $layers[2]['sid'] : null;
+                            $namaLayer3 = isset($layers[3]) ? $layers[3]['name'] : null;
+                            $sidLayer3 = isset($layers[3]) ? $layers[3]['sid'] : null;
+                            $namaLayer4 = isset($layers[4]) ? $layers[4]['name'] : null;
+                            $sidLayer4 = isset($layers[4]) ? $layers[4]['sid'] : null;
 
                             // Normalisasi & mapping status untuk tampilan
                             $rawStatus = $row['status'] ?? null;
@@ -1048,9 +1064,13 @@ class DOPMController extends Controller
                                 // status_matriks akan diisi ulang berdasarkan IPK/OKK/OAK di bawah
                                 'status_matriks' => null,
                                 'nama_layer_1' => $namaLayer1,
+                                'sid_layer_1' => $sidLayer1,
                                 'nama_layer_2' => $namaLayer2,
+                                'sid_layer_2' => $sidLayer2,
                                 'nama_layer_3' => $namaLayer3,
+                                'sid_layer_3' => $sidLayer3,
                                 'nama_layer_4' => $namaLayer4,
+                                'sid_layer_4' => $sidLayer4,
                                 'start_date' => $row['start_date'] ?? null,
                                 'end_date' => $row['end_date'] ?? null,
                                 'location_name' => self::getClickHouseRowValue($row, 'location_name'),
