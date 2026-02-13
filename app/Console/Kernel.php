@@ -19,9 +19,17 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->runInBackground()
             ->appendOutputTo(storage_path('logs/telegram-sync.log'));
-        
-        // Alternative: If you want to use the old fetch-updates command instead
-        // $schedule->command('telegram:fetch-updates')->everyMinute()->withoutOverlapping();
+
+        // Screenshot dashboard DOPM & kirim email 3x sehari: pagi, siang, sore
+        $schedule->command('dashboard:screenshot-send --slot=pagi')
+            ->dailyAt('07:00')
+            ->appendOutputTo(storage_path('logs/dashboard-screenshot.log'));
+        $schedule->command('dashboard:screenshot-send --slot=siang')
+            ->dailyAt('12:00')
+            ->appendOutputTo(storage_path('logs/dashboard-screenshot.log'));
+        $schedule->command('dashboard:screenshot-send --slot=sore')
+            ->dailyAt('17:00')
+            ->appendOutputTo(storage_path('logs/dashboard-screenshot.log'));
     }
 
     /**

@@ -1594,18 +1594,21 @@
                       <div class="card-body">
                         <div class="d-flex align-items-center gap-3 mb-2">
                            <div class="">
-                             <h2 class="mb-0">{{ $pctPengisianRataRata ?? 0 }}% Compliance</h2>
+                             @php
+                               $pctPengisianRataRataIkk = round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
+                             @endphp
+                             <h2 class="mb-0">{{ $pctPengisianRataRataIkk }}% Compliance</h2>
                            </div>
                            <div class="">
-                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata</p>
+                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata IKK</p>
                            </div>
                          </div>
-                         <p class="mb-0">Presentase Pengisian (IPK, OKK & OAK)</p>
-                         <p class="mb-0 small text-muted">Rata-rata dari IPK {{ $pctDopmAdaIpk ?? 0 }}% · OKK {{ $pctDopmAdaOkk ?? 0 }}% · OAK {{ $pctDopmOak ?? 0 }}%</p>
+                         <p class="mb-0">Presentase Pengisian IKK (IPK & OKK)</p>
+                         <p class="mb-0 small text-muted">Berdasarkan IKK unik: IPK {{ $pctIkkAdaIpk ?? 0 }}% · OKK {{ $pctIkkAdaOkk ?? 0 }}%</p>
                           <div class="mt-4">
-                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK + OAK <span class="">{{ $pctPengisianRataRata ?? 0 }}%</span></p>
+                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK (IKK) <span class="">{{ $pctPengisianRataRataIkk }}%</span></p>
                             <div class="progress w-100" style="height: 7px;">
-                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRata ?? 0) }}%"></div>
+                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRataIkk) }}%"></div>
                             </div>
                           </div>
                       </div>
