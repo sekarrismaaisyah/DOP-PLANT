@@ -1474,22 +1474,8 @@
     </div> --}}
     
         <div class="row">
-          <div class="col-12 col-xl-4 d-flex">
-             <div class="card rounded-4 w-100">
-               <div class="card-body">
-                 <div class="d-flex align-items-center gap-3 mb-2">
-                    <div class="">
-                      <h2 class="mb-0">106</h2>
-                    </div>
-                    <div class="">
-                    </div>
-                  </div>
-                  <p class="mb-0">Total Week ini</p>
-                   <div id="chart1"></div>
-               </div>
-             </div>
-          </div>
-          <div class="col-12 col-xl-8 d-flex">
+         
+          <div class="col-12 col-xl-12 d-flex">
             <div class="card rounded-4 w-100">
               <div class="card-body">
                 <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
