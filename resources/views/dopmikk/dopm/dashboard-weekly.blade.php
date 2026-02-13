@@ -1479,10 +1479,9 @@
                <div class="card-body">
                  <div class="d-flex align-items-center gap-3 mb-2">
                     <div class="">
-                      <h2 class="mb-0">{{ number_format($totalDopmMingguIni ?? 0) }}</h2>
+                      <h2 class="mb-0">{{ number_format($totalIkkClickhouseMingguIni ?? 0) }}</h2>
                     </div>
                     <div class="">
-                      <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-danger text-danger bg-opacity-10"><span class="material-icons-outlined fs-6">arrow_downward</span>8.6%</p>
                     </div>
                   </div>
                   <p class="mb-0">Total Week ini</p>
