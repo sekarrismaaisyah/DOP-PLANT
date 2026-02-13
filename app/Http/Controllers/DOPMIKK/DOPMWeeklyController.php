@@ -581,7 +581,7 @@ class DOPMWeeklyController extends Controller
                     continue;
                 }
 
-                $ikk->status_matriks = self::hitungStatusMatriksLengkap(
+                $matriksResult = \App\Http\Controllers\DOPMIKK\DOPMController::hitungStatusMatriksLengkapDenganAlasan(
                     $code,
                     $locationName,
                     $locationDetailName,
@@ -591,6 +591,9 @@ class DOPMWeeklyController extends Controller
                     $ikk->nama_layer_3 ?? null,
                     $ikk->nama_layer_4 ?? null
                 );
+                
+                $ikk->status_matriks = $matriksResult['status'] ?? 'Merah';
+                $ikk->alasan_matriks = $matriksResult['alasan'] ?? 'Tidak diketahui';
 
                 $status = $ikk->status_matriks ?? 'Merah';
                 $status = in_array($status, ['Hijau', 'Kuning', 'Merah'], true) ? $status : 'Merah';
