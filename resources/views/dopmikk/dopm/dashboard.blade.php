@@ -2183,7 +2183,7 @@
                                                <td><span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span></td>
                                                <td>
                                                    <span class="">
-                                                       {{ $ikk->status_pekerjaan ?? '-' }}
+                                                       {{ $ikk->status_pekerjaan ?? 'Belum ada IPK' }}
                                                    </span>
                                                </td>
                                                <td>
