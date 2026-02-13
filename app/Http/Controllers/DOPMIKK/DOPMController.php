@@ -345,14 +345,25 @@ class DOPMController extends Controller
                                 continue;
                             }
 
-                            // Sembunyikan jika end_date sudah lewat/sama dengan jam sekarang (meskipun status Berlaku/Approved)
+                            // Filter sampai jam: hanya tampilkan IKK yang "sekarang" ada di dalam rentang [start_date, end_date]
+                            $now = \Carbon\Carbon::now(config('app.timezone'));
+
+                            // Sembunyikan jika start_date belum lewat (izin belum mulai)
+                            $startDateRaw = self::getClickHouseRowValue($row, 'start_date');
+                            if ($startDateRaw !== null && $startDateRaw !== '') {
+                                $startDate = self::parseEndDate($startDateRaw);
+                                if ($startDate !== null && $startDate->gt($now)) {
+                                    continue; // start_date > sekarang → belum mulai, jangan tampilkan
+                                }
+                            }
+
+                            // Sembunyikan jika end_date sudah lewat/sama dengan jam sekarang
                             $endDateRaw = self::getClickHouseRowValue($row, 'end_date');
                             if ($endDateRaw !== null && $endDateRaw !== '') {
                                 $endDate = self::parseEndDate($endDateRaw);
                                 if ($endDate === null) {
                                     continue; // tidak bisa parse end_date → sembunyikan agar konsisten
                                 }
-                                $now = \Carbon\Carbon::now(config('app.timezone'));
                                 if ($endDate->lte($now)) {
                                     continue; // end_date <= sekarang → jangan tampilkan
                                 }
