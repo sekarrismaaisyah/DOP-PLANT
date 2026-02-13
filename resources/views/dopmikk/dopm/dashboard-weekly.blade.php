@@ -1479,7 +1479,7 @@
                <div class="card-body">
                  <div class="d-flex align-items-center gap-3 mb-2">
                     <div class="">
-                      <h2 class="mb-0">{{ number_format($totalIkkClickhouseMingguIni ?? 0) }}</h2>
+                      <h2 class="mb-0">106</h2>
                     </div>
                     <div class="">
                     </div>
@@ -1577,18 +1577,21 @@
                       <div class="card-body">
                         <div class="d-flex align-items-center gap-3 mb-2">
                            <div class="">
-                             <h2 class="mb-0">{{ $pctPengisianRataRata ?? 0 }}% Compliance</h2>
+                             @php
+                               $pctPengisianRataRataIkk = round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
+                             @endphp
+                             <h2 class="mb-0">{{ $pctPengisianRataRataIkk }}% Compliance</h2>
                            </div>
                            <div class="">
-                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata</p>
+                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata IKK</p>
                            </div>
                          </div>
-                         <p class="mb-0">Presentase Pengisian (IPK, OKK & OAK)</p>
-                         <p class="mb-0 small text-muted">Rata-rata dari IPK {{ $pctDopmAdaIpk ?? 0 }}% · OKK {{ $pctDopmAdaOkk ?? 0 }}% · OAK {{ $pctDopmOak ?? 0 }}%</p>
+                         <p class="mb-0">Presentase Pengisian IKK (IPK & OKK)</p>
+                         <p class="mb-0 small text-muted">Berdasarkan IKK unik: IPK {{ $pctIkkAdaIpk ?? 0 }}% · OKK {{ $pctIkkAdaOkk ?? 0 }}%</p>
                           <div class="mt-4">
-                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK + OAK <span class="">{{ $pctPengisianRataRata ?? 0 }}%</span></p>
+                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK (IKK) <span class="">{{ $pctPengisianRataRataIkk }}%</span></p>
                             <div class="progress w-100" style="height: 7px;">
-                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRata ?? 0) }}%"></div>
+                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRataIkk) }}%"></div>
                             </div>
                           </div>
                       </div>
@@ -2905,11 +2908,36 @@
 
 
 <script src="{{ URL::asset('build/plugins/apexchart/apexcharts.min.js') }}"></script>
-<script>window.skipChart4 = true;</script>
+<script>window.skipChart4 = true; window.skipChart1 = true;</script>
 <script src="{{ URL::asset('build/js/index.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/peity/jquery.peity.min.js') }}"></script>
 <script>
 (function() {
+  // Chart1: Total IKK Week ini (ClickHouse Approved + Expired) per hari
+  @php
+    $chart1WeekData = $chartIkkClickhousePerHariMinggu ?? array_fill(0, 7, 0);
+  @endphp
+  var chart1Data = @json($chart1WeekData);
+  setTimeout(function renderChart1() {
+    var el = document.querySelector('#chart1');
+    if (!el || typeof ApexCharts === 'undefined') return;
+    // Pastikan chart tidak dirender dua kali
+    try { ApexCharts.exec('chart1', 'destroy'); } catch (e) {}
+    el.innerHTML = '';
+    new ApexCharts(el, {
+      chart: { id: 'chart1', height: 105, type: 'area', sparkline: { enabled: true }, zoom: { enabled: false }, fontFamily: 'inherit' },
+      series: [{ name: 'IKK', data: chart1Data }],
+      dataLabels: { enabled: false },
+      stroke: { width: 1.7, curve: 'smooth' },
+      fill: { type: 'gradient', gradient: { shade: 'dark', gradientToColors: ['#02c27a'], shadeIntensity: 1, type: 'vertical', opacityFrom: 0.5, opacityTo: 0 } },
+      colors: ['#02c27a'],
+      xaxis: { labels: { show: false } },
+      yaxis: { labels: { show: false } },
+      grid: { borderColor: 'rgba(0,0,0,0.05)', strokeDashArray: 4 },
+      tooltip: { y: { title: { formatter: function() { return 'IKK'; } } } }
+    }).render();
+  }, 300);
+
   // Chart jumlah izin kerja per jenis, warna bar mengikuti status matriks (Merah/Kuning/Hijau)
   var categories = @json($chartJenisLabels ?? []);
   var categoriesFull = @json($chartJenisLabelsFull ?? []);

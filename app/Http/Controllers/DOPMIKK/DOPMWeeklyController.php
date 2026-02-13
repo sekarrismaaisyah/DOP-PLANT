@@ -82,6 +82,67 @@ class DOPMWeeklyController extends Controller
         };
         $totalDopmMingguIni = Dopm::where($scopeWeek)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->count();
 
+        // Total IKK ClickHouse minggu ini (APPROVED + EXPIRED) + data per hari untuk chart
+        $totalIkkClickhouseMingguIni = 0;
+        $chartIkkClickhousePerHariMinggu = [0, 0, 0, 0, 0, 0, 0];
+        try {
+            if (class_exists(\App\Services\ClickHouseService::class)) {
+                /** @var \App\Services\ClickHouseService $clickHouse */
+                $clickHouse = app(\App\Services\ClickHouseService::class);
+                if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                    $mingguStartStr = $mingguStart->format('Y-m-d');
+                    $mingguEndStr = $mingguEnd->format('Y-m-d');
+                    $siteFilterClause = '';
+                    if ($filterSite !== '' && $filterSite !== null) {
+                        if ($filterSite === 'Lainnya') {
+                            $siteFilterClause = " AND trim(COALESCE(ra_site_name, '')) = ''";
+                        } else {
+                            $siteFilterClause = " AND trim(COALESCE(ra_site_name, '')) = '" . addslashes($filterSite) . "'";
+                        }
+                    }
+                    $sqlWeek = "
+                        SELECT code, start_date, end_date
+                        FROM hse_automation.ikk_work_permit
+                        WHERE toDate(start_date) <= toDate('" . addslashes($mingguEndStr) . "')
+                          AND toDate(end_date)   >= toDate('" . addslashes($mingguStartStr) . "')
+                          AND status IN ('APPROVED', 'EXPIRED')
+                          AND deleted_at IS NULL
+                          {$siteFilterClause}
+                    ";
+                    $wpRowsWeek = $clickHouse->query($sqlWeek);
+                    $codesAllWeek = [];
+                    $codesPerDay = array_fill(0, 7, []);
+                    if (!empty($wpRowsWeek)) {
+                        foreach ($wpRowsWeek as $row) {
+                            $code = isset($row['code']) ? trim((string) $row['code']) : '';
+                            if ($code === '') {
+                                continue;
+                            }
+                            $codesAllWeek[$code] = true;
+                            $startDate = self::parseEndDate(self::getClickHouseRowValue($row, 'start_date'));
+                            $endDate = self::parseEndDate(self::getClickHouseRowValue($row, 'end_date'));
+                            if ($startDate === null || $endDate === null) {
+                                continue;
+                            }
+                            for ($i = 0; $i < 7; $i++) {
+                                $dayStart = $mingguStart->copy()->addDays($i)->startOfDay();
+                                $dayEnd = $mingguStart->copy()->addDays($i)->endOfDay();
+                                if ($startDate->lte($dayEnd) && $endDate->gte($dayStart)) {
+                                    $codesPerDay[$i][$code] = true;
+                                }
+                            }
+                        }
+                        $totalIkkClickhouseMingguIni = count($codesAllWeek);
+                        for ($i = 0; $i < 7; $i++) {
+                            $chartIkkClickhousePerHariMinggu[$i] = count($codesPerDay[$i]);
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::debug('Dashboard IKK ClickHouse week: ' . $e->getMessage());
+        }
+
         // IPK-IKK dan OKK harian: setelah dapat DOPM list, hitung dari kode_ikk yang ada di list (agar konsisten dengan filter site)
         $totalIkkHarian = IpkIkk::whereDate('ts', $filterDate)->count();
         $totalOkkHarian = Okk::whereDate('ts', $filterDate)->count();
@@ -701,6 +762,8 @@ class DOPMWeeklyController extends Controller
             'totalWorkPermitApprovedHarian' => $totalWorkPermitApprovedHarian,
             'totalDopmCancelHarian' => $totalDopmCancelHarian,
             'totalDopmMingguIni' => $totalDopmMingguIni,
+            'totalIkkClickhouseMingguIni' => $totalIkkClickhouseMingguIni,
+            'chartIkkClickhousePerHariMinggu' => $chartIkkClickhousePerHariMinggu,
             'totalPekerjaanBatalHarian' => $totalPekerjaanBatalHarian,
             'totalIkkHarian' => $totalIkkHarian,
             'totalOkkHarian' => $totalOkkHarian,
