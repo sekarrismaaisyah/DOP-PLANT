@@ -1501,7 +1501,7 @@
                     </div>
                   </div>
                   <p class="mb-0">Total Week ini</p>
-                  <small class="text-muted d-block mb-1">IKK ClickHouse (Approved + Expired)</small>
+                  <!-- <small class="text-muted d-block mb-1">IKK ClickHouse (Approved + Expired)</small> -->
                    <div id="chart1"></div>
                </div>
              </div>
@@ -2878,21 +2878,20 @@
     $chart1WeekData = $chartIkkClickhousePerHariMinggu ?? array_fill(0, 7, 0);
   @endphp
   var chart1Data = @json($chart1WeekData);
-  var chart1Categories = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
   (function renderChart1() {
     var el = document.querySelector('#chart1');
     if (!el || typeof ApexCharts === 'undefined') return;
     try { ApexCharts.exec('chart1', 'destroy'); } catch (e) {}
     el.innerHTML = '';
     new ApexCharts(el, {
-      chart: { id: 'chart1', height: 105, type: 'area', sparkline: { enabled: false }, zoom: { enabled: false }, fontFamily: 'inherit' },
+      chart: { id: 'chart1', height: 105, type: 'area', sparkline: { enabled: true }, zoom: { enabled: false }, fontFamily: 'inherit' },
       series: [{ name: 'IKK', data: chart1Data }],
       dataLabels: { enabled: false },
       stroke: { width: 1.7, curve: 'smooth' },
       fill: { type: 'gradient', gradient: { shade: 'dark', gradientToColors: ['#02c27a'], shadeIntensity: 1, type: 'vertical', opacityFrom: 0.5, opacityTo: 0 } },
       colors: ['#02c27a'],
-      xaxis: { categories: chart1Categories, labels: { style: { colors: '#a1acb8' } } },
-      yaxis: { labels: { style: { colors: '#a1acb8' } } },
+      xaxis: { labels: { show: false } },
+      yaxis: { labels: { show: false } },
       grid: { borderColor: 'rgba(0,0,0,0.05)', strokeDashArray: 4 },
       tooltip: { y: { title: { formatter: function() { return 'IKK'; } } } }
     }).render();
