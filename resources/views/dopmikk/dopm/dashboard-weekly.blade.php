@@ -1635,18 +1635,17 @@
                     @endphp
                     @forelse($ikkMerah as $ikk)
                      @php
-                        // Data dari IKK/work permit (bukan DOPM)
                         $dopmJson = [
                             'kode_ikk' => $ikk->code ?? null,
                             'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
-                            'sid_layer_2' => $ikk->sid_layer_2 ?? null,
-                            'sid_layer_3' => $ikk->sid_layer_3 ?? null,
-                            'sid_layer_4' => $ikk->sid_layer_4 ?? null,
+                            'sid_layer_2' => null,
+                            'sid_layer_3' => null,
+                            'sid_layer_4' => null,
                             'nama_layer_2' => $ikk->nama_layer_2 ?? null,
                             'nama_layer_3' => $ikk->nama_layer_3 ?? null,
                             'nama_layer_4' => $ikk->nama_layer_4 ?? null,
                             'nama_layer_1' => $ikk->nama_layer_1 ?? null,
-                            'sid_layer_1' => $ikk->sid_layer_1 ?? null,
+                            'sid_layer_1' => null,
                             'id_dop' => $ikk->code ?? null,
                             'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
                             'site_ijin_kerja_khusus' => $ikk->site ?? null,
@@ -1656,13 +1655,9 @@
                             'status' => $ikk->status ?? null,
                             'location_name' => $ikk->location_name ?? null,
                             'location_detail_name' => $ikk->location_detail_name ?? null,
-                            'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
                         ];
                      @endphp
-                     @php
-                        $alasanMerah = htmlspecialchars($ikk->alasan_matriks ?? 'Tidak ada IPK atau OKK', ENT_QUOTES, 'UTF-8');
-                     @endphp
-                     <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Merah:</strong><br>{{ $alasanMerah }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                     <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                        <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                         <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-danger bg-opacity-10 text-danger flex-shrink-0">
                           <span class="material-icons-outlined" style="font-size: 28px;">warning</span>
@@ -1717,34 +1712,29 @@
                   @endphp
                   @forelse($ikkKuning as $ikk)
                   @php
-                        // Data dari IKK/work permit (bukan DOPM)
-                        $dopmJsonK = [
-                            'kode_ikk' => $ikk->code ?? null,
-                            'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
-                            'sid_layer_2' => $ikk->sid_layer_2 ?? null,
-                            'sid_layer_3' => $ikk->sid_layer_3 ?? null,
-                            'sid_layer_4' => $ikk->sid_layer_4 ?? null,
-                            'nama_layer_2' => $ikk->nama_layer_2 ?? null,
-                            'nama_layer_3' => $ikk->nama_layer_3 ?? null,
-                            'nama_layer_4' => $ikk->nama_layer_4 ?? null,
-                            'nama_layer_1' => $ikk->nama_layer_1 ?? null,
-                            'sid_layer_1' => $ikk->sid_layer_1 ?? null,
-                            'id_dop' => $ikk->code ?? null,
-                            'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
-                            'site_ijin_kerja_khusus' => $ikk->site ?? null,
-                            'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
-                            'tanggal_dop' => $filterDate ?? null,
-                            'timestamp' => null,
-                            'status' => $ikk->status ?? null,
-                            'location_name' => $ikk->location_name ?? null,
-                            'location_detail_name' => $ikk->location_detail_name ?? null,
-                            'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
-                        ];
+                    $dopmJsonK = [
+                        'kode_ikk' => $ikk->code ?? null,
+                        'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
+                        'sid_layer_2' => null,
+                        'sid_layer_3' => null,
+                        'sid_layer_4' => null,
+                        'nama_layer_2' => $ikk->nama_layer_2 ?? null,
+                        'nama_layer_3' => $ikk->nama_layer_3 ?? null,
+                        'nama_layer_4' => $ikk->nama_layer_4 ?? null,
+                        'nama_layer_1' => $ikk->nama_layer_1 ?? null,
+                        'sid_layer_1' => null,
+                        'id_dop' => $ikk->code ?? null,
+                        'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
+                        'site_ijin_kerja_khusus' => $ikk->site ?? null,
+                        'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
+                        'tanggal_dop' => $filterDate ?? null,
+                        'timestamp' => null,
+                        'status' => $ikk->status ?? null,
+                        'location_name' => $ikk->location_name ?? null,
+                        'location_detail_name' => $ikk->location_detail_name ?? null,
+                    ];
                   @endphp
-                  @php
-                        $alasanKuning = htmlspecialchars($ikk->alasan_matriks ?? 'Kondisi tidak memenuhi kriteria Hijau', ENT_QUOTES, 'UTF-8');
-                  @endphp
-                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Kuning:</strong><br>{{ $alasanKuning }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                     <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                       <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-warning bg-opacity-10 text-warning flex-shrink-0">
                         <span class="material-icons-outlined" style="font-size: 28px;">info</span>
@@ -1799,34 +1789,29 @@
                   @endphp
                   @forelse($ikkHijau as $ikk)
                   @php
-                        // Data dari IKK/work permit (bukan DOPM)
-                        $dopmJsonH = [
-                            'kode_ikk' => $ikk->code ?? null,
-                            'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
-                            'sid_layer_2' => $ikk->sid_layer_2 ?? null,
-                            'sid_layer_3' => $ikk->sid_layer_3 ?? null,
-                            'sid_layer_4' => $ikk->sid_layer_4 ?? null,
-                            'nama_layer_2' => $ikk->nama_layer_2 ?? null,
-                            'nama_layer_3' => $ikk->nama_layer_3 ?? null,
-                            'nama_layer_4' => $ikk->nama_layer_4 ?? null,
-                            'nama_layer_1' => $ikk->nama_layer_1 ?? null,
-                            'sid_layer_1' => $ikk->sid_layer_1 ?? null,
-                            'id_dop' => $ikk->code ?? null,
-                            'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
-                            'site_ijin_kerja_khusus' => $ikk->site ?? null,
-                            'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
-                            'tanggal_dop' => $filterDate ?? null,
-                            'timestamp' => null,
-                            'status' => $ikk->status ?? null,
-                            'location_name' => $ikk->location_name ?? null,
-                            'location_detail_name' => $ikk->location_detail_name ?? null,
-                            'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
-                        ];
+                    $dopmJsonH = [
+                        'kode_ikk' => $ikk->code ?? null,
+                        'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
+                        'sid_layer_2' => null,
+                        'sid_layer_3' => null,
+                        'sid_layer_4' => null,
+                        'nama_layer_2' => $ikk->nama_layer_2 ?? null,
+                        'nama_layer_3' => $ikk->nama_layer_3 ?? null,
+                        'nama_layer_4' => $ikk->nama_layer_4 ?? null,
+                        'nama_layer_1' => $ikk->nama_layer_1 ?? null,
+                        'sid_layer_1' => null,
+                        'id_dop' => $ikk->code ?? null,
+                        'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
+                        'site_ijin_kerja_khusus' => $ikk->site ?? null,
+                        'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
+                        'tanggal_dop' => $filterDate ?? null,
+                        'timestamp' => null,
+                        'status' => $ikk->status ?? null,
+                        'location_name' => $ikk->location_name ?? null,
+                        'location_detail_name' => $ikk->location_detail_name ?? null,
+                    ];
                   @endphp
-                  @php
-                        $alasanHijau = htmlspecialchars($ikk->alasan_matriks ?? 'Semua persyaratan terpenuhi', ENT_QUOTES, 'UTF-8');
-                  @endphp
-                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Hijau:</strong><br>{{ $alasanHijau }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                     <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                       <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-success bg-opacity-10 text-success flex-shrink-0">
                         <span class="material-icons-outlined" style="font-size: 28px;">check_circle</span>
