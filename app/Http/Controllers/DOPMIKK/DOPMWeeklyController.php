@@ -1511,12 +1511,29 @@ class DOPMWeeklyController extends Controller
                     $okkLayer1->push($okk);
                 } else {
                     // Cek apakah OKK dari Layer 2, 3, atau 4
+                    // Matching dua arah: nama layer bisa lebih panjang atau lebih pendek dari nama pengawas
                     $isLayer2Up = false;
                     if ($namaPengawas) {
-                        if (($namaLayer2Normalized && strpos($namaPengawas, $namaLayer2Normalized) !== false) ||
-                            ($namaLayer3Normalized && strpos($namaPengawas, $namaLayer3Normalized) !== false) ||
-                            ($namaLayer4Normalized && strpos($namaPengawas, $namaLayer4Normalized) !== false)) {
-                            $isLayer2Up = true;
+                        // Cek Layer 2: nama pengawas mengandung nama layer ATAU nama layer mengandung nama pengawas
+                        if ($namaLayer2Normalized) {
+                            if (strpos($namaPengawas, $namaLayer2Normalized) !== false || 
+                                strpos($namaLayer2Normalized, $namaPengawas) !== false) {
+                                $isLayer2Up = true;
+                            }
+                        }
+                        // Cek Layer 3: nama pengawas mengandung nama layer ATAU nama layer mengandung nama pengawas
+                        if (!$isLayer2Up && $namaLayer3Normalized) {
+                            if (strpos($namaPengawas, $namaLayer3Normalized) !== false || 
+                                strpos($namaLayer3Normalized, $namaPengawas) !== false) {
+                                $isLayer2Up = true;
+                            }
+                        }
+                        // Cek Layer 4: nama pengawas mengandung nama layer ATAU nama layer mengandung nama pengawas
+                        if (!$isLayer2Up && $namaLayer4Normalized) {
+                            if (strpos($namaPengawas, $namaLayer4Normalized) !== false || 
+                                strpos($namaLayer4Normalized, $namaPengawas) !== false) {
+                                $isLayer2Up = true;
+                            }
                         }
                     }
                     if ($layerPengawas && !$isLayer2Up) {
@@ -1568,11 +1585,28 @@ class DOPMWeeklyController extends Controller
 
                 // Cek jarak waktu antar OKK Layer 1 untuk fraud detection
                 if ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount) {
-                    $tsList = $okkLayer1->pluck('ts')->sort()->values()->all();
+                    // Ambil timestamp dari OKK Layer 1, konversi ke Carbon, dan sort ascending
+                    $tsList = $okkLayer1->pluck('ts')->map(function ($ts) {
+                        if ($ts instanceof \Carbon\Carbon) {
+                            return $ts;
+                        }
+                        try {
+                            return \Carbon\Carbon::parse($ts);
+                        } catch (\Exception $e) {
+                            return null;
+                        }
+                    })->filter()->sort(function ($a, $b) {
+                        // Sort ascending berdasarkan timestamp
+                        return $a->timestamp <=> $b->timestamp;
+                    })->values()->all();
+                    
                     $isValidJarak = true;
 
                     for ($i = 1; $i < count($tsList); $i++) {
-                        $diffMinutes = $tsList[$i]->diffInMinutes($tsList[$i - 1]);
+                        $prev = $tsList[$i - 1];
+                        $curr = $tsList[$i];
+                        // Gunakan absolute value untuk memastikan nilai positif
+                        $diffMinutes = abs($curr->diffInMinutes($prev, false));
                         if ($diffMinutes < $jarakMenit) {
                             $isValidJarak = false;
                             break;
@@ -1657,14 +1691,15 @@ class DOPMWeeklyController extends Controller
         // HIJAU:
         // 1. Full ada IPK - OKK sesuai target dari Layer 1
         // 2. Ada OKK dari Layer 2 up sesuai IKK (jika ada Layer 2/3/4 di IKK)
-        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && !$isOkkFraud) {
+        // 3. Harus ada OAK (baik dari DIC mitra maupun BC)
+        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && !$isOkkFraud && $hasOak) {
             // Jika ada Layer 2 up di IKK, harus ada OKK Layer 2 up juga
             if ($hasLayer2UpInIkk) {
                 if ($hasOkkLayer2Up) {
                     return 'Hijau';
                 }
             } else {
-                // Jika tidak ada Layer 2 up di IKK, cukup OKK Layer 1 sesuai target
+                // Jika tidak ada Layer 2 up di IKK, cukup OKK Layer 1 sesuai target dan ada OAK
                 return 'Hijau';
             }
         }

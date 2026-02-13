@@ -562,7 +562,7 @@ class DOPMController extends Controller
                     continue;
                 }
 
-                $ikk->status_matriks = self::hitungStatusMatriksLengkap(
+                $matriksResult = self::hitungStatusMatriksLengkapDenganAlasan(
                     $code,
                     $locationName,
                     $locationDetailName,
@@ -572,6 +572,9 @@ class DOPMController extends Controller
                     $ikk->nama_layer_3 ?? null,
                     $ikk->nama_layer_4 ?? null
                 );
+                
+                $ikk->status_matriks = $matriksResult['status'] ?? 'Merah';
+                $ikk->alasan_matriks = $matriksResult['alasan'] ?? 'Tidak diketahui';
 
                 $status = $ikk->status_matriks ?? 'Merah';
                 $status = in_array($status, ['Hijau', 'Kuning', 'Merah'], true) ? $status : 'Merah';
@@ -1240,7 +1243,7 @@ class DOPMController extends Controller
                     continue;
                 }
 
-                $ikk->status_matriks = self::hitungStatusMatriksLengkap(
+                $matriksResult = self::hitungStatusMatriksLengkapDenganAlasan(
                     $code,
                     $locationName,
                     $locationDetailName,
@@ -1250,6 +1253,9 @@ class DOPMController extends Controller
                     $ikk->nama_layer_3 ?? null,
                     $ikk->nama_layer_4 ?? null
                 );
+                
+                $ikk->status_matriks = $matriksResult['status'] ?? 'Merah';
+                $ikk->alasan_matriks = $matriksResult['alasan'] ?? 'Tidak diketahui';
 
                 $status = $ikk->status_matriks ?? 'Merah';
                 $status = in_array($status, ['Hijau', 'Kuning', 'Merah'], true) ? $status : 'Merah';
@@ -2264,12 +2270,29 @@ class DOPMController extends Controller
                     $okkLayer1->push($okk);
                 } else {
                     // Cek apakah OKK dari Layer 2, 3, atau 4
+                    // Matching dua arah: nama layer bisa lebih panjang atau lebih pendek dari nama pengawas
                     $isLayer2Up = false;
                     if ($namaPengawas) {
-                        if (($namaLayer2Normalized && strpos($namaPengawas, $namaLayer2Normalized) !== false) ||
-                            ($namaLayer3Normalized && strpos($namaPengawas, $namaLayer3Normalized) !== false) ||
-                            ($namaLayer4Normalized && strpos($namaPengawas, $namaLayer4Normalized) !== false)) {
-                            $isLayer2Up = true;
+                        // Cek Layer 2: nama pengawas mengandung nama layer ATAU nama layer mengandung nama pengawas
+                        if ($namaLayer2Normalized) {
+                            if (strpos($namaPengawas, $namaLayer2Normalized) !== false || 
+                                strpos($namaLayer2Normalized, $namaPengawas) !== false) {
+                                $isLayer2Up = true;
+                            }
+                        }
+                        // Cek Layer 3: nama pengawas mengandung nama layer ATAU nama layer mengandung nama pengawas
+                        if (!$isLayer2Up && $namaLayer3Normalized) {
+                            if (strpos($namaPengawas, $namaLayer3Normalized) !== false || 
+                                strpos($namaLayer3Normalized, $namaPengawas) !== false) {
+                                $isLayer2Up = true;
+                            }
+                        }
+                        // Cek Layer 4: nama pengawas mengandung nama layer ATAU nama layer mengandung nama pengawas
+                        if (!$isLayer2Up && $namaLayer4Normalized) {
+                            if (strpos($namaPengawas, $namaLayer4Normalized) !== false || 
+                                strpos($namaLayer4Normalized, $namaPengawas) !== false) {
+                                $isLayer2Up = true;
+                            }
                         }
                     }
                     if ($layerPengawas && !$isLayer2Up) {
@@ -2321,11 +2344,28 @@ class DOPMController extends Controller
 
                 // Cek jarak waktu antar OKK Layer 1 untuk fraud detection
                 if ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount) {
-                    $tsList = $okkLayer1->pluck('ts')->sort()->values()->all();
+                    // Ambil timestamp dari OKK Layer 1, konversi ke Carbon, dan sort ascending
+                    $tsList = $okkLayer1->pluck('ts')->map(function ($ts) {
+                        if ($ts instanceof \Carbon\Carbon) {
+                            return $ts;
+                        }
+                        try {
+                            return \Carbon\Carbon::parse($ts);
+                        } catch (\Exception $e) {
+                            return null;
+                        }
+                    })->filter()->sort(function ($a, $b) {
+                        // Sort ascending berdasarkan timestamp
+                        return $a->timestamp <=> $b->timestamp;
+                    })->values()->all();
+                    
                     $isValidJarak = true;
 
                     for ($i = 1; $i < count($tsList); $i++) {
-                        $diffMinutes = $tsList[$i]->diffInMinutes($tsList[$i - 1]);
+                        $prev = $tsList[$i - 1];
+                        $curr = $tsList[$i];
+                        // Gunakan absolute value untuk memastikan nilai positif
+                        $diffMinutes = abs($curr->diffInMinutes($prev, false));
                         if ($diffMinutes < $jarakMenit) {
                             $isValidJarak = false;
                             break;
@@ -2410,14 +2450,15 @@ class DOPMController extends Controller
         // HIJAU:
         // 1. Full ada IPK - OKK sesuai target dari Layer 1
         // 2. Ada OKK dari Layer 2 up sesuai IKK (jika ada Layer 2/3/4 di IKK)
-        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && !$isOkkFraud) {
+        // 3. Harus ada OAK (baik dari DIC mitra maupun BC)
+        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && !$isOkkFraud && $hasOak) {
             // Jika ada Layer 2 up di IKK, harus ada OKK Layer 2 up juga
             if ($hasLayer2UpInIkk) {
                 if ($hasOkkLayer2Up) {
                     return 'Hijau';
                 }
             } else {
-                // Jika tidak ada Layer 2 up di IKK, cukup OKK Layer 1 sesuai target
+                // Jika tidak ada Layer 2 up di IKK, cukup OKK Layer 1 sesuai target dan ada OAK
                 return 'Hijau';
             }
         }
@@ -2439,6 +2480,292 @@ class DOPMController extends Controller
 
         // Default: Kuning untuk kondisi lainnya
         return 'Kuning';
+    }
+
+    /**
+     * Hitung status matriks lengkap dengan alasan detail untuk tooltip
+     * Returns: ['status' => 'Hijau'|'Kuning'|'Merah', 'alasan' => string]
+     */
+    public static function hitungStatusMatriksLengkapDenganAlasan(
+        ?string $kodeIkk,
+        ?string $locationName,
+        ?string $locationDetailName,
+        string $filterDate,
+        ?string $namaLayer1 = null,
+        ?string $namaLayer2 = null,
+        ?string $namaLayer3 = null,
+        ?string $namaLayer4 = null
+    ): array {
+        if ($kodeIkk === null || $kodeIkk === '') {
+            return ['status' => 'Merah', 'alasan' => 'Kode IKK tidak valid'];
+        }
+
+        // 1. Cek IPK dan ambil durasi_jam
+        $ipk = IpkIkk::where('kode_ikk', $kodeIkk)
+            ->whereDate('ts', $filterDate)
+            ->first();
+
+        $hasIpk = $ipk !== null;
+        $durasiJam = $hasIpk ? ($ipk->durasi_jam ?? null) : null;
+
+        // 2. Cek OKK dan ambil semua data untuk fraud detection dan Layer detection
+        $okkList = Okk::where('kode_ikk', $kodeIkk)
+            ->whereDate('ts', $filterDate)
+            ->orderBy('ts')
+            ->get();
+
+        $hasOkk = $okkList->count() > 0;
+        $okkCount = $okkList->count();
+
+        // 2a. Pisahkan OKK berdasarkan Layer (Layer 1 vs Layer 2 up)
+        $okkLayer1 = collect();
+        $okkLayer2Up = collect();
+        
+        if ($hasOkk) {
+            // Normalisasi nama Layer untuk matching
+            $namaLayer1Normalized = $namaLayer1 ? trim(strtolower($namaLayer1)) : null;
+            $namaLayer2Normalized = $namaLayer2 ? trim(strtolower($namaLayer2)) : null;
+            $namaLayer3Normalized = $namaLayer3 ? trim(strtolower($namaLayer3)) : null;
+            $namaLayer4Normalized = $namaLayer4 ? trim(strtolower($namaLayer4)) : null;
+            
+            foreach ($okkList as $okk) {
+                $namaPengawas = trim(strtolower($okk->nama_pengawas ?? ''));
+                $layerPengawas = trim(strtolower($okk->layer_pengawas ?? ''));
+                
+                // Cek apakah OKK dari Layer 1
+                $isLayer1 = false;
+                if ($namaLayer1Normalized && $namaPengawas) {
+                    if (strpos($namaPengawas, $namaLayer1Normalized) !== false || 
+                        ($layerPengawas && strpos($layerPengawas, '1') !== false)) {
+                        $isLayer1 = true;
+                    }
+                }
+                
+                if ($isLayer1) {
+                    $okkLayer1->push($okk);
+                } else {
+                    // Cek apakah OKK dari Layer 2, 3, atau 4
+                    $isLayer2Up = false;
+                    if ($namaPengawas) {
+                        if ($namaLayer2Normalized) {
+                            if (strpos($namaPengawas, $namaLayer2Normalized) !== false || 
+                                strpos($namaLayer2Normalized, $namaPengawas) !== false) {
+                                $isLayer2Up = true;
+                            }
+                        }
+                        if (!$isLayer2Up && $namaLayer3Normalized) {
+                            if (strpos($namaPengawas, $namaLayer3Normalized) !== false || 
+                                strpos($namaLayer3Normalized, $namaPengawas) !== false) {
+                                $isLayer2Up = true;
+                            }
+                        }
+                        if (!$isLayer2Up && $namaLayer4Normalized) {
+                            if (strpos($namaPengawas, $namaLayer4Normalized) !== false || 
+                                strpos($namaLayer4Normalized, $namaPengawas) !== false) {
+                                $isLayer2Up = true;
+                            }
+                        }
+                    }
+                    if ($layerPengawas && !$isLayer2Up) {
+                        if (strpos($layerPengawas, '2') !== false || 
+                            strpos($layerPengawas, '3') !== false || 
+                            strpos($layerPengawas, '4') !== false) {
+                            $isLayer2Up = true;
+                        }
+                    }
+                    
+                    if ($isLayer2Up) {
+                        $okkLayer2Up->push($okk);
+                    }
+                }
+            }
+        }
+        
+        $hasOkkLayer1 = $okkLayer1->count() > 0;
+        $hasOkkLayer2Up = $okkLayer2Up->count() > 0;
+        $okkLayer1Count = $okkLayer1->count();
+
+        // 3. Fraud detection untuk OKK Layer 1 berdasarkan durasi (hanya OKK Layer 1, bukan Layer 2/3/4)
+        $isOkkFraud = false;
+        $isOkkSesuaiTarget = false;
+        $targetOkkCount = 0;
+        $jarakMenit = 0;
+        $fraudAlasanDetail = null; // untuk tooltip: alasan spesifik fraud
+
+        if ($hasOkkLayer1 && $durasiJam !== null) {
+            $durasiParts = explode('-', trim((string) $durasiJam));
+            if (count($durasiParts) === 2) {
+                $durasiMin = (float) trim($durasiParts[0]);
+                $durasiMax = (float) trim($durasiParts[1]);
+                $durasiRata = ($durasiMin + $durasiMax) / 2;
+
+                if ($durasiRata >= 3 && $durasiRata <= 6) {
+                    $targetOkkCount = 2;
+                    $jarakMenit = 30;
+                } elseif ($durasiRata > 6 && $durasiRata <= 9) {
+                    $targetOkkCount = 3;
+                    $jarakMenit = 60;
+                }
+
+                $isOkkSesuaiTarget = ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount);
+
+                if ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount) {
+                    // Ambil timestamp dari OKK Layer 1, konversi ke Carbon, dan sort ascending
+                    $tsList = $okkLayer1->pluck('ts')->map(function ($ts) {
+                        if ($ts instanceof \Carbon\Carbon) {
+                            return $ts;
+                        }
+                        try {
+                            return \Carbon\Carbon::parse($ts);
+                        } catch (\Exception $e) {
+                            return null;
+                        }
+                    })->filter()->sort(function ($a, $b) {
+                        // Sort ascending berdasarkan timestamp
+                        return $a->timestamp <=> $b->timestamp;
+                    })->values()->all();
+                    
+                    $isValidJarak = true;
+                    $minJarakActual = null;
+
+                    // Cek jarak waktu antar OKK Layer 1 (harus >= jarakMenit)
+                    for ($i = 1; $i < count($tsList); $i++) {
+                        $prev = $tsList[$i - 1];
+                        $curr = $tsList[$i];
+                        
+                        // Pastikan urutan benar: curr harus >= prev setelah sorting
+                        // Gunakan diffInMinutes dengan absolute value untuk safety
+                        $diffMinutes = abs($curr->diffInMinutes($prev, false));
+                        
+                        if ($minJarakActual === null || $diffMinutes < $minJarakActual) {
+                            $minJarakActual = $diffMinutes;
+                        }
+                        
+                        if ($diffMinutes < $jarakMenit) {
+                            $isValidJarak = false;
+                            $fraudAlasanDetail = 'Jarak waktu antar OKK Layer 1 hanya ' . round($diffMinutes, 1) . ' menit (minimum ' . $jarakMenit . ' menit)';
+                            break;
+                        }
+                    }
+                    
+                    if ($isValidJarak && $minJarakActual !== null && count($tsList) >= 2) {
+                        $fraudAlasanDetail = null;
+                    }
+
+                    $isOkkFraud = !$isValidJarak;
+                } else {
+                    $isOkkFraud = true;
+                    $fraudAlasanDetail = 'Jumlah OKK Layer 1 hanya ' . $okkLayer1Count . ' (target ' . $targetOkkCount . ')';
+                }
+            }
+        }
+
+        // 4. Cek OAK berdasarkan lokasi
+        $hasOakDicMitra = false;
+        $hasOakBc = false;
+        $hasOak = false;
+
+        if ($locationName !== null && $locationName !== '' && 
+            $locationDetailName !== null && $locationDetailName !== '') {
+            try {
+                if (class_exists(\App\Services\ClickHouseService::class)) {
+                    $clickHouse = app(\App\Services\ClickHouseService::class);
+                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                        $locationNameEscaped = addslashes(trim($locationName));
+                        $locationDetailEscaped = addslashes(trim($locationDetailName));
+
+                        $sqlOakDicMitra = "
+                            SELECT count() as cnt
+                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                            WHERE toDate(submit_date) = '{$filterDate}'
+                              AND trim(lower(toString(tipe))) = 'observee'
+                              AND trim(toString(location)) = '{$locationNameEscaped}'
+                              AND trim(toString(detail_location)) = '{$locationDetailEscaped}'
+                        ";
+                        $oakResultDicMitra = $clickHouse->query($sqlOakDicMitra);
+                        $oakCountDicMitra = isset($oakResultDicMitra[0]['cnt']) ? (int) $oakResultDicMitra[0]['cnt'] : 0;
+                        $hasOakDicMitra = $oakCountDicMitra > 0;
+
+                        $sqlOakBc = "
+                            SELECT count() as cnt
+                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                            WHERE toDate(submit_date) = '{$filterDate}'
+                              AND trim(lower(toString(tipe))) = 'observe'
+                              AND trim(toString(location)) = '{$locationNameEscaped}'
+                              AND trim(toString(detail_location)) = '{$locationDetailEscaped}'
+                        ";
+                        $oakResultBc = $clickHouse->query($sqlOakBc);
+                        $oakCountBc = isset($oakResultBc[0]['cnt']) ? (int) $oakResultBc[0]['cnt'] : 0;
+                        $hasOakBc = $oakCountBc > 0;
+
+                        $hasOak = $hasOakDicMitra || $hasOakBc;
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::debug('Dashboard OAK check skip: ' . $e->getMessage());
+            }
+        }
+
+        // Cek apakah ada Layer 2 up di IKK
+        $hasLayer2UpInIkk = ($namaLayer2 !== null && trim($namaLayer2) !== '') ||
+                             ($namaLayer3 !== null && trim($namaLayer3) !== '') ||
+                             ($namaLayer4 !== null && trim($namaLayer4) !== '');
+
+        // MERAH
+        if (!$hasIpk || !$hasOkk) {
+            $alasan = [];
+            if (!$hasIpk) $alasan[] = 'Tidak ada IPK';
+            if (!$hasOkk) $alasan[] = 'Tidak ada OKK';
+            return ['status' => 'Merah', 'alasan' => implode(' dan ', $alasan)];
+        }
+        
+        if ($hasIpk && $hasOkkLayer1 && $hasLayer2UpInIkk && !$hasOkkLayer2Up) {
+            $layerNames = array_filter([$namaLayer2, $namaLayer3, $namaLayer4]);
+            return ['status' => 'Merah', 'alasan' => 'Ada IPK dan OKK Layer 1, tetapi tidak ada OKK dari Layer 2/3/4 (' . implode(', ', $layerNames) . ')'];
+        }
+
+        // HIJAU: Harus ada IPK, OKK Layer 1 sesuai target, tidak fraud, OKK Layer 2/3/4 ada (jika diperlukan), DAN harus ada OAK
+        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && !$isOkkFraud && $hasOak) {
+            if ($hasLayer2UpInIkk) {
+                if ($hasOkkLayer2Up) {
+                    return ['status' => 'Hijau', 'alasan' => 'Lengkap: IPK ada, OKK Layer 1 sesuai target (' . $okkLayer1Count . '/' . $targetOkkCount . '), OKK Layer 2/3/4 ada, OAK ada, tidak ada fraud'];
+                }
+            } else {
+                return ['status' => 'Hijau', 'alasan' => 'Lengkap: IPK ada, OKK Layer 1 sesuai target (' . $okkLayer1Count . '/' . $targetOkkCount . '), OAK ada, tidak ada fraud'];
+            }
+        }
+
+        // KUNING
+        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && $isOkkFraud) {
+            $okkLayer2UpCount = $okkLayer2Up->count();
+            $ringkasan = 'OKK Layer 1: ' . $okkLayer1Count . ' orang, OKK Layer 2/3/4: ' . $okkLayer2UpCount . ' orang. ';
+            $alasanFraud = $fraudAlasanDetail ?? 'Jarak waktu antar OKK Layer 1 terlalu dekat atau jumlah kurang dari target';
+            return ['status' => 'Kuning', 'alasan' => $ringkasan . 'Alasan: ' . $alasanFraud];
+        }
+        
+        if ($hasIpk && $hasOkk && !$hasOak) {
+            return ['status' => 'Kuning', 'alasan' => 'IPK dan OKK ada, tetapi belum ada OAK (baik dari DIC mitra maupun BC)'];
+        }
+        
+        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && !$isOkkFraud && 
+            $hasLayer2UpInIkk && !$hasOkkLayer2Up) {
+            $layerNames = array_filter([$namaLayer2, $namaLayer3, $namaLayer4]);
+            return ['status' => 'Kuning', 'alasan' => 'IPK dan OKK Layer 1 sesuai target, tetapi belum ada OKK dari Layer 2/3/4 (' . implode(', ', $layerNames) . ')'];
+        }
+
+        // Default Kuning
+        $okkLayer2UpCount = $okkLayer2Up->count();
+        $ringkasanLayer = 'OKK Layer 1: ' . $okkLayer1Count . ' orang, OKK Layer 2/3/4: ' . $okkLayer2UpCount . ' orang. ';
+        $alasan = [];
+        if (!$hasIpk) $alasan[] = 'Tidak ada IPK';
+        if (!$hasOkk) $alasan[] = 'Tidak ada OKK';
+        if ($hasOkkLayer1 && !$isOkkSesuaiTarget) {
+            $alasan[] = 'OKK Layer 1 tidak sesuai target (' . $okkLayer1Count . '/' . $targetOkkCount . ')';
+        }
+        if (empty($alasan)) {
+            $alasan[] = 'Kondisi tidak memenuhi kriteria Hijau';
+        }
+        return ['status' => 'Kuning', 'alasan' => $ringkasanLayer . implode(', ', $alasan)];
     }
 
     /**

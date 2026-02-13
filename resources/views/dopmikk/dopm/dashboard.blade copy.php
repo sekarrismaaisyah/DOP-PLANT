@@ -1436,45 +1436,45 @@
     </div> -->
 
     <div class="card rounded-4 mb-3 w-100">
-        <div class="card-body py-3">
-            <form method="get" action="{{ route('dopmikk.dopm.dashboard') }}" id="dashboardFilterForm">
-                <div class="row g-3 align-items-end">
-                    <div class="col-12 col-md">
-                        <label for="filterDate" class="form-label mb-2 small fw-semibold text-muted">
-                            <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">calendar_today</i>
-                            Tampilkan data tanggal
-                        </label>
-                        <input type="date" 
-                            name="date" 
-                            id="filterDate" 
-                            class="form-control rounded-3" 
-                            value="{{ $filterDate ?? now()->toDateString() }}" readonly>
-                    </div>
-                    <div class="col-12 col-md">
-                        <label for="filterSite" class="form-label mb-2 small fw-semibold text-muted">
-                            <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">place</i>
-                            Site
-                        </label>
-                        <select name="site" id="filterSite" class="form-select rounded-3">
-                            <option value="" {{ ($filterSite ?? '') === '' ? 'selected' : '' }}>Semua Site</option>
-                            @php
-                                $staticSites = ['BMO 1', 'BMO 2', 'GMO', 'LMO', 'SMO', 'BMO 3'];
-                            @endphp
-                            @foreach($staticSites as $site)
-                                <option value="{{ $site }}" {{ ($filterSite ?? '') === $site ? 'selected' : '' }}>{{ $site }}</option>
-                            @endforeach
-                        </select>
-                    </div>
-                    <div class="col-12 col-md-auto">
-                        <button type="submit" class="btn btn-primary rounded-3 px-4" id="dashboardFilterBtn">
-                            <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">search</i> 
-                            Filter
-                        </button>
-                    </div>
+    <div class="card-body py-3">
+        <form method="get" action="{{ route('dopmikk.dopm.dashboard') }}" id="dashboardFilterForm">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md">
+                    <label for="filterDate" class="form-label mb-2 small fw-semibold text-muted">
+                        <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">calendar_today</i>
+                        Tampilkan data tanggal
+                    </label>
+                    <input type="date" 
+                           name="date" 
+                           id="filterDate" 
+                           class="form-control rounded-3" 
+                           value="{{ $filterDate ?? now()->toDateString() }}" readonly>
                 </div>
-            </form>
-        </div>
+                <div class="col-12 col-md">
+                    <label for="filterSite" class="form-label mb-2 small fw-semibold text-muted">
+                        <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">place</i>
+                        Site
+                    </label>
+                    <select name="site" id="filterSite" class="form-select rounded-3">
+                        <option value="" {{ ($filterSite ?? '') === '' ? 'selected' : '' }}>Semua Site</option>
+                        @php
+                            $staticSites = ['BMO 1', 'BMO 2', 'GMO', 'LMO', 'SMO', 'BMO 3'];
+                        @endphp
+                        @foreach($staticSites as $site)
+                            <option value="{{ $site }}" {{ ($filterSite ?? '') === $site ? 'selected' : '' }}>{{ $site }}</option>
+                        @endforeach
+                    </select>
+                </div>
+                <div class="col-12 col-md-auto">
+                    <button type="submit" class="btn btn-primary rounded-3 px-4" id="dashboardFilterBtn">
+                        <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">search</i> 
+                        Filter
+                    </button>
+                </div>
+            </div>
+        </form>
     </div>
+</div>
     
 </div>
 
@@ -1489,6 +1489,21 @@
     </div> --}}
     
         <div class="row">
+          <!-- <div class="col-12 col-xl-4 d-flex">
+             <div class="card rounded-4 w-100">
+               <div class="card-body">
+                 <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="">
+                      <h2 class="mb-0">{{ number_format($totalIkkClickhouseMingguIni ?? 0) }}</h2>
+                    </div>
+                    <div class="">
+                    </div>
+                  </div>
+                  <p class="mb-0">Total Week ini</p>
+                   <div id="chart1"></div>
+               </div>
+             </div>
+          </div> -->
           <div class="col-12 col-xl-5 col-xxl-4 d-flex">
             <div class="card rounded-4 w-100 shadow-none bg-transparent border-0">
                <div class="card-body p-0">
@@ -1525,14 +1540,36 @@
                      </div>
                     </div>
                  </div>
-                  
+                   <div class="col-12 col-xl-12">
+                    <div class="card rounded-4 mb-0">
+                      <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                           <div class="">
+                             @php
+                               $pctPengisianRataRataIkk = round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
+                             @endphp
+                             <h2 class="mb-0">{{ $pctPengisianRataRataIkk }}% Compliance</h2>
+                           </div>
+                           <div class="">
+                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata IKK</p>
+                           </div>
+                         </div>
+                         <p class="mb-0">Presentase Pengisian IKK (IPK & OKK)</p>
+                         <p class="mb-0 small text-muted">Berdasarkan IKK unik: IPK {{ $pctIkkAdaIpk ?? 0 }}% · OKK {{ $pctIkkAdaOkk ?? 0 }}%</p>
+                          <div class="mt-4">
+                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK (IKK) <span class="">{{ $pctPengisianRataRataIkk }}%</span></p>
+                            <div class="progress w-100" style="height: 7px;">
+                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRataIkk) }}%"></div>
+                            </div>
+                          </div>
+                      </div>
+                    </div>
+                  </div>
 
                  </div><!--end row-->
                </div>
             </div>  
           </div> 
-
-          
 
           <div class="col-12 col-xl-8 d-flex">
             <div class="card rounded-4 w-100">
@@ -1564,7 +1601,7 @@
                                 <p class="mb-0">IKK ada OKK</p>
                                 <small class="text-muted">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaOkkCount ?? 0) }} belum OKK</small>
                   </div>
-                  <!-- <div class="vr"></div>
+                  <div class="vr"></div>
                   
                   <div class="d-flex flex-column align-items-center justify-content-center gap-2">
                     <a href="javascript:;" class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
@@ -1573,20 +1610,53 @@
                    <h3 class="mb-0">{{ number_format($totalOakHarian ?? 0) }}</h3>
                                 <p class="mb-0">OAK</p>
                                 <small class="text-muted">Data Hari ini (OBSERVE, Layer 2/3/4)</small>
-                  </div> -->
+                  </div>
                 </div>
               </div>
             </div>
           </div>
         </div><!--end row-->
-
         
-        
-        <div class="row align-items-stretch">
-          
-            <div class="col-12 col-xl-5 col-xxl-4 d-flex flex-column">
-                    <div class="card rounded-4 mb-1 flex-fill">
-                      <div class="card-body d-flex flex-column">
+        <div class="row">
+          <!-- <div class="col-12 col-xl-5 col-xxl-4 d-flex">
+            <div class="card rounded-4 w-100 shadow-none bg-transparent border-0">
+               <div class="card-body p-0">
+                 <div class="row g-4">
+                    <div class="col-12 col-xl-6 d-flex">
+                      <div class="card mb-0 rounded-4 w-100">
+                       <div class="card-body">
+                         <div class=" mb-2">
+                           <h5 class="mb-0 fw-bold">IKK Need Verification</h5>
+                           <p class="mb-0 text-muted small">Total IKK Need Verification</p>
+                         </div>
+                         <div class="text-center py-3 mt-4">
+                           <h1 class="mb-0 display-5 fw-bold">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</h1>
+                         </div>
+                         <div class="text-center mt-3">
+                           <p class="mb-0"><span class="text-success me-1">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</span> Need Verification pada hari ini</p>
+                         </div>
+                       </div>
+                      </div>
+                   </div>
+                   <div class="col-12 col-xl-6 d-flex">
+                    <div class="card mb-0 rounded-4 w-100">
+                     <div class="card-body">
+                       <div class="mb-2">
+                         <h5 class="mb-0 fw-bold">Pekerjaan Batal</h5>
+                         <p class="mb-0 text-muted small">Total IPK-IKK Status Batal Hari ini</p>
+                       </div>
+                       <div class="text-center py-3 mt-4">
+                         <h1 class="mb-0 display-5 fw-bold">{{ number_format($totalPekerjaanBatalHarian ?? 0) }} Cancel</h1>
+                       </div>
+                       <div class="text-center mt-3">
+                         <p class="mb-0 text-muted small">Data dari IPK-IKK</p>
+                       </div>
+                     </div>
+                    </div>
+                 </div>
+                   <div class="col-12 col-xl-12">
+                    <div class="card rounded-4 mb-0">
+                      <div class="card-body">
                         <div class="d-flex align-items-center gap-3 mb-2">
                            <div class="">
                              @php
@@ -1608,52 +1678,33 @@
                           </div>
                       </div>
                     </div>
+                  </div>
 
-                    <div class="card rounded-4 mt-2 mb-0 flex-fill">
-                      <div class="card-body d-flex flex-column">
-                        <div class="d-flex align-items-center gap-3 mb-2">
-                           <div class="">
-                             <h2 class="mb-0">Data OAK Hari ini</h2>
-                           </div>
-                           <div class="">
-                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-info bg-opacity-10 text-info"><span class="material-icons-outlined fs-6">visibility</span>OAK</p>
-                           </div>
-                         </div>
-                         <p class="mb-0">Jumlah Observasi Area Kerja berdasarkan IKK</p>
-                         <p class="mb-0 small text-muted">Data dari Beats — tipe OBSERVE, layer 2/3/4 DOPM</p>
-                          <div class="mt-4 flex-grow-1 d-flex align-items-center justify-content-center">
-                            <div class="text-center py-2 w-100">
-                              <h1 class="mb-0 display-5 fw-bold text-info">{{ number_format($totalOakHarian ?? 0) }}</h1>
-                              <p class="mb-0 mt-2 text-muted small">Total OAK Hari ini</p>
-                            </div>
-                          </div>
-                      </div>
-                    </div>
-            </div>
-            
-            <div class="col-12 col-xl-7 col-xxl-8 d-flex">
-                <div class="card w-100 rounded-4 h-100">
-                <div class="card-body d-flex flex-column">
-                    <div class="d-flex align-items-start justify-content-between mb-3">
-                    <div class="">
-                        <h5 class="mb-0 fw-bold">Sumarry Matriks Evaluasi</h5>
-                    </div>
-                    </div>
-                    <div id="chart4" class="flex-grow-1"></div>
-                    <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-start">
-                        <span class="small text-muted">
-                        Sumbu X = jenis ijin kerja khusus, tinggi bar = jumlah izin kerja (IKK) per jenis.
-                        Warna bar mengikuti status matriks agregat per jenis (Merah, Kuning, Hijau).
-                        </span>
-                    </div>
-                </div>
-                </div>  
-            </div> 
-        </div>
+                 </div>
+               </div>
+            </div>  
+          </div>  -->
+          <div class="col-12 col-xl-7 col-xxl-8 d-flex">
+            <div class="card w-100 rounded-4">
+               <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <div class="">
+                    <h5 class="mb-0 fw-bold">Sumarry Matriks Evaluasi</h5>
+                  </div>
+                 </div>
+                  <div id="chart4"></div>
+                  <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-start">
+                    <span class="small text-muted">
+                      Sumbu X = jenis ijin kerja khusus, tinggi bar = jumlah izin kerja (IKK) per jenis.
+                      Warna bar mengikuti status matriks agregat per jenis (Merah, Kuning, Hijau).
+                    </span>
+                  </div>
+               </div>
+            </div>  
+          </div> 
+        </div><!--end row-->
 
-        
-
-        <div class="row mt-3">
+        <div class="row">
            <div class="col-12 col-xl-4 d-flex">
             <div class="card w-100 rounded-4">
                <div class="card-body">
@@ -1736,167 +1787,167 @@
              </div>
            </div>
 
-            <div class="col-12 col-xl-4 d-flex">
-                <div class="card w-100 rounded-4">
-                <div class="card-body">
-                    <div class="d-flex align-items-start justify-content-between mb-3">
-                    <div class="">
-                        <h5 class="mb-0 fw-bold">Warning</h5>
+           <div class="col-12 col-xl-4 d-flex">
+            <div class="card w-100 rounded-4">
+              <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <div class="">
+                    <h5 class="mb-0 fw-bold">Warning</h5>
+                  </div>
+                  <div class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                      data-bs-toggle="dropdown">
+                      <span class="material-icons-outlined fs-5">more_vert</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                    </ul>
+                  </div>
+                 </div>
+                <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
+                  @php
+                      // Gunakan data IKK (work permit) dari ClickHouse untuk Warning (Kuning)
+                      $ikkKuning = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Kuning')->values();
+                  @endphp
+                  @forelse($ikkKuning as $ikk)
+                  @php
+                    // Data dari IKK/work permit (bukan DOPM)
+                    $dopmJsonK = [
+                        'kode_ikk' => $ikk->code ?? null,
+                        'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
+                        'sid_layer_2' => $ikk->sid_layer_2 ?? null,
+                        'sid_layer_3' => $ikk->sid_layer_3 ?? null,
+                        'sid_layer_4' => $ikk->sid_layer_4 ?? null,
+                        'nama_layer_2' => $ikk->nama_layer_2 ?? null,
+                        'nama_layer_3' => $ikk->nama_layer_3 ?? null,
+                        'nama_layer_4' => $ikk->nama_layer_4 ?? null,
+                        'nama_layer_1' => $ikk->nama_layer_1 ?? null,
+                        'sid_layer_1' => $ikk->sid_layer_1 ?? null,
+                        'id_dop' => $ikk->code ?? null,
+                        'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
+                        'site_ijin_kerja_khusus' => $ikk->site ?? null,
+                        'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
+                        'tanggal_dop' => $filterDate ?? null,
+                        'timestamp' => null,
+                        'status' => $ikk->status ?? null,
+                        'location_name' => $ikk->location_name ?? null,
+                        'location_detail_name' => $ikk->location_detail_name ?? null,
+                        'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
+                    ];
+                  @endphp
+                  @php
+                     $alasanKuning = htmlspecialchars($ikk->alasan_matriks ?? 'Kondisi tidak memenuhi kriteria Hijau', ENT_QUOTES, 'UTF-8');
+                  @endphp
+                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Kuning:</strong><br>{{ $alasanKuning }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
+                      <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-warning bg-opacity-10 text-warning flex-shrink-0">
+                        <span class="material-icons-outlined" style="font-size: 28px;">info</span>
+                      </div>
+                      <div class="min-w-0">
+                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}">{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}</h6>
+                        <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
+                      </div>
                     </div>
-                    <div class="dropdown">
-                        <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
-                        data-bs-toggle="dropdown">
-                        <span class="material-icons-outlined fs-5">more_vert</span>
-                        </a>
-                        <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="javascript:;">Action</a></li>
-                        <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
-                        <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
-                        </ul>
+                    <div class="progress w-25 flex-shrink-0" style="height: 5px;">
+                      <div class="progress-bar bg-warning text-dark" style="width: 50%"></div>
                     </div>
+                    <div class="flex-shrink-0 d-flex align-items-center gap-2">
+                     
+                      <p class="mb-0 fs-6">50%</p>
                     </div>
-                    <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
-                    @php
-                        // Gunakan data IKK (work permit) dari ClickHouse untuk Warning (Kuning)
-                        $ikkKuning = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Kuning')->values();
-                    @endphp
-                    @forelse($ikkKuning as $ikk)
-                    @php
-                        // Data dari IKK/work permit (bukan DOPM)
-                        $dopmJsonK = [
-                            'kode_ikk' => $ikk->code ?? null,
-                            'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
-                            'sid_layer_2' => $ikk->sid_layer_2 ?? null,
-                            'sid_layer_3' => $ikk->sid_layer_3 ?? null,
-                            'sid_layer_4' => $ikk->sid_layer_4 ?? null,
-                            'nama_layer_2' => $ikk->nama_layer_2 ?? null,
-                            'nama_layer_3' => $ikk->nama_layer_3 ?? null,
-                            'nama_layer_4' => $ikk->nama_layer_4 ?? null,
-                            'nama_layer_1' => $ikk->nama_layer_1 ?? null,
-                            'sid_layer_1' => $ikk->sid_layer_1 ?? null,
-                            'id_dop' => $ikk->code ?? null,
-                            'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
-                            'site_ijin_kerja_khusus' => $ikk->site ?? null,
-                            'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
-                            'tanggal_dop' => $filterDate ?? null,
-                            'timestamp' => null,
-                            'status' => $ikk->status ?? null,
-                            'location_name' => $ikk->location_name ?? null,
-                            'location_detail_name' => $ikk->location_detail_name ?? null,
-                            'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
-                        ];
-                    @endphp
-                    @php
-                        $alasanKuning = htmlspecialchars($ikk->alasan_matriks ?? 'Kondisi tidak memenuhi kriteria Hijau', ENT_QUOTES, 'UTF-8');
-                    @endphp
-                    <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Kuning:</strong><br>{{ $alasanKuning }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
-                        <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
-                        <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-warning bg-opacity-10 text-warning flex-shrink-0">
-                            <span class="material-icons-outlined" style="font-size: 28px;">info</span>
-                        </div>
-                        <div class="min-w-0">
-                            <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}">{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}</h6>
-                            <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
-                        </div>
-                        </div>
-                        <div class="progress w-25 flex-shrink-0" style="height: 5px;">
-                        <div class="progress-bar bg-warning text-dark" style="width: 50%"></div>
-                        </div>
-                        <div class="flex-shrink-0 d-flex align-items-center gap-2">
-                        
-                        <p class="mb-0 fs-6">50%</p>
-                        </div>
-                    </div>
-                    @empty
-                    <div class="text-center py-4 text-muted">
-                        <span class="material-icons-outlined" style="font-size: 48px;">check_circle</span>
-                        <p class="mb-0 mt-2 small">Tidak ada DOPM matriks Kuning untuk tanggal ini.</p>
-                    </div>
-                    @endforelse
-                    </div>
+                  </div>
+                  @empty
+                  <div class="text-center py-4 text-muted">
+                    <span class="material-icons-outlined" style="font-size: 48px;">check_circle</span>
+                    <p class="mb-0 mt-2 small">Tidak ada DOPM matriks Kuning untuk tanggal ini.</p>
+                  </div>
+                  @endforelse
                 </div>
-                </div>  
-            </div>
+              </div>
+            </div>  
+          </div>
 
            <div class="col-12 col-xl-4 d-flex">
-                <div class="card w-100 rounded-4">
-                    <div class="card-body">
-                        <div class="d-flex align-items-start justify-content-between mb-3">
-                            <div class="">
-                                <h5 class="mb-0 fw-bold">Complete</h5>
-                            </div>
-                            <div class="dropdown">
-                                <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
-                                data-bs-toggle="dropdown">
-                                <span class="material-icons-outlined fs-5">more_vert</span>
-                                </a>
-                                <ul class="dropdown-menu">
-                                <li><a class="dropdown-item" href="javascript:;">Action</a></li>
-                                <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
-                                <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                        <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
-                        @php
-                            // Gunakan data IKK (work permit) dari ClickHouse untuk Complete (Hijau)
-                            $ikkHijau = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Hijau')->values();
-                        @endphp
-                        @forelse($ikkHijau as $ikk)
-                        @php
-                            // Data dari IKK/work permit (bukan DOPM)
-                            $dopmJsonH = [
-                                'kode_ikk' => $ikk->code ?? null,
-                                'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
-                                'sid_layer_2' => $ikk->sid_layer_2 ?? null,
-                                'sid_layer_3' => $ikk->sid_layer_3 ?? null,
-                                'sid_layer_4' => $ikk->sid_layer_4 ?? null,
-                                'nama_layer_2' => $ikk->nama_layer_2 ?? null,
-                                'nama_layer_3' => $ikk->nama_layer_3 ?? null,
-                                'nama_layer_4' => $ikk->nama_layer_4 ?? null,
-                                'nama_layer_1' => $ikk->nama_layer_1 ?? null,
-                                'sid_layer_1' => $ikk->sid_layer_1 ?? null,
-                                'id_dop' => $ikk->code ?? null,
-                                'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
-                                'site_ijin_kerja_khusus' => $ikk->site ?? null,
-                                'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
-                                'tanggal_dop' => $filterDate ?? null,
-                                'timestamp' => null,
-                                'status' => $ikk->status ?? null,
-                                'location_name' => $ikk->location_name ?? null,
-                                'location_detail_name' => $ikk->location_detail_name ?? null,
-                                'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
-                            ];
-                        @endphp
-                        @php
-                            $alasanHijau = htmlspecialchars($ikk->alasan_matriks ?? 'Semua persyaratan terpenuhi', ENT_QUOTES, 'UTF-8');
-                        @endphp
-                        <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Hijau:</strong><br>{{ $alasanHijau }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
-                            <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
-                            <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-success bg-opacity-10 text-success flex-shrink-0">
-                                <span class="material-icons-outlined" style="font-size: 28px;">check_circle</span>
-                            </div>
-                            <div class="min-w-0">
-                                <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}">{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}</h6>
-                                <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
-                            </div>
-                            </div>
-                            <div class="progress w-25 flex-shrink-0" style="height: 5px;">
-                            <div class="progress-bar bg-success" style="width: 100%"></div>
-                            </div>
-                            <div class="flex-shrink-0 d-flex align-items-center gap-2">
-                            
-                            <p class="mb-0 fs-6">100%</p>
-                            </div>
-                        </div>
-                        @empty
-                        <div class="text-center py-4 text-muted">
-                            <span class="material-icons-outlined" style="font-size: 48px;">inbox</span>
-                            <p class="mb-0 mt-2 small">Tidak ada DOPM matriks Hijau untuk tanggal ini.</p>
-                        </div>
-                        @endforelse
-                        </div>
+            <div class="card w-100 rounded-4">
+              <div class="card-body">
+                <div class="d-flex align-items-start justify-content-between mb-3">
+                  <div class="">
+                    <h5 class="mb-0 fw-bold">Complete</h5>
+                  </div>
+                  <div class="dropdown">
+                    <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
+                      data-bs-toggle="dropdown">
+                      <span class="material-icons-outlined fs-5">more_vert</span>
+                    </a>
+                    <ul class="dropdown-menu">
+                      <li><a class="dropdown-item" href="javascript:;">Action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Another action</a></li>
+                      <li><a class="dropdown-item" href="javascript:;">Something else here</a></li>
+                    </ul>
+                  </div>
+                 </div>
+                <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
+                  @php
+                      // Gunakan data IKK (work permit) dari ClickHouse untuk Complete (Hijau)
+                      $ikkHijau = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Hijau')->values();
+                  @endphp
+                  @forelse($ikkHijau as $ikk)
+                  @php
+                    // Data dari IKK/work permit (bukan DOPM)
+                    $dopmJsonH = [
+                        'kode_ikk' => $ikk->code ?? null,
+                        'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
+                        'sid_layer_2' => $ikk->sid_layer_2 ?? null,
+                        'sid_layer_3' => $ikk->sid_layer_3 ?? null,
+                        'sid_layer_4' => $ikk->sid_layer_4 ?? null,
+                        'nama_layer_2' => $ikk->nama_layer_2 ?? null,
+                        'nama_layer_3' => $ikk->nama_layer_3 ?? null,
+                        'nama_layer_4' => $ikk->nama_layer_4 ?? null,
+                        'nama_layer_1' => $ikk->nama_layer_1 ?? null,
+                        'sid_layer_1' => $ikk->sid_layer_1 ?? null,
+                        'id_dop' => $ikk->code ?? null,
+                        'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
+                        'site_ijin_kerja_khusus' => $ikk->site ?? null,
+                        'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
+                        'tanggal_dop' => $filterDate ?? null,
+                        'timestamp' => null,
+                        'status' => $ikk->status ?? null,
+                        'location_name' => $ikk->location_name ?? null,
+                        'location_detail_name' => $ikk->location_detail_name ?? null,
+                        'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
+                    ];
+                  @endphp
+                  @php
+                     $alasanHijau = htmlspecialchars($ikk->alasan_matriks ?? 'Semua persyaratan terpenuhi', ENT_QUOTES, 'UTF-8');
+                  @endphp
+                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Hijau:</strong><br>{{ $alasanHijau }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                    <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
+                      <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-success bg-opacity-10 text-success flex-shrink-0">
+                        <span class="material-icons-outlined" style="font-size: 28px;">check_circle</span>
+                      </div>
+                      <div class="min-w-0">
+                        <h6 class="mb-0 fw-bold text-truncate" title="{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}">{{ $ikk->jenis_ijin_kerja_khusus ?? $ikk->code ?? '-' }}</h6>
+                        <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
+                      </div>
                     </div>
+                    <div class="progress w-25 flex-shrink-0" style="height: 5px;">
+                      <div class="progress-bar bg-success" style="width: 100%"></div>
+                    </div>
+                    <div class="flex-shrink-0 d-flex align-items-center gap-2">
+                    
+                      <p class="mb-0 fs-6">100%</p>
+                    </div>
+                  </div>
+                  @empty
+                  <div class="text-center py-4 text-muted">
+                    <span class="material-icons-outlined" style="font-size: 48px;">inbox</span>
+                    <p class="mb-0 mt-2 small">Tidak ada DOPM matriks Hijau untuk tanggal ini.</p>
+                  </div>
+                  @endforelse
+                </div>
+              </div>
             </div>
          </div>
 
