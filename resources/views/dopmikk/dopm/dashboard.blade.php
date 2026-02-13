@@ -2874,7 +2874,10 @@
 <script>
 (function() {
   // Chart1: Total IKK Week ini (ClickHouse Approved + Expired) per hari
-  var chart1Data = @json($chartIkkClickhousePerHariMinggu ?? [0,0,0,0,0,0,0]);
+  @php
+    $chart1WeekData = $chartIkkClickhousePerHariMinggu ?? array_fill(0, 7, 0);
+  @endphp
+  var chart1Data = @json($chart1WeekData);
   var chart1Categories = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
   (function renderChart1() {
     var el = document.querySelector('#chart1');
