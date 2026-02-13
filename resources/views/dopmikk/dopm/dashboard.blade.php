@@ -1494,13 +1494,14 @@
                <div class="card-body">
                  <div class="d-flex align-items-center gap-3 mb-2">
                     <div class="">
-                      <h2 class="mb-0">{{ number_format($totalDopmMingguIni ?? 0) }}</h2>
+                      <h2 class="mb-0">{{ number_format($totalIkkClickhouseMingguIni ?? 0) }}</h2>
                     </div>
                     <div class="">
-                      <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-danger text-danger bg-opacity-10"><span class="material-icons-outlined fs-6">arrow_downward</span>8.6%</p>
+                      <!-- <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-danger text-danger bg-opacity-10"><span class="material-icons-outlined fs-6">arrow_downward</span>8.6%</p> -->
                     </div>
                   </div>
                   <p class="mb-0">Total Week ini</p>
+                  <small class="text-muted d-block mb-1">IKK ClickHouse (Approved + Expired)</small>
                    <div id="chart1"></div>
                </div>
              </div>
@@ -2867,11 +2868,33 @@
 
 
 <script src="{{ URL::asset('build/plugins/apexchart/apexcharts.min.js') }}"></script>
-<script>window.skipChart4 = true;</script>
+<script>window.skipChart4 = true; window.skipChart1 = true;</script>
 <script src="{{ URL::asset('build/js/index.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/peity/jquery.peity.min.js') }}"></script>
 <script>
 (function() {
+  // Chart1: Total IKK Week ini (ClickHouse Approved + Expired) per hari
+  var chart1Data = @json($chartIkkClickhousePerHariMinggu ?? [0,0,0,0,0,0,0]);
+  var chart1Categories = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
+  (function renderChart1() {
+    var el = document.querySelector('#chart1');
+    if (!el || typeof ApexCharts === 'undefined') return;
+    try { ApexCharts.exec('chart1', 'destroy'); } catch (e) {}
+    el.innerHTML = '';
+    new ApexCharts(el, {
+      chart: { id: 'chart1', height: 105, type: 'area', sparkline: { enabled: false }, zoom: { enabled: false }, fontFamily: 'inherit' },
+      series: [{ name: 'IKK', data: chart1Data }],
+      dataLabels: { enabled: false },
+      stroke: { width: 1.7, curve: 'smooth' },
+      fill: { type: 'gradient', gradient: { shade: 'dark', gradientToColors: ['#02c27a'], shadeIntensity: 1, type: 'vertical', opacityFrom: 0.5, opacityTo: 0 } },
+      colors: ['#02c27a'],
+      xaxis: { categories: chart1Categories, labels: { style: { colors: '#a1acb8' } } },
+      yaxis: { labels: { style: { colors: '#a1acb8' } } },
+      grid: { borderColor: 'rgba(0,0,0,0.05)', strokeDashArray: 4 },
+      tooltip: { y: { title: { formatter: function() { return 'IKK'; } } } }
+    }).render();
+  })();
+
   // Chart jumlah izin kerja per jenis, warna bar mengikuti status matriks (Merah/Kuning/Hijau)
   var categories = @json($chartJenisLabels ?? []);
   var categoriesFull = @json($chartJenisLabelsFull ?? []);

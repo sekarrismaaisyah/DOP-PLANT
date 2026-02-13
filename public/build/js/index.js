@@ -2,8 +2,10 @@ $(function () {
   "use strict";
 
 
-  // chart 1
-
+  // chart 1 (skip if window.skipChart1 is set, e.g. DOPM Dashboard draws its own)
+  if (window.skipChart1) {
+    // Chart 1 will be rendered by the page (e.g. Dashboard IKK week)
+  } else {
   var options = {
     series: [{
       name: "Net Sales",
@@ -67,6 +69,7 @@ $(function () {
 
   var chart = new ApexCharts(document.querySelector("#chart1"), options);
   chart.render();
+  }
 
 
 
