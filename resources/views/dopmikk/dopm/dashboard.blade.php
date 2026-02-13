@@ -1624,7 +1624,7 @@
                           <div class="mt-4 flex-grow-1 d-flex align-items-center justify-content-center">
                             <div class="text-center py-2 w-100">
                               <h1 class="mb-0 display-5 fw-bold text-info">{{ number_format($totalOakHarian ?? 0) }}</h1>
-                              <p class="mb-0 mt-2 text-muted small">Total OAK Hari ini</p>
+                              <p class="mb-0 mt-2 text-muted small">Total OAK Pada IKK Hari ini</p>
                             </div>
                           </div>
                       </div>
