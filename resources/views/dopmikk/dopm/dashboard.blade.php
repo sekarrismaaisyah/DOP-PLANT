@@ -1448,7 +1448,7 @@
                            name="date" 
                            id="filterDate" 
                            class="form-control rounded-3" 
-                           value="{{ $filterDate ?? now()->toDateString() }}" >
+                           value="{{ $filterDate ?? now()->toDateString() }}" readonly>
                 </div>
                 <div class="col-12 col-md">
                     <label for="filterSite" class="form-label mb-2 small fw-semibold text-muted">
