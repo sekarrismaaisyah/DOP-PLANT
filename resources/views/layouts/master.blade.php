@@ -47,7 +47,7 @@
 <body>
 
 @include('layouts.topbar')
-@include('layouts.masterMotionHazardAdmin')
+@include('layouts.sidebarWmsAdmin')
 
 <!--start main wrapper-->
 <main class="main-wrapper">

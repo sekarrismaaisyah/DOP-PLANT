@@ -21,17 +21,21 @@
                         <h5 class="mb-0 fw-bold">Data CCTV Coverage</h5>
                         <p class="mb-0 text-muted">Daftar Data CCTV Coverage yang sudah diimport</p>
                     </div>
-                    <div class="d-flex gap-2">
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a href="{{ route('cctv-data.coverage.export') }}" class="btn btn-info">
+                            <i class="material-icons-outlined">download</i> Download Excel
+                        </a>
                         <button type="button" class="btn btn-primary" id="btnImportCoverage">
                             <i class="material-icons-outlined">upload</i> Import Coverage
                         </button>
-                    <div class="dropdown">
+                        <div class="dropdown">
                             <a href="javascript:;" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
                                 <i class="material-icons-outlined">more_vert</i>
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="{{ route('cctv-data.index') }}"><i class="material-icons-outlined me-2">arrow_back</i> Kembali</a></li>
-                        </ul>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ route('cctv-data.coverage.export') }}"><i class="material-icons-outlined me-2">download</i> Download Excel</a></li>
+                                <li><a class="dropdown-item" href="{{ route('cctv-data.index') }}"><i class="material-icons-outlined me-2">arrow_back</i> Kembali</a></li>
+                            </ul>
                         </div>
                     </div>
                 </div>
@@ -345,6 +349,10 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
+        // Hindari reinitialise DataTable: destroy dulu jika sudah ada
+        if ($.fn.DataTable.isDataTable('#coverageDataTable')) {
+            $('#coverageDataTable').DataTable().destroy();
+        }
         var table = $('#coverageDataTable').DataTable({
             processing: true,
             serverSide: true,

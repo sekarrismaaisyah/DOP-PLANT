@@ -153,6 +153,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('cctv-data-coverage-import', [CctvDataController::class, 'importCoverageForm'])->name('cctv-data.import-coverage-form');
     Route::post('cctv-data-coverage-import', [CctvDataController::class, 'importCoverage'])->name('cctv-data.import-coverage');
     Route::get('cctv-data-coverage-import/data', [CctvDataController::class, 'getCoverageData'])->name('cctv-data.coverage.data');
+    Route::get('cctv-data-coverage-import/export', [CctvDataController::class, 'exportCoverage'])->name('cctv-data.coverage.export');
     Route::get('cctv-data-coverage-import/download-template', [CctvDataController::class, 'downloadTemplateCoverage'])->name('cctv-data.download-template-coverage');
     Route::get('cctv-data-coverage-import/{id}', [CctvDataController::class, 'getCoverageDetail'])->name('cctv-data.coverage.detail');
     Route::put('cctv-data-coverage-import/{id}', [CctvDataController::class, 'updateCoverage'])->name('cctv-data.coverage.update');

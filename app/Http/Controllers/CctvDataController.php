@@ -281,7 +281,7 @@ class CctvDataController extends Controller
     }
 
     /**
-     * Export semua data CCTV (cctv_data_bmo2) ke Excel
+     * Export semua data CCTV (cctv_data_bmo2) ke Excel - semua kolom tabel
      */
     public function exportCctvData()
     {
@@ -302,37 +302,71 @@ class CctvDataController extends Controller
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
 
-            $headers = ['No', 'Site', 'Perusahaan', 'No CCTV', 'Nama CCTV', 'Control Room', 'Status', 'Kondisi', 'Lokasi Pemasangan', 'Link Akses', 'Keterangan', 'Created At', 'Updated At'];
+            // Semua kolom tabel cctv_data_bmo2 (sesuai fillable + id, timestamps)
+            $headers = [
+                'No', 'id', 'site', 'perusahaan', 'kategori', 'no_cctv', 'nama_cctv', 'fungsi_cctv', 'bentuk_instalasi_cctv',
+                'jenis', 'tipe_cctv', 'radius_pengawasan', 'jenis_spesifikasi_zoom', 'lokasi_pemasangan', 'control_room',
+                'status', 'kondisi', 'longitude', 'latitude', 'coverage_lokasi', 'coverage_detail_lokasi',
+                'kategori_area_tercapture', 'kategori_aktivitas_tercapture', 'link_akses', 'user_name', 'password',
+                'connected', 'mirrored', 'fitur_auto_alert', 'keterangan', 'verifikasi_by_petugas_ocr',
+                'bulan_update', 'tahun_update', 'qr_code', 'created_at', 'updated_at'
+            ];
             $col = 'A';
             foreach ($headers as $h) {
                 $sheet->setCellValue($col . '1', $h);
                 $col++;
             }
+            $lastCol = chr(ord('A') + count($headers) - 1);
             $headerStyle = [
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
                 'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']],
                 'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
             ];
-            $sheet->getStyle('A1:M1')->applyFromArray($headerStyle);
+            $sheet->getStyle('A1:' . $lastCol . '1')->applyFromArray($headerStyle);
 
             $rowNum = 2;
             foreach ($data as $index => $item) {
                 $sheet->setCellValue('A' . $rowNum, $index + 1);
-                $sheet->setCellValue('B' . $rowNum, $item->site ?? '');
-                $sheet->setCellValue('C' . $rowNum, $item->perusahaan ?? '');
-                $sheet->setCellValue('D' . $rowNum, $item->no_cctv ?? '');
-                $sheet->setCellValue('E' . $rowNum, $item->nama_cctv ?? '');
-                $sheet->setCellValue('F' . $rowNum, $item->control_room ?? '');
-                $sheet->setCellValue('G' . $rowNum, $item->status ?? '');
-                $sheet->setCellValue('H' . $rowNum, $item->kondisi ?? '');
-                $sheet->setCellValue('I' . $rowNum, $item->lokasi_pemasangan ?? '');
-                $sheet->setCellValue('J' . $rowNum, $item->link_akses ?? '');
-                $sheet->setCellValue('K' . $rowNum, $item->keterangan ?? '');
-                $sheet->setCellValue('L' . $rowNum, $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : '');
-                $sheet->setCellValue('M' . $rowNum, $item->updated_at ? $item->updated_at->format('Y-m-d H:i:s') : '');
+                $sheet->setCellValue('B' . $rowNum, $item->id);
+                $sheet->setCellValue('C' . $rowNum, $item->site ?? '');
+                $sheet->setCellValue('D' . $rowNum, $item->perusahaan ?? '');
+                $sheet->setCellValue('E' . $rowNum, $item->kategori ?? '');
+                $sheet->setCellValue('F' . $rowNum, $item->no_cctv ?? '');
+                $sheet->setCellValue('G' . $rowNum, $item->nama_cctv ?? '');
+                $sheet->setCellValue('H' . $rowNum, $item->fungsi_cctv ?? '');
+                $sheet->setCellValue('I' . $rowNum, $item->bentuk_instalasi_cctv ?? '');
+                $sheet->setCellValue('J' . $rowNum, $item->jenis ?? '');
+                $sheet->setCellValue('K' . $rowNum, $item->tipe_cctv ?? '');
+                $sheet->setCellValue('L' . $rowNum, $item->radius_pengawasan ?? '');
+                $sheet->setCellValue('M' . $rowNum, $item->jenis_spesifikasi_zoom ?? '');
+                $sheet->setCellValue('N' . $rowNum, $item->lokasi_pemasangan ?? '');
+                $sheet->setCellValue('O' . $rowNum, $item->control_room ?? '');
+                $sheet->setCellValue('P' . $rowNum, $item->status ?? '');
+                $sheet->setCellValue('Q' . $rowNum, $item->kondisi ?? '');
+                $sheet->setCellValue('R' . $rowNum, $item->longitude !== null ? (string) $item->longitude : '');
+                $sheet->setCellValue('S' . $rowNum, $item->latitude !== null ? (string) $item->latitude : '');
+                $sheet->setCellValue('T' . $rowNum, $item->coverage_lokasi ?? '');
+                $sheet->setCellValue('U' . $rowNum, $item->coverage_detail_lokasi ?? '');
+                $sheet->setCellValue('V' . $rowNum, $item->kategori_area_tercapture ?? '');
+                $sheet->setCellValue('W' . $rowNum, $item->kategori_aktivitas_tercapture ?? '');
+                $sheet->setCellValue('X' . $rowNum, $item->link_akses ?? '');
+                $sheet->setCellValue('Y' . $rowNum, $item->user_name ?? '');
+                $sheet->setCellValue('Z' . $rowNum, $item->password ?? '');
+                $sheet->setCellValue('AA' . $rowNum, $item->connected ?? '');
+                $sheet->setCellValue('AB' . $rowNum, $item->mirrored ?? '');
+                $sheet->setCellValue('AC' . $rowNum, $item->fitur_auto_alert ?? '');
+                $sheet->setCellValue('AD' . $rowNum, $item->keterangan ?? '');
+                $sheet->setCellValue('AE' . $rowNum, $item->verifikasi_by_petugas_ocr ?? '');
+                $sheet->setCellValue('AF' . $rowNum, $item->bulan_update ?? '');
+                $sheet->setCellValue('AG' . $rowNum, $item->tahun_update ?? '');
+                $sheet->setCellValue('AH' . $rowNum, $item->qr_code ?? '');
+                $sheet->setCellValue('AI' . $rowNum, $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : '');
+                $sheet->setCellValue('AJ' . $rowNum, $item->updated_at ? $item->updated_at->format('Y-m-d H:i:s') : '');
                 $rowNum++;
             }
-            foreach (range('A', 'M') as $c) {
+            $numCols = count($headers);
+            for ($i = 0; $i < $numCols; $i++) {
+                $c = $i < 26 ? chr(65 + $i) : 'A' . chr(65 + $i - 26);
                 $sheet->getColumnDimension($c)->setAutoSize(true);
             }
 
@@ -1208,6 +1242,66 @@ class CctvDataController extends Controller
             'recordsFiltered' => $recordsFiltered,
             'data' => $formattedData
         ]);
+    }
+
+    /**
+     * Export data CCTV Coverage ke Excel (No. CCTV, Coverage Lokasi, Coverage Detail, Kategori Aktivitas, Kategori Area)
+     */
+    public function exportCoverage()
+    {
+        try {
+            $data = CctvCoverage::select(
+                'cctv_coverage.id',
+                'cctv_data_bmo2.no_cctv',
+                'cctv_coverage.coverage_lokasi',
+                'cctv_coverage.coverage_detail_lokasi',
+                'cctv_coverage.kategori_aktivitas',
+                'cctv_coverage.kategori_area'
+            )
+                ->leftJoin('cctv_data_bmo2', 'cctv_coverage.id_cctv', '=', 'cctv_data_bmo2.id')
+                ->orderBy('cctv_coverage.id')
+                ->get();
+
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $sheet->setCellValue('A1', 'No. CCTV');
+            $sheet->setCellValue('B1', 'Coverage Lokasi');
+            $sheet->setCellValue('C1', 'Coverage Detail Lokasi');
+            $sheet->setCellValue('D1', 'Kategori Aktivitas');
+            $sheet->setCellValue('E1', 'Kategori Area');
+
+            $headerStyle = [
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+            ];
+            $sheet->getStyle('A1:E1')->applyFromArray($headerStyle);
+
+            $rowNum = 2;
+            foreach ($data as $item) {
+                $sheet->setCellValue('A' . $rowNum, $item->no_cctv ?? '');
+                $sheet->setCellValue('B' . $rowNum, $item->coverage_lokasi ?? '');
+                $sheet->setCellValue('C' . $rowNum, $item->coverage_detail_lokasi ?? '');
+                $sheet->setCellValue('D' . $rowNum, $item->kategori_aktivitas ?? '');
+                $sheet->setCellValue('E' . $rowNum, $item->kategori_area ?? '');
+                $rowNum++;
+            }
+            foreach (range('A', 'E') as $c) {
+                $sheet->getColumnDimension($c)->setAutoSize(true);
+            }
+
+            $writer = new Xlsx($spreadsheet);
+            $filename = 'cctv_coverage_' . date('Y-m-d_His') . '.xlsx';
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="' . $filename . '"');
+            header('Cache-Control: max-age=0');
+            $writer->save('php://output');
+            exit;
+        } catch (Exception $e) {
+            Log::error('Error exporting CCTV Coverage: ' . $e->getMessage());
+            return redirect()->route('cctv-data.import-coverage-form')->with('error', 'Error generating export: ' . $e->getMessage());
+        }
     }
 
     /**
@@ -3510,13 +3604,14 @@ class CctvDataController extends Controller
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
 
-            // Set title
-            $sheet->setCellValue('A1', 'NO');
-            $sheet->setCellValue('B1', 'CCTV Dedicated');
-            $sheet->setCellValue('C1', 'Jumlah PJA');
-            $sheet->setCellValue('D1', 'PJA');
-            $sheet->setCellValue('E1', 'Created At');
-            $sheet->setCellValue('F1', 'Updated At');
+            // Header: #, NO, CCTV Dedicated, Jumlah PJA, PJA, Created At, Updated At
+            $sheet->setCellValue('A1', '#');
+            $sheet->setCellValue('B1', 'NO');
+            $sheet->setCellValue('C1', 'CCTV Dedicated');
+            $sheet->setCellValue('D1', 'Jumlah PJA');
+            $sheet->setCellValue('E1', 'PJA');
+            $sheet->setCellValue('F1', 'Created At');
+            $sheet->setCellValue('G1', 'Updated At');
 
             // Style header
             $headerStyle = [
@@ -3533,30 +3628,32 @@ class CctvDataController extends Controller
                     'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
                 ],
             ];
-            $sheet->getStyle('A1:F1')->applyFromArray($headerStyle);
+            $sheet->getStyle('A1:G1')->applyFromArray($headerStyle);
 
             // Data rows
             $rowNum = 2;
+            $no = 1;
             foreach ($formattedGrouped as $item) {
-                $sheet->setCellValue('A' . $rowNum, $item['no'] ?? '');
-                $sheet->setCellValue('B' . $rowNum, $item['cctv_dedicated'] ?? '');
-                $sheet->setCellValue('C' . $rowNum, $item['pja_count'] ?? 0);
-                $sheet->setCellValue('D' . $rowNum, $item['pja'] ?? '');
-                $sheet->setCellValue('E' . $rowNum, $item['created_at'] ? $item['created_at']->format('Y-m-d H:i:s') : '');
-                $sheet->setCellValue('F' . $rowNum, $item['updated_at'] ? $item['updated_at']->format('Y-m-d H:i:s') : '');
-                
-                // Set wrap text for PJA column
-                $sheet->getStyle('D' . $rowNum)->getAlignment()->setWrapText(true);
+                // PJA dengan newline per item (untuk Excel)
+                $pjaExcel = isset($item['pja_list']) && is_array($item['pja_list'])
+                    ? implode("\n", $item['pja_list'])
+                    : ($item['pja'] ?? '');
+                $sheet->setCellValue('A' . $rowNum, $no);
+                $sheet->setCellValue('B' . $rowNum, $item['no'] ?? '');
+                $sheet->setCellValue('C' . $rowNum, $item['cctv_dedicated'] ?? '');
+                $sheet->setCellValue('D' . $rowNum, $item['pja_count'] ?? 0);
+                $sheet->setCellValue('E' . $rowNum, $pjaExcel);
+                $sheet->setCellValue('F' . $rowNum, $item['created_at'] ? $item['created_at']->format('Y-m-d H:i:s') : '');
+                $sheet->setCellValue('G' . $rowNum, $item['updated_at'] ? $item['updated_at']->format('Y-m-d H:i:s') : '');
+                $sheet->getStyle('E' . $rowNum)->getAlignment()->setWrapText(true);
                 $rowNum++;
+                $no++;
             }
 
-            // Auto-size columns
-            foreach (range('A', 'F') as $col) {
+            foreach (range('A', 'G') as $col) {
                 $sheet->getColumnDimension($col)->setAutoSize(true);
             }
-            
-            // Set column width for PJA column (make it wider)
-            $sheet->getColumnDimension('D')->setWidth(50);
+            $sheet->getColumnDimension('E')->setWidth(50);
 
             // Download file
             $writer = new Xlsx($spreadsheet);

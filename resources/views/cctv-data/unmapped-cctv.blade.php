@@ -158,6 +158,10 @@
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
     $(document).ready(function() {
+        // Hindari reinitialise DataTable: destroy dulu jika sudah ada
+        if ($.fn.DataTable.isDataTable('#unmappedCctvTable')) {
+            $('#unmappedCctvTable').DataTable().destroy();
+        }
         var table = $('#unmappedCctvTable').DataTable({
             processing: true,
             serverSide: true,
