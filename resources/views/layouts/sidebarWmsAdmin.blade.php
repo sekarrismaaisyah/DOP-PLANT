@@ -122,7 +122,7 @@
             </a>
           </li>
 
-          <li class="menu-label">DOPM$IKK</li>
+          <!-- <li class="menu-label">DOPM$IKK</li>
           <li>
             <a href="{{ route('dopmikk.dopm.dashboard') }}">
               <div class="parent-icon"><i class="material-icons-outlined">dashboard</i></div>
@@ -146,7 +146,7 @@
               <div class="parent-icon"><i class="material-icons-outlined">folder_open</i></div>
               <div class="menu-title">OKK</div>
             </a>
-          </li>
+          </li> -->
          
           
           <li class="menu-label">Control Room</li>
