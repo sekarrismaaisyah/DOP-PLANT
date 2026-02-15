@@ -83,6 +83,7 @@
                                 <span class="material-icons-outlined fs-5">more_vert</span>
                             </a>
                             <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="{{ route('cctv-data.pja-cctv-dedicated.export') }}"><i class="material-icons-outlined me-2">download</i> Download Excel</a></li>
                                 <li><a class="dropdown-item" href="{{ route('cctv-data.import-pja-cctv-dedicated-form') }}"><i class="material-icons-outlined me-2">upload</i> Import Excel</a></li>
                                 <li><a class="dropdown-item" href="{{ route('cctv-data.unmapped-cctv.index') }}"><i class="material-icons-outlined me-2">warning</i> CCTV Belum Termapping</a></li>
                                 <li><a class="dropdown-item" href="{{ route('cctv-data.index') }}"><i class="material-icons-outlined me-2">arrow_back</i> Kembali</a></li>
@@ -105,7 +106,12 @@
                     @endif
 
                     <div class="d-flex gap-2 mb-3 flex-wrap">
-                       
+                        <a href="{{ route('cctv-data.pja-cctv-dedicated.export') }}" class="btn btn-info" id="btnExport">
+                            <i class="material-icons-outlined">download</i> Download Excel
+                        </a>
+                        <a href="{{ route('cctv-data.import-pja-cctv-dedicated-form') }}" class="btn btn-success">
+                            <i class="material-icons-outlined">upload</i> Import Excel
+                        </a>
                         <a href="{{ route('cctv-data.unmapped-cctv.index') }}" class="btn btn-warning">
                             <i class="material-icons-outlined">warning</i> CCTV Belum Termapping
                         </a>
