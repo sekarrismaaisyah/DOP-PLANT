@@ -281,6 +281,75 @@ class CctvDataController extends Controller
     }
 
     /**
+     * Export semua data CCTV (cctv_data_bmo2) ke Excel
+     */
+    public function exportCctvData()
+    {
+        try {
+            $permissionAccess = $this->getAllowedCompanyAndSiteByPermission();
+            $allowedCompany = $permissionAccess['company'];
+            $allowedSites = $permissionAccess['sites'];
+
+            $query = CctvData::query();
+            if ($allowedCompany) {
+                $query->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+            }
+            if (!empty($allowedSites)) {
+                $query->whereIn('site', $allowedSites);
+            }
+            $data = $query->orderBy('site')->orderBy('no_cctv')->get();
+
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $headers = ['No', 'Site', 'Perusahaan', 'No CCTV', 'Nama CCTV', 'Control Room', 'Status', 'Kondisi', 'Lokasi Pemasangan', 'Link Akses', 'Keterangan', 'Created At', 'Updated At'];
+            $col = 'A';
+            foreach ($headers as $h) {
+                $sheet->setCellValue($col . '1', $h);
+                $col++;
+            }
+            $headerStyle = [
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+            ];
+            $sheet->getStyle('A1:M1')->applyFromArray($headerStyle);
+
+            $rowNum = 2;
+            foreach ($data as $index => $item) {
+                $sheet->setCellValue('A' . $rowNum, $index + 1);
+                $sheet->setCellValue('B' . $rowNum, $item->site ?? '');
+                $sheet->setCellValue('C' . $rowNum, $item->perusahaan ?? '');
+                $sheet->setCellValue('D' . $rowNum, $item->no_cctv ?? '');
+                $sheet->setCellValue('E' . $rowNum, $item->nama_cctv ?? '');
+                $sheet->setCellValue('F' . $rowNum, $item->control_room ?? '');
+                $sheet->setCellValue('G' . $rowNum, $item->status ?? '');
+                $sheet->setCellValue('H' . $rowNum, $item->kondisi ?? '');
+                $sheet->setCellValue('I' . $rowNum, $item->lokasi_pemasangan ?? '');
+                $sheet->setCellValue('J' . $rowNum, $item->link_akses ?? '');
+                $sheet->setCellValue('K' . $rowNum, $item->keterangan ?? '');
+                $sheet->setCellValue('L' . $rowNum, $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : '');
+                $sheet->setCellValue('M' . $rowNum, $item->updated_at ? $item->updated_at->format('Y-m-d H:i:s') : '');
+                $rowNum++;
+            }
+            foreach (range('A', 'M') as $c) {
+                $sheet->getColumnDimension($c)->setAutoSize(true);
+            }
+
+            $writer = new Xlsx($spreadsheet);
+            $filename = 'data_cctv_' . date('Y-m-d_His') . '.xlsx';
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="' . $filename . '"');
+            header('Cache-Control: max-age=0');
+            $writer->save('php://output');
+            exit;
+        } catch (Exception $e) {
+            Log::error('Error exporting CCTV data: ' . $e->getMessage());
+            return redirect()->route('cctv-data.index')->with('error', 'Error generating export: ' . $e->getMessage());
+        }
+    }
+
+    /**
      * Show the form for creating a new resource.
      */
     public function create()
@@ -4530,6 +4599,59 @@ class CctvDataController extends Controller
             'recordsFiltered' => $recordsFiltered,
             'data' => $formattedData
         ]);
+    }
+
+    /**
+     * Export data Pengawas Control Room (cctv_control_room_pengawas) ke Excel
+     */
+    public function exportControlRoomPengawas()
+    {
+        try {
+            $data = CctvControlRoomPengawas::orderBy('control_room')->orderBy('nama_pengawas')->get();
+
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+
+            $headers = ['No', 'Control Room', 'Nama Pengawas', 'Email', 'No HP', 'Keterangan', 'Created At', 'Updated At'];
+            $col = 'A';
+            foreach ($headers as $h) {
+                $sheet->setCellValue($col . '1', $h);
+                $col++;
+            }
+            $headerStyle = [
+                'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
+                'fill' => ['fillType' => \PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID, 'startColor' => ['rgb' => '4472C4']],
+                'alignment' => ['horizontal' => \PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER, 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER],
+            ];
+            $sheet->getStyle('A1:H1')->applyFromArray($headerStyle);
+
+            $rowNum = 2;
+            foreach ($data as $index => $item) {
+                $sheet->setCellValue('A' . $rowNum, $index + 1);
+                $sheet->setCellValue('B' . $rowNum, $item->control_room ?? '');
+                $sheet->setCellValue('C' . $rowNum, $item->nama_pengawas ?? '');
+                $sheet->setCellValue('D' . $rowNum, $item->email_pengawas ?? '');
+                $sheet->setCellValue('E' . $rowNum, $item->no_hp_pengawas ?? '');
+                $sheet->setCellValue('F' . $rowNum, $item->keterangan ?? '');
+                $sheet->setCellValue('G' . $rowNum, $item->created_at ? $item->created_at->format('Y-m-d H:i:s') : '');
+                $sheet->setCellValue('H' . $rowNum, $item->updated_at ? $item->updated_at->format('Y-m-d H:i:s') : '');
+                $rowNum++;
+            }
+            foreach (range('A', 'H') as $c) {
+                $sheet->getColumnDimension($c)->setAutoSize(true);
+            }
+
+            $writer = new Xlsx($spreadsheet);
+            $filename = 'cctv_control_room_pengawas_' . date('Y-m-d_His') . '.xlsx';
+            header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+            header('Content-Disposition: attachment;filename="' . $filename . '"');
+            header('Cache-Control: max-age=0');
+            $writer->save('php://output');
+            exit;
+        } catch (Exception $e) {
+            Log::error('Error exporting Control Room Pengawas: ' . $e->getMessage());
+            return redirect()->route('cctv-data.control-room.index')->with('error', 'Error generating export: ' . $e->getMessage());
+        }
     }
 
     /**

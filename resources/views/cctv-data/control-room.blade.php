@@ -56,9 +56,16 @@
                                     <span class="material-icons-outlined fs-5">more_vert</span>
                                 </a>
                                 <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ route('cctv-data.control-room.export') }}"><i class="material-icons-outlined me-2">download</i> Download Excel Pengawas</a></li>
                                     <li><a class="dropdown-item" href="{{ route('cctv-data.index') }}"><i class="material-icons-outlined me-2">arrow_back</i> Kembali ke Data CCTV</a></li>
                                 </ul>
                             </div>
+                        </div>
+
+                        <div class="d-flex gap-2 mb-3 flex-wrap">
+                            <a href="{{ route('cctv-data.control-room.export') }}" class="btn btn-info">
+                                <i class="material-icons-outlined">download</i> Download Excel Pengawas
+                            </a>
                         </div>
 
                         <div class="table-responsive">

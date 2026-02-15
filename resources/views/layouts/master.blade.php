@@ -47,7 +47,7 @@
 <body>
 
 @include('layouts.topbar')
-@include('layouts.sidebarEar')
+@include('layouts.masterMotionHazardAdmin')
 
 <!--start main wrapper-->
 <main class="main-wrapper">

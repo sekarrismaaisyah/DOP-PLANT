@@ -68,6 +68,7 @@
                                     <span class="material-icons-outlined fs-5">more_vert</span>
                                 </a>
                                 <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ route('cctv-data.export') }}"><i class="material-icons-outlined me-2">download</i> Download Excel</a></li>
                                     <li><a class="dropdown-item" href="{{ route('cctv-data.create') }}"><i class="material-icons-outlined me-2">add</i> Tambah Data</a></li>
                                     <li><a class="dropdown-item" href="{{ route('cctv-data.import-form') }}"><i class="material-icons-outlined me-2">upload</i> Import Excel</a></li>
                                 </ul>
@@ -75,6 +76,9 @@
                         </div>
 
                         <div class="d-flex gap-2 mb-3 flex-wrap">
+                            <a href="{{ route('cctv-data.export') }}" class="btn btn-info">
+                                <i class="material-icons-outlined">download</i> Download Excel
+                            </a>
                             <a href="{{ route('cctv-data.import-form') }}" class="btn btn-success">
                                 <i class="material-icons-outlined">upload</i> Import Excel
                             </a>

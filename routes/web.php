@@ -159,6 +159,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('cctv-data-coverage-import/{id}', [CctvDataController::class, 'deleteCoverage'])->name('cctv-data.coverage.delete');
     Route::get('cctv-data-control-room', [CctvDataController::class, 'indexControlRoom'])->name('cctv-data.control-room.index');
     Route::get('cctv-data-control-room/data', [CctvDataController::class, 'getControlRoomData'])->name('cctv-data.control-room.data');
+    Route::get('cctv-data-control-room/export', [CctvDataController::class, 'exportControlRoomPengawas'])->name('cctv-data.control-room.export');
     Route::post('cctv-data-control-room/pengawas', [CctvDataController::class, 'storePengawasControlRoom'])->name('cctv-data.control-room.pengawas.store');
     Route::get('cctv-data-control-room/pengawas/{controlRoom}', [CctvDataController::class, 'getPengawasControlRoom'])->name('cctv-data.control-room.pengawas.get');
     Route::get('cctv-data-control-room/users', [CctvDataController::class, 'getUsersFromClickHouse'])->name('cctv-data.control-room.users.get');
@@ -199,6 +200,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('cctv-data/{id}/qr-code/download', [CctvDataController::class, 'downloadQrCode'])->name('cctv-data.qr-code.download');
     Route::get('cctv-data/{id}/details', [CctvDataController::class, 'getCctvDetails'])->name('cctv-data.details');
     Route::get('cctv-data/hazard-status', [CctvDataController::class, 'getCctvHazardStatus'])->name('cctv-data.hazard-status');
+    Route::get('cctv-data/export', [CctvDataController::class, 'exportCctvData'])->name('cctv-data.export');
     // Resource routes dengan parameter eksplisit
     Route::get('cctv-data', [CctvDataController::class, 'index'])->name('cctv-data.index');
     Route::get('cctv-data/create', [CctvDataController::class, 'create'])->name('cctv-data.create');
