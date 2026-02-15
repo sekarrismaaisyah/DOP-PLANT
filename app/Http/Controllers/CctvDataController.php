@@ -3604,9 +3604,9 @@ class CctvDataController extends Controller
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
 
-            // Header: #, NO, CCTV Dedicated, Jumlah PJA, PJA, Created At, Updated At
+            // Header: #, site, CCTV Dedicated, Jumlah PJA, PJA, Created At, Updated At
             $sheet->setCellValue('A1', '#');
-            $sheet->setCellValue('B1', 'NO');
+            $sheet->setCellValue('B1', 'site');
             $sheet->setCellValue('C1', 'CCTV Dedicated');
             $sheet->setCellValue('D1', 'Jumlah PJA');
             $sheet->setCellValue('E1', 'PJA');
@@ -3634,10 +3634,16 @@ class CctvDataController extends Controller
             $rowNum = 2;
             $no = 1;
             foreach ($formattedGrouped as $item) {
-                // PJA dengan newline per item (untuk Excel)
-                $pjaExcel = isset($item['pja_list']) && is_array($item['pja_list'])
-                    ? implode("\n", $item['pja_list'])
-                    : ($item['pja'] ?? '');
+                // PJA format: 1Nama PJA 1, 2Nama PJA 2, ... (tanpa spasi, per baris)
+                $pjaList = $item['pja_list'] ?? [];
+                $pjaLines = [];
+                if (is_array($pjaList)) {
+                    foreach ($pjaList as $idx => $pja) {
+                        $pjaLines[] = ($idx + 1) . $pja;
+                    }
+                }
+                $pjaExcel = implode("\n", $pjaLines);
+
                 $sheet->setCellValue('A' . $rowNum, $no);
                 $sheet->setCellValue('B' . $rowNum, $item['no'] ?? '');
                 $sheet->setCellValue('C' . $rowNum, $item['cctv_dedicated'] ?? '');
