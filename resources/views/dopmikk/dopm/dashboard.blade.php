@@ -1636,7 +1636,7 @@
                 <div class="card-body d-flex flex-column">
                     <div class="d-flex align-items-start justify-content-between mb-3">
                     <div class="">
-                        <h5 class="mb-0 fw-bold">Sumarry Matriks Evaluasi</h5>
+                        <h5 class="mb-0 fw-bold">Summary Matriks Evaluasi</h5>
                     </div>
                     </div>
                     <div id="chart4" class="flex-grow-1"></div>

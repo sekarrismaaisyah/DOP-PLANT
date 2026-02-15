@@ -1583,6 +1583,32 @@
                       </div>
                     </div>
                   </div>
+                  <!-- <div class="col-12 col-xl-12">
+                    <div class="card rounded-4 mb-0">
+                      <div class="card-body">
+                        <div class="d-flex align-items-center gap-3 mb-2">
+                           <div class="">
+                             @php
+                               $pctPengisianRataRataIkk = round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
+                             @endphp
+                             <h2 class="mb-0">{{ $pctPengisianRataRataIkk }}% Compliance</h2>
+                           </div>
+                           <div class="">
+                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata IKK</p>
+                           </div>
+                         </div>
+                         <p class="mb-0">Presentase Pengisian IKK (IPK & OKK)</p>
+                         <p class="mb-0 small text-muted">Berdasarkan IKK unik: IPK {{ $pctIkkAdaIpk ?? 0 }}% · OKK {{ $pctIkkAdaOkk ?? 0 }}%</p>
+                          <div class="mt-4">
+                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK (IKK) <span class="">{{ $pctPengisianRataRataIkk }}%</span></p>
+                            <div class="progress w-100" style="height: 7px;">
+                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRataIkk) }}%"></div>
+                            </div>
+                          </div>
+                      </div>
+                      
+                    </div>
+                  </div> -->
 
                  </div><!--end row-->
                </div>
@@ -1593,18 +1619,72 @@
                <div class="card-body">
                 <div class="d-flex align-items-start justify-content-between mb-3">
                   <div class="">
-                    <h5 class="mb-0 fw-bold">Sumarry Matriks Evaluasi</h5>
+                    <h5 class="mb-0 fw-bold">Summary Matriks Evaluasi — Kalender Compliance IKK</h5>
                   </div>
                  </div>
-                  <div id="chart4"></div>
-                  <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-start">
-                    <span class="small text-muted">
-                      Sumbu X = jenis ijin kerja khusus, tinggi bar = jumlah izin kerja (IKK) per jenis.
-                      Warna bar mengikuti status matriks agregat per jenis (Merah, Kuning, Hijau).
-                    </span>
+                @php
+                  $pctCalendar = round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
+                @endphp
+                <style>
+                  .compliance-calendar-wrapper { background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px; border: 1px solid rgba(0,0,0,0.06); }
+                  .compliance-calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.04); border-radius: 10px; }
+                  .compliance-calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 10px; margin-top: 20px; }
+                  .compliance-day-header { text-align: center; font-weight: 600; padding: 12px 8px; background: rgba(0,0,0,0.06); border-radius: 8px; font-size: 0.85rem; }
+                  .compliance-day-cell { aspect-ratio: 1; padding: 10px; border-radius: 10px; cursor: pointer; transition: all 0.3s ease; min-height: 100px; display: flex; flex-direction: column; justify-content: space-between; }
+                  .compliance-day-cell:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.12); }
+                  .compliance-day-cell.positive { background: linear-gradient(135deg, #00c853 0%, #00e676 100%); border: 2px solid #00ff7f; color: #fff; }
+                  .compliance-day-cell.negative { background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%); border: 2px solid #ff1744; color: #fff; }
+                  .compliance-day-cell.neutral { background: linear-gradient(135deg, #ff6f00 0%, #ff9800 100%); border: 2px solid #ffa726; color: #fff; }
+                  .compliance-day-cell.empty { background: rgba(0,0,0,0.04); border: 1px solid rgba(0,0,0,0.08); color: #6c757d; }
+                  .compliance-day-cell.empty:hover { transform: translateY(-3px); box-shadow: 0 8px 20px rgba(0,0,0,0.08); }
+                  .compliance-day-number { font-size: 1rem; font-weight: 700; }
+                  .compliance-day-value { margin-top: auto; font-size: 1.1rem; font-weight: 700; }
+                  .compliance-day-label { font-size: 0.7rem; opacity: 0.9; }
+                  .compliance-legend { display: flex; gap: 20px; justify-content: center; margin-top: 20px; padding: 15px; background: rgba(0,0,0,0.04); border-radius: 10px; flex-wrap: wrap; }
+                  .compliance-legend-item { display: flex; align-items: center; gap: 8px; }
+                  .compliance-legend-color { width: 28px; height: 28px; border-radius: 6px; }
+                  .btn-month-nav { background: rgba(0,0,0,0.06); border: 1px solid rgba(0,0,0,0.1); color: #374151; padding: 8px 16px; border-radius: 8px; transition: all 0.3s; }
+                  .btn-month-nav:hover { background: rgba(0,0,0,0.1); color: #111; }
+                  @media (max-width: 768px) { .compliance-calendar-grid { gap: 6px; } .compliance-day-cell { min-height: 80px; padding: 6px; } .compliance-day-value { font-size: 0.95rem; } }
+                </style>
+                <div class="compliance-calendar-wrapper">
+                  <div class="compliance-calendar-header">
+                    <button type="button" class="btn btn-month-nav" id="compliancePrevMonth"><i class="material-icons-outlined" style="font-size:18px;vertical-align:middle">chevron_left</i> Bulan Sebelumnya</button>
+                    <h5 class="mb-0" id="complianceCurrentMonth"></h5>
+                    <button type="button" class="btn btn-month-nav" id="complianceNextMonth">Bulan Berikutnya <i class="material-icons-outlined" style="font-size:18px;vertical-align:middle">chevron_right</i></button>
                   </div>
+                  <div class="compliance-calendar-grid">
+                    <div class="compliance-day-header">Minggu</div>
+                    <div class="compliance-day-header">Senin</div>
+                    <div class="compliance-day-header">Selasa</div>
+                    <div class="compliance-day-header">Rabu</div>
+                    <div class="compliance-day-header">Kamis</div>
+                    <div class="compliance-day-header">Jumat</div>
+                    <div class="compliance-day-header">Sabtu</div>
+                  </div>
+                  <div class="compliance-calendar-grid" id="complianceCalendarDays"></div>
+                  <div class="compliance-legend">
+                    <div class="compliance-legend-item">
+                      <div class="compliance-legend-color" style="background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);"></div>
+                      <span class="small">Merah (1–50%)</span>
+                    </div>
+                    <div class="compliance-legend-item">
+                      <div class="compliance-legend-color" style="background: linear-gradient(135deg, #ff6f00 0%, #ff9800 100%);"></div>
+                      <span class="small">Kuning (51–80%)</span>
+                    </div>
+                    <div class="compliance-legend-item">
+                      <div class="compliance-legend-color" style="background: linear-gradient(135deg, #00c853 0%, #00e676 100%);"></div>
+                      <span class="small">Hijau (81–100%)</span>
+                    </div>
+                  </div>
+                </div>
+                <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-start">
+                  <span class="small text-muted">
+                    Compliance = rata-rata pengisian IKK (IPK & OKK) per hari. Klik tanggal untuk memuat data hari tersebut. Merah 1–50%, Kuning 51–80%, Hijau 81–100%.
+                  </span>
+                </div>
                </div>
-            </div>  
+            </div>
           </div> 
         </div><!--end row-->
 
@@ -2651,67 +2731,108 @@
     }).render();
   }, 300);
 
-  // Chart jumlah izin kerja per jenis, warna bar mengikuti status matriks (Merah/Kuning/Hijau)
-  var categories = @json($chartJenisLabels ?? []);
-  var categoriesFull = @json($chartJenisLabelsFull ?? []);
-  var izinData = @json($chartIzinKerjaPerJenis ?? []);
-  var matriksPerJenis = @json($chartMatriksPerJenis ?? []);
-  var len = categories.length;
+  // Chart jumlah izin kerja per jenis (chart4 dihapus — diganti Kalender Compliance)
+})();
+</script>
 
-  if (izinData.length !== len) izinData = izinData.slice(0, len);
-  while (izinData.length < len) izinData.push(0);
-  if (matriksPerJenis.length !== len) matriksPerJenis = matriksPerJenis.slice(0, len);
-  while (matriksPerJenis.length < len) matriksPerJenis.push('Merah');
+<script>
+(function() {
+  var filterDateStr = @json($filterDate ?? now()->toDateString());
+  var complianceByDay = @json($complianceByDay ?? []);
+  var monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
-  var matriksColors = {
-    'Hijau': '#02c27a',
-    'Kuning': '#ffc107',
-    'Merah': '#dc3545'
-  };
+  function parseFilterDate() {
+    var m = filterDateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
+    if (m) return { year: parseInt(m[1], 10), month: parseInt(m[2], 10) - 1, day: parseInt(m[3], 10) };
+    var d = new Date();
+    return { year: d.getFullYear(), month: d.getMonth(), day: d.getDate() };
+  }
+  var filterDateParsed = parseFilterDate();
+  var displayMonth = filterDateParsed.month;
+  var displayYear = filterDateParsed.year;
 
-  // Gunakan data point objek dengan fillColor per bar & label lengkap untuk tooltip
-  var seriesData = izinData.map(function(value, idx) {
-    var status = matriksPerJenis[idx] || 'Merah';
-    var color = matriksColors[status] || '#dc3545';
-    var fullLabel = categoriesFull[idx] || categories[idx] || '';
-    return {
-      x: categories[idx] || '',
-      y: value,
-      fillColor: color,
-      fullLabel: fullLabel
-    };
-  });
+  function getStatusClass(pct) {
+    if (pct <= 50) return 'negative';
+    if (pct <= 80) return 'neutral';
+    return 'positive';
+  }
 
-  setTimeout(function() {
-    var el = document.querySelector('#chart4');
-    if (!el || typeof ApexCharts === 'undefined') return;
-    try { ApexCharts.exec('chart4', 'destroy'); } catch (e) {}
-    el.innerHTML = '';
-    new ApexCharts(el, {
-      chart: { id: 'chart4', height: 235, type: 'bar', toolbar: { show: false }, fontFamily: 'inherit' },
-      plotOptions: { bar: { horizontal: false, columnWidth: '55%', borderRadius: 4, distributed: true } },
-      dataLabels: { enabled: false },
-      stroke: { show: true, width: 2, colors: ['transparent'] },
-      series: [
-        { name: 'Jumlah Izin Kerja', data: seriesData }
-      ],
-      xaxis: { labels: { style: { colors: '#a1acb8' } } },
-      yaxis: { labels: { style: { colors: '#a1acb8' } } },
-      grid: { borderColor: 'rgba(0,0,0,0.05)', strokeDashArray: 4 },
-      legend: { show: false },
-      tooltip: {
-        y: {
-          formatter: function(v, opts) {
-            var idx = opts.dataPointIndex;
-            var status = matriksPerJenis[idx] || '-';
-            var point = opts.w.config.series[opts.seriesIndex].data[idx] || {};
-            var fullLabel = point.fullLabel || point.x || '';
-            return fullLabel + ': ' + v + ' izin kerja (' + status + ')';
-          }
-        }
+  function renderComplianceCalendar(month, year) {
+    var container = document.getElementById('complianceCalendarDays');
+    if (!container) return;
+    container.innerHTML = '';
+    document.getElementById('complianceCurrentMonth').textContent = monthNames[month] + ' ' + year;
+
+    var firstDay = new Date(year, month, 1).getDay();
+    var daysInMonth = new Date(year, month + 1, 0).getDate();
+    var filterForm = document.getElementById('dashboardFilterForm');
+    var filterInput = document.getElementById('filterDate');
+    var isFilterDayInThisMonth = (year === filterDateParsed.year && month === filterDateParsed.month);
+
+    for (var i = 0; i < firstDay; i++) {
+      var empty = document.createElement('div');
+      empty.className = 'compliance-day-cell empty';
+      empty.style.cursor = 'default';
+      container.appendChild(empty);
+    }
+
+    for (var day = 1; day <= daysInMonth; day++) {
+      var cell = document.createElement('div');
+      var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
+      var pct = complianceByDay[dateStr] != null ? Number(complianceByDay[dateStr]) : null;
+      var isFilterDay = isFilterDayInThisMonth && (day === filterDateParsed.day);
+
+      if (pct != null && !isNaN(pct)) {
+        var statusClass = getStatusClass(pct);
+        cell.className = 'compliance-day-cell ' + statusClass;
+        cell.innerHTML = '<div class="compliance-day-number">' + day + '</div>' +
+          '<div class="compliance-day-value">' + pct + '%</div>' +
+          '<div class="compliance-day-label">Compliance IKK</div>';
+        cell.style.cursor = 'pointer';
+        cell.addEventListener('click', function(selectedDate) {
+          return function() {
+            if (filterInput) {
+              filterInput.value = selectedDate;
+              if (filterForm) filterForm.submit();
+            }
+          };
+        }(dateStr));
+      } else {
+        cell.className = 'compliance-day-cell empty';
+        cell.innerHTML = '<div class="compliance-day-number">' + day + '</div>' +
+          '<div class="compliance-day-value">—</div>' +
+          '<div class="compliance-day-label">' + (isFilterDay ? 'Tanggal dipilih' : 'Klik untuk pilih') + '</div>';
+        cell.addEventListener('click', function(selectedDate) {
+          return function() {
+            if (filterInput) {
+              filterInput.value = selectedDate;
+              if (filterForm) filterForm.submit();
+            }
+          };
+        }(dateStr));
       }
-    }).render();
-  }, 300);
+      container.appendChild(cell);
+    }
+  }
+
+  var prevBtn = document.getElementById('compliancePrevMonth');
+  var nextBtn = document.getElementById('complianceNextMonth');
+  if (prevBtn) {
+    prevBtn.addEventListener('click', function() {
+      displayMonth--;
+      if (displayMonth < 0) { displayMonth = 11; displayYear--; }
+      renderComplianceCalendar(displayMonth, displayYear);
+    });
+  }
+  if (nextBtn) {
+    nextBtn.addEventListener('click', function() {
+      displayMonth++;
+      if (displayMonth > 11) { displayMonth = 0; displayYear++; }
+      renderComplianceCalendar(displayMonth, displayYear);
+    });
+  }
+
+  renderComplianceCalendar(displayMonth, displayYear);
 })();
 </script>
 
