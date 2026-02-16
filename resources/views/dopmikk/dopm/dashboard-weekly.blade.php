@@ -1623,7 +1623,10 @@
                   </div>
                  </div>
                 @php
-                  $pctCalendar = round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
+                  // Persentase kalender = % IKK dengan status matriks Hijau (sama dengan perhitungan Need Action/Warning/Complete)
+                  $totalIkkMatriks = count($ikkClickhouseListHarian ?? []);
+                  $countHijauHarian = $totalIkkMatriks > 0 ? collect($ikkClickhouseListHarian)->where('status_matriks', 'Hijau')->count() : 0;
+                  $pctCalendar = $totalIkkMatriks > 0 ? round(($countHijauHarian / $totalIkkMatriks) * 100, 1) : 0;
                 @endphp
                 <style>
                   .compliance-calendar-wrapper { background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px; border: 1px solid rgba(0,0,0,0.06); }
@@ -1680,7 +1683,7 @@
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-start">
                   <span class="small text-muted">
-                    Compliance = rata-rata pengisian IKK (IPK & OKK) per hari. Klik tanggal untuk memuat data hari tersebut. Merah 1–50%, Kuning 51–80%, Hijau 81–100%.
+                    Compliance = persentase IKK dengan status matriks <strong>Hijau</strong> per hari (perhitungan sama dengan kartu Need Action / Warning / Complete: IPK, OKK Layer 1/2/3/4, OAK, dan fraud). Merah 1–50%, Kuning 51–80%, Hijau 81–100%. Klik tanggal untuk memuat data hari tersebut.
                   </span>
                 </div>
                </div>
@@ -2787,7 +2790,7 @@
         cell.className = 'compliance-day-cell ' + statusClass;
         cell.innerHTML = '<div class="compliance-day-number">' + day + '</div>' +
           '<div class="compliance-day-value">' + pct + '%</div>' +
-          '<div class="compliance-day-label">Compliance IKK</div>';
+          '<div class="compliance-day-label">% Matriks Hijau</div>';
         cell.style.cursor = 'pointer';
         cell.addEventListener('click', function(selectedDate) {
           return function() {
