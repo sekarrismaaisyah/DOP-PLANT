@@ -404,6 +404,43 @@
         color: var(--dms-muted);
         font-size: 14px;
     }
+    .dms-fatigue-history {
+        border-top: 1px solid var(--dms-border);
+        padding-top: 12px;
+        margin-top: 12px;
+    }
+    .dms-fatigue-history-title {
+        font-size: 12px;
+        font-weight: 700;
+        color: var(--dms-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.04em;
+        margin-bottom: 8px;
+    }
+    .dms-fatigue-history-table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+    }
+    .dms-fatigue-history-table th {
+        padding: 6px 8px;
+        text-align: left;
+        background: #f8fafc;
+        color: var(--dms-muted);
+        font-weight: 600;
+        font-size: 10px;
+        text-transform: uppercase;
+        border-bottom: 1px solid var(--dms-border);
+    }
+    .dms-fatigue-history-table td {
+        padding: 6px 8px;
+        border-bottom: 1px solid var(--dms-border);
+        color: #334155;
+    }
+    .dms-fatigue-history-table .score-bad {
+        color: #dc2626;
+        font-weight: 600;
+    }
 </style>
 
 <div class="row mt-4 dms-detection-wrap">
@@ -452,6 +489,42 @@
                         </tr>
                     </tbody>
                 </table>
+                    </div>
+                    <div class="dms-fatigue-history">
+                        <div class="dms-fatigue-history-title">History Score Fatigue Jelek</div>
+                        <div class="dms-true-alert-table-wrap" style="max-height: 180px;">
+                            <table class="dms-fatigue-history-table">
+                                <thead>
+                                    <tr>
+                                        <th>Driver</th>
+                                        <th>Fatigue Score</th>
+                                        <th>Waktu</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr>
+                                        <td>QMDQ3 (SAMUEL SIAHAAN)</td>
+                                        <td class="score-bad">85</td>
+                                        <td>1/2/2026 9:33:18 AM</td>
+                                    </tr>
+                                    <tr>
+                                        <td>QMDQ3 (SAMUEL SIAHAAN)</td>
+                                        <td class="score-bad">78</td>
+                                        <td>1/2/2026 9:30:03 AM</td>
+                                    </tr>
+                                    <tr>
+                                        <td>QMDQ3 (SAMUEL SIAHAAN)</td>
+                                        <td class="score-bad">72</td>
+                                        <td>1/2/2026 9:15:41 AM</td>
+                                    </tr>
+                                    <tr>
+                                        <td>QMDQ3 (SAMUEL SIAHAAN)</td>
+                                        <td class="score-bad">68</td>
+                                        <td>1/2/2026 9:08:22 AM</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
                     </div>
                 </div>
             </div>
