@@ -1622,12 +1622,6 @@
                     <h5 class="mb-0 fw-bold">Summary Matriks Evaluasi — Kalender Compliance IKK</h5>
                   </div>
                  </div>
-                @php
-                  // Persentase kalender = % IKK dengan status matriks Hijau (sama dengan perhitungan Need Action/Warning/Complete)
-                  $totalIkkMatriks = count($ikkClickhouseListHarian ?? []);
-                  $countHijauHarian = $totalIkkMatriks > 0 ? collect($ikkClickhouseListHarian)->where('status_matriks', 'Hijau')->count() : 0;
-                  $pctCalendar = $totalIkkMatriks > 0 ? round(($countHijauHarian / $totalIkkMatriks) * 100, 1) : 0;
-                @endphp
                 <style>
                   .compliance-calendar-wrapper { background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px; border: 1px solid rgba(0,0,0,0.06); }
                   .compliance-calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding: 15px; background: rgba(0,0,0,0.04); border-radius: 10px; }
@@ -1682,9 +1676,11 @@
                   </div>
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-start">
-                  <span class="small text-muted">
-                    Compliance = persentase IKK dengan status matriks <strong>Hijau</strong> per hari (perhitungan sama dengan kartu Need Action / Warning / Complete: IPK, OKK Layer 1/2/3/4, OAK, dan fraud). Merah 1–50%, Kuning 51–80%, Hijau 81–100%. Klik tanggal untuk memuat data hari tersebut.
-                  </span>
+                  <div class="small text-muted">
+                    <div class="mb-1"><strong>Merah (1–50%):</strong> Tidak ada IPK atau OKK sama sekali; hanya ada IPK atau hanya OKK; ada IPK+OKK Layer 1 tapi tidak ada OKK Layer 2 up sesuai IKK.</div>
+                    <div class="mb-1"><strong>Kuning (51–80%):</strong> Ada IPK+OKK sesuai target tapi fraud; atau tidak ada OAK (DIC mitra maupun BC).</div>
+                    <div><strong>Hijau (81–100%):</strong> Lengkap: IPK + OKK Layer 1 sesuai target + OKK L2 up sesuai IKK + OAK. Skor per hari = rata-rata bobot (Hijau 100, Kuning 50, Merah 0). Klik tanggal untuk memuat detail.</div>
+                  </div>
                 </div>
                </div>
             </div>
@@ -1698,6 +1694,7 @@
                 <div class="d-flex align-items-start justify-content-between mb-3">
                   <div class="">
                     <h5 class="mb-0 fw-bold">Need Action</h5>
+                    <p class="mb-0 small text-muted">Merah: (1) Tidak ada IPK/OKK; (2) Hanya IPK atau hanya OKK; (3) Ada IPK+OKK L1 tapi tidak ada OKK L2 up sesuai IKK.</p>
                   </div>
                   <div class="dropdown">
                     <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
@@ -1713,7 +1710,7 @@
                  </div>
                   <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
                   @php
-                        // Gunakan data IKK (work permit) dari ClickHouse untuk Need Action (Merah)
+                        // Matriks Merah: tidak ada IPK/OKK; hanya salah satu; atau IPK+OKK L1 tapi tidak OKK L2 up (dari hitungStatusMatriksLengkapDenganAlasan)
                         $ikkMerah = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Merah')->values();
                     @endphp
                     @forelse($ikkMerah as $ikk)
@@ -1780,6 +1777,7 @@
                 <div class="d-flex align-items-start justify-content-between mb-3">
                   <div class="">
                     <h5 class="mb-0 fw-bold">Warning</h5>
+                    <p class="mb-0 small text-muted">Kuning: (1) IPK+OKK sesuai target tapi ada fraud; (2) Tidak ada OAK (DIC mitra maupun BC).</p>
                   </div>
                   <div class="dropdown">
                     <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
@@ -1795,7 +1793,7 @@
                  </div>
                 <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
                   @php
-                      // Gunakan data IKK (work permit) dari ClickHouse untuk Warning (Kuning)
+                      // Matriks Kuning: fraud atau tidak ada OAK (dari hitungStatusMatriksLengkapDenganAlasan)
                       $ikkKuning = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Kuning')->values();
                   @endphp
                   @forelse($ikkKuning as $ikk)
@@ -1862,6 +1860,7 @@
                 <div class="d-flex align-items-start justify-content-between mb-3">
                   <div class="">
                     <h5 class="mb-0 fw-bold">Complete</h5>
+                    <p class="mb-0 small text-muted">Hijau: (1) IPK + OKK Layer 1 sesuai target; (2) OKK L2 up sesuai IKK; ada OAK.</p>
                   </div>
                   <div class="dropdown">
                     <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
@@ -1877,7 +1876,7 @@
                  </div>
                 <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
                   @php
-                      // Gunakan data IKK (work permit) dari ClickHouse untuk Complete (Hijau)
+                      // Matriks Hijau: lengkap IPK, OKK L1 target, OKK L2 up, OAK (dari hitungStatusMatriksLengkapDenganAlasan)
                       $ikkHijau = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Hijau')->values();
                   @endphp
                   @forelse($ikkHijau as $ikk)
@@ -2742,6 +2741,8 @@
 (function() {
   var filterDateStr = @json($filterDate ?? now()->toDateString());
   var complianceByDay = @json($complianceByDay ?? []);
+  var calendarApiUrl = @json(route('dopmikk.dopm.dashboard-weekly.calendar-compliance'));
+  var filterSite = @json($filterSite ?? '');
   var monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
 
   function parseFilterDate() {
@@ -2760,11 +2761,54 @@
     return 'positive';
   }
 
+  function fetchMonthCompliance(month, year, done) {
+    var monthStr = year + '-' + String(month + 1).padStart(2, '0');
+    var url = calendarApiUrl + '?month=' + encodeURIComponent(monthStr);
+    if (filterSite) url += '&site=' + encodeURIComponent(filterSite);
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', url, true);
+    xhr.setRequestHeader('Accept', 'application/json');
+    xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        var data = {};
+        try { data = JSON.parse(xhr.responseText) || {}; } catch (e) {}
+        for (var d in data) {
+          if (Object.prototype.hasOwnProperty.call(data, d)) {
+            complianceByDay[d] = data[d];
+          }
+        }
+      }
+      if (typeof done === 'function') done();
+    };
+    xhr.onerror = xhr.ontimeout = function() { if (typeof done === 'function') done(); };
+    xhr.timeout = 15000;
+    xhr.send();
+  }
+
   function renderComplianceCalendar(month, year) {
     var container = document.getElementById('complianceCalendarDays');
     if (!container) return;
-    container.innerHTML = '';
     document.getElementById('complianceCurrentMonth').textContent = monthNames[month] + ' ' + year;
+    var isCurrentMonth = (year === filterDateParsed.year && month === filterDateParsed.month);
+    var hasDataForMonth = false;
+    var monthStr = year + '-' + String(month + 1).padStart(2, '0');
+    for (var k in complianceByDay) {
+      if (k && k.indexOf(monthStr) === 0) { hasDataForMonth = true; break; }
+    }
+    if (isCurrentMonth && hasDataForMonth) {
+      renderComplianceCalendarGrid(month, year);
+    } else {
+      container.innerHTML = '<div class="compliance-day-cell empty" style="grid-column: 1 / -1; justify-content: center; align-items: center;">Memuat...</div>';
+      fetchMonthCompliance(month, year, function() {
+        renderComplianceCalendarGrid(month, year);
+      });
+    }
+  }
+
+  function renderComplianceCalendarGrid(month, year) {
+    var container = document.getElementById('complianceCalendarDays');
+    if (!container) return;
+    container.innerHTML = '';
 
     var firstDay = new Date(year, month, 1).getDay();
     var daysInMonth = new Date(year, month + 1, 0).getDate();
@@ -2790,7 +2834,7 @@
         cell.className = 'compliance-day-cell ' + statusClass;
         cell.innerHTML = '<div class="compliance-day-number">' + day + '</div>' +
           '<div class="compliance-day-value">' + pct + '%</div>' +
-          '<div class="compliance-day-label">% Matriks Hijau</div>';
+          '<div class="compliance-day-label">Compliance IKK</div>';
         cell.style.cursor = 'pointer';
         cell.addEventListener('click', function(selectedDate) {
           return function() {
