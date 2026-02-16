@@ -504,22 +504,22 @@
                                 <tbody>
                                     <tr>
                                         <td>QMDQ3 (SAMUEL SIAHAAN)</td>
-                                        <td class="score-bad">85</td>
+                                        <td class="score-bad">60</td>
                                         <td>1/2/2026 9:33:18 AM</td>
                                     </tr>
                                     <tr>
                                         <td>QMDQ3 (SAMUEL SIAHAAN)</td>
-                                        <td class="score-bad">78</td>
+                                        <td class="score-bad">65</td>
                                         <td>1/2/2026 9:30:03 AM</td>
                                     </tr>
                                     <tr>
                                         <td>QMDQ3 (SAMUEL SIAHAAN)</td>
-                                        <td class="score-bad">72</td>
+                                        <td class="score-bad">69</td>
                                         <td>1/2/2026 9:15:41 AM</td>
                                     </tr>
                                     <tr>
                                         <td>QMDQ3 (SAMUEL SIAHAAN)</td>
-                                        <td class="score-bad">68</td>
+                                        <td class="score-bad">70</td>
                                         <td>1/2/2026 9:08:22 AM</td>
                                     </tr>
                                 </tbody>
