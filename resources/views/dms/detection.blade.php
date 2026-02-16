@@ -470,12 +470,12 @@
                         <tr><td>12/29/2025 5:48:26 AM</td><td>FALSE</td><td>85</td><td>FALSE</td></tr>
                         <tr><td>12/30/2025 4:53:14 AM</td><td>FALSE</td><td>83</td><td>FALSE</td></tr>
                         <tr><td>1/2/2026 8:47:18 AM</td><td>FALSE</td><td>81</td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:08:22 AM</td><td>FALSE</td><td class="score-bad">79</td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:08:27 AM</td><td>FALSE</td><td class="score-bad">77</td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:10:29 AM</td><td>FALSE</td><td class="score-bad">75</td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:12:24 AM</td><td>FALSE</td><td class="score-bad">73</td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:15:41 AM</td><td>FALSE</td><td class="score-bad">71</td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:29:08 AM</td><td>FALSE</td><td class="score-bad">69</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:08:22 AM</td><td>True</td><td class="score-bad">79</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:08:27 AM</td><td>True</td><td class="score-bad">77</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:10:29 AM</td><td>True</td><td class="score-bad">75</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:12:24 AM</td><td>True</td><td class="score-bad">73</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:15:41 AM</td><td>True</td><td class="score-bad">71</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:29:08 AM</td><td>True</td><td class="score-bad">69</td><td>FALSE</td></tr>
                         <tr><td>1/2/2026 9:30:03 AM</td><td>True</td><td class="score-bad">67</td><td>True</td></tr>
                         <tr><td>1/2/2026 9:33:18 AM</td><td>True</td><td class="score-bad">65</td><td>True</td></tr>
                         <tr><td>1/28/2026 5:32:20 PM</td><td>True</td><td class="score-bad">63</td><td>FALSE</td></tr>
