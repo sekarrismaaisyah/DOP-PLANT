@@ -1443,7 +1443,7 @@
                     <select name="site" id="filterSite" class="form-select rounded-3">
                         <option value="" {{ ($filterSite ?? '') === '' ? 'selected' : '' }}>Semua Site</option>
                         @php
-                            $staticSites = ['BMO 1', 'BMO 2', 'GMO', 'LMO', 'SMO', 'BMO 3'];
+                            $staticSites = ['BMO 1', 'BMO 2', 'GMO', 'LMO', 'SMO', 'BMO 3','MARINE'];
                         @endphp
                         @foreach($staticSites as $site)
                             <option value="{{ $site }}" {{ ($filterSite ?? '') === $site ? 'selected' : '' }}>{{ $site }}</option>
