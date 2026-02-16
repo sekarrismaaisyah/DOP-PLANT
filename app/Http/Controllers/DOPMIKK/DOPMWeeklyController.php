@@ -757,8 +757,7 @@ class DOPMWeeklyController extends Controller
             }
         }
 
-        // Compliance kalender: satu bulan penuh dengan matriks lengkap (Merah/Kuning/Hijau).
-        // Kriteria: Merah = tidak ada IPK/OKK / hanya salah satu / ada L1 tapi tidak L2 up; Kuning = fraud atau tidak ada OAK; Hijau = lengkap.
+        // Compliance per hari untuk kalender (bulan yang berisi filterDate)
         $complianceByDay = [];
         $monthStart = Carbon::parse($filterDate)->startOfMonth()->format('Y-m-d');
         $monthEnd = Carbon::parse($filterDate)->endOfMonth()->format('Y-m-d');
@@ -775,8 +774,7 @@ class DOPMWeeklyController extends Controller
                         }
                     }
                     $sqlMonth = "
-                        SELECT wp.id AS id, wp.code AS code, toDate(wp.start_date) AS start_date,
-                               wp.location_name AS location_name, wp.location_detail_name AS location_detail_name
+                        SELECT wp.code AS code, toDate(wp.start_date) AS start_date
                         FROM hse_automation.ikk_work_permit AS wp
                         INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
                             ON toString(wp_pic.work_permit_id) = toString(wp.id)
@@ -787,92 +785,31 @@ class DOPMWeeklyController extends Controller
                             AND toDate(wp.start_date) >= toDate('" . addslashes($monthStart) . "')
                             AND toDate(wp.start_date) <= toDate('" . addslashes($monthEnd) . "')
                             {$siteFilterClause}
-                        GROUP BY wp.id, wp.code, wp.start_date, wp.location_name, wp.location_detail_name
+                        GROUP BY wp.id, wp.code, wp.start_date
                         HAVING sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
                             AND trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', 1, 0)) > 0
                     ";
                     $wpRowsMonth = $clickHouse->query($sqlMonth);
                     $codesPerDay = [];
-                    $detailsByDayCode = [];
-                    $wpIdsMonth = [];
-                    if (!empty($wpRowsMonth)) {
+                    if (! empty($wpRowsMonth)) {
                         foreach ($wpRowsMonth as $row) {
                             $code = isset($row['code']) ? trim((string) $row['code']) : '';
                             if ($code === '') {
                                 continue;
                             }
-                            $wpId = self::getClickHouseRowValue($row, 'id');
                             $startDate = self::parseEndDate(self::getClickHouseRowValue($row, 'start_date'));
                             if ($startDate === null) {
                                 continue;
                             }
                             $d = $startDate->format('Y-m-d');
-                            if (!isset($codesPerDay[$d])) {
+                            if (! isset($codesPerDay[$d])) {
                                 $codesPerDay[$d] = [];
                             }
                             $codesPerDay[$d][$code] = true;
-                            if (!isset($detailsByDayCode[$d])) {
-                                $detailsByDayCode[$d] = [];
-                            }
-                            $detailsByDayCode[$d][$code] = [
-                                'wp_id' => $wpId,
-                                'location_name' => trim((string) self::getClickHouseRowValue($row, 'location_name')),
-                                'location_detail_name' => trim((string) self::getClickHouseRowValue($row, 'location_detail_name')),
-                            ];
-                            if ($wpId !== null && $wpId !== '') {
-                                $wpIdsMonth[] = $wpId;
-                            }
                         }
                         foreach ($codesPerDay as $d => $codes) {
                             $codesPerDay[$d] = array_keys($codes);
                         }
-                    }
-
-                    $layersByWpId = [];
-                    if (!empty($wpIdsMonth)) {
-                        $wpIdsMonth = array_values(array_unique($wpIdsMonth));
-                        $inWpIds = implode(',', array_map(function ($id) {
-                            return "'" . addslashes((string) $id) . "'";
-                        }, $wpIdsMonth));
-                        $sqlEmp = "
-                            SELECT work_permit_id, layer, employee_name, employee_sid
-                            FROM hse_automation.ikk_work_permit_employee
-                            WHERE work_permit_id IN ({$inWpIds})
-                        ";
-                        $empRows = $clickHouse->query($sqlEmp);
-                        if (!empty($empRows)) {
-                            foreach ($empRows as $er) {
-                                $wpId = $er['work_permit_id'] ?? null;
-                                if ($wpId === null || $wpId === '') {
-                                    continue;
-                                }
-                                $layerRaw = $er['layer'] ?? null;
-                                if ($layerRaw === null || $layerRaw === '') {
-                                    continue;
-                                }
-                                $layerNum = (int) $layerRaw;
-                                if (!in_array($layerNum, [1, 2, 3, 4], true)) {
-                                    continue;
-                                }
-                                if (!isset($layersByWpId[$wpId])) {
-                                    $layersByWpId[$wpId] = [];
-                                }
-                                if (!isset($layersByWpId[$wpId][$layerNum])) {
-                                    $layersByWpId[$wpId][$layerNum] = trim((string) ($er['employee_name'] ?? ''));
-                                }
-                            }
-                        }
-                        foreach ($detailsByDayCode as $d => &$byCode) {
-                            foreach ($byCode as $code => &$det) {
-                                $wpId = $det['wp_id'] ?? null;
-                                $layers = $layersByWpId[$wpId] ?? [];
-                                $det['nama_layer_1'] = $layers[1] ?? null;
-                                $det['nama_layer_2'] = $layers[2] ?? null;
-                                $det['nama_layer_3'] = $layers[3] ?? null;
-                                $det['nama_layer_4'] = $layers[4] ?? null;
-                            }
-                        }
-                        unset($byCode, $det);
                     }
 
                     $cancelPerDay = [];
@@ -883,80 +820,49 @@ class DOPMWeeklyController extends Controller
                         $d = Carbon::parse($r->ts)->format('Y-m-d');
                         $k = trim((string) ($r->kode_ikk ?? ''));
                         if ($k !== '') {
-                            if (!isset($cancelPerDay[$d])) {
+                            if (! isset($cancelPerDay[$d])) {
                                 $cancelPerDay[$d] = [];
                             }
                             $cancelPerDay[$d][$k] = true;
                         }
                     }
 
-                    $ipkByDayCode = [];
+                    $ipkPerDay = [];
                     $ipkRows = IpkIkk::whereBetween('ts', [$monthStart, $monthEnd])
-                        ->get(['ts', 'kode_ikk', 'durasi_jam']);
+                        ->selectRaw('DATE(ts) as d, kode_ikk')
+                        ->distinct()
+                        ->get();
                     foreach ($ipkRows as $r) {
-                        $d = Carbon::parse($r->ts)->format('Y-m-d');
+                        $d = $r->d ?? null;
+                        if ($d === null) {
+                            continue;
+                        }
                         $k = trim((string) ($r->kode_ikk ?? ''));
                         if ($k !== '') {
-                            if (!isset($ipkByDayCode[$d])) {
-                                $ipkByDayCode[$d] = [];
+                            if (! isset($ipkPerDay[$d])) {
+                                $ipkPerDay[$d] = [];
                             }
-                            $ipkByDayCode[$d][$k] = $r;
+                            $ipkPerDay[$d][$k] = true;
                         }
                     }
 
-                    $okkByDayCode = [];
-                    $okkRows = Okk::whereBetween('ts', [$monthStart, $monthEnd])->get();
+                    $okkPerDay = [];
+                    $okkRows = Okk::whereBetween('ts', [$monthStart, $monthEnd])
+                        ->selectRaw('DATE(ts) as d, kode_ikk')
+                        ->distinct()
+                        ->get();
                     foreach ($okkRows as $r) {
-                        $d = Carbon::parse($r->ts)->format('Y-m-d');
+                        $d = $r->d ?? null;
+                        if ($d === null) {
+                            continue;
+                        }
                         $k = trim((string) ($r->kode_ikk ?? ''));
                         if ($k !== '') {
-                            if (!isset($okkByDayCode[$d])) {
-                                $okkByDayCode[$d] = [];
+                            if (! isset($okkPerDay[$d])) {
+                                $okkPerDay[$d] = [];
                             }
-                            if (!isset($okkByDayCode[$d][$k])) {
-                                $okkByDayCode[$d][$k] = collect();
-                            }
-                            $okkByDayCode[$d][$k]->push($r);
+                            $okkPerDay[$d][$k] = true;
                         }
-                    }
-
-                    $oakByDayLoc = [];
-                    try {
-                        $sqlOak = "
-                            SELECT toDate(submit_date) AS d, trim(toString(location)) AS loc, trim(toString(detail_location)) AS det, lower(trim(toString(tipe))) AS tipe
-                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
-                            WHERE toDate(submit_date) >= toDate('" . addslashes($monthStart) . "')
-                              AND toDate(submit_date) <= toDate('" . addslashes($monthEnd) . "')
-                        ";
-                        $oakRows = $clickHouse->query($sqlOak);
-                        if (!empty($oakRows)) {
-                            foreach ($oakRows as $or) {
-                                $d = isset($or['d']) ? (is_object($or['d']) ? \Carbon\Carbon::parse($or['d'])->format('Y-m-d') : $or['d']) : null;
-                                $loc = trim((string) ($or['loc'] ?? ''));
-                                $det = trim((string) ($or['det'] ?? ''));
-                                $tipe = trim((string) ($or['tipe'] ?? ''));
-                                if ($d === null || $loc === '' || $det === '') {
-                                    continue;
-                                }
-                                if (!isset($oakByDayLoc[$d])) {
-                                    $oakByDayLoc[$d] = [];
-                                }
-                                if (!isset($oakByDayLoc[$d][$loc])) {
-                                    $oakByDayLoc[$d][$loc] = [];
-                                }
-                                if (!isset($oakByDayLoc[$d][$loc][$det])) {
-                                    $oakByDayLoc[$d][$loc][$det] = ['observee' => false, 'observe' => false];
-                                }
-                                if ($tipe === 'observee') {
-                                    $oakByDayLoc[$d][$loc][$det]['observee'] = true;
-                                }
-                                if ($tipe === 'observe') {
-                                    $oakByDayLoc[$d][$loc][$det]['observe'] = true;
-                                }
-                            }
-                        }
-                    } catch (\Throwable $e) {
-                        \Illuminate\Support\Facades\Log::debug('Dashboard OAK month for calendar: ' . $e->getMessage());
                     }
 
                     $daysInMonth = (int) Carbon::parse($monthEnd)->day;
@@ -970,57 +876,26 @@ class DOPMWeeklyController extends Controller
                             $complianceByDay[$d] = null;
                             continue;
                         }
-                        $hijau = 0;
-                        $kuning = 0;
-                        $merah = 0;
-                        foreach ($codes as $code) {
-                            $det = $detailsByDayCode[$d][$code] ?? null;
-                            if ($det === null) {
-                                $merah++;
-                                continue;
+                        $ipkSet = isset($ipkPerDay[$d]) ? $ipkPerDay[$d] : [];
+                        $okkSet = isset($okkPerDay[$d]) ? $okkPerDay[$d] : [];
+                        $ipkCount = 0;
+                        $okkCount = 0;
+                        foreach ($codes as $c) {
+                            if (isset($ipkSet[$c])) {
+                                $ipkCount++;
                             }
-                            $loc = $det['location_name'] ?? '';
-                            $locDet = $det['location_detail_name'] ?? '';
-                            $hasOak = false;
-                            if ($loc !== '' && $locDet !== '' && isset($oakByDayLoc[$d][$loc][$locDet])) {
-                                $o = $oakByDayLoc[$d][$loc][$locDet];
-                                $hasOak = ($o['observee'] ?? false) || ($o['observe'] ?? false);
-                            }
-                            $ipkRow = $ipkByDayCode[$d][$code] ?? null;
-                            $okkList = $okkByDayCode[$d][$code] ?? collect();
-                            $result = \App\Http\Controllers\DOPMIKK\DOPMController::hitungStatusMatriksDariData(
-                                $ipkRow,
-                                $okkList,
-                                $loc ?: null,
-                                $locDet ?: null,
-                                $det['nama_layer_1'] ?? null,
-                                $det['nama_layer_2'] ?? null,
-                                $det['nama_layer_3'] ?? null,
-                                $det['nama_layer_4'] ?? null,
-                                $hasOak
-                            );
-                            $st = $result['status'] ?? 'Merah';
-                            if ($st === 'Hijau') {
-                                $hijau++;
-                            } elseif ($st === 'Kuning') {
-                                $kuning++;
-                            } else {
-                                $merah++;
+                            if (isset($okkSet[$c])) {
+                                $okkCount++;
                             }
                         }
-                        // Status langsung (tanpa bagi/skor): terburuk hari itu
-                        $worst = $merah > 0 ? 'Merah' : ($kuning > 0 ? 'Kuning' : 'Hijau');
-                        $complianceByDay[$d] = [
-                            'status' => $worst,
-                            'merah' => $merah,
-                            'kuning' => $kuning,
-                            'hijau' => $hijau,
-                        ];
+                        $pctIpk = $total > 0 ? ($ipkCount / $total * 100) : 0;
+                        $pctOkk = $total > 0 ? ($okkCount / $total * 100) : 0;
+                        $complianceByDay[$d] = round(($pctIpk + $pctOkk) / 2, 1);
                     }
                 }
             }
         } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::debug('Dashboard complianceByDay matriks: ' . $e->getMessage());
+            \Illuminate\Support\Facades\Log::debug('Dashboard complianceByDay: ' . $e->getMessage());
         }
 
         return view('dopmikk.dopm.dashboard-weekly', [
@@ -1062,165 +937,6 @@ class DOPMWeeklyController extends Controller
             'ikkClickhouseListHarian' => $ikkClickhouseListHarian,
             'complianceByDay' => $complianceByDay,
         ]);
-    }
-
-    /**
-     * API ringan untuk data kalender compliance per bulan (indikator IPK & OKK per hari).
-     * Dipanggil via AJAX agar request utama dashboard tidak timeout.
-     * Query: 1x ClickHouse IKK bulanan + 1x IPK + 1x OKK + 1x Cancel.
-     */
-    public function getCalendarCompliance(Request $request): JsonResponse
-    {
-        $month = trim((string) $request->input('month', ''));
-        if ($month === '' || !preg_match('/^\d{4}-\d{2}$/', $month)) {
-            $month = now()->format('Y-m');
-        }
-        $filterSite = trim((string) $request->input('site', ''));
-        $monthStart = Carbon::parse($month . '-01')->startOfMonth()->format('Y-m-d');
-        $monthEnd = Carbon::parse($month . '-01')->endOfMonth()->format('Y-m-d');
-        $complianceByDay = [];
-
-        try {
-            if (!class_exists(\App\Services\ClickHouseService::class)) {
-                return response()->json($complianceByDay);
-            }
-            $clickHouse = app(\App\Services\ClickHouseService::class);
-            if (!method_exists($clickHouse, 'query') || !$clickHouse->isConnected()) {
-                return response()->json($complianceByDay);
-            }
-
-            $siteFilterClause = '';
-            if ($filterSite !== '' && $filterSite !== null) {
-                if ($filterSite === 'Lainnya') {
-                    $siteFilterClause = " AND trim(COALESCE(wp.ra_site_name, '')) = ''";
-                } else {
-                    $siteFilterClause = " AND trim(COALESCE(wp.ra_site_name, '')) = '" . addslashes($filterSite) . "'";
-                }
-            }
-            $sqlMonth = "
-                SELECT wp.code AS code, toDate(wp.start_date) AS start_date
-                FROM hse_automation.ikk_work_permit AS wp
-                INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
-                    ON toString(wp_pic.work_permit_id) = toString(wp.id)
-                    AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
-                LEFT JOIN hse_automation.ikk_m_pic AS m
-                    ON toString(m.id) = toString(wp_pic.m_pic_id)
-                WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
-                    AND toDate(wp.start_date) >= toDate('" . addslashes($monthStart) . "')
-                    AND toDate(wp.start_date) <= toDate('" . addslashes($monthEnd) . "')
-                    {$siteFilterClause}
-                GROUP BY wp.id, wp.code, wp.start_date
-                HAVING sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
-                    AND trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', 1, 0)) > 0
-            ";
-            $wpRowsMonth = $clickHouse->query($sqlMonth);
-            $codesPerDay = [];
-            if (!empty($wpRowsMonth)) {
-                foreach ($wpRowsMonth as $row) {
-                    $code = isset($row['code']) ? trim((string) $row['code']) : '';
-                    if ($code === '') {
-                        continue;
-                    }
-                    $startDate = self::parseEndDate(self::getClickHouseRowValue($row, 'start_date'));
-                    if ($startDate === null) {
-                        continue;
-                    }
-                    $d = $startDate->format('Y-m-d');
-                    if (!isset($codesPerDay[$d])) {
-                        $codesPerDay[$d] = [];
-                    }
-                    $codesPerDay[$d][$code] = true;
-                }
-                foreach ($codesPerDay as $d => $codes) {
-                    $codesPerDay[$d] = array_keys($codes);
-                }
-            }
-
-            $cancelPerDay = [];
-            $cancelRows = IpkIkk::whereIn('status_pekerjaan', ['Batal', 'BATAL', 'Cancel', 'CANCEL'])
-                ->whereBetween('ts', [$monthStart, $monthEnd])
-                ->get(['ts', 'kode_ikk']);
-            foreach ($cancelRows as $r) {
-                $d = Carbon::parse($r->ts)->format('Y-m-d');
-                $k = trim((string) ($r->kode_ikk ?? ''));
-                if ($k !== '') {
-                    if (!isset($cancelPerDay[$d])) {
-                        $cancelPerDay[$d] = [];
-                    }
-                    $cancelPerDay[$d][$k] = true;
-                }
-            }
-
-            $ipkPerDay = [];
-            $ipkRows = IpkIkk::whereBetween('ts', [$monthStart, $monthEnd])
-                ->selectRaw('DATE(ts) as d, kode_ikk')
-                ->distinct()
-                ->get();
-            foreach ($ipkRows as $r) {
-                $d = $r->d ?? null;
-                if ($d === null) {
-                    continue;
-                }
-                $k = trim((string) ($r->kode_ikk ?? ''));
-                if ($k !== '') {
-                    if (!isset($ipkPerDay[$d])) {
-                        $ipkPerDay[$d] = [];
-                    }
-                    $ipkPerDay[$d][$k] = true;
-                }
-            }
-
-            $okkPerDay = [];
-            $okkRows = Okk::whereBetween('ts', [$monthStart, $monthEnd])
-                ->selectRaw('DATE(ts) as d, kode_ikk')
-                ->distinct()
-                ->get();
-            foreach ($okkRows as $r) {
-                $d = $r->d ?? null;
-                if ($d === null) {
-                    continue;
-                }
-                $k = trim((string) ($r->kode_ikk ?? ''));
-                if ($k !== '') {
-                    if (!isset($okkPerDay[$d])) {
-                        $okkPerDay[$d] = [];
-                    }
-                    $okkPerDay[$d][$k] = true;
-                }
-            }
-
-            $daysInMonth = (int) Carbon::parse($monthEnd)->day;
-            for ($day = 1; $day <= $daysInMonth; $day++) {
-                $d = Carbon::parse($monthStart)->addDays($day - 1)->format('Y-m-d');
-                $codes = $codesPerDay[$d] ?? [];
-                $cancelCodes = isset($cancelPerDay[$d]) ? array_keys($cancelPerDay[$d]) : [];
-                $codes = array_values(array_diff($codes, $cancelCodes));
-                $total = count($codes);
-                if ($total === 0) {
-                    $complianceByDay[$d] = null;
-                    continue;
-                }
-                $ipkSet = $ipkPerDay[$d] ?? [];
-                $okkSet = $okkPerDay[$d] ?? [];
-                $ipkCount = 0;
-                $okkCount = 0;
-                foreach ($codes as $c) {
-                    if (isset($ipkSet[$c])) {
-                        $ipkCount++;
-                    }
-                    if (isset($okkSet[$c])) {
-                        $okkCount++;
-                    }
-                }
-                $pctIpk = $total > 0 ? ($ipkCount / $total * 100) : 0;
-                $pctOkk = $total > 0 ? ($okkCount / $total * 100) : 0;
-                $complianceByDay[$d] = round(($pctIpk + $pctOkk) / 2, 1);
-            }
-        } catch (\Throwable $e) {
-            \Illuminate\Support\Facades\Log::debug('Dashboard getCalendarCompliance: ' . $e->getMessage());
-        }
-
-        return response()->json($complianceByDay);
     }
 
     /**
