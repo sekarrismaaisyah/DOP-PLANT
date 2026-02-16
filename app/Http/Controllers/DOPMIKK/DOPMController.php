@@ -1478,12 +1478,18 @@ class DOPMController extends Controller
         $oak = [];
 
         if ($kodeIkk !== '' && $kodeIkk !== null) {
+            $tz = config('app.timezone', 'Asia/Jakarta');
             // IPK-IKK dan OKK di modal: tampilkan semua data yang berelasi dengan kode_ikk
+            // Format ts ke WIB (waktu asli) agar tampil benar di frontend, bukan UTC
             $ipkIkk = IpkIkk::where('kode_ikk', $kodeIkk)
                 ->orderByDesc('ts')
                 ->get()
-                ->map(function ($row) {
-                    return $row->toArray();
+                ->map(function ($row) use ($tz) {
+                    $arr = $row->toArray();
+                    if ($row->ts) {
+                        $arr['ts'] = $row->ts->setTimezone($tz)->format('Y-m-d H:i:s');
+                    }
+                    return $arr;
                 })
                 ->values()
                 ->toArray();
@@ -1491,8 +1497,12 @@ class DOPMController extends Controller
             $okk = Okk::where('kode_ikk', $kodeIkk)
                 ->orderByDesc('ts')
                 ->get()
-                ->map(function ($row) {
-                    return $row->toArray();
+                ->map(function ($row) use ($tz) {
+                    $arr = $row->toArray();
+                    if ($row->ts) {
+                        $arr['ts'] = $row->ts->setTimezone($tz)->format('Y-m-d H:i:s');
+                    }
+                    return $arr;
                 })
                 ->values()
                 ->toArray();
