@@ -491,7 +491,7 @@
                 </table>
                     </div>
                     <div class="dms-fatigue-history">
-                        <div class="dms-fatigue-history-title">History Score Fatigue Jelek</div>
+                        <div class="dms-fatigue-history-title">History Score Fatigue Rendah</div>
                         <div class="dms-true-alert-table-wrap" style="max-height: 180px;">
                             <table class="dms-fatigue-history-table">
                                 <thead>
