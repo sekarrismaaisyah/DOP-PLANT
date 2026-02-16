@@ -444,7 +444,7 @@
 </style>
 
 <div class="row mt-4 dms-detection-wrap">
-    <div class="col-12 col-xl-8">
+    <div class="col-4 col-xl-8">
         <div class="dms-add-section">
             <p class="mb-0">Jalankan deteksi fatigue untuk beberapa operator sekaligus. Tambah slot untuk setiap sumber video.</p>
             <button type="button" class="btn-add-detection" onclick="addDetectionCard()">+ Tambah Slot Deteksi</button>
