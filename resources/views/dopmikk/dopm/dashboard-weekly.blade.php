@@ -2791,9 +2791,21 @@
         cell.style.cursor = 'pointer';
         cell.addEventListener('click', function(selectedDate) {
           return function() {
-            if (filterInput) {
-              filterInput.value = selectedDate;
-              if (filterForm) filterForm.submit();
+            if (filterInput) filterInput.value = selectedDate;
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                title: 'Memuat data...',
+                html: 'Menampilkan data untuk tanggal <strong>' + selectedDate + '</strong>. Mohon tunggu.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: function() {
+                  Swal.showLoading();
+                  if (filterForm) filterForm.submit();
+                }
+              });
+            } else if (filterForm) {
+              filterForm.submit();
             }
           };
         }(dateStr));
@@ -2802,11 +2814,24 @@
         cell.innerHTML = '<div class="compliance-day-number">' + day + '</div>' +
           '<div class="compliance-day-value">—</div>' +
           '<div class="compliance-day-label">' + (isFilterDay ? 'Tanggal dipilih' : 'Klik untuk pilih') + '</div>';
+        cell.style.cursor = 'pointer';
         cell.addEventListener('click', function(selectedDate) {
           return function() {
-            if (filterInput) {
-              filterInput.value = selectedDate;
-              if (filterForm) filterForm.submit();
+            if (filterInput) filterInput.value = selectedDate;
+            if (typeof Swal !== 'undefined') {
+              Swal.fire({
+                title: 'Memuat data...',
+                html: 'Menampilkan data untuk tanggal <strong>' + selectedDate + '</strong>. Mohon tunggu.',
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                didOpen: function() {
+                  Swal.showLoading();
+                  if (filterForm) filterForm.submit();
+                }
+              });
+            } else if (filterForm) {
+              filterForm.submit();
             }
           };
         }(dateStr));
