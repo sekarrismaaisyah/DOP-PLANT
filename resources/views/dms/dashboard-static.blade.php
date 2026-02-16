@@ -313,7 +313,7 @@
     <div id="summary" class="summary"></div>
   </section>
 
-  <footer class="dash-footer muted">Data riil dari API DMS. Diperbarui setiap 2 detik. Sumber: /api/dms/dashboard/realtime</footer>
+  <footer class="dash-footer muted">Data riil dari API DMS. Diperbarui setiap 10 detik. Sumber: /api/dms/dashboard/realtime</footer>
 </div>
 
 <!-- Modal Detail Log Driver -->
@@ -354,8 +354,8 @@
 (function(){
   const $ = (id) => document.getElementById(id);
   const API_REALTIME = '/api/dms/dashboard/realtime?minutes=60&limit=100';
-  const POLL_MS = 2000;
-  const POLL_MS_AFTER_429 = 60000; // 60 detik saat kena rate limit
+  const POLL_MS = 10000; // 10 detik (kurangi 429 Too Many Requests)
+  const POLL_MS_AFTER_429 = 90000; // 90 detik saat kena rate limit
 
   let operatorsData = [];
   let selectedIndex = 0;
