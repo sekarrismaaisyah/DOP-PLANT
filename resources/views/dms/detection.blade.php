@@ -398,7 +398,6 @@
         font-size: 11px;
         font-weight: 600;
     }
-    .dms-true-alert-card + .dms-true-alert-card { margin-top: 24px; }
     .dms-true-alert-empty {
         text-align: center;
         padding: 32px 16px;
@@ -418,9 +417,11 @@
         </div>
     </div>
     <div class="col-12 col-xl-4 mt-4 mt-xl-0">
-        <div class="dms-true-alert-card">
-            <div class="card-header">DMS True Alert (EAR Fatigue)</div>
-            <div class="dms-true-alert-table-wrap">
+        <div class="row g-3">
+            <div class="col-12 col-sm-6">
+                <div class="dms-true-alert-card">
+                    <div class="card-header">DMS True Alert (EAR Fatigue)</div>
+                    <div class="dms-true-alert-table-wrap">
                 <table class="dms-true-alert-table" id="dmsTrueAlertTable">
                     <thead>
                         <tr>
@@ -451,11 +452,13 @@
                         </tr>
                     </tbody>
                 </table>
+                    </div>
+                </div>
             </div>
-        </div>
-        <div class="dms-true-alert-card">
-            <div class="card-header">True Alert by Control Room</div>
-            <div class="dms-true-alert-table-wrap" style="max-height: 520px;">
+            <div class="col-12 col-sm-6">
+                <div class="dms-true-alert-card">
+                    <div class="card-header">True Alert by Control Room</div>
+                    <div class="dms-true-alert-table-wrap" style="max-height: 520px;">
                 <table class="dms-true-alert-table">
                     <thead>
                         <tr>
@@ -611,6 +614,8 @@
                         <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Yawning</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 4:18:46 PM</td><td>1</td></tr>
                     </tbody>
                 </table>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
