@@ -444,7 +444,7 @@
 </style>
 
 <div class="row mt-4 dms-detection-wrap">
-    <div class="col-4 col-xl-8">
+    <div class="col-12 col-xl-8">
         <div class="dms-add-section">
             <p class="mb-0">Jalankan deteksi fatigue untuk beberapa operator sekaligus. Tambah slot untuk setiap sumber video.</p>
             <button type="button" class="btn-add-detection" onclick="addDetectionCard()">+ Tambah Slot Deteksi</button>
@@ -454,241 +454,50 @@
         </div>
     </div>
     <div class="col-12 col-xl-4 mt-4 mt-xl-0">
-        <div class="row g-3">
-            <div class="col-12 col-sm-6">
-                <div class="dms-true-alert-card">
-                    <div class="card-header">DMS True Alert (EAR Fatigue)</div>
-                    <div class="dms-true-alert-table-wrap">
-                <table class="dms-true-alert-table" id="dmsTrueAlertTable">
+        <div class="dms-true-alert-card">
+            <div class="card-header">Alert &amp; Score (EAR + Control Room)</div>
+            <div class="dms-true-alert-table-wrap" style="max-height: 520px;">
+                <table class="dms-true-alert-table" id="dmsUnifiedAlertTable">
                     <thead>
                         <tr>
-                            <th>Driver SID</th>
-                            <th>Driver Name</th>
-                            <th>Warning Type</th>
-                            <th>L1 Context Status</th>
-                            <th>Second of event_time</th>
-                            <th>Alert</th>
-                        </tr>
-                    </thead>
-                    <tbody id="dmsTrueAlertTableBody">
-                        <tr>
-                            <td>QMDQ3</td>
-                            <td>SAMUEL SIAHAAN</td>
-                            <td>Closedeyes</td>
-                            <td><span class="badge-true-alarm">True Alarm</span></td>
-                            <td>1/2/2026 9:33:18 AM</td>
-                            <td>1</td>
-                        </tr>
-                        <tr>
-                            <td>QMDQ3</td>
-                            <td>SAMUEL SIAHAAN</td>
-                            <td>Closedeyes</td>
-                            <td><span class="badge-true-alarm">True Alarm</span></td>
-                            <td>1/2/2026 9:30:03 AM</td>
-                            <td>1</td>
-                        </tr>
-                    </tbody>
-                </table>
-                    </div>
-                    <div class="dms-fatigue-history">
-                        <div class="dms-fatigue-history-title">History Score Fatigue Rendah</div>
-                        <div class="dms-true-alert-table-wrap" style="max-height: 180px;">
-                            <table class="dms-fatigue-history-table">
-                                <thead>
-                                    <tr>
-                                        <th>Driver</th>
-                                        <th>Fatigue Score</th>
-                                        <th>Waktu</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    <tr>
-                                        <td>QMDQ3 (SAMUEL SIAHAAN)</td>
-                                        <td class="score-bad">60</td>
-                                        <td>1/2/2026 9:33:18 AM</td>
-                                    </tr>
-                                    <tr>
-                                        <td>QMDQ3 (SAMUEL SIAHAAN)</td>
-                                        <td class="score-bad">65</td>
-                                        <td>1/2/2026 9:30:03 AM</td>
-                                    </tr>
-                                    <tr>
-                                        <td>QMDQ3 (SAMUEL SIAHAAN)</td>
-                                        <td class="score-bad">69</td>
-                                        <td>1/2/2026 9:15:41 AM</td>
-                                    </tr>
-                                    <tr>
-                                        <td>QMDQ3 (SAMUEL SIAHAAN)</td>
-                                        <td class="score-bad">70</td>
-                                        <td>1/2/2026 9:08:22 AM</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="col-12 col-sm-6">
-                <div class="dms-true-alert-card">
-                    <div class="card-header">True Alert by Control Room</div>
-                    <div class="dms-true-alert-table-wrap" style="max-height: 520px;">
-                <table class="dms-true-alert-table">
-                    <thead>
-                        <tr>
-                            <th>Driver SID</th>
-                            <th>Driver Name</th>
-                            <th>Warning Type</th>
-                            <th>L1 Context Status</th>
-                            <th>Second of event_time</th>
-                            <th>Alert</th>
+                            <th>Jam</th>
+                            <th>EAR</th>
+                            <th>Safety Score</th>
+                            <th>DMS</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td></td><td>2/9/2026 5:50:58 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td></td><td>2/9/2026 5:50:47 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td></td><td>2/9/2026 5:40:20 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td></td><td>2/9/2026 11:50:24 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td></td><td>1/28/2026 5:32:44 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td></td><td>1/28/2026 5:32:20 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td></td><td>12/29/2025 5:48:26 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 5:32:09 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 4:31:29 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 11:55:05 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 11:43:09 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 11:42:45 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 10:19:37 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 10:19:32 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 9:27:11 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 9:20:50 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 9:20:29 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 8:55:29 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 8:53:09 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 8:32:28 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 8:16:21 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 7:27:42 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 7:11:32 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 5:30:51 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 5:13:50 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 5:12:35 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 4:20:09 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 4:20:06 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 3:56:23 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 3:54:54 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 3:52:47 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 3:14:39 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 2:55:11 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 2:18:44 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 2:18:05 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 2:14:16 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 1:49:26 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 1:49:15 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 1:14:41 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 11:27:46 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/7/2026 11:01:51 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/7/2026 4:47:55 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/7/2026 3:54:13 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/7/2026 2:16:31 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/4/2026 8:31:53 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/4/2026 2:05:20 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/2/2026 6:19:18 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 5:27:13 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 5:19:15 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 5:00:23 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 5:00:09 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 4:58:06 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 2:37:42 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 2:04:48 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 1:36:26 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 11:13:07 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 11:11:15 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 10:40:44 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 10:40:41 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 10:16:44 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 9:23:57 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 8:26:02 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 7:15:04 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 7:05:35 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 7:05:31 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 7:04:01 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 6:59:59 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:25:38 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:23:57 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:23:15 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:23:06 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:22:38 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:22:19 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:21:50 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:21:39 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:21:22 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:14:55 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 5:07:27 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 4:58:46 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 4:46:03 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 4:45:57 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 4:30:39 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 4:30:11 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 4:19:01 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 4:18:55 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 4:14:42 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 4:14:31 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 3:54:03 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 3:49:52 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 3:48:46 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 3:46:22 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 3:31:47 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 3:14:10 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 3:14:01 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 3:13:47 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 3:12:29 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 2:44:37 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 2:44:25 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 2:40:05 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 2:39:44 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 2:25:40 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 2:23:48 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 2:14:01 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 2:13:45 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 2:05:55 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 2:05:46 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 1:52:03 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 1:34:21 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 1:14:26 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 1:13:53 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 1:12:20 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 11:54:02 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 11:53:10 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 11:47:56 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 11:46:31 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 11:42:06 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 11:42:02 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 11:22:39 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 10:51:28 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 10:45:32 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 10:20:12 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 10:18:51 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 10:01:11 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 10:01:04 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 10:00:05 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/28/2026 9:08:21 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/2/2026 9:29:08 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/2/2026 9:12:24 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/2/2026 9:10:29 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/2/2026 9:08:27 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/2/2026 8:47:18 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-false-alarm">False Alarm</span></td><td>12/30/2025 4:53:14 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-true-alarm">True Alarm</span></td><td>1/2/2026 9:33:18 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Closedeyes</td><td><span class="badge-true-alarm">True Alarm</span></td><td>1/2/2026 9:30:03 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Yawning</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 5:49:07 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Yawning</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 9:05:55 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Yawning</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/10/2026 7:44:30 AM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Yawning</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/9/2026 2:55:28 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Yawning</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/3/2026 10:33:30 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Yawning</td><td><span class="badge-false-alarm">False Alarm</span></td><td>2/3/2026 10:29:05 PM</td><td>1</td></tr>
-                        <tr><td>QMDQ3</td><td>SAMUEL SIAHAAN</td><td>Yawning</td><td><span class="badge-false-alarm">False Alarm</span></td><td>1/30/2026 4:18:46 PM</td><td>1</td></tr>
+                        <tr><td>12/29/2025 5:48:26 AM</td><td></td><td></td><td></td></tr>
+                        <tr><td>12/30/2025 4:53:14 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 8:47:18 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:08:22 AM</td><td></td><td class="score-bad">70</td><td></td></tr>
+                        <tr><td>1/2/2026 9:08:27 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:10:29 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:12:24 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:15:41 AM</td><td></td><td class="score-bad">69</td><td></td></tr>
+                        <tr><td>1/2/2026 9:29:08 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:30:03 AM</td><td>True</td><td class="score-bad">65</td><td></td></tr>
+                        <tr><td>1/2/2026 9:33:18 AM</td><td>True</td><td class="score-bad">60</td><td></td></tr>
+                        <tr><td>1/28/2026 5:32:20 PM</td><td></td><td></td><td></td></tr>
+                        <tr><td>1/28/2026 5:32:44 PM</td><td></td><td></td><td></td></tr>
+                        <tr><td>1/30/2026 4:18:46 PM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>1/30/2026 5:00:09 PM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>2/2/2026 6:19:18 PM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>2/4/2026 2:05:20 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>2/7/2026 2:16:31 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>2/9/2026 5:40:20 PM</td><td></td><td></td><td></td></tr>
+                        <tr><td>2/9/2026 5:50:47 PM</td><td></td><td></td><td></td></tr>
+                        <tr><td>2/9/2026 5:50:58 PM</td><td></td><td></td><td></td></tr>
+                        <tr><td>2/10/2026 7:11:32 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>2/10/2026 9:20:29 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>2/10/2026 11:43:09 AM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>1/28/2026 5:23:06 PM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>1/28/2026 5:22:38 PM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>2/9/2026 2:55:11 PM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>2/10/2026 5:32:09 PM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>2/10/2026 5:49:07 PM</td><td></td><td></td><td>FALSE</td></tr>
                     </tbody>
                 </table>
-                    </div>
-                </div>
             </div>
         </div>
     </div>
