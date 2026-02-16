@@ -34,3 +34,4 @@ Route::get('/dms/calibrations', [SafetyScoreController::class, 'getCalibrations'
 Route::get('/dms/dashboard/realtime', [DMSDashboardController::class, 'getRealtimeData']);
 Route::get('/dms/dashboard/statistics', [DMSDashboardController::class, 'getStatistics']);
 Route::get('/dms/dashboard/driver-logs', [DMSDashboardController::class, 'getDriverLogs']);
+Route::get('/dms/dashboard/true-alerts', [DMSDashboardController::class, 'getTrueAlerts']);

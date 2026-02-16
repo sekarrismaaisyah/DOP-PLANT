@@ -258,5 +258,52 @@ class DMSDashboardController extends Controller
             ], 500);
         }
     }
+
+    /**
+     * Get DMS true alerts (EAR fatigue) for table: driver_sid, driver_name, warning_type, l1_context_status, event_time, alert
+     */
+    public function getTrueAlerts(Request $request): JsonResponse
+    {
+        try {
+            $minutes = $request->input('minutes', 60);
+            $limit = $request->input('limit', 100);
+
+            $query = SafetyScoreLog::query()
+                ->where('timestamp', '>=', now()->subMinutes($minutes))
+                ->where(function ($q) {
+                    $q->where('status', 'Attention')
+                        ->orWhere('fatigue', '>=', 60);
+                })
+                ->orderBy('timestamp', 'desc');
+
+            $logs = $query->limit($limit)->get();
+            $timezone = 'Asia/Jakarta';
+
+            $data = $logs->map(function ($log) use ($timezone) {
+                $ts = $log->timestamp->setTimezone($timezone);
+                $eventTime = $ts->format('j/n/Y g:i:s A');
+                return [
+                    'driver_sid' => $log->driver_id ?? '—',
+                    'driver_name' => strtoupper((string) ($log->driver_id ?? '—')),
+                    'warning_type' => 'Closedeyes',
+                    'l1_context_status' => 'True Alarm',
+                    'event_time' => $eventTime,
+                    'alert' => 1,
+                ];
+            });
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'count' => $data->count(),
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to fetch true alerts',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
 }
 

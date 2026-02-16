@@ -355,10 +355,12 @@
   const $ = (id) => document.getElementById(id);
   const API_REALTIME = '/api/dms/dashboard/realtime?minutes=60&limit=100';
   const POLL_MS = 2000;
+  const POLL_MS_AFTER_429 = 60000; // 60 detik saat kena rate limit
 
   let operatorsData = [];
   let selectedIndex = 0;
   let pollTimer = null;
+  let currentPollMs = POLL_MS;
 
   function safeNum(v, def){ return v != null && !isNaN(parseFloat(v)) ? parseFloat(v) : (def ?? 0); }
   function safeToFixed(v, d){ return safeNum(v, 0).toFixed(d ?? 0); }
@@ -705,8 +707,37 @@
   async function fetchRealtimeData(){
     try {
       const response = await fetch(API_REALTIME);
-      const result = await response.json();
-      if(result.success && result.data && Array.isArray(result.data)){
+      const contentType = (response.headers.get('content-type') || '').toLowerCase();
+      const isJson = contentType.indexOf('application/json') !== -1;
+
+      if (!response.ok) {
+        const text = await response.text();
+        let msg = 'Gagal memuat data';
+        if (response.status === 429) {
+          msg = 'Terlalu banyak permintaan (429). Polling diperlambat, coba lagi sebentar.';
+          if (currentPollMs === POLL_MS) {
+            currentPollMs = POLL_MS_AFTER_429;
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = setInterval(fetchRealtimeData, currentPollMs);
+          }
+        } else {
+          let detail = '';
+          if (isJson && text) { try { detail = ': ' + (JSON.parse(text).message || text).slice(0, 80); } catch(e) {} }
+          msg = 'Error ' + response.status + detail;
+        }
+        $('testStatus').innerHTML = msg;
+        $('testStatus').style.color = '#dc2626';
+        return;
+      }
+
+      const text = await response.text();
+      const result = (isJson && text) ? JSON.parse(text) : {};
+      if (result.success && result.data && Array.isArray(result.data)){
+        if (currentPollMs !== POLL_MS) {
+          currentPollMs = POLL_MS;
+          if (pollTimer) clearInterval(pollTimer);
+          pollTimer = setInterval(fetchRealtimeData, currentPollMs);
+        }
         operatorsData = result.data;
         if(operatorsData.length === 0){
           $('opCards').innerHTML = '<div class="card muted" style="text-align:center;padding:40px;font-weight:500;color:var(--muted)">Tidak ada data operator saat ini.</div>';
