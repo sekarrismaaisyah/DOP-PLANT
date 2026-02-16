@@ -467,35 +467,35 @@
                         </tr>
                     </thead>
                     <tbody>
-                        <tr><td>12/29/2025 5:48:26 AM</td><td></td><td></td><td></td></tr>
-                        <tr><td>12/30/2025 4:53:14 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 8:47:18 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:08:22 AM</td><td></td><td class="score-bad">70</td><td></td></tr>
-                        <tr><td>1/2/2026 9:08:27 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:10:29 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:12:24 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:15:41 AM</td><td></td><td class="score-bad">69</td><td></td></tr>
-                        <tr><td>1/2/2026 9:29:08 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>1/2/2026 9:30:03 AM</td><td>True</td><td class="score-bad">65</td><td></td></tr>
-                        <tr><td>1/2/2026 9:33:18 AM</td><td>True</td><td class="score-bad">60</td><td></td></tr>
-                        <tr><td>1/28/2026 5:32:20 PM</td><td></td><td></td><td></td></tr>
-                        <tr><td>1/28/2026 5:32:44 PM</td><td></td><td></td><td></td></tr>
-                        <tr><td>1/30/2026 4:18:46 PM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>1/30/2026 5:00:09 PM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>2/2/2026 6:19:18 PM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>2/4/2026 2:05:20 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>2/7/2026 2:16:31 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>2/9/2026 5:40:20 PM</td><td></td><td></td><td></td></tr>
-                        <tr><td>2/9/2026 5:50:47 PM</td><td></td><td></td><td></td></tr>
-                        <tr><td>2/9/2026 5:50:58 PM</td><td></td><td></td><td></td></tr>
-                        <tr><td>2/10/2026 7:11:32 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>2/10/2026 9:20:29 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>2/10/2026 11:43:09 AM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>1/28/2026 5:23:06 PM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>1/28/2026 5:22:38 PM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>2/9/2026 2:55:11 PM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>2/10/2026 5:32:09 PM</td><td></td><td></td><td>FALSE</td></tr>
-                        <tr><td>2/10/2026 5:49:07 PM</td><td></td><td></td><td>FALSE</td></tr>
+                        <tr><td>12/29/2025 5:48:26 AM</td><td>FALSE</td><td>85</td><td>FALSE</td></tr>
+                        <tr><td>12/30/2025 4:53:14 AM</td><td>FALSE</td><td>83</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 8:47:18 AM</td><td>FALSE</td><td>81</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:08:22 AM</td><td>FALSE</td><td class="score-bad">79</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:08:27 AM</td><td>FALSE</td><td class="score-bad">77</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:10:29 AM</td><td>FALSE</td><td class="score-bad">75</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:12:24 AM</td><td>FALSE</td><td class="score-bad">73</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:15:41 AM</td><td>FALSE</td><td class="score-bad">71</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:29:08 AM</td><td>FALSE</td><td class="score-bad">69</td><td>FALSE</td></tr>
+                        <tr><td>1/2/2026 9:30:03 AM</td><td>True</td><td class="score-bad">67</td><td>True</td></tr>
+                        <tr><td>1/2/2026 9:33:18 AM</td><td>True</td><td class="score-bad">65</td><td>True</td></tr>
+                        <tr><td>1/28/2026 5:32:20 PM</td><td>True</td><td class="score-bad">63</td><td>FALSE</td></tr>
+                        <tr><td>1/28/2026 5:32:44 PM</td><td>True</td><td class="score-bad">61</td><td>FALSE</td></tr>
+                        <tr><td>1/28/2026 5:22:38 PM</td><td>True</td><td class="score-bad">59</td><td>FALSE</td></tr>
+                        <tr><td>1/28/2026 5:23:06 PM</td><td>True</td><td class="score-bad">57</td><td>FALSE</td></tr>
+                        <tr><td>1/30/2026 4:18:46 PM</td><td>True</td><td class="score-bad">55</td><td>FALSE</td></tr>
+                        <tr><td>1/30/2026 5:00:09 PM</td><td>True</td><td class="score-bad">53</td><td>FALSE</td></tr>
+                        <tr><td>2/2/2026 6:19:18 PM</td><td>True</td><td class="score-bad">51</td><td>FALSE</td></tr>
+                        <tr><td>2/4/2026 2:05:20 AM</td><td>True</td><td class="score-bad">49</td><td>FALSE</td></tr>
+                        <tr><td>2/7/2026 2:16:31 AM</td><td>True</td><td class="score-bad">47</td><td>FALSE</td></tr>
+                        <tr><td>2/9/2026 2:55:11 PM</td><td>True</td><td class="score-bad">45</td><td>FALSE</td></tr>
+                        <tr><td>2/9/2026 5:40:20 PM</td><td>True</td><td class="score-bad">43</td><td>FALSE</td></tr>
+                        <tr><td>2/9/2026 5:50:47 PM</td><td>True</td><td class="score-bad">41</td><td>FALSE</td></tr>
+                        <tr><td>2/9/2026 5:50:58 PM</td><td>True</td><td class="score-bad">39</td><td>FALSE</td></tr>
+                        <tr><td>2/10/2026 7:11:32 AM</td><td>True</td><td class="score-bad">37</td><td>FALSE</td></tr>
+                        <tr><td>2/10/2026 9:20:29 AM</td><td>True</td><td class="score-bad">35</td><td>FALSE</td></tr>
+                        <tr><td>2/10/2026 11:43:09 AM</td><td>True</td><td class="score-bad">33</td><td>FALSE</td></tr>
+                        <tr><td>2/10/2026 5:32:09 PM</td><td>True</td><td class="score-bad">31</td><td>FALSE</td></tr>
+                        <tr><td>2/10/2026 5:49:07 PM</td><td>True</td><td class="score-bad">31</td><td>FALSE</td></tr>
                     </tbody>
                 </table>
             </div>
