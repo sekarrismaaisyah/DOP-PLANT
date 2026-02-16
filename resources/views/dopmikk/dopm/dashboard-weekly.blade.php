@@ -1663,23 +1663,23 @@
                   <div class="compliance-legend">
                     <div class="compliance-legend-item">
                       <div class="compliance-legend-color" style="background: linear-gradient(135deg, #d32f2f 0%, #f44336 100%);"></div>
-                      <span class="small">Merah (1–50%)</span>
+                      <span class="small">Merah</span>
                     </div>
                     <div class="compliance-legend-item">
                       <div class="compliance-legend-color" style="background: linear-gradient(135deg, #ff6f00 0%, #ff9800 100%);"></div>
-                      <span class="small">Kuning (51–80%)</span>
+                      <span class="small">Kuning</span>
                     </div>
                     <div class="compliance-legend-item">
                       <div class="compliance-legend-color" style="background: linear-gradient(135deg, #00c853 0%, #00e676 100%);"></div>
-                      <span class="small">Hijau (81–100%)</span>
+                      <span class="small">Hijau</span>
                     </div>
                   </div>
                 </div>
                 <div class="d-flex flex-wrap align-items-center gap-3 border p-3 rounded-4 mt-3 text-start">
                   <div class="small text-muted">
-                    <div class="mb-1"><strong>Merah (1–50%):</strong> Tidak ada IPK atau OKK sama sekali; hanya ada IPK atau hanya OKK; ada IPK+OKK Layer 1 tapi tidak ada OKK Layer 2 up sesuai IKK.</div>
-                    <div class="mb-1"><strong>Kuning (51–80%):</strong> Ada IPK+OKK sesuai target tapi fraud; atau tidak ada OAK (DIC mitra maupun BC).</div>
-                    <div><strong>Hijau (81–100%):</strong> Lengkap: IPK + OKK Layer 1 sesuai target + OKK L2 up sesuai IKK + OAK. Skor per hari = rata-rata bobot (Hijau 100, Kuning 50, Merah 0). Klik tanggal untuk memuat detail.</div>
+                    <div class="mb-1"><strong>Merah:</strong> Tidak ada IPK atau OKK sama sekali; hanya ada IPK atau hanya OKK; ada IPK+OKK Layer 1 tapi tidak ada OKK Layer 2 up sesuai IKK.</div>
+                    <div class="mb-1"><strong>Kuning:</strong> Ada IPK+OKK sesuai target tapi fraud; atau tidak ada OAK (DIC mitra maupun BC).</div>
+                    <div><strong>Hijau:</strong> Lengkap: IPK + OKK Layer 1 sesuai target + OKK L2 up sesuai IKK + OAK. Per hari ditampilkan status langsung (tanpa dibagi/skor); jika ada salah satu Merah maka hari = Merah, else Kuning, else Hijau. Klik tanggal untuk memuat detail.</div>
                   </div>
                 </div>
                </div>
@@ -1694,7 +1694,6 @@
                 <div class="d-flex align-items-start justify-content-between mb-3">
                   <div class="">
                     <h5 class="mb-0 fw-bold">Need Action</h5>
-                    <p class="mb-0 small text-muted">Merah: (1) Tidak ada IPK/OKK; (2) Hanya IPK atau hanya OKK; (3) Ada IPK+OKK L1 tapi tidak ada OKK L2 up sesuai IKK.</p>
                   </div>
                   <div class="dropdown">
                     <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
@@ -1742,7 +1741,7 @@
                      @php
                         $alasanMerah = htmlspecialchars($ikk->alasan_matriks ?? 'Tidak ada IPK atau OKK', ENT_QUOTES, 'UTF-8');
                      @endphp
-                     <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Merah:</strong><br>{{ $alasanMerah }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                     <div class="dopm-matriks-row d-flex align-items-center gap-3 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Merah:</strong><br>{{ $alasanMerah }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                        <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                         <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-danger bg-opacity-10 text-danger flex-shrink-0">
                           <span class="material-icons-outlined" style="font-size: 28px;">warning</span>
@@ -1752,13 +1751,7 @@
                             <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
                           </div>
                        </div>
-                       <div class="progress w-25 flex-shrink-0" style="height: 5px;">
-                          <div class="progress-bar bg-danger" style="width: 0%"></div>
-                       </div>
-                       <div class="flex-shrink-0 d-flex align-items-center gap-2">
-                       
-                        <p class="mb-0 fs-6">0%</p>
-                       </div>
+                       <span class="badge bg-danger flex-shrink-0">Merah</span>
                      </div>
                     @empty
                      <div class="text-center py-4 text-muted">
@@ -1777,7 +1770,6 @@
                 <div class="d-flex align-items-start justify-content-between mb-3">
                   <div class="">
                     <h5 class="mb-0 fw-bold">Warning</h5>
-                    <p class="mb-0 small text-muted">Kuning: (1) IPK+OKK sesuai target tapi ada fraud; (2) Tidak ada OAK (DIC mitra maupun BC).</p>
                   </div>
                   <div class="dropdown">
                     <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
@@ -1825,7 +1817,7 @@
                   @php
                     $alasanKuning = htmlspecialchars($ikk->alasan_matriks ?? 'Kondisi tidak memenuhi kriteria Hijau', ENT_QUOTES, 'UTF-8');
                   @endphp
-                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Kuning:</strong><br>{{ $alasanKuning }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                  <div class="dopm-matriks-row d-flex align-items-center gap-3 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Kuning:</strong><br>{{ $alasanKuning }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                     <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                       <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-warning bg-opacity-10 text-warning flex-shrink-0">
                         <span class="material-icons-outlined" style="font-size: 28px;">info</span>
@@ -1835,13 +1827,7 @@
                         <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
                       </div>
                     </div>
-                    <div class="progress w-25 flex-shrink-0" style="height: 5px;">
-                      <div class="progress-bar bg-warning text-dark" style="width: 50%"></div>
-                    </div>
-                    <div class="flex-shrink-0 d-flex align-items-center gap-2">
-                     
-                      <p class="mb-0 fs-6">50%</p>
-                    </div>
+                    <span class="badge bg-warning text-dark flex-shrink-0">Kuning</span>
                   </div>
                   @empty
                   <div class="text-center py-4 text-muted">
@@ -1860,7 +1846,6 @@
                 <div class="d-flex align-items-start justify-content-between mb-3">
                   <div class="">
                     <h5 class="mb-0 fw-bold">Complete</h5>
-                    <p class="mb-0 small text-muted">Hijau: (1) IPK + OKK Layer 1 sesuai target; (2) OKK L2 up sesuai IKK; ada OAK.</p>
                   </div>
                   <div class="dropdown">
                     <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle"
@@ -1908,7 +1893,7 @@
                   @php
                     $alasanHijau = htmlspecialchars($ikk->alasan_matriks ?? 'Semua persyaratan terpenuhi', ENT_QUOTES, 'UTF-8');
                   @endphp
-                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Hijau:</strong><br>{{ $alasanHijau }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                  <div class="dopm-matriks-row d-flex align-items-center gap-3 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Hijau:</strong><br>{{ $alasanHijau }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                     <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                       <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-success bg-opacity-10 text-success flex-shrink-0">
                         <span class="material-icons-outlined" style="font-size: 28px;">check_circle</span>
@@ -1918,13 +1903,7 @@
                         <p class="mb-0 text-muted small text-truncate" title="{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}">{{ $ikk->code ?? '-' }} • {{ $ikk->site ?? '-' }}</p>
                       </div>
                     </div>
-                    <div class="progress w-25 flex-shrink-0" style="height: 5px;">
-                      <div class="progress-bar bg-success" style="width: 100%"></div>
-                    </div>
-                    <div class="flex-shrink-0 d-flex align-items-center gap-2">
-                    
-                      <p class="mb-0 fs-6">100%</p>
-                    </div>
+                    <span class="badge bg-success flex-shrink-0">Hijau</span>
                   </div>
                   @empty
                   <div class="text-center py-4 text-muted">
@@ -2760,6 +2739,32 @@
     if (pct <= 80) return 'neutral';
     return 'positive';
   }
+  function getStatusClassFromStatus(status) {
+    if (status === 'Merah') return 'negative';
+    if (status === 'Kuning') return 'neutral';
+    return 'positive';
+  }
+  function getDisplayForDay(val) {
+    if (val == null) return { status: null, label: '', class: '' };
+    if (typeof val === 'object' && val.status) {
+      var s = val.status;
+      var label = s;
+      if (val.merah != null || val.kuning != null || val.hijau != null) {
+        var parts = [];
+        if (val.merah > 0) parts.push(val.merah + ' Merah');
+        if (val.kuning > 0) parts.push(val.kuning + ' Kuning');
+        if (val.hijau > 0) parts.push(val.hijau + ' Hijau');
+        if (parts.length) label = parts.join(', ');
+      }
+      return { status: s, label: label, class: getStatusClassFromStatus(s) };
+    }
+    var pct = Number(val);
+    if (!isNaN(pct)) {
+      var st = pct <= 50 ? 'Merah' : (pct <= 80 ? 'Kuning' : 'Hijau');
+      return { status: st, label: st, class: getStatusClass(pct) };
+    }
+    return { status: null, label: '', class: '' };
+  }
 
   function fetchMonthCompliance(month, year, done) {
     var monthStr = year + '-' + String(month + 1).padStart(2, '0');
@@ -2826,15 +2831,15 @@
     for (var day = 1; day <= daysInMonth; day++) {
       var cell = document.createElement('div');
       var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
-      var pct = complianceByDay[dateStr] != null ? Number(complianceByDay[dateStr]) : null;
+      var dayVal = complianceByDay[dateStr];
+      var display = getDisplayForDay(dayVal);
       var isFilterDay = isFilterDayInThisMonth && (day === filterDateParsed.day);
 
-      if (pct != null && !isNaN(pct)) {
-        var statusClass = getStatusClass(pct);
-        cell.className = 'compliance-day-cell ' + statusClass;
+      if (display.status) {
+        cell.className = 'compliance-day-cell ' + display.class;
         cell.innerHTML = '<div class="compliance-day-number">' + day + '</div>' +
-          '<div class="compliance-day-value">' + pct + '%</div>' +
-          '<div class="compliance-day-label">Compliance IKK</div>';
+          '<div class="compliance-day-value">' + display.label + '</div>' +
+          '<div class="compliance-day-label">Status matriks</div>';
         cell.style.cursor = 'pointer';
         cell.addEventListener('click', function(selectedDate) {
           return function() {

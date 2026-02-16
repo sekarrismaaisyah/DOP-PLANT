@@ -1008,7 +1008,14 @@ class DOPMWeeklyController extends Controller
                                 $merah++;
                             }
                         }
-                        $complianceByDay[$d] = round(($hijau * 100 + $kuning * 50 + $merah * 0) / $total, 1);
+                        // Status langsung (tanpa bagi/skor): terburuk hari itu
+                        $worst = $merah > 0 ? 'Merah' : ($kuning > 0 ? 'Kuning' : 'Hijau');
+                        $complianceByDay[$d] = [
+                            'status' => $worst,
+                            'merah' => $merah,
+                            'kuning' => $kuning,
+                            'hijau' => $hijau,
+                        ];
                     }
                 }
             }
