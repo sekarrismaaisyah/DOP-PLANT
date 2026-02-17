@@ -1618,19 +1618,22 @@
   color: #000;
 }
 
-/* Modal IKK: pastikan di atas backdrop dan bisa diklik */
+/* Semua modal: pastikan di atas backdrop (gm-layer-wrap 10002, ol-popup 10000) dan bisa diklik */
 .modal-backdrop {
   z-index: 10550 !important;
 }
+.modal {
+  z-index: 10600 !important;
+  pointer-events: auto !important;
+}
+.modal .modal-dialog {
+  pointer-events: auto !important;
+}
+.modal .modal-content {
+  pointer-events: auto !important;
+}
 #ikkModal.modal {
   z-index: 10600 !important;
-  pointer-events: auto;
-}
-#ikkModal .modal-dialog {
-  pointer-events: auto;
-}
-#ikkModal .modal-content {
-  pointer-events: auto;
 }
 
 /* Responsive */
@@ -25251,7 +25254,7 @@ source: new ol.source.Vector(),
     }
 </style>
 
-<div id="photoGalleryFooter" class="photo-gallery-footer">
+<div id="photoGalleryFooter" class="photo-gallery-footer hidden" style="display: none;">
     <!-- <div class="photo-gallery-header">
         <button type="button" class="photo-gallery-toggle-photos-btn" id="photoGalleryTogglePhotosBtn" onclick="togglePhotosDisplay()" title="Toggle Photos">
             <i class="material-icons-outlined" id="photoGalleryTogglePhotosIcon" style="font-size: 16px;">visibility</i>
@@ -25267,19 +25270,26 @@ source: new ol.source.Vector(),
 </div>
 
 <script>
-    let photoGalleryVisible = true;
+    let photoGalleryVisible = false;
     let photosDisplayVisible = true;
 
-    // Load photo gallery on page load
+    // Load photo gallery on page load (gallery hidden by default)
     document.addEventListener('DOMContentLoaded', function() {
         loadPhotoGallery();
-        // Add class to map container for padding adjustment
+        const footer = document.getElementById('photoGalleryFooter');
         const mapContainer = document.querySelector('.map-fullscreen-container');
-        if (mapContainer) {
-            mapContainer.classList.add('has-gallery');
+        if (footer) {
+            footer.classList.add('hidden');
+            footer.style.display = 'none';
         }
-        // Update category button state on load
+        if (mapContainer) {
+            mapContainer.classList.remove('has-gallery');
+        }
         updateCategoryButtonState();
+        const toggleIcon = document.getElementById('photoGalleryToggleIcon');
+        const toggleBtn = document.getElementById('photoGalleryToggleBtn');
+        if (toggleIcon) toggleIcon.style.color = '#5f6368';
+        if (toggleBtn) toggleBtn.classList.remove('active');
     });
 
     function loadPhotoGallery() {
@@ -25466,8 +25476,10 @@ source: new ol.source.Vector(),
     }
 
     function openPhotoModal(photoUrl, title) {
-        // Create modal for viewing full-size photo
+        // Create modal for viewing full-size photo (hidden by default, then shown)
         const modal = document.createElement('div');
+        modal.setAttribute('role', 'dialog');
+        modal.setAttribute('aria-modal', 'true');
         modal.style.cssText = `
             position: fixed;
             top: 0;
@@ -25475,8 +25487,8 @@ source: new ol.source.Vector(),
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.9);
-            z-index: 10000;
-            display: flex;
+            z-index: 10600;
+            display: none;
             align-items: center;
             justify-content: center;
             padding: 20px;
@@ -25543,7 +25555,7 @@ source: new ol.source.Vector(),
             document.body.removeChild(modal);
         };
         
-        closeBtn.onclick = closeModal;
+        closeBtn.onclick = function(e) { e.stopPropagation(); closeModal(); };
         modal.onclick = function(e) {
             if (e.target === modal) {
                 closeModal();
@@ -25551,6 +25563,7 @@ source: new ol.source.Vector(),
         };
         
         document.body.appendChild(modal);
+        modal.style.display = 'flex';
     }
 </script>
 
