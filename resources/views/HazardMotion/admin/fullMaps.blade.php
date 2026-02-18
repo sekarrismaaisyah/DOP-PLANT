@@ -3970,36 +3970,36 @@
 <script src="{{ URL::asset('build/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
 <!-- Load BMO2 PAMA GeoJSON data -->
-<script src="{{ asset('js/area-kerja-bmo2-pama.js') }}"></script>
-{{-- <script src="{{ asset('js/area-cctv-bmo2-pama.js') }}"></script> --}}
-{{-- <script src="{{ asset('js/difference_bmo2-pama.js') }}"></script> --}}
-{{-- <script src="{{ asset('js/symmetrical_difference_bmo2-pama.js') }}"></script> --}}
-{{-- <script src="{{ asset('js/intersection_bmo2-pama.js') }}"></script> --}}
+<!-- <script src="{{ asset('js/area-kerja-bmo2-pama.js') }}"></script> -->
+<!-- {{-- <script src="{{ asset('js/area-cctv-bmo2-pama.js') }}"></script> --}} -->
+<!-- {{-- <script src="{{ asset('js/difference_bmo2-pama.js') }}"></script> --}} -->
+<!-- {{-- <script src="{{ asset('js/symmetrical_difference_bmo2-pama.js') }}"></script> --}} -->
+<!-- {{-- <script src="{{ asset('js/intersection_bmo2-pama.js') }}"></script> --}} -->
 
 <!-- Load Area CCTV GeoJSON data -->
-{{-- <script src="{{ asset('js/area_cctv_bmo1_fad.js') }}"></script>
-<script src="{{ asset('js/area_cctv_bmo1_kdc.js') }}"></script>
-<script src="{{ asset('js/area_cctv_bmo2_buma.js') }}"></script> --}}
-<script src="{{ asset('js/area_cctv_bmo2_pama.js') }}"></script>
-{{-- <script src="{{ asset('js/area_cctv_bmo3_bar.js') }}"></script>
-<script src="{{ asset('js/area_cctv_gmo_kdc.js') }}"></script>
-<script src="{{ asset('js/area_cctv_gmo_pama.js') }}"></script>
-<script src="{{ asset('js/area_cctv_lmo_buma.js') }}"></script>
-<script src="{{ asset('js/area_cctv_lmo_fad.js') }}"></script>
-<script src="{{ asset('js/area_cctv_smo_mtn.js') }}"></script> --}}
+<!-- {{-- <script src="{{ asset('js/area_cctv_bmo1_fad.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_cctv_bmo1_kdc.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_cctv_bmo2_buma.js') }}"></script> --}} -->
+<!-- <script src="{{ asset('js/area_cctv_bmo2_pama.js') }}"></script> -->
+<!-- {{-- <script src="{{ asset('js/area_cctv_bmo3_bar.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_cctv_gmo_kdc.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_cctv_gmo_pama.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_cctv_lmo_buma.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_cctv_lmo_fad.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_cctv_smo_mtn.js') }}"></script> --}} -->
 
 <!-- Load Area Kerja GeoJSON data -->
 <!-- Menggunakan geotaging.js untuk boundary area kerja -->
 <script src="{{ asset('js/geotaging.js') }}"></script>
-<script src="{{ asset('js/area_kerja_bmo1_fad.js') }}"></script>
-<script src="{{ asset('js/area_kerja_bmo1_kdc.js') }}"></script>
-<script src="{{ asset('js/area_kerja_bmo2_buma.js') }}"></script>
-<script src="{{ asset('js/area_kerja_bmo3_bar.js') }}"></script>
-<script src="{{ asset('js/area_kerja_gmo_kdc.js') }}"></script>
-<script src="{{ asset('js/area_kerja_gmo_pama.js') }}"></script>
-<script src="{{ asset('js/area_kerja_lmo_buma.js') }}"></script>
-<script src="{{ asset('js/area_kerja_lmo_fad.js') }}"></script>
-<script src="{{ asset('js/area_kerja_smo_mtn.js') }}"></script>
+<!-- <script src="{{ asset('js/area_kerja_bmo1_fad.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_kerja_bmo1_kdc.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_kerja_bmo2_buma.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_kerja_bmo3_bar.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_kerja_gmo_kdc.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_kerja_gmo_pama.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_kerja_lmo_buma.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_kerja_lmo_fad.js') }}"></script> -->
+<!-- <script src="{{ asset('js/area_kerja_smo_mtn.js') }}"></script> -->
 
 <script>
     // Map areaCctvBmo2Pama to areaCctvGeoJsonDataBmo2Pama for compatibility
