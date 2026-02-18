@@ -50,6 +50,12 @@ class fullMapsController extends Controller
         $user = Auth::user();
         $userName = $user ? $user->name : null;
         
+        // Get user roles for filtering area kerja boundaries
+        $userRoles = [];
+        if ($user && method_exists($user, 'roles')) {
+            $userRoles = $user->roles()->pluck('slug')->toArray();
+        }
+        
         // Get control rooms that the logged-in user supervises
         $supervisedControlRooms = [];
         if ($userName) {
@@ -620,7 +626,8 @@ class fullMapsController extends Controller
             'cctvSudahPjaCount',
             'cctvSudahPjaPercentage',
             'totalCctvForPja',
-            'p2hResults'
+            'p2hResults',
+            'userRoles'  // User roles for filtering area kerja boundaries
         ));
     }
 
