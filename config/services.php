@@ -41,4 +41,12 @@ return [
         'path' => 'C:/ffmpeg/bin/ffmpeg.exe',
     ],
 
+    'clickhouse_custom' => [
+        'host' => env('CLICKHOUSE_CUSTOM_HOST', '10.10.10.38'),
+        'port' => env('CLICKHOUSE_CUSTOM_PORT', 8123),
+        'username' => env('CLICKHOUSE_CUSTOM_USERNAME', 'default'),
+        'password' => env('CLICKHOUSE_CUSTOM_PASSWORD', 'Zxcdsaqwe321:;'),
+        'timeout' => (int) env('CLICKHOUSE_CUSTOM_TIMEOUT', 60),
+    ],
+
 ];

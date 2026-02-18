@@ -30,6 +30,20 @@ class Kernel extends ConsoleKernel
         $schedule->command('dashboard:screenshot-send --slot=sore')
             ->dailyAt('17:00')
             ->appendOutputTo(storage_path('logs/dashboard-screenshot.log'));
+
+        // Supervisory alert log: perbarui data alert 3x sehari (pagi, siang, sore) timezone Asia/Makassar
+        $schedule->command('supervisory:update-alert-log')
+            ->timezone('Asia/Makassar')
+            ->dailyAt('06:00')
+            ->appendOutputTo(storage_path('logs/supervisory-alert.log'));
+        $schedule->command('supervisory:update-alert-log')
+            ->timezone('Asia/Makassar')
+            ->dailyAt('12:00')
+            ->appendOutputTo(storage_path('logs/supervisory-alert.log'));
+        $schedule->command('supervisory:update-alert-log')
+            ->timezone('Asia/Makassar')
+            ->dailyAt('18:00')
+            ->appendOutputTo(storage_path('logs/supervisory-alert.log'));
     }
 
     /**
