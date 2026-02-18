@@ -2579,49 +2579,164 @@
     <div class="gm-sidebar-backdrop" id="gmSidebarBackdrop"></div>
 
     <!-- Modal IKK (IPK IKK, OKK, OAK) - di luar map container agar z-index di atas backdrop -->
+    {{-- Modal Detail IKK (style sama seperti Dashboard DOPM): Statistik + Data IKK + IPK-IKK, OKK, OAK --}}
     <div class="modal fade" id="ikkModal" tabindex="-1" aria-labelledby="ikkModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true" style="z-index: 10600;">
-        <div class="modal-dialog modal-xl modal-dialog-scrollable">
-            <div class="modal-content">
-                <div class="modal-header">
-                    <h5 class="modal-title" id="ikkModalLabel">
-                        <i class="material-icons-outlined align-middle me-1">assignment</i>
-                        Detail IKK - <span id="ikkModalKodeIkk">-</span>
-                    </h5>
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content rounded-4 shadow-lg border border-light">
+                <div class="modal-header rounded-top-4 py-3">
+                    <div class="d-flex align-items-center flex-grow-1">
+                        <span class="material-icons-outlined me-2 fs-4 text-primary">assignment</span>
+                        <div>
+                            <h5 class="modal-title fw-bold mb-0 text-dark" id="ikkModalLabel">
+                                <span id="ikkModalTitle">Detail IKK</span>
+                            </h5>
+                            <small class="text-muted" id="ikkModalSubtitle">Kode IKK: —</small>
+                        </div>
+                    </div>
                     <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
-                <div class="modal-body p-0">
-                    <ul class="nav nav-tabs px-3 pt-2" id="ikkModalTabs" role="tablist">
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link active" id="ikk-tab-ipk" data-bs-toggle="tab" data-bs-target="#ikk-pane-ipk" type="button" role="tab">IPK IKK</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="ikk-tab-okk" data-bs-toggle="tab" data-bs-target="#ikk-pane-okk" type="button" role="tab">OKK</button>
-                        </li>
-                        <li class="nav-item" role="presentation">
-                            <button class="nav-link" id="ikk-tab-oak" data-bs-toggle="tab" data-bs-target="#ikk-pane-oak" type="button" role="tab">OAK</button>
-                        </li>
-                    </ul>
-                    <div class="tab-content p-3" id="ikkModalTabContent">
-                        <div class="tab-pane fade show active" id="ikk-pane-ipk" role="tabpanel">
-                            <div id="ikkModalIpkIkkBody" class="small">
-                                <p class="text-muted mb-0">Memuat data IPK IKK...</p>
+                <div class="modal-stat-cards px-4 py-3" style="border-bottom: 1px solid #e5e7eb;">
+                    <p class="small fw-semibold text-muted mb-2">Statistik</p>
+                    <div class="row g-3">
+                        <div class="col-6 col-md-4">
+                            <div class="stat-card p-3 h-100" style="border: 1px solid #e5e7eb; border-radius: 10px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="material-icons-outlined text-primary">checklist</span>
+                                    <div>
+                                        <span class="d-block fw-bold text-dark fs-5" id="ikkModalStatIpk">0</span>
+                                        <span class="small text-muted">IPK-IKK</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="ikk-pane-okk" role="tabpanel">
-                            <div id="ikkModalOkkBody" class="small">
-                                <p class="text-muted mb-0">Memuat data OKK...</p>
+                        <div class="col-6 col-md-4">
+                            <div class="stat-card p-3 h-100" style="border: 1px solid #e5e7eb; border-radius: 10px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="material-icons-outlined text-success">folder_open</span>
+                                    <div>
+                                        <span class="d-block fw-bold text-dark fs-5" id="ikkModalStatOkk">0</span>
+                                        <span class="small text-muted">OKK</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <div class="tab-pane fade" id="ikk-pane-oak" role="tabpanel">
-                            <div class="mb-2">
-                                <span class="text-muted">Layer 2–4:</span>
-                                <span id="ikkModalOakLayerNames">-</span>
-                            </div>
-                            <div id="ikkModalOakBody" class="small">
-                                <p class="text-muted mb-0">Memuat data OAK...</p>
+                        <div class="col-6 col-md-4">
+                            <div class="stat-card p-3 h-100" style="border: 1px solid #e5e7eb; border-radius: 10px;">
+                                <div class="d-flex align-items-center gap-2">
+                                    <span class="material-icons-outlined text-warning">visibility</span>
+                                    <div>
+                                        <span class="d-block fw-bold text-dark fs-5" id="ikkModalStatOak">0</span>
+                                        <span class="small text-muted">OAK</span>
+                                    </div>
+                                </div>
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="modal-body p-0">
+                    <div class="p-4 bg-white" style="max-height: 600px; overflow-y: auto;">
+                        <div class="card border mb-4 bg-light">
+                            <div class="card-body py-3">
+                                <h6 class="fw-bold mb-3 text-dark"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">description</i> Data IKK</h6>
+                                <div class="table-responsive">
+                                    <table class="table table-sm table-bordered table-striped align-middle mb-0 small">
+                                        <tbody>
+                                            <tr><td class="text-muted fw-semibold" style="width: 140px;">ID</td><td id="ikkModalIdDop">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Kode IKK</td><td id="ikkModalKodeIkk">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Nama Pekerjaan</td><td id="ikkModalNamaPekerjaan" class="text-break">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Site</td><td id="ikkModalSite">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Perusahaan</td><td id="ikkModalPerusahaan" class="text-break">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Lokasi</td><td id="ikkModalLokasi" class="text-break">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Tanggal Mulai</td><td id="ikkModalTanggal">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Status</td><td id="ikkModalStatus">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 1 (PJO)</td><td id="ikkModalLayer1">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 2</td><td id="ikkModalLayer2">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 3</td><td id="ikkModalLayer3">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 4</td><td id="ikkModalLayer4">—</td></tr>
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="material-icons-outlined text-primary me-2" style="font-size: 20px;">checklist</i>
+                                <h6 class="mb-0 fw-bold">IPK-IKK <span class="badge bg-primary ms-2" id="ikkModalBadgeIpk">0</span></h6>
+                            </div>
+                            <div id="ikkModalIpkLoading" class="text-center py-4 bg-white">
+                                <div class="spinner-border text-primary mb-2" role="status"></div>
+                                <p class="text-muted mb-0">Memuat data IPK-IKK...</p>
+                            </div>
+                            <div id="ikkModalIpkEmpty" class="text-center py-4 d-none bg-white">
+                                <span class="material-icons-outlined text-muted" style="font-size: 48px;">inbox</span>
+                                <p class="text-muted mt-2 mb-0">Tidak ada data IPK-IKK untuk kode IKK ini.</p>
+                            </div>
+                            <div id="ikkModalIpkTableWrap" class="d-none bg-white">
+                                <p class="small text-muted mb-2">Tabel di bawah menampilkan seluruh data IPK-IKK dengan kode IKK ini.</p>
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableIkkModalIpk">
+                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Status</th></tr></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="material-icons-outlined text-success me-2" style="font-size: 20px;">folder_open</i>
+                                <h6 class="mb-0 fw-bold">OKK <span class="badge bg-success ms-2" id="ikkModalBadgeOkk">0</span></h6>
+                            </div>
+                            <div id="ikkModalOkkLoading" class="text-center py-4 bg-white">
+                                <div class="spinner-border text-success mb-2" role="status"></div>
+                                <p class="text-muted mb-0">Memuat data OKK...</p>
+                            </div>
+                            <div id="ikkModalOkkEmpty" class="text-center py-4 d-none bg-white">
+                                <span class="material-icons-outlined text-muted" style="font-size: 48px;">inbox</span>
+                                <p class="text-muted mt-2 mb-0">Tidak ada data OKK untuk kode IKK ini.</p>
+                            </div>
+                            <div id="ikkModalOkkTableWrap" class="d-none bg-white">
+                                <p class="small text-muted mb-2">Tabel di bawah menampilkan seluruh data OKK dengan kode IKK ini.</p>
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableIkkModalOkk">
+                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="mb-4">
+                            <div class="d-flex align-items-center mb-3">
+                                <i class="material-icons-outlined text-warning me-2" style="font-size: 20px;">visibility</i>
+                                <h6 class="mb-0 fw-bold">OAK <span class="badge bg-warning text-dark ms-2" id="ikkModalBadgeOak">0</span></h6>
+                            </div>
+                            <div id="ikkModalOakContext" class="card border mb-3 d-none bg-white">
+                                <div class="card-body py-2 px-3">
+                                    <small class="text-muted fw-semibold">Layer 2 / 3 / 4:</small>
+                                    <span id="ikkModalOakLayerNames" class="ms-1">—</span>
+                                </div>
+                            </div>
+                            <div id="ikkModalOakLoading" class="text-center py-4 bg-white">
+                                <div class="spinner-border text-warning mb-2" role="status"></div>
+                                <p class="text-muted mb-0">Memuat data OAK...</p>
+                            </div>
+                            <div id="ikkModalOakEmpty" class="text-center py-4 d-none bg-white">
+                                <span class="material-icons-outlined text-muted" style="font-size: 48px;">inbox</span>
+                                <p class="text-muted mt-2 mb-0">Tidak ada data OAK untuk kriteria ini.</p>
+                            </div>
+                            <div id="ikkModalOakTableWrap" class="d-none bg-white">
+                                <p class="small text-muted mb-2">Tabel di bawah menampilkan data Observasi Area Kerja sesuai activity dan SID.</p>
+                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
+                                    <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableIkkModalOak">
+                                        <thead class="table-light"><tr><th>Activity</th><th>Sub Activity</th><th>Submit Date</th><th>Submit By</th><th>SID Pelapor</th><th>Lokasi</th><th>Detail Lokasi</th><th>Conclusion</th><th>Site</th></tr></thead>
+                                        <tbody></tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer border-top py-3 px-4 bg-light rounded-bottom-4">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Tutup</button>
                 </div>
             </div>
         </div>
@@ -11359,14 +11474,41 @@ source: new ol.source.Vector(),
         if (document.body !== modal.parentNode) {
             document.body.appendChild(modal);
         }
-        const kodeIkk = ikk.kode_ikk || '-';
-        document.getElementById('ikkModalKodeIkk').textContent = kodeIkk;
-        document.getElementById('ikkModalIpkIkkBody').innerHTML = '<p class="text-muted mb-0">Memuat data IPK IKK...</p>';
-        document.getElementById('ikkModalOkkBody').innerHTML = '<p class="text-muted mb-0">Memuat data OKK...</p>';
-        document.getElementById('ikkModalOakBody').innerHTML = '<p class="text-muted mb-0">Memuat data OAK...</p>';
-        document.getElementById('ikkModalOakLayerNames').textContent = [ikk.nama_layer_2, ikk.nama_layer_3, ikk.nama_layer_4].filter(Boolean).join(' / ') || '-';
+        const kodeIkk = (ikk.code || ikk.kode_ikk || '-').toString().trim();
+        document.getElementById('ikkModalTitle').textContent = 'Detail IKK';
+        document.getElementById('ikkModalSubtitle').textContent = 'Kode IKK: ' + (kodeIkk || '—');
+        document.getElementById('ikkModalIdDop').textContent = (ikk.id != null && ikk.id !== '') ? String(ikk.id) : '—';
+        document.getElementById('ikkModalKodeIkk').textContent = kodeIkk || '—';
+        document.getElementById('ikkModalNamaPekerjaan').textContent = (ikk.name || ikk.nama_pekerjaan || '—').toString().trim();
+        document.getElementById('ikkModalSite').textContent = (ikk.ra_site_name || ikk.site || '—').toString().trim();
+        document.getElementById('ikkModalPerusahaan').textContent = (ikk.company_name || ikk.perusahaan || '—').toString().trim();
+        document.getElementById('ikkModalLokasi').textContent = [ikk.location_name, ikk.location_detail_name].filter(Boolean).join(' — ').trim() || '—';
+        document.getElementById('ikkModalTanggal').textContent = (ikk.start_date || ikk.tanggal_dop || '—').toString().trim();
+        document.getElementById('ikkModalStatus').textContent = (ikk.status || '—').toString().trim();
+        document.getElementById('ikkModalLayer1').textContent = (ikk.ra_pjo_name || ikk.nama_layer_1 || '—').toString().trim();
+        document.getElementById('ikkModalLayer2').textContent = (ikk.nama_layer_2 || '—').toString().trim();
+        document.getElementById('ikkModalLayer3').textContent = (ikk.nama_layer_3 || '—').toString().trim();
+        document.getElementById('ikkModalLayer4').textContent = (ikk.nama_layer_4 || '—').toString().trim();
+        document.getElementById('ikkModalStatIpk').textContent = '0';
+        document.getElementById('ikkModalStatOkk').textContent = '0';
+        document.getElementById('ikkModalStatOak').textContent = '0';
+        document.getElementById('ikkModalBadgeIpk').textContent = '0';
+        document.getElementById('ikkModalBadgeOkk').textContent = '0';
+        document.getElementById('ikkModalBadgeOak').textContent = '0';
+        var oakNames = [ikk.nama_layer_2, ikk.nama_layer_3, ikk.nama_layer_4].filter(Boolean).join(' / ') || '—';
+        document.getElementById('ikkModalOakLayerNames').textContent = oakNames;
+        document.getElementById('ikkModalOakContext').classList.toggle('d-none', !oakNames || oakNames === '—');
+        document.getElementById('ikkModalIpkLoading').classList.remove('d-none');
+        document.getElementById('ikkModalIpkEmpty').classList.add('d-none');
+        document.getElementById('ikkModalIpkTableWrap').classList.add('d-none');
+        document.getElementById('ikkModalOkkLoading').classList.remove('d-none');
+        document.getElementById('ikkModalOkkEmpty').classList.add('d-none');
+        document.getElementById('ikkModalOkkTableWrap').classList.add('d-none');
+        document.getElementById('ikkModalOakLoading').classList.remove('d-none');
+        document.getElementById('ikkModalOakEmpty').classList.add('d-none');
+        document.getElementById('ikkModalOakTableWrap').classList.add('d-none');
         const params = new URLSearchParams({
-            kode_ikk: ikk.kode_ikk || '',
+            kode_ikk: ikk.kode_ikk || ikk.code || '',
             jenis_ijin_kerja_khusus: ikk.jenis_ijin_kerja_khusus || '',
             nama_layer_2: ikk.nama_layer_2 || '',
             nama_layer_3: ikk.nama_layer_3 || '',
@@ -11382,98 +11524,108 @@ source: new ol.source.Vector(),
             .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (!res.success) {
-                    document.getElementById('ikkModalIpkIkkBody').innerHTML = '<p class="text-danger">Gagal memuat: ' + (res.message || '') + '</p>';
-                    document.getElementById('ikkModalOkkBody').innerHTML = '<p class="text-danger">Gagal memuat</p>';
-                    document.getElementById('ikkModalOakBody').innerHTML = '<p class="text-danger">Gagal memuat</p>';
+                    document.getElementById('ikkModalIpkLoading').classList.add('d-none');
+                    document.getElementById('ikkModalIpkEmpty').classList.remove('d-none');
+                    document.getElementById('ikkModalIpkEmpty').querySelector('p').textContent = 'Gagal memuat: ' + (res.message || 'Unknown');
+                    document.getElementById('ikkModalOkkLoading').classList.add('d-none');
+                    document.getElementById('ikkModalOkkEmpty').classList.remove('d-none');
+                    document.getElementById('ikkModalOakLoading').classList.add('d-none');
+                    document.getElementById('ikkModalOakEmpty').classList.remove('d-none');
                     return;
                 }
-                renderIkkModalIpkIkk(res.ipk_ikk || []);
-                renderIkkModalOkk(res.okk || []);
-                renderIkkModalOak(res.oak || [], res.dopm_context || {});
+                var ipk = res.ipk_ikk || [];
+                var okk = res.okk || [];
+                var oak = res.oak || [];
+                document.getElementById('ikkModalStatIpk').textContent = ipk.length;
+                document.getElementById('ikkModalStatOkk').textContent = okk.length;
+                document.getElementById('ikkModalStatOak').textContent = oak.length;
+                document.getElementById('ikkModalBadgeIpk').textContent = ipk.length;
+                document.getElementById('ikkModalBadgeOkk').textContent = okk.length;
+                document.getElementById('ikkModalBadgeOak').textContent = oak.length;
+                var ctx = res.dopm_context || {};
+                if (ctx.nama_layer_2 || ctx.nama_layer_3 || ctx.nama_layer_4) {
+                    document.getElementById('ikkModalOakLayerNames').textContent = [ctx.nama_layer_2, ctx.nama_layer_3, ctx.nama_layer_4].filter(Boolean).join(' / ') || '—';
+                    document.getElementById('ikkModalOakContext').classList.remove('d-none');
+                }
+                renderIkkModalIpkIkk(ipk);
+                renderIkkModalOkk(okk);
+                renderIkkModalOak(oak, ctx);
             })
             .catch(function(err) {
-                document.getElementById('ikkModalIpkIkkBody').innerHTML = '<p class="text-danger">Error: ' + (err.message || '') + '</p>';
-                document.getElementById('ikkModalOkkBody').innerHTML = '<p class="text-danger">Error memuat OKK</p>';
-                document.getElementById('ikkModalOakBody').innerHTML = '<p class="text-danger">Error memuat OAK</p>';
+                document.getElementById('ikkModalIpkLoading').classList.add('d-none');
+                document.getElementById('ikkModalIpkEmpty').classList.remove('d-none');
+                document.getElementById('ikkModalIpkEmpty').querySelector('p').textContent = 'Error: ' + (err.message || 'Gagal memuat');
+                document.getElementById('ikkModalOkkLoading').classList.add('d-none');
+                document.getElementById('ikkModalOkkEmpty').classList.remove('d-none');
+                document.getElementById('ikkModalOakLoading').classList.add('d-none');
+                document.getElementById('ikkModalOakEmpty').classList.remove('d-none');
             });
     }
 
     function renderIkkModalIpkIkk(rows) {
-        const el = document.getElementById('ikkModalIpkIkkBody');
+        document.getElementById('ikkModalIpkLoading').classList.add('d-none');
         if (!rows.length) {
-            el.innerHTML = '<p class="text-muted">Tidak ada data IPK IKK untuk kode IKK ini.</p>';
+            document.getElementById('ikkModalIpkEmpty').classList.remove('d-none');
+            document.getElementById('ikkModalIpkTableWrap').classList.add('d-none');
             return;
         }
-        const keys = Object.keys(rows[0]).filter(function(k) { return k !== 'created_at' && k !== 'updated_at'; });
-        let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr>';
-        keys.forEach(function(k) {
-            html += '<th>' + k.replace(/_/g, ' ') + '</th>';
-        });
-        html += '</tr></thead><tbody>';
-        rows.forEach(function(row) {
-            html += '<tr>';
-            keys.forEach(function(k) {
+        document.getElementById('ikkModalIpkEmpty').classList.add('d-none');
+        document.getElementById('ikkModalIpkTableWrap').classList.remove('d-none');
+        var cols = ['ts', 'nama_pengawas', 'kode_sid', 'kode_ikk', 'nama_perusahaan', 'site', 'durasi_jam', 'cctv_terekam', 'kategori_ijk', 'status_pekerjaan'];
+        var tbody = document.querySelector('#tableIkkModalIpk tbody');
+        if (!tbody) return;
+        tbody.innerHTML = rows.map(function(row) {
+            return '<tr>' + cols.map(function(k) {
                 var v = row[k];
                 if (v === null || v === undefined) v = '';
                 if (typeof v === 'object' && v !== null && v.date) v = v.date;
-                html += '<td>' + (String(v).substring(0, 200)) + '</td>';
-            });
-            html += '</tr>';
-        });
-        html += '</tbody></table></div>';
-        el.innerHTML = html;
+                return '<td>' + escapeHtml(String(v).substring(0, 200)) + '</td>';
+            }).join('') + '</tr>';
+        }).join('');
     }
 
     function renderIkkModalOkk(rows) {
-        const el = document.getElementById('ikkModalOkkBody');
+        document.getElementById('ikkModalOkkLoading').classList.add('d-none');
         if (!rows.length) {
-            el.innerHTML = '<p class="text-muted">Tidak ada data OKK untuk kode IKK ini.</p>';
+            document.getElementById('ikkModalOkkEmpty').classList.remove('d-none');
+            document.getElementById('ikkModalOkkTableWrap').classList.add('d-none');
             return;
         }
-        const keys = Object.keys(rows[0]).filter(function(k) { return k !== 'created_at' && k !== 'updated_at'; });
-        let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr>';
-        keys.forEach(function(k) {
-            html += '<th>' + k.replace(/_/g, ' ') + '</th>';
-        });
-        html += '</tr></thead><tbody>';
-        rows.forEach(function(row) {
-            html += '<tr>';
-            keys.forEach(function(k) {
+        document.getElementById('ikkModalOkkEmpty').classList.add('d-none');
+        document.getElementById('ikkModalOkkTableWrap').classList.remove('d-none');
+        var cols = ['ts', 'nama_pengawas', 'kode_sid', 'kode_ikk', 'nama_perusahaan', 'site', 'jenis_ijk', 'layer_pengawas'];
+        var tbody = document.querySelector('#tableIkkModalOkk tbody');
+        if (!tbody) return;
+        tbody.innerHTML = rows.map(function(row) {
+            return '<tr>' + cols.map(function(k) {
                 var v = row[k];
                 if (v === null || v === undefined) v = '';
                 if (typeof v === 'object' && v !== null && v.date) v = v.date;
-                html += '<td>' + (String(v).substring(0, 200)) + '</td>';
-            });
-            html += '</tr>';
-        });
-        html += '</tbody></table></div>';
-        el.innerHTML = html;
+                return '<td>' + escapeHtml(String(v).substring(0, 200)) + '</td>';
+            }).join('') + '</tr>';
+        }).join('');
     }
 
     function renderIkkModalOak(rows, context) {
-        const el = document.getElementById('ikkModalOakBody');
+        document.getElementById('ikkModalOakLoading').classList.add('d-none');
         if (!rows.length) {
-            el.innerHTML = '<p class="text-muted">Tidak ada data OAK (ClickHouse) yang cocok dengan jenis ijin / layer ini.</p>';
+            document.getElementById('ikkModalOakEmpty').classList.remove('d-none');
+            document.getElementById('ikkModalOakTableWrap').classList.add('d-none');
             return;
         }
-        const keys = ['activity', 'sub_activity', 'submit_date', 'location', 'detail_location', 'conclusion', 'company_submit_by', 'submit_by', 'kode_sid_pelapor', 'kode_sid_team', 'nama_team', 'site'];
-        const allKeys = Object.keys(rows[0]);
-        let html = '<div class="table-responsive"><table class="table table-sm table-bordered"><thead><tr>';
-        allKeys.forEach(function(k) {
-            html += '<th>' + k.replace(/_/g, ' ') + '</th>';
-        });
-        html += '</tr></thead><tbody>';
-        rows.forEach(function(row) {
-            html += '<tr>';
-            allKeys.forEach(function(k) {
+        document.getElementById('ikkModalOakEmpty').classList.add('d-none');
+        document.getElementById('ikkModalOakTableWrap').classList.remove('d-none');
+        var cols = ['activity', 'sub_activity', 'submit_date', 'submit_by', 'kode_sid_pelapor', 'location', 'detail_location', 'conclusion', 'site'];
+        var tbody = document.querySelector('#tableIkkModalOak tbody');
+        if (!tbody) return;
+        tbody.innerHTML = rows.map(function(row) {
+            return '<tr>' + cols.map(function(k) {
                 var v = row[k];
                 if (v === null || v === undefined) v = '';
-                html += '<td>' + (String(v).substring(0, 150)) + '</td>';
-            });
-            html += '</tr>';
-        });
-        html += '</tbody></table></div>';
-        el.innerHTML = html;
+                if (typeof v === 'object' && v !== null && v.date) v = v.date;
+                return '<td>' + escapeHtml(String(v).substring(0, 150)) + '</td>';
+            }).join('') + '</tr>';
+        }).join('');
     }
 
     function showHazardPopup(coordinate, hazard) {
