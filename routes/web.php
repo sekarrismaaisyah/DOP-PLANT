@@ -184,6 +184,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('intervensi-area-kerja/{id}/done/detail', [\App\Http\Controllers\IntervensiAreaKerjaController::class, 'getDoneDetail'])->name('intervensi-area-kerja.done.detail');
     Route::post('intervensi-area-kerja/{id}/status', [\App\Http\Controllers\IntervensiAreaKerjaController::class, 'updateStatus'])->name('intervensi-area-kerja.status.update');
     Route::get('supervisory-alert-log', [\App\Http\Controllers\SupervisoryAlertLogController::class, 'index'])->name('supervisory-alert-log.index');
+    Route::get('supervisory-alert-log/data', [\App\Http\Controllers\SupervisoryAlertLogController::class, 'getData'])->name('supervisory-alert-log.data');
     Route::get('cctv-data-pja-cctv-import', [CctvDataController::class, 'importPjaCctvForm'])->name('cctv-data.import-pja-cctv-form');
     Route::post('cctv-data-pja-cctv-import', [CctvDataController::class, 'importPjaCctv'])->name('cctv-data.import-pja-cctv');
     Route::get('cctv-data-pja-cctv-dedicated-import', [CctvDataController::class, 'importPjaCctvDedicatedForm'])->name('cctv-data.import-pja-cctv-dedicated-form');
