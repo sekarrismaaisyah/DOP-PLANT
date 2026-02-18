@@ -14,22 +14,22 @@ class Kernel extends ConsoleKernel
     {
         // Sync Telegram messages every minute (monitoring CCTV alerts)
         // This command has built-in lock mechanism to prevent conflicts
-        $schedule->command('telegram:sync --once')
-            ->everyMinute()
-            ->withoutOverlapping()
-            ->runInBackground()
-            ->appendOutputTo(storage_path('logs/telegram-sync.log'));
+        // $schedule->command('telegram:sync --once')
+        //     ->everyMinute()
+        //     ->withoutOverlapping()
+        //     ->runInBackground()
+        //     ->appendOutputTo(storage_path('logs/telegram-sync.log'));
 
         // Screenshot dashboard DOPM & kirim email 3x sehari: pagi, siang, sore
-        $schedule->command('dashboard:screenshot-send --slot=pagi')
-            ->dailyAt('07:00')
-            ->appendOutputTo(storage_path('logs/dashboard-screenshot.log'));
-        $schedule->command('dashboard:screenshot-send --slot=siang')
-            ->dailyAt('12:00')
-            ->appendOutputTo(storage_path('logs/dashboard-screenshot.log'));
-        $schedule->command('dashboard:screenshot-send --slot=sore')
-            ->dailyAt('17:00')
-            ->appendOutputTo(storage_path('logs/dashboard-screenshot.log'));
+        // $schedule->command('dashboard:screenshot-send --slot=pagi')
+        //     ->dailyAt('07:00')
+        //     ->appendOutputTo(storage_path('logs/dashboard-screenshot.log'));
+        // $schedule->command('dashboard:screenshot-send --slot=siang')
+        //     ->dailyAt('12:00')
+        //     ->appendOutputTo(storage_path('logs/dashboard-screenshot.log'));
+        // $schedule->command('dashboard:screenshot-send --slot=sore')
+        //     ->dailyAt('17:00')
+        //     ->appendOutputTo(storage_path('logs/dashboard-screenshot.log'));
 
         // Supervisory alert log: perbarui data alert 3x sehari (pagi, siang, sore) timezone Asia/Makassar
         $schedule->command('supervisory:update-alert-log')
