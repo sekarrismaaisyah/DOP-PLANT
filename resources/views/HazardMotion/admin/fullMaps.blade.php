@@ -4007,6 +4007,13 @@
         window.areaCctvGeoJsonDataBmo2Pama = window.areaCctvBmo2Pama;
     }
     
+    // User role-based filter flags (from backend)
+    const userRoles = @json($userRoles ?? []);
+    const shouldFilterToBmo2Pama = Array.isArray(userRoles) && (
+        userRoles.includes('control-room-pama') ||
+        userRoles.includes('hazard-motion-it-pama')
+    );
+    
     // Calculate and update area kerja and CCTV coverage
     function calculateAreaCoverage() {
         try {
@@ -10239,6 +10246,20 @@ source: new ol.source.Vector(),
                         type: 'FeatureCollection',
                         features: Array.isArray(geotaggingGeoJson) ? geotaggingGeoJson : geotaggingGeoJson.features || []
                     };
+                }
+                
+                // Jika role user adalah control-room-pama / hazard-motion-it-pama,
+                // filter feature geotagging hanya yang site = 'BMO 2'
+                if (shouldFilterToBmo2Pama && Array.isArray(geotaggingGeoJson.features)) {
+                    const originalCount = geotaggingGeoJson.features.length;
+                    geotaggingGeoJson.features = geotaggingGeoJson.features.filter(feature => {
+                        const site = (feature.properties && feature.properties.site
+                            ? String(feature.properties.site)
+                            : ''
+                        ).trim().toUpperCase();
+                        return site === 'BMO 2';
+                    });
+                    console.log('[geotaging] Filtered features by site BMO 2:', originalCount, '→', geotaggingGeoJson.features.length);
                 }
                 
                 areaKerjaBmo2PamaLayer = createLayerFromGeoJson32650(
