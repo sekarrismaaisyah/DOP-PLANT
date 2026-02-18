@@ -2452,12 +2452,8 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             $today = Carbon::today($tz)->format('Y-m-d');
             $dateEsc = addslashes($today);
 
-            // Kolom start_date, end_date: Nullable(DateTime64(3, 'Asia/Jakarta'))
-            // Filter: tanggal filter ada di rentang [start_date, end_date] ATAU start_date jatuh pada tanggal filter
-            $whereDate = "(
-                (toDate(start_date) <= toDate('{$dateEsc}') AND toDate(end_date) >= toDate('{$dateEsc}'))
-                OR toDate(start_date) = toDate('{$dateEsc}')
-            )";
+            // Hanya tampilkan IKK yang start_date-nya hari ini (tanggal mulai = tanggal filter)
+            $whereDate = "toDate(start_date) = toDate('{$dateEsc}')";
             $whereDeleted = 'AND deleted_at IS NULL';
 
             // Satu query sesuai schema: id UUID→toString, Nullable(String)→ifNull, DateTime64→toString, geo Nullable(Float64)
