@@ -176,6 +176,7 @@
               <li><a href="{{ route('cctv-data.intervensi-control-room.index') }}"><i class="material-icons-outlined">arrow_right</i>Task List Readiness</a></li>
               {{-- <li><a href="{{ route('realtime-alerts.history') }}"><i class="material-icons-outlined">arrow_right</i>Smart Alert CCTV</a></li> --}}
               <li><a href="{{ route('intervensi-area-kerja.index') }}"><i class="material-icons-outlined">arrow_right</i>Task List Operasi</a></li>
+              <li><a href="{{ route('supervisory-alert-log.index') }}"><i class="material-icons-outlined">arrow_right</i>Alert Log Supervisory</a></li>
               {{-- <li><a href="{{ route('realtime-alerts.settings') }}"><i class="material-icons-outlined">arrow_right</i>Smart </a></li> --}}
             </ul>
           </li>

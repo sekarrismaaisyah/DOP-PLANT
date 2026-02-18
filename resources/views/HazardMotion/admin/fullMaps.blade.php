@@ -12556,26 +12556,6 @@ source: new ol.source.Vector(),
             // Get risk matrix summary
             const riskSummary = await getRiskMatrixSummary(feature);
             
-            // Simpan alert supervisory ke DB (hanya jika bukan hijau)
-            if (riskSummary.riskLevel === 'HIGH' || riskSummary.riskLevel === 'MEDIUM') {
-                const props = feature.getProperties();
-                const payload = {
-                    tanggal: new Date().toISOString().slice(0, 10),
-                    id_lokasi: props.id_lokasi || props.id || '',
-                    nama_lokasi: props.lokasi || props.nama_lokasi || props.name || '',
-                    risk_level: riskSummary.riskLevel,
-                    has_sap_report: riskSummary.hasSapReport,
-                    has_online_cctv: riskSummary.hasOnlineCctv,
-                    is_high_risk_area: riskSummary.isHighRiskArea
-                };
-                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
-                fetch('{{ route("full-maps.api.supervisory-alert-log") }}', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
-                    body: JSON.stringify(payload)
-                }).catch(function() { /* fire-and-forget */ });
-            }
-            
             // Generate TARP-based recommendations (rule-based, no AI)
             const aiRecommendations = getTARPRecommendations(riskSummary.riskLevel, riskSummary);
             
