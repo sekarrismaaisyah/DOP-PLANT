@@ -19,6 +19,9 @@ class SupervisoryAlertLog extends Model
         'has_sap_report',
         'has_online_cctv',
         'is_high_risk_area',
+        'tarp_recommendations',
+        'cctv_list',
+        'sap_list',
     ];
 
     protected $casts = [
@@ -26,6 +29,9 @@ class SupervisoryAlertLog extends Model
         'has_sap_report' => 'boolean',
         'has_online_cctv' => 'boolean',
         'is_high_risk_area' => 'boolean',
+        'tarp_recommendations' => 'array',
+        'cctv_list' => 'array',
+        'sap_list' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -56,6 +62,9 @@ class SupervisoryAlertLog extends Model
                 'has_sap_report' => $data['has_sap_report'] ?? false,
                 'has_online_cctv' => $data['has_online_cctv'] ?? false,
                 'is_high_risk_area' => $data['is_high_risk_area'] ?? false,
+                'tarp_recommendations' => $data['tarp_recommendations'] ?? null,
+                'cctv_list' => $data['cctv_list'] ?? null,
+                'sap_list' => $data['sap_list'] ?? null,
             ]
         );
         return true;

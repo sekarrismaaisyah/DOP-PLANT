@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Log;
 
 class SupervisoryAlertLogController extends Controller
 {
-    /** Kolom untuk ordering DataTables */
-    private const COLUMNS = ['tanggal', 'nama_lokasi', 'risk_level', 'has_sap_report', 'has_online_cctv', 'is_high_risk_area', 'updated_at'];
+    /** Kolom untuk ordering DataTables (index 7 = actions, pakai updated_at) */
+    private const COLUMNS = ['tanggal', 'nama_lokasi', 'risk_level', 'has_sap_report', 'has_online_cctv', 'is_high_risk_area', 'updated_at', 'updated_at'];
 
     /**
      * Halaman alert log dengan tab (tab pertama: Supervisory).
@@ -67,6 +67,8 @@ class SupervisoryAlertLogController extends Controller
                         ? '<span class="badge bg-warning text-dark">MEDIUM</span>'
                         : '<span class="badge bg-secondary">' . e($row->risk_level) . '</span>');
 
+                $actionsBtn = '<button type="button" class="btn btn-sm btn-outline-primary btn-view-matrix" data-id="' . (int) $row->id . '" title="Lihat Hasil Matriks TARP"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">visibility</i> Hasil Matriks</button>';
+
                 return [
                     'tanggal' => $row->tanggal ? $row->tanggal->format('d/m/Y') : '-',
                     'nama_lokasi' => $row->nama_lokasi ?? '-',
@@ -75,6 +77,7 @@ class SupervisoryAlertLogController extends Controller
                     'has_online_cctv' => $row->has_online_cctv ? '<span class="text-success">Ya</span>' : '<span class="text-muted">Tidak</span>',
                     'is_high_risk_area' => $row->is_high_risk_area ? '<span class="text-warning">Ya</span>' : '<span class="text-muted">Tidak</span>',
                     'updated_at' => $row->updated_at ? $row->updated_at->format('d/m/Y H:i') : '-',
+                    'actions' => $actionsBtn,
                 ];
             })->toArray();
 
@@ -94,5 +97,34 @@ class SupervisoryAlertLogController extends Controller
                 'error' => 'Gagal memuat data.',
             ], 500);
         }
+    }
+
+    /**
+     * Detail satu log untuk modal Hasil Matriks (TARP, CCTV, SAP).
+     */
+    public function getDetail(int $id)
+    {
+        $log = SupervisoryAlertLog::find($id);
+        if (! $log) {
+            return response()->json(['success' => false, 'message' => 'Data tidak ditemukan.'], 404);
+        }
+        return response()->json([
+            'success' => true,
+            'data' => [
+                'id' => $log->id,
+                'tanggal' => $log->tanggal ? $log->tanggal->format('d/m/Y') : null,
+                'nama_lokasi' => $log->nama_lokasi,
+                'id_lokasi' => $log->id_lokasi,
+                'risk_level' => $log->risk_level,
+                'has_sap_report' => $log->has_sap_report,
+                'has_online_cctv' => $log->has_online_cctv,
+                'is_high_risk_area' => $log->is_high_risk_area,
+                'has_sap_in_high_risk' => $log->is_high_risk_area && $log->has_sap_report,
+                'tarp_recommendations' => $log->tarp_recommendations ?? [],
+                'cctv_list' => $log->cctv_list ?? [],
+                'sap_list' => $log->sap_list ?? [],
+                'updated_at' => $log->updated_at ? $log->updated_at->format('d/m/Y H:i') : null,
+            ],
+        ]);
     }
 }
