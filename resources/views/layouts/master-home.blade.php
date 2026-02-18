@@ -230,7 +230,7 @@
         </a>
       </div>
       <div class="navbar-menu flex-grow-1">
-        <ul class="navbar-nav d-flex flex-row align-items-center">
+        {{-- <ul class="navbar-nav d-flex flex-row align-items-center">
           <li class="nav-item">
             <a class="nav-link d-flex align-items-center gap-2" href="{{ route('hazard-detection.index') ?? '/' }}">
               <i class="material-icons-outlined">home</i>
@@ -294,7 +294,7 @@
               <span>Help</span>
             </a>
           </li>
-        </ul>
+        </ul> --}}
       </div>
       <ul class="navbar-nav gap-1 nav-right-links align-items-center">
         <li class="nav-item dropdown position-static">
@@ -477,12 +477,12 @@
      
         <li class="nav-item dropdown">
           <a href="javascrpt:;" class="dropdown-toggle dropdown-toggle-nocaret" data-bs-toggle="dropdown">
-             <img src="{{ URL::asset('build/images/avatars/01.png') }}" class="rounded-circle p-1 border" width="45" height="45">
+             <img src="https://cdn-icons-png.flaticon.com/512/6522/6522516.png" class="rounded-circle p-1 border" width="45" height="45">
           </a>
           <div class="dropdown-menu dropdown-user dropdown-menu-end shadow">
             <a class="dropdown-item  gap-2 py-2" href="javascript:;">
               <div class="text-center">
-                <img src="{{ URL::asset('build/images/avatars/01.png') }}" class="rounded-circle p-1 shadow mb-3" width="90" height="90"
+                <img src="https://cdn-icons-png.flaticon.com/512/6522/6522516.png" class="rounded-circle p-1 shadow mb-3" width="90" height="90"
                   alt="">
                 <h5 class="user-name mb-0 fw-bold">Hello, {{ Auth::user()->name }} </h5>
               </div>
