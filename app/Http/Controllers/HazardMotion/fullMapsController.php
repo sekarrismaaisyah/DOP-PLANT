@@ -2452,7 +2452,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             $today = Carbon::today($tz)->format('Y-m-d');
             $dateEsc = addslashes($today);
 
-            $sql = "
+            $sqlWithGeo = "
                 SELECT
                     toString(id) AS id,
                     toString(code) AS code,
@@ -2475,10 +2475,40 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                   AND deleted_at IS NULL
                 ORDER BY start_date ASC
             ";
+            $sqlWithoutGeo = "
+                SELECT
+                    toString(id) AS id,
+                    toString(code) AS code,
+                    ifNull(toString(name), '') AS name,
+                    ifNull(toString(status), '') AS status,
+                    ifNull(toString(ra_site_name), '') AS ra_site_name,
+                    ifNull(toString(company_name), '') AS company_name,
+                    ifNull(toString(ra_pjo_name), '') AS ra_pjo_name,
+                    ifNull(toString(location_name), '') AS location_name,
+                    ifNull(toString(location_detail_name), '') AS location_detail_name,
+                    ifNull(toString(location_description), '') AS location_description,
+                    ifNull(toString(start_date), '') AS start_date,
+                    ifNull(toString(end_date), '') AS end_date,
+                    ifNull(toString(submit_date), '') AS submit_date
+                FROM hse_automation.ikk_work_permit
+                WHERE toDate(start_date) <= toDate('{$dateEsc}')
+                  AND toDate(end_date)   >= toDate('{$dateEsc}')
+                  AND deleted_at IS NULL
+                ORDER BY start_date ASC
+            ";
 
-            $rows = $this->queryClickHouseCustom($sql, 'hse_automation');
+            $rows = $this->queryClickHouseCustom($sqlWithGeo, 'hse_automation');
             if (! is_array($rows)) {
                 $rows = [];
+            }
+            if (empty($rows)) {
+                $rows = $this->queryClickHouseCustom($sqlWithoutGeo, 'hse_automation');
+                if (! is_array($rows)) {
+                    $rows = [];
+                }
+                if (! empty($rows)) {
+                    Log::info('getIkkWorkPermitToday: query with geo returned empty or failed, used query without geo_lat/geo_lon');
+                }
             }
 
             $data = [];

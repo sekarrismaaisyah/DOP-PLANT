@@ -7525,29 +7525,50 @@ source: new ol.source.Vector(),
 
     function loadIkkDopmToday() {
         if (!ikkLayer) return;
-        console.log('Loading IKK (work permit) data for today...');
+        const todayLabel = new Date().toLocaleDateString('id-ID', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        console.log('[IKK] Loading work permit data untuk hari ini:', todayLabel);
         const source = ikkLayer.getSource();
         source.clear();
         ikkDopmTodayData = [];
-        fetch('{{ url("full-maps/api/ikk-work-permit-today") }}')
-            .then(response => response.json())
+        const apiUrl = '{{ url("full-maps/api/ikk-work-permit-today") }}';
+        console.log('[IKK] Request URL:', apiUrl);
+        fetch(apiUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('HTTP ' + response.status + ' ' + response.statusText);
+                }
+                return response.json();
+            })
             .then(data => {
-                if (!data.success || !data.data) {
-                    console.warn('IKK work permit API error or no data:', data);
+                console.log('[IKK] API response:', { success: data.success, summary: data.summary, dataLength: (data.data && data.data.length) || 0 });
+                if (!data.success || !Array.isArray(data.data)) {
+                    console.warn('[IKK] API error atau data bukan array:', data);
                     return;
                 }
                 ikkDopmTodayData = data.data;
+                if (data.data.length === 0) {
+                    console.log('[IKK] Tidak ada data IKK untuk hari ini (data kosong)');
+                    return;
+                }
+                console.log('[IKK] Sample row (pertama):', data.data[0]);
                 const featuresToAdd = [];
-                data.data.forEach(function(row) {
+                let fromGeo = 0, fromFallback = 0, skipped = 0;
+                data.data.forEach(function(row, index) {
                     let coords = null;
                     const lat = row.geo_lat;
                     const lon = row.geo_lon;
                     if (lat != null && lon != null && !isNaN(parseFloat(lat)) && !isNaN(parseFloat(lon))) {
                         coords = ol.proj.fromLonLat([parseFloat(lon), parseFloat(lat)]);
+                        fromGeo++;
                     }
                     if (!coords) {
                         const detailLokasi = row.detail_lokasi || (row.location_name || '') + ' ' + (row.location_detail_name || '');
                         coords = getCoordinatesForDetailLokasi(detailLokasi);
+                        if (coords) fromFallback++;
+                    }
+                    if (!coords) {
+                        skipped++;
+                        if (index < 5) console.log('[IKK] Row tanpa koordinat (skip):', { index, code: row.code, name: row.name, geo_lat: lat, geo_lon: lon, detail_lokasi: row.detail_lokasi });
                     }
                     if (coords) {
                         const feature = new ol.Feature({
@@ -7573,6 +7594,11 @@ source: new ol.source.Vector(),
                         featuresToAdd.push(feature);
                     }
                 });
+                console.log('[IKK] Koordinat: dari geo_lat/geo_lon =', fromGeo, ', dari fallback area kerja =', fromFallback, ', dilewati (no coords) =', skipped);
+                console.log('[IKK] Total feature yang ditambahkan ke layer:', featuresToAdd.length);
+                if (featuresToAdd.length === 0) {
+                    console.warn('[IKK] Tidak ada card ditampilkan: semua baris tidak punya koordinat (geo_lat/geo_lon kosong dan fallback area kerja tidak cocok). Pastikan tabel ikk_work_permit punya geo_lat/geo_lon atau nama lokasi cocok dengan area kerja.');
+                }
                 source.addFeatures(featuresToAdd);
 
                 var iconsToCreate = 0;
@@ -7597,17 +7623,22 @@ source: new ol.source.Vector(),
                             ikkCardIconCache[cacheKey] = dataUrl;
                             feats.forEach(function(f) { f.set('cardIcon', dataUrl); });
                             iconsCreated++;
-                            if (iconsCreated === iconsToCreate && ikkLayer) ikkLayer.changed();
+                            if (iconsCreated === iconsToCreate && ikkLayer) {
+                                ikkLayer.changed();
+                                console.log('[IKK] Card icon selesai:', iconsCreated + '/' + iconsToCreate);
+                            }
                         });
                     } else {
                         keyToFeatures[cacheKey].forEach(function(f) { f.set('cardIcon', ikkCardIconCache[cacheKey]); });
                     }
                 });
                 if (iconsToCreate === 0 && ikkLayer) ikkLayer.changed();
+                console.log('[IKK] Card icon: dibuat baru =', iconsToCreate, ', dari cache =', Object.keys(keyToFeatures).length - iconsToCreate);
                 if (featuresToAdd.length > 0) {
                     const extent = source.getExtent();
                     if (extent && extent[0] !== Infinity) {
                         map.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 18 });
+                        console.log('[IKK] Peta di-fit ke extent feature');
                     }
                 }
                 setTimeout(function() {
@@ -7618,7 +7649,8 @@ source: new ol.source.Vector(),
                 }, 300);
             })
             .catch(function(err) {
-                console.error('Error loading IKK work permit data:', err);
+                console.error('[IKK] Error loading IKK work permit:', err.message || err);
+                console.error('[IKK] Full error:', err);
             });
     }
 
