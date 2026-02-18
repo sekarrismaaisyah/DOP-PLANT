@@ -2452,30 +2452,16 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             $today = Carbon::today($tz)->format('Y-m-d');
             $dateEsc = addslashes($today);
 
-            $sqlWithGeo = "
-                SELECT
-                    toString(id) AS id,
-                    toString(code) AS code,
-                    ifNull(toString(name), '') AS name,
-                    ifNull(toString(status), '') AS status,
-                    ifNull(toString(ra_site_name), '') AS ra_site_name,
-                    ifNull(toString(company_name), '') AS company_name,
-                    ifNull(toString(ra_pjo_name), '') AS ra_pjo_name,
-                    ifNull(toString(location_name), '') AS location_name,
-                    ifNull(toString(location_detail_name), '') AS location_detail_name,
-                    ifNull(toString(location_description), '') AS location_description,
-                    geo_lat AS geo_lat,
-                    geo_lon AS geo_lon,
-                    ifNull(toString(start_date), '') AS start_date,
-                    ifNull(toString(end_date), '') AS end_date,
-                    ifNull(toString(submit_date), '') AS submit_date
-                FROM hse_automation.ikk_work_permit
-                WHERE toDate(start_date) <= toDate('{$dateEsc}')
-                  AND toDate(end_date)   >= toDate('{$dateEsc}')
-                  AND deleted_at IS NULL
-                ORDER BY start_date ASC
-            ";
-            $sqlWithoutGeo = "
+            // Filter: tanggal filter ada di rentang [start_date, end_date] ATAU start_date jatuh pada tanggal filter (sama seperti data yang start_date-nya hari ini)
+            // Pakai toDate saja; jika kolom DateTime dengan timezone, bisa pakai toTimeZone(..., 'Asia/Jakarta')
+            $whereDate = "(
+                (toDate(start_date) <= toDate('{$dateEsc}') AND toDate(end_date) >= toDate('{$dateEsc}'))
+                OR toDate(start_date) = toDate('{$dateEsc}')
+            )";
+            $whereDeleted = 'AND deleted_at IS NULL';
+
+            // Query utama tanpa geo dulu agar tidak gagal jika kolom geo_lat/geo_lon tidak ada
+            $sqlBase = "
                 SELECT
                     toString(id) AS id,
                     toString(code) AS code,
@@ -2491,23 +2477,49 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     ifNull(toString(end_date), '') AS end_date,
                     ifNull(toString(submit_date), '') AS submit_date
                 FROM hse_automation.ikk_work_permit
-                WHERE toDate(start_date) <= toDate('{$dateEsc}')
-                  AND toDate(end_date)   >= toDate('{$dateEsc}')
-                  AND deleted_at IS NULL
+                WHERE {$whereDate}
+                {$whereDeleted}
                 ORDER BY start_date ASC
             ";
 
-            $rows = $this->queryClickHouseCustom($sqlWithGeo, 'hse_automation');
+            $rows = $this->queryClickHouseCustom($sqlBase, 'hse_automation');
             if (! is_array($rows)) {
                 $rows = [];
             }
-            if (empty($rows)) {
-                $rows = $this->queryClickHouseCustom($sqlWithoutGeo, 'hse_automation');
-                if (! is_array($rows)) {
-                    $rows = [];
-                }
-                if (! empty($rows)) {
-                    Log::info('getIkkWorkPermitToday: query with geo returned empty or failed, used query without geo_lat/geo_lon');
+
+            // Coba tambah geo_lat, geo_lon jika tabel punya kolom tersebut (query terpisah hanya untuk yang butuh geo)
+            if (! empty($rows) && count($rows) <= 500) {
+                $sqlWithGeo = "
+                    SELECT
+                        toString(id) AS id,
+                        geo_lat AS geo_lat,
+                        geo_lon AS geo_lon
+                    FROM hse_automation.ikk_work_permit
+                    WHERE {$whereDate}
+                    {$whereDeleted}
+                ";
+                $geoRows = $this->queryClickHouseCustom($sqlWithGeo, 'hse_automation');
+                if (is_array($geoRows) && ! empty($geoRows)) {
+                    $geoById = [];
+                    foreach ($geoRows as $gr) {
+                        $g = is_object($gr) ? (array) $gr : $gr;
+                        $id = $g['id'] ?? null;
+                        if ($id !== null && $id !== '') {
+                            $geoById[$id] = [
+                                'geo_lat' => isset($g['geo_lat']) && $g['geo_lat'] !== '' ? (float) $g['geo_lat'] : null,
+                                'geo_lon' => isset($g['geo_lon']) && $g['geo_lon'] !== '' ? (float) $g['geo_lon'] : null,
+                            ];
+                        }
+                    }
+                    foreach ($rows as $i => $row) {
+                        $row = is_object($row) ? (array) $row : $row;
+                        $id = $row['id'] ?? null;
+                        if ($id !== null && isset($geoById[$id])) {
+                            $row['geo_lat'] = $geoById[$id]['geo_lat'];
+                            $row['geo_lon'] = $geoById[$id]['geo_lon'];
+                        }
+                        $rows[$i] = $row;
+                    }
                 }
             }
 
