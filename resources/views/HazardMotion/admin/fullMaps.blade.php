@@ -3395,12 +3395,7 @@
                             <div class="gm-label">Probability</div>
                         <div class="gm-sub">Probability Insiden</div>
                         </label>
-                        <input class="btn-check" type="checkbox" id="layerIkk" autocomplete="off">
-                        <label class="gm-tile" for="layerIkk" data-layer="ikk">
-                            <div class="gm-thumb" style="background-image:url('https://plus.unsplash.com/premium_photo-1681691912442-68c4179c530c?q=80&w=1171&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
-                            <div class="gm-label">IKK</div>
-                            <div class="gm-sub">Data IKK Hari Ini</div>
-                        </label>
+                        <!-- IKK tile dihilangkan dari menu karena sekarang digabung dengan Critical Area (layerTraffic) -->
                     </div>
                 </div>
             </div>
@@ -6036,6 +6031,9 @@
                             }
                         }, 1000);
                     }
+
+                    // Saat Critical Area dinyalakan, tampilkan juga layer IKK
+                    applyLayer('ikk', true);
                 } else {
                     // Hide daily operation plans
                     if (dailyOperationPlansLayer) {
@@ -6068,6 +6066,9 @@
                         areaKerjaBmo2PamaLayer.setOpacity(1.0);
                         console.log('Showing Area Kerja BMO2 PAMA layer from JS');
                     }
+
+                    // Saat Critical Area dimatikan, matikan juga layer IKK
+                    applyLayer('ikk', false);
                 }
             } else if (layerName === 'ikk') {
                 // Clear highlighted area kerja layer when toggling IKK layer
