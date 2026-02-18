@@ -2440,6 +2440,94 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
+     * Get IKK (work permit) data for today from ClickHouse ikk_work_permit.
+     * Used by full maps IKK layer: show cards on map (geo_lat, geo_lon) and in notification panel.
+     * Filter: today between start_date and end_date; returns rows with table structure matching
+     * id, code, name, status, location_name, location_detail_name, ra_site_name, geo_lat, geo_lon, etc.
+     */
+    public function getIkkWorkPermitToday(Request $request)
+    {
+        try {
+            $tz = config('app.timezone') === 'UTC' ? 'Asia/Jakarta' : config('app.timezone');
+            $today = Carbon::today($tz)->format('Y-m-d');
+            $dateEsc = addslashes($today);
+
+            $sql = "
+                SELECT
+                    toString(id) AS id,
+                    toString(code) AS code,
+                    ifNull(toString(name), '') AS name,
+                    ifNull(toString(status), '') AS status,
+                    ifNull(toString(ra_site_name), '') AS ra_site_name,
+                    ifNull(toString(company_name), '') AS company_name,
+                    ifNull(toString(ra_pjo_name), '') AS ra_pjo_name,
+                    ifNull(toString(location_name), '') AS location_name,
+                    ifNull(toString(location_detail_name), '') AS location_detail_name,
+                    ifNull(toString(location_description), '') AS location_description,
+                    geo_lat AS geo_lat,
+                    geo_lon AS geo_lon,
+                    ifNull(toString(start_date), '') AS start_date,
+                    ifNull(toString(end_date), '') AS end_date,
+                    ifNull(toString(submit_date), '') AS submit_date
+                FROM hse_automation.ikk_work_permit
+                WHERE toDate(start_date) <= toDate('{$dateEsc}')
+                  AND toDate(end_date)   >= toDate('{$dateEsc}')
+                  AND deleted_at IS NULL
+                ORDER BY start_date ASC
+            ";
+
+            $rows = $this->queryClickHouseCustom($sql, 'hse_automation');
+            if (! is_array($rows)) {
+                $rows = [];
+            }
+
+            $data = [];
+            foreach ($rows as $row) {
+                if (is_object($row)) {
+                    $row = (array) $row;
+                }
+                $data[] = [
+                    'id' => $row['id'] ?? null,
+                    'code' => $row['code'] ?? null,
+                    'name' => $row['name'] ?? '',
+                    'status' => $row['status'] ?? '',
+                    'ra_site_name' => $row['ra_site_name'] ?? '',
+                    'company_name' => $row['company_name'] ?? '',
+                    'ra_pjo_name' => $row['ra_pjo_name'] ?? '',
+                    'location_name' => $row['location_name'] ?? '',
+                    'location_detail_name' => $row['location_detail_name'] ?? '',
+                    'location_description' => $row['location_description'] ?? '',
+                    'geo_lat' => isset($row['geo_lat']) && $row['geo_lat'] !== '' ? (float) $row['geo_lat'] : null,
+                    'geo_lon' => isset($row['geo_lon']) && $row['geo_lon'] !== '' ? (float) $row['geo_lon'] : null,
+                    'start_date' => $row['start_date'] ?? '',
+                    'end_date' => $row['end_date'] ?? '',
+                    'submit_date' => $row['submit_date'] ?? '',
+                    // for panel: reuse detail_lokasi for grouping (location_name + location_detail_name)
+                    'detail_lokasi' => trim(($row['location_name'] ?? '') . ' ' . ($row['location_detail_name'] ?? '')),
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'summary' => [
+                    'tanggal' => $today,
+                    'total' => count($data),
+                ],
+            ]);
+        } catch (Exception $e) {
+            Log::error('getIkkWorkPermitToday error: ' . $e->getMessage(), [
+                'exception' => $e->getTraceAsString(),
+            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data IKK work permit: ' . $e->getMessage(),
+                'data' => [],
+            ], 500);
+        }
+    }
+
+    /**
      * Map jenis_ijin_kerja_khusus (DOPM) to Activity / Sub Activity for ClickHouse OAK
      */
     private function mapJenisIjinToOakActivity(string $jenis): array
