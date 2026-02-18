@@ -11522,22 +11522,8 @@ source: new ol.source.Vector(),
         const BootstrapModal = window.bootstrap && window.bootstrap.Modal;
         const bootstrapModal = BootstrapModal ? (BootstrapModal.getOrCreateInstance ? BootstrapModal.getOrCreateInstance(modal) : new BootstrapModal(modal)) : null;
         if (bootstrapModal) bootstrapModal.show();
-        var modalDataUrl = '{{ route("full-maps.api.ikk-modal-data") }}?' + params.toString();
-        fetch(modalDataUrl, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
-            .then(function(r) {
-                var ct = (r.headers.get('Content-Type') || '').toLowerCase();
-                if (!r.ok) {
-                    return r.text().then(function(t) {
-                        throw new Error(r.status === 404 ? 'URL API tidak ditemukan.' : r.status === 419 ? 'Sesi habis, silakan refresh halaman.' : r.status === 500 ? 'Server error.' : 'HTTP ' + r.status);
-                    });
-                }
-                if (ct.indexOf('application/json') === -1) {
-                    return r.text().then(function(t) {
-                        throw new Error('Server mengembalikan bukan JSON (mungkin redirect). Silakan refresh halaman atau cek login.');
-                    });
-                }
-                return r.json();
-            })
+        fetch('{{ url("full-maps/api/ikk-modal-data") }}?' + params.toString())
+            .then(function(r) { return r.json(); })
             .then(function(res) {
                 if (!res.success) {
                     document.getElementById('ikkModalIpkLoading').classList.add('d-none');
@@ -12569,6 +12555,26 @@ source: new ol.source.Vector(),
             
             // Get risk matrix summary
             const riskSummary = await getRiskMatrixSummary(feature);
+            
+            // Simpan alert supervisory ke DB (hanya jika bukan hijau)
+            if (riskSummary.riskLevel === 'HIGH' || riskSummary.riskLevel === 'MEDIUM') {
+                const props = feature.getProperties();
+                const payload = {
+                    tanggal: new Date().toISOString().slice(0, 10),
+                    id_lokasi: props.id_lokasi || props.id || '',
+                    nama_lokasi: props.lokasi || props.nama_lokasi || props.name || '',
+                    risk_level: riskSummary.riskLevel,
+                    has_sap_report: riskSummary.hasSapReport,
+                    has_online_cctv: riskSummary.hasOnlineCctv,
+                    is_high_risk_area: riskSummary.isHighRiskArea
+                };
+                const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
+                fetch('{{ route("full-maps.api.supervisory-alert-log") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                    body: JSON.stringify(payload)
+                }).catch(function() { /* fire-and-forget */ });
+            }
             
             // Generate TARP-based recommendations (rule-based, no AI)
             const aiRecommendations = getTARPRecommendations(riskSummary.riskLevel, riskSummary);

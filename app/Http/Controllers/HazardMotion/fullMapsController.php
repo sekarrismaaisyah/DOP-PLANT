@@ -13,6 +13,7 @@ use App\Models\HazardValidation;
 use App\Models\PjaCctvDedicated;
 use App\Models\IntervensiControlRoom;
 use App\Models\IntervensiAreaKerja;
+use App\Models\SupervisoryAlertLog;
 use App\Models\DailyOperationPlan;
 use App\Models\Dopm;
 use App\Models\HseAiValidation;
@@ -2178,6 +2179,76 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 'error' => $e->getMessage()
             ], 500);
         }
+    }
+
+    /**
+     * Simpan alert Supervisory (layer Pengawasan Berjarak) ke database.
+     * Hanya menyimpan ketika risk_level HIGH atau MEDIUM; NORMAL (hijau) tidak disimpan.
+     * Menerima single payload atau batch (alerts array).
+     */
+    public function storeSupervisoryAlertLog(Request $request)
+    {
+        try {
+            $alerts = $request->input('alerts');
+            if (is_array($alerts)) {
+                $saved = 0;
+                foreach ($alerts as $item) {
+                    $normalized = $this->normalizeSupervisoryAlertItem($item);
+                    if ($normalized['nama_lokasi'] !== '' && SupervisoryAlertLog::storeIfNotGreen($normalized)) {
+                        $saved++;
+                    }
+                }
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Alert supervisory disimpan.',
+                    'saved' => $saved,
+                ]);
+            }
+
+            $item = $request->only([
+                'tanggal', 'id_lokasi', 'nama_lokasi', 'risk_level',
+                'has_sap_report', 'has_online_cctv', 'is_high_risk_area'
+            ]);
+            $item = $this->normalizeSupervisoryAlertItem($item);
+            if ($item['nama_lokasi'] === '') {
+                return response()->json(['success' => false, 'message' => 'nama_lokasi wajib diisi.'], 422);
+            }
+            $saved = SupervisoryAlertLog::storeIfNotGreen($item);
+            return response()->json([
+                'success' => true,
+                'message' => $saved ? 'Alert supervisory disimpan.' : 'Status hijau tidak disimpan.',
+                'saved' => $saved,
+            ]);
+        } catch (Exception $e) {
+            Log::error('Error storing supervisory alert log: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Terjadi kesalahan saat menyimpan alert supervisory.',
+                'error' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    /**
+     * Normalize single supervisory alert item for DB (tanggal format, booleans).
+     */
+    private function normalizeSupervisoryAlertItem(array $item): array
+    {
+        $tanggal = $item['tanggal'] ?? now()->toDateString();
+        if ($tanggal instanceof \DateTimeInterface) {
+            $tanggal = Carbon::parse($tanggal)->toDateString();
+        } elseif (is_string($tanggal) && strlen($tanggal) > 10) {
+            $tanggal = Carbon::parse($tanggal)->toDateString();
+        }
+        return [
+            'tanggal' => $tanggal,
+            'id_lokasi' => $item['id_lokasi'] ?? null,
+            'nama_lokasi' => (string) ($item['nama_lokasi'] ?? ''),
+            'risk_level' => $item['risk_level'] ?? SupervisoryAlertLog::RISK_NORMAL,
+            'has_sap_report' => filter_var($item['has_sap_report'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'has_online_cctv' => filter_var($item['has_online_cctv'] ?? false, FILTER_VALIDATE_BOOLEAN),
+            'is_high_risk_area' => filter_var($item['is_high_risk_area'] ?? false, FILTER_VALIDATE_BOOLEAN),
+        ];
     }
 
     /**
