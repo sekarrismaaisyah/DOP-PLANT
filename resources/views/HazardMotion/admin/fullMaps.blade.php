@@ -11522,8 +11522,22 @@ source: new ol.source.Vector(),
         const BootstrapModal = window.bootstrap && window.bootstrap.Modal;
         const bootstrapModal = BootstrapModal ? (BootstrapModal.getOrCreateInstance ? BootstrapModal.getOrCreateInstance(modal) : new BootstrapModal(modal)) : null;
         if (bootstrapModal) bootstrapModal.show();
-        fetch('{{ url("full-maps/api/ikk-modal-data") }}?' + params.toString())
-            .then(function(r) { return r.json(); })
+        var modalDataUrl = '{{ route("full-maps.api.ikk-modal-data") }}?' + params.toString();
+        fetch(modalDataUrl, { credentials: 'same-origin', headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function(r) {
+                var ct = (r.headers.get('Content-Type') || '').toLowerCase();
+                if (!r.ok) {
+                    return r.text().then(function(t) {
+                        throw new Error(r.status === 404 ? 'URL API tidak ditemukan.' : r.status === 419 ? 'Sesi habis, silakan refresh halaman.' : r.status === 500 ? 'Server error.' : 'HTTP ' + r.status);
+                    });
+                }
+                if (ct.indexOf('application/json') === -1) {
+                    return r.text().then(function(t) {
+                        throw new Error('Server mengembalikan bukan JSON (mungkin redirect). Silakan refresh halaman atau cek login.');
+                    });
+                }
+                return r.json();
+            })
             .then(function(res) {
                 if (!res.success) {
                     document.getElementById('ikkModalIpkLoading').classList.add('d-none');

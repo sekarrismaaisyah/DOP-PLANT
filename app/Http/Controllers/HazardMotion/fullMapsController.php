@@ -2646,7 +2646,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 })->toArray();
             }
 
-            $mapped = $this->mapJenisIjinToOakActivity($jenisIjin);
+            $mapped = $this->mapJenisIjinToOakActivity($jenisIjin ?? '');
             $activity = $mapped['activity'];
             $subActivity = $mapped['sub_activity'];
 
