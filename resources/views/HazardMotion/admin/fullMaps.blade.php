@@ -5998,10 +5998,11 @@
                 // Filter area kerja boundaries based on user role
                 if (isOn) {
                     if (shouldFilterToBmo2Pama) {
-                        // For control-room-pama and hazard-motion-it-pama roles, only show BMO 2 PAMA CCTV boundaries
-                        console.log('[applyLayer] Filtering to BMO 2 PAMA boundaries only for role:', userRoles);
+                        // Untuk role control-room-pama & hazard-motion-it-pama:
+                        // fokus hanya ke boundary Area Kerja BMO2 PAMA
+                        console.log('[applyLayer] Filtering to Area Kerja BMO2 PAMA only for role:', userRoles);
                         
-                        // Hide all area kerja layers
+                        // Sembunyikan semua area kerja lain
                         if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
                             window.areaKerjaLayers.forEach(layer => {
                                 if (layer) {
@@ -6011,42 +6012,16 @@
                             });
                         }
                         
-                        // Hide areaKerjaBmo2PamaLayer (regular area kerja)
+                        // Tampilkan hanya Area Kerja BMO2 PAMA
                         if (areaKerjaBmo2PamaLayer) {
-                            areaKerjaBmo2PamaLayer.setVisible(false);
-                            console.log('Hiding Area Kerja BMO2 PAMA layer');
-                        }
-                        
-                        // Show only areaCctvBmo2PamaLayer (CCTV boundaries from area_cctv_bmo2_pama.js)
-                        if (areaCctvBmo2PamaLayer) {
-                            areaCctvBmo2PamaLayer.setVisible(true);
-                            areaCctvBmo2PamaLayer.setOpacity(1.0);
-                            console.log('Showing Area CCTV BMO2 PAMA layer only');
-                        } else if (typeof window.areaCctvBmo2Pama !== 'undefined' && window.areaCctvBmo2Pama) {
-                            // Create layer if it doesn't exist yet
-                            try {
-                                console.log('Creating Area CCTV BMO2 PAMA layer from window.areaCctvBmo2Pama...');
-                                areaCctvBmo2PamaLayer = createLayerFromGeoJson(
-                                    window.areaCctvBmo2Pama,
-                                    'Area CCTV BMO2 PAMA',
-                                    getAreaCctvStyle,
-                                    510
-                                );
-                                if (areaCctvBmo2PamaLayer) {
-                                    areaCctvBmo2PamaLayer.setVisible(true);
-                                    areaCctvBmo2PamaLayer.setOpacity(1.0);
-                                    map.addLayer(areaCctvBmo2PamaLayer);
-                                    console.log('✓ Area CCTV BMO2 PAMA layer created and shown');
-                                }
-                            } catch (error) {
-                                console.error('Error creating Area CCTV BMO2 PAMA layer:', error);
-                            }
+                            areaKerjaBmo2PamaLayer.setVisible(true);
+                            areaKerjaBmo2PamaLayer.setOpacity(1.0);
+                            console.log('Showing Area Kerja BMO2 PAMA layer only');
                         }
                     } else {
-                        // For other roles, show all boundaries as normal
+                        // Role lain: tampilkan semua boundary area kerja seperti biasa
                         console.log('[applyLayer] Showing all area kerja boundaries for role:', userRoles);
                         
-                        // Show all area kerja layers
                         if (window.areaKerjaLayers && Array.isArray(window.areaKerjaLayers)) {
                             window.areaKerjaLayers.forEach(layer => {
                                 if (layer) {
@@ -6056,18 +6031,9 @@
                             });
                         }
                         
-                        // Show areaKerjaBmo2PamaLayer
                         if (areaKerjaBmo2PamaLayer) {
                             areaKerjaBmo2PamaLayer.setVisible(true);
                             areaKerjaBmo2PamaLayer.setOpacity(1.0);
-                        }
-                    }
-                } else {
-                    // When satellite layer is turned off, restore normal visibility
-                    if (shouldFilterToBmo2Pama) {
-                        // Hide CCTV boundaries
-                        if (areaCctvBmo2PamaLayer) {
-                            areaCctvBmo2PamaLayer.setVisible(false);
                         }
                     }
                 }
@@ -10281,22 +10247,11 @@ source: new ol.source.Vector(),
                     getAreaKerjaStyle,
                     410
                 );
-                // Ensure layer is visible
-                if (areaKerjaBmo2PamaLayer) {
-                    // Check if user should see filtered boundaries (only BMO 2 PAMA CCTV)
-                    const satelliteCheckbox = document.getElementById('layerSatellite');
-                    const isSatelliteChecked = satelliteCheckbox && satelliteCheckbox.checked;
-                    
-                    if (shouldFilterToBmo2Pama && isSatelliteChecked) {
-                        // Hide area kerja layer for filtered roles when satellite is active
-                        areaKerjaBmo2PamaLayer.setVisible(false);
-                        console.log('✓ Area Kerja Geotagging layer hidden (filtered role with satellite active)');
-                    } else {
-                        // Show area kerja layer normally
+                    // Ensure layer is visible
+                    if (areaKerjaBmo2PamaLayer) {
+                        // Default: tampilkan layer Area Kerja BMO2 PAMA
                         areaKerjaBmo2PamaLayer.setVisible(true);
                         areaKerjaBmo2PamaLayer.setOpacity(1.0);
-                    }
-                    
                     map.addLayer(areaKerjaBmo2PamaLayer);
                     const featureCount = areaKerjaBmo2PamaLayer.getSource().getFeatures().length;
                     console.log('✓ Area Kerja Geotagging layer added, features:', featureCount);
@@ -10338,20 +10293,9 @@ source: new ol.source.Vector(),
                     );
                     // Ensure layer is visible
                     if (areaKerjaBmo2PamaLayer) {
-                        // Check if user should see filtered boundaries (only BMO 2 PAMA CCTV)
-                        const satelliteCheckbox = document.getElementById('layerSatellite');
-                        const isSatelliteChecked = satelliteCheckbox && satelliteCheckbox.checked;
-                        
-                        if (shouldFilterToBmo2Pama && isSatelliteChecked) {
-                            // Hide area kerja layer for filtered roles when satellite is active
-                            areaKerjaBmo2PamaLayer.setVisible(false);
-                            console.log('✓ Area Kerja BMO2 PAMA layer hidden (filtered role with satellite active)');
-                        } else {
-                            // Show area kerja layer normally
-                            areaKerjaBmo2PamaLayer.setVisible(true);
-                            areaKerjaBmo2PamaLayer.setOpacity(1.0);
-                        }
-                        
+                        // Default: tampilkan layer Area Kerja BMO2 PAMA
+                        areaKerjaBmo2PamaLayer.setVisible(true);
+                        areaKerjaBmo2PamaLayer.setOpacity(1.0);
                         // Pastikan matrix warna langsung diterapkan
                         areaKerjaBmo2PamaLayer.setStyle(function(feature) {
                             return getRiskBasedAreaKerjaStyle(feature);
