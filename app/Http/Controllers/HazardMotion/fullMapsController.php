@@ -2452,9 +2452,10 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             $today = Carbon::today($tz)->format('Y-m-d');
             $dateEsc = addslashes($today);
 
-            // Hanya tampilkan IKK yang start_date-nya hari ini (tanggal mulai = tanggal filter)
+            // Hanya tampilkan IKK yang start_date-nya hari ini dan status APPROVED (sama seperti dashboard DOPM)
             $whereDate = "toDate(start_date) = toDate('{$dateEsc}')";
             $whereDeleted = 'AND deleted_at IS NULL';
+            $whereStatus = "AND trim(upper(toString(status))) = 'APPROVED'";
 
             // Satu query sesuai schema: id UUID→toString, Nullable(String)→ifNull, DateTime64→toString, geo Nullable(Float64)
             $sql = "
@@ -2477,6 +2478,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 FROM hse_automation.ikk_work_permit
                 WHERE {$whereDate}
                 {$whereDeleted}
+                {$whereStatus}
                 ORDER BY start_date ASC
             ";
 
