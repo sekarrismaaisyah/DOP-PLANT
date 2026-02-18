@@ -2487,13 +2487,61 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 $rows = [];
             }
 
+            // Ambil employee per work permit untuk Layer 1–4 (cara sama seperti DOPMController)
+            $wpIds = array_values(array_unique(array_filter(array_column($rows, 'id'))));
+            $layersByWp = [];
+            if (! empty($wpIds)) {
+                $idList = implode(',', array_map(function ($id) {
+                    $id = is_object($id) ? (string) $id : (string) $id;
+                    return "'" . addslashes($id) . "'";
+                }, $wpIds));
+                $sqlEmp = "
+                    SELECT toString(work_permit_id) AS work_permit_id, layer, ifNull(toString(employee_name), '') AS employee_name, ifNull(toString(employee_sid), '') AS employee_sid
+                    FROM hse_automation.ikk_work_permit_employee
+                    WHERE toString(work_permit_id) IN ({$idList})
+                ";
+                $empRows = $this->queryClickHouseCustom($sqlEmp, 'hse_automation');
+                if (is_array($empRows)) {
+                    foreach ($empRows as $er) {
+                        $er = is_object($er) ? (array) $er : $er;
+                        $wpId = $er['work_permit_id'] ?? null;
+                        if ($wpId === null || $wpId === '') {
+                            continue;
+                        }
+                        $layerRaw = $er['layer'] ?? null;
+                        if ($layerRaw === null || $layerRaw === '') {
+                            continue;
+                        }
+                        $layerNum = (int) $layerRaw;
+                        if (! in_array($layerNum, [1, 2, 3, 4], true)) {
+                            continue;
+                        }
+                        if (! isset($layersByWp[$wpId])) {
+                            $layersByWp[$wpId] = [];
+                        }
+                        if (! isset($layersByWp[$wpId][$layerNum])) {
+                            $layersByWp[$wpId][$layerNum] = [
+                                'name' => trim((string) ($er['employee_name'] ?? '')),
+                                'sid' => trim((string) ($er['employee_sid'] ?? '')),
+                            ];
+                        }
+                    }
+                }
+            }
+
             $data = [];
             foreach ($rows as $row) {
                 if (is_object($row)) {
                     $row = (array) $row;
                 }
+                $wpId = $row['id'] ?? null;
+                $layers = isset($wpId) ? ($layersByWp[$wpId] ?? []) : [];
+                $namaLayer1 = isset($layers[1]) ? $layers[1]['name'] : '';
+                $namaLayer2 = isset($layers[2]) ? $layers[2]['name'] : '';
+                $namaLayer3 = isset($layers[3]) ? $layers[3]['name'] : '';
+                $namaLayer4 = isset($layers[4]) ? $layers[4]['name'] : '';
                 $data[] = [
-                    'id' => $row['id'] ?? null,
+                    'id' => $wpId,
                     'code' => $row['code'] ?? null,
                     'name' => $row['name'] ?? '',
                     'status' => $row['status'] ?? '',
@@ -2508,8 +2556,11 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     'start_date' => $row['start_date'] ?? '',
                     'end_date' => $row['end_date'] ?? '',
                     'submit_date' => $row['submit_date'] ?? '',
-                    // for panel: reuse detail_lokasi for grouping (location_name + location_detail_name)
                     'detail_lokasi' => trim(($row['location_name'] ?? '') . ' ' . ($row['location_detail_name'] ?? '')),
+                    'nama_layer_1' => $namaLayer1,
+                    'nama_layer_2' => $namaLayer2,
+                    'nama_layer_3' => $namaLayer3,
+                    'nama_layer_4' => $namaLayer4,
                 ];
             }
 

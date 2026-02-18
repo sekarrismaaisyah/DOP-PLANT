@@ -2649,7 +2649,8 @@
                                             <tr><td class="text-muted fw-semibold">Lokasi</td><td id="ikkModalLokasi" class="text-break">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Tanggal Mulai</td><td id="ikkModalTanggal">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Status</td><td id="ikkModalStatus">—</td></tr>
-                                            <tr><td class="text-muted fw-semibold">Layer 1 (PJO)</td><td id="ikkModalLayer1">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">PJO</td><td id="ikkModalPjo">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 1</td><td id="ikkModalLayer1">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Layer 2</td><td id="ikkModalLayer2">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Layer 3</td><td id="ikkModalLayer3">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Layer 4</td><td id="ikkModalLayer4">—</td></tr>
@@ -11485,7 +11486,8 @@ source: new ol.source.Vector(),
         document.getElementById('ikkModalLokasi').textContent = [ikk.location_name, ikk.location_detail_name].filter(Boolean).join(' — ').trim() || '—';
         document.getElementById('ikkModalTanggal').textContent = (ikk.start_date || ikk.tanggal_dop || '—').toString().trim();
         document.getElementById('ikkModalStatus').textContent = (ikk.status || '—').toString().trim();
-        document.getElementById('ikkModalLayer1').textContent = (ikk.ra_pjo_name || ikk.nama_layer_1 || '—').toString().trim();
+        document.getElementById('ikkModalPjo').textContent = (ikk.ra_pjo_name || '—').toString().trim();
+        document.getElementById('ikkModalLayer1').textContent = (ikk.nama_layer_1 || '—').toString().trim();
         document.getElementById('ikkModalLayer2').textContent = (ikk.nama_layer_2 || '—').toString().trim();
         document.getElementById('ikkModalLayer3').textContent = (ikk.nama_layer_3 || '—').toString().trim();
         document.getElementById('ikkModalLayer4').textContent = (ikk.nama_layer_4 || '—').toString().trim();
