@@ -74,6 +74,7 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/full-maps/api/generate-recommendations', [fullMapsController::class, 'generateControlRoomRecommendations'])->name('full-maps.api.generate-recommendations');
     Route::post('/full-maps/api/intervensi-area-kerja', [fullMapsController::class, 'storeIntervensiAreaKerja'])->name('full-maps.api.intervensi-area-kerja');
     Route::post('/full-maps/api/supervisory-alert-log', [fullMapsController::class, 'storeSupervisoryAlertLog'])->name('full-maps.api.supervisory-alert-log');
+    Route::get('/full-maps/api/supervisory-alert-log-list', [fullMapsController::class, 'getSupervisoryAlertLogList'])->name('full-maps.api.supervisory-alert-log-list');
     Route::get('/full-maps/api/cctv-for-area-kerja', [fullMapsController::class, 'getCctvForAreaKerja'])->name('full-maps.api.cctv-for-area-kerja');
     Route::get('/full-maps/api/daily-operation-plans', [fullMapsController::class, 'getDailyOperationPlansWithPolygons'])->name('full-maps.api.daily-operation-plans');
     Route::get('/full-maps/api/dopm-ikk-today', [fullMapsController::class, 'getDopmIkkToday'])->name('full-maps.api.dopm-ikk-today');

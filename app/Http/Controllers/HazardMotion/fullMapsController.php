@@ -2259,6 +2259,57 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
+     * List supervisory_alert_log for fullMaps sidebar (Alert Supervisory tab).
+     */
+    public function getSupervisoryAlertLogList(Request $request)
+    {
+        try {
+            $limit = min(max((int) $request->get('limit', 100), 1), 500);
+            $tanggal = $request->get('tanggal'); // optional: filter by date Y-m-d
+
+            $query = SupervisoryAlertLog::query()->orderBy('tanggal', 'desc')->orderBy('updated_at', 'desc');
+
+            if ($tanggal) {
+                $query->whereDate('tanggal', $tanggal);
+            }
+
+            $rows = $query->take($limit)->get();
+
+            $data = $rows->map(function ($row) {
+                return [
+                    'id' => $row->id,
+                    'tanggal' => $row->tanggal ? $row->tanggal->format('Y-m-d') : null,
+                    'id_lokasi' => $row->id_lokasi,
+                    'nama_lokasi' => $row->nama_lokasi ?? '',
+                    'risk_level' => $row->risk_level ?? '',
+                    'has_sap_report' => (bool) $row->has_sap_report,
+                    'has_online_cctv' => (bool) $row->has_online_cctv,
+                    'is_high_risk_area' => (bool) $row->is_high_risk_area,
+                    'tarp_recommendations' => $row->tarp_recommendations ?? [],
+                    'cctv_list' => $row->cctv_list ?? [],
+                    'sap_list' => $row->sap_list ?? [],
+                    'created_at' => $row->created_at ? $row->created_at->toIso8601String() : null,
+                    'updated_at' => $row->updated_at ? $row->updated_at->toIso8601String() : null,
+                ];
+            })->toArray();
+
+            return response()->json([
+                'success' => true,
+                'data' => $data,
+                'total' => count($data),
+            ]);
+        } catch (Exception $e) {
+            Log::error('getSupervisoryAlertLogList: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memuat data supervisory alert.',
+                'data' => [],
+                'total' => 0,
+            ], 500);
+        }
+    }
+
+    /**
      * Get daily operation plans with polygons from MySQL
      * Returns GeoJSON FeatureCollection for display on map
      */

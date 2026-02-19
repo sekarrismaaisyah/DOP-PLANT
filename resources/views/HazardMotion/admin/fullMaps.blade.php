@@ -1262,6 +1262,60 @@
     padding: 0;
 }
 
+/* Supervisory alert log item: same expand/collapse layout as CCTV */
+.sidebar-list-item[data-type="supervisory"] {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-detail-section {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+    padding: 0 14px;
+    background: #f8f9fa;
+    border-top: 1px solid #e5e7eb;
+}
+.sidebar-list-item[data-type="supervisory"].expanded .supervisory-detail-section {
+    max-height: 999999px;
+    padding: 12px 14px;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-detail-group {
+    margin-bottom: 12px;
+    font-size: 12px;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-detail-group:last-child { margin-bottom: 0; }
+.sidebar-list-item[data-type="supervisory"] .supervisory-detail-group-title {
+    font-weight: 600;
+    color: #374151;
+    margin-bottom: 6px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-detail-item {
+    padding: 6px 0;
+    border-bottom: 1px solid #e5e7eb;
+    color: #4b5563;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-detail-item:last-child { border-bottom: none; }
+.sidebar-list-item[data-type="supervisory"] .supervisory-tarp-action {
+    padding: 8px 10px;
+    background: #fff;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    border-left: 3px solid #3b82f6;
+    font-size: 11px;
+    color: #374151;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-cctv-row {
+    padding: 6px 8px;
+    background: #fff;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    font-size: 11px;
+}
+
 .sidebar-list-item[data-type="autoalert"] {
     flex-direction: column;
     align-items: stretch;
@@ -3953,7 +4007,7 @@
                         <span class="tab-avatar tab-avatar-pink">S</span>
                         <div class="tab-content-inner">
                             <span class="tab-label">Alert Supervisory</span>
-                            <span class="tab-subtitle"><span class="tab-id">CCTV</span> (<span class="tab-count" id="cctvTabCount">0</span>)</span>
+                            <span class="tab-subtitle"><span class="tab-id">Total Alert</span> (<span class="tab-count" id="cctvTabCount">0</span>)</span>
                             <span class="tab-detail">Supervisory</span>
                         </div>
                     </button>
@@ -3961,7 +4015,7 @@
                         <span class="tab-avatar tab-avatar-blue">U</span>
                         <div class="tab-content-inner">
                             <span class="tab-label">Alert Unit & Orang</span>
-                            <span class="tab-subtitle"><span class="tab-id">Insiden</span> (<span class="tab-count" id="insidenTabCount">0</span>)</span>
+                            <span class="tab-subtitle"><span class="tab-id">Total Alert</span> (<span class="tab-count" id="insidenTabCount">0</span>)</span>
                             <span class="tab-detail">Unit & Orang</span>
                         </div>
                     </button>
@@ -3969,7 +4023,7 @@
                         <span class="tab-avatar tab-avatar-teal">D</span>
                         <div class="tab-content-inner">
                             <span class="tab-label">Alert DOP & IKK</span>
-                            <span class="tab-subtitle"><span class="tab-id">Control Room</span> (<span class="tab-count" id="controlroomTabCount">0</span>)</span>
+                            <span class="tab-subtitle"><span class="tab-id">Total Alert</span> (<span class="tab-count" id="controlroomTabCount">0</span>)</span>
                             <span class="tab-detail">DOP & IKK</span>
                         </div>
                     </button>
@@ -3977,7 +4031,7 @@
                         <span class="tab-avatar tab-avatar-orange">P</span>
                         <div class="tab-content-inner">
                             <span class="tab-label">Alert Probability</span>
-                            <span class="tab-subtitle"><span class="tab-id">PJA</span> (<span class="tab-count" id="pjaTabCount">0</span>)</span>
+                            <span class="tab-subtitle"><span class="tab-id">Total Alert</span> (<span class="tab-count" id="pjaTabCount">0</span>)</span>
                             <span class="tab-detail">Probability</span>
                         </div>
                     </button>
@@ -4928,6 +4982,10 @@
         controlroom: [],
         pja: []
     };
+    
+    // Supervisory Alert Log (tab Alert Supervisory) - must be declared before updateTabCounts
+    let supervisoryAlertLogCount = 0;
+    const supervisoryAlertLogDataById = {};
     
     // Store original PJA data for filtering
     let originalPjaData = [];
@@ -22121,7 +22179,7 @@ source: new ol.source.Vector(),
             }
         });
         
-        if (cctvCount) cctvCount.textContent = filteredSidebarData.cctv.length;
+        if (cctvCount) cctvCount.textContent = (typeof supervisoryAlertLogCount !== 'undefined' ? supervisoryAlertLogCount : filteredSidebarData.cctv.length);
         // Untuk SAP, gunakan semua data per week untuk count (bukan hanya data hari ini)
         if (sapCount) {
             const sapCountValue = (typeof sapDataAllWeek !== 'undefined' && sapDataAllWeek.length > 0) 
@@ -23183,6 +23241,160 @@ source: new ol.source.Vector(),
         `;
     }
     
+    // --- Supervisory Alert Log (tabel supervisory_alert_log) untuk tab Alert Supervisory ---
+    function loadSupervisoryAlertLogList() {
+        const container = document.getElementById('cctvList');
+        if (!container) return;
+        container.innerHTML = `
+            <div class="empty-state" style="padding: 24px; text-align: center; color: #6b7280;">
+                <i class="material-icons-outlined" style="font-size: 32px; opacity: 0.5;">hourglass_empty</i>
+                <p style="margin: 8px 0 0;">Memuat data supervisory...</p>
+            </div>
+        `;
+        const url = '{{ route("full-maps.api.supervisory-alert-log-list") }}';
+        fetch(url)
+            .then(res => res.json())
+            .then(result => {
+                if (result.success && Array.isArray(result.data)) {
+                    supervisoryAlertLogCount = result.data.length;
+                    const badge = document.getElementById('cctvTabCount');
+                    if (badge) badge.textContent = supervisoryAlertLogCount;
+                    renderSupervisoryAlertLogList(result.data);
+                } else {
+                    supervisoryAlertLogCount = 0;
+                    if (document.getElementById('cctvTabCount')) document.getElementById('cctvTabCount').textContent = '0';
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="material-icons-outlined">info</i>
+                            <p>Tidak ada data supervisory alert</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                console.error('loadSupervisoryAlertLogList:', err);
+                supervisoryAlertLogCount = 0;
+                if (document.getElementById('cctvTabCount')) document.getElementById('cctvTabCount').textContent = '0';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="material-icons-outlined">error_outline</i>
+                        <p>Gagal memuat data supervisory</p>
+                    </div>
+                `;
+            });
+    }
+    function renderSupervisoryAlertLogList(data) {
+        const container = document.getElementById('cctvList');
+        if (!container) return;
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="material-icons-outlined">assignment</i>
+                    <p>Tidak ada data supervisory alert</p>
+                </div>
+            `;
+            return;
+        }
+        Object.keys(supervisoryAlertLogDataById).forEach(k => delete supervisoryAlertLogDataById[k]);
+        data.forEach(row => { supervisoryAlertLogDataById[row.id] = row; });
+        const getFirstLetter = (s) => (s && s.charAt(0)) ? s.trim().charAt(0).toUpperCase() : '?';
+        const avatarColors = ['#d946ef','#3b82f6','#14b8a6','#f97316','#8b5cf6','#ec4899'];
+        const getAvatarColor = (c) => avatarColors[Math.abs((c || '?').charCodeAt(0)) % avatarColors.length];
+        container.innerHTML = data.map((row, index) => {
+            const name = row.nama_lokasi || 'Lokasi';
+            const firstLetter = getFirstLetter(name);
+            const avatarColor = getAvatarColor(firstLetter);
+            const riskBadge = row.risk_level === 'HIGH' ? 'HIGH' : (row.risk_level === 'MEDIUM' ? 'MED' : (row.risk_level || '-'));
+            const tanggalStr = row.tanggal ? new Date(row.tanggal).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }) : '-';
+            return `
+                <div class="sidebar-list-item" data-type="supervisory" data-id="${row.id}" data-index="${index}">
+                    <div class="sidebar-list-item-header">
+                        <div class="list-item-avatar" style="background-color: ${avatarColor};">
+                            ${firstLetter}
+                        </div>
+                        <div class="list-item-content list-item-content-cctv">
+                            <div class="list-item-title">${escapeHtml(name)}</div>
+                            <div class="list-item-meta">
+                                <span class="list-item-subtitle">${escapeHtml(tanggalStr)} · ${escapeHtml(riskBadge)}</span>
+                            </div>
+                        </div>
+                        <i class="material-icons-outlined list-item-expand-icon">expand_more</i>
+                    </div>
+                    <div class="supervisory-detail-section">
+                        <div class="supervisory-detail-placeholder">Klik untuk melihat detail</div>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        container.querySelectorAll('.sidebar-list-item[data-type="supervisory"]').forEach(item => {
+            item.addEventListener('click', function(e) {
+                if (e.target.classList.contains('list-item-expand-icon')) e.stopPropagation();
+                const isExpanded = this.classList.contains('expanded');
+                if (isExpanded) {
+                    this.classList.remove('expanded');
+                } else {
+                    this.classList.add('expanded');
+                    const detailSection = this.querySelector('.supervisory-detail-section');
+                    const placeholder = detailSection.querySelector('.supervisory-detail-placeholder');
+                    if (placeholder) {
+                        const record = supervisoryAlertLogDataById[this.dataset.id] || {};
+                        detailSection.innerHTML = buildSupervisoryDetailHtml(record);
+                    }
+                }
+                document.querySelectorAll('.sidebar-list-item').forEach(i => { if (i !== this) i.classList.remove('active'); });
+                this.classList.add('active');
+            });
+        });
+    }
+    function buildSupervisoryDetailHtml(record) {
+        const d = record || {};
+        const riskClass = d.risk_level === 'HIGH' ? 'color:#dc2626' : (d.risk_level === 'MEDIUM' ? 'color:#d97706' : '');
+        let html = '';
+        html += '<div class="supervisory-detail-group">';
+        html += '<div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">event</i> Tanggal</div>';
+        html += '<div class="supervisory-detail-item">' + escapeHtml(d.tanggal || '-') + '</div></div>';
+        html += '<div class="supervisory-detail-group">';
+        html += '<div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">warning</i> Risk Level</div>';
+        html += '<div class="supervisory-detail-item" style="' + riskClass + '">' + escapeHtml(d.risk_level || '-') + '</div></div>';
+        html += '<div class="supervisory-detail-group">';
+        html += '<div class="supervisory-detail-group-title">Status</div>';
+        html += '<div class="supervisory-detail-item">SAP: ' + (d.has_sap_report ? 'Ya' : 'Tidak') + ' · CCTV Online: ' + (d.has_online_cctv ? 'Ya' : 'Tidak') + ' · High Risk Area: ' + (d.is_high_risk_area ? 'Ya' : 'Tidak') + '</div></div>';
+        const tarp = d.tarp_recommendations || [];
+        if (tarp.length > 0) {
+            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">assignment</i> Rekomendasi TARP</div>';
+            tarp.forEach(r => {
+                const action = (r && r.action) ? r.action : (typeof r === 'string' ? r : '');
+                const priority = (r && r.priority) ? r.priority : '';
+                html += '<div class="supervisory-tarp-action">' + escapeHtml(action) + (priority ? ' <span style="color:#6b7280;">(' + escapeHtml(priority) + ')</span>' : '') + '</div>';
+            });
+            html += '</div>';
+        }
+        const cctvList = d.cctv_list || [];
+        if (cctvList.length > 0) {
+            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">videocam</i> CCTV (' + cctvList.length + ')</div>';
+            cctvList.slice(0, 20).forEach(c => {
+                const nama = c.nama_cctv || c.no_cctv || c.lokasi || '-';
+                const no = c.no_cctv || c.nomor_cctv || '';
+                const conn = (c.connected || '').toString().toLowerCase();
+                const connected = conn === 'yes' || conn === '1' || conn === 'true';
+                html += '<div class="supervisory-cctv-row">' + escapeHtml(nama) + (no ? ' <span style="color:#6b7280;">' + escapeHtml(no) + '</span>' : '') + ' · ' + (connected ? '<span style="color:#059669;">Connected</span>' : '<span style="color:#dc2626;">Off</span>') + '</div>';
+            });
+            if (cctvList.length > 20) html += '<div class="supervisory-detail-item" style="font-size:11px;color:#6b7280;">+ ' + (cctvList.length - 20) + ' lainnya</div>';
+            html += '</div>';
+        }
+        const sapList = d.sap_list || [];
+        if (sapList.length > 0) {
+            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title">SAP (' + sapList.length + ')</div>';
+            sapList.slice(0, 10).forEach(s => {
+                const lok = (s && s.lokasi) ? s.lokasi : (typeof s === 'string' ? s : '-');
+                html += '<div class="supervisory-detail-item">' + escapeHtml(lok) + '</div>';
+            });
+            if (sapList.length > 10) html += '<div class="supervisory-detail-item" style="font-size:11px;color:#6b7280;">+ ' + (sapList.length - 10) + ' lainnya</div>';
+            html += '</div>';
+        }
+        return html || '<div class="supervisory-detail-item">Tidak ada detail</div>';
+    }
+
     // Render sidebar tab content
     function renderSidebarTab(tabName) {
         // Hide all tab contents
@@ -23199,7 +23411,7 @@ source: new ol.source.Vector(),
         // Render appropriate list
         switch(tabName) {
             case 'cctv':
-                renderCctvList(filteredSidebarData.cctv);
+                loadSupervisoryAlertLogList();
                 break;
             case 'sap':
                 renderSapList(filteredSidebarData.sap);
