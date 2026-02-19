@@ -936,7 +936,7 @@
     flex-direction: row;
     align-items: center;
     padding: 10px 12px;
-    background: #ffffff;
+    background: #f3f4f6;
     border: 1px solid #e5e7eb;
     border-radius: 10px;
     cursor: pointer;
@@ -947,16 +947,24 @@
     max-width: 260px;
     text-align: left;
     box-sizing: border-box;
+    opacity: 0.85;
 }
 .sidebar-tab:hover {
-    background: #fafafa;
+    background: #e5e7eb;
     border-color: #d1d5db;
+    opacity: 1;
 }
 .sidebar-tab.active {
     background: #ffffff;
-    border-color: #e5e7eb;
-    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+    border: 2px solid #3b82f6;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+    opacity: 1;
+    z-index: 1;
 }
+.sidebar-tab.active .tab-avatar-pink { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #d946ef; }
+.sidebar-tab.active .tab-avatar-blue { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #3b82f6; }
+.sidebar-tab.active .tab-avatar-teal { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #14b8a6; }
+.sidebar-tab.active .tab-avatar-orange { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #f97316; }
 .sidebar-tab .tab-avatar {
     flex-shrink: 0;
     width: 40px;
@@ -983,14 +991,14 @@
 }
 .sidebar-tab .tab-label {
     font-size: 13px;
-    font-weight: 700;
-    color: #111827;
+    font-weight: 600;
+    color: #6b7280;
     line-height: 1.2;
 }
 .sidebar-tab .tab-subtitle {
     font-size: 11px;
     font-weight: 400;
-    color: #6b7280;
+    color: #9ca3af;
     line-height: 1.3;
 }
 .sidebar-tab .tab-detail {
@@ -998,6 +1006,14 @@
     font-weight: 400;
     color: #9ca3af;
     line-height: 1.3;
+}
+.sidebar-tab.active .tab-label {
+    font-weight: 700;
+    color: #111827;
+}
+.sidebar-tab.active .tab-subtitle,
+.sidebar-tab.active .tab-detail {
+    color: #6b7280;
 }
 .sidebar-tab .tab-actions {
     flex-shrink: 0;
@@ -1018,8 +1034,6 @@
     font-weight: 600;
     color: inherit;
 }
-.sidebar-tab.active .tab-label { color: #111827; }
-.sidebar-tab.active .tab-count { color: inherit; }
 .sidebar-body {
     flex: 1;
     display: flex;
