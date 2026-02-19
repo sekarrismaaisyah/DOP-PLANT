@@ -3883,7 +3883,7 @@
         </div> --}}
         
         <!-- Sidebar Panel (konsep UI dari mapBase) -->
-        <div id="mapSidebar" class="map-sidebar">
+        <div id="mapSidebar" class="map-sidebar mr-2">
             <button id="sidebarToggle" class="sidebar-toggle-btn" type="button">
                 <i class="material-icons-outlined" id="sidebarToggleIcon">chevron_left</i>
             </button>
