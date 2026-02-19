@@ -22989,7 +22989,8 @@ source: new ol.source.Vector(),
         container.innerHTML = data.map((ikk, index) => {
             const code = ikk.code || '-';
             const site = ikk.site || '-';
-            const firstLetter = getFirstLetter(code);
+            const jenisIjk = ikk.jenis_ijin_kerja_khusus || '-';
+            const firstLetter = getFirstLetter(jenisIjk);
             const avatarColor = getAvatarColor(firstLetter);
             const statusPekerjaan = ikk.status_pekerjaan || 'Belum ada IPK';
             const statusMatriks = ikk.status_matriks || 'Merah';
@@ -23000,9 +23001,10 @@ source: new ol.source.Vector(),
                             ${firstLetter}
                         </div>
                         <div class="list-item-content" style="flex: 1;">
-                            <div class="list-item-title">${escapeHtml(code)}</div>
+                            <div class="list-item-title">${escapeHtml(jenisIjk)}</div>
                             <div class="list-item-meta">
                                 <span class="list-item-subtitle">${escapeHtml(site)}</span>
+                                <span class="text-muted small ms-1">${escapeHtml(code)}</span>
                                 <span class="badge ${matriksClass(statusMatriks)} ms-1" style="font-size: 10px;">${escapeHtml(statusMatriks)}</span>
                             </div>
                         </div>
