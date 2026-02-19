@@ -3891,37 +3891,23 @@
                 <div class="sidebar-tabs">
                     <button class="sidebar-tab active" data-tab="cctv" title="CCTV">
                         <i class="material-icons-outlined">videocam</i>
-                        <span class="tab-label">CCTV</span>
+                        <span class="tab-label">Alert Supervisory</span>
                         <span class="tab-count" id="cctvTabCount">0</span>
                     </button>
                     <button class="sidebar-tab" data-tab="insiden" title="Insiden">
                         <i class="material-icons-outlined">report_problem</i>
-                        <span class="tab-label">Insiden</span>
+                        <span class="tab-label">Alert Unit & Orang</span>
                         <span class="tab-count" id="insidenTabCount">0</span>
                     </button>
                     <button class="sidebar-tab" data-tab="controlroom" title="Control Room">
                         <i class="material-icons-outlined">meeting_room</i>
-                        <span class="tab-label">Control Room</span>
+                        <span class="tab-label">Alert DOP & IKK</span>
                         <span class="tab-count" id="controlroomTabCount">0</span>
                     </button>
                     <button class="sidebar-tab" data-tab="pja" title="PJA">
                         <i class="material-icons-outlined">description</i>
-                        <span class="tab-label">PJA</span>
+                        <span class="tab-label">Alert Probability </span>
                         <span class="tab-count" id="pjaTabCount">0</span>
-                    </button>
-                    <button class="sidebar-tab" data-tab="areakerja" title="Area Kerja">
-                        <i class="material-icons-outlined">location_on</i>
-                        <span class="tab-label">Area Kerja</span>
-                        <span class="tab-count" id="areakerjaTabCount">0</span>
-                    </button>
-                    <button class="sidebar-tab" data-tab="autoalert" title="Auto Alert">
-                        <i class="material-icons-outlined">notifications_active</i>
-                        <span class="tab-label">Auto Alert</span>
-                        <span class="tab-count" id="autoalertTabCount">0</span>
-                    </button>
-                    <button class="sidebar-tab" data-tab="evaluasi" title="Evaluasi">
-                        <i class="material-icons-outlined">assessment</i>
-                        <span class="tab-label">Evaluasi</span>
                     </button>
                 </div>
                 <div class="sidebar-body">
