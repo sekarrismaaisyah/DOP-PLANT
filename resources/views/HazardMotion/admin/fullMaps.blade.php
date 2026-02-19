@@ -848,7 +848,7 @@
 .map-sidebar {
     position: absolute;
     top: 112px;
-    right: 0;
+    right: 16px;
     width: 380px;
     height: calc(100% - 112px);
     background: #ffffff;
