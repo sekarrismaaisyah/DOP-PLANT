@@ -848,7 +848,7 @@
 .map-sidebar {
     position: absolute;
     top: 112px;
-    right: 16px;
+    right: 0;
     width: 380px;
     height: calc(100% - 112px);
     background: #ffffff;
@@ -857,11 +857,11 @@
     display: flex;
     transition: transform 0.3s ease, width 0.3s ease;
     transform: translateX(0);
-    border-radius: 8px;
+    border-radius: 8px 0 0 8px;
 }
 .map-sidebar.collapsed {
     width: 0;
-    transform: translateX(calc(100% + 16px));
+    transform: translateX(100%);
     overflow: visible;
 }
 .map-sidebar.collapsed .sidebar-content {
@@ -909,61 +909,57 @@
     flex-direction: column;
     overflow: hidden;
 }
-/* Tab navigasi vertikal (atas-bawah) */
 .sidebar-tabs {
     display: flex;
-    flex-direction: column;
     background: #f8f9fa;
     border-bottom: 1px solid #e5e7eb;
     padding: 6px 8px;
     gap: 4px;
-    overflow-x: hidden;
-    overflow-y: auto;
+    overflow-x: auto;
+    overflow-y: hidden;
     scroll-behavior: smooth;
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8f9fa;
     flex-shrink: 0;
-    max-height: 220px;
 }
-.sidebar-tabs::-webkit-scrollbar { width: 5px; }
+.sidebar-tabs::-webkit-scrollbar { height: 5px; }
 .sidebar-tabs::-webkit-scrollbar-track { background: #f8f9fa; }
 .sidebar-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 .sidebar-tabs::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
 .sidebar-tab {
     flex: 0 0 auto;
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     align-items: center;
-    justify-content: flex-start;
-    padding: 10px 12px;
+    justify-content: center;
+    padding: 8px 12px;
     background: transparent;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
-    min-height: 44px;
-    width: 100%;
-    text-align: left;
-    gap: 10px;
+    min-height: 58px;
+    min-width: 72px;
+    max-width: 110px;
 }
 .sidebar-tab:hover { background: #e9ecef; }
 .sidebar-tab.active {
     background: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 .sidebar-tab i {
-    font-size: 22px;
+    font-size: 24px;
     color: #6b7280;
-    flex-shrink: 0;
+    margin-bottom: 4px;
 }
 .sidebar-tab.active i { color: #3b82f6; }
 .sidebar-tab .tab-label {
     font-size: 12px;
     font-weight: 500;
     color: #6b7280;
-    flex: 1;
+    margin-bottom: 4px;
 }
 .sidebar-tab.active .tab-label {
     color: #111827;
@@ -978,7 +974,6 @@
     border-radius: 10px;
     min-width: 24px;
     text-align: center;
-    flex-shrink: 0;
 }
 .sidebar-tab.active .tab-count {
     background: #3b82f6;
