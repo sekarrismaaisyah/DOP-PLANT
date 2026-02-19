@@ -2724,6 +2724,182 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
+     * Data IKK hari ini yang belum ada IPK atau belum ada OKK (untuk sidebar Control Room / DOP & IKK).
+     * Sumber: ClickHouse ikk_work_permit + ipk_ikk (MySQL) + okk (MySQL).
+     */
+    public function getIkkForControlroomSidebar(Request $request)
+    {
+        try {
+            $tz = 'Asia/Jakarta';
+            $today = Carbon::today($tz)->format('Y-m-d');
+            $dateEsc = addslashes($today);
+
+            $sql = "
+                SELECT
+                    id,
+                    code,
+                    name,
+                    ra_site_name,
+                    company_name,
+                    status,
+                    m_job_id,
+                    start_date,
+                    end_date,
+                    location_name,
+                    location_detail_name
+                FROM hse_automation.ikk_work_permit
+                WHERE toDate(start_date) <= toDate('{$dateEsc}')
+                  AND toDate(end_date)   >= toDate('{$dateEsc}')
+                  AND deleted_at IS NULL
+                  AND trim(upper(toString(status))) = 'APPROVED'
+                ORDER BY start_date ASC
+            ";
+            $wpRows = $this->queryClickHouseCustom($sql, 'hse_automation');
+            if (! is_array($wpRows)) {
+                $wpRows = [];
+            }
+
+            $jobIds = array_values(array_unique(array_filter(array_column($wpRows, 'm_job_id'))));
+            $jobNamesById = [];
+            if (! empty($jobIds)) {
+                $inJobs = implode(',', array_map(function ($id) {
+                    $id = is_object($id) ? (string) $id : (string) $id;
+                    return "'" . addslashes($id) . "'";
+                }, $jobIds));
+                $sqlJobs = "SELECT id, name FROM hse_automation.ikk_m_job WHERE id IN ({$inJobs})";
+                $jobRows = $this->queryClickHouseCustom($sqlJobs, 'hse_automation');
+                if (is_array($jobRows)) {
+                    foreach ($jobRows as $jr) {
+                        $jr = is_array($jr) ? $jr : (array) $jr;
+                        $jobNamesById[$jr['id'] ?? ''] = $jr['name'] ?? null;
+                    }
+                }
+            }
+
+            $wpIds = array_values(array_unique(array_filter(array_map(function ($r) {
+                $r = is_array($r) ? $r : (array) $r;
+                return $r['id'] ?? null;
+            }, $wpRows))));
+            $layersByWp = [];
+            if (! empty($wpIds)) {
+                $idList = implode(',', array_map(function ($id) {
+                    $id = is_object($id) ? (string) $id : (string) $id;
+                    return "'" . addslashes($id) . "'";
+                }, $wpIds));
+                $sqlEmp = "
+                    SELECT toString(work_permit_id) AS work_permit_id, layer,
+                           ifNull(toString(employee_name), '') AS employee_name,
+                           ifNull(toString(employee_sid), '') AS employee_sid
+                    FROM hse_automation.ikk_work_permit_employee
+                    WHERE toString(work_permit_id) IN ({$idList})
+                ";
+                $empRows = $this->queryClickHouseCustom($sqlEmp, 'hse_automation');
+                if (is_array($empRows)) {
+                    foreach ($empRows as $er) {
+                        $er = is_array($er) ? $er : (array) $er;
+                        $wpId = $er['work_permit_id'] ?? null;
+                        if ($wpId === null || $wpId === '') {
+                            continue;
+                        }
+                        $layerNum = (int) ($er['layer'] ?? 0);
+                        if (! in_array($layerNum, [1, 2, 3, 4], true)) {
+                            continue;
+                        }
+                        if (! isset($layersByWp[$wpId])) {
+                            $layersByWp[$wpId] = [];
+                        }
+                        if (! isset($layersByWp[$wpId][$layerNum])) {
+                            $layersByWp[$wpId][$layerNum] = [
+                                'name' => trim((string) ($er['employee_name'] ?? '')),
+                                'sid' => trim((string) ($er['employee_sid'] ?? '')),
+                            ];
+                        }
+                    }
+                }
+            }
+
+            $listByCode = [];
+            foreach ($wpRows as $row) {
+                $row = is_array($row) ? $row : (array) $row;
+                $wpId = $row['id'] ?? null;
+                $code = $row['code'] ?? null;
+                if ($code === null || $code === '') {
+                    continue;
+                }
+                if (isset($listByCode[$code])) {
+                    continue;
+                }
+                $layers = isset($wpId) ? ($layersByWp[$wpId] ?? []) : [];
+                $mJobId = $row['m_job_id'] ?? null;
+                $listByCode[$code] = [
+                    'id' => $wpId,
+                    'code' => $code,
+                    'site' => $row['ra_site_name'] ?? null,
+                    'jenis_ijin_kerja_khusus' => $mJobId ? ($jobNamesById[$mJobId] ?? null) : null,
+                    'nama_pekerjaan' => $row['name'] ?? null,
+                    'perusahaan' => $row['company_name'] ?? null,
+                    'status' => $row['status'] ?? null,
+                    'location_name' => $row['location_name'] ?? null,
+                    'location_detail_name' => $row['location_detail_name'] ?? null,
+                    'nama_layer_1' => $layers[1]['name'] ?? null,
+                    'sid_layer_1' => $layers[1]['sid'] ?? null,
+                    'nama_layer_2' => $layers[2]['name'] ?? null,
+                    'sid_layer_2' => $layers[2]['sid'] ?? null,
+                    'nama_layer_3' => $layers[3]['name'] ?? null,
+                    'sid_layer_3' => $layers[3]['sid'] ?? null,
+                    'nama_layer_4' => $layers[4]['name'] ?? null,
+                    'sid_layer_4' => $layers[4]['sid'] ?? null,
+                ];
+            }
+
+            $kodeIkks = array_keys($listByCode);
+            $statusByKode = [];
+            if (! empty($kodeIkks)) {
+                $statusRows = IpkIkk::whereIn('kode_ikk', $kodeIkks)
+                    ->orderByDesc('ts')
+                    ->get(['kode_ikk', 'status_pekerjaan']);
+                foreach ($statusRows as $srow) {
+                    $k = $srow->kode_ikk;
+                    if ($k !== null && $k !== '' && ! isset($statusByKode[$k])) {
+                        $statusByKode[$k] = $srow->status_pekerjaan;
+                    }
+                }
+            }
+
+            $okkKodesToday = Okk::whereDate('ts', $today)->pluck('kode_ikk')->unique()->flip()->all();
+
+            $out = [];
+            foreach ($listByCode as $code => $item) {
+                $statusPekerjaan = $statusByKode[$code] ?? null;
+                $hasOkk = isset($okkKodesToday[$code]);
+                $belumIpk = $statusPekerjaan === null || $statusPekerjaan === '' || (is_string($statusPekerjaan) && stripos($statusPekerjaan, 'belum') !== false);
+                $belumOkk = ! $hasOkk;
+                if (! $belumIpk && ! $belumOkk) {
+                    continue;
+                }
+                $item['status_pekerjaan'] = $statusPekerjaan ?? 'Belum ada IPK';
+                $item['status_matriks'] = (! $belumIpk && $belumOkk) ? 'Kuning' : (($belumIpk && ! $belumOkk) ? 'Kuning' : 'Merah');
+                $item['tanggal_dop'] = $today;
+                $out[] = $item;
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => array_values($out),
+                'total' => count($out),
+            ]);
+        } catch (Exception $e) {
+            Log::error('getIkkForControlroomSidebar: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal mengambil data IKK untuk sidebar.',
+                'data' => [],
+                'total' => 0,
+            ], 500);
+        }
+    }
+
+    /**
      * Map jenis_ijin_kerja_khusus (DOPM) to Activity / Sub Activity for ClickHouse OAK
      */
     private function mapJenisIjinToOakActivity(string $jenis): array

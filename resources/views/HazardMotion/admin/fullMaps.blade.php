@@ -1392,6 +1392,25 @@
     vertical-align: middle;
 }
 
+/* IKK Control Room item (data belum IPK/OKK) */
+.sidebar-list-item.ikk-controlroom-item {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+}
+.sidebar-list-item.ikk-controlroom-item .ikk-controlroom-detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+    padding: 0 14px;
+    background: #f8f9fa;
+    border-top: 1px solid #e5e7eb;
+}
+.sidebar-list-item.ikk-controlroom-item.expanded .ikk-controlroom-detail {
+    max-height: 999999px;
+    padding: 12px 14px;
+}
+
 .sidebar-list-item[data-type="autoalert"] {
     flex-direction: column;
     align-items: stretch;
@@ -5062,6 +5081,8 @@
     // Supervisory Alert Log (tab Alert Supervisory) - must be declared before updateTabCounts
     let supervisoryAlertLogCount = 0;
     const supervisoryAlertLogDataById = {};
+    // IKK untuk tab Control Room (DOP & IKK) - data belum ada IPK/OKK
+    let ikkControlroomCount = 0;
     
     // Store original PJA data for filtering
     let originalPjaData = [];
@@ -22319,7 +22340,7 @@ source: new ol.source.Vector(),
         if (unitCount) unitCount.textContent = filteredSidebarData.unit.length;
         // GPS tab removed - no longer used
         const controlroomCount = document.getElementById('controlroomTabCount');
-        if (controlroomCount) controlroomCount.textContent = filteredSidebarData.controlroom.length;
+        if (controlroomCount) controlroomCount.textContent = (typeof ikkControlroomCount !== 'undefined' ? ikkControlroomCount : filteredSidebarData.controlroom.length);
         if (pjaCount) pjaCount.textContent = filteredSidebarData.pja.length;
         
         // Update icon toolbar badges after updating tab counts
@@ -22903,6 +22924,120 @@ source: new ol.source.Vector(),
         // Store original data for filtering
         originalControlRoomData = JSON.parse(JSON.stringify(controlRoomData));
         filteredSidebarData.controlroom = controlRoomData;
+    }
+    
+    // Load IKK hari ini yang belum ada IPK/OKK untuk sidebar Control Room (DOP & IKK)
+    function loadIkkForControlroomSidebar() {
+        const container = document.getElementById('controlroomList');
+        if (!container) return;
+        container.innerHTML = `
+            <div class="empty-state" style="padding: 24px; text-align: center; color: #6b7280;">
+                <i class="material-icons-outlined" style="font-size: 32px; opacity: 0.5;">hourglass_empty</i>
+                <p style="margin: 8px 0 0;">Memuat data IKK...</p>
+            </div>
+        `;
+        const url = '{{ route("full-maps.api.ikk-for-controlroom-sidebar") }}';
+        fetch(url)
+            .then(res => res.json())
+            .then(result => {
+                if (result.success && Array.isArray(result.data)) {
+                    ikkControlroomCount = result.data.length;
+                    const badge = document.getElementById('controlroomTabCount');
+                    if (badge) badge.textContent = ikkControlroomCount;
+                    renderIkkControlroomList(result.data);
+                } else {
+                    ikkControlroomCount = 0;
+                    if (document.getElementById('controlroomTabCount')) document.getElementById('controlroomTabCount').textContent = '0';
+                    container.innerHTML = `
+                        <div class="empty-state">
+                            <i class="material-icons-outlined">assignment</i>
+                            <p>Tidak ada data IKK (belum IPK/OKK) hari ini</p>
+                        </div>
+                    `;
+                }
+            })
+            .catch(err => {
+                console.error('loadIkkForControlroomSidebar:', err);
+                ikkControlroomCount = 0;
+                if (document.getElementById('controlroomTabCount')) document.getElementById('controlroomTabCount').textContent = '0';
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <i class="material-icons-outlined">error_outline</i>
+                        <p>Gagal memuat data IKK</p>
+                    </div>
+                `;
+            });
+    }
+    
+    function renderIkkControlroomList(data) {
+        const container = document.getElementById('controlroomList');
+        if (!container) return;
+        if (!data || data.length === 0) {
+            container.innerHTML = `
+                <div class="empty-state">
+                    <i class="material-icons-outlined">assignment</i>
+                    <p>Data IKK hari ini yang belum ada IPK/OKK tidak ditemukan</p>
+                </div>
+            `;
+            return;
+        }
+        const getFirstLetter = (s) => (s && String(s).charAt(0)) ? String(s).trim().charAt(0).toUpperCase() : '?';
+        const avatarColors = ['#14b8a6','#3b82f6','#f97316','#8b5cf6','#ec4899'];
+        const getAvatarColor = (c) => avatarColors[Math.abs((c || '?').toString().charCodeAt(0)) % avatarColors.length];
+        const matriksClass = (s) => s === 'Hijau' ? 'bg-success' : (s === 'Kuning' ? 'bg-warning text-dark' : 'bg-danger');
+        const dashboardUrl = '{{ url("dopmikk/dopm/dashboard") }}';
+        container.innerHTML = data.map((ikk, index) => {
+            const code = ikk.code || '-';
+            const site = ikk.site || '-';
+            const firstLetter = getFirstLetter(code);
+            const avatarColor = getAvatarColor(firstLetter);
+            const statusPekerjaan = ikk.status_pekerjaan || 'Belum ada IPK';
+            const statusMatriks = ikk.status_matriks || 'Merah';
+            return `
+                <div class="sidebar-list-item ikk-controlroom-item" data-type="ikk-controlroom" data-index="${index}">
+                    <div class="sidebar-list-item-header">
+                        <div class="list-item-avatar" style="background-color: ${avatarColor};">
+                            ${firstLetter}
+                        </div>
+                        <div class="list-item-content" style="flex: 1;">
+                            <div class="list-item-title">${escapeHtml(code)}</div>
+                            <div class="list-item-meta">
+                                <span class="list-item-subtitle">${escapeHtml(site)}</span>
+                                <span class="badge ${matriksClass(statusMatriks)} ms-1" style="font-size: 10px;">${escapeHtml(statusMatriks)}</span>
+                            </div>
+                        </div>
+                        <i class="material-icons-outlined list-item-expand-icon">expand_more</i>
+                    </div>
+                    <div class="ikk-controlroom-detail">
+                        <div class="supervisory-detail-group">
+                            <div class="supervisory-detail-group-title">Detail IKK</div>
+                            <table class="supervisory-detail-table"><tbody>
+                                <tr><td class="supervisory-detail-label">Jenis IJK</td><td>${escapeHtml(ikk.jenis_ijin_kerja_khusus || '-')}</td></tr>
+                                <tr><td class="supervisory-detail-label">Nama Pekerjaan</td><td>${escapeHtml(ikk.nama_pekerjaan || '-')}</td></tr>
+                                <tr><td class="supervisory-detail-label">Perusahaan</td><td>${escapeHtml(ikk.perusahaan || '-')}</td></tr>
+                                <tr><td class="supervisory-detail-label">Status</td><td>${escapeHtml(ikk.status || '-')}</td></tr>
+                                <tr><td class="supervisory-detail-label">Status Pekerjaan</td><td>${escapeHtml(statusPekerjaan)}</td></tr>
+                                <tr><td class="supervisory-detail-label">Status Matriks</td><td><span class="badge ${matriksClass(statusMatriks)}">${escapeHtml(statusMatriks)}</span></td></tr>
+                                <tr><td class="supervisory-detail-label">Nama Layer 1</td><td>${escapeHtml(ikk.nama_layer_1 || '-')}</td></tr>
+                                <tr><td class="supervisory-detail-label">Layer 2 / 3 / 4</td><td><small>${escapeHtml(ikk.nama_layer_2 || '-')} / ${escapeHtml(ikk.nama_layer_3 || '-')} / ${escapeHtml(ikk.nama_layer_4 || '-')}</small></td></tr>
+                            </tbody></table>
+                        </div>
+                        <a href="${dashboardUrl}?tanggal=${ikk.tanggal_dop || ''}" target="_blank" class="btn btn-sm btn-outline-warning w-100 mt-2" title="Buka di Dashboard DOPM/IKK">
+                            <i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">campaign</i> Intervensi
+                        </a>
+                    </div>
+                </div>
+            `;
+        }).join('');
+        container.querySelectorAll('.ikk-controlroom-item').forEach(item => {
+            const header = item.querySelector('.sidebar-list-item-header');
+            header.addEventListener('click', function() {
+                const isExpanded = item.classList.contains('expanded');
+                item.classList.toggle('expanded', !isExpanded);
+                document.querySelectorAll('.ikk-controlroom-item').forEach(i => { if (i !== item) i.classList.remove('active'); });
+                item.classList.add('active');
+            });
+        });
     }
     
     // Render Control Room list
@@ -23596,7 +23731,7 @@ source: new ol.source.Vector(),
                 // GPS functionality removed - no longer used
                 break;
             case 'controlroom':
-                renderControlRoomList(filteredSidebarData.controlroom);
+                loadIkkForControlroomSidebar();
                 break;
             case 'pja':
                 if (filteredSidebarData.pja.length === 0) {

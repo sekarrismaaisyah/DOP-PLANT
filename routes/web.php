@@ -79,6 +79,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/full-maps/api/daily-operation-plans', [fullMapsController::class, 'getDailyOperationPlansWithPolygons'])->name('full-maps.api.daily-operation-plans');
     Route::get('/full-maps/api/dopm-ikk-today', [fullMapsController::class, 'getDopmIkkToday'])->name('full-maps.api.dopm-ikk-today');
     Route::get('/full-maps/api/ikk-work-permit-today', [fullMapsController::class, 'getIkkWorkPermitToday'])->name('full-maps.api.ikk-work-permit-today');
+    Route::get('/full-maps/api/ikk-for-controlroom-sidebar', [fullMapsController::class, 'getIkkForControlroomSidebar'])->name('full-maps.api.ikk-for-controlroom-sidebar');
     Route::get('/full-maps/api/ikk-modal-data', [fullMapsController::class, 'getIkkModalData'])->name('full-maps.api.ikk-modal-data');
     Route::get('/full-maps/api/location-sap-counts', [fullMapsController::class, 'getLocationSapCounts'])->name('full-maps.api.location-sap-counts');
     Route::get('/full-maps/api/latest-cctv-alert', [fullMapsController::class, 'getLatestCctvAlert'])->name('full-maps.api.latest-cctv-alert');
