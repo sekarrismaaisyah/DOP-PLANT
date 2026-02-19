@@ -1195,6 +1195,13 @@
     padding: 0;
 }
 
+/* CCTV item: header di atas, detail section di bawah (atas-bawah, bukan kiri-kanan) */
+.sidebar-list-item[data-type="cctv"] {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+}
+
 .sidebar-list-item[data-type="autoalert"] {
     flex-direction: column;
     align-items: stretch;
