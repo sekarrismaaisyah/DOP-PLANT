@@ -847,19 +847,25 @@
 /* Map Sidebar Panel Styles (dari mapBase) */
 .map-sidebar {
     position: absolute;
-    top: 0;
+    top: 20px;
     right: 0;
     width: 380px;
-    height: 100%;
+    height: calc(100% - 20px);
     background: #ffffff;
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
     display: flex;
-    transition: transform 0.3s ease;
+    transition: transform 0.3s ease, width 0.3s ease;
     transform: translateX(0);
+    border-radius: 8px 0 0 8px;
 }
 .map-sidebar.collapsed {
-    transform: translateX(calc(100% - 50px));
+    width: 0;
+    transform: translateX(100%);
+    overflow: visible;
+}
+.map-sidebar.collapsed .sidebar-content {
+    display: none !important;
 }
 .sidebar-toggle-btn {
     position: absolute;
@@ -867,7 +873,7 @@
     top: 50%;
     transform: translateY(-50%);
     width: 40px;
-    height: 60px;
+    height: 56px;
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-right: none;
@@ -879,6 +885,10 @@
     transition: all 0.2s ease;
     z-index: 1001;
     box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+}
+.map-sidebar.collapsed .sidebar-toggle-btn {
+    left: -40px;
+    box-shadow: -2px 0 6px rgba(0, 0, 0, 0.12);
 }
 .sidebar-toggle-btn:hover {
     background: #f9fafb;
@@ -1011,38 +1021,21 @@
 .sidebar-filter-btn i { font-size: 20px; color: #6b7280; }
 .sidebar-list-container {
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
+    -webkit-overflow-scrolling: touch;
 }
 .tab-content {
     display: none;
     height: 100%;
+    min-height: 0;
 }
 .tab-content.active {
     display: block;
 }
-/* Map sidebar collapsed state */
-.map-sidebar.collapsed { width: 50px; }
-.map-sidebar.collapsed .sidebar-content { width: 50px; }
-.map-sidebar.collapsed .sidebar-tabs {
-    flex-direction: column;
-    padding: 8px 4px;
-    gap: 4px;
-    overflow-x: hidden;
-    overflow-y: auto;
-}
-.map-sidebar.collapsed .sidebar-tab {
-    min-height: 50px;
-    padding: 8px 4px;
-    width: 100%;
-    min-width: auto;
-    max-width: none;
-}
-.map-sidebar.collapsed .sidebar-tab .tab-label,
-.map-sidebar.collapsed .sidebar-tab .tab-count { display: none; }
-.map-sidebar.collapsed .sidebar-tab i { margin-bottom: 0; }
-.map-sidebar.collapsed .sidebar-body { display: none; }
-.map-sidebar.collapsed .sidebar-toggle-btn { left: -40px; }
+/* Map sidebar collapsed: benar-benar hide, hanya tombol toggle yang terlihat */
+.map-sidebar.collapsed .sidebar-body { display: none !important; }
 /* Map selection (Evaluasi tab) */
 .map-selection-container { padding: 16px; }
 .map-selection-title {
@@ -1147,9 +1140,12 @@
     vertical-align: middle;
 }
 
-/* CCTV Alert Styles - Mirip dengan mapBase.blade.php */
+/* CCTV Alert Styles - selaras mapBase.blade.php */
 .sidebar-list {
     padding: 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
 }
 
 .sidebar-list-item {
@@ -1162,6 +1158,9 @@
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
+}
+.sidebar-list-item:last-child {
+    margin-bottom: 0;
 }
 
 .sidebar-list-item:hover {
