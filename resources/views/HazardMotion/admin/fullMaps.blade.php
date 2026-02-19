@@ -1308,12 +1308,77 @@
     font-size: 11px;
     color: #374151;
 }
+.sidebar-list-item[data-type="supervisory"] .supervisory-tarp-num {
+    font-weight: 700;
+    color: #6b7280;
+    margin-right: 2px;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-priority-badge {
+    display: inline-block;
+    padding: 2px 6px;
+    border-radius: 4px;
+    font-size: 10px;
+    font-weight: 600;
+    margin-left: 4px;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-priority-high {
+    background: #fee2e2;
+    color: #dc2626;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-priority-medium {
+    background: #fef3c7;
+    color: #d97706;
+}
 .sidebar-list-item[data-type="supervisory"] .supervisory-cctv-row {
     padding: 6px 8px;
     background: #fff;
     border-radius: 4px;
     margin-bottom: 4px;
     font-size: 11px;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-detail-table {
+    width: 100%;
+    font-size: 11px;
+    border-collapse: collapse;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-detail-table td {
+    padding: 4px 8px 4px 0;
+    vertical-align: top;
+    color: #4b5563;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-detail-label {
+    color: #6b7280;
+    font-weight: 500;
+    white-space: nowrap;
+    width: 1%;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-cctv-table-wrap {
+    max-height: 200px;
+    overflow: auto;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    margin-top: 6px;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-cctv-table {
+    width: 100%;
+    font-size: 10px;
+    border-collapse: collapse;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-cctv-table th,
+.sidebar-list-item[data-type="supervisory"] .supervisory-cctv-table td {
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-cctv-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    color: #374151;
+    position: sticky;
+    top: 0;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-cctv-table td {
+    color: #4b5563;
 }
 .sidebar-list-item[data-type="supervisory"] .supervisory-btn-intervensi {
     flex-shrink: 0;
@@ -6456,6 +6521,14 @@
         // Toggle layer ON/OFF - Only one menu can be active at a time
         // Define the menu group checkboxes
         const menuGroupIds = ['layerSatellite', 'layerTerrain', 'layerTraffic', 'layerTransit', 'layerIkk'];
+        // Map layer checkbox ID -> sidebar tab name (untuk sinkronisasi layer button dengan sidebar)
+        const layerToSidebarTab = {
+            'layerSatellite': 'cctv',      // Supervisory -> Alert Supervisory
+            'layerTerrain': 'insiden',     // Mobility -> Alert Unit & Orang
+            'layerTraffic': 'controlroom', // Critical Area -> Alert DOP & IKK
+            'layerTransit': 'pja',        // Probability -> Alert Probability
+            'layerIkk': 'controlroom'
+        };
         
         document.querySelectorAll('.btn-check').forEach(cb => {
             cb.addEventListener('change', () => {
@@ -6487,6 +6560,21 @@
                             }
                         }
                     });
+                    
+                    // Sinkronisasi: buka sidebar dan aktifkan tab yang sesuai, tampilkan datanya
+                    const tabName = layerToSidebarTab[cb.id];
+                    if (tabName && typeof renderSidebarTab === 'function') {
+                        const mapSidebar = document.getElementById('mapSidebar');
+                        if (mapSidebar && mapSidebar.classList.contains('collapsed')) {
+                            sidebarCollapsed = false;
+                            mapSidebar.classList.remove('collapsed');
+                        }
+                        currentSidebarTab = tabName;
+                        document.querySelectorAll('.sidebar-tab').forEach(t => t.classList.remove('active'));
+                        const tabBtn = document.querySelector('.sidebar-tab[data-tab="' + tabName + '"]');
+                        if (tabBtn) tabBtn.classList.add('active');
+                        renderSidebarTab(tabName);
+                    }
                 }
                 
                 // Apply the layer for the current checkbox
@@ -23406,49 +23494,70 @@ source: new ol.source.Vector(),
     }
     function buildSupervisoryDetailHtml(record) {
         const d = record || {};
-        const riskClass = d.risk_level === 'HIGH' ? 'color:#dc2626' : (d.risk_level === 'MEDIUM' ? 'color:#d97706' : '');
+        const fmtDate = (s) => {
+            if (!s) return '-';
+            try { return new Date(s).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }); } catch (_) { return s; }
+        };
+        const fmtDateTime = (s) => {
+            if (!s) return '-';
+            try { return new Date(s).toLocaleString('id-ID', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }); } catch (_) { return s; }
+        };
+        const riskClass = d.risk_level === 'HIGH' ? 'color:#dc2626;font-weight:600' : (d.risk_level === 'MEDIUM' ? 'color:#d97706;font-weight:600' : '');
         let html = '';
         html += '<div class="supervisory-detail-group">';
-        html += '<div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">event</i> Tanggal</div>';
-        html += '<div class="supervisory-detail-item">' + escapeHtml(d.tanggal || '-') + '</div></div>';
-        html += '<div class="supervisory-detail-group">';
-        html += '<div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">warning</i> Risk Level</div>';
-        html += '<div class="supervisory-detail-item" style="' + riskClass + '">' + escapeHtml(d.risk_level || '-') + '</div></div>';
-        html += '<div class="supervisory-detail-group">';
-        html += '<div class="supervisory-detail-group-title">Status</div>';
-        html += '<div class="supervisory-detail-item">SAP: ' + (d.has_sap_report ? 'Ya' : 'Tidak') + ' · CCTV Online: ' + (d.has_online_cctv ? 'Ya' : 'Tidak') + ' · High Risk Area: ' + (d.is_high_risk_area ? 'Ya' : 'Tidak') + '</div></div>';
-        const tarp = d.tarp_recommendations || [];
+        html += '<div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">info</i> Data Utama</div>';
+        html += '<table class="supervisory-detail-table"><tbody>';
+        html += '<tr><td class="supervisory-detail-label">ID</td><td>' + escapeHtml(String(d.id ?? '-')) + '</td></tr>';
+        html += '<tr><td class="supervisory-detail-label">Tanggal</td><td>' + escapeHtml(fmtDate(d.tanggal)) + '</td></tr>';
+        html += '<tr><td class="supervisory-detail-label">ID Lokasi</td><td>' + escapeHtml(d.id_lokasi != null && d.id_lokasi !== '' ? String(d.id_lokasi) : '-') + '</td></tr>';
+        html += '<tr><td class="supervisory-detail-label">Nama Lokasi</td><td>' + escapeHtml(d.nama_lokasi || '-') + '</td></tr>';
+        html += '<tr><td class="supervisory-detail-label">Risk Level</td><td style="' + riskClass + '">' + escapeHtml(d.risk_level || '-') + '</td></tr>';
+        html += '<tr><td class="supervisory-detail-label">Has SAP Report</td><td>' + (d.has_sap_report ? 'Ya' : 'Tidak') + '</td></tr>';
+        html += '<tr><td class="supervisory-detail-label">Has Online CCTV</td><td>' + (d.has_online_cctv ? 'Ya' : 'Tidak') + '</td></tr>';
+        html += '<tr><td class="supervisory-detail-label">High Risk Area</td><td>' + (d.is_high_risk_area ? 'Ya' : 'Tidak') + '</td></tr>';
+        html += '<tr><td class="supervisory-detail-label">Created</td><td>' + escapeHtml(fmtDateTime(d.created_at)) + '</td></tr>';
+        html += '<tr><td class="supervisory-detail-label">Updated</td><td>' + escapeHtml(fmtDateTime(d.updated_at)) + '</td></tr>';
+        html += '</tbody></table></div>';
+        const tarp = Array.isArray(d.tarp_recommendations) ? d.tarp_recommendations : [];
         if (tarp.length > 0) {
-            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">assignment</i> Rekomendasi TARP</div>';
-            tarp.forEach(r => {
-                const action = (r && r.action) ? r.action : (typeof r === 'string' ? r : '');
-                const priority = (r && r.priority) ? r.priority : '';
-                html += '<div class="supervisory-tarp-action">' + escapeHtml(action) + (priority ? ' <span style="color:#6b7280;">(' + escapeHtml(priority) + ')</span>' : '') + '</div>';
+            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">assignment</i> TARP Recommendations (' + tarp.length + ')</div>';
+            tarp.forEach((r, idx) => {
+                const action = (r && r.action) ? String(r.action) : (typeof r === 'string' ? r : '');
+                const priority = (r && r.priority) ? String(r.priority) : '';
+                const priorityClass = priority === 'HIGH' ? 'supervisory-priority-high' : (priority === 'MEDIUM' ? 'supervisory-priority-medium' : '');
+                html += '<div class="supervisory-tarp-action">';
+                html += '<span class="supervisory-tarp-num">' + (idx + 1) + '.</span> ';
+                html += escapeHtml(action);
+                if (priority) html += ' <span class="supervisory-priority-badge ' + priorityClass + '">' + escapeHtml(priority) + '</span>';
+                html += '</div>';
             });
             html += '</div>';
         }
-        const cctvList = d.cctv_list || [];
+        const cctvList = Array.isArray(d.cctv_list) ? d.cctv_list : [];
         if (cctvList.length > 0) {
-            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">videocam</i> CCTV (' + cctvList.length + ')</div>';
-            cctvList.slice(0, 20).forEach(c => {
-                const nama = c.nama_cctv || c.no_cctv || c.lokasi || '-';
-                const no = c.no_cctv || c.nomor_cctv || '';
-                const conn = (c.connected || '').toString().toLowerCase();
-                const connected = conn === 'yes' || conn === '1' || conn === 'true';
-                html += '<div class="supervisory-cctv-row">' + escapeHtml(nama) + (no ? ' <span style="color:#6b7280;">' + escapeHtml(no) + '</span>' : '') + ' · ' + (connected ? '<span style="color:#059669;">Connected</span>' : '<span style="color:#dc2626;">Off</span>') + '</div>';
+            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">videocam</i> CCTV List (' + cctvList.length + ')</div>';
+            html += '<div class="supervisory-cctv-table-wrap"><table class="supervisory-cctv-table"><thead><tr><th>Lokasi</th><th>Status</th><th>Kondisi</th><th>No CCTV</th><th>Connected</th><th>Nama CCTV</th></tr></thead><tbody>';
+            cctvList.forEach(c => {
+                const lokasi = (c.lokasi != null && c.lokasi !== '') ? String(c.lokasi) : '-';
+                const status = (c.status != null && c.status !== '') ? String(c.status) : '-';
+                const kondisi = (c.kondisi != null && c.kondisi !== '') ? String(c.kondisi) : '-';
+                const no = (c.no_cctv != null && c.no_cctv !== '') ? String(c.no_cctv) : (c.nomor_cctv || '-');
+                const connected = (c.connected != null && c.connected !== '') ? String(c.connected) : 'no';
+                const nama = (c.nama_cctv != null && c.nama_cctv !== '') ? String(c.nama_cctv) : '-';
+                html += '<tr><td>' + escapeHtml(lokasi) + '</td><td>' + escapeHtml(status) + '</td><td>' + escapeHtml(kondisi) + '</td><td>' + escapeHtml(no) + '</td><td>' + escapeHtml(connected) + '</td><td>' + escapeHtml(nama) + '</td></tr>';
             });
-            if (cctvList.length > 20) html += '<div class="supervisory-detail-item" style="font-size:11px;color:#6b7280;">+ ' + (cctvList.length - 20) + ' lainnya</div>';
-            html += '</div>';
+            html += '</tbody></table></div></div>';
         }
         const sapList = d.sap_list || [];
         if (sapList.length > 0) {
-            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title">SAP (' + sapList.length + ')</div>';
-            sapList.slice(0, 10).forEach(s => {
+            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title">Daftar SAP (' + sapList.length + ')</div>';
+            sapList.forEach(s => {
                 const lok = (s && s.lokasi) ? s.lokasi : (typeof s === 'string' ? s : '-');
                 html += '<div class="supervisory-detail-item">' + escapeHtml(lok) + '</div>';
             });
-            if (sapList.length > 10) html += '<div class="supervisory-detail-item" style="font-size:11px;color:#6b7280;">+ ' + (sapList.length - 10) + ' lainnya</div>';
             html += '</div>';
+        } else {
+            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title">Daftar SAP</div><div class="supervisory-detail-item" style="color:#9ca3af;">Kosong</div></div>';
         }
         return html || '<div class="supervisory-detail-item">Tidak ada detail</div>';
     }
