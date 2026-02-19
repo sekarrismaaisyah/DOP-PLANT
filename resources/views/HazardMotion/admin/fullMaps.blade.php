@@ -1084,6 +1084,11 @@
     overflow-y: auto;
     overflow-x: hidden;
     -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+.sidebar-list-container::-webkit-scrollbar {
+    display: none;
 }
 .tab-content {
     display: none;
