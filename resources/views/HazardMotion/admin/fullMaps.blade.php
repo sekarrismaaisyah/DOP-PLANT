@@ -1034,6 +1034,10 @@
     font-weight: 600;
     color: inherit;
 }
+/* Sembunyikan tab sidebar yang tidak sesuai layer Smart Alert yang dipilih */
+.sidebar-tab.hidden-by-layer {
+    display: none !important;
+}
 .sidebar-body {
     flex: 1;
     display: flex;
@@ -6582,8 +6586,14 @@
                         }
                     });
                     
-                    // Sinkronisasi: buka sidebar dan aktifkan tab yang sesuai, tampilkan datanya
+                    // Sinkronisasi: buka sidebar, sembunyikan tab lain, hanya tampilkan tab yang sesuai layer
                     const tabName = layerToSidebarTab[cb.id];
+                    document.querySelectorAll('.sidebar-tabs .sidebar-tab').forEach(tab => {
+                        tab.classList.add('hidden-by-layer');
+                        if (tab.getAttribute('data-tab') === tabName) {
+                            tab.classList.remove('hidden-by-layer');
+                        }
+                    });
                     if (tabName && typeof renderSidebarTab === 'function') {
                         const mapSidebar = document.getElementById('mapSidebar');
                         if (mapSidebar && mapSidebar.classList.contains('collapsed')) {
@@ -6602,6 +6612,23 @@
                 applyLayer(layerName, cb.checked);
             });
         });
+
+        // Inisialisasi: sembunyikan tab sidebar yang tidak sesuai layer yang saat ini terpilih
+        (function initSidebarTabsByLayer() {
+            const checkedId = menuGroupIds.find(id => {
+                const el = document.getElementById(id);
+                return el && el.checked;
+            });
+            if (checkedId) {
+                const tabName = layerToSidebarTab[checkedId];
+                document.querySelectorAll('.sidebar-tabs .sidebar-tab').forEach(tab => {
+                    tab.classList.add('hidden-by-layer');
+                    if (tab.getAttribute('data-tab') === tabName) {
+                        tab.classList.remove('hidden-by-layer');
+                    }
+                });
+            }
+        })();
 
         // Hook your map control here
         function applyLayer(layerName, isOn) {
