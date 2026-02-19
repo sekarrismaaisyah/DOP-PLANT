@@ -847,10 +847,10 @@
 /* Map Sidebar Panel Styles (dari mapBase) */
 .map-sidebar {
     position: absolute;
-    top: 64px;
+    top: 112px;
     right: 0;
     width: 380px;
-    height: calc(100% - 64px);
+    height: calc(100% - 112px);
     background: #ffffff;
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
@@ -1159,6 +1159,7 @@
     margin-bottom: 0;
     background: #ffffff;
     border: 1px solid #e5e7eb;
+    border-left: 4px solid transparent;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
@@ -1178,7 +1179,11 @@
 .sidebar-list-item.active {
     background: #eff6ff;
     border-color: #3b82f6;
+    border-left: 4px solid #3b82f6;
     box-shadow: 0 2px 6px rgba(59, 130, 246, 0.12);
+}
+.sidebar-list-item.active.expanded {
+    border-left-width: 4px;
 }
 
 .sidebar-list-item:not([data-type="cctv"]):not([data-type="autoalert"]) {
@@ -1243,7 +1248,7 @@
 
 .list-item-title {
     font-size: 13px;
-    font-weight: 600;
+    font-weight: 700;
     color: #111827;
     margin-bottom: 2px;
     line-height: 1.35;
@@ -1256,7 +1261,7 @@
 }
 
 .list-item-subtitle {
-    font-size: 11px;
+    font-size: 12px;
     color: #6b7280;
     word-break: break-word;
     line-height: 1.4;
@@ -1291,6 +1296,9 @@
     align-items: center;
     justify-content: center;
 }
+.cctv-hazard-status-icon.has-hazard i { color: #12b76a; }
+.cctv-hazard-status-icon.no-hazard i { color: #dc2626; }
+.cctv-hazard-status-icon.loading i { color: #9ca3af; }
 
 .sidebar-list-item-header {
     display: flex;
@@ -1376,13 +1384,17 @@
     display: flex;
     align-items: center;
     gap: 6px;
-    padding-bottom: 4px;
+    padding-bottom: 6px;
     border-bottom: 1px solid #e5e7eb;
 }
 
 .cctv-detail-group-title i {
     font-size: 16px;
     color: #4b5563;
+}
+
+.cctv-detail-group-title span {
+    flex: 1;
 }
 
 .cctv-coverage-item {
@@ -1399,10 +1411,6 @@
     box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
-.cctv-coverage-item:last-child {
-    margin-bottom: 0;
-}
-
 .cctv-coverage-lokasi {
     font-size: 12px;
     font-weight: 600;
@@ -1413,11 +1421,14 @@
     gap: 6px;
 }
 
-.cctv-coverage-lokasi .material-icons-outlined,
-.cctv-coverage-lokasi .pin-icon {
+.cctv-coverage-lokasi .material-icons-outlined {
     font-size: 14px;
     color: #dc2626;
     flex-shrink: 0;
+}
+
+.cctv-coverage-item:last-child {
+    margin-bottom: 0;
 }
 
 .cctv-coverage-detail {
@@ -2894,7 +2905,7 @@
             
             <!-- Category Filters - Sejajar dengan Search Box -->
             <div class="gm-category-filters">
-                  <a href="#" class="gm-category-item">
+                  <a href="#" class="gm-category-item" id="gmCategoryCctv" title="CCTV (default: tidak tampil, klik untuk tampilkan)">
                     <i class="material-icons-outlined">camera_alt</i>
                     <span>CCTV</span>
                 </a>
@@ -4828,7 +4839,7 @@
     // Layer visibility state
     // Default: SAP, Unit, dan GPS Orang hidden untuk performa
     let layerVisibility = {
-        cctv: true,
+        cctv: false,    // CCTV default tidak tampil di map
         hazard: false,  // SAP default hidden
         gr: true,
         insiden: true,
@@ -9118,6 +9129,7 @@ source: new ol.source.Vector(),
         zIndex: 1001  // Z-index lebih tinggi dari hazard layer
     });
     map.addLayer(cctvLayer);
+    cctvLayer.setVisible(false);  // Default CCTV tidak tampil di map
 
     // Helper function to add CCTV markers from any data array
     function addCctvMarkersFromData(cctvDataArray) {
@@ -20471,7 +20483,7 @@ source: new ol.source.Vector(),
                     toggleCctvDisplay();
                 });
                 
-                // Initialize active state for CCTV since it's visible by default
+                // Initialize active state for CCTV (default hidden)
                 if (layerVisibility.cctv && cctvLayer && cctvLayer.getVisible()) {
                     item.classList.add('active');
                 }
