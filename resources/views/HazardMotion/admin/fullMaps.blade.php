@@ -911,92 +911,113 @@
 }
 .sidebar-tabs {
     display: flex;
+    flex-direction: column;
     background: #f8f9fa;
     border-bottom: 1px solid #e5e7eb;
-    padding: 6px 8px;
-    gap: 4px;
-    overflow-x: auto;
-    overflow-y: hidden;
+    padding: 8px;
+    gap: 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
     scroll-behavior: smooth;
-    -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8f9fa;
     flex-shrink: 0;
+    max-height: 280px;
 }
-.sidebar-tabs::-webkit-scrollbar { height: 5px; }
+.sidebar-tabs::-webkit-scrollbar { width: 5px; }
 .sidebar-tabs::-webkit-scrollbar-track { background: #f8f9fa; }
 .sidebar-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 .sidebar-tabs::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-/* .sidebar-tab {
+
+.sidebar-tab {
     flex: 0 0 auto;
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
     align-items: center;
-    justify-content: center;
-    padding: 8px 12px;
-    background: transparent;
-    border: none;
-    border-radius: 8px;
+    padding: 10px 12px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-radius: 10px;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
-    min-height: 58px;
-    min-width: 72px;
-    max-width: 110px;
-} */
-
-.sidebar-tab {
-  flex: 0 0 auto;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 16px 20px;        /* naikkan padding (sebelumnya 8px 12px) */
-  background: transparent;
-  border: none;
-  border-radius: 12px;       /* opsional, sesuaikan radius */
-  cursor: pointer;
-  transition: all 0.2s ease;
-  position: relative;
-  min-height: 90px;          /* naikkan min-height (sebelumnya 58px) */
-  min-width: 100px;          /* naikkan min-width (sebelumnya 72px) */
-  max-width: 140px;          /* naikkan max-width (sebelumnya 110px) */
+    min-height: 64px;
+    text-align: left;
+    width: 100%;
+    box-sizing: border-box;
 }
-.sidebar-tab:hover { background: #e9ecef; }
+.sidebar-tab:hover {
+    background: #fafafa;
+    border-color: #d1d5db;
+}
 .sidebar-tab.active {
     background: #ffffff;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    border-color: #e5e7eb;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
 }
-.sidebar-tab i {
-    font-size: 24px;
-    color: #6b7280;
-    margin-bottom: 4px;
+.sidebar-tab .tab-avatar {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    font-weight: 700;
+    color: #ffffff;
+    margin-right: 12px;
 }
-.sidebar-tab.active i { color: #3b82f6; }
+.sidebar-tab .tab-avatar-pink { background: #d946ef; }
+.sidebar-tab .tab-avatar-blue { background: #3b82f6; }
+.sidebar-tab .tab-avatar-teal { background: #14b8a6; }
+.sidebar-tab .tab-avatar-orange { background: #f97316; }
+.sidebar-tab .tab-content-inner {
+    flex: 1;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
 .sidebar-tab .tab-label {
-    font-size: 12px;
-    font-weight: 500;
-    color: #6b7280;
-    margin-bottom: 4px;
-}
-.sidebar-tab.active .tab-label {
+    font-size: 13px;
+    font-weight: 700;
     color: #111827;
-    font-weight: 600;
+    line-height: 1.2;
+}
+.sidebar-tab .tab-subtitle {
+    font-size: 11px;
+    font-weight: 400;
+    color: #6b7280;
+    line-height: 1.3;
+}
+.sidebar-tab .tab-detail {
+    font-size: 11px;
+    font-weight: 400;
+    color: #9ca3af;
+    line-height: 1.3;
+}
+.sidebar-tab .tab-actions {
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    margin-left: 8px;
+}
+.sidebar-tab .tab-warning {
+    font-size: 18px !important;
+    color: #dc2626 !important;
+}
+.sidebar-tab .tab-chevron {
+    font-size: 20px !important;
+    color: #6b7280 !important;
 }
 .sidebar-tab .tab-count {
-    font-size: 11px;
     font-weight: 600;
-    color: #6b7280;
-    background: #e5e7eb;
-    padding: 2px 6px;
-    border-radius: 10px;
-    min-width: 24px;
-    text-align: center;
+    color: inherit;
 }
-.sidebar-tab.active .tab-count {
-    background: #3b82f6;
-    color: #ffffff;
-}
+.sidebar-tab.active .tab-label { color: #111827; }
+.sidebar-tab.active .tab-count { color: inherit; }
 .sidebar-body {
     flex: 1;
     display: flex;
@@ -3907,25 +3928,53 @@
             </button>
             <div class="sidebar-content">
                 <div class="sidebar-tabs">
-                    <button class="sidebar-tab active" data-tab="cctv" title="CCTV">
-                        <i class="material-icons-outlined">videocam</i>
-                        <span class="tab-label">Alert Supervisory</span>
-                        <span class="tab-count" id="cctvTabCount">0</span>
+                    <button type="button" class="sidebar-tab active" data-tab="cctv" title="CCTV">
+                        <span class="tab-avatar tab-avatar-pink">S</span>
+                        <div class="tab-content-inner">
+                            <span class="tab-label">Alert Supervisory</span>
+                            <span class="tab-subtitle"><span class="tab-id">CCTV</span> (<span class="tab-count" id="cctvTabCount">0</span>)</span>
+                            <span class="tab-detail">Supervisory</span>
+                        </div>
+                        <div class="tab-actions">
+                            <i class="material-icons-outlined tab-warning" title="Alert">warning</i>
+                            <i class="material-icons-outlined tab-chevron">expand_more</i>
+                        </div>
                     </button>
-                    <button class="sidebar-tab" data-tab="insiden" title="Insiden">
-                        <i class="material-icons-outlined">report_problem</i>
-                        <span class="tab-label">Alert Unit & Orang</span>
-                        <span class="tab-count" id="insidenTabCount">0</span>
+                    <button type="button" class="sidebar-tab" data-tab="insiden" title="Insiden">
+                        <span class="tab-avatar tab-avatar-blue">U</span>
+                        <div class="tab-content-inner">
+                            <span class="tab-label">Alert Unit & Orang</span>
+                            <span class="tab-subtitle"><span class="tab-id">Insiden</span> (<span class="tab-count" id="insidenTabCount">0</span>)</span>
+                            <span class="tab-detail">Unit & Orang</span>
+                        </div>
+                        <div class="tab-actions">
+                            <i class="material-icons-outlined tab-warning" title="Alert">warning</i>
+                            <i class="material-icons-outlined tab-chevron">expand_more</i>
+                        </div>
                     </button>
-                    <button class="sidebar-tab" data-tab="controlroom" title="Control Room">
-                        <i class="material-icons-outlined">meeting_room</i>
-                        <span class="tab-label">Alert DOP & IKK</span>
-                        <span class="tab-count" id="controlroomTabCount">0</span>
+                    <button type="button" class="sidebar-tab" data-tab="controlroom" title="Control Room">
+                        <span class="tab-avatar tab-avatar-teal">D</span>
+                        <div class="tab-content-inner">
+                            <span class="tab-label">Alert DOP & IKK</span>
+                            <span class="tab-subtitle"><span class="tab-id">Control Room</span> (<span class="tab-count" id="controlroomTabCount">0</span>)</span>
+                            <span class="tab-detail">DOP & IKK</span>
+                        </div>
+                        <div class="tab-actions">
+                            <i class="material-icons-outlined tab-warning" title="Alert">warning</i>
+                            <i class="material-icons-outlined tab-chevron">expand_more</i>
+                        </div>
                     </button>
-                    <button class="sidebar-tab" data-tab="pja" title="PJA">
-                        <i class="material-icons-outlined">description</i>
-                        <span class="tab-label">Alert Probability </span>
-                        <span class="tab-count" id="pjaTabCount">0</span>
+                    <button type="button" class="sidebar-tab" data-tab="pja" title="PJA">
+                        <span class="tab-avatar tab-avatar-orange">P</span>
+                        <div class="tab-content-inner">
+                            <span class="tab-label">Alert Probability</span>
+                            <span class="tab-subtitle"><span class="tab-id">PJA</span> (<span class="tab-count" id="pjaTabCount">0</span>)</span>
+                            <span class="tab-detail">Probability</span>
+                        </div>
+                        <div class="tab-actions">
+                            <i class="material-icons-outlined tab-warning" title="Alert">warning</i>
+                            <i class="material-icons-outlined tab-chevron">expand_more</i>
+                        </div>
                     </button>
                 </div>
                 <div class="sidebar-body">
