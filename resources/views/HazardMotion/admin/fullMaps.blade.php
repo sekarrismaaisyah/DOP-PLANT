@@ -848,7 +848,7 @@
 .map-sidebar {
     position: absolute;
     top: 112px;
-    right: 16px;
+    right: 0;
     width: 380px;
     height: calc(100% - 112px);
     background: #ffffff;
@@ -3938,7 +3938,7 @@
         </div> --}}
         
         <!-- Sidebar Panel (konsep UI dari mapBase) -->
-        <div id="mapSidebar" class="map-sidebar mr-2">
+        <div id="mapSidebar" class="map-sidebar">
             <button id="sidebarToggle" class="sidebar-toggle-btn" type="button">
                 <i class="material-icons-outlined" id="sidebarToggleIcon">chevron_left</i>
             </button>
