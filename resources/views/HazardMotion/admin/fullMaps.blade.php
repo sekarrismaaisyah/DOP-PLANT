@@ -23724,7 +23724,10 @@ source: new ol.source.Vector(),
                 renderSapList(filteredSidebarData.sap); // Alias untuk kompatibilitas
                 break;
             case 'insiden':
-                renderInsidenList(filteredSidebarData.insiden);
+                (function() {
+                    const el = document.getElementById('insidenList');
+                    if (el) el.innerHTML = '';
+                })();
                 break;
             case 'unit':
                 renderUnitList(filteredSidebarData.unit);
@@ -23736,11 +23739,10 @@ source: new ol.source.Vector(),
                 loadIkkForControlroomSidebar();
                 break;
             case 'pja':
-                if (filteredSidebarData.pja.length === 0) {
-                    loadPjaData();
-                } else {
-                    renderPjaList(filteredSidebarData.pja);
-                }
+                (function() {
+                    const el = document.getElementById('pjaList');
+                    if (el) el.innerHTML = '';
+                })();
                 break;
             case 'evaluasi':
                 // Evaluasi content will be rendered by loadEvaluationSummary
