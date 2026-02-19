@@ -847,10 +847,10 @@
 /* Map Sidebar Panel Styles (dari mapBase) */
 .map-sidebar {
     position: absolute;
-    top: 20px;
+    top: 64px;
     right: 0;
     width: 380px;
-    height: calc(100% - 20px);
+    height: calc(100% - 64px);
     background: #ffffff;
     box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
     z-index: 1000;
@@ -913,7 +913,7 @@
     display: flex;
     background: #f8f9fa;
     border-bottom: 1px solid #e5e7eb;
-    padding: 8px;
+    padding: 6px 8px;
     gap: 4px;
     overflow-x: auto;
     overflow-y: hidden;
@@ -921,8 +921,9 @@
     -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8f9fa;
+    flex-shrink: 0;
 }
-.sidebar-tabs::-webkit-scrollbar { height: 6px; }
+.sidebar-tabs::-webkit-scrollbar { height: 5px; }
 .sidebar-tabs::-webkit-scrollbar-track { background: #f8f9fa; }
 .sidebar-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 .sidebar-tabs::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
@@ -932,16 +933,16 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    padding: 12px 16px;
+    padding: 8px 12px;
     background: transparent;
     border: none;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
     position: relative;
-    min-height: 70px;
-    min-width: 80px;
-    max-width: 120px;
+    min-height: 58px;
+    min-width: 72px;
+    max-width: 110px;
 }
 .sidebar-tab:hover { background: #e9ecef; }
 .sidebar-tab.active {
@@ -987,38 +988,41 @@
 .sidebar-search {
     display: flex;
     align-items: center;
-    padding: 12px;
+    padding: 10px 12px;
     background: #ffffff;
     border-bottom: 1px solid #e5e7eb;
     gap: 8px;
+    flex-shrink: 0;
 }
-.sidebar-search .search-icon { color: #9ca3af; font-size: 20px; }
+.sidebar-search .search-icon { color: #9ca3af; font-size: 18px; flex-shrink: 0; }
 .sidebar-search-input {
     flex: 1;
+    min-width: 0;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
-    padding: 8px 12px;
-    font-size: 14px;
+    padding: 8px 10px 8px 10px;
+    font-size: 13px;
     outline: none;
     transition: border-color 0.2s ease;
 }
 .sidebar-search-input:focus { border-color: #3b82f6; }
 .sidebar-filter-btn {
-    background: transparent;
+    background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 6px;
-    padding: 8px;
+    padding: 6px;
     cursor: pointer;
     display: flex;
     align-items: center;
     justify-content: center;
     transition: all 0.2s ease;
+    flex-shrink: 0;
 }
 .sidebar-filter-btn:hover {
     background: #f9fafb;
     border-color: #d1d5db;
 }
-.sidebar-filter-btn i { font-size: 20px; color: #6b7280; }
+.sidebar-filter-btn i { font-size: 18px; color: #6b7280; }
 .sidebar-list-container {
     flex: 1;
     min-height: 0;
@@ -1140,39 +1144,50 @@
     vertical-align: middle;
 }
 
-/* CCTV Alert Styles - selaras mapBase.blade.php */
+/* Sidebar list - clean card layout seperti contoh */
 .sidebar-list {
-    padding: 8px;
+    padding: 10px 12px;
     display: flex;
     flex-direction: column;
-    gap: 0;
+    gap: 8px;
 }
 
 .sidebar-list-item {
     display: flex;
-    align-items: center;
-    padding: 12px;
-    margin-bottom: 8px;
+    align-items: stretch;
+    padding: 0;
+    margin-bottom: 0;
     background: #ffffff;
     border: 1px solid #e5e7eb;
     border-radius: 8px;
     cursor: pointer;
     transition: all 0.2s ease;
+    overflow: hidden;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 .sidebar-list-item:last-child {
     margin-bottom: 0;
 }
 
 .sidebar-list-item:hover {
-    background: #f9fafb;
+    background: #fafbfc;
     border-color: #d1d5db;
-    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .sidebar-list-item.active {
     background: #eff6ff;
     border-color: #3b82f6;
-    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.12);
+}
+
+.sidebar-list-item:not([data-type="cctv"]):not([data-type="autoalert"]) {
+    align-items: center;
+    padding: 12px;
+}
+
+.sidebar-list-item:not([data-type="cctv"]):not([data-type="autoalert"]) .list-item-content {
+    padding: 0;
 }
 
 .sidebar-list-item[data-type="autoalert"] {
@@ -1211,7 +1226,7 @@
     align-items: center;
     justify-content: center;
     font-weight: 600;
-    font-size: 16px;
+    font-size: 15px;
     color: #ffffff;
     margin-right: 12px;
     flex-shrink: 0;
@@ -1220,26 +1235,38 @@
 .list-item-content {
     flex: 1;
     min-width: 0;
+    padding: 12px 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .list-item-title {
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 600;
     color: #111827;
-    margin-bottom: 4px;
+    margin-bottom: 2px;
+    line-height: 1.35;
     word-break: break-word;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
 }
 
 .list-item-subtitle {
-    font-size: 12px;
+    font-size: 11px;
     color: #6b7280;
     word-break: break-word;
+    line-height: 1.4;
 }
 
 .list-item-time {
     font-size: 11px;
     color: #9ca3af;
-    margin-top: 4px;
+    margin-top: 2px;
+    line-height: 1.3;
 }
 
 .list-item-expand-icon {
@@ -1248,19 +1275,29 @@
     transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease, color 0.2s ease;
     flex-shrink: 0;
     font-size: 20px;
-    width: 24px;
-    height: 24px;
+    width: 28px;
+    height: 28px;
     display: flex;
     align-items: center;
     justify-content: center;
     border-radius: 4px;
 }
 
+.cctv-hazard-status-icon {
+    flex-shrink: 0;
+    width: 24px;
+    height: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
 .sidebar-list-item-header {
     display: flex;
     align-items: center;
-    padding: 12px;
+    padding: 12px 12px 12px 12px;
     width: 100%;
+    min-width: 0;
 }
 
 .empty-state {
@@ -1285,13 +1322,13 @@
     overflow: hidden;
     transition: max-height 0.4s cubic-bezier(0.4, 0, 0.2, 1), padding 0.3s ease;
     padding: 0 12px;
-    background: #fafbfc;
+    background: #f8fafc;
     border-top: 1px solid #e5e7eb;
 }
 
 .sidebar-list-item.expanded .cctv-detail-section {
     max-height: 999999px !important;
-    padding: 16px 12px;
+    padding: 12px 14px;
 }
 
 .cctv-detail-loading {
@@ -1324,7 +1361,7 @@
 }
 
 .cctv-detail-group {
-    margin-bottom: 20px;
+    margin-bottom: 14px;
 }
 
 .cctv-detail-group:last-child {
@@ -1332,35 +1369,34 @@
 }
 
 .cctv-detail-group-title {
-    font-size: 13px;
+    font-size: 12px;
     font-weight: 600;
-    color: #111827;
-    margin-bottom: 10px;
+    color: #374151;
+    margin-bottom: 8px;
     display: flex;
     align-items: center;
-    gap: 8px;
-    padding-bottom: 6px;
-    border-bottom: 2px solid #e5e7eb;
+    gap: 6px;
+    padding-bottom: 4px;
+    border-bottom: 1px solid #e5e7eb;
 }
 
 .cctv-detail-group-title i {
-    font-size: 18px;
-    color: #3b82f6;
+    font-size: 16px;
+    color: #4b5563;
 }
 
 .cctv-coverage-item {
     padding: 10px 12px;
     background: #ffffff;
-    border-radius: 6px;
-    margin-bottom: 8px;
-    border-left: 4px solid #3b82f6;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    transition: box-shadow 0.2s ease;
 }
 
 .cctv-coverage-item:hover {
-    transform: translateX(2px);
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
 }
 
 .cctv-coverage-item:last-child {
@@ -1377,24 +1413,76 @@
     gap: 6px;
 }
 
-.cctv-coverage-lokasi::before {
-    content: '📍';
+.cctv-coverage-lokasi .material-icons-outlined,
+.cctv-coverage-lokasi .pin-icon {
     font-size: 14px;
+    color: #dc2626;
+    flex-shrink: 0;
 }
 
 .cctv-coverage-detail {
     font-size: 11px;
     color: #6b7280;
-    margin-left: 20px;
-    line-height: 1.5;
+    margin-left: 0;
+    margin-top: 2px;
+    line-height: 1.45;
+}
+
+.cctv-hazard-stat {
+    padding: 10px 12px;
+    background: #ffffff;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.cctv-hazard-stat:last-child { margin-bottom: 0; }
+
+.cctv-hazard-stat-header {
+    font-size: 12px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.cctv-hazard-stat-count {
+    font-size: 11px;
+    color: #6b7280;
+}
+
+.cctv-pja-item {
+    padding: 10px 12px;
+    background: #ffffff;
+    border-radius: 8px;
+    margin-bottom: 6px;
+    border: 1px solid #e5e7eb;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+}
+
+.cctv-pja-item:last-child { margin-bottom: 0; }
+
+.cctv-pja-name {
+    font-size: 12px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 2px;
+}
+
+.cctv-pja-info {
+    font-size: 11px;
+    color: #6b7280;
+    line-height: 1.45;
 }
 
 .cctv-no-data {
-    padding: 12px;
+    padding: 10px 12px;
     text-align: center;
     color: #9ca3af;
-    font-size: 12px;
+    font-size: 11px;
     font-style: italic;
+    background: #f9fafb;
+    border-radius: 6px;
 }
 
 /* layers button in sidebar */
@@ -22166,7 +22254,7 @@ source: new ol.source.Vector(),
             coverages.forEach(coverage => {
                 html += `
                     <div class="cctv-coverage-item">
-                        <div class="cctv-coverage-lokasi">${escapeHtml(coverage.coverage_lokasi || '-')}</div>
+                        <div class="cctv-coverage-lokasi"><i class="material-icons-outlined">location_on</i>${escapeHtml(coverage.coverage_lokasi || '-')}</div>
                         <div class="cctv-coverage-detail">${escapeHtml(coverage.coverage_detail_lokasi || '-')}</div>
                     </div>
                 `;
