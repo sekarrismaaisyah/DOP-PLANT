@@ -927,7 +927,7 @@
 .sidebar-tabs::-webkit-scrollbar-track { background: #f8f9fa; }
 .sidebar-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 .sidebar-tabs::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
-.sidebar-tab {
+/* .sidebar-tab {
     flex: 0 0 auto;
     display: flex;
     flex-direction: column;
@@ -943,6 +943,24 @@
     min-height: 58px;
     min-width: 72px;
     max-width: 110px;
+} */
+
+.sidebar-tab {
+  flex: 0 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px 20px;        /* naikkan padding (sebelumnya 8px 12px) */
+  background: transparent;
+  border: none;
+  border-radius: 12px;       /* opsional, sesuaikan radius */
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  min-height: 90px;          /* naikkan min-height (sebelumnya 58px) */
+  min-width: 100px;          /* naikkan min-width (sebelumnya 72px) */
+  max-width: 140px;          /* naikkan max-width (sebelumnya 110px) */
 }
 .sidebar-tab:hover { background: #e9ecef; }
 .sidebar-tab.active {
