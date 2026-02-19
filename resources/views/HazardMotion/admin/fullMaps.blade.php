@@ -2968,7 +2968,7 @@
                     <i class="material-icons-outlined">directions_bus</i>
                     <span>Gps Unit</span>
                 </a>
-                <a href="#" class="gm-category-item">
+                <a href="#" class="gm-category-item" id="gmCategoryInsiden" title="Insiden (default: tidak tampil, klik untuk tampilkan)">
                     <i class="material-icons-outlined">local_pharmacy</i>
                     <span>Insiden</span>
                 </a>
@@ -4883,7 +4883,7 @@
         cctv: false,    // CCTV default tidak tampil di map
         hazard: false,  // SAP default hidden
         gr: true,
-        insiden: true,
+        insiden: false, // Insiden default hidden di map
         unit: false,    // Unit default hidden
         gps: false      // GPS Orang default hidden
     };
@@ -6848,9 +6848,10 @@
     });
     map.addLayer(cctvToHazardLinesLayer);
 
-    // Create vector layer for insiden with pulsating circle animation
+    // Create vector layer for insiden with pulsating circle animation (default: hidden)
     insidenLayer = new ol.layer.Vector({
         source: new ol.source.Vector(),
+        visible: false,
         style: function(feature) {
             // Check site filter
             if (currentSiteFilter) {
