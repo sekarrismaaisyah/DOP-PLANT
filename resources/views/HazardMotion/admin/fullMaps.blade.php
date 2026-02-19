@@ -911,20 +911,21 @@
 }
 .sidebar-tabs {
     display: flex;
-    flex-direction: column;
+    flex-direction: row;
+    flex-wrap: nowrap;
     background: #f8f9fa;
     border-bottom: 1px solid #e5e7eb;
     padding: 8px;
     gap: 8px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
     scrollbar-width: thin;
     scrollbar-color: #cbd5e1 #f8f9fa;
     flex-shrink: 0;
-    max-height: 280px;
 }
-.sidebar-tabs::-webkit-scrollbar { width: 5px; }
+.sidebar-tabs::-webkit-scrollbar { height: 5px; }
 .sidebar-tabs::-webkit-scrollbar-track { background: #f8f9fa; }
 .sidebar-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
 .sidebar-tabs::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
@@ -942,8 +943,9 @@
     transition: all 0.2s ease;
     position: relative;
     min-height: 64px;
+    min-width: 220px;
+    max-width: 260px;
     text-align: left;
-    width: 100%;
     box-sizing: border-box;
 }
 .sidebar-tab:hover {
