@@ -1274,6 +1274,40 @@
     line-height: 1.3;
 }
 
+/* CCTV list: nama di atas, detail lokasi di bawah (layout vertikal) */
+.list-item-content-cctv {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    justify-content: center !important;
+    gap: 4px;
+}
+.list-item-content-cctv .list-item-title {
+    display: block;
+    width: 100%;
+    margin-bottom: 0;
+}
+.list-item-content-cctv .list-item-meta {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 2px;
+    width: 100%;
+}
+.list-item-content-cctv .list-item-subtitle {
+    display: block;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.4;
+}
+.list-item-detail-lokasi {
+    display: block;
+    font-size: 11px;
+    color: #9ca3af;
+    line-height: 1.35;
+    margin-top: 0;
+}
+
 .list-item-expand-icon {
     margin-left: auto;
     color: #6b7280;
@@ -22134,9 +22168,9 @@ source: new ol.source.Vector(),
             const fullId = cctv.id || '';
             const firstLetter = getFirstLetter(name);
             const avatarColor = getAvatarColor(firstLetter);
-            
-            // Gunakan kategori_area_tercapture dari database
-            const kategoriArea = cctv.kategori_area_tercapture || '';
+            // Detail lokasi: prioritas coverage_detail_lokasi, lalu kategori_area_tercapture
+            const detailLokasi = cctv.coverage_detail_lokasi || cctv.kategori_area_tercapture || '';
+            const idDisplay = id ? `${id}${fullId ? ` (${fullId})` : ''}` : (fullId ? `ID: ${fullId}` : `#${index + 1}`);
             
             return `
                 <div class="sidebar-list-item" data-type="cctv" data-id="${cctv.id}" data-index="${index}" data-hazard-status="loading">
@@ -22144,10 +22178,12 @@ source: new ol.source.Vector(),
                         <div class="list-item-avatar" style="background-color: ${avatarColor};">
                             ${firstLetter}
                         </div>
-                        <div class="list-item-content">
+                        <div class="list-item-content list-item-content-cctv">
                             <div class="list-item-title">${name}</div>
-                            <div class="list-item-subtitle">${id ? `${id}${fullId ? ` (${fullId})` : ''}` : `ID: ${fullId || index + 1}`}</div>
-                            ${kategoriArea ? `<div class="list-item-time">${kategoriArea}</div>` : ''}
+                            <div class="list-item-meta">
+                                ${idDisplay ? `<span class="list-item-subtitle">${idDisplay}</span>` : ''}
+                                ${detailLokasi ? `<span class="list-item-detail-lokasi">${escapeHtml(detailLokasi)}</span>` : ''}
+                            </div>
                         </div>
                         <div class="cctv-hazard-status-icon loading" title="Memeriksa status hazard inspeksi...">
                             <i class="material-icons-outlined" style="font-size: 14px;">hourglass_empty</i>
