@@ -844,6 +844,309 @@
 .gm-get-app-btn:hover{ background:#e8eaed; }
 .gm-get-app-btn i{ color:#5f6368; }
 
+/* Map Sidebar Panel Styles (dari mapBase) */
+.map-sidebar {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 380px;
+    height: 100%;
+    background: #ffffff;
+    box-shadow: -2px 0 8px rgba(0, 0, 0, 0.1);
+    z-index: 1000;
+    display: flex;
+    transition: transform 0.3s ease;
+    transform: translateX(0);
+}
+.map-sidebar.collapsed {
+    transform: translateX(calc(100% - 50px));
+}
+.sidebar-toggle-btn {
+    position: absolute;
+    left: -40px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 60px;
+    background: #ffffff;
+    border: 1px solid #e5e7eb;
+    border-right: none;
+    border-radius: 8px 0 0 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    z-index: 1001;
+    box-shadow: -2px 0 4px rgba(0, 0, 0, 0.05);
+}
+.sidebar-toggle-btn:hover {
+    background: #f9fafb;
+    box-shadow: -2px 0 6px rgba(0, 0, 0, 0.1);
+}
+.sidebar-toggle-btn i {
+    font-size: 24px;
+    color: #6b7280;
+    transition: transform 0.3s ease;
+}
+.map-sidebar.collapsed .sidebar-toggle-btn i {
+    transform: rotate(180deg);
+}
+.sidebar-content {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sidebar-tabs {
+    display: flex;
+    background: #f8f9fa;
+    border-bottom: 1px solid #e5e7eb;
+    padding: 8px;
+    gap: 4px;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f8f9fa;
+}
+.sidebar-tabs::-webkit-scrollbar { height: 6px; }
+.sidebar-tabs::-webkit-scrollbar-track { background: #f8f9fa; }
+.sidebar-tabs::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 3px; }
+.sidebar-tabs::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+.sidebar-tab {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    position: relative;
+    min-height: 70px;
+    min-width: 80px;
+    max-width: 120px;
+}
+.sidebar-tab:hover { background: #e9ecef; }
+.sidebar-tab.active {
+    background: #ffffff;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+.sidebar-tab i {
+    font-size: 24px;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+.sidebar-tab.active i { color: #3b82f6; }
+.sidebar-tab .tab-label {
+    font-size: 12px;
+    font-weight: 500;
+    color: #6b7280;
+    margin-bottom: 4px;
+}
+.sidebar-tab.active .tab-label {
+    color: #111827;
+    font-weight: 600;
+}
+.sidebar-tab .tab-count {
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    background: #e5e7eb;
+    padding: 2px 6px;
+    border-radius: 10px;
+    min-width: 24px;
+    text-align: center;
+}
+.sidebar-tab.active .tab-count {
+    background: #3b82f6;
+    color: #ffffff;
+}
+.sidebar-body {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+.sidebar-search {
+    display: flex;
+    align-items: center;
+    padding: 12px;
+    background: #ffffff;
+    border-bottom: 1px solid #e5e7eb;
+    gap: 8px;
+}
+.sidebar-search .search-icon { color: #9ca3af; font-size: 20px; }
+.sidebar-search-input {
+    flex: 1;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 8px 12px;
+    font-size: 14px;
+    outline: none;
+    transition: border-color 0.2s ease;
+}
+.sidebar-search-input:focus { border-color: #3b82f6; }
+.sidebar-filter-btn {
+    background: transparent;
+    border: 1px solid #e5e7eb;
+    border-radius: 6px;
+    padding: 8px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s ease;
+}
+.sidebar-filter-btn:hover {
+    background: #f9fafb;
+    border-color: #d1d5db;
+}
+.sidebar-filter-btn i { font-size: 20px; color: #6b7280; }
+.sidebar-list-container {
+    flex: 1;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+.tab-content {
+    display: none;
+    height: 100%;
+}
+.tab-content.active {
+    display: block;
+}
+/* Map sidebar collapsed state */
+.map-sidebar.collapsed { width: 50px; }
+.map-sidebar.collapsed .sidebar-content { width: 50px; }
+.map-sidebar.collapsed .sidebar-tabs {
+    flex-direction: column;
+    padding: 8px 4px;
+    gap: 4px;
+    overflow-x: hidden;
+    overflow-y: auto;
+}
+.map-sidebar.collapsed .sidebar-tab {
+    min-height: 50px;
+    padding: 8px 4px;
+    width: 100%;
+    min-width: auto;
+    max-width: none;
+}
+.map-sidebar.collapsed .sidebar-tab .tab-label,
+.map-sidebar.collapsed .sidebar-tab .tab-count { display: none; }
+.map-sidebar.collapsed .sidebar-tab i { margin-bottom: 0; }
+.map-sidebar.collapsed .sidebar-body { display: none; }
+.map-sidebar.collapsed .sidebar-toggle-btn { left: -40px; }
+/* Map selection (Evaluasi tab) */
+.map-selection-container { padding: 16px; }
+.map-selection-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #111827;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+.map-selection-title i { font-size: 20px; color: #3b82f6; }
+.map-selection-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 16px;
+}
+.map-selection-item {
+    position: relative;
+    cursor: pointer;
+    border-radius: 8px;
+    overflow: hidden;
+    transition: all 0.2s ease;
+    border: 2px solid #e5e7eb;
+    background: #ffffff;
+}
+.map-selection-item:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+    transform: translateY(-2px);
+}
+.map-selection-item.selected {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 12px rgba(59, 130, 246, 0.25);
+    background: #eff6ff;
+}
+.map-thumbnail {
+    width: 100%;
+    height: 100px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.map-thumbnail.map-1 { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+.map-thumbnail.map-2 { background: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%); }
+.map-thumbnail.map-3 { background: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%); }
+.map-thumbnail.map-4 { background: linear-gradient(135deg, #fa709a 0%, #fee140 100%); }
+.map-thumbnail.map-5 { background: linear-gradient(135deg, #30cfd0 0%, #330867 100%); }
+.map-thumbnail.map-6 { background: linear-gradient(135deg, #a8edea 0%, #fed6e3 100%); }
+.map-thumbnail-pattern {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    opacity: 0.3;
+    background-image:
+        repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px),
+        repeating-linear-gradient(-45deg, transparent, transparent 10px, rgba(255,255,255,0.1) 10px, rgba(255,255,255,0.1) 20px);
+}
+.map-thumbnail-icon {
+    position: relative;
+    z-index: 1;
+    font-size: 32px;
+    color: rgba(255, 255, 255, 0.9);
+}
+.map-selection-label {
+    padding: 10px 12px;
+    text-align: center;
+    font-size: 13px;
+    font-weight: 500;
+    color: #374151;
+    background: #ffffff;
+    border-top: 1px solid #e5e7eb;
+}
+.map-selection-item.selected .map-selection-label {
+    color: #3b82f6;
+    font-weight: 600;
+    background: #eff6ff;
+}
+.map-selection-description {
+    font-size: 11px;
+    color: #6b7280;
+    margin-top: 4px;
+    line-height: 1.4;
+}
+.map-selection-info {
+    padding: 12px;
+    background: #f8f9fa;
+    border-radius: 8px;
+    margin-top: 16px;
+    font-size: 12px;
+    color: #6b7280;
+    line-height: 1.6;
+}
+.map-selection-info i {
+    font-size: 16px;
+    color: #3b82f6;
+    margin-right: 6px;
+    vertical-align: middle;
+}
+
 /* CCTV Alert Styles - Mirip dengan mapBase.blade.php */
 .sidebar-list {
     padding: 8px;
@@ -3440,78 +3743,151 @@
             </button>
         </div> --}}
         
-        <!-- Sidebar Panel - Right Side -->
-        {{-- <div id="mapSidebar" class="map-sidebar" data-tg-tour="<strong>Sidebar Panel</strong><br><br>Panel sidebar menampilkan daftar data berdasarkan tab yang dipilih. Gunakan icon toolbar di kiri untuk beralih antara CCTV, SAP, Insiden, Unit, GPS Orang, Control Room, PJA, dan Evaluasi. Gunakan search untuk mencari data spesifik."> --}}
-            <!-- Toggle Button -->
-         
-            
-            <!-- Sidebar Content -->
-            {{-- <div class="sidebar-content">
-                            
-                            <!-- Tab Content -->
-                            <div class="sidebar-body">
-                                <!-- Search Bar -->
-                                <div class="sidebar-search" data-tg-tour="<strong>Search & Filter</strong><br><br>Gunakan search bar untuk mencari data spesifik di tab yang aktif. Klik tombol filter untuk opsi filter tambahan.">
-                                    <i class="material-icons-outlined search-icon">search</i>
-                                    <input type="text" id="sidebarSearchInput" class="sidebar-search-input" placeholder="Cari...">
-                                    <button type="button" class="sidebar-filter-btn" id="sidebarFilterBtn" title="Filter">
-                                        <i class="material-icons-outlined">tune</i>
-                                    </button>
-                                </div>
-                                
-                                <!-- List Container -->
-                                <div class="sidebar-list-container">
-                                    <!-- CCTV Tab Content -->
-                                    <div class="tab-content active" id="tabContentCctv">
-                                        <div class="sidebar-list" id="cctvList"></div>
-                                    </div>
-                                    
-                                    <!-- SAP Tab Content -->
-                                    <div class="tab-content" id="tabContentSap">
-                                        <!-- Week Filter -->
-                                        <div class="sidebar-week-filter" style="padding: 12px; border-bottom: 1px solid #e5e7eb; background: #f8f9fa;">
-                                            <label style="font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 8px; display: block;">Filter Week (Senin-Senin)</label>
-                                            <input type="week" id="sapWeekFilter" class="form-control form-control-sm" style="font-size: 12px;">
-                                            <div style="margin-top: 8px; font-size: 11px; color: #9ca3af;">
-                                                <span id="sapWeekRange">Week: -</span>
-                                            </div>
-                                        </div>
-                                        <div class="sidebar-list" id="sapList"></div>
-                                    </div>
-                                    
-                                    <!-- Insiden Tab Content -->
-                                    <div class="tab-content" id="tabContentInsiden">
-                                        <div class="sidebar-list" id="insidenList"></div>
-                                    </div>
-                                    
-                                    <!-- Unit Tab Content -->
-                                    <div class="tab-content" id="tabContentUnit">
-                                        <div class="sidebar-list" id="unitList"></div>
-                                    </div>
-                                    
-                                    <!-- Control Room Tab Content -->
-                                    <div class="tab-content" id="tabContentControlroom">
-                                        <div class="sidebar-list" id="controlroomList"></div>
-                                    </div>
-                                    
-                                    <!-- PJA Tab Content -->
-                                    <div class="tab-content" id="tabContentPja">
-                                        <div class="sidebar-list" id="pjaList"></div>
-                                    </div>
-                                    
-                                    <!-- Evaluasi Tab Content -->
-                                    <div class="tab-content" id="tabContentEvaluasi">
-                                        <div id="evaluasiContent" style="padding: 16px;">
-                                            <div style="text-align: center; color: #6b7280; padding: 40px 20px;">
-                                                <i class="material-icons-outlined" style="font-size: 48px; margin-bottom: 12px; opacity: 0.5;">assessment</i>
-                                                <p style="margin: 0; font-size: 14px;">Klik area kerja atau area CCTV di peta untuk melihat summary evaluasi</p>
-                                            </div>
-                                        </div>
-                                    </div>
+        <!-- Sidebar Panel (konsep UI dari mapBase) -->
+        <div id="mapSidebar" class="map-sidebar">
+            <button id="sidebarToggle" class="sidebar-toggle-btn" type="button">
+                <i class="material-icons-outlined" id="sidebarToggleIcon">chevron_left</i>
+            </button>
+            <div class="sidebar-content">
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="cctv" title="CCTV">
+                        <i class="material-icons-outlined">videocam</i>
+                        <span class="tab-label">CCTV</span>
+                        <span class="tab-count" id="cctvTabCount">0</span>
+                    </button>
+                    <button class="sidebar-tab" data-tab="insiden" title="Insiden">
+                        <i class="material-icons-outlined">report_problem</i>
+                        <span class="tab-label">Insiden</span>
+                        <span class="tab-count" id="insidenTabCount">0</span>
+                    </button>
+                    <button class="sidebar-tab" data-tab="controlroom" title="Control Room">
+                        <i class="material-icons-outlined">meeting_room</i>
+                        <span class="tab-label">Control Room</span>
+                        <span class="tab-count" id="controlroomTabCount">0</span>
+                    </button>
+                    <button class="sidebar-tab" data-tab="pja" title="PJA">
+                        <i class="material-icons-outlined">description</i>
+                        <span class="tab-label">PJA</span>
+                        <span class="tab-count" id="pjaTabCount">0</span>
+                    </button>
+                    <button class="sidebar-tab" data-tab="areakerja" title="Area Kerja">
+                        <i class="material-icons-outlined">location_on</i>
+                        <span class="tab-label">Area Kerja</span>
+                        <span class="tab-count" id="areakerjaTabCount">0</span>
+                    </button>
+                    <button class="sidebar-tab" data-tab="autoalert" title="Auto Alert">
+                        <i class="material-icons-outlined">notifications_active</i>
+                        <span class="tab-label">Auto Alert</span>
+                        <span class="tab-count" id="autoalertTabCount">0</span>
+                    </button>
+                    <button class="sidebar-tab" data-tab="evaluasi" title="Evaluasi">
+                        <i class="material-icons-outlined">assessment</i>
+                        <span class="tab-label">Evaluasi</span>
+                    </button>
+                </div>
+                <div class="sidebar-body">
+                    <div class="sidebar-search">
+                        <i class="material-icons-outlined search-icon">search</i>
+                        <input type="text" id="sidebarSearchInput" class="sidebar-search-input" placeholder="Cari...">
+                        <button type="button" class="sidebar-filter-btn" id="sidebarFilterBtn" title="Filter">
+                            <i class="material-icons-outlined">tune</i>
+                        </button>
+                    </div>
+                    <div class="sidebar-list-container">
+                        <div class="tab-content active" id="tabContentCctv">
+                            <div class="sidebar-list" id="cctvList"></div>
+                        </div>
+                        <div class="tab-content" id="tabContentSap">
+                            <div class="sidebar-week-filter" style="padding: 12px; border-bottom: 1px solid #e5e7eb; background: #f8f9fa;">
+                                <label style="font-size: 12px; font-weight: 600; color: #6b7280; margin-bottom: 8px; display: block;">Filter Week (Senin-Senin)</label>
+                                <input type="week" id="sapWeekFilter" class="form-control form-control-sm" style="font-size: 12px;">
+                                <div style="margin-top: 8px; font-size: 11px; color: #9ca3af;">
+                                    <span id="sapWeekRange">Week: -</span>
                                 </div>
                             </div>
-            </div> --}}
-                    {{-- </div> --}}
+                            <div class="sidebar-list" id="sapList"></div>
+                        </div>
+                        <div class="tab-content" id="tabContentInsiden">
+                            <div class="sidebar-list" id="insidenList"></div>
+                        </div>
+                        <div class="tab-content" id="tabContentUnit">
+                            <div class="sidebar-list" id="unitList"></div>
+                        </div>
+                        <div class="tab-content" id="tabContentGps">
+                            <div class="sidebar-list" id="gpsList"></div>
+                        </div>
+                        <div class="tab-content" id="tabContentControlroom">
+                            <div class="sidebar-list" id="controlroomList"></div>
+                        </div>
+                        <div class="tab-content" id="tabContentPja">
+                            <div class="sidebar-list" id="pjaList"></div>
+                        </div>
+                        <div class="tab-content" id="tabContentAreakerja">
+                            <div class="sidebar-list" id="areakerjaList"></div>
+                        </div>
+                        <div class="tab-content" id="tabContentAutoalert">
+                            <div class="sidebar-list" id="autoalertList"></div>
+                        </div>
+                        <div class="tab-content" id="tabContentEvaluasi">
+                            <div id="evaluasiContent" class="map-selection-container">
+                                <div class="map-selection-title">
+                                    <i class="material-icons-outlined">map</i>
+                                    <span>Pilihan Map Evaluasi</span>
+                                </div>
+                                <div class="map-selection-grid">
+                                    <div class="map-selection-item" data-map="1" data-matrix='{"cctv": {"nyala": true}, "sap": {"exists": true}}'>
+                                        <div class="map-thumbnail map-1">
+                                            <div class="map-thumbnail-pattern"></div>
+                                            <i class="material-icons-outlined map-thumbnail-icon">videocam</i>
+                                        </div>
+                                        <div class="map-selection-label">Map 1<div class="map-selection-description">Smart Alert CCTV</div></div>
+                                    </div>
+                                    <div class="map-selection-item" data-map="2" data-matrix='{"cctv": {"nyala": true}, "sap": {"exists": false}}'>
+                                        <div class="map-thumbnail map-2">
+                                            <div class="map-thumbnail-pattern"></div>
+                                            <i class="material-icons-outlined map-thumbnail-icon">videocam_off</i>
+                                        </div>
+                                        <div class="map-selection-label">Map 2<div class="map-selection-description">CCTV Nyala (No SAP)</div></div>
+                                    </div>
+                                    <div class="map-selection-item" data-map="3" data-matrix='{"cctv": {"nyala": false}, "sap": {"exists": true}}'>
+                                        <div class="map-thumbnail map-3">
+                                            <div class="map-thumbnail-pattern"></div>
+                                            <i class="material-icons-outlined map-thumbnail-icon">assignment</i>
+                                        </div>
+                                        <div class="map-selection-label">Map 3<div class="map-selection-description">SAP (CCTV Mati)</div></div>
+                                    </div>
+                                    <div class="map-selection-item" data-map="4" data-matrix='{"cctv": {"nyala": false}, "sap": {"exists": false}}'>
+                                        <div class="map-thumbnail map-4">
+                                            <div class="map-thumbnail-pattern"></div>
+                                            <i class="material-icons-outlined map-thumbnail-icon">report_problem</i>
+                                        </div>
+                                        <div class="map-selection-label">Map 4<div class="map-selection-description">CCTV Mati + No SAP</div></div>
+                                    </div>
+                                    <div class="map-selection-item" data-map="5" data-matrix='{"cctv": {"nyala": true}, "sap": {"exists": true}, "insiden": {"exists": true}}'>
+                                        <div class="map-thumbnail map-5">
+                                            <div class="map-thumbnail-pattern"></div>
+                                            <i class="material-icons-outlined map-thumbnail-icon">warning</i>
+                                        </div>
+                                        <div class="map-selection-label">Map 5<div class="map-selection-description">CCTV + SAP + Insiden</div></div>
+                                    </div>
+                                    <div class="map-selection-item" data-map="6" data-matrix='{"all": true}'>
+                                        <div class="map-thumbnail map-6">
+                                            <div class="map-thumbnail-pattern"></div>
+                                            <i class="material-icons-outlined map-thumbnail-icon">dashboard</i>
+                                        </div>
+                                        <div class="map-selection-label">Map 6<div class="map-selection-description">Semua Data</div></div>
+                                    </div>
+                                </div>
+                                <div class="map-selection-info">
+                                    <i class="material-icons-outlined">info</i>
+                                    <strong>Info:</strong> Pilih map evaluasi untuk melihat data berdasarkan matrix yang ditentukan. Klik area kerja atau area CCTV di peta untuk melihat summary evaluasi.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
     </div>
 </div>
 </div>
