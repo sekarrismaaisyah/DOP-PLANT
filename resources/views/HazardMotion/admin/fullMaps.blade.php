@@ -3937,10 +3937,6 @@
                             <span class="tab-subtitle"><span class="tab-id">CCTV</span> (<span class="tab-count" id="cctvTabCount">0</span>)</span>
                             <span class="tab-detail">Supervisory</span>
                         </div>
-                        <div class="tab-actions">
-                            <i class="material-icons-outlined tab-warning" title="Alert">warning</i>
-                            <i class="material-icons-outlined tab-chevron">expand_more</i>
-                        </div>
                     </button>
                     <button type="button" class="sidebar-tab" data-tab="insiden" title="Insiden">
                         <span class="tab-avatar tab-avatar-blue">U</span>
@@ -3948,10 +3944,6 @@
                             <span class="tab-label">Alert Unit & Orang</span>
                             <span class="tab-subtitle"><span class="tab-id">Insiden</span> (<span class="tab-count" id="insidenTabCount">0</span>)</span>
                             <span class="tab-detail">Unit & Orang</span>
-                        </div>
-                        <div class="tab-actions">
-                            <i class="material-icons-outlined tab-warning" title="Alert">warning</i>
-                            <i class="material-icons-outlined tab-chevron">expand_more</i>
                         </div>
                     </button>
                     <button type="button" class="sidebar-tab" data-tab="controlroom" title="Control Room">
@@ -3961,10 +3953,6 @@
                             <span class="tab-subtitle"><span class="tab-id">Control Room</span> (<span class="tab-count" id="controlroomTabCount">0</span>)</span>
                             <span class="tab-detail">DOP & IKK</span>
                         </div>
-                        <div class="tab-actions">
-                            <i class="material-icons-outlined tab-warning" title="Alert">warning</i>
-                            <i class="material-icons-outlined tab-chevron">expand_more</i>
-                        </div>
                     </button>
                     <button type="button" class="sidebar-tab" data-tab="pja" title="PJA">
                         <span class="tab-avatar tab-avatar-orange">P</span>
@@ -3972,10 +3960,6 @@
                             <span class="tab-label">Alert Probability</span>
                             <span class="tab-subtitle"><span class="tab-id">PJA</span> (<span class="tab-count" id="pjaTabCount">0</span>)</span>
                             <span class="tab-detail">Probability</span>
-                        </div>
-                        <div class="tab-actions">
-                            <i class="material-icons-outlined tab-warning" title="Alert">warning</i>
-                            <i class="material-icons-outlined tab-chevron">expand_more</i>
                         </div>
                     </button>
                 </div>
