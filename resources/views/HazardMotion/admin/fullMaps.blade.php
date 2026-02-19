@@ -1315,6 +1315,17 @@
     margin-bottom: 4px;
     font-size: 11px;
 }
+.sidebar-list-item[data-type="supervisory"] .supervisory-btn-intervensi {
+    flex-shrink: 0;
+    padding: 4px 8px;
+    font-size: 11px;
+    white-space: nowrap;
+    margin-right: 4px;
+}
+.sidebar-list-item[data-type="supervisory"] .supervisory-btn-intervensi i {
+    font-size: 14px !important;
+    vertical-align: middle;
+}
 
 .sidebar-list-item[data-type="autoalert"] {
     flex-direction: column;
@@ -14324,6 +14335,35 @@ source: new ol.source.Vector(),
             });
     }
     
+    // Fit map to area kerja boundary by nama_lokasi / id_lokasi (untuk sidebar supervisory)
+    function fitMapToLokasiBoundary(namaLokasi, idLokasi) {
+        if (!namaLokasi && !idLokasi) return;
+        let areaKerjaFeature = null;
+        if (areaKerjaBmo2PamaLayer) {
+            const features = areaKerjaBmo2PamaLayer.getSource().getFeatures();
+            areaKerjaFeature = features.find(f => {
+                const p = f.getProperties();
+                return (idLokasi && (p.id_lokasi == idLokasi || p.fid == idLokasi)) ||
+                    (namaLokasi && (p.lokasi === namaLokasi || (p.nama_lokasi && p.nama_lokasi === namaLokasi) || (p.lokasi && namaLokasi.indexOf(p.lokasi) !== -1) || (p.lokasi && p.lokasi.indexOf(namaLokasi) !== -1)));
+            });
+        }
+        if (!areaKerjaFeature && window.areaKerjaLayers && window.areaKerjaLayers.length > 0) {
+            for (const layer of window.areaKerjaLayers) {
+                if (layer && layer.getSource()) {
+                    const features = layer.getSource().getFeatures();
+                    areaKerjaFeature = features.find(f => {
+                        const p = f.getProperties();
+                        return (idLokasi && (p.id_lokasi == idLokasi || p.fid == idLokasi)) ||
+                            (namaLokasi && (p.lokasi === namaLokasi || (p.nama_lokasi && p.nama_lokasi === namaLokasi)));
+                    });
+                    if (areaKerjaFeature) break;
+                }
+            }
+        }
+        if (!areaKerjaFeature || !map) return;
+        highlightAreaKerjaForSap(areaKerjaFeature);
+    }
+
     // Function to highlight area kerja for SAP
     function highlightAreaKerjaForSap(areaKerjaFeature) {
         // Remove existing highlight
@@ -23318,6 +23358,9 @@ source: new ol.source.Vector(),
                                 <span class="list-item-subtitle">${escapeHtml(tanggalStr)} · ${escapeHtml(riskBadge)}</span>
                             </div>
                         </div>
+                        <button type="button" class="btn btn-sm btn-outline-primary supervisory-btn-intervensi" title="Intervensi" data-id="${row.id}">
+                            <i class="material-icons-outlined" style="font-size:16px;">send</i> Intervensi
+                        </button>
                         <i class="material-icons-outlined list-item-expand-icon">expand_more</i>
                     </div>
                     <div class="supervisory-detail-section">
@@ -23328,7 +23371,12 @@ source: new ol.source.Vector(),
         }).join('');
         container.querySelectorAll('.sidebar-list-item[data-type="supervisory"]').forEach(item => {
             item.addEventListener('click', function(e) {
+                if (e.target.closest('.supervisory-btn-intervensi')) return;
                 if (e.target.classList.contains('list-item-expand-icon')) e.stopPropagation();
+                const record = supervisoryAlertLogDataById[this.dataset.id] || {};
+                if (typeof fitMapToLokasiBoundary === 'function') {
+                    fitMapToLokasiBoundary(record.nama_lokasi || '', record.id_lokasi || '');
+                }
                 const isExpanded = this.classList.contains('expanded');
                 if (isExpanded) {
                     this.classList.remove('expanded');
@@ -23337,12 +23385,22 @@ source: new ol.source.Vector(),
                     const detailSection = this.querySelector('.supervisory-detail-section');
                     const placeholder = detailSection.querySelector('.supervisory-detail-placeholder');
                     if (placeholder) {
-                        const record = supervisoryAlertLogDataById[this.dataset.id] || {};
                         detailSection.innerHTML = buildSupervisoryDetailHtml(record);
                     }
                 }
                 document.querySelectorAll('.sidebar-list-item').forEach(i => { if (i !== this) i.classList.remove('active'); });
                 this.classList.add('active');
+            });
+        });
+        container.querySelectorAll('.supervisory-btn-intervensi').forEach(btn => {
+            btn.addEventListener('click', function(e) {
+                e.preventDefault();
+                e.stopPropagation();
+                const record = supervisoryAlertLogDataById[this.dataset.id] || {};
+                const lokasi = record.nama_lokasi || '';
+                if (lokasi && typeof openIntervensiFromDailyPlan === 'function') {
+                    openIntervensiFromDailyPlan(lokasi, lokasi);
+                }
             });
         });
     }

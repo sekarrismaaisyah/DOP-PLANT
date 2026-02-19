@@ -2273,7 +2273,17 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 $query->whereDate('tanggal', $tanggal);
             }
 
-            $rows = $query->take($limit)->get();
+            // Hanya tampilkan yang belum ada SAP (atau SAP kosong) dan CCTV 0/tidak ada
+            $query->where('has_sap_report', false);
+
+            $rows = $query->take($limit * 2)->get(); // fetch more then filter
+            $rows = $rows->filter(function ($row) {
+                $noSap = ! $row->has_sap_report;
+                $cctvList = $row->cctv_list ?? [];
+                $cctvEmpty = ! is_array($cctvList) || count($cctvList) === 0;
+                $noOnlineCctv = ! $row->has_online_cctv;
+                return $noSap && ($cctvEmpty || $noOnlineCctv);
+            })->take($limit)->values();
 
             $data = $rows->map(function ($row) {
                 return [
