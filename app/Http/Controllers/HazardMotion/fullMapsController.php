@@ -2265,25 +2265,16 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     {
         try {
             $limit = min(max((int) $request->get('limit', 100), 1), 500);
-            // Default: tanggal hari ini (server). Request boleh kirim ?tanggal=Y-m-d untuk override.
-            $tanggal = $request->get('tanggal') ?? now()->format('Y-m-d');
+            // Default: tanggal hari ini menurut timezone Asia/Makassar. Request boleh kirim ?tanggal=Y-m-d untuk override.
+            $tanggal = $request->get('tanggal') ?? now('Asia/Makassar')->format('Y-m-d');
 
             $query = SupervisoryAlertLog::query()
                 ->whereDate('tanggal', $tanggal)
                 ->orderBy('tanggal', 'desc')
-                ->orderBy('updated_at', 'desc');
+                ->orderBy('updated_at', 'desc')
+                ->limit($limit);
 
-            // Hanya tampilkan yang belum ada SAP (atau SAP kosong) dan CCTV 0/tidak ada
-            $query->where('has_sap_report', false);
-
-            $rows = $query->take($limit * 2)->get(); // fetch more then filter
-            $rows = $rows->filter(function ($row) {
-                $noSap = ! $row->has_sap_report;
-                $cctvList = $row->cctv_list ?? [];
-                $cctvEmpty = ! is_array($cctvList) || count($cctvList) === 0;
-                $noOnlineCctv = ! $row->has_online_cctv;
-                return $noSap && ($cctvEmpty || $noOnlineCctv);
-            })->take($limit)->values();
+            $rows = $query->get();
 
             $data = $rows->map(function ($row) {
                 return [
