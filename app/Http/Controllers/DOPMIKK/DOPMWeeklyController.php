@@ -54,15 +54,13 @@ class DOPMWeeklyController extends Controller
             }
         };
 
-        // Daftar site untuk dropdown (tanggal terpilih, bukan Cancel)
-        $siteList = Dopm::where($scopeDate)
+        // Daftar site untuk dropdown (tanggal terpilih, bukan Cancel) — query distinct saja, tidak load semua baris
+        $siteListRaw = Dopm::where($scopeDate)
             ->where($scopeNotCancel)
-            ->get()
-            ->map(fn ($d) => trim($d->site_ijin_kerja_khusus ?? '') ?: 'Lainnya')
-            ->unique()
-            ->sort()
-            ->values()
-            ->all();
+            ->selectRaw("TRIM(COALESCE(site_ijin_kerja_khusus, '')) as site_val")
+            ->distinct()
+            ->pluck('site_val');
+        $siteList = $siteListRaw->map(fn ($s) => $s !== '' ? $s : 'Lainnya')->unique()->sort()->values()->all();
 
         // Data harian: hitung unik per kode_ikk (distinct) per tanggal (+ optional site)
         $totalDopmHarian = (int) Dopm::where($scopeDate)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->selectRaw('COUNT(DISTINCT kode_ikk) as cnt')->value('cnt');
@@ -152,12 +150,18 @@ class DOPMWeeklyController extends Controller
             ->whereIn('status_pekerjaan', ['Batal', 'BATAL'])
             ->count();
 
-        // Daftar DOPM untuk tanggal terpilih (+ optional site)
+        // Daftar DOPM untuk tanggal terpilih (+ optional site) — kolom yang dipakai view & summary
         $dopmListHarian = Dopm::where($scopeDate)
             ->where($scopeNotCancel)
             ->when($filterSite !== '', $scopeSite)
             ->orderBy('tanggal_dop')
             ->orderBy('id')
+            ->select([
+                'id', 'id_dop', 'kode_ikk', 'site_ijin_kerja_khusus', 'jenis_ijin_kerja_khusus', 'tanggal_dop', 'timestamp', 'status',
+                'nama_pekerjaan', 'perusahaan_ijin_kerja_khusus',
+                'nama_layer_1', 'nama_layer_2', 'nama_layer_3', 'nama_layer_4',
+                'sid_layer_1', 'sid_layer_2', 'sid_layer_3', 'sid_layer_4',
+            ])
             ->get();
 
         // Hitung total IKK/OKK hanya dari kode_ikk yang ada di DOPM terfilter (konsisten dengan filter site)
@@ -253,11 +257,27 @@ class DOPMWeeklyController extends Controller
             return strnatcasecmp($a, $b);
         });
 
-        // Chart DOPM vs IPK vs OKK per jenis_ijin_kerja_khusus (3 bar per jenis)
+        // Chart DOPM vs IPK vs OKK per jenis_ijin_kerja_khusus — satu kali query IPK/OKK count per kode_ikk
         $chartJenisLabels = [];
         $chartDopmPerJenis = [];
         $chartIpkPerJenis = [];
         $chartOkkPerJenis = [];
+        $ipkCountByKodeDopm = [];
+        $okkCountByKodeDopm = [];
+        if (!empty($kodeIkks)) {
+            $ipkCountByKodeDopm = IpkIkk::whereDate('ts', $filterDate)
+                ->whereIn('kode_ikk', $kodeIkks)
+                ->selectRaw('kode_ikk, count(*) as cnt')
+                ->groupBy('kode_ikk')
+                ->pluck('cnt', 'kode_ikk')
+                ->all();
+            $okkCountByKodeDopm = Okk::whereDate('ts', $filterDate)
+                ->whereIn('kode_ikk', $kodeIkks)
+                ->selectRaw('kode_ikk, count(*) as cnt')
+                ->groupBy('kode_ikk')
+                ->pluck('cnt', 'kode_ikk')
+                ->all();
+        }
         foreach ($summaryJenisKeys as $jenis) {
             $chartJenisLabels[] = self::singkatJenisIjin($jenis);
             $dopmPerJenis = $dopmListHarian->filter(function ($d) use ($jenis) {
@@ -266,12 +286,8 @@ class DOPMWeeklyController extends Controller
             });
             $chartDopmPerJenis[] = $dopmPerJenis->count();
             $kodeIkksJenis = $dopmPerJenis->pluck('kode_ikk')->filter()->unique()->values()->all();
-            $chartIpkPerJenis[] = empty($kodeIkksJenis)
-                ? 0
-                : IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $kodeIkksJenis)->count();
-            $chartOkkPerJenis[] = empty($kodeIkksJenis)
-                ? 0
-                : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $kodeIkksJenis)->count();
+            $chartIpkPerJenis[] = empty($kodeIkksJenis) ? 0 : array_sum(array_map(fn ($c) => (int) ($ipkCountByKodeDopm[$c] ?? 0), $kodeIkksJenis));
+            $chartOkkPerJenis[] = empty($kodeIkksJenis) ? 0 : array_sum(array_map(fn ($c) => (int) ($okkCountByKodeDopm[$c] ?? 0), $kodeIkksJenis));
         }
 
         // Data IKK (work permit) dari ClickHouse untuk tampilan weekly
@@ -520,9 +536,11 @@ class DOPMWeeklyController extends Controller
             }, $ikkClickhouseListHarian))));
 
             if (!empty($kodeIkksForStatus)) {
+                // Hanya kolom yang dipakai; ambil satu per kode_ikk (ts terbaru) via get lalu dedupe di PHP
                 $statusRows = IpkIkk::whereIn('kode_ikk', $kodeIkksForStatus)
+                    ->select(['kode_ikk', 'status_pekerjaan', 'ts'])
                     ->orderByDesc('ts')
-                    ->get(['kode_ikk', 'status_pekerjaan', 'ts']);
+                    ->get();
 
                 $statusByKode = [];
                 foreach ($statusRows as $row) {
@@ -554,34 +572,124 @@ class DOPMWeeklyController extends Controller
             ->values()
             ->all();
 
+        // Kode work permit (non-cancel) untuk pre-load dan persentase
+        $workPermitCodes = array_values(array_unique(array_filter(array_map(function ($ikk) use ($cancelKodeIkk) {
+            $c = $ikk->code ?? '';
+            if ($c === '' || $c === null) {
+                return null;
+            }
+            if (in_array($c, $cancelKodeIkk, true)) {
+                return null;
+            }
+            return $c;
+        }, $ikkClickhouseListHarian))));
+
+        // Pre-load IPK/OKK/OAK sekali untuk semua IKK (hindari N+1 di hitungStatusMatriksLengkapDenganAlasan)
+        $ipkByKode = [];
+        $okkByKode = [];
+        $oakDataByLocation = [];
+        if (!empty($workPermitCodes)) {
+            $ipkRows = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
+                ->whereDate('ts', $filterDate)
+                ->orderByDesc('ts')
+                ->get();
+            foreach ($ipkRows as $row) {
+                $k = $row->kode_ikk;
+                if (($k !== null && $k !== '') && !isset($ipkByKode[$k])) {
+                    $ipkByKode[$k] = $row;
+                }
+            }
+            $okkRows = Okk::whereIn('kode_ikk', $workPermitCodes)
+                ->whereDate('ts', $filterDate)
+                ->orderBy('ts')
+                ->get();
+            foreach ($okkRows as $row) {
+                $k = $row->kode_ikk;
+                if ($k === null || $k === '') {
+                    continue;
+                }
+                if (!isset($okkByKode[$k])) {
+                    $okkByKode[$k] = collect();
+                }
+                $okkByKode[$k]->push($row);
+            }
+            // OAK: unik (location, detail_location) dari IKK non-cancel
+            $locationPairsForOak = [];
+            foreach ($ikkClickhouseListHarian as $ikk) {
+                $code = $ikk->code ?? null;
+                if ($code !== null && in_array($code, $cancelKodeIkk, true)) {
+                    continue;
+                }
+                $loc = trim((string) ($ikk->location_name ?? ''));
+                $det = trim((string) ($ikk->location_detail_name ?? ''));
+                if ($loc !== '' && $det !== '') {
+                    $locationPairsForOak[$loc . '|' . $det] = [$loc, $det];
+                }
+            }
+            $locationPairsForOak = array_values($locationPairsForOak);
+            if (!empty($locationPairsForOak)) {
+                try {
+                    if (class_exists(\App\Services\ClickHouseService::class)) {
+                        $ch = app(\App\Services\ClickHouseService::class);
+                        if (method_exists($ch, 'query') && $ch->isConnected()) {
+                            $dateEsc = addslashes($filterDate);
+                            foreach (['observee' => 'dic_mitra', 'observe' => 'bc'] as $tipe => $key) {
+                                $conditions = [];
+                                foreach ($locationPairsForOak as $p) {
+                                    $locEsc = addslashes($p[0]);
+                                    $detEsc = addslashes($p[1]);
+                                    $conditions[] = "(lower(trim(toString(location))) = lower('{$locEsc}') AND lower(trim(toString(detail_location))) = lower('{$detEsc}'))";
+                                }
+                                $whereLoc = implode(' OR ', $conditions);
+                                $sql = "SELECT location, detail_location FROM hse_automation.aaj_vw_car_oak_register_ytd_only"
+                                    . " WHERE toDate(submit_date) = '{$dateEsc}'"
+                                    . " AND lower(trim(toString(tipe))) = '" . addslashes($tipe) . "'"
+                                    . " AND ({$whereLoc})"
+                                    . " LIMIT 1000";
+                                $res = $ch->query($sql);
+                                foreach ($res ?? [] as $r) {
+                                    $loc = trim((string) ($r['location'] ?? ''));
+                                    $det = trim((string) ($r['detail_location'] ?? ''));
+                                    if ($loc !== '' && $det !== '') {
+                                        $k = $loc . '|' . $det;
+                                        if (!isset($oakDataByLocation[$k])) {
+                                            $oakDataByLocation[$k] = ['dic_mitra' => false, 'bc' => false];
+                                        }
+                                        $oakDataByLocation[$k][$key] = true;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::debug('Dashboard OAK pre-load: ' . $e->getMessage());
+                }
+            }
+        }
+
         // Hitung status_matriks untuk IKK ClickHouse berdasarkan matriks lengkap (IPK + OKK + OAK),
-        // dengan mengecualikan IKK yang sudah cancel (tidak ikut perhitungan matriks).
-        // sekaligus siapkan data chart jumlah izin kerja per status matriks (Hijau/Kuning/Merah)
+        // dengan mengecualikan IKK yang sudah cancel. Pakai versi optimized dengan data yang sudah di-load.
         $chartMatriksLabels = ['Hijau', 'Kuning', 'Merah'];
         $chartIzinKerjaPerMatriks = [0, 0, 0];
 
         if (!empty($ikkClickhouseListHarian)) {
-            // Map nama status ke index pada array chartIzinKerjaPerMatriks
             $matriksIndex = [
                 'Hijau' => 0,
                 'Kuning' => 1,
                 'Merah' => 2,
             ];
 
-            // Override status_matriks di setiap item IKK ClickHouse menggunakan matriks lengkap
-            // lalu hitung total work permit per status matriks
             foreach ($ikkClickhouseListHarian as $ikk) {
                 $code = $ikk->code ?? null;
                 $locationName = $ikk->location_name ?? null;
                 $locationDetailName = $ikk->location_detail_name ?? null;
 
-                // Jika IKK ini termasuk yang cancel (berdasarkan ipk_ikk.status_pekerjaan), lewati dari perhitungan matriks
                 if ($code !== null && in_array($code, $cancelKodeIkk, true)) {
                     $ikk->status_matriks = null;
                     continue;
                 }
 
-                $matriksResult = \App\Http\Controllers\DOPMIKK\DOPMController::hitungStatusMatriksLengkapDenganAlasan(
+                $matriksResult = \App\Http\Controllers\DOPMIKK\DOPMController::hitungStatusMatriksLengkapDenganAlasanOptimized(
                     $code,
                     $locationName,
                     $locationDetailName,
@@ -589,9 +697,12 @@ class DOPMWeeklyController extends Controller
                     $ikk->nama_layer_1 ?? null,
                     $ikk->nama_layer_2 ?? null,
                     $ikk->nama_layer_3 ?? null,
-                    $ikk->nama_layer_4 ?? null
+                    $ikk->nama_layer_4 ?? null,
+                    $ipkByKode[$code] ?? null,
+                    $okkByKode[$code] ?? collect(),
+                    $oakDataByLocation
                 );
-                
+
                 $ikk->status_matriks = $matriksResult['status'] ?? 'Merah';
                 $ikk->alasan_matriks = $matriksResult['alasan'] ?? 'Tidak diketahui';
 
@@ -603,18 +714,7 @@ class DOPMWeeklyController extends Controller
             }
         }
 
-        // Persentase IKK ada IPK / IKK ada OKK: dasar = work permit (code) yang sama dengan kode_ikk di IPK & OKK
-        $workPermitCodes = array_values(array_unique(array_filter(array_map(function ($ikk) use ($cancelKodeIkk) {
-            $c = $ikk->code ?? '';
-            if ($c === '' || $c === null) {
-                return null;
-            }
-            // Kode yang cancel tidak ikut dasar perhitungan matriks/persentase
-            if (in_array($c, $cancelKodeIkk, true)) {
-                return null;
-            }
-            return $c;
-        }, $ikkClickhouseListHarian))));
+        // Persentase IKK ada IPK / IKK ada OKK (workPermitCodes sudah dihitung di atas)
         if (!empty($workPermitCodes)) {
             $ipkKodesWp = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
                 ->whereDate('ts', $filterDate)
@@ -660,12 +760,28 @@ class DOPMWeeklyController extends Controller
         usort($chartJenisKeysFromIkk, function ($a, $b) {
             return strnatcasecmp($a, $b);
         });
+        // Satu kali query hitung IPK/OKK per kode_ikk (untuk semua jenis), hindari N+1
+        $ipkCountByKode = [];
+        $okkCountByKode = [];
+        if (!empty($workPermitCodes)) {
+            $ipkCountByKode = IpkIkk::whereDate('ts', $filterDate)
+                ->whereIn('kode_ikk', $workPermitCodes)
+                ->selectRaw('kode_ikk, count(*) as cnt')
+                ->groupBy('kode_ikk')
+                ->pluck('cnt', 'kode_ikk')
+                ->all();
+            $okkCountByKode = Okk::whereDate('ts', $filterDate)
+                ->whereIn('kode_ikk', $workPermitCodes)
+                ->selectRaw('kode_ikk, count(*) as cnt')
+                ->groupBy('kode_ikk')
+                ->pluck('cnt', 'kode_ikk')
+                ->all();
+        }
         foreach ($chartJenisKeysFromIkk as $jenis) {
             $chartJenisLabels[] = self::singkatJenisIjin($jenis);
             $chartJenisLabelsFull[] = $jenis;
             $ikkPerJenis = array_filter($ikkClickhouseListHarian, function ($ikk) use ($jenis, $cancelKodeIkk) {
                 $j = trim((string) ($ikk->jenis_ijin_kerja_khusus ?? '')) ?: '-';
-                // Exclude IKK cancel dari agregasi per jenis
                 $c = $ikk->code ?? null;
                 if ($c !== null && in_array($c, $cancelKodeIkk, true)) {
                     return false;
@@ -673,12 +789,10 @@ class DOPMWeeklyController extends Controller
                 return $j === $jenis;
             });
 
-            // Jumlah izin kerja (IKK) per jenis
             $izinCount = count($ikkPerJenis);
             $chartIkkPerJenis[] = $izinCount;
             $chartIzinKerjaPerJenis[] = $izinCount;
 
-            // Status matriks agregat per jenis (pakai "terburuk": Merah > Kuning > Hijau)
             $statusScore = -1;
             foreach ($ikkPerJenis as $ikkRow) {
                 $st = $ikkRow->status_matriks ?? 'Merah';
@@ -687,7 +801,7 @@ class DOPMWeeklyController extends Controller
                 } elseif ($st === 'Kuning') {
                     $score = 1;
                 } else {
-                    $score = 0; // Hijau atau lainnya dianggap Hijau
+                    $score = 0;
                 }
                 if ($score > $statusScore) {
                     $statusScore = $score;
@@ -705,12 +819,8 @@ class DOPMWeeklyController extends Controller
                 $c = $ikk->code ?? '';
                 return $c !== '' && $c !== null ? $c : null;
             }, $ikkPerJenis))));
-            $chartIpkPerJenis[] = empty($codesJenis)
-                ? 0
-                : IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count();
-            $chartOkkPerJenis[] = empty($codesJenis)
-                ? 0
-                : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count();
+            $chartIpkPerJenis[] = empty($codesJenis) ? 0 : array_sum(array_map(fn ($c) => (int) ($ipkCountByKode[$c] ?? 0), $codesJenis));
+            $chartOkkPerJenis[] = empty($codesJenis) ? 0 : array_sum(array_map(fn ($c) => (int) ($okkCountByKode[$c] ?? 0), $codesJenis));
         }
 
         // Total OAK harian: dari IKK (lokasi + detail lokasi), sama konsep dengan modal — match OAK by location & detail_location
