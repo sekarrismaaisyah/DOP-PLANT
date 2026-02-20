@@ -3223,7 +3223,7 @@
                         </div>
                     </div>
                     <div class="gm-notification-panel-body" id="gmNotificationPanelBody">
-                        <div class="gm-notification-empty">Memuat data...</div>
+                        <!-- Panel tidak menampilkan data; klik notifikasi dinonaktifkan -->
                     </div>
                 </div>
             </div>
@@ -24535,12 +24535,13 @@ source: new ol.source.Vector(),
         return 'risk';
     }
     
-    // Function to render notification panel content
+    // Function to render notification panel content (dinonaktifkan: tidak menampilkan data)
     function renderNotificationPanel() {
         const panelBody = document.getElementById('gmNotificationPanelBody');
-        const panelTitle = document.querySelector('.gm-notification-panel-title');
         if (!panelBody) return;
-        
+        panelBody.innerHTML = '';
+        return;
+        const panelTitle = document.querySelector('.gm-notification-panel-title');
         const activeMatrix = getActiveMatrix();
         
         // Update panel title based on active matrix
@@ -25284,21 +25285,11 @@ source: new ol.source.Vector(),
         // State untuk track apakah panel di-pin
         let isPanelPinned = false;
         
-        // Toggle panel on button click
+        // Tombol notifikasi dinonaktifkan: klik tidak membuka panel dan tidak menampilkan data
         notificationBtn.addEventListener('click', function(e) {
             e.stopPropagation();
-            const isActive = notificationPanel.classList.contains('active');
-            
-            if (isActive) {
-                // Hanya tutup jika tidak di-pin
-                if (!isPanelPinned) {
-                    notificationPanel.classList.remove('active');
-                }
-            } else {
-                // Render panel content before showing
-                renderNotificationPanel();
-                notificationPanel.classList.add('active');
-            }
+            e.preventDefault();
+            // Tidak ada aksi
         });
         
         // Pin/Unpin panel
