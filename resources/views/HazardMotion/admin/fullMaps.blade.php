@@ -23678,25 +23678,9 @@ source: new ol.source.Vector(),
         html += '<tr><td class="supervisory-detail-label">Risk Level</td><td style="' + riskClass + '">' + escapeHtml(d.risk_level || '-') + '</td></tr>';
         html += '<tr><td class="supervisory-detail-label">Has SAP Report</td><td>' + (d.has_sap_report ? 'Ya' : 'Tidak') + '</td></tr>';
         html += '<tr><td class="supervisory-detail-label">Has Online CCTV</td><td>' + (d.has_online_cctv ? 'Ya' : 'Tidak') + '</td></tr>';
-        html += '<tr><td class="supervisory-detail-label">High Risk Area</td><td>' + (d.is_high_risk_area ? 'Ya' : 'Tidak') + '</td></tr>';
         html += '<tr><td class="supervisory-detail-label">Created</td><td>' + escapeHtml(fmtDateTime(d.created_at)) + '</td></tr>';
         html += '<tr><td class="supervisory-detail-label">Updated</td><td>' + escapeHtml(fmtDateTime(d.updated_at)) + '</td></tr>';
         html += '</tbody></table></div>';
-        const tarp = Array.isArray(d.tarp_recommendations) ? d.tarp_recommendations : [];
-        if (tarp.length > 0) {
-            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">assignment</i> TARP Recommendations (' + tarp.length + ')</div>';
-            tarp.forEach((r, idx) => {
-                const action = (r && r.action) ? String(r.action) : (typeof r === 'string' ? r : '');
-                const priority = (r && r.priority) ? String(r.priority) : '';
-                const priorityClass = priority === 'HIGH' ? 'supervisory-priority-high' : (priority === 'MEDIUM' ? 'supervisory-priority-medium' : '');
-                html += '<div class="supervisory-tarp-action">';
-                html += '<span class="supervisory-tarp-num">' + (idx + 1) + '.</span> ';
-                html += escapeHtml(action);
-                if (priority) html += ' <span class="supervisory-priority-badge ' + priorityClass + '">' + escapeHtml(priority) + '</span>';
-                html += '</div>';
-            });
-            html += '</div>';
-        }
         const cctvList = Array.isArray(d.cctv_list) ? d.cctv_list : [];
         if (cctvList.length > 0) {
             html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">videocam</i> CCTV List (' + cctvList.length + ')</div>';
