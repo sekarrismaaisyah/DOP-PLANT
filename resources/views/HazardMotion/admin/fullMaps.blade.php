@@ -23681,32 +23681,6 @@ source: new ol.source.Vector(),
         html += '<tr><td class="supervisory-detail-label">Created</td><td>' + escapeHtml(fmtDateTime(d.created_at)) + '</td></tr>';
         html += '<tr><td class="supervisory-detail-label">Updated</td><td>' + escapeHtml(fmtDateTime(d.updated_at)) + '</td></tr>';
         html += '</tbody></table></div>';
-        const cctvList = Array.isArray(d.cctv_list) ? d.cctv_list : [];
-        if (cctvList.length > 0) {
-            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title"><i class="material-icons-outlined" style="font-size:14px;">videocam</i> CCTV List (' + cctvList.length + ')</div>';
-            html += '<div class="supervisory-cctv-table-wrap"><table class="supervisory-cctv-table"><thead><tr><th>Lokasi</th><th>Status</th><th>Kondisi</th><th>No CCTV</th><th>Connected</th><th>Nama CCTV</th></tr></thead><tbody>';
-            cctvList.forEach(c => {
-                const lokasi = (c.lokasi != null && c.lokasi !== '') ? String(c.lokasi) : '-';
-                const status = (c.status != null && c.status !== '') ? String(c.status) : '-';
-                const kondisi = (c.kondisi != null && c.kondisi !== '') ? String(c.kondisi) : '-';
-                const no = (c.no_cctv != null && c.no_cctv !== '') ? String(c.no_cctv) : (c.nomor_cctv || '-');
-                const connected = (c.connected != null && c.connected !== '') ? String(c.connected) : 'no';
-                const nama = (c.nama_cctv != null && c.nama_cctv !== '') ? String(c.nama_cctv) : '-';
-                html += '<tr><td>' + escapeHtml(lokasi) + '</td><td>' + escapeHtml(status) + '</td><td>' + escapeHtml(kondisi) + '</td><td>' + escapeHtml(no) + '</td><td>' + escapeHtml(connected) + '</td><td>' + escapeHtml(nama) + '</td></tr>';
-            });
-            html += '</tbody></table></div></div>';
-        }
-        const sapList = d.sap_list || [];
-        if (sapList.length > 0) {
-            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title">Daftar SAP (' + sapList.length + ')</div>';
-            sapList.forEach(s => {
-                const lok = (s && s.lokasi) ? s.lokasi : (typeof s === 'string' ? s : '-');
-                html += '<div class="supervisory-detail-item">' + escapeHtml(lok) + '</div>';
-            });
-            html += '</div>';
-        } else {
-            html += '<div class="supervisory-detail-group"><div class="supervisory-detail-group-title">Daftar SAP</div><div class="supervisory-detail-item" style="color:#9ca3af;">Kosong</div></div>';
-        }
         return html || '<div class="supervisory-detail-item">Tidak ada detail</div>';
     }
 
