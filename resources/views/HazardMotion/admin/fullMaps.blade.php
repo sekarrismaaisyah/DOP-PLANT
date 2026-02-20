@@ -5035,10 +5035,9 @@
         allsite: {
             url: 'http://10.10.10.61:8080/geoserver/basemap/wms',
             name: 'All Site Basemap',
-            layerName: 'basemap:basemap_allsite',
-            
-            bbox: [117.129991, 1.873312, 117.638408, 2.418367],
-            center: [117.3841995, 2.1458395] 
+            layerName: 'basemap_allsite',
+            bbox: [117.12998632933528, 1.8732056335667353, 117.70822095701423, 2.41845427052137],
+            center: [117.4191, 2.1458]
         }
     };
     
@@ -6260,7 +6259,7 @@
     function createWMSLayer(layerName = '', serverKey = currentWmsServer) {
         const server = wmsServers[serverKey];
         // Gunakan layer name dari server config jika tidak ada parameter
-        const layerParam = layerName || server.layerName || 'basemap:basemap_allsite';
+        const layerParam = layerName || server.layerName || 'basemap_allsite';
         
         const params = {
             'LAYERS': layerParam,
@@ -17388,11 +17387,11 @@ source: new ol.source.Vector(),
                     }
                 });
                 
-                // Auto-select basemap:basemap_allsite jika ada, atau layer pertama
-                const allsiteLayer = Array.from(layers).find(l => l.textContent.trim() === 'basemap:basemap_allsite');
+                // Auto-select basemap_allsite jika ada, atau layer pertama
+                const allsiteLayer = Array.from(layers).find(l => l.textContent.trim() === 'basemap_allsite');
                 if (allsiteLayer) {
-                    layerSelect.value = 'basemap:basemap_allsite';
-                    addWMSLayerToMap('basemap:basemap_allsite', serverKey);
+                    layerSelect.value = 'basemap_allsite';
+                    addWMSLayerToMap('basemap_allsite', serverKey);
                 } else if (layers.length > 0) {
                     const firstLayerName = layers[0].textContent.trim();
                     layerSelect.value = firstLayerName;
