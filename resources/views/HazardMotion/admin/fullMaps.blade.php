@@ -6311,15 +6311,15 @@
         });
     }
 
-    // Create map dengan Google Satellite sebagai base layer
+    // Base layer = WMS (GeoServer basemap_allsite dari wmsServers config)
+    wmsLayer = createWMSLayer();
+    wmsLayer.setOpacity(1.0);
+
+    // Create map dengan WMS sebagai base layer
     const map = new ol.Map({
         target: 'hazardMap',
         layers: [
-            // Base layer - Google Satellite (fallback)
-            new ol.layer.Tile({
-                source: googleSatelliteSource,
-                opacity: 1.0
-            })
+            wmsLayer
         ],
         view: new ol.View({
             center: ol.proj.fromLonLat(wmsServers[currentWmsServer].center),
@@ -6347,8 +6347,8 @@
     startPulseAnimation();
 
     // Map Layer Filter - Store base layer reference and create different tile sources
-    let baseLayer = map.getLayers().item(0); // Get the first layer (base layer)
-    let currentMapType = 'satellite'; // Default map type
+    let baseLayer = map.getLayers().item(0); // Get the first layer (base layer = WMS)
+    let currentMapType = 'basemap'; // Default: WMS basemap dari GeoServer
     
     // Create different tile sources for map types
     // const mapTileSources = {
@@ -6474,14 +6474,39 @@
 
     // Function to switch map layer
     function switchMapLayer(layerType) {
+        // Kembali ke WMS basemap (GeoServer)
+        if (layerType === 'basemap') {
+            if (baseLayer) {
+                map.removeLayer(baseLayer);
+                baseLayer = null;
+            }
+            baseLayer = createWMSLayer();
+            baseLayer.setOpacity(1.0);
+            wmsLayer = baseLayer;
+            map.getLayers().insertAt(0, baseLayer);
+            currentMapType = 'basemap';
+            document.querySelectorAll('.gm-layer-option').forEach(option => {
+                option.classList.remove('active');
+                if (option.getAttribute('data-layer') === 'basemap') {
+                    option.classList.add('active');
+                }
+            });
+            console.log('Switched to WMS basemap layer');
+            return;
+        }
+
         if (!mapTileSources[layerType]) {
             console.warn(`Map layer type "${layerType}" not supported`);
             return;
         }
 
-        // Remove old base layer
+        // Remove old base layer (jika base saat ini WMS, clear reference wmsLayer)
         if (baseLayer) {
             map.removeLayer(baseLayer);
+            if (baseLayer === wmsLayer) {
+                wmsLayer = null;
+            }
+            baseLayer = null;
         }
 
         // Create new base layer
@@ -17217,7 +17242,7 @@ source: new ol.source.Vector(),
         bootstrap.Modal.getOrCreateInstance(document.getElementById('insidenDetailModal')).show();
     }
 
-    // Function to add WMS layer to map
+    // Function to add WMS layer to map (selalu sebagai base layer / index 0)
     function addWMSLayerToMap(layerName = '', serverKey = currentWmsServer) {
         // Remove existing WMS layer if any
         if (wmsLayer) {
@@ -17225,9 +17250,12 @@ source: new ol.source.Vector(),
             wmsLayer = null;
         }
         
-        // Create and add new WMS layer
+        // Create and add new WMS layer as base layer (index 0)
         wmsLayer = createWMSLayer(layerName, serverKey);
-        map.addLayer(wmsLayer);
+        wmsLayer.setOpacity(1.0);
+        map.getLayers().insertAt(0, wmsLayer);
+        baseLayer = wmsLayer;
+        currentMapType = 'basemap';
         currentLayer = layerName;
         
         // Update map center berdasarkan server yang dipilih
