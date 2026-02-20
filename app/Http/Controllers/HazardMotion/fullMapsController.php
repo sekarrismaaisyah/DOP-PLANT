@@ -2265,13 +2265,13 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     {
         try {
             $limit = min(max((int) $request->get('limit', 100), 1), 500);
-            $tanggal = $request->get('tanggal'); // optional: filter by date Y-m-d
+            // Default: tanggal hari ini (server). Request boleh kirim ?tanggal=Y-m-d untuk override.
+            $tanggal = $request->get('tanggal') ?? now()->format('Y-m-d');
 
-            $query = SupervisoryAlertLog::query()->orderBy('tanggal', 'desc')->orderBy('updated_at', 'desc');
-
-            if ($tanggal) {
-                $query->whereDate('tanggal', $tanggal);
-            }
+            $query = SupervisoryAlertLog::query()
+                ->whereDate('tanggal', $tanggal)
+                ->orderBy('tanggal', 'desc')
+                ->orderBy('updated_at', 'desc');
 
             // Hanya tampilkan yang belum ada SAP (atau SAP kosong) dan CCTV 0/tidak ada
             $query->where('has_sap_report', false);
