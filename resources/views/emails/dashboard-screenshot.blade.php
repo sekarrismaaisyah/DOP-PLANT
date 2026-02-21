@@ -1,764 +1,380 @@
 <!DOCTYPE html>
-<html lang="id">
+<html lang="id" xmlns="http://www.w3.org/1999/xhtml">
 <head>
   <meta charset="utf-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+  <meta name="x-apple-disable-message-reformatting"/>
   <title>Daily Report · Dashboard IKK–DOPM</title>
-  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,600;1,400&family=Instrument+Sans:wght@300;400;500;600&display=swap" rel="stylesheet"/>
-  <style>
-    :root {
-      --ink:      #111110;
-      --ink-mid:  #555552;
-      --ink-soft: #999994;
-      --ink-xsoft:#c8c8c2;
-      --rule:     #e8e7e3;
-      --surface:  #faf9f7;
-      --white:    #ffffff;
-      --red:      #b83232;
-      --red-bg:   #fdf4f4;
-      --red-bd:   #f0cece;
-      --amber:    #9a6200;
-      --amber-bg: #fdf8f0;
-      --amber-bd: #ecd9a8;
-      --green:    #1e6e48;
-      --green-bg: #f2fbf6;
-      --green-bd: #a8d8bc;
-    }
-
-    * { margin:0; padding:0; box-sizing:border-box; }
-
-    body {
-      background: #e9e8e4;
-      font-family: 'Instrument Sans', sans-serif;
-      font-weight: 300;
-      color: var(--ink);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* ─── SHELL ─────────────────────────────── */
-    .shell {
-      max-width: 640px;
-      margin: 0 auto;
-      padding: 48px 20px 64px;
-    }
-
-    /* ─── PRE-HEADER ─────────────────────────── */
-    .pre-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      margin-bottom: 16px;
-      padding: 0 2px;
-    }
-
-    .pre-header-left {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .logo-box {
-      width: 28px;
-      height: 28px;
-      background: var(--ink);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .logo-box svg { width:14px; height:14px; }
-
-    .org-name {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      color: var(--ink);
-    }
-
-    .pre-header-date {
-      font-size: 11px;
-      color: var(--ink-soft);
-      letter-spacing: 0.04em;
-    }
-
-    /* ─── CARD ───────────────────────────────── */
-    .card {
-      background: var(--white);
-      border: 1px solid var(--rule);
-      overflow: hidden;
-    }
-
-    /* ─── TOP BAND ───────────────────────────── */
-    .top-band {
-      height: 4px;
-      background: var(--ink);
-    }
-
-    /* ─── HERO ───────────────────────────────── */
-    .hero {
-      padding: 48px 48px 40px;
-      border-bottom: 1px solid var(--rule);
-      position: relative;
-    }
-
-    .report-eyebrow {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 24px;
-    }
-
-    .eyebrow-chip {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-      border: 1px solid var(--rule);
-      padding: 4px 10px;
-      background: var(--surface);
-    }
-
-    .eyebrow-line {
-      flex: 1;
-      height: 1px;
-      background: var(--rule);
-    }
-
-    .eyebrow-time {
-      font-size: 10px;
-      color: var(--ink-soft);
-      letter-spacing: 0.06em;
-      white-space: nowrap;
-    }
-
-    .hero-title {
-      font-family: 'Playfair Display', serif;
-      font-size: 36px;
-      font-weight: 400;
-      line-height: 1.18;
-      letter-spacing: -0.5px;
-      color: var(--ink);
-      margin-bottom: 18px;
-    }
-
-    .hero-title em {
-      font-style: italic;
-      font-weight: 400;
-    }
-
-    .hero-lead {
-      font-size: 14px;
-      font-weight: 300;
-      color: var(--ink-mid);
-      line-height: 1.75;
-      max-width: 440px;
-    }
-
-    /* corner ornament */
-    .hero::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      right: 48px;
-      width: 80px;
-      height: 3px;
-      background: var(--ink);
-    }
-
-    /* ─── SUMMARY METRICS ────────────────────── */
-    .summary {
-      padding: 36px 48px;
-      border-bottom: 1px solid var(--rule);
-    }
-
-    .section-eyebrow {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.14em;
-      text-transform: uppercase;
-      color: var(--ink-xsoft);
-      margin-bottom: 24px;
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .section-eyebrow::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: var(--rule);
-    }
-
-    /* big number row */
-    .kpi-row {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 0;
-      border: 1px solid var(--rule);
-      margin-bottom: 1px;
-    }
-
-    .kpi-cell {
-      padding: 22px 20px 18px;
-      border-right: 1px solid var(--rule);
-    }
-    .kpi-cell:last-child { border-right: none; }
-
-    .kpi-label {
-      font-size: 10px;
-      font-weight: 500;
-      letter-spacing: 0.09em;
-      text-transform: uppercase;
-      color: var(--ink-soft);
-      margin-bottom: 10px;
-      line-height: 1.4;
-    }
-
-    .kpi-val {
-      font-family: 'Playfair Display', serif;
-      font-size: 38px;
-      font-weight: 400;
-      line-height: 1;
-      letter-spacing: -1px;
-      color: var(--ink);
-      margin-bottom: 6px;
-    }
-
-    .kpi-val.danger { color: var(--red); }
-    .kpi-val.warn   { color: var(--amber); }
-
-    .kpi-sub {
-      font-size: 11px;
-      font-weight: 300;
-      color: var(--ink-soft);
-    }
-
-    /* secondary row */
-    .kpi-row-2 {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 0;
-      border: 1px solid var(--rule);
-      border-top: none;
-      margin-bottom: 28px;
-    }
-
-    .kpi-cell-2 {
-      padding: 18px 20px;
-      border-right: 1px solid var(--rule);
-    }
-    .kpi-cell-2:last-child { border-right: none; }
-
-    /* status section */
-    .status-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 8px;
-    }
-
-    .status-item {
-      padding: 14px 16px;
-      border: 1px solid;
-    }
-
-    .status-item.red    { border-color: var(--red-bd);   background: var(--red-bg); }
-    .status-item.amber  { border-color: var(--amber-bd); background: var(--amber-bg); }
-    .status-item.green  { border-color: var(--green-bd); background: var(--green-bg); }
-
-    .status-dot-row {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
-
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      flex-shrink: 0;
-    }
-
-    .red   .status-dot { background: var(--red); }
-    .amber .status-dot { background: var(--amber); }
-    .green .status-dot { background: var(--green); }
-
-    .status-name {
-      font-size: 10px;
-      font-weight: 600;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-    }
-
-    .red   .status-name { color: var(--red); }
-    .amber .status-name { color: var(--amber); }
-    .green .status-name { color: var(--green); }
-
-    .status-count {
-      font-family: 'Playfair Display', serif;
-      font-size: 24px;
-      font-weight: 400;
-      letter-spacing: -0.5px;
-      color: var(--ink);
-      margin-bottom: 2px;
-    }
-
-    .status-desc {
-      font-size: 10px;
-      color: var(--ink-soft);
-    }
-
-    /* ─── SCREENSHOT SECTION ─────────────────── */
-    .screenshot-section {
-      padding: 36px 48px;
-      border-bottom: 1px solid var(--rule);
-      background: var(--surface);
-    }
-
-    .ss-frame {
-      border: 1px solid var(--rule);
-      background: var(--white);
-      overflow: hidden;
-    }
-
-    .ss-topbar {
-      padding: 10px 14px;
-      background: #f4f3f0;
-      border-bottom: 1px solid var(--rule);
-      display: flex;
-      align-items: center;
-      gap: 12px;
-    }
-
-    .ss-dots {
-      display: flex;
-      gap: 5px;
-    }
-
-    .ss-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-    }
-
-    .ss-dot:nth-child(1) { background: #e8c4c4; }
-    .ss-dot:nth-child(2) { background: #e8dbc4; }
-    .ss-dot:nth-child(3) { background: #c4e8d4; }
-
-    .ss-url {
-      flex: 1;
-      font-size: 10px;
-      color: var(--ink-soft);
-      background: var(--white);
-      border: 1px solid var(--rule);
-      padding: 3px 10px;
-      letter-spacing: 0.02em;
-    }
-
-    .ss-body {
-      padding: 0;
-      position: relative;
-    }
-
-    /* placeholder for the actual screenshot image */
-    .ss-placeholder {
-      width: 100%;
-      min-height: 220px;
-      background: linear-gradient(145deg, #f7f6f4 0%, #eeede9 100%);
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 12px;
-    }
-
-    .ss-placeholder svg {
-      width: 36px;
-      height: 36px;
-      opacity: 0.3;
-    }
-
-    .ss-placeholder-text {
-      font-size: 12px;
-      color: var(--ink-soft);
-      letter-spacing: 0.04em;
-    }
-
-    /* when you have an actual img tag replace placeholder with: */
-    .ss-img {
-      width: 100%;
-      display: block;
-    }
-
-    .ss-caption {
-      padding: 10px 16px;
-      border-top: 1px solid var(--rule);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-    }
-
-    .ss-caption-left {
-      font-size: 10px;
-      color: var(--ink-soft);
-      letter-spacing: 0.04em;
-    }
-
-    .ss-caption-right {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 10px;
-      color: var(--ink-xsoft);
-    }
-
-    .ss-caption-right svg { width:11px; height:11px; }
-
-    /* ─── ATTACHMENT PILL ────────────────────── */
-    .attachment-wrap {
-      padding: 0 48px 28px;
-      background: var(--surface);
-      border-bottom: 1px solid var(--rule);
-    }
-
-    .attachment-pill {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      padding: 14px 18px;
-      border: 1px solid var(--rule);
-      background: var(--white);
-    }
-
-    .attach-icon {
-      width: 36px;
-      height: 36px;
-      background: var(--ink);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .attach-icon svg { width:16px; height:16px; }
-
-    .attach-info { flex:1; }
-
-    .attach-name {
-      font-size: 13px;
-      font-weight: 500;
-      color: var(--ink);
-      margin-bottom: 2px;
-    }
-
-    .attach-meta {
-      font-size: 10px;
-      color: var(--ink-soft);
-      letter-spacing: 0.04em;
-    }
-
-    .attach-size {
-      font-size: 11px;
-      color: var(--ink-xsoft);
-      font-weight: 400;
-    }
-
-    /* ─── CTA ────────────────────────────────── */
-    .cta-section {
-      padding: 36px 48px;
-      border-bottom: 1px solid var(--rule);
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-
-    .cta-btn {
-      display: inline-block;
-      background: var(--ink);
-      color: #fff;
-      text-decoration: none;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.12em;
-      text-transform: uppercase;
-      padding: 15px 36px;
-      transition: opacity .15s;
-    }
-
-    .cta-note {
-      font-size: 12px;
-      color: var(--ink-soft);
-      font-weight: 300;
-    }
-
-    /* ─── FOOTER ─────────────────────────────── */
-    .footer {
-      padding: 24px 48px;
-      background: var(--surface);
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 20px;
-      flex-wrap: wrap;
-    }
-
-    .footer-left {
-      display: flex;
-      flex-direction: column;
-      gap: 4px;
-    }
-
-    .footer-brand {
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.08em;
-      text-transform: uppercase;
-      color: var(--ink);
-    }
-
-    .footer-copy {
-      font-size: 10px;
-      color: var(--ink-xsoft);
-      letter-spacing: 0.03em;
-    }
-
-    .footer-right {
-      font-size: 10px;
-      color: var(--ink-xsoft);
-      letter-spacing: 0.04em;
-      text-align: right;
-      line-height: 1.7;
-    }
-
-    /* bottom rule stripe */
-    .bottom-band {
-      height: 2px;
-      background: linear-gradient(to right, var(--ink) 0%, var(--ink) 30%, var(--rule) 30%);
-    }
-
-    /* ─── RESPONSIVE ─────────────────────────── */
-    @media (max-width: 560px) {
-      .shell             { padding: 24px 12px 40px; }
-      .hero              { padding: 32px 24px 28px; }
-      .hero::after       { right: 24px; }
-      .hero-title        { font-size: 26px; }
-      .summary           { padding: 28px 24px; }
-      .kpi-row           { grid-template-columns: 1fr 1fr; }
-      .kpi-cell:nth-child(3) { border-right: none; border-top: 1px solid var(--rule); grid-column: 1/-1; }
-      .kpi-val           { font-size: 28px; }
-      .kpi-row-2         { grid-template-columns: 1fr 1fr; }
-      .status-grid       { grid-template-columns: 1fr 1fr; }
-      .status-item:last-child { grid-column: 1/-1; }
-      .screenshot-section { padding: 28px 24px; }
-      .attachment-wrap   { padding: 0 24px 24px; }
-      .cta-section       { padding: 28px 24px; flex-direction: column; align-items: flex-start; }
-      .footer            { padding: 20px 24px; }
-      .footer-right      { text-align: left; }
-      .pre-header-date   { display: none; }
+  <style type="text/css">
+    /* ── RESET ── */
+    body, table, td, a { -webkit-text-size-adjust: 100%; -ms-text-size-adjust: 100%; }
+    table, td { mso-table-lspace: 0pt; mso-table-rspace: 0pt; }
+    img { -ms-interpolation-mode: bicubic; border: 0; height: auto; line-height: 100%; outline: none; text-decoration: none; }
+    body { margin: 0 !important; padding: 0 !important; background-color: #ECEAE6; width: 100% !important; }
+
+    /* ── MOBILE ── */
+    @media screen and (max-width: 600px) {
+      .shell        { width: 100% !important; }
+      .card         { width: 100% !important; }
+      .hero-title   { font-size: 26px !important; line-height: 1.25 !important; }
+      .kpi-3col td  { display: block !important; width: 100% !important; border-right: none !important; border-bottom: 1px solid #E8E7E3 !important; }
+      .kpi-2col td  { display: block !important; width: 100% !important; border-right: none !important; border-bottom: 1px solid #E8E7E3 !important; }
+      .status-3col td { display: block !important; width: 100% !important; margin-bottom: 8px !important; }
+      .pad-lr       { padding-left: 24px !important; padding-right: 24px !important; }
+      .pad-all      { padding: 28px 24px !important; }
+      .hide-mobile  { display: none !important; }
+      .kpi-num      { font-size: 32px !important; }
+      .kpi-num-sm   { font-size: 24px !important; }
     }
   </style>
 </head>
-<body>
-<div class="shell">
+<body style="margin:0;padding:0;background-color:#ECEAE6;">
 
-  <!-- Pre-header -->
-  <div class="pre-header">
-    <div class="pre-header-left">
-      <div class="logo-box">
-        <svg viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect x="1" y="1" width="5" height="5" fill="white"/>
-          <rect x="8" y="1" width="5" height="5" fill="white" opacity=".5"/>
-          <rect x="1" y="8" width="5" height="5" fill="white" opacity=".5"/>
-          <rect x="8" y="8" width="5" height="5" fill="white"/>
-        </svg>
-      </div>
-      <span class="org-name">IKK Monitoring System</span>
-    </div>
-    <span class="pre-header-date">{{ now()->format('d F Y') }} · {{ now()->format('H:i') }} WIB</span>
-  </div>
+<!-- ════════════════════════════════════════ WRAPPER -->
+<table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="background-color:#ECEAE6;">
+<tr><td align="center" style="padding:40px 16px 56px;">
 
-  <!-- Card -->
-  <div class="card">
-    <div class="top-band"></div>
+  <!-- ── PRE-HEADER ── -->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" class="shell" style="width:600px;max-width:600px;">
+  <tr>
+    <td style="padding:0 4px 14px;">
+      <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+      <tr>
+        <td style="vertical-align:middle;">
+          <!-- Logo box + name -->
+          <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+          <tr>
+            <td style="background-color:#111110;width:26px;height:26px;text-align:center;vertical-align:middle;padding:6px;">
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <rect x="1" y="1" width="5" height="5" fill="white"/>
+                <rect x="8" y="1" width="5" height="5" fill="white" opacity=".5"/>
+                <rect x="1" y="8" width="5" height="5" fill="white" opacity=".5"/>
+                <rect x="8" y="8" width="5" height="5" fill="white"/>
+              </svg>
+            </td>
+            <td style="padding-left:8px;font-family:Georgia,serif;font-size:11px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;color:#111110;">IKK Monitoring System</td>
+          </tr>
+          </table>
+        </td>
+        <td align="right" class="hide-mobile" style="font-family:Georgia,serif;font-size:11px;color:#999994;letter-spacing:0.04em;">
+          {{ now()->format('d F Y') }} &middot; {{ now()->format('H:i') }} WIB
+        </td>
+      </tr>
+      </table>
+    </td>
+  </tr>
+  </table>
 
-    <!-- ① HERO -->
-    <div class="hero">
-      <div class="report-eyebrow">
-        <div class="eyebrow-chip">Daily Report</div>
-        <div class="eyebrow-line"></div>
-        <div class="eyebrow-time">Sesi {{ $timeOfDay ?? 'Pagi' }} · {{ now()->format('H:i') }} WIB</div>
-      </div>
+  <!-- ════ CARD ════ -->
+  <table role="presentation" cellspacing="0" cellpadding="0" border="0" class="shell card" style="width:600px;max-width:600px;background-color:#FFFFFF;border:1px solid #E2E1DD;">
 
-      <h1 class="hero-title">
-        Dashboard <em>IKK</em><br>
-        Laporan Harian
-      </h1>
+    <!-- TOP ACCENT BAR -->
+    <tr><td style="height:4px;background-color:#111110;font-size:0;line-height:0;">&nbsp;</td></tr>
 
-      <p class="hero-lead">
-        Berikut adalah ringkasan otomatis kondisi Dashboard IKK per
-        <strong>{{ isset($summary['reportDate']) ? \Carbon\Carbon::parse($summary['reportDate'])->translatedFormat('d F Y') : now()->format('d F Y') }}</strong>.
-        Screenshot dashboard terlampir pada email ini untuk keperluan monitoring dan tindak lanjut.
-      </p>
-    </div>
+    <!-- ① HERO ── -->
+    <tr>
+      <td class="pad-all" style="padding:44px 48px 36px;border-bottom:1px solid #ECEAE6;">
 
-    <!-- ② SUMMARY METRICS -->
-    <div class="summary">
-      <div class="section-eyebrow">Ringkasan Metrik Utama</div>
+        <!-- Eyebrow row -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:22px;">
+        <tr>
+          <td style="width:auto;padding:4px 12px;border:1px solid #E2E1DD;background-color:#FAF9F7;font-family:Georgia,serif;font-size:10px;letter-spacing:0.14em;text-transform:uppercase;color:#999994;white-space:nowrap;">Daily Report</td>
+          <td style="padding:0 12px;"><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td style="border-top:1px solid #E2E1DD;font-size:0;line-height:0;">&nbsp;</td></tr></table></td>
+          <td class="hide-mobile" style="font-family:Georgia,serif;font-size:10px;color:#999994;letter-spacing:0.06em;white-space:nowrap;">Sesi {{ $timeOfDay ?? 'Pagi' }} &middot; {{ now()->format('H:i') }} WIB</td>
+        </tr>
+        </table>
 
-      @php
-        $summary = $summary ?? [];
-        $needVerification = $summary['needVerification'] ?? 0;
-        $cancelCount = $summary['cancelCount'] ?? 0;
-        $compliance = $summary['compliance'] ?? '0%';
-        $oakToday = $summary['oakToday'] ?? 0;
-        $weeklyCount = $summary['weeklyCount'] ?? 0;
-        $needAction = $summary['needAction'] ?? 0;
-        $warningCount = $summary['warningCount'] ?? 0;
-        $completeCount = $summary['completeCount'] ?? 0;
-        $reportDateFormatted = isset($summary['reportDate']) ? \Carbon\Carbon::parse($summary['reportDate'])->translatedFormat('d M Y') : now()->format('d M Y');
-      @endphp
-      <!-- KPI baris 1 -->
-      <div class="kpi-row">
-        <div class="kpi-cell">
-          <div class="kpi-label">Need<br>Verification</div>
-          <div class="kpi-val">{{ $needVerification }}</div>
-          <div class="kpi-sub">item IKK pending</div>
+        <!-- Title -->
+        <div class="hero-title" style="font-family:Georgia,'Times New Roman',serif;font-size:34px;font-weight:normal;line-height:1.2;letter-spacing:-0.5px;color:#111110;margin:0 0 16px;">
+          Dashboard <em>IKK</em><br>Laporan Harian
         </div>
-        <div class="kpi-cell">
-          <div class="kpi-label">Pekerjaan<br>Batal</div>
-          <div class="kpi-val danger">{{ $cancelCount }}</div>
-          <div class="kpi-sub">cancel hari ini</div>
-        </div>
-        <div class="kpi-cell">
-          <div class="kpi-label">Compliance<br>Rate</div>
-          <div class="kpi-val {{ (float) str_replace('%', '', $compliance) >= 80 ? '' : 'danger' }}">{{ $compliance }}</div>
-          <div class="kpi-sub">target &gt; 80%</div>
-        </div>
-      </div>
 
-      <!-- KPI baris 2 -->
-      <div class="kpi-row-2">
-        <div class="kpi-cell-2">
-          <div class="kpi-label" style="font-size:10px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px;">OAK Hari Ini</div>
-          <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:400;letter-spacing:-0.5px;color:var(--ink);margin-bottom:4px;">{{ $oakToday }}</div>
-          <div style="font-size:11px;font-weight:300;color:var(--ink-soft);">Total OAK IKK</div>
-        </div>
-        <div class="kpi-cell-2">
-          <div class="kpi-label" style="font-size:10px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:8px;">Data IKK Minggu Ini</div>
-          <div style="font-family:'Playfair Display',serif;font-size:28px;font-weight:400;letter-spacing:-0.5px;color:var(--ink);margin-bottom:4px;">{{ $weeklyCount }}<span style="font-size:16px;color:var(--ink-soft);">+</span></div>
-          <div style="font-size:11px;font-weight:300;color:var(--ink-soft);">per {{ $reportDateFormatted }}</div>
-        </div>
-      </div>
+        <!-- Lead -->
+        <p style="font-family:Georgia,serif;font-size:14px;font-weight:normal;color:#555552;line-height:1.75;margin:0;">
+          Ringkasan otomatis kondisi Dashboard IKK per
+          <strong style="color:#111110;">{{ now()->format('d F Y') }}</strong>.
+          Screenshot dashboard terlampir pada email ini untuk keperluan monitoring dan tindak lanjut.
+        </p>
 
-      <!-- Status breakdown -->
-      <div class="section-eyebrow" style="margin-bottom:14px;margin-top:28px;">Status Pekerjaan</div>
-      <div class="status-grid">
-        <div class="status-item red">
-          <div class="status-dot-row">
-            <div class="status-dot"></div>
-            <div class="status-name">Need Action</div>
-          </div>
-          <div class="status-count">{{ $needAction }}</div>
-          <div class="status-desc">item membutuhkan tindakan segera</div>
-        </div>
-        <div class="status-item amber">
-          <div class="status-dot-row">
-            <div class="status-dot"></div>
-            <div class="status-name">Warning</div>
-          </div>
-          <div class="status-count">{{ $warningCount }}</div>
-          <div class="status-desc">item dalam status peringatan</div>
-        </div>
-        <div class="status-item green">
-          <div class="status-dot-row">
-            <div class="status-dot"></div>
-            <div class="status-name">Complete</div>
-          </div>
-          <div class="status-count">{{ $completeCount }}</div>
-          <div class="status-desc">item selesai & terverifikasi</div>
-        </div>
-      </div>
-    </div>
+        <!-- Bottom accent line (right side) -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-top:28px;">
+        <tr>
+          <td style="border-bottom:1px solid #ECEAE6;">&nbsp;</td>
+          <td style="width:80px;border-bottom:3px solid #111110;font-size:0;line-height:0;">&nbsp;</td>
+        </tr>
+        </table>
 
-    <!-- ③ SCREENSHOT PREVIEW -->
-    <div class="screenshot-section">
-      <div class="section-eyebrow" style="margin-bottom:16px;">Screenshot Dashboard</div>
-      <div class="ss-frame">
-        <div class="ss-topbar">
-          <div class="ss-dots">
-            <div class="ss-dot"></div>
-            <div class="ss-dot"></div>
-            <div class="ss-dot"></div>
-          </div>
-          <div class="ss-url">IKK Dashboard</div>
-        </div>
-        <div class="ss-body">
-          {{-- Screenshot dikirim sebagai lampiran email (attachment), tidak di-embed di body --}}
-          <div class="ss-placeholder">
-            <svg viewBox="0 0 36 36" fill="none" xmlns="http://www.w3.org/2000/svg">
-              <rect x="2" y="6" width="32" height="24" rx="2" stroke="#111110" stroke-width="1.5"/>
-              <path d="M2 12h32" stroke="#111110" stroke-width="1.5"/>
-              <rect x="6" y="16" width="8" height="10" rx="1" fill="#111110" opacity=".15"/>
-              <rect x="16" y="18" width="8" height="8" rx="1" fill="#111110" opacity=".15"/>
-              <rect x="26" y="14" width="4" height="12" rx="1" fill="#111110" opacity=".25"/>
+      </td>
+    </tr>
+
+    <!-- ② SUMMARY METRICS ── -->
+    <tr>
+      <td class="pad-all" style="padding:36px 48px;border-bottom:1px solid #ECEAE6;">
+
+        <!-- Section label -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:20px;">
+        <tr>
+          <td style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.14em;text-transform:uppercase;color:#CCCCC6;white-space:nowrap;padding-right:12px;">Ringkasan Metrik Utama</td>
+          <td width="100%"><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td style="border-top:1px solid #ECEAE6;">&nbsp;</td></tr></table></td>
+        </tr>
+        </table>
+
+        <!-- KPI ROW 1 — 3 columns -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="kpi-3col" style="border:1px solid #E8E7E3;border-collapse:collapse;margin-bottom:1px;">
+        <tr>
+          <td style="padding:20px 20px 16px;border-right:1px solid #E8E7E3;vertical-align:top;width:33.33%;">
+            <div style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.09em;text-transform:uppercase;color:#999994;margin-bottom:10px;line-height:1.4;">Need<br>Verification</div>
+            <div class="kpi-num" style="font-family:Georgia,'Times New Roman',serif;font-size:40px;line-height:1;letter-spacing:-1px;color:#111110;margin-bottom:6px;">{{ $needVerification ?? 36 }}</div>
+            <div style="font-family:Georgia,serif;font-size:11px;color:#999994;">item IKK pending</div>
+          </td>
+          <td style="padding:20px 20px 16px;border-right:1px solid #E8E7E3;vertical-align:top;width:33.33%;">
+            <div style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.09em;text-transform:uppercase;color:#999994;margin-bottom:10px;line-height:1.4;">Pekerjaan<br>Batal</div>
+            <div class="kpi-num" style="font-family:Georgia,'Times New Roman',serif;font-size:40px;line-height:1;letter-spacing:-1px;color:#B83232;margin-bottom:6px;">{{ $cancelCount ?? 0 }}</div>
+            <div style="font-family:Georgia,serif;font-size:11px;color:#999994;">cancel hari ini</div>
+          </td>
+          <td style="padding:20px 20px 16px;vertical-align:top;width:33.33%;">
+            <div style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.09em;text-transform:uppercase;color:#999994;margin-bottom:10px;line-height:1.4;">Compliance<br>Rate</div>
+            <div class="kpi-num" style="font-family:Georgia,'Times New Roman',serif;font-size:40px;line-height:1;letter-spacing:-1px;color:#B83232;margin-bottom:6px;">{{ $compliance ?? '0%' }}</div>
+            <div style="font-family:Georgia,serif;font-size:11px;color:#999994;">target &gt; 80%</div>
+          </td>
+        </tr>
+        </table>
+
+        <!-- KPI ROW 2 — 2 columns -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="kpi-2col" style="border:1px solid #E8E7E3;border-top:none;border-collapse:collapse;margin-bottom:28px;">
+        <tr>
+          <td style="padding:18px 20px;border-right:1px solid #E8E7E3;vertical-align:top;width:50%;">
+            <div style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.09em;text-transform:uppercase;color:#999994;margin-bottom:8px;">OAK Hari Ini</div>
+            <div class="kpi-num-sm" style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1;letter-spacing:-0.5px;color:#111110;margin-bottom:4px;">{{ $oakToday ?? 0 }}</div>
+            <div style="font-family:Georgia,serif;font-size:11px;color:#999994;">Total OAK IKK</div>
+          </td>
+          <td style="padding:18px 20px;vertical-align:top;width:50%;">
+            <div style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.09em;text-transform:uppercase;color:#999994;margin-bottom:8px;">Data IKK Minggu Ini</div>
+            <div class="kpi-num-sm" style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1;letter-spacing:-0.5px;color:#111110;margin-bottom:4px;">{{ $weeklyCount ?? 25 }}<span style="font-size:16px;color:#CCCCC6;">+</span></div>
+            <div style="font-family:Georgia,serif;font-size:11px;color:#999994;">per {{ now()->format('d M Y') }}</div>
+          </td>
+        </tr>
+        </table>
+
+        <!-- STATUS LABEL -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:14px;">
+        <tr>
+          <td style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.14em;text-transform:uppercase;color:#CCCCC6;white-space:nowrap;padding-right:12px;">Status Pekerjaan</td>
+          <td width="100%"><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td style="border-top:1px solid #ECEAE6;">&nbsp;</td></tr></table></td>
+        </tr>
+        </table>
+
+        <!-- STATUS 3 CARDS -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="status-3col">
+        <tr>
+          <!-- Need Action -->
+          <td style="padding-right:6px;vertical-align:top;width:33.33%;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+            <tr><td style="padding:14px 16px;border:1px solid #F0CECE;background-color:#FDF4F4;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8px;">
+              <tr>
+                <td style="width:6px;height:6px;background-color:#B83232;border-radius:50%;vertical-align:middle;">&nbsp;</td>
+                <td style="padding-left:6px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;color:#B83232;vertical-align:middle;">Need Action</td>
+              </tr>
+              </table>
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:normal;letter-spacing:-0.5px;color:#111110;margin-bottom:4px;">{{ $needAction ?? 4 }}</div>
+              <div style="font-family:Georgia,serif;font-size:10px;color:#999994;line-height:1.4;">item butuh tindakan segera</div>
+            </td></tr>
+            </table>
+          </td>
+          <!-- Warning -->
+          <td style="padding:0 3px;vertical-align:top;width:33.33%;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+            <tr><td style="padding:14px 16px;border:1px solid #ECD9A8;background-color:#FDF8F0;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8px;">
+              <tr>
+                <td style="width:6px;height:6px;background-color:#9A6200;border-radius:50%;vertical-align:middle;">&nbsp;</td>
+                <td style="padding-left:6px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;color:#9A6200;vertical-align:middle;">Warning</td>
+              </tr>
+              </table>
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:normal;letter-spacing:-0.5px;color:#111110;margin-bottom:4px;">{{ $warningCount ?? 0 }}</div>
+              <div style="font-family:Georgia,serif;font-size:10px;color:#999994;line-height:1.4;">item dalam status peringatan</div>
+            </td></tr>
+            </table>
+          </td>
+          <!-- Complete -->
+          <td style="padding-left:6px;vertical-align:top;width:33.33%;">
+            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+            <tr><td style="padding:14px 16px;border:1px solid #A8D8BC;background-color:#F2FBF6;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8px;">
+              <tr>
+                <td style="width:6px;height:6px;background-color:#1E6E48;border-radius:50%;vertical-align:middle;">&nbsp;</td>
+                <td style="padding-left:6px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;color:#1E6E48;vertical-align:middle;">Complete</td>
+              </tr>
+              </table>
+              <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:normal;letter-spacing:-0.5px;color:#111110;margin-bottom:4px;">{{ $completeCount ?? 0 }}</div>
+              <div style="font-family:Georgia,serif;font-size:10px;color:#999994;line-height:1.4;">item selesai &amp; terverifikasi</div>
+            </td></tr>
+            </table>
+          </td>
+        </tr>
+        </table>
+
+      </td>
+    </tr>
+
+    <!-- ③ SCREENSHOT SECTION ── -->
+    <tr>
+      <td class="pad-all" style="padding:36px 48px;border-bottom:1px solid #ECEAE6;background-color:#FAF9F7;">
+
+        <!-- Label -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:16px;">
+        <tr>
+          <td style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.14em;text-transform:uppercase;color:#CCCCC6;white-space:nowrap;padding-right:12px;">Screenshot Dashboard</td>
+          <td width="100%"><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td style="border-top:1px solid #ECEAE6;">&nbsp;</td></tr></table></td>
+        </tr>
+        </table>
+
+        <!-- Browser frame -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border:1px solid #E2E1DD;background-color:#FFFFFF;">
+          <!-- Browser bar -->
+          <tr>
+            <td style="padding:10px 14px;background-color:#F2F1EE;border-bottom:1px solid #E2E1DD;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+              <tr>
+                <!-- Dots -->
+                <td style="width:auto;">
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+                  <tr>
+                    <td style="width:8px;height:8px;background-color:#E8C4C4;border-radius:50%;font-size:0;line-height:0;">&nbsp;</td>
+                    <td style="width:5px;font-size:0;">&nbsp;</td>
+                    <td style="width:8px;height:8px;background-color:#E8DBC4;border-radius:50%;font-size:0;line-height:0;">&nbsp;</td>
+                    <td style="width:5px;font-size:0;">&nbsp;</td>
+                    <td style="width:8px;height:8px;background-color:#C4E8D4;border-radius:50%;font-size:0;line-height:0;">&nbsp;</td>
+                  </tr>
+                  </table>
+                </td>
+                <!-- URL bar -->
+                <td style="padding-left:12px;">
+                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+                  <tr>
+                    <td style="border:1px solid #E2E1DD;background-color:#FFFFFF;padding:4px 10px;font-family:Georgia,serif;font-size:10px;color:#999994;letter-spacing:0.02em;">
+                      dopm-system.internal / ikk-dashboard
+                    </td>
+                  </tr>
+                  </table>
+                </td>
+              </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Screenshot image area -->
+          <tr>
+            <td align="center" style="padding:0;background-color:#F5F4F1;">
+              {{--
+                UNTUK PRODUCTION — ganti blok di bawah dengan:
+                <img src="{{ $screenshotUrl }}" width="598" style="display:block;width:100%;max-width:598px;" alt="Dashboard IKK DOPM">
+                ATAU embed base64:
+                <img src="data:image/png;base64,{{ $screenshotBase64 }}" width="598" style="display:block;width:100%;" alt="Dashboard IKK DOPM">
+              --}}
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+              <tr>
+                <td align="center" style="padding:48px 24px;">
+                  <!-- Placeholder icon -->
+                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 12px;">
+                    <rect x="2" y="7" width="36" height="27" rx="2" stroke="#CCCCC6" stroke-width="1.5"/>
+                    <path d="M2 14h36" stroke="#CCCCC6" stroke-width="1.5"/>
+                    <rect x="6" y="18" width="10" height="11" rx="1" fill="#CCCCC6" opacity=".5"/>
+                    <rect x="18" y="20" width="10" height="9" rx="1" fill="#CCCCC6" opacity=".5"/>
+                    <rect x="30" y="16" width="5" height="13" rx="1" fill="#CCCCC6" opacity=".7"/>
+                  </svg>
+                  <div style="font-family:Georgia,serif;font-size:12px;color:#AAAAAA;letter-spacing:0.04em;">Screenshot terlampir di email ini</div>
+                </td>
+              </tr>
+              </table>
+            </td>
+          </tr>
+          <!-- Caption bar -->
+          <tr>
+            <td style="padding:9px 14px;border-top:1px solid #E2E1DD;">
+              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+              <tr>
+                <td style="font-family:Georgia,serif;font-size:10px;color:#999994;letter-spacing:0.03em;">IKK Dashboard &middot; {{ now()->format('d F Y, H:i') }} WIB</td>
+                <td align="right" style="font-family:Georgia,serif;font-size:10px;color:#CCCCC6;">Semua Situs</td>
+              </tr>
+              </table>
+            </td>
+          </tr>
+        </table>
+
+      </td>
+    </tr>
+
+    <!-- ④ ATTACHMENT ROW ── -->
+    <tr>
+      <td style="padding:0 48px 28px;background-color:#FAF9F7;border-bottom:1px solid #ECEAE6;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border:1px solid #E2E1DD;background-color:#FFFFFF;">
+        <tr>
+          <!-- Icon box -->
+          <td style="width:46px;background-color:#111110;text-align:center;vertical-align:middle;padding:15px 14px;">
+            <svg width="18" height="18" viewBox="0 0 18 18" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <rect x="2" y="1" width="10" height="15" rx="1" stroke="white" stroke-width="1.3"/>
+              <path d="M10 1L15 6" stroke="white" stroke-width="1.3"/>
+              <path d="M10 1V6H15" stroke="white" stroke-width="1.3"/>
+              <path d="M5 9h6M5 11.5h4" stroke="white" stroke-width="1.1" stroke-linecap="round"/>
             </svg>
-            <span class="ss-placeholder-text">Screenshot terlampir di email ini</span>
-          </div>
-        </div>
-        <div class="ss-caption">
-          <span class="ss-caption-left">IKK Dashboard · {{ now()->format('d F Y, H:i') }} WIB</span>
-          <span class="ss-caption-right">
-            <svg viewBox="0 0 12 12" fill="none"><circle cx="6" cy="6" r="5" stroke="#c8c8c2" stroke-width="1"/><path d="M6 4v3M6 8.5v.5" stroke="#c8c8c2" stroke-width="1" stroke-linecap="round"/></svg>
-            Semua Situs
-          </span>
-        </div>
-      </div>
-    </div>
+          </td>
+          <!-- Info -->
+          <td style="padding:12px 16px;vertical-align:middle;">
+            <div style="font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#111110;margin-bottom:3px;">dashboard-ikk-dopm-{{ now()->format('Ymd') }}-{{ strtolower($timeOfDay ?? 'pagi') }}.png</div>
+            <div style="font-family:Georgia,serif;font-size:10px;color:#999994;letter-spacing:0.03em;">Screenshot otomatis &middot; {{ now()->format('d F Y, H:i') }} WIB</div>
+          </td>
+          <!-- Badge -->
+          <td align="right" style="padding:12px 16px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:#CCCCC6;white-space:nowrap;vertical-align:middle;">PNG</td>
+        </tr>
+        </table>
+      </td>
+    </tr>
 
-    <!-- ④ ATTACHMENT PILL -->
-    <div class="attachment-wrap">
-      <div class="attachment-pill">
-        <div class="attach-icon">
-          <svg viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
-            <rect x="2" y="1" width="9" height="13" rx="1" stroke="white" stroke-width="1.2"/>
-            <path d="M9 1L13 5" stroke="white" stroke-width="1.2"/>
-            <path d="M9 1V5H13" stroke="white" stroke-width="1.2"/>
-            <path d="M4.5 7.5h5M4.5 9.5h3.5" stroke="white" stroke-width="1" stroke-linecap="round"/>
-          </svg>
-        </div>
-        <div class="attach-info">
-          <div class="attach-name">dashboard-ikk-dopm-{{ now()->format('Ymd') }}-{{ strtolower($timeOfDay ?? 'pagi') }}.png</div>
-          <div class="attach-meta">Screenshot otomatis · {{ now()->format('d F Y, H:i') }} WIB</div>
-        </div>
-        <div class="attach-size">PNG</div>
-      </div>
-    </div>
+    <!-- ⑤ CTA ── -->
+    <tr>
+      <td class="pad-all" style="padding:32px 48px;border-bottom:1px solid #ECEAE6;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0">
+        <tr>
+          <td style="background-color:#111110;">
+            <a href="{{ $dashboardUrl ?? '#' }}" style="display:inline-block;padding:14px 36px;font-family:Georgia,serif;font-size:11px;font-weight:bold;letter-spacing:0.12em;text-transform:uppercase;color:#FFFFFF;text-decoration:none;">Buka Dashboard &rarr;</a>
+          </td>
+          <td style="padding-left:16px;font-family:Georgia,serif;font-size:12px;color:#999994;vertical-align:middle;" class="hide-mobile">Atau akses melalui portal internal DOPM</td>
+        </tr>
+        </table>
+      </td>
+    </tr>
 
-    <!-- ⑤ CTA -->
-    <div class="cta-section">
-      <a href="{{ $dashboardUrl ?? '#' }}" class="cta-btn">Buka Dashboard →</a>
-      <span class="cta-note">Atau akses melalui portal internal DOPM</span>
-    </div>
+    <!-- ⑥ FOOTER ── -->
+    <tr>
+      <td class="pad-all" style="padding:22px 48px;background-color:#FAF9F7;">
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
+        <tr>
+          <td style="vertical-align:top;">
+            <div style="font-family:Georgia,serif;font-size:11px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:#111110;margin-bottom:4px;">DOPM System</div>
+            <div style="font-family:Georgia,serif;font-size:10px;color:#CCCCC6;">&copy; {{ now()->format('Y') }} &middot; IKK Monitoring &middot; Semua Situs</div>
+          </td>
+          <td align="right" style="font-family:Georgia,serif;font-size:10px;color:#CCCCC6;line-height:1.7;vertical-align:top;" class="hide-mobile">
+            Email ini dikirim otomatis sesuai jadwal harian.<br>
+            Jangan balas pesan ini &middot; <a href="#" style="color:#CCCCC6;text-decoration:underline;">Unsubscribe</a>
+          </td>
+        </tr>
+        </table>
+      </td>
+    </tr>
 
-    <!-- ⑥ FOOTER -->
-    <div class="footer">
-      <div class="footer-left">
-        <div class="footer-brand">DOPM System</div>
-        <div class="footer-copy">© {{ now()->format('Y') }} · IKK Monitoring · Semua Situs</div>
-      </div>
-      <div class="footer-right">
-        Email ini dikirim otomatis sesuai jadwal harian.<br>
-        Jangan balas pesan ini · <a href="#" style="color:var(--ink-xsoft);">Unsubscribe</a>
-      </div>
-    </div>
+    <!-- BOTTOM ACCENT -->
+    <tr>
+      <td style="height:3px;background-color:#111110;font-size:0;line-height:0;">&nbsp;</td>
+    </tr>
 
-    <div class="bottom-band"></div>
-  </div>
+  </table>
+  <!-- end card -->
 
-</div>
+</td></tr>
+</table>
+<!-- end wrapper -->
+
 </body>
 </html>
