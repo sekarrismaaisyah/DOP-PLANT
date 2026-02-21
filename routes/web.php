@@ -48,6 +48,21 @@ use App\Http\Controllers\InsidenLpiController;
 
 Auth::routes();
 
+// Route khusus screenshot dashboard (tanpa middleware auth, pakai token)
+// URL: /dopmikk/dopm/dashboard/screenshot?token=SECRET
+Route::get('/dopmikk/dopm/dashboard/screenshot', function (\Illuminate\Http\Request $request) {
+    $token = config('dashboard_screenshot.token');
+    if ($token === '' || $token !== $request->query('token')) {
+        abort(404);
+    }
+    $userId = config('dashboard_screenshot.user_id', 1);
+    $user = \App\Models\User::find($userId);
+    if (!$user) {
+        abort(404);
+    }
+    \Illuminate\Support\Facades\Auth::login($user);
+    return app(\App\Http\Controllers\DOPMIKK\DOPMController::class)->dashboard($request);
+})->name('dopm.dashboard.screenshot');
 
 // Define a group of routes with 'auth' middleware applied
 Route::middleware(['auth'])->group(function () {

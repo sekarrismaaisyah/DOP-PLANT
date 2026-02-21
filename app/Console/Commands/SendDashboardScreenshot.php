@@ -3,6 +3,7 @@
 namespace App\Console\Commands;
 
 use App\Mail\DashboardScreenshotMail;
+use App\Services\DashboardEmailSummaryService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Mail;
 
@@ -39,7 +40,7 @@ class SendDashboardScreenshot extends Command
             return self::FAILURE;
         }
 
-        $url = $this->option('url') ?: config('dashboard_screenshot.url');
+        $url = $this->option('url') ?: $this->getScreenshotUrl();
         $emails = config('dashboard_screenshot.emails');
         $storagePath = config('dashboard_screenshot.storage_path');
         $timeout = config('dashboard_screenshot.timeout');
@@ -93,9 +94,19 @@ class SendDashboardScreenshot extends Command
         }
 
         $slotLabel = ucfirst($slot);
+        $summary = [];
+        try {
+            $summaryService = app(DashboardEmailSummaryService::class);
+            $summary = $summaryService->getSummaryForDate(now()->toDateString());
+        } catch (\Throwable $e) {
+            $this->warn('Summary metrik tidak tersedia: ' . $e->getMessage());
+        }
+
+        // Link di email ke dashboard biasa (tanpa token)
+        $dashboardUrl = rtrim(config('app.url'), '/') . '/dopmikk/dopm/dashboard';
         try {
             foreach ($emails as $email) {
-                Mail::to($email)->send(new DashboardScreenshotMail($filepath, $slotLabel));
+                Mail::to($email)->send(new DashboardScreenshotMail($filepath, $slotLabel, $summary, $dashboardUrl));
                 $this->info("Email terkirim ke: {$email}");
             }
         } catch (\Throwable $e) {
@@ -107,5 +118,20 @@ class SendDashboardScreenshot extends Command
         @unlink($filepath);
         $this->info('Selesai.');
         return self::SUCCESS;
+    }
+
+    /**
+     * URL yang dibuka Browsershot. Jika DASHBOARD_SCREENSHOT_TOKEN di-set,
+     * pakai endpoint /dopmikk/dopm/dashboard/screenshot?token=... agar
+     * mendapat halaman dashboard (bukan login).
+     */
+    private function getScreenshotUrl(): string
+    {
+        $token = config('dashboard_screenshot.token');
+        if ($token !== '') {
+            $base = rtrim(config('app.url'), '/');
+            return $base . '/dopmikk/dopm/dashboard/screenshot?token=' . $token;
+        }
+        return config('dashboard_screenshot.url');
     }
 }

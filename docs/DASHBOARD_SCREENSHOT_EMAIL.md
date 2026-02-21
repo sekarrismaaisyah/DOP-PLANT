@@ -50,8 +50,15 @@ sudo apt-get install -y libnss3 libatk1.0-0 libatk-bridge2.0-0 libcups2 libdrm2 
 Tambahkan atau edit di file `.env`:
 
 ```env
-# URL halaman dashboard yang akan di-screenshot (harus bisa diakses dari server)
-DASHBOARD_SCREENSHOT_URL=https://besentry-dev.beraucoal.co.id/dopmikk/dopm/dashboard
+# Penting: agar screenshot menangkap DASHBOARD (bukan halaman login), set token:
+# Command akan memakai URL: {APP_URL}/dopmikk/dopm/dashboard/screenshot?token={token}
+DASHBOARD_SCREENSHOT_TOKEN=your-secret-token-minimal-16-karakter
+
+# User ID yang dipakai untuk render dashboard saat akses via token (default: 1)
+DASHBOARD_SCREENSHOT_USER_ID=1
+
+# Jika DASHBOARD_SCREENSHOT_TOKEN tidak di-set, URL di bawah yang dipakai (bisa dapat halaman login)
+# DASHBOARD_SCREENSHOT_URL=https://besentry-dev.beraucoal.co.id/dopmikk/dopm/dashboard
 
 # Email penerima, pisahkan dengan koma untuk banyak penerima
 DASHBOARD_SCREENSHOT_EMAILS=admin@example.com,manager@example.com

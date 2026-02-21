@@ -18,10 +18,14 @@ class DashboardScreenshotMail extends Mailable
      *
      * @param string $screenshotPath Path to PNG screenshot file
      * @param string $timeOfDay Pagi / Siang / Sore
+     * @param array<string, mixed> $summary Ringkasan metrik dari DashboardEmailSummaryService
+     * @param string $dashboardUrl URL dashboard untuk link CTA
      */
     public function __construct(
         public string $screenshotPath,
-        public string $timeOfDay
+        public string $timeOfDay,
+        public array $summary = [],
+        public string $dashboardUrl = '#'
     ) {}
 
     /**

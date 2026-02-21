@@ -11,6 +11,23 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Token rahasia untuk URL screenshot (tanpa login)
+    |--------------------------------------------------------------------------
+    | Set di .env (DASHBOARD_SCREENSHOT_TOKEN). Jika diisi, gunakan URL:
+    | {app_url}/dopmikk/dopm/dashboard/screenshot?token={token}
+    | agar Browsershot mendapat halaman dashboard, bukan halaman login.
+    */
+    'token' => env('DASHBOARD_SCREENSHOT_TOKEN', ''),
+
+    /*
+    |--------------------------------------------------------------------------
+    | User ID yang dipakai untuk render dashboard saat akses via token
+    |--------------------------------------------------------------------------
+    */
+    'user_id' => (int) env('DASHBOARD_SCREENSHOT_USER_ID', 1),
+
+    /*
+    |--------------------------------------------------------------------------
     | Email penerima (pisahkan dengan koma di .env)
     |--------------------------------------------------------------------------
     */
