@@ -1718,6 +1718,7 @@
                         // Data dari IKK/work permit (bukan DOPM)
                         $dopmJson = [
                             'kode_ikk' => $ikk->code ?? null,
+                            'work_permit_id' => $ikk->id ?? null,
                             'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
                             'sid_layer_2' => $ikk->sid_layer_2 ?? null,
                             'sid_layer_3' => $ikk->sid_layer_3 ?? null,
@@ -1800,6 +1801,7 @@
                     // Data dari IKK/work permit (bukan DOPM)
                     $dopmJsonK = [
                         'kode_ikk' => $ikk->code ?? null,
+                        'work_permit_id' => $ikk->id ?? null,
                         'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
                         'sid_layer_2' => $ikk->sid_layer_2 ?? null,
                         'sid_layer_3' => $ikk->sid_layer_3 ?? null,
@@ -1880,10 +1882,11 @@
                   @forelse($ikkHijau as $ikk)
                   @php
                     // Data dari IKK/work permit (bukan DOPM)
-                    $dopmJsonH = [
-                        'kode_ikk' => $ikk->code ?? null,
-                        'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
-                        'sid_layer_2' => $ikk->sid_layer_2 ?? null,
+                        $dopmJsonH = [
+                            'kode_ikk' => $ikk->code ?? null,
+                            'work_permit_id' => $ikk->id ?? null,
+                            'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
+                            'sid_layer_2' => $ikk->sid_layer_2 ?? null,
                         'sid_layer_3' => $ikk->sid_layer_3 ?? null,
                         'sid_layer_4' => $ikk->sid_layer_4 ?? null,
                         'nama_layer_2' => $ikk->nama_layer_2 ?? null,
@@ -2438,7 +2441,7 @@
                         <div class="mb-4">
                             <div class="d-flex align-items-center mb-3">
                                 <i class="material-icons-outlined text-primary me-2" style="font-size: 20px;">checklist</i>
-                                <h6 class="mb-0 fw-bold">IPK-IKK <span class="badge bg-primary ms-2" id="badgeIpkIkk">0</span></h6>
+                                <h6 class="mb-0 fw-bold">IPK-IKK <span class="badge bg-primary ms-2" id="badgeIpkIkk">0</span><span class="small text-muted ms-1" id="ipkIkkSourceLabel"></span></h6>
                             </div>
                             <div id="ipkIkkLoading" class="text-center py-4 d-none bg-white">
                                 <div class="spinner-border text-primary mb-2" role="status"></div>
@@ -2463,7 +2466,7 @@
                         <div class="mb-4">
                             <div class="d-flex align-items-center mb-3">
                                 <i class="material-icons-outlined text-success me-2" style="font-size: 20px;">folder_open</i>
-                                <h6 class="mb-0 fw-bold">OKK <span class="badge bg-success ms-2" id="badgeOkk">0</span></h6>
+                                <h6 class="mb-0 fw-bold">OKK <span class="badge bg-success ms-2" id="badgeOkk">0</span><span class="small text-muted ms-1" id="okkSourceLabel"></span></h6>
                             </div>
                             <div id="okkLoading" class="text-center py-4 d-none bg-white">
                                 <div class="spinner-border text-success mb-2" role="status"></div>
@@ -3117,6 +3120,8 @@
 
             var params = new URLSearchParams({
                 kode_ikk: data.kode_ikk || '',
+                work_permit_id: data.work_permit_id || '',
+                tanggal_dop: data.tanggal_dop || '',
                 jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '',
                 sid_layer_2: data.sid_layer_2 || '',
                 sid_layer_3: data.sid_layer_3 || '',
@@ -3444,6 +3449,7 @@
         if (modal) modal.show();
         var params = new URLSearchParams({
             kode_ikk: data.kode_ikk || '',
+            work_permit_id: data.work_permit_id || '',
             jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '',
             sid_layer_2: data.sid_layer_2 || '',
             sid_layer_3: data.sid_layer_3 || '',
@@ -3455,7 +3461,7 @@
             location_detail_name: data.location_detail_name || '',
             tanggal_dop: data.tanggal_dop || ''
         });
-        console.log('[OAK] Modal request params (data-dopm):', { location_name: data.location_name, location_detail_name: data.location_detail_name, tanggal_dop: data.tanggal_dop, kode_ikk: data.kode_ikk });
+        console.log('[OAK] Modal request params (data-dopm):', { location_name: data.location_name, location_detail_name: data.location_detail_name, tanggal_dop: data.tanggal_dop, kode_ikk: data.kode_ikk, work_permit_id: data.work_permit_id });
         console.log('[OAK] Modal API URL params:', params.toString());
         function doFetch() {
         fetch(modalApiUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
@@ -3470,13 +3476,19 @@
                 var ipk = res.ipk_ikk || [];
                 var okk = res.okk || [];
                 var oak = res.oak || [];
-                console.log('[OAK] API response:', { oakCount: oak.length, oak: oak, fullResKeys: res ? Object.keys(res) : [] });
+                var ipkSource = res.ipk_source || 'mysql';
+                var okkSource = res.okk_source || 'mysql';
+                console.log('[OAK] API response:', { oakCount: oak.length, oak: oak, fullResKeys: res ? Object.keys(res) : [], ipk_source: ipkSource, okk_source: okkSource });
                 if (oak.length > 0 && oak[0]) console.log('[OAK] First OAK row keys:', Object.keys(oak[0]), 'sample:', oak[0]);
                 var ctx = res.dopm_context || {};
                 var layerNames = [ctx.nama_layer_2, ctx.nama_layer_3, ctx.nama_layer_4].filter(Boolean).join(' / ') || '—';
                 document.getElementById('oakLayerNames').textContent = layerNames;
                 document.getElementById('badgeIpkIkk').textContent = ipk.length;
                 document.getElementById('badgeOkk').textContent = okk.length;
+                var ipkSourceEl = document.getElementById('ipkIkkSourceLabel');
+                var okkSourceEl = document.getElementById('okkSourceLabel');
+                if (ipkSourceEl) ipkSourceEl.textContent = ipkSource === 'clickhouse' ? ' (Sumber: ClickHouse)' : ' (Sumber: MySQL)';
+                if (okkSourceEl) okkSourceEl.textContent = okkSource === 'clickhouse' ? ' (Sumber: ClickHouse)' : ' (Sumber: MySQL)';
                 document.getElementById('badgeOak').textContent = oak.length;
                 document.getElementById('statCountIpkIkk').textContent = ipk.length;
                 document.getElementById('statCountOkk').textContent = okk.length;

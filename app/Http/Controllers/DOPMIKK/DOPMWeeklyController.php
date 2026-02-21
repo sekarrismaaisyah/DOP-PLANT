@@ -20,6 +20,23 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 class DOPMWeeklyController extends Controller
 {
     /**
+     * Apakah untuk tanggal tertentu data IPK/OKK diambil dari ClickHouse (true)
+     * atau MySQL (false). Berdasarkan config dopm.ipk_okk_clickhouse_cutoff_date.
+     */
+    public static function useClickHouseForIpkOkk(string $filterDate): bool
+    {
+        $cutoff = config('dopm.ipk_okk_clickhouse_cutoff_date', '2025-02-20');
+        try {
+            $d = Carbon::parse($filterDate)->startOfDay();
+            $c = Carbon::parse($cutoff)->startOfDay();
+
+            return $d->gte($c);
+        } catch (\Throwable $e) {
+            return false;
+        }
+    }
+
+    /**
      * Dashboard statistik mingguan DOPM, IKK, OKK, OAK.
      * Filter utama tetap menggunakan tanggal terpilih, tetapi
      * data IKK yang ditampilkan mencakup status APPROVED & EXPIRED.
@@ -528,49 +545,98 @@ class DOPMWeeklyController extends Controller
             'approved_count' => $totalWorkPermitApprovedHarian,
         ]);
 
-        // Tambahkan status_pekerjaan (dari tabel ipk_ikk) per kode IKK:
-        // relasi: ikk_work_permit.code = ipk_ikk.kode_ikk, ambil status_pekerjaan terbaru (ts paling baru).
+        // Status pekerjaan & daftar IKK batal: dari MySQL atau ClickHouse sesuai cutoff
+        $useChIpkOkk = self::useClickHouseForIpkOkk($filterDate);
+        $cancelKodeIkk = [];
         if (!empty($ikkClickhouseListHarian)) {
-            $kodeIkksForStatus = array_values(array_unique(array_filter(array_map(function ($ikk) {
-                return $ikk->code ?? null;
-            }, $ikkClickhouseListHarian))));
-
-            if (!empty($kodeIkksForStatus)) {
-                // Hanya kolom yang dipakai; ambil satu per kode_ikk (ts terbaru) via get lalu dedupe di PHP
-                $statusRows = IpkIkk::whereIn('kode_ikk', $kodeIkksForStatus)
-                    ->select(['kode_ikk', 'status_pekerjaan', 'ts'])
-                    ->orderByDesc('ts')
-                    ->get();
-
-                $statusByKode = [];
-                foreach ($statusRows as $row) {
-                    $kode = $row->kode_ikk;
-                    if ($kode === null || $kode === '') {
-                        continue;
-                    }
-                    // Ambil record pertama (ts paling baru) per kode_ikk
-                    if (!isset($statusByKode[$kode])) {
-                        $statusByKode[$kode] = $row->status_pekerjaan;
-                    }
-                }
-
-                foreach ($ikkClickhouseListHarian as $ikk) {
-                    $code = $ikk->code ?? null;
-                    $ikk->status_pekerjaan = ($code !== null && isset($statusByKode[$code]))
-                        ? $statusByKode[$code]
-                        : null;
+            $idToCode = [];
+            foreach ($ikkClickhouseListHarian as $ikk) {
+                $id = $ikk->id ?? null;
+                $code = $ikk->code ?? null;
+                if ($id !== null && $code !== null && $code !== '') {
+                    $idToCode[$id] = $code;
                 }
             }
-        }
 
-        // Siapkan daftar kode_ikk yang dibatalkan (status_pekerjaan Cancel/Batal) untuk hari ini
-        $cancelKodeIkk = IpkIkk::whereDate('ts', $filterDate)
-            ->whereIn('status_pekerjaan', ['Batal', 'BATAL', 'Cancel', 'CANCEL'])
-            ->pluck('kode_ikk')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
+            if ($useChIpkOkk && class_exists(\App\Services\ClickHouseService::class)) {
+                $ch = app(\App\Services\ClickHouseService::class);
+                if (method_exists($ch, 'query') && $ch->isConnected() && !empty($idToCode)) {
+                    $wpIds = array_keys($idToCode);
+                    $wpIdsEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $wpIds));
+                    $dateEsc = addslashes($filterDate);
+                    $sqlStatus = "
+                        SELECT work_permit_id, argMax(status, created_at) AS status, argMax(job_status, created_at) AS job_status
+                        FROM hse_automation.ipk_assessment
+                        WHERE work_permit_id IN ({$wpIdsEsc})
+                          AND toDate(start_date) = toDate('{$dateEsc}')
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                        GROUP BY work_permit_id
+                    ";
+                    $statusRows = $ch->query($sqlStatus);
+                    $statusByCode = [];
+                    foreach ($statusRows ?? [] as $r) {
+                        $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                        $code = $idToCode[$wpId] ?? null;
+                        if ($code !== null) {
+                            $st = self::getClickHouseRowValue($r, 'status') ?? self::getClickHouseRowValue($r, 'job_status');
+                            $statusByCode[$code] = $st;
+                        }
+                    }
+                    foreach ($ikkClickhouseListHarian as $ikk) {
+                        $ikk->status_pekerjaan = $statusByCode[$ikk->code ?? ''] ?? null;
+                    }
+                    $sqlCancel = "
+                        SELECT work_permit_id
+                        FROM hse_automation.ipk_assessment
+                        WHERE work_permit_id IN ({$wpIdsEsc})
+                          AND toDate(start_date) = toDate('{$dateEsc}')
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                          AND (upper(trim(toString(status))) IN ('BATAL', 'CANCEL') OR upper(trim(toString(job_status))) IN ('BATAL', 'CANCEL'))
+                    ";
+                    $cancelRows = $ch->query($sqlCancel);
+                    $cancelKodeIkk = [];
+                    foreach ($cancelRows ?? [] as $r) {
+                        $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                        if (isset($idToCode[$wpId])) {
+                            $cancelKodeIkk[] = $idToCode[$wpId];
+                        }
+                    }
+                    $cancelKodeIkk = array_values(array_unique($cancelKodeIkk));
+                }
+            }
+
+            if (!$useChIpkOkk) {
+                $kodeIkksForStatus = array_values(array_unique(array_filter(array_map(function ($ikk) {
+                    return $ikk->code ?? null;
+                }, $ikkClickhouseListHarian))));
+                if (!empty($kodeIkksForStatus)) {
+                    $statusRows = IpkIkk::whereIn('kode_ikk', $kodeIkksForStatus)
+                        ->select(['kode_ikk', 'status_pekerjaan', 'ts'])
+                        ->orderByDesc('ts')
+                        ->get();
+                    $statusByKode = [];
+                    foreach ($statusRows as $row) {
+                        $kode = $row->kode_ikk;
+                        if ($kode !== null && $kode !== '' && !isset($statusByKode[$kode])) {
+                            $statusByKode[$kode] = $row->status_pekerjaan;
+                        }
+                    }
+                    foreach ($ikkClickhouseListHarian as $ikk) {
+                        $code = $ikk->code ?? null;
+                        $ikk->status_pekerjaan = ($code !== null && isset($statusByKode[$code]))
+                            ? $statusByKode[$code]
+                            : null;
+                    }
+                }
+                $cancelKodeIkk = IpkIkk::whereDate('ts', $filterDate)
+                    ->whereIn('status_pekerjaan', ['Batal', 'BATAL', 'Cancel', 'CANCEL'])
+                    ->pluck('kode_ikk')
+                    ->filter()
+                    ->unique()
+                    ->values()
+                    ->all();
+            }
+        }
 
         // Kode work permit (non-cancel) untuk pre-load dan persentase
         $workPermitCodes = array_values(array_unique(array_filter(array_map(function ($ikk) use ($cancelKodeIkk) {
@@ -589,29 +655,93 @@ class DOPMWeeklyController extends Controller
         $okkByKode = [];
         $oakDataByLocation = [];
         if (!empty($workPermitCodes)) {
-            $ipkRows = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
-                ->whereDate('ts', $filterDate)
-                ->orderByDesc('ts')
-                ->get();
-            foreach ($ipkRows as $row) {
-                $k = $row->kode_ikk;
-                if (($k !== null && $k !== '') && !isset($ipkByKode[$k])) {
-                    $ipkByKode[$k] = $row;
+            if ($useChIpkOkk && !empty($ikkClickhouseListHarian) && class_exists(\App\Services\ClickHouseService::class)) {
+                $ch = app(\App\Services\ClickHouseService::class);
+                if (method_exists($ch, 'query') && $ch->isConnected()) {
+                    $wpIdToCode = [];
+                    foreach ($ikkClickhouseListHarian as $ikk) {
+                        $id = $ikk->id ?? null;
+                        $code = $ikk->code ?? null;
+                        if ($id !== null && $code !== null && $code !== '' && in_array($code, $workPermitCodes, true)) {
+                            $wpIdToCode[$id] = $code;
+                        }
+                    }
+                    $wpIds = array_keys($wpIdToCode);
+                    if (!empty($wpIds)) {
+                        $wpIdsEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $wpIds));
+                        $dateEsc = addslashes($filterDate);
+                        $sqlIpk = "
+                            SELECT id, work_permit_id, code, status, job_status, start_date, created_at, supervisor_id, cctv
+                            FROM hse_automation.ipk_assessment
+                            WHERE work_permit_id IN ({$wpIdsEsc})
+                              AND toDate(start_date) = toDate('{$dateEsc}')
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                            ORDER BY created_at DESC
+                        ";
+                        $ipkRowsCh = $ch->query($sqlIpk);
+                        foreach ($ipkRowsCh ?? [] as $r) {
+                            $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                            $code = $wpIdToCode[$wpId] ?? null;
+                            if ($code !== null && !isset($ipkByKode[$code])) {
+                                $obj = (object) [
+                                    'kode_ikk' => $code,
+                                    'durasi_jam' => null,
+                                    'status_pekerjaan' => self::getClickHouseRowValue($r, 'status') ?? self::getClickHouseRowValue($r, 'job_status'),
+                                ];
+                                $ipkByKode[$code] = $obj;
+                            }
+                        }
+                        $sqlOkk = "
+                            SELECT id, work_permit_id, code, status, created_at, supervisor_id
+                            FROM hse_automation.okk_assessment
+                            WHERE work_permit_id IN ({$wpIdsEsc})
+                              AND upper(trim(toString(status))) = 'SUBMITTED'
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                              AND toDate(created_at) = toDate('{$dateEsc}')
+                            ORDER BY created_at ASC
+                        ";
+                        $okkRowsCh = $ch->query($sqlOkk);
+                        foreach ($okkRowsCh ?? [] as $r) {
+                            $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                            $code = $wpIdToCode[$wpId] ?? null;
+                            if ($code !== null) {
+                                if (!isset($okkByKode[$code])) {
+                                    $okkByKode[$code] = collect();
+                                }
+                                $okkByKode[$code]->push((object) [
+                                    'nama_pengawas' => null,
+                                    'layer_pengawas' => null,
+                                ]);
+                            }
+                        }
+                    }
                 }
             }
-            $okkRows = Okk::whereIn('kode_ikk', $workPermitCodes)
-                ->whereDate('ts', $filterDate)
-                ->orderBy('ts')
-                ->get();
-            foreach ($okkRows as $row) {
-                $k = $row->kode_ikk;
-                if ($k === null || $k === '') {
-                    continue;
+            if (empty($ipkByKode) && empty($okkByKode)) {
+                $ipkRows = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
+                    ->whereDate('ts', $filterDate)
+                    ->orderByDesc('ts')
+                    ->get();
+                foreach ($ipkRows as $row) {
+                    $k = $row->kode_ikk;
+                    if (($k !== null && $k !== '') && !isset($ipkByKode[$k])) {
+                        $ipkByKode[$k] = $row;
+                    }
                 }
-                if (!isset($okkByKode[$k])) {
-                    $okkByKode[$k] = collect();
+                $okkRows = Okk::whereIn('kode_ikk', $workPermitCodes)
+                    ->whereDate('ts', $filterDate)
+                    ->orderBy('ts')
+                    ->get();
+                foreach ($okkRows as $row) {
+                    $k = $row->kode_ikk;
+                    if ($k === null || $k === '') {
+                        continue;
+                    }
+                    if (!isset($okkByKode[$k])) {
+                        $okkByKode[$k] = collect();
+                    }
+                    $okkByKode[$k]->push($row);
                 }
-                $okkByKode[$k]->push($row);
             }
             // OAK: unik (location, detail_location) dari IKK non-cancel
             $locationPairsForOak = [];
@@ -716,20 +846,25 @@ class DOPMWeeklyController extends Controller
 
         // Persentase IKK ada IPK / IKK ada OKK (workPermitCodes sudah dihitung di atas)
         if (!empty($workPermitCodes)) {
-            $ipkKodesWp = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
-                ->whereDate('ts', $filterDate)
-                ->select('kode_ikk')
-                ->distinct()
-                ->pluck('kode_ikk')
-                ->flip()
-                ->all();
-            $okkKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
-                ->whereDate('ts', $filterDate)
-                ->select('kode_ikk')
-                ->distinct()
-                ->pluck('kode_ikk')
-                ->flip()
-                ->all();
+            if ($useChIpkOkk) {
+                $ipkKodesWp = array_flip(array_keys($ipkByKode));
+                $okkKodesWp = array_flip(array_keys($okkByKode));
+            } else {
+                $ipkKodesWp = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
+                    ->whereDate('ts', $filterDate)
+                    ->select('kode_ikk')
+                    ->distinct()
+                    ->pluck('kode_ikk')
+                    ->flip()
+                    ->all();
+                $okkKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
+                    ->whereDate('ts', $filterDate)
+                    ->select('kode_ikk')
+                    ->distinct()
+                    ->pluck('kode_ikk')
+                    ->flip()
+                    ->all();
+            }
             $totalIkkUnikHarian = count($workPermitCodes);
             $ikkAdaIpkCount = count(array_intersect_key($ipkKodesWp, array_flip($workPermitCodes)));
             $ikkAdaOkkCount = count(array_intersect_key($okkKodesWp, array_flip($workPermitCodes)));
@@ -764,18 +899,71 @@ class DOPMWeeklyController extends Controller
         $ipkCountByKode = [];
         $okkCountByKode = [];
         if (!empty($workPermitCodes)) {
-            $ipkCountByKode = IpkIkk::whereDate('ts', $filterDate)
-                ->whereIn('kode_ikk', $workPermitCodes)
-                ->selectRaw('kode_ikk, count(*) as cnt')
-                ->groupBy('kode_ikk')
-                ->pluck('cnt', 'kode_ikk')
-                ->all();
-            $okkCountByKode = Okk::whereDate('ts', $filterDate)
-                ->whereIn('kode_ikk', $workPermitCodes)
-                ->selectRaw('kode_ikk, count(*) as cnt')
-                ->groupBy('kode_ikk')
-                ->pluck('cnt', 'kode_ikk')
-                ->all();
+            if ($useChIpkOkk && !empty($ikkClickhouseListHarian) && class_exists(\App\Services\ClickHouseService::class)) {
+                $ch = app(\App\Services\ClickHouseService::class);
+                if (method_exists($ch, 'query') && $ch->isConnected()) {
+                    $wpIdToCode = [];
+                    foreach ($ikkClickhouseListHarian as $ikk) {
+                        $id = $ikk->id ?? null;
+                        $code = $ikk->code ?? null;
+                        if ($id !== null && $code !== null && in_array($code, $workPermitCodes, true)) {
+                            $wpIdToCode[$id] = $code;
+                        }
+                    }
+                    $wpIds = array_keys($wpIdToCode);
+                    if (!empty($wpIds)) {
+                        $wpIdsEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $wpIds));
+                        $dateEsc = addslashes($filterDate);
+                        $sqlIpkCnt = "
+                            SELECT work_permit_id, count() AS cnt
+                            FROM hse_automation.ipk_assessment
+                            WHERE work_permit_id IN ({$wpIdsEsc})
+                              AND toDate(start_date) = toDate('{$dateEsc}')
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                            GROUP BY work_permit_id
+                        ";
+                        $ipkCntRows = $ch->query($sqlIpkCnt);
+                        foreach ($ipkCntRows ?? [] as $r) {
+                            $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                            $code = $wpIdToCode[$wpId] ?? null;
+                            if ($code !== null) {
+                                $ipkCountByKode[$code] = (int) (self::getClickHouseRowValue($r, 'cnt') ?? 0);
+                            }
+                        }
+                        $sqlOkkCnt = "
+                            SELECT work_permit_id, count() AS cnt
+                            FROM hse_automation.okk_assessment
+                            WHERE work_permit_id IN ({$wpIdsEsc})
+                              AND upper(trim(toString(status))) = 'SUBMITTED'
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                              AND toDate(created_at) = toDate('{$dateEsc}')
+                            GROUP BY work_permit_id
+                        ";
+                        $okkCntRows = $ch->query($sqlOkkCnt);
+                        foreach ($okkCntRows ?? [] as $r) {
+                            $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                            $code = $wpIdToCode[$wpId] ?? null;
+                            if ($code !== null) {
+                                $okkCountByKode[$code] = (int) (self::getClickHouseRowValue($r, 'cnt') ?? 0);
+                            }
+                        }
+                    }
+                }
+            }
+            if (empty($ipkCountByKode) && empty($okkCountByKode)) {
+                $ipkCountByKode = IpkIkk::whereDate('ts', $filterDate)
+                    ->whereIn('kode_ikk', $workPermitCodes)
+                    ->selectRaw('kode_ikk, count(*) as cnt')
+                    ->groupBy('kode_ikk')
+                    ->pluck('cnt', 'kode_ikk')
+                    ->all();
+                $okkCountByKode = Okk::whereDate('ts', $filterDate)
+                    ->whereIn('kode_ikk', $workPermitCodes)
+                    ->selectRaw('kode_ikk, count(*) as cnt')
+                    ->groupBy('kode_ikk')
+                    ->pluck('cnt', 'kode_ikk')
+                    ->all();
+            }
         }
         foreach ($chartJenisKeysFromIkk as $jenis) {
             $chartJenisLabels[] = self::singkatJenisIjin($jenis);
@@ -884,7 +1072,7 @@ class DOPMWeeklyController extends Controller
                         }
                     }
                     $sqlMonth = "
-                        SELECT wp.code AS code, toDate(wp.start_date) AS start_date
+                        SELECT wp.id AS id, wp.code AS code, toDate(wp.start_date) AS start_date
                         FROM hse_automation.ikk_work_permit AS wp
                         INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
                             ON toString(wp_pic.work_permit_id) = toString(wp.id)
@@ -901,9 +1089,14 @@ class DOPMWeeklyController extends Controller
                     ";
                     $wpRowsMonth = $clickHouse->query($sqlMonth);
                     $codesPerDay = [];
+                    $monthIdToCode = [];
                     if (! empty($wpRowsMonth)) {
                         foreach ($wpRowsMonth as $row) {
+                            $id = self::getClickHouseRowValue($row, 'id');
                             $code = isset($row['code']) ? trim((string) $row['code']) : '';
+                            if ($id !== null && $code !== '') {
+                                $monthIdToCode[$id] = $code;
+                            }
                             if ($code === '') {
                                 continue;
                             }
@@ -938,13 +1131,72 @@ class DOPMWeeklyController extends Controller
                     }
 
                     $ipkPerDay = [];
+                    $okkPerDay = [];
+                    $cutoffDtCompliance = Carbon::parse(config('dopm.ipk_okk_clickhouse_cutoff_date', '2025-02-20'))->startOfDay();
+                    $cutoffStrCompliance = $cutoffDtCompliance->format('Y-m-d');
+                    if (!empty($monthIdToCode) && class_exists(\App\Services\ClickHouseService::class)) {
+                        $chMonth = app(\App\Services\ClickHouseService::class);
+                        if (method_exists($chMonth, 'query') && $chMonth->isConnected()) {
+                            $wpIdsMonth = array_keys($monthIdToCode);
+                            $wpIdsMonthEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $wpIdsMonth));
+                            $sqlIpkMonth = "
+                                SELECT work_permit_id, toDate(start_date) AS d
+                                FROM hse_automation.ipk_assessment
+                                WHERE work_permit_id IN ({$wpIdsMonthEsc})
+                                  AND toDate(start_date) >= toDate('" . addslashes($monthStart) . "')
+                                  AND toDate(start_date) <= toDate('" . addslashes($monthEnd) . "')
+                                  AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                            ";
+                            $ipkMonthRows = $chMonth->query($sqlIpkMonth);
+                            foreach ($ipkMonthRows ?? [] as $r) {
+                                $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                                $d = $r['d'] ?? null;
+                                if ($wpId === null || $d === null) {
+                                    continue;
+                                }
+                                $code = $monthIdToCode[$wpId] ?? null;
+                                if ($code !== null) {
+                                    $dStr = $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : (string) $d;
+                                    if (! isset($ipkPerDay[$dStr])) {
+                                        $ipkPerDay[$dStr] = [];
+                                    }
+                                    $ipkPerDay[$dStr][$code] = true;
+                                }
+                            }
+                            $sqlOkkMonth = "
+                                SELECT work_permit_id, toDate(created_at) AS d
+                                FROM hse_automation.okk_assessment
+                                WHERE work_permit_id IN ({$wpIdsMonthEsc})
+                                  AND upper(trim(toString(status))) = 'SUBMITTED'
+                                  AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                                  AND toDate(created_at) >= toDate('" . addslashes($monthStart) . "')
+                                  AND toDate(created_at) <= toDate('" . addslashes($monthEnd) . "')
+                            ";
+                            $okkMonthRows = $chMonth->query($sqlOkkMonth);
+                            foreach ($okkMonthRows ?? [] as $r) {
+                                $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                                $d = $r['d'] ?? null;
+                                if ($wpId === null || $d === null) {
+                                    continue;
+                                }
+                                $code = $monthIdToCode[$wpId] ?? null;
+                                if ($code !== null) {
+                                    $dStr = $d instanceof \DateTimeInterface ? $d->format('Y-m-d') : (string) $d;
+                                    if (! isset($okkPerDay[$dStr])) {
+                                        $okkPerDay[$dStr] = [];
+                                    }
+                                    $okkPerDay[$dStr][$code] = true;
+                                }
+                            }
+                        }
+                    }
                     $ipkRows = IpkIkk::whereBetween('ts', [$monthStart, $monthEnd])
                         ->selectRaw('DATE(ts) as d, kode_ikk')
                         ->distinct()
                         ->get();
                     foreach ($ipkRows as $r) {
                         $d = $r->d ?? null;
-                        if ($d === null) {
+                        if ($d === null || $d >= $cutoffStrCompliance) {
                             continue;
                         }
                         $k = trim((string) ($r->kode_ikk ?? ''));
@@ -955,15 +1207,13 @@ class DOPMWeeklyController extends Controller
                             $ipkPerDay[$d][$k] = true;
                         }
                     }
-
-                    $okkPerDay = [];
                     $okkRows = Okk::whereBetween('ts', [$monthStart, $monthEnd])
                         ->selectRaw('DATE(ts) as d, kode_ikk')
                         ->distinct()
                         ->get();
                     foreach ($okkRows as $r) {
                         $d = $r->d ?? null;
-                        if ($d === null) {
+                        if ($d === null || $d >= $cutoffStrCompliance) {
                             continue;
                         }
                         $k = trim((string) ($r->kode_ikk ?? ''));
@@ -1068,26 +1318,110 @@ class DOPMWeeklyController extends Controller
         $ipkIkk = [];
         $okk = [];
         $oak = [];
+        $ipkSource = 'mysql';
+        $okkSource = 'mysql';
+
+        $tanggalDop = trim((string) $request->input('tanggal_dop', ''));
+        $filterDateModal = $tanggalDop !== '' ? (function () use ($tanggalDop) {
+            try {
+                return Carbon::parse($tanggalDop)->format('Y-m-d');
+            } catch (\Throwable $e) {
+                return date('Y-m-d');
+            }
+        })() : date('Y-m-d');
+        $useChModal = self::useClickHouseForIpkOkk($filterDateModal);
+        $workPermitId = trim((string) $request->input('work_permit_id', ''));
 
         if ($kodeIkk !== '' && $kodeIkk !== null) {
-            // IPK-IKK dan OKK di modal: tampilkan semua data yang berelasi dengan kode_ikk
-            $ipkIkk = IpkIkk::where('kode_ikk', $kodeIkk)
-                ->orderByDesc('ts')
-                ->get()
-                ->map(function ($row) {
-                    return $row->toArray();
-                })
-                ->values()
-                ->toArray();
-
-            $okk = Okk::where('kode_ikk', $kodeIkk)
-                ->orderByDesc('ts')
-                ->get()
-                ->map(function ($row) {
-                    return $row->toArray();
-                })
-                ->values()
-                ->toArray();
+            if ($useChModal && class_exists(\App\Services\ClickHouseService::class)) {
+                $ch = app(\App\Services\ClickHouseService::class);
+                if (method_exists($ch, 'query') && $ch->isConnected()) {
+                    $wpId = $workPermitId !== '' ? $workPermitId : null;
+                    if ($wpId === null) {
+                        $codeEsc = addslashes($kodeIkk);
+                        $sqlResolve = "
+                            SELECT id FROM hse_automation.ikk_work_permit
+                            WHERE trim(toString(code)) = '{$codeEsc}'
+                              AND toDate(start_date) = toDate('" . addslashes($filterDateModal) . "')
+                            LIMIT 1
+                        ";
+                        $wpRow = $ch->query($sqlResolve);
+                        if (!empty($wpRow[0])) {
+                            $wpId = self::getClickHouseRowValue($wpRow[0], 'id');
+                            $wpId = $wpId !== null ? (string) $wpId : null;
+                        }
+                    }
+                    if ($wpId !== null && $wpId !== '') {
+                        $wpIdEsc = addslashes($wpId);
+                        $dateEsc = addslashes($filterDateModal);
+                        $sqlIpkModal = "
+                            SELECT id, code, work_permit_id, status, job_status, start_date, created_at, supervisor_id, cctv
+                            FROM hse_automation.ipk_assessment
+                            WHERE work_permit_id = '{$wpIdEsc}'
+                              AND toDate(start_date) = toDate('{$dateEsc}')
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                            ORDER BY created_at DESC
+                        ";
+                        $ipkRowsCh = $ch->query($sqlIpkModal);
+                        foreach ($ipkRowsCh ?? [] as $r) {
+                            $ts = self::getClickHouseRowValue($r, 'start_date') ?? self::getClickHouseRowValue($r, 'created_at');
+                            $tsStr = $ts instanceof \DateTimeInterface ? $ts->format('Y-m-d H:i:s') : (string) $ts;
+                            $ipkIkk[] = [
+                                'ts' => $tsStr,
+                                'nama_pengawas' => null,
+                                'kode_sid' => null,
+                                'kode_ikk' => $kodeIkk,
+                                'nama_perusahaan' => null,
+                                'site' => null,
+                                'durasi_jam' => null,
+                                'cctv_terekam' => self::getClickHouseRowValue($r, 'cctv'),
+                                'kategori_ijk' => null,
+                                'status_pekerjaan' => self::getClickHouseRowValue($r, 'status') ?? self::getClickHouseRowValue($r, 'job_status'),
+                            ];
+                        }
+                        $sqlOkkModal = "
+                            SELECT id, code, work_permit_id, status, created_at, supervisor_id
+                            FROM hse_automation.okk_assessment
+                            WHERE work_permit_id = '{$wpIdEsc}'
+                              AND upper(trim(toString(status))) = 'SUBMITTED'
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                              AND toDate(created_at) = toDate('{$dateEsc}')
+                            ORDER BY created_at ASC
+                        ";
+                        $okkRowsCh = $ch->query($sqlOkkModal);
+                        foreach ($okkRowsCh ?? [] as $r) {
+                            $ts = self::getClickHouseRowValue($r, 'created_at');
+                            $tsStr = $ts instanceof \DateTimeInterface ? $ts->format('Y-m-d H:i:s') : (string) $ts;
+                            $okk[] = [
+                                'ts' => $tsStr,
+                                'nama_pengawas' => null,
+                                'kode_sid' => null,
+                                'kode_ikk' => $kodeIkk,
+                                'nama_perusahaan' => null,
+                                'site' => null,
+                                'jenis_ijk' => null,
+                                'layer_pengawas' => null,
+                            ];
+                        }
+                        $ipkSource = 'clickhouse';
+                        $okkSource = 'clickhouse';
+                    }
+                }
+            }
+            if ($ipkSource === 'mysql') {
+                $ipkIkk = IpkIkk::where('kode_ikk', $kodeIkk)
+                    ->orderByDesc('ts')
+                    ->get()
+                    ->map(fn ($row) => $row->toArray())
+                    ->values()
+                    ->toArray();
+                $okk = Okk::where('kode_ikk', $kodeIkk)
+                    ->orderByDesc('ts')
+                    ->get()
+                    ->map(fn ($row) => $row->toArray())
+                    ->values()
+                    ->toArray();
+            }
         }
 
         // Normalisasi lokasi (trim) dan pastikan tidak null
@@ -1241,6 +1575,8 @@ class DOPMWeeklyController extends Controller
             'ipk_ikk' => $ipkIkk,
             'okk' => $okk,
             'oak' => $oak,
+            'ipk_source' => $ipkSource,
+            'okk_source' => $okkSource,
             'dopm_context' => [
                 'nama_layer_2' => $namaLayer2,
                 'nama_layer_3' => $namaLayer3,
