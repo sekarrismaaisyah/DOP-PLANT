@@ -2156,7 +2156,7 @@
                                 <p class="small text-muted mb-2">Tabel di bawah menampilkan seluruh data IPK-IKK dengan kode IKK ini.</p>
                                 <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                                     <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableIpkIkk">
-                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Job Status</th></tr></thead>
+                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Status</th></tr></thead>
                                         <tbody></tbody>
                                     </table>
                                 </div>
@@ -2285,7 +2285,7 @@
                                 <p class="small text-muted mb-2">Tabel di bawah menampilkan seluruh data IPK-IKK dengan kode IKK ini.</p>
                                 <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                                     <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableIpkIkk">
-                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Job Status</th></tr></thead>
+                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Status</th></tr></thead>
                                         <tbody></tbody>
                                     </table>
                                 </div>
@@ -2415,7 +2415,7 @@
                         <div id="intervensiIpkTableWrap" class="d-none">
                             <div class="table-responsive">
                                 <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableIpk">
-                                    <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Job Status</th></tr></thead>
+                                    <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Status</th></tr></thead>
                                     <tbody></tbody>
                                 </table>
                             </div>
