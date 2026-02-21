@@ -1132,13 +1132,64 @@ class DOPMWeeklyController extends Controller
                         }
                     }
 
-                    // Compliance: "per IKK code" — kode yang punya IPK/OKK (kapan pun), bukan per tanggal submit
-                    $codesWithIpk = [];
-                    $codesWithOkk = [];
                     $cutoffDtCompliance = Carbon::parse(config('dopm.ipk_okk_clickhouse_cutoff_date', '2025-02-20'))->startOfDay();
                     $cutoffStrCompliance = $cutoffDtCompliance->format('Y-m-d');
 
-                    // Kode IKK unik di bulan ini (untuk batasi query MySQL)
+                    // Hari sebelum cutoff: isi codesPerDay dari MySQL (IKK yang punya aktivitas IPK/OKK di hari itu) — 2 query untuk seluruh bulan
+                    $ipkByDayMysql = [];
+                    $okkByDayMysql = [];
+                    $ipkMonthMysql = IpkIkk::where('ts', '>=', $monthStart)->where('ts', '<', $cutoffStrCompliance)
+                        ->selectRaw('DATE(ts) AS d, kode_ikk')
+                        ->distinct()
+                        ->get();
+                    foreach ($ipkMonthMysql as $r) {
+                        $d = $r->d ?? null;
+                        $k = trim((string) ($r->kode_ikk ?? ''));
+                        if ($d !== null && $k !== '') {
+                            if (! isset($ipkByDayMysql[$d])) {
+                                $ipkByDayMysql[$d] = [];
+                            }
+                            $ipkByDayMysql[$d][$k] = true;
+                        }
+                    }
+                    $okkMonthMysql = Okk::where('ts', '>=', $monthStart)->where('ts', '<', $cutoffStrCompliance)
+                        ->selectRaw('DATE(ts) AS d, kode_ikk')
+                        ->distinct()
+                        ->get();
+                    foreach ($okkMonthMysql as $r) {
+                        $d = $r->d ?? null;
+                        $k = trim((string) ($r->kode_ikk ?? ''));
+                        if ($d !== null && $k !== '') {
+                            if (! isset($okkByDayMysql[$d])) {
+                                $okkByDayMysql[$d] = [];
+                            }
+                            $okkByDayMysql[$d][$k] = true;
+                        }
+                    }
+                    $daysInMonth = (int) Carbon::parse($monthEnd)->day;
+                    for ($day = 1; $day <= $daysInMonth; $day++) {
+                        $d = Carbon::parse($monthStart)->addDays($day - 1)->format('Y-m-d');
+                        if ($d >= $cutoffStrCompliance) {
+                            continue;
+                        }
+                        $merged = [];
+                        foreach ($codesPerDay[$d] ?? [] as $c) {
+                            $merged[trim((string) $c)] = true;
+                        }
+                        foreach (array_keys($ipkByDayMysql[$d] ?? []) as $k) {
+                            $merged[$k] = true;
+                        }
+                        foreach (array_keys($okkByDayMysql[$d] ?? []) as $k) {
+                            $merged[$k] = true;
+                        }
+                        $codesPerDay[$d] = array_keys($merged);
+                    }
+
+                    // Compliance: "per IKK code" — kode yang punya IPK/OKK (kapan pun)
+                    $codesWithIpk = [];
+                    $codesWithOkk = [];
+
+                    // Kode IKK unik di bulan ini (setelah merge MySQL, untuk lookup)
                     $allCodesInMonth = [];
                     foreach ($codesPerDay as $codes) {
                         foreach ($codes as $c) {
@@ -1157,12 +1208,13 @@ class DOPMWeeklyController extends Controller
                         if (method_exists($chMonth, 'query') && $chMonth->isConnected()) {
                             $wpIdsMonth = array_keys($monthIdToCode);
                             $wpIdsMonthEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $wpIdsMonth));
-                            // Satu query: IPK + OKK pakai UNION ALL (satu round-trip, hasil typ 'ipk'/'okk')
+                            // Hanya IPK yang status SUBMITTED; OKK tetap SUBMITTED
                             $sqlIpkOkk = "
                                 SELECT work_permit_id, 'ipk' AS typ
                                 FROM hse_automation.ipk_assessment
                                 WHERE work_permit_id IN ({$wpIdsMonthEsc})
                                   AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                                  AND upper(trim(toString(status))) = 'SUBMITTED'
                                 GROUP BY work_permit_id
                                 UNION ALL
                                 SELECT work_permit_id, 'okk' AS typ
@@ -1235,10 +1287,11 @@ class DOPMWeeklyController extends Controller
                         $ipkCount = 0;
                         $okkCount = 0;
                         foreach ($codes as $c) {
-                            if (isset($codesWithIpk[$c])) {
+                            $cCanon = $normToChCode[strtoupper(trim((string) $c))] ?? $c;
+                            if (isset($codesWithIpk[$c]) || isset($codesWithIpk[$cCanon])) {
                                 $ipkCount++;
                             }
-                            if (isset($codesWithOkk[$c])) {
+                            if (isset($codesWithOkk[$c]) || isset($codesWithOkk[$cCanon])) {
                                 $okkCount++;
                             }
                         }
