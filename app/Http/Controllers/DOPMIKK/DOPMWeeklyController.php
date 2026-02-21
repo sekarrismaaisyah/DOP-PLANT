@@ -1365,10 +1365,16 @@ class DOPMWeeklyController extends Controller
                             ORDER BY created_at DESC
                         ";
                         $ipkRowsCh = $ch->query($sqlIpkModal);
+                        $assessmentIds = [];
                         foreach ($ipkRowsCh ?? [] as $r) {
                             $ts = self::getClickHouseRowValue($r, 'start_date') ?? self::getClickHouseRowValue($r, 'created_at');
                             $tsStr = $ts instanceof \DateTimeInterface ? $ts->format('Y-m-d H:i:s') : (string) $ts;
+                            $aid = self::getClickHouseRowValue($r, 'id');
+                            if ($aid !== null && $aid !== '') {
+                                $assessmentIds[] = $aid;
+                            }
                             $ipkIkk[] = [
+                                'assessment_id' => $aid,
                                 'ts' => $tsStr,
                                 'nama_pengawas' => null,
                                 'kode_sid' => null,
@@ -1380,6 +1386,75 @@ class DOPMWeeklyController extends Controller
                                 'kategori_ijk' => null,
                                 'status_pekerjaan' => self::getClickHouseRowValue($r, 'status') ?? self::getClickHouseRowValue($r, 'job_status'),
                             ];
+                        }
+                        if (!empty($assessmentIds)) {
+                            try {
+                                $aidList = array_unique(array_filter($assessmentIds));
+                                $aidEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $aidList));
+                                $sqlAnswer = "
+                                    SELECT assessment_id, argMax(employee_id, created_at) AS employee_id
+                                    FROM hse_automation.ipk_assessment_answer
+                                    WHERE assessment_id IN ({$aidEsc})
+                                      AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                                    GROUP BY assessment_id
+                                ";
+                                $answerRows = $ch->query($sqlAnswer);
+                                $assessmentToEmployee = [];
+                                $employeeIds = [];
+                                foreach ($answerRows ?? [] as $ar) {
+                                    $aId = self::getClickHouseRowValue($ar, 'assessment_id');
+                                    $eId = self::getClickHouseRowValue($ar, 'employee_id');
+                                    if ($aId !== null && $eId !== null && $eId !== '') {
+                                        $assessmentToEmployee[(string) $aId] = $eId;
+                                        $employeeIds[] = $eId;
+                                    }
+                                }
+                                if (!empty($employeeIds)) {
+                                    $eidList = array_unique($employeeIds);
+                                    $eidEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $eidList));
+                                    $sqlEmp = "
+                                        SELECT id, employee_name, employee_sid, company_name
+                                        FROM hse_automation.ikk_work_permit_employee
+                                        WHERE id IN ({$eidEsc})
+                                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                                    ";
+                                    $empRows = $ch->query($sqlEmp);
+                                    $employeeInfo = [];
+                                    foreach ($empRows ?? [] as $er) {
+                                        $eId = self::getClickHouseRowValue($er, 'id');
+                                        if ($eId !== null) {
+                                            $employeeInfo[(string) $eId] = [
+                                                'employee_name' => self::getClickHouseRowValue($er, 'employee_name'),
+                                                'employee_sid' => self::getClickHouseRowValue($er, 'employee_sid'),
+                                                'company_name' => self::getClickHouseRowValue($er, 'company_name'),
+                                            ];
+                                        }
+                                    }
+                                    foreach ($ipkIkk as $idx => $row) {
+                                        $aid = $row['assessment_id'] ?? null;
+                                        if ($aid !== null && isset($assessmentToEmployee[(string) $aid]) && isset($employeeInfo[(string) $assessmentToEmployee[(string) $aid]])) {
+                                            $info = $employeeInfo[(string) $assessmentToEmployee[(string) $aid]];
+                                            $ipkIkk[$idx]['nama_pengawas'] = $info['employee_name'] ?? null;
+                                            $ipkIkk[$idx]['kode_sid'] = $info['employee_sid'] ?? null;
+                                            $ipkIkk[$idx]['nama_perusahaan'] = $info['company_name'] ?? null;
+                                        }
+                                        unset($ipkIkk[$idx]['assessment_id']);
+                                    }
+                                } else {
+                                    foreach ($ipkIkk as $idx => $row) {
+                                        unset($ipkIkk[$idx]['assessment_id']);
+                                    }
+                                }
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::debug('Dashboard weekly modal IPK enrich: ' . $e->getMessage());
+                                foreach ($ipkIkk as $idx => $row) {
+                                    unset($ipkIkk[$idx]['assessment_id']);
+                                }
+                            }
+                        } else {
+                            foreach ($ipkIkk as $idx => $row) {
+                                unset($ipkIkk[$idx]['assessment_id']);
+                            }
                         }
                         $sqlOkkModal = "
                             SELECT id, code, work_permit_id, status, created_at, supervisor_id
@@ -1579,6 +1654,8 @@ class DOPMWeeklyController extends Controller
             'oak' => $oak,
             'ipk_source' => $ipkSource,
             'okk_source' => $okkSource,
+            'location_name' => $locationName !== '' ? $locationName : null,
+            'location_detail_name' => $locationDetailName !== '' ? $locationDetailName : null,
             'dopm_context' => [
                 'nama_layer_2' => $namaLayer2,
                 'nama_layer_3' => $namaLayer3,

@@ -2423,6 +2423,8 @@
                                             <tr><td class="text-muted fw-semibold">Jenis IJK</td><td id="detailDopmJenisIjk" class="text-break">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Tanggal DOP</td><td id="detailDopmTanggal">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Status</td><td id="detailDopmStatus">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Lokasi</td><td id="detailDopmLocation" class="text-break">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Detail Lokasi</td><td id="detailDopmLocationDetail" class="text-break">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Layer 1</td><td id="detailDopmLayer1">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Layer 2</td><td id="detailDopmLayer2">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Layer 3</td><td id="detailDopmLayer3">—</td></tr>
@@ -3432,6 +3434,8 @@
         document.getElementById('detailDopmJenisIjk').textContent = dash(data.jenis_ijin_kerja_khusus);
         document.getElementById('detailDopmTanggal').textContent = dash(data.tanggal_dop);
         document.getElementById('detailDopmStatus').textContent = dash(data.status);
+        document.getElementById('detailDopmLocation').textContent = dash(data.location_name);
+        document.getElementById('detailDopmLocationDetail').textContent = dash(data.location_detail_name);
         document.getElementById('detailDopmLayer1').textContent = dash(data.nama_layer_1);
         document.getElementById('detailDopmLayer2').textContent = dash(data.nama_layer_2);
         document.getElementById('detailDopmLayer3').textContent = dash(data.nama_layer_3);
@@ -3494,6 +3498,8 @@
                 document.getElementById('statCountOkk').textContent = okk.length;
                 document.getElementById('statCountOak').textContent = oak.length;
                 if (layerNames !== '—') document.getElementById('oakContext').classList.remove('d-none');
+                if (res.location_name != null && res.location_name !== '') document.getElementById('detailDopmLocation').textContent = res.location_name;
+                if (res.location_detail_name != null && res.location_detail_name !== '') document.getElementById('detailDopmLocationDetail').textContent = res.location_detail_name;
 
                 // Tabel IPK-IKK (pastikan ambil elemen di dalam modal)
                 var tbodyIpk = modalDoc.querySelector('#tableIpkIkk tbody');
