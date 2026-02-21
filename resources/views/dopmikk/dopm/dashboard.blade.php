@@ -2221,9 +2221,9 @@
                                                     </small>
                                                 </td>
                                                 <td class="text-end">
-                                                    <button type="button" class="btn btn-sm btn-outline-primary btn-detail-dopm me-1" data-dopm="{{ json_encode($ikkJson) }}" title="Detail IPK-IKK, OKK, OAK">
+                                                    <!-- <button type="button" class="btn btn-sm btn-outline-primary btn-detail-dopm me-1" data-dopm="{{ json_encode($ikkJson) }}" title="Detail IPK-IKK, OKK, OAK">
                                                         <i class="material-icons-outlined" style="font-size: 16px;">visibility</i> Detail
-                                                    </button>
+                                                    </button> -->
                                                     <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-dopm" data-dopm="{{ json_encode($ikkJson) }}" title="Intervensi (IPK-IKK, OKK, OAK) — data dari IKK/Work Permit">
                                                         <i class="material-icons-outlined" style="font-size: 16px;">campaign</i> Intervensi
                                                     </button>
