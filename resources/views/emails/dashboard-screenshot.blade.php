@@ -132,14 +132,13 @@
           </tr>
 
           @php
-            $sites = $summary['sites'] ?? [
-              ['name' => 'BW1',  'ikk' => 36, 'oak' => 41494, 'ipk' => 241],
-              ['name' => 'BW2',  'ikk' => 12, 'oak' => 8200,  'ipk' => 88],
-              ['name' => 'LNG',  'ikk' => 8,  'oak' => 5130,  'ipk' => 47],
-              ['name' => 'GMO',  'ikk' => 15, 'oak' => 11300, 'ipk' => 102],
-              ['name' => 'BMO1', 'ikk' => 5,  'oak' => 2800,  'ipk' => 31],
-              ['name' => 'BMO2', 'ikk' => 9,  'oak' => 4960,  'ipk' => 55],
-            ];
+            $sites = $summary['sites'] ?? [];
+            $totalIkk = (int) ($summary['totalIkk'] ?? 0);
+            $totalOak = (int) ($summary['totalOak'] ?? 0);
+            $totalIpk = (int) ($summary['totalIpk'] ?? 0);
+            if (empty($sites)) {
+              $sites = [['name' => 'Semua Situs', 'ikk' => $totalIkk, 'oak' => $totalOak, 'ipk' => $totalIpk]];
+            }
             $totIkk = array_sum(array_column($sites, 'ikk'));
             $totOak = isset($summary['totalOak']) ? (int) $summary['totalOak'] : array_sum(array_column($sites, 'oak'));
             $totIpk = array_sum(array_column($sites, 'ipk'));
@@ -155,12 +154,12 @@
           @endforeach
 
           <!-- Total Row -->
-          <tr style="background-color:#F2F1EE;">
+          <!-- <tr style="background-color:#F2F1EE;">
             <td style="padding:12px 16px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;color:#555552;border-right:1px solid #E8E7E3;border-top:2px solid #CCCCC6;">Total</td>
             <td style="padding:12px 16px;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:bold;color:#111110;text-align:center;border-right:1px solid #E8E7E3;border-top:2px solid #CCCCC6;">{{ number_format($totIkk) }}</td>
             <td style="padding:12px 16px;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:bold;color:#111110;text-align:center;border-right:1px solid #E8E7E3;border-top:2px solid #CCCCC6;">{{ number_format($totOak) }}</td>
             <td style="padding:12px 16px;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:bold;color:#111110;text-align:center;border-top:2px solid #CCCCC6;">{{ number_format($totIpk) }}</td>
-          </tr>
+          </tr> -->
 
         </table>
 
@@ -168,91 +167,7 @@
     </tr>
 
     <!-- ③ SCREENSHOT SECTION ── -->
-    <tr>
-      <td class="pad-all" style="padding:36px 48px;border-bottom:1px solid #ECEAE6;background-color:#FAF9F7;">
-
-        <!-- Label -->
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:16px;">
-        <tr>
-          <td style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.14em;text-transform:uppercase;color:#CCCCC6;white-space:nowrap;padding-right:12px;">Screenshot Dashboard</td>
-          <td width="100%"><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td style="border-top:1px solid #ECEAE6;">&nbsp;</td></tr></table></td>
-        </tr>
-        </table>
-
-        <!-- Browser frame -->
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border:1px solid #E2E1DD;background-color:#FFFFFF;">
-          <!-- Browser bar -->
-          <tr>
-            <td style="padding:10px 14px;background-color:#F2F1EE;border-bottom:1px solid #E2E1DD;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-              <tr>
-                <!-- Dots -->
-                <td style="width:auto;">
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0">
-                  <tr>
-                    <td style="width:8px;height:8px;background-color:#E8C4C4;border-radius:50%;font-size:0;line-height:0;">&nbsp;</td>
-                    <td style="width:5px;font-size:0;">&nbsp;</td>
-                    <td style="width:8px;height:8px;background-color:#E8DBC4;border-radius:50%;font-size:0;line-height:0;">&nbsp;</td>
-                    <td style="width:5px;font-size:0;">&nbsp;</td>
-                    <td style="width:8px;height:8px;background-color:#C4E8D4;border-radius:50%;font-size:0;line-height:0;">&nbsp;</td>
-                  </tr>
-                  </table>
-                </td>
-                <!-- URL bar -->
-                <td style="padding-left:12px;">
-                  <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-                  <tr>
-                    <td style="border:1px solid #E2E1DD;background-color:#FFFFFF;padding:4px 10px;font-family:Georgia,serif;font-size:10px;color:#999994;letter-spacing:0.02em;">
-                      dopm-system.internal / ikk-dashboard
-                    </td>
-                  </tr>
-                  </table>
-                </td>
-              </tr>
-              </table>
-            </td>
-          </tr>
-          <!-- Screenshot image area -->
-          <tr>
-            <td align="center" style="padding:0;background-color:#F5F4F1;">
-              {{--
-                UNTUK PRODUCTION — ganti blok di bawah dengan:
-                <img src="{{ $screenshotUrl }}" width="598" style="display:block;width:100%;max-width:598px;" alt="Dashboard IKK DOPM">
-                ATAU embed base64:
-                <img src="data:image/png;base64,{{ $screenshotBase64 }}" width="598" style="display:block;width:100%;" alt="Dashboard IKK DOPM">
-              --}}
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-              <tr>
-                <td align="center" style="padding:48px 24px;">
-                  <!-- Placeholder icon -->
-                  <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg" style="display:block;margin:0 auto 12px;">
-                    <rect x="2" y="7" width="36" height="27" rx="2" stroke="#CCCCC6" stroke-width="1.5"/>
-                    <path d="M2 14h36" stroke="#CCCCC6" stroke-width="1.5"/>
-                    <rect x="6" y="18" width="10" height="11" rx="1" fill="#CCCCC6" opacity=".5"/>
-                    <rect x="18" y="20" width="10" height="9" rx="1" fill="#CCCCC6" opacity=".5"/>
-                    <rect x="30" y="16" width="5" height="13" rx="1" fill="#CCCCC6" opacity=".7"/>
-                  </svg>
-                  <div style="font-family:Georgia,serif;font-size:12px;color:#AAAAAA;letter-spacing:0.04em;">Screenshot terlampir di email ini</div>
-                </td>
-              </tr>
-              </table>
-            </td>
-          </tr>
-          <!-- Caption bar -->
-          <tr>
-            <td style="padding:9px 14px;border-top:1px solid #E2E1DD;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-              <tr>
-                <td style="font-family:Georgia,serif;font-size:10px;color:#999994;letter-spacing:0.03em;">IKK Dashboard &middot; {{ now()->format('d F Y, H:i') }} WIB</td>
-                <td align="right" style="font-family:Georgia,serif;font-size:10px;color:#CCCCC6;">Semua Situs</td>
-              </tr>
-              </table>
-            </td>
-          </tr>
-        </table>
-
-      </td>
-    </tr>
+   
 
     <!-- ④ ATTACHMENT ROW ── -->
     <tr>
@@ -300,7 +215,7 @@
         <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
         <tr>
           <td style="vertical-align:top;">
-            <div style="font-family:Georgia,serif;font-size:11px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:#111110;margin-bottom:4px;">DOPM System</div>
+            <div style="font-family:Georgia,serif;font-size:11px;font-weight:bold;letter-spacing:0.08em;text-transform:uppercase;color:#111110;margin-bottom:4px;">IKK Monitoring System</div>
             <div style="font-family:Georgia,serif;font-size:10px;color:#CCCCC6;">&copy; {{ now()->format('Y') }} &middot; IKK Monitoring &middot; Semua Situs</div>
           </td>
           <td align="right" style="font-family:Georgia,serif;font-size:10px;color:#CCCCC6;line-height:1.7;vertical-align:top;" class="hide-mobile">
