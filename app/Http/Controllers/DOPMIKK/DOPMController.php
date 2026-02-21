@@ -1859,7 +1859,7 @@ class DOPMController extends Controller
                         $wpIdEsc = addslashes($wpId);
                         $dateEsc = addslashes($filterDateModal);
                         $sqlIpkModal = "
-                            SELECT id, code, work_permit_id, status, job_status, start_date, created_at, supervisor_id, cctv
+                            SELECT id, code, work_permit_id, status, job_status, start_date, created_at, supervisor_id, cctv, m_job_duration_id
                             FROM hse_automation.ipk_assessment
                             WHERE work_permit_id = '{$wpIdEsc}'
                               AND toDate(start_date) = toDate('{$dateEsc}')
@@ -1868,15 +1868,21 @@ class DOPMController extends Controller
                         ";
                         $ipkRowsCh = $ch->query($sqlIpkModal);
                         $assessmentIds = [];
+                        $durationIds = [];
                         foreach ($ipkRowsCh ?? [] as $r) {
                             $ts = self::getClickHouseRowValue($r, 'start_date') ?? self::getClickHouseRowValue($r, 'created_at');
                             $tsStr = $ts instanceof \DateTimeInterface ? $ts->format('Y-m-d H:i:s') : (string) $ts;
                             $aid = self::getClickHouseRowValue($r, 'id');
+                            $durId = self::getClickHouseRowValue($r, 'm_job_duration_id');
                             if ($aid !== null && $aid !== '') {
                                 $assessmentIds[] = $aid;
                             }
+                            if ($durId !== null && $durId !== '') {
+                                $durationIds[] = $durId;
+                            }
                             $ipkIkk[] = [
                                 'assessment_id' => $aid,
+                                'm_job_duration_id' => $durId,
                                 'ts' => $tsStr,
                                 'nama_pengawas' => null,
                                 'kode_sid' => null,
@@ -1957,6 +1963,64 @@ class DOPMController extends Controller
                         } else {
                             foreach ($ipkIkk as $idx => $row) {
                                 unset($ipkIkk[$idx]['assessment_id']);
+                            }
+                        }
+                        // Enrich IPK: Site & Kategori IJK dari work permit; Durasi dari m_job_duration
+                        if (!empty($ipkIkk)) {
+                            try {
+                                $wpSite = null;
+                                $wpKategoriIjk = null;
+                                $sqlWpIpk = "
+                                    SELECT ra_site_name, m_job_id FROM hse_automation.ikk_work_permit
+                                    WHERE id = '{$wpIdEsc}' LIMIT 1
+                                ";
+                                $wpInfoIpk = $ch->query($sqlWpIpk);
+                                if (!empty($wpInfoIpk[0])) {
+                                    $wpSite = self::getClickHouseRowValue($wpInfoIpk[0], 'ra_site_name');
+                                    $jobId = self::getClickHouseRowValue($wpInfoIpk[0], 'm_job_id');
+                                    if ($jobId !== null && $jobId !== '') {
+                                        $jobIdEsc = addslashes((string) $jobId);
+                                        $sqlJobIpk = "SELECT name FROM hse_automation.ikk_m_job WHERE id = '{$jobIdEsc}' LIMIT 1";
+                                        $jobRowIpk = $ch->query($sqlJobIpk);
+                                        if (!empty($jobRowIpk[0])) {
+                                            $wpKategoriIjk = self::getClickHouseRowValue($jobRowIpk[0], 'name');
+                                        }
+                                    }
+                                }
+                                $durationById = [];
+                                if (!empty($durationIds)) {
+                                    $durIds = array_unique(array_filter($durationIds));
+                                    $durEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $durIds));
+                                    try {
+                                        $sqlDur = "
+                                            SELECT id, name FROM hse_automation.ikk_m_job_duration
+                                            WHERE id IN ({$durEsc})
+                                        ";
+                                        $durRows = $ch->query($sqlDur);
+                                        foreach ($durRows ?? [] as $dr) {
+                                            $dId = self::getClickHouseRowValue($dr, 'id');
+                                            if ($dId !== null) {
+                                                $durationById[(string) $dId] = self::getClickHouseRowValue($dr, 'name');
+                                            }
+                                        }
+                                    } catch (\Throwable $e) {
+                                        \Illuminate\Support\Facades\Log::debug('Dashboard modal IPK durasi lookup: ' . $e->getMessage());
+                                    }
+                                }
+                                foreach ($ipkIkk as $idx => $row) {
+                                    $ipkIkk[$idx]['site'] = $wpSite;
+                                    $ipkIkk[$idx]['kategori_ijk'] = $wpKategoriIjk;
+                                    $durId = $row['m_job_duration_id'] ?? null;
+                                    if ($durId !== null && isset($durationById[(string) $durId])) {
+                                        $ipkIkk[$idx]['durasi_jam'] = $durationById[(string) $durId];
+                                    }
+                                    unset($ipkIkk[$idx]['m_job_duration_id']);
+                                }
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::debug('Dashboard modal IPK site/kategori/durasi enrich: ' . $e->getMessage());
+                                foreach ($ipkIkk as $idx => $row) {
+                                    unset($ipkIkk[$idx]['m_job_duration_id']);
+                                }
                             }
                         }
                         $sqlOkkModal = "
