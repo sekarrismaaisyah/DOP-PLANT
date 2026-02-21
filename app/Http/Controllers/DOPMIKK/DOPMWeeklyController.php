@@ -1097,7 +1097,7 @@ class DOPMWeeklyController extends Controller
                             $id = self::getClickHouseRowValue($row, 'id');
                             $code = isset($row['code']) ? trim((string) $row['code']) : '';
                             if ($id !== null && $code !== '') {
-                                $monthIdToCode[$id] = $code;
+                                $monthIdToCode[(string) $id] = $code;
                             }
                             if ($code === '') {
                                 continue;
@@ -1146,6 +1146,11 @@ class DOPMWeeklyController extends Controller
                         }
                     }
                     $allCodesInMonth = array_keys($allCodesInMonth);
+                    $allCodesNorm = array_map(fn ($c) => strtoupper(trim((string) $c)), $allCodesInMonth);
+                    $normToChCode = [];
+                    foreach ($allCodesInMonth as $c) {
+                        $normToChCode[strtoupper(trim((string) $c))] = $c;
+                    }
 
                     if (!empty($monthIdToCode) && class_exists(\App\Services\ClickHouseService::class)) {
                         $chMonth = app(\App\Services\ClickHouseService::class);
@@ -1173,11 +1178,12 @@ class DOPMWeeklyController extends Controller
                                 if ($wpId === null) {
                                     continue;
                                 }
-                                $code = $monthIdToCode[$wpId] ?? null;
+                                $code = $monthIdToCode[(string) $wpId] ?? $monthIdToCode[$wpId] ?? null;
                                 if ($code === null) {
                                     continue;
                                 }
-                                $typ = isset($r['typ']) ? trim(strtolower((string) $r['typ'])) : '';
+                                $typ = self::getClickHouseRowValue($r, 'typ');
+                                $typ = $typ !== null ? trim(strtolower((string) $typ)) : '';
                                 if ($typ === 'ipk') {
                                     $codesWithIpk[$code] = true;
                                 } elseif ($typ === 'okk') {
@@ -1187,27 +1193,31 @@ class DOPMWeeklyController extends Controller
                         }
                     }
 
-                    // MySQL (sebelum cutoff): hanya kode yang muncul di bulan ini, select kolom minimal
+                    // MySQL (sebelum cutoff): kode yang ada di bulan ini, match case-insensitive (UPPER/TRIM)
                     if (!empty($allCodesInMonth)) {
                         $ipkCodes = IpkIkk::where('ts', '<', $cutoffStrCompliance)
-                            ->whereIn('kode_ikk', $allCodesInMonth)
+                            ->whereRaw('UPPER(TRIM(kode_ikk)) IN (' . implode(',', array_fill(0, count($allCodesNorm), '?')) . ')', $allCodesNorm)
                             ->distinct()
                             ->pluck('kode_ikk');
                         foreach ($ipkCodes as $k) {
                             $k = trim((string) $k);
-                            if ($k !== '') {
-                                $codesWithIpk[$k] = true;
+                            if ($k === '') {
+                                continue;
                             }
+                            $key = $normToChCode[strtoupper($k)] ?? $k;
+                            $codesWithIpk[$key] = true;
                         }
                         $okkCodes = Okk::where('ts', '<', $cutoffStrCompliance)
-                            ->whereIn('kode_ikk', $allCodesInMonth)
+                            ->whereRaw('UPPER(TRIM(kode_ikk)) IN (' . implode(',', array_fill(0, count($allCodesNorm), '?')) . ')', $allCodesNorm)
                             ->distinct()
                             ->pluck('kode_ikk');
                         foreach ($okkCodes as $k) {
                             $k = trim((string) $k);
-                            if ($k !== '') {
-                                $codesWithOkk[$k] = true;
+                            if ($k === '') {
+                                continue;
                             }
+                            $key = $normToChCode[strtoupper($k)] ?? $k;
+                            $codesWithOkk[$key] = true;
                         }
                     }
 
