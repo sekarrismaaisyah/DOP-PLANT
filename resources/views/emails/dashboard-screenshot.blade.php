@@ -120,100 +120,48 @@
         </tr>
         </table>
 
-        <!-- KPI ROW 1 — 3 columns -->
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="kpi-3col" style="border:1px solid #E8E7E3;border-collapse:collapse;margin-bottom:1px;">
-        <tr>
-          <td style="padding:20px 20px 16px;border-right:1px solid #E8E7E3;vertical-align:top;width:33.33%;">
-            <div style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.09em;text-transform:uppercase;color:#999994;margin-bottom:10px;line-height:1.4;">Need<br>Verification</div>
-            <div class="kpi-num" style="font-family:Georgia,'Times New Roman',serif;font-size:40px;line-height:1;letter-spacing:-1px;color:#111110;margin-bottom:6px;">{{ $needVerification ?? 36 }}</div>
-            <div style="font-family:Georgia,serif;font-size:11px;color:#999994;">item IKK pending</div>
-          </td>
-          <td style="padding:20px 20px 16px;border-right:1px solid #E8E7E3;vertical-align:top;width:33.33%;">
-            <div style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.09em;text-transform:uppercase;color:#999994;margin-bottom:10px;line-height:1.4;">Pekerjaan<br>Batal</div>
-            <div class="kpi-num" style="font-family:Georgia,'Times New Roman',serif;font-size:40px;line-height:1;letter-spacing:-1px;color:#B83232;margin-bottom:6px;">{{ $cancelCount ?? 0 }}</div>
-            <div style="font-family:Georgia,serif;font-size:11px;color:#999994;">cancel hari ini</div>
-          </td>
-          <td style="padding:20px 20px 16px;vertical-align:top;width:33.33%;">
-            <div style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.09em;text-transform:uppercase;color:#999994;margin-bottom:10px;line-height:1.4;">Compliance<br>Rate</div>
-            <div class="kpi-num" style="font-family:Georgia,'Times New Roman',serif;font-size:40px;line-height:1;letter-spacing:-1px;color:#B83232;margin-bottom:6px;">{{ $compliance ?? '0%' }}</div>
-            <div style="font-family:Georgia,serif;font-size:11px;color:#999994;">target &gt; 80%</div>
-          </td>
-        </tr>
-        </table>
+        <!-- SITE TABLE — IKK / OAK / IPK -->
+        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="border-collapse:collapse;border:1px solid #E8E7E3;">
 
-        <!-- KPI ROW 2 — 2 columns -->
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="kpi-2col" style="border:1px solid #E8E7E3;border-top:none;border-collapse:collapse;margin-bottom:28px;">
-        <tr>
-          <td style="padding:18px 20px;border-right:1px solid #E8E7E3;vertical-align:top;width:50%;">
-            <div style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.09em;text-transform:uppercase;color:#999994;margin-bottom:8px;">OAK Hari Ini</div>
-            <div class="kpi-num-sm" style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1;letter-spacing:-0.5px;color:#111110;margin-bottom:4px;">{{ $oakToday ?? 0 }}</div>
-            <div style="font-family:Georgia,serif;font-size:11px;color:#999994;">Total OAK IKK</div>
-          </td>
-          <td style="padding:18px 20px;vertical-align:top;width:50%;">
-            <div style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.09em;text-transform:uppercase;color:#999994;margin-bottom:8px;">Data IKK Minggu Ini</div>
-            <div class="kpi-num-sm" style="font-family:Georgia,'Times New Roman',serif;font-size:30px;line-height:1;letter-spacing:-0.5px;color:#111110;margin-bottom:4px;">{{ $weeklyCount ?? 25 }}<span style="font-size:16px;color:#CCCCC6;">+</span></div>
-            <div style="font-family:Georgia,serif;font-size:11px;color:#999994;">per {{ now()->format('d M Y') }}</div>
-          </td>
-        </tr>
-        </table>
+          <!-- Table Header -->
+          <tr style="background-color:#111110;">
+            <td style="padding:11px 16px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.12em;text-transform:uppercase;color:#FFFFFF;border-right:1px solid #2A2A28;width:40%;">Site</td>
+            <td style="padding:11px 16px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.12em;text-transform:uppercase;color:#FFFFFF;border-right:1px solid #2A2A28;text-align:center;width:20%;">IKK</td>
+            <td style="padding:11px 16px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.12em;text-transform:uppercase;color:#FFFFFF;border-right:1px solid #2A2A28;text-align:center;width:20%;">OAK</td>
+            <td style="padding:11px 16px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.12em;text-transform:uppercase;color:#FFFFFF;text-align:center;width:20%;">IPK</td>
+          </tr>
 
-        <!-- STATUS LABEL -->
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" style="margin-bottom:14px;">
-        <tr>
-          <td style="font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.14em;text-transform:uppercase;color:#CCCCC6;white-space:nowrap;padding-right:12px;">Status Pekerjaan</td>
-          <td width="100%"><table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%"><tr><td style="border-top:1px solid #ECEAE6;">&nbsp;</td></tr></table></td>
-        </tr>
-        </table>
+          @php
+            $sites = $summary['sites'] ?? [
+              ['name' => 'BW1',  'ikk' => 36, 'oak' => 41494, 'ipk' => 241],
+              ['name' => 'BW2',  'ikk' => 12, 'oak' => 8200,  'ipk' => 88],
+              ['name' => 'LNG',  'ikk' => 8,  'oak' => 5130,  'ipk' => 47],
+              ['name' => 'GMO',  'ikk' => 15, 'oak' => 11300, 'ipk' => 102],
+              ['name' => 'BMO1', 'ikk' => 5,  'oak' => 2800,  'ipk' => 31],
+              ['name' => 'BMO2', 'ikk' => 9,  'oak' => 4960,  'ipk' => 55],
+            ];
+            $totIkk = array_sum(array_column($sites, 'ikk'));
+            $totOak = isset($summary['totalOak']) ? (int) $summary['totalOak'] : array_sum(array_column($sites, 'oak'));
+            $totIpk = array_sum(array_column($sites, 'ipk'));
+          @endphp
 
-        <!-- STATUS 3 CARDS -->
-        <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%" class="status-3col">
-        <tr>
-          <!-- Need Action -->
-          <td style="padding-right:6px;vertical-align:top;width:33.33%;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-            <tr><td style="padding:14px 16px;border:1px solid #F0CECE;background-color:#FDF4F4;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8px;">
-              <tr>
-                <td style="width:6px;height:6px;background-color:#B83232;border-radius:50%;vertical-align:middle;">&nbsp;</td>
-                <td style="padding-left:6px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;color:#B83232;vertical-align:middle;">Need Action</td>
-              </tr>
-              </table>
-              <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:normal;letter-spacing:-0.5px;color:#111110;margin-bottom:4px;">{{ $needAction ?? 4 }}</div>
-              <div style="font-family:Georgia,serif;font-size:10px;color:#999994;line-height:1.4;">item butuh tindakan segera</div>
-            </td></tr>
-            </table>
-          </td>
-          <!-- Warning -->
-          <td style="padding:0 3px;vertical-align:top;width:33.33%;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-            <tr><td style="padding:14px 16px;border:1px solid #ECD9A8;background-color:#FDF8F0;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8px;">
-              <tr>
-                <td style="width:6px;height:6px;background-color:#9A6200;border-radius:50%;vertical-align:middle;">&nbsp;</td>
-                <td style="padding-left:6px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;color:#9A6200;vertical-align:middle;">Warning</td>
-              </tr>
-              </table>
-              <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:normal;letter-spacing:-0.5px;color:#111110;margin-bottom:4px;">{{ $warningCount ?? 0 }}</div>
-              <div style="font-family:Georgia,serif;font-size:10px;color:#999994;line-height:1.4;">item dalam status peringatan</div>
-            </td></tr>
-            </table>
-          </td>
-          <!-- Complete -->
-          <td style="padding-left:6px;vertical-align:top;width:33.33%;">
-            <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="100%">
-            <tr><td style="padding:14px 16px;border:1px solid #A8D8BC;background-color:#F2FBF6;">
-              <table role="presentation" cellspacing="0" cellpadding="0" border="0" style="margin-bottom:8px;">
-              <tr>
-                <td style="width:6px;height:6px;background-color:#1E6E48;border-radius:50%;vertical-align:middle;">&nbsp;</td>
-                <td style="padding-left:6px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;color:#1E6E48;vertical-align:middle;">Complete</td>
-              </tr>
-              </table>
-              <div style="font-family:Georgia,'Times New Roman',serif;font-size:26px;font-weight:normal;letter-spacing:-0.5px;color:#111110;margin-bottom:4px;">{{ $completeCount ?? 0 }}</div>
-              <div style="font-family:Georgia,serif;font-size:10px;color:#999994;line-height:1.4;">item selesai &amp; terverifikasi</div>
-            </td></tr>
-            </table>
-          </td>
-        </tr>
+          @foreach($sites as $i => $site)
+          <tr style="background-color:{{ $i % 2 === 0 ? '#FFFFFF' : '#FAF9F7' }};">
+            <td style="padding:12px 16px;font-family:Georgia,serif;font-size:13px;font-weight:bold;color:#111110;border-right:1px solid #E8E7E3;border-top:1px solid #E8E7E3;">{{ $site['name'] }}</td>
+            <td style="padding:12px 16px;font-family:Georgia,'Times New Roman',serif;font-size:15px;color:#111110;text-align:center;border-right:1px solid #E8E7E3;border-top:1px solid #E8E7E3;">{{ number_format($site['ikk']) }}</td>
+            <td style="padding:12px 16px;font-family:Georgia,'Times New Roman',serif;font-size:15px;color:#111110;text-align:center;border-right:1px solid #E8E7E3;border-top:1px solid #E8E7E3;">{{ number_format($site['oak']) }}</td>
+            <td style="padding:12px 16px;font-family:Georgia,'Times New Roman',serif;font-size:15px;color:#111110;text-align:center;border-top:1px solid #E8E7E3;">{{ number_format($site['ipk']) }}</td>
+          </tr>
+          @endforeach
+
+          <!-- Total Row -->
+          <tr style="background-color:#F2F1EE;">
+            <td style="padding:12px 16px;font-family:Georgia,serif;font-size:10px;font-weight:bold;letter-spacing:0.1em;text-transform:uppercase;color:#555552;border-right:1px solid #E8E7E3;border-top:2px solid #CCCCC6;">Total</td>
+            <td style="padding:12px 16px;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:bold;color:#111110;text-align:center;border-right:1px solid #E8E7E3;border-top:2px solid #CCCCC6;">{{ number_format($totIkk) }}</td>
+            <td style="padding:12px 16px;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:bold;color:#111110;text-align:center;border-right:1px solid #E8E7E3;border-top:2px solid #CCCCC6;">{{ number_format($totOak) }}</td>
+            <td style="padding:12px 16px;font-family:Georgia,'Times New Roman',serif;font-size:16px;font-weight:bold;color:#111110;text-align:center;border-top:2px solid #CCCCC6;">{{ number_format($totIpk) }}</td>
+          </tr>
+
         </table>
 
       </td>

@@ -35,7 +35,7 @@ class DashboardScreenshotMail extends Mailable
     {
         $appName = config('app.name');
         return new Envelope(
-            subject: "[{$this->timeOfDay}] Screenshot Dashboard DOPM - {$appName}",
+            subject: "[{$this->timeOfDay}] Daily Report IKK - {$appName}",
         );
     }
 

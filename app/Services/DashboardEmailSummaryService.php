@@ -155,6 +155,34 @@ class DashboardEmailSummaryService
 
         $weeklyCount = $totalIkkClickhouseMingguIni > 0 ? $totalIkkClickhouseMingguIni : $totalDopmMingguIni;
 
+        // Per-site: name, ikk (DOPM count), ipk (IpkIkk count), oak (0 atau dari CH jika ada)
+        $summaryBySite = [];
+        foreach ($dopmListHarian as $dopm) {
+            $site = trim($dopm->site_ijin_kerja_khusus ?? '') ?: 'Lainnya';
+            if (!isset($summaryBySite[$site])) {
+                $summaryBySite[$site] = ['ikk' => 0, 'kode_ikks' => []];
+            }
+            $summaryBySite[$site]['ikk']++;
+            $k = $dopm->kode_ikk;
+            if ($k !== null && $k !== '') {
+                $summaryBySite[$site]['kode_ikks'][$k] = true;
+            }
+        }
+        $sites = [];
+        foreach ($summaryBySite as $siteName => $data) {
+            $kodeIkksSite = array_keys($data['kode_ikks']);
+            $ipkCount = empty($kodeIkksSite)
+                ? 0
+                : IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $kodeIkksSite)->count();
+            $sites[] = [
+                'name' => $siteName,
+                'ikk' => $data['ikk'],
+                'oak' => 0,
+                'ipk' => $ipkCount,
+            ];
+        }
+        usort($sites, fn ($a, $b) => strnatcasecmp($a['name'], $b['name']));
+
         return [
             'needVerification' => $needAction,
             'cancelCount' => $totalPekerjaanBatalHarian,
@@ -165,6 +193,8 @@ class DashboardEmailSummaryService
             'warningCount' => $warningCount,
             'completeCount' => $completeCount,
             'reportDate' => $filterDate,
+            'sites' => $sites,
+            'totalOak' => $totalOakHarian,
         ];
     }
 }
