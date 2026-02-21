@@ -1578,7 +1578,7 @@
               </div>
             </div>
           </div>
-        </div><!--end row-->
+        </div>
 
         
         
@@ -1680,10 +1680,10 @@
                     @endphp
                     @forelse($ikkMerah as $ikk)
                      @php
-                        // Data dari IKK/work permit (bukan DOPM)
+                        // Data dari IKK/work permit (bukan DOPM) — work_permit_id agar modal ambil IPK/OKK dari ClickHouse
                         $dopmJson = [
-                            'kode_ikk' => $ikk->code ?? null,
                             'work_permit_id' => $ikk->id ?? null,
+                            'kode_ikk' => $ikk->code ?? null,
                             'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
                             'sid_layer_2' => $ikk->sid_layer_2 ?? null,
                             'sid_layer_3' => $ikk->sid_layer_3 ?? null,
@@ -1763,8 +1763,9 @@
                     @endphp
                     @forelse($ikkKuning as $ikk)
                     @php
-                        // Data dari IKK/work permit (bukan DOPM)
+                        // Data dari IKK/work permit (bukan DOPM) — work_permit_id agar modal ambil IPK/OKK dari ClickHouse
                         $dopmJsonK = [
+                            'work_permit_id' => $ikk->id ?? null,
                             'kode_ikk' => $ikk->code ?? null,
                             'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
                             'sid_layer_2' => $ikk->sid_layer_2 ?? null,
@@ -1845,10 +1846,10 @@
                         @endphp
                         @forelse($ikkHijau as $ikk)
                         @php
-                            // Data dari IKK/work permit (bukan DOPM)
+                            // Data dari IKK/work permit (bukan DOPM) — work_permit_id agar modal ambil IPK/OKK dari ClickHouse
                             $dopmJsonH = [
-                                'kode_ikk' => $ikk->code ?? null,
                                 'work_permit_id' => $ikk->id ?? null,
+                                'kode_ikk' => $ikk->code ?? null,
                                 'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
                                 'sid_layer_2' => $ikk->sid_layer_2 ?? null,
                                 'sid_layer_3' => $ikk->sid_layer_3 ?? null,
@@ -2181,7 +2182,6 @@
                                                 // Data modal Intervensi dari IKK/work permit (bukan DOPM)
                                                 $ikkJson = [
                                                     'kode_ikk' => $ikk->code ?? null,
-                                                    'work_permit_id' => $ikk->id ?? null,
                                                     'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
                                                     'sid_layer_2' => $ikk->sid_layer_2 ?? null,
                                                     'sid_layer_3' => $ikk->sid_layer_3 ?? null,

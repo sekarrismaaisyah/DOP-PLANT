@@ -531,13 +531,14 @@ class DOPMController extends Controller
                     foreach ($ikkClickhouseListHarian as $ikk) {
                         $ikk->status_pekerjaan = $statusByCode[$ikk->code ?? ''] ?? null;
                     }
+                    // IKK cancel: status = SUBMITTED AND job_status = NOT_STARTED (definisi IKK cancel dari IPK ClickHouse)
                     $sqlCancel = "
                         SELECT work_permit_id
                         FROM hse_automation.ipk_assessment
                         WHERE work_permit_id IN ({$wpIdsEsc})
                           AND toDate(start_date) = toDate('{$dateEsc}')
                           AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
-                          AND (upper(trim(toString(status))) IN ('BATAL', 'CANCEL') OR upper(trim(toString(job_status))) IN ('BATAL', 'CANCEL'))
+                          AND upper(trim(toString(status))) = 'SUBMITTED' AND upper(trim(toString(job_status))) = 'NOT_STARTED'
                     ";
                     $cancelRows = $ch->query($sqlCancel);
                     foreach ($cancelRows ?? [] as $r) {
@@ -548,10 +549,10 @@ class DOPMController extends Controller
                     }
                     $cancelKodeIkk = array_values(array_unique($cancelKodeIkk));
                     $sqlBatalCnt = "
-                        SELECT count() AS cnt FROM hse_automation.ipk_assessment
+                        SELECT count(DISTINCT work_permit_id) AS cnt FROM hse_automation.ipk_assessment
                         WHERE work_permit_id IN ({$wpIdsEsc}) AND toDate(start_date) = toDate('{$dateEsc}')
                           AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
-                          AND (upper(trim(toString(status))) IN ('BATAL', 'CANCEL') OR upper(trim(toString(job_status))) IN ('BATAL', 'CANCEL'))
+                          AND upper(trim(toString(status))) = 'SUBMITTED' AND upper(trim(toString(job_status))) = 'NOT_STARTED'
                     ";
                     $batalCntRow = $ch->query($sqlBatalCnt);
                     $totalPekerjaanBatalHarianCh = isset($batalCntRow[0]['cnt']) ? (int) $batalCntRow[0]['cnt'] : 0;
@@ -1830,9 +1831,11 @@ class DOPMController extends Controller
         })() : date('Y-m-d');
         $useChModal = \App\Http\Controllers\DOPMIKK\DOPMWeeklyController::useClickHouseForIpkOkk($filterDateModal);
         $workPermitId = trim((string) $request->input('work_permit_id', ''));
+        // Bila work_permit_id dikirim (klik dari matriks Need Action/Warning/Complete), selalu pakai ClickHouse untuk IPK/OKK
+        $forceChModal = $workPermitId !== '';
 
         if ($kodeIkk !== '' && $kodeIkk !== null) {
-            if ($useChModal && class_exists(\App\Services\ClickHouseService::class)) {
+            if (($useChModal || $forceChModal) && class_exists(\App\Services\ClickHouseService::class)) {
                 $ch = app(\App\Services\ClickHouseService::class);
                 if (method_exists($ch, 'query') && $ch->isConnected()) {
                     $wpId = $workPermitId !== '' ? $workPermitId : null;

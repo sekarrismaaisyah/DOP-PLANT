@@ -585,13 +585,14 @@ class DOPMWeeklyController extends Controller
                     foreach ($ikkClickhouseListHarian as $ikk) {
                         $ikk->status_pekerjaan = $statusByCode[$ikk->code ?? ''] ?? null;
                     }
+                    // IKK cancel: status = SUBMITTED AND job_status = NOT_STARTED (definisi IKK cancel dari IPK ClickHouse)
                     $sqlCancel = "
                         SELECT work_permit_id
                         FROM hse_automation.ipk_assessment
                         WHERE work_permit_id IN ({$wpIdsEsc})
                           AND toDate(start_date) = toDate('{$dateEsc}')
                           AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
-                          AND (upper(trim(toString(status))) IN ('BATAL', 'CANCEL') OR upper(trim(toString(job_status))) IN ('BATAL', 'CANCEL'))
+                          AND upper(trim(toString(status))) = 'SUBMITTED' AND upper(trim(toString(job_status))) = 'NOT_STARTED'
                     ";
                     $cancelRows = $ch->query($sqlCancel);
                     $cancelKodeIkk = [];
@@ -1331,9 +1332,10 @@ class DOPMWeeklyController extends Controller
         })() : date('Y-m-d');
         $useChModal = self::useClickHouseForIpkOkk($filterDateModal);
         $workPermitId = trim((string) $request->input('work_permit_id', ''));
+        $forceChModal = $workPermitId !== '';
 
         if ($kodeIkk !== '' && $kodeIkk !== null) {
-            if ($useChModal && class_exists(\App\Services\ClickHouseService::class)) {
+            if (($useChModal || $forceChModal) && class_exists(\App\Services\ClickHouseService::class)) {
                 $ch = app(\App\Services\ClickHouseService::class);
                 if (method_exists($ch, 'query') && $ch->isConnected()) {
                     $wpId = $workPermitId !== '' ? $workPermitId : null;
