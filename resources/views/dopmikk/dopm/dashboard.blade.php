@@ -1415,8 +1415,8 @@
 
 @section('content')
 <div class="hazard-detection-header">
-    <h1 class="hazard-detection-title">DOPM & IKK - Dashboard</h1>
-    <p class="hazard-detection-subtitle">Statistik harian DOPM, IPK-IKK, OKK, dan OAK (Observasi Area Kerja)</p>
+    <h1 class="hazard-detection-title">IKK - Dashboard</h1>
+    <p class="hazard-detection-subtitle">Statistik harian IKK, IPK-IKK, OKK, dan OAK (Observasi Area Kerja)</p>
 
     {{-- Filter tanggal --}}
     <!-- <div class="card rounded-4 mb-3 w-100">
@@ -1482,7 +1482,7 @@
         <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardStatsCollapse" aria-expanded="true" aria-controls="dashboardStatsCollapse">
             <span class="fw-bold d-flex align-items-center">
                 <i class="material-icons-outlined me-2">dashboard</i>
-                Statistik DOPM, IKK, OKK & OAK
+                Statistik IKK, OKK & OAK
             </span>
             <i class="material-icons-outlined collapse-icon">expand_less</i>
         </button>
