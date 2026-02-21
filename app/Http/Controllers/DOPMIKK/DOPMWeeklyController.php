@@ -880,6 +880,9 @@ class DOPMWeeklyController extends Controller
             $pctIkkAdaOkk = 0;
         }
 
+        // Compliance IKK = rata-rata (pctIkkAdaIpk + pctIkkAdaOkk) / 2 — satu sumber kebenaran untuk view
+        $pctPengisianRataRataIkk = round(((float) ($pctIkkAdaIpk ?? 0) + (float) ($pctIkkAdaOkk ?? 0)) / 2, 1);
+
         // Chart per jenis: 100% data IKK (work permit) — kategori & nilai dari ClickHouse IKK, bukan DOPM
         $chartJenisLabels = [];
         $chartIkkPerJenis = [];
@@ -1250,6 +1253,7 @@ class DOPMWeeklyController extends Controller
             'totalIkkUnikHarian' => $totalIkkUnikHarian,
             'pctIkkAdaIpk' => $pctIkkAdaIpk,
             'pctIkkAdaOkk' => $pctIkkAdaOkk,
+            'pctPengisianRataRataIkk' => $pctPengisianRataRataIkk,
             'pctDopmAdaIpk' => $pctDopmAdaIpk,
             'pctDopmAdaOkk' => $pctDopmAdaOkk,
             'pctDopmOak' => $pctDopmOak,

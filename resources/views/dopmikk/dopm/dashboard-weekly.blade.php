@@ -1564,7 +1564,7 @@
                         <div class="d-flex align-items-center gap-3 mb-2">
                            <div class="">
                              @php
-                               $pctPengisianRataRataIkk = round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
+                               $pctPengisianRataRataIkk = $pctPengisianRataRataIkk ?? round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
                              @endphp
                              <h2 class="mb-0">{{ $pctPengisianRataRataIkk }}% Compliance</h2>
                            </div>
@@ -1589,7 +1589,7 @@
                         <div class="d-flex align-items-center gap-3 mb-2">
                            <div class="">
                              @php
-                               $pctPengisianRataRataIkk = round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
+                               $pctPengisianRataRataIkk = $pctPengisianRataRataIkk ?? round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
                              @endphp
                              <h2 class="mb-0">{{ $pctPengisianRataRataIkk }}% Compliance</h2>
                            </div>
@@ -1623,7 +1623,7 @@
                   </div>
                  </div>
                 @php
-                  $pctCalendar = round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
+                  $pctCalendar = $pctPengisianRataRataIkk ?? round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
                 @endphp
                 <style>
                   .compliance-calendar-wrapper { background: rgba(255,255,255,0.03); border-radius: 15px; padding: 20px; border: 1px solid rgba(0,0,0,0.06); }
