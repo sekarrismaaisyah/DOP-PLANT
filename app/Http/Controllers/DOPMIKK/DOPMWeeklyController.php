@@ -579,7 +579,7 @@ class DOPMWeeklyController extends Controller
                         $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
                         $code = $idToCode[$wpId] ?? null;
                         if ($code !== null) {
-                            $st = self::getClickHouseRowValue($r, 'status') ?? self::getClickHouseRowValue($r, 'job_status');
+                            $st = self::getClickHouseRowValue($r, 'job_status');
                             $statusByCode[$code] = $st;
                         }
                     }

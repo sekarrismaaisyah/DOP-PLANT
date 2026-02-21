@@ -2138,30 +2138,109 @@
                     </div>
                 </div> -->
 
-                {{-- Tabel IKK dari ClickHouse (ikk_work_permit) --}}
-                <div class="mb-4">
-                            <div class="d-flex align-items-center mb-3">
-                                <i class="material-icons-outlined text-primary me-2" style="font-size: 20px;">checklist</i>
-                                <h6 class="mb-0 fw-bold">IPK-IKK <span class="badge bg-primary ms-2" id="badgeIpkIkk">0</span></h6>
+                {{-- Data IKK harian dari ClickHouse (ikk_work_permit) --}}
+                <div class="card rounded-4 border-0 shadow-sm mt-2">
+                    <div class="card-header bg-white border-bottom">
+                        <h5 class="mb-0 fw-bold">
+                            Data IKK
+                            {{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('l, d F Y') }}
+                        </h5>
+                        <small class="text-muted">Data IKK harian dari tabel ClickHouse <code>hse_automation.ikk_work_permit</code>.</small>
+                    </div>
+                    <div class="card-body p-0">
+                        @if(count($ikkClickhouseListHarian ?? []) > 0)
+                            <div class="table-responsive">
+                                <table class="table table-hover table-striped align-middle mb-0 w-100" id="tableIkkClickhouseHarian">
+                                    <thead class="table-light">
+                                        <tr>
+                                            <th>No</th>
+                                            <th>Kode IKK</th>
+                                            <th>Site</th>
+                                            <th>Jenis Ijin Kerja Khusus</th>
+                                            <th>Nama Pekerjaan</th>
+                                            <th>Perusahaan</th>
+                                            <th>Status IKK</th>
+                                            <th>Status Pekerjaan</th>
+                                            <th>Status Matriks</th>
+                                            <th>Nama Layer 1</th>
+                                            <th>Layer 2 / 3 / 4</th>
+                                            <th class="text-end">Aksi</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="py-2">
+                                        @foreach($ikkClickhouseListHarian as $ikk)
+                                            @php
+                                                $matriksIkk = $ikk->status_matriks ?? 'Merah';
+                                                $badgeClassIkk = $matriksIkk === 'Hijau'
+                                                    ? 'bg-success'
+                                                    : ($matriksIkk === 'Kuning' ? 'bg-warning text-dark' : 'bg-danger');
+                                                $ikkJson = [
+                                                    'work_permit_id' => $ikk->id ?? null,
+                                                    'kode_ikk' => $ikk->code ?? null,
+                                                    'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
+                                                    'sid_layer_2' => $ikk->sid_layer_2 ?? null,
+                                                    'sid_layer_3' => $ikk->sid_layer_3 ?? null,
+                                                    'sid_layer_4' => $ikk->sid_layer_4 ?? null,
+                                                    'nama_layer_2' => $ikk->nama_layer_2 ?? null,
+                                                    'nama_layer_3' => $ikk->nama_layer_3 ?? null,
+                                                    'nama_layer_4' => $ikk->nama_layer_4 ?? null,
+                                                    'nama_layer_1' => $ikk->nama_layer_1 ?? null,
+                                                    'sid_layer_1' => $ikk->sid_layer_1 ?? null,
+                                                    'id_dop' => $ikk->code ?? null,
+                                                    'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
+                                                    'site_ijin_kerja_khusus' => $ikk->site ?? null,
+                                                    'perusahaan_ijin_kerja_khusus' => $ikk->perusahaan ?? null,
+                                                    'tanggal_dop' => $filterDate ?? null,
+                                                    'timestamp' => null,
+                                                    'status' => $ikk->status ?? null,
+                                                    'location_name' => $ikk->location_name ?? null,
+                                                    'location_detail_name' => $ikk->location_detail_name ?? null,
+                                                    'ra_pjo_name' => $ikk->ra_pjo_name ?? null,
+                                                ];
+                                            @endphp
+                                            <tr>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td>{{ $ikk->code ?? '-' }}</td>
+                                                <td>{{ $ikk->site ?? '-' }}</td>
+                                                <td>{{ $ikk->jenis_ijin_kerja_khusus ?? '-' }}</td>
+                                                <td>{{ $ikk->nama_pekerjaan ?? '-' }}</td>
+                                                <td>{{ $ikk->perusahaan ?? '-' }}</td>
+                                                <td><span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span></td>
+                                                <td>
+                                                    <span class="">{{ $ikk->status_pekerjaan ?? 'Belum ada IPK' }}</span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge {{ $badgeClassIkk }}">{{ $matriksIkk }}</span>
+                                                </td>
+                                                <td><small class="text-primary">{{ $ikk->nama_layer_1 ?? '-' }}</small></td>
+                                                <td>
+                                                    <small>
+                                                        {{ $ikk->nama_layer_2 ?? '-' }} /
+                                                        {{ $ikk->nama_layer_3 ?? '-' }} /
+                                                        {{ $ikk->nama_layer_4 ?? '-' }}
+                                                    </small>
+                                                </td>
+                                                <td class="text-end">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary btn-detail-dopm me-1" data-dopm="{{ json_encode($ikkJson) }}" title="Detail IPK-IKK, OKK, OAK">
+                                                        <i class="material-icons-outlined" style="font-size: 16px;">visibility</i> Detail
+                                                    </button>
+                                                    <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-dopm" data-dopm="{{ json_encode($ikkJson) }}" title="Intervensi (IPK-IKK, OKK, OAK) — data dari IKK/Work Permit">
+                                                        <i class="material-icons-outlined" style="font-size: 16px;">campaign</i> Intervensi
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
-                            <div id="ipkIkkLoading" class="text-center py-4 d-none bg-white">
-                                <div class="spinner-border text-primary mb-2" role="status"></div>
-                                <p class="text-muted mb-0">Memuat data IPK-IKK...</p>
+                        @else
+                            <div class="p-4 text-center text-muted">
+                                <i class="material-icons-outlined" style="font-size: 48px;">inbox</i>
+                                <p class="mb-0 mt-2">Tidak ada data IKK dari ClickHouse untuk tanggal ini.</p>
                             </div>
-                            <div id="ipkIkkEmpty" class="text-center py-4 d-none bg-white">
-                                <span class="material-icons-outlined text-muted" style="font-size: 48px;">inbox</span>
-                                <p class="text-muted mt-2 mb-0">Tidak ada data IPK-IKK untuk kode IKK ini.</p>
-                            </div>
-                            <div id="ipkIkkTableWrap" class="d-none bg-white">
-                                <p class="small text-muted mb-2">Tabel di bawah menampilkan seluruh data IPK-IKK dengan kode IKK ini.</p>
-                                <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
-                                    <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableIpkIkk">
-                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Status</th></tr></thead>
-                                        <tbody></tbody>
-                                    </table>
-                                </div>
-                            </div>
-                        </div>
+                        @endif
+                    </div>
+                </div>
             </div>
         </div>
 
