@@ -369,11 +369,12 @@ class DOPMController extends Controller
                                     $layersByWp[$wpId] = [];
                                 }
                                 if (!isset($layersByWp[$wpId][$layerNum])) {
-                                    $layersByWp[$wpId][$layerNum] = [
-                                        'name' => trim((string) ($er['employee_name'] ?? '')),
-                                        'sid' => trim((string) ($er['employee_sid'] ?? '')),
-                                    ];
+                                    $layersByWp[$wpId][$layerNum] = [];
                                 }
+                                $layersByWp[$wpId][$layerNum][] = [
+                                    'name' => trim((string) ($er['employee_name'] ?? '')),
+                                    'sid' => trim((string) ($er['employee_sid'] ?? '')),
+                                ];
                             }
                         }
 
@@ -383,14 +384,14 @@ class DOPMController extends Controller
                                 continue;
                             }
                             $layers = $layersByWp[$wpId] ?? [];
-                            $namaLayer1 = isset($layers[1]) ? $layers[1]['name'] : null;
-                            $sidLayer1 = isset($layers[1]) ? $layers[1]['sid'] : null;
-                            $namaLayer2 = isset($layers[2]) ? $layers[2]['name'] : null;
-                            $sidLayer2 = isset($layers[2]) ? $layers[2]['sid'] : null;
-                            $namaLayer3 = isset($layers[3]) ? $layers[3]['name'] : null;
-                            $sidLayer3 = isset($layers[3]) ? $layers[3]['sid'] : null;
-                            $namaLayer4 = isset($layers[4]) ? $layers[4]['name'] : null;
-                            $sidLayer4 = isset($layers[4]) ? $layers[4]['sid'] : null;
+                            $namaLayer1 = self::formatLayerEmployees($layers[1] ?? []);
+                            $sidLayer1 = self::formatLayerSids($layers[1] ?? []);
+                            $namaLayer2 = self::formatLayerEmployees($layers[2] ?? []);
+                            $sidLayer2 = self::formatLayerSids($layers[2] ?? []);
+                            $namaLayer3 = self::formatLayerEmployees($layers[3] ?? []);
+                            $sidLayer3 = self::formatLayerSids($layers[3] ?? []);
+                            $namaLayer4 = self::formatLayerEmployees($layers[4] ?? []);
+                            $sidLayer4 = self::formatLayerSids($layers[4] ?? []);
 
                             // Normalisasi & mapping status untuk tampilan
                             $rawStatus = $row['status'] ?? null;
@@ -628,7 +629,7 @@ class DOPMController extends Controller
                             $ipkDataByCode[$code] = (object) [
                                 'kode_ikk' => $code,
                                 'durasi_jam' => null,
-                                'status_pekerjaan' => self::getClickHouseRowValue($r, 'status') ?? self::getClickHouseRowValue($r, 'job_status'),
+                                'status_pekerjaan' => self::getClickHouseRowValue($r, 'job_status'),
                             ];
                         }
                     }
@@ -1289,11 +1290,12 @@ class DOPMController extends Controller
                                     $layersByWp[$wpId] = [];
                                 }
                                 if (!isset($layersByWp[$wpId][$layerNum])) {
-                                    $layersByWp[$wpId][$layerNum] = [
-                                        'name' => trim((string) ($er['employee_name'] ?? '')),
-                                        'sid' => trim((string) ($er['employee_sid'] ?? '')),
-                                    ];
+                                    $layersByWp[$wpId][$layerNum] = [];
                                 }
+                                $layersByWp[$wpId][$layerNum][] = [
+                                    'name' => trim((string) ($er['employee_name'] ?? '')),
+                                    'sid' => trim((string) ($er['employee_sid'] ?? '')),
+                                ];
                             }
                         }
 
@@ -1303,14 +1305,14 @@ class DOPMController extends Controller
                                 continue;
                             }
                             $layers = $layersByWp[$wpId] ?? [];
-                            $namaLayer1 = isset($layers[1]) ? $layers[1]['name'] : null;
-                            $sidLayer1 = isset($layers[1]) ? $layers[1]['sid'] : null;
-                            $namaLayer2 = isset($layers[2]) ? $layers[2]['name'] : null;
-                            $sidLayer2 = isset($layers[2]) ? $layers[2]['sid'] : null;
-                            $namaLayer3 = isset($layers[3]) ? $layers[3]['name'] : null;
-                            $sidLayer3 = isset($layers[3]) ? $layers[3]['sid'] : null;
-                            $namaLayer4 = isset($layers[4]) ? $layers[4]['name'] : null;
-                            $sidLayer4 = isset($layers[4]) ? $layers[4]['sid'] : null;
+                            $namaLayer1 = self::formatLayerEmployees($layers[1] ?? []);
+                            $sidLayer1 = self::formatLayerSids($layers[1] ?? []);
+                            $namaLayer2 = self::formatLayerEmployees($layers[2] ?? []);
+                            $sidLayer2 = self::formatLayerSids($layers[2] ?? []);
+                            $namaLayer3 = self::formatLayerEmployees($layers[3] ?? []);
+                            $sidLayer3 = self::formatLayerSids($layers[3] ?? []);
+                            $namaLayer4 = self::formatLayerEmployees($layers[4] ?? []);
+                            $sidLayer4 = self::formatLayerSids($layers[4] ?? []);
 
                             // Normalisasi & mapping status untuk tampilan
                             $rawStatus = $row['status'] ?? null;
@@ -1884,7 +1886,7 @@ class DOPMController extends Controller
                                 'durasi_jam' => null,
                                 'cctv_terekam' => self::getClickHouseRowValue($r, 'cctv'),
                                 'kategori_ijk' => null,
-                                'status_pekerjaan' => self::getClickHouseRowValue($r, 'status') ?? self::getClickHouseRowValue($r, 'job_status'),
+                                'status_pekerjaan' => self::getClickHouseRowValue($r, 'job_status'),
                             ];
                         }
                         // Enrich IPK dengan nama pengawas & kode SID dari ipk_assessment_answer -> ikk_work_permit_employee
@@ -1967,10 +1969,16 @@ class DOPMController extends Controller
                             ORDER BY created_at ASC
                         ";
                         $okkRowsCh = $ch->query($sqlOkkModal);
+                        $okkSupervisorIds = [];
                         foreach ($okkRowsCh ?? [] as $r) {
                             $ts = self::getClickHouseRowValue($r, 'created_at');
                             $tsStr = $ts instanceof \DateTimeInterface ? $ts->format('Y-m-d H:i:s') : (string) $ts;
+                            $supId = self::getClickHouseRowValue($r, 'supervisor_id');
+                            if ($supId !== null && $supId !== '') {
+                                $okkSupervisorIds[] = $supId;
+                            }
                             $okk[] = [
+                                'supervisor_id' => $supId,
                                 'ts' => $tsStr,
                                 'nama_pengawas' => null,
                                 'kode_sid' => null,
@@ -1980,6 +1988,72 @@ class DOPMController extends Controller
                                 'jenis_ijk' => null,
                                 'layer_pengawas' => null,
                             ];
+                        }
+                        // Enrich OKK: supervisor_id -> ikk_work_permit_employee (nama, sid, perusahaan, layer); work_permit -> site, jenis IJK
+                        if (!empty($okk)) {
+                            try {
+                                $supIds = array_unique(array_filter($okkSupervisorIds));
+                                $wpSite = null;
+                                $wpJenisIjk = null;
+                                $sqlWp = "
+                                    SELECT ra_site_name, m_job_id FROM hse_automation.ikk_work_permit
+                                    WHERE id = '{$wpIdEsc}' LIMIT 1
+                                ";
+                                $wpInfo = $ch->query($sqlWp);
+                                if (!empty($wpInfo[0])) {
+                                    $wpSite = self::getClickHouseRowValue($wpInfo[0], 'ra_site_name');
+                                    $jobId = self::getClickHouseRowValue($wpInfo[0], 'm_job_id');
+                                    if ($jobId !== null && $jobId !== '') {
+                                        $jobIdEsc = addslashes((string) $jobId);
+                                        $sqlJob = "SELECT name FROM hse_automation.ikk_m_job WHERE id = '{$jobIdEsc}' LIMIT 1";
+                                        $jobRow = $ch->query($sqlJob);
+                                        if (!empty($jobRow[0])) {
+                                            $wpJenisIjk = self::getClickHouseRowValue($jobRow[0], 'name');
+                                        }
+                                    }
+                                }
+                                $employeeInfoOkk = [];
+                                if (!empty($supIds)) {
+                                    $supEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $supIds));
+                                    $sqlEmpOkk = "
+                                        SELECT id, employee_name, employee_sid, company_name, layer
+                                        FROM hse_automation.ikk_work_permit_employee
+                                        WHERE id IN ({$supEsc})
+                                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                                    ";
+                                    $empOkkRows = $ch->query($sqlEmpOkk);
+                                    foreach ($empOkkRows ?? [] as $er) {
+                                        $eId = self::getClickHouseRowValue($er, 'id');
+                                        if ($eId !== null) {
+                                            $layerRaw = self::getClickHouseRowValue($er, 'layer');
+                                            $employeeInfoOkk[(string) $eId] = [
+                                                'employee_name' => self::getClickHouseRowValue($er, 'employee_name'),
+                                                'employee_sid' => self::getClickHouseRowValue($er, 'employee_sid'),
+                                                'company_name' => self::getClickHouseRowValue($er, 'company_name'),
+                                                'layer' => $layerRaw !== null && $layerRaw !== '' ? (string) $layerRaw : null,
+                                            ];
+                                        }
+                                    }
+                                }
+                                foreach ($okk as $idx => $row) {
+                                    $sid = $row['supervisor_id'] ?? null;
+                                    if ($sid !== null && isset($employeeInfoOkk[(string) $sid])) {
+                                        $info = $employeeInfoOkk[(string) $sid];
+                                        $okk[$idx]['nama_pengawas'] = $info['employee_name'] ?? null;
+                                        $okk[$idx]['kode_sid'] = $info['employee_sid'] ?? null;
+                                        $okk[$idx]['nama_perusahaan'] = $info['company_name'] ?? null;
+                                        $okk[$idx]['layer_pengawas'] = $info['layer'] ?? null;
+                                    }
+                                    $okk[$idx]['site'] = $wpSite;
+                                    $okk[$idx]['jenis_ijk'] = $wpJenisIjk;
+                                    unset($okk[$idx]['supervisor_id']);
+                                }
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::debug('Dashboard modal OKK enrich: ' . $e->getMessage());
+                                foreach ($okk as $idx => $row) {
+                                    unset($okk[$idx]['supervisor_id']);
+                                }
+                            }
                         }
                         $ipkSource = 'clickhouse';
                         $okkSource = 'clickhouse';
@@ -3600,6 +3674,38 @@ class DOPMController extends Controller
             }
         }
         return $row[$key] ?? null;
+    }
+
+    /**
+     * Format array of layer employees (nama + SID) untuk tampilan: "Nama1 (SID1), Nama2 (SID2)".
+     * @param array<int, array{name: string, sid: string}> $employees
+     */
+    private static function formatLayerEmployees(array $employees): ?string
+    {
+        if (empty($employees)) {
+            return null;
+        }
+        $parts = [];
+        foreach ($employees as $e) {
+            $name = trim((string) ($e['name'] ?? ''));
+            $sid = trim((string) ($e['sid'] ?? ''));
+            $parts[] = $name !== '' ? ($sid !== '' ? $name . ' (' . $sid . ')' : $name) : ($sid !== '' ? $sid : null);
+        }
+        $parts = array_filter($parts);
+        return $parts !== [] ? implode(', ', $parts) : null;
+    }
+
+    /**
+     * Format array of layer employees SID saja: "SID1, SID2".
+     * @param array<int, array{name: string, sid: string}> $employees
+     */
+    private static function formatLayerSids(array $employees): ?string
+    {
+        if (empty($employees)) {
+            return null;
+        }
+        $sids = array_filter(array_map(fn ($e) => trim((string) ($e['sid'] ?? '')), $employees));
+        return $sids !== [] ? implode(', ', $sids) : null;
     }
 
     /**

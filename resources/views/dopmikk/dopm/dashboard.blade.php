@@ -2336,10 +2336,10 @@
                                             <tr><td class="text-muted fw-semibold">Status</td><td id="detailDopmStatus">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Lokasi</td><td id="detailDopmLocation" class="text-break">—</td></tr>
                                             <tr><td class="text-muted fw-semibold">Detail Lokasi</td><td id="detailDopmLocationDetail" class="text-break">—</td></tr>
-                                            <tr><td class="text-muted fw-semibold">Layer 1</td><td id="detailDopmLayer1">—</td></tr>
-                                            <tr><td class="text-muted fw-semibold">Layer 2</td><td id="detailDopmLayer2">—</td></tr>
-                                            <tr><td class="text-muted fw-semibold">Layer 3</td><td id="detailDopmLayer3">—</td></tr>
-                                            <tr><td class="text-muted fw-semibold">Layer 4</td><td id="detailDopmLayer4">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 1</td><td id="detailDopmLayer1" class="text-break">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 2</td><td id="detailDopmLayer2" class="text-break">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 3</td><td id="detailDopmLayer3" class="text-break">—</td></tr>
+                                            <tr><td class="text-muted fw-semibold">Layer 4</td><td id="detailDopmLayer4" class="text-break">—</td></tr>
                                         </tbody>
                                     </table>
                                 </div>
