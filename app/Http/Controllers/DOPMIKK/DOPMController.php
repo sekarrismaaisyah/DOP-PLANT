@@ -493,47 +493,71 @@ class DOPMController extends Controller
         }
         $ikkClickhouseListHarian = array_values($byCode);
 
-        // Tambahkan status_pekerjaan (dari tabel ipk_ikk) per kode IKK:
-        // relasi: ikk_work_permit.code = ipk_ikk.kode_ikk, ambil status_pekerjaan terbaru (ts paling baru).
+        // Dashboard harian: IPK/OKK dari ClickHouse saja (relasi work_permit_id).
+        $cancelKodeIkk = [];
         if (!empty($ikkClickhouseListHarian)) {
-            $kodeIkksForStatus = array_values(array_unique(array_filter(array_map(function ($ikk) {
-                return $ikk->code ?? null;
-            }, $ikkClickhouseListHarian))));
-
-            if (!empty($kodeIkksForStatus)) {
-                $statusRows = IpkIkk::whereIn('kode_ikk', $kodeIkksForStatus)
-                    ->orderByDesc('ts')
-                    ->get(['kode_ikk', 'status_pekerjaan', 'ts']);
-
-                $statusByKode = [];
-                foreach ($statusRows as $row) {
-                    $kode = $row->kode_ikk;
-                    if ($kode === null || $kode === '') {
-                        continue;
-                    }
-                    // Ambil record pertama (ts paling baru) per kode_ikk
-                    if (!isset($statusByKode[$kode])) {
-                        $statusByKode[$kode] = $row->status_pekerjaan;
-                    }
+            $idToCode = [];
+            foreach ($ikkClickhouseListHarian as $ikk) {
+                $id = $ikk->id ?? null;
+                $code = $ikk->code ?? null;
+                if ($id !== null && $code !== null && $code !== '') {
+                    $idToCode[$id] = $code;
                 }
-
-                foreach ($ikkClickhouseListHarian as $ikk) {
-                    $code = $ikk->code ?? null;
-                    $ikk->status_pekerjaan = ($code !== null && isset($statusByKode[$code]))
-                        ? $statusByKode[$code]
-                        : null;
+            }
+            if (class_exists(\App\Services\ClickHouseService::class)) {
+                $ch = app(\App\Services\ClickHouseService::class);
+                if (method_exists($ch, 'query') && $ch->isConnected() && !empty($idToCode)) {
+                    $wpIds = array_keys($idToCode);
+                    $wpIdsEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $wpIds));
+                    $dateEsc = addslashes($filterDate);
+                    $sqlStatus = "
+                        SELECT work_permit_id, argMax(status, created_at) AS status, argMax(job_status, created_at) AS job_status
+                        FROM hse_automation.ipk_assessment
+                        WHERE work_permit_id IN ({$wpIdsEsc})
+                          AND toDate(start_date) = toDate('{$dateEsc}')
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                        GROUP BY work_permit_id
+                    ";
+                    $statusRows = $ch->query($sqlStatus);
+                    $statusByCode = [];
+                    foreach ($statusRows ?? [] as $r) {
+                        $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                        $code = $idToCode[$wpId] ?? null;
+                        if ($code !== null) {
+                            $st = self::getClickHouseRowValue($r, 'status') ?? self::getClickHouseRowValue($r, 'job_status');
+                            $statusByCode[$code] = $st;
+                        }
+                    }
+                    foreach ($ikkClickhouseListHarian as $ikk) {
+                        $ikk->status_pekerjaan = $statusByCode[$ikk->code ?? ''] ?? null;
+                    }
+                    $sqlCancel = "
+                        SELECT work_permit_id
+                        FROM hse_automation.ipk_assessment
+                        WHERE work_permit_id IN ({$wpIdsEsc})
+                          AND toDate(start_date) = toDate('{$dateEsc}')
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                          AND (upper(trim(toString(status))) IN ('BATAL', 'CANCEL') OR upper(trim(toString(job_status))) IN ('BATAL', 'CANCEL'))
+                    ";
+                    $cancelRows = $ch->query($sqlCancel);
+                    foreach ($cancelRows ?? [] as $r) {
+                        $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                        if (isset($idToCode[$wpId])) {
+                            $cancelKodeIkk[] = $idToCode[$wpId];
+                        }
+                    }
+                    $cancelKodeIkk = array_values(array_unique($cancelKodeIkk));
+                    $sqlBatalCnt = "
+                        SELECT count() AS cnt FROM hse_automation.ipk_assessment
+                        WHERE work_permit_id IN ({$wpIdsEsc}) AND toDate(start_date) = toDate('{$dateEsc}')
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                          AND (upper(trim(toString(status))) IN ('BATAL', 'CANCEL') OR upper(trim(toString(job_status))) IN ('BATAL', 'CANCEL'))
+                    ";
+                    $batalCntRow = $ch->query($sqlBatalCnt);
+                    $totalPekerjaanBatalHarianCh = isset($batalCntRow[0]['cnt']) ? (int) $batalCntRow[0]['cnt'] : 0;
                 }
             }
         }
-
-        // Siapkan daftar kode_ikk yang dibatalkan (status_pekerjaan Cancel/Batal) untuk hari ini
-        $cancelKodeIkk = IpkIkk::whereDate('ts', $filterDate)
-            ->whereIn('status_pekerjaan', ['Batal', 'BATAL', 'Cancel', 'CANCEL'])
-            ->pluck('kode_ikk')
-            ->filter()
-            ->unique()
-            ->values()
-            ->all();
 
         // Hitung status_matriks untuk IKK ClickHouse berdasarkan matriks lengkap (IPK + OKK + OAK),
         // dengan mengecualikan IKK yang sudah cancel (tidak ikut perhitungan matriks).
@@ -549,13 +573,15 @@ class DOPMController extends Controller
                 'Merah' => 2,
             ];
 
-            // OPTIMASI: Batch load semua data yang diperlukan untuk menghindari N+1 queries
+            // OPTIMASI: Batch load dari ClickHouse (work_permit_id)
             $validIkkCodes = [];
             $locationPairs = [];
+            $workPermitCodesForCh = [];
             foreach ($ikkClickhouseListHarian as $ikk) {
                 $code = $ikk->code ?? null;
                 if ($code !== null && $code !== '' && !in_array($code, $cancelKodeIkk, true)) {
                     $validIkkCodes[] = $code;
+                    $workPermitCodesForCh[] = $ikk->id ?? null;
                     $loc = trim((string) ($ikk->location_name ?? ''));
                     $det = trim((string) ($ikk->location_detail_name ?? ''));
                     if ($loc !== '' && $det !== '') {
@@ -566,34 +592,92 @@ class DOPMController extends Controller
                     }
                 }
             }
+            $workPermitCodesForCh = array_values(array_unique(array_filter($workPermitCodesForCh)));
 
-            // Batch load IPK data untuk semua IKK codes sekaligus
             $ipkDataByCode = [];
-            if (!empty($validIkkCodes)) {
-                $ipkList = IpkIkk::whereIn('kode_ikk', $validIkkCodes)
-                    ->whereDate('ts', $filterDate)
-                    ->get();
-                foreach ($ipkList as $ipk) {
-                    $kode = $ipk->kode_ikk;
-                    if (!isset($ipkDataByCode[$kode])) {
-                        $ipkDataByCode[$kode] = $ipk;
-                    }
-                }
-            }
-
-            // Batch load OKK data untuk semua IKK codes sekaligus
             $okkDataByCode = [];
-            if (!empty($validIkkCodes)) {
-                $okkList = Okk::whereIn('kode_ikk', $validIkkCodes)
-                    ->whereDate('ts', $filterDate)
-                    ->orderBy('ts')
-                    ->get();
-                foreach ($okkList as $okk) {
-                    $kode = $okk->kode_ikk;
-                    if (!isset($okkDataByCode[$kode])) {
-                        $okkDataByCode[$kode] = collect();
+            $ipkCountByKode = [];
+            $okkCountByKode = [];
+            if (!empty($workPermitCodesForCh) && class_exists(\App\Services\ClickHouseService::class)) {
+                $ch = app(\App\Services\ClickHouseService::class);
+                if (method_exists($ch, 'query') && $ch->isConnected()) {
+                    $dateEsc = addslashes($filterDate);
+                    $wpIdToCode = [];
+                    foreach ($ikkClickhouseListHarian as $ikk) {
+                        $id = $ikk->id ?? null;
+                        $code = $ikk->code ?? null;
+                        if ($id !== null && $code !== null && in_array($code, $validIkkCodes, true)) {
+                            $wpIdToCode[$id] = $code;
+                        }
                     }
-                    $okkDataByCode[$kode]->push($okk);
+                    $wpIdsEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $workPermitCodesForCh));
+                    $sqlIpk = "
+                        SELECT id, work_permit_id, code, status, job_status, start_date, created_at, supervisor_id, cctv
+                        FROM hse_automation.ipk_assessment
+                        WHERE work_permit_id IN ({$wpIdsEsc})
+                          AND toDate(start_date) = toDate('{$dateEsc}')
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                        ORDER BY created_at DESC
+                    ";
+                    $ipkRowsCh = $ch->query($sqlIpk);
+                    foreach ($ipkRowsCh ?? [] as $r) {
+                        $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                        $code = $wpIdToCode[$wpId] ?? null;
+                        if ($code !== null && !isset($ipkDataByCode[$code])) {
+                            $ipkDataByCode[$code] = (object) [
+                                'kode_ikk' => $code,
+                                'durasi_jam' => null,
+                                'status_pekerjaan' => self::getClickHouseRowValue($r, 'status') ?? self::getClickHouseRowValue($r, 'job_status'),
+                            ];
+                        }
+                    }
+                    $sqlOkk = "
+                        SELECT id, work_permit_id, code, status, created_at, supervisor_id
+                        FROM hse_automation.okk_assessment
+                        WHERE work_permit_id IN ({$wpIdsEsc})
+                          AND upper(trim(toString(status))) = 'SUBMITTED'
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                          AND toDate(created_at) = toDate('{$dateEsc}')
+                        ORDER BY created_at ASC
+                    ";
+                    $okkRowsCh = $ch->query($sqlOkk);
+                    foreach ($okkRowsCh ?? [] as $r) {
+                        $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                        $code = $wpIdToCode[$wpId] ?? null;
+                        if ($code !== null) {
+                            if (!isset($okkDataByCode[$code])) {
+                                $okkDataByCode[$code] = collect();
+                            }
+                            $okkDataByCode[$code]->push((object) [
+                                'nama_pengawas' => null,
+                                'layer_pengawas' => null,
+                            ]);
+                        }
+                    }
+                    $sqlIpkCnt = "
+                        SELECT work_permit_id, count() AS cnt FROM hse_automation.ipk_assessment
+                        WHERE work_permit_id IN ({$wpIdsEsc}) AND toDate(start_date) = toDate('{$dateEsc}')
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                        GROUP BY work_permit_id
+                    ";
+                    foreach ($ch->query($sqlIpkCnt) ?? [] as $r) {
+                        $code = $wpIdToCode[self::getClickHouseRowValue($r, 'work_permit_id')] ?? null;
+                        if ($code !== null) {
+                            $ipkCountByKode[$code] = (int) (self::getClickHouseRowValue($r, 'cnt') ?? 0);
+                        }
+                    }
+                    $sqlOkkCnt = "
+                        SELECT work_permit_id, count() AS cnt FROM hse_automation.okk_assessment
+                        WHERE work_permit_id IN ({$wpIdsEsc}) AND upper(trim(toString(status))) = 'SUBMITTED'
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) AND toDate(created_at) = toDate('{$dateEsc}')
+                        GROUP BY work_permit_id
+                    ";
+                    foreach ($ch->query($sqlOkkCnt) ?? [] as $r) {
+                        $code = $wpIdToCode[self::getClickHouseRowValue($r, 'work_permit_id')] ?? null;
+                        if ($code !== null) {
+                            $okkCountByKode[$code] = (int) (self::getClickHouseRowValue($r, 'cnt') ?? 0);
+                        }
+                    }
                 }
             }
 
@@ -712,20 +796,25 @@ class DOPMController extends Controller
             return $c;
         }, $ikkClickhouseListHarian))));
         if (!empty($workPermitCodes)) {
-            $ipkKodesWp = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
-                ->whereDate('ts', $filterDate)
-                ->select('kode_ikk')
-                ->distinct()
-                ->pluck('kode_ikk')
-                ->flip()
-                ->all();
-            $okkKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
-                ->whereDate('ts', $filterDate)
-                ->select('kode_ikk')
-                ->distinct()
-                ->pluck('kode_ikk')
-                ->flip()
-                ->all();
+            if (isset($workPermitCodesForCh) && is_array($ipkDataByCode ?? null)) {
+                $ipkKodesWp = array_flip(array_keys($ipkDataByCode));
+                $okkKodesWp = array_flip(array_keys($okkDataByCode));
+            } else {
+                $ipkKodesWp = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
+                    ->whereDate('ts', $filterDate)
+                    ->select('kode_ikk')
+                    ->distinct()
+                    ->pluck('kode_ikk')
+                    ->flip()
+                    ->all();
+                $okkKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
+                    ->whereDate('ts', $filterDate)
+                    ->select('kode_ikk')
+                    ->distinct()
+                    ->pluck('kode_ikk')
+                    ->flip()
+                    ->all();
+            }
             $totalIkkUnikHarian = count($workPermitCodes);
             $ikkAdaIpkCount = count(array_intersect_key($ipkKodesWp, array_flip($workPermitCodes)));
             $ikkAdaOkkCount = count(array_intersect_key($okkKodesWp, array_flip($workPermitCodes)));
@@ -803,10 +892,14 @@ class DOPMController extends Controller
             }, $ikkPerJenis))));
             $chartIpkPerJenis[] = empty($codesJenis)
                 ? 0
-                : IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count();
+                : (isset($ipkCountByKode) && is_array($ipkCountByKode)
+                    ? array_sum(array_map(fn ($c) => (int) ($ipkCountByKode[$c] ?? 0), $codesJenis))
+                    : IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count());
             $chartOkkPerJenis[] = empty($codesJenis)
                 ? 0
-                : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count();
+                : (isset($okkCountByKode) && is_array($okkCountByKode)
+                    ? array_sum(array_map(fn ($c) => (int) ($okkCountByKode[$c] ?? 0), $codesJenis))
+                    : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count());
         }
 
         // Total OAK harian: dari IKK (lokasi + detail lokasi), sama konsep dengan modal — match OAK by location & detail_location
@@ -850,6 +943,15 @@ class DOPMController extends Controller
                 }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::debug('Dashboard OAK harian by IKK location: ' . $e->getMessage());
+            }
+        }
+
+        // Dashboard harian: override totals dari ClickHouse bila dipakai
+        if (!empty($ikkClickhouseListHarian) && isset($workPermitCodesForCh)) {
+            $totalIkkHarian = array_sum($ipkCountByKode ?? []);
+            $totalOkkHarian = array_sum($okkCountByKode ?? []);
+            if (isset($totalPekerjaanBatalHarianCh)) {
+                $totalPekerjaanBatalHarian = $totalPekerjaanBatalHarianCh;
             }
         }
 
@@ -1508,20 +1610,25 @@ class DOPMController extends Controller
             return $c;
         }, $ikkClickhouseListHarian))));
         if (!empty($workPermitCodes)) {
-            $ipkKodesWp = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
-                ->whereDate('ts', $filterDate)
-                ->select('kode_ikk')
-                ->distinct()
-                ->pluck('kode_ikk')
-                ->flip()
-                ->all();
-            $okkKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
-                ->whereDate('ts', $filterDate)
-                ->select('kode_ikk')
-                ->distinct()
-                ->pluck('kode_ikk')
-                ->flip()
-                ->all();
+            if (isset($workPermitCodesForCh) && is_array($ipkDataByCode ?? null)) {
+                $ipkKodesWp = array_flip(array_keys($ipkDataByCode));
+                $okkKodesWp = array_flip(array_keys($okkDataByCode));
+            } else {
+                $ipkKodesWp = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
+                    ->whereDate('ts', $filterDate)
+                    ->select('kode_ikk')
+                    ->distinct()
+                    ->pluck('kode_ikk')
+                    ->flip()
+                    ->all();
+                $okkKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
+                    ->whereDate('ts', $filterDate)
+                    ->select('kode_ikk')
+                    ->distinct()
+                    ->pluck('kode_ikk')
+                    ->flip()
+                    ->all();
+            }
             $totalIkkUnikHarian = count($workPermitCodes);
             $ikkAdaIpkCount = count(array_intersect_key($ipkKodesWp, array_flip($workPermitCodes)));
             $ikkAdaOkkCount = count(array_intersect_key($okkKodesWp, array_flip($workPermitCodes)));
@@ -1599,10 +1706,14 @@ class DOPMController extends Controller
             }, $ikkPerJenis))));
             $chartIpkPerJenis[] = empty($codesJenis)
                 ? 0
-                : IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count();
+                : (isset($ipkCountByKode) && is_array($ipkCountByKode)
+                    ? array_sum(array_map(fn ($c) => (int) ($ipkCountByKode[$c] ?? 0), $codesJenis))
+                    : IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count());
             $chartOkkPerJenis[] = empty($codesJenis)
                 ? 0
-                : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count();
+                : (isset($okkCountByKode) && is_array($okkCountByKode)
+                    ? array_sum(array_map(fn ($c) => (int) ($okkCountByKode[$c] ?? 0), $codesJenis))
+                    : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $codesJenis)->count());
         }
 
         // Total OAK harian: dari IKK (lokasi + detail lokasi), sama konsep dengan modal — match OAK by location & detail_location
@@ -1706,36 +1817,123 @@ class DOPMController extends Controller
         $ipkIkk = [];
         $okk = [];
         $oak = [];
+        $ipkSource = 'mysql';
+        $okkSource = 'mysql';
+
+        $tanggalDop = trim((string) $request->input('tanggal_dop', ''));
+        $filterDateModal = $tanggalDop !== '' ? (function () use ($tanggalDop) {
+            try {
+                return Carbon::parse($tanggalDop)->format('Y-m-d');
+            } catch (\Throwable $e) {
+                return date('Y-m-d');
+            }
+        })() : date('Y-m-d');
+        $useChModal = \App\Http\Controllers\DOPMIKK\DOPMWeeklyController::useClickHouseForIpkOkk($filterDateModal);
+        $workPermitId = trim((string) $request->input('work_permit_id', ''));
 
         if ($kodeIkk !== '' && $kodeIkk !== null) {
-            $tz = config('app.timezone', 'Asia/Jakarta');
-            // IPK-IKK dan OKK di modal: tampilkan semua data yang berelasi dengan kode_ikk
-            // Format ts ke WIB (waktu asli) agar tampil benar di frontend, bukan UTC
-            $ipkIkk = IpkIkk::where('kode_ikk', $kodeIkk)
-                ->orderByDesc('ts')
-                ->get()
-                ->map(function ($row) use ($tz) {
-                    $arr = $row->toArray();
-                    if ($row->ts) {
-                        $arr['ts'] = $row->ts->setTimezone($tz)->format('Y-m-d H:i:s');
+            if ($useChModal && class_exists(\App\Services\ClickHouseService::class)) {
+                $ch = app(\App\Services\ClickHouseService::class);
+                if (method_exists($ch, 'query') && $ch->isConnected()) {
+                    $wpId = $workPermitId !== '' ? $workPermitId : null;
+                    if ($wpId === null) {
+                        $codeEsc = addslashes($kodeIkk);
+                        $sqlResolve = "
+                            SELECT id FROM hse_automation.ikk_work_permit
+                            WHERE trim(toString(code)) = '{$codeEsc}'
+                              AND toDate(start_date) = toDate('" . addslashes($filterDateModal) . "')
+                            LIMIT 1
+                        ";
+                        $wpRow = $ch->query($sqlResolve);
+                        if (!empty($wpRow[0])) {
+                            $wpId = self::getClickHouseRowValue($wpRow[0], 'id');
+                            $wpId = $wpId !== null ? (string) $wpId : null;
+                        }
                     }
-                    return $arr;
-                })
-                ->values()
-                ->toArray();
-
-            $okk = Okk::where('kode_ikk', $kodeIkk)
-                ->orderByDesc('ts')
-                ->get()
-                ->map(function ($row) use ($tz) {
-                    $arr = $row->toArray();
-                    if ($row->ts) {
-                        $arr['ts'] = $row->ts->setTimezone($tz)->format('Y-m-d H:i:s');
+                    if ($wpId !== null && $wpId !== '') {
+                        $wpIdEsc = addslashes($wpId);
+                        $dateEsc = addslashes($filterDateModal);
+                        $sqlIpkModal = "
+                            SELECT id, code, work_permit_id, status, job_status, start_date, created_at, supervisor_id, cctv
+                            FROM hse_automation.ipk_assessment
+                            WHERE work_permit_id = '{$wpIdEsc}'
+                              AND toDate(start_date) = toDate('{$dateEsc}')
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                            ORDER BY created_at DESC
+                        ";
+                        $ipkRowsCh = $ch->query($sqlIpkModal);
+                        foreach ($ipkRowsCh ?? [] as $r) {
+                            $ts = self::getClickHouseRowValue($r, 'start_date') ?? self::getClickHouseRowValue($r, 'created_at');
+                            $tsStr = $ts instanceof \DateTimeInterface ? $ts->format('Y-m-d H:i:s') : (string) $ts;
+                            $ipkIkk[] = [
+                                'ts' => $tsStr,
+                                'nama_pengawas' => null,
+                                'kode_sid' => null,
+                                'kode_ikk' => $kodeIkk,
+                                'nama_perusahaan' => null,
+                                'site' => null,
+                                'durasi_jam' => null,
+                                'cctv_terekam' => self::getClickHouseRowValue($r, 'cctv'),
+                                'kategori_ijk' => null,
+                                'status_pekerjaan' => self::getClickHouseRowValue($r, 'status') ?? self::getClickHouseRowValue($r, 'job_status'),
+                            ];
+                        }
+                        $sqlOkkModal = "
+                            SELECT id, code, work_permit_id, status, created_at, supervisor_id
+                            FROM hse_automation.okk_assessment
+                            WHERE work_permit_id = '{$wpIdEsc}'
+                              AND upper(trim(toString(status))) = 'SUBMITTED'
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                              AND toDate(created_at) = toDate('{$dateEsc}')
+                            ORDER BY created_at ASC
+                        ";
+                        $okkRowsCh = $ch->query($sqlOkkModal);
+                        foreach ($okkRowsCh ?? [] as $r) {
+                            $ts = self::getClickHouseRowValue($r, 'created_at');
+                            $tsStr = $ts instanceof \DateTimeInterface ? $ts->format('Y-m-d H:i:s') : (string) $ts;
+                            $okk[] = [
+                                'ts' => $tsStr,
+                                'nama_pengawas' => null,
+                                'kode_sid' => null,
+                                'kode_ikk' => $kodeIkk,
+                                'nama_perusahaan' => null,
+                                'site' => null,
+                                'jenis_ijk' => null,
+                                'layer_pengawas' => null,
+                            ];
+                        }
+                        $ipkSource = 'clickhouse';
+                        $okkSource = 'clickhouse';
                     }
-                    return $arr;
-                })
-                ->values()
-                ->toArray();
+                }
+            }
+            if ($ipkSource === 'mysql') {
+                $tz = config('app.timezone', 'Asia/Jakarta');
+                $ipkIkk = IpkIkk::where('kode_ikk', $kodeIkk)
+                    ->orderByDesc('ts')
+                    ->get()
+                    ->map(function ($row) use ($tz) {
+                        $arr = $row->toArray();
+                        if ($row->ts) {
+                            $arr['ts'] = $row->ts->setTimezone($tz)->format('Y-m-d H:i:s');
+                        }
+                        return $arr;
+                    })
+                    ->values()
+                    ->toArray();
+                $okk = Okk::where('kode_ikk', $kodeIkk)
+                    ->orderByDesc('ts')
+                    ->get()
+                    ->map(function ($row) use ($tz) {
+                        $arr = $row->toArray();
+                        if ($row->ts) {
+                            $arr['ts'] = $row->ts->setTimezone($tz)->format('Y-m-d H:i:s');
+                        }
+                        return $arr;
+                    })
+                    ->values()
+                    ->toArray();
+            }
         }
 
         // Normalisasi lokasi (trim) dan pastikan tidak null
@@ -1921,6 +2119,8 @@ class DOPMController extends Controller
             'ipk_ikk' => $ipkIkk,
             'okk' => $okk,
             'oak' => $oak,
+            'ipk_source' => $ipkSource,
+            'okk_source' => $okkSource,
             'ra_pjo_name' => $raPjoName,
             'dopm_context' => [
                 'nama_layer_2' => $namaLayer2,

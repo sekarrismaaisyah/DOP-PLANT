@@ -1683,6 +1683,7 @@
                         // Data dari IKK/work permit (bukan DOPM)
                         $dopmJson = [
                             'kode_ikk' => $ikk->code ?? null,
+                            'work_permit_id' => $ikk->id ?? null,
                             'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
                             'sid_layer_2' => $ikk->sid_layer_2 ?? null,
                             'sid_layer_3' => $ikk->sid_layer_3 ?? null,
@@ -1847,6 +1848,7 @@
                             // Data dari IKK/work permit (bukan DOPM)
                             $dopmJsonH = [
                                 'kode_ikk' => $ikk->code ?? null,
+                                'work_permit_id' => $ikk->id ?? null,
                                 'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
                                 'sid_layer_2' => $ikk->sid_layer_2 ?? null,
                                 'sid_layer_3' => $ikk->sid_layer_3 ?? null,
@@ -2179,6 +2181,7 @@
                                                 // Data modal Intervensi dari IKK/work permit (bukan DOPM)
                                                 $ikkJson = [
                                                     'kode_ikk' => $ikk->code ?? null,
+                                                    'work_permit_id' => $ikk->id ?? null,
                                                     'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
                                                     'sid_layer_2' => $ikk->sid_layer_2 ?? null,
                                                     'sid_layer_3' => $ikk->sid_layer_3 ?? null,
@@ -3278,6 +3281,7 @@
         modal.show();
         var params = new URLSearchParams({
             kode_ikk: data.kode_ikk || '',
+            work_permit_id: data.work_permit_id || '',
             jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '',
             sid_layer_2: data.sid_layer_2 || '',
             sid_layer_3: data.sid_layer_3 || '',
@@ -3289,7 +3293,7 @@
             location_detail_name: data.location_detail_name || '',
             tanggal_dop: data.tanggal_dop || ''
         });
-        console.log('[OAK] Modal request params (data-dopm):', { location_name: data.location_name, location_detail_name: data.location_detail_name, tanggal_dop: data.tanggal_dop, kode_ikk: data.kode_ikk });
+        console.log('[OAK] Modal request params (data-dopm):', { location_name: data.location_name, location_detail_name: data.location_detail_name, tanggal_dop: data.tanggal_dop, kode_ikk: data.kode_ikk, work_permit_id: data.work_permit_id });
         console.log('[OAK] Modal API URL params:', params.toString());
         function doFetch() {
         fetch(modalApiUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
