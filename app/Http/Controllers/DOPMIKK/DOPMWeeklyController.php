@@ -1135,9 +1135,9 @@ class DOPMWeeklyController extends Controller
                         }
                     }
 
-                    // Compliance: "per IKK code" — kode yang punya IPK/OKK (kapan pun), bukan per tanggal submit
-                    $codesWithIpk = [];
-                    $codesWithOkk = [];
+                    // Compliance per hari: IKK yang punya IPK/OKK **pada tanggal yang sama** (selaras dengan summary tanggal terpilih)
+                    $codesWithIpkByDay = [];
+                    $codesWithOkkByDay = [];
                     $cutoffDtCompliance = Carbon::parse(config('dopm.ipk_okk_clickhouse_cutoff_date', '2025-02-20'))->startOfDay();
                     $cutoffStrCompliance = $cutoffDtCompliance->format('Y-m-d');
                     if (!empty($monthIdToCode) && class_exists(\App\Services\ClickHouseService::class)) {
@@ -1145,62 +1145,92 @@ class DOPMWeeklyController extends Controller
                         if (method_exists($chMonth, 'query') && $chMonth->isConnected()) {
                             $wpIdsMonth = array_keys($monthIdToCode);
                             $wpIdsMonthEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $wpIdsMonth));
-                            // ClickHouse IPK: wp mana yang punya minimal 1 IPK (tanggal berapa pun)
+                            $monthStartEsc = addslashes($monthStart);
+                            $monthEndEsc = addslashes($monthEnd);
+                            // ClickHouse IPK: per tanggal (start_date) — kode yang punya IPK pada tanggal itu
                             $sqlIpkMonth = "
-                                SELECT DISTINCT work_permit_id
+                                SELECT toDate(start_date) AS d, work_permit_id
                                 FROM hse_automation.ipk_assessment
                                 WHERE work_permit_id IN ({$wpIdsMonthEsc})
+                                  AND toDate(start_date) >= toDate('{$monthStartEsc}')
+                                  AND toDate(start_date) <= toDate('{$monthEndEsc}')
                                   AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
                             ";
                             $ipkMonthRows = $chMonth->query($sqlIpkMonth);
                             foreach ($ipkMonthRows ?? [] as $r) {
                                 $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
-                                if ($wpId === null) {
+                                $dateVal = self::getClickHouseRowValue($r, 'd');
+                                if ($wpId === null || $dateVal === null) {
+                                    continue;
+                                }
+                                $d = $dateVal instanceof \Carbon\Carbon ? $dateVal->format('Y-m-d') : (is_string($dateVal) ? $dateVal : null);
+                                if ($d === null) {
                                     continue;
                                 }
                                 $code = $monthIdToCode[$wpId] ?? null;
                                 if ($code !== null) {
-                                    $codesWithIpk[$code] = true;
+                                    if (!isset($codesWithIpkByDay[$d])) {
+                                        $codesWithIpkByDay[$d] = [];
+                                    }
+                                    $codesWithIpkByDay[$d][$code] = true;
                                 }
                             }
-                            // ClickHouse OKK: wp mana yang punya minimal 1 OKK SUBMITTED (tanggal berapa pun)
+                            // ClickHouse OKK: per tanggal (created_at) — kode yang punya OKK SUBMITTED pada tanggal itu
                             $sqlOkkMonth = "
-                                SELECT DISTINCT work_permit_id
+                                SELECT toDate(created_at) AS d, work_permit_id
                                 FROM hse_automation.okk_assessment
                                 WHERE work_permit_id IN ({$wpIdsMonthEsc})
                                   AND upper(trim(toString(status))) = 'SUBMITTED'
+                                  AND toDate(created_at) >= toDate('{$monthStartEsc}')
+                                  AND toDate(created_at) <= toDate('{$monthEndEsc}')
                                   AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
                             ";
                             $okkMonthRows = $chMonth->query($sqlOkkMonth);
                             foreach ($okkMonthRows ?? [] as $r) {
                                 $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
-                                if ($wpId === null) {
+                                $dateVal = self::getClickHouseRowValue($r, 'd');
+                                if ($wpId === null || $dateVal === null) {
+                                    continue;
+                                }
+                                $d = $dateVal instanceof \Carbon\Carbon ? $dateVal->format('Y-m-d') : (is_string($dateVal) ? $dateVal : null);
+                                if ($d === null) {
                                     continue;
                                 }
                                 $code = $monthIdToCode[$wpId] ?? null;
                                 if ($code !== null) {
-                                    $codesWithOkk[$code] = true;
+                                    if (!isset($codesWithOkkByDay[$d])) {
+                                        $codesWithOkkByDay[$d] = [];
+                                    }
+                                    $codesWithOkkByDay[$d][$code] = true;
                                 }
                             }
                         }
                     }
-                    // MySQL (sebelum cutoff): kode IKK yang punya IPK/OKK, merge ke set global
-                    $ipkRows = IpkIkk::where('ts', '<', $cutoffStrCompliance)
-                        ->distinct()
-                        ->pluck('kode_ikk');
-                    foreach ($ipkRows as $k) {
-                        $k = trim((string) $k);
+                    // MySQL (sebelum cutoff): IPK/OKK per tanggal dalam bulan, merge ke per-hari
+                    $ipkRows = IpkIkk::whereBetween('ts', [$monthStart, $monthEnd])
+                        ->where('ts', '<', $cutoffStrCompliance)
+                        ->get(['ts', 'kode_ikk']);
+                    foreach ($ipkRows as $row) {
+                        $d = Carbon::parse($row->ts)->format('Y-m-d');
+                        $k = trim((string) ($row->kode_ikk ?? ''));
                         if ($k !== '') {
-                            $codesWithIpk[$k] = true;
+                            if (!isset($codesWithIpkByDay[$d])) {
+                                $codesWithIpkByDay[$d] = [];
+                            }
+                            $codesWithIpkByDay[$d][$k] = true;
                         }
                     }
-                    $okkRows = Okk::where('ts', '<', $cutoffStrCompliance)
-                        ->distinct()
-                        ->pluck('kode_ikk');
-                    foreach ($okkRows as $k) {
-                        $k = trim((string) $k);
+                    $okkRows = Okk::whereBetween('ts', [$monthStart, $monthEnd])
+                        ->where('ts', '<', $cutoffStrCompliance)
+                        ->get(['ts', 'kode_ikk']);
+                    foreach ($okkRows as $row) {
+                        $d = Carbon::parse($row->ts)->format('Y-m-d');
+                        $k = trim((string) ($row->kode_ikk ?? ''));
                         if ($k !== '') {
-                            $codesWithOkk[$k] = true;
+                            if (!isset($codesWithOkkByDay[$d])) {
+                                $codesWithOkkByDay[$d] = [];
+                            }
+                            $codesWithOkkByDay[$d][$k] = true;
                         }
                     }
 
@@ -1217,11 +1247,13 @@ class DOPMWeeklyController extends Controller
                         }
                         $ipkCount = 0;
                         $okkCount = 0;
+                        $ipkByDay = $codesWithIpkByDay[$d] ?? [];
+                        $okkByDay = $codesWithOkkByDay[$d] ?? [];
                         foreach ($codes as $c) {
-                            if (isset($codesWithIpk[$c])) {
+                            if (isset($ipkByDay[$c])) {
                                 $ipkCount++;
                             }
-                            if (isset($codesWithOkk[$c])) {
+                            if (isset($okkByDay[$c])) {
                                 $okkCount++;
                             }
                         }
