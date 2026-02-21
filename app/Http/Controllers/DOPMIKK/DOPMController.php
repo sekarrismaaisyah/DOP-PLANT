@@ -3247,7 +3247,7 @@ class DOPMController extends Controller
         ?string $namaLayer2 = null,
         ?string $namaLayer3 = null,
         ?string $namaLayer4 = null,
-        ?\App\Models\IpkIkk $ipk = null,
+        object|null $ipk = null,
         \Illuminate\Support\Collection $okkList = null,
         array $oakDataByLocation = []
     ): array {
