@@ -1097,7 +1097,7 @@ class DOPMWeeklyController extends Controller
                             $id = self::getClickHouseRowValue($row, 'id');
                             $code = isset($row['code']) ? trim((string) $row['code']) : '';
                             if ($id !== null && $code !== '') {
-                                $monthIdToCode[(string) $id] = $code;
+                                $monthIdToCode[$id] = $code;
                             }
                             if ($code === '') {
                                 continue;
@@ -1132,144 +1132,72 @@ class DOPMWeeklyController extends Controller
                         }
                     }
 
-                    $cutoffDtCompliance = Carbon::parse(config('dopm.ipk_okk_clickhouse_cutoff_date', '2025-02-20'))->startOfDay();
-                    $cutoffStrCompliance = $cutoffDtCompliance->format('Y-m-d');
-
-                    // Hari sebelum cutoff: isi codesPerDay dari MySQL (IKK yang punya aktivitas IPK/OKK di hari itu) — 2 query untuk seluruh bulan
-                    $ipkByDayMysql = [];
-                    $okkByDayMysql = [];
-                    $ipkMonthMysql = IpkIkk::where('ts', '>=', $monthStart)->where('ts', '<', $cutoffStrCompliance)
-                        ->selectRaw('DATE(ts) AS d, kode_ikk')
-                        ->distinct()
-                        ->get();
-                    foreach ($ipkMonthMysql as $r) {
-                        $d = $r->d ?? null;
-                        $k = trim((string) ($r->kode_ikk ?? ''));
-                        if ($d !== null && $k !== '') {
-                            if (! isset($ipkByDayMysql[$d])) {
-                                $ipkByDayMysql[$d] = [];
-                            }
-                            $ipkByDayMysql[$d][$k] = true;
-                        }
-                    }
-                    $okkMonthMysql = Okk::where('ts', '>=', $monthStart)->where('ts', '<', $cutoffStrCompliance)
-                        ->selectRaw('DATE(ts) AS d, kode_ikk')
-                        ->distinct()
-                        ->get();
-                    foreach ($okkMonthMysql as $r) {
-                        $d = $r->d ?? null;
-                        $k = trim((string) ($r->kode_ikk ?? ''));
-                        if ($d !== null && $k !== '') {
-                            if (! isset($okkByDayMysql[$d])) {
-                                $okkByDayMysql[$d] = [];
-                            }
-                            $okkByDayMysql[$d][$k] = true;
-                        }
-                    }
-                    $daysInMonth = (int) Carbon::parse($monthEnd)->day;
-                    for ($day = 1; $day <= $daysInMonth; $day++) {
-                        $d = Carbon::parse($monthStart)->addDays($day - 1)->format('Y-m-d');
-                        if ($d >= $cutoffStrCompliance) {
-                            continue;
-                        }
-                        $merged = [];
-                        foreach ($codesPerDay[$d] ?? [] as $c) {
-                            $merged[trim((string) $c)] = true;
-                        }
-                        foreach (array_keys($ipkByDayMysql[$d] ?? []) as $k) {
-                            $merged[$k] = true;
-                        }
-                        foreach (array_keys($okkByDayMysql[$d] ?? []) as $k) {
-                            $merged[$k] = true;
-                        }
-                        $codesPerDay[$d] = array_keys($merged);
-                    }
-
-                    // Compliance: "per IKK code" — kode yang punya IPK/OKK (kapan pun)
+                    // Compliance: "per IKK code" — kode yang punya IPK/OKK (kapan pun), bukan per tanggal submit
                     $codesWithIpk = [];
                     $codesWithOkk = [];
-
-                    // Kode IKK unik di bulan ini (setelah merge MySQL, untuk lookup)
-                    $allCodesInMonth = [];
-                    foreach ($codesPerDay as $codes) {
-                        foreach ($codes as $c) {
-                            $allCodesInMonth[$c] = true;
-                        }
-                    }
-                    $allCodesInMonth = array_keys($allCodesInMonth);
-                    $allCodesNorm = array_map(fn ($c) => strtoupper(trim((string) $c)), $allCodesInMonth);
-                    $normToChCode = [];
-                    foreach ($allCodesInMonth as $c) {
-                        $normToChCode[strtoupper(trim((string) $c))] = $c;
-                    }
-
+                    $cutoffDtCompliance = Carbon::parse(config('dopm.ipk_okk_clickhouse_cutoff_date', '2025-02-20'))->startOfDay();
+                    $cutoffStrCompliance = $cutoffDtCompliance->format('Y-m-d');
                     if (!empty($monthIdToCode) && class_exists(\App\Services\ClickHouseService::class)) {
                         $chMonth = app(\App\Services\ClickHouseService::class);
                         if (method_exists($chMonth, 'query') && $chMonth->isConnected()) {
                             $wpIdsMonth = array_keys($monthIdToCode);
                             $wpIdsMonthEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $wpIdsMonth));
-                            // Hanya IPK yang status SUBMITTED; OKK tetap SUBMITTED
-                            $sqlIpkOkk = "
-                                SELECT work_permit_id, 'ipk' AS typ
+                            // ClickHouse IPK: wp mana yang punya minimal 1 IPK (tanggal berapa pun)
+                            $sqlIpkMonth = "
+                                SELECT DISTINCT work_permit_id
                                 FROM hse_automation.ipk_assessment
                                 WHERE work_permit_id IN ({$wpIdsMonthEsc})
                                   AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
-                                  AND upper(trim(toString(status))) = 'SUBMITTED'
-                                GROUP BY work_permit_id
-                                UNION ALL
-                                SELECT work_permit_id, 'okk' AS typ
-                                FROM hse_automation.okk_assessment
-                                WHERE work_permit_id IN ({$wpIdsMonthEsc})
-                                  AND upper(trim(toString(status))) = 'SUBMITTED'
-                                  AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
-                                GROUP BY work_permit_id
                             ";
-                            $ipkOkkRows = $chMonth->query($sqlIpkOkk);
-                            foreach ($ipkOkkRows ?? [] as $r) {
+                            $ipkMonthRows = $chMonth->query($sqlIpkMonth);
+                            foreach ($ipkMonthRows ?? [] as $r) {
                                 $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
                                 if ($wpId === null) {
                                     continue;
                                 }
-                                $code = $monthIdToCode[(string) $wpId] ?? $monthIdToCode[$wpId] ?? null;
-                                if ($code === null) {
+                                $code = $monthIdToCode[$wpId] ?? null;
+                                if ($code !== null) {
+                                    $codesWithIpk[$code] = true;
+                                }
+                            }
+                            // ClickHouse OKK: wp mana yang punya minimal 1 OKK SUBMITTED (tanggal berapa pun)
+                            $sqlOkkMonth = "
+                                SELECT DISTINCT work_permit_id
+                                FROM hse_automation.okk_assessment
+                                WHERE work_permit_id IN ({$wpIdsMonthEsc})
+                                  AND upper(trim(toString(status))) = 'SUBMITTED'
+                                  AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                            ";
+                            $okkMonthRows = $chMonth->query($sqlOkkMonth);
+                            foreach ($okkMonthRows ?? [] as $r) {
+                                $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                                if ($wpId === null) {
                                     continue;
                                 }
-                                $typ = self::getClickHouseRowValue($r, 'typ');
-                                $typ = $typ !== null ? trim(strtolower((string) $typ)) : '';
-                                if ($typ === 'ipk') {
-                                    $codesWithIpk[$code] = true;
-                                } elseif ($typ === 'okk') {
+                                $code = $monthIdToCode[$wpId] ?? null;
+                                if ($code !== null) {
                                     $codesWithOkk[$code] = true;
                                 }
                             }
                         }
                     }
-
-                    // MySQL (sebelum cutoff): kode yang ada di bulan ini, match case-insensitive (UPPER/TRIM)
-                    if (!empty($allCodesInMonth)) {
-                        $ipkCodes = IpkIkk::where('ts', '<', $cutoffStrCompliance)
-                            ->whereRaw('UPPER(TRIM(kode_ikk)) IN (' . implode(',', array_fill(0, count($allCodesNorm), '?')) . ')', $allCodesNorm)
-                            ->distinct()
-                            ->pluck('kode_ikk');
-                        foreach ($ipkCodes as $k) {
-                            $k = trim((string) $k);
-                            if ($k === '') {
-                                continue;
-                            }
-                            $key = $normToChCode[strtoupper($k)] ?? $k;
-                            $codesWithIpk[$key] = true;
+                    // MySQL (sebelum cutoff): kode IKK yang punya IPK/OKK, merge ke set global
+                    $ipkRows = IpkIkk::where('ts', '<', $cutoffStrCompliance)
+                        ->distinct()
+                        ->pluck('kode_ikk');
+                    foreach ($ipkRows as $k) {
+                        $k = trim((string) $k);
+                        if ($k !== '') {
+                            $codesWithIpk[$k] = true;
                         }
-                        $okkCodes = Okk::where('ts', '<', $cutoffStrCompliance)
-                            ->whereRaw('UPPER(TRIM(kode_ikk)) IN (' . implode(',', array_fill(0, count($allCodesNorm), '?')) . ')', $allCodesNorm)
-                            ->distinct()
-                            ->pluck('kode_ikk');
-                        foreach ($okkCodes as $k) {
-                            $k = trim((string) $k);
-                            if ($k === '') {
-                                continue;
-                            }
-                            $key = $normToChCode[strtoupper($k)] ?? $k;
-                            $codesWithOkk[$key] = true;
+                    }
+                    $okkRows = Okk::where('ts', '<', $cutoffStrCompliance)
+                        ->distinct()
+                        ->pluck('kode_ikk');
+                    foreach ($okkRows as $k) {
+                        $k = trim((string) $k);
+                        if ($k !== '') {
+                            $codesWithOkk[$k] = true;
                         }
                     }
 
@@ -1287,11 +1215,10 @@ class DOPMWeeklyController extends Controller
                         $ipkCount = 0;
                         $okkCount = 0;
                         foreach ($codes as $c) {
-                            $cCanon = $normToChCode[strtoupper(trim((string) $c))] ?? $c;
-                            if (isset($codesWithIpk[$c]) || isset($codesWithIpk[$cCanon])) {
+                            if (isset($codesWithIpk[$c])) {
                                 $ipkCount++;
                             }
-                            if (isset($codesWithOkk[$c]) || isset($codesWithOkk[$cCanon])) {
+                            if (isset($codesWithOkk[$c])) {
                                 $okkCount++;
                             }
                         }
