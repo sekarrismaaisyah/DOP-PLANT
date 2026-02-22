@@ -524,6 +524,19 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/user/{id}/roles', [RolePermissionController::class, 'assignRolesToUser'])->name('user.roles.assign');
     });
 
+    // Master User Management (buat akun manual + import Excel)
+    Route::prefix('user-management')->name('user-management.')->group(function () {
+        Route::get('/', [App\Http\Controllers\UserManagementController::class, 'index'])->name('index');
+        Route::get('/create', [App\Http\Controllers\UserManagementController::class, 'create'])->name('create');
+        Route::post('/', [App\Http\Controllers\UserManagementController::class, 'store'])->name('store');
+        Route::get('/import', [App\Http\Controllers\UserManagementController::class, 'importForm'])->name('import-form');
+        Route::post('/import', [App\Http\Controllers\UserManagementController::class, 'import'])->name('import');
+        Route::get('/template', [App\Http\Controllers\UserManagementController::class, 'downloadTemplate'])->name('download-template');
+        Route::get('/{id}/edit', [App\Http\Controllers\UserManagementController::class, 'edit'])->name('edit');
+        Route::put('/{id}', [App\Http\Controllers\UserManagementController::class, 'update'])->name('update');
+        Route::delete('/{id}', [App\Http\Controllers\UserManagementController::class, 'destroy'])->name('destroy');
+    });
+
     // Define a GET route with dynamic placeholders for route parameters
     // HARUS di akhir agar tidak menangkap route spesifik di atas
     Route::get('{routeName}/{name?}', [HomeController::class, 'pageView']);

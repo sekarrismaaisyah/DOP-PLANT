@@ -312,6 +312,23 @@
             </a>
            
           </li>
+
+          @if(Auth::check() && Auth::user()->isAdmin())
+          <li class="menu-label">Admin</li>
+          <li>
+            <a class="has-arrow" href="javascript:;">
+              <div class="parent-icon"><i class="material-icons-outlined">manage_accounts</i>
+              </div>
+              <div class="menu-title">Master User</div>
+            </a>
+            <ul>
+              <li><a href="{{ route('user-management.index') }}"><i class="material-icons-outlined">arrow_right</i>Manajemen User</a></li>
+              <li><a href="{{ route('user-management.create') }}"><i class="material-icons-outlined">arrow_right</i>Tambah User</a></li>
+              <li><a href="{{ route('user-management.import-form') }}"><i class="material-icons-outlined">arrow_right</i>Import Excel</a></li>
+              <li><a href="{{ route('role-permission.index') }}"><i class="material-icons-outlined">arrow_right</i>Role & Permission</a></li>
+            </ul>
+          </li>
+          @endif
           
        
          </ul>
