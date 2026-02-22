@@ -3,6 +3,7 @@
 @section('title', 'Role & Permission Management')
 
 @section('css')
+<link href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
     .nav-tabs-custom .nav-link {
@@ -56,7 +57,7 @@
                             </button>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-bordered table-hover align-middle mb-0">
+                            <table id="rolesDataTable" class="table table-bordered table-hover align-middle mb-0" style="width:100%">
                                 <thead class="table-light">
                                     <tr>
                                         <th>ID</th>
@@ -67,7 +68,7 @@
                                         <th width="140">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="rolesTableBody">
+                                <tbody>
                                     @foreach($roles as $role)
                                     <tr>
                                         <td>{{ $role->id }}</td>
@@ -109,7 +110,7 @@
                             </button>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-bordered table-hover align-middle mb-0">
+                            <table id="permissionsDataTable" class="table table-bordered table-hover align-middle mb-0" style="width:100%">
                                 <thead class="table-light">
                                     <tr>
                                         <th>ID</th>
@@ -119,7 +120,7 @@
                                         <th width="120">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="permissionsTableBody">
+                                <tbody>
                                     @foreach($permissions as $permission)
                                     <tr>
                                         <td>{{ $permission->id }}</td>
@@ -147,7 +148,7 @@
                             <h5 class="mb-0 fw-bold">Daftar Users</h5>
                         </div>
                         <div class="table-responsive">
-                            <table class="table table-bordered table-hover align-middle mb-0">
+                            <table id="usersDataTable" class="table table-bordered table-hover align-middle mb-0" style="width:100%">
                                 <thead class="table-light">
                                     <tr>
                                         <th>ID</th>
@@ -157,7 +158,7 @@
                                         <th width="160">Aksi</th>
                                     </tr>
                                 </thead>
-                                <tbody id="usersTableBody">
+                                <tbody>
                                     @foreach($users as $user)
                                     <tr>
                                         <td>{{ $user->id }}</td>
@@ -304,11 +305,64 @@
 @endsection
 
 @section('scripts')
+<script src="{{ URL::asset('build/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ URL::asset('build/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const csrfToken = document.querySelector('meta[name="csrf-token"]').getAttribute('content');
 let currentRoleId = null;
 let currentUserId = null;
+
+var dtLang = {
+    processing: "Memproses...",
+    search: "Cari:",
+    lengthMenu: "Tampilkan _MENU_ data",
+    info: "Menampilkan _START_ sampai _END_ dari _TOTAL_ data",
+    infoEmpty: "Menampilkan 0 sampai 0 dari 0 data",
+    infoFiltered: "(disaring dari _MAX_ total data)",
+    paginate: { first: "Pertama", last: "Terakhir", next: "Selanjutnya", previous: "Sebelumnya" },
+    emptyTable: "Tidak ada data",
+    zeroRecords: "Tidak ada data yang cocok"
+};
+
+$(document).ready(function() {
+    if ($.fn.DataTable && document.getElementById('rolesDataTable') && !$.fn.DataTable.isDataTable('#rolesDataTable')) {
+        $('#rolesDataTable').DataTable({
+            order: [[0, 'asc']],
+            pageLength: 25,
+            language: dtLang,
+            columnDefs: [
+                { orderable: false, targets: [4, 5] }
+            ]
+        });
+    }
+
+    $('button[data-bs-target="#permissions"]').on('shown.bs.tab', function() {
+        if ($.fn.DataTable && document.getElementById('permissionsDataTable') && !$.fn.DataTable.isDataTable('#permissionsDataTable')) {
+            $('#permissionsDataTable').DataTable({
+                order: [[0, 'asc']],
+                pageLength: 25,
+                language: dtLang,
+                columnDefs: [
+                    { orderable: false, targets: 4 }
+                ]
+            });
+        }
+    });
+
+    $('button[data-bs-target="#users"]').on('shown.bs.tab', function() {
+        if ($.fn.DataTable && document.getElementById('usersDataTable') && !$.fn.DataTable.isDataTable('#usersDataTable')) {
+            $('#usersDataTable').DataTable({
+                order: [[0, 'asc']],
+                pageLength: 25,
+                language: dtLang,
+                columnDefs: [
+                    { orderable: false, targets: [3, 4] }
+                ]
+            });
+        }
+    });
+});
 
 // Role Functions
 function openRoleModal(id = null) {
