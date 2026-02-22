@@ -242,11 +242,6 @@ class UserManagementController extends Controller
             }
             $passwordExcel = ($passwordIdx !== null && isset($row[$passwordIdx])) ? trim((string) $row[$passwordIdx]) : '';
             $password = $passwordExcel !== '' ? $passwordExcel : $defaultPassword;
-            if (strlen($password) < 6) {
-                $errors[] = "Baris " . ($i + 1) . ": password minimal 6 karakter (atau isi kolom password di Excel).";
-                $skipped++;
-                continue;
-            }
 
             if ($name === '' || $email === '') {
                 $errors[] = "Baris " . ($i + 1) . ": name dan email wajib diisi.";
