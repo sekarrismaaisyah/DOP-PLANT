@@ -137,10 +137,11 @@ class UserManagementController extends Controller
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('User');
 
-        $headers = ['name', 'email', 'role'];
+        $headers = ['name', 'email', 'role', 'password'];
         $sheet->setCellValue('A1', 'name');
         $sheet->setCellValue('B1', 'email');
         $sheet->setCellValue('C1', 'role');
+        $sheet->setCellValue('D1', 'password');
 
         $headerStyle = [
             'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
@@ -153,21 +154,22 @@ class UserManagementController extends Controller
                 'vertical' => \PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER,
             ],
         ];
-        $sheet->getStyle('A1:C1')->applyFromArray($headerStyle);
+        $sheet->getStyle('A1:D1')->applyFromArray($headerStyle);
 
         $examples = [
-            ['SRI KASTORO', 'XUJG3', 'user'],
-            ['MASRUR ABDUL AZIS', 'H5UBW', 'user'],
+            ['SRI KASTORO', 'XUJG3', 'user', 'pass123'],
+            ['MASRUR ABDUL AZIS', 'H5UBW', 'user', 'rahasia99'],
         ];
         $row = 2;
         foreach ($examples as $ex) {
             $sheet->setCellValue('A' . $row, $ex[0]);
             $sheet->setCellValue('B' . $row, $ex[1]);
             $sheet->setCellValue('C' . $row, $ex[2]);
+            $sheet->setCellValue('D' . $row, $ex[3]);
             $row++;
         }
 
-        foreach (range('A', 'C') as $col) {
+        foreach (range('A', 'D') as $col) {
             $sheet->getColumnDimension($col)->setAutoSize(true);
         }
 
@@ -184,7 +186,7 @@ class UserManagementController extends Controller
 
     /**
      * Import user dari Excel.
-     * Kolom: name, email (text), role. Password default untuk semua.
+     * Kolom: name, email (text), role, password. Beda orang bisa beda password.
      */
     public function import(Request $request)
     {
@@ -218,11 +220,12 @@ class UserManagementController extends Controller
         $nameIdx = $this->findColumnIndex($header, ['name', 'nama']);
         $emailIdx = $this->findColumnIndex($header, ['email']);
         $roleIdx = $this->findColumnIndex($header, ['role']);
+        $passwordIdx = $this->findColumnIndex($header, ['password']);
 
         if ($nameIdx === null || $emailIdx === null) {
             return redirect()
                 ->route('user-management.import-form')
-                ->with('error', 'Kolom wajib: name dan email. Pastikan header baris pertama berisi: name, email, role.');
+                ->with('error', 'Kolom wajib: name dan email. Pastikan header baris pertama berisi: name, email, role, password.');
         }
 
         $created = 0;
@@ -236,6 +239,13 @@ class UserManagementController extends Controller
             $role = ($roleIdx !== null && isset($row[$roleIdx])) ? trim((string) $row[$roleIdx]) : 'user';
             if (!in_array($role, ['user', 'admin', 'administrator'])) {
                 $role = 'user';
+            }
+            $passwordExcel = ($passwordIdx !== null && isset($row[$passwordIdx])) ? trim((string) $row[$passwordIdx]) : '';
+            $password = $passwordExcel !== '' ? $passwordExcel : $defaultPassword;
+            if (strlen($password) < 6) {
+                $errors[] = "Baris " . ($i + 1) . ": password minimal 6 karakter (atau isi kolom password di Excel).";
+                $skipped++;
+                continue;
             }
 
             if ($name === '' || $email === '') {
@@ -255,7 +265,7 @@ class UserManagementController extends Controller
                     'name' => $name,
                     'email' => $email,
                     'role' => $role,
-                    'password' => Hash::make($defaultPassword),
+                    'password' => Hash::make($password),
                 ]);
                 $created++;
             } catch (\Throwable $e) {

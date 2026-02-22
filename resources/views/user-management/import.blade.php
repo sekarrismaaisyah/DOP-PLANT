@@ -25,10 +25,10 @@
                 <div class="alert alert-info">
                     <strong>Format Excel:</strong>
                     <ul class="mb-0 mt-2">
-                        <li>Kolom wajib: <strong>name</strong>, <strong>email</strong>. Kolom <strong>role</strong> opsional (default: user).</li>
-                        <li>Baris pertama harus header: <code>name</code>, <code>email</code>, <code>role</code>.</li>
+                        <li>Kolom wajib: <strong>name</strong>, <strong>email</strong>. Kolom <strong>role</strong> dan <strong>password</strong> opsional.</li>
+                        <li>Baris pertama harus header: <code>name</code>, <code>email</code>, <code>role</code>, <code>password</code>.</li>
                         <li>Email diisi dengan <strong>teks/kode</strong> (bukan alamat email, tanpa @). Contoh: XUJG3, H5UBW.</li>
-                        <li>Password untuk semua user hasil import akan diset sama (isi di bawah).</li>
+                        <li><strong>Password</strong>: isi per baris di kolom password (beda orang beda password). Jika kolom password kosong, dipakai password default di bawah.</li>
                     </ul>
                 </div>
 
@@ -49,9 +49,9 @@
                             @enderror
                         </div>
                         <div class="col-md-6">
-                            <label for="default_password" class="form-label">Password default untuk user hasil import</label>
+                            <label for="default_password" class="form-label">Password default (jika kolom password di Excel kosong)</label>
                             <input type="text" class="form-control" id="default_password" name="default_password" value="{{ old('default_password', 'password123') }}" minlength="6">
-                            <div class="form-text">Semua user yang diimpor akan memakai password ini.</div>
+                            <div class="form-text">Dipakai hanya bila kolom password di Excel tidak diisi. Minimal 6 karakter.</div>
                         </div>
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary">

@@ -311,7 +311,7 @@
               <div class="menu-title">On Off CCTV</div>
             </a>
            
-          </li>
+          <!-- </li>
 
           @if(Auth::check() && Auth::user()->isAdmin())
           <li class="menu-label">Admin</li>
@@ -328,7 +328,7 @@
               <li><a href="{{ route('role-permission.index') }}"><i class="material-icons-outlined">arrow_right</i>Role & Permission</a></li>
             </ul>
           </li>
-          @endif
+          @endif -->
           
        
          </ul>
