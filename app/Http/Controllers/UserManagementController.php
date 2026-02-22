@@ -39,13 +39,12 @@ class UserManagementController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|string|max:255|unique:users,email',
             'role' => 'nullable|string|max:50|in:user,admin,administrator',
-            'password' => 'required|string|min:6|confirmed',
+            'password' => 'required|string|confirmed',
         ], [
             'name.required' => 'Nama wajib diisi.',
             'email.required' => 'Email (kode) wajib diisi.',
             'email.unique' => 'Email (kode) sudah digunakan.',
             'password.required' => 'Password wajib diisi.',
-            'password.min' => 'Password minimal 6 karakter.',
             'password.confirmed' => 'Konfirmasi password tidak cocok.',
         ]);
 
@@ -83,7 +82,7 @@ class UserManagementController extends Controller
             'role' => 'nullable|string|max:50|in:user,admin,administrator',
         ];
         if ($request->filled('password')) {
-            $rules['password'] = 'string|min:6|confirmed';
+            $rules['password'] = 'string|confirmed';
         }
 
         $request->validate($rules, [
