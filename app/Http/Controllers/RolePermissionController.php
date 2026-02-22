@@ -150,12 +150,12 @@ class RolePermissionController extends Controller
     public function assignPermissionsToRole(Request $request, $roleId)
     {
         $request->validate([
-            'permission_ids' => 'required|array',
+            'permission_ids' => 'nullable|array',
             'permission_ids.*' => 'exists:permissions,id',
         ]);
 
         $role = Role::findOrFail($roleId);
-        $role->permissions()->sync($request->permission_ids);
+        $role->permissions()->sync($request->input('permission_ids', []));
 
         return response()->json([
             'success' => true,
