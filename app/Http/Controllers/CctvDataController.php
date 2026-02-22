@@ -47,6 +47,10 @@ class CctvDataController extends Controller
                 'company' => 'PT Pamapersada Nusantara',
                 'sites' => ['BMO 2'] // User dengan permission ini hanya bisa akses site BMO 2
             ],
+            'hazard-motion-it-mtl' => [
+                'company' => 'PT Madhani Talatah Nusantara BWEST',
+                'sites' => ['SMO']
+            ],
             // Add more permission mappings here as needed
         ];
 
