@@ -127,4 +127,17 @@ class SupervisoryAlertLogController extends Controller
             ],
         ]);
     }
+
+    /**
+     * Data untuk tab Alert Mobility (Unit & Orang).
+     * Sumber data dapat diintegrasikan dari sistem Mobility; sementara mengembalikan struktur kosong.
+     */
+    public function getDataMobility(Request $request)
+    {
+        return response()->json([
+            'success' => true,
+            'data' => [],
+            'total' => 0,
+        ]);
+    }
 }
