@@ -97,6 +97,8 @@
                                                             <thead class="table-light">
                                                                 <tr>
                                                                     <th>Kode IKK</th>
+                                                                    <th>Tanggal Mulai</th>
+                                                                    <th>Jam Mulai</th>
                                                                     <th>Jenis IJK</th>
                                                                     <th>Site</th>
                                                                     <th>Nama Pekerjaan</th>
@@ -109,6 +111,8 @@
                                                                 @foreach($needActionList as $ikk)
                                                                     <tr>
                                                                         <td class="fw-semibold">{{ $ikk['code'] ?? '-' }}</td>
+                                                                        <td>{{ $ikk['start_date_tanggal'] ?? '-' }}</td>
+                                                                        <td>{{ $ikk['start_date_jam'] ?? '-' }}</td>
                                                                         <td>{{ $ikk['jenis_ijin_kerja_khusus'] ?? '-' }}</td>
                                                                         <td>{{ $ikk['site'] ?? '-' }}</td>
                                                                         <td>{{ $ikk['nama_pekerjaan'] ?? '-' }}</td>
@@ -140,6 +144,8 @@
                                                             <thead class="table-light">
                                                                 <tr>
                                                                     <th>Kode IKK</th>
+                                                                    <th>Tanggal Mulai</th>
+                                                                    <th>Jam Mulai</th>
                                                                     <th>Jenis IJK</th>
                                                                     <th>Site</th>
                                                                     <th>Nama Pekerjaan</th>
@@ -152,6 +158,8 @@
                                                                 @foreach($warningList as $ikk)
                                                                     <tr>
                                                                         <td class="fw-semibold">{{ $ikk['code'] ?? '-' }}</td>
+                                                                        <td>{{ $ikk['start_date_tanggal'] ?? '-' }}</td>
+                                                                        <td>{{ $ikk['start_date_jam'] ?? '-' }}</td>
                                                                         <td>{{ $ikk['jenis_ijin_kerja_khusus'] ?? '-' }}</td>
                                                                         <td>{{ $ikk['site'] ?? '-' }}</td>
                                                                         <td>{{ $ikk['nama_pekerjaan'] ?? '-' }}</td>

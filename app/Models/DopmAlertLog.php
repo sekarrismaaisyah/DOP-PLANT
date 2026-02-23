@@ -95,6 +95,8 @@ class DopmAlertLog extends Model
             $row = [
                 'id' => $obj->id ?? null,
                 'code' => $obj->code ?? null,
+                'start_date_tanggal' => $startDate->format('d/m/Y'),
+                'start_date_jam' => $startDate->format('H:i'),
                 'site' => $obj->site ?? null,
                 'jenis_ijin_kerja_khusus' => $obj->jenis_ijin_kerja_khusus ?? null,
                 'nama_pekerjaan' => $obj->nama_pekerjaan ?? null,
