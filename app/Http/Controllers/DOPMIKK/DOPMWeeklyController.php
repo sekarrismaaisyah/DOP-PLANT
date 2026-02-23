@@ -1081,8 +1081,9 @@ class DOPMWeeklyController extends Controller
                             $siteFilterClause = " AND trim(COALESCE(wp.ra_site_name, '')) = '" . addslashes($filterSite) . "'";
                         }
                     }
+                    // Kalender: IKK yang rentang (start_date–end_date) mencakup bulan, sama konsep dengan kartu (rentang mencakup tanggal)
                     $sqlMonth = "
-                        SELECT wp.id AS id, wp.code AS code, toDate(wp.start_date) AS start_date
+                        SELECT wp.id AS id, wp.code AS code, wp.start_date AS start_date, wp.end_date AS end_date
                         FROM hse_automation.ikk_work_permit AS wp
                         INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
                             ON toString(wp_pic.work_permit_id) = toString(wp.id)
@@ -1090,10 +1091,10 @@ class DOPMWeeklyController extends Controller
                         LEFT JOIN hse_automation.ikk_m_pic AS m
                             ON toString(m.id) = toString(wp_pic.m_pic_id)
                         WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
-                            AND toDate(wp.start_date) >= toDate('" . addslashes($monthStart) . "')
                             AND toDate(wp.start_date) <= toDate('" . addslashes($monthEnd) . "')
+                            AND toDate(wp.end_date)   >= toDate('" . addslashes($monthStart) . "')
                             {$siteFilterClause}
-                        GROUP BY wp.id, wp.code, wp.start_date
+                        GROUP BY wp.id, wp.code, wp.start_date, wp.end_date
                         HAVING sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
                             AND trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', 1, 0)) > 0
                     ";
@@ -1101,6 +1102,9 @@ class DOPMWeeklyController extends Controller
                     $codesPerDay = [];
                     $monthIdToCode = [];
                     if (! empty($wpRowsMonth)) {
+                        $monthStartCarbon = Carbon::parse($monthStart)->startOfDay();
+                        $monthEndCarbon = Carbon::parse($monthEnd)->endOfDay();
+                        $daysInMonth = (int) $monthEndCarbon->day;
                         foreach ($wpRowsMonth as $row) {
                             $id = self::getClickHouseRowValue($row, 'id');
                             $code = isset($row['code']) ? trim((string) $row['code']) : '';
@@ -1111,14 +1115,21 @@ class DOPMWeeklyController extends Controller
                                 continue;
                             }
                             $startDate = self::parseEndDate(self::getClickHouseRowValue($row, 'start_date'));
-                            if ($startDate === null) {
+                            $endDate = self::parseEndDate(self::getClickHouseRowValue($row, 'end_date'));
+                            if ($startDate === null || $endDate === null) {
                                 continue;
                             }
-                            $d = $startDate->format('Y-m-d');
-                            if (! isset($codesPerDay[$d])) {
-                                $codesPerDay[$d] = [];
+                            // Untuk setiap hari di bulan, masukkan code jika rentang (start–end) mencakup hari itu
+                            for ($day = 1; $day <= $daysInMonth; $day++) {
+                                $dayDate = $monthStartCarbon->copy()->addDays($day - 1)->startOfDay();
+                                if ($startDate->lte($dayDate) && $endDate->gte($dayDate)) {
+                                    $d = $dayDate->format('Y-m-d');
+                                    if (! isset($codesPerDay[$d])) {
+                                        $codesPerDay[$d] = [];
+                                    }
+                                    $codesPerDay[$d][$code] = true;
+                                }
                             }
-                            $codesPerDay[$d][$code] = true;
                         }
                         foreach ($codesPerDay as $d => $codes) {
                             $codesPerDay[$d] = array_keys($codes);
