@@ -772,7 +772,11 @@ class DOPMController extends Controller
                     $ikk->nama_layer_4 ?? null,
                     $ipkDataByCode[$code] ?? null,
                     $okkDataByCode[$code] ?? collect(),
-                    $oakDataByLocation
+                    $oakDataByLocation,
+                    $ikk->sid_layer_1 ?? null,
+                    $ikk->sid_layer_2 ?? null,
+                    $ikk->sid_layer_3 ?? null,
+                    $ikk->sid_layer_4 ?? null
                 );
                 
                 $ikk->status_matriks = $matriksResult['status'] ?? 'Merah';
@@ -1616,7 +1620,11 @@ class DOPMController extends Controller
                     $ikk->nama_layer_4 ?? null,
                     $ipkDataByCode[$code] ?? null,
                     $okkDataByCode[$code] ?? collect(),
-                    $oakDataByLocation
+                    $oakDataByLocation,
+                    $ikk->sid_layer_1 ?? null,
+                    $ikk->sid_layer_2 ?? null,
+                    $ikk->sid_layer_3 ?? null,
+                    $ikk->sid_layer_4 ?? null
                 );
                 
                 $ikk->status_matriks = $matriksResult['status'] ?? 'Merah';
@@ -3198,7 +3206,11 @@ class DOPMController extends Controller
         ?string $namaLayer1 = null,
         ?string $namaLayer2 = null,
         ?string $namaLayer3 = null,
-        ?string $namaLayer4 = null
+        ?string $namaLayer4 = null,
+        ?string $sidLayer1 = null,
+        ?string $sidLayer2 = null,
+        ?string $sidLayer3 = null,
+        ?string $sidLayer4 = null
     ): array {
         if ($kodeIkk === null || $kodeIkk === '') {
             return ['status' => 'Merah', 'alasan' => 'Kode IKK tidak valid'];
@@ -3224,67 +3236,81 @@ class DOPMController extends Controller
         // 2a. Pisahkan OKK berdasarkan Layer (Layer 1 vs Layer 2 up)
         $okkLayer1 = collect();
         $okkLayer2Up = collect();
-        
+
         if ($hasOkk) {
             // Normalisasi nama Layer untuk matching
             $namaLayer1Normalized = $namaLayer1 ? trim(strtolower($namaLayer1)) : null;
             $namaLayer2Normalized = $namaLayer2 ? trim(strtolower($namaLayer2)) : null;
             $namaLayer3Normalized = $namaLayer3 ? trim(strtolower($namaLayer3)) : null;
             $namaLayer4Normalized = $namaLayer4 ? trim(strtolower($namaLayer4)) : null;
-            
+
             foreach ($okkList as $okk) {
                 $namaPengawas = trim(strtolower($okk->nama_pengawas ?? ''));
                 $layerPengawas = trim(strtolower($okk->layer_pengawas ?? ''));
-                
-                // Cek apakah OKK dari Layer 1
+                $kodeSid = trim(strtoupper((string) ($okk->kode_sid ?? '')));
+
+                // Cek apakah OKK dari Layer 1 (nama atau layer_pengawas atau SID)
                 $isLayer1 = false;
                 if ($namaLayer1Normalized && $namaPengawas) {
-                    if (strpos($namaPengawas, $namaLayer1Normalized) !== false || 
+                    if (strpos($namaPengawas, $namaLayer1Normalized) !== false ||
                         ($layerPengawas && strpos($layerPengawas, '1') !== false)) {
                         $isLayer1 = true;
                     }
                 }
-                
+                if (!$isLayer1 && $kodeSid !== '' && $sidLayer1 !== null && $sidLayer1 !== '') {
+                    if ($kodeSid === trim(strtoupper($sidLayer1))) {
+                        $isLayer1 = true;
+                    }
+                }
+
                 if ($isLayer1) {
                     $okkLayer1->push($okk);
                 } else {
-                    // Cek apakah OKK dari Layer 2, 3, atau 4
+                    // Cek apakah OKK dari Layer 2, 3, atau 4 (nama atau layer_pengawas atau SID)
                     $isLayer2Up = false;
                     if ($namaPengawas) {
                         if ($namaLayer2Normalized) {
-                            if (strpos($namaPengawas, $namaLayer2Normalized) !== false || 
+                            if (strpos($namaPengawas, $namaLayer2Normalized) !== false ||
                                 strpos($namaLayer2Normalized, $namaPengawas) !== false) {
                                 $isLayer2Up = true;
                             }
                         }
                         if (!$isLayer2Up && $namaLayer3Normalized) {
-                            if (strpos($namaPengawas, $namaLayer3Normalized) !== false || 
+                            if (strpos($namaPengawas, $namaLayer3Normalized) !== false ||
                                 strpos($namaLayer3Normalized, $namaPengawas) !== false) {
                                 $isLayer2Up = true;
                             }
                         }
                         if (!$isLayer2Up && $namaLayer4Normalized) {
-                            if (strpos($namaPengawas, $namaLayer4Normalized) !== false || 
+                            if (strpos($namaPengawas, $namaLayer4Normalized) !== false ||
                                 strpos($namaLayer4Normalized, $namaPengawas) !== false) {
                                 $isLayer2Up = true;
                             }
                         }
                     }
                     if ($layerPengawas && !$isLayer2Up) {
-                        if (strpos($layerPengawas, '2') !== false || 
-                            strpos($layerPengawas, '3') !== false || 
+                        if (strpos($layerPengawas, '2') !== false ||
+                            strpos($layerPengawas, '3') !== false ||
                             strpos($layerPengawas, '4') !== false) {
                             $isLayer2Up = true;
                         }
                     }
-                    
+                    if (!$isLayer2Up && $kodeSid !== '') {
+                        $s2 = $sidLayer2 !== null && $sidLayer2 !== '' ? trim(strtoupper($sidLayer2)) : '';
+                        $s3 = $sidLayer3 !== null && $sidLayer3 !== '' ? trim(strtoupper($sidLayer3)) : '';
+                        $s4 = $sidLayer4 !== null && $sidLayer4 !== '' ? trim(strtoupper($sidLayer4)) : '';
+                        if ($kodeSid === $s2 || $kodeSid === $s3 || $kodeSid === $s4) {
+                            $isLayer2Up = true;
+                        }
+                    }
+
                     if ($isLayer2Up) {
                         $okkLayer2Up->push($okk);
                     }
                 }
             }
         }
-        
+
         $hasOkkLayer1 = $okkLayer1->count() > 0;
         $hasOkkLayer2Up = $okkLayer2Up->count() > 0;
         $okkLayer1Count = $okkLayer1->count();
@@ -3479,6 +3505,10 @@ class DOPMController extends Controller
      * @param \App\Models\IpkIkk|null $ipk Pre-loaded IPK data
      * @param \Illuminate\Support\Collection $okkList Pre-loaded OKK collection
      * @param array $oakDataByLocation Pre-loaded OAK data by location key
+     * @param string|null $sidLayer1 SID Layer 1 (untuk matching OKK by kode_sid)
+     * @param string|null $sidLayer2 SID Layer 2
+     * @param string|null $sidLayer3 SID Layer 3
+     * @param string|null $sidLayer4 SID Layer 4
      * @return array
      */
     public static function hitungStatusMatriksLengkapDenganAlasanOptimized(
@@ -3492,7 +3522,11 @@ class DOPMController extends Controller
         ?string $namaLayer4 = null,
         object|null $ipk = null,
         \Illuminate\Support\Collection $okkList = null,
-        array $oakDataByLocation = []
+        array $oakDataByLocation = [],
+        ?string $sidLayer1 = null,
+        ?string $sidLayer2 = null,
+        ?string $sidLayer3 = null,
+        ?string $sidLayer4 = null
     ): array {
         if ($kodeIkk === null || $kodeIkk === '') {
             return ['status' => 'Merah', 'alasan' => 'Kode IKK tidak valid'];
@@ -3513,67 +3547,81 @@ class DOPMController extends Controller
         // 2a. Pisahkan OKK berdasarkan Layer (Layer 1 vs Layer 2 up)
         $okkLayer1 = collect();
         $okkLayer2Up = collect();
-        
+
         if ($hasOkk) {
             // Normalisasi nama Layer untuk matching
             $namaLayer1Normalized = $namaLayer1 ? trim(strtolower($namaLayer1)) : null;
             $namaLayer2Normalized = $namaLayer2 ? trim(strtolower($namaLayer2)) : null;
             $namaLayer3Normalized = $namaLayer3 ? trim(strtolower($namaLayer3)) : null;
             $namaLayer4Normalized = $namaLayer4 ? trim(strtolower($namaLayer4)) : null;
-            
+
             foreach ($okkList as $okk) {
                 $namaPengawas = trim(strtolower($okk->nama_pengawas ?? ''));
                 $layerPengawas = trim(strtolower($okk->layer_pengawas ?? ''));
-                
-                // Cek apakah OKK dari Layer 1
+                $kodeSid = trim(strtoupper((string) ($okk->kode_sid ?? '')));
+
+                // Cek apakah OKK dari Layer 1 (nama atau layer_pengawas atau SID)
                 $isLayer1 = false;
                 if ($namaLayer1Normalized && $namaPengawas) {
-                    if (strpos($namaPengawas, $namaLayer1Normalized) !== false || 
+                    if (strpos($namaPengawas, $namaLayer1Normalized) !== false ||
                         ($layerPengawas && strpos($layerPengawas, '1') !== false)) {
                         $isLayer1 = true;
                     }
                 }
-                
+                if (!$isLayer1 && $kodeSid !== '' && $sidLayer1 !== null && $sidLayer1 !== '') {
+                    if ($kodeSid === trim(strtoupper($sidLayer1))) {
+                        $isLayer1 = true;
+                    }
+                }
+
                 if ($isLayer1) {
                     $okkLayer1->push($okk);
                 } else {
-                    // Cek apakah OKK dari Layer 2, 3, atau 4
+                    // Cek apakah OKK dari Layer 2, 3, atau 4 (nama atau layer_pengawas atau SID)
                     $isLayer2Up = false;
                     if ($namaPengawas) {
                         if ($namaLayer2Normalized) {
-                            if (strpos($namaPengawas, $namaLayer2Normalized) !== false || 
+                            if (strpos($namaPengawas, $namaLayer2Normalized) !== false ||
                                 strpos($namaLayer2Normalized, $namaPengawas) !== false) {
                                 $isLayer2Up = true;
                             }
                         }
                         if (!$isLayer2Up && $namaLayer3Normalized) {
-                            if (strpos($namaPengawas, $namaLayer3Normalized) !== false || 
+                            if (strpos($namaPengawas, $namaLayer3Normalized) !== false ||
                                 strpos($namaLayer3Normalized, $namaPengawas) !== false) {
                                 $isLayer2Up = true;
                             }
                         }
                         if (!$isLayer2Up && $namaLayer4Normalized) {
-                            if (strpos($namaPengawas, $namaLayer4Normalized) !== false || 
+                            if (strpos($namaPengawas, $namaLayer4Normalized) !== false ||
                                 strpos($namaLayer4Normalized, $namaPengawas) !== false) {
                                 $isLayer2Up = true;
                             }
                         }
                     }
                     if ($layerPengawas && !$isLayer2Up) {
-                        if (strpos($layerPengawas, '2') !== false || 
-                            strpos($layerPengawas, '3') !== false || 
+                        if (strpos($layerPengawas, '2') !== false ||
+                            strpos($layerPengawas, '3') !== false ||
                             strpos($layerPengawas, '4') !== false) {
                             $isLayer2Up = true;
                         }
                     }
-                    
+                    if (!$isLayer2Up && $kodeSid !== '') {
+                        $s2 = $sidLayer2 !== null && $sidLayer2 !== '' ? trim(strtoupper($sidLayer2)) : '';
+                        $s3 = $sidLayer3 !== null && $sidLayer3 !== '' ? trim(strtoupper($sidLayer3)) : '';
+                        $s4 = $sidLayer4 !== null && $sidLayer4 !== '' ? trim(strtoupper($sidLayer4)) : '';
+                        if ($kodeSid === $s2 || $kodeSid === $s3 || $kodeSid === $s4) {
+                            $isLayer2Up = true;
+                        }
+                    }
+
                     if ($isLayer2Up) {
                         $okkLayer2Up->push($okk);
                     }
                 }
             }
         }
-        
+
         $hasOkkLayer1 = $okkLayer1->count() > 0;
         $hasOkkLayer2Up = $okkLayer2Up->count() > 0;
         $okkLayer1Count = $okkLayer1->count();

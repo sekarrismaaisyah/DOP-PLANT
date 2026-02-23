@@ -832,7 +832,11 @@ class DOPMWeeklyController extends Controller
                     $ikk->nama_layer_4 ?? null,
                     $ipkByKode[$code] ?? null,
                     $okkByKode[$code] ?? collect(),
-                    $oakDataByLocation
+                    $oakDataByLocation,
+                    $ikk->sid_layer_1 ?? null,
+                    $ikk->sid_layer_2 ?? null,
+                    $ikk->sid_layer_3 ?? null,
+                    $ikk->sid_layer_4 ?? null
                 );
 
                 $ikk->status_matriks = $matriksResult['status'] ?? 'Merah';
