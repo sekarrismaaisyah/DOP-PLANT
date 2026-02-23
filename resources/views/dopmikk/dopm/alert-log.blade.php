@@ -301,19 +301,21 @@
             var gain = ctx.createGain();
             osc.connect(gain);
             gain.connect(ctx.destination);
-            osc.frequency.value = 800;
-            osc.type = 'sine';
-            gain.gain.setValueAtTime(0.15, ctx.currentTime);
-            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+            // Nada lebih tajam dan \"bahaya\" (sekitar sirine pendek)
+            osc.frequency.value = 1400;
+            osc.type = 'square';
+            gain.gain.setValueAtTime(0.18, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.18);
             osc.start(ctx.currentTime);
-            osc.stop(ctx.currentTime + 0.15);
+            osc.stop(ctx.currentTime + 0.18);
         } catch (e) {}
     }
 
     function playBeepSequence() {
-        // dua kali "bep"
+        // Pola \"alert\": tinggi–lebih tinggi–tinggi (3 kali cepat)
         playBeepOnce();
-        setTimeout(playBeepOnce, 220);
+        setTimeout(function() { playBeepOnce(); }, 200);
+        setTimeout(function() { playBeepOnce(); }, 400);
     }
 
     var beepIntervalId = null;
