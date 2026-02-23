@@ -286,6 +286,33 @@
 <script src="{{ URL::asset('build/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
 <script>
+// Bep bep sound bila ada alert yang belum terintervensi
+(function() {
+    var hasUnintervenedAlerts = @json($hasUnintervenedAlerts ?? false);
+    if (!hasUnintervenedAlerts) return;
+
+    function beep() {
+        try {
+            var ctx = new (window.AudioContext || window.webkitAudioContext)();
+            var osc = ctx.createOscillator();
+            var gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.frequency.value = 800;
+            osc.type = 'sine';
+            gain.gain.setValueAtTime(0.15, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.15);
+        } catch (e) {}
+    }
+    setTimeout(function() {
+        beep();
+        setTimeout(beep, 220);
+    }, 300);
+})();
+</script>
+<script>
 (function() {
     var dtOptions = {
         order: [[0, 'asc']],

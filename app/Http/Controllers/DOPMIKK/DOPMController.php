@@ -1086,10 +1086,23 @@ class DOPMController extends Controller
         // Untuk informasi intervensi (level mana saja yang sudah diintervensi per IKK).
         $intervensiLevelsByIkk = DopmAlertIntervensi::getIntervensiLevelsByIkk($filterDate);
 
+        // Ada alert yang belum terintervensi? (untuk trigger sound beep di front)
+        $hasUnintervenedAlerts = false;
+        foreach ($alertRows as $row) {
+            $kode = $row->kode_ikk ?? '';
+            $level = (int) ($row->alert_level ?? 1);
+            $intervened = isset($intervensiLevelsByIkk[$kode]) && in_array($level, $intervensiLevelsByIkk[$kode], true);
+            if (! $intervened) {
+                $hasUnintervenedAlerts = true;
+                break;
+            }
+        }
+
         return view('dopmikk.dopm.alert-log', [
             'filterDate' => $filterDate,
             'alertRows' => $alertRows,
             'intervensiLevelsByIkk' => $intervensiLevelsByIkk,
+            'hasUnintervenedAlerts' => $hasUnintervenedAlerts,
         ]);
     }
 
