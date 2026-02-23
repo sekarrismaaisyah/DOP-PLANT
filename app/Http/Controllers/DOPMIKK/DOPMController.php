@@ -5,6 +5,7 @@ namespace App\Http\Controllers\DOPMIKK;
 use App\Http\Controllers\Controller;
 use App\Jobs\ImportDopmJob;
 use App\Models\Dopm;
+use App\Models\DopmAlertIntervensi;
 use App\Models\DopmAlertLog;
 use App\Models\IpkIkk;
 use App\Models\Okk;
@@ -1077,6 +1078,8 @@ class DOPMController extends Controller
         // jam ke-2 dan ke-3 di blok yang sama tidak ditampilkan (sudah tercover oleh alert jam pertama).
         $filtered = collect();
         $blockShown = [];
+        $maxIntervensiByIkk = DopmAlertIntervensi::getMaxIntervensiLevelByIkk($filterDate);
+
         foreach ($dopmAlertLogs as $log) {
             $block = (int) floor($log->jam / 3);
             if (isset($blockShown[$block])) {
@@ -1085,10 +1088,19 @@ class DOPMController extends Controller
             $snap = $log->snapshot ?? [];
             $needActionList = $snap['need_action'] ?? [];
             $warningList = $snap['warning'] ?? [];
+
+            // Jika IKK terintervensi di jam ke-2, jangan tampilkan di jam ke-3 (alert level 3)
+            $needActionList = self::filterAlertByIntervensi($needActionList, $log, $filterDate, $maxIntervensiByIkk);
+            $warningList = self::filterAlertByIntervensi($warningList, $log, $filterDate, $maxIntervensiByIkk);
+
             $hasAlert = (count($needActionList) > 0) || (count($warningList) > 0);
             if (! $hasAlert) {
                 continue;
             }
+            $log->snapshot = [
+                'need_action' => $needActionList,
+                'warning' => $warningList,
+            ];
             $filtered->push($log);
             $blockShown[$block] = true;
         }
@@ -1097,6 +1109,67 @@ class DOPMController extends Controller
             'filterDate' => $filterDate,
             'dopmAlertLogs' => $filtered,
         ]);
+    }
+
+    /**
+     * Filter daftar IKK di snapshot: jika IKK terintervensi di jam ke-2, jangan tampilkan di jam ke-3.
+     *
+     * @param  array<int, array<string, mixed>>  $list  need_action atau warning dari snapshot
+     * @param  array<string, int>  $maxIntervensiByIkk  kode_ikk => level intervensi tertinggi (1/2/3)
+     * @return array<int, array<string, mixed>>
+     */
+    private static function filterAlertByIntervensi(array $list, DopmAlertLog $log, string $filterDate, array $maxIntervensiByIkk): array
+    {
+        $tz = 'Asia/Makassar';
+        $logTime = Carbon::parse($filterDate, $tz)->startOfDay()->addHours((int) $log->jam);
+
+        $filtered = [];
+        foreach ($list as $ikk) {
+            $kodeIkk = trim((string) ($ikk['code'] ?? ''));
+            $jamKe = self::computeJamKeForIkk($logTime, $ikk, $tz);
+            if ($kodeIkk === '') {
+                $ikk['alert_level'] = $jamKe;
+                $filtered[] = $ikk;
+                continue;
+            }
+            // Jika ini alert jam ke-3 (level 3) dan IKK sudah terintervensi di jam ke-2 (level 2), skip
+            if ($jamKe >= 3) {
+                $maxLevel = $maxIntervensiByIkk[$kodeIkk] ?? 0;
+                if ($maxLevel >= 2) {
+                    continue;
+                }
+            }
+            $ikk['alert_level'] = $jamKe;
+            $filtered[] = $ikk;
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Hitung jam ke berapa sejak IKK mulai (1 = jam pertama, 2 = jam kedua, 3 = jam ketiga).
+     *
+     * @param  array<string, mixed>  $ikk  row snapshot dengan start_date_tanggal (d/m/Y) dan start_date_jam (H:i)
+     */
+    private static function computeJamKeForIkk(Carbon $logTime, array $ikk, string $tz): int
+    {
+        $startTanggal = $ikk['start_date_tanggal'] ?? '';
+        $startJam = $ikk['start_date_jam'] ?? '';
+        if ($startTanggal === '' || $startJam === '') {
+            return 1;
+        }
+        try {
+            $startDt = Carbon::createFromFormat('d/m/Y H:i', $startTanggal . ' ' . $startJam, $tz);
+        } catch (\Throwable $e) {
+            return 1;
+        }
+        $diffMinutes = $logTime->diffInMinutes($startDt, false);
+        if ($diffMinutes <= 0) {
+            return 1;
+        }
+        $diffHours = $diffMinutes / 60;
+
+        return (int) min(3, max(1, floor($diffHours) + 1));
     }
 
     /**
@@ -2585,6 +2658,38 @@ class DOPMController extends Controller
         }
 
         return response()->json(['success' => true, 'dopm' => $dopm]);
+    }
+
+    /**
+     * Simpan catatan intervensi untuk IKK di Alert Log.
+     * Jika terintervensi di jam ke-2, alert jam ke-3 tidak akan ditampilkan lagi.
+     */
+    public function storeAlertLogIntervensi(Request $request): JsonResponse
+    {
+        $tanggal = trim((string) $request->input('tanggal', ''));
+        $kodeIkk = trim((string) $request->input('kode_ikk', ''));
+        $alertLevel = (int) $request->input('alert_level', 1);
+
+        if ($kodeIkk === '' || $tanggal === '') {
+            return response()->json(['success' => false, 'message' => 'tanggal dan kode_ikk wajib'], 400);
+        }
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $tanggal)) {
+            return response()->json(['success' => false, 'message' => 'Format tanggal harus Y-m-d'], 400);
+        }
+        if ($alertLevel < 1 || $alertLevel > 3) {
+            return response()->json(['success' => false, 'message' => 'alert_level harus 1, 2, atau 3'], 400);
+        }
+
+        DopmAlertIntervensi::updateOrCreate(
+            [
+                'tanggal' => $tanggal,
+                'kode_ikk' => $kodeIkk,
+                'alert_level' => $alertLevel,
+            ],
+            ['tanggal' => $tanggal, 'kode_ikk' => $kodeIkk, 'alert_level' => $alertLevel]
+        );
+
+        return response()->json(['success' => true, 'message' => 'Intervensi tercatat']);
     }
 
     /**

@@ -119,7 +119,7 @@
                                                                         <td>{{ trim(($ikk['location_name'] ?? '') . (($ikk['location_detail_name'] ?? '') ? ' / ' . ($ikk['location_detail_name'] ?? '') : '')) ?: '-' }}</td>
                                                                         <td class="small text-muted" title="{{ $ikk['alasan_matriks'] ?? '' }}">{{ Str::limit($ikk['alasan_matriks'] ?? '-', 80) }}</td>
                                                                         <td>
-                                                                            <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-alert-log" data-kode-ikk="{{ $ikk['code'] ?? '' }}" data-tanggal="{{ $filterDate ?? now()->toDateString() }}" title="Intervensi (IPK-IKK, OKK, OAK)">
+                                                                            <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-alert-log" data-kode-ikk="{{ $ikk['code'] ?? '' }}" data-tanggal="{{ $filterDate ?? now()->toDateString() }}" data-alert-level="{{ (int) ($ikk['alert_level'] ?? 1) }}" title="Intervensi (IPK-IKK, OKK, OAK)">
                                                                                 <span class="material-icons-outlined" style="font-size:18px;">campaign</span> Intervensi
                                                                             </button>
                                                                         </td>
@@ -166,7 +166,7 @@
                                                                         <td>{{ trim(($ikk['location_name'] ?? '') . (($ikk['location_detail_name'] ?? '') ? ' / ' . ($ikk['location_detail_name'] ?? '') : '')) ?: '-' }}</td>
                                                                         <td class="small text-muted" title="{{ $ikk['alasan_matriks'] ?? '' }}">{{ Str::limit($ikk['alasan_matriks'] ?? '-', 80) }}</td>
                                                                         <td>
-                                                                            <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-alert-log" data-kode-ikk="{{ $ikk['code'] ?? '' }}" data-tanggal="{{ $filterDate ?? now()->toDateString() }}" title="Intervensi (IPK-IKK, OKK, OAK)">
+                                                                            <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-alert-log" data-kode-ikk="{{ $ikk['code'] ?? '' }}" data-tanggal="{{ $filterDate ?? now()->toDateString() }}" data-alert-level="{{ (int) ($ikk['alert_level'] ?? 1) }}" title="Intervensi (IPK-IKK, OKK, OAK)">
                                                                                 <span class="material-icons-outlined" style="font-size:18px;">campaign</span> Intervensi
                                                                             </button>
                                                                         </td>
@@ -361,6 +361,7 @@
 
 (function() {
     var ikkContextUrl = @json(route('dopmikk.api.ikk-context-alert-log'));
+    var intervensiStoreUrl = @json(route('dopmikk.api.alert-log-intervensi'));
     var modalApiUrl = @json(route('dopmikk.api.ikk-modal-data'));
     var layer1UsersApiUrl = @json(route('dopmikk.api.layer1-users'));
     var layers234UsersApiUrl = @json(route('dopmikk.api.layers234-users'));
@@ -405,25 +406,40 @@
         if (btnAlertLog) {
             var kodeIkk = (btnAlertLog.getAttribute('data-kode-ikk') || '').trim();
             var tanggal = (btnAlertLog.getAttribute('data-tanggal') || '').trim();
+            var alertLevel = parseInt(btnAlertLog.getAttribute('data-alert-level') || '1', 10) || 1;
             if (!kodeIkk) return;
-            var url = ikkContextUrl + '?kode_ikk=' + encodeURIComponent(kodeIkk) + '&tanggal_dop=' + encodeURIComponent(tanggal);
-            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-                .then(function(r) { return r.json(); })
-                .then(function(res) {
-                    if (res && res.success && res.dopm) {
-                        var fake = document.createElement('button');
-                        fake.className = 'btn-intervensi-dopm d-none';
-                        fake.setAttribute('data-dopm', JSON.stringify(res.dopm));
-                        document.body.appendChild(fake);
-                        fake.click();
-                        fake.remove();
-                    } else {
-                        if (typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Gagal', text: (res && res.message) ? res.message : 'Data IKK tidak ditemukan.' });
-                    }
-                })
-                .catch(function(err) {
-                    if (typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Gagal memuat', text: err.message || 'Gagal memuat data IKK.' });
-                });
+            var csrfToken = (document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content')) || @json(csrf_token());
+            var openModal = function() {
+                var url = ikkContextUrl + '?kode_ikk=' + encodeURIComponent(kodeIkk) + '&tanggal_dop=' + encodeURIComponent(tanggal);
+                fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                    .then(function(r) { return r.json(); })
+                    .then(function(res) {
+                        if (res && res.success && res.dopm) {
+                            var fake = document.createElement('button');
+                            fake.className = 'btn-intervensi-dopm d-none';
+                            fake.setAttribute('data-dopm', JSON.stringify(res.dopm));
+                            document.body.appendChild(fake);
+                            fake.click();
+                            fake.remove();
+                        } else {
+                            if (typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Gagal', text: (res && res.message) ? res.message : 'Data IKK tidak ditemukan.' });
+                        }
+                    })
+                    .catch(function(err) {
+                        if (typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Gagal memuat', text: err.message || 'Gagal memuat data IKK.' });
+                    });
+            };
+            // Simpan intervensi dulu (jika terintervensi di jam ke-2, alert jam ke-3 tidak akan muncul lagi)
+            var formData = new FormData();
+            formData.append('tanggal', tanggal);
+            formData.append('kode_ikk', kodeIkk);
+            formData.append('alert_level', alertLevel);
+            if (csrfToken) formData.append('_token', csrfToken);
+            fetch(intervensiStoreUrl, {
+                method: 'POST',
+                headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken || '' },
+                body: formData
+            }).then(function() { openModal(); }).catch(function() { openModal(); });
             return;
         }
 
