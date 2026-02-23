@@ -286,12 +286,14 @@
 <script src="{{ URL::asset('build/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
 <script>
-// Bep bep sound bila ada alert yang belum terintervensi
+// Bep bep sound bila ada alert yang belum terintervensi.
+// Catatan: Chrome mewajibkan AudioContext dibuat/setelah gesture user (klik/keydown).
+// Jadi beep akan diputar ketika user pertama kali berinteraksi di halaman ini.
 (function() {
     var hasUnintervenedAlerts = @json($hasUnintervenedAlerts ?? false);
     if (!hasUnintervenedAlerts) return;
 
-    function beep() {
+    function playBeepOnce() {
         try {
             var ctx = new (window.AudioContext || window.webkitAudioContext)();
             var osc = ctx.createOscillator();
@@ -306,10 +308,21 @@
             osc.stop(ctx.currentTime + 0.15);
         } catch (e) {}
     }
-    setTimeout(function() {
-        beep();
-        setTimeout(beep, 220);
-    }, 300);
+
+    function playBeepSequence() {
+        // dua kali "bep"
+        playBeepOnce();
+        setTimeout(playBeepOnce, 220);
+    }
+
+    function handleFirstUserGesture() {
+        document.removeEventListener('click', handleFirstUserGesture, true);
+        document.removeEventListener('keydown', handleFirstUserGesture, true);
+        playBeepSequence();
+    }
+
+    document.addEventListener('click', handleFirstUserGesture, true);
+    document.addEventListener('keydown', handleFirstUserGesture, true);
 })();
 </script>
 <script>
