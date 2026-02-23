@@ -314,7 +314,7 @@ class DOPMWeeklyController extends Controller
                 /** @var \App\Services\ClickHouseService $clickHouse */
                 $clickHouse = app(\App\Services\ClickHouseService::class);
                 if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                    // Work permit + PIC: hanya WP yang semua wp_pic-nya status APPROVED (HAVING)
+                    // Weekly: WP yang rentang (start_date–end_date) mencakup tanggal filter; IKK 1–3 akan muncul saat filter 1, 2, atau 3
                     $dateStr = addslashes($filterDate);
                     $siteFilterClause = '';
                     if ($filterSite !== '' && $filterSite !== null) {
@@ -347,7 +347,8 @@ class DOPMWeeklyController extends Controller
                         LEFT JOIN hse_automation.ikk_m_pic AS m
                             ON toString(m.id) = toString(wp_pic.m_pic_id)
                         WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
-                            AND toDate(wp.start_date) = toDate('{$dateStr}')
+                            AND toDate(wp.start_date) <= toDate('{$dateStr}')
+                            AND toDate(wp.end_date)   >= toDate('{$dateStr}')
                             {$siteFilterClause}
                         GROUP BY
                             wp.id, wp.code, wp.name, wp.ra_site_name, wp.company_name,
