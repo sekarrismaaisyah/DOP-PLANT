@@ -1277,6 +1277,11 @@ class DOPMWeeklyController extends Controller
                         $pctOkk = $total > 0 ? ($okkCount / $total * 100) : 0;
                         $complianceByDay[$d] = round(($pctIpk + $pctOkk) / 2, 1);
                     }
+
+                    // Selaraskan kalender dengan kartu: untuk tanggal filter gunakan nilai yang sama (pctPengisianRataRataIkk)
+                    if (isset($pctPengisianRataRataIkk) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $filterDate)) {
+                        $complianceByDay[$filterDate] = $pctPengisianRataRataIkk;
+                    }
                 }
             }
         } catch (\Throwable $e) {
