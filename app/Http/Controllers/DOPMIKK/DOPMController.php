@@ -3174,18 +3174,21 @@ class DOPMController extends Controller
      * Hitung status matriks lengkap dengan alasan detail untuk tooltip.
      * Returns: ['status' => 'Hijau'|'Kuning'|'Merah', 'alasan' => string]
      *
-     * Aturan status:
-     * MERAH:
-     *   1. Tidak ada IPK atau OKK sama sekali
-     *   2. Hanya ada IPK saja (belum ada OKK) atau hanya ada OKK saja (belum ada IPK)
-     *   3. Ada IPK + OKK dari Layer 1 tapi tidak ada OKK dari Layer 2 up sesuai yang tercantum di IKK
-     * KUNING:
-     *   1. Ada IPK + OKK sesuai target tapi ada yang fraud (sehingga tidak sesuai target)
-     *   2. Tidak ada OAK dari DIC mitra maupun dari BC
-     * HIJAU:
-     *   1. Full ada IPK, OKK sesuai target dari Layer 1
+     * Matriks berjenjang: Hijau → jika tidak terpenuhi cek Kuning → jika Kuning tidak terpenuhi maka Merah.
+     * Urutan cek di kode: 1. Hijau, 2. Merah, 3. Kuning (sisanya).
+     *
+     * HIJAU (Complete):
+     *   1. Full ada IPK, OKK sesuai target dari Layer 1, tidak fraud
      *   2. Ada OKK dari Layer 2 up sesuai IKK (jika IKK punya Layer 2/3/4)
      *   3. Ada OAK
+     * MERAH (Need Action):
+     *   1. Tidak ada IPK atau OKK sama sekali
+     *   2. Hanya ada IPK saja atau hanya OKK saja
+     *   3. Ada IPK + OKK Layer 1 tapi tidak ada OKK dari Layer 2 up sesuai IKK
+     * KUNING (Warning):
+     *   1. Ada IPK + OKK sesuai target tapi ada yang fraud
+     *   2. Tidak ada OAK dari DIC mitra maupun BC
+     *   3. Kondisi lain yang tidak memenuhi Hijau (mis. OKK L1 tidak sesuai target)
      */
     public static function hitungStatusMatriksLengkapDenganAlasan(
         ?string $kodeIkk,
@@ -3412,25 +3415,11 @@ class DOPMController extends Controller
                              ($namaLayer3 !== null && trim($namaLayer3) !== '') ||
                              ($namaLayer4 !== null && trim($namaLayer4) !== '');
 
-        // MERAH 1 & 2: Tidak ada IPK/OKK sama sekali, atau hanya salah satu (hanya IPK atau hanya OKK)
-        if (!$hasIpk || !$hasOkk) {
-            if (!$hasIpk && !$hasOkk) {
-                $alasan = 'Tidak ada IPK dan tidak ada OKK';
-            } elseif (!$hasIpk) {
-                $alasan = 'Hanya ada OKK, belum ada IPK';
-            } else {
-                $alasan = 'Hanya ada IPK, belum ada OKK';
-            }
-            return ['status' => 'Merah', 'alasan' => $alasan];
-        }
-        
-        // MERAH 3: Ada IPK + OKK Layer 1 tapi tidak ada OKK dari Layer 2 up sesuai IKK
-        if ($hasIpk && $hasOkkLayer1 && $hasLayer2UpInIkk && !$hasOkkLayer2Up) {
-            $layerNames = array_filter([$namaLayer2, $namaLayer3, $namaLayer4]);
-            return ['status' => 'Merah', 'alasan' => 'Ada IPK dan OKK Layer 1, tetapi tidak ada OKK dari Layer 2/3/4 (' . implode(', ', $layerNames) . ')'];
-        }
+        // Matriks berjenjang: cek Hijau dulu, lalu Merah, sisanya Kuning (Hijau → Kuning → Merah)
+        $okkLayer2UpCount = $okkLayer2Up->count();
+        $ringkasanLayer = 'OKK Layer 1: ' . $okkLayer1Count . ' orang, OKK Layer 2/3/4: ' . $okkLayer2UpCount . ' orang. ';
 
-        // HIJAU: Harus ada IPK, OKK Layer 1 sesuai target, tidak fraud, OKK Layer 2/3/4 ada (jika diperlukan), DAN harus ada OAK
+        // 1. HIJAU (Complete): Full IPK, OKK Layer 1 sesuai target, tidak fraud, OKK L2 up ada (jika diperlukan), OAK ada
         if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && !$isOkkFraud && $hasOak) {
             if ($hasLayer2UpInIkk) {
                 if ($hasOkkLayer2Up) {
@@ -3441,25 +3430,31 @@ class DOPMController extends Controller
             }
         }
 
-        // KUNING 1: Ada IPK + OKK sesuai target tapi ada yang fraud
-        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && $isOkkFraud) {
-            $okkLayer2UpCount = $okkLayer2Up->count();
-            $ringkasan = 'OKK Layer 1: ' . $okkLayer1Count . ' orang, OKK Layer 2/3/4: ' . $okkLayer2UpCount . ' orang. ';
-            $alasanFraud = $fraudAlasanDetail ?? 'Jarak waktu antar OKK Layer 1 terlalu dekat atau jumlah kurang dari target';
-            return ['status' => 'Kuning', 'alasan' => $ringkasan . 'Alasan: ' . $alasanFraud];
+        // 2. MERAH (Need Action): tidak terpenuhi syarat minimal
+        if (!$hasIpk || !$hasOkk) {
+            if (!$hasIpk && !$hasOkk) {
+                $alasan = 'Tidak ada IPK dan tidak ada OKK';
+            } elseif (!$hasIpk) {
+                $alasan = 'Hanya ada OKK, belum ada IPK';
+            } else {
+                $alasan = 'Hanya ada IPK, belum ada OKK';
+            }
+            return ['status' => 'Merah', 'alasan' => $alasan];
         }
-        
-        // KUNING 2: Tidak ada OAK dari DIC mitra maupun BC
+        if ($hasIpk && $hasOkkLayer1 && $hasLayer2UpInIkk && !$hasOkkLayer2Up) {
+            $layerNames = array_filter([$namaLayer2, $namaLayer3, $namaLayer4]);
+            return ['status' => 'Merah', 'alasan' => 'Ada IPK dan OKK Layer 1, tetapi tidak ada OKK dari Layer 2/3/4 (' . implode(', ', $layerNames) . ')'];
+        }
+
+        // 3. KUNING (Warning): struktur sudah ada (IPK + OKK [+ OKK L2 up jika perlu]) tapi belum memenuhi Hijau
+        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && $isOkkFraud) {
+            $alasanFraud = $fraudAlasanDetail ?? 'Jarak waktu antar OKK Layer 1 terlalu dekat atau jumlah kurang dari target';
+            return ['status' => 'Kuning', 'alasan' => $ringkasanLayer . 'Ada IPK + OKK sesuai target tapi ada yang fraud. ' . $alasanFraud];
+        }
         if ($hasIpk && $hasOkk && !$hasOak) {
             return ['status' => 'Kuning', 'alasan' => 'IPK dan OKK ada, tetapi belum ada OAK (baik dari DIC mitra maupun BC)'];
         }
-
-        // Default Kuning (kondisi lain yang tidak memenuhi kriteria Hijau)
-        $okkLayer2UpCount = $okkLayer2Up->count();
-        $ringkasanLayer = 'OKK Layer 1: ' . $okkLayer1Count . ' orang, OKK Layer 2/3/4: ' . $okkLayer2UpCount . ' orang. ';
         $alasan = [];
-        if (!$hasIpk) $alasan[] = 'Tidak ada IPK';
-        if (!$hasOkk) $alasan[] = 'Tidak ada OKK';
         if ($hasOkkLayer1 && !$isOkkSesuaiTarget) {
             $alasan[] = 'OKK Layer 1 tidak sesuai target (' . $okkLayer1Count . '/' . $targetOkkCount . ')';
         }
@@ -3471,8 +3466,8 @@ class DOPMController extends Controller
 
     /**
      * Versi optimized dari hitungStatusMatriksLengkapDenganAlasan yang menggunakan pre-loaded data
-     * untuk menghindari N+1 queries.
-     * 
+     * untuk menghindari N+1 queries. Matriks berjenjang: Hijau → Kuning → Merah (cek Hijau, Merah, lalu Kuning).
+     *
      * @param string|null $kodeIkk
      * @param string|null $locationName
      * @param string|null $locationDetailName
@@ -3674,25 +3669,11 @@ class DOPMController extends Controller
                              ($namaLayer3 !== null && trim($namaLayer3) !== '') ||
                              ($namaLayer4 !== null && trim($namaLayer4) !== '');
 
-        // MERAH 1 & 2: Tidak ada IPK/OKK sama sekali, atau hanya salah satu
-        if (!$hasIpk || !$hasOkk) {
-            if (!$hasIpk && !$hasOkk) {
-                $alasan = 'Tidak ada IPK dan tidak ada OKK';
-            } elseif (!$hasIpk) {
-                $alasan = 'Hanya ada OKK, belum ada IPK';
-            } else {
-                $alasan = 'Hanya ada IPK, belum ada OKK';
-            }
-            return ['status' => 'Merah', 'alasan' => $alasan];
-        }
-        
-        // MERAH 3: Ada IPK + OKK Layer 1 tapi tidak ada OKK dari Layer 2 up sesuai IKK
-        if ($hasIpk && $hasOkkLayer1 && $hasLayer2UpInIkk && !$hasOkkLayer2Up) {
-            $layerNames = array_filter([$namaLayer2, $namaLayer3, $namaLayer4]);
-            return ['status' => 'Merah', 'alasan' => 'Ada IPK dan OKK Layer 1, tetapi tidak ada OKK dari Layer 2/3/4 (' . implode(', ', $layerNames) . ')'];
-        }
+        // Matriks berjenjang: cek Hijau dulu, lalu Merah, sisanya Kuning (Hijau → Kuning → Merah)
+        $okkLayer2UpCount = $okkLayer2Up->count();
+        $ringkasanLayer = 'OKK Layer 1: ' . $okkLayer1Count . ' orang, OKK Layer 2/3/4: ' . $okkLayer2UpCount . ' orang. ';
 
-        // HIJAU: Harus ada IPK, OKK Layer 1 sesuai target, tidak fraud, OKK Layer 2/3/4 ada (jika diperlukan), DAN harus ada OAK
+        // 1. HIJAU (Complete): Full IPK, OKK Layer 1 sesuai target, tidak fraud, OKK L2 up ada (jika diperlukan), OAK ada
         if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && !$isOkkFraud && $hasOak) {
             if ($hasLayer2UpInIkk) {
                 if ($hasOkkLayer2Up) {
@@ -3703,25 +3684,31 @@ class DOPMController extends Controller
             }
         }
 
-        // KUNING 1: Ada IPK + OKK sesuai target tapi ada yang fraud
-        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && $isOkkFraud) {
-            $okkLayer2UpCount = $okkLayer2Up->count();
-            $ringkasan = 'OKK Layer 1: ' . $okkLayer1Count . ' orang, OKK Layer 2/3/4: ' . $okkLayer2UpCount . ' orang. ';
-            $alasanFraud = $fraudAlasanDetail ?? 'Jarak waktu antar OKK Layer 1 terlalu dekat atau jumlah kurang dari target';
-            return ['status' => 'Kuning', 'alasan' => $ringkasan . 'Alasan: ' . $alasanFraud];
+        // 2. MERAH (Need Action): tidak terpenuhi syarat minimal
+        if (!$hasIpk || !$hasOkk) {
+            if (!$hasIpk && !$hasOkk) {
+                $alasan = 'Tidak ada IPK dan tidak ada OKK';
+            } elseif (!$hasIpk) {
+                $alasan = 'Hanya ada OKK, belum ada IPK';
+            } else {
+                $alasan = 'Hanya ada IPK, belum ada OKK';
+            }
+            return ['status' => 'Merah', 'alasan' => $alasan];
         }
-        
-        // KUNING 2: Tidak ada OAK dari DIC mitra maupun BC
+        if ($hasIpk && $hasOkkLayer1 && $hasLayer2UpInIkk && !$hasOkkLayer2Up) {
+            $layerNames = array_filter([$namaLayer2, $namaLayer3, $namaLayer4]);
+            return ['status' => 'Merah', 'alasan' => 'Ada IPK dan OKK Layer 1, tetapi tidak ada OKK dari Layer 2/3/4 (' . implode(', ', $layerNames) . ')'];
+        }
+
+        // 3. KUNING (Warning): struktur sudah ada (IPK + OKK [+ OKK L2 up jika perlu]) tapi belum memenuhi Hijau
+        if ($hasIpk && $hasOkkLayer1 && $isOkkSesuaiTarget && $isOkkFraud) {
+            $alasanFraud = $fraudAlasanDetail ?? 'Jarak waktu antar OKK Layer 1 terlalu dekat atau jumlah kurang dari target';
+            return ['status' => 'Kuning', 'alasan' => $ringkasanLayer . 'Ada IPK + OKK sesuai target tapi ada yang fraud. ' . $alasanFraud];
+        }
         if ($hasIpk && $hasOkk && !$hasOak) {
             return ['status' => 'Kuning', 'alasan' => 'IPK dan OKK ada, tetapi belum ada OAK (baik dari DIC mitra maupun BC)'];
         }
-
-        // Default Kuning (kondisi lain yang tidak memenuhi kriteria Hijau)
-        $okkLayer2UpCount = $okkLayer2Up->count();
-        $ringkasanLayer = 'OKK Layer 1: ' . $okkLayer1Count . ' orang, OKK Layer 2/3/4: ' . $okkLayer2UpCount . ' orang. ';
         $alasan = [];
-        if (!$hasIpk) $alasan[] = 'Tidak ada IPK';
-        if (!$hasOkk) $alasan[] = 'Tidak ada OKK';
         if ($hasOkkLayer1 && !$isOkkSesuaiTarget) {
             $alasan[] = 'OKK Layer 1 tidak sesuai target (' . $okkLayer1Count . '/' . $targetOkkCount . ')';
         }
