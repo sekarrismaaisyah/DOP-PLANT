@@ -67,7 +67,12 @@ class SupervisoryAlertLogController extends Controller
                         ? '<span class="badge bg-warning text-dark">MEDIUM</span>'
                         : '<span class="badge bg-secondary">' . e($row->risk_level) . '</span>');
 
-                $actionsBtn = '<button type="button" class="btn btn-sm btn-outline-primary btn-view-matrix" data-id="' . (int) $row->id . '" title="Lihat Hasil Matriks TARP"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">visibility</i> Hasil Matriks</button>';
+                $lokasiEnc = rawurlencode($row->nama_lokasi ?? '');
+                $intervensiUrl = route('intervensi-area-kerja.index') . ($lokasiEnc !== '' ? '?lokasi=' . $lokasiEnc : '');
+                $actionsBtn = '<div class="d-flex flex-wrap gap-1">';
+                $actionsBtn .= '<button type="button" class="btn btn-sm btn-outline-primary btn-view-matrix" data-id="' . (int) $row->id . '" title="Lihat Hasil Matriks TARP"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">visibility</i> Hasil Matriks</button>';
+                $actionsBtn .= '<a href="' . e($intervensiUrl) . '" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a>';
+                $actionsBtn .= '</div>';
 
                 return [
                     'tanggal' => $row->tanggal ? $row->tanggal->format('d/m/Y') : '-',

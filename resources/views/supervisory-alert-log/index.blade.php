@@ -110,6 +110,7 @@
                                 <th class="text-nowrap">Lokasi</th>
                                 <th class="text-nowrap">Status</th>
                                 <th class="text-nowrap">Waktu</th>
+                                <th class="text-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="mobilityTableBody"></tbody>
@@ -145,6 +146,7 @@
                                 <th class="text-nowrap">Site</th>
                                 <th class="text-nowrap">Status Matriks</th>
                                 <th class="text-nowrap">Status Pekerjaan</th>
+                                <th class="text-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="criticalAreaTableBody"></tbody>
@@ -178,6 +180,7 @@
                                 <th class="text-nowrap">Site / Lokasi</th>
                                 <th class="text-nowrap">Tipe / Kategori</th>
                                 <th class="text-nowrap">Layer</th>
+                                <th class="text-nowrap">Aksi</th>
                             </tr>
                         </thead>
                         <tbody id="probabilityTableBody"></tbody>
@@ -313,8 +316,11 @@ $(document).ready(function() {
             if (data.length === 0) {
                 $('#mobilityEmpty').removeClass('d-none');
             } else {
+                var intervensiBase = "{{ route('intervensi-area-kerja.index') }}";
                 var rows = data.map(function(r) {
-                    return '<tr><td>' + (r.kode || r.unit || '-') + '</td><td>' + (r.lokasi || '-') + '</td><td>' + (r.status || '-') + '</td><td>' + (r.waktu || '-') + '</td></tr>';
+                    var lok = (r.lokasi || r.unit || r.kode || '').toString();
+                    var intervensiUrl = lok ? (intervensiBase + '?lokasi=' + encodeURIComponent(lok)) : intervensiBase;
+                    return '<tr><td>' + (r.kode || r.unit || '-') + '</td><td>' + (r.lokasi || '-') + '</td><td>' + (r.status || '-') + '</td><td>' + (r.waktu || '-') + '</td><td><a href="' + intervensiUrl + '" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a></td></tr>';
                 }).join('');
                 $('#mobilityTableBody').html(rows);
                 $('#mobilityTableWrap').removeClass('d-none');
@@ -347,8 +353,13 @@ $(document).ready(function() {
                     if (s === 'Kuning') return '<span class="badge bg-warning text-dark">Kuning</span>';
                     return '<span class="badge bg-secondary">' + escapeHtml(s || '-') + '</span>';
                 };
+                var dashboardUrl = "{{ route('dopmikk.dopm.dashboard') }}";
+                var today = "{{ now()->format('Y-m-d') }}";
                 var rows = data.map(function(r) {
-                    return '<tr><td>' + escapeHtml(r.code || '-') + '</td><td>' + escapeHtml(r.jenis_ijin_kerja_khusus || '-') + '</td><td>' + escapeHtml(r.nama_pekerjaan || '-') + '</td><td>' + escapeHtml(r.site || '-') + '</td><td>' + badge(r.status_matriks) + '</td><td>' + escapeHtml(r.status_pekerjaan || '-') + '</td></tr>';
+                    var tanggal = (r.tanggal_dop || today);
+                    var intervensiUrl = dashboardUrl + '?tanggal=' + encodeURIComponent(tanggal);
+                    var btn = '<a href="' + intervensiUrl + '" target="_blank" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a>';
+                    return '<tr><td>' + escapeHtml(r.code || '-') + '</td><td>' + escapeHtml(r.jenis_ijin_kerja_khusus || '-') + '</td><td>' + escapeHtml(r.nama_pekerjaan || '-') + '</td><td>' + escapeHtml(r.site || '-') + '</td><td>' + badge(r.status_matriks) + '</td><td>' + escapeHtml(r.status_pekerjaan || '-') + '</td><td>' + btn + '</td></tr>';
                 }).join('');
                 $('#criticalAreaTableBody').html(rows);
                 $('#criticalAreaTableWrap').removeClass('d-none');
@@ -374,11 +385,15 @@ $(document).ready(function() {
                 $('#probabilityEmpty').removeClass('d-none');
             } else {
                 var esc = typeof escapeHtml === 'function' ? escapeHtml : function(s){ return (s==null||s==='') ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+                var intervensiBase = "{{ route('intervensi-area-kerja.index') }}";
                 var rows = data.map(function(r) {
                     var nama = r.nama_pja || r.name || ('PJA ' + (r.pja_id || ''));
                     var siteLok = [r.site, r.lokasi, r.detail_lokasi].filter(Boolean).join(' / ');
                     var tipeCat = [r.pja_type_name, r.pja_category_name].filter(Boolean).join(' / ');
-                    return '<tr><td>' + esc(nama) + '</td><td>' + esc(siteLok || '-') + '</td><td>' + esc(tipeCat || '-') + '</td><td>' + esc(r.pja_layer || '-') + '</td></tr>';
+                    var lokParam = (r.site || r.lokasi || r.detail_lokasi || siteLok || '').toString();
+                    var intervensiUrl = lokParam ? (intervensiBase + '?lokasi=' + encodeURIComponent(lokParam)) : intervensiBase;
+                    var btn = '<a href="' + intervensiUrl + '" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a>';
+                    return '<tr><td>' + esc(nama) + '</td><td>' + esc(siteLok || '-') + '</td><td>' + esc(tipeCat || '-') + '</td><td>' + esc(r.pja_layer || '-') + '</td><td>' + btn + '</td></tr>';
                 }).join('');
                 $('#probabilityTableBody').html(rows);
                 $('#probabilityTableWrap').removeClass('d-none');
