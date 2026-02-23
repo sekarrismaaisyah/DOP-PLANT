@@ -288,7 +288,8 @@
 <script>
 // Bep bep sound bila ada alert yang belum terintervensi.
 // Catatan: Chrome mewajibkan AudioContext dibuat/setelah gesture user (klik/keydown).
-// Jadi beep akan diputar ketika user pertama kali berinteraksi di halaman ini.
+// Setelah gesture pertama, suara akan terus berbunyi berkala selama user masih di halaman ini
+// dan masih ada alert yang belum terintervensi.
 (function() {
     var hasUnintervenedAlerts = @json($hasUnintervenedAlerts ?? false);
     if (!hasUnintervenedAlerts) return;
@@ -315,14 +316,46 @@
         setTimeout(playBeepOnce, 220);
     }
 
+    var beepIntervalId = null;
+
+    function startBeepLoop() {
+        if (beepIntervalId !== null) return;
+        // mainkan segera sekali
+        playBeepSequence();
+        // lalu ulangi setiap beberapa detik
+        beepIntervalId = setInterval(function() {
+            if (!hasUnintervenedAlerts) {
+                stopBeepLoop();
+                return;
+            }
+            playBeepSequence();
+        }, 5000); // setiap 5 detik
+    }
+
+    function stopBeepLoop() {
+        if (beepIntervalId !== null) {
+            clearInterval(beepIntervalId);
+            beepIntervalId = null;
+        }
+    }
+
     function handleFirstUserGesture() {
         document.removeEventListener('click', handleFirstUserGesture, true);
         document.removeEventListener('keydown', handleFirstUserGesture, true);
-        playBeepSequence();
+        startBeepLoop();
     }
 
     document.addEventListener('click', handleFirstUserGesture, true);
     document.addEventListener('keydown', handleFirstUserGesture, true);
+
+    // Hentikan loop ketika tab tidak aktif, dan lanjutkan lagi saat aktif.
+    document.addEventListener('visibilitychange', function() {
+        if (document.hidden) {
+            stopBeepLoop();
+        } else if (hasUnintervenedAlerts) {
+            startBeepLoop();
+        }
+    });
 })();
 </script>
 <script>
