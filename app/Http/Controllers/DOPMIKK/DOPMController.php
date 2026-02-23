@@ -1908,7 +1908,7 @@ class DOPMController extends Controller
                         $durationIds = [];
                         foreach ($ipkRowsCh ?? [] as $r) {
                             $ts = self::getClickHouseRowValue($r, 'start_date') ?? self::getClickHouseRowValue($r, 'created_at');
-                            $tsStr = $ts instanceof \DateTimeInterface ? $ts->format('Y-m-d H:i:s') : (string) $ts;
+                            $tsStr = self::formatClickHouseTsForAppTz($ts);
                             $aid = self::getClickHouseRowValue($r, 'id');
                             $durId = self::getClickHouseRowValue($r, 'm_job_duration_id');
                             if ($aid !== null && $aid !== '') {
@@ -2073,7 +2073,7 @@ class DOPMController extends Controller
                         $okkSupervisorIds = [];
                         foreach ($okkRowsCh ?? [] as $r) {
                             $ts = self::getClickHouseRowValue($r, 'created_at');
-                            $tsStr = $ts instanceof \DateTimeInterface ? $ts->format('Y-m-d H:i:s') : (string) $ts;
+                            $tsStr = self::formatClickHouseTsForAppTz($ts);
                             $supId = self::getClickHouseRowValue($r, 'supervisor_id');
                             if ($supId !== null && $supId !== '') {
                                 $okkSupervisorIds[] = $supId;
@@ -3786,6 +3786,27 @@ class DOPMController extends Controller
             return \Carbon\Carbon::parse($value, $tz);
         } catch (\Throwable $e) {
             return null;
+        }
+    }
+
+    /**
+     * Format timestamp dari ClickHouse ke string Y-m-d H:i:s dalam timezone aplikasi (Asia/Jakarta).
+     * ClickHouse biasanya menyimpan/ mengembalikan UTC; konversi ke app timezone agar jam tampil benar.
+     */
+    private static function formatClickHouseTsForAppTz(mixed $value): string
+    {
+        if ($value === null || $value === '') {
+            return '';
+        }
+        $tz = config('app.timezone', 'Asia/Jakarta');
+        try {
+            if ($value instanceof \DateTimeInterface) {
+                return \Carbon\Carbon::instance($value)->setTimezone($tz)->format('Y-m-d H:i:s');
+            }
+            // String dari ClickHouse biasanya UTC; parse sebagai UTC lalu konversi ke app timezone
+            return \Carbon\Carbon::parse($value, 'UTC')->setTimezone($tz)->format('Y-m-d H:i:s');
+        } catch (\Throwable $e) {
+            return is_string($value) ? $value : '';
         }
     }
 
