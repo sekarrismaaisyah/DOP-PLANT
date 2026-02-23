@@ -1341,10 +1341,10 @@ class DOPMWeeklyController extends Controller
         })() : date('Y-m-d');
         $useChModal = self::useClickHouseForIpkOkk($filterDateModal);
         $workPermitId = trim((string) $request->input('work_permit_id', ''));
-        $forceChModal = $workPermitId !== '';
 
+        // Hanya gunakan ClickHouse untuk IPK/OKK jika tanggal_dop >= cutoff. Di bawah cutoff selalu MySQL (ipk_ikk, okk).
         if ($kodeIkk !== '' && $kodeIkk !== null) {
-            if (($useChModal || $forceChModal) && class_exists(\App\Services\ClickHouseService::class)) {
+            if ($useChModal && class_exists(\App\Services\ClickHouseService::class)) {
                 $ch = app(\App\Services\ClickHouseService::class);
                 if (method_exists($ch, 'query') && $ch->isConnected()) {
                     $wpId = $workPermitId !== '' ? $workPermitId : null;
