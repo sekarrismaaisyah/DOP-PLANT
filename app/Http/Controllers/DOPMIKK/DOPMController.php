@@ -1073,9 +1073,29 @@ class DOPMController extends Controller
             ->orderBy('jam')
             ->get();
 
+        // Dalam setiap blok 3 jam (0-2, 3-5, 6-8, ...), hanya tampilkan jam pertama yang punya alert;
+        // jam ke-2 dan ke-3 di blok yang sama tidak ditampilkan (sudah tercover oleh alert jam pertama).
+        $filtered = collect();
+        $blockShown = [];
+        foreach ($dopmAlertLogs as $log) {
+            $block = (int) floor($log->jam / 3);
+            if (isset($blockShown[$block])) {
+                continue;
+            }
+            $snap = $log->snapshot ?? [];
+            $needActionList = $snap['need_action'] ?? [];
+            $warningList = $snap['warning'] ?? [];
+            $hasAlert = (count($needActionList) > 0) || (count($warningList) > 0);
+            if (! $hasAlert) {
+                continue;
+            }
+            $filtered->push($log);
+            $blockShown[$block] = true;
+        }
+
         return view('dopmikk.dopm.alert-log', [
             'filterDate' => $filterDate,
-            'dopmAlertLogs' => $dopmAlertLogs,
+            'dopmAlertLogs' => $filtered,
         ]);
     }
 
