@@ -704,6 +704,7 @@ class DOPMWeeklyController extends Controller
                             ORDER BY created_at ASC
                         ";
                         $okkRowsCh = $ch->query($sqlOkk);
+                        $okkSupervisorIdsBatch = [];
                         foreach ($okkRowsCh ?? [] as $r) {
                             $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
                             $code = $wpIdToCode[$wpId] ?? null;
@@ -711,10 +712,58 @@ class DOPMWeeklyController extends Controller
                                 if (!isset($okkByKode[$code])) {
                                     $okkByKode[$code] = collect();
                                 }
+                                $ts = self::getClickHouseRowValue($r, 'created_at');
+                                $tsStr = self::formatClickHouseTsForAppTz($ts);
+                                $supId = self::getClickHouseRowValue($r, 'supervisor_id');
+                                if ($supId !== null && $supId !== '') {
+                                    $okkSupervisorIdsBatch[] = $supId;
+                                }
                                 $okkByKode[$code]->push((object) [
+                                    'supervisor_id' => $supId,
+                                    'ts' => $tsStr,
                                     'nama_pengawas' => null,
                                     'layer_pengawas' => null,
+                                    'kode_sid' => null,
                                 ]);
+                            }
+                        }
+                        // Enrich OKK dengan kode_sid & layer dari ikk_work_permit_employee agar matriks bisa deteksi Layer 1 vs Layer 2/3/4 (Merah jika hanya OKK Layer 1)
+                        if (!empty($okkSupervisorIdsBatch)) {
+                            try {
+                                $supIdsUniq = array_values(array_unique(array_filter($okkSupervisorIdsBatch)));
+                                $supEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $supIdsUniq));
+                                $sqlEmpOkk = "
+                                    SELECT id, employee_name, employee_sid, layer
+                                    FROM hse_automation.ikk_work_permit_employee
+                                    WHERE id IN ({$supEsc})
+                                      AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                                ";
+                                $empOkkRows = $ch->query($sqlEmpOkk);
+                                $employeeInfoOkkBatch = [];
+                                foreach ($empOkkRows ?? [] as $er) {
+                                    $eId = self::getClickHouseRowValue($er, 'id');
+                                    if ($eId !== null) {
+                                        $layerRaw = self::getClickHouseRowValue($er, 'layer');
+                                        $employeeInfoOkkBatch[(string) $eId] = [
+                                            'employee_name' => self::getClickHouseRowValue($er, 'employee_name'),
+                                            'employee_sid' => self::getClickHouseRowValue($er, 'employee_sid'),
+                                            'layer' => $layerRaw !== null && $layerRaw !== '' ? (string) $layerRaw : null,
+                                        ];
+                                    }
+                                }
+                                foreach ($okkByKode as $code => $okkList) {
+                                    foreach ($okkList as $obj) {
+                                        $sid = $obj->supervisor_id ?? null;
+                                        if ($sid !== null && isset($employeeInfoOkkBatch[(string) $sid])) {
+                                            $info = $employeeInfoOkkBatch[(string) $sid];
+                                            $obj->nama_pengawas = $info['employee_name'] ?? null;
+                                            $obj->kode_sid = $info['employee_sid'] ?? null;
+                                            $obj->layer_pengawas = $info['layer'] ?? null;
+                                        }
+                                    }
+                                }
+                            } catch (\Throwable $e) {
+                                \Illuminate\Support\Facades\Log::debug('Dashboard weekly batch OKK enrich (matriks): ' . $e->getMessage());
                             }
                         }
                     }
