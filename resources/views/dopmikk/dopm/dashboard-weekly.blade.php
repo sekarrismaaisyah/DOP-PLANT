@@ -3261,8 +3261,25 @@
                         var displayName = (res && res.nama_layer_1) ? res.nama_layer_1 : namaLayer1;
                         document.getElementById('intervensiLayer1NameDisplay').textContent = displayName || '—';
                         if (document.getElementById('intervensiOkkLayer1NameDisplay')) document.getElementById('intervensiOkkLayer1NameDisplay').textContent = displayName || '—';
-                        var ipkMsg = (displayName || 'PIC') + ', anda harus mengisi INSPEKSI PRA KERJA (IPK)\n' + ipkFormLink;
-                        var okkMsg = (displayName || 'PIC') + ', mohon perhatian untuk OBSERVASI KEGIATAN KERJA (OKK) sesuai IKK ini.';
+                        var ipkMsg = (displayName || 'PIC') + ', anda harus mengisi INSPEKSI PRA KERJA (IPK) untuk pekerjaan berikut:\n\n'
+                            + 'IKK: ' + (data.kode_ikk || '—') + (data.nama_pekerjaan ? ' - ' + data.nama_pekerjaan : '') + '\n'
+                            + 'Hari: ' + (data.tanggal_dop || '—') + '\n'
+                            + 'Lokasi: ' + (data.location_name || '—') + '\n'
+                            + 'Detail Lokasi: ' + (data.location_detail_name || '—') + '\n'
+                            + 'Layer 1: ' + (data.nama_layer_1 || '—') + '\n'
+                            + 'Layer 2: ' + (data.nama_layer_2 || '—') + '\n'
+                            + 'Layer 3: ' + (data.nama_layer_3 || '—') + '\n'
+                            + 'Layer 4: ' + (data.nama_layer_4 || '—') + '\n\n'
+                            + ipkFormLink;
+                        var okkMsg = (displayName || 'PIC') + ', mohon perhatian untuk OBSERVASI KEGIATAN KERJA (OKK).\n\n'
+                            + 'IKK: ' + (data.kode_ikk || '—') + (data.nama_pekerjaan ? ' - ' + data.nama_pekerjaan : '') + '\n'
+                            + 'Hari: ' + (data.tanggal_dop || '—') + '\n'
+                            + 'Lokasi: ' + (data.location_name || '—') + '\n'
+                            + 'Detail Lokasi: ' + (data.location_detail_name || '—') + '\n'
+                            + 'Layer 1: ' + (data.nama_layer_1 || '—') + '\n'
+                            + 'Layer 2: ' + (data.nama_layer_2 || '—') + '\n'
+                            + 'Layer 3: ' + (data.nama_layer_3 || '—') + '\n'
+                            + 'Layer 4: ' + (data.nama_layer_4 || '—');
 
                         if (users.length === 0) {
                             layer1EmptyEl2.classList.remove('d-none');

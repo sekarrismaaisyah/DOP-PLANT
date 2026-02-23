@@ -1235,7 +1235,7 @@ class DOPMController extends Controller
                 /** @var \App\Services\ClickHouseService $clickHouse */
                 $clickHouse = app(\App\Services\ClickHouseService::class);
                 if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                    // Ambil work permit yang rentang tanggalnya (start_date–end_date) mencakup tanggal filter
+                    // Weekly: sama dengan daily — hanya work permit yang start_date-nya = tanggal filter (dimulai hari itu saja)
                     $dateStr = addslashes($filterDate);
                     $siteFilterClause = '';
                     if ($filterSite !== '' && $filterSite !== null) {
@@ -1260,8 +1260,7 @@ class DOPMController extends Controller
                             location_name,
                             location_detail_name
                         FROM hse_automation.ikk_work_permit
-                        WHERE toDate(start_date) <= toDate('{$dateStr}')
-                          AND toDate(end_date)   >= toDate('{$dateStr}')
+                        WHERE toDate(start_date) = toDate('{$dateStr}')
                           AND deleted_at IS NULL
                           {$siteFilterClause}
                         ORDER BY start_date ASC
