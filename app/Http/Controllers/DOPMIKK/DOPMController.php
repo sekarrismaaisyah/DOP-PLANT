@@ -1007,6 +1007,27 @@ class DOPMController extends Controller
     }
 
     /**
+     * Halaman Alert Log: riwayat Need Action & Warning per jam (dari tabel dopm_alert_log).
+     */
+    public function alertLog(Request $request): View
+    {
+        $filterDate = $request->get('date', now()->toDateString());
+        if (! preg_match('/^\d{4}-\d{2}-\d{2}$/', $filterDate)) {
+            $filterDate = now()->toDateString();
+        }
+
+        $dopmAlertLogs = DopmAlertLog::query()
+            ->where('tanggal', $filterDate)
+            ->orderBy('jam')
+            ->get();
+
+        return view('dopmikk.dopm.alert-log', [
+            'filterDate' => $filterDate,
+            'dopmAlertLogs' => $dopmAlertLogs,
+        ]);
+    }
+
+    /**
      * Dashboard mingguan DOPM & IKK (berbasis Work Permit ClickHouse).
      * User dapat memilih tanggal dan melihat Work Permit dengan status APPROVED dan EXPIRED.
      * Secara struktur, data yang dikirim ke Blade disamakan dengan dashboard harian

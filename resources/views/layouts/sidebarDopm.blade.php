@@ -81,6 +81,12 @@
               <div class="menu-title">Dashboard Report</div>
             </a>
           </li>
+          <li>
+            <a href="{{ route('dopmikk.dopm.alert-log') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">warning</i></div>
+              <div class="menu-title">Alert Log</div>
+            </a>
+          </li>
 
           <li class="menu-label">Master Data</li>
           <li>
