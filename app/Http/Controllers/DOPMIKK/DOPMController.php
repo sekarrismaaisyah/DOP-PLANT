@@ -282,7 +282,7 @@ class DOPMController extends Controller
                 /** @var \App\Services\ClickHouseService $clickHouse */
                 $clickHouse = app(\App\Services\ClickHouseService::class);
                 if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                    // Ambil work permit yang rentang tanggalnya (start_date–end_date) mencakup tanggal filter
+                    // Daily: hanya work permit yang start_date-nya = tanggal filter (dimulai hari itu saja, bukan range)
                     $dateStr = addslashes($filterDate);
                     $siteFilterClause = '';
                     if ($filterSite !== '' && $filterSite !== null) {
@@ -307,8 +307,7 @@ class DOPMController extends Controller
                             location_name,
                             location_detail_name
                         FROM hse_automation.ikk_work_permit
-                        WHERE toDate(start_date) <= toDate('{$dateStr}')
-                          AND toDate(end_date)   >= toDate('{$dateStr}')
+                        WHERE toDate(start_date) = toDate('{$dateStr}')
                           AND deleted_at IS NULL
                           {$siteFilterClause}
                         ORDER BY start_date ASC
@@ -3790,8 +3789,8 @@ class DOPMController extends Controller
     }
 
     /**
-     * Format timestamp dari ClickHouse ke string Y-m-d H:i:s dalam timezone aplikasi (Asia/Jakarta).
-     * ClickHouse biasanya menyimpan/ mengembalikan UTC; konversi ke app timezone agar jam tampil benar.
+     * Format timestamp dari ClickHouse ke string Y-m-d H:i:s untuk tampilan.
+     * Data ClickHouse di sini sudah dalam waktu lokal (WIB); tampilkan as-is tanpa konversi timezone.
      */
     private static function formatClickHouseTsForAppTz(mixed $value): string
     {
@@ -3801,10 +3800,11 @@ class DOPMController extends Controller
         $tz = config('app.timezone', 'Asia/Jakarta');
         try {
             if ($value instanceof \DateTimeInterface) {
-                return \Carbon\Carbon::instance($value)->setTimezone($tz)->format('Y-m-d H:i:s');
+                // Anggap nilai sudah lokal (WIB); format tanpa menggeser jam
+                return \Carbon\Carbon::parse($value->format('Y-m-d H:i:s'), $tz)->format('Y-m-d H:i:s');
             }
-            // String dari ClickHouse biasanya UTC; parse sebagai UTC lalu konversi ke app timezone
-            return \Carbon\Carbon::parse($value, 'UTC')->setTimezone($tz)->format('Y-m-d H:i:s');
+            // String: anggap sudah dalam waktu aplikasi (WIB)
+            return \Carbon\Carbon::parse($value, $tz)->format('Y-m-d H:i:s');
         } catch (\Throwable $e) {
             return is_string($value) ? $value : '';
         }
