@@ -120,6 +120,47 @@
         background: #f9fafb;
         box-shadow: -2px 0 6px rgba(0, 0, 0, 0.1);
     }
+
+    /* Alert Sidebar (riwayat Need Action / Warning per jam) */
+    .alert-sidebar {
+        position: fixed;
+        top: 0;
+        right: 0;
+        width: 340px;
+        max-width: 95vw;
+        height: 100vh;
+        background: #fff;
+        box-shadow: -2px 0 12px rgba(0,0,0,0.12);
+        z-index: 1050;
+        display: flex;
+        flex-direction: column;
+        transition: transform 0.3s ease;
+        transform: translateX(0);
+    }
+    .alert-sidebar.collapsed {
+        transform: translateX(100%);
+    }
+    .alert-sidebar-toggle {
+        position: fixed;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        z-index: 1049;
+        width: 44px;
+        height: 80px;
+        border-radius: 12px 0 0 12px;
+        background: #fff;
+        border: 1px solid #e5e7eb;
+        border-right: none;
+        box-shadow: -2px 0 8px rgba(0,0,0,0.08);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: #dc2626;
+    }
+    .alert-sidebar-toggle:hover { background: #fef2f2; color: #b91c1c; }
+    .alert-sidebar-toggle.collapsed { right: 0; }
     
     .sidebar-toggle-btn i {
         font-size: 24px;
@@ -1477,6 +1518,64 @@
     </div>
     
 </div>
+
+    {{-- Sidebar Alert: riwayat Need Action & Warning per jam --}}
+    <button type="button" class="alert-sidebar-toggle collapsed" id="alertSidebarToggle" title="Buka panel Alert per jam" aria-label="Toggle Alert sidebar">
+        <span class="material-icons-outlined">notifications_active</span>
+    </button>
+    <div class="alert-sidebar collapsed" id="alertSidebar">
+        <div class="d-flex align-items-center justify-content-between border-bottom p-3">
+            <h5 class="mb-0 fw-bold d-flex align-items-center gap-2">
+                <span class="material-icons-outlined text-danger">warning</span>
+                Alert per Jam
+            </h5>
+            <button type="button" class="btn btn-sm btn-outline-secondary rounded-3" id="alertSidebarClose" aria-label="Tutup">
+                <span class="material-icons-outlined" style="font-size: 20px;">close</span>
+            </button>
+        </div>
+        <div class="p-3 small text-muted border-bottom">
+            Tanggal: <strong>{{ $filterDate ?? now()->toDateString() }}</strong>. Need Action = Merah, Warning = Kuning.
+        </div>
+        <div class="flex-grow-1 overflow-auto p-3">
+            @php $dopmAlertLogs = $dopmAlertLogs ?? collect(); @endphp
+            @forelse($dopmAlertLogs as $log)
+                <div class="card rounded-3 mb-2 border shadow-none">
+                    <div class="card-body py-2 px-3">
+                        <div class="d-flex align-items-center justify-content-between mb-1">
+                            <span class="fw-semibold">Jam {{ sprintf('%02d', $log->jam) }}:00</span>
+                            <span class="text-muted small">{{ $log->created_at ? $log->created_at->format('H:i') : '-' }}</span>
+                        </div>
+                        <div class="d-flex gap-3">
+                            <span class="badge bg-danger rounded-pill">{{ $log->need_action_count ?? 0 }} Need Action</span>
+                            <span class="badge bg-warning text-dark rounded-pill">{{ $log->warning_count ?? 0 }} Warning</span>
+                        </div>
+                    </div>
+                </div>
+            @empty
+                <div class="text-center py-5 text-muted">
+                    <span class="material-icons-outlined mb-2" style="font-size: 48px;">schedule</span>
+                    <p class="mb-0 small">Belum ada data alert per jam untuk tanggal ini. Buka dashboard pada tanggal hari ini agar snapshot per jam tersimpan.</p>
+                </div>
+            @endforelse
+        </div>
+        <div class="border-top p-2 small text-muted text-center">
+            Snapshot tersimpan saat dashboard dibuka (tanggal hari ini) dan lewat scheduler per jam.
+        </div>
+    </div>
+    <script>
+    (function() {
+        var sidebar = document.getElementById('alertSidebar');
+        var toggle = document.getElementById('alertSidebarToggle');
+        var closeBtn = document.getElementById('alertSidebarClose');
+        if (!sidebar || !toggle) return;
+        function openSidebar() { sidebar.classList.remove('collapsed'); }
+        function closeSidebar() { sidebar.classList.add('collapsed'); }
+        toggle.addEventListener('click', function() {
+            if (sidebar.classList.contains('collapsed')) openSidebar(); else closeSidebar();
+        });
+        if (closeBtn) closeBtn.addEventListener('click', closeSidebar);
+    })();
+    </script>
 
     {{-- <div class="mb-3">
         <button class="btn btn-outline-primary w-100 d-flex align-items-center justify-content-between p-3 rounded-4 shadow-sm" type="button" data-bs-toggle="collapse" data-bs-target="#dashboardStatsCollapse" aria-expanded="true" aria-controls="dashboardStatsCollapse">

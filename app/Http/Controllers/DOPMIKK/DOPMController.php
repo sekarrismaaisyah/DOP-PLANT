@@ -5,6 +5,7 @@ namespace App\Http\Controllers\DOPMIKK;
 use App\Http\Controllers\Controller;
 use App\Jobs\ImportDopmJob;
 use App\Models\Dopm;
+use App\Models\DopmAlertLog;
 use App\Models\IpkIkk;
 use App\Models\Okk;
 use Carbon\Carbon;
@@ -957,6 +958,10 @@ class DOPMController extends Controller
             }
         }
 
+        if ($filterDate === now()->toDateString()) {
+            DopmAlertLog::storeSnapshotForHour($ikkClickhouseListHarian, $filterDate);
+        }
+
         return view('dopmikk.dopm.dashboard', [
             'filterDate' => $filterDate,
             'filterSite' => $filterSite,
@@ -994,6 +999,10 @@ class DOPMController extends Controller
             'chartMatriksLabels' => $chartMatriksLabels,
             'chartIzinKerjaPerMatriks' => $chartIzinKerjaPerMatriks,
             'ikkClickhouseListHarian' => $ikkClickhouseListHarian,
+            'dopmAlertLogs' => DopmAlertLog::query()
+                ->where('tanggal', $filterDate)
+                ->orderBy('jam')
+                ->get(),
         ]);
     }
 

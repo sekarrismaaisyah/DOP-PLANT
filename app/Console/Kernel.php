@@ -44,6 +44,11 @@ class Kernel extends ConsoleKernel
             ->timezone('Asia/Makassar')
             ->dailyAt('18:00')
             ->appendOutputTo(storage_path('logs/supervisory-alert.log'));
+
+        // DOPM Alert: snapshot Need Action / Warning per jam (hanya untuk tanggal hari ini)
+        $schedule->command('dopm:alert-snapshot')
+            ->hourly()
+            ->appendOutputTo(storage_path('logs/dopm-alert-snapshot.log'));
     }
 
     /**
