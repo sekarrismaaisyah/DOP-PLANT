@@ -45,9 +45,10 @@ class Kernel extends ConsoleKernel
             ->dailyAt('18:00')
             ->appendOutputTo(storage_path('logs/supervisory-alert.log'));
 
-        // DOPM Alert: snapshot Need Action / Warning per jam (hanya untuk tanggal hari ini)
+        // DOPM Alert: snapshot + Alert 1/2/3 per IKK (jam ke-1/2/3 sejak start_date, belum IPK). Setiap 30 menit WITA agar Alert 1 tercatat ~30 menit setelah IKK mulai.
         $schedule->command('dopm:alert-snapshot')
-            ->hourly()
+            ->timezone('Asia/Makassar')
+            ->everyThirtyMinutes()
             ->appendOutputTo(storage_path('logs/dopm-alert-snapshot.log'));
     }
 

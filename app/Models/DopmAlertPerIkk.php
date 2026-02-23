@@ -28,11 +28,14 @@ class DopmAlertPerIkk extends Model
     private const TZ = 'Asia/Makassar';
 
     /**
-     * Untuk setiap IKK di daftar: jika belum ada IPK dan sudah jam ke-1/2/3 sejak mulai,
-     * simpan satu baris ke database (Alert 1, 2, atau 3).
-     * Dipanggil dari dashboard (tanggal = hari ini) atau scheduler.
+     * Konsep: IKK dari ClickHouse (start_date = jam mulai).
+     * - Alert 1 = jam ke-1 sejak mulai (0–1 jam setelah start_date): jika belum ada IPK → simpan ke DB.
+     * - Alert 2 = jam ke-2 (1–2 jam setelah start): jika belum ada IPK → simpan.
+     * - Alert 3 = jam ke-3 (2–3 jam setelah start): jika belum ada IPK → simpan.
+     * Contoh: IKK A mulai 09:00 → pada 09:30 sudah Alert 1 (masuk DB); pada 10:00–10:59 Alert 2; pada 11:00–11:59 Alert 3.
+     * Dipanggil dari dashboard (tanggal = hari ini) atau command dopm:alert-snapshot (setiap 30 menit WITA).
      *
-     * @param  array|Collection  $ikkList  Daftar IKK dengan code, start_date, status_matriks, dll.
+     * @param  array|Collection  $ikkList  Daftar IKK dengan code, start_date, status_matriks, dll. (dari ClickHouse)
      * @param  string  $tanggal  Y-m-d
      */
     public static function storeAlertsForDate($ikkList, string $tanggal): void

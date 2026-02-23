@@ -1012,7 +1012,9 @@ class DOPMController extends Controller
             }
         }
 
-        if ($filterDate === now()->toDateString()) {
+        // Snapshot + Alert 1/2/3 per IKK hanya untuk "hari ini" (WITA), agar konsisten dengan scheduler
+        $todayWita = Carbon::now('Asia/Makassar')->toDateString();
+        if ($filterDate === $todayWita) {
             DopmAlertLog::storeSnapshotForHour($ikkClickhouseListHarian, $filterDate);
             DopmAlertPerIkk::storeAlertsForDate($ikkClickhouseListHarian, $filterDate);
         }
