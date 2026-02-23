@@ -49,20 +49,23 @@ class DopmAlertLog extends Model
         foreach ($items as $ikk) {
             $obj = is_object($ikk) ? $ikk : (object) $ikk;
             $status = $obj->status_matriks ?? null;
+            $row = [
+                'id' => $obj->id ?? null,
+                'code' => $obj->code ?? null,
+                'site' => $obj->site ?? null,
+                'jenis_ijin_kerja_khusus' => $obj->jenis_ijin_kerja_khusus ?? null,
+                'nama_pekerjaan' => $obj->nama_pekerjaan ?? null,
+                'perusahaan' => $obj->perusahaan ?? null,
+                'location_name' => $obj->location_name ?? null,
+                'location_detail_name' => $obj->location_detail_name ?? null,
+                'alasan_matriks' => $obj->alasan_matriks ?? null,
+            ];
             if ($status === 'Merah') {
                 $needAction++;
-                $snapshotMerah[] = [
-                    'code' => $obj->code ?? null,
-                    'jenis_ijin_kerja_khusus' => $obj->jenis_ijin_kerja_khusus ?? null,
-                    'site' => $obj->site ?? null,
-                ];
+                $snapshotMerah[] = $row;
             } elseif ($status === 'Kuning') {
                 $warning++;
-                $snapshotKuning[] = [
-                    'code' => $obj->code ?? null,
-                    'jenis_ijin_kerja_khusus' => $obj->jenis_ijin_kerja_khusus ?? null,
-                    'site' => $obj->site ?? null,
-                ];
+                $snapshotKuning[] = $row;
             }
         }
 
@@ -77,8 +80,8 @@ class DopmAlertLog extends Model
                 'need_action_count' => $needAction,
                 'warning_count' => $warning,
                 'snapshot' => [
-                    'need_action' => array_slice($snapshotMerah, 0, 50),
-                    'warning' => array_slice($snapshotKuning, 0, 50),
+                    'need_action' => $snapshotMerah,
+                    'warning' => $snapshotKuning,
                 ],
             ]
         );
