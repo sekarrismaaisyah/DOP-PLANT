@@ -2454,6 +2454,140 @@ class DOPMController extends Controller
     }
 
     /**
+     * API untuk Alert Log: ambil konteks IKK (satu work permit by kode_ikk + tanggal) untuk modal Intervensi.
+     * Return struktur dopm (sama dengan data-dopm di Dashboard) agar frontend bisa membuka modal Intervensi.
+     */
+    public function getIkkContextForAlertLog(Request $request): JsonResponse
+    {
+        $kodeIkk = trim((string) $request->input('kode_ikk', ''));
+        $tanggalDop = trim((string) $request->input('tanggal_dop', ''));
+        if ($kodeIkk === '') {
+            return response()->json(['success' => false, 'message' => 'kode_ikk wajib'], 400);
+        }
+        try {
+            $filterDate = $tanggalDop !== '' ? Carbon::parse($tanggalDop)->format('Y-m-d') : date('Y-m-d');
+        } catch (\Throwable $e) {
+            $filterDate = date('Y-m-d');
+        }
+
+        $dopm = null;
+        try {
+            if (class_exists(\App\Services\ClickHouseService::class)) {
+                $ch = app(\App\Services\ClickHouseService::class);
+                if (method_exists($ch, 'query') && $ch->isConnected()) {
+                    $codeEsc = addslashes($kodeIkk);
+                    $dateEsc = addslashes($filterDate);
+                    $sqlWp = "
+                        SELECT id, code, name, ra_site_name, company_name, status, m_job_id,
+                               start_date, end_date, location_name, location_detail_name, ra_pjo_name
+                        FROM hse_automation.ikk_work_permit
+                        WHERE trim(toString(code)) = '{$codeEsc}'
+                          AND toDate(start_date) <= toDate('{$dateEsc}')
+                          AND toDate(end_date) >= toDate('{$dateEsc}')
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                        LIMIT 1
+                    ";
+                    $wpRows = $ch->query($sqlWp);
+                    if (empty($wpRows[0])) {
+                        $sqlWpFallback = "
+                            SELECT id, code, name, ra_site_name, company_name, status, m_job_id,
+                                   start_date, end_date, location_name, location_detail_name, ra_pjo_name
+                            FROM hse_automation.ikk_work_permit
+                            WHERE trim(toString(code)) = '{$codeEsc}'
+                              AND toDate(start_date) = toDate('{$dateEsc}')
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                            LIMIT 1
+                        ";
+                        $wpRows = $ch->query($sqlWpFallback);
+                    }
+                    $row = $wpRows[0] ?? null;
+                    if ($row) {
+                        $wpId = self::getClickHouseRowValue($row, 'id');
+                        $mJobId = self::getClickHouseRowValue($row, 'm_job_id');
+                        $jobName = null;
+                        if ($mJobId !== null && $mJobId !== '') {
+                            $jobIdEsc = addslashes((string) $mJobId);
+                            $jobRows = $ch->query("SELECT id, name FROM hse_automation.ikk_m_job WHERE id = '{$jobIdEsc}' LIMIT 1");
+                            if (! empty($jobRows[0])) {
+                                $jobName = self::getClickHouseRowValue($jobRows[0], 'name');
+                            }
+                        }
+                        $layersByWp = [];
+                        $sqlEmp = "
+                            SELECT work_permit_id, layer, employee_name, employee_sid
+                            FROM hse_automation.ikk_work_permit_employee
+                            WHERE work_permit_id = '" . addslashes((string) $wpId) . "'
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                        ";
+                        $empRows = $ch->query($sqlEmp);
+                        foreach ($empRows ?? [] as $er) {
+                            $layerRaw = $er['layer'] ?? null;
+                            if ($layerRaw === null || $layerRaw === '') {
+                                continue;
+                            }
+                            $layerNum = (int) $layerRaw;
+                            if (! in_array($layerNum, [1, 2, 3, 4], true)) {
+                                continue;
+                            }
+                            if (! isset($layersByWp[$layerNum])) {
+                                $layersByWp[$layerNum] = [];
+                            }
+                            $layersByWp[$layerNum][] = [
+                                'name' => trim((string) ($er['employee_name'] ?? '')),
+                                'sid' => trim((string) ($er['employee_sid'] ?? '')),
+                            ];
+                        }
+                        $namaLayer1 = self::formatLayerEmployees($layersByWp[1] ?? []);
+                        $sidLayer1 = self::formatLayerSids($layersByWp[1] ?? []);
+                        $namaLayer2 = self::formatLayerEmployees($layersByWp[2] ?? []);
+                        $sidLayer2 = self::formatLayerSids($layersByWp[2] ?? []);
+                        $namaLayer3 = self::formatLayerEmployees($layersByWp[3] ?? []);
+                        $sidLayer3 = self::formatLayerSids($layersByWp[3] ?? []);
+                        $namaLayer4 = self::formatLayerEmployees($layersByWp[4] ?? []);
+                        $sidLayer4 = self::formatLayerSids($layersByWp[4] ?? []);
+                        $rawStatus = $row['status'] ?? null;
+                        $statusUpper = $rawStatus !== null ? strtoupper(trim((string) $rawStatus)) : null;
+                        $statusLabel = $statusUpper === 'APPROVED' ? 'Berlaku' : ($statusUpper === 'EXPIRED' ? 'Kadaluarsa' : ($rawStatus ?? ''));
+                        $dopm = [
+                            'work_permit_id' => $wpId,
+                            'kode_ikk' => self::getClickHouseRowValue($row, 'code'),
+                            'jenis_ijin_kerja_khusus' => $jobName,
+                            'sid_layer_2' => $sidLayer2,
+                            'sid_layer_3' => $sidLayer3,
+                            'sid_layer_4' => $sidLayer4,
+                            'nama_layer_2' => $namaLayer2,
+                            'nama_layer_3' => $namaLayer3,
+                            'nama_layer_4' => $namaLayer4,
+                            'nama_layer_1' => $namaLayer1,
+                            'sid_layer_1' => $sidLayer1,
+                            'id_dop' => self::getClickHouseRowValue($row, 'code'),
+                            'nama_pekerjaan' => self::getClickHouseRowValue($row, 'name'),
+                            'site_ijin_kerja_khusus' => self::getClickHouseRowValue($row, 'ra_site_name'),
+                            'perusahaan_ijin_kerja_khusus' => self::getClickHouseRowValue($row, 'company_name'),
+                            'tanggal_dop' => $filterDate,
+                            'timestamp' => null,
+                            'status' => $statusLabel,
+                            'location_name' => self::getClickHouseRowValue($row, 'location_name'),
+                            'location_detail_name' => self::getClickHouseRowValue($row, 'location_detail_name'),
+                            'ra_pjo_name' => self::getClickHouseRowValue($row, 'ra_pjo_name'),
+                        ];
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::debug('getIkkContextForAlertLog: ' . $e->getMessage());
+
+            return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
+        }
+
+        if ($dopm === null) {
+            return response()->json(['success' => false, 'message' => 'IKK tidak ditemukan untuk kode dan tanggal tersebut'], 404);
+        }
+
+        return response()->json(['success' => true, 'dopm' => $dopm]);
+    }
+
+    /**
      * API untuk modal Intervensi: ambil user Layer 1 dari vw_user dengan join by SID (sid_layer_1).
      * Kriteria sama seperti CctvDataController getUsersFromClickHouse: is_active=1, username/nama tidak kosong.
      * Return id, username, nama, email, selular, nik untuk tampilan dan kirim WA (IPK/OKK).

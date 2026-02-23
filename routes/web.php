@@ -425,6 +425,7 @@ Route::middleware(['auth'])->group(function () {
     // DOPM$IKK Routes - DOPM, IPK-IKK, OKK
     Route::prefix('dopmikk')->name('dopmikk.')->group(function () {
         Route::get('api/ikk-modal-data', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getDetailModalData'])->name('api.ikk-modal-data');
+        Route::get('api/ikk-context-alert-log', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getIkkContextForAlertLog'])->name('api.ikk-context-alert-log');
         Route::get('api/layer1-users', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getLayer1Users'])->name('api.layer1-users');
         Route::get('api/layers234-users', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getLayers234Users'])->name('api.layers234-users');
         // DOPM
