@@ -90,7 +90,7 @@
                                                                     <td>{{ $ikk['jenis_ijin_kerja_khusus'] ?? '-' }}</td>
                                                                     <td>{{ $ikk['site'] ?? '-' }}</td>
                                                                     <td>{{ $ikk['nama_pekerjaan'] ?? '-' }}</td>
-                                                                    <td>{{ ($ikk['location_name'] ?? '') . ($ikk['location_detail_name'] ? ' / ' . $ikk['location_detail_name'] : '') ?: '-' }}</td>
+                                                                    <td>{{ trim(($ikk['location_name'] ?? '') . (($ikk['location_detail_name'] ?? '') ? ' / ' . ($ikk['location_detail_name'] ?? '') : '')) ?: '-' }}</td>
                                                                     <td class="small text-muted" title="{{ $ikk['alasan_matriks'] ?? '' }}">{{ Str::limit($ikk['alasan_matriks'] ?? '-', 60) }}</td>
                                                                 </tr>
                                                             @endforeach
@@ -127,7 +127,7 @@
                                                                     <td>{{ $ikk['jenis_ijin_kerja_khusus'] ?? '-' }}</td>
                                                                     <td>{{ $ikk['site'] ?? '-' }}</td>
                                                                     <td>{{ $ikk['nama_pekerjaan'] ?? '-' }}</td>
-                                                                    <td>{{ ($ikk['location_name'] ?? '') . ($ikk['location_detail_name'] ? ' / ' . $ikk['location_detail_name'] : '') ?: '-' }}</td>
+                                                                    <td>{{ trim(($ikk['location_name'] ?? '') . (($ikk['location_detail_name'] ?? '') ? ' / ' . ($ikk['location_detail_name'] ?? '') : '')) ?: '-' }}</td>
                                                                     <td class="small text-muted" title="{{ $ikk['alasan_matriks'] ?? '' }}">{{ Str::limit($ikk['alasan_matriks'] ?? '-', 60) }}</td>
                                                                 </tr>
                                                             @endforeach
