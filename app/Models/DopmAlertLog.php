@@ -31,15 +31,22 @@ class DopmAlertLog extends Model
         'updated_at' => 'datetime',
     ];
 
+    /** Timezone untuk Alert Log DOPM: WITA (Asia/Makassar). */
+    private static function alertLogTimezone(): string
+    {
+        return 'Asia/Makassar';
+    }
+
     /**
      * Parse start_date/end_date (string, timestamp, atau object) ke Carbon; null jika gagal.
+     * @param  string|null  $timezone  Timezone untuk hasil (default app timezone)
      */
-    private static function parseDateTime(mixed $value): ?Carbon
+    private static function parseDateTime(mixed $value, ?string $timezone = null): ?Carbon
     {
         if ($value === null || $value === '') {
             return null;
         }
-        $tz = config('app.timezone', 'UTC');
+        $tz = $timezone ?? config('app.timezone', 'UTC');
         try {
             if (is_numeric($value)) {
                 return Carbon::createFromTimestamp((int) $value, $tz);
@@ -55,6 +62,7 @@ class DopmAlertLog extends Model
 
     /**
      * Simpan snapshot alert per jam dari daftar IKK (Need Action = Merah, Warning = Kuning).
+     * Semua jam menggunakan WITA (Asia/Makassar).
      * Hanya IKK yang start_date-nya sudah dimulai pada jam tersebut yang dimasukkan:
      * untuk jam H, hanya include IKK dengan start_date < (tanggal jam H+1). Jadi IKK yang
      * belum mulai (start_date di masa depan) tidak masuk ke alert.
@@ -67,9 +75,10 @@ class DopmAlertLog extends Model
     public static function storeSnapshotForHour($ikkList, string $tanggal): self
     {
         $items = $ikkList instanceof Collection ? $ikkList->all() : $ikkList;
-        $jam = (int) now()->format('G');
-        $tz = config('app.timezone', 'UTC');
-        // Akhir jam ini: tanggal jam (H+1):00 — IKK hanya masuk jika start_date < waktu ini
+        $tz = self::alertLogTimezone();
+        // Jam saat ini dalam WITA (0-23)
+        $jam = (int) Carbon::now($tz)->format('G');
+        // Akhir jam ini dalam WITA: tanggal jam (H+1):00 — IKK hanya masuk jika start_date < waktu ini
         $hourEnd = Carbon::parse($tanggal, $tz)->startOfDay()->addHours($jam + 1);
 
         $needAction = 0;
@@ -87,16 +96,17 @@ class DopmAlertLog extends Model
             if ($startDateRaw === null || $startDateRaw === '') {
                 continue; // tidak ada start_date → belum mulai, jangan masuk alert
             }
-            $startDate = self::parseDateTime($startDateRaw);
+            $startDate = self::parseDateTime($startDateRaw, $tz);
             if ($startDate === null || $startDate->gte($hourEnd)) {
                 continue; // belum mulai pada jam ini → jangan masuk alert
             }
+            $startDateWita = $startDate->copy()->setTimezone($tz);
 
             $row = [
                 'id' => $obj->id ?? null,
                 'code' => $obj->code ?? null,
-                'start_date_tanggal' => $startDate->format('d/m/Y'),
-                'start_date_jam' => $startDate->format('H:i'),
+                'start_date_tanggal' => $startDateWita->format('d/m/Y'),
+                'start_date_jam' => $startDateWita->format('H:i'),
                 'site' => $obj->site ?? null,
                 'jenis_ijin_kerja_khusus' => $obj->jenis_ijin_kerja_khusus ?? null,
                 'nama_pekerjaan' => $obj->nama_pekerjaan ?? null,

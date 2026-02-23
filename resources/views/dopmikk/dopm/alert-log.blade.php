@@ -74,10 +74,10 @@
                                     <h2 class="accordion-header">
                                         <button class="accordion-button {{ $idx > 0 ? 'collapsed' : '' }} py-3" type="button" data-bs-toggle="collapse" data-bs-target="#{{ $collapseId }}" aria-expanded="{{ $idx === 0 ? 'true' : 'false' }}" aria-controls="{{ $collapseId }}">
                                             <span class="d-flex align-items-center gap-3 flex-wrap">
-                                                <strong class="text-nowrap">Jam {{ sprintf('%02d', $log->jam) }}:00</strong>
+                                                <strong class="text-nowrap">Jam {{ sprintf('%02d', $log->jam) }}:00 WITA</strong>
                                                 <span class="badge bg-danger rounded-pill">{{ count($needActionList) }} Need Action</span>
                                                 <span class="badge bg-warning text-dark rounded-pill">{{ count($warningList) }} Warning</span>
-                                                <span class="text-muted small">Update: {{ $log->updated_at ? $log->updated_at->format('d/m/Y H:i') : '-' }}</span>
+                                                <span class="text-muted small">Update: {{ $log->updated_at ? $log->updated_at->setTimezone('Asia/Makassar')->format('d/m/Y H:i') . ' WITA' : '-' }}</span>
                                             </span>
                                         </button>
                                     </h2>
