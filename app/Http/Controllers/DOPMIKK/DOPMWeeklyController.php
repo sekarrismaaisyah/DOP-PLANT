@@ -1119,10 +1119,13 @@ class DOPMWeeklyController extends Controller
                             if ($startDate === null || $endDate === null) {
                                 continue;
                             }
+                            // Bandingkan berdasarkan tanggal saja (startOfDay) agar IKK yang start jam 07:00 tetap masuk untuk hari itu
+                            $startDay = $startDate->copy()->startOfDay();
+                            $endDay = $endDate->copy()->startOfDay();
                             // Untuk setiap hari di bulan, masukkan code jika rentang (start–end) mencakup hari itu
                             for ($day = 1; $day <= $daysInMonth; $day++) {
                                 $dayDate = $monthStartCarbon->copy()->addDays($day - 1)->startOfDay();
-                                if ($startDate->lte($dayDate) && $endDate->gte($dayDate)) {
+                                if ($startDay->lte($dayDate) && $endDay->gte($dayDate)) {
                                     $d = $dayDate->format('Y-m-d');
                                     if (! isset($codesPerDay[$d])) {
                                         $codesPerDay[$d] = [];
