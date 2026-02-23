@@ -49,13 +49,17 @@
                 <div class="card-header bg-white border-bottom py-3">
                     <div class="d-flex align-items-center gap-2">
                         <span class="material-icons-outlined text-danger">warning</span>
-                        <h5 class="mb-0 fw-bold">Data IKK / Work Permit per IKK</h5>
+                        <h5 class="mb-0 fw-bold">Data Alert IKK per Baris</h5>
                     </div>
-                    <p class="mb-0 small text-muted mt-1">Dikelompokkan per IKK. Tiap baris menampilkan status Alert 1 (jam ke-1), Alert 2 (jam ke-2), Alert 3 (jam ke-3): Tampil, Terintervensi, atau Belum tampil. Jika terintervensi di jam ke-2, Alert 3 tidak ditampilkan.</p>
+                    <p class="mb-0 small text-muted mt-1">
+                        Setiap baris mewakili satu alert dari tabel <code>dopm_alert_per_ikk</code>:
+                        per tanggal, per kode IKK, dan per <strong>alert ke-1/2/3</strong>.
+                        Jika sudah terintervensi di level tertentu, level di atasnya tidak akan dibuat lagi.
+                    </p>
                 </div>
                 <div class="card-body">
-                    @php $ikkAlertList = $ikkAlertList ?? []; @endphp
-                    @if(empty($ikkAlertList))
+                    @php $alertRows = $alertRows ?? collect(); @endphp
+                    @if($alertRows->isEmpty())
                         <div class="empty-state">
                             <span class="material-icons-outlined mb-2" style="font-size: 48px;">schedule</span>
                             <p class="mb-0 fw-medium">Belum ada data alert untuk tanggal <strong>{{ $filterDate ?? now()->toDateString() }}</strong>.</p>
@@ -66,7 +70,9 @@
                             <table id="table-alert-log-ikk" class="table table-sm table-bordered table-hover align-middle alert-log-datatable mb-0" width="100%">
                                 <thead class="table-light">
                                     <tr>
+                                        <th>Tanggal Alert</th>
                                         <th>Kode IKK</th>
+                                        <th>Alert Ke</th>
                                         <th>Tipe</th>
                                         <th>Tanggal Mulai</th>
                                         <th>Jam Mulai</th>
@@ -75,77 +81,52 @@
                                         <th>Nama Pekerjaan</th>
                                         <th>Lokasi</th>
                                         <th>Alasan</th>
-                                        <th>Alert 1 (Jam ke-1)</th>
-                                        <th>Alert 2 (Jam ke-2)</th>
-                                        <th>Alert 3 (Jam ke-3)</th>
+                                        <th>Intervensi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach($ikkAlertList as $ikk)
+                                    @foreach($alertRows as $row)
                                         @php
-                                            $st = $ikk['alert_status'] ?? [];
-                                            $s1 = $st[1] ?? ['tampil' => false, 'terintervensi' => false];
-                                            $s2 = $st[2] ?? ['tampil' => false, 'terintervensi' => false];
-                                            $s3 = $st[3] ?? ['tampil' => false, 'terintervensi' => false, 'tidak_tampil_karena_intervensi_jam2' => false];
-                                            $kodeIkk = $ikk['code'] ?? '';
-                                            $tanggal = $filterDate ?? now()->toDateString();
+                                            $snap = $row->ikk_snapshot ?? [];
+                                            $kodeIkk = $row->kode_ikk ?? '';
+                                            $tanggal = $row->tanggal ? $row->tanggal->format('Y-m-d') : ($filterDate ?? now()->toDateString());
+                                            $alertLevel = (int) ($row->alert_level ?? 1);
+                                            $intervensiLevels = ($intervensiLevelsByIkk[$kodeIkk] ?? []);
+                                            $terintervensi = in_array($alertLevel, $intervensiLevels, true);
                                         @endphp
                                         <tr>
+                                            <td>{{ $tanggal }}</td>
                                             <td class="fw-semibold">{{ $kodeIkk ?: '-' }}</td>
+                                            <td>Alert {{ $alertLevel }}</td>
                                             <td>
-                                                @if(($ikk['type'] ?? '') === 'need_action')
+                                                @if(($snap['type'] ?? 'need_action') === 'need_action')
                                                     <span class="badge bg-danger">Need Action</span>
                                                 @else
                                                     <span class="badge bg-warning text-dark">Warning</span>
                                                 @endif
                                             </td>
-                                            <td>{{ $ikk['start_date_tanggal'] ?? '-' }}</td>
-                                            <td>{{ $ikk['start_date_jam'] ?? '-' }}</td>
-                                            <td>{{ $ikk['jenis_ijin_kerja_khusus'] ?? '-' }}</td>
-                                            <td>{{ $ikk['site'] ?? '-' }}</td>
-                                            <td>{{ $ikk['nama_pekerjaan'] ?? '-' }}</td>
-                                            <td>{{ trim(($ikk['location_name'] ?? '') . (($ikk['location_detail_name'] ?? '') ? ' / ' . ($ikk['location_detail_name'] ?? '') : '')) ?: '-' }}</td>
-                                            <td class="small text-muted" title="{{ $ikk['alasan_matriks'] ?? '' }}">{{ Str::limit($ikk['alasan_matriks'] ?? '-', 50) }}</td>
-                                            {{-- Alert 1 --}}
+                                            <td>{{ $snap['start_date_tanggal'] ?? '-' }}</td>
+                                            <td>{{ $snap['start_date_jam'] ?? '-' }}</td>
+                                            <td>{{ $snap['jenis_ijin_kerja_khusus'] ?? '-' }}</td>
+                                            <td>{{ $snap['site'] ?? '-' }}</td>
+                                            <td>{{ $snap['nama_pekerjaan'] ?? '-' }}</td>
+                                            <td>{{ trim(($snap['location_name'] ?? '') . (($snap['location_detail_name'] ?? '') ? ' / ' . ($snap['location_detail_name'] ?? '') : '')) ?: '-' }}</td>
+                                            <td class="small text-muted" title="{{ $snap['alasan_matriks'] ?? '' }}">{{ Str::limit($snap['alasan_matriks'] ?? '-', 50) }}</td>
                                             <td class="align-middle">
-                                                @if($s1['terintervensi'])
-                                                    <span class="badge bg-success">Terintervensi</span>
-                                                @elseif($s1['tampil'])
-                                                    <span class="badge bg-warning text-dark me-1">Tampil</span>
-                                                    <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-alert-log" data-kode-ikk="{{ $kodeIkk }}" data-tanggal="{{ $tanggal }}" data-alert-level="1" title="Intervensi jam ke-1">
-                                                        <span class="material-icons-outlined" style="font-size:16px;">campaign</span>
-                                                    </button>
+                                                @if($terintervensi)
+                                                    <span class="badge bg-success me-1">Terintervensi</span>
                                                 @else
-                                                    <span class="badge bg-secondary">Belum tampil</span>
+                                                    <span class="badge bg-warning text-dark me-1">Belum terintervensi</span>
                                                 @endif
-                                            </td>
-                                            {{-- Alert 2 --}}
-                                            <td class="align-middle">
-                                                @if($s2['terintervensi'])
-                                                    <span class="badge bg-success">Terintervensi</span>
-                                                @elseif($s2['tampil'])
-                                                    <span class="badge bg-warning text-dark me-1">Tampil</span>
-                                                    <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-alert-log" data-kode-ikk="{{ $kodeIkk }}" data-tanggal="{{ $tanggal }}" data-alert-level="2" title="Intervensi jam ke-2">
-                                                        <span class="material-icons-outlined" style="font-size:16px;">campaign</span>
-                                                    </button>
-                                                @else
-                                                    <span class="badge bg-secondary">Belum tampil</span>
-                                                @endif
-                                            </td>
-                                            {{-- Alert 3 --}}
-                                            <td class="align-middle">
-                                                @if(!empty($s3['tidak_tampil_karena_intervensi_jam2']))
-                                                    <span class="badge bg-info text-dark">Tidak tampil (intervensi jam ke-2)</span>
-                                                @elseif($s3['terintervensi'])
-                                                    <span class="badge bg-success">Terintervensi</span>
-                                                @elseif($s3['tampil'])
-                                                    <span class="badge bg-warning text-dark me-1">Tampil</span>
-                                                    <button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-alert-log" data-kode-ikk="{{ $kodeIkk }}" data-tanggal="{{ $tanggal }}" data-alert-level="3" title="Intervensi jam ke-3">
-                                                        <span class="material-icons-outlined" style="font-size:16px;">campaign</span>
-                                                    </button>
-                                                @else
-                                                    <span class="badge bg-secondary">Belum tampil</span>
-                                                @endif
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-sm btn-outline-warning btn-intervensi-alert-log mt-1"
+                                                    data-kode-ikk="{{ $kodeIkk }}"
+                                                    data-tanggal="{{ $tanggal }}"
+                                                    data-alert-level="{{ $alertLevel }}"
+                                                    title="Intervensi Alert ke-{{ $alertLevel }}">
+                                                    <span class="material-icons-outlined" style="font-size:16px;">campaign</span>
+                                                </button>
                                             </td>
                                         </tr>
                                     @endforeach

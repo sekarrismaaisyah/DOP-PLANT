@@ -1065,8 +1065,9 @@ class DOPMController extends Controller
     }
 
     /**
-     * Halaman Alert Log: data per IKK dari tabel dopm_alert_per_ikk (Alert 1/2/3 tersimpan per jam sejak mulai jika belum ada IPK).
-     * Status terintervensi dari dopm_alert_intervensi.
+     * Halaman Alert Log: tampilkan SEMUA baris dari tabel dopm_alert_per_ikk
+     * (setiap baris = satu alert per IKK per level: 1, 2, atau 3).
+     * Status terintervensi diambil dari dopm_alert_intervensi.
      */
     public function alertLog(Request $request): View
     {
@@ -1075,39 +1076,20 @@ class DOPMController extends Controller
             $filterDate = now()->toDateString();
         }
 
+        // Ambil semua alert per IKK untuk tanggal ini (setiap baris = 1 alert_level).
+        $alertRows = DopmAlertPerIkk::query()
+            ->where('tanggal', $filterDate)
+            ->orderBy('kode_ikk')
+            ->orderBy('alert_level')
+            ->get();
+
+        // Untuk informasi intervensi (level mana saja yang sudah diintervensi per IKK).
         $intervensiLevelsByIkk = DopmAlertIntervensi::getIntervensiLevelsByIkk($filterDate);
-        $ikkListFromDb = DopmAlertPerIkk::getGroupedByIkkForDate($filterDate);
-
-        $ikkAlertList = [];
-        foreach ($ikkListFromDb as $item) {
-            $kode = $item['code'] ?? '';
-            $levels = $item['levels'] ?? [];
-            $intervensiLevels = $intervensiLevelsByIkk[$kode] ?? [];
-            $intervenedAt2 = in_array(2, $intervensiLevels, true);
-
-            $alertStatus = [
-                1 => [
-                    'tampil' => ! empty($levels[1]),
-                    'terintervensi' => in_array(1, $intervensiLevels, true),
-                ],
-                2 => [
-                    'tampil' => ! empty($levels[2]),
-                    'terintervensi' => in_array(2, $intervensiLevels, true),
-                ],
-                3 => [
-                    'tampil' => ! empty($levels[3]),
-                    'terintervensi' => in_array(3, $intervensiLevels, true),
-                    'tidak_tampil_karena_intervensi_jam2' => $intervenedAt2 && empty($levels[3]),
-                ],
-            ];
-            unset($item['levels']);
-            $item['alert_status'] = $alertStatus;
-            $ikkAlertList[] = $item;
-        }
 
         return view('dopmikk.dopm.alert-log', [
             'filterDate' => $filterDate,
-            'ikkAlertList' => $ikkAlertList,
+            'alertRows' => $alertRows,
+            'intervensiLevelsByIkk' => $intervensiLevelsByIkk,
         ]);
     }
 
