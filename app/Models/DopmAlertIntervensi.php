@@ -45,4 +45,18 @@ class DopmAlertIntervensi extends Model
             ->map(fn ($rows) => $rows->max('alert_level'))
             ->all();
     }
+
+    /**
+     * Ambil daftar level alert (1, 2, 3) yang sudah terintervensi per IKK untuk tanggal.
+     * Return: ['kode_ikk' => [1, 2], ...]
+     */
+    public static function getIntervensiLevelsByIkk(string $tanggal): array
+    {
+        return self::query()
+            ->where('tanggal', $tanggal)
+            ->get()
+            ->groupBy('kode_ikk')
+            ->map(fn ($rows) => $rows->pluck('alert_level')->unique()->values()->all())
+            ->all();
+    }
 }

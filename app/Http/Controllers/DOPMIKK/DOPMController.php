@@ -1060,7 +1060,8 @@ class DOPMController extends Controller
     }
 
     /**
-     * Halaman Alert Log: riwayat Need Action & Warning per jam (dari tabel dopm_alert_log).
+     * Halaman Alert Log: data per IKK (bukan per jam). Tiap IKK punya status Alert 1, 2, 3
+     * (tampil / terintervensi / tidak tampil karena intervensi di jam ke-2).
      */
     public function alertLog(Request $request): View
     {
@@ -1074,40 +1075,100 @@ class DOPMController extends Controller
             ->orderBy('jam')
             ->get();
 
-        // Dalam setiap blok 3 jam (0-2, 3-5, 6-8, ...), hanya tampilkan jam pertama yang punya alert;
-        // jam ke-2 dan ke-3 di blok yang sama tidak ditampilkan (sudah tercover oleh alert jam pertama).
-        $filtered = collect();
-        $blockShown = [];
         $maxIntervensiByIkk = DopmAlertIntervensi::getMaxIntervensiLevelByIkk($filterDate);
+        $intervensiLevelsByIkk = DopmAlertIntervensi::getIntervensiLevelsByIkk($filterDate);
 
+        // Kumpulkan per IKK: dari semua jam, mana saja level alert (1,2,3) yang tampil
+        $ikkMap = [];
         foreach ($dopmAlertLogs as $log) {
-            $block = (int) floor($log->jam / 3);
-            if (isset($blockShown[$block])) {
-                continue;
-            }
             $snap = $log->snapshot ?? [];
-            $needActionList = $snap['need_action'] ?? [];
-            $warningList = $snap['warning'] ?? [];
+            $needActionList = self::filterAlertByIntervensi($snap['need_action'] ?? [], $log, $filterDate, $maxIntervensiByIkk);
+            $warningList = self::filterAlertByIntervensi($snap['warning'] ?? [], $log, $filterDate, $maxIntervensiByIkk);
 
-            // Jika IKK terintervensi di jam ke-2, jangan tampilkan di jam ke-3 (alert level 3)
-            $needActionList = self::filterAlertByIntervensi($needActionList, $log, $filterDate, $maxIntervensiByIkk);
-            $warningList = self::filterAlertByIntervensi($warningList, $log, $filterDate, $maxIntervensiByIkk);
-
-            $hasAlert = (count($needActionList) > 0) || (count($warningList) > 0);
-            if (! $hasAlert) {
-                continue;
+            foreach ($needActionList as $ikk) {
+                $kode = trim((string) ($ikk['code'] ?? ''));
+                if ($kode === '') {
+                    continue;
+                }
+                if (! isset($ikkMap[$kode])) {
+                    $ikkMap[$kode] = [
+                        'code' => $ikk['code'] ?? null,
+                        'start_date_tanggal' => $ikk['start_date_tanggal'] ?? null,
+                        'start_date_jam' => $ikk['start_date_jam'] ?? null,
+                        'site' => $ikk['site'] ?? null,
+                        'jenis_ijin_kerja_khusus' => $ikk['jenis_ijin_kerja_khusus'] ?? null,
+                        'nama_pekerjaan' => $ikk['nama_pekerjaan'] ?? null,
+                        'perusahaan' => $ikk['perusahaan'] ?? null,
+                        'location_name' => $ikk['location_name'] ?? null,
+                        'location_detail_name' => $ikk['location_detail_name'] ?? null,
+                        'alasan_matriks' => $ikk['alasan_matriks'] ?? null,
+                        'type' => 'need_action',
+                        'levels_tampil' => [],
+                    ];
+                }
+                $level = (int) ($ikk['alert_level'] ?? 1);
+                $ikkMap[$kode]['levels_tampil'][$level] = true;
             }
-            $log->snapshot = [
-                'need_action' => $needActionList,
-                'warning' => $warningList,
-            ];
-            $filtered->push($log);
-            $blockShown[$block] = true;
+
+            foreach ($warningList as $ikk) {
+                $kode = trim((string) ($ikk['code'] ?? ''));
+                if ($kode === '') {
+                    continue;
+                }
+                if (! isset($ikkMap[$kode])) {
+                    $ikkMap[$kode] = [
+                        'code' => $ikk['code'] ?? null,
+                        'start_date_tanggal' => $ikk['start_date_tanggal'] ?? null,
+                        'start_date_jam' => $ikk['start_date_jam'] ?? null,
+                        'site' => $ikk['site'] ?? null,
+                        'jenis_ijin_kerja_khusus' => $ikk['jenis_ijin_kerja_khusus'] ?? null,
+                        'nama_pekerjaan' => $ikk['nama_pekerjaan'] ?? null,
+                        'perusahaan' => $ikk['perusahaan'] ?? null,
+                        'location_name' => $ikk['location_name'] ?? null,
+                        'location_detail_name' => $ikk['location_detail_name'] ?? null,
+                        'alasan_matriks' => $ikk['alasan_matriks'] ?? null,
+                        'type' => 'warning',
+                        'levels_tampil' => [],
+                    ];
+                }
+                $level = (int) ($ikk['alert_level'] ?? 1);
+                $ikkMap[$kode]['levels_tampil'][$level] = true;
+            }
         }
+
+        // Bangun status per level (1, 2, 3) untuk tiap IKK
+        $ikkAlertList = [];
+        foreach ($ikkMap as $kode => $data) {
+            $levelsTampil = $data['levels_tampil'] ?? [];
+            $intervensiLevels = $intervensiLevelsByIkk[$kode] ?? [];
+            $intervenedAt2 = in_array(2, $intervensiLevels, true);
+
+            $alertStatus = [
+                1 => [
+                    'tampil' => ! empty($levelsTampil[1]),
+                    'terintervensi' => in_array(1, $intervensiLevels, true),
+                ],
+                2 => [
+                    'tampil' => ! empty($levelsTampil[2]),
+                    'terintervensi' => in_array(2, $intervensiLevels, true),
+                ],
+                3 => [
+                    'tampil' => ! empty($levelsTampil[3]),
+                    'terintervensi' => in_array(3, $intervensiLevels, true),
+                    'tidak_tampil_karena_intervensi_jam2' => $intervenedAt2 && empty($levelsTampil[3]),
+                ],
+            ];
+            unset($data['levels_tampil']);
+            $data['alert_status'] = $alertStatus;
+            $ikkAlertList[] = $data;
+        }
+
+        // Urutkan by kode IKK
+        usort($ikkAlertList, fn ($a, $b) => strcmp((string) ($a['code'] ?? ''), (string) ($b['code'] ?? '')));
 
         return view('dopmikk.dopm.alert-log', [
             'filterDate' => $filterDate,
-            'dopmAlertLogs' => $filtered,
+            'ikkAlertList' => $ikkAlertList,
         ]);
     }
 
