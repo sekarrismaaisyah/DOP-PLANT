@@ -2862,7 +2862,18 @@
     });
   }
 
-  renderComplianceCalendar(displayMonth, displayYear);
+  function initComplianceCalendar() {
+    var container = document.getElementById('complianceCalendarDays');
+    if (container) {
+      renderComplianceCalendar(displayMonth, displayYear);
+    }
+  }
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initComplianceCalendar);
+  } else {
+    initComplianceCalendar();
+  }
 })();
 </script>
 
