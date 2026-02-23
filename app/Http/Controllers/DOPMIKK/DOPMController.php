@@ -285,7 +285,7 @@ class DOPMController extends Controller
                 /** @var \App\Services\ClickHouseService $clickHouse */
                 $clickHouse = app(\App\Services\ClickHouseService::class);
                 if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                    // Daily: hanya work permit yang start_date-nya = tanggal filter (dimulai hari itu saja, bukan range)
+                    // Daily: work permit yang rentang [start_date, end_date] mencakup tanggal filter
                     $dateStr = addslashes($filterDate);
                     $siteFilterClause = '';
                     if ($filterSite !== '' && $filterSite !== null) {
@@ -310,7 +310,8 @@ class DOPMController extends Controller
                             location_name,
                             location_detail_name
                         FROM hse_automation.ikk_work_permit
-                        WHERE toDate(start_date) = toDate('{$dateStr}')
+                        WHERE toDate(start_date) <= toDate('{$dateStr}')
+                          AND toDate(end_date)   >= toDate('{$dateStr}')
                           AND deleted_at IS NULL
                           {$siteFilterClause}
                         ORDER BY start_date ASC
@@ -406,32 +407,8 @@ class DOPMController extends Controller
                             }
 
                             // Hanya tampilkan status Berlaku (APPROVED); sembunyikan Kadaluarsa, Pending, Rejected
-                            if (in_array($statusUpper, ['EXPIRED', 'PENDING', 'REJECTED'], true)) {
+                            if ($statusUpper !== 'APPROVED') {
                                 continue;
-                            }
-
-                            // Filter sampai jam: hanya tampilkan IKK yang "sekarang" ada di dalam rentang [start_date, end_date]
-                            $now = \Carbon\Carbon::now(config('app.timezone'));
-
-                            // Sembunyikan jika start_date belum lewat (izin belum mulai)
-                            $startDateRaw = self::getClickHouseRowValue($row, 'start_date');
-                            if ($startDateRaw !== null && $startDateRaw !== '') {
-                                $startDate = self::parseEndDate($startDateRaw);
-                                if ($startDate !== null && $startDate->gt($now)) {
-                                    continue; // start_date > sekarang → belum mulai, jangan tampilkan
-                                }
-                            }
-
-                            // Sembunyikan jika end_date sudah lewat/sama dengan jam sekarang
-                            $endDateRaw = self::getClickHouseRowValue($row, 'end_date');
-                            if ($endDateRaw !== null && $endDateRaw !== '') {
-                                $endDate = self::parseEndDate($endDateRaw);
-                                if ($endDate === null) {
-                                    continue; // tidak bisa parse end_date → sembunyikan agar konsisten
-                                }
-                                if ($endDate->lte($now)) {
-                                    continue; // end_date <= sekarang → jangan tampilkan
-                                }
                             }
 
                             // Kumpulkan code yang APPROVED untuk hitung unik (distinct by code)
