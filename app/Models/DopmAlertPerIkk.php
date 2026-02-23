@@ -28,12 +28,13 @@ class DopmAlertPerIkk extends Model
     private const TZ = 'Asia/Makassar';
 
     /**
-     * Konsep: IKK dari ClickHouse (start_date = jam mulai).
+     * Konsep: IKK dari ClickHouse (start_date = jam mulai) yang BELUM punya IPK di tanggal tsb.
      * - Alert 1 = jam ke-1 sejak mulai (0–1 jam setelah start_date): jika belum ada IPK → simpan ke DB.
      * - Alert 2 = jam ke-2 (1–2 jam setelah start): jika belum ada IPK → simpan.
      * - Alert 3 = jam ke-3 (2–3 jam setelah start): jika belum ada IPK → simpan.
      * Contoh: IKK A mulai 09:00 → pada 09:30 sudah Alert 1 (masuk DB); pada 10:00–10:59 Alert 2; pada 11:00–11:59 Alert 3.
      * Dipanggil dari dashboard (tanggal = hari ini) atau command dopm:alert-snapshot (setiap 30 menit WITA).
+     * Jika sudah ada intervensi di level tertentu (dopm_alert_intervensi), maka level di atasnya tidak akan disimpan lagi.
      *
      * @param  array|Collection  $ikkList  Daftar IKK dengan code, start_date, status_matriks, dll. (dari ClickHouse)
      * @param  string  $tanggal  Y-m-d
@@ -45,6 +46,10 @@ class DopmAlertPerIkk extends Model
         $now = Carbon::now($tz);
         $jamCek = (int) $now->format('G');
         $dateStart = Carbon::parse($tanggal, $tz)->startOfDay();
+
+        // Ambil level intervensi tertinggi per IKK untuk tanggal ini, agar Alert 2/3
+        // tidak terus dibuat jika sudah ada intervensi di Alert 1/2.
+        $maxIntervensiByIkk = DopmAlertIntervensi::getMaxIntervensiLevelByIkk($tanggal);
 
         foreach ($items as $ikk) {
             $obj = is_object($ikk) ? $ikk : (object) $ikk;
@@ -80,8 +85,18 @@ class DopmAlertPerIkk extends Model
             }
 
             $snapshot = self::buildIkkSnapshot($obj, $startDate);
-            // Simpan Alert 1, 2, dan 3 sampai jam_ke saat ini (agar semua level tercatat di DB)
-            for ($level = 1; $level <= $jamKe; $level++) {
+
+            // Tentukan level maksimum yang boleh disimpan berdasarkan intervensi:
+            // - Jika belum pernah diintervensi: boleh sampai $jamKe (1, 2, atau 3)
+            // - Jika sudah diintervensi di level 1/2: stop di level tsb, tidak buat level di atasnya.
+            $maxLevel = $jamKe;
+            $maxIntervensi = $maxIntervensiByIkk[$kodeIkk] ?? null;
+            if ($maxIntervensi !== null) {
+                $maxLevel = min($maxLevel, (int) $maxIntervensi);
+            }
+
+            // Simpan Alert 1..$maxLevel (agar history level yang relevan tercatat di DB)
+            for ($level = 1; $level <= $maxLevel; $level++) {
                 self::updateOrCreate(
                     [
                         'tanggal' => $tanggal,

@@ -12,11 +12,16 @@ class DopmAlertIntervensi extends Model
         'tanggal',
         'kode_ikk',
         'alert_level',
+        'user_id',
+        'user_name',
+        'user_username',
+        'user_email',
     ];
 
     protected $casts = [
         'tanggal' => 'date',
         'alert_level' => 'integer',
+        'user_id' => 'integer',
     ];
 
     /**

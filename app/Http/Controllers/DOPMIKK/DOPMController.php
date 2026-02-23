@@ -10,6 +10,7 @@ use App\Models\DopmAlertLog;
 use App\Models\DopmAlertPerIkk;
 use App\Models\IpkIkk;
 use App\Models\Okk;
+use Illuminate\Support\Facades\Auth;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -2679,13 +2680,27 @@ class DOPMController extends Controller
             return response()->json(['success' => false, 'message' => 'alert_level harus 1, 2, atau 3'], 400);
         }
 
+        $user = Auth::user();
+        $userId = $user?->id;
+        $userName = $user?->name;
+        $userUsername = $user?->username ?? null;
+        $userEmail = $user?->email;
+
         DopmAlertIntervensi::updateOrCreate(
             [
                 'tanggal' => $tanggal,
                 'kode_ikk' => $kodeIkk,
                 'alert_level' => $alertLevel,
             ],
-            ['tanggal' => $tanggal, 'kode_ikk' => $kodeIkk, 'alert_level' => $alertLevel]
+            [
+                'tanggal' => $tanggal,
+                'kode_ikk' => $kodeIkk,
+                'alert_level' => $alertLevel,
+                'user_id' => $userId,
+                'user_name' => $userName,
+                'user_username' => $userUsername,
+                'user_email' => $userEmail,
+            ]
         );
 
         return response()->json(['success' => true, 'message' => 'Intervensi tercatat']);
