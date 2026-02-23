@@ -102,6 +102,7 @@
                                                                     <th>Nama Pekerjaan</th>
                                                                     <th>Lokasi</th>
                                                                     <th>Alasan</th>
+                                                                    <th>Intervensi</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -113,6 +114,11 @@
                                                                         <td>{{ $ikk['nama_pekerjaan'] ?? '-' }}</td>
                                                                         <td>{{ trim(($ikk['location_name'] ?? '') . (($ikk['location_detail_name'] ?? '') ? ' / ' . ($ikk['location_detail_name'] ?? '') : '')) ?: '-' }}</td>
                                                                         <td class="small text-muted" title="{{ $ikk['alasan_matriks'] ?? '' }}">{{ Str::limit($ikk['alasan_matriks'] ?? '-', 80) }}</td>
+                                                                        <td>
+                                                                            <a href="{{ route('dopmikk.dopm.dashboard', ['date' => $filterDate ?? now()->toDateString(), 'kode_ikk' => $ikk['code'] ?? '']) }}" class="btn btn-sm btn-outline-warning" target="_blank" rel="noopener" title="Buka Dashboard untuk Intervensi (IPK-IKK, OKK, OAK)">
+                                                                                <span class="material-icons-outlined" style="font-size:18px;">campaign</span> Intervensi
+                                                                            </a>
+                                                                        </td>
                                                                     </tr>
                                                                 @endforeach
                                                             </tbody>
@@ -139,6 +145,7 @@
                                                                     <th>Nama Pekerjaan</th>
                                                                     <th>Lokasi</th>
                                                                     <th>Alasan</th>
+                                                                    <th>Intervensi</th>
                                                                 </tr>
                                                             </thead>
                                                             <tbody>
@@ -150,6 +157,11 @@
                                                                         <td>{{ $ikk['nama_pekerjaan'] ?? '-' }}</td>
                                                                         <td>{{ trim(($ikk['location_name'] ?? '') . (($ikk['location_detail_name'] ?? '') ? ' / ' . ($ikk['location_detail_name'] ?? '') : '')) ?: '-' }}</td>
                                                                         <td class="small text-muted" title="{{ $ikk['alasan_matriks'] ?? '' }}">{{ Str::limit($ikk['alasan_matriks'] ?? '-', 80) }}</td>
+                                                                        <td>
+                                                                            <a href="{{ route('dopmikk.dopm.dashboard', ['date' => $filterDate ?? now()->toDateString(), 'kode_ikk' => $ikk['code'] ?? '']) }}" class="btn btn-sm btn-outline-warning" target="_blank" rel="noopener" title="Buka Dashboard untuk Intervensi (IPK-IKK, OKK, OAK)">
+                                                                                <span class="material-icons-outlined" style="font-size:18px;">campaign</span> Intervensi
+                                                                            </a>
+                                                                        </td>
                                                                     </tr>
                                                                 @endforeach
                                                             </tbody>
