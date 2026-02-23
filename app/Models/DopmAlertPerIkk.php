@@ -68,9 +68,12 @@ class DopmAlertPerIkk extends Model
             }
             $startDate = $startDate->setTimezone($tz);
 
-            // Jam ke berapa sejak mulai (1, 2, atau 3)
-            $diffMinutes = $now->diffInMinutes($startDate, false);
-            if ($diffMinutes <= 0) {
+            // Jam ke berapa sejak mulai (1, 2, atau 3).
+            // Hitung selisih dari start_date ke "sekarang":
+            // - diffMinutes < 0  => sekarang masih sebelum start_date (belum mulai) → skip
+            // - diffMinutes >= 0 => sudah mulai, jamKe dihitung dari selisih jam.
+            $diffMinutes = $startDate->diffInMinutes($now, false);
+            if ($diffMinutes < 0) {
                 continue; // belum mulai
             }
             $diffHours = $diffMinutes / 60;
