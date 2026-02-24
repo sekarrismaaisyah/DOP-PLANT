@@ -75,9 +75,8 @@
                         <h5 class="mb-0 fw-bold">Data Alert IKK per Baris</h5>
                     </div>
                     <p class="mb-0 small text-muted mt-1">
-                        Setiap baris mewakili satu alert dari tabel <code>dopm_alert_per_ikk</code>:
-                        per tanggal, per kode IKK, dan per <strong>alert ke-1/2/3</strong>.
-                        Jika sudah terintervensi di level tertentu, level di atasnya tidak akan dibuat lagi.
+                        Satu baris per IKK: hanya <strong>status alert terakhir</strong> (alert_level tertinggi).
+                        Jika ada Alert 1, 2, 3 maka yang ditampilkan hanya Alert 3; jika sudah terintervensi di Alert 2 maka yang ditampilkan Alert 2.
                     </p>
                 </div>
                 <div class="card-body">

@@ -1060,6 +1060,10 @@ class DOPMController extends Controller
             ->orderBy('alert_level')
             ->get();
 
+        // Tampilkan hanya status terakhir per IKK: satu baris per kode_ikk dengan alert_level tertinggi.
+        // Contoh: jika ada Alert 1, 2, 3 → tampilkan hanya Alert 3. Jika sudah terintervensi di Alert 2 → tampilkan Alert 2.
+        $alertRows = $alertRows->groupBy('kode_ikk')->map(fn ($group) => $group->sortByDesc('alert_level')->first())->values();
+
         // Untuk informasi intervensi (level mana saja yang sudah diintervensi per IKK).
         $intervensiLevelsByIkk = DopmAlertIntervensi::getIntervensiLevelsByIkk($filterDate);
 
