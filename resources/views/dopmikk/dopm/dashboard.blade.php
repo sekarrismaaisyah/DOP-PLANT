@@ -2258,6 +2258,7 @@
                                             <th>Jenis Ijin Kerja Khusus</th>
                                             <th>Nama Pekerjaan</th>
                                             <th>Perusahaan</th>
+                                            <th>Tanggal & Jam Mulai</th>
                                             <th>Status IKK</th>
                                             <th>Status Pekerjaan</th>
                                             <th>Status Matriks</th>
@@ -2304,6 +2305,13 @@
                                                 <td>{{ $ikk->jenis_ijin_kerja_khusus ?? '-' }}</td>
                                                 <td>{{ $ikk->nama_pekerjaan ?? '-' }}</td>
                                                 <td>{{ $ikk->perusahaan ?? '-' }}</td>
+                                                <td>
+                                                    @if(!empty($ikk->start_date))
+                                                        {{ \Carbon\Carbon::parse($ikk->start_date)->locale('id')->translatedFormat('d/m/Y H:i') }}
+                                                    @else
+                                                        -
+                                                    @endif
+                                                </td>
                                                 <td><span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span></td>
                                                 <td>
                                                     <span class="">{{ $ikk->status_pekerjaan ?? 'Belum ada IPK' }}</span>
