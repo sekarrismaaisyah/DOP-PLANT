@@ -2496,7 +2496,7 @@
                                 <p class="small text-muted mb-2">Tabel di bawah menampilkan seluruh data OKK dengan kode IKK ini.</p>
                                 <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                                     <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableOkk">
-                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
+                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Code</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
                                         <tbody></tbody>
                                     </table>
                                 </div>
@@ -2630,7 +2630,7 @@
                         <div id="intervensiOkkTableWrap" class="d-none">
                             <div class="table-responsive">
                                 <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableOkk">
-                                    <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
+                                    <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Code</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
                                     <tbody></tbody>
                                 </table>
                             </div>
@@ -3082,7 +3082,7 @@
                             document.getElementById('intervensiOkkTableWrap').classList.remove('d-none');
                             var tbody = document.querySelector('#intervensiTableOkk tbody');
                             if (tbody) { tbody.innerHTML = ''; okk.forEach(function(r) {
-                                tbody.appendChild(tr([formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk), safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.jenis_ijk, 35), safeStr(r.layer_pengawas)]));
+                                tbody.appendChild(tr([formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk), safeStr(r.code), safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.jenis_ijk, 35), safeStr(r.layer_pengawas)]));
                             }); }
                         }
                         if (oak.length === 0) { document.getElementById('intervensiOakEmpty').classList.remove('d-none'); document.getElementById('intervensiOakTableWrap').classList.add('d-none'); } else {
@@ -3476,7 +3476,7 @@
                         showTable('okk');
                         okk.forEach(function(r) {
                             tbodyOkk.appendChild(tr([
-                                formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk),
+                                formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk), safeStr(r.code),
                                 safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.jenis_ijk, 35), safeStr(r.layer_pengawas)
                             ]));
                         });

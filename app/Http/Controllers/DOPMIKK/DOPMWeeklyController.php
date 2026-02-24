@@ -695,7 +695,7 @@ class DOPMWeeklyController extends Controller
                             }
                         }
                         $sqlOkk = "
-                            SELECT id, work_permit_id, code, status, created_at, supervisor_id
+                            SELECT id, work_permit_id, code, status, created_at, supervisor_id, indirect_supervisor_id
                             FROM hse_automation.okk_assessment
                             WHERE work_permit_id IN ({$wpIdsEsc})
                               AND upper(trim(toString(status))) = 'SUBMITTED'
@@ -705,6 +705,7 @@ class DOPMWeeklyController extends Controller
                         ";
                         $okkRowsCh = $ch->query($sqlOkk);
                         $okkSupervisorIdsBatch = [];
+                        $okkIndirectSupervisorIdsBatch = [];
                         foreach ($okkRowsCh ?? [] as $r) {
                             $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
                             $code = $wpIdToCode[$wpId] ?? null;
@@ -715,11 +716,16 @@ class DOPMWeeklyController extends Controller
                                 $ts = self::getClickHouseRowValue($r, 'created_at');
                                 $tsStr = self::formatClickHouseTsForAppTz($ts);
                                 $supId = self::getClickHouseRowValue($r, 'supervisor_id');
+                                $indirectSupId = self::getClickHouseRowValue($r, 'indirect_supervisor_id');
                                 if ($supId !== null && $supId !== '') {
                                     $okkSupervisorIdsBatch[] = $supId;
                                 }
+                                if ($indirectSupId !== null && $indirectSupId !== '') {
+                                    $okkIndirectSupervisorIdsBatch[] = $indirectSupId;
+                                }
                                 $okkByKode[$code]->push((object) [
                                     'supervisor_id' => $supId,
+                                    'indirect_supervisor_id' => $indirectSupId,
                                     'ts' => $tsStr,
                                     'nama_pengawas' => null,
                                     'layer_pengawas' => null,
@@ -727,11 +733,13 @@ class DOPMWeeklyController extends Controller
                                 ]);
                             }
                         }
-                        // Enrich OKK dengan kode_sid & layer dari ikk_work_permit_employee agar matriks bisa deteksi Layer 1 vs Layer 2/3/4 (Merah jika hanya OKK Layer 1)
-                        if (!empty($okkSupervisorIdsBatch)) {
+                        // Enrich OKK: kode_sid & layer dari ikk_work_permit_employee; OKK L2 up jika indirect_supervisor_id NOT NULL, layer dari row yang id = indirect_supervisor_id
+                        if (!empty($okkSupervisorIdsBatch) || !empty($okkIndirectSupervisorIdsBatch)) {
                             try {
                                 $supIdsUniq = array_values(array_unique(array_filter($okkSupervisorIdsBatch)));
-                                $supEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $supIdsUniq));
+                                $indirectIdsUniq = array_values(array_unique(array_filter($okkIndirectSupervisorIdsBatch)));
+                                $allEmpIdsBatch = array_values(array_unique(array_merge($supIdsUniq, $indirectIdsUniq)));
+                                $supEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $allEmpIdsBatch));
                                 $sqlEmpOkk = "
                                     SELECT id, employee_name, employee_sid, layer
                                     FROM hse_automation.ikk_work_permit_employee
@@ -754,12 +762,20 @@ class DOPMWeeklyController extends Controller
                                 foreach ($okkByKode as $code => $okkList) {
                                     foreach ($okkList as $obj) {
                                         $sid = $obj->supervisor_id ?? null;
+                                        $indirectSid = $obj->indirect_supervisor_id ?? null;
+                                        if ($indirectSid !== null && $indirectSid !== '' && isset($employeeInfoOkkBatch[(string) $indirectSid])) {
+                                            $infoIndirect = $employeeInfoOkkBatch[(string) $indirectSid];
+                                            $obj->layer_pengawas = $infoIndirect['layer'] ?? null;
+                                        } elseif ($sid !== null && isset($employeeInfoOkkBatch[(string) $sid])) {
+                                            $info = $employeeInfoOkkBatch[(string) $sid];
+                                            $obj->layer_pengawas = $info['layer'] ?? null;
+                                        }
                                         if ($sid !== null && isset($employeeInfoOkkBatch[(string) $sid])) {
                                             $info = $employeeInfoOkkBatch[(string) $sid];
                                             $obj->nama_pengawas = $info['employee_name'] ?? null;
                                             $obj->kode_sid = $info['employee_sid'] ?? null;
-                                            $obj->layer_pengawas = $info['layer'] ?? null;
                                         }
+                                        unset($obj->indirect_supervisor_id);
                                     }
                                 }
                             } catch (\Throwable $e) {
@@ -1602,7 +1618,7 @@ class DOPMWeeklyController extends Controller
                             }
                         }
                         $sqlOkkModal = "
-                            SELECT id, code, work_permit_id, status, created_at, supervisor_id
+                            SELECT id, code, work_permit_id, status, created_at, supervisor_id, indirect_supervisor_id
                             FROM hse_automation.okk_assessment
                             WHERE work_permit_id = '{$wpIdEsc}'
                               AND upper(trim(toString(status))) = 'SUBMITTED'
@@ -1612,16 +1628,23 @@ class DOPMWeeklyController extends Controller
                         ";
                         $okkRowsCh = $ch->query($sqlOkkModal);
                         $okkSupervisorIds = [];
+                        $okkIndirectSupervisorIds = [];
                         foreach ($okkRowsCh ?? [] as $r) {
                             $ts = self::getClickHouseRowValue($r, 'created_at');
                             $tsStr = self::formatClickHouseTsForAppTz($ts);
                             $supId = self::getClickHouseRowValue($r, 'supervisor_id');
+                            $indirectSupId = self::getClickHouseRowValue($r, 'indirect_supervisor_id');
                             if ($supId !== null && $supId !== '') {
                                 $okkSupervisorIds[] = $supId;
                             }
+                            if ($indirectSupId !== null && $indirectSupId !== '') {
+                                $okkIndirectSupervisorIds[] = $indirectSupId;
+                            }
                             $okk[] = [
                                 'supervisor_id' => $supId,
+                                'indirect_supervisor_id' => $indirectSupId,
                                 'ts' => $tsStr,
+                                'code' => self::getClickHouseRowValue($r, 'code'),
                                 'nama_pengawas' => null,
                                 'kode_sid' => null,
                                 'kode_ikk' => $kodeIkk,
@@ -1634,6 +1657,8 @@ class DOPMWeeklyController extends Controller
                         if (!empty($okk)) {
                             try {
                                 $supIds = array_unique(array_filter($okkSupervisorIds));
+                                $indirectIds = array_unique(array_filter($okkIndirectSupervisorIds));
+                                $allEmpIds = array_values(array_unique(array_merge($supIds, $indirectIds)));
                                 $wpSite = null;
                                 $wpJenisIjk = null;
                                 $sqlWp = "
@@ -1654,8 +1679,8 @@ class DOPMWeeklyController extends Controller
                                     }
                                 }
                                 $employeeInfoOkk = [];
-                                if (!empty($supIds)) {
-                                    $supEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $supIds));
+                                if (!empty($allEmpIds)) {
+                                    $supEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $allEmpIds));
                                     $sqlEmpOkk = "
                                         SELECT id, employee_name, employee_sid, company_name, layer
                                         FROM hse_automation.ikk_work_permit_employee
@@ -1678,21 +1703,28 @@ class DOPMWeeklyController extends Controller
                                 }
                                 foreach ($okk as $idx => $row) {
                                     $sid = $row['supervisor_id'] ?? null;
+                                    $indirectSid = $row['indirect_supervisor_id'] ?? null;
+                                    if ($indirectSid !== null && $indirectSid !== '' && isset($employeeInfoOkk[(string) $indirectSid])) {
+                                        $infoIndirect = $employeeInfoOkk[(string) $indirectSid];
+                                        $okk[$idx]['layer_pengawas'] = $infoIndirect['layer'] ?? null;
+                                    } elseif ($sid !== null && isset($employeeInfoOkk[(string) $sid])) {
+                                        $info = $employeeInfoOkk[(string) $sid];
+                                        $okk[$idx]['layer_pengawas'] = $info['layer'] ?? null;
+                                    }
                                     if ($sid !== null && isset($employeeInfoOkk[(string) $sid])) {
                                         $info = $employeeInfoOkk[(string) $sid];
                                         $okk[$idx]['nama_pengawas'] = $info['employee_name'] ?? null;
                                         $okk[$idx]['kode_sid'] = $info['employee_sid'] ?? null;
                                         $okk[$idx]['nama_perusahaan'] = $info['company_name'] ?? null;
-                                        $okk[$idx]['layer_pengawas'] = $info['layer'] ?? null;
                                     }
                                     $okk[$idx]['site'] = $wpSite;
                                     $okk[$idx]['jenis_ijk'] = $wpJenisIjk;
-                                    unset($okk[$idx]['supervisor_id']);
+                                    unset($okk[$idx]['supervisor_id'], $okk[$idx]['indirect_supervisor_id']);
                                 }
                             } catch (\Throwable $e) {
                                 \Illuminate\Support\Facades\Log::debug('Dashboard weekly modal OKK enrich: ' . $e->getMessage());
                                 foreach ($okk as $idx => $row) {
-                                    unset($okk[$idx]['supervisor_id']);
+                                    unset($okk[$idx]['supervisor_id'], $okk[$idx]['indirect_supervisor_id']);
                                 }
                             }
                         }
