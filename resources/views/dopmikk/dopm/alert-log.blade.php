@@ -16,8 +16,31 @@
 .alert-log-page .table-section-title { font-size: 0.95rem; margin-bottom: 0.75rem; display: flex; align-items: center; gap: 0.35rem; }
 .alert-log-page .dataTables_wrapper .row:first-child { margin-bottom: 0.75rem; }
 .alert-log-page .dataTables_wrapper .dataTables_length label, .alert-log-page .dataTables_wrapper .dataTables_filter label { margin-bottom: 0; }
-.alert-log-page table.dataTable { width: 100% !important; }
-.alert-log-page table.dataTable thead th { border-bottom: 2px solid #e9ecef; white-space: nowrap; }
+.alert-log-page table.dataTable { width: 100% !important; border-collapse: separate; border-spacing: 0; }
+.alert-log-page table.dataTable thead th {
+    border-bottom: 2px solid #e9ecef;
+    white-space: nowrap;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+    background: #f8f9fa;
+}
+.alert-log-page table.dataTable tbody td {
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+.alert-log-page table.dataTable tbody tr:hover { background-color: #f8f9fa; }
+.alert-log-page table.dataTable .col-kode-ikk { min-width: 140px; }
+.alert-log-page table.dataTable .col-alert-ke { width: 90px; }
+.alert-log-page table.dataTable .col-mulai { min-width: 120px; white-space: nowrap; }
+.alert-log-page table.dataTable .col-site { width: 80px; }
+.alert-log-page table.dataTable .col-nama-pekerjaan { min-width: 180px; max-width: 280px; }
+.alert-log-page table.dataTable .col-lokasi { min-width: 140px; max-width: 220px; }
+.alert-log-page table.dataTable .col-alasan { min-width: 160px; max-width: 280px; }
+.alert-log-page table.dataTable .col-intervensi { min-width: 160px; }
 .alert-log-page .empty-state { padding: 3rem 1rem; text-align: center; color: #6c757d; }
 </style>
 @endsection
@@ -67,21 +90,17 @@
                         </div>
                     @else
                         <div class="table-responsive">
-                            <table id="table-alert-log-ikk" class="table table-sm table-bordered table-hover align-middle alert-log-datatable mb-0" width="100%">
+                            <table id="table-alert-log-ikk" class="table table-bordered table-hover align-middle alert-log-datatable mb-0" width="100%">
                                 <thead class="table-light">
                                     <tr>
-                                        <th>Tanggal Alert</th>
-                                        <th>Kode IKK</th>
-                                        <th>Alert Ke</th>
-                                        <th>Tipe</th>
-                                        <th>Tanggal Mulai</th>
-                                        <th>Jam Mulai</th>
-                                        <th>Jenis IJK</th>
-                                        <th>Site</th>
-                                        <th>Nama Pekerjaan</th>
-                                        <th>Lokasi</th>
-                                        <th>Alasan</th>
-                                        <th>Intervensi</th>
+                                        <th class="col-kode-ikk">Kode IKK</th>
+                                        <th class="col-alert-ke">Alert Ke</th>
+                                        <th class="col-mulai">Tanggal & Jam Mulai</th>
+                                        <th class="col-site">Site</th>
+                                        <th class="col-nama-pekerjaan">Nama Pekerjaan</th>
+                                        <th class="col-lokasi">Lokasi</th>
+                                        <th class="col-alasan">Alasan</th>
+                                        <th class="col-intervensi">Intervensi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -93,26 +112,19 @@
                                             $alertLevel = (int) ($row->alert_level ?? 1);
                                             $intervensiLevels = ($intervensiLevelsByIkk[$kodeIkk] ?? []);
                                             $terintervensi = in_array($alertLevel, $intervensiLevels, true);
+                                            $tanggalMulai = $snap['start_date_tanggal'] ?? '';
+                                            $jamMulai = $snap['start_date_jam'] ?? '';
+                                            $mulaiGabung = trim($tanggalMulai . ($jamMulai ? ' ' . $jamMulai : '')) ?: '-';
                                         @endphp
                                         <tr>
-                                            <td>{{ $tanggal }}</td>
-                                            <td class="fw-semibold">{{ $kodeIkk ?: '-' }}</td>
-                                            <td>Alert {{ $alertLevel }}</td>
-                                            <td>
-                                                @if(($snap['type'] ?? 'need_action') === 'need_action')
-                                                    <span class="badge bg-danger">Need Action</span>
-                                                @else
-                                                    <span class="badge bg-warning text-dark">Warning</span>
-                                                @endif
-                                            </td>
-                                            <td>{{ $snap['start_date_tanggal'] ?? '-' }}</td>
-                                            <td>{{ $snap['start_date_jam'] ?? '-' }}</td>
-                                            <td>{{ $snap['jenis_ijin_kerja_khusus'] ?? '-' }}</td>
-                                            <td>{{ $snap['site'] ?? '-' }}</td>
-                                            <td>{{ $snap['nama_pekerjaan'] ?? '-' }}</td>
-                                            <td>{{ trim(($snap['location_name'] ?? '') . (($snap['location_detail_name'] ?? '') ? ' / ' . ($snap['location_detail_name'] ?? '') : '')) ?: '-' }}</td>
-                                            <td class="small text-muted" title="{{ $snap['alasan_matriks'] ?? '' }}">{{ Str::limit($snap['alasan_matriks'] ?? '-', 50) }}</td>
-                                            <td class="align-middle">
+                                            <td class="fw-semibold col-kode-ikk">{{ $kodeIkk ?: '-' }}</td>
+                                            <td class="col-alert-ke">Alert {{ $alertLevel }}</td>
+                                            <td class="col-mulai">{{ $mulaiGabung }}</td>
+                                            <td class="col-site">{{ $snap['site'] ?? '-' }}</td>
+                                            <td class="col-nama-pekerjaan">{{ $snap['nama_pekerjaan'] ?? '-' }}</td>
+                                            <td class="col-lokasi">{{ trim(($snap['location_name'] ?? '') . (($snap['location_detail_name'] ?? '') ? ' / ' . ($snap['location_detail_name'] ?? '') : '')) ?: '-' }}</td>
+                                            <td class="small text-muted col-alasan" title="{{ $snap['alasan_matriks'] ?? '' }}">{{ Str::limit($snap['alasan_matriks'] ?? '-', 60) }}</td>
+                                            <td class="align-middle col-intervensi">
                                                 @if($terintervensi)
                                                     <span class="badge bg-success me-1">Terintervensi</span>
                                                 @else
