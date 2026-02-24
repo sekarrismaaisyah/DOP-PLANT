@@ -2823,7 +2823,7 @@
     var modalApiUrl = @json(route('dopmikk.api.ikk-modal-data'));
     var layer1UsersApiUrl = @json(route('dopmikk.api.layer1-users'));
     var layers234UsersApiUrl = @json(route('dopmikk.api.layers234-users'));
-    var ipkFormLink = 'https://beikk.beraucoal.co.id/monitoring-ipk';
+    var ipkFormLink = 'https://beikk.beraucoal.co.id/monitoring-ipkWeekly tetap menampilkan IKK yang rentangnya mencakup tanggal terpilih.';
     var modalEl = document.getElementById('detailDopmModal');
     var intervensiModalEl = document.getElementById('intervensiDopmModal');
     var intervensiModal = intervensiModalEl ? new bootstrap.Modal(intervensiModalEl) : null;

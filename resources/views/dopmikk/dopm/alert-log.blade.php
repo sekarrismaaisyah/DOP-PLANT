@@ -41,6 +41,7 @@
 .alert-log-page table.dataTable .col-lokasi { min-width: 140px; max-width: 220px; }
 .alert-log-page table.dataTable .col-alasan { min-width: 160px; max-width: 280px; }
 .alert-log-page table.dataTable .col-intervensi { min-width: 160px; }
+.alert-log-page table.dataTable .col-nama-intervensi { min-width: 140px; }
 .alert-log-page .empty-state { padding: 3rem 1rem; text-align: center; color: #6c757d; }
 </style>
 @endsection
@@ -100,6 +101,7 @@
                                         <th class="col-lokasi">Lokasi</th>
                                         <th class="col-alasan">Alasan</th>
                                         <th class="col-intervensi">Intervensi</th>
+                                        <th class="col-nama-intervensi">Nama yang Intervensi</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -111,6 +113,8 @@
                                             $alertLevel = (int) ($row->alert_level ?? 1);
                                             $intervensiLevels = ($intervensiLevelsByIkk[$kodeIkk] ?? []);
                                             $terintervensi = in_array($alertLevel, $intervensiLevels, true);
+                                            $intervensiDetail = ($intervensiDetailByIkk[$kodeIkk][$alertLevel] ?? null);
+                                            $namaIntervensi = $intervensiDetail && trim($intervensiDetail['user_name'] ?? '') !== '' ? trim($intervensiDetail['user_name']) : ($intervensiDetail && trim($intervensiDetail['user_username'] ?? '') !== '' ? trim($intervensiDetail['user_username']) : null);
                                             $tanggalMulai = $snap['start_date_tanggal'] ?? '';
                                             $jamMulai = $snap['start_date_jam'] ?? '';
                                             $mulaiGabung = trim($tanggalMulai . ($jamMulai ? ' ' . $jamMulai : '')) ?: '-';
@@ -139,6 +143,7 @@
                                                     <span class="material-icons-outlined" style="font-size:16px;">campaign</span>
                                                 </button>
                                             </td>
+                                            <td class="col-nama-intervensi">{{ $terintervensi && $namaIntervensi ? $namaIntervensi : '—' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

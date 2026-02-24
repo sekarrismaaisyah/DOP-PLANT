@@ -64,4 +64,33 @@ class DopmAlertIntervensi extends Model
             ->map(fn ($rows) => $rows->pluck('alert_level')->unique()->values()->all())
             ->all();
     }
+
+    /**
+     * Ambil detail intervensi per IKK per level (termasuk user_name) untuk tanggal.
+     * Return: ['kode_ikk' => [alert_level => ['user_name' => '...', 'user_username' => '...'], ...], ...]
+     */
+    public static function getIntervensiDetailByIkk(string $tanggal): array
+    {
+        $rows = self::query()
+            ->where('tanggal', $tanggal)
+            ->get();
+
+        $result = [];
+        foreach ($rows as $row) {
+            $kode = $row->kode_ikk ?? '';
+            $level = (int) $row->alert_level;
+            if ($kode === '') {
+                continue;
+            }
+            if (! isset($result[$kode])) {
+                $result[$kode] = [];
+            }
+            $result[$kode][$level] = [
+                'user_name' => $row->user_name ?? null,
+                'user_username' => $row->user_username ?? null,
+            ];
+        }
+
+        return $result;
+    }
 }

@@ -988,6 +988,27 @@ class DOPMController extends Controller
             if (isset($totalPekerjaanBatalHarianCh)) {
                 $totalPekerjaanBatalHarian = $totalPekerjaanBatalHarianCh;
             }
+            // Override card "IKK ada IPK" / "IKK ada OKK" dari ClickHouse (bukan MySQL)
+            $validIkkCodesForCard = [];
+            foreach ($ikkClickhouseListHarian as $ikk) {
+                $code = $ikk->code ?? null;
+                if ($code !== null && $code !== '' && !in_array($code, $cancelKodeIkk ?? [], true)) {
+                    $validIkkCodesForCard[$code] = true;
+                }
+            }
+            $totalIkkUnikHarian = count($validIkkCodesForCard);
+            $ikkAdaIpkCount = 0;
+            $ikkAdaOkkCount = 0;
+            foreach (array_keys($validIkkCodesForCard) as $code) {
+                if (($ipkCountByKode[$code] ?? 0) > 0) {
+                    $ikkAdaIpkCount++;
+                }
+                if (($okkCountByKode[$code] ?? 0) > 0) {
+                    $ikkAdaOkkCount++;
+                }
+            }
+            $pctIkkAdaIpk = $totalIkkUnikHarian > 0 ? round($ikkAdaIpkCount / $totalIkkUnikHarian * 100, 1) : 0;
+            $pctIkkAdaOkk = $totalIkkUnikHarian > 0 ? round($ikkAdaOkkCount / $totalIkkUnikHarian * 100, 1) : 0;
         }
 
         // Snapshot + Alert 1/2/3 per IKK hanya untuk "hari ini" (WITA), agar konsisten dengan scheduler
@@ -1066,6 +1087,7 @@ class DOPMController extends Controller
 
         // Untuk informasi intervensi (level mana saja yang sudah diintervensi per IKK).
         $intervensiLevelsByIkk = DopmAlertIntervensi::getIntervensiLevelsByIkk($filterDate);
+        $intervensiDetailByIkk = DopmAlertIntervensi::getIntervensiDetailByIkk($filterDate);
 
         // Ada alert yang belum terintervensi? (untuk trigger sound beep di front)
         $hasUnintervenedAlerts = false;
@@ -1083,6 +1105,7 @@ class DOPMController extends Controller
             'filterDate' => $filterDate,
             'alertRows' => $alertRows,
             'intervensiLevelsByIkk' => $intervensiLevelsByIkk,
+            'intervensiDetailByIkk' => $intervensiDetailByIkk,
             'hasUnintervenedAlerts' => $hasUnintervenedAlerts,
         ]);
     }
