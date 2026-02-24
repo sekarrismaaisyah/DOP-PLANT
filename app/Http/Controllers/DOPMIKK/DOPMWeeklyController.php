@@ -763,17 +763,26 @@ class DOPMWeeklyController extends Controller
                                     foreach ($okkList as $obj) {
                                         $sid = $obj->supervisor_id ?? null;
                                         $indirectSid = $obj->indirect_supervisor_id ?? null;
-                                        if ($indirectSid !== null && $indirectSid !== '' && isset($employeeInfoOkkBatch[(string) $indirectSid])) {
-                                            $infoIndirect = $employeeInfoOkkBatch[(string) $indirectSid];
-                                            $obj->layer_pengawas = $infoIndirect['layer'] ?? null;
-                                        } elseif ($sid !== null && isset($employeeInfoOkkBatch[(string) $sid])) {
-                                            $info = $employeeInfoOkkBatch[(string) $sid];
-                                            $obj->layer_pengawas = $info['layer'] ?? null;
-                                        }
-                                        if ($sid !== null && isset($employeeInfoOkkBatch[(string) $sid])) {
-                                            $info = $employeeInfoOkkBatch[(string) $sid];
-                                            $obj->nama_pengawas = $info['employee_name'] ?? null;
-                                            $obj->kode_sid = $info['employee_sid'] ?? null;
+                                        // Layer & data employee: indirect_supervisor_id NULL = Layer 1 + data dari supervisor_id; NOT NULL = Layer 2+ + data dari indirect employee
+                                        if ($indirectSid === null || $indirectSid === '') {
+                                            $obj->layer_pengawas = '1';
+                                            if ($sid !== null && isset($employeeInfoOkkBatch[(string) $sid])) {
+                                                $info = $employeeInfoOkkBatch[(string) $sid];
+                                                $obj->nama_pengawas = $info['employee_name'] ?? null;
+                                                $obj->kode_sid = $info['employee_sid'] ?? null;
+                                            }
+                                        } else {
+                                            $infoIndirect = $employeeInfoOkkBatch[(string) $indirectSid] ?? null;
+                                            $layerVal = $infoIndirect !== null && isset($infoIndirect['layer']) && $infoIndirect['layer'] !== null && $infoIndirect['layer'] !== '' ? (string) $infoIndirect['layer'] : '2';
+                                            $obj->layer_pengawas = $layerVal;
+                                            if ($infoIndirect !== null) {
+                                                $obj->nama_pengawas = $infoIndirect['employee_name'] ?? null;
+                                                $obj->kode_sid = $infoIndirect['employee_sid'] ?? null;
+                                            } elseif ($sid !== null && isset($employeeInfoOkkBatch[(string) $sid])) {
+                                                $info = $employeeInfoOkkBatch[(string) $sid];
+                                                $obj->nama_pengawas = $info['employee_name'] ?? null;
+                                                $obj->kode_sid = $info['employee_sid'] ?? null;
+                                            }
                                         }
                                         unset($obj->indirect_supervisor_id);
                                     }
@@ -1704,18 +1713,29 @@ class DOPMWeeklyController extends Controller
                                 foreach ($okk as $idx => $row) {
                                     $sid = $row['supervisor_id'] ?? null;
                                     $indirectSid = $row['indirect_supervisor_id'] ?? null;
-                                    if ($indirectSid !== null && $indirectSid !== '' && isset($employeeInfoOkk[(string) $indirectSid])) {
-                                        $infoIndirect = $employeeInfoOkk[(string) $indirectSid];
-                                        $okk[$idx]['layer_pengawas'] = $infoIndirect['layer'] ?? null;
-                                    } elseif ($sid !== null && isset($employeeInfoOkk[(string) $sid])) {
-                                        $info = $employeeInfoOkk[(string) $sid];
-                                        $okk[$idx]['layer_pengawas'] = $info['layer'] ?? null;
-                                    }
-                                    if ($sid !== null && isset($employeeInfoOkk[(string) $sid])) {
-                                        $info = $employeeInfoOkk[(string) $sid];
-                                        $okk[$idx]['nama_pengawas'] = $info['employee_name'] ?? null;
-                                        $okk[$idx]['kode_sid'] = $info['employee_sid'] ?? null;
-                                        $okk[$idx]['nama_perusahaan'] = $info['company_name'] ?? null;
+                                    // Layer & data employee: indirect_supervisor_id NULL = Layer 1 + data dari supervisor_id; NOT NULL = Layer 2+ + data dari indirect employee
+                                    if ($indirectSid === null || $indirectSid === '') {
+                                        $okk[$idx]['layer_pengawas'] = '1';
+                                        if ($sid !== null && isset($employeeInfoOkk[(string) $sid])) {
+                                            $info = $employeeInfoOkk[(string) $sid];
+                                            $okk[$idx]['nama_pengawas'] = $info['employee_name'] ?? null;
+                                            $okk[$idx]['kode_sid'] = $info['employee_sid'] ?? null;
+                                            $okk[$idx]['nama_perusahaan'] = $info['company_name'] ?? null;
+                                        }
+                                    } else {
+                                        $infoIndirect = $employeeInfoOkk[(string) $indirectSid] ?? null;
+                                        $layerVal = $infoIndirect !== null && isset($infoIndirect['layer']) && $infoIndirect['layer'] !== null && $infoIndirect['layer'] !== '' ? (string) $infoIndirect['layer'] : '2';
+                                        $okk[$idx]['layer_pengawas'] = $layerVal;
+                                        if ($infoIndirect !== null) {
+                                            $okk[$idx]['nama_pengawas'] = $infoIndirect['employee_name'] ?? null;
+                                            $okk[$idx]['kode_sid'] = $infoIndirect['employee_sid'] ?? null;
+                                            $okk[$idx]['nama_perusahaan'] = $infoIndirect['company_name'] ?? null;
+                                        } elseif ($sid !== null && isset($employeeInfoOkk[(string) $sid])) {
+                                            $info = $employeeInfoOkk[(string) $sid];
+                                            $okk[$idx]['nama_pengawas'] = $info['employee_name'] ?? null;
+                                            $okk[$idx]['kode_sid'] = $info['employee_sid'] ?? null;
+                                            $okk[$idx]['nama_perusahaan'] = $info['company_name'] ?? null;
+                                        }
                                     }
                                     $okk[$idx]['site'] = $wpSite;
                                     $okk[$idx]['jenis_ijk'] = $wpJenisIjk;
