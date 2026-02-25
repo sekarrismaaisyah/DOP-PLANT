@@ -305,7 +305,6 @@ class DOPMController extends Controller
                             company_name,
                             status,
                             m_job_id,
-                            m_job_duration_id,
                             start_date,
                             end_date,
                             location_name,
@@ -450,7 +449,7 @@ class DOPMController extends Controller
                                 'sid_layer_4' => $sidLayer4,
                                 'start_date' => $row['start_date'] ?? null,
                                 'end_date' => $row['end_date'] ?? null,
-                                'm_job_duration_id' => $row['m_job_duration_id'] ?? null,
+                                'm_job_duration_id' => null,
                                 'location_name' => self::getClickHouseRowValue($row, 'location_name'),
                                 'location_detail_name' => self::getClickHouseRowValue($row, 'location_detail_name'),
                             ];
@@ -595,7 +594,7 @@ class DOPMController extends Controller
                     }
                     $wpIdsEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $workPermitCodesForCh));
                     $sqlIpk = "
-                        SELECT id, work_permit_id, code, status, job_status, start_date, created_at, supervisor_id, cctv
+                        SELECT id, work_permit_id, code, status, job_status, start_date, created_at, supervisor_id, cctv, m_job_duration_id
                         FROM hse_automation.ipk_assessment
                         WHERE work_permit_id IN ({$wpIdsEsc})
                           AND toDate(start_date) = toDate('{$dateEsc}')
@@ -603,15 +602,24 @@ class DOPMController extends Controller
                         ORDER BY created_at DESC
                     ";
                     $ipkRowsCh = $ch->query($sqlIpk);
+                    $jobDurationByCode = [];
                     foreach ($ipkRowsCh ?? [] as $r) {
                         $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
                         $code = $wpIdToCode[$wpId] ?? null;
-                        if ($code !== null && !isset($ipkDataByCode[$code])) {
-                            $ipkDataByCode[$code] = (object) [
-                                'kode_ikk' => $code,
-                                'durasi_jam' => null,
-                                'status_pekerjaan' => self::getClickHouseRowValue($r, 'job_status'),
-                            ];
+                        if ($code !== null) {
+                            if (!isset($ipkDataByCode[$code])) {
+                                $ipkDataByCode[$code] = (object) [
+                                    'kode_ikk' => $code,
+                                    'durasi_jam' => null,
+                                    'status_pekerjaan' => self::getClickHouseRowValue($r, 'job_status'),
+                                ];
+                            }
+                            if (!isset($jobDurationByCode[$code])) {
+                                $durId = self::getClickHouseRowValue($r, 'm_job_duration_id');
+                                if ($durId !== null && $durId !== '') {
+                                    $jobDurationByCode[$code] = $durId;
+                                }
+                            }
                         }
                     }
                     $sqlOkk = "
@@ -812,6 +820,11 @@ class DOPMController extends Controller
                 if ($code !== null && in_array($code, $cancelKodeIkk, true)) {
                     $ikk->status_matriks = null;
                     continue;
+                }
+
+                // Assign m_job_duration_id dari IPK jika tersedia
+                if ($code !== null && isset($jobDurationByCode[$code])) {
+                    $ikk->m_job_duration_id = $jobDurationByCode[$code];
                 }
 
                 // Gunakan fungsi optimized dengan pre-loaded data
@@ -1422,7 +1435,6 @@ class DOPMController extends Controller
                             company_name,
                             status,
                             m_job_id,
-                            m_job_duration_id,
                             start_date,
                             end_date,
                             location_name,
@@ -1569,7 +1581,7 @@ class DOPMController extends Controller
                                 'sid_layer_4' => $sidLayer4,
                                 'start_date' => $row['start_date'] ?? null,
                                 'end_date' => $row['end_date'] ?? null,
-                                'm_job_duration_id' => $row['m_job_duration_id'] ?? null,
+                                'm_job_duration_id' => null,
                                 'location_name' => self::getClickHouseRowValue($row, 'location_name'),
                                 'location_detail_name' => self::getClickHouseRowValue($row, 'location_detail_name'),
                             ];
@@ -1593,6 +1605,52 @@ class DOPMController extends Controller
             }
         }
         $ikkClickhouseListHarian = array_values($byCode);
+
+        // Ambil m_job_duration_id dari ipk_assessment ClickHouse untuk setiap IKK
+        $jobDurationByCode = [];
+        if (!empty($ikkClickhouseListHarian)) {
+            try {
+                $wpIdsForDuration = array_values(array_unique(array_filter(array_map(function ($ikk) {
+                    return $ikk->id ?? null;
+                }, $ikkClickhouseListHarian))));
+
+                if (!empty($wpIdsForDuration)) {
+                    $clickHouse = app(\App\Services\ClickHouseService::class);
+                    $wpIdsEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $wpIdsForDuration));
+                    $sqlDuration = "
+                        SELECT work_permit_id, m_job_duration_id
+                        FROM hse_automation.ipk_assessment
+                        WHERE work_permit_id IN ({$wpIdsEsc})
+                          AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                          AND m_job_duration_id IS NOT NULL AND m_job_duration_id != ''
+                        ORDER BY created_at DESC
+                    ";
+                    $durationRows = $clickHouse->query($sqlDuration);
+
+                    $wpIdToCode = [];
+                    foreach ($ikkClickhouseListHarian as $ikk) {
+                        $id = $ikk->id ?? null;
+                        $code = $ikk->code ?? null;
+                        if ($id !== null && $code !== null) {
+                            $wpIdToCode[$id] = $code;
+                        }
+                    }
+
+                    foreach ($durationRows ?? [] as $r) {
+                        $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                        $code = $wpIdToCode[$wpId] ?? null;
+                        if ($code !== null && !isset($jobDurationByCode[$code])) {
+                            $durId = self::getClickHouseRowValue($r, 'm_job_duration_id');
+                            if ($durId !== null && $durId !== '') {
+                                $jobDurationByCode[$code] = $durId;
+                            }
+                        }
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::debug('Dashboard Weekly m_job_duration_id skip: ' . $e->getMessage());
+            }
+        }
 
         // Tambahkan status_pekerjaan (dari tabel ipk_ikk) per kode IKK:
         // relasi: ikk_work_permit.code = ipk_ikk.kode_ikk, ambil status_pekerjaan terbaru (ts paling baru).
@@ -1772,6 +1830,11 @@ class DOPMController extends Controller
                 if ($code !== null && in_array($code, $cancelKodeIkk, true)) {
                     $ikk->status_matriks = null;
                     continue;
+                }
+
+                // Assign m_job_duration_id dari IPK jika tersedia
+                if ($code !== null && isset($jobDurationByCode[$code])) {
+                    $ikk->m_job_duration_id = $jobDurationByCode[$code];
                 }
 
                 // Gunakan fungsi optimized dengan pre-loaded data
