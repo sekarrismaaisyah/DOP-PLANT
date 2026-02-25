@@ -88,6 +88,26 @@
             </a>
           </li>
 
+
+
+          <li class="menu-label">Alert & Intervensi</li>
+          <li>
+            <a href="{{ route('dopmikk.dopm.alert-log') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">warning</i></div>
+              <div class="menu-title">Alert Log</div>
+            </a>
+          </li>
+          <li>
+            <a href="{{ route('dopmikk.dopm.issue-closure') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">dashboard</i></div>
+              <div class="menu-title">Task List </div>
+            </a>
+          </li>
+         
+          
+
+
+
           <li class="menu-label">Master Data</li>
           <li>
             <a href="{{ route('dopmikk.dopm.index') }}">
