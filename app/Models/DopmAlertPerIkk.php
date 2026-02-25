@@ -198,8 +198,8 @@ class DopmAlertPerIkk extends Model
     public static function storeAlertsForDate($ikkList, string $tanggal): void
     {
         $items = $ikkList instanceof Collection ? $ikkList->all() : $ikkList;
-        $dateStart = Carbon::parse($tanggal, $tz)->startOfDay();
         $tz = self::TZ;
+        $dateStart = Carbon::parse($tanggal, $tz)->startOfDay();
         $now = Carbon::now($tz);
         // Ambil level intervensi tertinggi per IKK untuk tanggal ini, agar Alert 2/3
         // tidak terus dibuat jika sudah ada intervensi di Alert 1/2.
