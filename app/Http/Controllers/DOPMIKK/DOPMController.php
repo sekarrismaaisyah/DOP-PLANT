@@ -1036,13 +1036,6 @@ class DOPMController extends Controller
             $pctIkkAdaOkk = $totalIkkUnikHarian > 0 ? round($ikkAdaOkkCount / $totalIkkUnikHarian * 100, 1) : 0;
         }
 
-        // Snapshot + Alert 1/2/3 per IKK hanya untuk "hari ini" (WITA), agar konsisten dengan scheduler
-        $todayWita = Carbon::now('Asia/Makassar')->toDateString();
-        if ($filterDate === $todayWita) {
-            DopmAlertLog::storeSnapshotForHour($ikkClickhouseListHarian, $filterDate);
-            DopmAlertPerIkk::storeAlertsForDate($ikkClickhouseListHarian, $filterDate);
-        }
-
         return view('dopmikk.dopm.dashboard', [
             'filterDate' => $filterDate,
             'filterSite' => $filterSite,
