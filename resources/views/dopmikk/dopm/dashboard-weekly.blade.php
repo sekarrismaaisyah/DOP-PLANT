@@ -1424,40 +1424,30 @@
     <div class="card-body py-3">
         <form method="get" action="{{ route('dopmikk.dopm.dashboard-weekly') }}" id="dashboardFilterForm">
             <div class="row g-3 align-items-end">
-                <div class="col-12 col-md-6 col-lg-5">
+                <div class="col-12 col-md-6 col-lg-4">
                     <label class="form-label mb-2 small fw-semibold text-muted">
                         <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">date_range</i>
                         Pilih Week
                     </label>
-                    {{-- Week Calendar Picker --}}
-                    <div class="week-calendar-picker">
-                        <div class="week-calendar-header d-flex align-items-center justify-content-between mb-2">
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle p-1" id="weekCalendarPrevMonth" title="Bulan Sebelumnya">
-                                <i class="material-icons-outlined" style="font-size: 18px;">chevron_left</i>
-                            </button>
-                            <h6 class="mb-0 fw-bold" id="weekCalendarMonthYear"></h6>
-                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle p-1" id="weekCalendarNextMonth" title="Bulan Berikutnya">
-                                <i class="material-icons-outlined" style="font-size: 18px;">chevron_right</i>
-                            </button>
-                        </div>
-                        <div class="week-calendar-grid">
-                            <div class="week-calendar-day-header">Wk</div>
-                            <div class="week-calendar-day-header">Sen</div>
-                            <div class="week-calendar-day-header">Sel</div>
-                            <div class="week-calendar-day-header">Rab</div>
-                            <div class="week-calendar-day-header">Kam</div>
-                            <div class="week-calendar-day-header">Jum</div>
-                            <div class="week-calendar-day-header">Sab</div>
-                            <div class="week-calendar-day-header">Min</div>
-                        </div>
-                        <div class="week-calendar-body" id="weekCalendarBody"></div>
+                    {{-- Bootstrap Week Picker with Input Field --}}
+                    <div class="input-group">
+                        <span class="input-group-text bg-white border-end-0">
+                            <i class="material-icons-outlined text-muted" style="font-size: 20px;">calendar_today</i>
+                        </span>
+                        <input type="text" 
+                               class="form-control border-start-0 rounded-end-3 week-picker-input" 
+                               id="weekPickerInput" 
+                               readonly 
+                               placeholder="Pilih Week..."
+                               value="Week {{ $weekNumber ?? '-' }}: {{ $weekStartDate ?? '-' }} - {{ $weekEndDate ?? '-' }}"
+                               style="cursor: pointer;">
+                    </div>
+                    {{-- Hidden datepicker container --}}
+                    <div id="weekPickerContainer" class="week-picker-dropdown d-none">
+                        <div class="week-picker-calendar"></div>
                     </div>
                     <input type="hidden" name="week" id="filterWeek" value="{{ $filterWeek ?? '' }}">
                     <input type="hidden" name="date" id="filterDate" value="{{ $filterDate ?? now()->toDateString() }}">
-                    <div class="mt-2 small text-muted" id="selectedWeekDisplay">
-                        <i class="material-icons-outlined me-1" style="font-size: 14px; vertical-align: middle;">check_circle</i>
-                        <span id="selectedWeekText">Week {{ $weekNumber ?? '-' }}: {{ $weekStartDate ?? '-' }} - {{ $weekEndDate ?? '-' }}</span>
-                    </div>
                 </div>
                 <div class="col-12 col-md-4 col-lg-4">
                     <label for="filterSite" class="form-label mb-2 small fw-semibold text-muted">
@@ -1486,98 +1476,119 @@
 </div>
 
 <style>
-.week-calendar-picker {
-    background: #f8f9fa;
+/* Bootstrap Week Picker Styles */
+.week-picker-input {
+    background-color: #fff !important;
+}
+.week-picker-input:focus {
+    box-shadow: 0 0 0 0.2rem rgba(59, 130, 246, 0.25);
+    border-color: #3b82f6;
+}
+.week-picker-dropdown {
+    position: absolute;
+    z-index: 1050;
+    background: #fff;
     border: 1px solid #e5e7eb;
     border-radius: 12px;
-    padding: 12px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+    padding: 16px;
+    margin-top: 4px;
+    min-width: 320px;
 }
-.week-calendar-header button {
+.week-picker-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 12px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #e5e7eb;
+}
+.week-picker-header .btn-nav {
     width: 32px;
     height: 32px;
+    padding: 0;
     display: flex;
     align-items: center;
     justify-content: center;
+    border-radius: 8px;
+    border: 1px solid #e5e7eb;
+    background: #fff;
+    color: #6b7280;
+    transition: all 0.2s;
 }
-.week-calendar-grid, .week-calendar-body {
-    display: grid;
-    grid-template-columns: 40px repeat(7, 1fr);
-    gap: 2px;
+.week-picker-header .btn-nav:hover {
+    background: #f3f4f6;
+    color: #111827;
 }
-.week-calendar-day-header {
+.week-picker-header .month-year {
+    font-weight: 600;
+    font-size: 15px;
+    color: #111827;
+}
+.week-picker-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+.week-picker-table th {
     text-align: center;
     font-size: 11px;
     font-weight: 600;
-    color: #6b7280;
-    padding: 6px 2px;
+    color: #9ca3af;
+    padding: 8px 4px;
     text-transform: uppercase;
 }
-.week-calendar-row {
-    display: contents;
+.week-picker-table td {
+    text-align: center;
+    font-size: 13px;
+    padding: 0;
 }
-.week-calendar-week-num {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    font-size: 11px;
+.week-picker-table .week-row {
+    cursor: pointer;
+    transition: all 0.15s ease;
+}
+.week-picker-table .week-row:hover td {
+    background: #eff6ff;
+}
+.week-picker-table .week-row.selected td {
+    background: #3b82f6;
+    color: #fff;
+}
+.week-picker-table .week-row.selected td:first-child {
+    border-radius: 8px 0 0 8px;
+}
+.week-picker-table .week-row.selected td:last-child {
+    border-radius: 0 8px 8px 0;
+}
+.week-picker-table .week-row td {
+    padding: 10px 4px;
+}
+.week-picker-table .week-num {
     font-weight: 700;
     color: #3b82f6;
     background: #eff6ff;
     border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.2s ease;
-    padding: 4px;
+    min-width: 32px;
 }
-.week-calendar-week-num:hover {
-    background: #3b82f6;
+.week-picker-table .week-row.selected .week-num {
+    background: #1d4ed8;
     color: #fff;
 }
-.week-calendar-week-num.selected {
+.week-picker-table .other-month {
+    color: #d1d5db;
+}
+.week-picker-table .week-row.selected .other-month {
+    color: rgba(255, 255, 255, 0.7);
+}
+.week-picker-table .today {
+    font-weight: 700;
+    color: #dc2626;
+}
+.week-picker-table .week-row.selected .today {
+    color: #fef2f2;
+}
+.week-picker-table .week-row:hover .week-num {
     background: #3b82f6;
     color: #fff;
-    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
-}
-.week-calendar-day {
-    text-align: center;
-    font-size: 12px;
-    padding: 6px 2px;
-    border-radius: 6px;
-    cursor: pointer;
-    transition: all 0.15s ease;
-    color: #374151;
-}
-.week-calendar-day:hover {
-    background: #e5e7eb;
-}
-.week-calendar-day.other-month {
-    color: #9ca3af;
-}
-.week-calendar-day.today {
-    background: #fef3c7;
-    color: #92400e;
-    font-weight: 600;
-}
-.week-calendar-day.in-selected-week {
-    background: #dbeafe;
-    color: #1e40af;
-}
-.week-calendar-day.in-selected-week.today {
-    background: #93c5fd;
-    color: #1e3a8a;
-    font-weight: 700;
-}
-.week-calendar-row.selected-week .week-calendar-day {
-    background: #dbeafe;
-    color: #1e40af;
-}
-.week-calendar-row.selected-week .week-calendar-day.today {
-    background: #93c5fd;
-    color: #1e3a8a;
-    font-weight: 700;
-}
-#selectedWeekDisplay {
-    color: #059669;
-    font-weight: 500;
 }
 </style>
     
@@ -2812,22 +2823,26 @@
 <script src="{{ URL::asset('build/plugins/peity/jquery.peity.min.js') }}"></script>
 <script>
 (function() {
-  // Week Calendar Picker
+  // Bootstrap Week Picker
   var selectedWeekValue = @json($filterWeek ?? '');
   var monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
   var monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  var dayNamesShort = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
   
-  // Parse selected week to get display month
   var currentDate = new Date();
   var displayMonth = currentDate.getMonth();
   var displayYear = currentDate.getFullYear();
+  var isOpen = false;
+  
+  var inputEl = document.getElementById('weekPickerInput');
+  var containerEl = document.getElementById('weekPickerContainer');
+  var hiddenInput = document.getElementById('filterWeek');
   
   if (selectedWeekValue) {
     var match = selectedWeekValue.match(/^(\d{4})-W(\d{2})$/);
     if (match) {
       var y = parseInt(match[1], 10);
       var w = parseInt(match[2], 10);
-      // Get first day of that week
       var firstDayOfWeek = getDateOfISOWeek(w, y);
       displayMonth = firstDayOfWeek.getMonth();
       displayYear = firstDayOfWeek.getFullYear();
@@ -2869,6 +2884,10 @@
     return date.getDate() + ' ' + monthNamesShort[date.getMonth()];
   }
   
+  function formatFullDate(date) {
+    return date.getDate() + ' ' + monthNamesShort[date.getMonth()] + ' ' + date.getFullYear();
+  }
+  
   function isToday(date) {
     var today = new Date();
     return date.getDate() === today.getDate() && 
@@ -2876,27 +2895,32 @@
            date.getFullYear() === today.getFullYear();
   }
   
-  function renderWeekCalendar(month, year) {
-    var container = document.getElementById('weekCalendarBody');
-    var monthYearEl = document.getElementById('weekCalendarMonthYear');
-    if (!container || !monthYearEl) return;
+  function renderWeekPicker() {
+    if (!containerEl) return;
     
-    container.innerHTML = '';
-    monthYearEl.textContent = monthNames[month] + ' ' + year;
+    var firstDay = new Date(displayYear, displayMonth, 1);
+    var lastDay = new Date(displayYear, displayMonth + 1, 0);
     
-    // Get first day of month and last day
-    var firstDay = new Date(year, month, 1);
-    var lastDay = new Date(year, month + 1, 0);
-    
-    // Get the Monday of the week containing the first day
     var startDate = new Date(firstDay);
-    var dayOfWeek = startDate.getDay() || 7; // Convert Sunday (0) to 7
-    startDate.setDate(startDate.getDate() - dayOfWeek + 1); // Go to Monday
+    var dayOfWeek = startDate.getDay() || 7;
+    startDate.setDate(startDate.getDate() - dayOfWeek + 1);
     
-    // Get the Sunday of the week containing the last day
     var endDate = new Date(lastDay);
     var endDayOfWeek = endDate.getDay() || 7;
-    endDate.setDate(endDate.getDate() + (7 - endDayOfWeek)); // Go to Sunday
+    endDate.setDate(endDate.getDate() + (7 - endDayOfWeek));
+    
+    var html = '<div class="week-picker-header">';
+    html += '<button type="button" class="btn-nav" id="wpPrev"><i class="material-icons-outlined" style="font-size:18px;">chevron_left</i></button>';
+    html += '<span class="month-year">' + monthNames[displayMonth] + ' ' + displayYear + '</span>';
+    html += '<button type="button" class="btn-nav" id="wpNext"><i class="material-icons-outlined" style="font-size:18px;">chevron_right</i></button>';
+    html += '</div>';
+    
+    html += '<table class="week-picker-table">';
+    html += '<thead><tr><th>Wk</th>';
+    for (var i = 0; i < 7; i++) {
+      html += '<th>' + dayNamesShort[i] + '</th>';
+    }
+    html += '</tr></thead><tbody>';
     
     var currentDateIter = new Date(startDate);
     
@@ -2904,98 +2928,121 @@
       var weekNum = getISOWeek(currentDateIter);
       var weekYear = getISOWeekYear(currentDateIter);
       var weekValue = formatWeekValue(weekYear, weekNum);
+      var isSelected = weekValue === selectedWeekValue;
       
-      // Calculate week start and end for display
-      var weekStartDisplay = new Date(currentDateIter);
-      var weekEndDisplay = new Date(currentDateIter);
-      weekEndDisplay.setDate(weekEndDisplay.getDate() + 6);
+      var weekStart = new Date(currentDateIter);
+      var weekEnd = new Date(currentDateIter);
+      weekEnd.setDate(weekEnd.getDate() + 6);
       
-      var rowHtml = '<div class="week-calendar-row' + (weekValue === selectedWeekValue ? ' selected-week' : '') + '" data-week="' + weekValue + '">';
+      html += '<tr class="week-row' + (isSelected ? ' selected' : '') + '" data-week="' + weekValue + '" data-start="' + formatDate(weekStart) + '" data-end="' + formatFullDate(weekEnd) + '">';
+      html += '<td class="week-num">' + weekNum + '</td>';
       
-      // Week number cell
-      rowHtml += '<div class="week-calendar-week-num' + (weekValue === selectedWeekValue ? ' selected' : '') + '" data-week="' + weekValue + '" data-start="' + formatDate(weekStartDisplay) + '" data-end="' + formatDate(weekEndDisplay) + ' ' + weekEndDisplay.getFullYear() + '" title="Klik untuk memilih Week ' + weekNum + '">' + weekNum + '</div>';
-      
-      // Day cells (Monday to Sunday)
-      for (var i = 0; i < 7; i++) {
+      for (var d = 0; d < 7; d++) {
         var dayDate = new Date(currentDateIter);
-        dayDate.setDate(dayDate.getDate() + i);
+        dayDate.setDate(dayDate.getDate() + d);
         
-        var dayClasses = ['week-calendar-day'];
-        if (dayDate.getMonth() !== month) {
-          dayClasses.push('other-month');
-        }
-        if (isToday(dayDate)) {
-          dayClasses.push('today');
-        }
-        if (weekValue === selectedWeekValue) {
-          dayClasses.push('in-selected-week');
-        }
+        var classes = [];
+        if (dayDate.getMonth() !== displayMonth) classes.push('other-month');
+        if (isToday(dayDate)) classes.push('today');
         
-        rowHtml += '<div class="' + dayClasses.join(' ') + '" data-week="' + weekValue + '">' + dayDate.getDate() + '</div>';
+        html += '<td class="' + classes.join(' ') + '">' + dayDate.getDate() + '</td>';
       }
       
-      rowHtml += '</div>';
-      container.innerHTML += rowHtml;
-      
-      // Move to next week
+      html += '</tr>';
       currentDateIter.setDate(currentDateIter.getDate() + 7);
     }
     
-    // Add click handlers
-    container.querySelectorAll('.week-calendar-week-num, .week-calendar-day').forEach(function(el) {
-      el.addEventListener('click', function() {
+    html += '</tbody></table>';
+    
+    containerEl.querySelector('.week-picker-calendar').innerHTML = html;
+    
+    // Add event listeners
+    containerEl.querySelector('#wpPrev')?.addEventListener('click', function(e) {
+      e.stopPropagation();
+      displayMonth--;
+      if (displayMonth < 0) { displayMonth = 11; displayYear--; }
+      renderWeekPicker();
+    });
+    
+    containerEl.querySelector('#wpNext')?.addEventListener('click', function(e) {
+      e.stopPropagation();
+      displayMonth++;
+      if (displayMonth > 11) { displayMonth = 0; displayYear++; }
+      renderWeekPicker();
+    });
+    
+    containerEl.querySelectorAll('.week-row').forEach(function(row) {
+      row.addEventListener('click', function() {
         var weekVal = this.getAttribute('data-week');
-        selectWeek(weekVal);
+        var start = this.getAttribute('data-start');
+        var end = this.getAttribute('data-end');
+        selectWeek(weekVal, start, end);
       });
     });
   }
   
-  function selectWeek(weekValue) {
+  function selectWeek(weekValue, startDisplay, endDisplay) {
     selectedWeekValue = weekValue;
     
-    // Update hidden input
-    var input = document.getElementById('filterWeek');
-    if (input) input.value = weekValue;
+    if (hiddenInput) hiddenInput.value = weekValue;
     
-    // Parse week to get display info
     var match = weekValue.match(/^(\d{4})-W(\d{2})$/);
-    if (match) {
-      var y = parseInt(match[1], 10);
+    if (match && inputEl) {
       var w = parseInt(match[2], 10);
-      var weekStart = getDateOfISOWeek(w, y);
-      var weekEnd = new Date(weekStart);
-      weekEnd.setDate(weekEnd.getDate() + 6);
-      
-      var displayText = 'Week ' + w + ': ' + formatDate(weekStart) + ' - ' + formatDate(weekEnd) + ' ' + weekEnd.getFullYear();
-      var textEl = document.getElementById('selectedWeekText');
-      if (textEl) textEl.textContent = displayText;
+      inputEl.value = 'Week ' + w + ': ' + startDisplay + ' - ' + endDisplay;
     }
     
-    // Re-render calendar to update selection
-    renderWeekCalendar(displayMonth, displayYear);
+    closeDropdown();
   }
   
-  // Navigation buttons
-  document.getElementById('weekCalendarPrevMonth')?.addEventListener('click', function() {
-    displayMonth--;
-    if (displayMonth < 0) {
-      displayMonth = 11;
-      displayYear--;
+  function openDropdown() {
+    if (!containerEl || !inputEl) return;
+    isOpen = true;
+    containerEl.classList.remove('d-none');
+    
+    // Position dropdown below input
+    var rect = inputEl.getBoundingClientRect();
+    containerEl.style.top = (inputEl.offsetTop + inputEl.offsetHeight + 4) + 'px';
+    containerEl.style.left = inputEl.offsetLeft + 'px';
+    
+    renderWeekPicker();
+  }
+  
+  function closeDropdown() {
+    if (!containerEl) return;
+    isOpen = false;
+    containerEl.classList.add('d-none');
+  }
+  
+  function toggleDropdown() {
+    if (isOpen) {
+      closeDropdown();
+    } else {
+      openDropdown();
     }
-    renderWeekCalendar(displayMonth, displayYear);
+  }
+  
+  // Event listeners
+  if (inputEl) {
+    inputEl.addEventListener('click', function(e) {
+      e.stopPropagation();
+      toggleDropdown();
+    });
+  }
+  
+  // Close on click outside
+  document.addEventListener('click', function(e) {
+    if (isOpen && containerEl && !containerEl.contains(e.target) && e.target !== inputEl) {
+      closeDropdown();
+    }
   });
   
-  document.getElementById('weekCalendarNextMonth')?.addEventListener('click', function() {
-    displayMonth++;
-    if (displayMonth > 11) {
-      displayMonth = 0;
-      displayYear++;
+  // Close on escape
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Escape' && isOpen) {
+      closeDropdown();
     }
-    renderWeekCalendar(displayMonth, displayYear);
   });
-  
-  // Initial render
-  renderWeekCalendar(displayMonth, displayYear);
 })();
 </script>
 
