@@ -50,6 +50,36 @@ class DOPMWeeklyController extends Controller
         // Normalisasi: null / kosong / spasi = Semua Site (jangan filter by site)
         $filterSite = trim((string) ($request->query('site') ?? ''));
 
+        // Week filter: parse dari request atau default ke week saat ini
+        // Format: YYYY-WXX (contoh: 2025-W09)
+        $filterWeek = $request->get('week', '');
+        if ($filterWeek === '' || !preg_match('/^\d{4}-W\d{2}$/', $filterWeek)) {
+            // Default ke week dari filterDate
+            $filterWeek = Carbon::parse($filterDate)->format('o-\WW');
+        }
+        
+        // Parse week number dan tahun
+        preg_match('/^(\d{4})-W(\d{2})$/', $filterWeek, $weekMatches);
+        $weekYear = (int) ($weekMatches[1] ?? now()->year);
+        $weekNumber = (int) ($weekMatches[2] ?? now()->weekOfYear);
+        
+        // Hitung tanggal Senin (start) dan Minggu (end) dari week yang dipilih
+        $weekStartDate = Carbon::now()->setISODate($weekYear, $weekNumber, 1)->startOfDay(); // 1 = Senin
+        $weekEndDate = $weekStartDate->copy()->addDays(6)->endOfDay(); // Minggu
+        
+        // Generate daftar week untuk dropdown (dari minggu 1 tahun ini sampai minggu saat ini + 2)
+        $currentYear = now()->year;
+        $currentWeek = now()->weekOfYear;
+        $weekList = [];
+        for ($w = 1; $w <= min(53, $currentWeek + 2); $w++) {
+            $wStart = Carbon::now()->setISODate($currentYear, $w, 1);
+            $wEnd = $wStart->copy()->addDays(6);
+            $weekList[] = [
+                'value' => $currentYear . '-W' . str_pad($w, 2, '0', STR_PAD_LEFT),
+                'label' => 'Week ' . $w . ' (' . $wStart->format('d M') . ' - ' . $wEnd->format('d M') . ')',
+            ];
+        }
+
         // Scope tanggal & status (exclude Cancel)
         $scopeDate = function ($q) use ($filterDate) {
             $q->whereDate('tanggal_dop', $filterDate)->orWhereDate('timestamp', $filterDate);
@@ -156,6 +186,136 @@ class DOPMWeeklyController extends Controller
             }
         } catch (\Throwable $e) {
             \Illuminate\Support\Facades\Log::debug('Dashboard IKK ClickHouse week: ' . $e->getMessage());
+        }
+
+        // === STATISTIK WEEKLY: berdasarkan week yang dipilih (distinct work permit by start_date) ===
+        $totalIkkWeekly = 0;
+        $ikkAdaIpkCountWeekly = 0;
+        $ikkAdaOkkCountWeekly = 0;
+        $pctIkkAdaIpkWeekly = 0;
+        $pctIkkAdaOkkWeekly = 0;
+        $pctComplianceWeekly = 0;
+        $totalPekerjaanBatalWeekly = 0;
+        
+        try {
+            if (class_exists(\App\Services\ClickHouseService::class)) {
+                $clickHouse = app(\App\Services\ClickHouseService::class);
+                if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                    $weekStartStr = $weekStartDate->format('Y-m-d');
+                    $weekEndStr = $weekEndDate->format('Y-m-d');
+                    
+                    $siteFilterClauseWeekly = '';
+                    if ($filterSite !== '' && $filterSite !== null) {
+                        if ($filterSite === 'Lainnya') {
+                            $siteFilterClauseWeekly = " AND trim(COALESCE(ra_site_name, '')) = ''";
+                        } else {
+                            $siteFilterClauseWeekly = " AND trim(COALESCE(ra_site_name, '')) = '" . addslashes($filterSite) . "'";
+                        }
+                    }
+                    
+                    // Query IKK dengan start_date dalam rentang week (distinct by code)
+                    // Hanya yang sudah di-approve oleh WKTT
+                    $sqlWeeklyIkk = "
+                        SELECT DISTINCT wp.code, wp.id
+                        FROM hse_automation.ikk_work_permit AS wp
+                        INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
+                            ON toString(wp_pic.work_permit_id) = toString(wp.id)
+                            AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
+                        LEFT JOIN hse_automation.ikk_m_pic AS m
+                            ON toString(m.id) = toString(wp_pic.m_pic_id)
+                        WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
+                            AND toDate(wp.start_date) >= toDate('{$weekStartStr}')
+                            AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
+                            {$siteFilterClauseWeekly}
+                        GROUP BY wp.code, wp.id
+                        HAVING sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
+                            AND trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', 1, 0)) > 0
+                    ";
+                    $weeklyIkkRows = $clickHouse->query($sqlWeeklyIkk);
+                    $weeklyIkkCodes = [];
+                    $weeklyIkkIds = [];
+                    if (!empty($weeklyIkkRows)) {
+                        foreach ($weeklyIkkRows as $row) {
+                            $code = isset($row['code']) ? trim((string) $row['code']) : '';
+                            $id = isset($row['id']) ? trim((string) $row['id']) : '';
+                            if ($code !== '') {
+                                $weeklyIkkCodes[$code] = true;
+                            }
+                            if ($id !== '') {
+                                $weeklyIkkIds[$id] = $code;
+                            }
+                        }
+                    }
+                    $totalIkkWeekly = count($weeklyIkkCodes);
+                    
+                    // Query IPK yang ada dalam rentang week (by work_permit_id)
+                    if (!empty($weeklyIkkIds)) {
+                        $wpIdsWeeklyEsc = implode(',', array_map(fn($id) => "'" . addslashes($id) . "'", array_keys($weeklyIkkIds)));
+                        $sqlWeeklyIpk = "
+                            SELECT DISTINCT work_permit_id
+                            FROM hse_automation.ipk_assessment
+                            WHERE work_permit_id IN ({$wpIdsWeeklyEsc})
+                              AND toDate(start_date) >= toDate('{$weekStartStr}')
+                              AND toDate(start_date) <= toDate('{$weekEndStr}')
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                        ";
+                        $weeklyIpkRows = $clickHouse->query($sqlWeeklyIpk);
+                        $ipkWpIds = [];
+                        if (!empty($weeklyIpkRows)) {
+                            foreach ($weeklyIpkRows as $r) {
+                                $wpId = isset($r['work_permit_id']) ? trim((string) $r['work_permit_id']) : '';
+                                if ($wpId !== '' && isset($weeklyIkkIds[$wpId])) {
+                                    $ipkWpIds[$weeklyIkkIds[$wpId]] = true;
+                                }
+                            }
+                        }
+                        $ikkAdaIpkCountWeekly = count($ipkWpIds);
+                        
+                        // Query OKK yang ada dalam rentang week (by work_permit_id)
+                        $sqlWeeklyOkk = "
+                            SELECT DISTINCT work_permit_id
+                            FROM hse_automation.okk_assessment
+                            WHERE work_permit_id IN ({$wpIdsWeeklyEsc})
+                              AND toDate(created_at) >= toDate('{$weekStartStr}')
+                              AND toDate(created_at) <= toDate('{$weekEndStr}')
+                              AND upper(trim(toString(status))) = 'SUBMITTED'
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                        ";
+                        $weeklyOkkRows = $clickHouse->query($sqlWeeklyOkk);
+                        $okkWpIds = [];
+                        if (!empty($weeklyOkkRows)) {
+                            foreach ($weeklyOkkRows as $r) {
+                                $wpId = isset($r['work_permit_id']) ? trim((string) $r['work_permit_id']) : '';
+                                if ($wpId !== '' && isset($weeklyIkkIds[$wpId])) {
+                                    $okkWpIds[$weeklyIkkIds[$wpId]] = true;
+                                }
+                            }
+                        }
+                        $ikkAdaOkkCountWeekly = count($okkWpIds);
+                        
+                        // Query IKK yang cancel dalam rentang week
+                        $sqlWeeklyCancel = "
+                            SELECT COUNT(DISTINCT work_permit_id) as cnt
+                            FROM hse_automation.ipk_assessment
+                            WHERE work_permit_id IN ({$wpIdsWeeklyEsc})
+                              AND toDate(start_date) >= toDate('{$weekStartStr}')
+                              AND toDate(start_date) <= toDate('{$weekEndStr}')
+                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                              AND upper(trim(toString(status))) = 'SUBMITTED' 
+                              AND upper(trim(toString(job_status))) = 'NOT_STARTED'
+                        ";
+                        $cancelRows = $clickHouse->query($sqlWeeklyCancel);
+                        $totalPekerjaanBatalWeekly = (int) ($cancelRows[0]['cnt'] ?? 0);
+                    }
+                    
+                    // Hitung persentase
+                    $pctIkkAdaIpkWeekly = $totalIkkWeekly > 0 ? round(($ikkAdaIpkCountWeekly / $totalIkkWeekly) * 100, 1) : 0;
+                    $pctIkkAdaOkkWeekly = $totalIkkWeekly > 0 ? round(($ikkAdaOkkCountWeekly / $totalIkkWeekly) * 100, 1) : 0;
+                    $pctComplianceWeekly = round(($pctIkkAdaIpkWeekly + $pctIkkAdaOkkWeekly) / 2, 1);
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::debug('Dashboard weekly stats: ' . $e->getMessage());
         }
 
         // IPK-IKK dan OKK harian: setelah dapat DOPM list, hitung dari kode_ikk yang ada di list (agar konsisten dengan filter site)
@@ -1369,6 +1529,21 @@ class DOPMWeeklyController extends Controller
             'filterDate' => $filterDate,
             'filterSite' => $filterSite,
             'siteList' => $siteList,
+            // Weekly filter data
+            'filterWeek' => $filterWeek,
+            'weekNumber' => $weekNumber,
+            'weekYear' => $weekYear,
+            'weekStartDate' => $weekStartDate->format('d M'),
+            'weekEndDate' => $weekEndDate->format('d M Y'),
+            'weekList' => $weekList,
+            // Weekly statistics (distinct work permit)
+            'totalIkkWeekly' => $totalIkkWeekly,
+            'ikkAdaIpkCountWeekly' => $ikkAdaIpkCountWeekly,
+            'ikkAdaOkkCountWeekly' => $ikkAdaOkkCountWeekly,
+            'pctIkkAdaIpkWeekly' => $pctIkkAdaIpkWeekly,
+            'pctIkkAdaOkkWeekly' => $pctIkkAdaOkkWeekly,
+            'pctComplianceWeekly' => $pctComplianceWeekly,
+            'totalPekerjaanBatalWeekly' => $totalPekerjaanBatalWeekly,
             'totalDopmHarian' => $totalDopmHarian,
             'totalWorkPermitApprovedHarian' => $totalWorkPermitApprovedHarian,
             'totalDopmCancelHarian' => $totalDopmCancelHarian,

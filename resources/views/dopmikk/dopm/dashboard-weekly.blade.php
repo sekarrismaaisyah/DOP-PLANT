@@ -1425,15 +1425,18 @@
         <form method="get" action="{{ route('dopmikk.dopm.dashboard-weekly') }}" id="dashboardFilterForm">
             <div class="row g-3 align-items-end">
                 <div class="col-12 col-md">
-                    <label for="filterDate" class="form-label mb-2 small fw-semibold text-muted">
-                        <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">calendar_today</i>
-                        Tampilkan data tanggal
+                    <label for="filterWeek" class="form-label mb-2 small fw-semibold text-muted">
+                        <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">date_range</i>
+                        Pilih Week
                     </label>
-                    <input type="date" 
-                           name="date" 
-                           id="filterDate" 
-                           class="form-control rounded-3" 
-                           value="{{ $filterDate ?? now()->toDateString() }}" >
+                    <select name="week" id="filterWeek" class="form-select rounded-3">
+                        @foreach($weekList ?? [] as $week)
+                            <option value="{{ $week['value'] }}" {{ ($filterWeek ?? '') === $week['value'] ? 'selected' : '' }}>
+                                {{ $week['label'] }}
+                            </option>
+                        @endforeach
+                    </select>
+                    <input type="hidden" name="date" id="filterDate" value="{{ $filterDate ?? now()->toDateString() }}">
                 </div>
                 <div class="col-12 col-md">
                     <label for="filterSite" class="form-label mb-2 small fw-semibold text-muted">
@@ -1525,19 +1528,29 @@
           <div class="col-12 col-xl-5 col-xxl-4 d-flex">
             <div class="card rounded-4 w-100 shadow-none bg-transparent border-0">
                <div class="card-body p-0">
+                 {{-- Header Week Info --}}
+                 <div class="alert alert-primary bg-primary bg-opacity-10 border-primary border-opacity-25 rounded-4 mb-4">
+                   <div class="d-flex align-items-center gap-2">
+                     <i class="material-icons-outlined text-primary">date_range</i>
+                     <div>
+                       <h6 class="mb-0 fw-bold text-primary">Week {{ $weekNumber ?? '-' }} ({{ $weekYear ?? now()->year }})</h6>
+                       <small class="text-muted">{{ $weekStartDate ?? '-' }} - {{ $weekEndDate ?? '-' }}</small>
+                     </div>
+                   </div>
+                 </div>
                  <div class="row g-4">
                     <div class="col-12 col-xl-6 d-flex">
                       <div class="card mb-0 rounded-4 w-100">
                        <div class="card-body">
-                         <div class=" mb-2">
+                         <div class="mb-2">
                            <h5 class="mb-0 fw-bold">IKK Need Verification</h5>
-                           <p class="mb-0 text-muted small">Total IKK Need Verification</p>
+                           <p class="mb-0 text-muted small">Week {{ $weekNumber ?? '-' }}</p>
                          </div>
                          <div class="text-center py-3 mt-4">
-                           <h1 class="mb-0 display-5 fw-bold">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</h1>
+                           <h1 class="mb-0 display-5 fw-bold">{{ ($totalIkkWeekly ?? 0) - ($ikkAdaIpkCountWeekly ?? 0) }}</h1>
                          </div>
                          <div class="text-center mt-3">
-                           <p class="mb-0"><span class="text-success me-1">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</span> Need Verification pada hari ini</p>
+                           <p class="mb-0"><span class="text-primary fw-semibold me-1">{{ $totalIkkWeekly ?? 0 }}</span> Total IKK minggu ini</p>
                          </div>
                        </div>
                       </div>
@@ -1547,10 +1560,10 @@
                      <div class="card-body">
                        <div class="mb-2">
                          <h5 class="mb-0 fw-bold">Pekerjaan Batal</h5>
-                         <p class="mb-0 text-muted small">Total IPK-IKK Status Batal Hari ini</p>
+                         <p class="mb-0 text-muted small">Week {{ $weekNumber ?? '-' }}</p>
                        </div>
                        <div class="text-center py-3 mt-4">
-                         <h1 class="mb-0 display-5 fw-bold">{{ number_format($totalPekerjaanBatalHarian ?? 0) }} Cancel</h1>
+                         <h1 class="mb-0 display-5 fw-bold">{{ number_format($totalPekerjaanBatalWeekly ?? 0) }} Cancel</h1>
                        </div>
                        <div class="text-center mt-3">
                          <p class="mb-0 text-muted small">Data dari IPK-IKK</p>
@@ -1563,52 +1576,31 @@
                       <div class="card-body">
                         <div class="d-flex align-items-center gap-3 mb-2">
                            <div class="">
-                             @php
-                               $pctPengisianRataRataIkk = $pctPengisianRataRataIkk ?? round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
-                             @endphp
-                             <h2 class="mb-0">{{ $pctPengisianRataRataIkk }}% Compliance</h2>
+                             <h2 class="mb-0">{{ $pctComplianceWeekly ?? 0 }}% Compliance</h2>
                            </div>
                            <div class="">
-                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata IKK</p>
+                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Weekly</p>
                            </div>
                          </div>
-                         <p class="mb-0">Presentase Pengisian IKK (IPK & OKK)</p>
-                         <p class="mb-0 small text-muted">Berdasarkan IKK unik: IPK {{ $pctIkkAdaIpk ?? 0 }}% · OKK {{ $pctIkkAdaOkk ?? 0 }}%</p>
+                         <p class="mb-0">Presentase Pengisian IKK (IPK & OKK) Mingguan</p>
+                         <p class="mb-0 small text-muted">Berdasarkan IKK unik: IPK {{ $pctIkkAdaIpkWeekly ?? 0 }}% ({{ $ikkAdaIpkCountWeekly ?? 0 }}/{{ $totalIkkWeekly ?? 0 }}) · OKK {{ $pctIkkAdaOkkWeekly ?? 0 }}% ({{ $ikkAdaOkkCountWeekly ?? 0 }}/{{ $totalIkkWeekly ?? 0 }})</p>
                           <div class="mt-4">
-                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK (IKK) <span class="">{{ $pctPengisianRataRataIkk }}%</span></p>
-                            <div class="progress w-100" style="height: 7px;">
-                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRataIkk) }}%"></div>
+                            <p class="mb-2 d-flex align-items-center justify-content-between">IPK (Inspeksi Pra Kerja) <span class="">{{ $pctIkkAdaIpkWeekly ?? 0 }}%</span></p>
+                            <div class="progress w-100 mb-3" style="height: 7px;">
+                              <div class="progress-bar bg-success" style="width: {{ min(100, $pctIkkAdaIpkWeekly ?? 0) }}%"></div>
+                            </div>
+                            <p class="mb-2 d-flex align-items-center justify-content-between">OKK (Observasi Kegiatan Kerja) <span class="">{{ $pctIkkAdaOkkWeekly ?? 0 }}%</span></p>
+                            <div class="progress w-100 mb-3" style="height: 7px;">
+                              <div class="progress-bar bg-info" style="width: {{ min(100, $pctIkkAdaOkkWeekly ?? 0) }}%"></div>
+                            </div>
+                            <p class="mb-2 d-flex align-items-center justify-content-between fw-semibold">Rata-rata Compliance <span class="">{{ $pctComplianceWeekly ?? 0 }}%</span></p>
+                            <div class="progress w-100" style="height: 10px;">
+                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctComplianceWeekly ?? 0) }}%"></div>
                             </div>
                           </div>
                       </div>
                     </div>
                   </div>
-                  <!-- <div class="col-12 col-xl-12">
-                    <div class="card rounded-4 mb-0">
-                      <div class="card-body">
-                        <div class="d-flex align-items-center gap-3 mb-2">
-                           <div class="">
-                             @php
-                               $pctPengisianRataRataIkk = $pctPengisianRataRataIkk ?? round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
-                             @endphp
-                             <h2 class="mb-0">{{ $pctPengisianRataRataIkk }}% Compliance</h2>
-                           </div>
-                           <div class="">
-                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata IKK</p>
-                           </div>
-                         </div>
-                         <p class="mb-0">Presentase Pengisian IKK (IPK & OKK)</p>
-                         <p class="mb-0 small text-muted">Berdasarkan IKK unik: IPK {{ $pctIkkAdaIpk ?? 0 }}% · OKK {{ $pctIkkAdaOkk ?? 0 }}%</p>
-                          <div class="mt-4">
-                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK (IKK) <span class="">{{ $pctPengisianRataRataIkk }}%</span></p>
-                            <div class="progress w-100" style="height: 7px;">
-                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRataIkk) }}%"></div>
-                            </div>
-                          </div>
-                      </div>
-                      
-                    </div>
-                  </div> -->
 
                  </div><!--end row-->
                </div>
