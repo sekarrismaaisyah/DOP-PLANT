@@ -1765,12 +1765,26 @@ class DOPMWeeklyController extends Controller
                                         }
                                     }
                                 }
-                                $durationById = [
-                                    '6606dfe7-5df0-4d9e-9de3-7d49014d3b6b' => '9 jam',
-                                    '3032f5de-2bfe-4fe6-a791-8ecfda4fc1fc' => '6 jam',
-                                    '86390fff-42c2-4f31-aee5-953439312aa5' => '3 jam',
-                                    '7de308e6-bde0-40d2-9411-d517fc5dc9c9' => 'Mengikuti durasi IKK',
-                                ];
+                                $durationById = [];
+                                if (!empty($durationIds)) {
+                                    $durIds = array_unique(array_filter($durationIds));
+                                    $durEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $durIds));
+                                    try {
+                                        $sqlDur = "
+                                            SELECT id, name FROM hse_automation.ikk_m_job_duration
+                                            WHERE id IN ({$durEsc})
+                                        ";
+                                        $durRows = $ch->query($sqlDur);
+                                        foreach ($durRows ?? [] as $dr) {
+                                            $dId = self::getClickHouseRowValue($dr, 'id');
+                                            if ($dId !== null) {
+                                                $durationById[(string) $dId] = self::getClickHouseRowValue($dr, 'name');
+                                            }
+                                        }
+                                    } catch (\Throwable $e) {
+                                        \Illuminate\Support\Facades\Log::debug('Dashboard weekly modal IPK durasi lookup: ' . $e->getMessage());
+                                    }
+                                }
                                 foreach ($ipkIkk as $idx => $row) {
                                     $ipkIkk[$idx]['site'] = $wpSite;
                                     $ipkIkk[$idx]['kategori_ijk'] = $wpKategoriIjk;
