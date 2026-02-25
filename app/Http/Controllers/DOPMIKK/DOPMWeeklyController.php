@@ -1765,7 +1765,12 @@ class DOPMWeeklyController extends Controller
                                         }
                                     }
                                 }
-                                $durationById = [];
+                                $durationById = [
+                                    '6606dfe7-5df0-4d9e-9de3-7d49014d3b6b' => '9 jam',
+                                    '3032f5de-2bfe-4fe6-a791-8ecfda4fc1fc' => '6 jam',
+                                    '86390fff-42c2-4f31-aee5-953439312aa5' => '3 jam',
+                                    '7de308e6-bde0-40d2-9411-d517fc5dc9c9' => 'Mengikuti durasi IKK',
+                                ];
                                 if (!empty($durationIds)) {
                                     $durIds = array_unique(array_filter($durationIds));
                                     $durEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $durIds));
