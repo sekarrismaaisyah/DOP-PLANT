@@ -1419,26 +1419,47 @@
     <h1 class="hazard-detection-title">DOPM & IKK - Dashboard Weekly</h1>
     <p class="hazard-detection-subtitle">Statistik harian DOPM, IPK-IKK, OKK, dan OAK (Observasi Area Kerja)</p>
 
-    {{-- Filter tanggal --}}
+    {{-- Filter Week Calendar --}}
     <div class="card rounded-4 mb-3 w-100">
     <div class="card-body py-3">
         <form method="get" action="{{ route('dopmikk.dopm.dashboard-weekly') }}" id="dashboardFilterForm">
             <div class="row g-3 align-items-end">
-                <div class="col-12 col-md">
-                    <label for="filterWeek" class="form-label mb-2 small fw-semibold text-muted">
+                <div class="col-12 col-md-6 col-lg-5">
+                    <label class="form-label mb-2 small fw-semibold text-muted">
                         <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">date_range</i>
                         Pilih Week
                     </label>
-                    <select name="week" id="filterWeek" class="form-select rounded-3">
-                        @foreach($weekList ?? [] as $week)
-                            <option value="{{ $week['value'] }}" {{ ($filterWeek ?? '') === $week['value'] ? 'selected' : '' }}>
-                                {{ $week['label'] }}
-                            </option>
-                        @endforeach
-                    </select>
+                    {{-- Week Calendar Picker --}}
+                    <div class="week-calendar-picker">
+                        <div class="week-calendar-header d-flex align-items-center justify-content-between mb-2">
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle p-1" id="weekCalendarPrevMonth" title="Bulan Sebelumnya">
+                                <i class="material-icons-outlined" style="font-size: 18px;">chevron_left</i>
+                            </button>
+                            <h6 class="mb-0 fw-bold" id="weekCalendarMonthYear"></h6>
+                            <button type="button" class="btn btn-sm btn-outline-secondary rounded-circle p-1" id="weekCalendarNextMonth" title="Bulan Berikutnya">
+                                <i class="material-icons-outlined" style="font-size: 18px;">chevron_right</i>
+                            </button>
+                        </div>
+                        <div class="week-calendar-grid">
+                            <div class="week-calendar-day-header">Wk</div>
+                            <div class="week-calendar-day-header">Sen</div>
+                            <div class="week-calendar-day-header">Sel</div>
+                            <div class="week-calendar-day-header">Rab</div>
+                            <div class="week-calendar-day-header">Kam</div>
+                            <div class="week-calendar-day-header">Jum</div>
+                            <div class="week-calendar-day-header">Sab</div>
+                            <div class="week-calendar-day-header">Min</div>
+                        </div>
+                        <div class="week-calendar-body" id="weekCalendarBody"></div>
+                    </div>
+                    <input type="hidden" name="week" id="filterWeek" value="{{ $filterWeek ?? '' }}">
                     <input type="hidden" name="date" id="filterDate" value="{{ $filterDate ?? now()->toDateString() }}">
+                    <div class="mt-2 small text-muted" id="selectedWeekDisplay">
+                        <i class="material-icons-outlined me-1" style="font-size: 14px; vertical-align: middle;">check_circle</i>
+                        <span id="selectedWeekText">Week {{ $weekNumber ?? '-' }}: {{ $weekStartDate ?? '-' }} - {{ $weekEndDate ?? '-' }}</span>
+                    </div>
                 </div>
-                <div class="col-12 col-md">
+                <div class="col-12 col-md-4 col-lg-4">
                     <label for="filterSite" class="form-label mb-2 small fw-semibold text-muted">
                         <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">place</i>
                         Site
@@ -1463,6 +1484,102 @@
         </form>
     </div>
 </div>
+
+<style>
+.week-calendar-picker {
+    background: #f8f9fa;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: 12px;
+}
+.week-calendar-header button {
+    width: 32px;
+    height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.week-calendar-grid, .week-calendar-body {
+    display: grid;
+    grid-template-columns: 40px repeat(7, 1fr);
+    gap: 2px;
+}
+.week-calendar-day-header {
+    text-align: center;
+    font-size: 11px;
+    font-weight: 600;
+    color: #6b7280;
+    padding: 6px 2px;
+    text-transform: uppercase;
+}
+.week-calendar-row {
+    display: contents;
+}
+.week-calendar-week-num {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 11px;
+    font-weight: 700;
+    color: #3b82f6;
+    background: #eff6ff;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    padding: 4px;
+}
+.week-calendar-week-num:hover {
+    background: #3b82f6;
+    color: #fff;
+}
+.week-calendar-week-num.selected {
+    background: #3b82f6;
+    color: #fff;
+    box-shadow: 0 2px 6px rgba(59, 130, 246, 0.4);
+}
+.week-calendar-day {
+    text-align: center;
+    font-size: 12px;
+    padding: 6px 2px;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+    color: #374151;
+}
+.week-calendar-day:hover {
+    background: #e5e7eb;
+}
+.week-calendar-day.other-month {
+    color: #9ca3af;
+}
+.week-calendar-day.today {
+    background: #fef3c7;
+    color: #92400e;
+    font-weight: 600;
+}
+.week-calendar-day.in-selected-week {
+    background: #dbeafe;
+    color: #1e40af;
+}
+.week-calendar-day.in-selected-week.today {
+    background: #93c5fd;
+    color: #1e3a8a;
+    font-weight: 700;
+}
+.week-calendar-row.selected-week .week-calendar-day {
+    background: #dbeafe;
+    color: #1e40af;
+}
+.week-calendar-row.selected-week .week-calendar-day.today {
+    background: #93c5fd;
+    color: #1e3a8a;
+    font-weight: 700;
+}
+#selectedWeekDisplay {
+    color: #059669;
+    font-weight: 500;
+}
+</style>
     
 </div>
 
@@ -1481,42 +1598,49 @@
           <div class="col-12 col-xl-12 d-flex">
             <div class="card rounded-4 w-100">
               <div class="card-body">
+                {{-- Header Week Info --}}
+                <div class="d-flex align-items-center gap-2 mb-3 pb-3 border-bottom">
+                  <i class="material-icons-outlined text-primary">date_range</i>
+                  <div>
+                    <h6 class="mb-0 fw-bold text-primary">Week {{ $weekNumber ?? '-' }} ({{ $weekYear ?? now()->year }})</h6>
+                    <small class="text-muted">{{ $weekStartDate ?? '-' }} - {{ $weekEndDate ?? '-' }}</small>
+                  </div>
+                </div>
                 <div class="d-flex align-items-center justify-content-around flex-wrap gap-4 p-4">
                   <div class="d-flex flex-column align-items-center justify-content-center gap-2">
                     <a href="javascript:;" class="mb-2 wh-48 bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">assignment</i>
                     </a>
-                    <h3 class="mb-0">{{ number_format(count($ikkClickhouseListHarian ?? [])) }}</h3>
-                    <p class="mb-0">IKK</p>
-                     <small class="text-muted">Data Hari ini</small>
+                    <h3 class="mb-0">{{ number_format($totalIkkWeekly ?? 0) }}</h3>
+                    <p class="mb-0">Total IKK</p>
+                    <small class="text-muted">Week {{ $weekNumber ?? '-' }}</small>
                   </div>
                   <div class="vr"></div>
                   <div class="d-flex flex-column align-items-center justify-content-center gap-2">
                     <a href="javascript:;" class="mb-2 wh-48 bg-success bg-opacity-10 text-success rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">checklist</i>
                     </a>
-                    <h3 class="mb-0">{{ $pctIkkAdaIpk ?? 0 }}%</h3>
-                                <p class="mb-0">IKK ada IPK</p>
-                                <small class="text-muted">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }} belum IPK-IKK</small>
+                    <h3 class="mb-0">{{ $pctIkkAdaIpkWeekly ?? 0 }}%</h3>
+                    <p class="mb-0">IKK ada IPK</p>
+                    <small class="text-muted">{{ $ikkAdaIpkCountWeekly ?? 0 }}/{{ $totalIkkWeekly ?? 0 }} IKK</small>
                   </div>
                   <div class="vr"></div>
                   <div class="d-flex flex-column align-items-center justify-content-center gap-2">
                     <a href="javascript:;" class="mb-2 wh-48 bg-danger bg-opacity-10 text-danger rounded-circle d-flex align-items-center justify-content-center">
                       <i class="material-icons-outlined">folder_open</i>
                     </a>
-                    <h3 class="mb-0">{{ $pctIkkAdaOkk ?? 0 }}%</h3>
-                                <p class="mb-0">IKK ada OKK</p>
-                                <small class="text-muted">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaOkkCount ?? 0) }} belum OKK</small>
+                    <h3 class="mb-0">{{ $pctIkkAdaOkkWeekly ?? 0 }}%</h3>
+                    <p class="mb-0">IKK ada OKK</p>
+                    <small class="text-muted">{{ $ikkAdaOkkCountWeekly ?? 0 }}/{{ $totalIkkWeekly ?? 0 }} IKK</small>
                   </div>
                   <div class="vr"></div>
-                  
                   <div class="d-flex flex-column align-items-center justify-content-center gap-2">
-                    <a href="javascript:;" class="mb-2 wh-48 bg-info bg-opacity-10 text-info rounded-circle d-flex align-items-center justify-content-center">
-                      <i class="material-icons-outlined">visibility</i>
+                    <a href="javascript:;" class="mb-2 wh-48 bg-warning bg-opacity-10 text-warning rounded-circle d-flex align-items-center justify-content-center">
+                      <i class="material-icons-outlined">trending_up</i>
                     </a>
-                   <h3 class="mb-0">{{ number_format($totalOakHarian ?? 0) }}</h3>
-                                <p class="mb-0">OAK</p>
-                                <small class="text-muted">Data Hari ini (OBSERVE, Layer 2/3/4)</small>
+                    <h3 class="mb-0">{{ $pctComplianceWeekly ?? 0 }}%</h3>
+                    <p class="mb-0">Compliance</p>
+                    <small class="text-muted">Rata-rata IPK + OKK</small>
                   </div>
                 </div>
               </div>
@@ -1528,29 +1652,19 @@
           <div class="col-12 col-xl-5 col-xxl-4 d-flex">
             <div class="card rounded-4 w-100 shadow-none bg-transparent border-0">
                <div class="card-body p-0">
-                 {{-- Header Week Info --}}
-                 <div class="alert alert-primary bg-primary bg-opacity-10 border-primary border-opacity-25 rounded-4 mb-4">
-                   <div class="d-flex align-items-center gap-2">
-                     <i class="material-icons-outlined text-primary">date_range</i>
-                     <div>
-                       <h6 class="mb-0 fw-bold text-primary">Week {{ $weekNumber ?? '-' }} ({{ $weekYear ?? now()->year }})</h6>
-                       <small class="text-muted">{{ $weekStartDate ?? '-' }} - {{ $weekEndDate ?? '-' }}</small>
-                     </div>
-                   </div>
-                 </div>
                  <div class="row g-4">
                     <div class="col-12 col-xl-6 d-flex">
                       <div class="card mb-0 rounded-4 w-100">
                        <div class="card-body">
                          <div class="mb-2">
                            <h5 class="mb-0 fw-bold">IKK Need Verification</h5>
-                           <p class="mb-0 text-muted small">Week {{ $weekNumber ?? '-' }}</p>
+                           <p class="mb-0 text-muted small">Total IKK Need Verification</p>
                          </div>
                          <div class="text-center py-3 mt-4">
-                           <h1 class="mb-0 display-5 fw-bold">{{ ($totalIkkWeekly ?? 0) - ($ikkAdaIpkCountWeekly ?? 0) }}</h1>
+                           <h1 class="mb-0 display-5 fw-bold">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</h1>
                          </div>
                          <div class="text-center mt-3">
-                           <p class="mb-0"><span class="text-primary fw-semibold me-1">{{ $totalIkkWeekly ?? 0 }}</span> Total IKK minggu ini</p>
+                           <p class="mb-0"><span class="text-success me-1">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</span> Need Verification pada hari ini</p>
                          </div>
                        </div>
                       </div>
@@ -1560,10 +1674,10 @@
                      <div class="card-body">
                        <div class="mb-2">
                          <h5 class="mb-0 fw-bold">Pekerjaan Batal</h5>
-                         <p class="mb-0 text-muted small">Week {{ $weekNumber ?? '-' }}</p>
+                         <p class="mb-0 text-muted small">Total IPK-IKK Status Batal Hari ini</p>
                        </div>
                        <div class="text-center py-3 mt-4">
-                         <h1 class="mb-0 display-5 fw-bold">{{ number_format($totalPekerjaanBatalWeekly ?? 0) }} Cancel</h1>
+                         <h1 class="mb-0 display-5 fw-bold">{{ number_format($totalPekerjaanBatalHarian ?? 0) }} Cancel</h1>
                        </div>
                        <div class="text-center mt-3">
                          <p class="mb-0 text-muted small">Data dari IPK-IKK</p>
@@ -1576,26 +1690,21 @@
                       <div class="card-body">
                         <div class="d-flex align-items-center gap-3 mb-2">
                            <div class="">
-                             <h2 class="mb-0">{{ $pctComplianceWeekly ?? 0 }}% Compliance</h2>
+                             @php
+                               $pctPengisianRataRataIkk = $pctPengisianRataRataIkk ?? round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
+                             @endphp
+                             <h2 class="mb-0">{{ $pctPengisianRataRataIkk }}% Compliance</h2>
                            </div>
                            <div class="">
-                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Weekly</p>
+                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata IKK</p>
                            </div>
                          </div>
-                         <p class="mb-0">Presentase Pengisian IKK (IPK & OKK) Mingguan</p>
-                         <p class="mb-0 small text-muted">Berdasarkan IKK unik: IPK {{ $pctIkkAdaIpkWeekly ?? 0 }}% ({{ $ikkAdaIpkCountWeekly ?? 0 }}/{{ $totalIkkWeekly ?? 0 }}) · OKK {{ $pctIkkAdaOkkWeekly ?? 0 }}% ({{ $ikkAdaOkkCountWeekly ?? 0 }}/{{ $totalIkkWeekly ?? 0 }})</p>
+                         <p class="mb-0">Presentase Pengisian IKK (IPK & OKK)</p>
+                         <p class="mb-0 small text-muted">Berdasarkan IKK unik: IPK {{ $pctIkkAdaIpk ?? 0 }}% · OKK {{ $pctIkkAdaOkk ?? 0 }}%</p>
                           <div class="mt-4">
-                            <p class="mb-2 d-flex align-items-center justify-content-between">IPK (Inspeksi Pra Kerja) <span class="">{{ $pctIkkAdaIpkWeekly ?? 0 }}%</span></p>
-                            <div class="progress w-100 mb-3" style="height: 7px;">
-                              <div class="progress-bar bg-success" style="width: {{ min(100, $pctIkkAdaIpkWeekly ?? 0) }}%"></div>
-                            </div>
-                            <p class="mb-2 d-flex align-items-center justify-content-between">OKK (Observasi Kegiatan Kerja) <span class="">{{ $pctIkkAdaOkkWeekly ?? 0 }}%</span></p>
-                            <div class="progress w-100 mb-3" style="height: 7px;">
-                              <div class="progress-bar bg-info" style="width: {{ min(100, $pctIkkAdaOkkWeekly ?? 0) }}%"></div>
-                            </div>
-                            <p class="mb-2 d-flex align-items-center justify-content-between fw-semibold">Rata-rata Compliance <span class="">{{ $pctComplianceWeekly ?? 0 }}%</span></p>
-                            <div class="progress w-100" style="height: 10px;">
-                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctComplianceWeekly ?? 0) }}%"></div>
+                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK (IKK) <span class="">{{ $pctPengisianRataRataIkk }}%</span></p>
+                            <div class="progress w-100" style="height: 7px;">
+                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRataIkk) }}%"></div>
                             </div>
                           </div>
                       </div>
@@ -2701,6 +2810,195 @@
 <script>window.skipChart4 = true; window.skipChart1 = true;</script>
 <script src="{{ URL::asset('build/js/index.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/peity/jquery.peity.min.js') }}"></script>
+<script>
+(function() {
+  // Week Calendar Picker
+  var selectedWeekValue = @json($filterWeek ?? '');
+  var monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  var monthNamesShort = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
+  
+  // Parse selected week to get display month
+  var currentDate = new Date();
+  var displayMonth = currentDate.getMonth();
+  var displayYear = currentDate.getFullYear();
+  
+  if (selectedWeekValue) {
+    var match = selectedWeekValue.match(/^(\d{4})-W(\d{2})$/);
+    if (match) {
+      var y = parseInt(match[1], 10);
+      var w = parseInt(match[2], 10);
+      // Get first day of that week
+      var firstDayOfWeek = getDateOfISOWeek(w, y);
+      displayMonth = firstDayOfWeek.getMonth();
+      displayYear = firstDayOfWeek.getFullYear();
+    }
+  }
+  
+  function getDateOfISOWeek(week, year) {
+    var simple = new Date(year, 0, 1 + (week - 1) * 7);
+    var dow = simple.getDay();
+    var ISOweekStart = simple;
+    if (dow <= 4) {
+      ISOweekStart.setDate(simple.getDate() - simple.getDay() + 1);
+    } else {
+      ISOweekStart.setDate(simple.getDate() + 8 - simple.getDay());
+    }
+    return ISOweekStart;
+  }
+  
+  function getISOWeek(date) {
+    var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    var dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    var yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+    return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+  }
+  
+  function getISOWeekYear(date) {
+    var d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+    var dayNum = d.getUTCDay() || 7;
+    d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+    return d.getUTCFullYear();
+  }
+  
+  function formatWeekValue(year, week) {
+    return year + '-W' + String(week).padStart(2, '0');
+  }
+  
+  function formatDate(date) {
+    return date.getDate() + ' ' + monthNamesShort[date.getMonth()];
+  }
+  
+  function isToday(date) {
+    var today = new Date();
+    return date.getDate() === today.getDate() && 
+           date.getMonth() === today.getMonth() && 
+           date.getFullYear() === today.getFullYear();
+  }
+  
+  function renderWeekCalendar(month, year) {
+    var container = document.getElementById('weekCalendarBody');
+    var monthYearEl = document.getElementById('weekCalendarMonthYear');
+    if (!container || !monthYearEl) return;
+    
+    container.innerHTML = '';
+    monthYearEl.textContent = monthNames[month] + ' ' + year;
+    
+    // Get first day of month and last day
+    var firstDay = new Date(year, month, 1);
+    var lastDay = new Date(year, month + 1, 0);
+    
+    // Get the Monday of the week containing the first day
+    var startDate = new Date(firstDay);
+    var dayOfWeek = startDate.getDay() || 7; // Convert Sunday (0) to 7
+    startDate.setDate(startDate.getDate() - dayOfWeek + 1); // Go to Monday
+    
+    // Get the Sunday of the week containing the last day
+    var endDate = new Date(lastDay);
+    var endDayOfWeek = endDate.getDay() || 7;
+    endDate.setDate(endDate.getDate() + (7 - endDayOfWeek)); // Go to Sunday
+    
+    var currentDateIter = new Date(startDate);
+    
+    while (currentDateIter <= endDate) {
+      var weekNum = getISOWeek(currentDateIter);
+      var weekYear = getISOWeekYear(currentDateIter);
+      var weekValue = formatWeekValue(weekYear, weekNum);
+      
+      // Calculate week start and end for display
+      var weekStartDisplay = new Date(currentDateIter);
+      var weekEndDisplay = new Date(currentDateIter);
+      weekEndDisplay.setDate(weekEndDisplay.getDate() + 6);
+      
+      var rowHtml = '<div class="week-calendar-row' + (weekValue === selectedWeekValue ? ' selected-week' : '') + '" data-week="' + weekValue + '">';
+      
+      // Week number cell
+      rowHtml += '<div class="week-calendar-week-num' + (weekValue === selectedWeekValue ? ' selected' : '') + '" data-week="' + weekValue + '" data-start="' + formatDate(weekStartDisplay) + '" data-end="' + formatDate(weekEndDisplay) + ' ' + weekEndDisplay.getFullYear() + '" title="Klik untuk memilih Week ' + weekNum + '">' + weekNum + '</div>';
+      
+      // Day cells (Monday to Sunday)
+      for (var i = 0; i < 7; i++) {
+        var dayDate = new Date(currentDateIter);
+        dayDate.setDate(dayDate.getDate() + i);
+        
+        var dayClasses = ['week-calendar-day'];
+        if (dayDate.getMonth() !== month) {
+          dayClasses.push('other-month');
+        }
+        if (isToday(dayDate)) {
+          dayClasses.push('today');
+        }
+        if (weekValue === selectedWeekValue) {
+          dayClasses.push('in-selected-week');
+        }
+        
+        rowHtml += '<div class="' + dayClasses.join(' ') + '" data-week="' + weekValue + '">' + dayDate.getDate() + '</div>';
+      }
+      
+      rowHtml += '</div>';
+      container.innerHTML += rowHtml;
+      
+      // Move to next week
+      currentDateIter.setDate(currentDateIter.getDate() + 7);
+    }
+    
+    // Add click handlers
+    container.querySelectorAll('.week-calendar-week-num, .week-calendar-day').forEach(function(el) {
+      el.addEventListener('click', function() {
+        var weekVal = this.getAttribute('data-week');
+        selectWeek(weekVal);
+      });
+    });
+  }
+  
+  function selectWeek(weekValue) {
+    selectedWeekValue = weekValue;
+    
+    // Update hidden input
+    var input = document.getElementById('filterWeek');
+    if (input) input.value = weekValue;
+    
+    // Parse week to get display info
+    var match = weekValue.match(/^(\d{4})-W(\d{2})$/);
+    if (match) {
+      var y = parseInt(match[1], 10);
+      var w = parseInt(match[2], 10);
+      var weekStart = getDateOfISOWeek(w, y);
+      var weekEnd = new Date(weekStart);
+      weekEnd.setDate(weekEnd.getDate() + 6);
+      
+      var displayText = 'Week ' + w + ': ' + formatDate(weekStart) + ' - ' + formatDate(weekEnd) + ' ' + weekEnd.getFullYear();
+      var textEl = document.getElementById('selectedWeekText');
+      if (textEl) textEl.textContent = displayText;
+    }
+    
+    // Re-render calendar to update selection
+    renderWeekCalendar(displayMonth, displayYear);
+  }
+  
+  // Navigation buttons
+  document.getElementById('weekCalendarPrevMonth')?.addEventListener('click', function() {
+    displayMonth--;
+    if (displayMonth < 0) {
+      displayMonth = 11;
+      displayYear--;
+    }
+    renderWeekCalendar(displayMonth, displayYear);
+  });
+  
+  document.getElementById('weekCalendarNextMonth')?.addEventListener('click', function() {
+    displayMonth++;
+    if (displayMonth > 11) {
+      displayMonth = 0;
+      displayYear++;
+    }
+    renderWeekCalendar(displayMonth, displayYear);
+  });
+  
+  // Initial render
+  renderWeekCalendar(displayMonth, displayYear);
+})();
+</script>
+
 <script>
 (function() {
   // Chart1: Total IKK Week ini (ClickHouse Approved + Expired) per hari
