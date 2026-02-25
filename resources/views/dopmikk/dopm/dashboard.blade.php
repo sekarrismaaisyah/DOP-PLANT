@@ -1520,7 +1520,7 @@
 </div>
 
     {{-- Sidebar Alert: riwayat Need Action & Warning per jam --}}
-    <button type="button" class="alert-sidebar-toggle collapsed" id="alertSidebarToggle" title="Buka panel Alert per jam" aria-label="Toggle Alert sidebar">
+    <!-- <button type="button" class="alert-sidebar-toggle collapsed" id="alertSidebarToggle" title="Buka panel Alert per jam" aria-label="Toggle Alert sidebar">
         <span class="material-icons-outlined">notifications_active</span>
     </button>
     <div class="alert-sidebar collapsed" id="alertSidebar">
@@ -1561,7 +1561,7 @@
         <div class="border-top p-2 small text-muted text-center">
             Snapshot tersimpan saat dashboard dibuka (tanggal hari ini) dan lewat scheduler per jam.
         </div>
-    </div>
+    </div> -->
     <script>
     (function() {
         var sidebar = document.getElementById('alertSidebar');
