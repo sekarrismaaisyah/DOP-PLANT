@@ -38,11 +38,6 @@ return new class extends Migration
 
             $table->timestamps();
 
-            $table->foreign('closure_id')
-                ->references('id')
-                ->on('dopm_alert_intervensi_closures')
-                ->onDelete('cascade');
-
             $table->index('closure_id', 'dopm_evidences_closure_id_index');
         });
     }
