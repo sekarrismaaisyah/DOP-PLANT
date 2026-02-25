@@ -1632,8 +1632,8 @@
                       <i class="material-icons-outlined">checklist</i>
                     </a>
                     <h3 class="mb-0">{{ $pctIkkAdaIpkWeekly ?? 0 }}%</h3>
-                    <p class="mb-0">IKK ada IPK</p>
-                    <small class="text-muted">{{ $ikkAdaIpkCountWeekly ?? 0 }}/{{ $totalIkkWeekly ?? 0 }} IKK</small>
+                    <p class="mb-0">IPK Harian</p>
+                    <small class="text-muted">{{ $totalIpkAda ?? 0 }}/{{ $totalIpkSeharusnya ?? 0 }} hari</small>
                   </div>
                   <div class="vr"></div>
                   <div class="d-flex flex-column align-items-center justify-content-center gap-2">
