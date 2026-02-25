@@ -305,6 +305,7 @@ class DOPMController extends Controller
                             company_name,
                             status,
                             m_job_id,
+                            m_job_duration_id,
                             start_date,
                             end_date,
                             location_name,
@@ -438,7 +439,6 @@ class DOPMController extends Controller
                                 'nama_pekerjaan' => $row['name'] ?? null,
                                 'perusahaan' => $row['company_name'] ?? null,
                                 'status' => $statusLabel,
-                                // status_matriks akan diisi ulang berdasarkan IPK/OKK/OAK di bawah
                                 'status_matriks' => null,
                                 'nama_layer_1' => $namaLayer1,
                                 'sid_layer_1' => $sidLayer1,
@@ -450,6 +450,7 @@ class DOPMController extends Controller
                                 'sid_layer_4' => $sidLayer4,
                                 'start_date' => $row['start_date'] ?? null,
                                 'end_date' => $row['end_date'] ?? null,
+                                'm_job_duration_id' => $row['m_job_duration_id'] ?? null,
                                 'location_name' => self::getClickHouseRowValue($row, 'location_name'),
                                 'location_detail_name' => self::getClickHouseRowValue($row, 'location_detail_name'),
                             ];
@@ -1421,6 +1422,7 @@ class DOPMController extends Controller
                             company_name,
                             status,
                             m_job_id,
+                            m_job_duration_id,
                             start_date,
                             end_date,
                             location_name,
@@ -1556,7 +1558,6 @@ class DOPMController extends Controller
                                 'nama_pekerjaan' => $row['name'] ?? null,
                                 'perusahaan' => $row['company_name'] ?? null,
                                 'status' => $statusLabel,
-                                // status_matriks akan diisi ulang berdasarkan IPK/OKK/OAK di bawah
                                 'status_matriks' => null,
                                 'nama_layer_1' => $namaLayer1,
                                 'sid_layer_1' => $sidLayer1,
@@ -1568,6 +1569,7 @@ class DOPMController extends Controller
                                 'sid_layer_4' => $sidLayer4,
                                 'start_date' => $row['start_date'] ?? null,
                                 'end_date' => $row['end_date'] ?? null,
+                                'm_job_duration_id' => $row['m_job_duration_id'] ?? null,
                                 'location_name' => self::getClickHouseRowValue($row, 'location_name'),
                                 'location_detail_name' => self::getClickHouseRowValue($row, 'location_detail_name'),
                             ];
