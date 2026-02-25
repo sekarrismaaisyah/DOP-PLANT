@@ -3,6 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class DopmAlertIntervensi extends Model
 {
@@ -16,13 +18,58 @@ class DopmAlertIntervensi extends Model
         'user_name',
         'user_username',
         'user_email',
+        'pic_user_id',
+        'pic_name',
+        'pic_email',
+        'status',
     ];
 
     protected $casts = [
         'tanggal' => 'date',
         'alert_level' => 'integer',
         'user_id' => 'integer',
+        'pic_user_id' => 'integer',
     ];
+
+    /**
+     * Relasi ke user PIC (Person In Charge).
+     */
+    public function pic(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'pic_user_id');
+    }
+
+    /**
+     * Relasi ke closure (data penutupan issue).
+     */
+    public function closure(): HasOne
+    {
+        return $this->hasOne(DopmAlertIntervensiClosure::class, 'alert_intervensi_id');
+    }
+
+    /**
+     * Cek apakah issue sudah di-close.
+     */
+    public function isClosed(): bool
+    {
+        return $this->status === 'closed';
+    }
+
+    /**
+     * Cek apakah issue masih open.
+     */
+    public function isOpen(): bool
+    {
+        return $this->status === 'open';
+    }
+
+    /**
+     * Cek apakah issue sedang in progress.
+     */
+    public function isInProgress(): bool
+    {
+        return $this->status === 'in_progress';
+    }
 
     /**
      * Cek apakah IKK sudah terintervensi di level tertentu pada tanggal.
