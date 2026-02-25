@@ -2756,10 +2756,46 @@ class DOPMController extends Controller
                 'user_name' => $userName,
                 'user_username' => $userUsername,
                 'user_email' => $userEmail,
+                'status' => 'open',
             ]
         );
 
         return response()->json(['success' => true, 'message' => 'Intervensi tercatat']);
+    }
+
+    /**
+     * Update PIC untuk intervensi yang sudah ada.
+     * Dipanggil saat user klik tombol WA untuk intervensi.
+     */
+    public function updateIntervensiPic(Request $request): JsonResponse
+    {
+        $tanggal = trim((string) $request->input('tanggal', ''));
+        $kodeIkk = trim((string) $request->input('kode_ikk', ''));
+        $alertLevel = (int) $request->input('alert_level', 1);
+        $picUserId = $request->input('pic_user_id');
+        $picName = trim((string) $request->input('pic_name', ''));
+        $picEmail = trim((string) $request->input('pic_email', ''));
+
+        if ($kodeIkk === '' || $tanggal === '') {
+            return response()->json(['success' => false, 'message' => 'tanggal dan kode_ikk wajib'], 400);
+        }
+
+        $intervensi = DopmAlertIntervensi::where('tanggal', $tanggal)
+            ->where('kode_ikk', $kodeIkk)
+            ->where('alert_level', $alertLevel)
+            ->first();
+
+        if (!$intervensi) {
+            return response()->json(['success' => false, 'message' => 'Intervensi tidak ditemukan'], 404);
+        }
+
+        $intervensi->update([
+            'pic_user_id' => $picUserId ?: null,
+            'pic_name' => $picName !== '' ? $picName : null,
+            'pic_email' => $picEmail !== '' ? $picEmail : null,
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'PIC berhasil diupdate']);
     }
 
     /**
@@ -4249,5 +4285,225 @@ class DOPMController extends Controller
             }
         }
         return $out;
+    }
+
+    /**
+     * Halaman Issue Closure: daftar issue yang perlu di-close dan history closure.
+     */
+    public function issueClosure(Request $request)
+    {
+        $dateStart = $request->input('date_start', now()->subDays(7)->format('Y-m-d'));
+        $dateEnd = $request->input('date_end', now()->format('Y-m-d'));
+        $status = $request->input('status', '');
+
+        $query = DopmAlertIntervensi::query()
+            ->whereBetween('tanggal', [$dateStart, $dateEnd])
+            ->orderBy('tanggal', 'desc')
+            ->orderBy('created_at', 'desc');
+
+        if ($status !== '') {
+            $query->where('status', $status);
+        }
+
+        $issues = $query->with('closure')->get();
+
+        $openIssues = $issues->where('status', 'open');
+        $inProgressIssues = $issues->where('status', 'in_progress');
+        $closedIssues = $issues->where('status', 'closed');
+
+        return view('dopmikk.dopm.issue-closure', [
+            'dateStart' => $dateStart,
+            'dateEnd' => $dateEnd,
+            'status' => $status,
+            'openIssues' => $openIssues,
+            'inProgressIssues' => $inProgressIssues,
+            'closedIssues' => $closedIssues,
+            'openCount' => $openIssues->count(),
+            'inProgressCount' => $inProgressIssues->count(),
+            'closedCount' => $closedIssues->count(),
+        ]);
+    }
+
+    /**
+     * API: Search users untuk assign PIC.
+     */
+    public function searchUsers(Request $request): JsonResponse
+    {
+        $q = trim((string) $request->input('q', ''));
+
+        if (strlen($q) < 2) {
+            return response()->json(['success' => true, 'users' => []]);
+        }
+
+        try {
+            $users = \Illuminate\Support\Facades\DB::table('vw_user')
+                ->where('is_active', 1)
+                ->whereNotNull('username')
+                ->where('username', '!=', '')
+                ->whereNotNull('nama')
+                ->where('nama', '!=', '')
+                ->where(function ($query) use ($q) {
+                    $query->where('nama', 'LIKE', '%' . $q . '%')
+                        ->orWhere('username', 'LIKE', '%' . $q . '%');
+                })
+                ->select('id', 'username', 'nama', 'email')
+                ->orderBy('nama', 'ASC')
+                ->limit(20)
+                ->get()
+                ->map(fn ($row) => [
+                    'id' => $row->id,
+                    'username' => trim($row->username ?? ''),
+                    'nama' => trim($row->nama ?? ''),
+                    'email' => trim($row->email ?? ''),
+                ])
+                ->values()
+                ->toArray();
+
+            return response()->json(['success' => true, 'users' => $users]);
+        } catch (\Throwable $e) {
+            return response()->json(['success' => false, 'users' => [], 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Assign PIC ke issue.
+     */
+    public function assignPic(Request $request): JsonResponse
+    {
+        $issueId = (int) $request->input('issue_id');
+        $picUserId = $request->input('pic_user_id');
+        $picName = trim((string) $request->input('pic_name', ''));
+        $picEmail = trim((string) $request->input('pic_email', ''));
+
+        if ($issueId <= 0) {
+            return response()->json(['success' => false, 'message' => 'Issue ID tidak valid'], 400);
+        }
+
+        $issue = DopmAlertIntervensi::find($issueId);
+        if (!$issue) {
+            return response()->json(['success' => false, 'message' => 'Issue tidak ditemukan'], 404);
+        }
+
+        $issue->update([
+            'pic_user_id' => $picUserId,
+            'pic_name' => $picName,
+            'pic_email' => $picEmail,
+            'status' => 'in_progress',
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'PIC berhasil di-assign']);
+    }
+
+    /**
+     * API: Close issue dengan evidence.
+     */
+    public function closeIssue(Request $request): JsonResponse
+    {
+        $issueId = (int) $request->input('issue_id');
+        $keterangan = trim((string) $request->input('keterangan', ''));
+        $rootCause = trim((string) $request->input('root_cause', ''));
+        $tindakan = trim((string) $request->input('tindakan', ''));
+
+        if ($issueId <= 0) {
+            return response()->json(['success' => false, 'message' => 'Issue ID tidak valid'], 400);
+        }
+        if ($keterangan === '') {
+            return response()->json(['success' => false, 'message' => 'Keterangan wajib diisi'], 400);
+        }
+
+        $issue = DopmAlertIntervensi::find($issueId);
+        if (!$issue) {
+            return response()->json(['success' => false, 'message' => 'Issue tidak ditemukan'], 404);
+        }
+
+        $user = Auth::user();
+
+        try {
+            \Illuminate\Support\Facades\DB::beginTransaction();
+
+            $closure = \App\Models\DopmAlertIntervensiClosure::create([
+                'alert_intervensi_id' => $issueId,
+                'closed_by_user_id' => $user?->id,
+                'closed_by_name' => $user?->name ?? 'Unknown',
+                'closed_by_email' => $user?->email,
+                'keterangan' => $keterangan,
+                'root_cause' => $rootCause !== '' ? $rootCause : null,
+                'tindakan' => $tindakan !== '' ? $tindakan : null,
+                'closed_at' => now(),
+            ]);
+
+            if ($request->hasFile('evidences')) {
+                foreach ($request->file('evidences') as $file) {
+                    $fileName = $file->getClientOriginalName();
+                    $filePath = $file->store('dopm-evidences', 'public');
+                    $fileType = $file->getMimeType();
+                    $fileSize = $file->getSize();
+
+                    \App\Models\DopmAlertIntervensiEvidence::create([
+                        'closure_id' => $closure->id,
+                        'file_name' => $fileName,
+                        'file_path' => $filePath,
+                        'file_type' => $fileType,
+                        'file_size' => $fileSize,
+                        'uploaded_by_user_id' => $user?->id ?? 0,
+                    ]);
+                }
+            }
+
+            $issue->update(['status' => 'closed']);
+
+            \Illuminate\Support\Facades\DB::commit();
+
+            return response()->json(['success' => true, 'message' => 'Issue berhasil di-close']);
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\DB::rollBack();
+            \Illuminate\Support\Facades\Log::error('closeIssue error: ' . $e->getMessage());
+            return response()->json(['success' => false, 'message' => 'Gagal menutup issue: ' . $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Get closure detail dengan evidences.
+     */
+    public function getClosure(Request $request): JsonResponse
+    {
+        $issueId = (int) $request->input('issue_id');
+
+        if ($issueId <= 0) {
+            return response()->json(['success' => false, 'message' => 'Issue ID tidak valid'], 400);
+        }
+
+        $issue = DopmAlertIntervensi::with(['closure.evidences'])->find($issueId);
+        if (!$issue) {
+            return response()->json(['success' => false, 'message' => 'Issue tidak ditemukan'], 404);
+        }
+
+        $closure = $issue->closure;
+
+        $data = [
+            'kode_ikk' => $issue->kode_ikk,
+            'tanggal' => $issue->tanggal->format('d M Y'),
+            'alert_level' => $issue->alert_level,
+            'pic_name' => $issue->pic_name,
+            'closed_by_name' => $closure?->closed_by_name,
+            'closed_at' => $closure?->closed_at?->format('d M Y H:i'),
+            'keterangan' => $closure?->keterangan,
+            'root_cause' => $closure?->root_cause,
+            'tindakan' => $closure?->tindakan,
+            'evidences' => [],
+        ];
+
+        if ($closure && $closure->evidences) {
+            foreach ($closure->evidences as $ev) {
+                $data['evidences'][] = [
+                    'file_name' => $ev->file_name,
+                    'file_url' => asset('storage/' . $ev->file_path),
+                    'file_type' => $ev->file_type,
+                    'file_size_formatted' => $ev->file_size_formatted,
+                ];
+            }
+        }
+
+        return response()->json(['success' => true, 'data' => $data]);
     }
 }

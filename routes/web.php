@@ -427,14 +427,20 @@ Route::middleware(['auth'])->group(function () {
         Route::get('api/ikk-modal-data', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getDetailModalData'])->name('api.ikk-modal-data');
         Route::get('api/ikk-context-alert-log', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getIkkContextForAlertLog'])->name('api.ikk-context-alert-log');
         Route::post('api/alert-log-intervensi', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'storeAlertLogIntervensi'])->name('api.alert-log-intervensi');
+        Route::post('api/update-intervensi-pic', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'updateIntervensiPic'])->name('api.update-intervensi-pic');
         Route::get('api/layer1-users', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getLayer1Users'])->name('api.layer1-users');
         Route::get('api/layers234-users', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getLayers234Users'])->name('api.layers234-users');
+        Route::get('api/search-users', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'searchUsers'])->name('api.search-users');
+        Route::post('api/assign-pic', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'assignPic'])->name('api.assign-pic');
+        Route::post('api/close-issue', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'closeIssue'])->name('api.close-issue');
+        Route::get('api/get-closure', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'getClosure'])->name('api.get-closure');
         // DOPM
         Route::prefix('dopm')->name('dopm.')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'dashboard'])->name('dashboard');
             // Dashboard Weekly menggunakan controller khusus agar bisa menampilkan status APPROVED & EXPIRED
             Route::get('/dashboard-weekly', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'dashboard'])->name('dashboard-weekly');
             Route::get('/alert-log', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'alertLog'])->name('alert-log');
+            Route::get('/issue-closure', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'issueClosure'])->name('issue-closure');
             Route::get('/', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'index'])->name('index');
             Route::get('/create', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'create'])->name('create');
             Route::get('/download-template', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'downloadTemplate'])->name('download-template');

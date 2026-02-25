@@ -404,12 +404,14 @@
 (function() {
     var ikkContextUrl = @json(route('dopmikk.api.ikk-context-alert-log'));
     var intervensiStoreUrl = @json(route('dopmikk.api.alert-log-intervensi'));
+    var updatePicUrl = @json(route('dopmikk.api.update-intervensi-pic'));
     var modalApiUrl = @json(route('dopmikk.api.ikk-modal-data'));
     var layer1UsersApiUrl = @json(route('dopmikk.api.layer1-users'));
     var layers234UsersApiUrl = @json(route('dopmikk.api.layers234-users'));
     var ipkFormLink = 'https://beikk.beraucoal.co.id/monitoring-ipk';
     var intervensiModalEl = document.getElementById('intervensiDopmModal');
     var intervensiModal = intervensiModalEl ? new bootstrap.Modal(intervensiModalEl) : null;
+    var currentIntervensiData = null;
 
     function tr(cells) {
         var row = document.createElement('tr');
@@ -443,6 +445,28 @@
         return s;
     }
 
+    function savePicAndOpenWa(waUrl, picUser) {
+        if (!currentIntervensiData || !currentIntervensiData.kode_ikk) {
+            window.open(waUrl, '_blank');
+            return;
+        }
+        var csrfToken = (document.querySelector('meta[name="csrf-token"]') && document.querySelector('meta[name="csrf-token"]').getAttribute('content')) || @json(csrf_token());
+        var formData = new FormData();
+        formData.append('tanggal', currentIntervensiData.tanggal);
+        formData.append('kode_ikk', currentIntervensiData.kode_ikk);
+        formData.append('alert_level', currentIntervensiData.alert_level);
+        formData.append('pic_user_id', picUser.id || '');
+        formData.append('pic_name', picUser.nama || picUser.username || '');
+        formData.append('pic_email', picUser.email || '');
+        fetch(updatePicUrl, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken || '' },
+            body: formData
+        }).finally(function() {
+            window.open(waUrl, '_blank');
+        });
+    }
+
     document.addEventListener('click', function(e) {
         var btnAlertLog = e.target.closest('.btn-intervensi-alert-log');
         if (btnAlertLog) {
@@ -472,6 +496,8 @@
                     });
             };
             // Simpan intervensi dulu (jika terintervensi di jam ke-2, alert jam ke-3 tidak akan muncul lagi)
+            // Simpan context untuk update PIC nanti
+            currentIntervensiData = { tanggal: tanggal, kode_ikk: kodeIkk, alert_level: alertLevel };
             var formData = new FormData();
             formData.append('tanggal', tanggal);
             formData.append('kode_ikk', kodeIkk);
@@ -488,6 +514,10 @@
         var btnIntervensi = e.target.closest('.btn-intervensi-dopm');
         if (btnIntervensi && intervensiModal) {
             var data = JSON.parse(btnIntervensi.getAttribute('data-dopm') || '{}');
+            // Simpan context untuk update PIC saat klik tombol WA
+            if (!currentIntervensiData) {
+                currentIntervensiData = { tanggal: data.tanggal_dop || '', kode_ikk: data.kode_ikk || '', alert_level: 1 };
+            }
             var namaLayer1 = (data.nama_layer_1 || '').trim();
             var sidLayer1 = (data.sid_layer_1 || '').trim();
             var hasLayer1 = sidLayer1 !== '' || namaLayer1 !== '';
@@ -666,7 +696,7 @@
                             if (!num) return;
                             var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn btn-sm btn-success';
                             btn.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA (IPK) → ' + label;
-                            btn.addEventListener('click', function() { window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(ipkMsg), '_blank'); });
+                            btn.addEventListener('click', function() { savePicAndOpenWa('https://wa.me/' + num + '?text=' + encodeURIComponent(ipkMsg), u); });
                             layer1UsersEl2.appendChild(btn);
                         });
                         users.forEach(function(u) {
@@ -674,7 +704,7 @@
                             if (!num) return;
                             var btn = document.createElement('button'); btn.type = 'button'; btn.className = 'btn btn-sm btn-success';
                             btn.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA (OKK) → ' + label;
-                            btn.addEventListener('click', function() { window.open('https://wa.me/' + num + '?text=' + encodeURIComponent(okkMsg), '_blank'); });
+                            btn.addEventListener('click', function() { savePicAndOpenWa('https://wa.me/' + num + '?text=' + encodeURIComponent(okkMsg), u); });
                             okkLayer1UsersEl2.appendChild(btn);
                         });
                     })
@@ -712,11 +742,12 @@
                             users.forEach(function(u) {
                                 var num = normalizeWaNumber(u.selular); if (!num) return;
                                 var label = u.nama || u.username || 'User';
-                                var a = document.createElement('a');
-                                a.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(oakMsg); a.target = '_blank'; a.rel = 'noopener';
-                                a.className = 'btn btn-sm btn-warning text-dark';
-                                a.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:14px;">send</i> Intervensi by WA'; a.title = label;
-                                usersEl.appendChild(a);
+                                var btn = document.createElement('button');
+                                btn.type = 'button';
+                                btn.className = 'btn btn-sm btn-warning text-dark';
+                                btn.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:14px;">send</i> Intervensi by WA'; btn.title = label;
+                                btn.addEventListener('click', function() { savePicAndOpenWa('https://wa.me/' + num + '?text=' + encodeURIComponent(oakMsg), u); });
+                                usersEl.appendChild(btn);
                             });
                             if (users.length === 0 && emptyEl) emptyEl.classList.remove('d-none');
                         });
@@ -748,11 +779,12 @@
                         users.forEach(function(u) {
                             var num = normalizeWaNumber(u.selular || ''); if (!num) return;
                             var nama = (u.nama || u.username || 'PJO').trim();
-                            var a = document.createElement('a');
-                            a.href = 'https://wa.me/' + num + '?text=' + encodeURIComponent(intervensiMsg); a.target = '_blank'; a.rel = 'noopener';
-                            a.className = 'btn btn-sm btn-outline-success';
-                            a.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA ke ' + (nama.length > 25 ? nama.substring(0, 22) + '...' : nama);
-                            pjoUsersEl.appendChild(a);
+                            var btn = document.createElement('button');
+                            btn.type = 'button';
+                            btn.className = 'btn btn-sm btn-outline-success';
+                            btn.innerHTML = '<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA ke ' + (nama.length > 25 ? nama.substring(0, 22) + '...' : nama);
+                            btn.addEventListener('click', function() { savePicAndOpenWa('https://wa.me/' + num + '?text=' + encodeURIComponent(intervensiMsg), u); });
+                            pjoUsersEl.appendChild(btn);
                         });
                         if (pjoEmptyEl) { if (users.length === 0) pjoEmptyEl.classList.remove('d-none'); else pjoEmptyEl.classList.add('d-none'); }
                     })
