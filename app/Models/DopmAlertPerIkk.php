@@ -198,8 +198,11 @@ class DopmAlertPerIkk extends Model
     public static function storeAlertsForDate($ikkList, string $tanggal): void
     {
         $items = $ikkList instanceof Collection ? $ikkList->all() : $ikkList;
+        $dateStart = Carbon::parse($tanggal, $tz)->startOfDay();
         $tz = self::TZ;
         $now = Carbon::now($tz);
+        // Ambil level intervensi tertinggi per IKK untuk tanggal ini, agar Alert 2/3
+        // tidak terus dibuat jika sudah ada intervensi di Alert 1/2.
         $jamCek = (int) $now->format('G');
 
         $maxIntervensiByIkk = DopmAlertIntervensi::getMaxIntervensiLevelByIkk($tanggal);
@@ -254,7 +257,11 @@ class DopmAlertPerIkk extends Model
             }
 
             $snapshot = self::buildIkkSnapshot($obj, $startDate, $endDate);
+            // Tentukan level maksimum yang boleh disimpan berdasarkan intervensi:
+            // - Jika belum pernah diintervensi: boleh sampai $jamKe (1, 2, atau 3)
+            // - Jika sudah diintervensi di level 1/2: stop di level tsb, tidak buat level di atasnya.
             $snapshot['alert_reason'] = $alertCheck['alert_reason'];
+            // Simpan Alert 1..$maxLevel (agar history level yang relevan tercatat di DB)
             $snapshot['max_alert_level'] = $maxAlertFromDuration;
             $snapshot['m_job_duration_id'] = $jobDurationId;
 
