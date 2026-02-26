@@ -1632,7 +1632,7 @@
                       <i class="material-icons-outlined">checklist</i>
                     </a>
                     <h3 class="mb-0">{{ $pctIkkAdaIpkWeekly ?? 0 }}%</h3>
-                    <p class="mb-0">IPK Harian</p>
+                    <p class="mb-0">%IPK Harian</p>
                     <small class="text-muted">{{ $totalIpkAda ?? 0 }}/{{ $totalIpkSeharusnya ?? 0 }} hari</small>
                   </div>
                   <div class="vr"></div>

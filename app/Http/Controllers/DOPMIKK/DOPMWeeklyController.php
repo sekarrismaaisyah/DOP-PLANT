@@ -199,6 +199,10 @@ class DOPMWeeklyController extends Controller
         $totalIpkSeharusnya = 0;
         $totalIpkAda = 0;
         
+        // Tentukan cut off date untuk IPK/OKK
+        $cutoffDate = Carbon::parse(config('dopm.ipk_okk_clickhouse_cutoff_date', '2025-02-20'))->startOfDay();
+        $useClickHouseForWeekly = $weekStartDate->gte($cutoffDate);
+        
         try {
             if (class_exists(\App\Services\ClickHouseService::class)) {
                 $clickHouse = app(\App\Services\ClickHouseService::class);
@@ -219,7 +223,7 @@ class DOPMWeeklyController extends Controller
                     // Hanya yang sudah di-approve oleh WKTT
                     // Ambil juga start_date dan end_date untuk hitung durasi IPK yang seharusnya
                     $sqlWeeklyIkk = "
-                        SELECT wp.code, wp.id, wp.start_date, wp.end_date
+                        SELECT wp.code AS code, wp.id AS id, wp.start_date AS ikk_start_date, wp.end_date AS ikk_end_date
                         FROM hse_automation.ikk_work_permit AS wp
                         INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
                             ON toString(wp_pic.work_permit_id) = toString(wp.id)
@@ -237,6 +241,7 @@ class DOPMWeeklyController extends Controller
                     $weeklyIkkRows = $clickHouse->query($sqlWeeklyIkk);
                     $weeklyIkkCodes = [];
                     $weeklyIkkIds = [];
+                    $weeklyIkkDurations = []; // Simpan durasi per code untuk MySQL fallback
                     $totalIpkSeharusnya = 0;
                     if (!empty($weeklyIkkRows)) {
                         foreach ($weeklyIkkRows as $row) {
@@ -249,8 +254,8 @@ class DOPMWeeklyController extends Controller
                                 $weeklyIkkIds[$id] = $code;
                                 
                                 // Hitung durasi IKK (dalam hari) yang overlap dengan range minggu
-                                $ikkStart = self::parseEndDate(self::getClickHouseRowValue($row, 'start_date'));
-                                $ikkEnd = self::parseEndDate(self::getClickHouseRowValue($row, 'end_date'));
+                                $ikkStart = self::parseEndDate(self::getClickHouseRowValue($row, 'ikk_start_date'));
+                                $ikkEnd = self::parseEndDate(self::getClickHouseRowValue($row, 'ikk_end_date'));
                                 if ($ikkStart !== null && $ikkEnd !== null) {
                                     // Batasi range IKK ke dalam range minggu yang dipilih
                                     $effectiveStart = $ikkStart->lt($weekStartDate) ? $weekStartDate->copy() : $ikkStart->copy();
@@ -260,6 +265,7 @@ class DOPMWeeklyController extends Controller
                                     if ($effectiveStart->lte($effectiveEnd)) {
                                         $durasiHari = $effectiveStart->startOfDay()->diffInDays($effectiveEnd->startOfDay()) + 1;
                                         $totalIpkSeharusnya += $durasiHari;
+                                        $weeklyIkkDurations[$code] = ($weeklyIkkDurations[$code] ?? 0) + $durasiHari;
                                     }
                                 }
                             }
@@ -267,36 +273,62 @@ class DOPMWeeklyController extends Controller
                     }
                     $totalIkkWeekly = count($weeklyIkkCodes);
                     
-                    // Query IPK yang ada dalam rentang week (by work_permit_id)
-                    // Tidak pakai DISTINCT - hitung per hari karena IPK wajib setiap hari
+                    // Query IPK yang ada dalam rentang week
+                    // Cek cut off: jika weekStartDate >= cutoff maka dari ClickHouse, jika tidak dari MySQL
                     $totalIpkAda = 0;
-                    if (!empty($weeklyIkkIds)) {
-                        $wpIdsWeeklyEsc = implode(',', array_map(fn($id) => "'" . addslashes($id) . "'", array_keys($weeklyIkkIds)));
-                        $sqlWeeklyIpk = "
-                            SELECT work_permit_id, toDate(start_date) as ipk_date
-                            FROM hse_automation.ipk_assessment
-                            WHERE work_permit_id IN ({$wpIdsWeeklyEsc})
-                              AND toDate(start_date) >= toDate('{$weekStartStr}')
-                              AND toDate(start_date) <= toDate('{$weekEndStr}')
-                              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
-                            GROUP BY work_permit_id, toDate(start_date)
-                        ";
-                        $weeklyIpkRows = $clickHouse->query($sqlWeeklyIpk);
-                        $ipkPerWpPerDay = [];
-                        if (!empty($weeklyIpkRows)) {
-                            foreach ($weeklyIpkRows as $r) {
-                                $wpId = isset($r['work_permit_id']) ? trim((string) $r['work_permit_id']) : '';
-                                $ipkDate = isset($r['ipk_date']) ? trim((string) $r['ipk_date']) : '';
-                                if ($wpId !== '' && $ipkDate !== '' && isset($weeklyIkkIds[$wpId])) {
-                                    $key = $wpId . '_' . $ipkDate;
+                    $ipkPerWpPerDay = [];
+                    
+                    if ($useClickHouseForWeekly) {
+                        // === CLICKHOUSE: weekStartDate >= cutoff ===
+                        if (!empty($weeklyIkkIds)) {
+                            $wpIdsWeeklyEsc = implode(',', array_map(fn($id) => "'" . addslashes($id) . "'", array_keys($weeklyIkkIds)));
+                            $sqlWeeklyIpk = "
+                                SELECT work_permit_id, toDate(start_date) as ipk_date
+                                FROM hse_automation.ipk_assessment
+                                WHERE work_permit_id IN ({$wpIdsWeeklyEsc})
+                                  AND toDate(start_date) >= toDate('{$weekStartStr}')
+                                  AND toDate(start_date) <= toDate('{$weekEndStr}')
+                                  AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                                GROUP BY work_permit_id, toDate(start_date)
+                            ";
+                            $weeklyIpkRows = $clickHouse->query($sqlWeeklyIpk);
+                            if (!empty($weeklyIpkRows)) {
+                                foreach ($weeklyIpkRows as $r) {
+                                    $wpId = isset($r['work_permit_id']) ? trim((string) $r['work_permit_id']) : '';
+                                    $ipkDate = isset($r['ipk_date']) ? trim((string) $r['ipk_date']) : '';
+                                    if ($wpId !== '' && $ipkDate !== '' && isset($weeklyIkkIds[$wpId])) {
+                                        $key = $wpId . '_' . $ipkDate;
+                                        $ipkPerWpPerDay[$key] = true;
+                                    }
+                                }
+                            }
+                        }
+                    } else {
+                        // === MYSQL: weekStartDate < cutoff ===
+                        if (!empty($weeklyIkkCodes)) {
+                            $ikkCodesArray = array_keys($weeklyIkkCodes);
+                            $ipkRows = IpkIkk::whereIn('kode_ikk', $ikkCodesArray)
+                                ->whereBetween('ts', [$weekStartDate->format('Y-m-d'), $weekEndDate->format('Y-m-d 23:59:59')])
+                                ->selectRaw('kode_ikk, DATE(ts) as ipk_date')
+                                ->groupBy('kode_ikk', \DB::raw('DATE(ts)'))
+                                ->get();
+                            foreach ($ipkRows as $row) {
+                                $kodeIkk = $row->kode_ikk ?? '';
+                                $ipkDate = $row->ipk_date ?? '';
+                                if ($kodeIkk !== '' && $ipkDate !== '') {
+                                    $key = $kodeIkk . '_' . $ipkDate;
                                     $ipkPerWpPerDay[$key] = true;
                                 }
                             }
                         }
-                        $totalIpkAda = count($ipkPerWpPerDay);
-                        $ikkAdaIpkCountWeekly = $totalIpkAda;
-                        
-                        // Query OKK yang ada dalam rentang week (by work_permit_id)
+                    }
+                    
+                    $totalIpkAda = count($ipkPerWpPerDay);
+                    $ikkAdaIpkCountWeekly = $totalIpkAda;
+                    
+                    // Query OKK yang ada dalam rentang week (by work_permit_id) - tetap dari ClickHouse
+                    if (!empty($weeklyIkkIds)) {
+                        $wpIdsWeeklyEsc = implode(',', array_map(fn($id) => "'" . addslashes($id) . "'", array_keys($weeklyIkkIds)));
                         $sqlWeeklyOkk = "
                             SELECT DISTINCT work_permit_id
                             FROM hse_automation.okk_assessment
