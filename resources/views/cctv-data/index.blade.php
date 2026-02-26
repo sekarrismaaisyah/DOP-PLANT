@@ -87,6 +87,33 @@
                             </a>
                         </div>
 
+                        <!-- Filter Section -->
+                        <div class="row mb-3">
+                            <div class="col-md-4">
+                                <label for="filterPerusahaan" class="form-label">Filter Perusahaan</label>
+                                <select id="filterPerusahaan" class="form-select">
+                                    <option value="">-- Semua Perusahaan --</option>
+                                    @foreach($perusahaanList as $perusahaan)
+                                        <option value="{{ $perusahaan }}">{{ $perusahaan }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4">
+                                <label for="filterSite" class="form-label">Filter Site</label>
+                                <select id="filterSite" class="form-select">
+                                    <option value="">-- Semua Site --</option>
+                                    @foreach($siteList as $site)
+                                        <option value="{{ $site }}">{{ $site }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+                            <div class="col-md-4 d-flex align-items-end">
+                                <button type="button" id="btnResetFilter" class="btn btn-outline-secondary">
+                                    <i class="material-icons-outlined">refresh</i> Reset Filter
+                                </button>
+                            </div>
+                        </div>
+
                         <div class="table-responsive">
                             <table class="table table-bordered table-striped table-hover" id="cctvDataTable" style="width:100%">
                                 <thead>
@@ -173,7 +200,11 @@
                     serverSide: true,
                     ajax: {
                         url: "{{ route('cctv-data.data') }}",
-                        type: "GET"
+                        type: "GET",
+                        data: function(d) {
+                            d.perusahaan = $('#filterPerusahaan').val();
+                            d.site = $('#filterSite').val();
+                        }
                     },
                     columns: [
                         { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -257,6 +288,22 @@
                         });
                     }
                 });
+            }
+        });
+
+        // Filter change handlers
+        $('#filterPerusahaan, #filterSite').on('change', function() {
+            if (table && $.fn.DataTable.isDataTable('#cctvDataTable')) {
+                table.ajax.reload();
+            }
+        });
+
+        // Reset filter button
+        $('#btnResetFilter').on('click', function() {
+            $('#filterPerusahaan').val('');
+            $('#filterSite').val('');
+            if (table && $.fn.DataTable.isDataTable('#cctvDataTable')) {
+                table.ajax.reload();
             }
         });
 

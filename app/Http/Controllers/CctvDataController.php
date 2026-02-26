@@ -183,7 +183,32 @@ class CctvDataController extends Controller
             'distribution_by_status' => $distributionByStatus,
         ];
         
-        return view('cctv-data.index', compact('stats'));
+        // Get list of perusahaan and site for filter dropdowns
+        $perusahaanListQuery = CctvData::select('perusahaan')
+            ->whereNotNull('perusahaan')
+            ->where('perusahaan', '!=', '')
+            ->distinct();
+        if ($allowedCompany) {
+            $perusahaanListQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $perusahaanListQuery->whereIn('site', $allowedSites);
+        }
+        $perusahaanList = $perusahaanListQuery->orderBy('perusahaan')->pluck('perusahaan');
+        
+        $siteListQuery = CctvData::select('site')
+            ->whereNotNull('site')
+            ->where('site', '!=', '')
+            ->distinct();
+        if ($allowedCompany) {
+            $siteListQuery->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+        }
+        if (!empty($allowedSites)) {
+            $siteListQuery->whereIn('site', $allowedSites);
+        }
+        $siteList = $siteListQuery->orderBy('site')->pluck('site');
+        
+        return view('cctv-data.index', compact('stats', 'perusahaanList', 'siteList'));
     }
 
     /**
@@ -223,6 +248,18 @@ class CctvDataController extends Controller
         // Filter by sites if user has specific permission with site restrictions
         if (!empty($allowedSites)) {
             $query->whereIn('site', $allowedSites);
+        }
+
+        // Filter by perusahaan dropdown
+        $filterPerusahaan = $request->get('perusahaan');
+        if (!empty($filterPerusahaan)) {
+            $query->whereRaw('TRIM(perusahaan) = ?', [trim($filterPerusahaan)]);
+        }
+
+        // Filter by site dropdown
+        $filterSite = $request->get('site');
+        if (!empty($filterSite)) {
+            $query->where('site', $filterSite);
         }
 
         // Search functionality
