@@ -1185,6 +1185,91 @@ class DOPMWeeklyController extends Controller
             }
         }
 
+        // Generate daily_details untuk setiap IKK (untuk tampilan expand/collapse di view)
+        if (!empty($ikkClickhouseListHarian) && class_exists(\App\Services\ClickHouseService::class)) {
+            $ch = app(\App\Services\ClickHouseService::class);
+            if (method_exists($ch, 'query') && $ch->isConnected()) {
+                foreach ($ikkClickhouseListHarian as $ikk) {
+                    $wpId = $ikk->id ?? null;
+                    if ($wpId === null) {
+                        $ikk->daily_details = [];
+                        $ikk->total_hari = 0;
+                        $ikk->ipk_count = 0;
+                        $ikk->okk_count = 0;
+                        continue;
+                    }
+
+                    try {
+                        $ikkStartDate = Carbon::parse($ikk->start_date)->startOfDay();
+                        $ikkEndDate = Carbon::parse($ikk->end_date)->startOfDay();
+                    } catch (\Throwable $e) {
+                        $ikk->daily_details = [];
+                        $ikk->total_hari = 0;
+                        $ikk->ipk_count = 0;
+                        $ikk->okk_count = 0;
+                        continue;
+                    }
+
+                    $effectiveStart = $ikkStartDate->lt($weekStartDate) ? $weekStartDate->copy() : $ikkStartDate->copy();
+                    $effectiveEnd = $ikkEndDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkEndDate->copy();
+
+                    $dailyDetails = [];
+                    $ipkCount = 0;
+                    $okkCount = 0;
+                    $wpIdEsc = addslashes($wpId);
+
+                    $currentDate = $effectiveStart->copy();
+                    while ($currentDate->lte($effectiveEnd)) {
+                        $dateStr = $currentDate->format('Y-m-d');
+                        $dateEsc = addslashes($dateStr);
+
+                        $hasIpk = false;
+                        $ipkKode = null;
+                        $ipkStatus = null;
+                        $hasOkk = false;
+                        $okkKode = null;
+                        $okkStatus = null;
+
+                        $sqlIpk = "SELECT code, job_status FROM hse_automation.ipk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(start_date) = toDate('{$dateEsc}') AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) ORDER BY created_at DESC LIMIT 1";
+                        $ipkRows = $ch->query($sqlIpk);
+                        if (!empty($ipkRows)) {
+                            $hasIpk = true;
+                            $ipkCount++;
+                            $ipkKode = self::getClickHouseRowValue($ipkRows[0], 'code');
+                            $ipkStatus = self::getClickHouseRowValue($ipkRows[0], 'job_status');
+                        }
+
+                        $sqlOkk = "SELECT code, status FROM hse_automation.okk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(created_at) = toDate('{$dateEsc}') AND upper(trim(toString(status))) = 'SUBMITTED' AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) ORDER BY created_at DESC LIMIT 1";
+                        $okkRows = $ch->query($sqlOkk);
+                        if (!empty($okkRows)) {
+                            $hasOkk = true;
+                            $okkCount++;
+                            $okkKode = self::getClickHouseRowValue($okkRows[0], 'code');
+                            $okkStatus = self::getClickHouseRowValue($okkRows[0], 'status');
+                        }
+
+                        $dailyDetails[] = [
+                            'tanggal' => $currentDate->format('d/m/Y'),
+                            'hari' => $currentDate->locale('id')->translatedFormat('l'),
+                            'has_ipk' => $hasIpk,
+                            'ipk_kode' => $ipkKode,
+                            'ipk_status' => $ipkStatus,
+                            'has_okk' => $hasOkk,
+                            'okk_kode' => $okkKode,
+                            'okk_status' => $okkStatus,
+                        ];
+
+                        $currentDate->addDay();
+                    }
+
+                    $ikk->daily_details = $dailyDetails;
+                    $ikk->total_hari = count($dailyDetails);
+                    $ikk->ipk_count = $ipkCount;
+                    $ikk->okk_count = $okkCount;
+                }
+            }
+        }
+
         // Persentase IKK ada IPK / IKK ada OKK (workPermitCodes sudah dihitung di atas)
         if (!empty($workPermitCodes)) {
             if ($useChIpkOkk) {

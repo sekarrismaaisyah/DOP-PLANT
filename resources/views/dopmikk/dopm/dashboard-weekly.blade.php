@@ -2285,7 +2285,7 @@
                     </div>
                 </div> -->
 
-                {{-- Tabel IKK dari ClickHouse (ikk_work_permit) --}}
+                {{-- Tabel IKK dari ClickHouse (ikk_work_permit) dengan Expand/Collapse --}}
                 <div class="card rounded-4 border-0 shadow-sm mt-2">
                     <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-start">
                         <div>
@@ -2293,108 +2293,271 @@
                                 Data IKK Weekly 
                                 ({{ $weekStartDate ?? '-' }} - {{ $weekEndDate ?? '-' }})
                             </h5>
-                            <small class="text-muted">Data IKK Weekly (work permit) yang sudah di-approve KWTT, distinct per kode IKK. Klik salah satu kolom pada baris untuk melihat detail lengkap.</small>
+                            <small class="text-muted">Data IKK Weekly (work permit) yang sudah di-approve KWTT, distinct per kode IKK. Klik tombol [+] untuk melihat detail IPK/OKK per tanggal.</small>
                         </div>
-                        @if(count($ikkClickhouseListHarian ?? []) > 0)
-                            <a href="{{ route('dopmikk.dopm.dashboard-weekly.export-ikk-excel', ['week' => $filterWeek ?? now()->format('o-\\WW'), 'site' => request('site')]) }}" 
-                               class="btn btn-success btn-sm d-flex align-items-center gap-1" 
-                               title="Download Excel">
-                                <i class="material-icons-outlined" style="font-size: 18px;">download</i>
-                                <span>Download Excel</span>
-                            </a>
-                        @endif
+                        <div class="d-flex gap-2">
+                            @if(count($ikkClickhouseListHarian ?? []) > 0)
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnExpandAllIkk" title="Expand All">
+                                    <i class="material-icons-outlined" style="font-size: 16px;">unfold_more</i>
+                                </button>
+                                <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCollapseAllIkk" title="Collapse All">
+                                    <i class="material-icons-outlined" style="font-size: 16px;">unfold_less</i>
+                                </button>
+                                <a href="{{ route('dopmikk.dopm.dashboard-weekly.export-ikk-excel', ['week' => $filterWeek ?? now()->format('o-\\WW'), 'site' => request('site')]) }}" 
+                                   class="btn btn-success btn-sm d-flex align-items-center gap-1" 
+                                   title="Download Excel">
+                                    <i class="material-icons-outlined" style="font-size: 18px;">download</i>
+                                    <span>Download Excel</span>
+                                </a>
+                            @endif
+                        </div>
                     </div>
                     <div class="card-body p-0">
                         @if(count($ikkClickhouseListHarian ?? []) > 0)
                             <div class="table-responsive">
-                                <table class="table table-hover table-striped align-middle mb-0 w-100" id="tableIkkClickhouseHarian">
+                                <table class="table table-hover align-middle mb-0 w-100" id="tableIkkClickhouseHarian">
                                    <thead class="table-light">
                                        <tr>
+                                           <th style="width: 40px;"></th>
                                            <th>No</th>
                                            <th>Kode IKK</th>
                                            <th>Site</th>
-                                           <th>Jenis Ijin Kerja Khusus</th>
+                                           <th>Jenis Ijin</th>
                                            <th>Nama Pekerjaan</th>
                                            <th>Perusahaan</th>
+                                           <th>Periode</th>
                                            <th>Status WP</th>
-                                           <th>Status Pekerjaan</th>
-                                           <th>Status Matriks</th>
+                                           <th>IPK</th>
+                                           <th>OKK</th>
                                            <th>PIC Approver</th>
-                                           <th>Nama Layer 1</th>
-                                           <th>Layer 2 / 3 / 4</th>
                                        </tr>
                                     </thead>
-                                    <tbody class="py-2">
+                                    <tbody>
                                         @foreach($ikkClickhouseListHarian as $ikk)
                                             @php
-                                                $matriksIkk = $ikk->status_matriks ?? 'Merah';
-                                                $badgeClassIkk = $matriksIkk === 'Hijau'
-                                                    ? 'bg-success'
-                                                    : ($matriksIkk === 'Kuning' ? 'bg-warning text-dark' : 'bg-danger');
-                                                $ikkModal = [
-                                                    'code' => $ikk->code ?? '-',
-                                                    'site' => $ikk->site ?? '-',
-                                                    'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? '-',
-                                                    'nama_pekerjaan' => $ikk->nama_pekerjaan ?? '-',
-                                                    'perusahaan' => $ikk->perusahaan ?? '-',
-                                                    'status' => $ikk->status ?? '-',
-                                                    'status_pekerjaan' => $ikk->status_pekerjaan ?? 'Tidak ada IPK',
-                                                    'status_matriks' => $matriksIkk,
-                                                    'pic_approver_name' => $ikk->pic_approver_name ?? '-',
-                                                    'nama_layer_1' => $ikk->nama_layer_1 ?? '-',
-                                                    'nama_layer_2' => $ikk->nama_layer_2 ?? '-',
-                                                    'nama_layer_3' => $ikk->nama_layer_3 ?? '-',
-                                                    'nama_layer_4' => $ikk->nama_layer_4 ?? '-',
-                                                    'location_name' => $ikk->location_name ?? '-',
-                                                    'location_detail_name' => $ikk->location_detail_name ?? '-',
-                                                ];
+                                                $totalHari = $ikk->total_hari ?? 0;
+                                                $ipkCount = $ikk->ipk_count ?? 0;
+                                                $okkCount = $ikk->okk_count ?? 0;
+                                                $dailyDetails = $ikk->daily_details ?? [];
+                                                
+                                                // Badge class untuk IPK
+                                                if ($totalHari > 0 && $ipkCount >= $totalHari) {
+                                                    $ipkBadgeClass = 'bg-success';
+                                                } elseif ($ipkCount > 0) {
+                                                    $ipkBadgeClass = 'bg-warning text-dark';
+                                                } else {
+                                                    $ipkBadgeClass = 'bg-danger';
+                                                }
+                                                
+                                                // Badge class untuk OKK
+                                                if ($totalHari > 0 && $okkCount >= $totalHari) {
+                                                    $okkBadgeClass = 'bg-success';
+                                                } elseif ($okkCount > 0) {
+                                                    $okkBadgeClass = 'bg-warning text-dark';
+                                                } else {
+                                                    $okkBadgeClass = 'bg-danger';
+                                                }
+                                                
+                                                // Format periode
                                                 try {
-                                                    $ikkModal['start_date'] = $ikk->start_date ? \Carbon\Carbon::parse($ikk->start_date)->format('d/m/Y') : '-';
-                                                } catch (\Throwable $e) { $ikkModal['start_date'] = '-'; }
-                                                try {
-                                                    $ikkModal['end_date'] = $ikk->end_date ? \Carbon\Carbon::parse($ikk->end_date)->format('d/m/Y') : '-';
-                                                } catch (\Throwable $e) { $ikkModal['end_date'] = '-'; }
+                                                    $startFormatted = $ikk->start_date ? \Carbon\Carbon::parse($ikk->start_date)->format('d M') : '-';
+                                                    $endFormatted = $ikk->end_date ? \Carbon\Carbon::parse($ikk->end_date)->format('d M') : '-';
+                                                    $periode = $startFormatted . ' - ' . $endFormatted;
+                                                } catch (\Throwable $e) {
+                                                    $periode = '-';
+                                                }
                                             @endphp
-                                           <tr class="ikk-row-clickable" role="button" tabindex="0" data-ikk="{{ e(json_encode($ikkModal)) }}">
-                                               <td>{{ $loop->iteration }}</td>
-                                                <td>{{ $ikk->code ?? '-' }}</td>
+                                            {{-- Main Row --}}
+                                            <tr class="ikk-main-row" data-ikk-id="{{ $loop->iteration }}">
+                                                <td class="text-center">
+                                                    <button type="button" class="btn btn-sm btn-outline-primary ikk-toggle-btn p-0" 
+                                                            data-target="ikk-detail-{{ $loop->iteration }}" 
+                                                            style="width: 28px; height: 28px; line-height: 1;">
+                                                        <i class="material-icons-outlined" style="font-size: 18px;">add</i>
+                                                    </button>
+                                                </td>
+                                                <td>{{ $loop->iteration }}</td>
+                                                <td><strong class="text-primary">{{ $ikk->code ?? '-' }}</strong></td>
                                                 <td>{{ $ikk->site ?? '-' }}</td>
-                                                <td>{{ $ikk->jenis_ijin_kerja_khusus ?? '-' }}</td>
-                                                <td>{{ $ikk->nama_pekerjaan ?? '-' }}</td>
-                                               <td>{{ $ikk->perusahaan ?? '-' }}</td>
-                                               <td><span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span></td>
-                                               <td>
-                                                   <span class="badge bg-info text-dark">
-                                                       {{ $ikk->status_pekerjaan ?? 'Tidak ada IPK' }}
-                                                   </span>
-                                               </td>
-                                               <td>
-                                                    <span class="badge {{ $badgeClassIkk }}">{{ $matriksIkk }}</span>
+                                                <td><small>{{ \Illuminate\Support\Str::limit($ikk->jenis_ijin_kerja_khusus ?? '-', 20) }}</small></td>
+                                                <td><small>{{ \Illuminate\Support\Str::limit($ikk->nama_pekerjaan ?? '-', 25) }}</small></td>
+                                                <td><small>{{ \Illuminate\Support\Str::limit($ikk->perusahaan ?? '-', 20) }}</small></td>
+                                                <td><small>{{ $periode }}</small></td>
+                                                <td><span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span></td>
+                                                <td>
+                                                    <span class="badge {{ $ipkBadgeClass }}" title="IPK: {{ $ipkCount }}/{{ $totalHari }} hari">
+                                                        {{ $ipkCount }}/{{ $totalHari }}
+                                                    </span>
+                                                </td>
+                                                <td>
+                                                    <span class="badge {{ $okkBadgeClass }}" title="OKK: {{ $okkCount }}/{{ $totalHari }} hari">
+                                                        {{ $okkCount }}/{{ $totalHari }}
+                                                    </span>
                                                 </td>
                                                 <td>
                                                     @if(!empty($ikk->pic_approver_name))
-                                                        <span class="fw-semibold text-primary" title="{{ $ikk->pic_approver_name }}">{{ $ikk->pic_approver_name }}</span>
+                                                        <small class="fw-semibold text-primary" title="{{ $ikk->pic_approver_name }}">
+                                                            {{ \Illuminate\Support\Str::limit($ikk->pic_approver_name, 15) }}
+                                                        </small>
                                                     @else
                                                         <span class="text-muted">-</span>
                                                     @endif
                                                 </td>
-                                                <td><small class="text-primary">{{ $ikk->nama_layer_1 ?? '-' }}</small></td>
-                                                <td>
-                                                    <small>
-                                                        {{ $ikk->nama_layer_2 ?? '-' }} /
-                                                        {{ $ikk->nama_layer_3 ?? '-' }} /
-                                                        {{ $ikk->nama_layer_4 ?? '-' }}
-                                                    </small>
+                                            </tr>
+                                            {{-- Detail Row (Hidden by default) --}}
+                                            <tr class="ikk-detail-row d-none" id="ikk-detail-{{ $loop->iteration }}">
+                                                <td colspan="12" class="p-0 bg-light">
+                                                    <div class="p-3">
+                                                        <div class="row mb-2">
+                                                            <div class="col-md-6">
+                                                                <small class="text-muted">
+                                                                    <strong>Layer 1:</strong> {{ $ikk->nama_layer_1 ?? '-' }}<br>
+                                                                    <strong>Layer 2:</strong> {{ $ikk->nama_layer_2 ?? '-' }}<br>
+                                                                    <strong>Layer 3:</strong> {{ $ikk->nama_layer_3 ?? '-' }}<br>
+                                                                    <strong>Layer 4:</strong> {{ $ikk->nama_layer_4 ?? '-' }}
+                                                                </small>
+                                                            </div>
+                                                            <div class="col-md-6">
+                                                                <small class="text-muted">
+                                                                    <strong>Lokasi:</strong> {{ $ikk->location_name ?? '-' }}<br>
+                                                                    <strong>Detail Lokasi:</strong> {{ $ikk->location_detail_name ?? '-' }}
+                                                                </small>
+                                                            </div>
+                                                        </div>
+                                                        <div class="table-responsive">
+                                                            <table class="table table-sm table-bordered mb-0 bg-white">
+                                                                <thead class="table-secondary">
+                                                                    <tr>
+                                                                        <th style="width: 120px;">Tanggal</th>
+                                                                        <th style="width: 100px;">Hari</th>
+                                                                        <th>IPK</th>
+                                                                        <th>Detail IPK</th>
+                                                                        <th>OKK</th>
+                                                                        <th>Detail OKK</th>
+                                                                    </tr>
+                                                                </thead>
+                                                                <tbody>
+                                                                    @forelse($dailyDetails as $detail)
+                                                                        <tr>
+                                                                            <td>{{ $detail['tanggal'] ?? '-' }}</td>
+                                                                            <td>{{ $detail['hari'] ?? '-' }}</td>
+                                                                            <td class="text-center">
+                                                                                @if($detail['has_ipk'] ?? false)
+                                                                                    <span class="badge bg-success">Ada</span>
+                                                                                @else
+                                                                                    <span class="badge bg-danger">Tidak</span>
+                                                                                @endif
+                                                                            </td>
+                                                                            <td>
+                                                                                @if($detail['has_ipk'] ?? false)
+                                                                                    <small>
+                                                                                        <strong>Kode:</strong> {{ $detail['ipk_kode'] ?? '-' }}<br>
+                                                                                        <strong>Status:</strong> {{ $detail['ipk_status'] ?? '-' }}
+                                                                                    </small>
+                                                                                @else
+                                                                                    <span class="text-muted">-</span>
+                                                                                @endif
+                                                                            </td>
+                                                                            <td class="text-center">
+                                                                                @if($detail['has_okk'] ?? false)
+                                                                                    <span class="badge bg-success">Ada</span>
+                                                                                @else
+                                                                                    <span class="badge bg-danger">Tidak</span>
+                                                                                @endif
+                                                                            </td>
+                                                                            <td>
+                                                                                @if($detail['has_okk'] ?? false)
+                                                                                    <small>
+                                                                                        <strong>Kode:</strong> {{ $detail['okk_kode'] ?? '-' }}<br>
+                                                                                        <strong>Status:</strong> {{ $detail['okk_status'] ?? '-' }}
+                                                                                    </small>
+                                                                                @else
+                                                                                    <span class="text-muted">-</span>
+                                                                                @endif
+                                                                            </td>
+                                                                        </tr>
+                                                                    @empty
+                                                                        <tr>
+                                                                            <td colspan="6" class="text-center text-muted">Tidak ada data tanggal</td>
+                                                                        </tr>
+                                                                    @endforelse
+                                                                </tbody>
+                                                            </table>
+                                                        </div>
+                                                        <div class="mt-2">
+                                                            <small class="text-muted">
+                                                                <strong>Summary:</strong> 
+                                                                IPK {{ $ipkCount }}/{{ $totalHari }} hari ({{ $totalHari > 0 ? round($ipkCount / $totalHari * 100) : 0 }}%) | 
+                                                                OKK {{ $okkCount }}/{{ $totalHari }} hari ({{ $totalHari > 0 ? round($okkCount / $totalHari * 100) : 0 }}%)
+                                                            </small>
+                                                        </div>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         @endforeach
                                     </tbody>
                                 </table>
                             </div>
+                            
+                            {{-- JavaScript untuk Expand/Collapse --}}
+                            <script>
+                                document.addEventListener('DOMContentLoaded', function() {
+                                    // Toggle individual row
+                                    document.querySelectorAll('.ikk-toggle-btn').forEach(function(btn) {
+                                        btn.addEventListener('click', function() {
+                                            var targetId = this.getAttribute('data-target');
+                                            var targetRow = document.getElementById(targetId);
+                                            var icon = this.querySelector('i');
+                                            
+                                            if (targetRow.classList.contains('d-none')) {
+                                                targetRow.classList.remove('d-none');
+                                                icon.textContent = 'remove';
+                                                this.classList.remove('btn-outline-primary');
+                                                this.classList.add('btn-primary');
+                                            } else {
+                                                targetRow.classList.add('d-none');
+                                                icon.textContent = 'add';
+                                                this.classList.remove('btn-primary');
+                                                this.classList.add('btn-outline-primary');
+                                            }
+                                        });
+                                    });
+                                    
+                                    // Expand All
+                                    var btnExpandAll = document.getElementById('btnExpandAllIkk');
+                                    if (btnExpandAll) {
+                                        btnExpandAll.addEventListener('click', function() {
+                                            document.querySelectorAll('.ikk-detail-row').forEach(function(row) {
+                                                row.classList.remove('d-none');
+                                            });
+                                            document.querySelectorAll('.ikk-toggle-btn').forEach(function(btn) {
+                                                btn.querySelector('i').textContent = 'remove';
+                                                btn.classList.remove('btn-outline-primary');
+                                                btn.classList.add('btn-primary');
+                                            });
+                                        });
+                                    }
+                                    
+                                    // Collapse All
+                                    var btnCollapseAll = document.getElementById('btnCollapseAllIkk');
+                                    if (btnCollapseAll) {
+                                        btnCollapseAll.addEventListener('click', function() {
+                                            document.querySelectorAll('.ikk-detail-row').forEach(function(row) {
+                                                row.classList.add('d-none');
+                                            });
+                                            document.querySelectorAll('.ikk-toggle-btn').forEach(function(btn) {
+                                                btn.querySelector('i').textContent = 'add';
+                                                btn.classList.remove('btn-primary');
+                                                btn.classList.add('btn-outline-primary');
+                                            });
+                                        });
+                                    }
+                                });
+                            </script>
                         @else
                             <div class="p-4 text-center text-muted">
                                 <i class="material-icons-outlined" style="font-size: 48px;">inbox</i>
-                                <p class="mb-0 mt-2">Tidak ada data IKK (semua PIC APPROVED) untuk tanggal ini.</p>
+                                <p class="mb-0 mt-2">Tidak ada data IKK (semua PIC APPROVED) untuk minggu ini.</p>
                             </div>
                         @endif
                     </div>
