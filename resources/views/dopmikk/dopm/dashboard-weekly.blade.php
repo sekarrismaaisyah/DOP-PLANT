@@ -2290,13 +2290,13 @@
                     <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-start">
                         <div>
                             <h5 class="mb-0 fw-bold">
-                                Data IKK 
-                                {{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('l, d F Y') }}
+                                Data IKK Weekly 
+                                ({{ $weekStartDate ?? '-' }} - {{ $weekEndDate ?? '-' }})
                             </h5>
-                            <small class="text-muted">Data IKK Weekly (work permit) yang semua PIC-nya berstatus APPROVED di <code>ikk_work_permit_pic</code>. Klik salah satu kolom pada baris untuk melihat detail lengkap.</small>
+                            <small class="text-muted">Data IKK Weekly (work permit) yang sudah di-approve KWTT, distinct per kode IKK. Klik salah satu kolom pada baris untuk melihat detail lengkap.</small>
                         </div>
                         @if(count($ikkClickhouseListHarian ?? []) > 0)
-                            <a href="{{ route('dopmikk.dopm.dashboard-weekly.export-ikk-excel', ['date' => $filterDate ?? now()->toDateString(), 'site' => request('site')]) }}" 
+                            <a href="{{ route('dopmikk.dopm.dashboard-weekly.export-ikk-excel', ['week' => $filterWeek ?? now()->format('o-\\WW'), 'site' => request('site')]) }}" 
                                class="btn btn-success btn-sm d-flex align-items-center gap-1" 
                                title="Download Excel">
                                 <i class="material-icons-outlined" style="font-size: 18px;">download</i>

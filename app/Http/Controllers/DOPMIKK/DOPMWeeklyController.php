@@ -564,14 +564,17 @@ class DOPMWeeklyController extends Controller
         }
 
         // Data IKK (work permit) dari ClickHouse untuk tampilan weekly
+        // Filter berdasarkan rentang minggu (weekStartDate - weekEndDate), distinct per kode IKK
         $ikkClickhouseListHarian = [];
+        $weekStartStr = $weekStartDate->format('Y-m-d');
+        $weekEndStr = $weekEndDate->format('Y-m-d');
         try {
             if (class_exists(\App\Services\ClickHouseService::class)) {
                 /** @var \App\Services\ClickHouseService $clickHouse */
                 $clickHouse = app(\App\Services\ClickHouseService::class);
                 if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                    // Weekly: WP yang rentang (start_date–end_date) mencakup tanggal filter; IKK 1–3 akan muncul saat filter 1, 2, atau 3
-                    $dateStr = addslashes($filterDate);
+                    // Weekly: WP yang rentang (start_date–end_date) overlap dengan minggu filter
+                    // IKK dengan rentang 3 hari dalam minggu ini dianggap 1 IKK (distinct by code)
                     $siteFilterClause = '';
                     if ($filterSite !== '' && $filterSite !== null) {
                         if ($filterSite === 'Lainnya') {
@@ -603,8 +606,8 @@ class DOPMWeeklyController extends Controller
                         LEFT JOIN hse_automation.ikk_m_pic AS m
                             ON toString(m.id) = toString(wp_pic.m_pic_id)
                         WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
-                            AND toDate(wp.start_date) <= toDate('{$dateStr}')
-                            AND toDate(wp.end_date)   >= toDate('{$dateStr}')
+                            AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
+                            AND toDate(wp.end_date)   >= toDate('{$weekStartStr}')
                             {$siteFilterClause}
                         GROUP BY
                             wp.id, wp.code, wp.name, wp.ra_site_name, wp.company_name,
@@ -627,10 +630,11 @@ class DOPMWeeklyController extends Controller
                             $sampleRows[] = is_array($r) ? $r : (array) $r;
                         }
                     }
-                    \Illuminate\Support\Facades\Log::debug('ClickHouse work permit query result', [
+                    \Illuminate\Support\Facades\Log::debug('ClickHouse work permit query result (weekly)', [
                         'query' => 'sqlWorkPermits (wp + wp_pic + m_pic, HAVING all PIC APPROVED)',
                         'params' => [
-                            'date' => $filterDate,
+                            'weekStart' => $weekStartStr,
+                            'weekEnd' => $weekEndStr,
                             'site' => $filterSite,
                         ],
                         'row_count' => $rowCount,
@@ -1684,13 +1688,10 @@ class DOPMWeeklyController extends Controller
 
     /**
      * Export data IKK (work permit) ke file Excel.
+     * Filter berdasarkan rentang minggu (weekly), distinct per kode IKK.
      */
     public function exportIkkExcel(Request $request): void
     {
-        $filterDate = $request->get('date', now()->toDateString());
-        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $filterDate)) {
-            $filterDate = now()->toDateString();
-        }
         $filterSite = $request->get('site');
         if ($filterSite === null || trim($filterSite) === '') {
             $filterSite = '';
@@ -1698,12 +1699,25 @@ class DOPMWeeklyController extends Controller
             $filterSite = trim($filterSite);
         }
 
+        // Parse week filter: format YYYY-WXX
+        $filterWeek = $request->get('week', '');
+        if ($filterWeek === '' || !preg_match('/^\d{4}-W\d{2}$/', $filterWeek)) {
+            $filterWeek = Carbon::now()->format('o-\WW');
+        }
+        preg_match('/^(\d{4})-W(\d{2})$/', $filterWeek, $weekMatches);
+        $weekYear = (int) ($weekMatches[1] ?? now()->year);
+        $weekNumber = (int) ($weekMatches[2] ?? now()->weekOfYear);
+
+        $weekStartDate = Carbon::now()->setISODate($weekYear, $weekNumber, 1)->startOfDay();
+        $weekEndDate = $weekStartDate->copy()->addDays(6)->endOfDay();
+        $weekStartStr = $weekStartDate->format('Y-m-d');
+        $weekEndStr = $weekEndDate->format('Y-m-d');
+
         $ikkClickhouseListHarian = [];
         try {
             if (class_exists(\App\Services\ClickHouseService::class)) {
                 $clickHouse = app(\App\Services\ClickHouseService::class);
                 if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                    $dateStr = addslashes($filterDate);
                     $siteFilterClause = '';
                     if ($filterSite !== '' && $filterSite !== null) {
                         if ($filterSite === 'Lainnya') {
@@ -1735,8 +1749,8 @@ class DOPMWeeklyController extends Controller
                         LEFT JOIN hse_automation.ikk_m_pic AS m
                             ON toString(m.id) = toString(wp_pic.m_pic_id)
                         WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
-                            AND toDate(wp.start_date) <= toDate('{$dateStr}')
-                            AND toDate(wp.end_date)   >= toDate('{$dateStr}')
+                            AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
+                            AND toDate(wp.end_date)   >= toDate('{$weekStartStr}')
                             {$siteFilterClause}
                         GROUP BY
                             wp.id, wp.code, wp.name, wp.ra_site_name, wp.company_name,
@@ -1840,7 +1854,7 @@ class DOPMWeeklyController extends Controller
         }
         $ikkClickhouseListHarian = array_values($byCode);
 
-        $useChIpkOkk = self::useClickHouseForIpkOkk($filterDate);
+        $useChIpkOkk = self::useClickHouseForIpkOkk($weekStartStr);
         $cancelKodeIkk = [];
         if (!empty($ikkClickhouseListHarian)) {
             $codes = array_values(array_unique(array_filter(array_map(fn($ikk) => is_object($ikk) ? ($ikk->code ?? null) : ($ikk['code'] ?? null), $ikkClickhouseListHarian))));
@@ -1851,11 +1865,10 @@ class DOPMWeeklyController extends Controller
                         $wpId = is_object($ikk) ? ($ikk->id ?? null) : ($ikk['id'] ?? null);
                         if ($wpId === null) continue;
                         $wpIdEsc = addslashes($wpId);
-                        $dateEsc = addslashes($filterDate);
-                        $sqlIpk = "SELECT id FROM hse_automation.ipk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(start_date) = toDate('{$dateEsc}') AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) LIMIT 1";
+                        $sqlIpk = "SELECT id FROM hse_automation.ipk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(start_date) >= toDate('{$weekStartStr}') AND toDate(start_date) <= toDate('{$weekEndStr}') AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) LIMIT 1";
                         $ipkRows = $ch->query($sqlIpk);
                         $hasIpk = !empty($ipkRows);
-                        $sqlOkk = "SELECT id FROM hse_automation.okk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(created_at) = toDate('{$dateEsc}') AND upper(trim(toString(status))) = 'SUBMITTED' AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) LIMIT 1";
+                        $sqlOkk = "SELECT id FROM hse_automation.okk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(created_at) >= toDate('{$weekStartStr}') AND toDate(created_at) <= toDate('{$weekEndStr}') AND upper(trim(toString(status))) = 'SUBMITTED' AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) LIMIT 1";
                         $okkRows = $ch->query($sqlOkk);
                         $hasOkk = !empty($okkRows);
                         $ikk->status_pekerjaan = $hasIpk ? 'Ada IPK' : 'Tidak ada IPK';
@@ -1863,8 +1876,8 @@ class DOPMWeeklyController extends Controller
                     }
                 }
             } else {
-                $ipkByCode = IpkIkk::whereIn('kode_ikk', $codes)->whereDate('tanggal_dop', $filterDate)->get()->keyBy('kode_ikk');
-                $okkByCode = Okk::whereIn('kode_ikk', $codes)->whereDate('tanggal_dop', $filterDate)->get()->keyBy('kode_ikk');
+                $ipkByCode = IpkIkk::whereIn('kode_ikk', $codes)->whereBetween('tanggal_dop', [$weekStartStr, $weekEndStr])->get()->keyBy('kode_ikk');
+                $okkByCode = Okk::whereIn('kode_ikk', $codes)->whereBetween('tanggal_dop', [$weekStartStr, $weekEndStr])->get()->keyBy('kode_ikk');
                 foreach ($ikkClickhouseListHarian as $ikk) {
                     $code = $ikk->code ?? null;
                     $hasIpk = $code !== null && isset($ipkByCode[$code]);
@@ -1957,8 +1970,7 @@ class DOPMWeeklyController extends Controller
             $sheet->getColumnDimension($colLetter)->setAutoSize(true);
         }
 
-        $dateForFilename = Carbon::parse($filterDate)->format('Y-m-d');
-        $filename = "Data_IKK_Weekly_{$dateForFilename}.xlsx";
+        $filename = "Data_IKK_Weekly_{$filterWeek}_{$weekStartDate->format('d_M')}-{$weekEndDate->format('d_M_Y')}.xlsx";
 
         $writer = new Xlsx($spreadsheet);
         header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
