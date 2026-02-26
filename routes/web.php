@@ -439,6 +439,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'dashboard'])->name('dashboard');
             // Dashboard Weekly menggunakan controller khusus agar bisa menampilkan status APPROVED & EXPIRED
             Route::get('/dashboard-weekly', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'dashboard'])->name('dashboard-weekly');
+            Route::get('/dashboard-weekly/export-ikk-excel', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'exportIkkExcel'])->name('dashboard-weekly.export-ikk-excel');
             Route::get('/alert-log', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'alertLog'])->name('alert-log');
             Route::get('/issue-closure', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'issueClosure'])->name('issue-closure');
             Route::get('/', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'index'])->name('index');

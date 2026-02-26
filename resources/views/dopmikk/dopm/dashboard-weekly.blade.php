@@ -1651,7 +1651,7 @@
                     </a>
                     <h3 class="mb-0">{{ $pctComplianceWeekly ?? 0 }}%</h3>
                     <p class="mb-0">Compliance</p>
-                    <small class="text-muted">Rata-rata IPK + OKK</small>
+                    <small class="text-muted">Week {{ $weekNumber ?? '-' }}</small>
                   </div>
                 </div>
               </div>
@@ -1668,8 +1668,8 @@
                       <div class="card mb-0 rounded-4 w-100">
                        <div class="card-body">
                          <div class="mb-2">
-                           <h5 class="mb-0 fw-bold">IKK Need Verification</h5>
-                           <p class="mb-0 text-muted small">Total IKK Need Verification</p>
+                           <h5 class="mb-0 fw-bold">IKK Tidak Ada IPK</h5>
+                           <p class="mb-0 text-muted small">IKK Tidak Ada IPK</p>
                          </div>
                          <div class="text-center py-3 mt-4">
                            <h1 class="mb-0 display-5 fw-bold">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</h1>
@@ -1684,8 +1684,8 @@
                     <div class="card mb-0 rounded-4 w-100">
                      <div class="card-body">
                        <div class="mb-2">
-                         <h5 class="mb-0 fw-bold">Pekerjaan Batal</h5>
-                         <p class="mb-0 text-muted small">Total IPK-IKK Status Batal Hari ini</p>
+                         <h5 class="mb-0 fw-bold">Pekerjaan Cancel</h5>
+                         <p class="mb-0 text-muted small">Total IPK-IKK Status Cancel Weekly</p>
                        </div>
                        <div class="text-center py-3 mt-4">
                          <h1 class="mb-0 display-5 fw-bold">{{ number_format($totalPekerjaanBatalHarian ?? 0) }} Cancel</h1>
@@ -2287,12 +2287,22 @@
 
                 {{-- Tabel IKK dari ClickHouse (ikk_work_permit) --}}
                 <div class="card rounded-4 border-0 shadow-sm mt-2">
-                    <div class="card-header bg-white border-bottom">
-                        <h5 class="mb-0 fw-bold">
-                            Data IKK 
-                            {{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('l, d F Y') }}
-                        </h5>
-                        <small class="text-muted">Data IKK harian (work permit) yang semua PIC-nya berstatus APPROVED di <code>ikk_work_permit_pic</code>. Klik salah satu kolom pada baris untuk melihat detail lengkap.</small>
+                    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-start">
+                        <div>
+                            <h5 class="mb-0 fw-bold">
+                                Data IKK 
+                                {{ \Carbon\Carbon::parse($filterDate ?? now())->locale('id')->translatedFormat('l, d F Y') }}
+                            </h5>
+                            <small class="text-muted">Data IKK Weekly (work permit) yang semua PIC-nya berstatus APPROVED di <code>ikk_work_permit_pic</code>. Klik salah satu kolom pada baris untuk melihat detail lengkap.</small>
+                        </div>
+                        @if(count($ikkClickhouseListHarian ?? []) > 0)
+                            <a href="{{ route('dopmikk.dopm.dashboard-weekly.export-ikk-excel', ['date' => $filterDate ?? now()->toDateString(), 'site' => request('site')]) }}" 
+                               class="btn btn-success btn-sm d-flex align-items-center gap-1" 
+                               title="Download Excel">
+                                <i class="material-icons-outlined" style="font-size: 18px;">download</i>
+                                <span>Download Excel</span>
+                            </a>
+                        @endif
                     </div>
                     <div class="card-body p-0">
                         @if(count($ikkClickhouseListHarian ?? []) > 0)

@@ -1683,6 +1683,292 @@ class DOPMWeeklyController extends Controller
     }
 
     /**
+     * Export data IKK (work permit) ke file Excel.
+     */
+    public function exportIkkExcel(Request $request): void
+    {
+        $filterDate = $request->get('date', now()->toDateString());
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $filterDate)) {
+            $filterDate = now()->toDateString();
+        }
+        $filterSite = $request->get('site');
+        if ($filterSite === null || trim($filterSite) === '') {
+            $filterSite = '';
+        } else {
+            $filterSite = trim($filterSite);
+        }
+
+        $ikkClickhouseListHarian = [];
+        try {
+            if (class_exists(\App\Services\ClickHouseService::class)) {
+                $clickHouse = app(\App\Services\ClickHouseService::class);
+                if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                    $dateStr = addslashes($filterDate);
+                    $siteFilterClause = '';
+                    if ($filterSite !== '' && $filterSite !== null) {
+                        if ($filterSite === 'Lainnya') {
+                            $siteFilterClause = " AND trim(COALESCE(wp.ra_site_name, '')) = ''";
+                        } else {
+                            $siteFilterClause = " AND trim(COALESCE(wp.ra_site_name, '')) = '" . addslashes($filterSite) . "'";
+                        }
+                    }
+
+                    $sqlWorkPermits = "
+                        SELECT
+                            wp.id AS id,
+                            wp.code AS code,
+                            wp.name AS name,
+                            wp.ra_site_name AS ra_site_name,
+                            wp.company_name AS company_name,
+                            wp.status AS status,
+                            wp.m_job_id AS m_job_id,
+                            wp.start_date AS start_date,
+                            wp.end_date AS end_date,
+                            wp.location_name AS location_name,
+                            wp.location_detail_name AS location_detail_name,
+                            groupUniqArray(if(trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', ifNull(m.employee_name, concat('UNKNOWN:', toString(wp_pic.m_pic_id))), null)) AS approver_names,
+                            count() AS total_pic
+                        FROM hse_automation.ikk_work_permit AS wp
+                        INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
+                            ON toString(wp_pic.work_permit_id) = toString(wp.id)
+                            AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
+                        LEFT JOIN hse_automation.ikk_m_pic AS m
+                            ON toString(m.id) = toString(wp_pic.m_pic_id)
+                        WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
+                            AND toDate(wp.start_date) <= toDate('{$dateStr}')
+                            AND toDate(wp.end_date)   >= toDate('{$dateStr}')
+                            {$siteFilterClause}
+                        GROUP BY
+                            wp.id, wp.code, wp.name, wp.ra_site_name, wp.company_name,
+                            wp.status, wp.m_job_id,
+                            wp.start_date, wp.end_date, wp.location_name, wp.location_detail_name
+                        HAVING
+                            sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
+                                AND trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', 1, 0)) > 0
+                        ORDER BY wp.start_date ASC
+                    ";
+
+                    $wpRows = $clickHouse->query($sqlWorkPermits);
+
+                    if (!empty($wpRows)) {
+                        $jobIds = array_values(array_unique(array_filter(array_column($wpRows, 'm_job_id'))));
+                        $jobNamesById = [];
+                        if (!empty($jobIds)) {
+                            $inJobs = implode(',', array_map(function ($id) {
+                                return "'" . addslashes($id) . "'";
+                            }, $jobIds));
+                            $sqlJobs = "SELECT id, name FROM hse_automation.ikk_m_job WHERE id IN ({$inJobs})";
+                            $jobRows = $clickHouse->query($sqlJobs);
+                            foreach ($jobRows as $jr) {
+                                if (!isset($jr['id'])) continue;
+                                $jobNamesById[$jr['id']] = $jr['name'] ?? null;
+                            }
+                        }
+
+                        $wpIds = array_values(array_unique(array_column($wpRows, 'id')));
+                        $layersByWp = [];
+                        if (!empty($wpIds)) {
+                            $inWpIds = implode(',', array_map(fn($id) => "'" . addslashes($id) . "'", $wpIds));
+                            $sqlEmp = "SELECT work_permit_id, layer, employee_name, employee_sid FROM hse_automation.ikk_work_permit_employee WHERE work_permit_id IN ({$inWpIds})";
+                            $empRows = $clickHouse->query($sqlEmp);
+                            foreach ($empRows as $er) {
+                                $wpId = $er['work_permit_id'] ?? null;
+                                if ($wpId === null || $wpId === '') continue;
+                                $layerRaw = $er['layer'] ?? null;
+                                if ($layerRaw === null || $layerRaw === '') continue;
+                                $layerNum = (int) $layerRaw;
+                                if (!in_array($layerNum, [1, 2, 3, 4], true)) continue;
+                                if (!isset($layersByWp[$wpId])) $layersByWp[$wpId] = [];
+                                if (!isset($layersByWp[$wpId][$layerNum])) $layersByWp[$wpId][$layerNum] = [];
+                                $layersByWp[$wpId][$layerNum][] = [
+                                    'name' => trim((string) ($er['employee_name'] ?? '')),
+                                    'sid' => trim((string) ($er['employee_sid'] ?? '')),
+                                ];
+                            }
+                        }
+
+                        foreach ($wpRows as $row) {
+                            $wpId = $row['id'] ?? null;
+                            if ($wpId === null || $wpId === '') continue;
+                            $layers = $layersByWp[$wpId] ?? [];
+                            $rawStatus = $row['status'] ?? null;
+                            $statusUpper = $rawStatus !== null ? strtoupper(trim((string) $rawStatus)) : null;
+                            if ($statusUpper === 'REJECTED') continue;
+
+                            $statusLabel = $rawStatus;
+                            if ($statusUpper === 'APPROVED') $statusLabel = 'Berlaku';
+                            elseif ($statusUpper === 'EXPIRED') $statusLabel = 'Kadaluarsa';
+
+                            $ikkClickhouseListHarian[] = (object) [
+                                'id' => $wpId,
+                                'code' => $row['code'] ?? null,
+                                'site' => $row['ra_site_name'] ?? null,
+                                'jenis_ijin_kerja_khusus' => isset($row['m_job_id']) && $row['m_job_id'] ? ($jobNamesById[$row['m_job_id']] ?? null) : null,
+                                'nama_pekerjaan' => $row['name'] ?? null,
+                                'perusahaan' => $row['company_name'] ?? null,
+                                'raw_status' => $statusUpper,
+                                'status' => $statusLabel,
+                                'status_matriks' => null,
+                                'nama_layer_1' => self::formatLayerEmployees($layers[1] ?? []),
+                                'sid_layer_1' => self::formatLayerSids($layers[1] ?? []),
+                                'nama_layer_2' => self::formatLayerEmployees($layers[2] ?? []),
+                                'sid_layer_2' => self::formatLayerSids($layers[2] ?? []),
+                                'nama_layer_3' => self::formatLayerEmployees($layers[3] ?? []),
+                                'sid_layer_3' => self::formatLayerSids($layers[3] ?? []),
+                                'nama_layer_4' => self::formatLayerEmployees($layers[4] ?? []),
+                                'sid_layer_4' => self::formatLayerSids($layers[4] ?? []),
+                                'start_date' => $row['start_date'] ?? null,
+                                'end_date' => $row['end_date'] ?? null,
+                                'location_name' => self::getClickHouseRowValue($row, 'location_name'),
+                                'location_detail_name' => self::getClickHouseRowValue($row, 'location_detail_name'),
+                                'pic_approver_name' => self::formatApproverNames(self::getClickHouseRowValue($row, 'approver_names')),
+                            ];
+                        }
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::debug('Export IKK ClickHouse skip: ' . $e->getMessage());
+        }
+
+        $byCode = [];
+        foreach ($ikkClickhouseListHarian as $ikk) {
+            $c = $ikk->code ?? '';
+            if ($c !== '' && $c !== null && !isset($byCode[$c])) {
+                $byCode[$c] = $ikk;
+            }
+        }
+        $ikkClickhouseListHarian = array_values($byCode);
+
+        $useChIpkOkk = self::useClickHouseForIpkOkk($filterDate);
+        $cancelKodeIkk = [];
+        if (!empty($ikkClickhouseListHarian)) {
+            $codes = array_values(array_unique(array_filter(array_map(fn($ikk) => is_object($ikk) ? ($ikk->code ?? null) : ($ikk['code'] ?? null), $ikkClickhouseListHarian))));
+            if ($useChIpkOkk && class_exists(\App\Services\ClickHouseService::class)) {
+                $ch = app(\App\Services\ClickHouseService::class);
+                if (method_exists($ch, 'query') && $ch->isConnected()) {
+                    foreach ($ikkClickhouseListHarian as $ikk) {
+                        $wpId = is_object($ikk) ? ($ikk->id ?? null) : ($ikk['id'] ?? null);
+                        if ($wpId === null) continue;
+                        $wpIdEsc = addslashes($wpId);
+                        $dateEsc = addslashes($filterDate);
+                        $sqlIpk = "SELECT id FROM hse_automation.ipk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(start_date) = toDate('{$dateEsc}') AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) LIMIT 1";
+                        $ipkRows = $ch->query($sqlIpk);
+                        $hasIpk = !empty($ipkRows);
+                        $sqlOkk = "SELECT id FROM hse_automation.ikk_okk WHERE work_permit_id = '{$wpIdEsc}' AND toDate(submit_date) = toDate('{$dateEsc}') AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) LIMIT 1";
+                        $okkRows = $ch->query($sqlOkk);
+                        $hasOkk = !empty($okkRows);
+                        $ikk->status_pekerjaan = $hasIpk ? 'Ada IPK' : 'Tidak ada IPK';
+                        $ikk->status_matriks = \App\Http\Controllers\DOPMIKK\DOPMController::hitungStatusMatriks($hasIpk, $hasOkk);
+                    }
+                }
+            } else {
+                $ipkByCode = IpkIkk::whereIn('kode_ikk', $codes)->whereDate('tanggal_dop', $filterDate)->get()->keyBy('kode_ikk');
+                $okkByCode = Okk::whereIn('kode_ikk', $codes)->whereDate('tanggal_dop', $filterDate)->get()->keyBy('kode_ikk');
+                foreach ($ikkClickhouseListHarian as $ikk) {
+                    $code = $ikk->code ?? null;
+                    $hasIpk = $code !== null && isset($ipkByCode[$code]);
+                    $hasOkk = $code !== null && isset($okkByCode[$code]);
+                    $ikk->status_pekerjaan = $hasIpk ? 'Ada IPK' : 'Tidak ada IPK';
+                    $ikk->status_matriks = \App\Http\Controllers\DOPMIKK\DOPMController::hitungStatusMatriks($hasIpk, $hasOkk);
+                }
+            }
+        }
+
+        $headers = [
+            'No',
+            'Kode IKK',
+            'Site',
+            'Jenis Ijin Kerja Khusus',
+            'Nama Pekerjaan',
+            'Perusahaan',
+            'Status WP',
+            'Status Pekerjaan',
+            'Status Matriks',
+            'PIC Approver',
+            'Nama Layer 1',
+            'SID Layer 1',
+            'Nama Layer 2',
+            'SID Layer 2',
+            'Nama Layer 3',
+            'SID Layer 3',
+            'Nama Layer 4',
+            'SID Layer 4',
+            'Start Date',
+            'End Date',
+            'Location',
+            'Location Detail',
+        ];
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Data IKK');
+
+        $col = 1;
+        foreach ($headers as $h) {
+            $sheet->setCellValue(Coordinate::stringFromColumnIndex($col) . '1', $h);
+            $col++;
+        }
+        $lastCol = Coordinate::stringFromColumnIndex(count($headers));
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFD9EAD3');
+
+        $rowNum = 2;
+        foreach ($ikkClickhouseListHarian as $idx => $ikk) {
+            $startDateFormatted = '-';
+            $endDateFormatted = '-';
+            try {
+                if ($ikk->start_date) {
+                    $startDateFormatted = Carbon::parse($ikk->start_date)->format('d/m/Y');
+                }
+            } catch (\Throwable $e) {}
+            try {
+                if ($ikk->end_date) {
+                    $endDateFormatted = Carbon::parse($ikk->end_date)->format('d/m/Y');
+                }
+            } catch (\Throwable $e) {}
+
+            $sheet->setCellValue('A' . $rowNum, $idx + 1);
+            $sheet->setCellValue('B' . $rowNum, $ikk->code ?? '-');
+            $sheet->setCellValue('C' . $rowNum, $ikk->site ?? '-');
+            $sheet->setCellValue('D' . $rowNum, $ikk->jenis_ijin_kerja_khusus ?? '-');
+            $sheet->setCellValue('E' . $rowNum, $ikk->nama_pekerjaan ?? '-');
+            $sheet->setCellValue('F' . $rowNum, $ikk->perusahaan ?? '-');
+            $sheet->setCellValue('G' . $rowNum, $ikk->status ?? '-');
+            $sheet->setCellValue('H' . $rowNum, $ikk->status_pekerjaan ?? 'Tidak ada IPK');
+            $sheet->setCellValue('I' . $rowNum, $ikk->status_matriks ?? 'Merah');
+            $sheet->setCellValue('J' . $rowNum, $ikk->pic_approver_name ?? '-');
+            $sheet->setCellValue('K' . $rowNum, $ikk->nama_layer_1 ?? '-');
+            $sheet->setCellValue('L' . $rowNum, $ikk->sid_layer_1 ?? '-');
+            $sheet->setCellValue('M' . $rowNum, $ikk->nama_layer_2 ?? '-');
+            $sheet->setCellValue('N' . $rowNum, $ikk->sid_layer_2 ?? '-');
+            $sheet->setCellValue('O' . $rowNum, $ikk->nama_layer_3 ?? '-');
+            $sheet->setCellValue('P' . $rowNum, $ikk->sid_layer_3 ?? '-');
+            $sheet->setCellValue('Q' . $rowNum, $ikk->nama_layer_4 ?? '-');
+            $sheet->setCellValue('R' . $rowNum, $ikk->sid_layer_4 ?? '-');
+            $sheet->setCellValue('S' . $rowNum, $startDateFormatted);
+            $sheet->setCellValue('T' . $rowNum, $endDateFormatted);
+            $sheet->setCellValue('U' . $rowNum, $ikk->location_name ?? '-');
+            $sheet->setCellValue('V' . $rowNum, $ikk->location_detail_name ?? '-');
+            $rowNum++;
+        }
+
+        foreach (range('A', 'V') as $colLetter) {
+            $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+        }
+
+        $dateForFilename = Carbon::parse($filterDate)->format('Y-m-d');
+        $filename = "Data_IKK_Weekly_{$dateForFilename}.xlsx";
+
+        $writer = new Xlsx($spreadsheet);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+        exit;
+    }
+
+    /**
      * API data untuk modal detail DOPM: IPK-IKK, OKK, OAK (by kode_ikk dan konteks).
      */
     public function getDetailModalData(Request $request): JsonResponse
