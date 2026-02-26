@@ -1855,7 +1855,7 @@ class DOPMWeeklyController extends Controller
                         $sqlIpk = "SELECT id FROM hse_automation.ipk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(start_date) = toDate('{$dateEsc}') AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) LIMIT 1";
                         $ipkRows = $ch->query($sqlIpk);
                         $hasIpk = !empty($ipkRows);
-                        $sqlOkk = "SELECT id FROM hse_automation.okk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(submit_date) = toDate('{$dateEsc}') AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) LIMIT 1";
+                        $sqlOkk = "SELECT id FROM hse_automation.okk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(created_at) = toDate('{$dateEsc}') AND upper(trim(toString(status))) = 'SUBMITTED' AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) LIMIT 1";
                         $okkRows = $ch->query($sqlOkk);
                         $hasOkk = !empty($okkRows);
                         $ikk->status_pekerjaan = $hasIpk ? 'Ada IPK' : 'Tidak ada IPK';
