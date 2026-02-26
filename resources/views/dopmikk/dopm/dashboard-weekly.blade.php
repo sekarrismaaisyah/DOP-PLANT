@@ -1623,7 +1623,7 @@
                       <i class="material-icons-outlined">assignment</i>
                     </a>
                     <h3 class="mb-0">{{ number_format($totalIkkWeekly ?? 0) }}</h3>
-                    <p class="mb-0">Total IKK</p>
+                    <p class="mb-0">Total Kode IKK Aktif</p>
                     <small class="text-muted">Week {{ $weekNumber ?? '-' }}</small>
                   </div>
                   <div class="vr"></div>
@@ -1668,14 +1668,14 @@
                       <div class="card mb-0 rounded-4 w-100">
                        <div class="card-body">
                          <div class="mb-2">
-                           <h5 class="mb-0 fw-bold">IKK Tidak Ada IPK</h5>
-                           <p class="mb-0 text-muted small">IKK Tidak Ada IPK</p>
+                           <h5 class="mb-0 fw-bold">IKK Weekly Tidak Ada IPK</h5>
+                           <p class="mb-0 text-muted small">IKK Tidak Ada IPK (Per Hari)</p>
                          </div>
                          <div class="text-center py-3 mt-4">
-                           <h1 class="mb-0 display-5 fw-bold">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</h1>
+                           <h1 class="mb-0 display-5 fw-bold">{{ ($totalIpkSeharusnya ?? 0) - ($totalIpkAda ?? 0) }}</h1>
                          </div>
                          <div class="text-center mt-3">
-                           <p class="mb-0"><span class="text-success me-1">{{ ($totalIkkUnikHarian ?? 0) - ($ikkAdaIpkCount ?? 0) }}</span> Need Verification pada hari ini</p>
+                           <p class="mb-0"><span class="text-success me-1">{{ ($totalIpkSeharusnya ?? 0) - ($totalIpkAda ?? 0) }}</span> Need Verification pada Week {{ $weekNumber ?? '-' }}</p>
                          </div>
                        </div>
                       </div>
