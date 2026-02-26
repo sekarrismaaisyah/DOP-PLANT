@@ -1633,7 +1633,7 @@
                     </a>
                     <h3 class="mb-0">{{ $pctIkkAdaIpkWeekly ?? 0 }}%</h3>
                     <p class="mb-0">%IPK Harian</p>
-                    <small class="text-muted">{{ $totalIpkAda ?? 0 }}/{{ $totalIpkSeharusnya ?? 0 }} hari</small>
+                    <small class="text-muted">Week {{ $weekNumber ?? '-' }}</small>
                   </div>
                   <div class="vr"></div>
                   <div class="d-flex flex-column align-items-center justify-content-center gap-2">
@@ -1641,8 +1641,8 @@
                       <i class="material-icons-outlined">folder_open</i>
                     </a>
                     <h3 class="mb-0">{{ $pctIkkAdaOkkWeekly ?? 0 }}%</h3>
-                    <p class="mb-0">IKK ada OKK</p>
-                    <small class="text-muted">{{ $ikkAdaOkkCountWeekly ?? 0 }}/{{ $totalIkkWeekly ?? 0 }} IKK</small>
+                    <p class="mb-0">%OKK Harian</p>
+                    <small class="text-muted">Week {{ $weekNumber ?? '-' }}</small>
                   </div>
                   <div class="vr"></div>
                   <div class="d-flex flex-column align-items-center justify-content-center gap-2">

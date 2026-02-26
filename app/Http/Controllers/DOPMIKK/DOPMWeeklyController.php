@@ -198,6 +198,8 @@ class DOPMWeeklyController extends Controller
         $totalPekerjaanBatalWeekly = 0;
         $totalIpkSeharusnya = 0;
         $totalIpkAda = 0;
+        $totalOkkSeharusnya = 0;
+        $totalOkkAda = 0;
         
         // Tentukan cut off date untuk IPK/OKK
         $cutoffDate = Carbon::parse(config('dopm.ipk_okk_clickhouse_cutoff_date', '2025-02-20'))->startOfDay();
@@ -327,28 +329,63 @@ class DOPMWeeklyController extends Controller
                     $ikkAdaIpkCountWeekly = $totalIpkAda;
                     
                     // Query OKK yang ada dalam rentang week (by work_permit_id) - tetap dari ClickHouse
+                    // OKK dianggap comply jika ada Layer 1 DAN Layer 2 per hari per IKK
+                    // Layer 1: indirect_supervisor_id IS NULL atau kosong
+                    // Layer 2+: indirect_supervisor_id NOT NULL dan tidak kosong
                     if (!empty($weeklyIkkIds)) {
                         $wpIdsWeeklyEsc = implode(',', array_map(fn($id) => "'" . addslashes($id) . "'", array_keys($weeklyIkkIds)));
+                        
+                        // Hitung total OKK seharusnya (sama dengan IPK - berdasarkan durasi IKK dalam minggu)
+                        $totalOkkSeharusnya = $totalIpkSeharusnya;
+                        
+                        // Query OKK dengan info layer per hari per work_permit
                         $sqlWeeklyOkk = "
-                            SELECT DISTINCT work_permit_id
+                            SELECT 
+                                work_permit_id, 
+                                toDate(created_at) as okk_date,
+                                CASE 
+                                    WHEN indirect_supervisor_id IS NULL OR trim(toString(indirect_supervisor_id)) = '' THEN 'L1'
+                                    ELSE 'L2'
+                                END as layer_type
                             FROM hse_automation.okk_assessment
                             WHERE work_permit_id IN ({$wpIdsWeeklyEsc})
                               AND toDate(created_at) >= toDate('{$weekStartStr}')
                               AND toDate(created_at) <= toDate('{$weekEndStr}')
                               AND upper(trim(toString(status))) = 'SUBMITTED'
                               AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                            GROUP BY work_permit_id, toDate(created_at), layer_type
                         ";
                         $weeklyOkkRows = $clickHouse->query($sqlWeeklyOkk);
+                        
+                        // Struktur: okkPerWpPerDay[wp_id][date] = ['L1' => true/false, 'L2' => true/false]
+                        $okkPerWpPerDay = [];
                         $okkWpIds = [];
                         if (!empty($weeklyOkkRows)) {
                             foreach ($weeklyOkkRows as $r) {
                                 $wpId = isset($r['work_permit_id']) ? trim((string) $r['work_permit_id']) : '';
-                                if ($wpId !== '' && isset($weeklyIkkIds[$wpId])) {
-                                    $okkWpIds[$weeklyIkkIds[$wpId]] = true;
+                                $okkDate = isset($r['okk_date']) ? trim((string) $r['okk_date']) : '';
+                                $layerType = isset($r['layer_type']) ? trim((string) $r['layer_type']) : '';
+                                if ($wpId !== '' && $okkDate !== '' && $layerType !== '' && isset($weeklyIkkIds[$wpId])) {
+                                    $code = $weeklyIkkIds[$wpId];
+                                    $key = $wpId . '_' . $okkDate;
+                                    if (!isset($okkPerWpPerDay[$key])) {
+                                        $okkPerWpPerDay[$key] = ['L1' => false, 'L2' => false, 'code' => $code];
+                                    }
+                                    $okkPerWpPerDay[$key][$layerType] = true;
+                                    $okkWpIds[$code] = true;
                                 }
                             }
                         }
-                        $ikkAdaOkkCountWeekly = count($okkWpIds);
+                        
+                        // Hitung hari yang comply (ada Layer 1 DAN Layer 2)
+                        $totalOkkAda = 0;
+                        foreach ($okkPerWpPerDay as $key => $layers) {
+                            if ($layers['L1'] === true && $layers['L2'] === true) {
+                                $totalOkkAda++;
+                            }
+                        }
+                        
+                        $ikkAdaOkkCountWeekly = $totalOkkAda;
                         
                         // Query IKK yang cancel dalam rentang week
                         $sqlWeeklyCancel = "
@@ -368,7 +405,8 @@ class DOPMWeeklyController extends Controller
                     // Hitung persentase
                     // IPK: persentase berdasarkan jumlah hari IPK yang ada vs yang seharusnya
                     $pctIkkAdaIpkWeekly = $totalIpkSeharusnya > 0 ? round(($totalIpkAda / $totalIpkSeharusnya) * 100, 1) : 0;
-                    $pctIkkAdaOkkWeekly = $totalIkkWeekly > 0 ? round(($ikkAdaOkkCountWeekly / $totalIkkWeekly) * 100, 1) : 0;
+                    // OKK: persentase berdasarkan jumlah hari OKK comply (L1+L2) vs yang seharusnya
+                    $pctIkkAdaOkkWeekly = $totalOkkSeharusnya > 0 ? round(($totalOkkAda / $totalOkkSeharusnya) * 100, 1) : 0;
                     $pctComplianceWeekly = round(($pctIkkAdaIpkWeekly + $pctIkkAdaOkkWeekly) / 2, 1);
                 }
             }
@@ -1604,6 +1642,8 @@ class DOPMWeeklyController extends Controller
             'totalPekerjaanBatalWeekly' => $totalPekerjaanBatalWeekly,
             'totalIpkSeharusnya' => $totalIpkSeharusnya,
             'totalIpkAda' => $totalIpkAda,
+            'totalOkkSeharusnya' => $totalOkkSeharusnya,
+            'totalOkkAda' => $totalOkkAda,
             'totalDopmHarian' => $totalDopmHarian,
             'totalWorkPermitApprovedHarian' => $totalWorkPermitApprovedHarian,
             'totalDopmCancelHarian' => $totalDopmCancelHarian,
