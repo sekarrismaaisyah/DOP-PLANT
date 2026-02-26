@@ -80,7 +80,6 @@ class UpdateDopmAlertLog extends Command
                 ra_site_name,
                 company_name,
                 status,
-                m_job_id,
                 start_date,
                 end_date,
                 location_name,
@@ -137,19 +136,6 @@ class UpdateDopmAlertLog extends Command
             }
         }
 
-        $jobIds = array_values(array_unique(array_filter(array_column($wpRows, 'm_job_id'))));
-        $jobNamesById = [];
-
-        if (! empty($jobIds)) {
-            $inJobs = implode(',', array_map(fn ($id) => "'" . addslashes($id) . "'", $jobIds));
-            $sqlJobs = "SELECT id, name FROM hse_automation.m_job WHERE id IN ({$inJobs})";
-            $jobRows = $clickHouse->query($sqlJobs);
-            foreach ($jobRows ?? [] as $jr) {
-                $jobId = $jr['id'];
-                $jobNamesById[$jobId] = $jr['name'] ?? null;
-            }
-        }
-
         $ikkList = [];
         $seenCodes = [];
 
@@ -172,9 +158,6 @@ class UpdateDopmAlertLog extends Command
                 'id' => $wpId,
                 'code' => $code,
                 'site' => $row['ra_site_name'] ?? null,
-                'jenis_ijin_kerja_khusus' => isset($row['m_job_id']) && $row['m_job_id']
-                    ? ($jobNamesById[$row['m_job_id']] ?? null)
-                    : null,
                 'nama_pekerjaan' => $row['name'] ?? null,
                 'perusahaan' => $row['company_name'] ?? null,
                 'start_date' => $row['start_date'] ?? null,
@@ -291,7 +274,6 @@ class UpdateDopmAlertLog extends Command
             'end_date_tanggal' => $endDate?->format('d/m/Y'),
             'end_date_jam' => $endDate?->format('H:i'),
             'site' => $ikk->site ?? null,
-            'jenis_ijin_kerja_khusus' => $ikk->jenis_ijin_kerja_khusus ?? null,
             'nama_pekerjaan' => $ikk->nama_pekerjaan ?? null,
             'perusahaan' => $ikk->perusahaan ?? null,
             'location_name' => $ikk->location_name ?? null,
