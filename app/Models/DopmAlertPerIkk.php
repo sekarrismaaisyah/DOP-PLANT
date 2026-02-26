@@ -28,29 +28,9 @@ class DopmAlertPerIkk extends Model
     private const TZ = 'Asia/Makassar';
 
     /**
-     * Mapping m_job_duration_id ke durasi dalam jam.
-     * UUID '7de308e6-bde0-40d2-9411-d517fc5dc9c9' = Mengikuti durasi IKK (end_date - start_date).
+     * Maksimal alert level (fixed = 3).
      */
-    public const JOB_DURATION_MAP = [
-        '6606dfe7-5df0-4d9e-9de3-7d49014d3b6b' => 9,   // 9 jam
-        '3032f5de-2bfe-4fe6-a791-8ecfda4fc1fc' => 6,   // 6 jam
-        '86390fff-42c2-4f31-aee5-953439312aa5' => 3,   // 3 jam
-        '7de308e6-bde0-40d2-9411-d517fc5dc9c9' => null, // Mengikuti durasi IKK
-    ];
-
-    /**
-     * Hitung max alert level berdasarkan m_job_duration_id dan durasi IKK.
-     */
-    public static function getMaxAlertFromDuration(?string $jobDurationId, ?Carbon $startDate, ?Carbon $endDate): int
-    {
-        $durationHours = self::JOB_DURATION_MAP[$jobDurationId] ?? null;
-
-        if ($durationHours === null && $startDate && $endDate) {
-            $durationHours = (int) ceil($startDate->diffInMinutes($endDate) / 60);
-        }
-
-        return max(1, min(24, $durationHours ?? 3));
-    }
+    public const MAX_ALERT_LEVEL = 3;
 
     /**
      * Cek kondisi alert berdasarkan IPK, OKK Layer 1, dan OKK Layer 2+.
@@ -183,26 +163,22 @@ class DopmAlertPerIkk extends Model
      * 3. Hanya ada OKK saja (tanpa IPK)
      * 4. Ada IPK + OKK Layer 1, tapi tidak ada OKK dari Layer 2+ sesuai yang tercantum di IKK
      *
-     * Alert level dinamis berdasarkan durasi pekerjaan (m_job_duration_id):
-     * - 9 jam = Alert 1-9
-     * - 6 jam = Alert 1-6
-     * - 3 jam = Alert 1-3
-     * - Mengikuti durasi IKK = dihitung dari end_date - start_date
+     * Alert level fixed maksimal 3:
+     * - Alert 1 = jam ke-1 sejak start_date
+     * - Alert 2 = jam ke-2 sejak start_date
+     * - Alert 3 = jam ke-3 sejak start_date
      *
-     * Dipanggil dari dashboard (tanggal = hari ini) atau command dopm:alert-snapshot (setiap 30 menit WITA).
+     * Dipanggil dari command dopm:alert-snapshot (setiap 30 menit WITA).
      * Jika sudah ada intervensi di level tertentu, level di atasnya tidak akan disimpan lagi.
      *
-     * @param  array|Collection  $ikkList  Daftar IKK dengan code, start_date, end_date, m_job_duration_id, layer info, dll. (dari ClickHouse)
+     * @param  array|Collection  $ikkList  Daftar IKK dengan code, start_date, end_date, layer info, dll. (dari ClickHouse)
      * @param  string  $tanggal  Y-m-d
      */
     public static function storeAlertsForDate($ikkList, string $tanggal): void
     {
         $items = $ikkList instanceof Collection ? $ikkList->all() : $ikkList;
         $tz = self::TZ;
-        $dateStart = Carbon::parse($tanggal, $tz)->startOfDay();
         $now = Carbon::now($tz);
-        // Ambil level intervensi tertinggi per IKK untuk tanggal ini, agar Alert 2/3
-        // tidak terus dibuat jika sudah ada intervensi di Alert 1/2.
         $jamCek = (int) $now->format('G');
 
         $maxIntervensiByIkk = DopmAlertIntervensi::getMaxIntervensiLevelByIkk($tanggal);
@@ -228,16 +204,13 @@ class DopmAlertPerIkk extends Model
             $endDate = $endDateRaw ? self::parseDateTime($endDateRaw, $tz) : null;
             $endDate = $endDate?->setTimezone($tz);
 
-            $jobDurationId = $obj->m_job_duration_id ?? null;
-            $maxAlertFromDuration = self::getMaxAlertFromDuration($jobDurationId, $startDate, $endDate);
-
             $diffMinutes = $startDate->diffInMinutes($now, false);
             if ($diffMinutes < 0) {
                 continue;
             }
 
             $diffHours = $diffMinutes / 60;
-            $jamKe = (int) min($maxAlertFromDuration, max(1, floor($diffHours) + 1));
+            $jamKe = (int) min(self::MAX_ALERT_LEVEL, max(1, floor($diffHours) + 1));
 
             $alertCheck = self::checkAlertCondition(
                 $kodeIkk,
@@ -257,13 +230,8 @@ class DopmAlertPerIkk extends Model
             }
 
             $snapshot = self::buildIkkSnapshot($obj, $startDate, $endDate);
-            // Tentukan level maksimum yang boleh disimpan berdasarkan intervensi:
-            // - Jika belum pernah diintervensi: boleh sampai $jamKe (1, 2, atau 3)
-            // - Jika sudah diintervensi di level 1/2: stop di level tsb, tidak buat level di atasnya.
             $snapshot['alert_reason'] = $alertCheck['alert_reason'];
-            // Simpan Alert 1..$maxLevel (agar history level yang relevan tercatat di DB)
-            $snapshot['max_alert_level'] = $maxAlertFromDuration;
-            $snapshot['m_job_duration_id'] = $jobDurationId;
+            $snapshot['max_alert_level'] = self::MAX_ALERT_LEVEL;
 
             $maxLevel = $jamKe;
             $maxIntervensi = $maxIntervensiByIkk[$kodeIkk] ?? null;
@@ -367,8 +335,7 @@ class DopmAlertPerIkk extends Model
                     'location_detail_name' => $snap['location_detail_name'] ?? null,
                     'alasan_matriks' => $snap['alasan_matriks'] ?? null,
                     'alert_reason' => $snap['alert_reason'] ?? null,
-                    'max_alert_level' => $snap['max_alert_level'] ?? 3,
-                    'm_job_duration_id' => $snap['m_job_duration_id'] ?? null,
+                    'max_alert_level' => $snap['max_alert_level'] ?? self::MAX_ALERT_LEVEL,
                     'nama_layer_1' => $snap['nama_layer_1'] ?? null,
                     'nama_layer_2' => $snap['nama_layer_2'] ?? null,
                     'nama_layer_3' => $snap['nama_layer_3'] ?? null,
