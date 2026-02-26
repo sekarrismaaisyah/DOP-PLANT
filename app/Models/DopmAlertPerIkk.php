@@ -33,145 +33,47 @@ class DopmAlertPerIkk extends Model
     public const MAX_ALERT_LEVEL = 3;
 
     /**
-     * Cek kondisi alert berdasarkan IPK, OKK Layer 1, dan OKK Layer 2+.
+     * Cek kondisi alert berdasarkan keberadaan IPK.
      *
-     * Kondisi alert:
-     * 1. Tidak ada IPK atau OKK sama sekali
-     * 2. Hanya ada IPK saja (tanpa OKK)
-     * 3. Hanya ada OKK saja (tanpa IPK)
-     * 4. Ada IPK + OKK dari Layer 1, tapi tidak ada OKK dari Layer 2+ sesuai yang tercantum di IKK
+     * Kondisi alert: Tidak ada IPK untuk kode_ikk tersebut di tanggal itu.
      *
      * @return array ['should_alert' => bool, 'alert_reason' => string]
      */
     public static function checkAlertCondition(
         string $kodeIkk,
         string $tanggal,
-        ?string $namaLayer1,
-        ?string $namaLayer2,
-        ?string $namaLayer3,
-        ?string $namaLayer4,
-        ?string $sidLayer1,
-        ?string $sidLayer2,
-        ?string $sidLayer3,
-        ?string $sidLayer4
+        ?string $namaLayer1 = null,
+        ?string $namaLayer2 = null,
+        ?string $namaLayer3 = null,
+        ?string $namaLayer4 = null,
+        ?string $sidLayer1 = null,
+        ?string $sidLayer2 = null,
+        ?string $sidLayer3 = null,
+        ?string $sidLayer4 = null
     ): array {
         $hasIpk = IpkIkk::where('kode_ikk', $kodeIkk)
             ->whereDate('ts', $tanggal)
             ->exists();
 
-        $okkList = Okk::where('kode_ikk', $kodeIkk)
-            ->whereDate('ts', $tanggal)
-            ->get();
-
-        $hasOkk = $okkList->count() > 0;
-
-        $hasOkkLayer1 = false;
-        $hasOkkLayer2Up = false;
-
-        $layer1Names = array_filter([$namaLayer1 ? trim(strtolower($namaLayer1)) : null]);
-        $layer1Sids = array_filter([$sidLayer1 ? trim(strtoupper($sidLayer1)) : null]);
-        $layer2UpNames = array_filter([
-            $namaLayer2 ? trim(strtolower($namaLayer2)) : null,
-            $namaLayer3 ? trim(strtolower($namaLayer3)) : null,
-            $namaLayer4 ? trim(strtolower($namaLayer4)) : null,
-        ]);
-        $layer2UpSids = array_filter([
-            $sidLayer2 ? trim(strtoupper($sidLayer2)) : null,
-            $sidLayer3 ? trim(strtoupper($sidLayer3)) : null,
-            $sidLayer4 ? trim(strtoupper($sidLayer4)) : null,
-        ]);
-
-        foreach ($okkList as $okk) {
-            $namaPengawas = trim(strtolower($okk->nama_pengawas ?? ''));
-            $layerPengawas = trim(strtolower($okk->layer_pengawas ?? ''));
-            $kodeSid = trim(strtoupper($okk->kode_sid ?? ''));
-
-            $isLayer1 = false;
-            if (in_array($layerPengawas, ['1', 'layer 1', 'layer1'], true)) {
-                $isLayer1 = true;
-            } elseif (! empty($layer1Names)) {
-                foreach ($layer1Names as $ln) {
-                    if ($ln && $namaPengawas && str_contains($namaPengawas, $ln)) {
-                        $isLayer1 = true;
-                        break;
-                    }
-                }
-            }
-            if (! $isLayer1 && ! empty($layer1Sids) && $kodeSid) {
-                foreach ($layer1Sids as $sid) {
-                    if ($sid && $kodeSid === $sid) {
-                        $isLayer1 = true;
-                        break;
-                    }
-                }
-            }
-
-            $isLayer2Up = false;
-            if (in_array($layerPengawas, ['2', '3', '4', 'layer 2', 'layer 3', 'layer 4', 'layer2', 'layer3', 'layer4'], true)) {
-                $isLayer2Up = true;
-            } elseif (! empty($layer2UpNames)) {
-                foreach ($layer2UpNames as $ln) {
-                    if ($ln && $namaPengawas && str_contains($namaPengawas, $ln)) {
-                        $isLayer2Up = true;
-                        break;
-                    }
-                }
-            }
-            if (! $isLayer2Up && ! empty($layer2UpSids) && $kodeSid) {
-                foreach ($layer2UpSids as $sid) {
-                    if ($sid && $kodeSid === $sid) {
-                        $isLayer2Up = true;
-                        break;
-                    }
-                }
-            }
-
-            if ($isLayer1) {
-                $hasOkkLayer1 = true;
-            }
-            if ($isLayer2Up) {
-                $hasOkkLayer2Up = true;
-            }
+        if (! $hasIpk) {
+            return ['should_alert' => true, 'alert_reason' => 'Tidak ada IPK'];
         }
 
-        if (! $hasIpk && ! $hasOkk) {
-            return ['should_alert' => true, 'alert_reason' => 'Tidak ada IPK atau OKK sama sekali'];
-        }
-
-        if ($hasIpk && ! $hasOkk) {
-            return ['should_alert' => true, 'alert_reason' => 'Hanya ada IPK, tidak ada OKK'];
-        }
-
-        if (! $hasIpk && $hasOkk) {
-            return ['should_alert' => true, 'alert_reason' => 'Hanya ada OKK, tidak ada IPK'];
-        }
-
-        $hasLayer2UpInIkk = ! empty($namaLayer2) || ! empty($namaLayer3) || ! empty($namaLayer4)
-                        || ! empty($sidLayer2) || ! empty($sidLayer3) || ! empty($sidLayer4);
-
-        if ($hasIpk && $hasOkkLayer1 && $hasLayer2UpInIkk && ! $hasOkkLayer2Up) {
-            return ['should_alert' => true, 'alert_reason' => 'Ada IPK + OKK Layer 1, tapi tidak ada OKK dari Layer 2/3/4'];
-        }
-
-        return ['should_alert' => false, 'alert_reason' => 'Lengkap'];
+        return ['should_alert' => false, 'alert_reason' => 'Sudah ada IPK'];
     }
 
     /**
-     * Simpan alert per IKK berdasarkan kondisi:
-     * 1. Tidak ada IPK atau OKK sama sekali
-     * 2. Hanya ada IPK saja (tanpa OKK)
-     * 3. Hanya ada OKK saja (tanpa IPK)
-     * 4. Ada IPK + OKK Layer 1, tapi tidak ada OKK dari Layer 2+ sesuai yang tercantum di IKK
+     * Simpan alert per IKK jika tidak ada IPK.
      *
      * Alert level fixed maksimal 3:
-     * - Alert 1 = jam ke-1 sejak start_date
-     * - Alert 2 = jam ke-2 sejak start_date
-     * - Alert 3 = jam ke-3 sejak start_date
+     * - Alert 1 = jam ke-1 sejak start_date, belum ada IPK
+     * - Alert 2 = jam ke-2 sejak start_date, belum ada IPK
+     * - Alert 3 = jam ke-3 sejak start_date, belum ada IPK
      *
      * Dipanggil dari command dopm:alert-snapshot (setiap 30 menit WITA).
      * Jika sudah ada intervensi di level tertentu, level di atasnya tidak akan disimpan lagi.
      *
-     * @param  array|Collection  $ikkList  Daftar IKK dengan code, start_date, end_date, layer info, dll. (dari ClickHouse)
+     * @param  array|Collection  $ikkList  Daftar IKK dengan code, start_date, end_date, dll. (dari ClickHouse)
      * @param  string  $tanggal  Y-m-d
      */
     public static function storeAlertsForDate($ikkList, string $tanggal): void
