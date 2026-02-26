@@ -2510,7 +2510,8 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
-     * Get DOPM (IKK) data where tanggal_dop = today for full maps IKK layer
+     * Get DOPM (IKK) data for full maps IKK layer based on date range.
+     * Shows entries where today falls between tanggal_dop (start) and tanggal_selesai_ijin (end).
      * Uses Asia/Jakarta so "hari ini" matches user date in Indonesia.
      */
     public function getDopmIkkToday(Request $request)
@@ -2518,7 +2519,10 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
         try {
             $tz = config('app.timezone') === 'UTC' ? 'Asia/Jakarta' : config('app.timezone');
             $today = Carbon::today($tz)->format('Y-m-d');
-            $entries = Dopm::whereDate('tanggal_dop', $today)
+            // Tampilkan DOPM yang rentangnya (tanggal_dop - tanggal_selesai_ijin) mencakup hari ini
+            // tanggal_dop <= today AND tanggal_selesai_ijin >= today
+            $entries = Dopm::whereDate('tanggal_dop', '<=', $today)
+                ->whereDate('tanggal_selesai_ijin', '>=', $today)
                 ->orderBy('detail_lokasi')
                 ->orderBy('id_dop')
                 ->get();
@@ -2572,7 +2576,8 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     /**
      * Get IKK (work permit) data for today from ClickHouse ikk_work_permit.
      * Used by full maps IKK layer: show cards on map (geo_lat, geo_lon) and in notification panel.
-     * Filter: today between start_date and end_date; returns rows with table structure matching
+     * Filter: today between start_date and end_date (rentang pekerjaan yang sedang aktif).
+     * IKK akan ditampilkan jika hari ini berada di antara start_date dan end_date.
      * id, code, name, status, location_name, location_detail_name, ra_site_name, geo_lat, geo_lon, etc.
      */
     public function getIkkWorkPermitToday(Request $request)
@@ -2582,8 +2587,9 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             $today = Carbon::today($tz)->format('Y-m-d');
             $dateEsc = addslashes($today);
 
-            // Hanya tampilkan IKK yang start_date-nya hari ini dan status APPROVED (sama seperti dashboard DOPM)
-            $whereDate = "toDate(start_date) = toDate('{$dateEsc}')";
+            // Tampilkan IKK yang rentang (start_date - end_date) mencakup hari ini
+            // Artinya: start_date <= today AND end_date >= today
+            $whereDate = "toDate(start_date) <= toDate('{$dateEsc}') AND toDate(end_date) >= toDate('{$dateEsc}')";
             $whereDeleted = 'AND deleted_at IS NULL';
             $whereStatus = "AND trim(upper(toString(status))) = 'APPROVED'";
 
