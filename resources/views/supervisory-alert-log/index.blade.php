@@ -1,205 +1,215 @@
 @extends('layouts.master')
 
 @section('title', 'Alert Log')
+
+@section('css')
+<link rel="stylesheet" href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}">
+<style>
+.alert-log-page .filter-card { border-radius: 1rem; }
+.alert-log-page .main-card { border-radius: 1rem; overflow: hidden; }
+.alert-log-page .nav-tabs .nav-link { font-weight: 500; color: #495057; }
+.alert-log-page .nav-tabs .nav-link.active { color: #0d6efd; border-bottom: 2px solid #0d6efd; }
+.alert-log-page .tab-content { padding-top: 1.5rem; }
+.alert-log-page .dataTables_wrapper .row:first-child { margin-bottom: 0.75rem; }
+.alert-log-page table.dataTable { width: 100% !important; border-collapse: separate; border-spacing: 0; }
+.alert-log-page table.dataTable thead th {
+    border-bottom: 2px solid #e9ecef;
+    white-space: nowrap;
+    padding: 0.75rem 1rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: #495057;
+    background: #f8f9fa;
+}
+.alert-log-page table.dataTable tbody td {
+    padding: 0.85rem 1rem;
+    font-size: 0.9rem;
+    line-height: 1.4;
+    vertical-align: middle;
+}
+.alert-log-page table.dataTable tbody tr:hover { background-color: #f8f9fa; }
+.alert-log-page .empty-state { padding: 3rem 1rem; text-align: center; color: #6c757d; }
+.alert-log-page .badge-high { background-color: #dc3545; }
+.alert-log-page .badge-medium { background-color: #ffc107; color: #212529; }
+.alert-log-page .badge-low { background-color: #198754; }
+</style>
+@endsection
+
 @section('content')
-<x-page-title title="Alert Log" pagetitle="Alert Log" />
+<div class="alert-log-page">
+    <x-page-title title="Alert Log" pagetitle="Alert Log" />
 
-@if(session('success'))
-<div class="alert alert-success alert-dismissible fade show" role="alert">
-    {{ session('success') }}
-    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-</div>
-@endif
-
-<!-- Tabs: Alert Supervisory, Mobility, Critical Area, Probability -->
-<ul class="nav nav-tabs nav-tabs-custom mb-3" id="alertLogTabs" role="tablist">
-    <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="supervisory-tab" data-bs-toggle="tab" data-bs-target="#supervisory" type="button" role="tab" aria-selected="true">
-            <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">assignment</i>
-            Alert Supervisory
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="mobility-tab" data-bs-toggle="tab" data-bs-target="#mobility" type="button" role="tab" aria-selected="false">
-            <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">directions_car</i>
-            Alert Mobility
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="critical-area-tab" data-bs-toggle="tab" data-bs-target="#critical-area" type="button" role="tab" aria-selected="false">
-            <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">warning</i>
-            Alert Critical Area
-        </button>
-    </li>
-    <li class="nav-item" role="presentation">
-        <button class="nav-link" id="probability-tab" data-bs-toggle="tab" data-bs-target="#probability" type="button" role="tab" aria-selected="false">
-            <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">insights</i>
-            Alert Probability Area
-        </button>
-    </li>
-</ul>
-
-<div class="tab-content" id="alertLogTabContent">
-    <!-- Tab 1: Alert Supervisory -->
-    <div class="tab-pane fade show active" id="supervisory" role="tabpanel">
-        <div class="card rounded-4 border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom py-3">
-                <div class="d-flex flex-wrap align-items-center justify-content-between gap-2">
-                    <div>
-                        <h5 class="mb-0 fw-bold text-dark">Data Alert Supervisory</h5>
-                        <p class="text-muted small mb-0 mt-1">Log status alert Pengawasan Berjarak — diperbarui otomatis pagi, siang, dan sore</p>
-                    </div>
-                </div>
-            </div>
-            <div class="card-body">
-                <div class="row g-2 mb-4 p-3 rounded-3 bg-light align-items-end">
-                    <div class="col-md-2">
-                        <label class="form-label small fw-medium text-muted mb-1">Tanggal</label>
-                        <input type="date" id="filterTanggal" class="form-control form-control-sm">
-                    </div>
-                    <div class="col-md-2">
-                        <label class="form-label small fw-medium text-muted mb-1">Risk Level</label>
-                        <select id="filterRiskLevel" class="form-select form-select-sm">
-                            <option value="">Semua</option>
-                            <option value="HIGH">HIGH (Merah)</option>
-                            <option value="MEDIUM">MEDIUM (Kuning)</option>
-                        </select>
-                    </div>
-                    <div class="col-md-2">
-                        <button type="button" id="btnApplyFilter" class="btn btn-primary btn-sm">
-                            <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">filter_list</i>
-                            Terapkan
-                        </button>
-                        <button type="button" id="btnResetFilter" class="btn btn-outline-secondary btn-sm ms-1">Reset</button>
-                    </div>
-                </div>
-                <div class="table-responsive">
-                    <table id="supervisoryTable" class="table table-hover table-bordered align-middle mb-0" style="width:100%">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-nowrap">Tanggal</th>
-                                <th class="text-nowrap">Nama Lokasi</th>
-                                <th class="text-nowrap">Risk Level</th>
-                                <th class="text-nowrap">SAP Report</th>
-                                <th class="text-nowrap">CCTV Online</th>
-                                <th class="text-nowrap">High Risk Area</th>
-                                <th class="text-nowrap">Diperbarui</th>
-                                <th class="text-nowrap">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody></tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
+    @if(session('success'))
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        {{ session('success') }}
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
     </div>
+    @endif
 
-    <!-- Tab 2: Alert Mobility (Unit & Orang) -->
-    <div class="tab-pane fade" id="mobility" role="tabpanel">
-        <div class="card rounded-4 border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="mb-0 fw-bold text-dark">Data Alert Mobility</h5>
-                <p class="text-muted small mb-0 mt-1">Alert Unit & Orang (Mobility)</p>
-            </div>
-            <div class="card-body">
-                <div id="mobilityTableWrap" class="table-responsive">
-                    <table id="mobilityTable" class="table table-hover table-bordered align-middle mb-0" style="width:100%">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-nowrap">Kode / Unit</th>
-                                <th class="text-nowrap">Lokasi</th>
-                                <th class="text-nowrap">Status</th>
-                                <th class="text-nowrap">Waktu</th>
-                                <th class="text-nowrap">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mobilityTableBody"></tbody>
-                    </table>
-                </div>
-                <div id="mobilityEmpty" class="text-center py-5 text-muted d-none">
-                    <i class="material-icons-outlined" style="font-size: 48px; opacity: 0.5;">directions_car</i>
-                    <p class="mt-2 mb-0">Belum ada data alert Mobility. Data dapat diintegrasikan dari sistem Unit & Orang.</p>
-                </div>
-                <div id="mobilityLoading" class="text-center py-5 text-muted">
-                    <div class="spinner-border spinner-border-sm text-primary"></div>
-                    <p class="mt-2 mb-0">Memuat data...</p>
-                </div>
-            </div>
+    <div class="card main-card">
+        <div class="card-header bg-white py-3">
+            <ul class="nav nav-tabs card-header-tabs" id="alertLogTabs" role="tablist">
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link active" id="supervisory-tab" data-bs-toggle="tab" data-bs-target="#supervisory" type="button" role="tab" aria-selected="true">
+                        <i class="material-icons-outlined align-middle me-1" style="font-size:18px;">assignment</i>
+                        Alert Supervisory
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="mobility-tab" data-bs-toggle="tab" data-bs-target="#mobility" type="button" role="tab" aria-selected="false">
+                        <i class="material-icons-outlined align-middle me-1" style="font-size:18px;">directions_car</i>
+                        Alert Mobility
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="critical-area-tab" data-bs-toggle="tab" data-bs-target="#critical-area" type="button" role="tab" aria-selected="false">
+                        <i class="material-icons-outlined align-middle me-1" style="font-size:18px;">warning</i>
+                        Alert Critical Area
+                    </button>
+                </li>
+                <li class="nav-item" role="presentation">
+                    <button class="nav-link" id="probability-tab" data-bs-toggle="tab" data-bs-target="#probability" type="button" role="tab" aria-selected="false">
+                        <i class="material-icons-outlined align-middle me-1" style="font-size:18px;">insights</i>
+                        Alert Probability Area
+                    </button>
+                </li>
+            </ul>
         </div>
-    </div>
+        <div class="card-body">
+            <div class="tab-content" id="alertLogTabContent">
+                {{-- Tab 1: Alert Supervisory --}}
+                <div class="tab-pane fade show active" id="supervisory" role="tabpanel">
+                    <div class="card filter-card mb-4 border">
+                        <div class="card-body">
+                            <div class="row g-3 align-items-end">
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Tanggal</label>
+                                    <input type="date" id="filterTanggal" class="form-control">
+                                </div>
+                                <div class="col-md-3">
+                                    <label class="form-label fw-semibold">Risk Level</label>
+                                    <select id="filterRiskLevel" class="form-select">
+                                        <option value="">Semua</option>
+                                        <option value="HIGH">HIGH (Merah)</option>
+                                        <option value="MEDIUM">MEDIUM (Kuning)</option>
+                                    </select>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" id="btnApplyFilter" class="btn btn-primary w-100">
+                                        <i class="material-icons-outlined align-middle me-1" style="font-size:18px;">filter_alt</i> Filter
+                                    </button>
+                                </div>
+                                <div class="col-md-3">
+                                    <button type="button" id="btnResetFilter" class="btn btn-outline-secondary w-100">Reset</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
 
-    <!-- Tab 3: Alert Critical Area (DOP & IKK) -->
-    <div class="tab-pane fade" id="critical-area" role="tabpanel">
-        <div class="card rounded-4 border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="mb-0 fw-bold text-dark">Data Alert Critical Area</h5>
-                <p class="text-muted small mb-0 mt-1">IKK hari ini yang belum ada IPK/OKK (DOP & IKK)</p>
-            </div>
-            <div class="card-body">
-                <div id="criticalAreaTableWrap" class="table-responsive">
-                    <table id="criticalAreaTable" class="table table-hover table-bordered align-middle mb-0" style="width:100%">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-nowrap">Kode IKK</th>
-                                <th class="text-nowrap">Jenis IJK</th>
-                                <th class="text-nowrap">Nama Pekerjaan</th>
-                                <th class="text-nowrap">Site</th>
-                                <th class="text-nowrap">Status Matriks</th>
-                                <th class="text-nowrap">Status Pekerjaan</th>
-                                <th class="text-nowrap">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="criticalAreaTableBody"></tbody>
-                    </table>
+                    <div class="table-responsive">
+                        <table id="supervisoryTable" class="table table-hover table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Tanggal</th>
+                                    <th>Nama Lokasi</th>
+                                    <th>Risk Level</th>
+                                    <th>SAP Report</th>
+                                    <th>CCTV Online</th>
+                                    <th>High Risk Area</th>
+                                    <th>Diperbarui</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
-                <div id="criticalAreaEmpty" class="text-center py-5 text-muted d-none">
-                    <i class="material-icons-outlined" style="font-size: 48px; opacity: 0.5;">check_circle</i>
-                    <p class="mt-2 mb-0">Tidak ada alert Critical Area (semua IKK sudah ada IPK/OKK).</p>
-                </div>
-                <div id="criticalAreaLoading" class="text-center py-5 text-muted">
-                    <div class="spinner-border spinner-border-sm text-primary"></div>
-                    <p class="mt-2 mb-0">Memuat data IKK...</p>
-                </div>
-            </div>
-        </div>
-    </div>
 
-    <!-- Tab 4: Alert Probability Area (PJA) -->
-    <div class="tab-pane fade" id="probability" role="tabpanel">
-        <div class="card rounded-4 border-0 shadow-sm">
-            <div class="card-header bg-white border-bottom py-3">
-                <h5 class="mb-0 fw-bold text-dark">Data Alert Probability Area</h5>
-                <p class="text-muted small mb-0 mt-1">Data PJA (Probability Insiden)</p>
-            </div>
-            <div class="card-body">
-                <div id="probabilityTableWrap" class="table-responsive">
-                    <table id="probabilityTable" class="table table-hover table-bordered align-middle mb-0" style="width:100%">
-                        <thead class="table-light">
-                            <tr>
-                                <th class="text-nowrap">Nama PJA</th>
-                                <th class="text-nowrap">Site / Lokasi</th>
-                                <th class="text-nowrap">Tipe / Kategori</th>
-                                <th class="text-nowrap">Layer</th>
-                                <th class="text-nowrap">Aksi</th>
-                            </tr>
-                        </thead>
-                        <tbody id="probabilityTableBody"></tbody>
-                    </table>
+                {{-- Tab 2: Alert Mobility --}}
+                <div class="tab-pane fade" id="mobility" role="tabpanel">
+                    <div id="mobilityTableWrap" class="table-responsive d-none">
+                        <table id="mobilityTable" class="table table-hover table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Kode / Unit</th>
+                                    <th>Lokasi</th>
+                                    <th>Status</th>
+                                    <th>Waktu</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mobilityTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="mobilityEmpty" class="empty-state d-none">
+                        <i class="material-icons-outlined" style="font-size: 48px;">directions_car</i>
+                        <p class="mt-2 mb-0">Belum ada data alert Mobility. Data dapat diintegrasikan dari sistem Unit & Orang.</p>
+                    </div>
+                    <div id="mobilityLoading" class="empty-state">
+                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                        <p class="mt-2 mb-0">Memuat data...</p>
+                    </div>
                 </div>
-                <div id="probabilityEmpty" class="text-center py-5 text-muted d-none">
-                    <i class="material-icons-outlined" style="font-size: 48px; opacity: 0.5;">insights</i>
-                    <p class="mt-2 mb-0">Tidak ada data PJA (Probability).</p>
+
+                {{-- Tab 3: Alert Critical Area --}}
+                <div class="tab-pane fade" id="critical-area" role="tabpanel">
+                    <div id="criticalAreaTableWrap" class="table-responsive d-none">
+                        <table id="criticalAreaTable" class="table table-hover table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Kode IKK</th>
+                                    <th>Jenis IJK</th>
+                                    <th>Nama Pekerjaan</th>
+                                    <th>Site</th>
+                                    <th>Status Matriks</th>
+                                    <th>Status Pekerjaan</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="criticalAreaTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="criticalAreaEmpty" class="empty-state d-none">
+                        <i class="material-icons-outlined" style="font-size: 48px;">check_circle</i>
+                        <p class="mt-2 mb-0">Tidak ada alert Critical Area (semua IKK sudah ada IPK/OKK).</p>
+                    </div>
+                    <div id="criticalAreaLoading" class="empty-state">
+                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                        <p class="mt-2 mb-0">Memuat data IKK...</p>
+                    </div>
                 </div>
-                <div id="probabilityLoading" class="text-center py-5 text-muted">
-                    <div class="spinner-border spinner-border-sm text-primary"></div>
-                    <p class="mt-2 mb-0">Memuat data PJA...</p>
+
+                {{-- Tab 4: Alert Probability Area --}}
+                <div class="tab-pane fade" id="probability" role="tabpanel">
+                    <div id="probabilityTableWrap" class="table-responsive d-none">
+                        <table id="probabilityTable" class="table table-hover table-striped" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>Nama PJA</th>
+                                    <th>Site / Lokasi</th>
+                                    <th>Tipe / Kategori</th>
+                                    <th>Layer</th>
+                                    <th class="text-end">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="probabilityTableBody"></tbody>
+                        </table>
+                    </div>
+                    <div id="probabilityEmpty" class="empty-state d-none">
+                        <i class="material-icons-outlined" style="font-size: 48px;">insights</i>
+                        <p class="mt-2 mb-0">Tidak ada data PJA (Probability).</p>
+                    </div>
+                    <div id="probabilityLoading" class="empty-state">
+                        <div class="spinner-border spinner-border-sm text-primary"></div>
+                        <p class="mt-2 mb-0">Memuat data PJA...</p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<!-- Modal Hasil Matriks TARP -->
+{{-- Modal Hasil Matriks TARP --}}
 <div class="modal fade" id="matrixResultModal" tabindex="-1" aria-labelledby="matrixResultModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-xl modal-dialog-scrollable">
         <div class="modal-content">
@@ -216,28 +226,6 @@
         </div>
     </div>
 </div>
-
-<style>
-    .nav-tabs-custom .nav-link {
-        font-weight: 500;
-        color: #6b7280;
-        border: none;
-        border-bottom: 2px solid transparent;
-        padding: 0.6rem 1rem;
-    }
-    .nav-tabs-custom .nav-link:hover { color: #111827; }
-    .nav-tabs-custom .nav-link.active {
-        color: #008cff;
-        border-bottom-color: #008cff;
-        background: transparent;
-    }
-    #supervisoryTable thead th { font-size: 0.8125rem; }
-    #supervisoryTable tbody td { font-size: 0.875rem; }
-    #mobilityTable thead th, #criticalAreaTable thead th, #probabilityTable thead th { font-size: 0.8125rem; }
-    #mobilityTable tbody td, #criticalAreaTable tbody td, #probabilityTable tbody td { font-size: 0.875rem; }
-    .dataTables_wrapper .dataTables_length select { padding: 0.25rem 1.5rem; }
-    .dataTables_wrapper .dataTables_filter input { margin-left: 0.5rem; padding: 0.35rem 0.5rem; }
-</style>
 @endsection
 
 @section('scripts')
@@ -264,7 +252,7 @@ $(document).ready(function() {
             { data: 'has_online_cctv', name: 'has_online_cctv', orderable: true },
             { data: 'is_high_risk_area', name: 'is_high_risk_area', orderable: true },
             { data: 'updated_at', name: 'updated_at', orderable: true },
-            { data: 'actions', name: 'actions', orderable: false, searchable: false }
+            { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-end' }
         ],
         order: [[0, 'desc']],
         pageLength: 25,
@@ -303,7 +291,7 @@ $(document).ready(function() {
         table.ajax.reload();
     });
 
-    // --- Tab Mobility: load data saat tab pertama kali ditampilkan ---
+    // Tab Mobility: load data saat tab ditampilkan
     $('button[data-bs-target="#mobility"]').on('shown.bs.tab', function() {
         if ($('#mobilityTableBody').data('loaded')) return;
         $('#mobilityLoading').removeClass('d-none');
@@ -320,7 +308,7 @@ $(document).ready(function() {
                 var rows = data.map(function(r) {
                     var lok = (r.lokasi || r.unit || r.kode || '').toString();
                     var intervensiUrl = lok ? (intervensiBase + '?lokasi=' + encodeURIComponent(lok)) : intervensiBase;
-                    return '<tr><td>' + (r.kode || r.unit || '-') + '</td><td>' + (r.lokasi || '-') + '</td><td>' + (r.status || '-') + '</td><td>' + (r.waktu || '-') + '</td><td><a href="' + intervensiUrl + '" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a></td></tr>';
+                    return '<tr><td>' + (r.kode || r.unit || '-') + '</td><td>' + (r.lokasi || '-') + '</td><td>' + (r.status || '-') + '</td><td>' + (r.waktu || '-') + '</td><td class="text-end"><a href="' + intervensiUrl + '" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a></td></tr>';
                 }).join('');
                 $('#mobilityTableBody').html(rows);
                 $('#mobilityTableWrap').removeClass('d-none');
@@ -331,7 +319,7 @@ $(document).ready(function() {
         });
     });
 
-    // --- Tab Critical Area: load IKK dari full-maps API ---
+    // Tab Critical Area: load IKK dari full-maps API
     var escapeHtml = function(s) {
         if (s == null || s === '') return '';
         return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -359,7 +347,7 @@ $(document).ready(function() {
                     var tanggal = (r.tanggal_dop || today);
                     var intervensiUrl = dashboardUrl + '?tanggal=' + encodeURIComponent(tanggal);
                     var btn = '<a href="' + intervensiUrl + '" target="_blank" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a>';
-                    return '<tr><td>' + escapeHtml(r.code || '-') + '</td><td>' + escapeHtml(r.jenis_ijin_kerja_khusus || '-') + '</td><td>' + escapeHtml(r.nama_pekerjaan || '-') + '</td><td>' + escapeHtml(r.site || '-') + '</td><td>' + badge(r.status_matriks) + '</td><td>' + escapeHtml(r.status_pekerjaan || '-') + '</td><td>' + btn + '</td></tr>';
+                    return '<tr><td>' + escapeHtml(r.code || '-') + '</td><td>' + escapeHtml(r.jenis_ijin_kerja_khusus || '-') + '</td><td>' + escapeHtml(r.nama_pekerjaan || '-') + '</td><td>' + escapeHtml(r.site || '-') + '</td><td>' + badge(r.status_matriks) + '</td><td>' + escapeHtml(r.status_pekerjaan || '-') + '</td><td class="text-end">' + btn + '</td></tr>';
                 }).join('');
                 $('#criticalAreaTableBody').html(rows);
                 $('#criticalAreaTableWrap').removeClass('d-none');
@@ -370,7 +358,7 @@ $(document).ready(function() {
         });
     });
 
-    // --- Tab Probability: load PJA dari maps API ---
+    // Tab Probability: load PJA dari maps API
     $('button[data-bs-target="#probability"]').on('shown.bs.tab', function() {
         if ($('#probabilityTableBody').data('loaded')) return;
         $('#probabilityLoading').removeClass('d-none');
@@ -393,7 +381,7 @@ $(document).ready(function() {
                     var lokParam = (r.site || r.lokasi || r.detail_lokasi || siteLok || '').toString();
                     var intervensiUrl = lokParam ? (intervensiBase + '?lokasi=' + encodeURIComponent(lokParam)) : intervensiBase;
                     var btn = '<a href="' + intervensiUrl + '" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a>';
-                    return '<tr><td>' + esc(nama) + '</td><td>' + esc(siteLok || '-') + '</td><td>' + esc(tipeCat || '-') + '</td><td>' + esc(r.pja_layer || '-') + '</td><td>' + btn + '</td></tr>';
+                    return '<tr><td>' + esc(nama) + '</td><td>' + esc(siteLok || '-') + '</td><td>' + esc(tipeCat || '-') + '</td><td>' + esc(r.pja_layer || '-') + '</td><td class="text-end">' + btn + '</td></tr>';
                 }).join('');
                 $('#probabilityTableBody').html(rows);
                 $('#probabilityTableWrap').removeClass('d-none');

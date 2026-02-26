@@ -290,13 +290,22 @@
 
 
 
-          <li class="menu-label">Intervensi Smart Alert</li>
+          <li class="menu-label">Log Alert & Intervensi</li>
           
           <li>
             <a class="" href="{{ route('supervisory-alert-log.index') }}">
               <div class="parent-icon"><i class="material-icons-outlined">settings</i>
               </div>                 
               <div class="menu-title">Alert & Intervensi</div>
+            </a>
+           
+          </li>
+
+          <li>
+            <a class="" href="{{ route('supervisory-alert-log.index') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">settings</i>
+              </div>                 
+              <div class="menu-title">Task List</div>
             </a>
            
           </li>
