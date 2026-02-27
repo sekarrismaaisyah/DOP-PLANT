@@ -292,6 +292,12 @@
 <script src="{{ URL::asset('build/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 <script>
 $(document).ready(function() {
+    // Helper function for escaping HTML
+    var escapeHtml = function(s) {
+        if (s == null || s === '') return '';
+        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    };
+
     var table = $('#supervisoryTable').DataTable({
         processing: true,
         serverSide: true,
@@ -376,10 +382,6 @@ $(document).ready(function() {
     });
 
     // Tab Critical Area: load IKK dari full-maps API
-    var escapeHtml = function(s) {
-        if (s == null || s === '') return '';
-        return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
-    };
     $('button[data-bs-target="#critical-area"]').on('shown.bs.tab', function() {
         if ($('#criticalAreaTableBody').data('loaded')) return;
         $('#criticalAreaLoading').removeClass('d-none');
@@ -425,14 +427,13 @@ $(document).ready(function() {
             if (data.length === 0) {
                 $('#probabilityEmpty').removeClass('d-none');
             } else {
-                var esc = typeof escapeHtml === 'function' ? escapeHtml : function(s){ return (s==null||s==='') ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
                 var rows = data.map(function(r) {
                     var nama = r.nama_pja || r.name || ('PJA ' + (r.pja_id || ''));
                     var siteLok = [r.site, r.lokasi, r.detail_lokasi].filter(Boolean).join(' / ');
                     var tipeCat = [r.pja_type_name, r.pja_category_name].filter(Boolean).join(' / ');
                     var lokParam = (r.site || r.lokasi || r.detail_lokasi || siteLok || '').toString();
-                    var btn = '<button type="button" class="btn btn-sm btn-outline-success btn-intervensi" data-lokasi="' + esc(lokParam) + '" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</button>';
-                    return '<tr><td>' + esc(nama) + '</td><td>' + esc(siteLok || '-') + '</td><td>' + esc(tipeCat || '-') + '</td><td>' + esc(r.pja_layer || '-') + '</td><td class="text-end">' + btn + '</td></tr>';
+                    var btn = '<button type="button" class="btn btn-sm btn-outline-success btn-intervensi" data-lokasi="' + escapeHtml(lokParam) + '" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</button>';
+                    return '<tr><td>' + escapeHtml(nama) + '</td><td>' + escapeHtml(siteLok || '-') + '</td><td>' + escapeHtml(tipeCat || '-') + '</td><td>' + escapeHtml(r.pja_layer || '-') + '</td><td class="text-end">' + btn + '</td></tr>';
                 }).join('');
                 $('#probabilityTableBody').html(rows);
                 $('#probabilityTableWrap').removeClass('d-none');
