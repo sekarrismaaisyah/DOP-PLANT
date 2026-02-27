@@ -50,6 +50,14 @@ class Kernel extends ConsoleKernel
             ->timezone('Asia/Makassar')
             ->everyThirtyMinutes()
             ->appendOutputTo(storage_path('logs/dopm-alert-snapshot.log'));
+
+        // DOPM Auto Alert WA via Fonnte: kirim notifikasi WA otomatis setiap jam untuk IKK yang belum ada IPK.
+        // Dijalankan setiap jam (pada menit ke-5) setelah dopm:alert-snapshot berjalan.
+        $schedule->command('dopm:auto-alert-wa')
+            ->timezone('Asia/Makassar')
+            ->hourlyAt(5)
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/dopm-auto-alert-wa.log'));
     }
 
     /**
