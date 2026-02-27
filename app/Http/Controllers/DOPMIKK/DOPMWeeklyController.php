@@ -221,7 +221,8 @@ class DOPMWeeklyController extends Controller
                         }
                     }
                     
-                    // Query IKK dengan start_date dalam rentang week (distinct by code)
+                    // Query IKK yang OVERLAP dengan rentang week (distinct by code)
+                    // IKK aktif = start_date <= akhir_minggu DAN end_date >= awal_minggu
                     // Hanya yang sudah di-approve oleh WKTT
                     // Ambil juga start_date dan end_date untuk hitung durasi IPK yang seharusnya
                     $sqlWeeklyIkk = "
@@ -233,8 +234,8 @@ class DOPMWeeklyController extends Controller
                         LEFT JOIN hse_automation.ikk_m_pic AS m
                             ON toString(m.id) = toString(wp_pic.m_pic_id)
                         WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
-                            AND toDate(wp.start_date) >= toDate('{$weekStartStr}')
                             AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
+                            AND toDate(wp.end_date)   >= toDate('{$weekStartStr}')
                             {$siteFilterClauseWeekly}
                         GROUP BY wp.code, wp.id, wp.start_date, wp.end_date
                         HAVING sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
