@@ -283,6 +283,147 @@
         </div>
     </div>
 </div>
+
+{{-- Modal Intervensi DOPM (untuk Critical Area IKK) --}}
+<div class="modal fade" id="intervensiDopmModal" tabindex="-1" aria-labelledby="intervensiDopmModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="true">
+    <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content rounded-4 shadow-lg border border-light">
+            <div class="modal-header rounded-top-4 py-3 bg-warning bg-opacity-10">
+                <div class="d-flex align-items-center flex-grow-1">
+                    <span class="material-icons-outlined me-2 fs-4 text-warning">campaign</span>
+                    <div>
+                        <h5 class="modal-title fw-bold mb-0 text-dark" id="intervensiDopmModalLabel">
+                            <span id="intervensiDopmTitle">Intervensi DOPM</span>
+                        </h5>
+                        <small class="text-muted" id="intervensiDopmSubtitle">Kode IKK: —</small>
+                    </div>
+                </div>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4 bg-white">
+                <div id="intervensiPjoWrap" class="intervensi-section mb-4 d-none">
+                    <h6 class="text-info border-bottom pb-2 mb-3"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">person</i> PJO — Intervensi by WA</h6>
+                    <div class="card border-info mb-3">
+                        <div class="card-header bg-info bg-opacity-10 py-2">
+                            <span class="material-icons-outlined align-middle me-1 text-info">contact_phone</span>
+                            <strong>PJO Work Permit: <span id="intervensiPjoNameDisplay" class="text-dark">—</span></strong>
+                        </div>
+                        <div class="card-body py-3">
+                            <p class="small text-muted mb-2">Kirim intervensi via WhatsApp ke nomor PJO yang terdaftar.</p>
+                            <div id="intervensiPjoUsers" class="d-flex flex-wrap gap-2"></div>
+                            <div id="intervensiPjoEmpty" class="text-muted small d-none">Tidak ada user terdaftar dengan nama tersebut.</div>
+                            <div id="intervensiPjoLoading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat nomor PJO...</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="intervensi-section mb-4">
+                    <h6 class="text-primary border-bottom pb-2 mb-3"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">checklist</i> IPK-IKK <span class="badge bg-primary ms-1" id="intervensiBadgeIpk">0</span></h6>
+                    <div id="intervensiLayer1Wrap" class="card border-warning mb-3">
+                        <div class="card-header bg-warning bg-opacity-10 py-2">
+                            <span class="material-icons-outlined align-middle me-1 text-warning">notifications_active</span>
+                            <strong>Layer 1 — Pengingat Isi IPK (INSPEKSI PRA KERJA)</strong>
+                        </div>
+                        <div class="card-body py-3">
+                            <p class="small mb-2"><strong>Nama Layer:</strong> <span id="intervensiLayer1NameDisplay" class="text-dark">—</span></p>
+                            <p class="small text-muted mb-2">Klik tombol di bawah untuk langsung kirim intervensi via WhatsApp.</p>
+                            <div id="intervensiLayer1Users" class="d-flex flex-wrap gap-2"></div>
+                            <div id="intervensiLayer1Empty" class="text-muted small d-none">Tidak ada user terdaftar untuk Layer 1 ini.</div>
+                            <div id="intervensiLayer1NoName" class="text-muted small d-none">Kolom <strong>SID Layer 1</strong> atau <strong>Nama Layer 1</strong> untuk DOPM ini belum diisi.</div>
+                            <div id="intervensiLayer1Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat daftar PIC Layer 1...</div>
+                        </div>
+                    </div>
+                    <div id="intervensiIpkLoading" class="text-center py-3 d-none"><div class="spinner-border text-primary spinner-border-sm" role="status"></div><p class="text-muted mb-0 mt-2 small">Memuat data IPK-IKK...</p></div>
+                    <div id="intervensiIpkEmpty" class="text-center py-3 d-none"><span class="material-icons-outlined text-muted" style="font-size: 32px;">inbox</span><p class="text-muted mt-2 mb-0 small">Tidak ada data IPK-IKK.</p></div>
+                    <div id="intervensiIpkTableWrap" class="d-none">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableIpk">
+                                <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Durasi</th><th>CCTV</th><th>Kategori IJK</th><th>Status</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="intervensi-section mb-4">
+                    <h6 class="text-success border-bottom pb-2 mb-3"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">folder_open</i> OKK <span class="badge bg-success ms-1" id="intervensiBadgeOkk">0</span></h6>
+                    <div id="intervensiOkkLayer1Wrap" class="card border-success mb-3">
+                        <div class="card-header bg-success bg-opacity-10 py-2">
+                            <span class="material-icons-outlined align-middle me-1 text-success">notifications_active</span>
+                            <strong>Layer 1 — Intervensi OKK (OBSERVASI KEGIATAN KERJA)</strong>
+                        </div>
+                        <div class="card-body py-3">
+                            <p class="small mb-2"><strong>Nama Layer:</strong> <span id="intervensiOkkLayer1NameDisplay" class="text-dark">—</span></p>
+                            <p class="small text-muted mb-2">Klik tombol di bawah untuk langsung kirim intervensi via WhatsApp.</p>
+                            <div id="intervensiOkkLayer1Users" class="d-flex flex-wrap gap-2"></div>
+                            <div id="intervensiOkkLayer1Empty" class="text-muted small d-none">Tidak ada user terdaftar untuk Layer 1 ini.</div>
+                            <div id="intervensiOkkLayer1NoName" class="text-muted small d-none">Kolom <strong>SID Layer 1</strong> atau <strong>Nama Layer 1</strong> untuk DOPM ini belum diisi.</div>
+                            <div id="intervensiOkkLayer1Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1" role="status"></span>Memuat daftar PIC Layer 1...</div>
+                        </div>
+                    </div>
+                    <div id="intervensiOkkLoading" class="text-center py-3 d-none"><div class="spinner-border text-success spinner-border-sm" role="status"></div><p class="text-muted mb-0 mt-2 small">Memuat data OKK...</p></div>
+                    <div id="intervensiOkkEmpty" class="text-center py-3 d-none"><span class="material-icons-outlined text-muted" style="font-size: 32px;">inbox</span><p class="text-muted mt-2 mb-0 small">Tidak ada data OKK.</p></div>
+                    <div id="intervensiOkkTableWrap" class="d-none">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableOkk">
+                                <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="intervensi-section">
+                    <h6 class="text-warning text-dark border-bottom pb-2 mb-3"><i class="material-icons-outlined align-middle me-1" style="font-size:20px;">visibility</i> OAK <span class="badge bg-warning text-dark ms-1" id="intervensiBadgeOak">0</span></h6>
+                    <div id="intervensiOakLayersWrap" class="card border-warning mb-3">
+                        <div class="card-header bg-warning bg-opacity-10 py-2">
+                            <span class="material-icons-outlined align-middle me-1 text-warning">notifications_active</span>
+                            <strong>Intervensi OAK — Layer 2, 3, 4</strong>
+                        </div>
+                        <div class="card-body py-3">
+                            <div class="row g-3">
+                                <div class="col-md-4">
+                                    <div class="border rounded p-2 bg-light">
+                                        <p class="small mb-1 fw-semibold">Layer 2</p>
+                                        <p class="small mb-1 text-muted"><strong>Nama:</strong> <span id="intervensiOakLayer2Name" class="text-dark">—</span></p>
+                                        <div id="intervensiOakLayer2Users" class="d-flex flex-wrap gap-1"></div>
+                                        <div id="intervensiOakLayer2Empty" class="text-muted small d-none">Tidak ada user.</div>
+                                        <div id="intervensiOakLayer2Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1"></span>Memuat...</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-2 bg-light">
+                                        <p class="small mb-1 fw-semibold">Layer 3</p>
+                                        <p class="small mb-1 text-muted"><strong>Nama:</strong> <span id="intervensiOakLayer3Name" class="text-dark">—</span></p>
+                                        <div id="intervensiOakLayer3Users" class="d-flex flex-wrap gap-1"></div>
+                                        <div id="intervensiOakLayer3Empty" class="text-muted small d-none">Tidak ada user.</div>
+                                        <div id="intervensiOakLayer3Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1"></span>Memuat...</div>
+                                    </div>
+                                </div>
+                                <div class="col-md-4">
+                                    <div class="border rounded p-2 bg-light">
+                                        <p class="small mb-1 fw-semibold">Layer 4</p>
+                                        <p class="small mb-1 text-muted"><strong>Nama:</strong> <span id="intervensiOakLayer4Name" class="text-dark">—</span></p>
+                                        <div id="intervensiOakLayer4Users" class="d-flex flex-wrap gap-1"></div>
+                                        <div id="intervensiOakLayer4Empty" class="text-muted small d-none">Tidak ada user.</div>
+                                        <div id="intervensiOakLayer4Loading" class="text-muted small d-none"><span class="spinner-border spinner-border-sm me-1"></span>Memuat...</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="intervensiOakLoading" class="text-center py-3 d-none"><div class="spinner-border text-warning spinner-border-sm" role="status"></div><p class="text-muted mb-0 mt-2 small">Memuat data OAK...</p></div>
+                    <div id="intervensiOakEmpty" class="text-center py-3 d-none"><span class="material-icons-outlined text-muted" style="font-size: 32px;">inbox</span><p class="text-muted mt-2 mb-0 small">Tidak ada data OAK.</p></div>
+                    <div id="intervensiOakTableWrap" class="d-none">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="intervensiTableOak">
+                                <thead class="table-light"><tr><th>Activity</th><th>Sub Activity</th><th>Submit Date</th><th>Submit By</th><th>SID Pelapor</th><th>Lokasi</th><th>Detail Lokasi</th><th>Conclusion</th><th>Site</th></tr></thead>
+                                <tbody></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
@@ -400,8 +541,25 @@ $(document).ready(function() {
                     return '<span class="badge bg-secondary">' + escapeHtml(s || '-') + '</span>';
                 };
                 var rows = data.map(function(r) {
-                    var lokasi = r.site || r.lokasi || '';
-                    var btn = '<button type="button" class="btn btn-sm btn-outline-success btn-intervensi" data-lokasi="' + escapeHtml(lokasi) + '" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</button>';
+                    var dopmData = JSON.stringify({
+                        kode_ikk: r.code || '',
+                        tanggal_dop: r.tanggal_dop || '{{ now()->format("Y-m-d") }}',
+                        nama_pekerjaan: r.nama_pekerjaan || '',
+                        jenis_ijin_kerja_khusus: r.jenis_ijin_kerja_khusus || '',
+                        site: r.site || '',
+                        location_name: r.location_name || r.lokasi || '',
+                        location_detail_name: r.location_detail_name || '',
+                        nama_layer_1: r.nama_layer_1 || '',
+                        nama_layer_2: r.nama_layer_2 || '',
+                        nama_layer_3: r.nama_layer_3 || '',
+                        nama_layer_4: r.nama_layer_4 || '',
+                        sid_layer_1: r.sid_layer_1 || '',
+                        sid_layer_2: r.sid_layer_2 || '',
+                        sid_layer_3: r.sid_layer_3 || '',
+                        sid_layer_4: r.sid_layer_4 || '',
+                        ra_pjo_name: r.ra_pjo_name || ''
+                    });
+                    var btn = '<button type="button" class="btn btn-sm btn-outline-warning btn-intervensi-dopm" data-dopm=\'' + escapeHtml(dopmData) + '\' title="Intervensi DOPM"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</button>';
                     return '<tr><td>' + escapeHtml(r.code || '-') + '</td><td>' + escapeHtml(r.jenis_ijin_kerja_khusus || '-') + '</td><td>' + escapeHtml(r.nama_pekerjaan || '-') + '</td><td>' + escapeHtml(r.site || '-') + '</td><td>' + badge(r.status_matriks) + '</td><td>' + escapeHtml(r.status_pekerjaan || '-') + '</td><td class="text-end">' + btn + '</td></tr>';
                 }).join('');
                 $('#criticalAreaTableBody').html(rows);
@@ -779,6 +937,369 @@ $(document).ready(function() {
                 submitBtn.html('<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span> Kirim Intervensi');
             }
         });
+    });
+
+    // ============================================
+    // Intervensi DOPM (untuk Critical Area IKK)
+    // ============================================
+    
+    var modalApiUrl = "{{ route('dopmikk.api.ikk-modal-data') }}";
+    var layer1UsersApiUrl = "{{ route('dopmikk.api.layer1-users') }}";
+    var layers234UsersApiUrl = "{{ route('dopmikk.api.layers234-users') }}";
+    var intervensiStoreUrl = "{{ route('dopmikk.api.alert-log-intervensi') }}";
+    var updatePicUrl = "{{ route('dopmikk.api.update-intervensi-pic') }}";
+    var ipkFormLink = 'https://beikk.beraucoal.co.id/monitoring-ipk';
+    var intervensiDopmModalEl = document.getElementById('intervensiDopmModal');
+    var intervensiDopmModal = intervensiDopmModalEl ? new bootstrap.Modal(intervensiDopmModalEl) : null;
+    var currentIntervensiData = null;
+    
+    function tr(cells) {
+        var row = document.createElement('tr');
+        cells.forEach(function(c) {
+            var td = document.createElement('td');
+            td.textContent = c == null || c === undefined ? '—' : String(c);
+            row.appendChild(td);
+        });
+        return row;
+    }
+    function safeStr(val, maxLen) {
+        if (val == null || val === undefined) return '—';
+        var s = String(val).trim();
+        if (!s) return '—';
+        if (maxLen && s.length > maxLen) s = s.substring(0, maxLen);
+        return s;
+    }
+    function formatTs(ts) {
+        if (!ts) return '—';
+        var s = String(ts).trim();
+        if (!s) return '—';
+        var m = s.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
+        if (m) return m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + ':' + m[5];
+        return s;
+    }
+    function normalizeWaNumber(selular) {
+        if (!selular || typeof selular !== 'string') return '';
+        var s = selular.replace(/\s+/g, '').replace(/-/g, '');
+        if (/^0\d+/.test(s)) return '62' + s.substring(1);
+        if (!/^62/.test(s) && /^\d+/.test(s)) return '62' + s;
+        return s;
+    }
+    
+    function savePicAndOpenWa(waUrl, picUser) {
+        if (!currentIntervensiData || !currentIntervensiData.kode_ikk) {
+            window.open(waUrl, '_blank');
+            return;
+        }
+        var formData = new FormData();
+        formData.append('tanggal', currentIntervensiData.tanggal);
+        formData.append('kode_ikk', currentIntervensiData.kode_ikk);
+        formData.append('alert_level', currentIntervensiData.alert_level || 1);
+        formData.append('pic_user_id', picUser.id || '');
+        formData.append('pic_name', picUser.nama || picUser.username || '');
+        formData.append('pic_email', picUser.email || '');
+        fetch(updatePicUrl, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: formData
+        }).finally(function() {
+            window.open(waUrl, '_blank');
+        });
+    }
+    
+    // Handle click on intervensi DOPM button
+    $(document).on('click', '.btn-intervensi-dopm', function(e) {
+        e.preventDefault();
+        if (!intervensiDopmModal) return;
+        
+        var dataStr = $(this).attr('data-dopm') || '{}';
+        var data = {};
+        try { data = JSON.parse(dataStr); } catch(e) { data = {}; }
+        
+        currentIntervensiData = { tanggal: data.tanggal_dop || '', kode_ikk: data.kode_ikk || '', alert_level: 1 };
+        
+        var namaLayer1 = (data.nama_layer_1 || '').trim();
+        var sidLayer1 = (data.sid_layer_1 || '').trim();
+        var hasLayer1 = sidLayer1 !== '' || namaLayer1 !== '';
+        
+        $('#intervensiDopmTitle').text((data.kode_ikk || 'Intervensi') + ' — ' + (data.nama_pekerjaan || 'DOPM').substring(0, 50));
+        $('#intervensiDopmSubtitle').text('Kode IKK: ' + (data.kode_ikk || '—'));
+        $('#intervensiBadgeIpk').text('0');
+        $('#intervensiBadgeOkk').text('0');
+        $('#intervensiBadgeOak').text('0');
+        
+        var raPjoName = (data.ra_pjo_name || '').trim();
+        var hasKodeIkk = (data.kode_ikk || '').trim() !== '';
+        
+        if (raPjoName === '' && !hasKodeIkk) {
+            $('#intervensiPjoWrap').addClass('d-none');
+        } else {
+            $('#intervensiPjoWrap').removeClass('d-none');
+            $('#intervensiPjoNameDisplay').text(raPjoName || 'Memuat...');
+            $('#intervensiPjoUsers').html('');
+            $('#intervensiPjoEmpty').addClass('d-none');
+            $('#intervensiPjoLoading').removeClass('d-none');
+        }
+        
+        $('#intervensiIpkLoading').removeClass('d-none');
+        $('#intervensiIpkEmpty').addClass('d-none');
+        $('#intervensiIpkTableWrap').addClass('d-none');
+        $('#intervensiOkkLoading').removeClass('d-none');
+        $('#intervensiOkkEmpty').addClass('d-none');
+        $('#intervensiOkkTableWrap').addClass('d-none');
+        $('#intervensiOakLoading').removeClass('d-none');
+        $('#intervensiOakEmpty').addClass('d-none');
+        $('#intervensiOakTableWrap').addClass('d-none');
+        
+        [2, 3, 4].forEach(function(n) {
+            $('#intervensiOakLayer' + n + 'Users').html('');
+            $('#intervensiOakLayer' + n + 'Empty').addClass('d-none');
+            $('#intervensiOakLayer' + n + 'Loading').removeClass('d-none');
+            $('#intervensiOakLayer' + n + 'Name').text('—');
+        });
+        
+        $('#intervensiLayer1Wrap').removeClass('d-none');
+        $('#intervensiLayer1Users').html('');
+        $('#intervensiLayer1NameDisplay').text(namaLayer1 || '—');
+        $('#intervensiLayer1Empty').addClass('d-none');
+        $('#intervensiLayer1NoName').addClass('d-none');
+        $('#intervensiLayer1Loading').addClass('d-none');
+        
+        $('#intervensiOkkLayer1Wrap').removeClass('d-none');
+        $('#intervensiOkkLayer1Users').html('');
+        $('#intervensiOkkLayer1NameDisplay').text(namaLayer1 || '—');
+        $('#intervensiOkkLayer1Empty').addClass('d-none');
+        $('#intervensiOkkLayer1NoName').addClass('d-none');
+        $('#intervensiOkkLayer1Loading').addClass('d-none');
+        
+        if (!hasLayer1) {
+            $('#intervensiLayer1NoName').removeClass('d-none');
+            $('#intervensiOkkLayer1NoName').removeClass('d-none');
+        } else {
+            $('#intervensiLayer1Loading').removeClass('d-none');
+            $('#intervensiOkkLayer1Loading').removeClass('d-none');
+        }
+        
+        // Store intervensi first
+        var formData = new FormData();
+        formData.append('tanggal', data.tanggal_dop || '');
+        formData.append('kode_ikk', data.kode_ikk || '');
+        formData.append('alert_level', 1);
+        fetch(intervensiStoreUrl, {
+            method: 'POST',
+            headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json', 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            body: formData
+        }).catch(function() {});
+        
+        intervensiDopmModal.show();
+        
+        var params = new URLSearchParams({
+            kode_ikk: data.kode_ikk || '',
+            jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '',
+            sid_layer_2: data.sid_layer_2 || '',
+            sid_layer_3: data.sid_layer_3 || '',
+            sid_layer_4: data.sid_layer_4 || '',
+            nama_layer_2: data.nama_layer_2 || '',
+            nama_layer_3: data.nama_layer_3 || '',
+            nama_layer_4: data.nama_layer_4 || '',
+            tanggal_dop: data.tanggal_dop || '',
+            location_name: data.location_name || '',
+            location_detail_name: data.location_detail_name || ''
+        });
+        
+        // Fetch IPK, OKK, OAK data
+        fetch(modalApiUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                if (!res || !res.success) throw new Error('Request failed');
+                var ipkAll = res.ipk_ikk || [];
+                var okkAll = res.okk || [];
+                var oak = res.oak || [];
+                
+                function isLayer1Row(row) {
+                    var raw = (row.employee_type !== undefined && row.employee_type !== null && row.employee_type !== '') ? row.employee_type : (row.layer_pengawas || '');
+                    var lv = raw.toString().trim().toLowerCase();
+                    return lv === 'layer 1' || lv === 'layer1' || lv === '1';
+                }
+                var ipk = ipkAll.filter(function(r) { if (r.employee_type === undefined && r.layer_pengawas === undefined) return true; return isLayer1Row(r); });
+                var okk = okkAll.filter(function(r) { if (r.employee_type === undefined && r.layer_pengawas === undefined) return true; return isLayer1Row(r); });
+                
+                $('#intervensiBadgeIpk').text(ipk.length);
+                $('#intervensiBadgeOkk').text(okk.length);
+                $('#intervensiBadgeOak').text(oak.length);
+                $('#intervensiIpkLoading').addClass('d-none');
+                $('#intervensiOkkLoading').addClass('d-none');
+                $('#intervensiOakLoading').addClass('d-none');
+                
+                if (ipk.length === 0) { $('#intervensiIpkEmpty').removeClass('d-none'); } else {
+                    $('#intervensiIpkTableWrap').removeClass('d-none');
+                    var tbody = document.querySelector('#intervensiTableIpk tbody');
+                    if (tbody) { tbody.innerHTML = ''; ipk.forEach(function(r) { tbody.appendChild(tr([formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk), safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.durasi_jam), safeStr(r.cctv_terekam), safeStr(r.kategori_ijk, 35), safeStr(r.status_pekerjaan)])); }); }
+                }
+                if (okk.length === 0) { $('#intervensiOkkEmpty').removeClass('d-none'); } else {
+                    $('#intervensiOkkTableWrap').removeClass('d-none');
+                    var tbody = document.querySelector('#intervensiTableOkk tbody');
+                    if (tbody) { tbody.innerHTML = ''; okk.forEach(function(r) { tbody.appendChild(tr([formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk), safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.jenis_ijk, 35), safeStr(r.layer_pengawas)])); }); }
+                }
+                if (oak.length === 0) { $('#intervensiOakEmpty').removeClass('d-none'); } else {
+                    $('#intervensiOakTableWrap').removeClass('d-none');
+                    var tbody = document.querySelector('#intervensiTableOak tbody');
+                    if (tbody) { tbody.innerHTML = ''; oak.forEach(function(r) { tbody.appendChild(tr([safeStr(r.activity), safeStr(r.sub_activity), safeStr(r.submit_date), safeStr(r.submit_by), safeStr(r.kode_sid_pelapor), safeStr(r.location), safeStr(r.detail_location), safeStr(r.conclusion, 50), safeStr(r.site)])); }); }
+                }
+            })
+            .catch(function() {
+                $('#intervensiIpkLoading').addClass('d-none');
+                $('#intervensiOkkLoading').addClass('d-none');
+                $('#intervensiOakLoading').addClass('d-none');
+                $('#intervensiIpkEmpty').removeClass('d-none');
+                $('#intervensiOkkEmpty').removeClass('d-none');
+                $('#intervensiOakEmpty').removeClass('d-none');
+            });
+        
+        // Fetch Layer 1 users
+        if (hasLayer1) {
+            var qs = new URLSearchParams();
+            if (sidLayer1) qs.set('sid_layer_1', sidLayer1);
+            if (namaLayer1) qs.set('nama_layer_1', namaLayer1);
+            fetch(layer1UsersApiUrl + '?' + qs.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    $('#intervensiLayer1Loading').addClass('d-none');
+                    $('#intervensiOkkLayer1Loading').addClass('d-none');
+                    var usersRaw = (res && res.success && res.users) ? res.users : [];
+                    var seen = {}; var users = [];
+                    usersRaw.forEach(function(u) {
+                        var key = u.id ? ('id_' + u.id) : ('wa_' + normalizeWaNumber(u.selular));
+                        if (key && !seen[key]) { seen[key] = true; users.push(u); }
+                    });
+                    var displayName = (res && res.nama_layer_1) ? res.nama_layer_1 : namaLayer1;
+                    $('#intervensiLayer1NameDisplay').text(displayName || '—');
+                    $('#intervensiOkkLayer1NameDisplay').text(displayName || '—');
+                    
+                    var ipkMsg = (displayName || 'PIC') + ', anda harus mengisi INSPEKSI PRA KERJA (IPK) untuk pekerjaan berikut:\n\nIKK: ' + (data.kode_ikk || '—') + (data.nama_pekerjaan ? ' - ' + data.nama_pekerjaan : '') + '\nHari: ' + (data.tanggal_dop || '—') + '\nLokasi: ' + (data.location_name || '—') + '\nDetail Lokasi: ' + (data.location_detail_name || '—') + '\n\n' + ipkFormLink;
+                    var okkMsg = (displayName || 'PIC') + ', mohon perhatian untuk OBSERVASI KEGIATAN KERJA (OKK).\n\nIKK: ' + (data.kode_ikk || '—') + (data.nama_pekerjaan ? ' - ' + data.nama_pekerjaan : '') + '\nHari: ' + (data.tanggal_dop || '—') + '\nLokasi: ' + (data.location_name || '—');
+                    
+                    if (users.length === 0) {
+                        $('#intervensiLayer1Empty').removeClass('d-none');
+                        $('#intervensiOkkLayer1Empty').removeClass('d-none');
+                        return;
+                    }
+                    
+                    users.forEach(function(u) {
+                        var num = normalizeWaNumber(u.selular); var label = u.nama || u.username || 'User';
+                        if (!num) return;
+                        var btn = $('<button type="button" class="btn btn-sm btn-success"></button>');
+                        btn.html('<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA (IPK) → ' + label);
+                        btn.on('click', function() { savePicAndOpenWa('https://wa.me/' + num + '?text=' + encodeURIComponent(ipkMsg), u); });
+                        $('#intervensiLayer1Users').append(btn);
+                    });
+                    users.forEach(function(u) {
+                        var num = normalizeWaNumber(u.selular); var label = u.nama || u.username || 'User';
+                        if (!num) return;
+                        var btn = $('<button type="button" class="btn btn-sm btn-success"></button>');
+                        btn.html('<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA (OKK) → ' + label);
+                        btn.on('click', function() { savePicAndOpenWa('https://wa.me/' + num + '?text=' + encodeURIComponent(okkMsg), u); });
+                        $('#intervensiOkkLayer1Users').append(btn);
+                    });
+                })
+                .catch(function() {
+                    $('#intervensiLayer1Loading').addClass('d-none');
+                    $('#intervensiLayer1Empty').removeClass('d-none');
+                    $('#intervensiOkkLayer1Loading').addClass('d-none');
+                    $('#intervensiOkkLayer1Empty').removeClass('d-none');
+                });
+        }
+        
+        // Fetch Layer 2, 3, 4 users
+        var qs234 = new URLSearchParams();
+        qs234.set('sid_layer_2', data.sid_layer_2 || ''); qs234.set('sid_layer_3', data.sid_layer_3 || ''); qs234.set('sid_layer_4', data.sid_layer_4 || '');
+        qs234.set('nama_layer_2', data.nama_layer_2 || ''); qs234.set('nama_layer_3', data.nama_layer_3 || ''); qs234.set('nama_layer_4', data.nama_layer_4 || '');
+        fetch(layers234UsersApiUrl + '?' + qs234.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+            .then(function(r) { return r.json(); })
+            .then(function(res) {
+                [2, 3, 4].forEach(function(n) {
+                    var key = 'layer_' + n;
+                    var layerData = res && res[key] ? res[key] : { users: [], nama_layer: '' };
+                    var usersRaw = layerData.users || [];
+                    var seen = {}; var users = [];
+                    usersRaw.forEach(function(u) {
+                        var k = u.id ? ('id_' + u.id) : ('wa_' + normalizeWaNumber(u.selular));
+                        if (k && !seen[k]) { seen[k] = true; users.push(u); }
+                    });
+                    var displayName = layerData.nama_layer || '—';
+                    $('#intervensiOakLayer' + n + 'Loading').addClass('d-none');
+                    $('#intervensiOakLayer' + n + 'Name').text(displayName);
+                    
+                    var oakMsg = (displayName !== '—' ? displayName : 'PIC') + ', mohon perhatian untuk OAK (Observasi Aktivitas Kerja) sesuai IKK ini.';
+                    users.forEach(function(u) {
+                        var num = normalizeWaNumber(u.selular); if (!num) return;
+                        var label = u.nama || u.username || 'User';
+                        var btn = $('<button type="button" class="btn btn-sm btn-warning text-dark"></button>');
+                        btn.html('<i class="material-icons-outlined me-1" style="font-size:14px;">send</i> WA');
+                        btn.attr('title', label);
+                        btn.on('click', function() { savePicAndOpenWa('https://wa.me/' + num + '?text=' + encodeURIComponent(oakMsg), u); });
+                        $('#intervensiOakLayer' + n + 'Users').append(btn);
+                    });
+                    if (users.length === 0) $('#intervensiOakLayer' + n + 'Empty').removeClass('d-none');
+                });
+            })
+            .catch(function() {
+                [2, 3, 4].forEach(function(n) {
+                    $('#intervensiOakLayer' + n + 'Loading').addClass('d-none');
+                    $('#intervensiOakLayer' + n + 'Empty').removeClass('d-none');
+                });
+            });
+        
+        // Fetch PJO
+        if (raPjoName !== '') {
+            var pjoQs = new URLSearchParams({ nama_layer_1: raPjoName });
+            fetch(layer1UsersApiUrl + '?' + pjoQs.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    $('#intervensiPjoLoading').addClass('d-none');
+                    var users = (res && res.success && res.users) ? res.users : [];
+                    var intervensiMsg = 'Assalamu\'alaikum. Intervensi DOPM/IKK: mohon perhatian untuk kelengkapan IPK-IKK, OKK, dan OAK. Terima kasih.';
+                    users.forEach(function(u) {
+                        var num = normalizeWaNumber(u.selular || ''); if (!num) return;
+                        var nama = (u.nama || u.username || 'PJO').trim();
+                        var btn = $('<button type="button" class="btn btn-sm btn-outline-success"></button>');
+                        btn.html('<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA ke ' + (nama.length > 25 ? nama.substring(0, 22) + '...' : nama));
+                        btn.on('click', function() { savePicAndOpenWa('https://wa.me/' + num + '?text=' + encodeURIComponent(intervensiMsg), u); });
+                        $('#intervensiPjoUsers').append(btn);
+                    });
+                    if (users.length === 0) $('#intervensiPjoEmpty').removeClass('d-none');
+                })
+                .catch(function() { $('#intervensiPjoLoading').addClass('d-none'); $('#intervensiPjoEmpty').removeClass('d-none'); });
+        } else if (hasKodeIkk) {
+            var apiParams = new URLSearchParams({ kode_ikk: data.kode_ikk || '', jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '', location_name: data.location_name || '', location_detail_name: data.location_detail_name || '', tanggal_dop: data.tanggal_dop || '' });
+            fetch(modalApiUrl + '?' + apiParams.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                .then(function(r) { return r.json(); })
+                .then(function(res) {
+                    var name = (res && res.ra_pjo_name) ? String(res.ra_pjo_name).trim() : '';
+                    $('#intervensiPjoNameDisplay').text(name || '—');
+                    $('#intervensiPjoLoading').addClass('d-none');
+                    if (name !== '') {
+                        var pjoQs2 = new URLSearchParams({ nama_layer_1: name });
+                        fetch(layer1UsersApiUrl + '?' + pjoQs2.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                            .then(function(r2) { return r2.json(); })
+                            .then(function(res2) {
+                                var users = (res2 && res2.success && res2.users) ? res2.users : [];
+                                var intervensiMsg = 'Assalamu\'alaikum. Intervensi DOPM/IKK: mohon perhatian untuk kelengkapan IPK-IKK, OKK, dan OAK. Terima kasih.';
+                                users.forEach(function(u) {
+                                    var num = normalizeWaNumber(u.selular || ''); if (!num) return;
+                                    var nama = (u.nama || u.username || 'PJO').trim();
+                                    var btn = $('<button type="button" class="btn btn-sm btn-outline-success"></button>');
+                                    btn.html('<i class="material-icons-outlined me-1" style="font-size:16px;">send</i> WA ke ' + (nama.length > 25 ? nama.substring(0, 22) + '...' : nama));
+                                    btn.on('click', function() { savePicAndOpenWa('https://wa.me/' + num + '?text=' + encodeURIComponent(intervensiMsg), u); });
+                                    $('#intervensiPjoUsers').append(btn);
+                                });
+                                if (users.length === 0) $('#intervensiPjoEmpty').removeClass('d-none');
+                            });
+                    } else {
+                        $('#intervensiPjoEmpty').text('Tidak ada data PJO untuk IKK ini.').removeClass('d-none');
+                    }
+                })
+                .catch(function() { $('#intervensiPjoLoading').addClass('d-none'); $('#intervensiPjoEmpty').text('Gagal memuat data PJO.').removeClass('d-none'); });
+        }
     });
 });
 </script>

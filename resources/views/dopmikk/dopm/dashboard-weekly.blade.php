@@ -1696,7 +1696,7 @@
                      </div>
                     </div>
                  </div>
-                   <div class="col-12 col-xl-12">
+                   <!-- <div class="col-12 col-xl-12">
                     <div class="card rounded-4 mb-0">
                       <div class="card-body">
                         <div class="d-flex align-items-center gap-3 mb-2">
@@ -1720,7 +1720,7 @@
                           </div>
                       </div>
                     </div>
-                  </div>
+                  </div> -->
 
                  </div><!--end row-->
                </div>
