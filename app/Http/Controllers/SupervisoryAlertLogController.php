@@ -8,8 +8,8 @@ use Illuminate\Support\Facades\Log;
 
 class SupervisoryAlertLogController extends Controller
 {
-    /** Kolom untuk ordering DataTables (index 7 = actions, pakai updated_at) */
-    private const COLUMNS = ['tanggal', 'nama_lokasi', 'risk_level', 'has_sap_report', 'has_online_cctv', 'is_high_risk_area', 'updated_at', 'updated_at'];
+    /** Kolom untuk ordering DataTables (index 6 = actions, pakai updated_at) */
+    private const COLUMNS = ['tanggal', 'nama_lokasi', 'risk_level', 'has_sap_report', 'has_online_cctv', 'updated_at', 'updated_at'];
 
     /**
      * Halaman alert log dengan tab (tab pertama: Supervisory).
@@ -67,11 +67,10 @@ class SupervisoryAlertLogController extends Controller
                         ? '<span class="badge bg-warning text-dark">MEDIUM</span>'
                         : '<span class="badge bg-secondary">' . e($row->risk_level) . '</span>');
 
-                $lokasiEnc = rawurlencode($row->nama_lokasi ?? '');
-                $intervensiUrl = route('intervensi-area-kerja.index') . ($lokasiEnc !== '' ? '?lokasi=' . $lokasiEnc : '');
+                $lokasiEsc = e($row->nama_lokasi ?? '');
                 $actionsBtn = '<div class="d-flex flex-wrap gap-1">';
                 $actionsBtn .= '<button type="button" class="btn btn-sm btn-outline-primary btn-view-matrix" data-id="' . (int) $row->id . '" title="Lihat Hasil Matriks TARP"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">visibility</i> Hasil Matriks</button>';
-                $actionsBtn .= '<a href="' . e($intervensiUrl) . '" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a>';
+                $actionsBtn .= '<button type="button" class="btn btn-sm btn-outline-success btn-intervensi" data-lokasi="' . $lokasiEsc . '" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</button>';
                 $actionsBtn .= '</div>';
 
                 return [
@@ -80,7 +79,6 @@ class SupervisoryAlertLogController extends Controller
                     'risk_level' => $riskBadge,
                     'has_sap_report' => $row->has_sap_report ? '<span class="text-success">Ya</span>' : '<span class="text-muted">Tidak</span>',
                     'has_online_cctv' => $row->has_online_cctv ? '<span class="text-success">Ya</span>' : '<span class="text-muted">Tidak</span>',
-                    'is_high_risk_area' => $row->is_high_risk_area ? '<span class="text-warning">Ya</span>' : '<span class="text-muted">Tidak</span>',
                     'updated_at' => $row->updated_at ? $row->updated_at->format('d/m/Y H:i') : '-',
                     'actions' => $actionsBtn,
                 ];
