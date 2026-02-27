@@ -4,6 +4,8 @@
 
 @section('css')
 <link rel="stylesheet" href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}">
+<link rel="stylesheet" href="{{ URL::asset('build/plugins/select2/css/select2.min.css') }}">
+<link rel="stylesheet" href="{{ URL::asset('build/plugins/select2-bootstrap-5-theme/select2-bootstrap-5-theme.min.css') }}">
 <style>
 .alert-log-page .filter-card { border-radius: 1rem; }
 .alert-log-page .main-card { border-radius: 1rem; overflow: hidden; }
@@ -115,7 +117,6 @@
                                     <th>Risk Level</th>
                                     <th>SAP Report</th>
                                     <th>CCTV Online</th>
-                                    <th>High Risk Area</th>
                                     <th>Diperbarui</th>
                                     <th class="text-end">Aksi</th>
                                 </tr>
@@ -226,11 +227,69 @@
         </div>
     </div>
 </div>
+
+{{-- Modal Intervensi Area Kerja --}}
+<div class="modal fade" id="intervensiAreaKerjaModal" tabindex="-1" aria-labelledby="intervensiAreaKerjaModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <div class="modal-header border-bottom">
+                <h5 class="modal-title fw-bold" id="intervensiAreaKerjaModalLabel">
+                    <span class="material-icons-outlined me-2">send</span>
+                    Form Intervensi Area Kerja
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="intervensiAreaKerjaForm">
+                    <input type="hidden" id="intervensiControlRoomAreaKerja" name="control_room" value="">
+                    <input type="hidden" id="intervensiAreaKerja" name="area_kerja" value="">
+                    <input type="hidden" id="intervensiLokasi" name="lokasi" value="">
+                    
+                    <div class="mb-3">
+                        <label for="intervensiLokasiDisplay" class="form-label fw-semibold">Lokasi</label>
+                        <input type="text" class="form-control" id="intervensiLokasiDisplay" readonly>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="intervensiCCTVAreaKerja" class="form-label fw-semibold">CCTV <span class="text-danger">*</span></label>
+                        <select class="form-select" id="intervensiCCTVAreaKerja" name="cctv_ids[]" multiple required>
+                            <option value="">Pilih CCTV...</option>
+                        </select>
+                        <div class="form-text">Pilih satu atau lebih CCTV yang bermasalah (bisa pilih lebih dari 1)</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="intervensiPICAreaKerja" class="form-label fw-semibold">PIC (Pengawas) <span class="text-danger">*</span></label>
+                        <select class="form-select" id="intervensiPICAreaKerja" name="pic" required>
+                            <option value="">Pilih PIC...</option>
+                        </select>
+                        <div class="form-text">Pilih PIC (Pengawas) dari daftar pengguna</div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="intervensiIssueAreaKerja" class="form-label fw-semibold">Issue <span class="text-danger">*</span></label>
+                        <textarea class="form-control" id="intervensiIssueAreaKerja" name="issue" rows="5" placeholder="Masukkan issue atau masalah yang ditemukan..." required></textarea>
+                        <div class="form-text">Jelaskan issue atau masalah yang memerlukan intervensi</div>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer border-top">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Batal</button>
+                <button type="button" class="btn btn-primary" id="submitIntervensiAreaKerjaBtn">
+                    <span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>
+                    Kirim Intervensi
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
 @endsection
 
 @section('scripts')
 <script src="{{ URL::asset('build/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
+<script src="{{ URL::asset('build/plugins/select2/js/select2.min.js') }}"></script>
+<script src="{{ URL::asset('build/plugins/sweetalert2/sweetalert2.min.js') }}"></script>
 <script>
 $(document).ready(function() {
     var table = $('#supervisoryTable').DataTable({
@@ -250,7 +309,6 @@ $(document).ready(function() {
             { data: 'risk_level', name: 'risk_level', orderable: true },
             { data: 'has_sap_report', name: 'has_sap_report', orderable: true },
             { data: 'has_online_cctv', name: 'has_online_cctv', orderable: true },
-            { data: 'is_high_risk_area', name: 'is_high_risk_area', orderable: true },
             { data: 'updated_at', name: 'updated_at', orderable: true },
             { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-end' }
         ],
@@ -304,11 +362,9 @@ $(document).ready(function() {
             if (data.length === 0) {
                 $('#mobilityEmpty').removeClass('d-none');
             } else {
-                var intervensiBase = "{{ route('intervensi-area-kerja.index') }}";
                 var rows = data.map(function(r) {
                     var lok = (r.lokasi || r.unit || r.kode || '').toString();
-                    var intervensiUrl = lok ? (intervensiBase + '?lokasi=' + encodeURIComponent(lok)) : intervensiBase;
-                    return '<tr><td>' + (r.kode || r.unit || '-') + '</td><td>' + (r.lokasi || '-') + '</td><td>' + (r.status || '-') + '</td><td>' + (r.waktu || '-') + '</td><td class="text-end"><a href="' + intervensiUrl + '" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a></td></tr>';
+                    return '<tr><td>' + (r.kode || r.unit || '-') + '</td><td>' + (r.lokasi || '-') + '</td><td>' + (r.status || '-') + '</td><td>' + (r.waktu || '-') + '</td><td class="text-end"><button type="button" class="btn btn-sm btn-outline-success btn-intervensi" data-lokasi="' + escapeHtml(lok) + '" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</button></td></tr>';
                 }).join('');
                 $('#mobilityTableBody').html(rows);
                 $('#mobilityTableWrap').removeClass('d-none');
@@ -341,12 +397,9 @@ $(document).ready(function() {
                     if (s === 'Kuning') return '<span class="badge bg-warning text-dark">Kuning</span>';
                     return '<span class="badge bg-secondary">' + escapeHtml(s || '-') + '</span>';
                 };
-                var dashboardUrl = "{{ route('dopmikk.dopm.dashboard') }}";
-                var today = "{{ now()->format('Y-m-d') }}";
                 var rows = data.map(function(r) {
-                    var tanggal = (r.tanggal_dop || today);
-                    var intervensiUrl = dashboardUrl + '?tanggal=' + encodeURIComponent(tanggal);
-                    var btn = '<a href="' + intervensiUrl + '" target="_blank" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a>';
+                    var lokasi = r.site || r.lokasi || '';
+                    var btn = '<button type="button" class="btn btn-sm btn-outline-success btn-intervensi" data-lokasi="' + escapeHtml(lokasi) + '" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</button>';
                     return '<tr><td>' + escapeHtml(r.code || '-') + '</td><td>' + escapeHtml(r.jenis_ijin_kerja_khusus || '-') + '</td><td>' + escapeHtml(r.nama_pekerjaan || '-') + '</td><td>' + escapeHtml(r.site || '-') + '</td><td>' + badge(r.status_matriks) + '</td><td>' + escapeHtml(r.status_pekerjaan || '-') + '</td><td class="text-end">' + btn + '</td></tr>';
                 }).join('');
                 $('#criticalAreaTableBody').html(rows);
@@ -373,14 +426,12 @@ $(document).ready(function() {
                 $('#probabilityEmpty').removeClass('d-none');
             } else {
                 var esc = typeof escapeHtml === 'function' ? escapeHtml : function(s){ return (s==null||s==='') ? '' : String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
-                var intervensiBase = "{{ route('intervensi-area-kerja.index') }}";
                 var rows = data.map(function(r) {
                     var nama = r.nama_pja || r.name || ('PJA ' + (r.pja_id || ''));
                     var siteLok = [r.site, r.lokasi, r.detail_lokasi].filter(Boolean).join(' / ');
                     var tipeCat = [r.pja_type_name, r.pja_category_name].filter(Boolean).join(' / ');
                     var lokParam = (r.site || r.lokasi || r.detail_lokasi || siteLok || '').toString();
-                    var intervensiUrl = lokParam ? (intervensiBase + '?lokasi=' + encodeURIComponent(lokParam)) : intervensiBase;
-                    var btn = '<a href="' + intervensiUrl + '" class="btn btn-sm btn-outline-success" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</a>';
+                    var btn = '<button type="button" class="btn btn-sm btn-outline-success btn-intervensi" data-lokasi="' + esc(lokParam) + '" title="Intervensi"><i class="material-icons-outlined me-1" style="font-size:16px;vertical-align:middle;">campaign</i> Intervensi</button>';
                     return '<tr><td>' + esc(nama) + '</td><td>' + esc(siteLok || '-') + '</td><td>' + esc(tipeCat || '-') + '</td><td>' + esc(r.pja_layer || '-') + '</td><td class="text-end">' + btn + '</td></tr>';
                 }).join('');
                 $('#probabilityTableBody').html(rows);
@@ -475,6 +526,257 @@ $(document).ready(function() {
             $body.html(html);
         }).fail(function() {
             $body.html('<div class="alert alert-danger">Gagal memuat data.</div>');
+        });
+    });
+
+    // ============================================
+    // Intervensi Area Kerja
+    // ============================================
+    
+    var intervensiModal = null;
+    
+    function initializePICSelect2() {
+        var picSelect = $('#intervensiPICAreaKerja');
+        if (picSelect.length === 0) return;
+        
+        if (picSelect.hasClass('select2-hidden-accessible')) {
+            picSelect.select2('destroy');
+        }
+        
+        picSelect.html('<option value="">Pilih PIC...</option>');
+        picSelect.prop('disabled', false);
+        
+        picSelect.select2({
+            theme: 'bootstrap-5',
+            placeholder: 'Ketik untuk mencari PIC (Pengawas)...',
+            allowClear: true,
+            width: '100%',
+            minimumInputLength: 0,
+            ajax: {
+                url: "{{ url('cctv-data-control-room/users') }}",
+                type: 'GET',
+                dataType: 'json',
+                delay: 300,
+                data: function(params) {
+                    return { q: params.term || '', page: params.page || 1 };
+                },
+                processResults: function(data) {
+                    if (data.success && data.data) {
+                        var results = data.data.map(function(user) {
+                            return {
+                                id: user.id,
+                                text: user.text || (user.username + ' - ' + user.nama),
+                                username: user.username,
+                                nama: user.nama
+                            };
+                        });
+                        return { results: results, pagination: { more: false } };
+                    }
+                    return { results: data.results || [], pagination: { more: data.pagination && data.pagination.more } };
+                },
+                cache: false
+            },
+            dropdownParent: $('#intervensiAreaKerjaModal .modal-body'),
+            language: {
+                noResults: function() { return "Tidak ada hasil ditemukan"; },
+                searching: function() { return "Mencari..."; },
+                inputTooShort: function() { return "Ketik untuk mencari"; }
+            }
+        });
+    }
+    
+    function loadCctvListForAreaKerja(lokasi) {
+        var cctvSelect = $('#intervensiCCTVAreaKerja');
+        if (cctvSelect.length === 0) return;
+        
+        if (cctvSelect.hasClass('select2-hidden-accessible')) {
+            cctvSelect.select2('destroy');
+        }
+        
+        cctvSelect.html('<option value="">Memuat CCTV...</option>');
+        cctvSelect.prop('disabled', true);
+        
+        $.ajax({
+            url: "{{ url('full-maps/api/cctv-for-area-kerja') }}",
+            type: 'GET',
+            dataType: 'json',
+            success: function(data) {
+                cctvSelect.html('');
+                if (data.success && data.data && data.data.length > 0) {
+                    data.data.forEach(function(cctv) {
+                        var text = cctv.nama_cctv + (cctv.no_cctv ? ' (' + cctv.no_cctv + ')' : '') + (cctv.lokasi_pemasangan ? ' - ' + cctv.lokasi_pemasangan : '');
+                        cctvSelect.append('<option value="' + cctv.id + '">' + escapeHtml(text) + '</option>');
+                    });
+                    cctvSelect.prop('disabled', false);
+                    
+                    cctvSelect.select2({
+                        theme: 'bootstrap-5',
+                        placeholder: 'Pilih satu atau lebih CCTV...',
+                        allowClear: true,
+                        width: '100%',
+                        closeOnSelect: false,
+                        dropdownParent: $('#intervensiAreaKerjaModal .modal-body')
+                    });
+                } else {
+                    cctvSelect.html('<option value="">Tidak ada CCTV ditemukan</option>');
+                    cctvSelect.prop('disabled', false);
+                }
+            },
+            error: function() {
+                cctvSelect.html('<option value="">Error memuat CCTV</option>');
+                cctvSelect.prop('disabled', false);
+            }
+        });
+    }
+    
+    function openIntervensiModal(lokasi) {
+        var lokasiValue = lokasi || '';
+        
+        $('#intervensiControlRoomAreaKerja').val(lokasiValue);
+        $('#intervensiAreaKerja').val('');
+        $('#intervensiLokasi').val(lokasiValue);
+        $('#intervensiLokasiDisplay').val(lokasiValue);
+        $('#intervensiIssueAreaKerja').val('');
+        
+        loadCctvListForAreaKerja(lokasiValue);
+        
+        if (!intervensiModal) {
+            intervensiModal = new bootstrap.Modal(document.getElementById('intervensiAreaKerjaModal'));
+        }
+        
+        $('#intervensiAreaKerjaModal').off('shown.bs.modal').on('shown.bs.modal', function() {
+            setTimeout(function() {
+                initializePICSelect2();
+            }, 300);
+        });
+        
+        intervensiModal.show();
+    }
+    
+    // Handle click on intervensi button
+    $(document).on('click', '.btn-intervensi', function(e) {
+        e.preventDefault();
+        var lokasi = $(this).data('lokasi') || '';
+        openIntervensiModal(lokasi);
+    });
+    
+    // Handle modal close to destroy Select2
+    $('#intervensiAreaKerjaModal').on('hidden.bs.modal', function() {
+        setTimeout(function() {
+            var picSelect = $('#intervensiPICAreaKerja');
+            if (picSelect.hasClass('select2-hidden-accessible')) {
+                picSelect.select2('destroy');
+            }
+            var cctvSelect = $('#intervensiCCTVAreaKerja');
+            if (cctvSelect.hasClass('select2-hidden-accessible')) {
+                cctvSelect.select2('destroy');
+            }
+        }, 100);
+    });
+    
+    // Handle submit intervensi form
+    $('#submitIntervensiAreaKerjaBtn').on('click', function(e) {
+        e.preventDefault();
+        
+        var controlRoom = $('#intervensiControlRoomAreaKerja').val();
+        var lokasi = $('#intervensiLokasi').val();
+        var picId = $('#intervensiPICAreaKerja').val();
+        var issue = $('#intervensiIssueAreaKerja').val();
+        var selectedCctvIds = $('#intervensiCCTVAreaKerja').val() || [];
+        
+        if (!controlRoom && !lokasi) {
+            Swal.fire({ icon: 'warning', title: 'Peringatan!', text: 'Lokasi harus diisi.' });
+            return;
+        }
+        
+        if (selectedCctvIds.length === 0) {
+            Swal.fire({ icon: 'warning', title: 'Peringatan!', text: 'Silakan pilih minimal 1 CCTV.' });
+            return;
+        }
+        
+        if (!picId) {
+            Swal.fire({ icon: 'warning', title: 'Peringatan!', text: 'PIC (Pengawas) harus dipilih.' });
+            return;
+        }
+        
+        if (!issue || issue.trim() === '') {
+            Swal.fire({ icon: 'warning', title: 'Peringatan!', text: 'Issue harus diisi.' });
+            return;
+        }
+        
+        var formData = {
+            control_room: controlRoom || lokasi,
+            cctv_ids: selectedCctvIds,
+            pic_id: picId,
+            issue: issue
+        };
+        
+        var submitBtn = $(this);
+        submitBtn.prop('disabled', true);
+        submitBtn.html('<span class="spinner-border spinner-border-sm me-1"></span> Mengirim...');
+        
+        $.ajax({
+            url: "{{ url('cctv-data-control-room/intervensi') }}",
+            type: 'POST',
+            dataType: 'json',
+            contentType: 'application/json',
+            headers: { 'X-CSRF-TOKEN': '{{ csrf_token() }}' },
+            data: JSON.stringify(formData),
+            success: function(data) {
+                if (data.success) {
+                    var whatsappUrl = data.data?.whatsapp_url;
+                    
+                    if (whatsappUrl) {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: data.message || 'Intervensi berhasil dikirim!',
+                            showConfirmButton: true,
+                            showCancelButton: true,
+                            confirmButtonText: 'Buka WhatsApp',
+                            cancelButtonText: 'Tutup',
+                            confirmButtonColor: '#25D366'
+                        }).then(function(result) {
+                            if (intervensiModal) {
+                                intervensiModal.hide();
+                            }
+                            $('#intervensiAreaKerjaForm')[0].reset();
+                            
+                            if (result.isConfirmed) {
+                                window.open(whatsappUrl, '_blank');
+                            }
+                        });
+                    } else {
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: data.message || 'Intervensi berhasil dikirim!'
+                        }).then(function() {
+                            if (intervensiModal) {
+                                intervensiModal.hide();
+                            }
+                            $('#intervensiAreaKerjaForm')[0].reset();
+                        });
+                    }
+                } else {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Gagal!',
+                        text: data.message || 'Gagal mengirim intervensi.'
+                    });
+                }
+            },
+            error: function(xhr) {
+                var errorMsg = 'Terjadi kesalahan saat mengirim intervensi.';
+                if (xhr.responseJSON && xhr.responseJSON.message) {
+                    errorMsg = xhr.responseJSON.message;
+                }
+                Swal.fire({ icon: 'error', title: 'Error!', text: errorMsg });
+            },
+            complete: function() {
+                submitBtn.prop('disabled', false);
+                submitBtn.html('<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span> Kirim Intervensi');
+            }
         });
     });
 });
