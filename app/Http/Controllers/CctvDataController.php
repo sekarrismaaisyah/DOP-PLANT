@@ -1382,10 +1382,10 @@ class CctvDataController extends Controller
 
             // Contoh data
             $examples = [
-                ['HO', 'PT Fajar Anugerah Dinamika', 'CCTV 01 FAD LMO', 'Dermaga', 'Dermaga FAD Prapatan', 'Operasional', 'Area Produksi'],
-                ['LMO', 'PT Fajar Anugerah Dinamika', 'LMO-FAD-0001', 'Workshop FAD', 'Base Workshop', 'Maintenance', 'Area Workshop'],
-                ['LMO', 'PT Fajar Anugerah Dinamika', 'LMO-FAD-0001', 'Workshop FAD', 'Parkiran Unit', 'Operasional', 'Area Parkir'],
-                ['BMO 1', 'PT Fajar Anugerah Dinamika', 'BMO1-MTL-0023', 'Workshop FAD', 'Area Fabrikasi', 'Produksi', 'Area Fabrikasi'],
+                ['HO', 'PT Fajar Anugerah Dinamika', 'CCTV 01 FAD LMO', 'Dermaga', 'Dermaga FAD Prapatan', 'Aktivitas Kritis', 'Area Kritis'],
+                ['LMO', 'PT Fajar Anugerah Dinamika', 'LMO-FAD-0001', 'Workshop FAD', 'Base Workshop', 'Aktivitas Non Kritis', 'Area Non Highrisk'],
+                ['LMO', 'PT Fajar Anugerah Dinamika', 'LMO-FAD-0001', 'Workshop FAD', 'Parkiran Unit', 'Aktivitas Kritis', 'Area Kritis'],
+                ['BMO 1', 'PT Fajar Anugerah Dinamika', 'BMO1-MTL-0023', 'Workshop FAD', 'Area Fabrikasi', 'Aktivitas Non Kritis', 'Area Non Highrisk'],
             ];
 
             // Data rows dengan contoh

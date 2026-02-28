@@ -49,6 +49,7 @@
                                     <th>Longitude</th>
                                     <th>CCTV</th>
                                     <th>Foto</th>
+                                    <th>Status</th>
                                     <th>Actions</th>
                                 </tr>
                             </thead>
@@ -79,6 +80,17 @@
                                             @endif
                                         </td>
                                         <td>
+                                            <div class="form-check form-switch">
+                                                <input class="form-check-input status-toggle" type="checkbox" role="switch" 
+                                                    data-id="{{ $dop->id }}" 
+                                                    {{ $dop->status ? 'checked' : '' }}
+                                                    style="cursor: pointer; width: 3em; height: 1.5em;">
+                                                <span class="status-label badge {{ $dop->status ? 'bg-success' : 'bg-secondary' }}">
+                                                    {{ $dop->status ? 'ON' : 'OFF' }}
+                                                </span>
+                                            </div>
+                                        </td>
+                                        <td>
                                             <div class="d-flex gap-2">
                                                 <a href="{{ route('daily-operation-plan.show', $dop->id) }}" class="btn btn-sm btn-info rounded-3" title="Detail">
                                                 <i class="material-icons-outlined text-white">visibility</i>
@@ -98,7 +110,7 @@
                                     </tr>
                                 @empty
                                     <tr>
-                                        <td colspan="10" class="text-center text-muted">Belum ada data DOP</td>
+                                        <td colspan="11" class="text-center text-muted">Belum ada data DOP</td>
                                     </tr>
                                 @endforelse
                             </tbody>
@@ -116,3 +128,47 @@
     </div>
 @endsection
 
+@section('scripts')
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        document.querySelectorAll('.status-toggle').forEach(function(toggle) {
+            toggle.addEventListener('change', function() {
+                const dopId = this.dataset.id;
+                const checkbox = this;
+                const statusLabel = this.parentElement.querySelector('.status-label');
+                
+                fetch(`{{ url('daily-operation-plan') }}/${dopId}/toggle-status`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-CSRF-TOKEN': '{{ csrf_token() }}',
+                        'Accept': 'application/json'
+                    }
+                })
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success) {
+                        if (data.status) {
+                            statusLabel.textContent = 'ON';
+                            statusLabel.classList.remove('bg-secondary');
+                            statusLabel.classList.add('bg-success');
+                        } else {
+                            statusLabel.textContent = 'OFF';
+                            statusLabel.classList.remove('bg-success');
+                            statusLabel.classList.add('bg-secondary');
+                        }
+                    } else {
+                        checkbox.checked = !checkbox.checked;
+                        alert('Gagal mengubah status');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    checkbox.checked = !checkbox.checked;
+                    alert('Terjadi kesalahan');
+                });
+            });
+        });
+    });
+</script>
+@endsection

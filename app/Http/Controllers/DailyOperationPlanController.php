@@ -277,6 +277,22 @@ class DailyOperationPlanController extends Controller
     }
 
     /**
+     * Toggle the status of a DOP (on/off).
+     */
+    public function toggleStatus($id)
+    {
+        $dop = DailyOperationPlan::findOrFail($id);
+        $dop->status = !$dop->status;
+        $dop->save();
+
+        return response()->json([
+            'success' => true,
+            'status' => $dop->status,
+            'message' => $dop->status ? 'DOP diaktifkan' : 'DOP dinonaktifkan',
+        ]);
+    }
+
+    /**
      * Download Excel template for DOP import
      */
     public function downloadTemplate()

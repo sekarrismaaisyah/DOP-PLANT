@@ -33,6 +33,7 @@ use App\Http\Controllers\RolePermissionController;
 use App\Http\Controllers\CctvAlertsDashboardController;
 use App\Http\Controllers\InsidenCcrController;
 use App\Http\Controllers\InsidenLpiController;
+use App\Http\Controllers\CctvP2hChecklistController;
 
 /*
 |--------------------------------------------------------------------------
@@ -380,10 +381,18 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/', [DailyOperationPlanController::class, 'store'])->name('store');
         Route::get('/template', [DailyOperationPlanController::class, 'downloadTemplate'])->name('template');
         Route::post('/import', [DailyOperationPlanController::class, 'import'])->name('import');
+        Route::patch('/{id}/toggle-status', [DailyOperationPlanController::class, 'toggleStatus'])->name('toggle-status');
         Route::get('/{id}', [DailyOperationPlanController::class, 'show'])->name('show');
         Route::get('/{id}/edit', [DailyOperationPlanController::class, 'edit'])->name('edit');
         Route::put('/{id}', [DailyOperationPlanController::class, 'update'])->name('update');
         Route::delete('/{id}', [DailyOperationPlanController::class, 'destroy'])->name('destroy');
+    });
+
+    // CCTV P2H Checklist Routes
+    Route::prefix('cctv-p2h-checklist')->name('cctv-p2h-checklist.')->group(function () {
+        Route::get('/', [CctvP2hChecklistController::class, 'index'])->name('index');
+        Route::get('/{id}', [CctvP2hChecklistController::class, 'show'])->name('show');
+        Route::delete('/{id}', [CctvP2hChecklistController::class, 'destroy'])->name('destroy');
     });
 
     // Insiden Tabel Routes - HARUS sebelum catch-all route

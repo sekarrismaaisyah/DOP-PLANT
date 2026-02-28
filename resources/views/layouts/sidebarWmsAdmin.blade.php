@@ -319,25 +319,20 @@
               </div>                 
               <div class="menu-title">On Off CCTV</div>
             </a>
-           
-          <!-- </li>
-
-          @if(Auth::check() && Auth::user()->isAdmin())
-          <li class="menu-label">Admin</li>
-          <li>
-            <a class="has-arrow" href="javascript:;">
-              <div class="parent-icon"><i class="material-icons-outlined">manage_accounts</i>
-              </div>
-              <div class="menu-title">Master User</div>
-            </a>
-            <ul>
-              <li><a href="{{ route('user-management.index') }}"><i class="material-icons-outlined">arrow_right</i>Manajemen User</a></li>
-              <li><a href="{{ route('user-management.create') }}"><i class="material-icons-outlined">arrow_right</i>Tambah User</a></li>
-              <li><a href="{{ route('user-management.import-form') }}"><i class="material-icons-outlined">arrow_right</i>Import Excel</a></li>
-              <li><a href="{{ route('role-permission.index') }}"><i class="material-icons-outlined">arrow_right</i>Role & Permission</a></li>
-            </ul>
           </li>
-          @endif -->
+
+
+          <li class="menu-label">History P2H</li>
+          
+          <li>
+            <a class="" href="{{ route('cctv-p2h-checklist.index') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">checklist</i>
+              </div>                 
+              <div class="menu-title">History P2H</div>
+            </a>
+          </li>
+           
+       
           
        
          </ul>

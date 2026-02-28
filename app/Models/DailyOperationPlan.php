@@ -23,10 +23,12 @@ class DailyOperationPlan extends Model
         'pengendalian_bahaya',
         'catatan',
         'tanggal',
+        'status',
     ];
 
     protected $casts = [
         'tanggal' => 'date',
+        'status' => 'boolean',
     ];
 
     /**
