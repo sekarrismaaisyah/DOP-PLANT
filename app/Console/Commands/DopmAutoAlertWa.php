@@ -6,7 +6,6 @@ use App\Models\DopmAlertIntervensi;
 use App\Models\DopmAlertPerIkk;
 use App\Models\DopmWaNotificationLog;
 use App\Models\IpkIkk;
-use App\Services\FonnteService;
 use App\Services\WwebjsService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
@@ -19,18 +18,16 @@ class DopmAutoAlertWa extends Command
                             {--date= : Tanggal (Y-m-d), default hari ini WITA}
                             {--dry-run : Simulasi tanpa mengirim WA}
                             {--test-phone= : Mode testing - kirim semua WA ke nomor ini saja (contoh: 081919898656)}
-                            {--limit=0 : Batas jumlah WA yang dikirim (0 = unlimited)}
-                            {--provider= : Provider WA: fonnte atau wwebjs (default dari config)}';
+                            {--limit=0 : Batas jumlah WA yang dikirim (0 = unlimited)}';
 
-    protected $description = 'Kirim auto alert WA via Fonnte/wwebjs untuk IKK yang belum ada IPK';
+    protected $description = 'Kirim auto alert WA via whatsapp-web.js untuk IKK yang belum ada IPK';
 
     private const TZ = 'Asia/Makassar';
 
     private ?string $testPhone = null;
     private int $limit = 0;
     private int $totalSent = 0;
-    private string $provider = 'fonnte';
-    private FonnteService|WwebjsService $waService;
+    private WwebjsService $waService;
 
     public function handle(): int
     {
@@ -72,28 +69,13 @@ class DopmAutoAlertWa extends Command
             $this->warn("Limit aktif - maksimal {$this->limit} WA yang akan dikirim.");
         }
 
-        $providerOpt = $this->option('provider');
-        $this->provider = $providerOpt !== null && $providerOpt !== ''
-            ? $providerOpt
-            : config('services.whatsapp.default_provider', 'fonnte');
-
-        if (! in_array($this->provider, ['fonnte', 'wwebjs'])) {
-            $this->error("Provider tidak valid: {$this->provider}. Gunakan 'fonnte' atau 'wwebjs'.");
+        $this->waService = new WwebjsService();
+        if (! $this->waService->isReady()) {
+            $this->error('WA Service belum siap. Pastikan Node.js service sudah jalan dan scan QR.');
+            $this->info('Jalankan: cd wa-service && npm install && node index.js');
             return self::FAILURE;
         }
-
-        if ($this->provider === 'wwebjs') {
-            $this->waService = new WwebjsService();
-            if (! $this->waService->isReady()) {
-                $this->error('WA Service (wwebjs) belum siap. Pastikan Node.js service sudah jalan dan scan QR.');
-                $this->info('Jalankan: cd wa-service && npm install && node index.js');
-                return self::FAILURE;
-            }
-            $this->info("Provider: wwebjs (whatsapp-web.js)");
-        } else {
-            $this->waService = new FonnteService(config('services.fonnte.token'));
-            $this->info("Provider: Fonnte");
-        }
+        $this->info("Provider: whatsapp-web.js");
 
         try {
             $alerts = $this->getUnnotifiedAlerts($date);
@@ -191,70 +173,82 @@ class DopmAutoAlertWa extends Command
 
             $users = $this->getUsersForLayer($sid, $nama);
 
+            // Cek apakah sudah ada notifikasi untuk IKK + Alert Level + Layer ini
+            $alreadyNotifiedForLayer = DopmWaNotificationLog::where('tanggal', $date)
+                ->where('kode_ikk', $kodeIkk)
+                ->where('alert_level', $alertLevel)
+                ->where('layer', $layer)
+                ->where('fonnte_status', 'success')
+                ->exists();
+
+            if ($alreadyNotifiedForLayer) {
+                $this->line("  [SKIP] {$kodeIkk} Alert {$alertLevel} Layer {$layer} (sudah ada notifikasi terkirim)");
+                continue;
+            }
+
+            // Ambil 1 user pertama yang memiliki nomor telepon valid
+            $selectedUser = null;
             foreach ($users as $user) {
-                if ($this->limit > 0 && $this->totalSent >= $this->limit) {
+                $phone = $this->normalizePhone($user['selular'] ?? '');
+                if ($phone !== '') {
+                    $selectedUser = $user;
                     break;
                 }
-
-                $originalPhone = $this->normalizePhone($user['selular'] ?? '');
-                if ($originalPhone === '') {
-                    continue;
-                }
-
-                $actualPhone = $this->testPhone ?? $originalPhone;
-
-                $logKey = $this->testPhone !== null
-                    ? "{$kodeIkk}_{$alertLevel}_{$layer}_{$originalPhone}"
-                    : $originalPhone;
-
-                if ($this->testPhone === null && DopmWaNotificationLog::alreadySent($date, $kodeIkk, $alertLevel, $layer, $originalPhone)) {
-                    $this->line("  [SKIP] {$kodeIkk} Alert {$alertLevel} Layer {$layer} -> {$originalPhone} (sudah terkirim)");
-                    continue;
-                }
-
-                $message = $this->buildMessage($snapshot, $alertLevel, $layer, $user['nama'] ?? '', $this->testPhone !== null ? $originalPhone : null);
-
-                if ($dryRun) {
-                    $targetInfo = $this->testPhone !== null ? "{$this->testPhone} (asli: {$originalPhone})" : $originalPhone;
-                    $this->info("  [DRY-RUN] {$kodeIkk} Alert {$alertLevel} Layer {$layer} -> {$targetInfo}");
-                    $sent++;
-                    $this->totalSent++;
-                    continue;
-                }
-
-                $result = $this->waService->sendMessage($actualPhone, $message);
-
-                DopmWaNotificationLog::create([
-                    'tanggal' => $date,
-                    'kode_ikk' => $kodeIkk,
-                    'alert_level' => $alertLevel,
-                    'layer' => $layer,
-                    'phone_number' => $this->testPhone !== null ? "TEST:{$this->testPhone}|ORIG:{$originalPhone}" : $originalPhone,
-                    'recipient_name' => $user['nama'] ?? null,
-                    'recipient_sid' => $user['username'] ?? null,
-                    'message' => $message,
-                    'fonnte_status' => $result['status'],
-                    'fonnte_id' => is_array($result['id']) ? ($result['id'][0] ?? null) : $result['id'],
-                    'fonnte_response' => json_encode($result['response']),
-                    'sent_at' => now(),
-                    'provider' => $this->provider,
-                ]);
-
-                $targetInfo = $this->testPhone !== null ? "{$actualPhone} (asli: {$originalPhone})" : $actualPhone;
-
-                if ($result['success']) {
-                    $this->info("  [OK] {$kodeIkk} Alert {$alertLevel} Layer {$layer} -> {$targetInfo}");
-                    $sent++;
-                } else {
-                    $this->error("  [FAIL] {$kodeIkk} Alert {$alertLevel} Layer {$layer} -> {$targetInfo}");
-                    $failed++;
-                }
-
-                $this->totalSent++;
-                
-                $delayMs = $this->provider === 'wwebjs' ? 3000000 : 300000;
-                usleep($delayMs);
             }
+
+            if ($selectedUser === null) {
+                $this->line("  [SKIP] {$kodeIkk} Alert {$alertLevel} Layer {$layer} (tidak ada user dengan nomor valid)");
+                continue;
+            }
+
+            if ($this->limit > 0 && $this->totalSent >= $this->limit) {
+                break;
+            }
+
+            $originalPhone = $this->normalizePhone($selectedUser['selular'] ?? '');
+            $actualPhone = $this->testPhone ?? $originalPhone;
+
+            $message = $this->buildMessage($snapshot, $alertLevel, $layer, $selectedUser['nama'] ?? '', $this->testPhone !== null ? $originalPhone : null);
+
+            if ($dryRun) {
+                $targetInfo = $this->testPhone !== null ? "{$this->testPhone} (asli: {$originalPhone})" : $originalPhone;
+                $this->info("  [DRY-RUN] {$kodeIkk} Alert {$alertLevel} Layer {$layer} -> {$targetInfo} ({$selectedUser['nama']})");
+                $sent++;
+                $this->totalSent++;
+                continue;
+            }
+
+            $result = $this->waService->sendMessage($actualPhone, $message);
+
+            DopmWaNotificationLog::create([
+                'tanggal' => $date,
+                'kode_ikk' => $kodeIkk,
+                'alert_level' => $alertLevel,
+                'layer' => $layer,
+                'phone_number' => $this->testPhone !== null ? "TEST:{$this->testPhone}|ORIG:{$originalPhone}" : $originalPhone,
+                'recipient_name' => $selectedUser['nama'] ?? null,
+                'recipient_sid' => $selectedUser['username'] ?? null,
+                'message' => $message,
+                'fonnte_status' => $result['status'],
+                'fonnte_id' => is_array($result['id']) ? ($result['id'][0] ?? null) : $result['id'],
+                'fonnte_response' => json_encode($result['response']),
+                'sent_at' => now(),
+                'provider' => 'wwebjs',
+            ]);
+
+            $targetInfo = $this->testPhone !== null ? "{$actualPhone} (asli: {$originalPhone})" : $actualPhone;
+
+            if ($result['success']) {
+                $this->info("  [OK] {$kodeIkk} Alert {$alertLevel} Layer {$layer} -> {$targetInfo} ({$selectedUser['nama']})");
+                $sent++;
+            } else {
+                $this->error("  [FAIL] {$kodeIkk} Alert {$alertLevel} Layer {$layer} -> {$targetInfo}");
+                $failed++;
+            }
+
+            $this->totalSent++;
+
+            usleep(3000000); // 3 detik delay antar pengiriman
         }
 
         return ['sent' => $sent, 'failed' => $failed];
