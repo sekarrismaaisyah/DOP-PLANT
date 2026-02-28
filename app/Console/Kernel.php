@@ -51,9 +51,11 @@ class Kernel extends ConsoleKernel
             ->everyThirtyMinutes()
             ->appendOutputTo(storage_path('logs/dopm-alert-snapshot.log'));
 
-        // DOPM Auto Alert WA via Fonnte: kirim notifikasi WA otomatis setiap jam untuk IKK yang belum ada IPK.
+        // DOPM Auto Alert WA: kirim notifikasi WA otomatis setiap jam untuk IKK yang belum ada IPK.
         // Dijalankan setiap jam (pada menit ke-5) setelah dopm:alert-snapshot berjalan.
-        $schedule->command('dopm:auto-alert-wa')
+        // --provider=wwebjs: menggunakan whatsapp-web.js (self-hosted)
+        // --limit=10: maksimal 10 pesan per jam untuk menghindari ban
+        $schedule->command('dopm:auto-alert-wa --provider=wwebjs --limit=10')
             ->timezone('Asia/Makassar')
             ->hourlyAt(5)
             ->withoutOverlapping()
