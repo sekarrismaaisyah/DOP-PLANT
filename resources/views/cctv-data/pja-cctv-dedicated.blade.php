@@ -105,7 +105,17 @@
                     </div>
                     @endif
 
-                    <div class="d-flex gap-2 mb-3 flex-wrap">
+                    <div class="d-flex gap-2 mb-3 flex-wrap align-items-center">
+                        <div class="d-flex align-items-center gap-2">
+                            <label for="siteFilter" class="form-label mb-0 fw-bold">Filter Site:</label>
+                            <select class="form-select" id="siteFilter" style="min-width: 200px;">
+                                <option value="">Semua Site</option>
+                                @foreach($sites as $site)
+                                    <option value="{{ $site }}">{{ $site }}</option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="vr mx-2"></div>
                         <a href="{{ route('cctv-data.pja-cctv-dedicated.export') }}" class="btn btn-info" id="btnExport">
                             <i class="material-icons-outlined">download</i> Download Excel
                         </a>
@@ -157,7 +167,10 @@
             serverSide: true,
             ajax: {
                 url: "{{ route('cctv-data.pja-cctv-dedicated.data') }}",
-                type: "GET"
+                type: "GET",
+                data: function(d) {
+                    d.site = $('#siteFilter').val();
+                }
             },
             columns: [
                 { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false },
@@ -209,6 +222,11 @@
                     className: 'text-center'
                 }
             ]
+        });
+
+        // Handle site filter change
+        $('#siteFilter').on('change', function() {
+            table.ajax.reload();
         });
 
         // Handle export button click

@@ -2554,61 +2554,77 @@ class CctvDataController extends Controller
             // Proses data (mulai dari baris kedua)
             $successCount = 0;
             $errorCount = 0;
-            $skippedCount = 0;
+            $deletedCount = 0;
             $errors = [];
+            
+            // Kumpulkan semua data valid dari Excel terlebih dahulu
+            $validData = [];
+            $cctvListToReplace = [];
+            
+            for ($i = 1; $i < count($rows); $i++) {
+                $row = $rows[$i];
+                
+                // Skip baris kosong
+                if (empty(array_filter($row))) {
+                    continue;
+                }
+
+                // Ambil data dari Excel
+                $no = isset($row[$columnIndexes['no']]) ? trim((string) $row[$columnIndexes['no']]) : null;
+                $pja = isset($row[$columnIndexes['pja']]) ? trim((string) $row[$columnIndexes['pja']]) : null;
+                $cctvDedicated = isset($row[$columnIndexes['cctv_dedicated']]) ? trim((string) $row[$columnIndexes['cctv_dedicated']]) : null;
+
+                // Validasi data wajib
+                if (empty($pja) || empty($cctvDedicated)) {
+                    $errorCount++;
+                    $errors[] = "Baris " . ($i + 1) . ": PJA dan CCTV Dedicated harus diisi.";
+                    continue;
+                }
+
+                // Simpan data valid
+                $validData[] = [
+                    'no' => $no,
+                    'pja' => $pja,
+                    'cctv_dedicated' => $cctvDedicated,
+                    'row_number' => $i + 1,
+                ];
+                
+                // Kumpulkan daftar CCTV unik yang akan di-replace
+                $cctvListToReplace[$cctvDedicated] = true;
+            }
+            
+            if (empty($validData)) {
+                return back()->withErrors(['file' => 'Tidak ada data valid untuk diimpor.']);
+            }
 
             DB::beginTransaction();
             
             try {
-                for ($i = 1; $i < count($rows); $i++) {
-                    $row = $rows[$i];
-                    
-                    // Skip baris kosong
-                    if (empty(array_filter($row))) {
-                        continue;
-                    }
-
-                    // Ambil data dari Excel
-                    $no = isset($row[$columnIndexes['no']]) ? trim((string) $row[$columnIndexes['no']]) : null;
-                    $pja = isset($row[$columnIndexes['pja']]) ? trim((string) $row[$columnIndexes['pja']]) : null;
-                    $cctvDedicated = isset($row[$columnIndexes['cctv_dedicated']]) ? trim((string) $row[$columnIndexes['cctv_dedicated']]) : null;
-
-                    // Validasi data wajib
-                    if (empty($pja) || empty($cctvDedicated)) {
-                        $errorCount++;
-                        $errors[] = "Baris " . ($i + 1) . ": PJA dan CCTV Dedicated harus diisi.";
-                        continue;
-                    }
-
-                    // Cek apakah data sudah ada (optional - bisa dihapus jika ingin allow duplicate)
-                    $existing = PjaCctvDedicated::where('pja', $pja)
-                        ->where('cctv_dedicated', $cctvDedicated)
-                        ->first();
-
-                    if ($existing) {
-                        $skippedCount++;
-                        continue;
-                    }
-
-                    // Simpan data
+                // Hapus semua data lama untuk CCTV yang ada di Excel
+                $cctvNames = array_keys($cctvListToReplace);
+                $deletedCount = PjaCctvDedicated::whereIn('cctv_dedicated', $cctvNames)->count();
+                PjaCctvDedicated::whereIn('cctv_dedicated', $cctvNames)->delete();
+                
+                // Insert semua data baru dari Excel
+                foreach ($validData as $data) {
                     try {
                         PjaCctvDedicated::create([
-                            'no' => $no,
-                            'pja' => $pja,
-                            'cctv_dedicated' => $cctvDedicated,
+                            'no' => $data['no'],
+                            'pja' => $data['pja'],
+                            'cctv_dedicated' => $data['cctv_dedicated'],
                         ]);
                         $successCount++;
                     } catch (Exception $e) {
                         $errorCount++;
-                        $errors[] = "Baris " . ($i + 1) . ": " . $e->getMessage();
+                        $errors[] = "Baris " . $data['row_number'] . ": " . $e->getMessage();
                     }
                 }
 
                 DB::commit();
 
                 $message = "Import berhasil! {$successCount} data berhasil diimpor.";
-                if ($skippedCount > 0) {
-                    $message .= " {$skippedCount} data di-skip (sudah ada di database).";
+                if ($deletedCount > 0) {
+                    $message .= " {$deletedCount} data lama di-replace.";
                 }
                 if ($errorCount > 0) {
                     $message .= " {$errorCount} data gagal diimpor.";
@@ -3394,7 +3410,15 @@ class CctvDataController extends Controller
         // Get statistics
         $stats = $this->getPjaCctvStatistics();
         
-        return view('cctv-data.pja-cctv-dedicated', compact('stats'));
+        // Get list of unique sites (from 'no' column)
+        $sites = PjaCctvDedicated::select('no')
+            ->distinct()
+            ->whereNotNull('no')
+            ->where('no', '!=', '')
+            ->orderBy('no')
+            ->pluck('no');
+        
+        return view('cctv-data.pja-cctv-dedicated', compact('stats', 'sites'));
     }
 
     /**
@@ -3506,6 +3530,7 @@ class CctvDataController extends Controller
         $searchValue = $request->get('search')['value'] ?? '';
         $orderColumn = $request->get('order')[0]['column'] ?? 0;
         $orderDir = $request->get('order')[0]['dir'] ?? 'desc';
+        $siteFilter = $request->get('site', '');
 
         // Column mapping (sesuai urutan kolom di DataTable: #, NO, CCTV Dedicated, Jumlah PJA, PJA, Created At, Updated At)
         $columns = ['cctv_dedicated', 'no', 'cctv_dedicated', 'pja_count', 'pja', 'created_at', 'updated_at'];
@@ -3521,6 +3546,11 @@ class CctvDataController extends Controller
 
         // Base query - ambil semua data dulu untuk grouping
         $query = PjaCctvDedicated::query();
+
+        // Filter by site (no column)
+        if (!empty($siteFilter)) {
+            $query->where('no', $siteFilter);
+        }
 
         // Search functionality - search sebelum grouping
         if (!empty($searchValue)) {

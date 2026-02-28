@@ -248,7 +248,7 @@ class DopmAutoAlertWa extends Command
 
             $this->totalSent++;
 
-            usleep(3000000); // 3 detik delay antar pengiriman
+            sleep(120); // 2 menit delay antar pengiriman untuk menghindari ban
         }
 
         return ['sent' => $sent, 'failed' => $failed];

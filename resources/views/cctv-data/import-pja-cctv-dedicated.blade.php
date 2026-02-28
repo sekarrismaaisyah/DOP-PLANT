@@ -132,11 +132,11 @@
                                     <li>Kolom NO bersifat opsional</li>
                                     <li>Data dimulai dari baris kedua</li>
                                     <li>Baris kosong akan diabaikan</li>
-                                    <li>Data duplikat akan di-skip</li>
+                                    <li><strong>Data PJA lama akan di-replace</strong> untuk CCTV yang sama</li>
                                 </ol>
-                                <div class="mt-3 p-2 bg-warning bg-opacity-10 rounded">
-                                    <small class="text-warning">
-                                        <strong>Tips:</strong> Pastikan format kolom sesuai dengan contoh di atas. Sistem akan memvalidasi data sebelum menyimpan ke database.
+                                <div class="mt-3 p-2 bg-danger bg-opacity-10 rounded">
+                                    <small class="text-danger">
+                                        <strong>Penting:</strong> Jika CCTV sudah ada di database, semua PJA lama untuk CCTV tersebut akan <strong>dihapus</strong> dan diganti dengan data baru dari Excel.
                                     </small>
                                 </div>
                             </div>
