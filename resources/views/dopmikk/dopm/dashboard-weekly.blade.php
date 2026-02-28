@@ -3409,6 +3409,16 @@
         });
     }
 
+    // Inisialisasi Bootstrap Tooltip untuk menampilkan alasan status matriks
+    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
+    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
+        new bootstrap.Tooltip(tooltipTriggerEl, {
+            html: true,
+            placement: 'top',
+            trigger: 'hover'
+        });
+    });
+
     var modalApiUrl = @json(route('dopmikk.api.ikk-modal-data'));
     var layer1UsersApiUrl = @json(route('dopmikk.api.layer1-users'));
     var layers234UsersApiUrl = @json(route('dopmikk.api.layers234-users'));
@@ -3417,6 +3427,8 @@
     var intervensiModalEl = document.getElementById('intervensiDopmModal');
     var intervensiModal = intervensiModalEl ? new bootstrap.Modal(intervensiModalEl) : null;
     var modal = modalEl ? new bootstrap.Modal(modalEl) : null;
+    
+    console.log('[DOPM Weekly] Modal initialization:', { modalEl: !!modalEl, modal: !!modal, intervensiModalEl: !!intervensiModalEl, intervensiModal: !!intervensiModal });
 
     // DataTables untuk tabel DOPM harian
     if ($.fn.DataTable && document.getElementById('tableDopmHarian')) {
@@ -3957,8 +3969,10 @@
         }
 
         var btn = e.target.closest('.btn-detail-dopm') || (e.target.closest('.dopm-matriks-row') && !e.target.closest('.btn-intervensi-dopm') ? e.target.closest('.dopm-matriks-row') : null);
+        console.log('[DOPM Weekly] Click detected:', { target: e.target, btn: btn, hasMatriksRow: !!e.target.closest('.dopm-matriks-row') });
         if (!btn) return;
         var data = JSON.parse(btn.getAttribute('data-dopm') || '{}');
+        console.log('[DOPM Weekly] Opening detail modal for:', { id_dop: data.id_dop, kode_ikk: data.kode_ikk, modal: !!modal });
         window._lastDetailDopmData = data;
         var modalDoc = document.getElementById('detailDopmModal');
         document.getElementById('detailDopmTitle').textContent = (data.id_dop || 'Detail') + ' — ' + (data.nama_pekerjaan || 'DOPM').substring(0, 50);
@@ -3988,7 +4002,13 @@
         showLoading('okk');
         showLoading('oak');
         document.getElementById('oakContext').classList.add('d-none');
-        if (modal) modal.show();
+        console.log('[DOPM Weekly] About to show modal:', { modal: !!modal, modalEl: !!modalEl });
+        if (modal) {
+            modal.show();
+            console.log('[DOPM Weekly] modal.show() called');
+        } else {
+            console.error('[DOPM Weekly] Modal is null! Cannot show detail modal.');
+        }
         var params = new URLSearchParams({
             kode_ikk: data.kode_ikk || '',
             work_permit_id: data.work_permit_id || '',
