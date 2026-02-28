@@ -3410,13 +3410,8 @@ class CctvDataController extends Controller
         // Get statistics
         $stats = $this->getPjaCctvStatistics();
         
-        // Get list of unique sites (from 'no' column)
-        $sites = PjaCctvDedicated::select('no')
-            ->distinct()
-            ->whereNotNull('no')
-            ->where('no', '!=', '')
-            ->orderBy('no')
-            ->pluck('no');
+        // Static list of sites
+        $sites = ['BMO 1', 'BMO 2', 'BMO 3', 'EXPLORASI', 'LMO', 'SMO', 'GMO', 'HO', 'MARINE'];
         
         return view('cctv-data.pja-cctv-dedicated', compact('stats', 'sites'));
     }
