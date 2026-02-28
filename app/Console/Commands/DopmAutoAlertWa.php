@@ -7,6 +7,7 @@ use App\Models\DopmAlertPerIkk;
 use App\Models\DopmWaNotificationLog;
 use App\Models\IpkIkk;
 use App\Services\FonnteService;
+use App\Services\WwebjsService;
 use Carbon\Carbon;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
@@ -18,15 +19,18 @@ class DopmAutoAlertWa extends Command
                             {--date= : Tanggal (Y-m-d), default hari ini WITA}
                             {--dry-run : Simulasi tanpa mengirim WA}
                             {--test-phone= : Mode testing - kirim semua WA ke nomor ini saja (contoh: 081919898656)}
-                            {--limit=0 : Batas jumlah WA yang dikirim (0 = unlimited)}';
+                            {--limit=0 : Batas jumlah WA yang dikirim (0 = unlimited)}
+                            {--provider= : Provider WA: fonnte atau wwebjs (default dari config)}';
 
-    protected $description = 'Kirim auto alert WA via Fonnte untuk IKK yang belum ada IPK';
+    protected $description = 'Kirim auto alert WA via Fonnte/wwebjs untuk IKK yang belum ada IPK';
 
     private const TZ = 'Asia/Makassar';
 
     private ?string $testPhone = null;
     private int $limit = 0;
     private int $totalSent = 0;
+    private string $provider = 'fonnte';
+    private FonnteService|WwebjsService $waService;
 
     public function handle(): int
     {
@@ -68,6 +72,29 @@ class DopmAutoAlertWa extends Command
             $this->warn("Limit aktif - maksimal {$this->limit} WA yang akan dikirim.");
         }
 
+        $providerOpt = $this->option('provider');
+        $this->provider = $providerOpt !== null && $providerOpt !== ''
+            ? $providerOpt
+            : config('services.whatsapp.default_provider', 'fonnte');
+
+        if (! in_array($this->provider, ['fonnte', 'wwebjs'])) {
+            $this->error("Provider tidak valid: {$this->provider}. Gunakan 'fonnte' atau 'wwebjs'.");
+            return self::FAILURE;
+        }
+
+        if ($this->provider === 'wwebjs') {
+            $this->waService = new WwebjsService();
+            if (! $this->waService->isReady()) {
+                $this->error('WA Service (wwebjs) belum siap. Pastikan Node.js service sudah jalan dan scan QR.');
+                $this->info('Jalankan: cd wa-service && npm install && node index.js');
+                return self::FAILURE;
+            }
+            $this->info("Provider: wwebjs (whatsapp-web.js)");
+        } else {
+            $this->waService = new FonnteService(config('services.fonnte.token'));
+            $this->info("Provider: Fonnte");
+        }
+
         try {
             $alerts = $this->getUnnotifiedAlerts($date);
 
@@ -78,7 +105,6 @@ class DopmAutoAlertWa extends Command
 
             $this->info('Ditemukan ' . $alerts->count() . ' alert yang perlu diproses.');
 
-            $fonnte = new FonnteService(config('services.fonnte.token'));
             $sentCount = 0;
             $failedCount = 0;
 
@@ -88,7 +114,7 @@ class DopmAutoAlertWa extends Command
                     break;
                 }
 
-                $result = $this->processAlert($alert, $fonnte, $date, $dryRun);
+                $result = $this->processAlert($alert, $date, $dryRun);
                 $sentCount += $result['sent'];
                 $failedCount += $result['failed'];
             }
@@ -137,7 +163,7 @@ class DopmAutoAlertWa extends Command
     /**
      * Proses satu alert: ambil PIC dan kirim WA.
      */
-    private function processAlert($alert, FonnteService $fonnte, string $date, bool $dryRun): array
+    private function processAlert($alert, string $date, bool $dryRun): array
     {
         $sent = 0;
         $failed = 0;
@@ -196,7 +222,7 @@ class DopmAutoAlertWa extends Command
                     continue;
                 }
 
-                $result = $fonnte->sendMessage($actualPhone, $message);
+                $result = $this->waService->sendMessage($actualPhone, $message);
 
                 DopmWaNotificationLog::create([
                     'tanggal' => $date,
@@ -208,9 +234,10 @@ class DopmAutoAlertWa extends Command
                     'recipient_sid' => $user['username'] ?? null,
                     'message' => $message,
                     'fonnte_status' => $result['status'],
-                    'fonnte_id' => $result['id'],
+                    'fonnte_id' => is_array($result['id']) ? ($result['id'][0] ?? null) : $result['id'],
                     'fonnte_response' => json_encode($result['response']),
                     'sent_at' => now(),
+                    'provider' => $this->provider,
                 ]);
 
                 $targetInfo = $this->testPhone !== null ? "{$actualPhone} (asli: {$originalPhone})" : $actualPhone;
@@ -224,7 +251,9 @@ class DopmAutoAlertWa extends Command
                 }
 
                 $this->totalSent++;
-                usleep(300000); // 300ms delay
+                
+                $delayMs = $this->provider === 'wwebjs' ? 3000000 : 300000;
+                usleep($delayMs);
             }
         }
 

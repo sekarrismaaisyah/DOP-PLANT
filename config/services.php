@@ -53,4 +53,14 @@ return [
         'token' => env('FONNTE_API_TOKEN', ''),
     ],
 
+    'wwebjs' => [
+        'url' => env('WWEBJS_URL', 'http://localhost:3001'),
+        'api_key' => env('WWEBJS_API_KEY', 'wa-service-secret-key'),
+        'timeout' => (int) env('WWEBJS_TIMEOUT', 30),
+    ],
+
+    'whatsapp' => [
+        'default_provider' => env('WHATSAPP_PROVIDER', 'fonnte'),
+    ],
+
 ];

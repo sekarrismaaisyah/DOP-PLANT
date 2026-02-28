@@ -21,6 +21,7 @@ class DopmWaNotificationLog extends Model
         'fonnte_id',
         'fonnte_response',
         'sent_at',
+        'provider',
     ];
 
     protected $casts = [
