@@ -1855,7 +1855,7 @@
                      @php
                         $alasanMerah = htmlspecialchars($ikk->alasan_matriks ?? 'Tidak ada IPK atau OKK', ENT_QUOTES, 'UTF-8');
                      @endphp
-                     <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Merah:</strong><br>{{ $alasanMerah }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                     <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ e(json_encode($dopmJson, JSON_HEX_QUOT | JSON_HEX_APOS | JSON_HEX_AMP)) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Merah:</strong><br>{{ $alasanMerah }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                        <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                         <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-danger bg-opacity-10 text-danger flex-shrink-0">
                           <span class="material-icons-outlined" style="font-size: 28px;">warning</span>
@@ -1938,7 +1938,7 @@
                   @php
                     $alasanKuning = htmlspecialchars($ikk->alasan_matriks ?? 'Kondisi tidak memenuhi kriteria Hijau', ENT_QUOTES, 'UTF-8');
                   @endphp
-                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Kuning:</strong><br>{{ $alasanKuning }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ e(json_encode($dopmJsonK, JSON_HEX_QUOT | JSON_HEX_APOS | JSON_HEX_AMP)) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Kuning:</strong><br>{{ $alasanKuning }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                     <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                       <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-warning bg-opacity-10 text-warning flex-shrink-0">
                         <span class="material-icons-outlined" style="font-size: 28px;">info</span>
@@ -2021,7 +2021,7 @@
                   @php
                     $alasanHijau = htmlspecialchars($ikk->alasan_matriks ?? 'Semua persyaratan terpenuhi', ENT_QUOTES, 'UTF-8');
                   @endphp
-                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Hijau:</strong><br>{{ $alasanHijau }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ e(json_encode($dopmJsonH, JSON_HEX_QUOT | JSON_HEX_APOS | JSON_HEX_AMP)) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Hijau:</strong><br>{{ $alasanHijau }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                     <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                       <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-success bg-opacity-10 text-success flex-shrink-0">
                         <span class="material-icons-outlined" style="font-size: 28px;">check_circle</span>
@@ -3579,11 +3579,30 @@
         return s;
     }
 
+    // Decode HTML entities untuk JSON parsing
+    function decodeHtmlEntities(str) {
+        if (!str) return str;
+        var txt = document.createElement('textarea');
+        txt.innerHTML = str;
+        return txt.value;
+    }
+
+    // Safe JSON parse dengan decode HTML entities
+    function safeJsonParse(str) {
+        try {
+            var decoded = decodeHtmlEntities(str);
+            return JSON.parse(decoded || '{}');
+        } catch (e) {
+            console.error('[DOPM Weekly] JSON parse error:', e, str);
+            return {};
+        }
+    }
+
     // Event delegation: tombol Intervensi
     document.addEventListener('click', function(e) {
         var btnIntervensi = e.target.closest('.btn-intervensi-dopm');
         if (btnIntervensi && intervensiModal) {
-            var data = JSON.parse(btnIntervensi.getAttribute('data-dopm') || '{}');
+            var data = safeJsonParse(btnIntervensi.getAttribute('data-dopm'));
             var namaLayer1 = (data.nama_layer_1 || '').trim();
             var sidLayer1 = (data.sid_layer_1 || '').trim();
             var hasLayer1 = sidLayer1 !== '' || namaLayer1 !== '';
@@ -3971,7 +3990,7 @@
         var btn = e.target.closest('.btn-detail-dopm') || (e.target.closest('.dopm-matriks-row') && !e.target.closest('.btn-intervensi-dopm') ? e.target.closest('.dopm-matriks-row') : null);
         console.log('[DOPM Weekly] Click detected:', { target: e.target, btn: btn, hasMatriksRow: !!e.target.closest('.dopm-matriks-row') });
         if (!btn) return;
-        var data = JSON.parse(btn.getAttribute('data-dopm') || '{}');
+        var data = safeJsonParse(btn.getAttribute('data-dopm'));
         console.log('[DOPM Weekly] Opening detail modal for:', { id_dop: data.id_dop, kode_ikk: data.kode_ikk, modal: !!modal });
         window._lastDetailDopmData = data;
         var modalDoc = document.getElementById('detailDopmModal');
