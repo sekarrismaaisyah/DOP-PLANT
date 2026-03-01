@@ -1765,20 +1765,40 @@
                           
                           foreach ($perusahaanGrouped as $perusahaanName => $items) {
                               $totalIkk = $items->count();
-                              $hijauCount = $items->where('status_matriks', 'Hijau')->count();
-                              $pctComply = $totalIkk > 0 ? round(($hijauCount / $totalIkk) * 100, 1) : 0;
+                              
+                              // Hitung total hari, IPK, dan OKK untuk semua IKK di perusahaan ini
+                              $totalHariPerusahaan = $items->sum('total_hari');
+                              $totalIpkPerusahaan = $items->sum('ipk_count');
+                              $totalOkkPerusahaan = $items->sum('okk_count');
+                              
+                              // Hitung persentase IPK dan OKK
+                              $pctIpkPerusahaan = $totalHariPerusahaan > 0 ? round(($totalIpkPerusahaan / $totalHariPerusahaan) * 100, 1) : 0;
+                              $pctOkkPerusahaan = $totalHariPerusahaan > 0 ? round(($totalOkkPerusahaan / $totalHariPerusahaan) * 100, 1) : 0;
+                              
+                              // Compliance = rata-rata IPK dan OKK
+                              $pctComply = round(($pctIpkPerusahaan + $pctOkkPerusahaan) / 2, 1);
                               
                               // Group by site within this perusahaan
                               $siteGrouped = $items->groupBy('site');
                               $sites = [];
                               foreach ($siteGrouped as $siteName => $siteItems) {
                                   $siteTotalIkk = $siteItems->count();
-                                  $siteHijau = $siteItems->where('status_matriks', 'Hijau')->count();
-                                  $sitePct = $siteTotalIkk > 0 ? round(($siteHijau / $siteTotalIkk) * 100, 1) : 0;
+                                  $siteTotalHari = $siteItems->sum('total_hari');
+                                  $siteTotalIpk = $siteItems->sum('ipk_count');
+                                  $siteTotalOkk = $siteItems->sum('okk_count');
+                                  
+                                  $sitePctIpk = $siteTotalHari > 0 ? round(($siteTotalIpk / $siteTotalHari) * 100, 1) : 0;
+                                  $sitePctOkk = $siteTotalHari > 0 ? round(($siteTotalOkk / $siteTotalHari) * 100, 1) : 0;
+                                  $sitePct = round(($sitePctIpk + $sitePctOkk) / 2, 1);
+                                  
                                   $sites[] = [
                                       'name' => $siteName ?: 'Unknown',
                                       'total' => $siteTotalIkk,
-                                      'hijau' => $siteHijau,
+                                      'total_hari' => $siteTotalHari,
+                                      'ipk_count' => $siteTotalIpk,
+                                      'okk_count' => $siteTotalOkk,
+                                      'pct_ipk' => $sitePctIpk,
+                                      'pct_okk' => $sitePctOkk,
                                       'pct' => $sitePct,
                                   ];
                               }
@@ -1787,9 +1807,11 @@
                               $perusahaanData = [
                                   'name' => $perusahaanName ?: 'Unknown',
                                   'total' => $totalIkk,
-                                  'hijau' => $hijauCount,
-                                  'kuning' => $items->where('status_matriks', 'Kuning')->count(),
-                                  'merah' => $items->where('status_matriks', 'Merah')->count(),
+                                  'total_hari' => $totalHariPerusahaan,
+                                  'ipk_count' => $totalIpkPerusahaan,
+                                  'okk_count' => $totalOkkPerusahaan,
+                                  'pct_ipk' => $pctIpkPerusahaan,
+                                  'pct_okk' => $pctOkkPerusahaan,
                                   'pct' => $pctComply,
                                   'sites' => $sites,
                               ];
@@ -1839,22 +1861,25 @@
                                     <p class="mb-0 text-muted small">{{ count($perusahaan['sites']) }} Site • {{ $perusahaan['total'] }} IKK</p>
                                   </div>
                                 </div>
-                                <div class="progress flex-shrink-0" style="width: 80px; height: 5px; background: rgba(34, 197, 94, 0.15);">
-                                  <div class="progress-bar bg-success" style="width: 100%;"></div>
+                               
+                                <div class="progress flex-shrink-0" style="width: 60px; height: 5px; background: rgba(34, 197, 94, 0.15);">
+                                  <div class="progress-bar bg-success" style="width: {{ $perusahaan['pct'] }}%;"></div>
                                 </div>
                                 <div class="flex-shrink-0 text-end" style="min-width: 50px;">
-                                  <span class="fw-semibold text-success">100%</span>
+                                  <span class="fw-semibold text-success">{{ $perusahaan['pct'] }}%</span>
                                 </div>
                                 <span class="material-icons-outlined text-muted accordion-chevron" style="font-size: 20px; transition: transform 0.2s;">expand_more</span>
                               </div>
                               <div class="collapse" id="perusahaanComply{{ $loop->index }}">
                                 <div class="ps-4 pt-2">
                                   @foreach($perusahaan['sites'] as $site)
-                                  <div class="d-flex align-items-center gap-2 py-1 px-2 rounded-2 mb-1" style="background: rgba(34, 197, 94, 0.04);">
-                                    <span class="material-icons-outlined text-success" style="font-size: 16px;">location_on</span>
-                                    <span class="small fw-medium flex-grow-1 text-truncate" title="{{ $site['name'] }}">{{ $site['name'] }}</span>
+                                  <div class="d-flex align-items-center gap-2 py-1 px-2 rounded-2 mb-1" style="background: {{ $siteBgColor }};">
+                                    <span class="material-icons-outlined text-{{ $siteColor }}" style="font-size: 16px;">location_on</span>
+                                    <span class="small fw-medium text-truncate" style="min-width: 100px;" title="{{ $site['name'] }}">{{ $site['name'] }}</span>
                                     <span class="small text-muted">{{ $site['total'] }} IKK</span>
-                                    <span class="badge bg-success text-white small px-2 py-1">{{ $site['pct'] }}%</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary small px-1" title="IPK: {{ $site['ipk_count'] }}/{{ $site['total_hari'] }}">IPK {{ $site['pct_ipk'] }}%</span>
+                                    <span class="badge bg-info bg-opacity-10 text-info small px-1" title="OKK: {{ $site['okk_count'] }}/{{ $site['total_hari'] }}">OKK {{ $site['pct_okk'] }}%</span>
+                                    <span class="badge bg-{{ $siteColor }} {{ $siteColor === 'warning' ? 'text-dark' : 'text-white' }} small px-2 py-1">{{ $site['pct'] }}%</span>
                                   </div>
                                   @endforeach
                                 </div>
@@ -1886,7 +1911,8 @@
                                     <p class="mb-0 text-muted small">{{ count($perusahaan['sites']) }} Site • {{ $perusahaan['total'] }} IKK</p>
                                   </div>
                                 </div>
-                                <div class="progress flex-shrink-0" style="width: 80px; height: 5px; background: rgba(234, 179, 8, 0.15);">
+                               
+                                <div class="progress flex-shrink-0" style="width: 60px; height: 5px; background: rgba(234, 179, 8, 0.15);">
                                   <div class="progress-bar bg-warning" style="width: {{ $perusahaan['pct'] }}%;"></div>
                                 </div>
                                 <div class="flex-shrink-0 text-end" style="min-width: 50px;">
@@ -1903,8 +1929,10 @@
                                   @endphp
                                   <div class="d-flex align-items-center gap-2 py-1 px-2 rounded-2 mb-1" style="background: {{ $siteBgColor }};">
                                     <span class="material-icons-outlined text-{{ $siteColor }}" style="font-size: 16px;">location_on</span>
-                                    <span class="small fw-medium flex-grow-1 text-truncate" title="{{ $site['name'] }}">{{ $site['name'] }}</span>
+                                    <span class="small fw-medium text-truncate" style="min-width: 100px;" title="{{ $site['name'] }}">{{ $site['name'] }}</span>
                                     <span class="small text-muted">{{ $site['total'] }} IKK</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary small px-1" title="IPK: {{ $site['ipk_count'] }}/{{ $site['total_hari'] }}">IPK {{ $site['pct_ipk'] }}%</span>
+                                    <span class="badge bg-info bg-opacity-10 text-info small px-1" title="OKK: {{ $site['okk_count'] }}/{{ $site['total_hari'] }}">OKK {{ $site['pct_okk'] }}%</span>
                                     <span class="badge bg-{{ $siteColor }} {{ $siteColor === 'warning' ? 'text-dark' : 'text-white' }} small px-2 py-1">{{ $site['pct'] }}%</span>
                                   </div>
                                   @endforeach
@@ -1937,7 +1965,8 @@
                                     <p class="mb-0 text-muted small">{{ count($perusahaan['sites']) }} Site • {{ $perusahaan['total'] }} IKK</p>
                                   </div>
                                 </div>
-                                <div class="progress flex-shrink-0" style="width: 80px; height: 5px; background: rgba(239, 68, 68, 0.15);">
+                               
+                                <div class="progress flex-shrink-0" style="width: 60px; height: 5px; background: rgba(239, 68, 68, 0.15);">
                                   <div class="progress-bar bg-danger" style="width: {{ $perusahaan['pct'] }}%;"></div>
                                 </div>
                                 <div class="flex-shrink-0 text-end" style="min-width: 50px;">
@@ -1954,8 +1983,10 @@
                                   @endphp
                                   <div class="d-flex align-items-center gap-2 py-1 px-2 rounded-2 mb-1" style="background: {{ $siteBgColor }};">
                                     <span class="material-icons-outlined text-{{ $siteColor }}" style="font-size: 16px;">location_on</span>
-                                    <span class="small fw-medium flex-grow-1 text-truncate" title="{{ $site['name'] }}">{{ $site['name'] }}</span>
+                                    <span class="small fw-medium text-truncate" style="min-width: 100px;" title="{{ $site['name'] }}">{{ $site['name'] }}</span>
                                     <span class="small text-muted">{{ $site['total'] }} IKK</span>
+                                    <span class="badge bg-primary bg-opacity-10 text-primary small px-1" title="IPK: {{ $site['ipk_count'] }}/{{ $site['total_hari'] }}">IPK {{ $site['pct_ipk'] }}%</span>
+                                    <span class="badge bg-info bg-opacity-10 text-info small px-1" title="OKK: {{ $site['okk_count'] }}/{{ $site['total_hari'] }}">OKK {{ $site['pct_okk'] }}%</span>
                                     <span class="badge bg-{{ $siteColor }} {{ $siteColor === 'warning' ? 'text-dark' : 'text-white' }} small px-2 py-1">{{ $site['pct'] }}%</span>
                                   </div>
                                   @endforeach
@@ -1970,7 +2001,7 @@
                           @if(count($allPerusahaan) === 0)
                           <div class="text-center py-4 text-muted">
                             <span class="material-icons-outlined" style="font-size: 48px;">inventory_2</span>
-                            <p class="mb-0 mt-2 small">Tidak ada data perusahaan untuk tanggal ini.</p>
+                            <p class="mb-0 mt-2 small">Tidak ada data perusahaan untuk minggu ini.</p>
                           </div>
                           @endif
                         </div>
