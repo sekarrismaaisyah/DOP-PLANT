@@ -3646,11 +3646,11 @@
                 showConfirmButton: false,
                 didOpen: function() {
                   Swal.showLoading();
-                  if (filterForm) filterForm.submit();
+                  if (filterForm) HTMLFormElement.prototype.submit.call(filterForm);
                 }
               });
             } else if (filterForm) {
-              filterForm.submit();
+              HTMLFormElement.prototype.submit.call(filterForm);
             }
           };
         }(dateStr));
@@ -3672,11 +3672,11 @@
                 showConfirmButton: false,
                 didOpen: function() {
                   Swal.showLoading();
-                  if (filterForm) filterForm.submit();
+                  if (filterForm) HTMLFormElement.prototype.submit.call(filterForm);
                 }
               });
             } else if (filterForm) {
-              filterForm.submit();
+              HTMLFormElement.prototype.submit.call(filterForm);
             }
           };
         }(dateStr));
@@ -3722,9 +3722,12 @@
 (function() {
     // Loading SweetAlert saat submit filter tanggal
     var filterForm = document.getElementById('dashboardFilterForm');
+    var isSubmitting = false;
     if (filterForm && typeof Swal !== 'undefined') {
         filterForm.addEventListener('submit', function(e) {
+            if (isSubmitting) return;
             e.preventDefault();
+            isSubmitting = true;
             Swal.fire({
                 title: 'Memuat data...',
                 html: 'Menampilkan data untuk tanggal yang dipilih.',
@@ -3733,9 +3736,9 @@
                 showConfirmButton: false,
                 didOpen: function() {
                     Swal.showLoading();
+                    HTMLFormElement.prototype.submit.call(filterForm);
                 }
             });
-            filterForm.submit();
         });
     }
 
