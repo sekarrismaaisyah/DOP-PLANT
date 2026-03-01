@@ -1368,6 +1368,47 @@
     .dopm-matriks-list-scroll::-webkit-scrollbar {
         display: none;
     }
+
+    /* Site list scroll untuk Status per Site Perusahaan */
+    .site-list-scroll,
+    .site-status-list-scroll {
+        scrollbar-width: thin;
+        scrollbar-color: rgba(0,0,0,0.12) transparent;
+    }
+    .site-list-scroll::-webkit-scrollbar,
+    .site-status-list-scroll::-webkit-scrollbar {
+        width: 4px;
+    }
+    .site-list-scroll::-webkit-scrollbar-track,
+    .site-status-list-scroll::-webkit-scrollbar-track {
+        background: transparent;
+    }
+    .site-list-scroll::-webkit-scrollbar-thumb,
+    .site-status-list-scroll::-webkit-scrollbar-thumb {
+        background: rgba(0,0,0,0.12);
+        border-radius: 4px;
+    }
+    .site-list-scroll::-webkit-scrollbar-thumb:hover,
+    .site-status-list-scroll::-webkit-scrollbar-thumb:hover {
+        background: rgba(0,0,0,0.2);
+    }
+    .site-status-row:hover {
+        border-color: rgba(0,0,0,0.08) !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+    .wh-32 { width: 32px; height: 32px; }
+    .wh-42 { width: 42px; height: 42px; }
+    
+    /* Perusahaan accordion styles */
+    .perusahaan-header:hover {
+        filter: brightness(0.98);
+    }
+    .perusahaan-header[aria-expanded="true"] .accordion-chevron {
+        transform: rotate(180deg);
+    }
+    .perusahaan-accordion .collapse {
+        transition: height 0.25s ease;
+    }
     
     .cctv-icon-marker.live::before {
         background: #10b981;
@@ -1696,31 +1737,246 @@
                      </div>
                     </div>
                  </div>
-                   <!-- <div class="col-12 col-xl-12">
-                    <div class="card rounded-4 mb-0">
-                      <div class="card-body">
-                        <div class="d-flex align-items-center gap-3 mb-2">
-                           <div class="">
-                             @php
-                               $pctPengisianRataRataIkk = $pctPengisianRataRataIkk ?? round((($pctIkkAdaIpk ?? 0) + ($pctIkkAdaOkk ?? 0)) / 2, 1);
-                             @endphp
-                             <h2 class="mb-0">{{ $pctPengisianRataRataIkk }}% Compliance</h2>
-                           </div>
-                           <div class="">
-                             <p class="dash-lable d-flex align-items-center gap-1 rounded mb-0 bg-primary bg-opacity-10 text-primary"><span class="material-icons-outlined fs-6">trending_up</span>Rata-rata IKK</p>
-                           </div>
-                         </div>
-                         <p class="mb-0">Presentase Pengisian IKK (IPK & OKK)</p>
-                         <p class="mb-0 small text-muted">Berdasarkan IKK unik: IPK {{ $pctIkkAdaIpk ?? 0 }}% · OKK {{ $pctIkkAdaOkk ?? 0 }}%</p>
-                          <div class="mt-4">
-                            <p class="mb-2 d-flex align-items-center justify-content-between">Gabungan IPK + OKK (IKK) <span class="">{{ $pctPengisianRataRataIkk }}%</span></p>
-                            <div class="progress w-100" style="height: 7px;">
-                              <div class="progress-bar bg-primary" style="width: {{ min(100, $pctPengisianRataRataIkk) }}%"></div>
-                            </div>
+<div class="col-12 col-xl-12">
+                   <div class="card rounded-4 mb-0 w-100">
+                     <div class="card-body">
+                       <div class="d-flex align-items-start justify-content-between mb-3">
+                          <div class="">
+                            <h5 class="mb-0 fw-bold">Status per Perusahaan & Site</h5>
                           </div>
-                      </div>
-                    </div>
-                  </div> -->
+                          <div class="dropdown">
+                            <a href="javascript:;" class="dropdown-toggle-nocaret options dropdown-toggle" data-bs-toggle="dropdown">
+                              <span class="material-icons-outlined fs-5">more_vert</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                              <li><a class="dropdown-item" href="javascript:;">Export Data</a></li>
+                              <li><a class="dropdown-item" href="javascript:;">Refresh</a></li>
+                            </ul>
+                          </div>
+                        </div>
+                        
+                        @php
+                          $ikkList = collect($ikkClickhouseListHarian ?? []);
+                          $perusahaanGrouped = $ikkList->groupBy('perusahaan');
+                          
+                          $perusahaanComply = [];
+                          $perusahaanNeedAttention = [];
+                          $perusahaanProposeHold = [];
+                          
+                          foreach ($perusahaanGrouped as $perusahaanName => $items) {
+                              $totalIkk = $items->count();
+                              $hijauCount = $items->where('status_matriks', 'Hijau')->count();
+                              $pctComply = $totalIkk > 0 ? round(($hijauCount / $totalIkk) * 100, 1) : 0;
+                              
+                              // Group by site within this perusahaan
+                              $siteGrouped = $items->groupBy('site');
+                              $sites = [];
+                              foreach ($siteGrouped as $siteName => $siteItems) {
+                                  $siteTotalIkk = $siteItems->count();
+                                  $siteHijau = $siteItems->where('status_matriks', 'Hijau')->count();
+                                  $sitePct = $siteTotalIkk > 0 ? round(($siteHijau / $siteTotalIkk) * 100, 1) : 0;
+                                  $sites[] = [
+                                      'name' => $siteName ?: 'Unknown',
+                                      'total' => $siteTotalIkk,
+                                      'hijau' => $siteHijau,
+                                      'pct' => $sitePct,
+                                  ];
+                              }
+                              usort($sites, fn($a, $b) => $a['pct'] - $b['pct']);
+                              
+                              $perusahaanData = [
+                                  'name' => $perusahaanName ?: 'Unknown',
+                                  'total' => $totalIkk,
+                                  'hijau' => $hijauCount,
+                                  'kuning' => $items->where('status_matriks', 'Kuning')->count(),
+                                  'merah' => $items->where('status_matriks', 'Merah')->count(),
+                                  'pct' => $pctComply,
+                                  'sites' => $sites,
+                              ];
+                              
+                              if ($pctComply == 100) {
+                                  $perusahaanComply[] = $perusahaanData;
+                              } elseif ($pctComply >= 80) {
+                                  $perusahaanNeedAttention[] = $perusahaanData;
+                              } else {
+                                  $perusahaanProposeHold[] = $perusahaanData;
+                              }
+                          }
+                          
+                          usort($perusahaanComply, fn($a, $b) => $b['total'] - $a['total']);
+                          usort($perusahaanNeedAttention, fn($a, $b) => $a['pct'] - $b['pct']);
+                          usort($perusahaanProposeHold, fn($a, $b) => $a['pct'] - $b['pct']);
+                          
+                          $totalPerusahaanComply = count($perusahaanComply);
+                          $totalPerusahaanNeedAttention = count($perusahaanNeedAttention);
+                          $totalPerusahaanProposeHold = count($perusahaanProposeHold);
+                          $totalIkkComplyPerusahaan = array_sum(array_column($perusahaanComply, 'total'));
+                          $totalIkkNeedAttentionPerusahaan = array_sum(array_column($perusahaanNeedAttention, 'total'));
+                          $totalIkkProposeHoldPerusahaan = array_sum(array_column($perusahaanProposeHold, 'total'));
+                          $allPerusahaan = array_merge($perusahaanComply, $perusahaanNeedAttention, $perusahaanProposeHold);
+                        @endphp
+
+                        <div class="d-flex flex-column gap-3 site-status-list-scroll" style="max-height: 420px; overflow-y: auto;">
+                          {{-- Section: Comply (100%) --}}
+                          @if(count($perusahaanComply) > 0)
+                          <div class="mb-2">
+                            <div class="d-flex align-items-center gap-2 mb-2 px-1">
+                              <div class="wh-32 d-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10">
+                                <span class="material-icons-outlined text-success" style="font-size: 18px;">verified</span>
+                              </div>
+                              <span class="fw-semibold text-success">Comply</span>
+                              <span class="badge bg-success bg-opacity-15 text-success rounded-pill px-2 py-1 small">{{ $totalPerusahaanComply }} Perusahaan • {{ $totalIkkComplyPerusahaan }} IKK • 100%</span>
+                            </div>
+                            @foreach($perusahaanComply as $perusahaan)
+                            <div class="perusahaan-accordion mb-2">
+                              <div class="perusahaan-header d-flex align-items-center gap-3 rounded-3 p-2 border border-transparent cursor-pointer" style="background: rgba(34, 197, 94, 0.08); transition: all 0.2s ease;" data-bs-toggle="collapse" data-bs-target="#perusahaanComply{{ $loop->index }}">
+                                <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
+                                  <div class="wh-42 d-flex align-items-center justify-content-center rounded-3 bg-success bg-opacity-15 flex-shrink-0">
+                                    <span class="material-icons-outlined text-success" style="font-size: 22px;">domain</span>
+                                  </div>
+                                  <div class="min-w-0">
+                                    <h6 class="mb-0 fw-semibold text-truncate" title="{{ $perusahaan['name'] }}">{{ $perusahaan['name'] }}</h6>
+                                    <p class="mb-0 text-muted small">{{ count($perusahaan['sites']) }} Site • {{ $perusahaan['total'] }} IKK</p>
+                                  </div>
+                                </div>
+                                <div class="progress flex-shrink-0" style="width: 80px; height: 5px; background: rgba(34, 197, 94, 0.15);">
+                                  <div class="progress-bar bg-success" style="width: 100%;"></div>
+                                </div>
+                                <div class="flex-shrink-0 text-end" style="min-width: 50px;">
+                                  <span class="fw-semibold text-success">100%</span>
+                                </div>
+                                <span class="material-icons-outlined text-muted accordion-chevron" style="font-size: 20px; transition: transform 0.2s;">expand_more</span>
+                              </div>
+                              <div class="collapse" id="perusahaanComply{{ $loop->index }}">
+                                <div class="ps-4 pt-2">
+                                  @foreach($perusahaan['sites'] as $site)
+                                  <div class="d-flex align-items-center gap-2 py-1 px-2 rounded-2 mb-1" style="background: rgba(34, 197, 94, 0.04);">
+                                    <span class="material-icons-outlined text-success" style="font-size: 16px;">location_on</span>
+                                    <span class="small fw-medium flex-grow-1 text-truncate" title="{{ $site['name'] }}">{{ $site['name'] }}</span>
+                                    <span class="small text-muted">{{ $site['total'] }} IKK</span>
+                                    <span class="badge bg-success text-white small px-2 py-1">{{ $site['pct'] }}%</span>
+                                  </div>
+                                  @endforeach
+                                </div>
+                              </div>
+                            </div>
+                            @endforeach
+                          </div>
+                          @endif
+
+                          {{-- Section: Need Attention (>=80% & <100%) --}}
+                          @if(count($perusahaanNeedAttention) > 0)
+                          <div class="mb-2">
+                            <div class="d-flex align-items-center gap-2 mb-2 px-1">
+                              <div class="wh-32 d-flex align-items-center justify-content-center rounded-circle bg-warning bg-opacity-10">
+                                <span class="material-icons-outlined text-warning" style="font-size: 18px;">warning_amber</span>
+                              </div>
+                              <span class="fw-semibold" style="color: #b45309;">Need Attention</span>
+                              <span class="badge bg-warning bg-opacity-15 rounded-pill px-2 py-1 small" style="color: #92400e;">>80% • {{ $totalPerusahaanNeedAttention }} Perusahaan • {{ $totalIkkNeedAttentionPerusahaan }} IKK</span>
+                            </div>
+                            @foreach($perusahaanNeedAttention as $perusahaan)
+                            <div class="perusahaan-accordion mb-2">
+                              <div class="perusahaan-header d-flex align-items-center gap-3 rounded-3 p-2 border border-transparent cursor-pointer" style="background: rgba(234, 179, 8, 0.08); transition: all 0.2s ease;" data-bs-toggle="collapse" data-bs-target="#perusahaanAttention{{ $loop->index }}">
+                                <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
+                                  <div class="wh-42 d-flex align-items-center justify-content-center rounded-3 bg-warning bg-opacity-15 flex-shrink-0">
+                                    <span class="material-icons-outlined text-warning" style="font-size: 22px;">domain</span>
+                                  </div>
+                                  <div class="min-w-0">
+                                    <h6 class="mb-0 fw-semibold text-truncate" title="{{ $perusahaan['name'] }}">{{ $perusahaan['name'] }}</h6>
+                                    <p class="mb-0 text-muted small">{{ count($perusahaan['sites']) }} Site • {{ $perusahaan['total'] }} IKK</p>
+                                  </div>
+                                </div>
+                                <div class="progress flex-shrink-0" style="width: 80px; height: 5px; background: rgba(234, 179, 8, 0.15);">
+                                  <div class="progress-bar bg-warning" style="width: {{ $perusahaan['pct'] }}%;"></div>
+                                </div>
+                                <div class="flex-shrink-0 text-end" style="min-width: 50px;">
+                                  <span class="fw-semibold" style="color: #b45309;">{{ $perusahaan['pct'] }}%</span>
+                                </div>
+                                <span class="material-icons-outlined text-muted accordion-chevron" style="font-size: 20px; transition: transform 0.2s;">expand_more</span>
+                              </div>
+                              <div class="collapse" id="perusahaanAttention{{ $loop->index }}">
+                                <div class="ps-4 pt-2">
+                                  @foreach($perusahaan['sites'] as $site)
+                                  @php
+                                    $siteColor = $site['pct'] == 100 ? 'success' : ($site['pct'] >= 80 ? 'warning' : 'danger');
+                                    $siteBgColor = $site['pct'] == 100 ? 'rgba(34, 197, 94, 0.04)' : ($site['pct'] >= 80 ? 'rgba(234, 179, 8, 0.04)' : 'rgba(239, 68, 68, 0.04)');
+                                  @endphp
+                                  <div class="d-flex align-items-center gap-2 py-1 px-2 rounded-2 mb-1" style="background: {{ $siteBgColor }};">
+                                    <span class="material-icons-outlined text-{{ $siteColor }}" style="font-size: 16px;">location_on</span>
+                                    <span class="small fw-medium flex-grow-1 text-truncate" title="{{ $site['name'] }}">{{ $site['name'] }}</span>
+                                    <span class="small text-muted">{{ $site['total'] }} IKK</span>
+                                    <span class="badge bg-{{ $siteColor }} {{ $siteColor === 'warning' ? 'text-dark' : 'text-white' }} small px-2 py-1">{{ $site['pct'] }}%</span>
+                                  </div>
+                                  @endforeach
+                                </div>
+                              </div>
+                            </div>
+                            @endforeach
+                          </div>
+                          @endif
+
+                          {{-- Section: Propose to Hold (<80%) --}}
+                          @if(count($perusahaanProposeHold) > 0)
+                          <div class="mb-2">
+                            <div class="d-flex align-items-center gap-2 mb-2 px-1">
+                              <div class="wh-32 d-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10">
+                                <span class="material-icons-outlined text-danger" style="font-size: 18px;">block</span>
+                              </div>
+                              <span class="fw-semibold text-danger">Propose to Hold</span>
+                              <span class="badge bg-danger bg-opacity-15 text-danger rounded-pill px-2 py-1 small">&lt;80% • {{ $totalPerusahaanProposeHold }} Perusahaan • {{ $totalIkkProposeHoldPerusahaan }} IKK</span>
+                            </div>
+                            @foreach($perusahaanProposeHold as $perusahaan)
+                            <div class="perusahaan-accordion mb-2">
+                              <div class="perusahaan-header d-flex align-items-center gap-3 rounded-3 p-2 border border-transparent cursor-pointer" style="background: rgba(239, 68, 68, 0.08); transition: all 0.2s ease;" data-bs-toggle="collapse" data-bs-target="#perusahaanHold{{ $loop->index }}">
+                                <div class="d-flex align-items-center gap-3 flex-grow-1 min-w-0">
+                                  <div class="wh-42 d-flex align-items-center justify-content-center rounded-3 bg-danger bg-opacity-15 flex-shrink-0">
+                                    <span class="material-icons-outlined text-danger" style="font-size: 22px;">domain</span>
+                                  </div>
+                                  <div class="min-w-0">
+                                    <h6 class="mb-0 fw-semibold text-truncate" title="{{ $perusahaan['name'] }}">{{ $perusahaan['name'] }}</h6>
+                                    <p class="mb-0 text-muted small">{{ count($perusahaan['sites']) }} Site • {{ $perusahaan['total'] }} IKK</p>
+                                  </div>
+                                </div>
+                                <div class="progress flex-shrink-0" style="width: 80px; height: 5px; background: rgba(239, 68, 68, 0.15);">
+                                  <div class="progress-bar bg-danger" style="width: {{ $perusahaan['pct'] }}%;"></div>
+                                </div>
+                                <div class="flex-shrink-0 text-end" style="min-width: 50px;">
+                                  <span class="fw-semibold text-danger">{{ $perusahaan['pct'] }}%</span>
+                                </div>
+                                <span class="material-icons-outlined text-muted accordion-chevron" style="font-size: 20px; transition: transform 0.2s;">expand_more</span>
+                              </div>
+                              <div class="collapse" id="perusahaanHold{{ $loop->index }}">
+                                <div class="ps-4 pt-2">
+                                  @foreach($perusahaan['sites'] as $site)
+                                  @php
+                                    $siteColor = $site['pct'] == 100 ? 'success' : ($site['pct'] >= 80 ? 'warning' : 'danger');
+                                    $siteBgColor = $site['pct'] == 100 ? 'rgba(34, 197, 94, 0.04)' : ($site['pct'] >= 80 ? 'rgba(234, 179, 8, 0.04)' : 'rgba(239, 68, 68, 0.04)');
+                                  @endphp
+                                  <div class="d-flex align-items-center gap-2 py-1 px-2 rounded-2 mb-1" style="background: {{ $siteBgColor }};">
+                                    <span class="material-icons-outlined text-{{ $siteColor }}" style="font-size: 16px;">location_on</span>
+                                    <span class="small fw-medium flex-grow-1 text-truncate" title="{{ $site['name'] }}">{{ $site['name'] }}</span>
+                                    <span class="small text-muted">{{ $site['total'] }} IKK</span>
+                                    <span class="badge bg-{{ $siteColor }} {{ $siteColor === 'warning' ? 'text-dark' : 'text-white' }} small px-2 py-1">{{ $site['pct'] }}%</span>
+                                  </div>
+                                  @endforeach
+                                </div>
+                              </div>
+                            </div>
+                            @endforeach
+                          </div>
+                          @endif
+
+                          {{-- Empty State --}}
+                          @if(count($allPerusahaan) === 0)
+                          <div class="text-center py-4 text-muted">
+                            <span class="material-icons-outlined" style="font-size: 48px;">inventory_2</span>
+                            <p class="mb-0 mt-2 small">Tidak ada data perusahaan untuk tanggal ini.</p>
+                          </div>
+                          @endif
+                        </div>
+                     </div>
+                   </div>
+                 </div>
 
                  </div><!--end row-->
                </div>
@@ -3602,7 +3858,8 @@
         }
     }
 
-    // Event delegation: tombol Intervensi
+    // Event delegation: tombol Intervensi dan detail DOPM
+    console.log('[DOPM Weekly] Event listener for click attached');
     document.addEventListener('click', function(e) {
         var btnIntervensi = e.target.closest('.btn-intervensi-dopm');
         if (btnIntervensi && intervensiModal) {

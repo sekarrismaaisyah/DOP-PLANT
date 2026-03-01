@@ -3022,13 +3022,17 @@
 
             var params = new URLSearchParams({
                 kode_ikk: data.kode_ikk || '',
+                work_permit_id: data.work_permit_id || '',
                 jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '',
                 sid_layer_2: data.sid_layer_2 || '',
                 sid_layer_3: data.sid_layer_3 || '',
                 sid_layer_4: data.sid_layer_4 || '',
                 nama_layer_2: data.nama_layer_2 || '',
                 nama_layer_3: data.nama_layer_3 || '',
-                nama_layer_4: data.nama_layer_4 || ''
+                nama_layer_4: data.nama_layer_4 || '',
+                location_name: data.location_name || '',
+                location_detail_name: data.location_detail_name || '',
+                tanggal_dop: data.tanggal_dop || ''
             });
 
             function doIntervensiFetch() {
