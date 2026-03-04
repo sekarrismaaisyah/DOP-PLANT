@@ -606,7 +606,7 @@ class DOPMController extends Controller
                     }
                     $wpIdsEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $workPermitCodesForCh));
                     $sqlIpk = "
-                        SELECT id, work_permit_id, code, status, job_status, start_date, created_at, supervisor_id, cctv
+                        SELECT id, work_permit_id, code, status, job_status, start_date, created_at, supervisor_id, cctv, m_job_duration_id
                         FROM hse_automation.ipk_assessment
                         WHERE work_permit_id IN ({$wpIdsEsc})
                           AND toDate(start_date) = toDate('{$dateEsc}')
@@ -614,15 +614,49 @@ class DOPMController extends Controller
                         ORDER BY created_at DESC
                     ";
                     $ipkRowsCh = $ch->query($sqlIpk);
+                    $durationIdsForIpk = [];
                     foreach ($ipkRowsCh ?? [] as $r) {
                         $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
                         $code = $wpIdToCode[$wpId] ?? null;
                         if ($code !== null && !isset($ipkDataByCode[$code])) {
+                            $durId = self::getClickHouseRowValue($r, 'm_job_duration_id');
+                            if ($durId !== null && $durId !== '') {
+                                $durationIdsForIpk[] = $durId;
+                            }
                             $ipkDataByCode[$code] = (object) [
                                 'kode_ikk' => $code,
                                 'durasi_jam' => null,
+                                'm_job_duration_id' => $durId,
                                 'status_pekerjaan' => self::getClickHouseRowValue($r, 'job_status'),
                             ];
+                        }
+                    }
+                    // Enrich durasi_jam dari ikk_m_job_duration agar target OKK Layer 1 bisa dihitung
+                    if (!empty($durationIdsForIpk) && method_exists($ch, 'query')) {
+                        try {
+                            $durIdsUniq = array_values(array_unique(array_filter($durationIdsForIpk)));
+                            $durEsc = implode(',', array_map(fn ($id) => "'" . addslashes((string) $id) . "'", $durIdsUniq));
+                            $sqlDur = "SELECT id, name FROM hse_automation.ikk_m_job_duration WHERE id IN ({$durEsc})";
+                            $durRows = $ch->query($sqlDur);
+                            $durationById = [];
+                            foreach ($durRows ?? [] as $dr) {
+                                $dId = self::getClickHouseRowValue($dr, 'id');
+                                if ($dId !== null) {
+                                    $durationById[(string) $dId] = self::getClickHouseRowValue($dr, 'name');
+                                }
+                            }
+                            foreach ($ipkDataByCode as $code => $ipkObj) {
+                                $durId = $ipkObj->m_job_duration_id ?? null;
+                                if ($durId !== null && isset($durationById[(string) $durId])) {
+                                    $ipkObj->durasi_jam = $durationById[(string) $durId];
+                                }
+                                unset($ipkObj->m_job_duration_id);
+                            }
+                        } catch (\Throwable $e) {
+                            \Illuminate\Support\Facades\Log::debug('Dashboard IPK durasi batch lookup: ' . $e->getMessage());
+                            foreach ($ipkDataByCode as $ipkObj) {
+                                unset($ipkObj->m_job_duration_id);
+                            }
                         }
                     }
                     $sqlOkk = "
