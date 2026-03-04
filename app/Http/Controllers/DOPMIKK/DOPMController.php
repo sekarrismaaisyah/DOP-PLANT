@@ -3510,7 +3510,7 @@ class DOPMController extends Controller
         $isOkkSesuaiTarget = false;
 
         if ($hasOkkLayer1 && $durasiJam !== null) {
-            // Parse durasi_jam: "3-6", "6-9", "6 jam", "6", dll
+            // Parse durasi_jam: "3 jam", "6 jam", "9 jam", "3-6", "6-9", dll
             $durasiRata = null;
             $durasiStr = trim((string) $durasiJam);
             $durasiParts = explode('-', $durasiStr);
@@ -3526,10 +3526,17 @@ class DOPMController extends Controller
             $targetOkkCount = 0;
             $jarakMenit = 0;
             if ($durasiRata !== null) {
-                if ($durasiRata >= 3 && $durasiRata <= 6) {
+                $jam = (int) round($durasiRata);
+                if ($jam === 3) {
+                    // Durasi 3 jam: target 1 OKK Layer 1
+                    $targetOkkCount = 1;
+                    $jarakMenit = 30;
+                } elseif ($jam === 6) {
+                    // Durasi 6 jam: target 2 OKK Layer 1
                     $targetOkkCount = 2;
                     $jarakMenit = 30;
-                } elseif ($durasiRata > 6 && $durasiRata <= 9) {
+                } elseif ($jam === 9) {
+                    // Durasi 9 jam: target 3 OKK Layer 1
                     $targetOkkCount = 3;
                     $jarakMenit = 60;
                 }
@@ -3822,7 +3829,7 @@ class DOPMController extends Controller
         $fraudAlasanDetail = null; // untuk tooltip: alasan spesifik fraud
 
         if ($hasOkkLayer1 && $durasiJam !== null) {
-            // Parse durasi_jam: "3-6", "6-9", "6 jam", "6", dll
+            // Parse durasi_jam: "3 jam", "6 jam", "9 jam", "3-6", "6-9", dll
             $durasiRata = null;
             $durasiStr = trim((string) $durasiJam);
             $durasiParts = explode('-', $durasiStr);
@@ -3835,10 +3842,14 @@ class DOPMController extends Controller
                 $durasiRata = (float) $m[0];
             }
             if ($durasiRata !== null) {
-                if ($durasiRata >= 3 && $durasiRata <= 6) {
+                $jam = (int) round($durasiRata);
+                if ($jam === 3) {
+                    $targetOkkCount = 1;
+                    $jarakMenit = 30;
+                } elseif ($jam === 6) {
                     $targetOkkCount = 2;
                     $jarakMenit = 30;
-                } elseif ($durasiRata > 6 && $durasiRata <= 9) {
+                } elseif ($jam === 9) {
                     $targetOkkCount = 3;
                     $jarakMenit = 60;
                 }
@@ -4140,7 +4151,7 @@ class DOPMController extends Controller
         $fraudAlasanDetail = null;
 
         if ($hasOkkLayer1 && $durasiJam !== null) {
-            // Parse durasi_jam: "3-6", "6-9", "6 jam", "6", dll
+            // Parse durasi_jam: "3 jam", "6 jam", "9 jam", "3-6", "6-9", dll
             $durasiRata = null;
             $durasiStr = trim((string) $durasiJam);
             $durasiParts = explode('-', $durasiStr);
@@ -4153,10 +4164,14 @@ class DOPMController extends Controller
                 $durasiRata = (float) $m[0];
             }
             if ($durasiRata !== null) {
-                if ($durasiRata >= 3 && $durasiRata <= 6) {
+                $jam = (int) round($durasiRata);
+                if ($jam === 3) {
+                    $targetOkkCount = 1;
+                    $jarakMenit = 30;
+                } elseif ($jam === 6) {
                     $targetOkkCount = 2;
                     $jarakMenit = 30;
-                } elseif ($durasiRata > 6 && $durasiRata <= 9) {
+                } elseif ($jam === 9) {
                     $targetOkkCount = 3;
                     $jarakMenit = 60;
                 }
