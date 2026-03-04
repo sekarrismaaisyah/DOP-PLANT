@@ -7652,17 +7652,54 @@
         }
 
         const escapedNo = insiden.no_kecelakaan ? insiden.no_kecelakaan.replace(/"/g, '&quot;') : '';
+        let itemsRows = '';
+        if (insiden.items && insiden.items.length) {
+            itemsRows = insiden.items.map(function(item, index) {
+                return `
+                    <tr>
+                        <td style="font-size: 12px;">${index + 1}</td>
+                        <td style="font-size: 12px;">${(item.layer || '-')}</td>
+                        <td style="font-size: 12px;">${(item.jenis_item_ipls || '-')}</td>
+                        <td style="font-size: 12px;">${(item.detail_layer || '-')}</td>
+                        <td style="font-size: 12px;">${(item.klasifikasi_layer || '-')}</td>
+                        <td style="font-size: 12px;">${(item.keterangan_layer || '-')}</td>
+                    </tr>
+                `;
+            }).join('');
+        } else {
+            itemsRows = '<tr><td colspan="6" class="text-center text-muted" style="font-size: 12px;">Tidak ada detail tersedia</td></tr>';
+        }
+
         const content = `
-            <div style="min-width: 220px;">
-                <h6 style="margin: 0 0 8px 0;">${insiden.no_kecelakaan}</h6>
-                <p style="margin: 5px 0; font-size: 13px;">
-                    <strong>Site:</strong> ${insiden.site || 'N/A'}<br>
-                    <strong>Layer:</strong> ${insiden.layer || 'N/A'}<br>
-                    <strong>Kategori:</strong> ${insiden.kategori || 'N/A'}<br>
-                    <strong>Status LPI:</strong> ${insiden.status_lpi || 'N/A'}
-                </p>
+            <div style="min-width: 280px; max-width: 420px; max-height: 70vh; overflow-y: auto;">
+                <h6 style="margin: 0 0 10px 0; font-size: 14px;">${insiden.no_kecelakaan}</h6>
+                <div style="margin-bottom: 10px; font-size: 13px;">
+                    <p style="margin: 4px 0;"><strong>Site:</strong> ${insiden.site || '-'}</p>
+                    <p style="margin: 4px 0;"><strong>Lokasi:</strong> ${insiden.lokasi || '-'}</p>
+                    <p style="margin: 4px 0;"><strong>Kategori:</strong> ${insiden.kategori || '-'}</p>
+                    <p style="margin: 4px 0;"><strong>Status LPI:</strong> ${insiden.status_lpi || '-'}</p>
+                    <p style="margin: 4px 0;"><strong>Layer:</strong> ${insiden.layer || '-'}</p>
+                </div>
+                <div style="margin-bottom: 10px;">
+                    <strong style="font-size: 12px;">Detail Item:</strong>
+                    <div style="max-height: 200px; overflow-y: auto; font-size: 12px;">
+                        <table class="table table-sm table-striped" style="margin-bottom: 0;">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Layer</th>
+                                    <th>Jenis Item IPLS</th>
+                                    <th>Detail Layer</th>
+                                    <th>Klasifikasi</th>
+                                    <th>Keterangan</th>
+                                </tr>
+                            </thead>
+                            <tbody>${itemsRows}</tbody>
+                        </table>
+                    </div>
+                </div>
                 <button class="btn btn-sm btn-primary w-100" data-no-kec="${escapedNo}" onclick="openInsidenModal(this.dataset.noKec)">
-                    Detail Insiden
+                    Buka Detail Lengkap
                 </button>
             </div>
         `;

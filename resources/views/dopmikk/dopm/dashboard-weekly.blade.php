@@ -3583,8 +3583,12 @@
 <script>
 (function() {
   var filterDateStr = @json($filterDate ?? now()->toDateString());
+  var filterSite = @json($filterSite ?? '');
   var complianceByDay = @json($complianceByDay ?? []);
+  var complianceApiUrl = @json(route('dopmikk.dopm.dashboard-weekly.api.compliance-by-month'));
   var monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+  var complianceCache = {};
+  var isLoadingCompliance = false;
 
   function parseFilterDate() {
     var m = filterDateStr.match(/^(\d{4})-(\d{2})-(\d{2})$/);
@@ -3595,6 +3599,8 @@
   var filterDateParsed = parseFilterDate();
   var displayMonth = filterDateParsed.month;
   var displayYear = filterDateParsed.year;
+  var initialCacheKey = displayYear + '-' + (displayMonth + 1);
+  complianceCache[initialCacheKey] = complianceByDay;
 
   function getStatusClass(pct) {
     if (pct <= 50) return 'negative';
@@ -3602,7 +3608,7 @@
     return 'positive';
   }
 
-  function renderComplianceCalendar(month, year) {
+  function renderComplianceCalendar(month, year, data) {
     var container = document.getElementById('complianceCalendarDays');
     if (!container) return;
     container.innerHTML = '';
@@ -3624,7 +3630,7 @@
     for (var day = 1; day <= daysInMonth; day++) {
       var cell = document.createElement('div');
       var dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(day).padStart(2, '0');
-      var pct = complianceByDay[dateStr] != null ? Number(complianceByDay[dateStr]) : null;
+      var pct = data[dateStr] != null ? Number(data[dateStr]) : null;
       var isFilterDay = isFilterDayInThisMonth && (day === filterDateParsed.day);
 
       if (pct != null && !isNaN(pct)) {
@@ -3685,27 +3691,69 @@
     }
   }
 
+  function showCalendarLoading() {
+    var container = document.getElementById('complianceCalendarDays');
+    if (!container) return;
+    container.innerHTML = '<div class="text-center py-5 w-100" style="grid-column: 1 / -1;"><div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div><div class="mt-2 text-muted">Memuat data compliance...</div></div>';
+  }
+
+  function fetchAndRenderMonth(month, year) {
+    var cacheKey = year + '-' + (month + 1);
+    if (complianceCache[cacheKey]) {
+      renderComplianceCalendar(month, year, complianceCache[cacheKey]);
+      return;
+    }
+    if (isLoadingCompliance) return;
+    isLoadingCompliance = true;
+    showCalendarLoading();
+    document.getElementById('complianceCurrentMonth').textContent = monthNames[month] + ' ' + year;
+
+    var url = complianceApiUrl + '?year=' + year + '&month=' + (month + 1);
+    if (filterSite) {
+      url += '&site=' + encodeURIComponent(filterSite);
+    }
+
+    fetch(url)
+      .then(function(response) { return response.json(); })
+      .then(function(result) {
+        isLoadingCompliance = false;
+        if (result.success && result.complianceByDay) {
+          complianceCache[cacheKey] = result.complianceByDay;
+          renderComplianceCalendar(month, year, result.complianceByDay);
+        } else {
+          renderComplianceCalendar(month, year, {});
+        }
+      })
+      .catch(function(err) {
+        isLoadingCompliance = false;
+        console.error('Error fetching compliance data:', err);
+        renderComplianceCalendar(month, year, {});
+      });
+  }
+
   var prevBtn = document.getElementById('compliancePrevMonth');
   var nextBtn = document.getElementById('complianceNextMonth');
   if (prevBtn) {
     prevBtn.addEventListener('click', function() {
+      if (isLoadingCompliance) return;
       displayMonth--;
       if (displayMonth < 0) { displayMonth = 11; displayYear--; }
-      renderComplianceCalendar(displayMonth, displayYear);
+      fetchAndRenderMonth(displayMonth, displayYear);
     });
   }
   if (nextBtn) {
     nextBtn.addEventListener('click', function() {
+      if (isLoadingCompliance) return;
       displayMonth++;
       if (displayMonth > 11) { displayMonth = 0; displayYear++; }
-      renderComplianceCalendar(displayMonth, displayYear);
+      fetchAndRenderMonth(displayMonth, displayYear);
     });
   }
 
   function initComplianceCalendar() {
     var container = document.getElementById('complianceCalendarDays');
     if (container) {
-      renderComplianceCalendar(displayMonth, displayYear);
+      renderComplianceCalendar(displayMonth, displayYear, complianceByDay);
     }
   }
 

@@ -181,8 +181,19 @@ class DOPMController extends Controller
                 ->pluck('kode_ikk')
                 ->flip()
                 ->all();
-            $okkKodes = Okk::whereIn('kode_ikk', $kodeIkks)
+            // OKK Layer 1: kode_ikk yang ada OKK dari Layer 1
+            $okkLayer1Kodes = Okk::whereIn('kode_ikk', $kodeIkks)
                 ->whereDate('ts', $filterDate)
+                ->where('layer_pengawas', '1')
+                ->select('kode_ikk')
+                ->distinct()
+                ->pluck('kode_ikk')
+                ->flip()
+                ->all();
+            // OKK Layer 2+: kode_ikk yang ada OKK dari Layer 2, 3, atau 4
+            $okkLayer2UpKodes = Okk::whereIn('kode_ikk', $kodeIkks)
+                ->whereDate('ts', $filterDate)
+                ->whereIn('layer_pengawas', ['2', '3', '4'])
                 ->select('kode_ikk')
                 ->distinct()
                 ->pluck('kode_ikk')
@@ -190,7 +201,8 @@ class DOPMController extends Controller
                 ->all();
             foreach ($kodeIkks as $k) {
                 $hasIpkByKode[$k] = isset($ipkKodes[$k]);
-                $hasOkkByKode[$k] = isset($okkKodes[$k]);
+                // IKK dianggap ada OKK hanya jika ada OKK dari Layer 1 DAN Layer 2+
+                $hasOkkByKode[$k] = isset($okkLayer1Kodes[$k]) && isset($okkLayer2UpKodes[$k]);
             }
         }
 
@@ -858,7 +870,26 @@ class DOPMController extends Controller
         if (!empty($workPermitCodes)) {
             if (isset($workPermitCodesForCh) && is_array($ipkDataByCode ?? null)) {
                 $ipkKodesWp = array_flip(array_keys($ipkDataByCode));
-                $okkKodesWp = array_flip(array_keys($okkDataByCode));
+                // OKK dianggap ada hanya jika ada Layer 1 DAN Layer 2+ per kode_ikk
+                $okkKodesWp = [];
+                foreach ($okkDataByCode as $kode => $okkCollection) {
+                    $hasLayer1 = false;
+                    $hasLayer2Up = false;
+                    foreach ($okkCollection as $okk) {
+                        $layer = (string) ($okk->layer_pengawas ?? '');
+                        if ($layer === '1') {
+                            $hasLayer1 = true;
+                        } elseif (in_array($layer, ['2', '3', '4'], true)) {
+                            $hasLayer2Up = true;
+                        }
+                        if ($hasLayer1 && $hasLayer2Up) {
+                            break;
+                        }
+                    }
+                    if ($hasLayer1 && $hasLayer2Up) {
+                        $okkKodesWp[$kode] = true;
+                    }
+                }
             } else {
                 $ipkKodesWp = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
                     ->whereDate('ts', $filterDate)
@@ -867,13 +898,26 @@ class DOPMController extends Controller
                     ->pluck('kode_ikk')
                     ->flip()
                     ->all();
-                $okkKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
+                // OKK Layer 1: kode_ikk yang ada OKK dari Layer 1
+                $okkLayer1KodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
                     ->whereDate('ts', $filterDate)
+                    ->where('layer_pengawas', '1')
                     ->select('kode_ikk')
                     ->distinct()
                     ->pluck('kode_ikk')
                     ->flip()
                     ->all();
+                // OKK Layer 2+: kode_ikk yang ada OKK dari Layer 2, 3, atau 4
+                $okkLayer2UpKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
+                    ->whereDate('ts', $filterDate)
+                    ->whereIn('layer_pengawas', ['2', '3', '4'])
+                    ->select('kode_ikk')
+                    ->distinct()
+                    ->pluck('kode_ikk')
+                    ->flip()
+                    ->all();
+                // OKK dianggap ada hanya jika ada Layer 1 DAN Layer 2+
+                $okkKodesWp = array_intersect_key($okkLayer1KodesWp, $okkLayer2UpKodesWp);
             }
             $totalIkkUnikHarian = count($workPermitCodes);
             $ikkAdaIpkCount = count(array_intersect_key($ipkKodesWp, array_flip($workPermitCodes)));
@@ -1024,11 +1068,32 @@ class DOPMController extends Controller
             $totalIkkUnikHarian = count($validIkkCodesForCard);
             $ikkAdaIpkCount = 0;
             $ikkAdaOkkCount = 0;
+            // Pre-compute kode_ikk yang ada OKK Layer 1 DAN Layer 2+ dari ClickHouse
+            $okkKodesWithBothLayers = [];
+            foreach ($okkDataByCode as $kode => $okkCollection) {
+                $hasLayer1 = false;
+                $hasLayer2Up = false;
+                foreach ($okkCollection as $okk) {
+                    $layer = (string) ($okk->layer_pengawas ?? '');
+                    if ($layer === '1') {
+                        $hasLayer1 = true;
+                    } elseif (in_array($layer, ['2', '3', '4'], true)) {
+                        $hasLayer2Up = true;
+                    }
+                    if ($hasLayer1 && $hasLayer2Up) {
+                        break;
+                    }
+                }
+                if ($hasLayer1 && $hasLayer2Up) {
+                    $okkKodesWithBothLayers[$kode] = true;
+                }
+            }
             foreach (array_keys($validIkkCodesForCard) as $code) {
                 if (($ipkCountByKode[$code] ?? 0) > 0) {
                     $ikkAdaIpkCount++;
                 }
-                if (($okkCountByKode[$code] ?? 0) > 0) {
+                // IKK dianggap ada OKK hanya jika ada Layer 1 DAN Layer 2+
+                if (isset($okkKodesWithBothLayers[$code])) {
                     $ikkAdaOkkCount++;
                 }
             }
@@ -1290,8 +1355,19 @@ class DOPMController extends Controller
                 ->pluck('kode_ikk')
                 ->flip()
                 ->all();
-            $okkKodes = Okk::whereIn('kode_ikk', $kodeIkks)
+            // OKK Layer 1: kode_ikk yang ada OKK dari Layer 1
+            $okkLayer1Kodes = Okk::whereIn('kode_ikk', $kodeIkks)
                 ->whereDate('ts', $filterDate)
+                ->where('layer_pengawas', '1')
+                ->select('kode_ikk')
+                ->distinct()
+                ->pluck('kode_ikk')
+                ->flip()
+                ->all();
+            // OKK Layer 2+: kode_ikk yang ada OKK dari Layer 2, 3, atau 4
+            $okkLayer2UpKodes = Okk::whereIn('kode_ikk', $kodeIkks)
+                ->whereDate('ts', $filterDate)
+                ->whereIn('layer_pengawas', ['2', '3', '4'])
                 ->select('kode_ikk')
                 ->distinct()
                 ->pluck('kode_ikk')
@@ -1299,7 +1375,8 @@ class DOPMController extends Controller
                 ->all();
             foreach ($kodeIkks as $k) {
                 $hasIpkByKode[$k] = isset($ipkKodes[$k]);
-                $hasOkkByKode[$k] = isset($okkKodes[$k]);
+                // IKK dianggap ada OKK hanya jika ada OKK dari Layer 1 DAN Layer 2+
+                $hasOkkByKode[$k] = isset($okkLayer1Kodes[$k]) && isset($okkLayer2UpKodes[$k]);
             }
         }
 
@@ -1810,7 +1887,26 @@ class DOPMController extends Controller
         if (!empty($workPermitCodes)) {
             if (isset($workPermitCodesForCh) && is_array($ipkDataByCode ?? null)) {
                 $ipkKodesWp = array_flip(array_keys($ipkDataByCode));
-                $okkKodesWp = array_flip(array_keys($okkDataByCode));
+                // OKK dianggap ada hanya jika ada Layer 1 DAN Layer 2+ per kode_ikk
+                $okkKodesWp = [];
+                foreach ($okkDataByCode as $kode => $okkCollection) {
+                    $hasLayer1 = false;
+                    $hasLayer2Up = false;
+                    foreach ($okkCollection as $okk) {
+                        $layer = (string) ($okk->layer_pengawas ?? '');
+                        if ($layer === '1') {
+                            $hasLayer1 = true;
+                        } elseif (in_array($layer, ['2', '3', '4'], true)) {
+                            $hasLayer2Up = true;
+                        }
+                        if ($hasLayer1 && $hasLayer2Up) {
+                            break;
+                        }
+                    }
+                    if ($hasLayer1 && $hasLayer2Up) {
+                        $okkKodesWp[$kode] = true;
+                    }
+                }
             } else {
                 $ipkKodesWp = IpkIkk::whereIn('kode_ikk', $workPermitCodes)
                     ->whereDate('ts', $filterDate)
@@ -1819,13 +1915,26 @@ class DOPMController extends Controller
                     ->pluck('kode_ikk')
                     ->flip()
                     ->all();
-                $okkKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
+                // OKK Layer 1: kode_ikk yang ada OKK dari Layer 1
+                $okkLayer1KodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
                     ->whereDate('ts', $filterDate)
+                    ->where('layer_pengawas', '1')
                     ->select('kode_ikk')
                     ->distinct()
                     ->pluck('kode_ikk')
                     ->flip()
                     ->all();
+                // OKK Layer 2+: kode_ikk yang ada OKK dari Layer 2, 3, atau 4
+                $okkLayer2UpKodesWp = Okk::whereIn('kode_ikk', $workPermitCodes)
+                    ->whereDate('ts', $filterDate)
+                    ->whereIn('layer_pengawas', ['2', '3', '4'])
+                    ->select('kode_ikk')
+                    ->distinct()
+                    ->pluck('kode_ikk')
+                    ->flip()
+                    ->all();
+                // OKK dianggap ada hanya jika ada Layer 1 DAN Layer 2+
+                $okkKodesWp = array_intersect_key($okkLayer1KodesWp, $okkLayer2UpKodesWp);
             }
             $totalIkkUnikHarian = count($workPermitCodes);
             $ikkAdaIpkCount = count(array_intersect_key($ipkKodesWp, array_flip($workPermitCodes)));

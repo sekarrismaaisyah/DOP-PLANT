@@ -13,8 +13,10 @@ class DailyOperationPlan extends Model
 
     protected $fillable = [
         'pekerjaan',
+        'aktivitas',
         'foto_pekerjaan',
         'unit_id',
+        'perusahaan',
         'lokasi',
         'latitude',
         'longitude',

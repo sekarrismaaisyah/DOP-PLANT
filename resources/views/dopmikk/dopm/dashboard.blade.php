@@ -2926,6 +2926,32 @@
         return s;
     }
 
+    function formatTsAddHour(ts) {
+        if (!ts) return '—';
+        var s = String(ts).trim();
+        if (!s) return '—';
+        var d = new Date(s);
+        if (isNaN(d.getTime())) {
+            var m = s.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
+            if (!m) return s;
+            d = new Date(
+                parseInt(m[1], 10),
+                parseInt(m[2], 10) - 1,
+                parseInt(m[3], 10),
+                parseInt(m[4], 10),
+                parseInt(m[5], 10)
+            );
+        }
+        d.setHours(d.getHours() + 1);
+        var dd = d.getDate();
+        var mm = d.getMonth() + 1;
+        var yyyy = d.getFullYear();
+        var hh = d.getHours();
+        var min = d.getMinutes();
+        var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+        return pad(dd) + '/' + pad(mm) + '/' + yyyy + ' ' + pad(hh) + ':' + pad(min);
+    }
+
 
     // Normalisasi nomor untuk wa.me: 08xxx -> 62xxx
     function normalizeWaNumber(selular) {
@@ -3462,7 +3488,7 @@
                         showTable('ipkIkk');
                         ipk.forEach(function(r) {
                             tbodyIpk.appendChild(tr([
-                                formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk),
+                                formatTsAddHour(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk),
                                 safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.durasi_jam),
                                 safeStr(r.cctv_terekam), safeStr(r.kategori_ijk, 35), safeStr(r.status_pekerjaan)
                             ]));

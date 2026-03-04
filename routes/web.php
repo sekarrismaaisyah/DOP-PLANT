@@ -449,6 +449,7 @@ Route::middleware(['auth'])->group(function () {
             // Dashboard Weekly menggunakan controller khusus agar bisa menampilkan status APPROVED & EXPIRED
             Route::get('/dashboard-weekly', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'dashboard'])->name('dashboard-weekly');
             Route::get('/dashboard-weekly/export-ikk-excel', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'exportIkkExcel'])->name('dashboard-weekly.export-ikk-excel');
+            Route::get('/dashboard-weekly/api/compliance-by-month', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'getComplianceByMonth'])->name('dashboard-weekly.api.compliance-by-month');
             Route::get('/alert-log', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'alertLog'])->name('alert-log');
             Route::get('/issue-closure', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'issueClosure'])->name('issue-closure');
             Route::get('/', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'index'])->name('index');
@@ -555,6 +556,61 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{id}/edit', [App\Http\Controllers\UserManagementController::class, 'edit'])->name('edit');
         Route::put('/{id}', [App\Http\Controllers\UserManagementController::class, 'update'])->name('update');
         Route::delete('/{id}', [App\Http\Controllers\UserManagementController::class, 'destroy'])->name('destroy');
+    });
+
+    // Sistem Roster Routes
+    Route::prefix('sistem-roster')->name('sistem-roster.')->group(function () {
+        // Dashboard
+        Route::get('/dashboard', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'index'])->name('dashboard.index');
+
+        // DOP Routes
+        Route::prefix('dop')->name('dop.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SistemRoster\DOPController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\SistemRoster\DOPController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\SistemRoster\DOPController::class, 'store'])->name('store');
+            Route::get('/template', [\App\Http\Controllers\SistemRoster\DOPController::class, 'downloadTemplate'])->name('template');
+            Route::post('/import', [\App\Http\Controllers\SistemRoster\DOPController::class, 'import'])->name('import');
+            Route::patch('/{id}/toggle-status', [\App\Http\Controllers\SistemRoster\DOPController::class, 'toggleStatus'])->name('toggle-status');
+            Route::get('/{id}', [\App\Http\Controllers\SistemRoster\DOPController::class, 'show'])->name('show');
+            Route::get('/{id}/edit', [\App\Http\Controllers\SistemRoster\DOPController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [\App\Http\Controllers\SistemRoster\DOPController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\SistemRoster\DOPController::class, 'destroy'])->name('destroy');
+        });
+
+        // IKK Routes (ClickHouse)
+        Route::prefix('ikk')->name('ikk.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SistemRoster\IKKController::class, 'index'])->name('index');
+            Route::get('/{id}', [\App\Http\Controllers\SistemRoster\IKKController::class, 'show'])->name('show');
+        });
+
+        // Master Aktivitas Routes
+        Route::prefix('master-aktivitas')->name('master-aktivitas.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SistemRoster\MasterAktivitasController::class, 'index'])->name('index');
+            Route::get('/create', [\App\Http\Controllers\SistemRoster\MasterAktivitasController::class, 'create'])->name('create');
+            Route::post('/', [\App\Http\Controllers\SistemRoster\MasterAktivitasController::class, 'store'])->name('store');
+            Route::get('/{id}/edit', [\App\Http\Controllers\SistemRoster\MasterAktivitasController::class, 'edit'])->name('edit');
+            Route::put('/{id}', [\App\Http\Controllers\SistemRoster\MasterAktivitasController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\SistemRoster\MasterAktivitasController::class, 'destroy'])->name('destroy');
+        });
+
+        // Lokasi Non Kritis Routes
+        Route::prefix('lokasi-non-kritis')->name('lokasi-non-kritis.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SistemRoster\LokasiNonKritisController::class, 'index'])->name('index');
+            Route::get('/data', [\App\Http\Controllers\SistemRoster\LokasiNonKritisController::class, 'data'])->name('data');
+            Route::post('/generate', [\App\Http\Controllers\SistemRoster\LokasiNonKritisController::class, 'generate'])->name('generate');
+        });
+
+        // Planning Routes
+        Route::prefix('planning')->name('planning.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'index'])->name('index');
+            Route::post('/generate', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'generate'])->name('generate');
+            Route::get('/job-status', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'jobStatus'])->name('job-status');
+            Route::get('/users', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'getUsers'])->name('users');
+            Route::get('/{id}/karyawans', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'getKaryawans'])->name('karyawans');
+            Route::post('/{id}/assign-karyawan', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'assignKaryawan'])->name('assign-karyawan');
+            Route::put('/{id}', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'update'])->name('update');
+            Route::delete('/{id}', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'destroy'])->name('destroy');
+        });
     });
 
     // Define a GET route with dynamic placeholders for route parameters
