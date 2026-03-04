@@ -3493,17 +3493,22 @@ class DOPMController extends Controller
         $isOkkSesuaiTarget = false;
 
         if ($hasOkkLayer1 && $durasiJam !== null) {
-            // Parse durasi_jam (format: "3-6", "6-9", dll)
-            $durasiParts = explode('-', trim($durasiJam));
+            // Parse durasi_jam: "3-6", "6-9", "6 jam", "6", dll
+            $durasiRata = null;
+            $durasiStr = trim((string) $durasiJam);
+            $durasiParts = explode('-', $durasiStr);
             if (count($durasiParts) === 2) {
                 $durasiMin = (float) trim($durasiParts[0]);
                 $durasiMax = (float) trim($durasiParts[1]);
                 $durasiRata = ($durasiMin + $durasiMax) / 2;
+            }
+            if ($durasiRata === null && preg_match('/[\d.]+/', $durasiStr, $m)) {
+                $durasiRata = (float) $m[0];
+            }
 
-                // Tentukan target OKK dan jarak waktu
-                $targetOkkCount = 0;
-                $jarakMenit = 0;
-
+            $targetOkkCount = 0;
+            $jarakMenit = 0;
+            if ($durasiRata !== null) {
                 if ($durasiRata >= 3 && $durasiRata <= 6) {
                     $targetOkkCount = 2;
                     $jarakMenit = 30;
@@ -3511,45 +3516,45 @@ class DOPMController extends Controller
                     $targetOkkCount = 3;
                     $jarakMenit = 60;
                 }
+            }
 
-                // Cek apakah jumlah OKK Layer 1 sesuai target
-                $isOkkSesuaiTarget = ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount);
+            // Cek apakah jumlah OKK Layer 1 sesuai target
+            $isOkkSesuaiTarget = ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount);
 
-                // Cek jarak waktu antar OKK Layer 1 untuk fraud detection
-                if ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount) {
-                    // Ambil timestamp dari OKK Layer 1, konversi ke Carbon, dan sort ascending
-                    $tsList = $okkLayer1->pluck('ts')->map(function ($ts) {
-                        if ($ts instanceof \Carbon\Carbon) {
-                            return $ts;
-                        }
-                        try {
-                            return \Carbon\Carbon::parse($ts);
-                        } catch (\Exception $e) {
-                            return null;
-                        }
-                    })->filter()->sort(function ($a, $b) {
-                        // Sort ascending berdasarkan timestamp
-                        return $a->timestamp <=> $b->timestamp;
-                    })->values()->all();
-                    
-                    $isValidJarak = true;
-
-                    for ($i = 1; $i < count($tsList); $i++) {
-                        $prev = $tsList[$i - 1];
-                        $curr = $tsList[$i];
-                        // Gunakan absolute value untuk memastikan nilai positif
-                        $diffMinutes = abs($curr->diffInMinutes($prev, false));
-                        if ($diffMinutes < $jarakMenit) {
-                            $isValidJarak = false;
-                            break;
-                        }
+            // Cek jarak waktu antar OKK Layer 1 untuk fraud detection
+            if ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount) {
+                // Ambil timestamp dari OKK Layer 1, konversi ke Carbon, dan sort ascending
+                $tsList = $okkLayer1->pluck('ts')->map(function ($ts) {
+                    if ($ts instanceof \Carbon\Carbon) {
+                        return $ts;
                     }
+                    try {
+                        return \Carbon\Carbon::parse($ts);
+                    } catch (\Exception $e) {
+                        return null;
+                    }
+                })->filter()->sort(function ($a, $b) {
+                    // Sort ascending berdasarkan timestamp
+                    return $a->timestamp <=> $b->timestamp;
+                })->values()->all();
+                
+                $isValidJarak = true;
 
-                    $isOkkFraud = !$isValidJarak;
-                } else {
-                    // Jika jumlah OKK Layer 1 kurang dari target, dianggap fraud
-                    $isOkkFraud = true;
+                for ($i = 1; $i < count($tsList); $i++) {
+                    $prev = $tsList[$i - 1];
+                    $curr = $tsList[$i];
+                    // Gunakan absolute value untuk memastikan nilai positif
+                    $diffMinutes = abs($curr->diffInMinutes($prev, false));
+                    if ($diffMinutes < $jarakMenit) {
+                        $isValidJarak = false;
+                        break;
+                    }
                 }
+
+                $isOkkFraud = !$isValidJarak;
+            } else {
+                // Jika jumlah OKK Layer 1 kurang dari target, dianggap fraud
+                $isOkkFraud = true;
             }
         }
 
@@ -3800,12 +3805,19 @@ class DOPMController extends Controller
         $fraudAlasanDetail = null; // untuk tooltip: alasan spesifik fraud
 
         if ($hasOkkLayer1 && $durasiJam !== null) {
-            $durasiParts = explode('-', trim((string) $durasiJam));
+            // Parse durasi_jam: "3-6", "6-9", "6 jam", "6", dll
+            $durasiRata = null;
+            $durasiStr = trim((string) $durasiJam);
+            $durasiParts = explode('-', $durasiStr);
             if (count($durasiParts) === 2) {
                 $durasiMin = (float) trim($durasiParts[0]);
                 $durasiMax = (float) trim($durasiParts[1]);
                 $durasiRata = ($durasiMin + $durasiMax) / 2;
-
+            }
+            if ($durasiRata === null && preg_match('/[\d.]+/', $durasiStr, $m)) {
+                $durasiRata = (float) $m[0];
+            }
+            if ($durasiRata !== null) {
                 if ($durasiRata >= 3 && $durasiRata <= 6) {
                     $targetOkkCount = 2;
                     $jarakMenit = 30;
@@ -3813,57 +3825,57 @@ class DOPMController extends Controller
                     $targetOkkCount = 3;
                     $jarakMenit = 60;
                 }
+            }
 
-                $isOkkSesuaiTarget = ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount);
+            $isOkkSesuaiTarget = ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount);
 
-                if ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount) {
-                    // Ambil timestamp dari OKK Layer 1, konversi ke Carbon, dan sort ascending
-                    $tsList = $okkLayer1->pluck('ts')->map(function ($ts) {
-                        if ($ts instanceof \Carbon\Carbon) {
-                            return $ts;
-                        }
-                        try {
-                            return \Carbon\Carbon::parse($ts);
-                        } catch (\Exception $e) {
-                            return null;
-                        }
-                    })->filter()->sort(function ($a, $b) {
-                        // Sort ascending berdasarkan timestamp
-                        return $a->timestamp <=> $b->timestamp;
-                    })->values()->all();
+            if ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount) {
+                // Ambil timestamp dari OKK Layer 1, konversi ke Carbon, dan sort ascending
+                $tsList = $okkLayer1->pluck('ts')->map(function ($ts) {
+                    if ($ts instanceof \Carbon\Carbon) {
+                        return $ts;
+                    }
+                    try {
+                        return \Carbon\Carbon::parse($ts);
+                    } catch (\Exception $e) {
+                        return null;
+                    }
+                })->filter()->sort(function ($a, $b) {
+                    // Sort ascending berdasarkan timestamp
+                    return $a->timestamp <=> $b->timestamp;
+                })->values()->all();
+                
+                $isValidJarak = true;
+                $minJarakActual = null;
+
+                // Cek jarak waktu antar OKK Layer 1 (harus >= jarakMenit)
+                for ($i = 1; $i < count($tsList); $i++) {
+                    $prev = $tsList[$i - 1];
+                    $curr = $tsList[$i];
                     
-                    $isValidJarak = true;
-                    $minJarakActual = null;
-
-                    // Cek jarak waktu antar OKK Layer 1 (harus >= jarakMenit)
-                    for ($i = 1; $i < count($tsList); $i++) {
-                        $prev = $tsList[$i - 1];
-                        $curr = $tsList[$i];
-                        
-                        // Pastikan urutan benar: curr harus >= prev setelah sorting
-                        // Gunakan diffInMinutes dengan absolute value untuk safety
-                        $diffMinutes = abs($curr->diffInMinutes($prev, false));
-                        
-                        if ($minJarakActual === null || $diffMinutes < $minJarakActual) {
-                            $minJarakActual = $diffMinutes;
-                        }
-                        
-                        if ($diffMinutes < $jarakMenit) {
-                            $isValidJarak = false;
-                            $fraudAlasanDetail = 'Jarak waktu antar OKK Layer 1 hanya ' . round($diffMinutes, 1) . ' menit (minimum ' . $jarakMenit . ' menit)';
-                            break;
-                        }
+                    // Pastikan urutan benar: curr harus >= prev setelah sorting
+                    // Gunakan diffInMinutes dengan absolute value untuk safety
+                    $diffMinutes = abs($curr->diffInMinutes($prev, false));
+                    
+                    if ($minJarakActual === null || $diffMinutes < $minJarakActual) {
+                        $minJarakActual = $diffMinutes;
                     }
                     
-                    if ($isValidJarak && $minJarakActual !== null && count($tsList) >= 2) {
-                        $fraudAlasanDetail = null;
+                    if ($diffMinutes < $jarakMenit) {
+                        $isValidJarak = false;
+                        $fraudAlasanDetail = 'Jarak waktu antar OKK Layer 1 hanya ' . round($diffMinutes, 1) . ' menit (minimum ' . $jarakMenit . ' menit)';
+                        break;
                     }
-
-                    $isOkkFraud = !$isValidJarak;
-                } else {
-                    $isOkkFraud = true;
-                    $fraudAlasanDetail = 'Jumlah OKK Layer 1 hanya ' . $okkLayer1Count . ' (target ' . $targetOkkCount . ')';
                 }
+                
+                if ($isValidJarak && $minJarakActual !== null && count($tsList) >= 2) {
+                    $fraudAlasanDetail = null;
+                }
+
+                $isOkkFraud = !$isValidJarak;
+            } else {
+                $isOkkFraud = true;
+                $fraudAlasanDetail = 'Jumlah OKK Layer 1 hanya ' . $okkLayer1Count . ' (target ' . $targetOkkCount . ')';
             }
         }
 
@@ -4111,12 +4123,19 @@ class DOPMController extends Controller
         $fraudAlasanDetail = null;
 
         if ($hasOkkLayer1 && $durasiJam !== null) {
-            $durasiParts = explode('-', trim((string) $durasiJam));
+            // Parse durasi_jam: "3-6", "6-9", "6 jam", "6", dll
+            $durasiRata = null;
+            $durasiStr = trim((string) $durasiJam);
+            $durasiParts = explode('-', $durasiStr);
             if (count($durasiParts) === 2) {
                 $durasiMin = (float) trim($durasiParts[0]);
                 $durasiMax = (float) trim($durasiParts[1]);
                 $durasiRata = ($durasiMin + $durasiMax) / 2;
-
+            }
+            if ($durasiRata === null && preg_match('/[\d.]+/', $durasiStr, $m)) {
+                $durasiRata = (float) $m[0];
+            }
+            if ($durasiRata !== null) {
                 if ($durasiRata >= 3 && $durasiRata <= 6) {
                     $targetOkkCount = 2;
                     $jarakMenit = 30;
@@ -4124,53 +4143,53 @@ class DOPMController extends Controller
                     $targetOkkCount = 3;
                     $jarakMenit = 60;
                 }
+            }
 
-                $isOkkSesuaiTarget = ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount);
+            $isOkkSesuaiTarget = ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount);
 
-                if ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount) {
-                    // Ambil timestamp dari OKK Layer 1, konversi ke Carbon, dan sort ascending
-                    $tsList = $okkLayer1->pluck('ts')->map(function ($ts) {
-                        if ($ts instanceof \Carbon\Carbon) {
-                            return $ts;
-                        }
-                        try {
-                            return \Carbon\Carbon::parse($ts);
-                        } catch (\Exception $e) {
-                            return null;
-                        }
-                    })->filter()->sort(function ($a, $b) {
-                        return $a->timestamp <=> $b->timestamp;
-                    })->values()->all();
+            if ($targetOkkCount > 0 && $okkLayer1Count >= $targetOkkCount) {
+                // Ambil timestamp dari OKK Layer 1, konversi ke Carbon, dan sort ascending
+                $tsList = $okkLayer1->pluck('ts')->map(function ($ts) {
+                    if ($ts instanceof \Carbon\Carbon) {
+                        return $ts;
+                    }
+                    try {
+                        return \Carbon\Carbon::parse($ts);
+                    } catch (\Exception $e) {
+                        return null;
+                    }
+                })->filter()->sort(function ($a, $b) {
+                    return $a->timestamp <=> $b->timestamp;
+                })->values()->all();
+                
+                $isValidJarak = true;
+                $minJarakActual = null;
+
+                // Cek jarak waktu antar OKK Layer 1 (harus >= jarakMenit)
+                for ($i = 1; $i < count($tsList); $i++) {
+                    $prev = $tsList[$i - 1];
+                    $curr = $tsList[$i];
+                    $diffMinutes = abs($curr->diffInMinutes($prev, false));
                     
-                    $isValidJarak = true;
-                    $minJarakActual = null;
-
-                    // Cek jarak waktu antar OKK Layer 1 (harus >= jarakMenit)
-                    for ($i = 1; $i < count($tsList); $i++) {
-                        $prev = $tsList[$i - 1];
-                        $curr = $tsList[$i];
-                        $diffMinutes = abs($curr->diffInMinutes($prev, false));
-                        
-                        if ($minJarakActual === null || $diffMinutes < $minJarakActual) {
-                            $minJarakActual = $diffMinutes;
-                        }
-                        
-                        if ($diffMinutes < $jarakMenit) {
-                            $isValidJarak = false;
-                            $fraudAlasanDetail = 'Jarak waktu antar OKK Layer 1 hanya ' . round($diffMinutes, 1) . ' menit (minimum ' . $jarakMenit . ' menit)';
-                            break;
-                        }
+                    if ($minJarakActual === null || $diffMinutes < $minJarakActual) {
+                        $minJarakActual = $diffMinutes;
                     }
                     
-                    if ($isValidJarak && $minJarakActual !== null && count($tsList) >= 2) {
-                        $fraudAlasanDetail = null;
+                    if ($diffMinutes < $jarakMenit) {
+                        $isValidJarak = false;
+                        $fraudAlasanDetail = 'Jarak waktu antar OKK Layer 1 hanya ' . round($diffMinutes, 1) . ' menit (minimum ' . $jarakMenit . ' menit)';
+                        break;
                     }
-
-                    $isOkkFraud = !$isValidJarak;
-                } else {
-                    $isOkkFraud = true;
-                    $fraudAlasanDetail = 'Jumlah OKK Layer 1 hanya ' . $okkLayer1Count . ' (target ' . $targetOkkCount . ')';
                 }
+                
+                if ($isValidJarak && $minJarakActual !== null && count($tsList) >= 2) {
+                    $fraudAlasanDetail = null;
+                }
+
+                $isOkkFraud = !$isValidJarak;
+            } else {
+                $isOkkFraud = true;
+                $fraudAlasanDetail = 'Jumlah OKK Layer 1 hanya ' . $okkLayer1Count . ' (target ' . $targetOkkCount . ')';
             }
         }
 
