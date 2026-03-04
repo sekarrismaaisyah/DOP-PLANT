@@ -749,61 +749,40 @@ class DOPMController extends Controller
                 }
             }
 
-            // Batch load OAK data untuk semua location pairs sekaligus
+            // Batch load OAK data untuk semua pasangan lokasi (location + detail_location) sekaligus,
+            // tanpa membedakan sumber DIC / BC. Yang penting ada OAK di lokasi tsb pada hari itu.
             $oakDataByLocation = [];
             if (!empty($locationPairs) && class_exists(\App\Services\ClickHouseService::class)) {
                 try {
                     $clickHouse = app(\App\Services\ClickHouseService::class);
                     if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
                         $dateEsc = addslashes($filterDate);
-                        $conditionsDicMitra = [];
-                        $conditionsBc = [];
+                        $conditions = [];
                         foreach ($locationPairs as $pair) {
                             $locEsc = addslashes($pair[0]);
                             $detEsc = addslashes($pair[1]);
-                            $conditionsDicMitra[] = "(trim(toString(location)) = '{$locEsc}' AND trim(toString(detail_location)) = '{$detEsc}')";
-                            $conditionsBc[] = "(trim(toString(location)) = '{$locEsc}' AND trim(toString(detail_location)) = '{$detEsc}')";
+                            $conditions[] = "(trim(toString(location)) = '{$locEsc}' AND trim(toString(detail_location)) = '{$detEsc}')";
                         }
-                        
-                        if (!empty($conditionsDicMitra)) {
-                            $whereDicMitra = implode(' OR ', $conditionsDicMitra);
-                            $sqlOakDicMitra = "
-                                SELECT trim(toString(location)) as location, trim(toString(detail_location)) as detail_location, count() as cnt
-                                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
-                                WHERE toDate(submit_date) = '{$dateEsc}'
-                                  AND trim(lower(toString(tipe))) = 'observee'
-                                  AND ({$whereDicMitra})
-                                GROUP BY location, detail_location
-                            ";
-                            $oakResultDicMitra = $clickHouse->query($sqlOakDicMitra);
-                            foreach ($oakResultDicMitra as $row) {
-                                $loc = trim((string) ($row['location'] ?? ''));
-                                $det = trim((string) ($row['detail_location'] ?? ''));
-                                $key = $loc . '|' . $det;
-                                if (!isset($oakDataByLocation[$key])) {
-                                    $oakDataByLocation[$key] = ['dic_mitra' => false, 'bc' => false];
-                                }
-                                $oakDataByLocation[$key]['dic_mitra'] = ((int) ($row['cnt'] ?? 0)) > 0;
-                            }
 
-                            $whereBc = implode(' OR ', $conditionsBc);
-                            $sqlOakBc = "
-                                SELECT trim(toString(location)) as location, trim(toString(detail_location)) as detail_location, count() as cnt
+                        if (!empty($conditions)) {
+                            $where = implode(' OR ', $conditions);
+                            $sqlOakAny = "
+                                SELECT trim(toString(location)) as location,
+                                       trim(toString(detail_location)) as detail_location,
+                                       count() as cnt
                                 FROM hse_automation.aaj_vw_car_oak_register_ytd_only
                                 WHERE toDate(submit_date) = '{$dateEsc}'
-                                  AND trim(lower(toString(tipe))) = 'observe'
-                                  AND ({$whereBc})
+                                  AND ({$where})
                                 GROUP BY location, detail_location
                             ";
-                            $oakResultBc = $clickHouse->query($sqlOakBc);
-                            foreach ($oakResultBc as $row) {
+                            $oakResultAny = $clickHouse->query($sqlOakAny);
+                            foreach ($oakResultAny as $row) {
                                 $loc = trim((string) ($row['location'] ?? ''));
                                 $det = trim((string) ($row['detail_location'] ?? ''));
                                 $key = $loc . '|' . $det;
-                                if (!isset($oakDataByLocation[$key])) {
-                                    $oakDataByLocation[$key] = ['dic_mitra' => false, 'bc' => false];
-                                }
-                                $oakDataByLocation[$key]['bc'] = ((int) ($row['cnt'] ?? 0)) > 0;
+                                $oakDataByLocation[$key] = [
+                                    'has_oak' => ((int) ($row['cnt'] ?? 0)) > 0,
+                                ];
                             }
                         }
                     }
@@ -1766,61 +1745,40 @@ class DOPMController extends Controller
                 }
             }
 
-            // Batch load OAK data untuk semua location pairs sekaligus
+            // Batch load OAK data untuk semua pasangan lokasi (location + detail_location) sekaligus,
+            // tanpa membedakan sumber DIC / BC. Yang penting ada OAK di lokasi tsb pada hari itu.
             $oakDataByLocation = [];
             if (!empty($locationPairs) && class_exists(\App\Services\ClickHouseService::class)) {
                 try {
                     $clickHouse = app(\App\Services\ClickHouseService::class);
                     if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
                         $dateEsc = addslashes($filterDate);
-                        $conditionsDicMitra = [];
-                        $conditionsBc = [];
+                        $conditions = [];
                         foreach ($locationPairs as $pair) {
                             $locEsc = addslashes($pair[0]);
                             $detEsc = addslashes($pair[1]);
-                            $conditionsDicMitra[] = "(trim(toString(location)) = '{$locEsc}' AND trim(toString(detail_location)) = '{$detEsc}')";
-                            $conditionsBc[] = "(trim(toString(location)) = '{$locEsc}' AND trim(toString(detail_location)) = '{$detEsc}')";
+                            $conditions[] = "(trim(toString(location)) = '{$locEsc}' AND trim(toString(detail_location)) = '{$detEsc}')";
                         }
-                        
-                        if (!empty($conditionsDicMitra)) {
-                            $whereDicMitra = implode(' OR ', $conditionsDicMitra);
-                            $sqlOakDicMitra = "
-                                SELECT trim(toString(location)) as location, trim(toString(detail_location)) as detail_location, count() as cnt
-                                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
-                                WHERE toDate(submit_date) = '{$dateEsc}'
-                                  AND trim(lower(toString(tipe))) = 'observee'
-                                  AND ({$whereDicMitra})
-                                GROUP BY location, detail_location
-                            ";
-                            $oakResultDicMitra = $clickHouse->query($sqlOakDicMitra);
-                            foreach ($oakResultDicMitra as $row) {
-                                $loc = trim((string) ($row['location'] ?? ''));
-                                $det = trim((string) ($row['detail_location'] ?? ''));
-                                $key = $loc . '|' . $det;
-                                if (!isset($oakDataByLocation[$key])) {
-                                    $oakDataByLocation[$key] = ['dic_mitra' => false, 'bc' => false];
-                                }
-                                $oakDataByLocation[$key]['dic_mitra'] = ((int) ($row['cnt'] ?? 0)) > 0;
-                            }
 
-                            $whereBc = implode(' OR ', $conditionsBc);
-                            $sqlOakBc = "
-                                SELECT trim(toString(location)) as location, trim(toString(detail_location)) as detail_location, count() as cnt
+                        if (!empty($conditions)) {
+                            $where = implode(' OR ', $conditions);
+                            $sqlOakAny = "
+                                SELECT trim(toString(location)) as location,
+                                       trim(toString(detail_location)) as detail_location,
+                                       count() as cnt
                                 FROM hse_automation.aaj_vw_car_oak_register_ytd_only
                                 WHERE toDate(submit_date) = '{$dateEsc}'
-                                  AND trim(lower(toString(tipe))) = 'observe'
-                                  AND ({$whereBc})
+                                  AND ({$where})
                                 GROUP BY location, detail_location
                             ";
-                            $oakResultBc = $clickHouse->query($sqlOakBc);
-                            foreach ($oakResultBc as $row) {
+                            $oakResultAny = $clickHouse->query($sqlOakAny);
+                            foreach ($oakResultAny as $row) {
                                 $loc = trim((string) ($row['location'] ?? ''));
                                 $det = trim((string) ($row['detail_location'] ?? ''));
                                 $key = $loc . '|' . $det;
-                                if (!isset($oakDataByLocation[$key])) {
-                                    $oakDataByLocation[$key] = ['dic_mitra' => false, 'bc' => false];
-                                }
-                                $oakDataByLocation[$key]['bc'] = ((int) ($row['cnt'] ?? 0)) > 0;
+                                $oakDataByLocation[$key] = [
+                                    'has_oak' => ((int) ($row['cnt'] ?? 0)) > 0,
+                                ];
                             }
                         }
                     }
@@ -4216,18 +4174,16 @@ class DOPMController extends Controller
             }
         }
 
-        // 4. Cek OAK berdasarkan lokasi (dari pre-loaded data)
-        $hasOakDicMitra = false;
-        $hasOakBc = false;
+        // 4. Cek OAK berdasarkan lokasi (dari pre-loaded data):
+        // hasOak = true jika ada minimal 1 OAK di lokasi + detail lokasi IKK pada hari itu,
+        // tanpa membedakan apakah sumbernya DIC atau BC.
         $hasOak = false;
 
         if ($locationName !== null && $locationName !== '' && 
             $locationDetailName !== null && $locationDetailName !== '') {
             $key = trim($locationName) . '|' . trim($locationDetailName);
             if (isset($oakDataByLocation[$key])) {
-                $hasOakDicMitra = $oakDataByLocation[$key]['dic_mitra'] ?? false;
-                $hasOakBc = $oakDataByLocation[$key]['bc'] ?? false;
-                $hasOak = $hasOakDicMitra || $hasOakBc;
+                $hasOak = $oakDataByLocation[$key]['has_oak'] ?? false;
             }
         }
 
