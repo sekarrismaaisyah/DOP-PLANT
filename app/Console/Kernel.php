@@ -60,6 +60,12 @@ class Kernel extends ConsoleKernel
             ->hourlyAt(5)
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/dopm-auto-alert-wa.log'));
+
+        // Generate planning roster dari DOP & IKK setiap 10 menit (hari ini). Skip jika job periode yang sama masih pending/processing.
+        $schedule->command('roster:generate-planning')
+            ->everyTenMinutes()
+            ->withoutOverlapping(15)
+            ->appendOutputTo(storage_path('logs/roster-generate-planning.log'));
     }
 
     /**

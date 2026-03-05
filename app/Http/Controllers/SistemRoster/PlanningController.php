@@ -4,9 +4,14 @@ namespace App\Http\Controllers\SistemRoster;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\GeneratePlanningJob;
+use App\Models\CctvCoverage;
+use App\Models\CctvData;
+use App\Models\InsidenTabel;
 use App\Models\RosterPlanning;
 use App\Models\RosterPlanningJob;
 use App\Models\RosterPlanningKaryawan;
+use App\Services\ClickHouseService;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
@@ -266,11 +271,26 @@ class PlanningController extends Controller
         $planning->update(['status' => $newStatus]);
 
         if ($request->expectsJson()) {
-            return response()->json([
+            $payload = [
                 'success' => true,
                 'status' => $newStatus,
                 'count' => $planning->karyawans()->count(),
-            ]);
+            ];
+            if ($newStatus === 'assigned') {
+                $payload['planning'] = [
+                    'id' => $planning->id,
+                    'tanggal' => $planning->tanggal?->format('Y-m-d'),
+                    'tanggal_formatted' => $planning->tanggal?->format('d M Y'),
+                    'source_type' => $planning->source_type ?? '',
+                    'site' => $planning->site ?? '',
+                    'no_ikk' => $planning->no_ikk ?? '',
+                    'aktivitas' => $planning->aktivitas ?? '',
+                    'lokasi' => $planning->lokasi ?? '',
+                    'detail_lokasi' => $planning->detail_lokasi ?? '',
+                    'perusahaan_pic' => $planning->perusahaan_pic ?? '',
+                ];
+            }
+            return response()->json($payload);
         }
 
         return redirect()
@@ -294,6 +314,190 @@ class PlanningController extends Controller
         return redirect()
             ->back()
             ->with('success', 'Planning berhasil diupdate.');
+    }
+
+    /**
+     * Konten pesan WA untuk planning yang di-assign: "Kamu harus mengunjungi" + summary lokasi (insiden, aktivitas kritis, statistik).
+     */
+    public function waMessageContent($id): JsonResponse
+    {
+        $planning = RosterPlanning::findOrFail($id);
+        $tanggal = $planning->tanggal ? Carbon::parse($planning->tanggal) : today();
+        $filterLokasi = $planning->lokasi !== null && $planning->lokasi !== '' ? preg_replace('/\s+/', ' ', trim($planning->lokasi)) : null;
+        $filterDetailLokasi = $planning->detail_lokasi !== null && $planning->detail_lokasi !== '' ? preg_replace('/\s+/', ' ', trim($planning->detail_lokasi)) : null;
+
+        // Aktivitas kritis di lokasi ini (termasuk baris planning ini)
+        $aktivitasQuery = RosterPlanning::whereDate('tanggal', $tanggal);
+        if ($filterLokasi !== null && $filterLokasi !== '') {
+            $aktivitasQuery->whereRaw("REGEXP_REPLACE(TRIM(lokasi), '[[:space:]]+', ' ') = ?", [$filterLokasi]);
+        }
+        if ($filterDetailLokasi !== null && $filterDetailLokasi !== '') {
+            $aktivitasQuery->whereRaw("REGEXP_REPLACE(TRIM(detail_lokasi), '[[:space:]]+', ' ') = ?", [$filterDetailLokasi]);
+        }
+        $aktivitasKritis = $aktivitasQuery->orderBy('lokasi')->orderBy('detail_lokasi')->orderBy('no_ikk')->get();
+
+        // Insiden
+        $insidenQuery = InsidenTabel::whereNotNull('lokasi')->where('lokasi', '!=', '');
+        if ($filterLokasi !== null && $filterLokasi !== '') {
+            $insidenQuery->whereRaw("REGEXP_REPLACE(TRIM(lokasi), '[[:space:]]+', ' ') = ?", [$filterLokasi]);
+        }
+        $totalInsiden = (int) $insidenQuery->selectRaw('COUNT(DISTINCT no_kecelakaan) as total')->value('total');
+
+        $recentInsidenQuery = InsidenTabel::whereNotNull('lokasi')->where('lokasi', '!=', '');
+        if ($filterLokasi !== null && $filterLokasi !== '') {
+            $recentInsidenQuery->whereRaw("REGEXP_REPLACE(TRIM(lokasi), '[[:space:]]+', ' ') = ?", [$filterLokasi]);
+        }
+        $recentInsiden = $recentInsidenQuery->orderByRaw('tahun DESC, bulan DESC, tanggal DESC')->get()->unique('no_kecelakaan')->take(10)->values();
+
+        // CCTV
+        $normLokasi = $filterLokasi !== null && $filterLokasi !== '' ? preg_replace('/\s+/', ' ', strtolower(trim($filterLokasi))) : null;
+        $normDetail = $filterDetailLokasi !== null && $filterDetailLokasi !== '' ? preg_replace('/\s+/', ' ', strtolower(trim($filterDetailLokasi))) : null;
+        $coverageQuery = CctvCoverage::query()->select('id_cctv');
+        if ($normLokasi !== null) {
+            $coverageQuery->whereRaw('LOWER(REGEXP_REPLACE(TRIM(coverage_lokasi), \'[[:space:]]+\', \' \')) = ?', [$normLokasi]);
+        }
+        if ($normDetail !== null) {
+            $coverageQuery->whereRaw('LOWER(REGEXP_REPLACE(TRIM(coverage_detail_lokasi), \'[[:space:]]+\', \' \')) = ?', [$normDetail]);
+        }
+        $cctvIds = $coverageQuery->pluck('id_cctv')->unique()->values()->map(fn ($id) => (int) str_replace(',', '', (string) $id))->filter(fn ($id) => $id > 0)->unique()->values()->all();
+        $cctvActiveCount = 0;
+        if (! empty($cctvIds)) {
+            $cctvList = CctvData::query()->select('id', 'kondisi')->whereIn('id', $cctvIds)->get();
+            $cctvActiveCount = $cctvList->filter(fn ($c) => strtolower(trim((string) ($c->kondisi ?? ''))) === 'baik')->count();
+        }
+
+        // Hazard & Inspeksi Open minggu ini
+        $totalHazardWeekly = 0;
+        $weekStartStr = $tanggal->copy()->startOfWeek()->format('Y-m-d');
+        $weekEndStr = $tanggal->copy()->startOfWeek()->addWeek()->format('Y-m-d');
+        $conditions = [
+            "jenis_laporan IN ('HAZARD', 'INSPEKSI')",
+            "trim(ifNull(status, '')) = 'SUBMITTED'",
+            "((tanggal_pembuatan IS NOT NULL AND toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('" . addslashes($weekStartStr) . "') AND toDate(tanggal_pembuatan, 'Asia/Makassar') < toDate('" . addslashes($weekEndStr) . "')) "
+            . "or (bedraft_date IS NOT NULL AND toDate(bedraft_date, 'Asia/Makassar') >= toDate('" . addslashes($weekStartStr) . "') AND toDate(bedraft_date, 'Asia/Makassar') < toDate('" . addslashes($weekEndStr) . "')))",
+        ];
+        if ($filterLokasi !== null && $filterLokasi !== '') {
+            $conditions[] = "replaceRegexpAll(trim(nama_lokasi), '\\\\s+', ' ') = '" . addslashes($filterLokasi) . "'";
+        }
+        if ($filterDetailLokasi !== null && $filterDetailLokasi !== '') {
+            $conditions[] = "replaceRegexpAll(trim(nama_detail_lokasi), '\\\\s+', ' ') = '" . addslashes($filterDetailLokasi) . "'";
+        }
+        $whereClause = implode(' AND ', $conditions);
+        $sqlCount = "SELECT count() AS total FROM hse_automation.aaj_car_all_year_from_dav WHERE {$whereClause}";
+        try {
+            if (class_exists(ClickHouseService::class)) {
+                $ch = app(ClickHouseService::class);
+                if (method_exists($ch, 'query') && $ch->isConnected()) {
+                    $results = $ch->query($sqlCount);
+                    if (! empty($results)) {
+                        $totalHazardWeekly = (int) ($this->getClickHouseRowValue($results[0], 'total') ?? 0);
+                    }
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('PlanningController waMessageContent: hazard weekly count failed: ' . $e->getMessage());
+        }
+
+        $lokasiLabel = $filterLokasi ?: '—';
+        $detailLabel = $filterDetailLokasi ?: '—';
+
+        // Link Tasklist: tanggal = tanggal planning, lokasi & detail_lokasi dari planning yang di-assign
+        $tasklistUrl = url(route('sistem-roster.tasklist.index', [
+            'tanggal' => $planning->tanggal?->format('Y-m-d') ?? now()->format('Y-m-d'),
+            'lokasi' => $planning->lokasi ?? '',
+            'detail_lokasi' => $planning->detail_lokasi ?? '',
+        ]));
+
+        // Build message text — format per baris: Label : nilai (bukan tabel)
+        $lines = [];
+        $lines[] = 'Kamu harus mengunjungi:';
+        $lines[] = '';
+        $lines[] = 'Tanggal : ' . ($planning->tanggal?->format('d M Y') ?? '—');
+        $lines[] = 'Sumber : ' . ($planning->source_type ?? '—');
+        $lines[] = 'Site : ' . ($planning->site ?? '—');
+        $lines[] = 'No IKK : ' . ($planning->no_ikk ?? '—');
+        $lines[] = 'Aktivitas : ' . ($planning->aktivitas ?? '—');
+        $lines[] = 'Lokasi : ' . ($planning->lokasi ?? '—');
+        $lines[] = 'Detail Lokasi : ' . ($planning->detail_lokasi ?? '—');
+        $lines[] = 'Perusahaan : ' . ($planning->perusahaan_pic ?? '—');
+        $lines[] = '';
+        $lines[] = 'Link Tasklist (Summary Detail Lokasi):';
+        $lines[] = $tasklistUrl;
+        $lines[] = '';
+        $lines[] = '--- Summary Lokasi: ' . $lokasiLabel . ' / ' . $detailLabel . ' ---';
+        $lines[] = '';
+        $lines[] = 'Statistik:';
+        $lines[] = '• Total Insiden YTD: ' . $totalInsiden;
+        $lines[] = '• Total Area/Aktivitas Kritis: ' . $aktivitasKritis->count();
+        $lines[] = '• Total CCTV: ' . $cctvActiveCount;
+        $lines[] = '• Total Hazard Weekly: ' . $totalHazardWeekly;
+        $lines[] = '• Hazard & Inspeksi Open (SUBMITTED) Minggu Ini: ' . $totalHazardWeekly;
+        $lines[] = '';
+
+        if ($recentInsiden->isNotEmpty()) {
+            $lines[] = 'Detail Insiden:';
+            foreach ($recentInsiden as $ins) {
+                $lines[] = '  - ' . ($ins->no_kecelakaan ?? '—') . ' | ' . ($ins->lokasi ?? '—') . ($ins->sublokasi ? ' • ' . $ins->sublokasi : '') . ' | ' . ($ins->kategori ?? $ins->status_lpi ?? '—');
+            }
+            $lines[] = '';
+        }
+
+        if ($aktivitasKritis->isNotEmpty()) {
+            $lines[] = 'Aktivitas Kritis:';
+            foreach ($aktivitasKritis as $row) {
+                $lines[] = '  - ' . ($row->aktivitas ?? '—') . ' | IKK: ' . ($row->no_ikk ?? '—') . ' | ' . ($row->lokasi ?? '—') . ' / ' . ($row->detail_lokasi ?? '—') . ' | ' . ($row->perusahaan_pic ?? '—');
+            }
+        }
+
+        $message = implode("\n", $lines);
+
+        // Karyawan yang di-assign + selular dari vw_user (untuk WA otomatis ke nomor tujuan)
+        $karyawansWithSelular = [];
+        $assignedKaryawans = $planning->karyawans()->get();
+        $userIds = $assignedKaryawans->pluck('user_id')->filter()->unique()->values()->all();
+        if (! empty($userIds)) {
+            $users = DB::table('vw_user')
+                ->whereIn('id', $userIds)
+                ->select('id', 'nama', 'selular')
+                ->get()
+                ->keyBy(function ($u) {
+                    return (int) $u->id;
+                });
+            foreach ($assignedKaryawans as $k) {
+                $nama = $k->nama_karyawan ?? '';
+                $selular = null;
+                $uid = $k->user_id !== null ? (int) $k->user_id : null;
+                if ($uid !== null && $users->has($uid)) {
+                    $selular = trim($users->get($uid)->selular ?? '');
+                }
+                $karyawansWithSelular[] = [
+                    'nama_karyawan' => $nama,
+                    'selular' => $selular !== '' ? $selular : null,
+                ];
+            }
+        }
+
+        return response()->json([
+            'message' => $message,
+            'planning' => [
+                'id' => $planning->id,
+                'tanggal_formatted' => $planning->tanggal?->format('d M Y'),
+                'lokasi' => $planning->lokasi,
+                'detail_lokasi' => $planning->detail_lokasi,
+            ],
+            'karyawans' => $karyawansWithSelular,
+        ]);
+    }
+
+    private function getClickHouseRowValue(array $row, string $key): mixed
+    {
+        $keyLower = strtolower($key);
+        foreach ($row as $k => $v) {
+            if (strtolower((string) $k) === $keyLower) {
+                return $v;
+            }
+        }
+        return $row[$key] ?? null;
     }
 
     public function destroy($id): RedirectResponse

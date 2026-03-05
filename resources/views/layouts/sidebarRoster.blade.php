@@ -110,6 +110,15 @@
               <div class="menu-title">Master Aktivitas</div>
             </a>
           </li>
+
+         
+          <li class="menu-label">Tasklist</li>
+          <li>
+            <a href="{{ route('sistem-roster.tasklist.index') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">checklist</i></div>
+              <div class="menu-title">Tasklist</div>
+            </a>
+          </li>
         
          
         

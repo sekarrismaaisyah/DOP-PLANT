@@ -600,6 +600,11 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/generate', [\App\Http\Controllers\SistemRoster\LokasiNonKritisController::class, 'generate'])->name('generate');
         });
 
+        // Tasklist Routes (Intelligence Hub)
+        Route::prefix('tasklist')->name('tasklist.')->group(function () {
+            Route::get('/', [\App\Http\Controllers\SistemRoster\TasklistController::class, 'index'])->name('index');
+        });
+
         // Planning Routes
         Route::prefix('planning')->name('planning.')->group(function () {
             Route::get('/', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'index'])->name('index');
@@ -607,6 +612,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/job-status', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'jobStatus'])->name('job-status');
             Route::get('/users', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'getUsers'])->name('users');
             Route::get('/{id}/karyawans', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'getKaryawans'])->name('karyawans');
+            Route::get('/{id}/wa-message', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'waMessageContent'])->name('wa-message');
             Route::post('/{id}/assign-karyawan', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'assignKaryawan'])->name('assign-karyawan');
             Route::put('/{id}', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'update'])->name('update');
             Route::delete('/{id}', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'destroy'])->name('destroy');

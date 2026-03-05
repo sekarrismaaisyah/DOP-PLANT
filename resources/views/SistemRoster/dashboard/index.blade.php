@@ -905,24 +905,62 @@
     .lmo-table-card {
       background:#fff;
       border:1px solid var(--lmo-line,#e6ebf2);
-      border-radius:18px;
+      border-radius:20px;
       overflow:hidden;
+      box-shadow:0 4px 24px rgba(15,23,42,.06);
+      transition:box-shadow .25s ease, border-color .25s ease;
     }
+    .lmo-table-card:hover { box-shadow:0 8px 32px rgba(15,23,42,.08); border-color:#e2e8f0; }
     .lmo-table-head {
-      padding:22px 26px;
+      padding:24px 28px;
       border-bottom:1px solid var(--lmo-line,#e6ebf2);
       display:flex;
       align-items:flex-start;
       justify-content:space-between;
       gap:16px;
       flex-wrap:wrap;
+      background:linear-gradient(180deg, #fefefe 0%, #fafbfe 100%);
     }
     .lmo-table-head h3 { margin:0; font-size:1.05rem; color:#667085; font-weight:500; }
-    .lmo-table-head .big { display:block; color:#101828; font-size:1.55rem; line-height:1.2; font-weight:900; margin-bottom:2px; }
+    .lmo-table-head .big { display:block; color:#101828; font-size:1.55rem; line-height:1.2; font-weight:900; margin-bottom:4px; letter-spacing:-.02em; }
     .lmo-table-head .desc { color:#98a2b3; font-size:.95rem; }
     .lmo-table-actions { display:flex; gap:16px; align-items:center; flex-wrap:wrap; color:#667085; font-weight:500; }
-    .lmo-table-actions .link-strong { color:#1d4ed8; font-weight:800; text-decoration:none; }
-    .lmo-table-scroll { overflow-x:auto; }
+    .lmo-table-actions .link-strong { color:#1d4ed8; font-weight:800; text-decoration:none; transition:color .2s ease, opacity .2s ease; }
+    .lmo-table-actions .link-strong:hover { color:#1e40af; opacity:.9; }
+    .lmo-action-sep { width:1px; height:14px; background:linear-gradient(180deg, transparent, #e2e8f0, transparent); border-radius:1px; }
+    .lmo-team-label { color:#64748b; font-size:.9rem; }
+    .lmo-coverage-val--danger { color:#ef4444 !important; }
+    .lmo-table-scroll {
+      overflow-x:auto;
+      overflow-y:visible;
+      -webkit-overflow-scrolling:touch;
+      scroll-behavior:smooth;
+      border-radius:0 0 20px 20px;
+    }
+    .lmo-table-scroll::-webkit-scrollbar { height:8px; }
+    .lmo-table-scroll::-webkit-scrollbar-track { background:#f1f5f9; border-radius:0 0 20px 20px; }
+    .lmo-table-scroll::-webkit-scrollbar-thumb { background:#cbd5e1; border-radius:999px; }
+    /* Coverage by Location card accent */
+    .lmo-coverage-card { border-left: 4px solid var(--kt-primary); }
+    .lmo-coverage-header { flex-wrap: wrap; gap: 1rem; }
+    .lmo-coverage-icon-wrap {
+      width: 44px; height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, #e9f3ff 0%, #dbeafe 100%);
+      color: var(--kt-primary);
+      display: grid; place-items: center;
+      font-size: 1.25rem;
+      flex-shrink: 0;
+    }
+    .lmo-coverage-legend {
+      display: flex; align-items: center; gap: 1rem; flex-wrap: wrap;
+      font-size: .7rem; color: var(--kt-muted);
+      letter-spacing: .02em;
+    }
+    .lmo-coverage-legend span { display: inline-flex; align-items: center; gap: .35rem; }
+    .lmo-coverage-legend .text-green-600 { color: #16a34a; }
+    .lmo-coverage-legend .text-amber-500 { color: #f59e0b; }
+    .lmo-coverage-legend .text-slate-300 { color: #cbd5e1; }
     table.lmo-coverage-table {
       width:100%;
       border-collapse:separate;
@@ -930,94 +968,125 @@
       min-width:1040px;
     }
     .lmo-coverage-table thead th {
-      background:#fafbfe;
-      color:#667085;
+      background:linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+      color:#64748b;
       font-size:.78rem;
       letter-spacing:.06em;
       text-transform:uppercase;
       font-weight:800;
-      padding:16px 14px;
-      border-bottom:1px solid var(--lmo-line,#e6ebf2);
+      padding:18px 16px;
+      border-bottom:1px solid #e2e8f0;
       white-space:nowrap;
       text-align:left;
     }
+    .lmo-coverage-table thead th:first-child { padding-left:28px; }
     .lmo-coverage-table tbody td {
-      padding:18px 14px;
-      border-bottom:1px solid #edf1f6;
+      padding:20px 16px;
+      border-bottom:1px solid #f1f5f9;
       vertical-align:middle;
       background:#fff;
+      transition:background .2s ease;
     }
+    .lmo-coverage-table tbody td:first-child { padding-left:28px; }
+    .lmo-coverage-table tbody tr { transition:background .2s ease; }
+    .lmo-coverage-table tbody tr:nth-child(even) td { background:#fafbfd; }
+    .lmo-coverage-table tbody tr:hover td { background:#f0f7ff !important; }
     .lmo-coverage-table tbody tr:last-child td { border-bottom:none; }
-    .lmo-area-cell { display:flex; align-items:center; gap:12px; min-width:240px; }
-    .lmo-status-dot { width:10px; height:10px; border-radius:50%; flex:0 0 auto; box-shadow:0 0 0 4px rgba(0,0,0,.03); }
+    .lmo-area-cell { display:flex; align-items:center; gap:14px; min-width:240px; }
+    .lmo-status-dot {
+      width:10px; height:10px; border-radius:50%; flex:0 0 auto;
+      box-shadow:0 0 0 4px rgba(0,0,0,.04);
+      transition:transform .2s ease, box-shadow .2s ease;
+    }
+    .lmo-coverage-table tbody tr:hover .lmo-status-dot { box-shadow:0 0 0 6px rgba(0,0,0,.06); transform:scale(1.1); }
     .lmo-dot-green { background:#22b573; }
     .lmo-dot-orange { background:#f59e0b; }
     .lmo-dot-red { background:#ef4444; }
-    .lmo-area-name { font-weight:900; font-size:1rem; line-height:1.2; margin-bottom:2px; }
+    .lmo-area-name { font-weight:900; font-size:1rem; line-height:1.2; margin-bottom:2px; color:#0f172a; }
     .lmo-area-meta { color:#94a3b8; font-size:.85rem; line-height:1.2; }
     .lmo-area-alert { color:#ef4444; font-weight:800; font-size:.8rem; text-transform:uppercase; margin-top:4px; line-height:1.1; }
     .lmo-level-icons { display:flex; gap:10px; align-items:center; }
     .lmo-check-badge, .lmo-warn-badge, .lmo-x-badge, .lmo-empty-badge {
-      width:18px; height:18px;
+      width:20px; height:20px;
       border-radius:50%;
       display:grid;
       place-items:center;
-      font-size:.72rem;
+      font-size:.7rem;
       font-weight:700;
       line-height:1;
+      transition:transform .2s ease, box-shadow .2s ease;
     }
-    .lmo-check-badge { background:#22b573; color:#fff; }
-    .lmo-warn-badge { background:#f59e0b; color:#fff; }
-    .lmo-x-badge { background:#ef4444; color:#fff; }
-    .lmo-empty-badge { background:#d8dee8; color:transparent; }
-    .lmo-coverage-cell { display:flex; align-items:center; gap:12px; min-width:170px; }
+    .lmo-coverage-table tbody tr:hover .lmo-check-badge,
+    .lmo-coverage-table tbody tr:hover .lmo-warn-badge,
+    .lmo-coverage-table tbody tr:hover .lmo-x-badge { transform:scale(1.08); }
+    .lmo-check-badge { background:linear-gradient(135deg, #22b573, #16a34a); color:#fff; box-shadow:0 2px 6px rgba(34,197,94,.3); }
+    .lmo-warn-badge { background:linear-gradient(135deg, #f59e0b, #d97706); color:#fff; box-shadow:0 2px 6px rgba(245,158,11,.3); }
+    .lmo-x-badge { background:linear-gradient(135deg, #ef4444, #dc2626); color:#fff; box-shadow:0 2px 6px rgba(239,68,68,.3); }
+    .lmo-empty-badge { background:#e2e8f0; color:transparent; }
+    .lmo-coverage-cell { display:flex; align-items:center; gap:14px; min-width:170px; }
     .lmo-coverage-bar {
-      width:120px;
-      height:6px;
-      border-radius:99px;
-      background:#edf1f7;
+      width:128px;
+      height:8px;
+      border-radius:999px;
+      background:#e2e8f0;
       overflow:hidden;
     }
-    .lmo-coverage-bar > span { height:100%; display:block; border-radius:99px; }
-    .lmo-coverage-val { font-weight:900; font-size:.95rem; min-width:40px; }
-    .lmo-pill { display:inline-flex; align-items:center; border-radius:8px; padding:4px 10px; font-size:.76rem; font-weight:800; letter-spacing:.02em; text-transform:uppercase; border:1px solid transparent; white-space:nowrap; }
-    .lmo-pill-optimal { color:#12a361; background:#e8f9f0; border-color:#b7ebce; }
-    .lmo-pill-incomplete { color:#d97706; background:#fff5e5; border-color:#fed7aa; }
-    .lmo-pill-critical { color:#ef4444; background:#fff1f2; border-color:#fecdd3; }
-    .lmo-last-inspection { min-width:140px; line-height:1.2; }
-    .lmo-last-inspection .main { font-weight:700; color:#111827; display:block; }
-    .lmo-last-inspection .sub { color:#98a2b3; font-size:.85rem; display:block; margin-top:4px; }
+    .lmo-coverage-bar > span {
+      height:100%; display:block; border-radius:999px;
+      transition:width .5s cubic-bezier(.4,0,.2,1);
+    }
+    .lmo-coverage-val { font-weight:900; font-size:.95rem; min-width:42px; transition:color .2s ease; }
+    .lmo-pill {
+      display:inline-flex; align-items:center; border-radius:10px;
+      padding:6px 12px; font-size:.75rem; font-weight:800;
+      letter-spacing:.02em; text-transform:uppercase;
+      border:1px solid transparent; white-space:nowrap;
+      transition:transform .2s ease, box-shadow .2s ease;
+    }
+    .lmo-coverage-table tbody tr:hover .lmo-pill { transform:translateY(-1px); }
+    .lmo-pill-optimal { color:#12a361; background:linear-gradient(135deg, #ecfdf5, #d1fae5); border-color:#a7f3d0; }
+    .lmo-pill-incomplete { color:#d97706; background:linear-gradient(135deg, #fffbeb, #fef3c7); border-color:#fde68a; }
+    .lmo-pill-critical { color:#ef4444; background:linear-gradient(135deg, #fef2f2, #fee2e2); border-color:#fecaca; }
+    .lmo-last-inspection { min-width:150px; line-height:1.3; }
+    .lmo-last-inspection .main { font-weight:700; color:#0f172a; display:block; }
+    .lmo-last-inspection .sub { color:#94a3b8; font-size:.85rem; display:block; margin-top:4px; }
     .lmo-last-inspection .sub.warn { color:#f59e0b; font-weight:700; }
     .lmo-last-inspection .sub.red { color:#ef4444; font-weight:800; }
-    .lmo-team-cell { display:flex; align-items:center; gap:8px; min-width:180px; }
+    .lmo-team-cell { display:flex; align-items:center; gap:10px; min-width:180px; }
     .lmo-avatar-stack { display:flex; align-items:center; }
     .lmo-avatar-chip {
-      width:32px; height:32px;
+      width:34px; height:34px;
       border-radius:50%;
-      background:#eef2f7;
+      background:#f1f5f9;
       border:2px solid #fff;
       display:grid;
       place-items:center;
       font-size:.72rem;
       font-weight:800;
       color:#64748b;
-      margin-left:-8px;
+      margin-left:-10px;
+      box-shadow:0 2px 6px rgba(0,0,0,.06);
+      transition:transform .2s ease, margin-left .2s ease;
     }
     .lmo-avatar-chip:first-child { margin-left:0; }
-    .lmo-avatar-chip.blue { background:#dbe8ff; color:#2457d6; }
-    .lmo-avatar-chip.green { background:#ddf7ea; color:#159a60; }
+    .lmo-coverage-table tbody tr:hover .lmo-avatar-chip { transform:translateY(-1px); }
+    .lmo-avatar-chip.blue { background:linear-gradient(135deg, #dbeafe, #bfdbfe); color:#1d4ed8; }
+    .lmo-avatar-chip.green { background:linear-gradient(135deg, #d1fae5, #a7f3d0); color:#059669; }
     .lmo-assign-btn {
       margin-left:auto;
       border:none;
-      background:#2563eb;
+      background:linear-gradient(135deg, #2563eb, #1d4ed8);
       color:#fff;
       font-weight:700;
       border-radius:10px;
-      padding:7px 12px;
+      padding:8px 14px;
       font-size:.82rem;
       white-space:nowrap;
-      box-shadow:0 8px 16px rgba(37,99,235,.18);
+      box-shadow:0 4px 12px rgba(37,99,235,.25);
+      transition:transform .2s ease, box-shadow .2s ease, background .2s ease;
     }
+    .lmo-assign-btn:hover { transform:translateY(-2px); box-shadow:0 6px 20px rgba(37,99,235,.35); }
+    .lmo-assign-btn:active { transform:translateY(0); }
     @media (max-width: 1200px) {
       .lmo-card-grid, .lmo-layer-grid { grid-template-columns:repeat(2, minmax(0,1fr)); }
     }
@@ -1193,11 +1262,9 @@
             </div>
           </section>
 
-          <!-- Coverage table -->
          
         </div>
 
-        <!-- HEATMAP -->
         <section class="kt-card animate-in" style="animation-delay:.05s">
           <div class="kt-card-header heatmap-header">
             <div class="flex-shrink-0">
@@ -1246,20 +1313,29 @@
          
         </section>
 
-        <section class="lmo-table-card">
-            <div class="lmo-table-head">
-              <div>
-                <h3><span class="big">Coverage by Location</span></h3>
-                <div class="desc">Detailed inspection status and team allocation per area</div>
-              </div>
+   
 
-              <div class="lmo-table-actions">
-                <span>Sort by: <a href="#" class="link-strong">Status Priority</a></span>
-                <span style="color:#cbd5e1;">|</span>
-                <a href="#" class="link-strong">View Detailed Map <i class="bi bi-box-arrow-up-right"></i></a>
+        <section class="animate-in" style="animation-delay:.1s">
+          <div class="kt-card w-full lmo-coverage-card">
+            <div class="kt-card-header lmo-coverage-header">
+              <div class="flex items-center gap-3">
+                <div class="lmo-coverage-icon-wrap">
+                  <i class="bi bi-pin-map-fill"></i>
+                </div>
+                <div>
+                  <div class="kt-card-title">Coverage by Location</div>
+                  <div class="kt-card-subtitle">Completion % per hari — L1–L4 & MK-BC</div>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="lmo-coverage-legend">
+                  <span><i class="bi bi-check-circle-fill text-green-600"></i> Done</span>
+                  <span><i class="bi bi-exclamation-circle-fill text-amber-500"></i> Perlu perhatian</span>
+                  <span><i class="bi bi-dash-circle text-slate-300"></i> N/A</span>
+                </div>
+                <div class="badge-kt badge-primary">8 Hari</div>
               </div>
             </div>
-
             <div class="lmo-table-scroll">
               <table class="lmo-coverage-table">
                 <thead>
@@ -1269,11 +1345,9 @@
                     <th>L2</th>
                     <th>L3</th>
                     <th>L4</th>
-                    <th>MK-<br>BC</th>
+                    <th>MK-BC</th>
                     <th>% Coverage</th>
                     <th>Status</th>
-                    <th>Last Inspection</th>
-                    <th>Assigned Team</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -1294,28 +1368,12 @@
                     <td><div class="lmo-empty-badge">•</div></td>
                     <td>
                       <div class="lmo-coverage-cell">
-                        <div class="lmo-coverage-bar"><span style="width:80%; background:#22b573;"></span></div>
+                        <div class="lmo-coverage-bar"><span style="width:80%; background:linear-gradient(90deg, #22b573, #16a34a);"></span></div>
                         <div class="lmo-coverage-val">80%</div>
                       </div>
                     </td>
                     <td><span class="lmo-pill lmo-pill-optimal">Optimal</span></td>
-                    <td>
-                      <div class="lmo-last-inspection">
-                        <span class="main">Today, 08:45 AM</span>
-                        <span class="sub">Verified by Site AI</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="lmo-team-cell">
-                        <div class="lmo-avatar-stack">
-                          <div class="lmo-avatar-chip">JD</div>
-                          <div class="lmo-avatar-chip blue">T-A</div>
-                          <div class="lmo-avatar-chip green">S1</div>
-                        </div>
-                      </div>
-                    </td>
                   </tr>
-
                   <tr>
                     <td>
                       <div class="lmo-area-cell">
@@ -1333,27 +1391,12 @@
                     <td><div class="lmo-empty-badge">•</div></td>
                     <td>
                       <div class="lmo-coverage-cell">
-                        <div class="lmo-coverage-bar"><span style="width:45%; background:#f59e0b;"></span></div>
+                        <div class="lmo-coverage-bar"><span style="width:45%; background:linear-gradient(90deg, #f59e0b, #d97706);"></span></div>
                         <div class="lmo-coverage-val">45%</div>
                       </div>
                     </td>
                     <td><span class="lmo-pill lmo-pill-incomplete">Incomplete</span></td>
-                    <td>
-                      <div class="lmo-last-inspection">
-                        <span class="main">Yesterday, 04:20 PM</span>
-                        <span class="sub warn">Re-check required</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="lmo-team-cell">
-                        <div class="lmo-avatar-stack">
-                          <div class="lmo-avatar-chip">T-B</div>
-                        </div>
-                        <span style="color:#64748b; font-size:.9rem;">Logistics Alpha</span>
-                      </div>
-                    </td>
                   </tr>
-
                   <tr>
                     <td>
                       <div class="lmo-area-cell">
@@ -1371,182 +1414,19 @@
                     <td><div class="lmo-empty-badge">•</div></td>
                     <td>
                       <div class="lmo-coverage-cell">
-                        <div class="lmo-coverage-bar"><span style="width:20%; background:#ef4444;"></span></div>
-                        <div class="lmo-coverage-val" style="color:#ef4444;">20%</div>
+                        <div class="lmo-coverage-bar"><span style="width:20%; background:linear-gradient(90deg, #ef4444, #dc2626);"></span></div>
+                        <div class="lmo-coverage-val lmo-coverage-val--danger">20%</div>
                       </div>
                     </td>
                     <td><span class="lmo-pill lmo-pill-critical">Critical Gap</span></td>
-                    <td>
-                      <div class="lmo-last-inspection">
-                        <span class="main">14 Hours Overdue</span>
-                        <span class="sub red">Missed L2 Window</span>
-                      </div>
-                    </td>
-                    <td>
-                      <div class="lmo-team-cell">
-                        <div class="lmo-avatar-stack">
-                          <div class="lmo-avatar-chip">R1</div>
-                          <div class="lmo-avatar-chip blue">QH</div>
-                        </div>
-                        <button class="lmo-assign-btn" type="button">Assign Team</button>
-                      </div>
-                    </td>
                   </tr>
                 </tbody>
               </table>
             </div>
-          </section>
-
-        <!-- TREND + CATEGORY SUMMARY -->
-        <section class="grid grid-cols-1 xl:grid-cols-3 gap-4 animate-in" style="animation-delay:.1s">
-          <!-- Trend -->
-          <div class="xl:col-span-2 kt-card">
-            <div class="kt-card-header">
-              <div>
-                <div class="kt-card-title">Trend Harian</div>
-                <div class="kt-card-subtitle">Completion % per hari</div>
-              </div>
-              <div class="badge-kt badge-primary">8 Hari</div>
-            </div>
-            <div class="kt-card-body">
-              <div class="h-56 flex items-end gap-3">
-                <div class="flex-1 flex flex-col items-center gap-2" data-tip="88%">
-                  <div class="w-full rounded-md bg-[#1b84ff]" style="height:88%"></div>
-                  <div class="text-[11px] text-kt-muted">24/2</div>
-                  <div class="text-xs font-semibold text-kt-text">88%</div>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2" data-tip="67%">
-                  <div class="w-full rounded-md bg-[#56a8ff]" style="height:67%"></div>
-                  <div class="text-[11px] text-kt-muted">25/2</div>
-                  <div class="text-xs font-semibold text-kt-text">67%</div>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2" data-tip="62%">
-                  <div class="w-full rounded-md bg-[#6cb2ff]" style="height:62%"></div>
-                  <div class="text-[11px] text-kt-muted">26/2</div>
-                  <div class="text-xs font-semibold text-kt-text">62%</div>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2" data-tip="78%">
-                  <div class="w-full rounded-md bg-[#3a96ff]" style="height:78%"></div>
-                  <div class="text-[11px] text-kt-muted">27/2</div>
-                  <div class="text-xs font-semibold text-kt-text">78%</div>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2" data-tip="56%">
-                  <div class="w-full rounded-md bg-[#8fc4ff]" style="height:56%"></div>
-                  <div class="text-[11px] text-kt-muted">28/2</div>
-                  <div class="text-xs font-semibold text-kt-text">56%</div>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2" data-tip="75%">
-                  <div class="w-full rounded-md bg-[#4099ff]" style="height:75%"></div>
-                  <div class="text-[11px] text-kt-muted">01/3</div>
-                  <div class="text-xs font-semibold text-kt-text">75%</div>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2" data-tip="33%">
-                  <div class="w-full rounded-md bg-[#d7eaff]" style="height:33%"></div>
-                  <div class="text-[11px] text-kt-muted">02/3</div>
-                  <div class="text-xs font-semibold text-kt-text">33%</div>
-                </div>
-                <div class="flex-1 flex flex-col items-center gap-2" data-tip="0%">
-                  <div class="w-full rounded-md border border-dashed border-slate-300 bg-slate-50" style="height:4%; min-height:4px"></div>
-                  <div class="text-[11px] text-kt-text font-semibold">03/3</div>
-                  <div class="text-xs font-semibold text-kt-text">0%</div>
-                </div>
-              </div>
-
-              <div class="mt-5 grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div class="rounded-xl border border-kt-border p-3 bg-slate-50/70">
-                  <div class="text-[11px] uppercase tracking-[.14em] text-kt-muted">Avg</div>
-                  <div class="text-lg font-semibold mt-1">56%</div>
-                </div>
-                <div class="rounded-xl border border-kt-border p-3 bg-slate-50/70">
-                  <div class="text-[11px] uppercase tracking-[.14em] text-kt-muted">Peak</div>
-                  <div class="text-lg font-semibold mt-1">88% <span class="text-xs text-kt-muted">(24 Feb)</span></div>
-                </div>
-                <div class="rounded-xl border border-kt-border p-3 bg-slate-50/70">
-                  <div class="text-[11px] uppercase tracking-[.14em] text-kt-muted">Low</div>
-                  <div class="text-lg font-semibold mt-1">0% <span class="text-xs text-kt-muted">(03 Mar)</span></div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Category Summary -->
-          <div class="kt-card">
-            <div class="kt-card-header">
-              <div>
-                <div class="kt-card-title">Kategori Summary</div>
-                <div class="kt-card-subtitle">Average 8 hari</div>
-              </div>
-              <div class="badge-kt badge-neutral">Ranking</div>
-            </div>
-            <div class="kt-card-body space-y-4">
-              <div>
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                  <span class="font-medium">Area Kritis Mining</span>
-                  <span class="text-kt-muted">43%</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill" style="width:43%"></div></div>
-              </div>
-
-              <div>
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                  <span class="font-medium">Dewatering</span>
-                  <span class="text-kt-muted">79%</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill" style="width:79%"></div></div>
-              </div>
-
-              <div>
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                  <span class="font-medium">Drill & Blast</span>
-                  <span class="text-kt-muted">94%</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill" style="width:94%"></div></div>
-              </div>
-
-              <div>
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                  <span class="font-medium">IKDA</span>
-                  <span class="text-kt-muted">88%</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill" style="width:88%"></div></div>
-              </div>
-
-              <div>
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                  <span class="font-medium">IKDP</span>
-                  <span class="text-kt-muted">83%</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill" style="width:83%"></div></div>
-              </div>
-
-              <div>
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                  <span class="font-medium">IKDK</span>
-                  <span class="text-kt-muted">50%</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill" style="width:50%"></div></div>
-              </div>
-
-              <div>
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                  <span class="font-medium">IKDW</span>
-                  <span class="text-kt-muted">50%</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill" style="width:50%"></div></div>
-              </div>
-
-              <div>
-                <div class="flex items-center justify-between text-xs mb-1.5">
-                  <span class="font-medium">IKPM</span>
-                  <span class="text-kt-muted">0%</span>
-                </div>
-                <div class="progress-track"><div class="progress-fill" style="width:0%"></div></div>
-              </div>
-            </div>
           </div>
         </section>
 
-        <!-- DETAIL TABLE -->
+    
         <section class="kt-card animate-in" style="animation-delay:.15s">
           <div class="kt-card-header flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
@@ -1586,295 +1466,57 @@
                   </tr>
                 </thead>
                 <tbody id="tableBody">
-                  <tr data-shift="1" data-status="notok">
-                    <td class="font-medium">
-                      <div class="text-sm font-semibold">3/3</div>
-                      <div class="text-[11px] text-kt-muted">2026</div>
-                    </td>
-                    <td><span class="badge-kt badge-neutral">S1</span></td>
-                    <td>Area Kritis Mining</td>
-                    <td class="text-slate-600">IPD-72 HR BARAT</td>
-                    <td class="font-medium">ANDI MUAMMAR</td>
-                    <td class="text-kt-muted">—</td>
-                    <td class="text-kt-muted">—</td>
-                    <td class="text-kt-muted">—</td>
-                    <td class="text-center"><span class="badge-kt badge-danger">Not OK</span></td>
-                  </tr>
-
-                  <tr data-shift="1" data-status="ok">
-                    <td class="font-medium">
-                      <div class="text-sm font-semibold">3/2</div>
-                      <div class="text-[11px] text-kt-muted">2026</div>
-                    </td>
-                    <td><span class="badge-kt badge-neutral">S1</span></td>
-                    <td>Dewatering</td>
-                    <td class="text-slate-600">Sump P Barat & Su.</td>
-                    <td class="font-medium">ANTHONIUS ANG.</td>
-                    <td class="text-slate-500">5147275</td>
-                    <td class="text-kt-muted">—</td>
-                    <td><span class="badge-kt badge-primary">OBSERVASI</span></td>
-                    <td class="text-center"><span class="badge-kt badge-success">OK</span></td>
-                  </tr>
-
-                  <tr data-shift="1" data-status="ok">
-                    <td class="font-medium">
-                      <div class="text-sm font-semibold">3/1</div>
-                      <div class="text-[11px] text-kt-muted">2026</div>
-                    </td>
-                    <td><span class="badge-kt badge-neutral">S1</span></td>
-                    <td>Drill & Blast</td>
-                    <td class="text-slate-600">PENGEBORAN DAN P.</td>
-                    <td class="font-medium">ANDI MUAMMAR.</td>
-                    <td class="text-slate-500">8321546</td>
-                    <td class="text-slate-500">Genangan air dilokasi Parkiran pe.</td>
-                    <td><span class="badge-kt badge-warning">HAZARD</span></td>
-                    <td class="text-center"><span class="badge-kt badge-success">OK</span></td>
-                  </tr>
+                  @forelse($assignedPlannings ?? [] as $planning)
+                    @php
+                      $shiftVal = $planning->shift ? trim((string)$planning->shift) : '';
+                      $dataShift = (strpos($shiftVal, '1') !== false) ? '1' : ((strpos($shiftVal, '2') !== false) ? '2' : 'all');
+                      $firstK = $planning->karyawans->first();
+                      $karyawanNames = $planning->karyawans->pluck('nama_karyawan')->implode(', ');
+                    @endphp
+                    <tr data-shift="{{ $dataShift }}" data-status="ok">
+                      <td class="font-medium">
+                        <div class="text-sm font-semibold">{{ $planning->tanggal ? $planning->tanggal->format('d/m') : '—' }}</div>
+                        <div class="text-[11px] text-kt-muted">{{ $planning->tanggal ? $planning->tanggal->format('Y') : '—' }}</div>
+                      </td>
+                      <td>
+                        @if($planning->shift)
+                          <span class="badge-kt badge-neutral">{{ Str::limit($planning->shift, 8) }}</span>
+                        @else
+                          <span class="text-kt-muted">—</span>
+                        @endif
+                      </td>
+                      <td>{{ $planning->kategori_area ?? '—' }}</td>
+                      <td class="text-slate-600">{{ Str::limit($planning->aktivitas ?? '—', 28) }}</td>
+                      <td class="font-medium">{{ $karyawanNames ?: '—' }}</td>
+                      <td class="text-slate-500">{{ $firstK && $firstK->sid_karyawan ? $firstK->sid_karyawan : '—' }}</td>
+                      <td class="text-slate-500">{{ $firstK && ($firstK->reason || $firstK->detail) ? Str::limit($firstK->reason ?? $firstK->detail ?? '—', 35) : '—' }}</td>
+                      <td>
+                        @if($planning->jenis_sap)
+                          <span class="badge-kt badge-primary">{{ Str::limit($planning->jenis_sap, 12) }}</span>
+                        @else
+                          <span class="text-kt-muted">—</span>
+                        @endif
+                      </td>
+                      <td class="text-center"><span class="badge-kt badge-success">Assigned</span></td>
+                    </tr>
+                  @empty
+                    <tr>
+                      <td colspan="9" class="text-center py-8 text-kt-muted text-sm">Belum ada plan yang di-assign ke karyawan.</td>
+                    </tr>
+                  @endforelse
                 </tbody>
               </table>
             </div>
 
             <div class="px-5 py-3 border-t border-kt-border bg-slate-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
               <span id="rowCount" class="text-kt-muted">Menampilkan semua record</span>
-              <span class="text-kt-muted">Total: <span id="totalRowText" class="font-medium text-kt-text">0</span> entri</span>
+              <span class="text-kt-muted">Total: <span id="totalRowText" class="font-medium text-kt-text">{{ count($assignedPlannings ?? []) }}</span> entri</span>
             </div>
           </div>
         </section>
 
-        <!-- Performance Pengecekan Area / Aktifitas Kritis (LMO Monitor) -->
-        <div class="lmo-perf animate-in mt-4" style="animation-delay:.2s">
-          <div class="d-flex flex-column flex-lg-row align-items-start align-items-lg-center justify-content-between gap-4 mb-4 pb-2">
-            <div class="headline">
-              <h1>Performance Pengecekan Area / Aktifitas Kritis</h1>
-              <p>Monthly operational performance tracker for critical mining zones</p>
-            </div>
-            <div class="d-flex align-items-center gap-3 month-toolbar flex-shrink-0">
-              <div class="month-control">
-                <button class="btn" type="button" aria-label="Previous month"><i class="material-icons-outlined" style="font-size:1.35rem">chevron_left</i></button>
-                <div class="label">February 2024</div>
-                <button class="btn" type="button" aria-label="Next month"><i class="material-icons-outlined" style="font-size:1.35rem">chevron_right</i></button>
-              </div>
-              <button class="btn btn-primary btn-export" type="button">
-                <i class="material-icons-outlined me-2" style="font-size:1.1rem">download</i>Export Report
-              </button>
-            </div>
-          </div>
+       
 
-          <!-- Calendar Card -->
-          <section class="card-panel calendar-card mb-4">
-            <div class="calendar-scroll">
-              <div class="calendar-head">
-                <div>Sunday</div>
-                <div>Monday</div>
-                <div>Tuesday</div>
-                <div>Wednesday</div>
-                <div>Thursday</div>
-                <div>Friday</div>
-                <div>Saturday</div>
-              </div>
-              <div class="calendar-grid">
-                <div class="day-cell state-neutral"></div>
-                <div class="day-cell state-neutral"></div>
-                <div class="day-cell state-neutral"></div>
-                <div class="day-cell state-neutral"></div>
-                <div class="day-cell state-good">
-                  <div class="day-num">1</div>
-                  <div class="day-center">
-                    <div class="score good">8 / 8</div>
-                    <div class="mini-progress"><div class="fill good" style="width:100%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-good">
-                  <div class="day-num">2</div>
-                  <div class="day-center">
-                    <div class="score good">10 / 10</div>
-                    <div class="mini-progress"><div class="fill good" style="width:100%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-warn">
-                  <div class="day-num">3</div>
-                  <div class="day-center">
-                    <div class="score warn">6 / 9</div>
-                    <div class="mini-progress"><div class="fill warn" style="width:66%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell">
-                  <div class="day-num">4</div>
-                  <div class="day-center">
-                    <div class="off-label">Off Schedule</div>
-                  </div>
-                </div>
-                <div class="day-cell state-bad">
-                  <div class="day-num">5</div>
-                  <div class="day-center">
-                    <div class="score bad">4 / 12</div>
-                    <div class="mini-progress"><div class="fill bad" style="width:33%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-good">
-                  <div class="day-num">6</div>
-                  <div class="day-center">
-                    <div class="score good">12 / 12</div>
-                    <div class="mini-progress"><div class="fill good" style="width:100%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-warn">
-                  <div class="day-num">7</div>
-                  <div class="day-center">
-                    <div class="score warn">7 / 10</div>
-                    <div class="mini-progress"><div class="fill warn" style="width:70%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-good">
-                  <div class="day-num">8</div>
-                  <div class="day-center">
-                    <div class="score good">9 / 10</div>
-                    <div class="mini-progress"><div class="fill good" style="width:90%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-good">
-                  <div class="day-num">9</div>
-                  <div class="day-center">
-                    <div class="score good">8 / 8</div>
-                    <div class="mini-progress"><div class="fill good" style="width:100%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-bad">
-                  <div class="day-num">10</div>
-                  <div class="day-center">
-                    <div class="score bad">2 / 11</div>
-                    <div class="mini-progress"><div class="fill bad" style="width:18%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-good">
-                  <div class="day-num">11</div>
-                  <div class="day-center">
-                    <div class="score good">14 / 15</div>
-                    <div class="mini-progress"><div class="fill good" style="width:93%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell selected">
-                  <div class="day-num">24</div>
-                  <span class="current-pill">Current</span>
-                  <div class="day-center">
-                    <div class="score">7 / 8</div>
-                    <div class="mini-progress"><div class="fill" style="width:88%; background:#2563eb"></div></div>
-                    <div class="completion">88% Completion</div>
-                  </div>
-                </div>
-                <div class="day-cell state-good">
-                  <div class="day-num">25</div>
-                  <div class="day-center">
-                    <div class="score good">8 / 8</div>
-                    <div class="mini-progress"><div class="fill good" style="width:100%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-good">
-                  <div class="day-num">26</div>
-                  <div class="day-center">
-                    <div class="score good">12 / 12</div>
-                    <div class="mini-progress"><div class="fill good" style="width:100%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-warn">
-                  <div class="day-num">27</div>
-                  <div class="day-center">
-                    <div class="score warn">8 / 12</div>
-                    <div class="mini-progress"><div class="fill warn" style="width:67%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-good">
-                  <div class="day-num">28</div>
-                  <div class="day-center">
-                    <div class="score good">10 / 10</div>
-                    <div class="mini-progress"><div class="fill good" style="width:100%"></div></div>
-                  </div>
-                </div>
-                <div class="day-cell state-good">
-                  <div class="day-num">29</div>
-                  <div class="day-center">
-                    <div class="score good">11 / 11</div>
-                    <div class="mini-progress"><div class="fill good" style="width:100%"></div></div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <!-- Activity Log Card -->
-          <section class="card-panel">
-            <div class="d-flex flex-column flex-lg-row justify-content-between align-items-start align-items-lg-center gap-3 p-4 pb-3">
-              <h2 class="section-title">Detail Plan Pengecekan (Activity Log)</h2>
-              <div class="d-flex gap-2 flex-wrap">
-                <button class="soft-chip-btn" type="button">Shift: Day</button>
-                <button class="soft-chip-btn" type="button">Status: All</button>
-                <button class="soft-chip-btn" type="button"><i class="material-icons-outlined me-1" style="font-size:1rem;vertical-align:middle">filter_list</i>Filters</button>
-              </div>
-            </div>
-            <div class="table-wrap">
-              <table class="table table-custom align-middle">
-                <thead>
-                  <tr>
-                    <th style="width:140px;">Time</th>
-                    <th>Area</th>
-                    <th>Inspector</th>
-                    <th>Layer</th>
-                    <th style="width:170px;">Status</th>
-                    <th style="width:160px;" class="text-end">Action</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr>
-                    <td>08:45 AM</td>
-                    <td>South-West Pit 4</td>
-                    <td>John D. Miller</td>
-                    <td>Level -240m</td>
-                    <td><span class="status-pill status-complete">Completed</span></td>
-                    <td class="text-end"><a href="javascript:;" class="action-link action-blue">VIEW DETAILS</a></td>
-                  </tr>
-                  <tr>
-                    <td>09:12 AM</td>
-                    <td>Main Haul Road B</td>
-                    <td>Sarah Jenkins</td>
-                    <td>Surface</td>
-                    <td><span class="status-pill status-progress">In Progress</span></td>
-                    <td class="text-end"><a href="javascript:;" class="action-link action-blue">MONITOR</a></td>
-                  </tr>
-                  <tr>
-                    <td>10:05 AM</td>
-                    <td>Primary Crusher</td>
-                    <td>Mike Thompson</td>
-                    <td>Infrastructure</td>
-                    <td><span class="status-pill status-pending">Pending</span></td>
-                    <td class="text-end"><a href="javascript:;" class="action-link action-blue">ASSIGN</a></td>
-                  </tr>
-                  <tr>
-                    <td>10:30 AM</td>
-                    <td>North Tailings Dam</td>
-                    <td>Emma Wilson</td>
-                    <td>Environmental</td>
-                    <td><span class="status-pill status-issue">Issue Detected</span></td>
-                    <td class="text-end"><a href="javascript:;" class="action-link action-red">URGENT REVIEW</a></td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="card-footer-lite">
-              <div>Showing 1 to 4 of 32 results</div>
-              <nav aria-label="Pagination">
-                <ul class="pagination pagination-sm mb-0 pagination-lite">
-                  <li class="page-item disabled"><a class="page-link" href="javascript:;"><i class="material-icons-outlined" style="font-size:1rem">chevron_left</i></a></li>
-                  <li class="page-item active"><a class="page-link" href="javascript:;">1</a></li>
-                  <li class="page-item"><a class="page-link" href="javascript:;">2</a></li>
-                  <li class="page-item"><a class="page-link" href="javascript:;">3</a></li>
-                  <li class="page-item"><a class="page-link" href="javascript:;"><i class="material-icons-outlined" style="font-size:1rem">chevron_right</i></a></li>
-                </ul>
-              </nav>
-            </div>
-          </section>
-        </div>
-
-        <!-- Footer -->
         <section class="text-xs text-kt-muted flex flex-col md:flex-row md:items-center md:justify-between gap-2 px-1">
           <div class="font-semibold text-kt-text">Performance Monitor</div>
           <div class="uppercase tracking-[.14em]">Critical Area Inspection — LMO · 2026</div>

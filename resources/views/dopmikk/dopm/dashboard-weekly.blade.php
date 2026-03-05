@@ -2185,7 +2185,7 @@
                      @php
                         $alasanMerah = htmlspecialchars($ikk->alasan_matriks ?? 'Tidak ada IPK atau OKK', ENT_QUOTES, 'UTF-8');
                      @endphp
-                     <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Merah:</strong><br>{{ $alasanMerah }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                     <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJson) }}" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Merah:</strong><br>{{ $alasanMerah }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                        <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                         <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-danger bg-opacity-10 text-danger flex-shrink-0">
                           <span class="material-icons-outlined" style="font-size: 28px;">warning</span>
@@ -2268,7 +2268,7 @@
                   @php
                     $alasanKuning = htmlspecialchars($ikk->alasan_matriks ?? 'Kondisi tidak memenuhi kriteria Hijau', ENT_QUOTES, 'UTF-8');
                   @endphp
-                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Kuning:</strong><br>{{ $alasanKuning }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonK) }}" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Kuning:</strong><br>{{ $alasanKuning }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                     <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                       <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-warning bg-opacity-10 text-warning flex-shrink-0">
                         <span class="material-icons-outlined" style="font-size: 28px;">info</span>
@@ -2351,7 +2351,7 @@
                   @php
                     $alasanHijau = htmlspecialchars($ikk->alasan_matriks ?? 'Semua persyaratan terpenuhi', ENT_QUOTES, 'UTF-8');
                   @endphp
-                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" data-bs-toggle="tooltip" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Hijau:</strong><br>{{ $alasanHijau }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
+                  <div class="dopm-matriks-row d-flex align-items-center gap-4 rounded-3 p-2 border border-transparent hover-border cursor-pointer" role="button" tabindex="0" data-dopm="{{ json_encode($dopmJsonH) }}" data-bs-toggle="tooltip" data-bs-trigger="hover" data-bs-placement="top" data-bs-html="true" data-bs-title="<strong>Alasan Status Hijau:</strong><br>{{ $alasanHijau }}" title="Klik untuk detail DOPM, IPK-IKK, OKK, OAK">
                     <div class="d-flex align-items-center gap-3 flex-grow-1 flex-shrink-0 min-w-0">
                       <div class="wh-48 d-flex align-items-center justify-content-center rounded-3 border bg-success bg-opacity-10 text-success flex-shrink-0">
                         <span class="material-icons-outlined" style="font-size: 28px;">check_circle</span>
@@ -3097,7 +3097,7 @@
                                 <p class="small text-muted mb-2">Tabel di bawah menampilkan seluruh data OKK dengan kode IKK ini.</p>
                                 <div class="table-responsive" style="max-height: 300px; overflow-y: auto;">
                                     <table class="table table-sm table-hover table-striped align-middle mb-0 table-bordered" id="tableOkk">
-                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
+                                        <thead class="table-light"><tr><th>Waktu</th><th>Nama Pengawas</th><th>Kode SID</th><th>Kode IKK</th><th>Code</th><th>Perusahaan</th><th>Site</th><th>Jenis IJK</th><th>Layer</th></tr></thead>
                                         <tbody></tbody>
                                     </table>
                                 </div>
@@ -3807,50 +3807,36 @@
     var modalEl = document.getElementById('detailDopmModal');
     var intervensiModalEl = document.getElementById('intervensiDopmModal');
     var intervensiModal = intervensiModalEl ? new bootstrap.Modal(intervensiModalEl) : null;
-    console.log('[DOPM Weekly] Modal initialization:', { modalEl: !!modalEl, intervensiModalEl: !!intervensiModalEl, intervensiModal: !!intervensiModal });
-    if (!modalEl) {
-        console.error('[DOPM Weekly] CRITICAL: detailDopmModal element not found! Modal will not work.');
-        return;
-    }
-    var modal = new bootstrap.Modal(modalEl);
-    console.log('[DOPM Weekly] Modal instance created successfully');
+    var modal = modalEl ? new bootstrap.Modal(modalEl) : null;
 
-    // DataTables untuk tabel DOPM harian
-    if ($.fn.DataTable && document.getElementById('tableDopmHarian')) {
-        $('#tableDopmHarian').DataTable({
-            order: [[0, 'asc']],
-            pageLength: 25,
-            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-            language: {
-                search: 'Cari:',
-                lengthMenu: 'Tampilkan _MENU_ baris',
-                info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
-                infoEmpty: 'Tidak ada data',
-                infoFiltered: '(filter dari _MAX_ data)',
-                paginate: { first: 'Awal', last: 'Akhir', next: 'Selanjutnya', previous: 'Sebelumnya' }
-            },
-            columnDefs: [{ targets: [9, 10], orderable: false }],
-            dom: '<"row mb-2"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
-        });
+    // DataTables: wrap in try/catch agar error tidak menghentikan script (modal detail & listener tetap jalan)
+    try {
+        if ($.fn.DataTable && document.getElementById('tableDopmHarian')) {
+            $('#tableDopmHarian').DataTable({
+                order: [[0, 'asc']],
+                pageLength: 25,
+                lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+                language: {
+                    search: 'Cari:',
+                    lengthMenu: 'Tampilkan _MENU_ baris',
+                    info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
+                    infoEmpty: 'Tidak ada data',
+                    infoFiltered: '(filter dari _MAX_ data)',
+                    paginate: { first: 'Awal', last: 'Akhir', next: 'Selanjutnya', previous: 'Sebelumnya' }
+                },
+                columnDefs: [{ targets: [9, 10], orderable: false }],
+                dom: '<"row mb-2"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
+            });
+        }
+    } catch (e) {
+        console.warn('[DOPM Weekly] DataTable tableDopmHarian:', e);
     }
-
-    // DataTables untuk tabel IKK ClickHouse harian
-    if ($.fn.DataTable && document.getElementById('tableIkkClickhouseHarian')) {
-        $('#tableIkkClickhouseHarian').DataTable({
-            order: [[0, 'asc']],
-            pageLength: 25,
-            lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-            language: {
-                search: 'Cari:',
-                lengthMenu: 'Tampilkan _MENU_ baris',
-                info: 'Menampilkan _START_–_END_ dari _TOTAL_ data',
-                infoEmpty: 'Tidak ada data',
-                infoFiltered: '(filter dari _MAX_ data)',
-                paginate: { first: 'Awal', last: 'Akhir', next: 'Selanjutnya', previous: 'Sebelumnya' }
-            },
-            dom: '<"row mb-2"<"col-sm-12 col-md-6"l><"col-sm-12 col-md-6"f>>rtip'
-        });
-    }
+    // Tabel IKK ClickHouse punya baris expand (colspan) yang tidak kompatibel dengan DataTables — jangan init agar tidak error _DT_CellIndex
+    // try {
+    //     if ($.fn.DataTable && document.getElementById('tableIkkClickhouseHarian')) {
+    //         $('#tableIkkClickhouseHarian').DataTable({ ... });
+    //     }
+    // } catch (e) { console.warn('[DOPM Weekly] DataTable tableIkkClickhouseHarian:', e); }
 
     // Modal detail Work Permit IKK: klik baris tabel → tampilkan data lengkap
     (function() {
@@ -3953,7 +3939,31 @@
         if (m) return m[3] + '/' + m[2] + '/' + m[1] + ' ' + m[4] + ':' + m[5];
         return s;
     }
-
+    function formatTsAddHour(ts) {
+        if (!ts) return '—';
+        var s = String(ts).trim();
+        if (!s) return '—';
+        var d = new Date(s);
+        if (isNaN(d.getTime())) {
+            var m = s.match(/^(\d{4})-(\d{2})-(\d{2})[T\s](\d{2}):(\d{2})/);
+            if (!m) return s;
+            d = new Date(
+                parseInt(m[1], 10),
+                parseInt(m[2], 10) - 1,
+                parseInt(m[3], 10),
+                parseInt(m[4], 10),
+                parseInt(m[5], 10)
+            );
+        }
+        d.setHours(d.getHours() + 1);
+        var dd = d.getDate();
+        var mm = d.getMonth() + 1;
+        var yyyy = d.getFullYear();
+        var hh = d.getHours();
+        var min = d.getMinutes();
+        var pad = function(n) { return n < 10 ? '0' + n : '' + n; };
+        return pad(dd) + '/' + pad(mm) + '/' + yyyy + ' ' + pad(hh) + ':' + pad(min);
+    }
 
     // Normalisasi nomor untuk wa.me: 08xxx -> 62xxx
     function normalizeWaNumber(selular) {
@@ -3983,8 +3993,132 @@
         }
     }
 
-    // Event delegation: tombol Intervensi dan detail DOPM
-    console.log('[DOPM Weekly] Event listener for click attached');
+    // Klik baris Need Action / Warning / Complete → buka modal detail (capture phase agar jalan sebelum tooltip/elemen lain)
+    document.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-detail-dopm') || (e.target.closest('.dopm-matriks-row') && !e.target.closest('.btn-intervensi-dopm') ? e.target.closest('.dopm-matriks-row') : null);
+        if (btn) {
+            e.preventDefault();
+            e.stopPropagation();
+            e.stopImmediatePropagation();
+            var data = JSON.parse(btn.getAttribute('data-dopm') || '{}');
+            window._lastDetailDopmData = data;
+            var modalDoc = document.getElementById('detailDopmModal');
+            if (!modalDoc) return;
+            document.getElementById('detailDopmTitle').textContent = (data.id_dop || 'Detail') + ' — ' + (data.nama_pekerjaan || 'DOPM').substring(0, 50);
+            document.getElementById('detailDopmSubtitle').textContent = 'Kode IKK: ' + (data.kode_ikk || '—');
+            function dash(val) { return (val == null || val === '' || val === undefined) ? '—' : String(val); }
+            document.getElementById('detailDopmId').textContent = dash(data.id_dop);
+            document.getElementById('detailDopmKodeIkk').textContent = dash(data.kode_ikk);
+            document.getElementById('detailDopmNamaPekerjaan').textContent = dash(data.nama_pekerjaan);
+            document.getElementById('detailDopmSite').textContent = dash(data.site_ijin_kerja_khusus);
+            document.getElementById('detailDopmPerusahaan').textContent = dash(data.perusahaan_ijin_kerja_khusus);
+            document.getElementById('detailDopmJenisIjk').textContent = dash(data.jenis_ijin_kerja_khusus);
+            document.getElementById('detailDopmTanggal').textContent = dash(data.tanggal_dop);
+            document.getElementById('detailDopmStatus').textContent = dash(data.status);
+            document.getElementById('detailDopmLocation').textContent = dash(data.location_name);
+            document.getElementById('detailDopmLocationDetail').textContent = dash(data.location_detail_name);
+            document.getElementById('detailDopmLayer1').textContent = dash(data.nama_layer_1);
+            document.getElementById('detailDopmLayer2').textContent = dash(data.nama_layer_2);
+            document.getElementById('detailDopmLayer3').textContent = dash(data.nama_layer_3);
+            document.getElementById('detailDopmLayer4').textContent = dash(data.nama_layer_4);
+            document.getElementById('badgeIpkIkk').textContent = '0';
+            document.getElementById('badgeOkk').textContent = '0';
+            document.getElementById('badgeOak').textContent = '0';
+            document.getElementById('statCountIpkIkk').textContent = '0';
+            document.getElementById('statCountOkk').textContent = '0';
+            document.getElementById('statCountOak').textContent = '0';
+            showLoading('ipkIkk');
+            showLoading('okk');
+            showLoading('oak');
+            document.getElementById('oakContext').classList.add('d-none');
+            var detailModalEl = document.getElementById('detailDopmModal');
+            var detailModalInstance = modal || (detailModalEl && typeof bootstrap !== 'undefined' && bootstrap.Modal ? bootstrap.Modal.getOrCreateInstance(detailModalEl) : null);
+            if (detailModalInstance) detailModalInstance.show();
+            var params = new URLSearchParams({
+                kode_ikk: data.kode_ikk || '',
+                work_permit_id: data.work_permit_id || '',
+                jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '',
+                sid_layer_2: data.sid_layer_2 || '',
+                sid_layer_3: data.sid_layer_3 || '',
+                sid_layer_4: data.sid_layer_4 || '',
+                nama_layer_2: data.nama_layer_2 || '',
+                nama_layer_3: data.nama_layer_3 || '',
+                nama_layer_4: data.nama_layer_4 || '',
+                location_name: data.location_name || '',
+                location_detail_name: data.location_detail_name || '',
+                tanggal_dop: data.tanggal_dop || ''
+            });
+            function doFetch() {
+                fetch(modalApiUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                    .then(function(r) {
+                        if (!r.ok) throw new Error('HTTP ' + r.status);
+                        var ct = (r.headers.get('Content-Type') || '').toLowerCase();
+                        if (ct.indexOf('application/json') === -1) throw new Error('Response bukan JSON');
+                        return r.json();
+                    })
+                    .then(function(res) {
+                        if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Request failed');
+                        var ipk = res.ipk_ikk || [];
+                        var okk = res.okk || [];
+                        var oak = res.oak || [];
+                        var ipkSource = res.ipk_source || 'mysql';
+                        var okkSource = res.okk_source || 'mysql';
+                        var ctx = res.dopm_context || {};
+            document.getElementById('oakLayerNames').textContent = [ctx.nama_layer_2, ctx.nama_layer_3, ctx.nama_layer_4].filter(Boolean).join(' / ') || '—';
+                        document.getElementById('badgeIpkIkk').textContent = ipk.length;
+                        document.getElementById('badgeOkk').textContent = okk.length;
+                        document.getElementById('badgeOak').textContent = oak.length;
+                        document.getElementById('statCountIpkIkk').textContent = ipk.length;
+                        document.getElementById('statCountOkk').textContent = okk.length;
+                        document.getElementById('statCountOak').textContent = oak.length;
+                        var ipkSourceEl = document.getElementById('ipkIkkSourceLabel');
+                        var okkSourceEl = document.getElementById('okkSourceLabel');
+                        if (ipkSourceEl) ipkSourceEl.textContent = ipkSource === 'clickhouse' ? ' (Sumber: ClickHouse)' : ' (Sumber: MySQL)';
+                        if (okkSourceEl) okkSourceEl.textContent = okkSource === 'clickhouse' ? ' (Sumber: ClickHouse)' : ' (Sumber: MySQL)';
+                        if (res.location_name) document.getElementById('detailDopmLocation').textContent = res.location_name;
+                        if (res.location_detail_name) document.getElementById('detailDopmLocationDetail').textContent = res.location_detail_name;
+                        var layerNames = [ctx.nama_layer_2, ctx.nama_layer_3, ctx.nama_layer_4].filter(Boolean).join(' / ') || '—';
+                        if (layerNames !== '—') document.getElementById('oakContext').classList.remove('d-none');
+                        var tbodyIpk = modalDoc.querySelector('#tableIpkIkk tbody');
+                        if (tbodyIpk) {
+                            tbodyIpk.innerHTML = '';
+                            ipk.forEach(function(r) {
+                                tbodyIpk.appendChild(tr([formatTsAddHour(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk), safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.durasi_jam), safeStr(r.cctv_terekam), safeStr(r.kategori_ijk, 35), safeStr(r.status_pekerjaan)]));
+                            });
+                            ipk.length === 0 ? showEmpty('ipkIkk') : showTable('ipkIkk');
+                        }
+                        var tbodyOkk = modalDoc.querySelector('#tableOkk tbody');
+                        if (tbodyOkk) {
+                            tbodyOkk.innerHTML = '';
+                            okk.forEach(function(r) {
+                                tbodyOkk.appendChild(tr([formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk), safeStr(r.code), safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.jenis_ijk, 35), safeStr(r.layer_pengawas)]));
+                            });
+                            okk.length === 0 ? showEmpty('okk') : showTable('okk');
+                        }
+                        var tbodyOak = modalDoc.querySelector('#tableOak tbody');
+                        if (tbodyOak) {
+                            tbodyOak.innerHTML = '';
+                            oak.forEach(function(r) {
+                                tbodyOak.appendChild(tr([safeStr(r.activity), safeStr(r.sub_activity), safeStr(r.submit_date), safeStr(r.submit_by), safeStr(r.kode_sid_pelapor), safeStr(r.location), safeStr(r.detail_location), safeStr(r.conclusion, 50), safeStr(r.site)]));
+                            });
+                            oak.length === 0 ? showEmpty('oak') : showTable('oak');
+                        }
+                    })
+                    .catch(function(err) {
+                        showEmpty('ipkIkk');
+                        showEmpty('okk');
+                        showEmpty('oak');
+                        if (typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Gagal memuat', text: err.message || 'Gagal memuat data detail.' });
+                    });
+            }
+            detailModalEl.addEventListener('shown.bs.modal', function onShown() {
+                detailModalEl.removeEventListener('shown.bs.modal', onShown);
+                doFetch();
+            }, { once: true });
+            return;
+        }
+    }, true);
+
     document.addEventListener('click', function(e) {
         var btnIntervensi = e.target.closest('.btn-intervensi-dopm');
         if (btnIntervensi && intervensiModal) {
@@ -4371,158 +4505,6 @@
             doLayer1Fetch();
             doOakLayers234Fetch();
             return;
-        }
-
-        var btn = e.target.closest('.btn-detail-dopm') || (e.target.closest('.dopm-matriks-row') && !e.target.closest('.btn-intervensi-dopm') ? e.target.closest('.dopm-matriks-row') : null);
-        console.log('[DOPM Weekly] Click detected:', { target: e.target, btn: btn, hasMatriksRow: !!e.target.closest('.dopm-matriks-row') });
-        if (!btn) return;
-        var data = JSON.parse(btn.getAttribute('data-dopm') || '{}');
-        console.log('[DOPM Weekly] Opening detail modal for:', { id_dop: data.id_dop, kode_ikk: data.kode_ikk, modal: !!modal });
-        window._lastDetailDopmData = data;
-        var modalDoc = document.getElementById('detailDopmModal');
-        document.getElementById('detailDopmTitle').textContent = (data.id_dop || 'Detail') + ' — ' + (data.nama_pekerjaan || 'DOPM').substring(0, 50);
-        document.getElementById('detailDopmSubtitle').textContent = 'Kode IKK: ' + (data.kode_ikk || '—');
-        function dash(val) { return (val == null || val === '' || val === undefined) ? '—' : String(val); }
-        document.getElementById('detailDopmId').textContent = dash(data.id_dop);
-        document.getElementById('detailDopmKodeIkk').textContent = dash(data.kode_ikk);
-        document.getElementById('detailDopmNamaPekerjaan').textContent = dash(data.nama_pekerjaan);
-        document.getElementById('detailDopmSite').textContent = dash(data.site_ijin_kerja_khusus);
-        document.getElementById('detailDopmPerusahaan').textContent = dash(data.perusahaan_ijin_kerja_khusus);
-        document.getElementById('detailDopmJenisIjk').textContent = dash(data.jenis_ijin_kerja_khusus);
-        document.getElementById('detailDopmTanggal').textContent = dash(data.tanggal_dop);
-        document.getElementById('detailDopmStatus').textContent = dash(data.status);
-        document.getElementById('detailDopmLocation').textContent = dash(data.location_name);
-        document.getElementById('detailDopmLocationDetail').textContent = dash(data.location_detail_name);
-        document.getElementById('detailDopmLayer1').textContent = dash(data.nama_layer_1);
-        document.getElementById('detailDopmLayer2').textContent = dash(data.nama_layer_2);
-        document.getElementById('detailDopmLayer3').textContent = dash(data.nama_layer_3);
-        document.getElementById('detailDopmLayer4').textContent = dash(data.nama_layer_4);
-        document.getElementById('badgeIpkIkk').textContent = '0';
-        document.getElementById('badgeOkk').textContent = '0';
-        document.getElementById('badgeOak').textContent = '0';
-        document.getElementById('statCountIpkIkk').textContent = '0';
-        document.getElementById('statCountOkk').textContent = '0';
-        document.getElementById('statCountOak').textContent = '0';
-        showLoading('ipkIkk');
-        showLoading('okk');
-        showLoading('oak');
-        document.getElementById('oakContext').classList.add('d-none');
-        modal.show();
-        var params = new URLSearchParams({
-            kode_ikk: data.kode_ikk || '',
-            work_permit_id: data.work_permit_id || '',
-            jenis_ijin_kerja_khusus: data.jenis_ijin_kerja_khusus || '',
-            sid_layer_2: data.sid_layer_2 || '',
-            sid_layer_3: data.sid_layer_3 || '',
-            sid_layer_4: data.sid_layer_4 || '',
-            nama_layer_2: data.nama_layer_2 || '',
-            nama_layer_3: data.nama_layer_3 || '',
-            nama_layer_4: data.nama_layer_4 || '',
-            location_name: data.location_name || '',
-            location_detail_name: data.location_detail_name || '',
-            tanggal_dop: data.tanggal_dop || ''
-        });
-        console.log('[OAK] Modal request params (data-dopm):', { location_name: data.location_name, location_detail_name: data.location_detail_name, tanggal_dop: data.tanggal_dop, kode_ikk: data.kode_ikk, work_permit_id: data.work_permit_id });
-        console.log('[OAK] Modal API URL params:', params.toString());
-        function doFetch() {
-        fetch(modalApiUrl + '?' + params.toString(), { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-            .then(function(r) {
-                if (!r.ok) throw new Error('HTTP ' + r.status);
-                var ct = (r.headers.get('Content-Type') || '').toLowerCase();
-                if (ct.indexOf('application/json') === -1) throw new Error('Response bukan JSON');
-                return r.json();
-            })
-            .then(function(res) {
-                if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Request failed');
-                var ipk = res.ipk_ikk || [];
-                var okk = res.okk || [];
-                var oak = res.oak || [];
-                var ipkSource = res.ipk_source || 'mysql';
-                var okkSource = res.okk_source || 'mysql';
-                console.log('[OAK] API response:', { oakCount: oak.length, oak: oak, fullResKeys: res ? Object.keys(res) : [], ipk_source: ipkSource, okk_source: okkSource });
-                if (oak.length > 0 && oak[0]) console.log('[OAK] First OAK row keys:', Object.keys(oak[0]), 'sample:', oak[0]);
-                var ctx = res.dopm_context || {};
-                var layerNames = [ctx.nama_layer_2, ctx.nama_layer_3, ctx.nama_layer_4].filter(Boolean).join(' / ') || '—';
-                document.getElementById('oakLayerNames').textContent = layerNames;
-                document.getElementById('badgeIpkIkk').textContent = ipk.length;
-                document.getElementById('badgeOkk').textContent = okk.length;
-                var ipkSourceEl = document.getElementById('ipkIkkSourceLabel');
-                var okkSourceEl = document.getElementById('okkSourceLabel');
-                if (ipkSourceEl) ipkSourceEl.textContent = ipkSource === 'clickhouse' ? ' (Sumber: ClickHouse)' : ' (Sumber: MySQL)';
-                if (okkSourceEl) okkSourceEl.textContent = okkSource === 'clickhouse' ? ' (Sumber: ClickHouse)' : ' (Sumber: MySQL)';
-                document.getElementById('badgeOak').textContent = oak.length;
-                document.getElementById('statCountIpkIkk').textContent = ipk.length;
-                document.getElementById('statCountOkk').textContent = okk.length;
-                document.getElementById('statCountOak').textContent = oak.length;
-                if (layerNames !== '—') document.getElementById('oakContext').classList.remove('d-none');
-                if (res.location_name != null && res.location_name !== '') document.getElementById('detailDopmLocation').textContent = res.location_name;
-                if (res.location_detail_name != null && res.location_detail_name !== '') document.getElementById('detailDopmLocationDetail').textContent = res.location_detail_name;
-
-                // Tabel IPK-IKK (pastikan ambil elemen di dalam modal)
-                var tbodyIpk = modalDoc.querySelector('#tableIpkIkk tbody');
-                if (tbodyIpk) {
-                    tbodyIpk.innerHTML = '';
-                    if (ipk.length === 0) {
-                        showEmpty('ipkIkk');
-                    } else {
-                        showTable('ipkIkk');
-                        ipk.forEach(function(r) {
-                            tbodyIpk.appendChild(tr([
-                                formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk),
-                                safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.durasi_jam),
-                                safeStr(r.cctv_terekam), safeStr(r.kategori_ijk, 35), safeStr(r.status_pekerjaan)
-                            ]));
-                        });
-                    }
-                }
-
-                // Tabel OKK
-                var tbodyOkk = modalDoc.querySelector('#tableOkk tbody');
-                if (tbodyOkk) {
-                    tbodyOkk.innerHTML = '';
-                    if (okk.length === 0) {
-                        showEmpty('okk');
-                    } else {
-                        showTable('okk');
-                        okk.forEach(function(r) {
-                            tbodyOkk.appendChild(tr([
-                                formatTs(r.ts), safeStr(r.nama_pengawas), safeStr(r.kode_sid), safeStr(r.kode_ikk),
-                                safeStr(r.nama_perusahaan, 40), safeStr(r.site), safeStr(r.jenis_ijk, 35), safeStr(r.layer_pengawas)
-                            ]));
-                        });
-                    }
-                }
-
-                // Tabel OAK
-                var tbodyOak = modalDoc.querySelector('#tableOak tbody');
-                if (tbodyOak) {
-                    tbodyOak.innerHTML = '';
-                    if (oak.length === 0) {
-                        showEmpty('oak');
-                    } else {
-                        showTable('oak');
-                        oak.forEach(function(r) {
-                            tbodyOak.appendChild(tr([
-                                safeStr(r.activity), safeStr(r.sub_activity), safeStr(r.submit_date), safeStr(r.submit_by),
-                                safeStr(r.kode_sid_pelapor), safeStr(r.location), safeStr(r.detail_location), safeStr(r.conclusion, 50), safeStr(r.site)
-                            ]));
-                        });
-                    }
-                }
-            })
-            .catch(function(err) {
-                showEmpty('ipkIkk');
-                showEmpty('okk');
-                showEmpty('oak');
-                console.error(err);
-                if (typeof Swal !== 'undefined') Swal.fire({ icon: 'error', title: 'Gagal memuat', text: err.message || 'Gagal memuat data detail.' });
-            });
-        }
-        if (modalEl) {
-            modalEl.addEventListener('shown.bs.modal', function onShown() {
-                modalEl.removeEventListener('shown.bs.modal', onShown);
-                doFetch();
-            }, { once: true });
         }
     });
 

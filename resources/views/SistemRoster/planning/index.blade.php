@@ -5,6 +5,7 @@
 @section('css')
 <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
 <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 <style>
 .select2-container { width: 100% !important; }
 .select2-container--bootstrap-5 .select2-selection { min-height: 32px; font-size: 0.875rem; }
@@ -12,6 +13,11 @@
 .karyawan-select-cell { min-width: 250px; }
 .saving-indicator { display: none; }
 .saving-indicator.show { display: inline-block; }
+/* Tabs per site */
+.nav-tabs-custom { border-bottom: 2px solid #e9ecef; gap: 4px; }
+.nav-tabs-custom .nav-link { border: 1px solid #dee2e6; border-bottom: none; margin-bottom: -2px; font-weight: 500; color: #6c757d; }
+.nav-tabs-custom .nav-link:hover { color: #0d6efd; border-color: #dee2e6; }
+.nav-tabs-custom .nav-link.active { color: #0d6efd; background: #fff; border-color: #dee2e6 #dee2e6 #fff; }
 </style>
 @endsection
 
@@ -88,7 +94,7 @@
                 <div class="card-body">
                     <div class="row g-3">
                         <div class="col-lg-8">
-                            <form method="GET" action="{{ route('sistem-roster.planning.index') }}" class="row g-3 align-items-end">
+                            <form method="GET" action="{{ route('sistem-roster.planning.index') }}" id="filterForm" class="row g-3 align-items-end">
                                 <div class="col-12">
                                     <label for="search" class="form-label">Cari (No IKK, Aktivitas, Lokasi, Site, Perusahaan, Pengawas)</label>
                                     <input type="text" name="search" id="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Ketik untuk cari di semua kolom...">
@@ -153,6 +159,34 @@
                     </div>
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- Tabs per Site -->
+    @php
+        $siteTabs = ['Semua', 'BMO 1', 'BMO 2', 'BMO 3', 'GMO', 'SMO', 'LMO', 'HO', 'Explorasi'];
+        $currentFilterSite = $filterSite ?? '';
+    @endphp
+    <div class="row mb-3">
+        <div class="col-12">
+            <ul class="nav nav-tabs nav-tabs-custom flex-wrap" id="siteTabs" role="tablist">
+                @foreach($siteTabs as $tab)
+                    @php
+                        $tabValue = $tab === 'Semua' ? '' : $tab;
+                        $tabId = $tab === 'Semua' ? 'semua' : Str::slug($tab);
+                        $isActive = ($currentFilterSite === $tabValue);
+                    @endphp
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link {{ $isActive ? 'active' : '' }} rounded-3 px-3 py-2"
+                                type="button"
+                                data-site="{{ $tabValue }}"
+                                id="tab-{{ $tabId }}"
+                                role="tab">
+                            {{ $tab }}
+                        </button>
+                    </li>
+                @endforeach
+            </ul>
         </div>
     </div>
 
@@ -310,10 +344,12 @@
             </div>
         </div>
     </div>
+
 @endsection
 
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 const csrfToken = '{{ csrf_token() }}';
 const usersUrl = '{{ route("sistem-roster.planning.users") }}';
@@ -381,13 +417,34 @@ function saveKaryawan(planningId, $select) {
         const $status = $('#status-' + planningId);
         if (karyawans.length > 0) {
             $status.removeClass('bg-secondary bg-primary bg-success').addClass('bg-primary').text('Assigned');
+            if (data.status === 'assigned' && data.planning) {
+                window.lastAssignedPlanningId = data.planning.id;
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Berhasil',
+                        text: 'Karyawan telah di-assign.',
+                        showCancelButton: true,
+                        confirmButtonText: '<i class="bx bxl-whatsapp me-1"></i> Kirim notifikasi ke WA',
+                        cancelButtonText: 'Tutup',
+                        confirmButtonColor: '#25D366',
+                        customClass: { confirmButton: 'rounded-3', cancelButton: 'rounded-3' }
+                    }).then(function(result) {
+                        if (result.isConfirmed) openWaNotifModal();
+                    });
+                }
+            }
         } else {
             $status.removeClass('bg-secondary bg-primary bg-success').addClass('bg-secondary').text('Draft');
         }
     })
     .catch(() => {
         $indicator.removeClass('show');
-        alert('Gagal menyimpan. Silakan coba lagi.');
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menyimpan. Silakan coba lagi.' });
+        } else {
+            alert('Gagal menyimpan. Silakan coba lagi.');
+        }
     });
 }
 
@@ -480,9 +537,110 @@ function enableGenerateButton() {
     }
 }
 
+function escapeHtml(text) {
+    if (!text) return '';
+    var div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+function normalizeWaNumber(selular) {
+    if (!selular || typeof selular !== 'string') return '';
+    var s = String(selular).replace(/\s+/g, '').replace(/-/g, '').replace(/,/g, '');
+    s = s.replace(/\D/g, '');
+    if (/^0\d+/.test(s)) s = '62' + s.slice(1);
+    else if (!/^62/.test(s) && /^\d+/.test(s)) s = '62' + s;
+    return s;
+}
+
+function openWaNotifModal() {
+    const planningId = window.lastAssignedPlanningId;
+    if (!planningId) return;
+    if (typeof Swal === 'undefined') return;
+    Swal.fire({
+        title: 'Kirim notifikasi ke WhatsApp',
+        html: '<div class="text-center py-4"><i class="bx bx-loader-alt bx-spin text-primary" style="font-size:2rem"></i><p class="mt-2 small text-muted mb-0">Memuat konten pesan...</p></div>',
+        showConfirmButton: false,
+        allowOutsideClick: false
+    });
+    fetch('/sistem-roster/planning/' + planningId + '/wa-message', {
+        headers: { 'Accept': 'application/json', 'X-CSRF-TOKEN': csrfToken }
+    })
+    .then(res => res.json())
+    .then(data => {
+        const msg = (data.message || '').trim();
+        window._waMessageContent = msg;
+        var karyawans = data.karyawans || [];
+        window._waKaryawans = karyawans;
+        var defaultPhone = '';
+        var targetLabel = '';
+        var hasAnySelular = karyawans.some(function(k) { return k.selular && normalizeWaNumber(k.selular); });
+        if (hasAnySelular && karyawans[0].selular) {
+            defaultPhone = normalizeWaNumber(karyawans[0].selular);
+            if (karyawans.length === 1) {
+                targetLabel = '<p class="text-success small mb-2 text-start"><i class="bx bxl-whatsapp me-1"></i> Nomor tujuan: ' + escapeHtml(karyawans[0].nama_karyawan || 'Karyawan') + ' (otomatis dari data karyawan)</p>';
+            } else {
+                targetLabel = '<p class="text-success small mb-2 text-start"><i class="bx bxl-whatsapp me-1"></i> Nomor tujuan: ' + karyawans.length + ' karyawan (otomatis dari data karyawan). Klik Buka WhatsApp untuk kirim ke semua.</p>';
+            }
+        }
+        if (!targetLabel) targetLabel = '<p class="text-muted small mb-2 text-start">Isi nomor WA atau kosongkan untuk memilih kontak manual.</p>';
+        const preStyle = 'white-space:pre-wrap;word-break:break-word;max-height:320px;overflow-y:auto;text-align:left;background:#f8f9fa;border:1px solid #dee2e6;border-radius:0.375rem;padding:1rem;font-size:0.875rem;margin-bottom:1rem;';
+        const inputVal = defaultPhone ? escapeHtml(defaultPhone) : '';
+        Swal.fire({
+            title: 'Kirim notifikasi ke WhatsApp',
+            html: targetLabel + '<p class="text-muted small mb-2 text-start">Pesan berisi lokasi yang harus dikunjungi dan summary lokasi.</p><pre id="waMessageText" style="' + preStyle + '">' + escapeHtml(msg) + '</pre><label class="form-label small text-start d-block">Nomor WA (bisa edit jika kirim ke nomor lain)</label><input type="text" class="form-control form-control-sm" id="waPhoneInput" value="' + inputVal + '" placeholder="6281234567890 (otomatis dari karyawan yang dipilih)">',
+            showCancelButton: true,
+            confirmButtonText: '<i class="bx bxl-whatsapp me-1"></i> Buka WhatsApp',
+            cancelButtonText: 'Tutup',
+            confirmButtonColor: '#25D366',
+            width: '32rem',
+            customClass: { confirmButton: 'rounded-3', cancelButton: 'rounded-3' },
+            // wa.me tetap ke nomor karyawan yang di-tuju: input sudah diisi otomatis dari selular (vw_user). Buka WhatsApp = wa.me/{nomor}?text=...
+            preConfirm: function() {
+                const m = window._waMessageContent || '';
+                const inp = document.getElementById('waPhoneInput');
+                let num = (inp && inp.value || '').trim();
+                num = num ? normalizeWaNumber(num) : '';
+                var kList = window._waKaryawans || [];
+                var numbersToOpen = [];
+                if (num) {
+                    numbersToOpen.push({ num: num });
+                } else if (kList.length > 0) {
+                    kList.forEach(function(k) {
+                        var n = k.selular ? normalizeWaNumber(k.selular) : '';
+                        if (n) numbersToOpen.push({ num: n });
+                    });
+                }
+                if (numbersToOpen.length === 0) {
+                    window.open('https://wa.me/?text=' + encodeURIComponent(m), '_blank');
+                } else {
+                    numbersToOpen.forEach(function(o) {
+                        window.open('https://wa.me/' + o.num + '?text=' + encodeURIComponent(m), '_blank');
+                    });
+                }
+            }
+        });
+    })
+    .catch(function() {
+        Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal memuat konten pesan.' });
+    });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     initKaryawanSelect();
-    
+
+    // Tab per site: klik tab set filter_site dan submit form
+    document.querySelectorAll('#siteTabs [data-site]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var site = this.getAttribute('data-site');
+            var filterSite = document.getElementById('filter_site');
+            if (filterSite) {
+                filterSite.value = site;
+                document.getElementById('filterForm').submit();
+            }
+        });
+    });
+
     if (hasActiveJob) {
         showJobProgress();
         disableGenerateButton();
