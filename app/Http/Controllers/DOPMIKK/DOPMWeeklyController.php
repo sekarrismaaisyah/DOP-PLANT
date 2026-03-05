@@ -1107,37 +1107,37 @@ class DOPMWeeklyController extends Controller
                 }
             }
             $locationPairsForOak = array_values($locationPairsForOak);
+            // Batch load OAK berdasarkan lokasi + detail lokasi IKK saja (tanpa bedakan tipe DIC/BC)
             if (!empty($locationPairsForOak)) {
                 try {
                     if (class_exists(\App\Services\ClickHouseService::class)) {
                         $ch = app(\App\Services\ClickHouseService::class);
                         if (method_exists($ch, 'query') && $ch->isConnected()) {
                             $dateEsc = addslashes($filterDate);
-                            foreach (['observee' => 'dic_mitra', 'observe' => 'bc'] as $tipe => $key) {
-                                $conditions = [];
-                                foreach ($locationPairsForOak as $p) {
-                                    $locEsc = addslashes($p[0]);
-                                    $detEsc = addslashes($p[1]);
-                                    $conditions[] = "(lower(trim(toString(location))) = lower('{$locEsc}') AND lower(trim(toString(detail_location))) = lower('{$detEsc}'))";
-                                }
-                                $whereLoc = implode(' OR ', $conditions);
-                                $sql = "SELECT location, detail_location FROM hse_automation.aaj_vw_car_oak_register_ytd_only"
-                                    . " WHERE toDate(submit_date) = '{$dateEsc}'"
-                                    . " AND lower(trim(toString(tipe))) = '" . addslashes($tipe) . "'"
-                                    . " AND ({$whereLoc})"
-                                    . " LIMIT 1000";
-                                $res = $ch->query($sql);
-                                foreach ($res ?? [] as $r) {
-                                    $loc = trim((string) ($r['location'] ?? ''));
-                                    $det = trim((string) ($r['detail_location'] ?? ''));
-                                    if ($loc !== '' && $det !== '') {
-                                        $k = $loc . '|' . $det;
-                                        if (!isset($oakDataByLocation[$k])) {
-                                            $oakDataByLocation[$k] = ['dic_mitra' => false, 'bc' => false];
-                                        }
-                                        $oakDataByLocation[$k][$key] = true;
-                                    }
-                                }
+                            $conditions = [];
+                            foreach ($locationPairsForOak as $p) {
+                                $locEsc = addslashes($p[0]);
+                                $detEsc = addslashes($p[1]);
+                                $conditions[] = "(trim(toString(location)) = '{$locEsc}' AND trim(toString(detail_location)) = '{$detEsc}')";
+                            }
+                            $where = implode(' OR ', $conditions);
+                            $sqlOakAny = "
+                                SELECT trim(toString(location)) as location,
+                                       trim(toString(detail_location)) as detail_location,
+                                       count() as cnt
+                                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                                WHERE toDate(submit_date) = '{$dateEsc}'
+                                  AND ({$where})
+                                GROUP BY location, detail_location
+                            ";
+                            $oakResultAny = $ch->query($sqlOakAny);
+                            foreach ($oakResultAny ?? [] as $row) {
+                                $loc = trim((string) ($row['location'] ?? ''));
+                                $det = trim((string) ($row['detail_location'] ?? ''));
+                                $key = $loc . '|' . $det;
+                                $oakDataByLocation[$key] = [
+                                    'has_oak' => ((int) ($row['cnt'] ?? 0)) > 0,
+                                ];
                             }
                         }
                     }

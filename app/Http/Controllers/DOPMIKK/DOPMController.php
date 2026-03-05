@@ -3995,7 +3995,7 @@ class DOPMController extends Controller
             return ['status' => 'Kuning', 'alasan' => $ringkasanLayer . 'Ada IPK + OKK sesuai target tapi ada yang fraud. ' . $alasanFraud];
         }
         if ($hasIpk && $hasOkk && !$hasOak) {
-            return ['status' => 'Kuning', 'alasan' => 'IPK dan OKK ada, tetapi belum ada OAK (baik dari DIC mitra maupun BC)'];
+            return ['status' => 'Kuning', 'alasan' => 'IPK dan OKK ada, tetapi belum ada OAK di lokasi dan detail lokasi IKK ini'];
         }
         $alasan = [];
         if ($hasOkkLayer1 && !$isOkkSesuaiTarget) {
@@ -4280,7 +4280,7 @@ class DOPMController extends Controller
             return ['status' => 'Kuning', 'alasan' => $ringkasanLayer . 'Ada IPK + OKK sesuai target tapi ada yang fraud. ' . $alasanFraud];
         }
         if ($hasIpk && $hasOkk && !$hasOak) {
-            return ['status' => 'Kuning', 'alasan' => 'IPK dan OKK ada, tetapi belum ada OAK (baik dari DIC mitra maupun BC)'];
+            return ['status' => 'Kuning', 'alasan' => 'IPK dan OKK ada, tetapi belum ada OAK di lokasi dan detail lokasi IKK ini'];
         }
         $alasan = [];
         if ($hasOkkLayer1 && !$isOkkSesuaiTarget) {
