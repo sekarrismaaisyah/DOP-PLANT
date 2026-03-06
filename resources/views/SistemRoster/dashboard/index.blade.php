@@ -1201,7 +1201,7 @@
                 <div class="lmo-kpi-icon lmo-icon-blue"><i class="bi bi-speedometer2"></i></div>
                 <div class="lmo-delta up"><i class="bi bi-arrow-up-right"></i> +5.4%</div>
               </div>
-              <div class="lmo-kpi-title">Avg Completion</div>
+              <div class="lmo-kpi-title">Hazard Ditemukan </div>
               <div class="lmo-kpi-value">94.2%</div>
               <div class="lmo-kpi-sub">90% Target benchmark</div>
             </div>
@@ -1211,7 +1211,7 @@
                 <div class="lmo-kpi-icon lmo-icon-green"><i class="bi bi-check-circle-fill"></i></div>
                 <div class="lmo-delta down"><i class="bi bi-arrow-down-right"></i> -2%</div>
               </div>
-              <div class="lmo-kpi-title">Status OK</div>
+              <div class="lmo-kpi-title">OAK ditemukan</div>
               <div class="lmo-kpi-value">1,102</div>
               <div class="lmo-kpi-sub">Compliance verified areas</div>
             </div>
@@ -1221,7 +1221,7 @@
                 <div class="lmo-kpi-icon lmo-icon-red"><i class="bi bi-exclamation-triangle-fill"></i></div>
                 <div class="lmo-delta down" style="color:#f04438;"><i class="bi bi-arrow-up-right"></i> +8%</div>
               </div>
-              <div class="lmo-kpi-title">Hazard Ditemukan</div>
+              <div class="lmo-kpi-title">Stop aktivitas dari OAK</div>
               <div class="lmo-kpi-value">42</div>
               <div class="lmo-kpi-sub">Immediate action required</div>
             </div>
@@ -1282,10 +1282,18 @@
                   <i class="bi bi-chevron-right" style="font-size:1.25rem"></i>
                 </button>
               </div>
-              <button class="btn-export-heatmap" type="button">
-                <i class="bi bi-download"></i>
-                <span>Export Report</span>
-              </button>
+              <div class="flex items-center gap-1 p-1 bg-slate-50 border border-kt-border rounded-xl flex-wrap" data-btn-group="heatmap-site">
+                <button type="button" onclick="filterHeatmapSite(this,'all')" class="btn-kt active text-[11px] px-3 py-2">Semua</button>
+                <button type="button" onclick="filterHeatmapSite(this,'BMO 1')" class="btn-kt text-[11px] px-3 py-2">BMO 1</button>
+                <button type="button" onclick="filterHeatmapSite(this,'BMO 2')" class="btn-kt text-[11px] px-3 py-2">BMO 2</button>
+                <button type="button" onclick="filterHeatmapSite(this,'BMO 3')" class="btn-kt text-[11px] px-3 py-2">BMO 3</button>
+                <button type="button" onclick="filterHeatmapSite(this,'SMO')" class="btn-kt text-[11px] px-3 py-2">SMO</button>
+                <button type="button" onclick="filterHeatmapSite(this,'LMO')" class="btn-kt text-[11px] px-3 py-2">LMO</button>
+                <button type="button" onclick="filterHeatmapSite(this,'GMO')" class="btn-kt text-[11px] px-3 py-2">GMO</button>
+                <button type="button" onclick="filterHeatmapSite(this,'Marine')" class="btn-kt text-[11px] px-3 py-2">Marine</button>
+                <button type="button" onclick="filterHeatmapSite(this,'HO')" class="btn-kt text-[11px] px-3 py-2">HO</button>
+                <button type="button" onclick="filterHeatmapSite(this,'EXPLORASI')" class="btn-kt text-[11px] px-3 py-2">EXPLORASI</button>
+              </div>
             </div>
           </div>
 
@@ -1328,12 +1336,18 @@
                 </div>
               </div>
               <div class="flex items-center gap-3">
-                <div class="lmo-coverage-legend">
-                  <span><i class="bi bi-check-circle-fill text-green-600"></i> Done</span>
-                  <span><i class="bi bi-exclamation-circle-fill text-amber-500"></i> Perlu perhatian</span>
-                  <span><i class="bi bi-dash-circle text-slate-300"></i> N/A</span>
-                </div>
-                <div class="badge-kt badge-primary">8 Hari</div>
+              <div class="flex items-center gap-1 p-1 bg-slate-50 border border-kt-border rounded-xl flex-wrap" data-btn-group="site">
+                <button type="button" onclick="filterSite(this,'all')" class="btn-kt active text-[11px] px-3 py-2">Semua</button>
+                <button type="button" onclick="filterSite(this,'BMO 1')" class="btn-kt text-[11px] px-3 py-2">BMO 1</button>
+                <button type="button" onclick="filterSite(this,'BMO 2')" class="btn-kt text-[11px] px-3 py-2">BMO 2</button>
+                <button type="button" onclick="filterSite(this,'BMO 3')" class="btn-kt text-[11px] px-3 py-2">BMO 3</button>
+                <button type="button" onclick="filterSite(this,'SMO')" class="btn-kt text-[11px] px-3 py-2">SMO</button>
+                <button type="button" onclick="filterSite(this,'LMO')" class="btn-kt text-[11px] px-3 py-2">LMO</button>
+                <button type="button" onclick="filterSite(this,'GMO')" class="btn-kt text-[11px] px-3 py-2">GMO</button>
+                <button type="button" onclick="filterSite(this,'Marine')" class="btn-kt text-[11px] px-3 py-2">Marine</button>
+                <button type="button" onclick="filterSite(this,'HO')" class="btn-kt text-[11px] px-3 py-2">HO</button>
+                <button type="button" onclick="filterSite(this,'EXPLORASI')" class="btn-kt text-[11px] px-3 py-2">EXPLORASI</button>
+              </div>
               </div>
             </div>
             <div class="lmo-table-scroll">
@@ -1350,76 +1364,43 @@
                     <th>Status</th>
                   </tr>
                 </thead>
-                <tbody>
-                  <tr>
-                    <td>
-                      <div class="lmo-area-cell">
-                        <span class="lmo-status-dot lmo-dot-green"></span>
-                        <div>
-                          <div class="lmo-area-name">Pit North Alpha</div>
-                          <div class="lmo-area-meta">North Sector • Active</div>
+                <tbody id="coverageTableBody">
+                  @forelse($coverageLocations ?? [] as $loc)
+                    @php
+                      $dotClass = $loc->pct >= 80 ? 'lmo-dot-green' : ($loc->pct > 0 ? 'lmo-dot-orange' : 'lmo-dot-red');
+                      $barStyle = $loc->pct >= 80 ? 'width:'.$loc->pct.'%; background:linear-gradient(90deg, #22b573, #16a34a);' : ($loc->pct > 0 ? 'width:'.$loc->pct.'%; background:linear-gradient(90deg, #f59e0b, #d97706);' : 'width:'.max(5, $loc->pct).'%; background:linear-gradient(90deg, #ef4444, #dc2626);');
+                      $valClass = $loc->pct >= 80 ? '' : ($loc->pct > 0 ? '' : 'lmo-coverage-val--danger');
+                      $pillClass = $loc->pct >= 80 ? 'lmo-pill-optimal' : ($loc->pct > 0 ? 'lmo-pill-incomplete' : 'lmo-pill-critical');
+                      $pillLabel = $loc->pct >= 80 ? 'Optimal' : ($loc->pct > 0 ? 'Incomplete' : 'Critical Gap');
+                    @endphp
+                    <tr data-site="{{ $loc->site ?? '' }}">
+                      <td>
+                        <div class="lmo-area-cell">
+                          <span class="lmo-status-dot {{ $dotClass }}"></span>
+                          <div>
+                            <div class="lmo-area-name">{{ $loc->lokasi ?: '—' }}</div>
+                            <div class="lmo-area-meta">{{ $loc->detail_lokasi ?: '—' }}</div>
+                          </div>
                         </div>
-                      </div>
-                    </td>
-                    <td><div class="lmo-check-badge"><i class="bi bi-check"></i></div></td>
-                    <td><div class="lmo-check-badge"><i class="bi bi-check"></i></div></td>
-                    <td><div class="lmo-check-badge"><i class="bi bi-check"></i></div></td>
-                    <td><div class="lmo-check-badge"><i class="bi bi-check"></i></div></td>
-                    <td><div class="lmo-empty-badge">•</div></td>
-                    <td>
-                      <div class="lmo-coverage-cell">
-                        <div class="lmo-coverage-bar"><span style="width:80%; background:linear-gradient(90deg, #22b573, #16a34a);"></span></div>
-                        <div class="lmo-coverage-val">80%</div>
-                      </div>
-                    </td>
-                    <td><span class="lmo-pill lmo-pill-optimal">Optimal</span></td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="lmo-area-cell">
-                        <span class="lmo-status-dot lmo-dot-orange"></span>
-                        <div>
-                          <div class="lmo-area-name">Stockpile Zone 4</div>
-                          <div class="lmo-area-meta">Logistics Hub • Warning</div>
+                      </td>
+                      <td><div class="lmo-empty-badge">•</div></td>
+                      <td><div class="lmo-empty-badge">•</div></td>
+                      <td><div class="lmo-empty-badge">•</div></td>
+                      <td><div class="lmo-empty-badge">•</div></td>
+                      <td><div class="lmo-empty-badge">•</div></td>
+                      <td>
+                        <div class="lmo-coverage-cell">
+                          <div class="lmo-coverage-bar"><span style="{{ $barStyle }}"></span></div>
+                          <div class="lmo-coverage-val {{ $valClass }}">{{ $loc->pct }}%</div>
                         </div>
-                      </div>
-                    </td>
-                    <td><div class="lmo-check-badge"><i class="bi bi-check"></i></div></td>
-                    <td><div class="lmo-check-badge"><i class="bi bi-check"></i></div></td>
-                    <td><div class="lmo-warn-badge"><i class="bi bi-exclamation"></i></div></td>
-                    <td><div class="lmo-empty-badge">•</div></td>
-                    <td><div class="lmo-empty-badge">•</div></td>
-                    <td>
-                      <div class="lmo-coverage-cell">
-                        <div class="lmo-coverage-bar"><span style="width:45%; background:linear-gradient(90deg, #f59e0b, #d97706);"></span></div>
-                        <div class="lmo-coverage-val">45%</div>
-                      </div>
-                    </td>
-                    <td><span class="lmo-pill lmo-pill-incomplete">Incomplete</span></td>
-                  </tr>
-                  <tr>
-                    <td>
-                      <div class="lmo-area-cell">
-                        <span class="lmo-status-dot lmo-dot-red"></span>
-                        <div>
-                          <div class="lmo-area-name">Hauling Road KM 12</div>
-                          <div class="lmo-area-alert">Critical Gap Detected</div>
-                        </div>
-                      </div>
-                    </td>
-                    <td><div class="lmo-check-badge"><i class="bi bi-check"></i></div></td>
-                    <td><div class="lmo-x-badge"><i class="bi bi-x"></i></div></td>
-                    <td><div class="lmo-empty-badge">•</div></td>
-                    <td><div class="lmo-empty-badge">•</div></td>
-                    <td><div class="lmo-empty-badge">•</div></td>
-                    <td>
-                      <div class="lmo-coverage-cell">
-                        <div class="lmo-coverage-bar"><span style="width:20%; background:linear-gradient(90deg, #ef4444, #dc2626);"></span></div>
-                        <div class="lmo-coverage-val lmo-coverage-val--danger">20%</div>
-                      </div>
-                    </td>
-                    <td><span class="lmo-pill lmo-pill-critical">Critical Gap</span></td>
-                  </tr>
+                      </td>
+                      <td><span class="lmo-pill {{ $pillClass }}">{{ $pillLabel }}</span></td>
+                    </tr>
+                  @empty
+                    <tr>
+                      <td colspan="8" class="text-center py-8 text-kt-muted text-sm">Belum ada lokasi yang di-planning hari ini.</td>
+                    </tr>
+                  @endforelse
                 </tbody>
               </table>
             </div>
@@ -1473,7 +1454,7 @@
                       $firstK = $planning->karyawans->first();
                       $karyawanNames = $planning->karyawans->pluck('nama_karyawan')->implode(', ');
                     @endphp
-                    <tr data-shift="{{ $dataShift }}" data-status="ok">
+                    <tr data-shift="{{ $dataShift }}" data-status="{{ $planning->car_status ?? 'notok' }}">
                       <td class="font-medium">
                         <div class="text-sm font-semibold">{{ $planning->tanggal ? $planning->tanggal->format('d/m') : '—' }}</div>
                         <div class="text-[11px] text-kt-muted">{{ $planning->tanggal ? $planning->tanggal->format('Y') : '—' }}</div>
@@ -1485,10 +1466,10 @@
                           <span class="text-kt-muted">—</span>
                         @endif
                       </td>
-                      <td>{{ $planning->kategori_area ?? '—' }}</td>
+                      <td>{{ $planning->kategori_area ?: 'Area Highrisk' }}</td>
                       <td class="text-slate-600">{{ Str::limit($planning->aktivitas ?? '—', 28) }}</td>
                       <td class="font-medium">{{ $karyawanNames ?: '—' }}</td>
-                      <td class="text-slate-500">{{ $firstK && $firstK->sid_karyawan ? $firstK->sid_karyawan : '—' }}</td>
+                      <td class="text-slate-500">{{ $planning->car_task_id ?? '—' }}</td>
                       <td class="text-slate-500">{{ $firstK && ($firstK->reason || $firstK->detail) ? Str::limit($firstK->reason ?? $firstK->detail ?? '—', 35) : '—' }}</td>
                       <td>
                         @if($planning->jenis_sap)
@@ -1497,7 +1478,13 @@
                           <span class="text-kt-muted">—</span>
                         @endif
                       </td>
-                      <td class="text-center"><span class="badge-kt badge-success">Assigned</span></td>
+                      <td class="text-center">
+                        @if(($planning->car_status ?? 'notok') === 'ok')
+                          <span class="badge-kt badge-success">OK</span>
+                        @else
+                          <span class="badge-kt badge-danger">NOT OK</span>
+                        @endif
+                      </td>
                     </tr>
                   @empty
                     <tr>
@@ -1557,6 +1544,25 @@
       setActiveInGroup(btn);
       currentStatus = status;
       applyFilters();
+    }
+
+    function filterSite(btn, site) {
+      setActiveInGroup(btn);
+      const rows = Array.from(document.querySelectorAll('#coverageTableBody tr[data-site]'));
+      rows.forEach(row => {
+        const rowSite = (row.getAttribute('data-site') || '').trim();
+        const show = site === 'all' || rowSite === site;
+        row.style.display = show ? '' : 'none';
+      });
+    }
+
+    window.heatmapData = @json($heatmapData ?? []);
+    window.currentHeatmapSite = 'all';
+
+    function filterHeatmapSite(btn, site) {
+      setActiveInGroup(btn);
+      window.currentHeatmapSite = site;
+      if (typeof window.renderHeatmapCalendar === 'function') window.renderHeatmapCalendar();
     }
 
     function applyFilters() {
@@ -1649,7 +1655,7 @@
       el.className = 'mt-1 text-sm font-semibold ' + (isCovered ? 'text-green-600' : 'text-slate-500');
     }
 
-    // --- Heatmap Calendar: kalender dinamis, deteksi bulan berjalan, navigasi ---
+    // --- Heatmap Calendar: actual/plan dari roster_plannings + CAR match, filter by site ---
     (function heatmapCalendar() {
       const MONTH_NAMES_ID = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni', 'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
       const gridEl = document.getElementById('heatmapCalendarGrid');
@@ -1670,13 +1676,29 @@
         return new Date(y, m, 1).getDay();
       }
 
-      function getDayState(dayNum) {
-        var seed = currentYear * 10000 + currentMonth * 100 + dayNum;
-        var r = (seed * 9301 + 49297) % 233280;
-        var ratio = r / 233280;
-        if (ratio < 0.6) return { state: 'good', done: 8, total: 8, pct: 100 };
-        if (ratio < 0.85) return { state: 'warn', done: Math.floor(6 + ratio * 4), total: 10, pct: Math.floor(60 + ratio * 25) };
-        return { state: 'bad', done: Math.floor(2 + ratio * 3), total: 10, pct: Math.floor(20 + ratio * 20) };
+      function pad(n) {
+        return n < 10 ? '0' + n : String(n);
+      }
+
+      function getDayData(dayNum) {
+        const dateStr = currentYear + '-' + pad(currentMonth + 1) + '-' + pad(dayNum);
+        const data = window.heatmapData || [];
+        const siteFilter = window.currentHeatmapSite || 'all';
+        let planned = 0, actual = 0;
+        data.forEach(function (row) {
+          if (row.date !== dateStr) return;
+          if (siteFilter !== 'all' && row.site !== siteFilter) return;
+          planned += row.planned || 0;
+          actual += row.actual || 0;
+        });
+        const pct = planned > 0 ? Math.round((actual / planned) * 100) : 0;
+        let state = 'neutral';
+        if (planned > 0) {
+          if (pct >= 80) state = 'good';
+          else if (pct > 0) state = 'warn';
+          else state = 'bad';
+        }
+        return { planned, actual, pct, state };
       }
 
       function renderCalendar() {
@@ -1694,31 +1716,33 @@
 
         for (let d = 1; d <= daysInMonth; d++) {
           const isToday = isCurrentMonth && d === today.getDate();
-          const info = getDayState(d);
-          const stateClass = info.state === 'good' ? 'state-good' : (info.state === 'warn' ? 'state-warn' : 'state-bad');
-          const scoreClass = info.state === 'good' ? 'good' : (info.state === 'warn' ? 'warn' : 'bad');
+          const info = getDayData(d);
+          const stateClass = info.state === 'good' ? 'state-good' : (info.state === 'warn' ? 'state-warn' : (info.state === 'bad' ? 'state-bad' : 'state-neutral'));
+          const scoreClass = info.state === 'good' ? 'good' : (info.state === 'warn' ? 'warn' : (info.state === 'bad' ? 'bad' : ''));
 
           if (isToday) {
             html += '<div class="day-cell selected">';
             html += '<div class="day-num">' + d + '</div>';
             html += '<span class="current-pill">Hari ini</span>';
             html += '<div class="day-center">';
-            html += '<div class="score">' + info.done + ' / ' + info.total + '</div>';
-            html += '<div class="mini-progress"><div class="fill" style="width:' + info.pct + '%; background:#2563eb"></div></div>';
-            html += '<div class="completion">' + info.pct + '% Completion</div>';
+            html += '<div class="score">' + info.actual + ' / ' + info.planned + '</div>';
+            html += '<div class="mini-progress"><div class="fill" style="width:' + (info.planned ? info.pct : 0) + '%; background:#2563eb"></div></div>';
+            html += '<div class="completion">' + (info.planned ? info.pct + '% Actual' : '—') + '</div>';
             html += '</div></div>';
           } else {
             html += '<div class="day-cell ' + stateClass + '">';
             html += '<div class="day-num">' + d + '</div>';
             html += '<div class="day-center">';
-            html += '<div class="score ' + scoreClass + '">' + info.done + ' / ' + info.total + '</div>';
-            html += '<div class="mini-progress"><div class="fill ' + scoreClass + '" style="width:' + info.pct + '%"></div></div>';
+            html += '<div class="score ' + scoreClass + '">' + info.actual + ' / ' + info.planned + '</div>';
+            html += '<div class="mini-progress"><div class="fill ' + scoreClass + '" style="width:' + (info.planned ? info.pct : 0) + '%"></div></div>';
             html += '</div></div>';
           }
         }
 
         gridEl.innerHTML = html;
       }
+
+      window.renderHeatmapCalendar = renderCalendar;
 
       function goPrevMonth() {
         currentMonth--;
