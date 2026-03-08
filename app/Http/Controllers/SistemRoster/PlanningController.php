@@ -10,6 +10,7 @@ use App\Models\InsidenTabel;
 use App\Models\RosterPlanning;
 use App\Models\RosterPlanningJob;
 use App\Models\RosterPlanningKaryawan;
+use App\Models\RosterReferenceExclusion;
 use App\Services\ClickHouseService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -23,6 +24,15 @@ use Illuminate\View\View;
 
 class PlanningController extends Controller
 {
+    /** Tabel roster sebagai acuan (non area kritis). Hanya dibaca; saat Save masuk ke roster_plannings. */
+    private const ROSTER_REFERENCE_TABLES = [
+        'roster_bmo1' => 'BMO 1',
+        'roster_bmo3' => 'BMO 3',
+        'roster_gmo' => 'GMO',
+        'roster_hote' => 'HOTE',
+        'roster_lmo' => 'LMO',
+    ];
+
     public function index(Request $request): View
     {
         $filterStartDate = $request->get('start_date', now()->toDateString());
@@ -49,7 +59,7 @@ class PlanningController extends Controller
         $filterPerusahaan = $request->get('filter_perusahaan', '');
 
         $query = RosterPlanning::with(['karyawans' => function ($q) {
-                $q->select('id', 'roster_planning_id', 'nama_karyawan');
+                $q->select('id', 'roster_planning_id', 'user_id', 'nama_karyawan', 'sid_karyawan');
             }])
             ->select([
                 'id', 'tanggal', 'source_type', 'source_id', 'site', 'no_ikk', 
@@ -83,6 +93,13 @@ class PlanningController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
+        $grouped = $plannings->getCollection()->groupBy(function ($p) {
+            $t = $p->tanggal ? $p->tanggal->format('Y-m-d') : '';
+            $s = $p->site ?? '';
+            $j = $p->source_type ?? '';
+            return $t . '|' . $s . '|' . $j;
+        });
+
         $sites = RosterPlanning::whereBetween('tanggal', [$filterStartDate, $filterEndDate])
             ->whereNotNull('site')
             ->where('site', '!=', '')
@@ -104,8 +121,29 @@ class PlanningController extends Controller
 
         $queueConnection = config('queue.default');
 
+        $groupedRoster = $this->getRosterReferenceGrouped($filterStartDate, $filterEndDate, $filterSite ?? '');
+        $exclusionKeys = $this->getRosterExclusionKeys($filterStartDate, $filterEndDate);
+        $groupedRoster = $this->applyRosterExclusions($groupedRoster, $exclusionKeys);
+        // Untuk evaluasi: "terakhir ada data" dihitung dari data 1 tahun ke belakang (bukan hanya periode filter)
+        $evalStartDate = Carbon::parse($filterEndDate)->subYear()->format('Y-m-d');
+        $inspeksiHazardLastMap = $this->getInspeksiHazardLastPerLokasi($evalStartDate, $filterEndDate);
+        $groupedRoster = $this->enrichRosterWithInspeksiHazardLast($groupedRoster, $inspeksiHazardLastMap);
+        $existingRosterKeys = $this->getExistingRosterPlanningKeys($filterStartDate, $filterEndDate);
+
+        $summaryByPersonMerged = $this->buildSummaryByPersonMerged(
+            $filterStartDate,
+            $filterEndDate,
+            $filterSite ?? '',
+            $search ?? '',
+            $filterPerusahaan ?? '',
+            $groupedRoster
+        );
+
         return view('SistemRoster.planning.index', [
             'plannings' => $plannings,
+            'grouped' => $grouped,
+            'groupedRoster' => $groupedRoster,
+            'existingRosterKeys' => $existingRosterKeys,
             'filterStartDate' => $filterStartDate,
             'filterEndDate' => $filterEndDate,
             'perPage' => $perPage,
@@ -117,7 +155,485 @@ class PlanningController extends Controller
             'users' => [],
             'latestJob' => $latestJob,
             'queueConnection' => $queueConnection,
+            'summaryByPersonMerged' => $summaryByPersonMerged,
         ]);
+    }
+
+    /**
+     * Summary per orang: dari planning (assign) — siapa harus mengunjungi mana saja.
+     * Key = nama_karyawan, value = array of { tanggal, site, source_type, lokasi, detail_lokasi, aktivitas, no_ikk }.
+     */
+    private function buildSummaryByPersonPlanning(string $startDate, string $endDate, string $filterSite, ?string $search, string $filterPerusahaan): \Illuminate\Support\Collection
+    {
+        $search = $search ?? '';
+        $filterPerusahaan = $filterPerusahaan ?? '';
+        $query = RosterPlanning::with(['karyawans' => function ($q) {
+            $q->select('id', 'roster_planning_id', 'user_id', 'nama_karyawan', 'sid_karyawan');
+        }])
+            ->select([
+                'id', 'tanggal', 'source_type', 'source_id', 'site', 'no_ikk',
+                'aktivitas', 'lokasi', 'detail_lokasi', 'shift',
+                'perusahaan_pic', 'status', 'created_at',
+            ])
+            ->whereBetween('tanggal', [$startDate, $endDate]);
+
+        if ($search !== '') {
+            $term = '%' . trim($search) . '%';
+            $query->where(function ($q) use ($term) {
+                $q->where('no_ikk', 'like', $term)
+                    ->orWhere('aktivitas', 'like', $term)
+                    ->orWhere('lokasi', 'like', $term)
+                    ->orWhere('detail_lokasi', 'like', $term)
+                    ->orWhere('site', 'like', $term)
+                    ->orWhere('perusahaan_pic', 'like', $term);
+            });
+        }
+        if ($filterSite !== '') {
+            $query->where('site', 'like', '%' . trim($filterSite) . '%');
+        }
+        if ($filterPerusahaan !== '') {
+            $query->where('perusahaan_pic', 'like', '%' . trim($filterPerusahaan) . '%');
+        }
+
+        $items = $query->orderBy('tanggal')->orderBy('site')->limit(3000)->get();
+
+        $byPerson = collect();
+        foreach ($items as $p) {
+            foreach ($p->karyawans ?? [] as $k) {
+                $nama = trim((string) ($k->nama_karyawan ?? ''));
+                if ($nama === '') {
+                    $nama = 'Tanpa Nama';
+                }
+                if (!$byPerson->has($nama)) {
+                    $byPerson->put($nama, collect());
+                }
+                $byPerson->get($nama)->push((object)[
+                    'tanggal' => $p->tanggal,
+                    'site' => $p->site ?? '-',
+                    'source_type' => $p->source_type ?? '-',
+                    'lokasi' => $p->lokasi ?? '-',
+                    'detail_lokasi' => $p->detail_lokasi ?? '-',
+                    'aktivitas' => $p->aktivitas ?? '-',
+                    'no_ikk' => $p->no_ikk ?? '-',
+                ]);
+            }
+        }
+        return $byPerson->map(fn ($list) => $list->values())->sortKeys();
+    }
+
+    /**
+     * Summary per orang: dari roster acuan (jika tidak ada perubahan) — lokasi + detail lokasi per nama.
+     * Key = nama, value = array of { date_ins, site, lokasi, detail_lokasi }.
+     */
+    private function buildSummaryByPersonRoster(\Illuminate\Support\Collection $groupedRoster): \Illuminate\Support\Collection
+    {
+        $byPerson = collect();
+        foreach ($groupedRoster as $items) {
+            foreach ($items as $r) {
+                $nama = trim((string) ($r->nama ?? ''));
+                if ($nama === '') {
+                    $nama = 'Tanpa Nama';
+                }
+                if (!$byPerson->has($nama)) {
+                    $byPerson->put($nama, collect());
+                }
+                $byPerson->get($nama)->push((object)[
+                    'date_ins' => $r->date_ins ?? null,
+                    'site' => $r->site ?? '-',
+                    'lokasi' => $r->lokasi ?? '-',
+                    'detail_lokasi' => $r->detail_lokasi ?? '-',
+                ]);
+            }
+        }
+        return $byPerson->map(fn ($list) => $list->values())->sortKeys();
+    }
+
+    /**
+     * Summary per orang: gabungan dari Planning (IKK/DOP/Roster assign) + Roster acuan — satu list per orang.
+     * Key = nama, value = array of { tanggal, site, source_type (IKK|DOP|Roster), lokasi, detail_lokasi, aktivitas }.
+     */
+    private function buildSummaryByPersonMerged(string $startDate, string $endDate, string $filterSite, ?string $search, string $filterPerusahaan, \Illuminate\Support\Collection $groupedRoster): \Illuminate\Support\Collection
+    {
+        $fromPlanning = $this->buildSummaryByPersonPlanning($startDate, $endDate, $filterSite, $search ?? '', $filterPerusahaan ?? '');
+        $fromRoster = $this->buildSummaryByPersonRoster($groupedRoster);
+
+        $allNames = $fromPlanning->keys()->merge($fromRoster->keys())->unique()->sort()->values();
+
+        $merged = collect();
+        foreach ($allNames as $nama) {
+            $items = collect();
+
+            foreach ($fromPlanning->get($nama, []) as $it) {
+                $items->push((object)[
+                    'tanggal' => $it->tanggal,
+                    'site' => $it->site ?? '-',
+                    'source_type' => $it->source_type ?? '-',
+                    'lokasi' => $it->lokasi ?? '-',
+                    'detail_lokasi' => $it->detail_lokasi ?? '-',
+                    'aktivitas' => $it->aktivitas ?? '-',
+                ]);
+            }
+
+            foreach ($fromRoster->get($nama, []) as $it) {
+                $tanggal = $it->date_ins ? Carbon::parse($it->date_ins) : null;
+                $items->push((object)[
+                    'tanggal' => $tanggal,
+                    'site' => $it->site ?? '-',
+                    'source_type' => 'Roster',
+                    'lokasi' => $it->lokasi ?? '-',
+                    'detail_lokasi' => $it->detail_lokasi ?? '-',
+                    'aktivitas' => '-',
+                ]);
+            }
+
+            $merged->put($nama, $items->sortBy(function ($it) {
+                if (!$it->tanggal) {
+                    return '9999-99-99';
+                }
+                return $it->tanggal instanceof \DateTimeInterface ? $it->tanggal->format('Y-m-d') : $it->tanggal;
+            })->values());
+        }
+
+        return $merged->sortKeys();
+    }
+
+    /**
+     * Data dari tabel roster (acuan awal, non area kritis). Dikelompokkan per tanggal|site|Roster.
+     */
+    private function getRosterReferenceGrouped(string $startDate, string $endDate, ?string $filterSite = ''): \Illuminate\Support\Collection
+    {
+        $filterSite = $filterSite ?? '';
+        $groups = collect();
+        foreach (self::ROSTER_REFERENCE_TABLES as $tableName => $siteLabel) {
+            if ($filterSite !== '' && stripos($siteLabel, $filterSite) === false) {
+                continue;
+            }
+            try {
+                $rows = DB::table($tableName)
+                    ->whereBetween('date_ins', [$startDate, $endDate])
+                    ->orderBy('date_ins')
+                    ->orderBy('nama')
+                    ->get();
+            } catch (\Throwable $e) {
+                Log::warning("PlanningController: could not read roster table {$tableName}: " . $e->getMessage());
+                continue;
+            }
+            foreach ($rows as $row) {
+                $tanggalStr = $row->date_ins ? \Carbon\Carbon::parse($row->date_ins)->format('Y-m-d') : '';
+                if ($tanggalStr === '') {
+                    continue;
+                }
+                $key = $tanggalStr . '|' . $siteLabel . '|Roster';
+                if (!$groups->has($key)) {
+                    $groups->put($key, collect());
+                }
+                $lokasi = isset($row->lokasi) ? $row->lokasi : (isset($row->lokasi_kerja) ? $row->lokasi_kerja : null);
+                $sublokasi = isset($row->sublokasi) ? $row->sublokasi : (isset($row->detail_lokasi) ? $row->detail_lokasi : null);
+                $groups->get($key)->push((object)[
+                    'date_ins' => $row->date_ins,
+                    'nama' => $row->nama ?? 'Tanpa Nama',
+                    'lokasi' => $lokasi,
+                    'detail_lokasi' => $sublokasi,
+                    'site' => $siteLabel,
+                    'roster_table' => $tableName,
+                ]);
+            }
+        }
+        return $groups->map(function ($items) {
+            return $items->sortBy('nama')->values();
+        });
+    }
+
+    /**
+     * Key-key exclusion untuk (tanggal|site|roster_table|nama|lokasi|detail_lokasi) — normalisasi spasi.
+     */
+    private function getRosterExclusionKeys(string $startDate, string $endDate): \Illuminate\Support\Collection
+    {
+        return RosterReferenceExclusion::whereBetween('tanggal', [$startDate, $endDate])
+            ->get()
+            ->map(function ($e) {
+                $t = $e->tanggal ? $e->tanggal->format('Y-m-d') : '';
+                $lok = preg_replace('/\s+/', ' ', trim((string) ($e->lokasi ?? '')));
+                $det = preg_replace('/\s+/', ' ', trim((string) ($e->detail_lokasi ?? '')));
+                return $t . '|' . ($e->site ?? '') . '|' . ($e->roster_table ?? '') . '|' . ($e->nama ?? '') . '|' . $lok . '|' . $det;
+            })
+            ->flip();
+    }
+
+    /**
+     * Hapus item roster yang ada di daftar exclusion (take out lokasi + detail lokasi acuan).
+     */
+    private function applyRosterExclusions(\Illuminate\Support\Collection $groupedRoster, \Illuminate\Support\Collection $exclusionKeys): \Illuminate\Support\Collection
+    {
+        if ($exclusionKeys->isEmpty()) {
+            return $groupedRoster;
+        }
+        return $groupedRoster->map(function ($items) use ($exclusionKeys) {
+            return $items->filter(function ($item) use ($exclusionKeys) {
+                $tanggalStr = $item->date_ins ? Carbon::parse($item->date_ins)->format('Y-m-d') : '';
+                $lok = preg_replace('/\s+/', ' ', trim((string) ($item->lokasi ?? '')));
+                $det = preg_replace('/\s+/', ' ', trim((string) ($item->detail_lokasi ?? '')));
+                $key = $tanggalStr . '|' . ($item->site ?? '') . '|' . ($item->roster_table ?? '') . '|' . ($item->nama ?? '') . '|' . $lok . '|' . $det;
+                return !$exclusionKeys->has($key);
+            })->values();
+        });
+    }
+
+    /**
+     * Untuk setiap (lokasi, detail_lokasi): tanggal terakhir inspeksi hazard & subketidaksesuaian dari record terakhir.
+     * Sumber: ClickHouse hse_automation.aaj_car_all_year_from_dav.
+     * Key = "normalized_lokasi|normalized_detail_lokasi", value = ['last_date' => 'Y-m-d', 'subketidaksesuaian' => '...'].
+     */
+    private function getInspeksiHazardLastPerLokasi(string $startDate, string $endDate): array
+    {
+        $map = [];
+        $sql = "
+            SELECT
+                replaceRegexpAll(trim(ifNull(toString(nama_lokasi), '')), '\\\\s+', ' ') AS lokasi,
+                replaceRegexpAll(trim(ifNull(toString(nama_detail_lokasi), '')), '\\\\s+', ' ') AS detail_lokasi,
+                argMax(toDate(tanggal_pembuatan, 'Asia/Makassar'), tanggal_pembuatan) AS last_date,
+                argMax(ifNull(toString(subketidaksesuaian), ''), tanggal_pembuatan) AS subketidaksesuaian
+            FROM hse_automation.aaj_car_all_year_from_dav
+            WHERE jenis_laporan IN ('HAZARD', 'INSPEKSI')
+                AND tanggal_pembuatan IS NOT NULL
+                AND toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('" . addslashes($startDate) . "')
+                AND toDate(tanggal_pembuatan, 'Asia/Makassar') <= toDate('" . addslashes($endDate) . "')
+            GROUP BY lokasi, detail_lokasi
+        ";
+        try {
+            if (!class_exists(ClickHouseService::class)) {
+                return $map;
+            }
+            $ch = app(ClickHouseService::class);
+            if (!method_exists($ch, 'query') || !$ch->isConnected()) {
+                return $map;
+            }
+            $results = $ch->query($sql);
+            if (empty($results)) {
+                return $map;
+            }
+            foreach ($results as $row) {
+                $lokasi = isset($row['lokasi']) ? preg_replace('/\s+/', ' ', trim((string) $row['lokasi'])) : '';
+                $detailLokasi = isset($row['detail_lokasi']) ? preg_replace('/\s+/', ' ', trim((string) $row['detail_lokasi'])) : '';
+                $lastDate = $row['last_date'] ?? null;
+                $lastDateStr = null;
+                if ($lastDate !== null && $lastDate !== '') {
+                    $lastDateStr = is_string($lastDate) ? substr($lastDate, 0, 10) : Carbon::parse($lastDate)->format('Y-m-d');
+                }
+                $subketidaksesuaian = isset($row['subketidaksesuaian']) ? trim((string) $row['subketidaksesuaian']) : '';
+                $key = $lokasi . '|' . $detailLokasi;
+                $map[$key] = [
+                    'last_date' => $lastDateStr,
+                    'subketidaksesuaian' => $subketidaksesuaian,
+                ];
+            }
+        } catch (\Throwable $e) {
+            Log::warning('PlanningController getInspeksiHazardLastPerLokasi: ' . $e->getMessage());
+        }
+        return $map;
+    }
+
+    /**
+     * Enrich setiap item roster dengan last_inspeksi_date dan last_inspeksi_subketidaksesuaian (match lokasi + detail_lokasi).
+     */
+    private function enrichRosterWithInspeksiHazardLast(\Illuminate\Support\Collection $groupedRoster, array $lastMap): \Illuminate\Support\Collection
+    {
+        return $groupedRoster->map(function ($items) use ($lastMap) {
+            return $items->map(function ($item) use ($lastMap) {
+                $lokasi = preg_replace('/\s+/', ' ', trim((string) ($item->lokasi ?? '')));
+                $detailLokasi = preg_replace('/\s+/', ' ', trim((string) ($item->detail_lokasi ?? '')));
+                $key = $lokasi . '|' . $detailLokasi;
+                $data = $lastMap[$key] ?? null;
+                $item->last_inspeksi_date = $data['last_date'] ?? null;
+                $item->last_inspeksi_subketidaksesuaian = $data['subketidaksesuaian'] ?? null;
+                return $item;
+            })->values();
+        });
+    }
+
+    /**
+     * Key-key (tanggal|site|roster_table) yang sudah ada di roster_plannings source_type Roster.
+     * source_id format: roster_table_md5 (satu per lokasi+detail), key untuk UI tetap tanggal|site|roster_table.
+     */
+    private function getExistingRosterPlanningKeys(string $startDate, string $endDate): array
+    {
+        $existing = RosterPlanning::where('source_type', 'Roster')
+            ->whereBetween('tanggal', [$startDate, $endDate])
+            ->get(['tanggal', 'site', 'source_id']);
+        $keys = [];
+        foreach ($existing as $p) {
+            $t = $p->tanggal ? $p->tanggal->format('Y-m-d') : '';
+            $s = $p->site ?? '';
+            $tid = $p->source_id ?? '';
+            $rosterTable = $tid;
+            if (preg_match('/^(.+)_[a-f0-9]{32}$/', $tid, $m)) {
+                $rosterTable = $m[1];
+            }
+            if ($t !== '' && $s !== '') {
+                $keys[] = $t . '|' . $s . '|' . $rosterTable;
+            }
+        }
+        return array_values(array_unique($keys));
+    }
+
+    /**
+     * Simpan data roster (acuan) ke roster_plannings. Dipanggil saat user klik "Save ke Planning".
+     */
+    public function saveRosterToPlanning(Request $request): RedirectResponse|JsonResponse
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+            'roster_table' => 'required|string|in:' . implode(',', array_keys(self::ROSTER_REFERENCE_TABLES)),
+        ]);
+
+        $tanggal = $request->get('tanggal');
+        $rosterTable = $request->get('roster_table');
+        $siteLabel = self::ROSTER_REFERENCE_TABLES[$rosterTable] ?? $rosterTable;
+
+        try {
+            $rows = DB::table($rosterTable)
+                ->whereDate('date_ins', $tanggal)
+                ->orderBy('nama')
+                ->get();
+        } catch (\Throwable $e) {
+            Log::warning("PlanningController saveRosterToPlanning: " . $e->getMessage());
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Gagal membaca data roster.'], 422);
+            }
+            return redirect()->back()->with('error', 'Gagal membaca data roster.');
+        }
+
+        $exclusionKeys = RosterReferenceExclusion::where('tanggal', $tanggal)
+            ->where('roster_table', $rosterTable)
+            ->where('site', $siteLabel)
+            ->get()
+            ->map(function ($e) {
+                $lok = preg_replace('/\s+/', ' ', trim((string) ($e->lokasi ?? '')));
+                $det = preg_replace('/\s+/', ' ', trim((string) ($e->detail_lokasi ?? '')));
+                return ($e->nama ?? '') . '|' . $lok . '|' . $det;
+            })
+            ->flip();
+
+        $rows = $rows->filter(function ($row) use ($exclusionKeys, $rosterTable) {
+            $lok = isset($row->lokasi) ? $row->lokasi : (isset($row->lokasi_kerja) ? $row->lokasi_kerja : '');
+            $det = isset($row->sublokasi) ? $row->sublokasi : (isset($row->detail_lokasi) ? $row->detail_lokasi : '');
+            $lok = preg_replace('/\s+/', ' ', trim((string) $lok));
+            $det = preg_replace('/\s+/', ' ', trim((string) $det));
+            $key = ($row->nama ?? '') . '|' . $lok . '|' . $det;
+            return !$exclusionKeys->has($key);
+        })->values();
+
+        if ($rows->isEmpty()) {
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Tidak ada data roster untuk tanggal ini.'], 422);
+            }
+            return redirect()->back()->with('error', 'Tidak ada data roster untuk tanggal ini.');
+        }
+
+        // Group by (lokasi, detail_lokasi) — satu roster_plannings per lokasi + detail lokasi, karyawan di roster_planning_karyawans
+        $grouped = collect($rows)->groupBy(function ($row) {
+            $lok = isset($row->lokasi) ? $row->lokasi : (isset($row->lokasi_kerja) ? $row->lokasi_kerja : '');
+            $det = isset($row->sublokasi) ? $row->sublokasi : (isset($row->detail_lokasi) ? $row->detail_lokasi : '');
+            return preg_replace('/\s+/', ' ', trim((string) $lok)) . '|' . preg_replace('/\s+/', ' ', trim((string) $det));
+        });
+
+        $createdSourceIds = [];
+        foreach ($grouped as $lokasiKey => $groupRows) {
+            $firstRow = $groupRows->first();
+            $lokasi = isset($firstRow->lokasi) ? $firstRow->lokasi : (isset($firstRow->lokasi_kerja) ? $firstRow->lokasi_kerja : null);
+            $detailLokasi = isset($firstRow->sublokasi) ? $firstRow->sublokasi : (isset($firstRow->detail_lokasi) ? $firstRow->detail_lokasi : null);
+            $sourceId = $rosterTable . '_' . md5($lokasiKey);
+            if (strlen($sourceId) > 100) {
+                $sourceId = $rosterTable . '_' . substr(md5($lokasiKey), 0, 32);
+            }
+
+            $planning = RosterPlanning::updateOrCreate(
+                [
+                    'source_type' => 'Roster',
+                    'source_id' => $sourceId,
+                    'tanggal' => $tanggal,
+                ],
+                [
+                    'site' => $siteLabel,
+                    'aktivitas' => 'Non Area Kritis',
+                    'no_ikk' => null,
+                    'lokasi' => $lokasi,
+                    'detail_lokasi' => $detailLokasi,
+                    'shift' => null,
+                    'perusahaan_pic' => null,
+                    'status' => 'assigned',
+                ]
+            );
+
+            $planning->karyawans()->delete();
+            foreach ($groupRows as $row) {
+                $sid = isset($row->sid) ? $row->sid : (isset($row->nik) ? $row->nik : null);
+                $planning->karyawans()->create([
+                    'user_id' => null,
+                    'nama_karyawan' => $row->nama ?? 'Tanpa Nama',
+                    'sid_karyawan' => $sid,
+                ]);
+            }
+            $createdSourceIds[] = $sourceId;
+        }
+
+        // Hapus roster_plannings untuk tanggal+roster_table ini yang tidak lagi ada di acuan (lokasi dihapus / berubah)
+        RosterPlanning::where('source_type', 'Roster')
+            ->where('tanggal', $tanggal)
+            ->where('source_id', 'like', $rosterTable . '_%')
+            ->whereNotIn('source_id', $createdSourceIds)
+            ->delete();
+
+        $count = $grouped->count();
+        if ($request->wantsJson()) {
+            return response()->json(['success' => true, 'message' => "Data roster berhasil disimpan ke planning ({$count} lokasi).", 'planning_id' => null]);
+        }
+        return redirect()->back()->with('success', "Data roster berhasil disimpan ke planning ({$count} lokasi).");
+    }
+
+    /**
+     * Take out (exclude) satu lokasi + detail lokasi dari acuan roster — untuk bahan evaluasi / setting ulang.
+     */
+    public function excludeRosterLocation(Request $request): JsonResponse
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+            'roster_table' => 'required|string|in:' . implode(',', array_keys(self::ROSTER_REFERENCE_TABLES)),
+            'site' => 'required|string|max:100',
+            'nama' => 'required|string|max:255',
+            'lokasi' => 'nullable|string|max:255',
+            'detail_lokasi' => 'nullable|string|max:255',
+        ]);
+
+        RosterReferenceExclusion::firstOrCreate([
+            'tanggal' => $request->get('tanggal'),
+            'site' => $request->get('site'),
+            'roster_table' => $request->get('roster_table'),
+            'nama' => $request->get('nama'),
+            'lokasi' => $request->get('lokasi'),
+            'detail_lokasi' => $request->get('detail_lokasi'),
+        ]);
+
+        return response()->json(['success' => true, 'message' => 'Lokasi acuan telah dihapus dari tampilan. Gunakan "Setting ulang" untuk mengembalikan.']);
+    }
+
+    /**
+     * Setting ulang: hapus semua exclusion untuk satu grup (tanggal + site + roster_table).
+     */
+    public function resetRosterExclusions(Request $request): JsonResponse
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+            'roster_table' => 'required|string|in:' . implode(',', array_keys(self::ROSTER_REFERENCE_TABLES)),
+            'site' => 'required|string|max:100',
+        ]);
+
+        $deleted = RosterReferenceExclusion::where('tanggal', $request->get('tanggal'))
+            ->where('roster_table', $request->get('roster_table'))
+            ->where('site', $request->get('site'))
+            ->delete();
+
+        return response()->json(['success' => true, 'message' => 'Setting ulang berhasil. ' . $deleted . ' lokasi acuan dikembalikan.']);
     }
 
     public function generate(Request $request): RedirectResponse

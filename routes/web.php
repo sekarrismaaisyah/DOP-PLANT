@@ -605,10 +605,16 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/', [\App\Http\Controllers\SistemRoster\TasklistController::class, 'index'])->name('index');
         });
 
+        // Master Roster (mapping roster per tabel/site, tampilan mingguan)
+        Route::get('/master-roster', [\App\Http\Controllers\SistemRoster\MasterRosterController::class, 'index'])->name('master-roster.index');
+
         // Planning Routes
         Route::prefix('planning')->name('planning.')->group(function () {
             Route::get('/', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'index'])->name('index');
             Route::post('/generate', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'generate'])->name('generate');
+            Route::post('/save-roster', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'saveRosterToPlanning'])->name('save-roster');
+            Route::post('/exclude-roster-location', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'excludeRosterLocation'])->name('exclude-roster-location');
+            Route::post('/reset-roster-exclusions', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'resetRosterExclusions'])->name('reset-roster-exclusions');
             Route::get('/job-status', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'jobStatus'])->name('job-status');
             Route::get('/users', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'getUsers'])->name('users');
             Route::get('/{id}/karyawans', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'getKaryawans'])->name('karyawans');

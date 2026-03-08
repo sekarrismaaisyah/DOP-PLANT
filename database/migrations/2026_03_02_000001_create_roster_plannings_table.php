@@ -13,7 +13,7 @@ return new class extends Migration
             $table->date('tanggal');
             $table->string('shift', 50)->nullable();
             $table->string('kategori_area', 255)->nullable();
-            $table->enum('source_type', ['IKK', 'DOP']);
+            $table->enum('source_type', ['IKK', 'DOP', 'Roster']);
             $table->string('source_id', 100);
             $table->string('no_ikk', 100)->nullable();
             $table->string('aktivitas', 255)->nullable();

@@ -132,6 +132,8 @@
       background: #1d4ed8;
     }
     .heatmap-toolbar .btn-export-heatmap:active { transform: translateY(0); }
+    #heatmapRefreshBtn .bi-arrow-clockwise.spin { animation: heatmap-spin .8s linear infinite; }
+    @keyframes heatmap-spin { to { transform: rotate(360deg); } }
     @media (max-width: 768px) {
       .kt-card-header.heatmap-header { flex-direction: column; align-items: stretch; gap: 1rem; }
       .heatmap-toolbar { width: 100%; justify-content: space-between; }
@@ -1189,46 +1191,46 @@
             <div class="lmo-kpi-card">
               <div class="lmo-kpi-top">
                 <div class="lmo-kpi-icon lmo-icon-blue"><i class="bi bi-clipboard-data-fill"></i></div>
-                <div class="lmo-delta up"><i class="bi bi-arrow-up-right"></i> +12%</div>
+                <div class="lmo-delta up"><i class="bi bi-arrow-up-right"></i> </div>
               </div>
-              <div class="lmo-kpi-title">Total Coverage DOP/IKK </div>
+              <div class="lmo-kpi-title">Coverage Area All</div>
               <div class="lmo-kpi-value">100%</div>
-              <div class="lmo-kpi-sub">Current period activity</div>
+              <div class="lmo-kpi-sub">Coverage Area All</div>
             </div>
 
             <div class="lmo-kpi-card">
               <div class="lmo-kpi-top">
                 <div class="lmo-kpi-icon lmo-icon-blue"><i class="bi bi-speedometer2"></i></div>
-                <div class="lmo-delta up"><i class="bi bi-arrow-up-right"></i> +5.4%</div>
+                <div class="lmo-delta up"><i class="bi bi-arrow-up-right"></i> </div>
               </div>
-              <div class="lmo-kpi-title">Hazard Ditemukan </div>
+              <div class="lmo-kpi-title">Coverage Activity DOP</div>
               <div class="lmo-kpi-value">94.2%</div>
-              <div class="lmo-kpi-sub">90% Target benchmark</div>
+              <div class="lmo-kpi-sub">Coverage Activity DOP</div>
             </div>
 
             <div class="lmo-kpi-card">
               <div class="lmo-kpi-top">
                 <div class="lmo-kpi-icon lmo-icon-green"><i class="bi bi-check-circle-fill"></i></div>
-                <div class="lmo-delta down"><i class="bi bi-arrow-down-right"></i> -2%</div>
+                <div class="lmo-delta down"><i class="bi bi-arrow-down-right"></i></div>
               </div>
-              <div class="lmo-kpi-title">OAK ditemukan</div>
-              <div class="lmo-kpi-value">1,102</div>
-              <div class="lmo-kpi-sub">Compliance verified areas</div>
+              <div class="lmo-kpi-title">Coverage Activity BeIKK</div>
+              <div class="lmo-kpi-value">100%</div>
+              <div class="lmo-kpi-sub">Coverage Activity BeIKK</div>
             </div>
 
             <div class="lmo-kpi-card">
               <div class="lmo-kpi-top">
                 <div class="lmo-kpi-icon lmo-icon-red"><i class="bi bi-exclamation-triangle-fill"></i></div>
-                <div class="lmo-delta down" style="color:#f04438;"><i class="bi bi-arrow-up-right"></i> +8%</div>
+                <div class="lmo-delta down" style="color:#f04438;"><i class="bi bi-arrow-up-right"></i> </div>
               </div>
-              <div class="lmo-kpi-title">Stop aktivitas dari OAK</div>
-              <div class="lmo-kpi-value">42</div>
-              <div class="lmo-kpi-sub">Immediate action required</div>
+              <div class="lmo-kpi-title">Coverage Area Non Kritis</div>
+              <div class="lmo-kpi-value">100%</div>
+              <div class="lmo-kpi-sub">Coverage Area Non Kritis</div>
             </div>
           </section>
 
           <!-- Layer summary -->
-          <section class="lmo-layer-grid">
+          <!-- <section class="lmo-layer-grid">
             <div class="lmo-layer-card">
               <div class="lmo-layer-row">
                 <div class="lmo-layer-name">L1 Base Layer</div>
@@ -1260,12 +1262,12 @@
               </div>
               <div class="lmo-progress-thin"><span style="width:48.2%; background:#ef4444;"></span></div>
             </div>
-          </section>
+          </section> -->
 
          
         </div>
 
-        <section class="kt-card animate-in" style="animation-delay:.05s">
+        <section class="kt-card animate-in heatmap-calendar-section" style="animation-delay:.05s">
           <div class="kt-card-header heatmap-header">
             <div class="flex-shrink-0">
               <div class="kt-card-title">Performance Heatmap</div>
@@ -1294,6 +1296,10 @@
                 <button type="button" onclick="filterHeatmapSite(this,'HO')" class="btn-kt text-[11px] px-3 py-2">HO</button>
                 <button type="button" onclick="filterHeatmapSite(this,'EXPLORASI')" class="btn-kt text-[11px] px-3 py-2">EXPLORASI</button>
               </div>
+              <button type="button" id="heatmapRefreshBtn" class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" title="Refresh kalender &amp; data">
+                <i class="bi bi-arrow-clockwise" id="heatmapRefreshIcon"></i>
+                <span>Refresh</span>
+              </button>
             </div>
           </div>
 
@@ -1301,13 +1307,13 @@
           <section class="card-panel calendar-card mb-4">
             <div class="calendar-scroll">
               <div class="calendar-head">
-                <div>Minggu</div>
-                <div>Senin</div>
-                <div>Selasa</div>
-                <div>Rabu</div>
-                <div>Kamis</div>
-                <div>Jumat</div>
-                <div>Sabtu</div>
+                <div>Min</div>
+                <div>Sen</div>
+                <div>Sel</div>
+                <div>Rab</div>
+                <div>Kam</div>
+                <div>Jum</div>
+                <div>Sab</div>
               </div>
               <div class="calendar-grid" id="heatmapCalendarGrid">
                 <!-- Diisi oleh JS berdasarkan bulan/tahun yang dipilih -->
@@ -1316,8 +1322,6 @@
           </section>
           </div>
 
-          
-
          
         </section>
 
@@ -1325,85 +1329,102 @@
 
         <section class="animate-in" style="animation-delay:.1s">
           <div class="kt-card w-full lmo-coverage-card">
-            <div class="kt-card-header lmo-coverage-header">
+            <div class="kt-card-header lmo-coverage-header flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div class="flex items-center gap-3">
                 <div class="lmo-coverage-icon-wrap">
                   <i class="bi bi-pin-map-fill"></i>
                 </div>
                 <div>
                   <div class="kt-card-title">Coverage by Location</div>
-                  <div class="kt-card-subtitle">Completion % per hari — L1–L4 & MK-BC</div>
+                  <div class="kt-card-subtitle">Data dari roster_plannings — Completion % per hari</div>
                 </div>
               </div>
-              <div class="flex items-center gap-3">
-              <div class="flex items-center gap-1 p-1 bg-slate-50 border border-kt-border rounded-xl flex-wrap" data-btn-group="site">
-                <button type="button" onclick="filterSite(this,'all')" class="btn-kt active text-[11px] px-3 py-2">Semua</button>
-                <button type="button" onclick="filterSite(this,'BMO 1')" class="btn-kt text-[11px] px-3 py-2">BMO 1</button>
-                <button type="button" onclick="filterSite(this,'BMO 2')" class="btn-kt text-[11px] px-3 py-2">BMO 2</button>
-                <button type="button" onclick="filterSite(this,'BMO 3')" class="btn-kt text-[11px] px-3 py-2">BMO 3</button>
-                <button type="button" onclick="filterSite(this,'SMO')" class="btn-kt text-[11px] px-3 py-2">SMO</button>
-                <button type="button" onclick="filterSite(this,'LMO')" class="btn-kt text-[11px] px-3 py-2">LMO</button>
-                <button type="button" onclick="filterSite(this,'GMO')" class="btn-kt text-[11px] px-3 py-2">GMO</button>
-                <button type="button" onclick="filterSite(this,'Marine')" class="btn-kt text-[11px] px-3 py-2">Marine</button>
-                <button type="button" onclick="filterSite(this,'HO')" class="btn-kt text-[11px] px-3 py-2">HO</button>
-                <button type="button" onclick="filterSite(this,'EXPLORASI')" class="btn-kt text-[11px] px-3 py-2">EXPLORASI</button>
-              </div>
+              <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
+                <div class="flex items-center gap-1 p-1 bg-slate-50 border border-kt-border rounded-xl flex-wrap" data-btn-group="coverage-tab">
+                  <button type="button" onclick="switchCoverageTab(this, 'all')" class="btn-kt active text-[11px] px-3 py-2" data-tab="all">Coverage All Location</button>
+                  <button type="button" onclick="switchCoverageTab(this, 'ikk')" class="btn-kt text-[11px] px-3 py-2" data-tab="ikk">Coverage by IKK</button>
+                  <button type="button" onclick="switchCoverageTab(this, 'dop')" class="btn-kt text-[11px] px-3 py-2" data-tab="dop">Coverage by DOP</button>
+                  <button type="button" onclick="switchCoverageTab(this, 'nonkritis')" class="btn-kt text-[11px] px-3 py-2" data-tab="nonkritis">Coverage Non Kritis</button>
+                </div>
+                <div class="flex items-center gap-1 p-1 bg-slate-50 border border-kt-border rounded-xl flex-wrap" data-btn-group="site">
+                  <button type="button" onclick="filterSite(this,'all')" class="btn-kt active text-[11px] px-3 py-2">Semua</button>
+                  <button type="button" onclick="filterSite(this,'BMO 1')" class="btn-kt text-[11px] px-3 py-2">BMO 1</button>
+                  <button type="button" onclick="filterSite(this,'BMO 2')" class="btn-kt text-[11px] px-3 py-2">BMO 2</button>
+                  <button type="button" onclick="filterSite(this,'BMO 3')" class="btn-kt text-[11px] px-3 py-2">BMO 3</button>
+                  <button type="button" onclick="filterSite(this,'SMO')" class="btn-kt text-[11px] px-3 py-2">SMO</button>
+                  <button type="button" onclick="filterSite(this,'LMO')" class="btn-kt text-[11px] px-3 py-2">LMO</button>
+                  <button type="button" onclick="filterSite(this,'GMO')" class="btn-kt text-[11px] px-3 py-2">GMO</button>
+                  <button type="button" onclick="filterSite(this,'Marine')" class="btn-kt text-[11px] px-3 py-2">Marine</button>
+                  <button type="button" onclick="filterSite(this,'HO')" class="btn-kt text-[11px] px-3 py-2">HO</button>
+                  <button type="button" onclick="filterSite(this,'EXPLORASI')" class="btn-kt text-[11px] px-3 py-2">EXPLORASI</button>
+                </div>
               </div>
             </div>
-            <div class="lmo-table-scroll">
-              <table class="lmo-coverage-table">
-                <thead>
-                  <tr>
-                    <th>Area Location</th>
-                    <th>L1</th>
-                    <th>L2</th>
-                    <th>L3</th>
-                    <th>L4</th>
-                    <th>MK-BC</th>
-                    <th>% Coverage</th>
-                    <th>Status</th>
-                  </tr>
-                </thead>
-                <tbody id="coverageTableBody">
-                  @forelse($coverageLocations ?? [] as $loc)
-                    @php
-                      $dotClass = $loc->pct >= 80 ? 'lmo-dot-green' : ($loc->pct > 0 ? 'lmo-dot-orange' : 'lmo-dot-red');
-                      $barStyle = $loc->pct >= 80 ? 'width:'.$loc->pct.'%; background:linear-gradient(90deg, #22b573, #16a34a);' : ($loc->pct > 0 ? 'width:'.$loc->pct.'%; background:linear-gradient(90deg, #f59e0b, #d97706);' : 'width:'.max(5, $loc->pct).'%; background:linear-gradient(90deg, #ef4444, #dc2626);');
-                      $valClass = $loc->pct >= 80 ? '' : ($loc->pct > 0 ? '' : 'lmo-coverage-val--danger');
-                      $pillClass = $loc->pct >= 80 ? 'lmo-pill-optimal' : ($loc->pct > 0 ? 'lmo-pill-incomplete' : 'lmo-pill-critical');
-                      $pillLabel = $loc->pct >= 80 ? 'Optimal' : ($loc->pct > 0 ? 'Incomplete' : 'Critical Gap');
-                    @endphp
-                    <tr data-site="{{ $loc->site ?? '' }}">
-                      <td>
-                        <div class="lmo-area-cell">
-                          <span class="lmo-status-dot {{ $dotClass }}"></span>
-                          <div>
-                            <div class="lmo-area-name">{{ $loc->lokasi ?: '—' }}</div>
-                            <div class="lmo-area-meta">{{ $loc->detail_lokasi ?: '—' }}</div>
-                          </div>
-                        </div>
-                      </td>
-                      <td><div class="lmo-empty-badge">•</div></td>
-                      <td><div class="lmo-empty-badge">•</div></td>
-                      <td><div class="lmo-empty-badge">•</div></td>
-                      <td><div class="lmo-empty-badge">•</div></td>
-                      <td><div class="lmo-empty-badge">•</div></td>
-                      <td>
-                        <div class="lmo-coverage-cell">
-                          <div class="lmo-coverage-bar"><span style="{{ $barStyle }}"></span></div>
-                          <div class="lmo-coverage-val {{ $valClass }}">{{ $loc->pct }}%</div>
-                        </div>
-                      </td>
-                      <td><span class="lmo-pill {{ $pillClass }}">{{ $pillLabel }}</span></td>
-                    </tr>
-                  @empty
+
+            @php
+              $coverageTabVars = [
+                'all' => $coverageLocations ?? [],
+                'ikk' => $coverageByIkk ?? [],
+                'dop' => $coverageByDop ?? [],
+                'nonkritis' => $coverageNonKritis ?? [],
+              ];
+            @endphp
+            @foreach($coverageTabVars as $tabKey => $coverageList)
+              <div class="coverage-tab-pane lmo-table-scroll {{ $loop->first ? '' : 'd-none' }}" id="coverageTab-{{ $tabKey }}" data-coverage-tab="{{ $tabKey }}">
+                <table class="lmo-coverage-table">
+                  <thead>
                     <tr>
-                      <td colspan="8" class="text-center py-8 text-kt-muted text-sm">Belum ada lokasi yang di-planning hari ini.</td>
+                      <th>Area Location</th>
+                      <th>L1</th>
+                      <th>L2</th>
+                      <th>L3</th>
+                      <th>L4</th>
+                      <th>MK-BC</th>
+                      <th>% Coverage</th>
+                      <th>Status</th>
                     </tr>
-                  @endforelse
-                </tbody>
-              </table>
-            </div>
+                  </thead>
+                  <tbody class="coverageTableBody">
+                    @forelse($coverageList as $loc)
+                      @php
+                        $dotClass = $loc->pct >= 80 ? 'lmo-dot-green' : ($loc->pct > 0 ? 'lmo-dot-orange' : 'lmo-dot-red');
+                        $barStyle = $loc->pct >= 80 ? 'width:'.$loc->pct.'%; background:linear-gradient(90deg, #22b573, #16a34a);' : ($loc->pct > 0 ? 'width:'.$loc->pct.'%; background:linear-gradient(90deg, #f59e0b, #d97706);' : 'width:'.max(5, $loc->pct).'%; background:linear-gradient(90deg, #ef4444, #dc2626);');
+                        $valClass = $loc->pct >= 80 ? '' : ($loc->pct > 0 ? '' : 'lmo-coverage-val--danger');
+                        $pillClass = $loc->pct >= 80 ? 'lmo-pill-optimal' : ($loc->pct > 0 ? 'lmo-pill-incomplete' : 'lmo-pill-critical');
+                        $pillLabel = $loc->pct >= 80 ? 'Optimal' : ($loc->pct > 0 ? 'Incomplete' : 'Critical Gap');
+                      @endphp
+                      <tr data-site="{{ $loc->site ?? '' }}">
+                        <td>
+                          <div class="lmo-area-cell">
+                            <span class="lmo-status-dot {{ $dotClass }}"></span>
+                            <div>
+                              <div class="lmo-area-name">{{ $loc->lokasi ?: '—' }}</div>
+                              <div class="lmo-area-meta">{{ $loc->detail_lokasi ?: '—' }}</div>
+                            </div>
+                          </div>
+                        </td>
+                        <td><div class="lmo-empty-badge">•</div></td>
+                        <td><div class="lmo-empty-badge">•</div></td>
+                        <td><div class="lmo-empty-badge">•</div></td>
+                        <td><div class="lmo-empty-badge">•</div></td>
+                        <td><div class="lmo-empty-badge">•</div></td>
+                        <td>
+                          <div class="lmo-coverage-cell">
+                            <div class="lmo-coverage-bar"><span style="{{ $barStyle }}"></span></div>
+                            <div class="lmo-coverage-val {{ $valClass }}">{{ $loc->pct }}%</div>
+                          </div>
+                        </td>
+                        <td><span class="lmo-pill {{ $pillClass }}">{{ $pillLabel }}</span></td>
+                      </tr>
+                    @empty
+                      <tr>
+                        <td colspan="8" class="text-center py-8 text-kt-muted text-sm">Belum ada lokasi untuk tab ini.</td>
+                      </tr>
+                    @endforelse
+                  </tbody>
+                </table>
+              </div>
+            @endforeach
           </div>
         </section>
 
@@ -1412,7 +1433,7 @@
           <div class="kt-card-header flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div class="kt-card-title">Detail Plan Pengecekan</div>
-              <div class="kt-card-subtitle">Log aktivitas kritis per shift</div>
+              <div class="kt-card-subtitle">Per lokasi & detail lokasi — status OK/NOT OK dari planning</div>
             </div>
 
             <div class="w-full lg:w-auto flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -1438,6 +1459,8 @@
                     <th class="text-left">Tanggal</th>
                     <th class="text-left">Shift</th>
                     <th class="text-left">Kategori Area</th>
+                    <th class="text-left">Lokasi</th>
+                    <th class="text-left">Detail Lokasi</th>
                     <th class="text-left">Aktifitas</th>
                     <th class="text-left">Karyawan</th>
                     <th class="text-left">Task ID</th>
@@ -1447,39 +1470,39 @@
                   </tr>
                 </thead>
                 <tbody id="tableBody">
-                  @forelse($assignedPlannings ?? [] as $planning)
+                  @forelse($detailByLokasi ?? [] as $row)
                     @php
-                      $shiftVal = $planning->shift ? trim((string)$planning->shift) : '';
+                      $shiftVal = $row->shift_val ?? '';
                       $dataShift = (strpos($shiftVal, '1') !== false) ? '1' : ((strpos($shiftVal, '2') !== false) ? '2' : 'all');
-                      $firstK = $planning->karyawans->first();
-                      $karyawanNames = $planning->karyawans->pluck('nama_karyawan')->implode(', ');
                     @endphp
-                    <tr data-shift="{{ $dataShift }}" data-status="{{ $planning->car_status ?? 'notok' }}">
+                    <tr data-shift="{{ $dataShift }}" data-status="{{ $row->car_status ?? 'notok' }}">
                       <td class="font-medium">
-                        <div class="text-sm font-semibold">{{ $planning->tanggal ? $planning->tanggal->format('d/m') : '—' }}</div>
-                        <div class="text-[11px] text-kt-muted">{{ $planning->tanggal ? $planning->tanggal->format('Y') : '—' }}</div>
+                        <div class="text-sm font-semibold">{{ $row->tanggal ? $row->tanggal->format('d/m') : '—' }}</div>
+                        <div class="text-[11px] text-kt-muted">{{ $row->tanggal ? $row->tanggal->format('Y') : '—' }}</div>
                       </td>
                       <td>
-                        @if($planning->shift)
-                          <span class="badge-kt badge-neutral">{{ Str::limit($planning->shift, 8) }}</span>
+                        @if($row->shift)
+                          <span class="badge-kt badge-neutral">{{ Str::limit($row->shift, 8) }}</span>
                         @else
                           <span class="text-kt-muted">—</span>
                         @endif
                       </td>
-                      <td>{{ $planning->kategori_area ?: 'Area Highrisk' }}</td>
-                      <td class="text-slate-600">{{ Str::limit($planning->aktivitas ?? '—', 28) }}</td>
-                      <td class="font-medium">{{ $karyawanNames ?: '—' }}</td>
-                      <td class="text-slate-500">{{ $planning->car_task_id ?? '—' }}</td>
-                      <td class="text-slate-500">{{ $firstK && ($firstK->reason || $firstK->detail) ? Str::limit($firstK->reason ?? $firstK->detail ?? '—', 35) : '—' }}</td>
+                      <td>{{ $row->kategori_area ?? '—' }}</td>
+                      <td class="font-medium text-slate-700">{{ Str::limit($row->lokasi ?? '—', 30) }}</td>
+                      <td class="text-slate-600">{{ Str::limit($row->detail_lokasi ?? '—', 30) }}</td>
+                      <td class="text-slate-600">{{ Str::limit($row->aktivitas ?? '—', 28) }}</td>
+                      <td class="font-medium">{{ $row->karyawan_nama ?? '—' }}</td>
+                      <td class="text-slate-500">{{ Str::limit($row->car_task_id ?? '—', 20) }}</td>
+                      <td class="text-slate-500">{{ Str::limit($row->detail_reason ?? '—', 35) }}</td>
                       <td>
-                        @if($planning->jenis_sap)
-                          <span class="badge-kt badge-primary">{{ Str::limit($planning->jenis_sap, 12) }}</span>
+                        @if($row->jenis_sap ?? null)
+                          <span class="badge-kt badge-primary">{{ Str::limit($row->jenis_sap, 12) }}</span>
                         @else
                           <span class="text-kt-muted">—</span>
                         @endif
                       </td>
                       <td class="text-center">
-                        @if(($planning->car_status ?? 'notok') === 'ok')
+                        @if(($row->car_status ?? 'notok') === 'ok')
                           <span class="badge-kt badge-success">OK</span>
                         @else
                           <span class="badge-kt badge-danger">NOT OK</span>
@@ -1488,7 +1511,7 @@
                     </tr>
                   @empty
                     <tr>
-                      <td colspan="9" class="text-center py-8 text-kt-muted text-sm">Belum ada plan yang di-assign ke karyawan.</td>
+                      <td colspan="11" class="text-center py-8 text-kt-muted text-sm">Belum ada plan yang di-assign ke karyawan.</td>
                     </tr>
                   @endforelse
                 </tbody>
@@ -1497,7 +1520,7 @@
 
             <div class="px-5 py-3 border-t border-kt-border bg-slate-50/70 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 text-xs">
               <span id="rowCount" class="text-kt-muted">Menampilkan semua record</span>
-              <span class="text-kt-muted">Total: <span id="totalRowText" class="font-medium text-kt-text">{{ count($assignedPlannings ?? []) }}</span> entri</span>
+              <span class="text-kt-muted">Total: <span id="totalRowText" class="font-medium text-kt-text">{{ count($detailByLokasi ?? []) }}</span> entri (per karyawan)</span>
             </div>
           </div>
         </section>
@@ -1546,13 +1569,36 @@
       applyFilters();
     }
 
+    function switchCoverageTab(btn, tabKey) {
+      setActiveInGroup(btn);
+      document.querySelectorAll('.coverage-tab-pane').forEach(pane => {
+        const isActive = pane.getAttribute('data-coverage-tab') === tabKey;
+        pane.classList.toggle('d-none', !isActive);
+      });
+      window.currentCoverageTab = tabKey;
+      if (typeof filterSiteLast === 'function') filterSiteLast();
+    }
+
     function filterSite(btn, site) {
       setActiveInGroup(btn);
-      const rows = Array.from(document.querySelectorAll('#coverageTableBody tr[data-site]'));
+      window.coverageFilterSite = site;
+      const activePane = document.querySelector('.coverage-tab-pane:not(.d-none)');
+      const container = activePane ? activePane.querySelector('.coverageTableBody') : null;
+      const rows = container ? Array.from(container.querySelectorAll('tr[data-site]')) : [];
       rows.forEach(row => {
         const rowSite = (row.getAttribute('data-site') || '').trim();
         const show = site === 'all' || rowSite === site;
         row.style.display = show ? '' : 'none';
+      });
+    }
+    function filterSiteLast() {
+      const site = window.coverageFilterSite || 'all';
+      const activePane = document.querySelector('.coverage-tab-pane:not(.d-none)');
+      const container = activePane ? activePane.querySelector('.coverageTableBody') : null;
+      const rows = container ? Array.from(container.querySelectorAll('tr[data-site]')) : [];
+      rows.forEach(row => {
+        const rowSite = (row.getAttribute('data-site') || '').trim();
+        row.style.display = (site === 'all' || rowSite === site) ? '' : 'none';
       });
     }
 
@@ -1762,6 +1808,18 @@
 
       if (btnPrev) btnPrev.addEventListener('click', goPrevMonth);
       if (btnNext) btnNext.addEventListener('click', goNextMonth);
+
+      // Refresh kalender: reload halaman agar data heatmap (planned/actual) ter-update dari server
+      var refreshBtn = document.getElementById('heatmapRefreshBtn');
+      var refreshIcon = document.getElementById('heatmapRefreshIcon');
+      if (refreshBtn) {
+        refreshBtn.addEventListener('click', function() {
+          if (refreshIcon) refreshIcon.classList.add('spin');
+          refreshBtn.disabled = true;
+          refreshBtn.querySelector('span').textContent = 'Memuat...';
+          window.location.reload();
+        });
+      }
     })();
 
     // --- Animate progress bars on load ---

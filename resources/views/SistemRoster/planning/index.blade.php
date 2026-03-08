@@ -13,6 +13,61 @@
 .karyawan-select-cell { min-width: 250px; }
 .saving-indicator { display: none; }
 .saving-indicator.show { display: inline-block; }
+
+/* Tabel ringkas (tingkat 1) */
+#planningSummaryTable { border-collapse: separate; border-spacing: 0; }
+#planningSummaryTable thead tr { background: #f8fafc !important; }
+#planningSummaryTable thead th {
+    font-weight: 600; font-size: 0.8125rem; text-transform: uppercase; letter-spacing: 0.02em;
+    color: #475569; border-bottom: 2px solid #e2e8f0; padding: 0.75rem 1rem;
+}
+.summary-row {
+    transition: background-color 0.15s ease, box-shadow 0.15s ease;
+}
+.summary-row:hover { background-color: #f8fafc !important; }
+.summary-row td { padding: 0.875rem 1rem; vertical-align: middle !important; border-bottom: 1px solid #f1f3f5; }
+.summary-row .badge { font-weight: 500; padding: 0.35em 0.65em; }
+.summary-total { font-weight: 600; color: #0d6efd; min-width: 1.5em; display: inline-block; text-align: center; }
+.expand-btn {
+    font-weight: 500; padding: 0.35rem 0.75rem; transition: all 0.2s ease;
+    border-width: 1.5px;
+}
+.expand-btn:hover { transform: translateY(-1px); }
+.expand-btn .expand-icon { font-size: 1.1em; vertical-align: -0.05em; }
+
+/* Panel detail (tingkat 2) */
+.detail-wrapper-row td { vertical-align: top !important; padding: 0 !important; border: none !important; }
+.detail-inner {
+    margin: 0 0.5rem 0.5rem; padding: 1.25rem 1.5rem;
+    background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+    border: 1px solid #e2e8f0; border-radius: 0.5rem;
+    border-left: 4px solid #0d6efd;
+    box-shadow: 0 2px 8px rgba(0,0,0,.06);
+}
+.detail-inner .table {
+    border-radius: 0.5rem; overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.05);
+}
+.detail-inner .table thead th {
+    font-size: 0.8125rem; font-weight: 600; color: #475569;
+    background: #fff !important; border-bottom: 2px solid #e2e8f0;
+    padding: 0.6rem 0.75rem;
+}
+.detail-inner .table tbody tr { transition: background-color 0.15s ease; }
+.detail-inner .table tbody tr:hover { background-color: #f8fafc !important; }
+.detail-inner .table td { padding: 0.5rem 0.75rem; vertical-align: middle !important; font-size: 0.875rem; }
+.detail-row td { border-color: #f1f5f9 !important; }
+.collapse-btn {
+    font-weight: 500; font-size: 0.8125rem;
+    padding: 0.3rem 0.65rem; margin-top: 0.25rem;
+}
+.detail-row td { vertical-align: middle !important; }
+
+/* Empty state */
+#planningSummaryTable tbody > tr > td[colspan="7"] {
+    padding: 2.5rem 1rem !important; color: #64748b;
+}
+
 /* Tabs per site */
 .nav-tabs-custom { border-bottom: 2px solid #e9ecef; gap: 4px; }
 .nav-tabs-custom .nav-link { border: 1px solid #dee2e6; border-bottom: none; margin-bottom: -2px; font-weight: 500; color: #6c757d; }
@@ -190,114 +245,431 @@
         </div>
     </div>
 
-    <!-- Planning Table -->
+  
+
+    {{-- Bahan Evaluasi: per lokasi + detail lokasi — kapan terakhir ada data inspeksi hazard & subketidaksesuaian --}}
+  
+
+    <!-- Planning Table (referensi: dashboard-weekly Data IKK Weekly) -->
     <div class="row">
         <div class="col-12">
-            <div class="card rounded-4">
-                <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover table-striped align-middle mb-4">
-                            <thead class="table-light">
-                                <tr>
-                                    <th style="width: 50px">No</th>
-                                    <th>Tanggal</th>
-                                    <th>Sumber</th>
-                                    <th>Site</th>
-                                    <th>No IKK</th>
-                                    <th>Aktivitas</th>
-                                    <th>Lokasi</th>
-                                    <th>Perusahaan</th>
-                                    <th>Shift</th>
-                                    <th class="karyawan-select-cell">Karyawan</th>
-                                    <th>Status</th>
-                                    <th style="width: 80px">Aksi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                @forelse ($plannings as $idx => $planning)
-                                    <tr data-planning-id="{{ $planning->id }}">
-                                        <td>{{ $plannings->firstItem() + $idx }}</td>
-                                        <td>{{ $planning->tanggal->format('d M Y') }}</td>
-                                        <td>
-                                            <span class="badge bg-{{ $planning->source_type === 'DOP' ? 'secondary' : 'info' }}">
-                                                {{ $planning->source_type }}
-                                            </span>
-                                        </td>
-                                        <td><small>{{ $planning->site ?? '-' }}</small></td>
-                                        <td><small>{{ $planning->no_ikk ?? '-' }}</small></td>
-                                        <td><small>{{ Str::limit($planning->aktivitas, 30) ?? '-' }}</small></td>
-                                        <td><small>{{ Str::limit($planning->lokasi, 20) ?? '-' }}</small></td>
-                                        <td><small>{{ Str::limit($planning->perusahaan_pic, 20) ?? '-' }}</small></td>
-                                        <td>{{ $planning->shift ?? '-' }}</td>
-                                        <td class="karyawan-select-cell">
-                                            <div class="d-flex align-items-center gap-2">
-                                                <select class="form-select form-select-sm karyawan-select" 
-                                                    data-planning-id="{{ $planning->id }}" 
-                                                    multiple="multiple">
-                                                    @foreach($planning->karyawans as $k)
-                                                        <option value="{{ $k->user_id }}" 
-                                                            data-nama="{{ $k->nama_karyawan }}" 
-                                                            data-sid="{{ $k->sid_karyawan }}"
-                                                            selected>{{ $k->nama_karyawan }}</option>
-                                                    @endforeach
-                                                </select>
-                                                <span class="saving-indicator" id="saving-{{ $planning->id }}">
-                                                    <i class="bx bx-loader-alt bx-spin text-primary"></i>
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            @php
-                                                $statusColors = [
-                                                    'draft' => 'secondary',
-                                                    'assigned' => 'primary',
-                                                    'completed' => 'success',
-                                                ];
-                                            @endphp
-                                            <span class="badge bg-{{ $statusColors[$planning->status] ?? 'secondary' }}" id="status-{{ $planning->id }}">
-                                                {{ ucfirst($planning->status) }}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="d-flex gap-1">
-                                                <button type="button" class="btn btn-sm btn-info rounded-3" 
-                                                    onclick="openEditModal({{ $planning->id }}, '{{ $planning->shift }}', '{{ $planning->kategori_area }}', '{{ $planning->jenis_sap }}', '{{ $planning->status }}')" 
-                                                    title="Edit">
-                                                    <i class="material-icons-outlined text-white">visibility</i>
-                                                </button>
-                                                <form action="{{ route('sistem-roster.planning.destroy', $planning->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus planning ini?')">
-                                                    @csrf
-                                                    @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger rounded-3" title="Hapus">
-                                                    <i class="material-icons-outlined">delete</i>
-                                                    </button>
-                                                </form>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                @empty
+            <div class="card rounded-4 border-0 shadow-sm mt-2">
+                <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-start">
+                    <div>
+                        <h5 class="mb-0 fw-bold">
+                            Daftar Planning
+                            @if($plannings->isNotEmpty())
+                                <span class="text-muted fw-normal fs-6">({{ $plannings->firstItem() ?? 0 }}-{{ $plannings->lastItem() ?? 0 }} dari {{ $plannings->total() }})</span>
+                            @endif
+                        </h5>
+                        <small class="text-muted">Ringkas per Tanggal, Site & Jenis. Klik tombol [+] untuk melihat detail aktivitas dan assign karyawan.</small>
+                    </div>
+                    <div class="d-flex gap-2">
+                        @if(count($grouped ?? []) > 0 || count($groupedRoster ?? []) > 0)
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnExpandAllPlanning" title="Expand All">
+                                <i class="material-icons-outlined" style="font-size: 16px;">unfold_more</i>
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCollapseAllPlanning" title="Collapse All">
+                                <i class="material-icons-outlined" style="font-size: 16px;">unfold_less</i>
+                            </button>
+                        @endif
+                    </div>
+                </div>
+                <div class="card-body p-0">
+                    @if(count($grouped ?? []) > 0 || count($groupedRoster ?? []) > 0)
+                        <div class="table-responsive">
+                            <table class="table table-hover align-middle mb-0 w-100" id="planningSummaryTable">
+                                <thead class="table-light">
                                     <tr>
-                                        <td colspan="12" class="text-center text-muted py-4">
-                                            <i class="bx bx-info-circle fs-1 d-block mb-2"></i>
-                                            Belum ada data planning untuk periode ini.
-                                            <br>
-                                            <small>Klik tombol "Generate dari IKK & DOP" untuk membuat planning.</small>
-                                        </td>
+                                        <th style="width: 40px;"></th>
+                                        <th>No</th>
+                                        <th>Tanggal</th>
+                                        <th>Site</th>
+                                        <th>Jenis</th>
+                                        <th>Aktivitas</th>
+                                        <th class="text-center">Total Aktivitas</th>
+                                        <th class="text-center">Total Assigned</th>
                                     </tr>
-                                @endforelse
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="d-flex justify-content-between align-items-center flex-column flex-lg-row gap-3">
-                        <div class="text-muted">
-                            Menampilkan {{ $plannings->firstItem() ?? 0 }}-{{ $plannings->lastItem() ?? 0 }} dari {{ $plannings->total() }} data
+                                </thead>
+                                <tbody>
+                                    @php $detailIndex = (int) $plannings->firstItem() - 1; @endphp
+                                    @foreach($grouped as $groupKey => $items)
+                                        @php
+                                            $first = $items->first();
+                                            $tanggal = $first->tanggal;
+                                            $site = $first->site ?? '-';
+                                            $jenis = $first->source_type ?? '-';
+                                            $totalAktivitas = $items->count();
+                                            $totalAssigned = $items->filter(fn($p) => $p->karyawans->count() > 0)->count();
+                                        @endphp
+                                        {{-- Main Row --}}
+                                        <tr class="planning-main-row" data-group-key="{{ $groupKey }}">
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-outline-primary planning-toggle-btn p-0"
+                                                        data-target="planning-detail-{{ $loop->iteration }}"
+                                                        style="width: 28px; height: 28px; line-height: 1;">
+                                                    <i class="material-icons-outlined" style="font-size: 18px;">add</i>
+                                                </button>
+                                            </td>
+                                            <td>{{ $loop->iteration }}</td>
+                                            <td>{{ $tanggal->format('d M Y') }}</td>
+                                            <td>{{ $site }}</td>
+                                            <td>
+                                                <span class="badge bg-{{ $jenis === 'DOP' ? 'secondary' : 'info' }}">{{ $jenis }}</span>
+                                            </td>
+                                            <td>
+                                                @if(strtoupper($jenis) === 'IKK' || strtoupper($jenis) === 'DOP')
+                                                    <span class="badge bg-warning text-dark">Highrisk/Kritis</span>
+                                                @else
+                                                    <span class="text-muted">-</span>
+                                                @endif
+                                            </td>
+                                            <td class="text-center"><strong>{{ $totalAktivitas }}</strong></td>
+                                            <td class="text-center"><strong>{{ $totalAssigned }}</strong></td>
+                                        </tr>
+                                        {{-- Detail Row (Hidden by default) --}}
+                                        <tr class="planning-detail-row d-none" id="planning-detail-{{ $loop->iteration }}">
+                                            <td colspan="8" class="p-0 bg-light">
+                                                <div class="p-3">
+                                                    <div class="d-flex align-items-center justify-content-between mb-2">
+                                                        <small class="text-muted fw-semibold">
+                                                            <i class="bx bx-list-ul me-1"></i> Detail aktivitas — assign karyawan di bawah
+                                                        </small>
+                                                    </div>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered table-hover align-middle mb-0 bg-white">
+                                                            <thead class="table-secondary">
+                                                                <tr>
+                                                                    <th style="width: 40px">No</th>
+                                                                    <th>Tanggal</th>
+                                                                    <th>Sumber</th>
+                                                                    <th>Site</th>
+                                                                    <th>No IKK</th>
+                                                                    <th>Aktivitas</th>
+                                                                    <th>Lokasi</th>
+                                                                    <th>Perusahaan</th>
+                                                                    <th>Shift</th>
+                                                                    <th class="karyawan-select-cell">Karyawan</th>
+                                                                    <th>Status</th>
+                                                                    <th style="width: 90px">Aksi</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($items as $planning)
+                                                                    @php $detailIndex++; @endphp
+                                                                    <tr class="detail-row" data-planning-id="{{ $planning->id }}">
+                                                                        <td>{{ $detailIndex }}</td>
+                                                                        <td>{{ $planning->tanggal->format('d M Y') }}</td>
+                                                                        <td>
+                                                                            <span class="badge bg-{{ $planning->source_type === 'DOP' ? 'secondary' : 'info' }}">{{ $planning->source_type }}</span>
+                                                                        </td>
+                                                                        <td><small>{{ $planning->site ?? '-' }}</small></td>
+                                                                        <td><small>{{ $planning->no_ikk ?? '-' }}</small></td>
+                                                                        <td><small>{{ Str::limit($planning->aktivitas, 30) ?? '-' }}</small></td>
+                                                                        <td><small>{{ Str::limit($planning->lokasi, 20) ?? '-' }}</small></td>
+                                                                        <td><small>{{ Str::limit($planning->perusahaan_pic, 20) ?? '-' }}</small></td>
+                                                                        <td>{{ $planning->shift ?? '-' }}</td>
+                                                                        <td class="karyawan-select-cell">
+                                                                            <div class="d-flex align-items-center gap-2">
+                                                                                <select class="form-select form-select-sm karyawan-select"
+                                                                                    data-planning-id="{{ $planning->id }}"
+                                                                                    multiple="multiple">
+                                                                                    @foreach($planning->karyawans as $k)
+                                                                                        <option value="{{ $k->user_id }}"
+                                                                                            data-nama="{{ $k->nama_karyawan }}"
+                                                                                            data-sid="{{ $k->sid_karyawan ?? '' }}"
+                                                                                            selected>{{ $k->nama_karyawan }}</option>
+                                                                                    @endforeach
+                                                                                </select>
+                                                                                <span class="saving-indicator" id="saving-{{ $planning->id }}">
+                                                                                    <i class="bx bx-loader-alt bx-spin text-primary"></i>
+                                                                                </span>
+                                                                            </div>
+                                                                        </td>
+                                                                        <td>
+                                                                            @php
+                                                                                $statusColors = ['draft' => 'secondary', 'assigned' => 'primary', 'completed' => 'success'];
+                                                                            @endphp
+                                                                            <span class="badge bg-{{ $statusColors[$planning->status] ?? 'secondary' }}" id="status-{{ $planning->id }}">{{ ucfirst($planning->status) }}</span>
+                                                                        </td>
+                                                                        <td>
+                                                                            <div class="d-flex gap-1">
+                                                                                <button type="button" class="btn btn-sm btn-info rounded-3" onclick="openEditModal({{ $planning->id }}, '{{ addslashes($planning->shift ?? '') }}', '{{ addslashes($planning->kategori_area ?? '') }}', '{{ addslashes($planning->jenis_sap ?? '') }}', '{{ $planning->status }}')" title="Lihat/Edit">
+                                                                                    <i class="material-icons-outlined text-white" style="font-size: 16px;">visibility</i>
+                                                                                </button>
+                                                                                <form action="{{ route('sistem-roster.planning.destroy', $planning->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Hapus planning ini?')">
+                                                                                    @csrf
+                                                                                    @method('DELETE')
+                                                                                    <button type="submit" class="btn btn-sm btn-danger rounded-3" title="Hapus"><i class="material-icons-outlined" style="font-size: 16px;">delete</i></button>
+                                                                                </form>
+                                                                            </div>
+                                                                        </td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                    {{-- Baris Roster (acuan dari roster_bmo1, roster_bmo3, roster_gmo, roster_hote, roster_lmo) — Save ke Planning --}}
+                                    @php $rosterRowIndex = 0; @endphp
+                                    @foreach($groupedRoster ?? [] as $rosterKey => $rosterItems)
+                                        @php
+                                            $rosterRowIndex++;
+                                            $firstRoster = $rosterItems->first();
+                                            $rosterTanggal = $firstRoster->date_ins ? \Carbon\Carbon::parse($firstRoster->date_ins) : null;
+                                            $rosterSite = $firstRoster->site ?? '-';
+                                            $rosterTable = $firstRoster->roster_table ?? '';
+                                            $existingKey = $rosterTanggal ? $rosterTanggal->format('Y-m-d') . '|' . $rosterSite . '|' . $rosterTable : '';
+                                            $alreadySaved = in_array($existingKey, $existingRosterKeys ?? [], true);
+                                        @endphp
+                                        <tr class="planning-main-row roster-reference-row" data-roster-key="{{ $rosterKey }}">
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-outline-primary planning-toggle-btn p-0"
+                                                        data-target="planning-detail-roster-{{ $rosterRowIndex }}"
+                                                        style="width: 28px; height: 28px; line-height: 1;">
+                                                    <i class="material-icons-outlined" style="font-size: 18px;">add</i>
+                                                </button>
+                                            </td>
+                                            <td>{{ count($grouped ?? []) + $rosterRowIndex }}</td>
+                                            <td>{{ $rosterTanggal ? $rosterTanggal->format('d M Y') : '-' }}</td>
+                                            <td>{{ $rosterSite }}</td>
+                                            <td>
+                                                <span class="badge bg-success">Roster</span>
+                                            </td>
+                                            <td>
+                                                <span class="badge bg-secondary">Non Area Kritis</span>
+                                            </td>
+                                            <td class="text-center"><strong>{{ $rosterItems->count() }}</strong></td>
+                                            <td class="text-center">{{ $alreadySaved ? $rosterItems->count() : '-' }}</td>
+                                        </tr>
+                                        <tr class="planning-detail-row d-none" id="planning-detail-roster-{{ $rosterRowIndex }}">
+                                            <td colspan="8" class="p-0 bg-light">
+                                                <div class="p-3">
+                                                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                                                        <small class="text-muted fw-semibold">
+                                                            <i class="bx bx-list-ul me-1"></i> Data roster (acuan) — Non Area Kritis. Klik "Save ke Planning" untuk memasukkan ke daftar planning.
+                                                        </small>
+                                                        @if($alreadySaved)
+                                                            <span class="badge bg-success">Sudah di-Planning</span>
+                                                        @else
+                                                            <button type="button" class="btn btn-sm btn-success btn-save-roster"
+                                                                    data-tanggal="{{ $rosterTanggal ? $rosterTanggal->format('Y-m-d') : '' }}"
+                                                                    data-roster-table="{{ $rosterTable }}"
+                                                                    data-site="{{ $rosterSite }}">
+                                                                <i class="bx bx-save me-1"></i> Save ke Planning
+                                                            </button>
+                                                        @endif
+                                                        <button type="button" class="btn btn-sm btn-outline-warning btn-reset-roster-exclusions"
+                                                                data-tanggal="{{ $rosterTanggal ? $rosterTanggal->format('Y-m-d') : '' }}"
+                                                                data-roster-table="{{ $rosterTable }}"
+                                                                data-site="{{ $rosterSite }}"
+                                                                title="Kembalikan semua lokasi acuan yang telah dihapus">
+                                                            <i class="bx bx-reset me-1"></i> Setting ulang
+                                                        </button>
+                                                    </div>
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered table-hover align-middle mb-0 bg-white">
+                                                            <thead class="table-secondary">
+                                                                <tr>
+                                                                    <th style="width: 40px">No</th>
+                                                                    <th>Tanggal</th>
+                                                                    <th>Nama</th>
+                                                                    <th>Lokasi</th>
+                                                                    <th>Detail Lokasi</th>
+                                                                    <th>Hazard Inspeksi</th>
+                                                                    <th style="width: 70px" class="text-center">Aksi</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @php
+                                                                    $rosterNameGroups = [];
+                                                                    $currentName = null;
+                                                                    $currentGroup = [];
+                                                                    foreach ($rosterItems as $r) {
+                                                                        $nama = $r->nama ?? 'Tanpa Nama';
+                                                                        if ($nama !== $currentName) {
+                                                                            if (!empty($currentGroup)) {
+                                                                                $rosterNameGroups[] = ['nama' => $currentName, 'rows' => $currentGroup];
+                                                                            }
+                                                                            $currentName = $nama;
+                                                                            $currentGroup = [$r];
+                                                                        } else {
+                                                                            $currentGroup[] = $r;
+                                                                        }
+                                                                    }
+                                                                    if (!empty($currentGroup)) {
+                                                                        $rosterNameGroups[] = ['nama' => $currentName, 'rows' => $currentGroup];
+                                                                    }
+                                                                    $rosterRowNo = 0;
+                                                                @endphp
+                                                                @foreach($rosterNameGroups as $group)
+                                                                    @foreach($group['rows'] as $subIdx => $r)
+                                                                        @php $rosterRowNo++; @endphp
+                                                                        <tr>
+                                                                            <td>{{ $rosterRowNo }}</td>
+                                                                            <td>{{ $r->date_ins ? \Carbon\Carbon::parse($r->date_ins)->format('d M Y') : '-' }}</td>
+                                                                            @if($subIdx === 0)
+                                                                                <td rowspan="{{ count($group['rows']) }}" class="align-top">{{ $group['nama'] }}</td>
+                                                                            @endif
+                                                                            <td><small>{{ $r->lokasi ?? '-' }}</small></td>
+                                                                            <td><small>{{ $r->detail_lokasi ?? '-' }}</small></td>
+                                                                            <td class="text-start">
+                                                                                @php
+                                                                                    $lastDate = $r->last_inspeksi_date ?? null;
+                                                                                    $subket = $r->last_inspeksi_subketidaksesuaian ?? null;
+                                                                                @endphp
+                                                                                @if($lastDate || $subket)
+                                                                                    @if($lastDate)
+                                                                                        <div class="small"><strong>Terakhir ada data:</strong> {{ \Carbon\Carbon::parse($lastDate)->format('d/m/Y') }}</div>
+                                                                                    @endif
+                                                                                    @if($subket !== null && $subket !== '')
+                                                                                        <div class="small text-muted" title="Subketidaksesuaian"><strong>Subketidaksesuaian:</strong> {{ $subket }}</div>
+                                                                                    @endif
+                                                                                @else
+                                                                                    <span class="text-muted">Belum ada data inspeksi hazard</span>
+                                                                                @endif
+                                                                            </td>
+                                                                            <td class="text-center">
+                                                                                <button type="button" class="btn btn-sm btn-outline-danger btn-exclude-roster-location p-1"
+                                                                                        title="Hapus lokasi ini dari acuan (bisa dikembalikan dengan Setting ulang)"
+                                                                                        data-tanggal="{{ $rosterTanggal ? $rosterTanggal->format('Y-m-d') : '' }}"
+                                                                                        data-roster-table="{{ $rosterTable }}"
+                                                                                        data-site="{{ $rosterSite }}"
+                                                                                        data-nama="{{ e($r->nama ?? '') }}"
+                                                                                        data-lokasi="{{ e($r->lokasi ?? '') }}"
+                                                                                        data-detail-lokasi="{{ e($r->detail_lokasi ?? '') }}">
+                                                                                        <i class="material-icons-outlined">delete</i>
+                                                                                </button>
+                                                                            </td>
+                                                                        </tr>
+                                                                    @endforeach
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
-                        {{ $plannings->onEachSide(1)->links('pagination::bootstrap-5') }}
-                    </div>
+                        <div class="d-flex justify-content-between align-items-center flex-column flex-lg-row gap-3 p-3 border-top">
+                            <div class="text-muted small">
+                                Menampilkan {{ $plannings->firstItem() ?? 0 }}-{{ $plannings->lastItem() ?? 0 }} dari {{ $plannings->total() }} data planning
+                                @if(count($groupedRoster ?? []) > 0)
+                                    <span class="ms-2">| {{ count($groupedRoster) }} grup Roster (acuan)</span>
+                                @endif
+                            </div>
+                            {{ $plannings->onEachSide(1)->links('pagination::bootstrap-5') }}
+                        </div>
+                    @else
+                        <div class="p-4 text-center text-muted">
+                            <i class="bx bx-info-circle" style="font-size: 48px;"></i>
+                            <p class="mb-0 mt-2">Belum ada data planning untuk periode ini.</p>
+                            <small>Klik tombol "Generate Planning" untuk membuat planning dari IKK & DOP.</small>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
     </div>
+
+    {{-- Summary per orang: gabungan IKK, DOP, dan Roster — tabel grouping, klik + untuk detail lokasi --}}
+    @if(count($summaryByPersonMerged ?? []) > 0)
+        <div class="row mb-3">
+            <div class="col-12">
+                <div class="card rounded-4 border-0 shadow-sm">
+                    <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-start">
+                        <div>
+                            <h6 class="mb-0 fw-bold"><i class="bx bx-user-check me-1"></i> Summary per orang — harus mengunjungi</h6>
+                            <small class="text-muted">Grouping per nama. Klik tombol [+] untuk melihat detail lokasi dan detail lokasi.</small>
+                        </div>
+                        <div class="d-flex gap-2">
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnExpandAllSummary" title="Expand All"><i class="material-icons-outlined" style="font-size: 16px;">unfold_more</i></button>
+                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCollapseAllSummary" title="Collapse All"><i class="material-icons-outlined" style="font-size: 16px;">unfold_less</i></button>
+                        </div>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-sm table-bordered table-hover align-middle mb-0" id="summaryTable">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th style="width: 40px"></th>
+                                        <th style="width: 40px">No</th>
+                                        <th>Nama</th>
+                                        <th class="text-center">Total kunjungan</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    @foreach($summaryByPersonMerged as $nama => $items)
+                                        @php $idx = $loop->iteration; @endphp
+                                        <tr class="summary-main-row">
+                                            <td class="text-center">
+                                                <button type="button" class="btn btn-sm btn-outline-primary planning-toggle-btn p-0"
+                                                        data-target="summary-detail-{{ $idx }}"
+                                                        style="width: 28px; height: 28px; line-height: 1;">
+                                                    <i class="material-icons-outlined" style="font-size: 18px;">add</i>
+                                                </button>
+                                            </td>
+                                            <td>{{ $idx }}</td>
+                                            <td><strong>{{ $nama }}</strong></td>
+                                            <td class="text-center"><strong>{{ $items->count() }}</strong></td>
+                                        </tr>
+                                        <tr class="planning-detail-row d-none" id="summary-detail-{{ $idx }}">
+                                            <td colspan="4" class="p-0 bg-light">
+                                                <div class="p-3">
+                                                    <div class="table-responsive">
+                                                        <table class="table table-sm table-bordered table-hover align-middle mb-0 bg-white">
+                                                            <thead class="table-secondary">
+                                                                <tr>
+                                                                    <th style="width: 40px">No</th>
+                                                                    <th>Tanggal</th>
+                                                                    <th>Site</th>
+                                                                    <th>Sumber</th>
+                                                                    <th>Lokasi</th>
+                                                                    <th>Detail Lokasi</th>
+                                                                    <th>Aktivitas</th>
+                                                                </tr>
+                                                            </thead>
+                                                            <tbody>
+                                                                @foreach($items as $subNo => $it)
+                                                                    <tr>
+                                                                        <td>{{ $subNo + 1 }}</td>
+                                                                        <td>{{ $it->tanggal ? ($it->tanggal instanceof \DateTimeInterface ? $it->tanggal->format('d/m/Y') : \Carbon\Carbon::parse($it->tanggal)->format('d/m/Y')) : '-' }}</td>
+                                                                        <td><span class="badge bg-light text-dark">{{ $it->site ?? '-' }}</span></td>
+                                                                        <td>
+                                                                            @php
+                                                                                $badgeClass = 'bg-secondary';
+                                                                                if (($it->source_type ?? '') === 'IKK') $badgeClass = 'bg-info';
+                                                                                elseif (($it->source_type ?? '') === 'DOP') $badgeClass = 'bg-secondary';
+                                                                                elseif (($it->source_type ?? '') === 'Roster') $badgeClass = 'bg-success';
+                                                                            @endphp
+                                                                            <span class="badge {{ $badgeClass }}">{{ $it->source_type ?? '-' }}</span>
+                                                                        </td>
+                                                                        <td><small>{{ $it->lokasi ?? '-' }}</small></td>
+                                                                        <td><small class="text-muted">{{ $it->detail_lokasi ?? '-' }}</small></td>
+                                                                        <td><small>{{ Str::limit($it->aktivitas ?? '-', 40) }}</small></td>
+                                                                    </tr>
+                                                                @endforeach
+                                                            </tbody>
+                                                        </table>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    @endif
 
     <!-- Edit Modal -->
     <div class="modal fade" id="editModal" tabindex="-1" aria-hidden="true">
@@ -354,9 +726,11 @@
 const csrfToken = '{{ csrf_token() }}';
 const usersUrl = '{{ route("sistem-roster.planning.users") }}';
 
-function initKaryawanSelect() {
-    $('.karyawan-select').each(function() {
+function initKaryawanSelect(container) {
+    var $scope = container ? $(container) : $(document);
+    $scope.find('.karyawan-select').each(function() {
         const $select = $(this);
+        if ($select.hasClass('select2-hidden-accessible')) return;
         const planningId = $select.data('planning-id');
         
         $select.select2({
@@ -627,7 +1001,216 @@ function openWaNotifModal() {
 }
 
 document.addEventListener('DOMContentLoaded', function() {
-    initKaryawanSelect();
+    // Toggle individual planning row (referensi: dashboard-weekly IKK toggle)
+    document.querySelectorAll('.planning-toggle-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+            var targetId = this.getAttribute('data-target');
+            var targetRow = document.getElementById(targetId);
+            var icon = this.querySelector('i');
+            if (!targetRow || !icon) return;
+            if (targetRow.classList.contains('d-none')) {
+                targetRow.classList.remove('d-none');
+                icon.textContent = 'remove';
+                this.classList.remove('btn-outline-primary');
+                this.classList.add('btn-primary');
+                initKaryawanSelect(targetRow);
+            } else {
+                targetRow.classList.add('d-none');
+                icon.textContent = 'add';
+                this.classList.remove('btn-primary');
+                this.classList.add('btn-outline-primary');
+            }
+        });
+    });
+
+    // Expand All
+    var btnExpandAll = document.getElementById('btnExpandAllPlanning');
+    if (btnExpandAll) {
+        btnExpandAll.addEventListener('click', function() {
+            document.querySelectorAll('.planning-detail-row').forEach(function(row) {
+                row.classList.remove('d-none');
+                initKaryawanSelect(row);
+            });
+            document.querySelectorAll('.planning-toggle-btn').forEach(function(btn) {
+                var icon = btn.querySelector('i');
+                if (icon) icon.textContent = 'remove';
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-primary');
+            });
+        });
+    }
+
+    // Collapse All
+    var btnCollapseAll = document.getElementById('btnCollapseAllPlanning');
+    if (btnCollapseAll) {
+        btnCollapseAll.addEventListener('click', function() {
+            document.querySelectorAll('.planning-detail-row').forEach(function(row) {
+                row.classList.add('d-none');
+            });
+            document.querySelectorAll('.planning-toggle-btn').forEach(function(btn) {
+                var icon = btn.querySelector('i');
+                if (icon) icon.textContent = 'add';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+        });
+    }
+
+    // Summary table: Expand All / Collapse All (hanya di dalam #summaryTable)
+    var summaryTable = document.getElementById('summaryTable');
+    var btnExpandSummary = document.getElementById('btnExpandAllSummary');
+    if (summaryTable && btnExpandSummary) {
+        btnExpandSummary.addEventListener('click', function() {
+            summaryTable.querySelectorAll('.planning-detail-row').forEach(function(row) { row.classList.remove('d-none'); });
+            summaryTable.querySelectorAll('.planning-toggle-btn').forEach(function(btn) {
+                var icon = btn.querySelector('i');
+                if (icon) icon.textContent = 'remove';
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-primary');
+            });
+        });
+    }
+    var btnCollapseSummary = document.getElementById('btnCollapseAllSummary');
+    if (summaryTable && btnCollapseSummary) {
+        btnCollapseSummary.addEventListener('click', function() {
+            summaryTable.querySelectorAll('.planning-detail-row').forEach(function(row) { row.classList.add('d-none'); });
+            summaryTable.querySelectorAll('.planning-toggle-btn').forEach(function(btn) {
+                var icon = btn.querySelector('i');
+                if (icon) icon.textContent = 'add';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            });
+        });
+    }
+
+    // Save Roster ke Planning (delegasi karena tombol bisa di dalam baris yang di-expand)
+    document.body.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-save-roster');
+        if (!btn) return;
+        e.preventDefault();
+        var tanggal = btn.getAttribute('data-tanggal');
+        var rosterTable = btn.getAttribute('data-roster-table');
+        if (!tanggal || !rosterTable) return;
+        if (btn.disabled) return;
+        btn.disabled = true;
+        var origHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-1"></i> Menyimpan...';
+        fetch('{{ route("sistem-roster.planning.save-roster") }}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: JSON.stringify({ tanggal: tanggal, roster_table: rosterTable })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: data.message || 'Data roster berhasil disimpan ke planning.' }).then(function() { window.location.reload(); });
+                } else {
+                    window.location.reload();
+                }
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                alert(data.message || 'Gagal menyimpan');
+            }
+        })
+        .catch(function() {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            alert('Gagal menyimpan. Silakan coba lagi.');
+        });
+    });
+
+    // Hapus lokasi dari acuan roster (take out) — setelah itu bisa Setting ulang
+    document.body.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-exclude-roster-location');
+        if (!btn) return;
+        e.preventDefault();
+        if (btn.disabled) return;
+        var tanggal = btn.getAttribute('data-tanggal');
+        var rosterTable = btn.getAttribute('data-roster-table');
+        var site = btn.getAttribute('data-site');
+        var nama = btn.getAttribute('data-nama') || '';
+        var lokasi = btn.getAttribute('data-lokasi') || '';
+        var detailLokasi = btn.getAttribute('data-detail-lokasi') || '';
+        if (!tanggal || !rosterTable || !site) return;
+        if (typeof Swal !== 'undefined') {
+            Swal.fire({
+                title: 'Hapus lokasi dari acuan?',
+                text: 'Lokasi dan detail lokasi ini akan disembunyikan dari daftar. Anda bisa mengembalikan dengan tombol "Setting ulang".',
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonText: 'Ya, hapus dari acuan',
+                cancelButtonText: 'Batal'
+            }).then(function(result) {
+                if (!result.isConfirmed) return;
+                btn.disabled = true;
+                fetch('{{ route("sistem-roster.planning.exclude-roster-location") }}', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                    body: JSON.stringify({ tanggal: tanggal, roster_table: rosterTable, site: site, nama: nama, lokasi: lokasi, detail_lokasi: detailLokasi })
+                })
+                .then(function(r) { return r.json(); })
+                .then(function(data) {
+                    if (data.success) { window.location.reload(); } else { btn.disabled = false; alert(data.message || 'Gagal'); }
+                })
+                .catch(function() { btn.disabled = false; alert('Gagal. Silakan coba lagi.'); });
+            });
+        } else {
+            if (!confirm('Hapus lokasi ini dari acuan?')) return;
+            btn.disabled = true;
+            fetch('{{ route("sistem-roster.planning.exclude-roster-location") }}', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+                body: JSON.stringify({ tanggal: tanggal, roster_table: rosterTable, site: site, nama: nama, lokasi: lokasi, detail_lokasi: detailLokasi })
+            })
+            .then(function(r) { return r.json(); })
+            .then(function(data) {
+                if (data.success) { window.location.reload(); } else { btn.disabled = false; alert(data.message || 'Gagal'); }
+            })
+            .catch(function() { btn.disabled = false; alert('Gagal. Silakan coba lagi.'); });
+        }
+    });
+
+    // Setting ulang: kembalikan semua lokasi acuan yang dihapus untuk grup ini
+    document.body.addEventListener('click', function(e) {
+        var btn = e.target.closest('.btn-reset-roster-exclusions');
+        if (!btn) return;
+        e.preventDefault();
+        if (btn.disabled) return;
+        var tanggal = btn.getAttribute('data-tanggal');
+        var rosterTable = btn.getAttribute('data-roster-table');
+        var site = btn.getAttribute('data-site');
+        if (!tanggal || !rosterTable || !site) return;
+        btn.disabled = true;
+        var origHtml = btn.innerHTML;
+        btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-1"></i> ...';
+        fetch('{{ route("sistem-roster.planning.reset-roster-exclusions") }}', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json', 'X-CSRF-TOKEN': csrfToken, 'Accept': 'application/json' },
+            body: JSON.stringify({ tanggal: tanggal, roster_table: rosterTable, site: site })
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+            if (data.success) {
+                if (typeof Swal !== 'undefined') Swal.fire({ icon: 'success', title: 'Berhasil', text: data.message }).then(function() { window.location.reload(); });
+                else { alert(data.message); window.location.reload(); }
+            } else {
+                btn.disabled = false;
+                btn.innerHTML = origHtml;
+                alert(data.message || 'Gagal');
+            }
+        })
+        .catch(function() {
+            btn.disabled = false;
+            btn.innerHTML = origHtml;
+            alert('Gagal. Silakan coba lagi.');
+        });
+    });
 
     // Tab per site: klik tab set filter_site dan submit form
     document.querySelectorAll('#siteTabs [data-site]').forEach(function(btn) {

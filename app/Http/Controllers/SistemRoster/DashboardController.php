@@ -31,29 +31,83 @@ class DashboardController extends Controller
             $planning->setAttribute('car_task_id', $matchResult['task_id']);
         }
 
-        $coverageLocations = $assignedPlannings
-            ->groupBy(fn ($p) => trim($p->lokasi ?? '') . '|' . trim($p->detail_lokasi ?? ''))
-            ->map(function ($items) {
-                $first = $items->first();
-                $okCount = $items->where('car_status', 'ok')->count();
-                $total = $items->count();
-                $pct = $total > 0 ? (int) round($okCount / $total * 100) : 0;
-                return (object) [
-                    'lokasi' => $first->lokasi ?? '',
-                    'detail_lokasi' => $first->detail_lokasi ?? '',
-                    'site' => trim($first->site ?? ''),
-                    'total' => $total,
-                    'ok_count' => $okCount,
-                    'pct' => $pct,
-                ];
-            })
-            ->values();
+        $buildCoverage = function ($plannings) {
+            return $plannings
+                ->groupBy(fn ($p) => trim($p->lokasi ?? '') . '|' . trim($p->detail_lokasi ?? ''))
+                ->map(function ($items) {
+                    $first = $items->first();
+                    $okCount = $items->where('car_status', 'ok')->count();
+                    $total = $items->count();
+                    $pct = $total > 0 ? (int) round($okCount / $total * 100) : 0;
+                    return (object) [
+                        'lokasi' => $first->lokasi ?? '',
+                        'detail_lokasi' => $first->detail_lokasi ?? '',
+                        'site' => trim($first->site ?? ''),
+                        'total' => $total,
+                        'ok_count' => $okCount,
+                        'pct' => $pct,
+                    ];
+                })
+                ->values();
+        };
+
+        $coverageLocations = $buildCoverage($assignedPlannings);
+        $coverageByIkk = $buildCoverage($assignedPlannings->where('source_type', 'IKK'));
+        $coverageByDop = $buildCoverage($assignedPlannings->where('source_type', 'DOP'));
+        $coverageNonKritis = $buildCoverage($assignedPlannings->where('source_type', 'Roster'));
+
+        // Detail Plan Pengecekan: satu baris per karyawan (tiap karyawan beda pembagian lokasi/detail lokasi dari planning-nya)
+        $detailRows = collect();
+        foreach ($assignedPlannings as $planning) {
+            $shiftVal = $planning->shift ? trim((string) $planning->shift) : '';
+            $karyawans = $planning->karyawans ?? collect();
+            if ($karyawans->isEmpty()) {
+                $detailRows->push((object) [
+                    'tanggal' => $planning->tanggal,
+                    'shift' => $planning->shift,
+                    'shift_val' => $shiftVal,
+                    'kategori_area' => $planning->kategori_area ?? 'Area Highrisk',
+                    'lokasi' => $planning->lokasi ?? '—',
+                    'detail_lokasi' => $planning->detail_lokasi ?? '—',
+                    'aktivitas' => $planning->aktivitas ?? '—',
+                    'karyawan_nama' => '—',
+                    'car_task_id' => $planning->getAttribute('car_task_id') ?? '—',
+                    'detail_reason' => '—',
+                    'jenis_sap' => $planning->jenis_sap ?? null,
+                    'car_status' => $planning->getAttribute('car_status') ?? 'notok',
+                ]);
+            } else {
+                foreach ($karyawans as $k) {
+                    $firstK = $planning->karyawans->first();
+                    $detailReason = $firstK && ($firstK->reason || $firstK->detail) ? ($firstK->reason ?? $firstK->detail ?? '') : '';
+                    $detailRows->push((object) [
+                        'tanggal' => $planning->tanggal,
+                        'shift' => $planning->shift,
+                        'shift_val' => $shiftVal,
+                        'kategori_area' => $planning->kategori_area ?? 'Area Highrisk',
+                        'lokasi' => $planning->lokasi ?? '—',
+                        'detail_lokasi' => $planning->detail_lokasi ?? '—',
+                        'aktivitas' => $planning->aktivitas ?? '—',
+                        'karyawan_nama' => $k->nama_karyawan ?? '—',
+                        'car_task_id' => $planning->getAttribute('car_task_id') ?? '—',
+                        'detail_reason' => $detailReason ?: '—',
+                        'jenis_sap' => $planning->jenis_sap ?? null,
+                        'car_status' => $planning->getAttribute('car_status') ?? 'notok',
+                    ]);
+                }
+            }
+        }
+        $detailByLokasi = $detailRows;
 
         $heatmapData = $this->buildHeatmapData();
 
         return view('SistemRoster.dashboard.index', [
             'assignedPlannings' => $assignedPlannings,
             'coverageLocations' => $coverageLocations,
+            'coverageByIkk' => $coverageByIkk,
+            'coverageByDop' => $coverageByDop,
+            'coverageNonKritis' => $coverageNonKritis,
+            'detailByLokasi' => $detailByLokasi,
             'heatmapData' => $heatmapData,
         ]);
     }

@@ -84,6 +84,12 @@
               <div class="menu-title">Planning Roster</div>
             </a>
           </li>
+          <li>
+            <a href="{{ route('sistem-roster.master-roster.index') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">calendar_view_week</i></div>
+              <div class="menu-title">Master Roster</div>
+            </a>
+          </li>
          
           <li class="menu-label">Master Data</li>
           <li>
