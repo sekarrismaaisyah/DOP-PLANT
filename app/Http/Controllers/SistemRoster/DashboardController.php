@@ -13,7 +13,8 @@ class DashboardController extends Controller
 {
     /**
      * Menampilkan halaman Performance Dashboard Sistem Roster.
-     * Status OK/NOT OK diambil dari match nama_karyawan dengan nama_pelapor di ClickHouse (aaj_car_all_year_from_dav).
+     * Status OK/NOT OK: berdasarkan nama yang di-assign, lokasi, detail lokasi, dan tanggal —
+     * apakah ada hazard inspeksi (CAR jenis HAZARD/INSPEKSI, status SUBMITTED) di ClickHouse yang match.
      * Filter tanggal via query string ?date=YYYY-MM-DD (default: hari ini).
      */
     public function index(): View
@@ -29,11 +30,12 @@ class DashboardController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
-        $carTasksForDate = $this->getCarTasksFromClickHouseForDate($filterDate->format('Y-m-d'));
+        $carHazardInspeksiForDate = $this->getCarHazardInspeksiFromClickHouseForDate($filterDate->format('Y-m-d'));
         foreach ($assignedPlannings as $planning) {
-            $matchResult = $this->planningMatchCarPelaporWithIds($planning, $carTasksForDate);
+            $matchResult = $this->planningMatchHazardInspeksiByLokasi($planning, $carHazardInspeksiForDate);
             $planning->setAttribute('car_status', $matchResult['ok'] ? 'ok' : 'notok');
             $planning->setAttribute('car_task_id', $matchResult['task_id']);
+            $planning->setAttribute('car_jenis_sap', $matchResult['jenis_sap'] ?? null);
         }
 
         $buildCoverage = function ($plannings) {
@@ -78,7 +80,7 @@ class DashboardController extends Controller
                     'karyawan_nama' => '—',
                     'car_task_id' => $planning->getAttribute('car_task_id') ?? '—',
                     'detail_reason' => '—',
-                    'jenis_sap' => $planning->jenis_sap ?? null,
+                    'jenis_sap' => $planning->getAttribute('car_jenis_sap') ?? $planning->jenis_sap ?? null,
                     'car_status' => $planning->getAttribute('car_status') ?? 'notok',
                 ]);
             } else {
@@ -96,7 +98,7 @@ class DashboardController extends Controller
                         'karyawan_nama' => $k->nama_karyawan ?? '—',
                         'car_task_id' => $planning->getAttribute('car_task_id') ?? '—',
                         'detail_reason' => $detailReason ?: '—',
-                        'jenis_sap' => $planning->jenis_sap ?? null,
+                        'jenis_sap' => $planning->getAttribute('car_jenis_sap') ?? $planning->jenis_sap ?? null,
                         'car_status' => $planning->getAttribute('car_status') ?? 'notok',
                     ]);
                 }
@@ -173,7 +175,6 @@ class DashboardController extends Controller
     private function getCarNamaPelaporByDateRange(string $start, string $end): array
     {
         $conditions = [
-            "trim(ifNull(status, '')) = 'SUBMITTED'",
             "tanggal_pembuatan IS NOT NULL",
             "toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('" . addslashes($start) . "')",
             "toDate(tanggal_pembuatan, 'Asia/Makassar') <= toDate('" . addslashes($end) . "')",
@@ -220,19 +221,31 @@ class DashboardController extends Controller
     }
 
     /**
-     * Ambil id + nama_pelapor dari hse_automation.aaj_car_all_year_from_dav untuk tanggal tertentu (tanggal_pembuatan).
+     * Normalisasi string lokasi/detail lokasi untuk perbandingan (trim + collapse spasi).
+     */
+    private function normalizeLocation(?string $s): string
+    {
+        if ($s === null || $s === '') {
+            return '';
+        }
+        return preg_replace('/\s+/', ' ', trim($s));
+    }
+
+    /**
+     * Ambil data hazard inspeksi (CAR jenis HAZARD/INSPEKSI, status SUBMITTED) dari ClickHouse untuk tanggal tertentu.
+     * Digunakan untuk match: nama pelapor + lokasi + detail lokasi + tanggal.
      *
      * @param  string  $dateStr  Format Y-m-d
-     * @return array<int, array{id: mixed, nama_lower: string}> list of {id, nama_lower} for matching
+     * @return array<int, array{id: mixed, nama_lower: string, lokasi_norm: string, detail_lokasi_norm: string, jenis_laporan: string|null}>
      */
-    private function getCarTasksFromClickHouseForDate(string $dateStr): array
+    private function getCarHazardInspeksiFromClickHouseForDate(string $dateStr): array
     {
         $conditions = [
-            "trim(ifNull(status, '')) = 'SUBMITTED'",
             "tanggal_pembuatan IS NOT NULL AND toDate(tanggal_pembuatan, 'Asia/Makassar') = toDate('" . addslashes($dateStr) . "')",
+            "trim(ifNull(jenis_laporan, '')) IN ('HAZARD', 'INSPEKSI', 'INSPEKSI_HAZARD')",
         ];
         $whereClause = implode(' AND ', $conditions);
-        $sql = "SELECT id, trim(ifNull(nama_pelapor, '')) AS nama_pelapor FROM hse_automation.aaj_car_all_year_from_dav WHERE {$whereClause}";
+        $sql = "SELECT id, trim(ifNull(nama_pelapor, '')) AS nama_pelapor, trim(ifNull(nama_lokasi, '')) AS nama_lokasi, trim(ifNull(nama_detail_lokasi, '')) AS nama_detail_lokasi, trim(ifNull(jenis_laporan, '')) AS jenis_laporan FROM hse_automation.aaj_car_all_year_from_dav WHERE {$whereClause}";
 
         try {
             if (! class_exists(ClickHouseService::class)) {
@@ -250,37 +263,57 @@ class DashboardController extends Controller
             foreach ($results as $row) {
                 $id = $this->getClickHouseRowValue($row, 'id');
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
-                if ($nama !== '') {
-                    $list[] = ['id' => $id, 'nama_lower' => mb_strtolower($nama)];
-                }
+                $lokasi = $this->normalizeLocation($this->getClickHouseRowValue($row, 'nama_lokasi'));
+                $detailLokasi = $this->normalizeLocation($this->getClickHouseRowValue($row, 'nama_detail_lokasi'));
+                $jenisLaporan = trim((string) $this->getClickHouseRowValue($row, 'jenis_laporan'));
+                $list[] = [
+                    'id' => $id,
+                    'nama_lower' => $nama !== '' ? mb_strtolower($nama) : '',
+                    'lokasi_norm' => $lokasi,
+                    'detail_lokasi_norm' => $detailLokasi,
+                    'jenis_laporan' => $jenisLaporan !== '' ? $jenisLaporan : null,
+                ];
             }
             return $list;
         } catch (\Throwable $e) {
-            Log::warning('DashboardController getCarTasksFromClickHouseForDate: ' . $e->getMessage());
+            Log::warning('DashboardController getCarHazardInspeksiFromClickHouseForDate: ' . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * Cek match nama + dapatkan task id dari hasil match (nama dan tanggal yang dipilih).
+     * Cek apakah ada hazard inspeksi yang match dengan plan: nama (yang di-assign) + lokasi + detail lokasi + tanggal.
      *
-     * @param  array<int, array{id: mixed, nama_lower: string}>  $carTasksToday
-     * @return array{ok: bool, task_id: string}
+     * @param  array<int, array{id: mixed, nama_lower: string, lokasi_norm: string, detail_lokasi_norm: string, jenis_laporan: string|null}>  $carHazardInspeksi
+     * @return array{ok: bool, task_id: string, jenis_sap: string|null}
      */
-    private function planningMatchCarPelaporWithIds(RosterPlanning $planning, array $carTasksToday): array
+    private function planningMatchHazardInspeksiByLokasi(RosterPlanning $planning, array $carHazardInspeksi): array
     {
-        $taskIds = [];
-        $namaToIds = [];
-        foreach ($carTasksToday as $item) {
-            $namaToIds[$item['nama_lower']][] = $item['id'];
-        }
+        $planLokasiNorm = $this->normalizeLocation($planning->lokasi ?? '');
+        $planDetailNorm = $this->normalizeLocation($planning->detail_lokasi ?? '');
+        $karyawanNamesLower = [];
         foreach ($planning->karyawans ?? [] as $k) {
             $nama = trim((string) ($k->nama_karyawan ?? ''));
             if ($nama !== '') {
-                $key = mb_strtolower($nama);
-                if (isset($namaToIds[$key])) {
-                    $taskIds = array_merge($taskIds, $namaToIds[$key]);
-                }
+                $karyawanNamesLower[mb_strtolower($nama)] = true;
+            }
+        }
+
+        $taskIds = [];
+        $jenisSap = null;
+        foreach ($carHazardInspeksi as $item) {
+            if ($item['nama_lower'] === '') {
+                continue;
+            }
+            if (! isset($karyawanNamesLower[$item['nama_lower']])) {
+                continue;
+            }
+            if ($item['lokasi_norm'] !== $planLokasiNorm || $item['detail_lokasi_norm'] !== $planDetailNorm) {
+                continue;
+            }
+            $taskIds[] = $item['id'];
+            if ($jenisSap === null && ($item['jenis_laporan'] ?? null) !== null) {
+                $jenisSap = $item['jenis_laporan'];
             }
         }
         $taskIds = array_values(array_unique($taskIds));
@@ -289,6 +322,7 @@ class DashboardController extends Controller
         return [
             'ok' => $taskIds !== [],
             'task_id' => $taskIdDisplay,
+            'jenis_sap' => $jenisSap,
         ];
     }
 

@@ -1442,7 +1442,7 @@
           <div class="kt-card-header flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div class="kt-card-title">Detail Plan Pengecekan</div>
-              <div class="kt-card-subtitle">Per lokasi & detail lokasi — status OK/NOT OK dari planning. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
+              <div class="kt-card-subtitle">Per lokasi & detail lokasi — OK = ada hazard inspeksi (nama + lokasi + detail lokasi + tanggal match); NOT OK = belum ada. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
             </div>
 
             <div class="w-full lg:w-auto flex flex-col sm:flex-row gap-2 sm:items-center">
