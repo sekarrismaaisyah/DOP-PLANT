@@ -1846,7 +1846,7 @@
                               <div class="wh-32 d-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10">
                                 <span class="material-icons-outlined text-success" style="font-size: 18px;">verified</span>
                               </div>
-                              <span class="fw-semibold text-success">Comply</span>
+                              <span class="fw-semibold text-white">Comply</span>
                               <span class="badge bg-success bg-opacity-15 text-success rounded-pill px-2 py-1 small">{{ $totalSiteComply }} Site • {{ $totalIkkComply }} IKK • 100%</span>
                             </div>
                             @foreach($siteComply as $site)
@@ -1860,8 +1860,8 @@
                                   <p class="mb-0 text-muted small">{{ $site['total_ikk'] }} IKK</p>
                                 </div>
                                 <div class="d-flex gap-1 flex-shrink-0">
-                                  <span class="badge bg-primary bg-opacity-15 text-primary small" title="IPK: {{ $site['ipk_count'] }}/{{ $site['total_hari'] }}">IPK {{ $site['pct_ipk'] }}%</span>
-                                  <span class="badge bg-info bg-opacity-15 text-info small" title="OKK: {{ $site['okk_count'] }}/{{ $site['total_hari'] }}">OKK {{ $site['pct_okk'] }}%</span>
+                                  <!-- <span class="badge bg-primary bg-opacity-15 text-primary small" title="IPK: {{ $site['ipk_count'] }}/{{ $site['total_hari'] }}">IPK {{ $site['pct_ipk'] }}%</span> -->
+                                  <!-- <span class="badge bg-info bg-opacity-15 text-info small" title="OKK: {{ $site['okk_count'] }}/{{ $site['total_hari'] }}">OKK {{ $site['pct_okk'] }}%</span> -->
                                 </div>
                                 <div class="progress flex-shrink-0" style="width: 50px; height: 5px; background: rgba(34, 197, 94, 0.15);">
                                   <div class="progress-bar bg-success" style="width: {{ $site['pct'] }}%;"></div>
@@ -1981,7 +1981,7 @@
                               <div class="wh-32 d-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10">
                                 <span class="material-icons-outlined text-danger" style="font-size: 18px;">block</span>
                               </div>
-                              <span class="fw-semibold text-danger">Propose to Hold</span>
+                              <span class="fw-semibold text-white">Propose to Hold</span>
                               <span class="badge bg-danger bg-opacity-15 text-danger rounded-pill px-2 py-1 small">&lt;80% • {{ $totalSiteProposeHold }} Site • {{ $totalIkkProposeHold }} IKK</span>
                             </div>
                             @foreach($siteProposeHold as $site)
