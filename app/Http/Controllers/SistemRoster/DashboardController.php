@@ -14,19 +14,24 @@ class DashboardController extends Controller
     /**
      * Menampilkan halaman Performance Dashboard Sistem Roster.
      * Status OK/NOT OK diambil dari match nama_karyawan dengan nama_pelapor di ClickHouse (aaj_car_all_year_from_dav).
+     * Filter tanggal via query string ?date=YYYY-MM-DD (default: hari ini).
      */
     public function index(): View
     {
+        $filterDate = request('date')
+            ? Carbon::parse(request('date'))->startOfDay()
+            : now()->startOfDay();
+
         $assignedPlannings = RosterPlanning::with('karyawans')
             ->where('status', 'assigned')
-            ->whereDate('tanggal', today())
+            ->whereDate('tanggal', $filterDate)
             ->orderByDesc('tanggal')
             ->orderByDesc('updated_at')
             ->get();
 
-        $carTasksToday = $this->getCarTasksFromClickHouseToday();
+        $carTasksForDate = $this->getCarTasksFromClickHouseForDate($filterDate->format('Y-m-d'));
         foreach ($assignedPlannings as $planning) {
-            $matchResult = $this->planningMatchCarPelaporWithIds($planning, $carTasksToday);
+            $matchResult = $this->planningMatchCarPelaporWithIds($planning, $carTasksForDate);
             $planning->setAttribute('car_status', $matchResult['ok'] ? 'ok' : 'notok');
             $planning->setAttribute('car_task_id', $matchResult['task_id']);
         }
@@ -109,6 +114,7 @@ class DashboardController extends Controller
             'coverageNonKritis' => $coverageNonKritis,
             'detailByLokasi' => $detailByLokasi,
             'heatmapData' => $heatmapData,
+            'filterDate' => $filterDate->format('Y-m-d'),
         ]);
     }
 
@@ -214,16 +220,16 @@ class DashboardController extends Controller
     }
 
     /**
-     * Ambil id + nama_pelapor dari hse_automation.aaj_car_all_year_from_dav untuk tanggal hari ini (tanggal_pembuatan).
+     * Ambil id + nama_pelapor dari hse_automation.aaj_car_all_year_from_dav untuk tanggal tertentu (tanggal_pembuatan).
      *
+     * @param  string  $dateStr  Format Y-m-d
      * @return array<int, array{id: mixed, nama_lower: string}> list of {id, nama_lower} for matching
      */
-    private function getCarTasksFromClickHouseToday(): array
+    private function getCarTasksFromClickHouseForDate(string $dateStr): array
     {
-        $todayStr = now()->format('Y-m-d');
         $conditions = [
             "trim(ifNull(status, '')) = 'SUBMITTED'",
-            "tanggal_pembuatan IS NOT NULL AND toDate(tanggal_pembuatan, 'Asia/Makassar') = toDate('" . addslashes($todayStr) . "')",
+            "tanggal_pembuatan IS NOT NULL AND toDate(tanggal_pembuatan, 'Asia/Makassar') = toDate('" . addslashes($dateStr) . "')",
         ];
         $whereClause = implode(' AND ', $conditions);
         $sql = "SELECT id, trim(ifNull(nama_pelapor, '')) AS nama_pelapor FROM hse_automation.aaj_car_all_year_from_dav WHERE {$whereClause}";
@@ -250,13 +256,13 @@ class DashboardController extends Controller
             }
             return $list;
         } catch (\Throwable $e) {
-            Log::warning('DashboardController getCarTasksFromClickHouseToday: ' . $e->getMessage());
+            Log::warning('DashboardController getCarTasksFromClickHouseForDate: ' . $e->getMessage());
             return [];
         }
     }
 
     /**
-     * Cek match nama + dapatkan task id dari hasil match (nama dan tanggal hari ini).
+     * Cek match nama + dapatkan task id dari hasil match (nama dan tanggal yang dipilih).
      *
      * @param  array<int, array{id: mixed, nama_lower: string}>  $carTasksToday
      * @return array{ok: bool, task_id: string}

@@ -1336,27 +1336,36 @@
                 </div>
                 <div>
                   <div class="kt-card-title">Coverage by Location</div>
-                  <div class="kt-card-subtitle">Data dari roster_plannings — Completion % per hari</div>
+                  <div class="kt-card-subtitle">Data dari roster_plannings — Completion % per hari. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
                 </div>
               </div>
-              <div class="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-                <div class="flex items-center gap-1 p-1 bg-slate-50 border border-kt-border rounded-xl flex-wrap" data-btn-group="coverage-tab">
-                  <button type="button" onclick="switchCoverageTab(this, 'all')" class="btn-kt active text-[11px] px-3 py-2" data-tab="all">Coverage All Location</button>
-                  <button type="button" onclick="switchCoverageTab(this, 'ikk')" class="btn-kt text-[11px] px-3 py-2" data-tab="ikk">Coverage by IKK</button>
-                  <button type="button" onclick="switchCoverageTab(this, 'dop')" class="btn-kt text-[11px] px-3 py-2" data-tab="dop">Coverage by DOP</button>
-                  <button type="button" onclick="switchCoverageTab(this, 'nonkritis')" class="btn-kt text-[11px] px-3 py-2" data-tab="nonkritis">Coverage Non Kritis</button>
+              <div class="flex flex-nowrap items-center gap-3 w-full min-w-0">
+                <form method="GET" action="{{ route('sistem-roster.dashboard.index') }}" class="flex items-center shrink-0 rounded-xl border border-kt-border bg-white shadow-sm overflow-hidden" id="dashboardDateFilterForm">
+                  <span class="pl-3 pr-1 py-2.5 bg-slate-50 border-r border-kt-border text-[11px] font-semibold text-kt-muted uppercase tracking-wide">Tanggal</span>
+                  <input type="date" name="date" id="filterDate" value="{{ $filterDate ?? now()->format('Y-m-d') }}" class="border-0 px-3 py-2 text-sm bg-transparent w-[148px] focus:ring-0 focus:outline-none" title="Pilih tanggal jadwal planning">
+                  <button type="submit" class="px-4 py-2.5 bg-kt-primary text-white text-xs font-medium hover:opacity-90 transition-opacity shrink-0">Lihat</button>
+                  <a href="{{ route('sistem-roster.dashboard.index') }}" class="px-3 py-2.5 text-kt-muted hover:bg-slate-50 text-xs font-medium transition-colors shrink-0" title="Reset ke hari ini">Hari ini</a>
+                </form>
+                <div class="flex items-center shrink-0 rounded-xl border border-kt-border bg-white shadow-sm overflow-hidden">
+                  <label for="filterSiteSelect" class="pl-3 pr-1 py-2.5 bg-slate-50 border-r border-kt-border text-[11px] font-semibold text-kt-muted uppercase tracking-wide">Site</label>
+                  <select id="filterSiteSelect" class="border-0 px-3 py-2 text-sm bg-transparent w-[140px] focus:ring-0 focus:outline-none cursor-pointer" onchange="filterSiteBySelect(this)">
+                    <option value="all">Semua Site</option>
+                    <option value="BMO 1">BMO 1</option>
+                    <option value="BMO 2">BMO 2</option>
+                    <option value="BMO 3">BMO 3</option>
+                    <option value="SMO">SMO</option>
+                    <option value="LMO">LMO</option>
+                    <option value="GMO">GMO</option>
+                    <option value="Marine">Marine</option>
+                    <option value="HO">HO</option>
+                    <option value="EXPLORASI">EXPLORASI</option>
+                  </select>
                 </div>
-                <div class="flex items-center gap-1 p-1 bg-slate-50 border border-kt-border rounded-xl flex-wrap" data-btn-group="site">
-                  <button type="button" onclick="filterSite(this,'all')" class="btn-kt active text-[11px] px-3 py-2">Semua</button>
-                  <button type="button" onclick="filterSite(this,'BMO 1')" class="btn-kt text-[11px] px-3 py-2">BMO 1</button>
-                  <button type="button" onclick="filterSite(this,'BMO 2')" class="btn-kt text-[11px] px-3 py-2">BMO 2</button>
-                  <button type="button" onclick="filterSite(this,'BMO 3')" class="btn-kt text-[11px] px-3 py-2">BMO 3</button>
-                  <button type="button" onclick="filterSite(this,'SMO')" class="btn-kt text-[11px] px-3 py-2">SMO</button>
-                  <button type="button" onclick="filterSite(this,'LMO')" class="btn-kt text-[11px] px-3 py-2">LMO</button>
-                  <button type="button" onclick="filterSite(this,'GMO')" class="btn-kt text-[11px] px-3 py-2">GMO</button>
-                  <button type="button" onclick="filterSite(this,'Marine')" class="btn-kt text-[11px] px-3 py-2">Marine</button>
-                  <button type="button" onclick="filterSite(this,'HO')" class="btn-kt text-[11px] px-3 py-2">HO</button>
-                  <button type="button" onclick="filterSite(this,'EXPLORASI')" class="btn-kt text-[11px] px-3 py-2">EXPLORASI</button>
+                <div class="flex items-center gap-1 p-1.5 bg-slate-50/80 border border-kt-border rounded-xl flex-1 min-w-0 justify-end" data-btn-group="coverage-tab">
+                  <button type="button" onclick="switchCoverageTab(this, 'all')" class="btn-kt active text-[11px] px-3 py-2 rounded-lg shrink-0" data-tab="all">All Location</button>
+                  <button type="button" onclick="switchCoverageTab(this, 'ikk')" class="btn-kt text-[11px] px-3 py-2 rounded-lg shrink-0" data-tab="ikk">By IKK</button>
+                  <button type="button" onclick="switchCoverageTab(this, 'dop')" class="btn-kt text-[11px] px-3 py-2 rounded-lg shrink-0" data-tab="dop">By DOP</button>
+                  <button type="button" onclick="switchCoverageTab(this, 'nonkritis')" class="btn-kt text-[11px] px-3 py-2 rounded-lg shrink-0" data-tab="nonkritis">Non Kritis</button>
                 </div>
               </div>
             </div>
@@ -1433,7 +1442,7 @@
           <div class="kt-card-header flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div class="kt-card-title">Detail Plan Pengecekan</div>
-              <div class="kt-card-subtitle">Per lokasi & detail lokasi — status OK/NOT OK dari planning</div>
+              <div class="kt-card-subtitle">Per lokasi & detail lokasi — status OK/NOT OK dari planning. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
             </div>
 
             <div class="w-full lg:w-auto flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -1474,8 +1483,9 @@
                     @php
                       $shiftVal = $row->shift_val ?? '';
                       $dataShift = (strpos($shiftVal, '1') !== false) ? '1' : ((strpos($shiftVal, '2') !== false) ? '2' : 'all');
+                      $rowDateStr = $row->tanggal ? $row->tanggal->format('Y-m-d') : '';
                     @endphp
-                    <tr data-shift="{{ $dataShift }}" data-status="{{ $row->car_status ?? 'notok' }}">
+                    <tr data-shift="{{ $dataShift }}" data-status="{{ $row->car_status ?? 'notok' }}" data-tanggal="{{ $rowDateStr }}">
                       <td class="font-medium">
                         <div class="text-sm font-semibold">{{ $row->tanggal ? $row->tanggal->format('d/m') : '—' }}</div>
                         <div class="text-[11px] text-kt-muted">{{ $row->tanggal ? $row->tanggal->format('Y') : '—' }}</div>
@@ -1538,6 +1548,11 @@
 
 
   <script>
+    // --- Filter tanggal: submit form saat tanggal berubah (opsional)
+    document.getElementById('filterDate')?.addEventListener('change', function() {
+      document.getElementById('dashboardDateFilterForm')?.submit();
+    });
+
     // --- Button group helper ---
     function setActiveInGroup(btn){
       const group = btn.closest('[data-btn-group]');
@@ -1579,20 +1594,9 @@
       if (typeof filterSiteLast === 'function') filterSiteLast();
     }
 
-    function filterSite(btn, site) {
-      setActiveInGroup(btn);
+    function applySiteFilter() {
+      const site = (document.getElementById('filterSiteSelect') && document.getElementById('filterSiteSelect').value) || window.coverageFilterSite || 'all';
       window.coverageFilterSite = site;
-      const activePane = document.querySelector('.coverage-tab-pane:not(.d-none)');
-      const container = activePane ? activePane.querySelector('.coverageTableBody') : null;
-      const rows = container ? Array.from(container.querySelectorAll('tr[data-site]')) : [];
-      rows.forEach(row => {
-        const rowSite = (row.getAttribute('data-site') || '').trim();
-        const show = site === 'all' || rowSite === site;
-        row.style.display = show ? '' : 'none';
-      });
-    }
-    function filterSiteLast() {
-      const site = window.coverageFilterSite || 'all';
       const activePane = document.querySelector('.coverage-tab-pane:not(.d-none)');
       const container = activePane ? activePane.querySelector('.coverageTableBody') : null;
       const rows = container ? Array.from(container.querySelectorAll('tr[data-site]')) : [];
@@ -1600,6 +1604,16 @@
         const rowSite = (row.getAttribute('data-site') || '').trim();
         row.style.display = (site === 'all' || rowSite === site) ? '' : 'none';
       });
+    }
+    function filterSiteBySelect(selectEl) {
+      if (!selectEl) return;
+      window.coverageFilterSite = selectEl.value;
+      applySiteFilter();
+    }
+    function filterSiteLast() {
+      const sel = document.getElementById('filterSiteSelect');
+      if (sel) window.coverageFilterSite = sel.value;
+      applySiteFilter();
     }
 
     window.heatmapData = @json($heatmapData ?? []);
