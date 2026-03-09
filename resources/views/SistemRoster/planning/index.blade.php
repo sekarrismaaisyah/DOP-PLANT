@@ -347,6 +347,7 @@
                                                                     <th>No IKK</th>
                                                                     <th>Aktivitas</th>
                                                                     <th>Lokasi</th>
+                                                                    <th>Detail Lokasi</th>
                                                                     <th>Perusahaan</th>
                                                                     <th>Shift</th>
                                                                     <th class="karyawan-select-cell">Karyawan</th>
@@ -367,6 +368,7 @@
                                                                         <td><small>{{ $planning->no_ikk ?? '-' }}</small></td>
                                                                         <td><small>{{ Str::limit($planning->aktivitas, 30) ?? '-' }}</small></td>
                                                                         <td><small>{{ Str::limit($planning->lokasi, 20) ?? '-' }}</small></td>
+                                                                        <td><small>{{ Str::limit($planning->detail_lokasi ?? '-', 25) }}</small></td>
                                                                         <td><small>{{ Str::limit($planning->perusahaan_pic, 20) ?? '-' }}</small></td>
                                                                         <td>{{ $planning->shift ?? '-' }}</td>
                                                                         <td class="karyawan-select-cell">
