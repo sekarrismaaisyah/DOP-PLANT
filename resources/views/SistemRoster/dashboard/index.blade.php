@@ -1336,7 +1336,7 @@
                 </div>
                 <div>
                   <div class="kt-card-title">Coverage by Location</div>
-                  <div class="kt-card-subtitle">Data dari roster_plannings — Completion % per hari. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
+                  <div class="kt-card-subtitle">Data dari roster_plannings — Completion % per hari (ada SAP di lokasi dari siapapun; tidak match nama). Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
                 </div>
               </div>
               <div class="flex flex-nowrap items-center gap-3 w-full min-w-0">
@@ -1391,6 +1391,7 @@
                       <th>MK-BC</th>
                       <th>% Coverage</th>
                       <th>Status</th>
+                      <th class="text-center">Action</th>
                     </tr>
                   </thead>
                   <tbody class="coverageTableBody">
@@ -1424,16 +1425,60 @@
                           </div>
                         </td>
                         <td><span class="lmo-pill {{ $pillClass }}">{{ $pillLabel }}</span></td>
+                        <td class="text-center">
+                          @if(!empty($loc->task_ids ?? []))
+                            <button type="button" class="btn-kt btn-kt-sm bg-kt-primary/10 text-kt-primary hover:bg-kt-primary hover:text-white border border-kt-primary/30 text-xs px-3 py-1.5 rounded-lg transition-colors coverage-sap-detail-btn" title="Lihat detail SAP"
+                              data-lokasi="{{ e($loc->lokasi ?? '') }}"
+                              data-detail-lokasi="{{ e($loc->detail_lokasi ?? '') }}"
+                              data-task-ids="{{ json_encode($loc->task_ids ?? []) }}">
+                              <i class="bi bi-eye me-1"></i> Lihat SAP
+                            </button>
+                          @else
+                            <span class="text-kt-muted text-xs">—</span>
+                          @endif
+                        </td>
                       </tr>
                     @empty
                       <tr>
-                        <td colspan="8" class="text-center py-8 text-kt-muted text-sm">Belum ada lokasi untuk tab ini.</td>
+                        <td colspan="9" class="text-center py-8 text-kt-muted text-sm">Belum ada lokasi untuk tab ini.</td>
                       </tr>
                     @endforelse
                   </tbody>
                 </table>
               </div>
             @endforeach
+          </div>
+
+          {{-- Modal: Detail SAP per lokasi (Coverage by Location) --}}
+          <div class="modal fade" id="coverageSapDetailModal" tabindex="-1" aria-labelledby="coverageSapDetailModalLabel" aria-hidden="true">
+            <div class="modal-dialog modal-dialog-centered">
+              <div class="modal-content">
+                <div class="modal-header border-kt-border">
+                  <h5 class="modal-title" id="coverageSapDetailModalLabel"><i class="bi bi-file-earmark-text me-2"></i>Detail SAP di Lokasi</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="mb-3">
+                    <div class="text-[11px] font-semibold text-kt-muted uppercase tracking-wide mb-1">Lokasi</div>
+                    <div id="coverageSapModalLokasi" class="font-medium text-kt-text">—</div>
+                  </div>
+                  <div class="mb-3">
+                    <div class="text-[11px] font-semibold text-kt-muted uppercase tracking-wide mb-1">Detail Lokasi</div>
+                    <div id="coverageSapModalDetailLokasi" class="text-slate-600">—</div>
+                  </div>
+                  <div>
+                    <div class="text-[11px] font-semibold text-kt-muted uppercase tracking-wide mb-2">Task ID SAP (Hazard/Inspeksi)</div>
+                    <ul id="coverageSapModalTaskList" class="list-group list-group-flush rounded border border-kt-border overflow-hidden">
+                      {{-- diisi via JS --}}
+                    </ul>
+                    <p class="text-kt-muted text-xs mt-2 mb-0">Task ID dapat digunakan untuk penelusuran di CAR Register / sistem SAP.</p>
+                  </div>
+                </div>
+                <div class="modal-footer border-kt-border">
+                  <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -1442,7 +1487,7 @@
           <div class="kt-card-header flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div class="kt-card-title">Detail Plan Pengecekan</div>
-              <div class="kt-card-subtitle">Per lokasi & detail lokasi — OK = ada hazard inspeksi (nama + lokasi + detail lokasi + tanggal match); NOT OK = belum ada. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
+              <div class="kt-card-subtitle">Per lokasi & karyawan — OK = ada hazard inspeksi dari karyawan yang di-assign (nama pelapor + lokasi + detail lokasi + tanggal match); NOT OK = belum ada. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
             </div>
 
             <div class="w-full lg:w-auto flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -1615,6 +1660,44 @@
       if (sel) window.coverageFilterSite = sel.value;
       applySiteFilter();
     }
+
+    document.addEventListener('DOMContentLoaded', function() {
+      document.querySelectorAll('.coverage-sap-detail-btn').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var lokasi = this.getAttribute('data-lokasi') || '—';
+          var detailLokasi = this.getAttribute('data-detail-lokasi') || '—';
+          var taskIdsJson = this.getAttribute('data-task-ids') || '[]';
+          var taskIds = [];
+          try { taskIds = JSON.parse(taskIdsJson); } catch (e) {}
+          document.getElementById('coverageSapModalLokasi').textContent = lokasi || '—';
+          document.getElementById('coverageSapModalDetailLokasi').textContent = detailLokasi || '—';
+          var listEl = document.getElementById('coverageSapModalTaskList');
+          listEl.innerHTML = '';
+          if (taskIds.length) {
+            taskIds.forEach(function(id) {
+              var li = document.createElement('li');
+              li.className = 'list-group-item list-group-item-action d-flex align-items-center py-2';
+              li.innerHTML = '<i class="bi bi-hash text-kt-muted me-2"></i><code class="text-sm">' + (id || '').toString().replace(/</g, '&lt;') + '</code>';
+              listEl.appendChild(li);
+            });
+          } else {
+            var li = document.createElement('li');
+            li.className = 'list-group-item text-kt-muted';
+            li.textContent = 'Tidak ada Task ID';
+            listEl.appendChild(li);
+          }
+          var modalEl = document.getElementById('coverageSapDetailModal');
+          if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+            modal.show();
+          } else if (modalEl && modalEl.classList) {
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            document.body.classList.add('modal-open');
+          }
+        });
+      });
+    });
 
     window.heatmapData = @json($heatmapData ?? []);
     window.currentHeatmapSite = 'all';

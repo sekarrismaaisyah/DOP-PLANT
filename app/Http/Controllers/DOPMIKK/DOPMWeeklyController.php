@@ -257,14 +257,16 @@ class DOPMWeeklyController extends Controller
                                 $weeklyIkkIds[$id] = $code;
                                 
                                 // Hitung durasi IKK (dalam hari) yang overlap dengan range minggu
+                                // Hari terakhir aktif = date(end_date) - 1 (pekerjaan selesai di pagi end_date)
                                 $ikkStart = self::parseEndDate(self::getClickHouseRowValue($row, 'ikk_start_date'));
                                 $ikkEnd = self::parseEndDate(self::getClickHouseRowValue($row, 'ikk_end_date'));
                                 if ($ikkStart !== null && $ikkEnd !== null) {
-                                    // Batasi range IKK ke dalam range minggu yang dipilih
+                                    $ikkLastActiveDate = $ikkEnd->copy()->subDay()->startOfDay();
                                     $effectiveStart = $ikkStart->lt($weekStartDate) ? $weekStartDate->copy() : $ikkStart->copy();
-                                    $effectiveEnd = $ikkEnd->gt($weekEndDate) ? $weekEndDate->copy() : $ikkEnd->copy();
-                                    
-                                    // Hitung jumlah hari (inklusif)
+                                    $effectiveEnd = $ikkLastActiveDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkLastActiveDate->copy();
+                                    if ($effectiveEnd->lt($effectiveStart)) {
+                                        $effectiveEnd = $effectiveStart->copy();
+                                    }
                                     if ($effectiveStart->lte($effectiveEnd)) {
                                         $durasiHari = $effectiveStart->startOfDay()->diffInDays($effectiveEnd->startOfDay()) + 1;
                                         $totalIpkSeharusnya += $durasiHari;
@@ -1214,7 +1216,8 @@ class DOPMWeeklyController extends Controller
 
                     try {
                         $ikkStartDate = Carbon::parse($ikk->start_date)->startOfDay();
-                        $ikkEndDate = Carbon::parse($ikk->end_date)->startOfDay();
+                        // Hari terakhir yang aktif = date(end_date) - 1 (pekerjaan selesai di pagi end_date, jadi tanggal end_date tidak dihitung)
+                        $ikkLastActiveDate = Carbon::parse($ikk->end_date)->subDay()->startOfDay();
                     } catch (\Throwable $e) {
                         $ikk->daily_details = [];
                         $ikk->total_hari = 0;
@@ -1224,7 +1227,10 @@ class DOPMWeeklyController extends Controller
                     }
 
                     $effectiveStart = $ikkStartDate->lt($weekStartDate) ? $weekStartDate->copy() : $ikkStartDate->copy();
-                    $effectiveEnd = $ikkEndDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkEndDate->copy();
+                    $effectiveEnd = $ikkLastActiveDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkLastActiveDate->copy();
+                    if ($effectiveEnd->lt($effectiveStart)) {
+                        $effectiveEnd = $effectiveStart->copy();
+                    }
 
                     $dailyDetails = [];
                     $ipkCount = 0;
@@ -1603,7 +1609,11 @@ class DOPMWeeklyController extends Controller
                             continue;
                         }
                         $startDay = $startDate->copy()->startOfDay();
-                        $endDay = $endDate->copy()->startOfDay();
+                        // Hari terakhir aktif = date(end_date) - 1 (jika sama hari, pakai startDay)
+                        $endDay = $endDate->copy()->subDay()->startOfDay();
+                        if ($endDay->lt($startDay)) {
+                            $endDay = $startDay->copy();
+                        }
                         for ($day = 1; $day <= $daysInMonthCalendar; $day++) {
                             $dayDate = $monthStartCarbon->copy()->addDays($day - 1)->startOfDay();
                             if ($dayDate->lt($cutoffDtCalendar)) {
@@ -1938,7 +1948,11 @@ class DOPMWeeklyController extends Controller
                             continue;
                         }
                         $startDay = $startDate->copy()->startOfDay();
-                        $endDay = $endDate->copy()->startOfDay();
+                        // Hari terakhir aktif = date(end_date) - 1 (jika sama hari, pakai startDay)
+                        $endDay = $endDate->copy()->subDay()->startOfDay();
+                        if ($endDay->lt($startDay)) {
+                            $endDay = $startDay->copy();
+                        }
                         for ($day = 1; $day <= $daysInMonth; $day++) {
                             $dayDate = $monthStartCarbon->copy()->addDays($day - 1)->startOfDay();
                             if ($dayDate->lt($cutoffDt)) {
@@ -2299,13 +2313,17 @@ class DOPMWeeklyController extends Controller
             
             try {
                 $ikkStartDate = Carbon::parse($ikk['start_date'])->startOfDay();
-                $ikkEndDate = Carbon::parse($ikk['end_date'])->startOfDay();
+                // Hari terakhir yang aktif = date(end_date) - 1 (pekerjaan selesai di pagi end_date)
+                $ikkLastActiveDate = Carbon::parse($ikk['end_date'])->subDay()->startOfDay();
             } catch (\Throwable $e) {
                 continue;
             }
 
             $effectiveStart = $ikkStartDate->lt($weekStartDate) ? $weekStartDate->copy() : $ikkStartDate->copy();
-            $effectiveEnd = $ikkEndDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkEndDate->copy();
+            $effectiveEnd = $ikkLastActiveDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkLastActiveDate->copy();
+            if ($effectiveEnd->lt($effectiveStart)) {
+                $effectiveEnd = $effectiveStart->copy();
+            }
 
             $currentDate = $effectiveStart->copy();
             while ($currentDate->lte($effectiveEnd)) {

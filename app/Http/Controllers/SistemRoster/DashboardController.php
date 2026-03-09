@@ -13,8 +13,8 @@ class DashboardController extends Controller
 {
     /**
      * Menampilkan halaman Performance Dashboard Sistem Roster.
-     * Status OK/NOT OK: berdasarkan nama yang di-assign, lokasi, detail lokasi, dan tanggal —
-     * apakah ada hazard inspeksi (CAR jenis HAZARD/INSPEKSI, status SUBMITTED) di ClickHouse yang match.
+     * Coverage by Location: ada SAP di lokasi (siapapun) — tidak match nama.
+     * Detail Plan Pengecekan: OK hanya jika ada SAP dari karyawan yang di-assign (match nama + lokasi + tanggal).
      * Filter tanggal via query string ?date=YYYY-MM-DD (default: hari ini).
      */
     public function index(): View
@@ -32,10 +32,15 @@ class DashboardController extends Controller
 
         $carHazardInspeksiForDate = $this->getCarHazardInspeksiFromClickHouseForDate($filterDate->format('Y-m-d'));
         foreach ($assignedPlannings as $planning) {
-            $matchResult = $this->planningMatchHazardInspeksiByLokasi($planning, $carHazardInspeksiForDate);
-            $planning->setAttribute('car_status', $matchResult['ok'] ? 'ok' : 'notok');
-            $planning->setAttribute('car_task_id', $matchResult['task_id']);
-            $planning->setAttribute('car_jenis_sap', $matchResult['jenis_sap'] ?? null);
+            // Coverage by Location: ada SAP di lokasi (siapapun) — tidak match nama
+            $matchCoverage = $this->planningMatchHazardInspeksiByLokasi($planning, $carHazardInspeksiForDate);
+            $planning->setAttribute('car_status_coverage', $matchCoverage['ok'] ? 'ok' : 'notok');
+            $planning->setAttribute('car_task_id_coverage', $matchCoverage['task_id']);
+            // Detail Plan Pengecekan: OK hanya jika ada SAP dari karyawan yang di-assign (match nama + lokasi + tanggal)
+            $matchDetail = $this->planningMatchHazardInspeksiByLokasiAndNama($planning, $carHazardInspeksiForDate);
+            $planning->setAttribute('car_status', $matchDetail['ok'] ? 'ok' : 'notok');
+            $planning->setAttribute('car_task_id', $matchDetail['task_id']);
+            $planning->setAttribute('car_jenis_sap', $matchDetail['jenis_sap'] ?? null);
         }
 
         $buildCoverage = function ($plannings) {
@@ -43,9 +48,21 @@ class DashboardController extends Controller
                 ->groupBy(fn ($p) => trim($p->lokasi ?? '') . '|' . trim($p->detail_lokasi ?? ''))
                 ->map(function ($items) {
                     $first = $items->first();
-                    $okCount = $items->where('car_status', 'ok')->count();
+                    $okCount = $items->where('car_status_coverage', 'ok')->count();
                     $total = $items->count();
                     $pct = $total > 0 ? (int) round($okCount / $total * 100) : 0;
+                    $taskIds = [];
+                    foreach ($items as $p) {
+                        $ids = $p->getAttribute('car_task_id_coverage');
+                        if ($ids !== null && $ids !== '') {
+                            foreach (array_map('trim', explode(',', (string) $ids)) as $id) {
+                                if ($id !== '') {
+                                    $taskIds[$id] = true;
+                                }
+                            }
+                        }
+                    }
+                    $taskIds = array_keys($taskIds);
                     return (object) [
                         'lokasi' => $first->lokasi ?? '',
                         'detail_lokasi' => $first->detail_lokasi ?? '',
@@ -53,6 +70,7 @@ class DashboardController extends Controller
                         'total' => $total,
                         'ok_count' => $okCount,
                         'pct' => $pct,
+                        'task_ids' => $taskIds,
                     ];
                 })
                 ->values();
@@ -282,12 +300,46 @@ class DashboardController extends Controller
     }
 
     /**
-     * Cek apakah ada hazard inspeksi yang match dengan plan: nama (yang di-assign) + lokasi + detail lokasi + tanggal.
+     * Cek apakah ada hazard inspeksi (SAP) yang match dengan plan: lokasi + detail lokasi + tanggal.
+     * Nama pelapor tidak di-match — yang penting ada SAP dari siapapun di lokasi & tanggal tersebut.
      *
      * @param  array<int, array{id: mixed, nama_lower: string, lokasi_norm: string, detail_lokasi_norm: string, jenis_laporan: string|null}>  $carHazardInspeksi
      * @return array{ok: bool, task_id: string, jenis_sap: string|null}
      */
     private function planningMatchHazardInspeksiByLokasi(RosterPlanning $planning, array $carHazardInspeksi): array
+    {
+        $planLokasiNorm = $this->normalizeLocation($planning->lokasi ?? '');
+        $planDetailNorm = $this->normalizeLocation($planning->detail_lokasi ?? '');
+
+        $taskIds = [];
+        $jenisSap = null;
+        foreach ($carHazardInspeksi as $item) {
+            if ($item['lokasi_norm'] !== $planLokasiNorm || $item['detail_lokasi_norm'] !== $planDetailNorm) {
+                continue;
+            }
+            $taskIds[] = $item['id'];
+            if ($jenisSap === null && ($item['jenis_laporan'] ?? null) !== null) {
+                $jenisSap = $item['jenis_laporan'];
+            }
+        }
+        $taskIds = array_values(array_unique($taskIds));
+        $taskIdDisplay = $taskIds !== [] ? implode(', ', $taskIds) : '';
+
+        return [
+            'ok' => $taskIds !== [],
+            'task_id' => $taskIdDisplay,
+            'jenis_sap' => $jenisSap,
+        ];
+    }
+
+    /**
+     * Cek apakah ada hazard inspeksi yang match dengan plan: nama pelapor = salah satu karyawan yang di-assign + lokasi + detail lokasi + tanggal.
+     * Dipakai untuk Detail Plan Pengecekan (OK = karyawan yang di-assign sudah isi SAP).
+     *
+     * @param  array<int, array{id: mixed, nama_lower: string, lokasi_norm: string, detail_lokasi_norm: string, jenis_laporan: string|null}>  $carHazardInspeksi
+     * @return array{ok: bool, task_id: string, jenis_sap: string|null}
+     */
+    private function planningMatchHazardInspeksiByLokasiAndNama(RosterPlanning $planning, array $carHazardInspeksi): array
     {
         $planLokasiNorm = $this->normalizeLocation($planning->lokasi ?? '');
         $planDetailNorm = $this->normalizeLocation($planning->detail_lokasi ?? '');
