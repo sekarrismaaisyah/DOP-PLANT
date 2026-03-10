@@ -455,7 +455,16 @@
                                                             <small class="text-muted fw-semibold mb-0">
                                                                 <i class="bx bx-list-ul me-1"></i> Data roster (acuan) — Non Area Kritis. Klik "Save ke Planning" untuk memasukkan ke daftar planning.
                                                             </small>
-                                                           
+                                                            @if($alreadySaved)
+                                                                <span class="badge bg-success px-3 py-2 rounded-pill"><i class="bx bx-check-circle me-1"></i> Sudah di-Planning</span>
+                                                            @else
+                                                                <button type="button" class="btn btn-success btn-save-roster rounded-pill px-3 shadow-sm"
+                                                                        data-tanggal="{{ $rosterTanggal ? $rosterTanggal->format('Y-m-d') : '' }}"
+                                                                        data-roster-table="{{ $rosterTable }}"
+                                                                        data-site="{{ $rosterSite }}">
+                                                                    <i class="bx bx-save me-1"></i> Save
+                                                                </button>
+                                                            @endif
                                                         </div>
                                                         <button type="button" class="btn btn-sm btn-outline-warning btn-reset-roster-exclusions"
                                                                 data-tanggal="{{ $rosterTanggal ? $rosterTanggal->format('Y-m-d') : '' }}"
@@ -572,17 +581,6 @@
             </div>
         </div>
     </div>
-
-    @if($alreadySaved)
-                                                                <span class="badge bg-success px-3 py-2 rounded-pill"><i class="bx bx-check-circle me-1"></i> Sudah di-Planning</span>
-                                                            @else
-                                                                <button type="button" class="btn btn-success btn-save-roster rounded-pill px-3 shadow-sm"
-                                                                        data-tanggal="{{ $rosterTanggal ? $rosterTanggal->format('Y-m-d') : '' }}"
-                                                                        data-roster-table="{{ $rosterTable }}"
-                                                                        data-site="{{ $rosterSite }}">
-                                                                    <i class="bx bx-save me-1"></i> Save
-                                                                </button>
-                                                            @endif
 
     {{-- Summary per orang: gabungan IKK, DOP, dan Roster — tabel grouping, klik + untuk detail lokasi --}}
     @if(count($summaryByPersonMerged ?? []) > 0)
