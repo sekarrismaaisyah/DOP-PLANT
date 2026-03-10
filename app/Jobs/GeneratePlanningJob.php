@@ -134,11 +134,11 @@ class GeneratePlanningJob implements ShouldQueue
                             'no_ikk' => null,
                             'id_detail_lokasi' => null,
                             'jenis_sap' => null,
-                            'status' => 'draft',
                         ]
                     );
-
+                    // Hanya set status draft untuk record baru; yang sudah ada (assigned) tetap tidak tertimpa
                     if ($result->wasRecentlyCreated) {
+                        $result->update(['status' => 'draft']);
                         $created++;
                     } else {
                         $updated++;
@@ -260,11 +260,11 @@ class GeneratePlanningJob implements ShouldQueue
                                     'shift' => null,
                                     'kategori_area' => null,
                                     'jenis_sap' => null,
-                                    'status' => 'draft',
                                 ]
                             );
-
+                            // Hanya set status draft untuk record baru; yang sudah assigned tetap tidak tertimpa
                             if ($result->wasRecentlyCreated) {
+                                $result->update(['status' => 'draft']);
                                 $created++;
                             } else {
                                 $updated++;
