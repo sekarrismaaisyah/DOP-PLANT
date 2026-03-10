@@ -451,19 +451,12 @@
                                             <td colspan="8" class="p-0 bg-light">
                                                 <div class="p-3">
                                                     <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
-                                                        <small class="text-muted fw-semibold">
-                                                            <i class="bx bx-list-ul me-1"></i> Data roster (acuan) — Non Area Kritis. Klik "Save ke Planning" untuk memasukkan ke daftar planning.
-                                                        </small>
-                                                        @if($alreadySaved)
-                                                            <span class="badge bg-success">Sudah di-Planning</span>
-                                                        @else
-                                                            <button type="button" class="btn btn-sm btn-success btn-save-roster"
-                                                                    data-tanggal="{{ $rosterTanggal ? $rosterTanggal->format('Y-m-d') : '' }}"
-                                                                    data-roster-table="{{ $rosterTable }}"
-                                                                    data-site="{{ $rosterSite }}">
-                                                                <i class="bx bx-save me-1"></i> Save ke Planning
-                                                            </button>
-                                                        @endif
+                                                        <div class="d-flex align-items-center gap-2 flex-wrap">
+                                                            <small class="text-muted fw-semibold mb-0">
+                                                                <i class="bx bx-list-ul me-1"></i> Data roster (acuan) — Non Area Kritis. Klik "Save ke Planning" untuk memasukkan ke daftar planning.
+                                                            </small>
+                                                           
+                                                        </div>
                                                         <button type="button" class="btn btn-sm btn-outline-warning btn-reset-roster-exclusions"
                                                                 data-tanggal="{{ $rosterTanggal ? $rosterTanggal->format('Y-m-d') : '' }}"
                                                                 data-roster-table="{{ $rosterTable }}"
@@ -580,9 +573,20 @@
         </div>
     </div>
 
+    @if($alreadySaved)
+                                                                <span class="badge bg-success px-3 py-2 rounded-pill"><i class="bx bx-check-circle me-1"></i> Sudah di-Planning</span>
+                                                            @else
+                                                                <button type="button" class="btn btn-success btn-save-roster rounded-pill px-3 shadow-sm"
+                                                                        data-tanggal="{{ $rosterTanggal ? $rosterTanggal->format('Y-m-d') : '' }}"
+                                                                        data-roster-table="{{ $rosterTable }}"
+                                                                        data-site="{{ $rosterSite }}">
+                                                                    <i class="bx bx-save me-1"></i> Save
+                                                                </button>
+                                                            @endif
+
     {{-- Summary per orang: gabungan IKK, DOP, dan Roster — tabel grouping, klik + untuk detail lokasi --}}
     @if(count($summaryByPersonMerged ?? []) > 0)
-        <div class="row mb-3">
+        <div class="row mb-3 mt-3">
             <div class="col-12">
                 <div class="card rounded-4 border-0 shadow-sm">
                     <div class="card-header bg-white border-bottom d-flex justify-content-between align-items-start">
@@ -715,6 +719,35 @@
                         <button type="submit" class="btn btn-primary">Simpan</button>
                     </div>
                 </form>
+            </div>
+        </div>
+    </div>
+
+    {{-- Modal: Simpan ke Planning & Kirim Email Summary --}}
+    <div class="modal fade" id="modalSendPlanningEmail" tabindex="-1" aria-labelledby="modalSendPlanningEmailLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-3 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="modalSendPlanningEmailLabel">
+                        <i class="bx bx-save me-2 text-success"></i> Simpan ke Planning & Kirim Email
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body pt-1">
+                    <p class="text-muted small mb-3">Data roster akan disimpan ke daftar planning. Anda dapat mengirimkan summary planning ke email berikut (opsional).</p>
+                    <label for="planningEmailRecipients" class="form-label fw-semibold">Kirim summary ke email <span class="text-muted fw-normal">(pisahkan dengan koma atau baris baru)</span></label>
+                    <textarea class="form-control" id="planningEmailRecipients" rows="4" placeholder="email1@contoh.com, email2@contoh.com"></textarea>
+                    <div class="form-text">Kosongkan jika hanya ingin menyimpan tanpa mengirim email.</div>
+                </div>
+                <div class="modal-footer border-0 pt-0 flex-wrap gap-2">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                    <button type="button" class="btn btn-outline-success" id="btnSavePlanningOnly">
+                        <i class="bx bx-save me-1"></i> Simpan saja
+                    </button>
+                    <button type="button" class="btn btn-success" id="btnSaveAndSendEmail">
+                        <i class="bx bx-send me-1"></i> Simpan & Kirim Email
+                    </button>
+                </div>
             </div>
         </div>
     </div>
@@ -1085,18 +1118,39 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
-    // Save Roster ke Planning (delegasi karena tombol bisa di dalam baris yang di-expand)
+    // Save Roster ke Planning: klik tombol → buka modal pilih kirim email
+    var saveRosterModalData = { btn: null, tanggal: '', rosterTable: '', site: '' };
     document.body.addEventListener('click', function(e) {
         var btn = e.target.closest('.btn-save-roster');
         if (!btn) return;
         e.preventDefault();
         var tanggal = btn.getAttribute('data-tanggal');
         var rosterTable = btn.getAttribute('data-roster-table');
+        var site = btn.getAttribute('data-site') || '';
         if (!tanggal || !rosterTable) return;
         if (btn.disabled) return;
+        saveRosterModalData = { btn: btn, tanggal: tanggal, rosterTable: rosterTable, site: site };
+        document.getElementById('planningEmailRecipients').value = '';
+        var modal = new bootstrap.Modal(document.getElementById('modalSendPlanningEmail'));
+        modal.show();
+    });
+
+    function parseEmailRecipients(text) {
+        if (!text || !String(text).trim()) return [];
+        return String(text).split(/[\s,;]+/).map(function(s) { return s.trim(); }).filter(Boolean);
+    }
+
+    function doSaveRosterToPlanning(emails) {
+        var data = saveRosterModalData;
+        if (!data.tanggal || !data.rosterTable) return;
+        var btn = data.btn;
+        var payload = { tanggal: data.tanggal, roster_table: data.rosterTable };
+        if (emails && emails.length) payload.emails = emails;
         btn.disabled = true;
         var origHtml = btn.innerHTML;
         btn.innerHTML = '<i class="bx bx-loader-alt bx-spin me-1"></i> Menyimpan...';
+        var modalEl = document.getElementById('modalSendPlanningEmail');
+        if (modalEl) bootstrap.Modal.getInstance(modalEl).hide();
         fetch('{{ route("sistem-roster.planning.save-roster") }}', {
             method: 'POST',
             headers: {
@@ -1104,20 +1158,20 @@ document.addEventListener('DOMContentLoaded', function() {
                 'X-CSRF-TOKEN': csrfToken,
                 'Accept': 'application/json'
             },
-            body: JSON.stringify({ tanggal: tanggal, roster_table: rosterTable })
+            body: JSON.stringify(payload)
         })
         .then(function(r) { return r.json(); })
-        .then(function(data) {
-            if (data.success) {
+        .then(function(res) {
+            if (res.success) {
                 if (typeof Swal !== 'undefined') {
-                    Swal.fire({ icon: 'success', title: 'Berhasil', text: data.message || 'Data roster berhasil disimpan ke planning.' }).then(function() { window.location.reload(); });
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: res.message || 'Data roster berhasil disimpan.' + (emails && emails.length ? ' Email akan dikirim.' : '') }).then(function() { window.location.reload(); });
                 } else {
                     window.location.reload();
                 }
             } else {
                 btn.disabled = false;
                 btn.innerHTML = origHtml;
-                alert(data.message || 'Gagal menyimpan');
+                alert(res.message || 'Gagal menyimpan');
             }
         })
         .catch(function() {
@@ -1125,6 +1179,20 @@ document.addEventListener('DOMContentLoaded', function() {
             btn.innerHTML = origHtml;
             alert('Gagal menyimpan. Silakan coba lagi.');
         });
+    }
+
+    document.getElementById('btnSavePlanningOnly').addEventListener('click', function() {
+        doSaveRosterToPlanning([]);
+    });
+    document.getElementById('btnSaveAndSendEmail').addEventListener('click', function() {
+        var raw = document.getElementById('planningEmailRecipients').value;
+        var emails = parseEmailRecipients(raw);
+        if (!emails.length) {
+            if (typeof Swal !== 'undefined') Swal.fire({ icon: 'warning', title: 'Email kosong', text: 'Masukkan minimal satu alamat email untuk mengirim summary.' });
+            else alert('Masukkan minimal satu alamat email.');
+            return;
+        }
+        doSaveRosterToPlanning(emails);
     });
 
     // Hapus lokasi dari acuan roster (take out) — setelah itu bisa Setting ulang

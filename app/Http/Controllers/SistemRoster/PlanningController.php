@@ -4,6 +4,7 @@ namespace App\Http\Controllers\SistemRoster;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\GeneratePlanningJob;
+use App\Jobs\SendPlanningSummaryEmailJob;
 use App\Models\CctvCoverage;
 use App\Models\CctvData;
 use App\Models\InsidenTabel;
@@ -484,6 +485,8 @@ class PlanningController extends Controller
         $request->validate([
             'tanggal' => 'required|date',
             'roster_table' => 'required|string|in:' . implode(',', array_keys(self::ROSTER_REFERENCE_TABLES)),
+            'emails' => 'nullable|array',
+            'emails.*' => 'email',
         ]);
 
         $tanggal = $request->get('tanggal');
@@ -585,8 +588,17 @@ class PlanningController extends Controller
             ->delete();
 
         $count = $grouped->count();
+        $emails = $request->input('emails', []);
+        $emails = is_array($emails) ? array_values(array_filter(array_map('trim', $emails))) : [];
+        if (! empty($emails)) {
+            SendPlanningSummaryEmailJob::dispatch($emails, $tanggal, $rosterTable, $siteLabel);
+        }
         if ($request->wantsJson()) {
-            return response()->json(['success' => true, 'message' => "Data roster berhasil disimpan ke planning ({$count} lokasi).", 'planning_id' => null]);
+            $msg = "Data roster berhasil disimpan ke planning ({$count} lokasi).";
+            if (! empty($emails)) {
+                $msg .= ' Summary akan dikirim ke ' . count($emails) . ' email.';
+            }
+            return response()->json(['success' => true, 'message' => $msg, 'planning_id' => null]);
         }
         return redirect()->back()->with('success', "Data roster berhasil disimpan ke planning ({$count} lokasi).");
     }

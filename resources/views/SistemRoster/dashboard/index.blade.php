@@ -1095,6 +1095,9 @@
     @media (max-width: 992px) {
       .lmo-card-grid, .lmo-layer-grid { grid-template-columns:1fr; }
     }
+    /* Modal Detail SAP: pastikan di atas overlay/backdrop layout */
+    #coverageSapDetailModal.modal { z-index: 1060 !important; }
+    body.modal-open .modal-backdrop { z-index: 1055 !important; }
 </style>
 @endsection
 
@@ -1687,10 +1690,15 @@
             listEl.appendChild(li);
           }
           var modalEl = document.getElementById('coverageSapDetailModal');
+          if (!modalEl) return;
+          // Pindahkan modal ke body agar tampil di atas backdrop & overlay layout (bisa diklik)
+          if (modalEl.parentNode !== document.body) {
+            document.body.appendChild(modalEl);
+          }
           if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
             var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
             modal.show();
-          } else if (modalEl && modalEl.classList) {
+          } else if (modalEl.classList) {
             modalEl.classList.add('show');
             modalEl.style.display = 'block';
             document.body.classList.add('modal-open');
