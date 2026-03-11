@@ -148,9 +148,10 @@ class DashboardController extends Controller
         $start = now()->subMonths(2)->startOfMonth()->format('Y-m-d');
         $end = now()->addMonths(2)->endOfMonth()->format('Y-m-d');
 
+        // Planned = planning yang sudah punya minimal 1 karyawan (roster_planning_karyawans), bukan berdasarkan status
         $plannings = RosterPlanning::with('karyawans')
-            ->where('status', 'assigned')
             ->whereBetween('tanggal', [$start, $end])
+            ->whereHas('karyawans')
             ->orderBy('tanggal')
             ->get();
 
