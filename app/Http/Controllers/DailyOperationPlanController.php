@@ -366,10 +366,10 @@ class DailyOperationPlanController extends Controller
         $sheet->setCellValue('A' . $exampleRow, '2026-01-15');
         $sheet->setCellValue('B' . $exampleRow, 'Pemeliharaan Unit Excavator');
         $sheet->setCellValue('C' . $exampleRow, 'EX-001');
-        $sheet->setCellValue('D' . $exampleRow, 'Area Tambang Utara');
+        $sheet->setCellValue('D' . $exampleRow, '(B8) Area Kritis Blok 8');
         $sheet->setCellValue('E' . $exampleRow, '-2.186253');
         $sheet->setCellValue('F' . $exampleRow, '117.4539035');
-        $sheet->setCellValue('G' . $exampleRow, 'Koordinat: -2.186253, 117.4539035');
+        $sheet->setCellValue('G' . $exampleRow, '(B8) Running Dragflow WMP 47');
         $sheet->setCellValue('H' . $exampleRow, 'Tenggelam, Terbalik');
         $sheet->setCellValue('I' . $exampleRow, 'Assessment, JSA, SOP');
         $sheet->setCellValue('J' . $exampleRow, 'Pekerjaan dilakukan pada shift pagi');
