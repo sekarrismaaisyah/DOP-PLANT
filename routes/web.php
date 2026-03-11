@@ -406,6 +406,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/{insidenTabel}/edit', [InsidenTabelController::class, 'edit'])->name('edit');
         Route::put('/{insidenTabel}', [InsidenTabelController::class, 'update'])->name('update');
         Route::delete('/{insidenTabel}', [InsidenTabelController::class, 'destroy'])->name('destroy');
+        Route::post('/destroy-group', [InsidenTabelController::class, 'destroyGroup'])->name('destroy-group');
         Route::post('/import', [InsidenTabelController::class, 'import'])->name('import');
     });
 

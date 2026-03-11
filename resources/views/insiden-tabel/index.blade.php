@@ -163,6 +163,7 @@
                                     <th>Status LPI</th>
                                     <th class="text-center">Total Entri</th>
                                     <th>Tag</th>
+                                    <th style="width: 120px">Aksi</th>
                                 </tr>
                             </thead>
                             <tbody></tbody>
@@ -309,6 +310,26 @@
                         'data-no-kecelakaan="' + escapeHtml(row.no_kecelakaan) + '" value="' + escapeHtml(value) + '" data-row-id="' + escapeHtml(String(rowId)) + '" placeholder="Tag1, Tag2, ...">' +
                         '<span class="saving-indicator-insiden" id="saving-tag-row-' + escapeHtml(String(rowId)) + '"><i class="bx bx-loader-alt bx-spin text-primary"></i></span>' +
                         '</div>';
+                }
+            },
+            {
+                data: null,
+                orderable: false,
+                searchable: false,
+                className: 'text-nowrap',
+                render: function(data, type, row) {
+                    var detail = row.detail || [];
+                    var firstEditUrl = detail.length ? detail[0].edit_url : null;
+                    var destroyGroupUrl = '{{ route("insiden-tabel.destroy-group") }}';
+                    var noKec = escapeHtml(row.no_kecelakaan || '');
+                    var btnEdit = firstEditUrl
+                        ? '<a href="' + escapeHtml(firstEditUrl) + '" class="btn btn-sm btn-outline-primary rounded-3" title="Edit entri"><i class="material-icons-outlined" style="font-size: 16px;">edit</i></a>'
+                        : '<span class="text-muted small">-</span>';
+                    var btnDelete = '<form method="POST" action="' + destroyGroupUrl + '" class="d-inline" onsubmit="return confirm(\'Hapus seluruh grup ' + noKec.replace(/\'/g, "\\'") + '?\');">' +
+                        '<input type="hidden" name="_token" value="' + (row.detail && row.detail[0] ? escapeHtml(row.detail[0].csrf || csrfToken) : csrfToken) + '">' +
+                        '<input type="hidden" name="no_kecelakaan" value="' + noKec + '">' +
+                        '<button type="submit" class="btn btn-sm btn-outline-danger rounded-3" title="Hapus grup"><i class="material-icons-outlined" style="font-size: 16px;">delete</i></button></form>';
+                    return '<div class="d-flex gap-1">' + btnEdit + btnDelete + '</div>';
                 }
             }
         ],

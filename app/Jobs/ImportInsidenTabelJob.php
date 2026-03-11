@@ -143,13 +143,8 @@ class ImportInsidenTabelJob implements ShouldQueue
             return;
         }
 
-        // Load existing no_kecelakaan untuk pengecekan duplicate
-        $existingNoKecelakaan = InsidenTabel::pluck('no_kecelakaan')->toArray();
-        $existingNoKecelakaan = array_flip($existingNoKecelakaan); // Convert to hash map untuk lookup O(1)
-
         $batch = [];
         $batchSize = 500;
-        $skippedCount = 0;
         $insertedCount = 0;
 
         foreach ($rows as $index => $row) {
@@ -168,21 +163,9 @@ class ImportInsidenTabelJob implements ShouldQueue
                 $payload[$columnName] = $this->normalizeValue($value, $columnName);
             }
 
-            // Cek apakah no_kecelakaan sudah ada (duplicate)
-            $noKecelakaan = $payload['no_kecelakaan'] ?? null;
-            if ($noKecelakaan && isset($existingNoKecelakaan[$noKecelakaan])) {
-                $skippedCount++;
-                continue; // Skip data duplicate
-            }
-
             $payload['created_at'] = now();
             $payload['updated_at'] = now();
             $batch[] = $payload;
-
-            // Tambahkan no_kecelakaan ke existing list untuk menghindari duplicate dalam batch yang sama
-            if ($noKecelakaan) {
-                $existingNoKecelakaan[$noKecelakaan] = true;
-            }
 
             if (count($batch) >= $batchSize) {
                 InsidenTabel::insert($batch);
@@ -196,7 +179,7 @@ class ImportInsidenTabelJob implements ShouldQueue
             $insertedCount += count($batch);
         }
 
-        Log::info("ImportInsidenTabelJob completed. Inserted: {$insertedCount}, Skipped (duplicate): {$skippedCount}");
+        Log::info("ImportInsidenTabelJob completed. Inserted: {$insertedCount}");
     }
 
     protected function normalizeValue($value, string $column)

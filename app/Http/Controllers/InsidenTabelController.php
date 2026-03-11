@@ -12,6 +12,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class InsidenTabelController extends Controller
@@ -76,6 +77,12 @@ class InsidenTabelController extends Controller
         'id_lokasi_insiden',
     ];
 
+    private function setCellValueByColumnAndRowCompat(Worksheet $sheet, int $columnIndex, int $row, mixed $value): void
+    {
+        $cell = Coordinate::stringFromColumnIndex($columnIndex) . $row;
+        $sheet->setCellValue($cell, $value);
+    }
+
     public function index(Request $request): View
     {
         return view('insiden-tabel.index');
@@ -88,8 +95,7 @@ class InsidenTabelController extends Controller
         $sheet->setTitle('Template');
 
         foreach ($this->templateColumns as $i => $col) {
-            $cell = Coordinate::stringFromColumnIndex($i + 1) . '1';
-            $sheet->setCellValue($cell, $col);
+            $this->setCellValueByColumnAndRowCompat($sheet, $i + 1, 1, $col);
         }
 
         // Example row (optional, can be deleted by user)
@@ -130,6 +136,7 @@ class InsidenTabelController extends Controller
             5 => 'status_lpi',
             6 => 'total_entri',
             7 => 'tag',
+            8 => 'no_kecelakaan', // Aksi column, not sortable in UI
         ];
         $orderBy = $orderColumns[$orderColIndex] ?? 'no_kecelakaan';
 
@@ -301,6 +308,20 @@ class InsidenTabelController extends Controller
         $insidenTabel->delete();
 
         return redirect()->route('insiden-tabel.index')->with('success', 'Data insiden berhasil dihapus.');
+    }
+
+    /**
+     * Hapus semua entri dan tag untuk satu no_kecelakaan (grup).
+     */
+    public function destroyGroup(Request $request): RedirectResponse
+    {
+        $request->validate(['no_kecelakaan' => ['required', 'string', 'max:255']]);
+        $noKecelakaan = $request->input('no_kecelakaan');
+
+        InsidenTabelTag::where('no_kecelakaan', $noKecelakaan)->delete();
+        InsidenTabel::where('no_kecelakaan', $noKecelakaan)->delete();
+
+        return redirect()->route('insiden-tabel.index')->with('success', 'Grup insiden "' . e($noKecelakaan) . '" berhasil dihapus.');
     }
 
     public function import(Request $request): RedirectResponse
