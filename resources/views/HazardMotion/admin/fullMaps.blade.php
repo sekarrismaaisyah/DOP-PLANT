@@ -13458,35 +13458,79 @@ source: new ol.source.Vector(),
                 `;
             }).join('') : '<p class="text-muted">Tidak ada CCTV ditemukan di area ini</p>';
             
-            // Format SAP reports list
-            const sapReportsHtml = riskSummary.sapReports.length > 0 ? riskSummary.sapReports.map((sap, index) => {
+            // Summary: Open vs Closed and subketidaksesuaian for SAP hari ini
+            const sapReports = riskSummary.sapReports || [];
+            const sapOpenCount = sapReports.filter(s => {
+                const st = (s.status || '').toUpperCase();
+                return st !== 'CLOSED';
+            }).length;
+            const sapClosedCount = sapReports.filter(s => (s.status || '').toUpperCase() === 'CLOSED').length;
+            const subketidaksesuaianCounts = {};
+            sapReports.forEach(s => {
+                const raw = s.subketidaksesuaian || s.ketidaksesuaian || '';
+                const key = String(raw).trim() || '[Tanpa subketidaksesuaian]';
+                subketidaksesuaianCounts[key] = (subketidaksesuaianCounts[key] || 0) + 1;
+            });
+            const subketidaksesuaianList = Object.entries(subketidaksesuaianCounts).sort((a, b) => b[1] - a[1]);
+            const esc = (str) => { if (str == null) return ''; return String(str).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); };
+            const sapSummaryHtml = sapReports.length > 0 ? `
+                <div class="mb-3 p-3 border rounded bg-light">
+                    <h6 class="mb-2"><i class="material-icons-outlined" style="font-size: 16px; vertical-align: middle;">summarize</i> Summary Hari Ini</h6>
+                    <div class="d-flex flex-wrap gap-3 mb-2">
+                        <span class="badge bg-warning text-dark">Open: ${sapOpenCount}</span>
+                        <span class="badge bg-success">Closed: ${sapClosedCount}</span>
+                    </div>
+                    ${subketidaksesuaianList.length > 0 ? `
+                    <div class="mt-2">
+                        <strong class="small">Subketidaksesuaian:</strong>
+                        <ul class="mb-0 mt-1 small ps-3" style="max-height: 120px; overflow-y: auto;">
+                            ${subketidaksesuaianList.map(([nama, count]) => `<li><span class="text-dark">${esc(nama)}</span> <span class="badge bg-secondary">${count}</span></li>`).join('')}
+                        </ul>
+                    </div>
+                    ` : ''}
+                </div>
+            ` : '';
+
+            // Format SAP reports list (detail per laporan) - simpan referensi untuk onclick
+            window.__sapAreaKerjaSummary = sapReports;
+            const sapReportsHtml = sapReports.length > 0 ? sapSummaryHtml + sapReports.map((sap, index) => {
                 const taskNumber = sap.task_number || sap.id || 'N/A';
                 const jenisLaporan = sap.jenis_laporan || sap.source_type || sap.type || 'SAP';
-                const lokasi = sap.lokasi || sap.detail_lokasi || 'N/A';
-                const tanggal = sap.tanggal_pelaporan || sap.detected_at || 'N/A';
+                const lokasi = sap.nama_lokasi || sap.lokasi || sap.detail_lokasi || sap.nama_detail_lokasi || 'N/A';
+                const issue = sap.issue || sap.deskripsi || sap.keterangan || '-';
+                const status = (sap.status || 'SUBMITTED').toUpperCase();
+                const isClosed = status === 'CLOSED';
+                const statusBadge = isClosed ? '<span class="badge bg-success">Closed</span>' : '<span class="badge bg-warning text-dark">Open</span>';
+                const subketidaksesuaian = sap.subketidaksesuaian || sap.ketidaksesuaian || '-';
+                const namaPelapor = sap.nama_pelapor || sap.pelapor || '-';
+                const tanggal = sap.tanggal_pelaporan || sap.detected_at || sap.bedraft_date || sap.tanggal_pembuatan || 'N/A';
                 let tanggalFormatted = 'N/A';
                 if (tanggal !== 'N/A') {
                     try {
                         const date = new Date(tanggal);
-                        tanggalFormatted = date.toLocaleDateString('id-ID', { 
-                            day: '2-digit', 
-                            month: '2-digit', 
-                            year: 'numeric',
-                            hour: '2-digit',
-                            minute: '2-digit'
-                        });
+                        tanggalFormatted = date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' });
                     } catch (e) {
                         tanggalFormatted = tanggal;
                     }
                 }
-                
+                const urlPhoto = sap.url_photo || '';
+                const onclickOpenDetail = `openSapDetailModalByData(window.__sapAreaKerjaSummary[${index}])`;
+
+                const issueShort = (issue || '').substring(0, 120) + ((issue || '').length > 120 ? '...' : '');
+                const subShort = (subketidaksesuaian || '').substring(0, 80) + ((subketidaksesuaian || '').length > 80 ? '...' : '');
                 return `
-                    <div class="card mb-2">
+                    <div class="card mb-2 cursor-pointer border-start border-3 border-primary" style="cursor: pointer;" onclick="${onclickOpenDetail}" title="Klik untuk detail">
                         <div class="card-body p-2">
-                            <h6 class="mb-1" style="font-size: 14px;">${jenisLaporan}</h6>
-                            <small class="text-muted">Task: ${taskNumber}</small>
-                            <br><small class="text-muted">Lokasi: ${lokasi}</small>
-                            <br><small class="text-muted">Tanggal: ${tanggalFormatted}</small>
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <h6 class="mb-1" style="font-size: 14px;">${esc(jenisLaporan)} ${statusBadge}</h6>
+                                    <p class="mb-1 small text-muted">Task: ${esc(taskNumber)} | ${esc(tanggalFormatted)}</p>
+                                    <p class="mb-1 small"><strong>Issue:</strong> ${esc(issueShort)}</p>
+                                    <p class="mb-1 small"><strong>Subketidaksesuaian:</strong> ${esc(subShort)}</p>
+                                    <p class="mb-0 small text-muted">Lokasi: ${esc(lokasi)} | Pelapor: ${esc(namaPelapor)}</p>
+                                </div>
+                                ${urlPhoto ? `<a href="${String(urlPhoto).replace(/"/g, '&quot;')}" target="_blank" class="btn btn-sm btn-outline-primary ms-2" onclick="event.stopPropagation();" title="Lihat foto">Foto</a>` : ''}
+                            </div>
                         </div>
                     </div>
                 `;
@@ -25676,10 +25720,25 @@ source: new ol.source.Vector(),
         });
     }
     
-    // Handle modal close to destroy Select2
+    // AbortController for intervensi submit - abort when modal is closed so we don't show "Berhasil" after close
+    let intervensiAreaKerjaAbortController = null;
+    const intervensiAreaKerjaSubmitBtnDefaultHtml = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>Kirim Intervensi';
+
+    // Handle modal close to destroy Select2 and reset submit state
     const intervensiAreaKerjaModal = document.getElementById('intervensiAreaKerjaModal');
     if (intervensiAreaKerjaModal) {
         intervensiAreaKerjaModal.addEventListener('hidden.bs.modal', function() {
+            // Abort ongoing submit so success Swal doesn't show after user closed modal
+            if (intervensiAreaKerjaAbortController) {
+                intervensiAreaKerjaAbortController.abort();
+                intervensiAreaKerjaAbortController = null;
+            }
+            // Reset submit button so it doesn't stay "Mengirim..." when modal is closed
+            const submitBtn = document.getElementById('submitIntervensiAreaKerjaBtn');
+            if (submitBtn) {
+                submitBtn.disabled = false;
+                submitBtn.innerHTML = intervensiAreaKerjaSubmitBtnDefaultHtml;
+            }
             // Wait a bit before destroying to allow any pending requests to complete
             setTimeout(function() {
                 const picSelect = document.getElementById('intervensiPICAreaKerja');
@@ -25850,6 +25909,13 @@ source: new ol.source.Vector(),
                 submitBtn.disabled = true;
                 submitBtn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Mengirim...';
                 
+                // Abort any previous request and create new controller (so closing modal cancels this request)
+                if (intervensiAreaKerjaAbortController) {
+                    intervensiAreaKerjaAbortController.abort();
+                }
+                intervensiAreaKerjaAbortController = new AbortController();
+                const signal = intervensiAreaKerjaAbortController.signal;
+                
                 // Get CSRF token safely
                 const csrfToken = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '{{ csrf_token() }}';
                 
@@ -25860,7 +25926,8 @@ source: new ol.source.Vector(),
                         'Content-Type': 'application/json',
                         'X-CSRF-TOKEN': csrfToken
                     },
-                    body: JSON.stringify(formData)
+                    body: JSON.stringify(formData),
+                    signal: signal
                 })
                     .then(response => {
                         // Check if response is ok
@@ -25872,6 +25939,7 @@ source: new ol.source.Vector(),
                         return response.json();
                     })
                     .then(data => {
+                        intervensiAreaKerjaAbortController = null;
                         console.log('Response data:', data);
                         if (data.success) {
                             // Show success message with option to open WhatsApp
@@ -25911,7 +25979,7 @@ source: new ol.source.Vector(),
                                     
                                     // Reset button
                                     submitBtn.disabled = false;
-                                    submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>Kirim Intervensi';
+                                    submitBtn.innerHTML = intervensiAreaKerjaSubmitBtnDefaultHtml;
                                     
                                     // Open WhatsApp if user clicked confirm
                                     if (result.isConfirmed && whatsappUrl) {
@@ -25950,7 +26018,7 @@ source: new ol.source.Vector(),
                                     
                                     // Reset button
                                     submitBtn.disabled = false;
-                                    submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>Kirim Intervensi';
+                                    submitBtn.innerHTML = intervensiAreaKerjaSubmitBtnDefaultHtml;
                                 });
                             }
                         } else {
@@ -25961,10 +26029,17 @@ source: new ol.source.Vector(),
                                 footer: data.error ? '<small>' + data.error + '</small>' : ''
                             });
                             submitBtn.disabled = false;
-                            submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>Kirim Intervensi';
+                            submitBtn.innerHTML = intervensiAreaKerjaSubmitBtnDefaultHtml;
                         }
                     })
                     .catch(error => {
+                        intervensiAreaKerjaAbortController = null;
+                        // Don't show error when user closed modal (request aborted)
+                        if (error.name === 'AbortError') {
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = intervensiAreaKerjaSubmitBtnDefaultHtml;
+                            return;
+                        }
                         console.error('Error submitting intervensi:', error);
                         Swal.fire({
                             icon: 'error',
@@ -25972,7 +26047,7 @@ source: new ol.source.Vector(),
                             text: error.message || 'Terjadi kesalahan saat mengirim intervensi. Silakan coba lagi.'
                         });
                         submitBtn.disabled = false;
-                        submitBtn.innerHTML = '<span class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">send</span>Kirim Intervensi';
+                        submitBtn.innerHTML = intervensiAreaKerjaSubmitBtnDefaultHtml;
                     });
             });
         }
