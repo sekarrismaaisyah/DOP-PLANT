@@ -383,10 +383,10 @@ class DOPController extends Controller
         $sheet->setCellValue('C' . $exampleRow, 'Pemeliharaan');
         $sheet->setCellValue('D' . $exampleRow, 'BMO 2');
         $sheet->setCellValue('E' . $exampleRow, 'EX-001');
-        $sheet->setCellValue('F' . $exampleRow, 'Area Tambang Utara');
+        $sheet->setCellValue('F' . $exampleRow, '(B8) Area Kritis Blok 8');
         $sheet->setCellValue('G' . $exampleRow, '-2.186253');
         $sheet->setCellValue('H' . $exampleRow, '117.4539035');
-        $sheet->setCellValue('I' . $exampleRow, 'Koordinat: -2.186253, 117.4539035');
+        $sheet->setCellValue('I' . $exampleRow, '(B8) Running Dragflow WMP 47');
         $sheet->setCellValue('J' . $exampleRow, 'Tenggelam, Terbalik');
         $sheet->setCellValue('K' . $exampleRow, 'Assessment, JSA, SOP');
         $sheet->setCellValue('L' . $exampleRow, 'Pekerjaan dilakukan pada shift pagi');
