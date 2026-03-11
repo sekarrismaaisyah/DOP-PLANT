@@ -499,14 +499,17 @@ class DOPController extends Controller
                         $tanggal = $parsedDate->format('Y-m-d');
                     }
 
-                    $dopKey = md5($tanggal . '|' . ($row[$idxPekerjaan] ?? '') . '|' . ($row[$idxUnitId] ?? '') . '|' . ($row[$idxLokasi] ?? ''));
+                    // Nilai yang masuk ke DB untuk unit_id & site: dari kolom Site di Excel bila ada, else dari kolom Unit ID
+                    $valueFromSiteCol = $idxSite !== null ? trim((string) ($row[$idxSite] ?? '')) : '';
+                    $valueForDb = $valueFromSiteCol !== '' ? $valueFromSiteCol : trim((string) ($row[$idxUnitId] ?? ''));
+                    $dopKey = md5($tanggal . '|' . ($row[$idxPekerjaan] ?? '') . '|' . $valueForDb . '|' . ($row[$idxLokasi] ?? ''));
 
                     if (isset($dopCache[$dopKey])) {
                         $dop = $dopCache[$dopKey];
                     } else {
                         $dop = DailyOperationPlan::where('tanggal', $tanggal)
                             ->where('pekerjaan', $row[$idxPekerjaan] ?? '')
-                            ->where('unit_id', $row[$idxUnitId] ?? '')
+                            ->where('unit_id', $valueForDb)
                             ->where('lokasi', $row[$idxLokasi] ?? '')
                             ->first();
 
@@ -523,9 +526,9 @@ class DOPController extends Controller
                                 'tanggal' => $tanggal,
                                 'pekerjaan' => $row[$idxPekerjaan] ?? '',
                                 'aktivitas' => $idxAktivitas !== null ? ($row[$idxAktivitas] ?? null) : null,
-                                'unit_id' => $row[$idxUnitId] ?? '',
+                                'unit_id' => $valueForDb !== '' ? $valueForDb : ($row[$idxUnitId] ?? ''),
                                 'lokasi' => $row[$idxLokasi] ?? '',
-                                'site' => $idxSite !== null ? ($row[$idxSite] ?? null) : null,
+                                'site' => $valueForDb !== '' ? $valueForDb : null,
                                 'latitude' => $latitude,
                                 'longitude' => $longitude,
                                 'detail_lokasi' => $row[$idxDetailLokasi] ?? null,

@@ -3287,6 +3287,38 @@
     </div>
 </div>
 
+<!-- Modal Detail Insiden -->
+<div class="modal fade" id="insidenDetailModal" tabindex="-1" aria-labelledby="insidenDetailModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-fullscreen-lg-down modal-xl modal-dialog-scrollable">
+        <div class="modal-content shadow-lg">
+            <div class="modal-header bg-light border-bottom">
+                <h5 class="modal-title d-flex align-items-center" id="insidenDetailModalLabel">
+                    <i class="material-icons-outlined me-2 text-muted" style="font-size: 24px;">info</i>
+                    <div>
+                        <div style="font-size: 18px; font-weight: 600; color: #495057;">Detail Insiden</div>
+                        <small style="font-size: 12px; color: #6c757d;">Informasi lengkap mengenai insiden</small>
+                    </div>
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body p-4" id="insidenDetailContent">
+                <div class="text-center py-5">
+                    <div class="spinner-border text-secondary" role="status" style="width: 3rem; height: 3rem;">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                    <p class="mt-3 text-muted fs-5">Memuat data insiden...</p>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                    <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">close</i>
+                    Tutup
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
 @endsection
 
 @section('scripts')
@@ -9831,51 +9863,204 @@
 
         const modalTitle = document.getElementById('insidenDetailModalLabel');
         const modalContent = document.getElementById('insidenDetailContent');
-        modalTitle.textContent = `Detail Insiden - ${insiden.no_kecelakaan}`;
+        modalTitle.innerHTML = `
+            <i class="material-icons-outlined me-2 text-muted" style="font-size: 24px;">info</i>
+            <div>
+                <div style="font-size: 18px; font-weight: 600; color: #495057;">Detail Insiden - ${escapeHtml(insiden.no_kecelakaan || 'N/A')}</div>
+                <small style="font-size: 12px; color: #6c757d;">Informasi lengkap mengenai insiden</small>
+            </div>
+        `;
+
+        // Tampilkan loading dulu
+        modalContent.innerHTML = `
+            <div class="text-center py-5">
+                <div class="spinner-border text-secondary" role="status" style="width: 3rem; height: 3rem;">
+                    <span class="visually-hidden">Loading...</span>
+                </div>
+                <p class="mt-3 text-muted fs-5">Memuat data insiden...</p>
+            </div>
+        `;
+        bootstrap.Modal.getOrCreateInstance(document.getElementById('insidenDetailModal')).show();
+
+        // Format tanggal
+        const formatDate = (dateStr, bulan, tahun) => {
+            if (dateStr) {
+                try {
+                    const date = new Date(dateStr);
+                    return date.toLocaleDateString('id-ID', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                } catch (e) {
+                    return dateStr;
+                }
+            }
+            if (bulan && tahun) {
+                const monthNames = ['Januari', 'Februari', 'Maret', 'April', 'Mei', 'Juni',
+                    'Juli', 'Agustus', 'September', 'Oktober', 'November', 'Desember'];
+                const monthIndex = parseInt(bulan) - 1;
+                if (monthIndex >= 0 && monthIndex < 12) {
+                    return `${monthNames[monthIndex]} ${tahun}`;
+                }
+                return `${bulan}/${tahun}`;
+            }
+            return '-';
+        };
+
+        const formatTime = (jam, menit) => {
+            if (jam === null || jam === undefined) return '-';
+            const h = String(jam).padStart(2, '0');
+            const m = menit !== null && menit !== undefined ? String(menit).padStart(2, '0') : '00';
+            return `${h}:${m}`;
+        };
+
+        const hasValue = (val) => {
+            return val !== null && val !== undefined && val !== '' && val !== '\\N';
+        };
+
+        let columns = [];
+        if (insiden.items && insiden.items.length) {
+            const columnChecks = {
+                'Layer': (item) => hasValue(item.layer),
+                'Jenis Item IPLS': (item) => hasValue(item.jenis_item_ipls),
+                'Detail Layer': (item) => hasValue(item.detail_layer),
+                'Klasifikasi': (item) => hasValue(item.klasifikasi_layer),
+                'Keterangan': (item) => hasValue(item.keterangan_layer)
+            };
+            Object.keys(columnChecks).forEach(colName => {
+                const hasData = insiden.items.some(item => columnChecks[colName](item));
+                if (hasData) columns.push(colName);
+            });
+        }
+
+        let filteredItems = [];
+        if (insiden.items && insiden.items.length) {
+            filteredItems = insiden.items.filter(item => {
+                return hasValue(item.layer) || hasValue(item.jenis_item_ipls) || hasValue(item.detail_layer) ||
+                    hasValue(item.klasifikasi_layer) || hasValue(item.keterangan_layer);
+            });
+        }
 
         let rows = '';
-        if (insiden.items && insiden.items.length) {
-            rows = insiden.items.map(function(item, index) {
-                return `
-                    <tr>
-                        <td>${index + 1}</td>
-                        <td>${item.layer || '-'}</td>
-                        <td>${item.jenis_item_ipls || '-'}</td>
-                        <td>${item.detail_layer || '-'}</td>
-                        <td>${item.klasifikasi_layer || '-'}</td>
-                        <td>${item.keterangan_layer || '-'}</td>
-                    </tr>
-                `;
+        if (filteredItems.length > 0) {
+            rows = filteredItems.map(function(item, index) {
+                const cells = [];
+                cells.push(`<td>${index + 1}</td>`);
+                if (columns.includes('Layer')) cells.push(`<td>${hasValue(item.layer) ? escapeHtml(item.layer) : '-'}</td>`);
+                if (columns.includes('Jenis Item IPLS')) cells.push(`<td>${hasValue(item.jenis_item_ipls) ? escapeHtml(item.jenis_item_ipls) : '-'}</td>`);
+                if (columns.includes('Detail Layer')) cells.push(`<td>${hasValue(item.detail_layer) ? escapeHtml(item.detail_layer) : '-'}</td>`);
+                if (columns.includes('Klasifikasi')) cells.push(`<td>${hasValue(item.klasifikasi_layer) ? escapeHtml(item.klasifikasi_layer) : '-'}</td>`);
+                if (columns.includes('Keterangan')) cells.push(`<td>${hasValue(item.keterangan_layer) ? escapeHtml(item.keterangan_layer) : '-'}</td>`);
+                return `<tr>${cells.join('')}</tr>`;
             }).join('');
         }
 
         modalContent.innerHTML = `
-            <div class="mb-3">
-                <p class="mb-1"><strong>Site:</strong> ${insiden.site || '-'}</p>
-                <p class="mb-1"><strong>Lokasi:</strong> ${insiden.lokasi || '-'}</p>
-                <p class="mb-1"><strong>Status LPI:</strong> ${insiden.status_lpi || '-'}</p>
-                <p class="mb-1"><strong>Kategori:</strong> ${insiden.kategori || '-'}</p>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">info</i>Informasi Dasar</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.no_kecelakaan) ? `<tr><td width="40%"><strong>No. Kecelakaan:</strong></td><td>${escapeHtml(insiden.no_kecelakaan)}</td></tr>` : ''}
+                                ${hasValue(insiden.kode_be_investigasi) ? `<tr><td width="40%"><strong>Kode BE Investigasi:</strong></td><td>${escapeHtml(insiden.kode_be_investigasi)}</td></tr>` : ''}
+                                ${hasValue(insiden.status_lpi) ? `<tr><td width="40%"><strong>Status LPI:</strong></td><td><span class="badge ${insiden.status_lpi === 'Open' ? 'bg-warning text-dark' : insiden.status_lpi === 'Closed' ? 'bg-success' : 'bg-secondary'}">${escapeHtml(insiden.status_lpi)}</span></td></tr>` : ''}
+                                ${hasValue(insiden.kategori) ? `<tr><td width="40%"><strong>Kategori:</strong></td><td><span class="badge bg-light text-danger border border-danger border-opacity-25">${escapeHtml(insiden.kategori)}</span></td></tr>` : ''}
+                                ${hasValue(insiden.injury_status) ? `<tr><td width="40%"><strong>Injury Status:</strong></td><td>${escapeHtml(insiden.injury_status)}</td></tr>` : ''}
+                                ${hasValue(insiden.high_potential) ? `<tr><td width="40%"><strong>High Potential:</strong></td><td>${escapeHtml(insiden.high_potential)}</td></tr>` : ''}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">location_on</i>Lokasi</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.site) ? `<tr><td width="40%"><strong>Site:</strong></td><td>${escapeHtml(insiden.site)}</td></tr>` : ''}
+                                ${hasValue(insiden.lokasi) ? `<tr><td width="40%"><strong>Lokasi:</strong></td><td>${escapeHtml(insiden.lokasi)}</td></tr>` : ''}
+                                ${hasValue(insiden.sublokasi) ? `<tr><td width="40%"><strong>Sublokasi:</strong></td><td>${escapeHtml(insiden.sublokasi)}</td></tr>` : ''}
+                                ${hasValue(insiden.lokasi_spesifik) ? `<tr><td width="40%"><strong>Lokasi Spesifik:</strong></td><td>${escapeHtml(insiden.lokasi_spesifik)}</td></tr>` : ''}
+                                ${hasValue(insiden.lokasi_validasi_hsecm) ? `<tr><td width="40%"><strong>Lokasi Validasi HSECM:</strong></td><td>${escapeHtml(insiden.lokasi_validasi_hsecm)}</td></tr>` : ''}
+                                ${hasValue(insiden.latitude) && hasValue(insiden.longitude) ? `<tr><td width="40%"><strong>Koordinat:</strong></td><td>${insiden.latitude}, ${insiden.longitude}</td></tr>` : ''}
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="table-responsive">
-                <table class="table table-striped">
-                    <thead>
-                        <tr>
-                            <th>#</th>
-                            <th>Layer</th>
-                            <th>Jenis Item IPLS</th>
-                            <th>Detail Layer</th>
-                            <th>Klasifikasi</th>
-                            <th>Keterangan</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        ${rows || '<tr><td colspan="6" class="text-center text-muted">Tidak ada detail tersedia</td></tr>'}
-                    </tbody>
-                </table>
+            <div class="row mb-4">
+                <div class="col-md-6">
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">schedule</i>Waktu Kejadian</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.tanggal) || hasValue(insiden.bulan) || hasValue(insiden.tahun) ? `<tr><td width="40%"><strong>Tanggal:</strong></td><td>${formatDate(insiden.tanggal, insiden.bulan, insiden.tahun)}</td></tr>` : ''}
+                                ${hasValue(insiden.hari) ? `<tr><td width="40%"><strong>Hari:</strong></td><td>${escapeHtml(insiden.hari)}</td></tr>` : ''}
+                                ${hasValue(insiden.jam) || hasValue(insiden.menit) ? `<tr><td width="40%"><strong>Waktu:</strong></td><td>${formatTime(insiden.jam, insiden.menit)}</td></tr>` : ''}
+                                ${hasValue(insiden.shift) ? `<tr><td width="40%"><strong>Shift:</strong></td><td>${escapeHtml(insiden.shift)}</td></tr>` : ''}
+                                ${hasValue(insiden.minggu_ke) ? `<tr><td width="40%"><strong>Minggu Ke:</strong></td><td>${insiden.minggu_ke}</td></tr>` : ''}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6">
+                    <div class="card border shadow-sm mb-3">
+                        <div class="card-header bg-light border-bottom">
+                            <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">business</i>Perusahaan & Departemen</h6>
+                        </div>
+                        <div class="card-body">
+                            <table class="table table-sm table-borderless mb-0">
+                                ${hasValue(insiden.perusahaan) ? `<tr><td width="40%"><strong>Perusahaan:</strong></td><td>${escapeHtml(insiden.perusahaan)}</td></tr>` : ''}
+                                ${hasValue(insiden.departemen) ? `<tr><td width="40%"><strong>Departemen:</strong></td><td>${escapeHtml(insiden.departemen)}</td></tr>` : ''}
+                                ${hasValue(insiden.pja) ? `<tr><td width="40%"><strong>PJA:</strong></td><td>${escapeHtml(insiden.pja)}</td></tr>` : ''}
+                                ${hasValue(insiden.insiden_dalam_site_mining) ? `<tr><td width="40%"><strong>Insiden dalam Site Mining:</strong></td><td>${escapeHtml(insiden.insiden_dalam_site_mining)}</td></tr>` : ''}
+                            </table>
+                        </div>
+                    </div>
+                </div>
             </div>
+            ${insiden.kronologis ? `
+            <div class="card border shadow-sm mb-3">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">description</i>Kronologis</h6>
+                </div>
+                <div class="card-body">
+                    <p class="mb-0">${escapeHtml(insiden.kronologis || '-')}</p>
+                </div>
+            </div>
+            ` : ''}
+            ${filteredItems.length > 0 && columns.length > 0 ? `
+            <div class="card border shadow-sm">
+                <div class="card-header bg-light border-bottom">
+                    <h6 class="mb-0 text-dark"><i class="material-icons-outlined me-2 text-muted" style="font-size: 18px;">layers</i>Detail Layer</h6>
+                </div>
+                <div class="card-body">
+                    <div class="table-responsive">
+                        <table class="table table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    ${columns.includes('Layer') ? '<th>Layer</th>' : ''}
+                                    ${columns.includes('Jenis Item IPLS') ? '<th>Jenis Item IPLS</th>' : ''}
+                                    ${columns.includes('Detail Layer') ? '<th>Detail Layer</th>' : ''}
+                                    ${columns.includes('Klasifikasi') ? '<th>Klasifikasi</th>' : ''}
+                                    ${columns.includes('Keterangan') ? '<th>Keterangan</th>' : ''}
+                                </tr>
+                            </thead>
+                            <tbody>${rows}</tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            ` : ''}
         `;
-
-        bootstrap.Modal.getOrCreateInstance(document.getElementById('insidenDetailModal')).show();
     }
 
     // Function to add WMS layer to map
