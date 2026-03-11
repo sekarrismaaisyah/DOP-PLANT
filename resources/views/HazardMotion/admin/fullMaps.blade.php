@@ -25942,83 +25942,50 @@ source: new ol.source.Vector(),
                         intervensiAreaKerjaAbortController = null;
                         console.log('Response data:', data);
                         if (data.success) {
-                            // Show success message with option to open WhatsApp
                             const whatsappUrl = data.data?.whatsapp_url;
+                            const successMessage = data.message || 'Intervensi berhasil dikirim!';
                             
+                            // Tutup modal dulu agar Swal tampil di atas (tidak tertutup modal)
+                            const modal = bootstrap.Modal.getInstance(document.getElementById('intervensiAreaKerjaModal'));
+                            if (modal) {
+                                modal.hide();
+                            }
+                            // Reset form dan button segera setelah modal ditutup
+                            form.reset();
+                            const picSelect = document.getElementById('intervensiPICAreaKerja');
+                            if (picSelect && typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
+                                $(picSelect).val(null).trigger('change');
+                            }
+                            const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
+                            if (cctvSelect && typeof $ !== 'undefined' && $(cctvSelect).hasClass('select2-hidden-accessible')) {
+                                $(cctvSelect).val(null).trigger('change');
+                            }
+                            submitBtn.disabled = false;
+                            submitBtn.innerHTML = intervensiAreaKerjaSubmitBtnDefaultHtml;
+                            
+                            // Baru tampilkan Swal berhasil (setelah modal tertutup)
                             if (whatsappUrl) {
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Berhasil!',
-                                    text: data.message || 'Intervensi berhasil dikirim!',
+                                    text: successMessage,
                                     showConfirmButton: true,
                                     showCancelButton: true,
                                     confirmButtonText: 'Buka WhatsApp',
                                     cancelButtonText: 'Tutup',
                                     confirmButtonColor: '#25D366'
                                 }).then((result) => {
-                                    // Close modal
-                                    const modal = bootstrap.Modal.getInstance(document.getElementById('intervensiAreaKerjaModal'));
-                                    if (modal) {
-                                        modal.hide();
-                                    }
-                                    
-                                    // Reset form
-                                    form.reset();
-                                    
-                                    // Reset Select2 for PIC
-                                    const picSelect = document.getElementById('intervensiPICAreaKerja');
-                                    if (picSelect && typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
-                                        $(picSelect).val(null).trigger('change');
-                                    }
-                                    
-                                    // Reset Select2 for CCTV
-                                    const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
-                                    if (cctvSelect && typeof $ !== 'undefined' && $(cctvSelect).hasClass('select2-hidden-accessible')) {
-                                        $(cctvSelect).val(null).trigger('change');
-                                    }
-                                    
-                                    // Reset button
-                                    submitBtn.disabled = false;
-                                    submitBtn.innerHTML = intervensiAreaKerjaSubmitBtnDefaultHtml;
-                                    
-                                    // Open WhatsApp if user clicked confirm
                                     if (result.isConfirmed && whatsappUrl) {
                                         window.open(whatsappUrl, '_blank');
                                     }
                                 });
                             } else {
-                                // No WhatsApp URL, just show success
                                 Swal.fire({
                                     icon: 'success',
                                     title: 'Berhasil!',
-                                    text: data.message || 'Intervensi berhasil dikirim!',
+                                    text: successMessage,
                                     showConfirmButton: true,
                                     confirmButtonText: 'OK'
-                                }).then((result) => {
-                                    // Close modal
-                                    const modal = bootstrap.Modal.getInstance(document.getElementById('intervensiAreaKerjaModal'));
-                                    if (modal) {
-                                        modal.hide();
-                                    }
-                                    
-                                    // Reset form
-                                    form.reset();
-                                    
-                                    // Reset Select2 for PIC
-                                    const picSelect = document.getElementById('intervensiPICAreaKerja');
-                                    if (picSelect && typeof $ !== 'undefined' && $(picSelect).hasClass('select2-hidden-accessible')) {
-                                        $(picSelect).val(null).trigger('change');
-                                    }
-                                    
-                                    // Reset Select2 for CCTV
-                                    const cctvSelect = document.getElementById('intervensiCCTVAreaKerja');
-                                    if (cctvSelect && typeof $ !== 'undefined' && $(cctvSelect).hasClass('select2-hidden-accessible')) {
-                                        $(cctvSelect).val(null).trigger('change');
-                                    }
-                                    
-                                    // Reset button
-                                    submitBtn.disabled = false;
-                                    submitBtn.innerHTML = intervensiAreaKerjaSubmitBtnDefaultHtml;
                                 });
                             }
                         } else {
