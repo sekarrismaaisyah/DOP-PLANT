@@ -129,10 +129,10 @@
                                                 <a href="{{ route('sistem-roster.dop.edit', $dop->id) }}" class="btn btn-sm btn-warning rounded-3" title="Edit">
                                                     <i class="material-icons-outlined">edit</i>
                                                 </a>
-                                                <form action="{{ route('sistem-roster.dop.destroy', $dop->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus DOP ini?');">
+                                                <form action="{{ route('sistem-roster.dop.destroy', $dop->id) }}" method="POST" class="d-inline form-delete-dop" data-pekerjaan="{{ e($dop->pekerjaan) }}">
                                                     @csrf
                                                     @method('DELETE')
-                                                    <button type="submit" class="btn btn-sm btn-danger rounded-3" title="Hapus">
+                                                    <button type="button" class="btn btn-sm btn-danger rounded-3 btn-delete-dop" title="Hapus">
                                                         <i class="material-icons-outlined">delete</i>
                                                     </button>
                                                 </form>
@@ -160,8 +160,31 @@
 @endsection
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Konfirmasi hapus DOP dengan SweetAlert
+            document.querySelectorAll('.btn-delete-dop').forEach(function(btn) {
+                btn.addEventListener('click', function() {
+                    const form = this.closest('form.form-delete-dop');
+                    const pekerjaan = form ? form.getAttribute('data-pekerjaan') || 'DOP ini' : 'DOP ini';
+                    Swal.fire({
+                        title: 'Apakah Anda yakin?',
+                        text: 'Apakah Anda yakin akan menghapus "' + pekerjaan + '"? Data yang dihapus tidak dapat dikembalikan.',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#dc3545',
+                        cancelButtonColor: '#6c757d',
+                        confirmButtonText: 'Ya, hapus',
+                        cancelButtonText: 'Batal'
+                    }).then(function(result) {
+                        if (result.isConfirmed && form) {
+                            form.submit();
+                        }
+                    });
+                });
+            });
+
             document.querySelectorAll('.status-toggle').forEach(function(toggle) {
                 toggle.addEventListener('change', function() {
                     const dopId = this.dataset.id;
