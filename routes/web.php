@@ -398,6 +398,9 @@ Route::middleware(['auth'])->group(function () {
     // Insiden Tabel Routes - HARUS sebelum catch-all route
     Route::prefix('insiden-tabel')->name('insiden-tabel.')->group(function () {
         Route::get('/', [InsidenTabelController::class, 'index'])->name('index');
+        Route::get('/data', [InsidenTabelController::class, 'data'])->name('data');
+        Route::get('/template', [InsidenTabelController::class, 'downloadTemplate'])->name('template');
+        Route::post('/update-group-meta', [InsidenTabelController::class, 'updateGroupMeta'])->name('update-group-meta');
         Route::get('/create', [InsidenTabelController::class, 'create'])->name('create');
         Route::post('/', [InsidenTabelController::class, 'store'])->name('store');
         Route::get('/{insidenTabel}/edit', [InsidenTabelController::class, 'edit'])->name('edit');

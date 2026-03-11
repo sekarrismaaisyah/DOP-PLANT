@@ -4,31 +4,267 @@ namespace App\Http\Controllers;
 
 use App\Jobs\ImportInsidenTabelJob;
 use App\Models\InsidenTabel;
+use App\Models\InsidenTabelTag;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class InsidenTabelController extends Controller
 {
+    private array $templateColumns = [
+        'no_kecelakaan',
+        'kode_be_investigasi',
+        'status_lpi',
+        'target_penyelesaian_lpi',
+        'actual_penyelesaian_lpi',
+        'ketepatan_waktu_lpi',
+        'tanggal',
+        'bulan',
+        'tahun',
+        'minggu_ke',
+        'hari',
+        'jam',
+        'menit',
+        'shift',
+        'perusahaan',
+        'latitude',
+        'longitude',
+        'departemen',
+        'site',
+        'lokasi',
+        'sublokasi',
+        'lokasi_spesifik',
+        'lokasi_validasi_hsecm',
+        'pja',
+        'insiden_dalam_site_mining',
+        'kategori',
+        'injury_status',
+        'kronologis',
+        'high_potential',
+        'alat_terlibat',
+        'nama',
+        'jabatan',
+        'shift_kerja_ke',
+        'hari_kerja_ke',
+        'npk',
+        'umur',
+        'range_umur',
+        'masa_kerja_perusahaan_tahun',
+        'masa_kerja_perusahaan_bulan',
+        'range_masa_kerja_perusahaan',
+        'masa_kerja_bc_tahun',
+        'masa_kerja_bc_bulan',
+        'range_masa_kerja_bc',
+        'bagian_luka',
+        'loss_cost',
+        'saksi_langsung',
+        'atasan_langsung',
+        'jabatan_atasan_langsung',
+        'kontak',
+        'detail_kontak',
+        'sumber_kecelakaan',
+        'layer',
+        'jenis_item_ipls',
+        'detail_layer',
+        'klasifikasi_layer',
+        'keterangan_layer',
+        'id_lokasi_insiden',
+    ];
+
     public function index(Request $request): View
     {
-        $perPage = (int) $request->get('per_page', 25);
-        $perPage = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 25;
+        return view('insiden-tabel.index');
+    }
 
-        $query = InsidenTabel::query()->latest();
+    public function downloadTemplate(): StreamedResponse
+    {
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Template');
 
-        if ($search = $request->get('search')) {
-            $query->where(function ($q) use ($search) {
+        foreach ($this->templateColumns as $i => $col) {
+            $cell = Coordinate::stringFromColumnIndex($i + 1) . '1';
+            $sheet->setCellValue($cell, $col);
+        }
+
+        // Example row (optional, can be deleted by user)
+        $sheet->setCellValue('A2', 'INC-001');
+        $sheet->setCellValue('C2', 'Open');
+        $sheet->setCellValue('G2', now()->format('Y-m-d'));
+        $sheet->setCellValue('S2', 'BMO 1');
+        $sheet->setCellValue('Z2', 'Near Miss');
+
+        $writer = new Xlsx($spreadsheet);
+        $filename = 'template-insiden-tabel.xlsx';
+
+        return response()->streamDownload(function () use ($writer) {
+            $writer->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    /**
+     * DataTables server-side: return grouped data by no_kecelakaan.
+     */
+    public function data(Request $request): JsonResponse
+    {
+        $search = $request->input('search.value');
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 25);
+        $length = in_array($length, [10, 25, 50, 100], true) ? $length : 25;
+        $orderColIndex = (int) $request->input('order.0.column', 2);
+        $orderDir = $request->input('order.0.dir', 'asc') === 'asc' ? 'asc' : 'desc';
+
+        $orderColumns = [
+            0 => 'no_kecelakaan',
+            1 => 'no_kecelakaan',
+            2 => 'no_kecelakaan',
+            3 => 'site',
+            4 => 'kategori',
+            5 => 'status_lpi',
+            6 => 'total_entri',
+            7 => 'tag',
+        ];
+        $orderBy = $orderColumns[$orderColIndex] ?? 'no_kecelakaan';
+
+        $baseQuery = InsidenTabel::query();
+        if ($search !== null && $search !== '') {
+            $baseQuery->where(function ($q) use ($search) {
                 $q->where('no_kecelakaan', 'like', '%' . $search . '%')
                     ->orWhere('kategori', 'like', '%' . $search . '%')
-                    ->orWhere('site', 'like', '%' . $search . '%');
+                    ->orWhere('site', 'like', '%' . $search . '%')
+                    ->orWhere('status_lpi', 'like', '%' . $search . '%')
+                    ->orWhereExists(function ($sub) use ($search) {
+                        $sub->selectRaw(1)
+                            ->from('insiden_tabel_tags')
+                            ->whereColumn('insiden_tabel_tags.no_kecelakaan', 'insiden_tabel.no_kecelakaan')
+                            ->where('insiden_tabel_tags.tag', 'like', '%' . $search . '%');
+                    });
             });
         }
 
-        $insidens = $query->paginate($perPage)->withQueryString();
-        $groupedInsidens = $insidens->getCollection()->groupBy('no_kecelakaan');
+        $recordsTotal = InsidenTabel::selectRaw('count(distinct no_kecelakaan) as c')->value('c') ?? 0;
+        $recordsFiltered = (clone $baseQuery)->selectRaw('count(distinct no_kecelakaan) as c')->value('c') ?? 0;
 
-        return view('insiden-tabel.index', compact('insidens', 'perPage', 'search', 'groupedInsidens'));
+        $groupsQuery = (clone $baseQuery)
+            ->selectRaw('insiden_tabel.no_kecelakaan, max(insiden_tabel.site) as site, max(insiden_tabel.kategori) as kategori, max(insiden_tabel.status_lpi) as status_lpi, count(*) as total_entri')
+            ->groupBy('insiden_tabel.no_kecelakaan');
+
+        if ($orderBy === 'tag') {
+            $groupsQuery->leftJoinSub(
+                InsidenTabelTag::selectRaw('no_kecelakaan, MIN(tag) as tag_sort')->groupBy('no_kecelakaan'),
+                'tag_sort_sub',
+                'insiden_tabel.no_kecelakaan',
+                '=',
+                'tag_sort_sub.no_kecelakaan'
+            )->orderBy('tag_sort_sub.tag_sort', $orderDir);
+        } elseif ($orderBy === 'total_entri') {
+            $groupsQuery->orderByRaw('count(*) ' . $orderDir);
+        } else {
+            $groupsQuery->orderBy($orderBy, $orderDir);
+        }
+
+        $groups = $groupsQuery->skip($start)->take($length)->get();
+        $noKecelakaanList = $groups->pluck('no_kecelakaan')->toArray();
+
+        $tagsByNo = collect();
+        if (!empty($noKecelakaanList)) {
+            $tagsByNo = InsidenTabelTag::whereIn('no_kecelakaan', $noKecelakaanList)
+                ->orderBy('no_kecelakaan')
+                ->orderBy('tag')
+                ->get()
+                ->groupBy('no_kecelakaan')
+                ->map(fn ($rows) => $rows->pluck('tag')->values()->all());
+        }
+
+        $details = collect();
+        if (!empty($noKecelakaanList)) {
+            $details = InsidenTabel::whereIn('no_kecelakaan', $noKecelakaanList)
+                ->orderBy('no_kecelakaan')
+                ->orderBy('id')
+                ->get()
+                ->groupBy('no_kecelakaan');
+        }
+
+        $data = [];
+        $rowIndex = $start + 1;
+        foreach ($groups as $g) {
+            $detailRows = $details->get($g->no_kecelakaan, collect())->values()->map(function ($row, $idx) {
+                return [
+                    'id' => $row->id,
+                    'row_num' => $idx + 1,
+                    'kategori' => $row->kategori ?? '-',
+                    'site' => $row->site ?? '-',
+                    'layer' => $row->layer ?? '-',
+                    'jenis_item_ipls' => $row->jenis_item_ipls ?? '-',
+                    'detail_layer' => \Str::limit($row->detail_layer ?? '-', 25),
+                    'klasifikasi_layer' => $row->klasifikasi_layer ?? '-',
+                    'keterangan_layer' => \Str::limit($row->keterangan_layer ?? '-', 25),
+                    'status_lpi' => $row->status_lpi ?? '-',
+                    'tanggal' => $row->tanggal ? $row->tanggal->format('d M Y') : '-',
+                    'edit_url' => route('insiden-tabel.edit', ['insidenTabel' => $row->id]),
+                    'destroy_url' => route('insiden-tabel.destroy', ['insidenTabel' => $row->id]),
+                    'csrf' => csrf_token(),
+                ];
+            })->values();
+            $tags = $tagsByNo->get($g->no_kecelakaan, []);
+
+            $data[] = [
+                'DT_RowIndex' => $rowIndex++,
+                'no_kecelakaan' => $g->no_kecelakaan,
+                'site' => $g->site ?? '-',
+                'kategori' => $g->kategori ?? '-',
+                'status_lpi' => $g->status_lpi ?? '-',
+                'total_entri' => (int) $g->total_entri,
+                'tags' => $tags,
+                'detail' => $detailRows,
+            ];
+        }
+
+        return response()->json([
+            'draw' => (int) $request->input('draw', 1),
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]);
+    }
+
+    /**
+     * Update tags per no_kecelakaan. Auto-save dari input di tabel.
+     */
+    public function updateGroupMeta(Request $request): JsonResponse
+    {
+        $request->validate([
+            'no_kecelakaan' => ['required', 'string', 'max:255'],
+            'tags' => ['nullable', 'array'],
+            'tags.*' => ['string', 'max:255'],
+        ]);
+
+        $noKecelakaan = $request->input('no_kecelakaan');
+
+        if ($request->has('tags')) {
+            InsidenTabelTag::where('no_kecelakaan', $noKecelakaan)->delete();
+            $tags = array_values(array_filter(array_map('trim', $request->input('tags', []))));
+            foreach ($tags as $tag) {
+                if ($tag !== '') {
+                    InsidenTabelTag::create(['no_kecelakaan' => $noKecelakaan, 'tag' => $tag]);
+                }
+            }
+        }
+
+        $tags = InsidenTabelTag::where('no_kecelakaan', $noKecelakaan)->orderBy('tag')->pluck('tag')->values()->all();
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Berhasil disimpan',
+            'meta' => ['tags' => $tags],
+        ]);
     }
 
     public function create(): View
