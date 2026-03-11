@@ -55,7 +55,7 @@
     </div>
 
     <!-- Excel Upload Section -->
-    <div class="row mb-4">
+    <!-- <div class="row mb-4">
         <div class="col-12">
             <div class="card rounded-4 border-primary">
                 <div class="card-header">
@@ -120,13 +120,13 @@
                 </div>
             </div>
         </div>
-    </div>
+    </div> -->
 
-    <hr class="my-4">
+    <!-- <hr class="my-4">
 
     <div class="text-center mb-3">
         <h6 class="text-muted">ATAU</h6>
-    </div>
+    </div> -->
 
     <!-- Manual Input Form -->
     <form method="POST" action="{{ route('sistem-roster.dop.store') }}" enctype="multipart/form-data">
