@@ -13247,6 +13247,25 @@ source: new ol.source.Vector(),
         populateSapDetailModal(sapData);
     }
     
+    // Tutup modal Summary Area Kerja dulu, lalu buka modal detail SAP (dipanggil dari klik item SAP di dalam summary)
+    window.closeAreaKerjaSummaryAndOpenSapDetail = function(sapData) {
+        if (!sapData) {
+            if (typeof openSapDetailModalByData === 'function') openSapDetailModalByData(null);
+            return;
+        }
+        const summaryModalEl = document.getElementById('areaKerjaSummaryModal');
+        const summaryModalInstance = summaryModalEl ? bootstrap.Modal.getInstance(summaryModalEl) : null;
+        if (summaryModalInstance) {
+            summaryModalEl.addEventListener('hidden.bs.modal', function onSummaryHidden() {
+                summaryModalEl.removeEventListener('hidden.bs.modal', onSummaryHidden);
+                openSapDetailModalByData(sapData);
+            }, { once: true });
+            summaryModalInstance.hide();
+        } else {
+            openSapDetailModalByData(sapData);
+        }
+    };
+    
     // Function to show Area Kerja Summary Modal with TARP
     async function showAreaKerjaSummaryModal(feature, props) {
         // Close popup first
@@ -13514,7 +13533,7 @@ source: new ol.source.Vector(),
                     }
                 }
                 const urlPhoto = sap.url_photo || '';
-                const onclickOpenDetail = `openSapDetailModalByData(window.__sapAreaKerjaSummary[${index}])`;
+                const onclickOpenDetail = `closeAreaKerjaSummaryAndOpenSapDetail(window.__sapAreaKerjaSummary[${index}])`;
 
                 const issueShort = (issue || '').substring(0, 120) + ((issue || '').length > 120 ? '...' : '');
                 const subShort = (subketidaksesuaian || '').substring(0, 80) + ((subketidaksesuaian || '').length > 80 ? '...' : '');

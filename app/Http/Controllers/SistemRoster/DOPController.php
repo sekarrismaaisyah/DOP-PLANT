@@ -318,21 +318,23 @@ class DOPController extends Controller
         $headers = [
             'A1' => 'Tanggal',
             'B1' => 'Pekerjaan',
-            'C1' => 'Unit ID',
-            'D1' => 'Lokasi',
-            'E1' => 'Latitude',
-            'F1' => 'Longitude',
-            'G1' => 'Detail Lokasi',
-            'H1' => 'Potensi Risiko',
-            'I1' => 'Pengendalian Bahaya',
-            'J1' => 'Catatan',
-            'K1' => 'CCTV IDs (pisahkan dengan koma)',
-            'L1' => 'PIC Berau Coal - Shift',
-            'M1' => 'PIC Berau Coal - Nama PIC',
-            'N1' => 'PIC Berau Coal - Layer',
-            'O1' => 'Pengawas Mitra Kerja - Shift',
-            'P1' => 'Pengawas Mitra Kerja - Nama Pengawas',
-            'Q1' => 'Pengawas Mitra Kerja - Layer',
+            'C1' => 'Aktivitas',
+            'D1' => 'Site',
+            'E1' => 'Unit ID',
+            'F1' => 'Lokasi',
+            'G1' => 'Latitude',
+            'H1' => 'Longitude',
+            'I1' => 'Detail Lokasi',
+            'J1' => 'Potensi Risiko',
+            'K1' => 'Pengendalian Bahaya',
+            'L1' => 'Catatan',
+            'M1' => 'CCTV IDs (pisahkan dengan koma)',
+            'N1' => 'PIC Berau Coal - Shift',
+            'O1' => 'PIC Berau Coal - Nama PIC',
+            'P1' => 'PIC Berau Coal - Layer',
+            'Q1' => 'Pengawas Mitra Kerja - Shift',
+            'R1' => 'Pengawas Mitra Kerja - Nama Pengawas',
+            'S1' => 'Pengawas Mitra Kerja - Layer',
         ];
 
         foreach ($headers as $cell => $value) {
@@ -357,40 +359,44 @@ class DOPController extends Controller
 
         $sheet->getColumnDimension('A')->setWidth(12);
         $sheet->getColumnDimension('B')->setWidth(30);
-        $sheet->getColumnDimension('C')->setWidth(15);
-        $sheet->getColumnDimension('D')->setWidth(25);
+        $sheet->getColumnDimension('C')->setWidth(25);
+        $sheet->getColumnDimension('D')->setWidth(15);
         $sheet->getColumnDimension('E')->setWidth(15);
-        $sheet->getColumnDimension('F')->setWidth(15);
-        $sheet->getColumnDimension('G')->setWidth(30);
-        $sheet->getColumnDimension('H')->setWidth(30);
+        $sheet->getColumnDimension('F')->setWidth(25);
+        $sheet->getColumnDimension('G')->setWidth(15);
+        $sheet->getColumnDimension('H')->setWidth(15);
         $sheet->getColumnDimension('I')->setWidth(30);
         $sheet->getColumnDimension('J')->setWidth(30);
-        $sheet->getColumnDimension('K')->setWidth(25);
-        $sheet->getColumnDimension('L')->setWidth(20);
+        $sheet->getColumnDimension('K')->setWidth(30);
+        $sheet->getColumnDimension('L')->setWidth(30);
         $sheet->getColumnDimension('M')->setWidth(25);
-        $sheet->getColumnDimension('N')->setWidth(15);
-        $sheet->getColumnDimension('O')->setWidth(20);
-        $sheet->getColumnDimension('P')->setWidth(25);
-        $sheet->getColumnDimension('Q')->setWidth(15);
+        $sheet->getColumnDimension('N')->setWidth(20);
+        $sheet->getColumnDimension('O')->setWidth(25);
+        $sheet->getColumnDimension('P')->setWidth(15);
+        $sheet->getColumnDimension('Q')->setWidth(20);
+        $sheet->getColumnDimension('R')->setWidth(25);
+        $sheet->getColumnDimension('S')->setWidth(15);
 
         $exampleRow = 2;
         $sheet->setCellValue('A' . $exampleRow, '2026-01-15');
         $sheet->setCellValue('B' . $exampleRow, 'Pemeliharaan Unit Excavator');
-        $sheet->setCellValue('C' . $exampleRow, 'EX-001');
-        $sheet->setCellValue('D' . $exampleRow, 'Area Tambang Utara');
-        $sheet->setCellValue('E' . $exampleRow, '-2.186253');
-        $sheet->setCellValue('F' . $exampleRow, '117.4539035');
-        $sheet->setCellValue('G' . $exampleRow, 'Koordinat: -2.186253, 117.4539035');
-        $sheet->setCellValue('H' . $exampleRow, 'Tenggelam, Terbalik');
-        $sheet->setCellValue('I' . $exampleRow, 'Assessment, JSA, SOP');
-        $sheet->setCellValue('J' . $exampleRow, 'Pekerjaan dilakukan pada shift pagi');
-        $sheet->setCellValue('K' . $exampleRow, '1,2,3');
-        $sheet->setCellValue('L' . $exampleRow, 'Shift 1 s/d 2');
-        $sheet->setCellValue('M' . $exampleRow, 'John Doe');
-        $sheet->setCellValue('N' . $exampleRow, 'Layer 1');
-        $sheet->setCellValue('O' . $exampleRow, 'Shift 1 s/d 2');
-        $sheet->setCellValue('P' . $exampleRow, 'Jane Smith');
-        $sheet->setCellValue('Q' . $exampleRow, 'Layer 2');
+        $sheet->setCellValue('C' . $exampleRow, 'Pemeliharaan');
+        $sheet->setCellValue('D' . $exampleRow, 'BMO 2');
+        $sheet->setCellValue('E' . $exampleRow, 'EX-001');
+        $sheet->setCellValue('F' . $exampleRow, 'Area Tambang Utara');
+        $sheet->setCellValue('G' . $exampleRow, '-2.186253');
+        $sheet->setCellValue('H' . $exampleRow, '117.4539035');
+        $sheet->setCellValue('I' . $exampleRow, 'Koordinat: -2.186253, 117.4539035');
+        $sheet->setCellValue('J' . $exampleRow, 'Tenggelam, Terbalik');
+        $sheet->setCellValue('K' . $exampleRow, 'Assessment, JSA, SOP');
+        $sheet->setCellValue('L' . $exampleRow, 'Pekerjaan dilakukan pada shift pagi');
+        $sheet->setCellValue('M' . $exampleRow, '1,2,3');
+        $sheet->setCellValue('N' . $exampleRow, 'Shift 1 s/d 2');
+        $sheet->setCellValue('O' . $exampleRow, 'John Doe');
+        $sheet->setCellValue('P' . $exampleRow, 'Layer 1');
+        $sheet->setCellValue('Q' . $exampleRow, 'Shift 1 s/d 2');
+        $sheet->setCellValue('R' . $exampleRow, 'Jane Smith');
+        $sheet->setCellValue('S' . $exampleRow, 'Layer 2');
 
         $noteRow = 4;
         $sheet->setCellValue('A' . $noteRow, 'CATATAN:');
@@ -454,13 +460,35 @@ class DOPController extends Controller
                 }
 
                 try {
-                    if (empty($row[0]) || empty($row[1]) || empty($row[2]) || empty($row[3])) {
+                    // Template baru: A=Tanggal, B=Pekerjaan, C=Aktivitas, D=Site, E=Unit ID, F=Lokasi, ...
+                    $isNewTemplate = isset($row[4]) && isset($row[5]) && count($row) >= 19;
+                    $idxTanggal = 0;
+                    $idxPekerjaan = 1;
+                    $idxAktivitas = $isNewTemplate ? 2 : null;
+                    $idxSite = $isNewTemplate ? 3 : null;
+                    $idxUnitId = $isNewTemplate ? 4 : 2;
+                    $idxLokasi = $isNewTemplate ? 5 : 3;
+                    $idxLat = $isNewTemplate ? 6 : 4;
+                    $idxLong = $isNewTemplate ? 7 : 5;
+                    $idxDetailLokasi = $isNewTemplate ? 8 : 6;
+                    $idxPotensi = $isNewTemplate ? 9 : 7;
+                    $idxPengendalian = $isNewTemplate ? 10 : 8;
+                    $idxCatatan = $isNewTemplate ? 11 : 9;
+                    $idxCctv = $isNewTemplate ? 12 : 10;
+                    $idxPicShift = $isNewTemplate ? 13 : 11;
+                    $idxPicNama = $isNewTemplate ? 14 : 12;
+                    $idxPicLayer = $isNewTemplate ? 15 : 13;
+                    $idxPengawasShift = $isNewTemplate ? 16 : 14;
+                    $idxPengawasNama = $isNewTemplate ? 17 : 15;
+                    $idxPengawasLayer = $isNewTemplate ? 18 : 16;
+
+                    if (empty($row[$idxTanggal]) || empty($row[$idxPekerjaan]) || empty($row[$idxUnitId]) || empty($row[$idxLokasi])) {
                         $errors[] = "Baris {$rowNumber}: Tanggal, Pekerjaan, Unit ID, dan Lokasi wajib diisi";
                         $rowNumber++;
                         continue;
                     }
 
-                    $tanggal = $row[0];
+                    $tanggal = $row[$idxTanggal];
                     if (is_numeric($tanggal)) {
                         $tanggal = \PhpOffice\PhpSpreadsheet\Shared\Date::excelToDateTimeObject($tanggal)->format('Y-m-d');
                     } else {
@@ -471,39 +499,39 @@ class DOPController extends Controller
                         $tanggal = $parsedDate->format('Y-m-d');
                     }
 
-                    $dopKey = md5($tanggal . '|' . ($row[1] ?? '') . '|' . ($row[2] ?? '') . '|' . ($row[3] ?? ''));
+                    $dopKey = md5($tanggal . '|' . ($row[$idxPekerjaan] ?? '') . '|' . ($row[$idxUnitId] ?? '') . '|' . ($row[$idxLokasi] ?? ''));
 
                     if (isset($dopCache[$dopKey])) {
                         $dop = $dopCache[$dopKey];
                     } else {
                         $dop = DailyOperationPlan::where('tanggal', $tanggal)
-                            ->where('pekerjaan', $row[1] ?? '')
-                            ->where('unit_id', $row[2] ?? '')
-                            ->where('lokasi', $row[3] ?? '')
+                            ->where('pekerjaan', $row[$idxPekerjaan] ?? '')
+                            ->where('unit_id', $row[$idxUnitId] ?? '')
+                            ->where('lokasi', $row[$idxLokasi] ?? '')
                             ->first();
 
                         if (!$dop) {
-                            $latitude = !empty($row[4]) ? (is_numeric($row[4]) ? (float)$row[4] : null) : null;
-                            $longitude = !empty($row[5]) ? (is_numeric($row[5]) ? (float)$row[5] : null) : null;
-                            
+                            $latitude = !empty($row[$idxLat]) ? (is_numeric($row[$idxLat]) ? (float)$row[$idxLat] : null) : null;
+                            $longitude = !empty($row[$idxLong]) ? (is_numeric($row[$idxLong]) ? (float)$row[$idxLong] : null) : null;
                             if ($latitude !== null && ($latitude < -90 || $latitude > 90)) {
                                 $latitude = null;
                             }
                             if ($longitude !== null && ($longitude < -180 || $longitude > 180)) {
                                 $longitude = null;
                             }
-                            
                             $dop = DailyOperationPlan::create([
                                 'tanggal' => $tanggal,
-                                'pekerjaan' => $row[1] ?? '',
-                                'unit_id' => $row[2] ?? '',
-                                'lokasi' => $row[3] ?? '',
+                                'pekerjaan' => $row[$idxPekerjaan] ?? '',
+                                'aktivitas' => $idxAktivitas !== null ? ($row[$idxAktivitas] ?? null) : null,
+                                'unit_id' => $row[$idxUnitId] ?? '',
+                                'lokasi' => $row[$idxLokasi] ?? '',
+                                'site' => $idxSite !== null ? ($row[$idxSite] ?? null) : null,
                                 'latitude' => $latitude,
                                 'longitude' => $longitude,
-                                'detail_lokasi' => $row[6] ?? null,
-                                'potensi_resiko' => $row[7] ?? null,
-                                'pengendalian_bahaya' => $row[8] ?? null,
-                                'catatan' => $row[9] ?? null,
+                                'detail_lokasi' => $row[$idxDetailLokasi] ?? null,
+                                'potensi_resiko' => $row[$idxPotensi] ?? null,
+                                'pengendalian_bahaya' => $row[$idxPengendalian] ?? null,
+                                'catatan' => $row[$idxCatatan] ?? null,
                                 'foto_pekerjaan' => null,
                             ]);
                             $imported++;
@@ -511,8 +539,8 @@ class DOPController extends Controller
 
                         $dopCache[$dopKey] = $dop;
 
-                        if (!empty($row[10])) {
-                            $cctvIds = array_map('trim', explode(',', $row[10]));
+                        if (!empty($row[$idxCctv])) {
+                            $cctvIds = array_map('trim', explode(',', $row[$idxCctv]));
                             $cctvIds = array_filter($cctvIds, function($id) {
                                 return is_numeric($id) && CctvData::where('id', $id)->exists();
                             });
@@ -524,34 +552,32 @@ class DOPController extends Controller
                         }
                     }
 
-                    if (!empty($row[11]) && !empty($row[12])) {
+                    if (!empty($row[$idxPicShift]) && !empty($row[$idxPicNama])) {
                         $picExists = DopPicBerauCoal::where('dop_id', $dop->id)
-                            ->where('shift', $row[11] ?? null)
-                            ->where('nama_pic', $row[12] ?? '')
+                            ->where('shift', $row[$idxPicShift] ?? null)
+                            ->where('nama_pic', $row[$idxPicNama] ?? '')
                             ->exists();
-                        
                         if (!$picExists) {
                             DopPicBerauCoal::create([
                                 'dop_id' => $dop->id,
-                                'shift' => $row[11] ?? null,
-                                'nama_pic' => $row[12] ?? '',
-                                'layer' => $row[13] ?? null,
+                                'shift' => $row[$idxPicShift] ?? null,
+                                'nama_pic' => $row[$idxPicNama] ?? '',
+                                'layer' => $row[$idxPicLayer] ?? null,
                             ]);
                         }
                     }
 
-                    if (!empty($row[14]) && !empty($row[15])) {
+                    if (!empty($row[$idxPengawasShift]) && !empty($row[$idxPengawasNama])) {
                         $pengawasExists = DopPengawasMitraKerja::where('dop_id', $dop->id)
-                            ->where('shift', $row[14] ?? null)
-                            ->where('nama_pengawas', $row[15] ?? '')
+                            ->where('shift', $row[$idxPengawasShift] ?? null)
+                            ->where('nama_pengawas', $row[$idxPengawasNama] ?? '')
                             ->exists();
-                        
                         if (!$pengawasExists) {
                             DopPengawasMitraKerja::create([
                                 'dop_id' => $dop->id,
-                                'shift' => $row[14] ?? null,
-                                'nama_pengawas' => $row[15] ?? '',
-                                'layer' => $row[16] ?? null,
+                                'shift' => $row[$idxPengawasShift] ?? null,
+                                'nama_pengawas' => $row[$idxPengawasNama] ?? '',
+                                'layer' => $row[$idxPengawasLayer] ?? null,
                             ]);
                         }
                     }

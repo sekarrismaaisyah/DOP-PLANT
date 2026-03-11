@@ -94,6 +94,8 @@
                                 <ul class="mb-0 small">
                                     <li><strong>Tanggal:</strong> Format YYYY-MM-DD (contoh: 2026-01-15) <span class="text-danger">*</span></li>
                                     <li><strong>Pekerjaan:</strong> Nama pekerjaan yang akan dilakukan <span class="text-danger">*</span></li>
+                                    <li><strong>Aktivitas:</strong> Kategori aktivitas (opsional)</li>
+                                    <li><strong>Site:</strong> Site lokasi (opsional)</li>
                                     <li><strong>Unit ID:</strong> ID unit yang digunakan <span class="text-danger">*</span></li>
                                     <li><strong>Lokasi:</strong> Lokasi pekerjaan <span class="text-danger">*</span></li>
                                     <li><strong>Latitude:</strong> Koordinat latitude (opsional, format: -90 sampai 90)</li>

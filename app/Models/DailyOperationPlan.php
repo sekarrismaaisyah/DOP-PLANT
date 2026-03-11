@@ -18,6 +18,7 @@ class DailyOperationPlan extends Model
         'unit_id',
         'perusahaan',
         'lokasi',
+        'site',
         'latitude',
         'longitude',
         'detail_lokasi',
