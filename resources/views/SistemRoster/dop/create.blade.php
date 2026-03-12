@@ -55,7 +55,7 @@
     </div>
 
     <!-- Excel Upload Section -->
-    <!-- <div class="row mb-4">
+    <div class="row mb-4">
         <div class="col-12">
             <div class="card rounded-4 border-primary">
                 <div class="card-header">
@@ -120,7 +120,7 @@
                 </div>
             </div>
         </div>
-    </div> -->
+    </div>
 
     <!-- <hr class="my-4">
 
