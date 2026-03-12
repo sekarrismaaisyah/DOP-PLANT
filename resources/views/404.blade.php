@@ -81,7 +81,7 @@
 </div>
 <!-- Neon Sign "NO VACANCY" -->
 <div class="absolute -top-12 -right-8 transform rotate-12 bg-gray-900 border-2 border-gray-700 p-2 rounded shadow-lg">
-<span class="neon-sign font-bold text-xs uppercase tracking-widest animate-flicker">No Vacancy</span>
+<span class="neon-sign font-bold text-xs uppercase tracking-widest animate-flicker">System Overload</span>
 </div>
 <!-- Steam/Smoke Elements -->
 <div class="absolute -top-8 left-1/4 w-8 h-8 bg-gray-400/20 rounded-full blur-xl steam-particle" style="animation-delay: 0s;"></div>
