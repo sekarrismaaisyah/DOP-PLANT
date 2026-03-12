@@ -127,7 +127,7 @@
                   </div>
                   <div>
                      <p class="data-label">Hazard &amp; Inspeksi Open (SUBMITTED) Minggu Ini</p>
-                     <p class="text-xl font-black text-slate-800">10</p>
+                     <p class="text-xl font-black text-slate-800">-</p>
                   </div>
                </div>
             </div>

@@ -178,34 +178,6 @@
   color: #c5221f;
 }
 
-.gm-search-mode-tabs{
-  display: flex;
-  gap: 0;
-  margin-bottom: 8px;
-  border-radius: 8px;
-  overflow: hidden;
-  background: #f1f3f4;
-  padding: 2px;
-  width: fit-content;
-}
-.gm-search-mode-tabs button{
-  padding: 6px 14px;
-  font-size: 12px;
-  font-weight: 500;
-  border: none;
-  background: transparent;
-  color: #5f6368;
-  cursor: pointer;
-  border-radius: 6px;
-  transition: background .15s, color .15s;
-}
-.gm-search-mode-tabs button:hover{ color: #202124; background: rgba(255,255,255,.8); }
-.gm-search-mode-tabs button.active{
-  background: #fff;
-  color: #1a73e8;
-  box-shadow: 0 1px 2px rgba(0,0,0,.08);
-}
-
 .gm-search-no-results{
   padding: 16px;
   text-align: center;
@@ -3176,10 +3148,6 @@
             
             <!-- Search Box -->
             <div class="gm-search-container">
-                <div class="gm-search-mode-tabs">
-                    <button type="button" class="active" data-mode="cctv" id="gmSearchModeCctv">CCTV</button>
-                    <button type="button" data-mode="insiden" id="gmSearchModeInsiden">Insiden</button>
-                </div>
                 <i class="material-icons-outlined gm-search-icon">search</i>
                 <input type="text" class="gm-search-box" id="gmSearchBox" placeholder="Search CCTV...">
                 <button class="gm-directions-btn" id="gmDirectionsBtn" title="Directions">
@@ -3519,33 +3487,9 @@
             // Search Box Focus and Search Functionality
             const gmSearchBox = document.getElementById('gmSearchBox');
             const gmSearchResults = document.getElementById('gmSearchResults');
-            const gmSearchModeCctv = document.getElementById('gmSearchModeCctv');
-            const gmSearchModeInsiden = document.getElementById('gmSearchModeInsiden');
             let searchTimeout = null;
             let currentSearchResults = [];
             let selectedIndex = -1;
-            let searchMode = 'cctv'; // 'cctv' | 'insiden'
-
-            if (gmSearchModeCctv) {
-                gmSearchModeCctv.addEventListener('click', function() {
-                    searchMode = 'cctv';
-                    gmSearchModeCctv.classList.add('active');
-                    if (gmSearchModeInsiden) gmSearchModeInsiden.classList.remove('active');
-                    if (gmSearchBox) gmSearchBox.placeholder = 'Search CCTV...';
-                    currentSearchResults = [];
-                    gmSearchResults.classList.remove('show');
-                });
-            }
-            if (gmSearchModeInsiden) {
-                gmSearchModeInsiden.addEventListener('click', function() {
-                    searchMode = 'insiden';
-                    gmSearchModeInsiden.classList.add('active');
-                    if (gmSearchModeCctv) gmSearchModeCctv.classList.remove('active');
-                    if (gmSearchBox) gmSearchBox.placeholder = 'Search Insiden (no. kecelakaan, lokasi, nama, dll)...';
-                    currentSearchResults = [];
-                    gmSearchResults.classList.remove('show');
-                });
-            }
 
             if (gmSearchBox) {
                 gmSearchBox.addEventListener('focus', function() {
@@ -3622,10 +3566,7 @@
             }
 
             function performSearch(query) {
-                const url = searchMode === 'insiden'
-                    ? `{{ route('full-maps.api.search-insiden') }}?q=${encodeURIComponent(query)}`
-                    : `{{ route('full-maps.api.search-cctv') }}?q=${encodeURIComponent(query)}`;
-                fetch(url)
+                fetch(`{{ route('full-maps.api.search-cctv') }}?q=${encodeURIComponent(query)}`)
                     .then(response => response.json())
                     .then(data => {
                         currentSearchResults = data;
@@ -3646,37 +3587,23 @@
                 }
 
                 let html = '';
-                if (searchMode === 'insiden') {
-                    results.forEach((item, index) => {
-                        const locationBadge = item.has_location
-                            ? '<span class="gm-search-result-badge location">Has Location</span>'
-                            : '<span class="gm-search-result-badge no-location">No Location</span>';
-                        const subtitleParts = [];
-                        if (item.site) subtitleParts.push(item.site);
+                results.forEach((item, index) => {
+                    const locationBadge = item.has_location 
+                        ? '<span class="gm-search-result-badge location">Has Location</span>'
+                        : '<span class="gm-search-result-badge no-location">No Location</span>';
+                    
+                    const subtitleParts = [];
+                    if (item.type === 'insiden') {
+                        if (item.site) subtitleParts.push(`Site: ${item.site}`);
                         if (item.lokasi) subtitleParts.push(item.lokasi);
                         if (item.kategori) subtitleParts.push(item.kategori);
-                        const kronologisShort = item.kronologis ? (item.kronologis.length > 60 ? item.kronologis.substring(0, 60) + '…' : item.kronologis) : '';
-                        html += `
-                        <div class="gm-search-result-item" data-index="${index}" data-id="${item.id}">
-                            <div class="gm-search-result-title">${escapeHtml(item.no_kecelakaan || 'Insiden #' + item.id)}</div>
-                            <div class="gm-search-result-subtitle">
-                                ${subtitleParts.length > 0 ? escapeHtml(subtitleParts.join(' • ')) : ''}
-                                ${locationBadge}
-                            </div>
-                            ${kronologisShort ? '<div class="gm-search-result-subtitle" style="margin-top:4px;font-size:12px;">' + escapeHtml(kronologisShort) + '</div>' : ''}
-                        </div>
-                    `;
-                    });
-                } else {
-                    results.forEach((item, index) => {
-                        const locationBadge = item.has_location
-                            ? '<span class="gm-search-result-badge location">Has Location</span>'
-                            : '<span class="gm-search-result-badge no-location">No Location</span>';
-                        const subtitleParts = [];
+                    } else {
                         if (item.no_cctv) subtitleParts.push(`No: ${item.no_cctv}`);
                         if (item.site) subtitleParts.push(`Site: ${item.site}`);
                         if (item.control_room) subtitleParts.push(`CR: ${item.control_room}`);
-                        html += `
+                    }
+                    
+                    html += `
                         <div class="gm-search-result-item" data-index="${index}" data-id="${item.id}">
                             <div class="gm-search-result-title">${escapeHtml(item.nama_cctv)}</div>
                             <div class="gm-search-result-subtitle">
@@ -3685,12 +3612,12 @@
                             </div>
                         </div>
                     `;
-                    });
-                }
+                });
 
                 gmSearchResults.innerHTML = html;
                 gmSearchResults.classList.add('show');
 
+                // Add click handlers
                 gmSearchResults.querySelectorAll('.gm-search-result-item').forEach(item => {
                     item.addEventListener('click', function() {
                         const index = parseInt(this.getAttribute('data-index'));
@@ -3700,30 +3627,22 @@
             }
 
             function selectSearchResult(item) {
+                // Close search results
                 gmSearchResults.classList.remove('show');
+                gmSearchBox.value = item.nama_cctv;
                 selectedIndex = -1;
 
-                if (searchMode === 'insiden') {
-                    gmSearchBox.value = item.no_kecelakaan || ('Insiden #' + item.id);
-                    if (item.has_location && window.hazardMapView && item.latitude != null && item.longitude != null) {
-                        window.hazardMapView.animate({
-                            center: [parseFloat(item.longitude), parseFloat(item.latitude)],
-                            zoom: 18,
-                            duration: 500
-                        });
-                    }
-                    console.log('Selected Insiden:', item);
-                } else {
-                    gmSearchBox.value = item.nama_cctv;
-                    if (item.has_location && window.hazardMapView && item.latitude && item.longitude) {
-                        window.hazardMapView.animate({
-                            center: [parseFloat(item.longitude), parseFloat(item.latitude)],
-                            zoom: 18,
-                            duration: 500
-                        });
-                    }
-                    console.log('Selected CCTV:', item);
+                // If item has location, center map on it
+                if (item.has_location && window.hazardMapView && item.latitude && item.longitude) {
+                    window.hazardMapView.animate({
+                        center: [parseFloat(item.longitude), parseFloat(item.latitude)],
+                        zoom: 18,
+                        duration: 500
+                    });
                 }
+
+                // You can add more actions here, like highlighting the marker, etc.
+                console.log('Selected CCTV:', item);
             }
 
             // Drawer JavaScript (keep existing functionality)

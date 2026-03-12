@@ -3751,10 +3751,11 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             $searchQuery->whereIn('control_room', $supervisedControlRooms);
         }
 
-        $results = $searchQuery->limit(20)->get();
+        $cctvResults = $searchQuery->limit(10)->get();
 
-        $formattedResults = $results->map(function($cctv) {
+        $formattedCctv = $cctvResults->map(function($cctv) {
             return [
+                'type' => 'cctv',
                 'id' => $cctv->id,
                 'nama_cctv' => $cctv->nama_cctv ?? 'CCTV ' . $cctv->id,
                 'no_cctv' => $cctv->no_cctv ?? null,
@@ -3769,63 +3770,54 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             ];
         });
 
-        return response()->json($formattedResults);
-    }
+        // Search insiden_tabel (multiple text columns)
+        $insidenQuery = InsidenTabel::where(function($q) use ($query) {
+            $q->where('no_kecelakaan', 'LIKE', '%' . $query . '%')
+              ->orWhere('kode_be_investigasi', 'LIKE', '%' . $query . '%')
+              ->orWhere('perusahaan', 'LIKE', '%' . $query . '%')
+              ->orWhere('departemen', 'LIKE', '%' . $query . '%')
+              ->orWhere('site', 'LIKE', '%' . $query . '%')
+              ->orWhere('lokasi', 'LIKE', '%' . $query . '%')
+              ->orWhere('sublokasi', 'LIKE', '%' . $query . '%')
+              ->orWhere('lokasi_spesifik', 'LIKE', '%' . $query . '%')
+              ->orWhere('pja', 'LIKE', '%' . $query . '%')
+              ->orWhere('kategori', 'LIKE', '%' . $query . '%')
+              ->orWhere('injury_status', 'LIKE', '%' . $query . '%')
+              ->orWhere('kronologis', 'LIKE', '%' . $query . '%')
+              ->orWhere('high_potential', 'LIKE', '%' . $query . '%')
+              ->orWhere('alat_terlibat', 'LIKE', '%' . $query . '%')
+              ->orWhere('nama', 'LIKE', '%' . $query . '%')
+              ->orWhere('jabatan', 'LIKE', '%' . $query . '%')
+              ->orWhere('npk', 'LIKE', '%' . $query . '%')
+              ->orWhere('sumber_kecelakaan', 'LIKE', '%' . $query . '%')
+              ->orWhere('layer', 'LIKE', '%' . $query . '%')
+              ->orWhere('detail_layer', 'LIKE', '%' . $query . '%')
+              ->orWhere('klasifikasi_layer', 'LIKE', '%' . $query . '%')
+              ->orWhere('keterangan_layer', 'LIKE', '%' . $query . '%')
+              ->orWhere('status_lpi', 'LIKE', '%' . $query . '%');
+        });
 
-    /**
-     * Search insiden_tabel for fullMaps search box.
-     * Searches across no_kecelakaan, lokasi, kronologis, nama, site, perusahaan, kategori, etc.
-     */
-    public function searchInsiden(Request $request)
-    {
-        $query = $request->input('q', '');
+        $insidenResults = $insidenQuery->limit(10)->get();
 
-        if (empty($query) || strlen($query) < 2) {
-            return response()->json([]);
-        }
-
-        $searchTerm = '%' . $query . '%';
-
-        $results = InsidenTabel::where(function ($q) use ($searchTerm) {
-            $q->where('no_kecelakaan', 'LIKE', $searchTerm)
-                ->orWhere('kode_be_investigasi', 'LIKE', $searchTerm)
-                ->orWhere('lokasi', 'LIKE', $searchTerm)
-                ->orWhere('sublokasi', 'LIKE', $searchTerm)
-                ->orWhere('lokasi_spesifik', 'LIKE', $searchTerm)
-                ->orWhere('kronologis', 'LIKE', $searchTerm)
-                ->orWhere('nama', 'LIKE', $searchTerm)
-                ->orWhere('site', 'LIKE', $searchTerm)
-                ->orWhere('perusahaan', 'LIKE', $searchTerm)
-                ->orWhere('departemen', 'LIKE', $searchTerm)
-                ->orWhere('kategori', 'LIKE', $searchTerm)
-                ->orWhere('injury_status', 'LIKE', $searchTerm)
-                ->orWhere('alat_terlibat', 'LIKE', $searchTerm)
-                ->orWhere('high_potential', 'LIKE', $searchTerm)
-                ->orWhere('pja', 'LIKE', $searchTerm)
-                ->orWhere('keterangan_layer', 'LIKE', $searchTerm);
-        })
-            ->orderBy('created_at', 'desc')
-            ->limit(20)
-            ->get();
-
-        $formattedResults = $results->map(function ($row) {
+        $formattedInsiden = $insidenResults->map(function($row) {
+            $lat = $row->latitude;
+            $lng = $row->longitude;
+            $hasLocation = !is_null($lat) && $lat !== '' && !is_null($lng) && $lng !== '';
             return [
+                'type' => 'insiden',
                 'id' => $row->id,
-                'no_kecelakaan' => $row->no_kecelakaan ?? '',
-                'lokasi' => $row->lokasi ?? '',
-                'sublokasi' => $row->sublokasi ?? null,
-                'lokasi_spesifik' => $row->lokasi_spesifik ?? null,
+                'nama_cctv' => $row->no_kecelakaan ?? 'Insiden #' . $row->id,
+                'no_cctv' => null,
                 'site' => $row->site ?? null,
-                'perusahaan' => $row->perusahaan ?? null,
+                'lokasi' => $row->lokasi ?? null,
                 'kategori' => $row->kategori ?? null,
-                'kronologis' => $row->kronologis ?? null,
-                'nama' => $row->nama ?? null,
-                'tanggal' => $row->tanggal ? (Carbon::parse($row->tanggal)->format('d/m/Y')) : null,
-                'latitude' => $row->latitude ? (float) $row->latitude : null,
-                'longitude' => $row->longitude ? (float) $row->longitude : null,
-                'has_location' => !is_null($row->latitude) && !is_null($row->longitude) && $row->latitude != '' && $row->longitude != '',
+                'latitude' => $hasLocation ? $lat : null,
+                'longitude' => $hasLocation ? $lng : null,
+                'has_location' => $hasLocation,
             ];
         });
+
+        $formattedResults = $formattedCctv->concat($formattedInsiden)->values()->all();
 
         return response()->json($formattedResults);
     }
