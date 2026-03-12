@@ -97,7 +97,7 @@
 <div class="space-y-2">
 <h2 class="text-orange-500 font-mono font-bold tracking-tighter uppercase text-sm">Error Code: 404</h2>
 <h1 class="text-5xl md:text-6xl font-black text-white leading-tight">
-          Capacity <br/> <span class="text-red-500">Reached</span>
+System<br/> <span class="text-red-500">Overload</span>
 </h1>
 </div>
 <p class="text-gray-400 text-lg max-w-md">
