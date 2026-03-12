@@ -3773,6 +3773,64 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
+     * Search insiden_tabel for fullMaps search box.
+     * Searches across no_kecelakaan, lokasi, kronologis, nama, site, perusahaan, kategori, etc.
+     */
+    public function searchInsiden(Request $request)
+    {
+        $query = $request->input('q', '');
+
+        if (empty($query) || strlen($query) < 2) {
+            return response()->json([]);
+        }
+
+        $searchTerm = '%' . $query . '%';
+
+        $results = InsidenTabel::where(function ($q) use ($searchTerm) {
+            $q->where('no_kecelakaan', 'LIKE', $searchTerm)
+                ->orWhere('kode_be_investigasi', 'LIKE', $searchTerm)
+                ->orWhere('lokasi', 'LIKE', $searchTerm)
+                ->orWhere('sublokasi', 'LIKE', $searchTerm)
+                ->orWhere('lokasi_spesifik', 'LIKE', $searchTerm)
+                ->orWhere('kronologis', 'LIKE', $searchTerm)
+                ->orWhere('nama', 'LIKE', $searchTerm)
+                ->orWhere('site', 'LIKE', $searchTerm)
+                ->orWhere('perusahaan', 'LIKE', $searchTerm)
+                ->orWhere('departemen', 'LIKE', $searchTerm)
+                ->orWhere('kategori', 'LIKE', $searchTerm)
+                ->orWhere('injury_status', 'LIKE', $searchTerm)
+                ->orWhere('alat_terlibat', 'LIKE', $searchTerm)
+                ->orWhere('high_potential', 'LIKE', $searchTerm)
+                ->orWhere('pja', 'LIKE', $searchTerm)
+                ->orWhere('keterangan_layer', 'LIKE', $searchTerm);
+        })
+            ->orderBy('created_at', 'desc')
+            ->limit(20)
+            ->get();
+
+        $formattedResults = $results->map(function ($row) {
+            return [
+                'id' => $row->id,
+                'no_kecelakaan' => $row->no_kecelakaan ?? '',
+                'lokasi' => $row->lokasi ?? '',
+                'sublokasi' => $row->sublokasi ?? null,
+                'lokasi_spesifik' => $row->lokasi_spesifik ?? null,
+                'site' => $row->site ?? null,
+                'perusahaan' => $row->perusahaan ?? null,
+                'kategori' => $row->kategori ?? null,
+                'kronologis' => $row->kronologis ?? null,
+                'nama' => $row->nama ?? null,
+                'tanggal' => $row->tanggal ? (Carbon::parse($row->tanggal)->format('d/m/Y')) : null,
+                'latitude' => $row->latitude ? (float) $row->latitude : null,
+                'longitude' => $row->longitude ? (float) $row->longitude : null,
+                'has_location' => !is_null($row->latitude) && !is_null($row->longitude) && $row->latitude != '' && $row->longitude != '',
+            ];
+        });
+
+        return response()->json($formattedResults);
+    }
+
+    /**
      * Get photos from hse_ai_validations for gallery
      */
     public function getPhotoGallery(Request $request)
