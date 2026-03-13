@@ -108,7 +108,16 @@ class GeneratePlanningJob implements ShouldQueue
                         ? $dop->pengawasMitraKerja->pluck('nama_pengawas')->implode(', ')
                         : null;
 
-                    $perusahaanPic = !empty($dop->perusahaan) ? $dop->perusahaan : null;
+                    $perusahaanPic = null;
+                    if (!empty($dop->perusahaan)) {
+                        $namaPicBc = $dop->picBerauCoal->isNotEmpty()
+                            ? $dop->picBerauCoal->pluck('nama_pic')->map(fn ($n) => trim((string) $n))->filter()->values()->all()
+                            : [];
+                        $isSameAsPic = in_array(trim((string) $dop->perusahaan), $namaPicBc, true);
+                        if (!$isSameAsPic) {
+                            $perusahaanPic = $dop->perusahaan;
+                        }
+                    }
 
                     $aktivitasText = !empty($dop->aktivitas) ? $dop->aktivitas : $dop->pekerjaan;
 
@@ -171,6 +180,10 @@ class GeneratePlanningJob implements ShouldQueue
             $filterStart = Carbon::parse($this->startDate)->startOfDay();
             $filterEnd = Carbon::parse($this->endDate)->startOfDay();
 
+            /** WKTT privilege ID: hanya IKK yang di-approve oleh PIC dengan privilege ini (APPROVED + EXPIRED). */
+            $wkttPrivilegeId = '7d872114-0924-4c6a-880e-49b3c06b5429';
+            $havingWktt = " HAVING sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED' AND trim(toString(m.m_privilege_id)) = '{$wkttPrivilegeId}', 1, 0)) > 0 ";
+
             $batchSize = 100;
             $offset = 0;
             $hasMore = true;
@@ -178,22 +191,32 @@ class GeneratePlanningJob implements ShouldQueue
             while ($hasMore) {
                 $sql = "
                     SELECT
-                        id,
-                        code,
-                        company_name,
-                        m_job_id,
-                        start_date,
-                        end_date,
-                        ra_site_name,
-                        location_name,
-                        location_detail_name,
-                        location_detail_id
-                    FROM hse_automation.ikk_work_permit
-                    WHERE toDate(start_date) <= toDate('{$endDateStr}')
-                      AND toDate(end_date) >= toDate('{$startDateStr}')
-                      AND status IN ('APPROVED')
-                      AND deleted_at IS NULL
-                    ORDER BY id
+                        wp.id,
+                        wp.code,
+                        wp.company_name,
+                        wp.m_job_id,
+                        wp.start_date,
+                        wp.end_date,
+                        wp.ra_site_name,
+                        wp.location_name,
+                        wp.location_detail_name,
+                        wp.location_detail_id
+                    FROM hse_automation.ikk_work_permit AS wp
+                    INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
+                        ON toString(wp_pic.work_permit_id) = toString(wp.id)
+                        AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
+                    LEFT JOIN hse_automation.ikk_m_pic AS m
+                        ON toString(m.id) = toString(wp_pic.m_pic_id)
+                    WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
+                      AND toDate(wp.start_date) <= toDate('{$endDateStr}')
+                      AND toDate(wp.end_date) >= toDate('{$startDateStr}')
+                      AND wp.status IN ('APPROVED', 'EXPIRED')
+                    GROUP BY
+                        wp.id, wp.code, wp.company_name, wp.m_job_id,
+                        wp.start_date, wp.end_date, wp.ra_site_name,
+                        wp.location_name, wp.location_detail_name, wp.location_detail_id
+                    {$havingWktt}
+                    ORDER BY wp.id
                     LIMIT {$batchSize} OFFSET {$offset}
                 ";
 
@@ -210,7 +233,11 @@ class GeneratePlanningJob implements ShouldQueue
                 $wpIds = [];
                 foreach ($rows as $row) {
                     $jobId = $this->getVal($row, 'm_job_id');
-                    $wpId = $this->getVal($row, 'id');
+                    $wpId = $this->getVal($row, 'id') ?? $this->getVal($row, 'wp.id');
+                    if (is_array($wpId) && isset($wpId[0])) {
+                        $wpId = $wpId[0];
+                    }
+                    $wpId = $wpId !== null && $wpId !== '' ? (string) $wpId : null;
                     if ($jobId) $jobIds[$jobId] = true;
                     if ($wpId) $wpIds[$wpId] = true;
                 }
@@ -221,7 +248,11 @@ class GeneratePlanningJob implements ShouldQueue
                 unset($jobIds, $wpIds);
 
                 foreach ($rows as $row) {
-                    $wpId = $this->getVal($row, 'id');
+                    $wpId = $this->getVal($row, 'id') ?? $this->getVal($row, 'wp.id');
+                    if (is_array($wpId) && isset($wpId[0])) {
+                        $wpId = $wpId[0];
+                    }
+                    $wpId = $wpId !== null && $wpId !== '' ? (string) $wpId : null;
                     $code = $this->getVal($row, 'code');
                     $startDateIkk = $this->parseDate($this->getVal($row, 'start_date'));
                     $endDateIkk = $this->parseDate($this->getVal($row, 'end_date'));
@@ -272,11 +303,12 @@ class GeneratePlanningJob implements ShouldQueue
                     }
                 }
 
+                $rowsCount = count($rows);
                 unset($rows, $jobMap, $employeeMap);
-                
+
                 $offset += $batchSize;
-                
-                if (count($rows ?? []) < $batchSize) {
+
+                if ($rowsCount < $batchSize) {
                     $hasMore = false;
                 }
             }
