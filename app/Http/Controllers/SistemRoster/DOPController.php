@@ -29,7 +29,30 @@ class DOPController extends Controller
         $perPage = (int) $request->get('per_page', 25);
         $perPage = in_array($perPage, [10, 25, 50, 100], true) ? $perPage : 25;
 
-        $dops = DailyOperationPlan::with(['picBerauCoal', 'pengawasMitraKerja', 'cctvs'])
+        $query = DailyOperationPlan::with(['picBerauCoal', 'pengawasMitraKerja', 'cctvs']);
+
+        // Filter berdasarkan Site (menggunakan kolom unit_id yang berisi nilai site)
+        if ($request->filled('site')) {
+            $query->where('unit_id', $request->get('site'));
+        }
+
+        // Pencarian umum di beberapa kolom penting
+        if ($request->filled('search')) {
+            $search = $request->get('search');
+            $query->where(function ($q) use ($search) {
+                $q->where('pekerjaan', 'like', '%' . $search . '%')
+                    ->orWhere('aktivitas', 'like', '%' . $search . '%')
+                    ->orWhere('unit_id', 'like', '%' . $search . '%')
+                    ->orWhere('perusahaan', 'like', '%' . $search . '%')
+                    ->orWhere('lokasi', 'like', '%' . $search . '%')
+                    ->orWhere('detail_lokasi', 'like', '%' . $search . '%')
+                    ->orWhere('potensi_resiko', 'like', '%' . $search . '%')
+                    ->orWhere('pengendalian_bahaya', 'like', '%' . $search . '%')
+                    ->orWhere('catatan', 'like', '%' . $search . '%');
+            });
+        }
+
+        $dops = $query
             ->orderByDesc('tanggal')
             ->orderByDesc('created_at')
             ->paginate($perPage)

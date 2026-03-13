@@ -65,6 +65,42 @@
                     </div>
                 </div>
                 <div class="card-body">
+                    @php
+                        $siteOptions = \App\Models\DailyOperationPlan::query()
+                            ->whereNotNull('unit_id')
+                            ->distinct()
+                            ->orderBy('unit_id')
+                            ->pluck('unit_id');
+                    @endphp
+                    <form method="GET" action="{{ route('sistem-roster.dop.index') }}" class="row g-2 align-items-end mb-3">
+                        <div class="col-md-4 col-lg-3">
+                            <label for="site" class="form-label mb-1">Filter Site</label>
+                            <select name="site" id="site" class="form-select">
+                                <option value="">Semua Site</option>
+                                @foreach($siteOptions as $site)
+                                    <option value="{{ $site }}" {{ (string) $site === (string) request('site') ? 'selected' : '' }}>
+                                        {{ $site }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="col-md-4 col-lg-4">
+                            <label for="search" class="form-label mb-1">Pencarian</label>
+                            <input type="text" name="search" id="search" class="form-control"
+                                   placeholder="Cari pekerjaan, aktivitas, lokasi, dll"
+                                   value="{{ request('search') }}">
+                        </div>
+                        <div class="col-md-4 col-lg-3 d-flex gap-2">
+                            <button type="submit" class="btn btn-primary rounded-3">
+                                <i class="bx bx-filter-alt"></i> Terapkan
+                            </button>
+                            @if(request('site') || request('search'))
+                                <a href="{{ route('sistem-roster.dop.index') }}" class="btn btn-outline-secondary rounded-3">
+                                    Reset
+                                </a>
+                            @endif
+                        </div>
+                    </form>
                     <div class="table-responsive">
                         <table class="table table-striped align-middle mb-3">
                             <thead>
