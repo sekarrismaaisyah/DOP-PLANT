@@ -410,6 +410,7 @@
                                                                 @endforeach
                                                             </tbody>
                                                         </table>
+
                                                     </div>
                                                 </div>
                                             </td>
@@ -450,7 +451,7 @@
                                         <tr class="planning-detail-row d-none" id="planning-detail-roster-{{ $rosterRowIndex }}">
                                             <td colspan="8" class="p-0 bg-light">
                                                 <div class="p-3">
-                                                    <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
+                                                    <!-- <div class="d-flex align-items-center justify-content-between mb-2 flex-wrap gap-2">
                                                         <div class="d-flex align-items-center gap-2 flex-wrap">
                                                             <small class="text-muted fw-semibold mb-0">
                                                                 <i class="bx bx-list-ul me-1"></i> Data roster (acuan) — Non Area Kritis. Klik "Save ke Planning" untuk memasukkan ke daftar planning.
@@ -473,7 +474,7 @@
                                                                 title="Kembalikan semua lokasi acuan yang telah dihapus">
                                                             <i class="bx bx-reset me-1"></i> Setting ulang
                                                         </button>
-                                                    </div>
+                                                    </div> -->
                                                     <div class="table-responsive">
                                                         <table class="table table-sm table-bordered table-hover align-middle mb-0 bg-white">
                                                             <thead class="table-secondary">
@@ -554,6 +555,7 @@
                                                             </tbody>
                                                         </table>
                                                     </div>
+
                                                 </div>
                                             </td>
                                         </tr>
@@ -581,6 +583,48 @@
             </div>
         </div>
     </div>
+
+    @if(count($groupedRoster ?? []) > 0)
+        @php
+            $firstRosterGroup = collect($groupedRoster)->first();
+            $firstRosterForToolbar = $firstRosterGroup->first();
+            $toolbarTanggal = $firstRosterForToolbar->date_ins ? \Carbon\Carbon::parse($firstRosterForToolbar->date_ins) : null;
+            $toolbarSite = $firstRosterForToolbar->site ?? '-';
+            $toolbarTable = $firstRosterForToolbar->roster_table ?? '';
+            $toolbarExistingKey = $toolbarTanggal ? $toolbarTanggal->format('Y-m-d') . '|' . $toolbarSite . '|' . $toolbarTable : '';
+            $toolbarAlreadySaved = in_array($toolbarExistingKey, $existingRosterKeys ?? [], true);
+        @endphp
+        <div class="row mb-3 mt-2">
+            <div class="col-12">
+                <div class="d-flex align-items-center justify-content-between flex-wrap gap-2">
+                    <div class="d-flex align-items-center gap-2 flex-wrap">
+                        <small class="text-muted fw-semibold mb-0">
+                            <i class="bx bx-list-ul me-1"></i> Data roster (acuan) — Non Area Kritis. Klik "Save ke Planning" untuk memasukkan ke daftar planning.
+                        </small>
+                        @if($toolbarAlreadySaved)
+                            <span class="badge bg-success px-3 py-2 rounded-pill">
+                                <i class="bx bx-check-circle me-1"></i> Sudah di-Planning
+                            </span>
+                        @else
+                            <button type="button" class="btn btn-success btn-save-roster rounded-pill px-3 shadow-sm"
+                                    data-tanggal="{{ $toolbarTanggal ? $toolbarTanggal->format('Y-m-d') : '' }}"
+                                    data-roster-table="{{ $toolbarTable }}"
+                                    data-site="{{ $toolbarSite }}">
+                                <i class="bx bx-save me-1"></i> Save
+                            </button>
+                        @endif
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-warning btn-reset-roster-exclusions"
+                            data-tanggal="{{ $toolbarTanggal ? $toolbarTanggal->format('Y-m-d') : '' }}"
+                            data-roster-table="{{ $toolbarTable }}"
+                            data-site="{{ $toolbarSite }}"
+                            title="Kembalikan semua lokasi acuan yang telah dihapus">
+                        <i class="bx bx-reset me-1"></i> Setting ulang
+                    </button>
+                </div>
+            </div>
+        </div>
+    @endif
 
     {{-- Summary per orang: gabungan IKK, DOP, dan Roster — tabel grouping, klik + untuk detail lokasi --}}
     @if(count($summaryByPersonMerged ?? []) > 0)
