@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\RosterPlanning;
 use App\Services\ClickHouseService;
 use Carbon\Carbon;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
 
@@ -30,17 +32,66 @@ class DashboardController extends Controller
             ->orderByDesc('updated_at')
             ->get();
 
-        $carHazardInspeksiForDate = $this->getCarHazardInspeksiFromClickHouseForDate($filterDate->format('Y-m-d'));
+        $filterDateStr = $filterDate->format('Y-m-d');
+        $carHazardInspeksiForDate = $this->getCarHazardInspeksiFromClickHouseForDate($filterDateStr);
+        // Coverage by Location: tidak match nama — lokasi covered jika ada SAP ATAU OAK ATAU Observasi (siapapun) di lokasi itu
+        $oakLocationKeysForDate = $this->getOakLocationKeysForDate($filterDateStr);
+        $observasiLocationKeysForDate = $this->getObservasiLocationKeysForDate($filterDateStr);
+        // Detail Plan: match sampai nama — butuh OAK & Observasi per (date, locationKey, nama) untuk filter date saja
+        $oakForDate = $this->getOakDataByDateRange($filterDateStr, $filterDateStr);
+        $observasiForDate = $this->getObservasiDataByDateRange($filterDateStr, $filterDateStr);
+        $oakByLocForDate = $oakForDate[$filterDateStr] ?? [];
+        $observasiByLocForDate = $observasiForDate[$filterDateStr] ?? [];
+
         foreach ($assignedPlannings as $planning) {
-            // Coverage by Location: ada SAP di lokasi (siapapun) — tidak match nama
+            $planLokasiNorm = $this->normalizeLocation($planning->lokasi ?? '');
+            $planDetailNorm = $this->normalizeLocation($planning->detail_lokasi ?? '');
+            $locationKey = $planLokasiNorm . '|' . $planDetailNorm;
+
+            // Coverage by Location: ada SAP atau OAK atau Observasi di lokasi (siapapun) — tidak match nama
             $matchCoverage = $this->planningMatchHazardInspeksiByLokasi($planning, $carHazardInspeksiForDate);
-            $planning->setAttribute('car_status_coverage', $matchCoverage['ok'] ? 'ok' : 'notok');
+            $coveredByOak = in_array($locationKey, $oakLocationKeysForDate, true);
+            $coveredByObservasi = in_array($locationKey, $observasiLocationKeysForDate, true);
+            $planning->setAttribute('car_status_coverage', ($matchCoverage['ok'] || $coveredByOak || $coveredByObservasi) ? 'ok' : 'notok');
             $planning->setAttribute('car_task_id_coverage', $matchCoverage['task_id']);
-            // Detail Plan Pengecekan: OK hanya jika ada SAP dari karyawan yang di-assign (match nama + lokasi + tanggal)
+
+            // Detail Plan Pengecekan: OK jika ada SAP atau OAK atau Observasi dari karyawan yang di-assign (match nama + lokasi + tanggal)
             $matchDetail = $this->planningMatchHazardInspeksiByLokasiAndNama($planning, $carHazardInspeksiForDate);
-            $planning->setAttribute('car_status', $matchDetail['ok'] ? 'ok' : 'notok');
-            $planning->setAttribute('car_task_id', $matchDetail['task_id']);
-            $planning->setAttribute('car_jenis_sap', $matchDetail['jenis_sap'] ?? null);
+            $carStatus = $matchDetail['ok'] ? 'ok' : 'notok';
+            $carTaskId = $matchDetail['task_id'];
+            $carJenisSap = $matchDetail['jenis_sap'] ?? null;
+
+            if ($carStatus !== 'ok') {
+                $karyawanNamesLower = [];
+                foreach ($planning->karyawans ?? [] as $k) {
+                    $nama = trim((string) ($k->nama_karyawan ?? ''));
+                    if ($nama !== '') {
+                        $karyawanNamesLower[mb_strtolower($nama)] = true;
+                    }
+                }
+                if (isset($oakByLocForDate[$locationKey])) {
+                    foreach (array_keys($karyawanNamesLower) as $namaLower) {
+                        if (isset($oakByLocForDate[$locationKey][$namaLower])) {
+                            $carStatus = 'ok';
+                            $carJenisSap = $carJenisSap ?? 'OAK';
+                            break;
+                        }
+                    }
+                }
+                if ($carStatus !== 'ok' && isset($observasiByLocForDate[$locationKey])) {
+                    foreach (array_keys($karyawanNamesLower) as $namaLower) {
+                        if (isset($observasiByLocForDate[$locationKey][$namaLower])) {
+                            $carStatus = 'ok';
+                            $carJenisSap = $carJenisSap ?? 'Observasi';
+                            break;
+                        }
+                    }
+                }
+            }
+
+            $planning->setAttribute('car_status', $carStatus);
+            $planning->setAttribute('car_task_id', $carTaskId);
+            $planning->setAttribute('car_jenis_sap', $carJenisSap);
         }
 
         $buildCoverage = function ($plannings) {
@@ -139,7 +190,8 @@ class DashboardController extends Controller
     }
 
     /**
-     * Data heatmap: per (date, site) -> planned count & actual count (match CAR nama + tanggal_pembuatan).
+     * Data heatmap: per (date, site) -> planned count & actual count.
+     * Actual = CAR (nama + tanggal) OR OAK (nama submit_by + location + detail_location + submit_date) OR Observasi (nama_pelapor + lokasi + detil_lokasi + report_datetime).
      *
      * @return array<int, array{date: string, site: string, planned: int, actual: int}>
      */
@@ -156,6 +208,8 @@ class DashboardController extends Controller
             ->get();
 
         $carByDate = $this->getCarNamaPelaporByDateRange($start, $end);
+        $oakByDate = $this->getOakDataByDateRange($start, $end);
+        $observasiByDate = $this->getObservasiDataByDateRange($start, $end);
 
         $byKey = [];
         foreach ($plannings as $p) {
@@ -169,21 +223,256 @@ class DashboardController extends Controller
                 $byKey[$key] = ['date' => $date, 'site' => $site, 'planned' => 0, 'actual' => 0];
             }
             $byKey[$key]['planned']++;
-            $pelaporThatDay = $carByDate[$date] ?? [];
-            $isActual = false;
+
+            $planLokasiNorm = $this->normalizeLocation($p->lokasi ?? '');
+            $planDetailNorm = $this->normalizeLocation($p->detail_lokasi ?? '');
+            $locationKey = $planLokasiNorm . '|' . $planDetailNorm;
+
+            $karyawanNamesLower = [];
             foreach ($p->karyawans ?? [] as $k) {
                 $nama = trim((string) ($k->nama_karyawan ?? ''));
-                if ($nama !== '' && isset($pelaporThatDay[mb_strtolower($nama)])) {
+                if ($nama !== '') {
+                    $karyawanNamesLower[mb_strtolower($nama)] = true;
+                }
+            }
+
+            $isActual = false;
+            // CAR: nama pelapor match (existing)
+            $pelaporThatDay = $carByDate[$date] ?? [];
+            foreach (array_keys($karyawanNamesLower) as $namaLower) {
+                if (isset($pelaporThatDay[$namaLower])) {
                     $isActual = true;
                     break;
                 }
             }
+            // OAK: location + detail_location + submit_by match
+            if (! $isActual && isset($oakByDate[$date][$locationKey])) {
+                foreach (array_keys($karyawanNamesLower) as $namaLower) {
+                    if (isset($oakByDate[$date][$locationKey][$namaLower])) {
+                        $isActual = true;
+                        break;
+                    }
+                }
+            }
+            // Observasi: lokasi + detil_lokasi + nama_pelapor match
+            if (! $isActual && isset($observasiByDate[$date][$locationKey])) {
+                foreach (array_keys($karyawanNamesLower) as $namaLower) {
+                    if (isset($observasiByDate[$date][$locationKey][$namaLower])) {
+                        $isActual = true;
+                        break;
+                    }
+                }
+            }
+
             if ($isActual) {
                 $byKey[$key]['actual']++;
             }
         }
 
         return array_values($byKey);
+    }
+
+    /**
+     * OAK per (date, location_key): set of submit_by (lowercase) from aaj_vw_car_oak_register_ytd_only.
+     * Untuk heatmap: actual jika ada OAK dengan location+detail_location match dan submit_by = salah satu karyawan assign.
+     *
+     * @return array<string, array<string, array<string, true>>> [date => [ locationKey => [ nama_lower => true ] ] ]
+     */
+    private function getOakDataByDateRange(string $start, string $end): array
+    {
+        $startEsc = addslashes($start);
+        $endEsc = addslashes($end);
+        $sql = "SELECT toDate(submit_date, 'Asia/Makassar') AS dt,
+                trim(ifNull(toString(location), '')) AS loc,
+                trim(ifNull(toString(detail_location), '')) AS det,
+                trim(ifNull(toString(submit_by), '')) AS submit_by
+                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                WHERE submit_date IS NOT NULL
+                  AND toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}')
+                  AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}')";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return [];
+            }
+            $ch = app(ClickHouseService::class);
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return [];
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return [];
+            }
+            $byDate = [];
+            foreach ($results as $row) {
+                $dt = $this->getClickHouseRowValue($row, 'dt');
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $nama = trim((string) $this->getClickHouseRowValue($row, 'submit_by'));
+                $dateStr = $dt instanceof \DateTimeInterface
+                    ? $dt->format('Y-m-d')
+                    : (is_string($dt) ? substr($dt, 0, 10) : '');
+                if ($dateStr === '') {
+                    continue;
+                }
+                $locationKey = $loc . '|' . $det;
+                if (! isset($byDate[$dateStr])) {
+                    $byDate[$dateStr] = [];
+                }
+                if (! isset($byDate[$dateStr][$locationKey])) {
+                    $byDate[$dateStr][$locationKey] = [];
+                }
+                if ($nama !== '') {
+                    $byDate[$dateStr][$locationKey][mb_strtolower($nama)] = true;
+                }
+            }
+            return $byDate;
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController getOakDataByDateRange: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Observasi per (date, location_key): set of nama_pelapor (lowercase) from aaj_database_observasi_from_bep_ytd_only.
+     * Untuk heatmap: actual jika ada Observasi dengan lokasi+detil_lokasi match dan nama_pelapor = salah satu karyawan assign.
+     * Database: hse_automation (sesuaikan ke beats jika env pakai beats).
+     *
+     * @return array<string, array<string, array<string, true>>> [date => [ locationKey => [ nama_lower => true ] ] ]
+     */
+    private function getObservasiDataByDateRange(string $start, string $end): array
+    {
+        $startEsc = addslashes($start);
+        $endEsc = addslashes($end);
+        $db = 'hse_automation';
+        $sql = "SELECT toDate(report_datetime, 'Asia/Makassar') AS dt,
+                trim(ifNull(toString(lokasi), '')) AS loc,
+                trim(ifNull(toString(detil_lokasi), '')) AS det,
+                trim(ifNull(toString(nama_pelapor), '')) AS nama_pelapor
+                FROM {$db}.aaj_database_observasi_from_bep_ytd_only
+                WHERE report_datetime IS NOT NULL
+                  AND toDate(report_datetime, 'Asia/Makassar') >= toDate('{$startEsc}')
+                  AND toDate(report_datetime, 'Asia/Makassar') <= toDate('{$endEsc}')";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return [];
+            }
+            $ch = app(ClickHouseService::class);
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return [];
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return [];
+            }
+            $byDate = [];
+            foreach ($results as $row) {
+                $dt = $this->getClickHouseRowValue($row, 'dt');
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
+                $dateStr = $dt instanceof \DateTimeInterface
+                    ? $dt->format('Y-m-d')
+                    : (is_string($dt) ? substr($dt, 0, 10) : '');
+                if ($dateStr === '') {
+                    continue;
+                }
+                $locationKey = $loc . '|' . $det;
+                if (! isset($byDate[$dateStr])) {
+                    $byDate[$dateStr] = [];
+                }
+                if (! isset($byDate[$dateStr][$locationKey])) {
+                    $byDate[$dateStr][$locationKey] = [];
+                }
+                if ($nama !== '') {
+                    $byDate[$dateStr][$locationKey][mb_strtolower($nama)] = true;
+                }
+            }
+            return $byDate;
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController getObservasiDataByDateRange: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * OAK: daftar location key (lokasi_norm|detail_norm) yang punya minimal 1 record pada tanggal tersebut.
+     * Untuk Coverage by Location — tidak match nama, hanya cek ada data di lokasi atau tidak.
+     *
+     * @return array<int, string>
+     */
+    private function getOakLocationKeysForDate(string $dateStr): array
+    {
+        $dateEsc = addslashes($dateStr);
+        $sql = "SELECT trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det
+                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                WHERE submit_date IS NOT NULL AND toDate(submit_date, 'Asia/Makassar') = toDate('{$dateEsc}')";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return [];
+            }
+            $ch = app(ClickHouseService::class);
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return [];
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return [];
+            }
+            $keys = [];
+            foreach ($results as $row) {
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $key = $loc . '|' . $det;
+                $keys[$key] = true;
+            }
+            return array_keys($keys);
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController getOakLocationKeysForDate: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Observasi: daftar location key (lokasi_norm|detail_norm) yang punya minimal 1 record pada tanggal tersebut.
+     * Untuk Coverage by Location — tidak match nama.
+     *
+     * @return array<int, string>
+     */
+    private function getObservasiLocationKeysForDate(string $dateStr): array
+    {
+        $dateEsc = addslashes($dateStr);
+        $db = 'hse_automation';
+        $sql = "SELECT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det
+                FROM {$db}.aaj_database_observasi_from_bep_ytd_only
+                WHERE report_datetime IS NOT NULL AND toDate(report_datetime, 'Asia/Makassar') = toDate('{$dateEsc}')";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return [];
+            }
+            $ch = app(ClickHouseService::class);
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return [];
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return [];
+            }
+            $keys = [];
+            foreach ($results as $row) {
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $key = $loc . '|' . $det;
+                $keys[$key] = true;
+            }
+            return array_keys($keys);
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController getObservasiLocationKeysForDate: ' . $e->getMessage());
+            return [];
+        }
     }
 
     /**
@@ -301,6 +590,195 @@ class DashboardController extends Controller
     }
 
     /**
+     * OAK count per (locationKey, nama_lower) untuk satu tanggal. Untuk heatmap day detail.
+     *
+     * @return array<string, array<string, int>>
+     */
+    private function getOakCountsForDate(string $dateStr): array
+    {
+        $dateEsc = addslashes($dateStr);
+        $sql = "SELECT trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det, trim(ifNull(toString(submit_by), '')) AS submit_by, count() AS cnt
+                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                WHERE submit_date IS NOT NULL AND toDate(submit_date, 'Asia/Makassar') = toDate('{$dateEsc}')
+                GROUP BY location, detail_location, submit_by";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return [];
+            }
+            $ch = app(ClickHouseService::class);
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return [];
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return [];
+            }
+            $out = [];
+            foreach ($results as $row) {
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $nama = trim((string) $this->getClickHouseRowValue($row, 'submit_by'));
+                $cnt = (int) ($this->getClickHouseRowValue($row, 'cnt') ?? 0);
+                $key = $loc . '|' . $det;
+                if (! isset($out[$key])) {
+                    $out[$key] = [];
+                }
+                if ($nama !== '') {
+                    $out[$key][mb_strtolower($nama)] = $cnt;
+                }
+            }
+            return $out;
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController getOakCountsForDate: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Observasi count per (locationKey, nama_lower) untuk satu tanggal.
+     *
+     * @return array<string, array<string, int>>
+     */
+    private function getObservasiCountsForDate(string $dateStr): array
+    {
+        $dateEsc = addslashes($dateStr);
+        $db = 'hse_automation';
+        $sql = "SELECT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det, trim(ifNull(toString(nama_pelapor), '')) AS nama_pelapor, count() AS cnt
+                FROM {$db}.aaj_database_observasi_from_bep_ytd_only
+                WHERE report_datetime IS NOT NULL AND toDate(report_datetime, 'Asia/Makassar') = toDate('{$dateEsc}')
+                GROUP BY lokasi, detil_lokasi, nama_pelapor";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return [];
+            }
+            $ch = app(ClickHouseService::class);
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return [];
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return [];
+            }
+            $out = [];
+            foreach ($results as $row) {
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
+                $cnt = (int) ($this->getClickHouseRowValue($row, 'cnt') ?? 0);
+                $key = $loc . '|' . $det;
+                if (! isset($out[$key])) {
+                    $out[$key] = [];
+                }
+                if ($nama !== '') {
+                    $out[$key][mb_strtolower($nama)] = $cnt;
+                }
+            }
+            return $out;
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController getObservasiCountsForDate: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * API: Detail per hari heatmap — per planning (karyawan + lokasi) dengan count Inspeksi, OAK, Observasi.
+     * GET ?date=Y-m-d&site=...
+     */
+    public function heatmapDayDetail(Request $request): JsonResponse
+    {
+        $dateStr = $request->input('date');
+        if (! $dateStr || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
+            return response()->json(['data' => [], 'message' => 'date (Y-m-d) required']);
+        }
+        $site = trim((string) $request->input('site', ''));
+        $siteFilter = $site === '' ? 'all' : $site;
+
+        $plannings = RosterPlanning::with('karyawans')
+            ->whereDate('tanggal', $dateStr)
+            ->whereHas('karyawans')
+            ->orderBy('lokasi')
+            ->get();
+
+        if ($siteFilter !== 'all') {
+            $plannings = $plannings->where('site', $siteFilter);
+        }
+
+        $carList = $this->getCarHazardInspeksiFromClickHouseForDate($dateStr);
+        $oakCounts = $this->getOakCountsForDate($dateStr);
+        $observasiCounts = $this->getObservasiCountsForDate($dateStr);
+
+        $rows = [];
+        foreach ($plannings as $planning) {
+            $planLokasiNorm = $this->normalizeLocation($planning->lokasi ?? '');
+            $planDetailNorm = $this->normalizeLocation($planning->detail_lokasi ?? '');
+            $locationKey = $planLokasiNorm . '|' . $planDetailNorm;
+
+            $karyawans = $planning->karyawans ?? collect();
+            if ($karyawans->isEmpty()) {
+                $rows[] = [
+                    'karyawan_nama' => '—',
+                    'lokasi' => $planning->lokasi ?? '—',
+                    'detail_lokasi' => $planning->detail_lokasi ?? '—',
+                    'count_inspeksi' => 0,
+                    'count_oak' => 0,
+                    'count_observasi' => 0,
+                ];
+                continue;
+            }
+
+            foreach ($karyawans as $k) {
+                $nama = trim((string) ($k->nama_karyawan ?? ''));
+                $namaLower = $nama !== '' ? mb_strtolower($nama) : '';
+
+                $countInspeksi = 0;
+                foreach ($carList as $item) {
+                    if ($item['lokasi_norm'] !== $planLokasiNorm || $item['detail_lokasi_norm'] !== $planDetailNorm) {
+                        continue;
+                    }
+                    if ($item['nama_lower'] !== '' && $item['nama_lower'] === $namaLower) {
+                        $countInspeksi++;
+                    }
+                }
+                $countOak = isset($oakCounts[$locationKey][$namaLower]) ? $oakCounts[$locationKey][$namaLower] : 0;
+                $countObservasi = isset($observasiCounts[$locationKey][$namaLower]) ? $observasiCounts[$locationKey][$namaLower] : 0;
+
+                $rows[] = [
+                    'karyawan_nama' => $nama ?: '—',
+                    'lokasi' => $planning->lokasi ?? '—',
+                    'detail_lokasi' => $planning->detail_lokasi ?? '—',
+                    'count_inspeksi' => $countInspeksi,
+                    'count_oak' => $countOak,
+                    'count_observasi' => $countObservasi,
+                ];
+            }
+        }
+
+        // Group by (karyawan_nama, lokasi, detail_lokasi), sum counts — satu baris per kombinasi unik
+        $grouped = [];
+        foreach ($rows as $r) {
+            $key = ($r['karyawan_nama'] ?? '') . '|' . ($r['lokasi'] ?? '') . '|' . ($r['detail_lokasi'] ?? '');
+            if (! isset($grouped[$key])) {
+                $grouped[$key] = [
+                    'karyawan_nama' => $r['karyawan_nama'] ?? '—',
+                    'lokasi' => $r['lokasi'] ?? '—',
+                    'detail_lokasi' => $r['detail_lokasi'] ?? '—',
+                    'count_inspeksi' => 0,
+                    'count_oak' => 0,
+                    'count_observasi' => 0,
+                ];
+            }
+            $grouped[$key]['count_inspeksi'] += (int) ($r['count_inspeksi'] ?? 0);
+            $grouped[$key]['count_oak'] += (int) ($r['count_oak'] ?? 0);
+            $grouped[$key]['count_observasi'] += (int) ($r['count_observasi'] ?? 0);
+        }
+        $rows = array_values($grouped);
+
+        return response()->json(['data' => $rows, 'date' => $dateStr, 'site' => $siteFilter]);
+    }
+
+    /**
      * Cek apakah ada hazard inspeksi (SAP) yang match dengan plan: lokasi + detail lokasi + tanggal.
      * Nama pelapor tidak di-match — yang penting ada SAP dari siapapun di lokasi & tanggal tersebut.
      *
@@ -377,6 +855,260 @@ class DashboardController extends Controller
             'task_id' => $taskIdDisplay,
             'jenis_sap' => $jenisSap,
         ];
+    }
+
+    /**
+     * API: Detail SAP (data inspeksi hazard) by task_ids dari aaj_car_all_year_from_dav.
+     * Query: GET ?task_ids=id1,id2 atau task_ids[]=id1&task_ids[]=id2
+     */
+    public function sapDetail(Request $request): JsonResponse
+    {
+        $taskIds = $request->input('task_ids');
+        if (is_string($taskIds)) {
+            $taskIds = array_filter(array_map('trim', explode(',', $taskIds)));
+        }
+        if (! is_array($taskIds) || empty($taskIds)) {
+            return response()->json(['data' => [], 'message' => 'task_ids required']);
+        }
+        $ids = [];
+        foreach ($taskIds as $id) {
+            $n = is_numeric($id) ? (int) $id : (int) str_replace(',', '', (string) $id);
+            if ($n > 0) {
+                $ids[] = $n;
+            }
+        }
+        $ids = array_values(array_unique($ids));
+        if (empty($ids)) {
+            return response()->json(['data' => []]);
+        }
+        $idList = implode(',', $ids);
+        $conditions = ["id IN ({$idList})"];
+        $whereClause = implode(' AND ', $conditions);
+        $sql = "SELECT
+            id,
+            trim(ifNull(jenis_laporan, '')) AS jenis_laporan,
+            trim(ifNull(status, '')) AS status,
+            trim(ifNull(nama_pelapor, '')) AS nama_pelapor,
+            trim(ifNull(sid_pelapor, '')) AS sid_pelapor,
+            trim(ifNull(nama_lokasi, '')) AS nama_lokasi,
+            trim(ifNull(nama_detail_lokasi, '')) AS nama_detail_lokasi,
+            trim(ifNull(deskripsi, '')) AS deskripsi,
+            trim(ifNull(ketidaksesuaian, '')) AS ketidaksesuaian,
+            trim(ifNull(subketidaksesuaian, '')) AS subketidaksesuaian,
+            trim(ifNull(nama_kategori, '')) AS nama_kategori,
+            trim(ifNull(nama_goldenrule, '')) AS nama_goldenrule,
+            trim(ifNull(nilai_resiko, '')) AS nilai_resiko,
+            trim(ifNull(tindakan, '')) AS tindakan,
+            trim(ifNull(departemen_pelapor, '')) AS departemen_pelapor,
+            trim(ifNull(perusahaan_pelapor, '')) AS perusahaan_pelapor,
+            trim(ifNull(nama_pic, '')) AS nama_pic,
+            trim(ifNull(departemen_pic, '')) AS departemen_pic,
+            trim(ifNull(perusahaan_pic, '')) AS perusahaan_pic,
+            trim(ifNull(catatan_verifikasi, '')) AS catatan_verifikasi,
+            url_photo,
+            tanggal_pembuatan,
+            bedraft_date,
+            tanggal_janji,
+            tanggal_aktual_penyelesaian,
+            waktu_verifikasi
+            FROM hse_automation.aaj_car_all_year_from_dav
+            WHERE {$whereClause}
+            ORDER BY toDateTime(ifNull(tanggal_pembuatan, bedraft_date)) DESC";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return response()->json(['data' => [], 'message' => 'ClickHouse not available']);
+            }
+            $ch = app(ClickHouseService::class);
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return response()->json(['data' => [], 'message' => 'ClickHouse not connected']);
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return response()->json(['data' => []]);
+            }
+            $list = [];
+            foreach ($results as $row) {
+                $list[] = [
+                    'id' => $this->getClickHouseRowValue($row, 'id'),
+                    'jenis_laporan' => $this->getClickHouseRowValue($row, 'jenis_laporan'),
+                    'status' => $this->getClickHouseRowValue($row, 'status'),
+                    'nama_pelapor' => $this->getClickHouseRowValue($row, 'nama_pelapor'),
+                    'sid_pelapor' => $this->getClickHouseRowValue($row, 'sid_pelapor'),
+                    'nama_lokasi' => $this->getClickHouseRowValue($row, 'nama_lokasi'),
+                    'nama_detail_lokasi' => $this->getClickHouseRowValue($row, 'nama_detail_lokasi'),
+                    'deskripsi' => $this->getClickHouseRowValue($row, 'deskripsi'),
+                    'ketidaksesuaian' => $this->getClickHouseRowValue($row, 'ketidaksesuaian'),
+                    'subketidaksesuaian' => $this->getClickHouseRowValue($row, 'subketidaksesuaian'),
+                    'nama_kategori' => $this->getClickHouseRowValue($row, 'nama_kategori'),
+                    'nama_goldenrule' => $this->getClickHouseRowValue($row, 'nama_goldenrule'),
+                    'nilai_resiko' => $this->getClickHouseRowValue($row, 'nilai_resiko'),
+                    'tindakan' => $this->getClickHouseRowValue($row, 'tindakan'),
+                    'departemen_pelapor' => $this->getClickHouseRowValue($row, 'departemen_pelapor'),
+                    'perusahaan_pelapor' => $this->getClickHouseRowValue($row, 'perusahaan_pelapor'),
+                    'nama_pic' => $this->getClickHouseRowValue($row, 'nama_pic'),
+                    'departemen_pic' => $this->getClickHouseRowValue($row, 'departemen_pic'),
+                    'perusahaan_pic' => $this->getClickHouseRowValue($row, 'perusahaan_pic'),
+                    'catatan_verifikasi' => $this->getClickHouseRowValue($row, 'catatan_verifikasi'),
+                    'url_photo' => $this->getClickHouseRowValue($row, 'url_photo'),
+                    'tanggal_pembuatan' => $this->formatClickHouseDate($this->getClickHouseRowValue($row, 'tanggal_pembuatan')),
+                    'bedraft_date' => $this->formatClickHouseDate($this->getClickHouseRowValue($row, 'bedraft_date')),
+                    'tanggal_janji' => $this->formatClickHouseDate($this->getClickHouseRowValue($row, 'tanggal_janji')),
+                    'tanggal_aktual_penyelesaian' => $this->formatClickHouseDate($this->getClickHouseRowValue($row, 'tanggal_aktual_penyelesaian')),
+                    'waktu_verifikasi' => $this->formatClickHouseDate($this->getClickHouseRowValue($row, 'waktu_verifikasi')),
+                ];
+            }
+            return response()->json(['data' => $list]);
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController sapDetail: ' . $e->getMessage());
+            return response()->json(['data' => [], 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Detail OAK by lokasi, detail_lokasi, date. Match location + detail_location + toDate(submit_date).
+     * GET ?lokasi=...&detail_lokasi=...&date=Y-m-d
+     */
+    public function oakDetail(Request $request): JsonResponse
+    {
+        $lokasi = $this->normalizeLocation($request->input('lokasi'));
+        $detailLokasi = $this->normalizeLocation($request->input('detail_lokasi'));
+        $dateStr = $request->input('date');
+        if (! $dateStr || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
+            return response()->json(['data' => [], 'message' => 'lokasi, detail_lokasi, date (Y-m-d) required']);
+        }
+
+        $locEsc = addslashes($lokasi);
+        $detEsc = addslashes($detailLokasi);
+        $dateEsc = addslashes($dateStr);
+        $sql = "SELECT id, site, tipe, shift, method, activity, code_sib, kode_sid, latitude, location, material, platform,
+                file_foto, longitude, nama_team, submit_by, submit_id, tool_type, url_photo, versi_apk, conclusion,
+                is_be_draft, mobile_uuid, submit_date, bedraft_date, sib_register, sub_activity, kode_sid_team,
+                conveyance_type, detail_location, tools_observasi, id_employee_team, kode_sid_pelapor, company_submit_by,
+                lifting_equipment, location_description, jabatan_fungsional_team, jabatan_fungsional_submiter
+                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                WHERE toDate(submit_date, 'Asia/Makassar') = toDate('{$dateEsc}')
+                  AND trim(ifNull(toString(location), '')) = '{$locEsc}'
+                  AND trim(ifNull(toString(detail_location), '')) = '{$detEsc}'
+                ORDER BY toDateTime(ifNull(submit_date, bedraft_date)) DESC";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return response()->json(['data' => [], 'message' => 'ClickHouse not available']);
+            }
+            $ch = app(ClickHouseService::class);
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return response()->json(['data' => [], 'message' => 'ClickHouse not connected']);
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return response()->json(['data' => []]);
+            }
+            $list = [];
+            foreach ($results as $row) {
+                $list[] = [
+                    'id' => $this->getClickHouseRowValue($row, 'id'),
+                    'site' => $this->getClickHouseRowValue($row, 'site'),
+                    'tipe' => $this->getClickHouseRowValue($row, 'tipe'),
+                    'shift' => $this->getClickHouseRowValue($row, 'shift'),
+                    'activity' => $this->getClickHouseRowValue($row, 'activity'),
+                    'location' => $this->getClickHouseRowValue($row, 'location'),
+                    'detail_location' => $this->getClickHouseRowValue($row, 'detail_location'),
+                    'nama_team' => $this->getClickHouseRowValue($row, 'nama_team'),
+                    'submit_by' => $this->getClickHouseRowValue($row, 'submit_by'),
+                    'submit_date' => $this->formatClickHouseDate($this->getClickHouseRowValue($row, 'submit_date')),
+                    'conclusion' => $this->getClickHouseRowValue($row, 'conclusion'),
+                    'url_photo' => $this->getClickHouseRowValue($row, 'url_photo'),
+                    'tools_observasi' => $this->getClickHouseRowValue($row, 'tools_observasi'),
+                    'company_submit_by' => $this->getClickHouseRowValue($row, 'company_submit_by'),
+                ];
+            }
+            return response()->json(['data' => $list]);
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController oakDetail: ' . $e->getMessage());
+            return response()->json(['data' => [], 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * API: Detail Observasi by lokasi, detail_lokasi, date. Match lokasi + detil_lokasi + toDate(report_datetime).
+     * GET ?lokasi=...&detail_lokasi=...&date=Y-m-d
+     */
+    public function observasiDetail(Request $request): JsonResponse
+    {
+        $lokasi = $this->normalizeLocation($request->input('lokasi'));
+        $detailLokasi = $this->normalizeLocation($request->input('detail_lokasi'));
+        $dateStr = $request->input('date');
+        if (! $dateStr || ! preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
+            return response()->json(['data' => [], 'message' => 'lokasi, detail_lokasi, date (Y-m-d) required']);
+        }
+
+        $db = 'hse_automation';
+        $locEsc = addslashes($lokasi);
+        $detEsc = addslashes($detailLokasi);
+        $dateEsc = addslashes($dateStr);
+        $sql = "SELECT task_id, report_datetime, id_pelapor, nama_pelapor, kode_sid_pelapor, site, lokasi, detil_lokasi,
+                jenis_kegiatan, tools_observasi, tindakan_perbaikan, umpan_balik, catatan, tipe, url_photo,
+                nama_perusahaan, jabatan_fungsional
+                FROM {$db}.aaj_database_observasi_from_bep_ytd_only
+                WHERE report_datetime IS NOT NULL
+                  AND toDate(report_datetime, 'Asia/Makassar') = toDate('{$dateEsc}')
+                  AND trim(ifNull(toString(lokasi), '')) = '{$locEsc}'
+                  AND trim(ifNull(toString(detil_lokasi), '')) = '{$detEsc}'
+                ORDER BY toDateTime(report_datetime) DESC";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return response()->json(['data' => [], 'message' => 'ClickHouse not available']);
+            }
+            $ch = app(ClickHouseService::class);
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return response()->json(['data' => [], 'message' => 'ClickHouse not connected']);
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return response()->json(['data' => []]);
+            }
+            $list = [];
+            foreach ($results as $row) {
+                $list[] = [
+                    'task_id' => $this->getClickHouseRowValue($row, 'task_id'),
+                    'report_datetime' => $this->formatClickHouseDate($this->getClickHouseRowValue($row, 'report_datetime')),
+                    'nama_pelapor' => $this->getClickHouseRowValue($row, 'nama_pelapor'),
+                    'kode_sid_pelapor' => $this->getClickHouseRowValue($row, 'kode_sid_pelapor'),
+                    'site' => $this->getClickHouseRowValue($row, 'site'),
+                    'lokasi' => $this->getClickHouseRowValue($row, 'lokasi'),
+                    'detil_lokasi' => $this->getClickHouseRowValue($row, 'detil_lokasi'),
+                    'jenis_kegiatan' => $this->getClickHouseRowValue($row, 'jenis_kegiatan'),
+                    'tools_observasi' => $this->getClickHouseRowValue($row, 'tools_observasi'),
+                    'tindakan_perbaikan' => $this->getClickHouseRowValue($row, 'tindakan_perbaikan'),
+                    'umpan_balik' => $this->getClickHouseRowValue($row, 'umpan_balik'),
+                    'catatan' => $this->getClickHouseRowValue($row, 'catatan'),
+                    'tipe' => $this->getClickHouseRowValue($row, 'tipe'),
+                    'url_photo' => $this->getClickHouseRowValue($row, 'url_photo'),
+                    'nama_perusahaan' => $this->getClickHouseRowValue($row, 'nama_perusahaan'),
+                    'jabatan_fungsional' => $this->getClickHouseRowValue($row, 'jabatan_fungsional'),
+                ];
+            }
+            return response()->json(['data' => $list]);
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController observasiDetail: ' . $e->getMessage());
+            return response()->json(['data' => [], 'message' => $e->getMessage()], 500);
+        }
+    }
+
+    private function formatClickHouseDate(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('d/m/Y H:i');
+        }
+        if (is_string($value)) {
+            return substr($value, 0, 19);
+        }
+        return (string) $value;
     }
 
     private function getClickHouseRowValue(array $row, string $key): mixed

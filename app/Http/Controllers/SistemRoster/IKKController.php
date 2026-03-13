@@ -39,6 +39,9 @@ class IKKController extends Controller
         $totalRecords = 0;
         $clickhouseConnected = false;
 
+        /** WKTT privilege ID: hanya IKK yang di-approve oleh PIC dengan privilege ini yang ditampilkan (APPROVED + EXPIRED). */
+        $wkttPrivilegeId = '7d872114-0924-4c6a-880e-49b3c06b5429';
+
         try {
             if (class_exists(ClickHouseService::class)) {
                 $clickHouse = app(ClickHouseService::class);
@@ -48,22 +51,50 @@ class IKKController extends Controller
                     $endDateStr = addslashes($filterEndDate);
 
                     $siteFilterClause = '';
+                    $siteFilterClauseWp = '';
                     if ($filterSite !== '' && $filterSite !== null) {
                         if ($filterSite === 'Lainnya') {
-                            $siteFilterClause = " AND trim(COALESCE(ra_site_name, '')) = ''";
+                            $siteFilterClause = " AND trim(COALESCE(wp.ra_site_name, '')) = ''";
+                            $siteFilterClauseWp = $siteFilterClause;
                         } else {
-                            $siteFilterClause = " AND trim(COALESCE(ra_site_name, '')) = '" . addslashes($filterSite) . "'";
+                            $siteFilterClauseWp = " AND trim(COALESCE(wp.ra_site_name, '')) = '" . addslashes($filterSite) . "'";
+                            $siteFilterClause = $siteFilterClauseWp;
                         }
                     }
 
+                    $havingWktt = " HAVING sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED' AND trim(toString(m.m_privilege_id)) = '{$wkttPrivilegeId}', 1, 0)) > 0 ";
+                    $subqueryWp = "
+                        SELECT wp.id
+                        FROM hse_automation.ikk_work_permit AS wp
+                        INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
+                            ON toString(wp_pic.work_permit_id) = toString(wp.id)
+                            AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
+                        LEFT JOIN hse_automation.ikk_m_pic AS m
+                            ON toString(m.id) = toString(wp_pic.m_pic_id)
+                        WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
+                          AND toDate(wp.start_date) <= toDate('{$endDateStr}')
+                          AND toDate(wp.end_date) >= toDate('{$startDateStr}')
+                          AND wp.status IN ('APPROVED', 'EXPIRED')
+                          {$siteFilterClauseWp}
+                        GROUP BY wp.id
+                        {$havingWktt}
+                    ";
+
                     $sqlSites = "
-                        SELECT DISTINCT trim(COALESCE(ra_site_name, '')) as site_name
-                        FROM hse_automation.ikk_work_permit
-                        WHERE toDate(start_date) <= toDate('{$endDateStr}')
-                          AND toDate(end_date) >= toDate('{$startDateStr}')
-                          AND status IN ('APPROVED')
-                          AND deleted_at IS NULL
-                        ORDER BY site_name
+                        SELECT DISTINCT trim(COALESCE(wp.ra_site_name, '')) AS site_name
+                        FROM hse_automation.ikk_work_permit AS wp
+                        INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
+                            ON toString(wp_pic.work_permit_id) = toString(wp.id)
+                            AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
+                        LEFT JOIN hse_automation.ikk_m_pic AS m
+                            ON toString(m.id) = toString(wp_pic.m_pic_id)
+                        WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
+                          AND toDate(wp.start_date) <= toDate('{$endDateStr}')
+                          AND toDate(wp.end_date) >= toDate('{$startDateStr}')
+                          AND wp.status IN ('APPROVED', 'EXPIRED')
+                          {$siteFilterClauseWp}
+                        GROUP BY wp.id, wp.ra_site_name
+                        {$havingWktt}
                     ";
                     $siteRows = $clickHouse->query($sqlSites);
                     foreach ($siteRows ?? [] as $row) {
@@ -74,17 +105,12 @@ class IKKController extends Controller
                             $siteList[] = $siteName;
                         }
                     }
-                    $siteList = array_unique($siteList);
+                    $siteList = array_values(array_unique($siteList));
                     sort($siteList);
 
                     $sqlCount = "
-                        SELECT count(DISTINCT code) as total
-                        FROM hse_automation.ikk_work_permit
-                        WHERE toDate(start_date) <= toDate('{$endDateStr}')
-                          AND toDate(end_date) >= toDate('{$startDateStr}')
-                          AND status IN ('APPROVED')
-                          AND deleted_at IS NULL
-                          {$siteFilterClause}
+                        SELECT count(*) AS total
+                        FROM ({$subqueryWp}) AS sub
                     ";
                     $countResult = $clickHouse->query($sqlCount);
                     $totalRecords = isset($countResult[0]['total']) ? (int) $countResult[0]['total'] : 0;
@@ -92,24 +118,34 @@ class IKKController extends Controller
                     $offset = ($page - 1) * $perPage;
                     $sql = "
                         SELECT
-                            id,
-                            code,
-                            status,
-                            ra_site_name,
-                            company_name,
-                            m_job_id,
-                            start_date,
-                            end_date,
-                            location_name,
-                            location_detail_name,
-                            created_at
-                        FROM hse_automation.ikk_work_permit
-                        WHERE toDate(start_date) <= toDate('{$endDateStr}')
-                          AND toDate(end_date) >= toDate('{$startDateStr}')
-                          AND status IN ('APPROVED')
-                          AND deleted_at IS NULL
-                          {$siteFilterClause}
-                        ORDER BY start_date DESC, created_at DESC
+                            wp.id,
+                            wp.code,
+                            wp.status,
+                            wp.ra_site_name,
+                            wp.company_name,
+                            wp.m_job_id,
+                            wp.start_date,
+                            wp.end_date,
+                            wp.location_name,
+                            wp.location_detail_name,
+                            wp.created_at
+                        FROM hse_automation.ikk_work_permit AS wp
+                        INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
+                            ON toString(wp_pic.work_permit_id) = toString(wp.id)
+                            AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
+                        LEFT JOIN hse_automation.ikk_m_pic AS m
+                            ON toString(m.id) = toString(wp_pic.m_pic_id)
+                        WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
+                          AND toDate(wp.start_date) <= toDate('{$endDateStr}')
+                          AND toDate(wp.end_date) >= toDate('{$startDateStr}')
+                          AND wp.status IN ('APPROVED', 'EXPIRED')
+                          {$siteFilterClauseWp}
+                        GROUP BY
+                            wp.id, wp.code, wp.status, wp.ra_site_name, wp.company_name,
+                            wp.m_job_id, wp.start_date, wp.end_date,
+                            wp.location_name, wp.location_detail_name, wp.created_at
+                        {$havingWktt}
+                        ORDER BY wp.start_date DESC, wp.created_at DESC
                         LIMIT {$perPage} OFFSET {$offset}
                     ";
                     $rows = $clickHouse->query($sql);
@@ -118,7 +154,13 @@ class IKKController extends Controller
                     $wpIds = [];
                     foreach ($rows ?? [] as $row) {
                         $jobId = $this->getClickHouseRowValue($row, 'm_job_id');
-                        $wpId = $this->getClickHouseRowValue($row, 'id');
+                        $wpId = $this->getClickHouseRowValue($row, 'id')
+                            ?? $this->getClickHouseRowValue($row, 'wp.id')
+                            ?? ($row['id'] ?? null);
+                        if (is_array($wpId) && isset($wpId[0])) {
+                            $wpId = $wpId[0];
+                        }
+                        $wpId = $wpId !== null && $wpId !== '' ? (string) $wpId : null;
                         if ($jobId !== null && $jobId !== '') {
                             $jobIds[] = $jobId;
                         }
@@ -175,10 +217,24 @@ class IKKController extends Controller
                     }
 
                     foreach ($rows ?? [] as $row) {
-                        $wpId = $this->getClickHouseRowValue($row, 'id');
+                        $wpId = $this->getClickHouseRowValue($row, 'id')
+                            ?? $this->getClickHouseRowValue($row, 'wp.id')
+                            ?? ($row['id'] ?? null);
+                        if (is_array($wpId) && isset($wpId[0])) {
+                            $wpId = $wpId[0];
+                        }
+                        $wpId = $wpId !== null && $wpId !== '' ? (string) $wpId : null;
                         $jobId = $this->getClickHouseRowValue($row, 'm_job_id');
                         $siteName = trim($this->getClickHouseRowValue($row, 'ra_site_name') ?? '');
                         $companyName = trim($this->getClickHouseRowValue($row, 'company_name') ?? '');
+                        $rawStatus = $this->getClickHouseRowValue($row, 'status');
+                        $statusUpper = $rawStatus !== null && $rawStatus !== '' ? strtoupper(trim((string) $rawStatus)) : null;
+                        $statusLabel = $rawStatus;
+                        if ($statusUpper === 'APPROVED') {
+                            $statusLabel = 'Berlaku';
+                        } elseif ($statusUpper === 'EXPIRED') {
+                            $statusLabel = 'Kadaluarsa';
+                        }
 
                         $employees = $employeeMap[$wpId] ?? [];
                         $layer1 = collect($employees)->where('layer', '1')->first();
@@ -192,7 +248,8 @@ class IKKController extends Controller
                         $ikkList->push((object) [
                             'id' => $wpId,
                             'code' => $this->getClickHouseRowValue($row, 'code'),
-                            'status' => $this->getClickHouseRowValue($row, 'status'),
+                            'status' => $rawStatus,
+                            'status_label' => $statusLabel,
                             'site' => $siteName !== '' ? $siteName : 'Lainnya',
                             'company_name' => $companyName !== '' ? $companyName : '-',
                             'job_name' => $jobMap[$jobId] ?? '-',

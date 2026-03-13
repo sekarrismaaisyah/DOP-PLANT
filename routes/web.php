@@ -566,6 +566,10 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('sistem-roster')->name('sistem-roster.')->group(function () {
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'index'])->name('dashboard.index');
+        Route::get('/dashboard/sap-detail', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'sapDetail'])->name('dashboard.sap-detail');
+        Route::get('/dashboard/oak-detail', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'oakDetail'])->name('dashboard.oak-detail');
+        Route::get('/dashboard/observasi-detail', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'observasiDetail'])->name('dashboard.observasi-detail');
+        Route::get('/dashboard/heatmap-day-detail', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'heatmapDayDetail'])->name('dashboard.heatmap-day-detail');
 
         // DOP Routes
         Route::prefix('dop')->name('dop.')->group(function () {

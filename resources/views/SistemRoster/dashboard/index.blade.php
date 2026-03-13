@@ -536,6 +536,7 @@
       transition: background .25s ease, transform .2s ease, box-shadow .25s ease;
     }
     .lmo-perf .calendar-grid .day-cell:nth-child(7n) { border-right: 0; }
+    .lmo-perf .day-cell.heatmap-day-cell { cursor: pointer; }
     .lmo-perf .day-cell:not(.state-neutral):not(:empty):hover {
       transform: scale(1.02);
       z-index: 2;
@@ -1095,8 +1096,11 @@
     @media (max-width: 992px) {
       .lmo-card-grid, .lmo-layer-grid { grid-template-columns:1fr; }
     }
-    /* Modal Detail SAP: pastikan di atas overlay/backdrop layout */
-    #coverageSapDetailModal.modal { z-index: 1060 !important; }
+    /* Modal Detail (Inspeksi Hazard + OAK + Observasi): di atas backdrop */
+    #coverageDetailAllModal.modal { z-index: 1060 !important; }
+    #coverageDetailAllModal .modal-content { background: #fff; position: relative; z-index: 1; }
+    #heatmapDayDetailModal.modal { z-index: 1060 !important; }
+    #heatmapDayDetailModal .modal-content { background: #fff; position: relative; z-index: 1; }
     body.modal-open .modal-backdrop { z-index: 1055 !important; }
 </style>
 @endsection
@@ -1274,7 +1278,7 @@
           <div class="kt-card-header heatmap-header">
             <div class="flex-shrink-0">
               <div class="kt-card-title">Performance Heatmap</div>
-              <div class="kt-card-subtitle">Actual / Plan — Kategori Area / Aktivitas Kritis</div>
+              <div class="kt-card-subtitle">Actual / Plan — Actual SAP</div>
             </div>
 
             <div class="heatmap-toolbar">
@@ -1328,6 +1332,43 @@
          
         </section>
 
+        {{-- Modal: Detail per hari heatmap (per karyawan + lokasi: Inspeksi, OAK, Observasi) --}}
+        <div class="modal fade" id="heatmapDayDetailModal" tabindex="-1" aria-labelledby="heatmapDayDetailModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+          <div class="modal-dialog modal-dialog-centered modal-lg">
+            <div class="modal-content">
+              <div class="modal-header border-kt-border">
+                <h5 class="modal-title" id="heatmapDayDetailModalLabel"><i class="bi bi-calendar-day me-2"></i>Detail Hari</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+              </div>
+              <div class="modal-body">
+                <div id="heatmapDayDetailMeta" class="mb-3 text-sm text-kt-muted"></div>
+                <div id="heatmapDayDetailLoading" class="text-center py-4 d-none">
+                  <div class="spinner-border spinner-border-sm me-2" role="status"></div> Memuat...
+                </div>
+                <div id="heatmapDayDetailError" class="alert alert-warning py-2 d-none"></div>
+                <div id="heatmapDayDetailWrap" class="overflow-auto border border-kt-border rounded" style="max-height: 60vh;">
+                  <table class="table table-sm table-hover mb-0">
+                    <thead class="table-light sticky-top">
+                      <tr>
+                        <th class="text-nowrap">Karyawan</th>
+                        <th class="text-nowrap">Lokasi</th>
+                        <th class="text-nowrap">Detail Lokasi</th>
+                        <th class="text-center">Inspeksi</th>
+                        <th class="text-center">OAK</th>
+                        <th class="text-center">Observasi</th>
+                      </tr>
+                    </thead>
+                    <tbody id="heatmapDayDetailTbody"></tbody>
+                  </table>
+                </div>
+              </div>
+              <div class="modal-footer border-kt-border">
+                <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
    
 
         <section class="animate-in" style="animation-delay:.1s">
@@ -1339,7 +1380,7 @@
                 </div>
                 <div>
                   <div class="kt-card-title">Coverage by Location</div>
-                  <div class="kt-card-subtitle">Data dari roster_plannings — Completion % per hari (ada SAP di lokasi dari siapapun; tidak match nama). Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
+                  <div class="kt-card-subtitle">Data dari roster_plannings — Completion % per hari (ada SAP, OAK, atau Observasi di lokasi dari siapapun; tidak match nama). Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
                 </div>
               </div>
               <div class="flex flex-nowrap items-center gap-3 w-full min-w-0">
@@ -1429,16 +1470,12 @@
                         </td>
                         <td><span class="lmo-pill {{ $pillClass }}">{{ $pillLabel }}</span></td>
                         <td class="text-center">
-                          @if(!empty($loc->task_ids ?? []))
-                            <button type="button" class="btn-kt btn-kt-sm bg-kt-primary/10 text-kt-primary hover:bg-kt-primary hover:text-white border border-kt-primary/30 text-xs px-3 py-1.5 rounded-lg transition-colors coverage-sap-detail-btn" title="Lihat detail SAP"
-                              data-lokasi="{{ e($loc->lokasi ?? '') }}"
-                              data-detail-lokasi="{{ e($loc->detail_lokasi ?? '') }}"
-                              data-task-ids="{{ json_encode($loc->task_ids ?? []) }}">
-                              <i class="bi bi-eye me-1"></i> Lihat SAP
-                            </button>
-                          @else
-                            <span class="text-kt-muted text-xs">—</span>
-                          @endif
+                          <button type="button" class="btn-kt btn-kt-sm bg-kt-primary/10 text-kt-primary hover:bg-kt-primary hover:text-white border border-kt-primary/30 text-xs px-3 py-1.5 rounded-lg transition-colors coverage-detail-all-btn" title="Lihat Inspeksi Hazard, OAK & Observasi"
+                            data-lokasi="{{ e($loc->lokasi ?? '') }}"
+                            data-detail-lokasi="{{ e($loc->detail_lokasi ?? '') }}"
+                            data-task-ids="{{ json_encode($loc->task_ids ?? []) }}">
+                            <i class="bi bi-eye me-1"></i> Lihat Detail
+                          </button>
                         </td>
                       </tr>
                     @empty
@@ -1452,29 +1489,58 @@
             @endforeach
           </div>
 
-          {{-- Modal: Detail SAP per lokasi (Coverage by Location) --}}
-          <div class="modal fade" id="coverageSapDetailModal" tabindex="-1" aria-labelledby="coverageSapDetailModalLabel" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered">
+          {{-- Modal: Satu modal untuk Inspeksi Hazard + OAK + Observasi --}}
+          <div class="modal fade" id="coverageDetailAllModal" tabindex="-1" aria-labelledby="coverageDetailAllModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
               <div class="modal-content">
                 <div class="modal-header border-kt-border">
-                  <h5 class="modal-title" id="coverageSapDetailModalLabel"><i class="bi bi-file-earmark-text me-2"></i>Detail SAP di Lokasi</h5>
+                  <h5 class="modal-title" id="coverageDetailAllModalLabel"><i class="bi bi-eye me-2"></i>Detail per Lokasi — Inspeksi Hazard, OAK & Observasi</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
                 <div class="modal-body">
                   <div class="mb-3">
                     <div class="text-[11px] font-semibold text-kt-muted uppercase tracking-wide mb-1">Lokasi</div>
-                    <div id="coverageSapModalLokasi" class="font-medium text-kt-text">—</div>
+                    <div id="coverageDetailAllModalLokasi" class="font-medium text-kt-text">—</div>
                   </div>
-                  <div class="mb-3">
+                  <div class="mb-4">
                     <div class="text-[11px] font-semibold text-kt-muted uppercase tracking-wide mb-1">Detail Lokasi</div>
-                    <div id="coverageSapModalDetailLokasi" class="text-slate-600">—</div>
+                    <div id="coverageDetailAllModalDetailLokasi" class="text-slate-600">—</div>
                   </div>
-                  <div>
-                    <div class="text-[11px] font-semibold text-kt-muted uppercase tracking-wide mb-2">Task ID SAP (Hazard/Inspeksi)</div>
-                    <ul id="coverageSapModalTaskList" class="list-group list-group-flush rounded border border-kt-border overflow-hidden">
-                      {{-- diisi via JS --}}
-                    </ul>
-                    <p class="text-kt-muted text-xs mt-2 mb-0">Task ID dapat digunakan untuk penelusuran di CAR Register / sistem SAP.</p>
+
+                  <div class="mb-4">
+                    <div class="text-[11px] font-semibold text-kt-muted uppercase tracking-wide mb-2">Inspeksi Hazard (SAP)</div>
+                    <div id="coverageDetailAllSapLoading" class="text-center py-3 text-kt-muted d-none"><div class="spinner-border spinner-border-sm me-2" role="status"></div> Memuat...</div>
+                    <div id="coverageDetailAllSapError" class="alert alert-warning py-2 d-none"></div>
+                    <div id="coverageDetailAllSapWrap" class="overflow-auto border border-kt-border rounded mb-0" style="max-height: 28vh;">
+                      <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light sticky-top"><tr><th>ID</th><th>Jenis</th><th>Status</th><th>Pelapor</th><th>Deskripsi</th><th>Kategori/Sub</th><th>Nilai Resiko</th><th>PIC</th><th>Tanggal</th><th>Foto</th></tr></thead>
+                        <tbody id="coverageDetailAllSapTbody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="mb-4">
+                    <div class="text-[11px] font-semibold text-kt-muted uppercase tracking-wide mb-2">OAK</div>
+                    <div id="coverageDetailAllOakLoading" class="text-center py-3 text-kt-muted d-none"><div class="spinner-border spinner-border-sm me-2" role="status"></div> Memuat...</div>
+                    <div id="coverageDetailAllOakError" class="alert alert-warning py-2 d-none"></div>
+                    <div id="coverageDetailAllOakWrap" class="overflow-auto border border-kt-border rounded mb-0" style="max-height: 28vh;">
+                      <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light sticky-top"><tr><th>ID</th><th>Site</th><th>Tipe</th><th>Shift</th><th>Activity</th><th>Submit By</th><th>Submit Date</th><th>Conclusion</th><th>Tools</th><th>Foto</th></tr></thead>
+                        <tbody id="coverageDetailAllOakTbody"></tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  <div class="mb-0">
+                    <div class="text-[11px] font-semibold text-kt-muted uppercase tracking-wide mb-2">Observasi</div>
+                    <div id="coverageDetailAllObsLoading" class="text-center py-3 text-kt-muted d-none"><div class="spinner-border spinner-border-sm me-2" role="status"></div> Memuat...</div>
+                    <div id="coverageDetailAllObsError" class="alert alert-warning py-2 d-none"></div>
+                    <div id="coverageDetailAllObsWrap" class="overflow-auto border border-kt-border rounded mb-0" style="max-height: 28vh;">
+                      <table class="table table-sm table-hover mb-0">
+                        <thead class="table-light sticky-top"><tr><th>Task ID</th><th>Tanggal</th><th>Pelapor</th><th>Site</th><th>Jenis Kegiatan</th><th>Tools</th><th>Tindakan/Umpan Balik</th><th>Foto</th></tr></thead>
+                        <tbody id="coverageDetailAllObsTbody"></tbody>
+                      </table>
+                    </div>
                   </div>
                 </div>
                 <div class="modal-footer border-kt-border">
@@ -1490,7 +1556,7 @@
           <div class="kt-card-header flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div class="kt-card-title">Detail Plan Pengecekan</div>
-              <div class="kt-card-subtitle">Per lokasi & karyawan — OK = ada hazard inspeksi dari karyawan yang di-assign (nama pelapor + lokasi + detail lokasi + tanggal match); NOT OK = belum ada. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
+              <div class="kt-card-subtitle">Per lokasi & karyawan — OK = ada SAP, OAK, atau Observasi dari karyawan yang di-assign (match nama + lokasi + tanggal); NOT OK = belum ada. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
             </div>
 
             <div class="w-full lg:w-auto flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -1664,45 +1730,101 @@
       applySiteFilter();
     }
 
+    var sapDetailUrl = @json(route('sistem-roster.dashboard.sap-detail'));
+    var oakDetailUrl = @json(route('sistem-roster.dashboard.oak-detail'));
+    var observasiDetailUrl = @json(route('sistem-roster.dashboard.observasi-detail'));
+
+    function getDashboardFilterDate() {
+      var el = document.getElementById('filterDate');
+      return (el && el.value) ? el.value : '';
+    }
+
     document.addEventListener('DOMContentLoaded', function() {
-      document.querySelectorAll('.coverage-sap-detail-btn').forEach(function(btn) {
+      document.querySelectorAll('.coverage-detail-all-btn').forEach(function(btn) {
         btn.addEventListener('click', function() {
-          var lokasi = this.getAttribute('data-lokasi') || '—';
-          var detailLokasi = this.getAttribute('data-detail-lokasi') || '—';
+          var lokasi = this.getAttribute('data-lokasi') || '';
+          var detailLokasi = this.getAttribute('data-detail-lokasi') || '';
           var taskIdsJson = this.getAttribute('data-task-ids') || '[]';
           var taskIds = [];
           try { taskIds = JSON.parse(taskIdsJson); } catch (e) {}
-          document.getElementById('coverageSapModalLokasi').textContent = lokasi || '—';
-          document.getElementById('coverageSapModalDetailLokasi').textContent = detailLokasi || '—';
-          var listEl = document.getElementById('coverageSapModalTaskList');
-          listEl.innerHTML = '';
-          if (taskIds.length) {
-            taskIds.forEach(function(id) {
-              var li = document.createElement('li');
-              li.className = 'list-group-item list-group-item-action d-flex align-items-center py-2';
-              li.innerHTML = '<i class="bi bi-hash text-kt-muted me-2"></i><code class="text-sm">' + (id || '').toString().replace(/</g, '&lt;') + '</code>';
-              listEl.appendChild(li);
+          var date = getDashboardFilterDate();
+
+          document.getElementById('coverageDetailAllModalLokasi').textContent = lokasi || '—';
+          document.getElementById('coverageDetailAllModalDetailLokasi').textContent = detailLokasi || '—';
+
+          function resetSection(loadingId, errorId, wrapId, tbodyId) {
+            var loadingEl = document.getElementById(loadingId);
+            var errorEl = document.getElementById(errorId);
+            var wrapEl = document.getElementById(wrapId);
+            var tbodyEl = document.getElementById(tbodyId);
+            if (loadingEl) { loadingEl.classList.add('d-none'); }
+            if (errorEl) { errorEl.classList.add('d-none'); errorEl.textContent = ''; }
+            if (wrapEl) wrapEl.classList.add('d-none');
+            if (tbodyEl) tbodyEl.innerHTML = '';
+            return { loadingEl: loadingEl, errorEl: errorEl, wrapEl: wrapEl, tbodyEl: tbodyEl };
+          }
+          var sap = resetSection('coverageDetailAllSapLoading', 'coverageDetailAllSapError', 'coverageDetailAllSapWrap', 'coverageDetailAllSapTbody');
+          var oak = resetSection('coverageDetailAllOakLoading', 'coverageDetailAllOakError', 'coverageDetailAllOakWrap', 'coverageDetailAllOakTbody');
+          var obs = resetSection('coverageDetailAllObsLoading', 'coverageDetailAllObsError', 'coverageDetailAllObsWrap', 'coverageDetailAllObsTbody');
+          sap.loadingEl.classList.remove('d-none');
+          oak.loadingEl.classList.remove('d-none');
+          obs.loadingEl.classList.remove('d-none');
+
+          var modalEl = document.getElementById('coverageDetailAllModal');
+          if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
+          if (typeof bootstrap !== 'undefined' && bootstrap.Modal) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+          else { modalEl.classList.add('show'); modalEl.style.display = 'block'; document.body.classList.add('modal-open'); }
+
+          function renderSap(data) {
+            sap.loadingEl.classList.add('d-none');
+            if (!data.length) { sap.errorEl.textContent = 'Tidak ada data inspeksi hazard.'; sap.errorEl.classList.remove('d-none'); return; }
+            sap.errorEl.classList.add('d-none');
+            data.forEach(function(row) {
+              var tr = document.createElement('tr');
+              var desc = (row.deskripsi || '').toString().substring(0, 80);
+              if ((row.deskripsi || '').length > 80) desc += '…';
+              var kategori = (row.nama_kategori || '') + (row.subketidaksesuaian ? ' / ' + row.subketidaksesuaian : '');
+              var pic = (row.nama_pic || '') + (row.departemen_pic ? ' — ' + row.departemen_pic : '');
+              var tanggal = row.tanggal_pembuatan || row.bedraft_date || '—';
+              var foto = row.url_photo ? '<a href="' + (row.url_photo || '').replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" class="text-kt-primary small">Link</a>' : '—';
+              tr.innerHTML = '<td class="text-nowrap"><code>' + (row.id || '').toString().replace(/</g, '&lt;') + '</code></td><td class="text-nowrap">' + (row.jenis_laporan || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + (row.status || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + (row.nama_pelapor || '—').toString().replace(/</g, '&lt;') + '</td><td class="small">' + desc.replace(/</g, '&lt;') + '</td><td class="small">' + (kategori || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + (row.nilai_resiko || '—').toString().replace(/</g, '&lt;') + '</td><td class="small">' + (pic || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap small">' + (tanggal || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + foto + '</td>';
+              sap.tbodyEl.appendChild(tr);
             });
-          } else {
-            var li = document.createElement('li');
-            li.className = 'list-group-item text-kt-muted';
-            li.textContent = 'Tidak ada Task ID';
-            listEl.appendChild(li);
+            sap.wrapEl.classList.remove('d-none');
           }
-          var modalEl = document.getElementById('coverageSapDetailModal');
-          if (!modalEl) return;
-          // Pindahkan modal ke body agar tampil di atas backdrop & overlay layout (bisa diklik)
-          if (modalEl.parentNode !== document.body) {
-            document.body.appendChild(modalEl);
+          function renderOak(data) {
+            oak.loadingEl.classList.add('d-none');
+            if (!data.length) { oak.errorEl.textContent = 'Tidak ada data OAK.'; oak.errorEl.classList.remove('d-none'); return; }
+            oak.errorEl.classList.add('d-none');
+            data.forEach(function(row) {
+              var tr = document.createElement('tr');
+              var foto = row.url_photo ? '<a href="' + (row.url_photo || '').replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" class="text-kt-primary small">Link</a>' : '—';
+              tr.innerHTML = '<td class="text-nowrap"><code>' + (row.id || '').toString().replace(/</g, '&lt;') + '</code></td><td class="text-nowrap">' + (row.site || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + (row.tipe || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + (row.shift || '—').toString().replace(/</g, '&lt;') + '</td><td class="small">' + (row.activity || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + (row.submit_by || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap small">' + (row.submit_date || '—').toString().replace(/</g, '&lt;') + '</td><td class="small">' + (row.conclusion || '—').toString().replace(/</g, '&lt;') + '</td><td class="small">' + (row.tools_observasi || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + foto + '</td>';
+              oak.tbodyEl.appendChild(tr);
+            });
+            oak.wrapEl.classList.remove('d-none');
           }
-          if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
-            var modal = bootstrap.Modal.getOrCreateInstance(modalEl);
-            modal.show();
-          } else if (modalEl.classList) {
-            modalEl.classList.add('show');
-            modalEl.style.display = 'block';
-            document.body.classList.add('modal-open');
+          function renderObs(data) {
+            obs.loadingEl.classList.add('d-none');
+            if (!data.length) { obs.errorEl.textContent = 'Tidak ada data Observasi.'; obs.errorEl.classList.remove('d-none'); return; }
+            obs.errorEl.classList.add('d-none');
+            data.forEach(function(row) {
+              var tr = document.createElement('tr');
+              var tindakan = (row.tindakan_perbaikan || '') + (row.umpan_balik ? ' / ' + row.umpan_balik : '');
+              var foto = row.url_photo ? '<a href="' + (row.url_photo || '').replace(/"/g, '&quot;') + '" target="_blank" rel="noopener" class="text-kt-primary small">Link</a>' : '—';
+              tr.innerHTML = '<td class="text-nowrap"><code>' + (row.task_id || '').toString().replace(/</g, '&lt;') + '</code></td><td class="text-nowrap small">' + (row.report_datetime || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + (row.nama_pelapor || '—').toString().replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + (row.site || '—').toString().replace(/</g, '&lt;') + '</td><td class="small">' + (row.jenis_kegiatan || '—').toString().replace(/</g, '&lt;') + '</td><td class="small">' + (row.tools_observasi || '—').toString().replace(/</g, '&lt;') + '</td><td class="small">' + (tindakan ? (tindakan.length > 50 ? tindakan.substring(0, 50) + '…' : tindakan) : '—').replace(/</g, '&lt;') + '</td><td class="text-nowrap">' + foto + '</td>';
+              obs.tbodyEl.appendChild(tr);
+            });
+            obs.wrapEl.classList.remove('d-none');
           }
+
+          var sapPromise = taskIds.length
+            ? fetch(sapDetailUrl + '?' + taskIds.map(function(id) { return 'task_ids[]=' + encodeURIComponent(id); }).join('&'), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(function(r) { return r.json(); }).then(function(res) { renderSap(res.data || []); }).catch(function() { sap.loadingEl.classList.add('d-none'); sap.errorEl.textContent = 'Gagal memuat SAP.'; sap.errorEl.classList.remove('d-none'); })
+            : Promise.resolve(function() { sap.loadingEl.classList.add('d-none'); sap.errorEl.textContent = 'Tidak ada Task ID untuk lokasi ini.'; sap.errorEl.classList.remove('d-none'); }());
+          var oakPromise = fetch(oakDetailUrl + '?' + new URLSearchParams({ lokasi: lokasi, detail_lokasi: detailLokasi, date: date }).toString(), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(function(r) { return r.json(); }).then(function(res) { renderOak(res.data || []); }).catch(function() { oak.loadingEl.classList.add('d-none'); oak.errorEl.textContent = 'Gagal memuat OAK.'; oak.errorEl.classList.remove('d-none'); });
+          var obsPromise = fetch(observasiDetailUrl + '?' + new URLSearchParams({ lokasi: lokasi, detail_lokasi: detailLokasi, date: date }).toString(), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } }).then(function(r) { return r.json(); }).then(function(res) { renderObs(res.data || []); }).catch(function() { obs.loadingEl.classList.add('d-none'); obs.errorEl.textContent = 'Gagal memuat Observasi.'; obs.errorEl.classList.remove('d-none'); });
+
+          Promise.all([sapPromise, oakPromise, obsPromise]);
         });
       });
     });
@@ -1866,13 +1988,14 @@
         }
 
         for (let d = 1; d <= daysInMonth; d++) {
+          const dateStr = currentYear + '-' + pad(currentMonth + 1) + '-' + pad(d);
           const isToday = isCurrentMonth && d === today.getDate();
           const info = getDayData(d);
           const stateClass = info.state === 'good' ? 'state-good' : (info.state === 'warn' ? 'state-warn' : (info.state === 'bad' ? 'state-bad' : 'state-neutral'));
           const scoreClass = info.state === 'good' ? 'good' : (info.state === 'warn' ? 'warn' : (info.state === 'bad' ? 'bad' : ''));
 
           if (isToday) {
-            html += '<div class="day-cell selected">';
+            html += '<div class="day-cell heatmap-day-cell selected" data-date="' + dateStr + '" role="button" title="Klik untuk detail">';
             html += '<div class="day-num">' + d + '</div>';
             html += '<span class="current-pill">Hari ini</span>';
             html += '<div class="day-center">';
@@ -1881,7 +2004,7 @@
             html += '<div class="completion">' + (info.planned ? info.pct + '% Actual' : '—') + '</div>';
             html += '</div></div>';
           } else {
-            html += '<div class="day-cell ' + stateClass + '">';
+            html += '<div class="day-cell heatmap-day-cell ' + stateClass + '" data-date="' + dateStr + '" role="button" title="Klik untuk detail">';
             html += '<div class="day-num">' + d + '</div>';
             html += '<div class="day-center">';
             html += '<div class="score ' + scoreClass + '">' + info.actual + ' / ' + info.planned + '</div>';
@@ -1913,6 +2036,80 @@
 
       if (btnPrev) btnPrev.addEventListener('click', goPrevMonth);
       if (btnNext) btnNext.addEventListener('click', goNextMonth);
+
+      // Klik day cell: tampilkan modal detail per karyawan + lokasi (Inspeksi, OAK, Observasi)
+      var heatmapDayDetailUrl = @json(route('sistem-roster.dashboard.heatmap-day-detail'));
+      gridEl.addEventListener('click', function(e) {
+        var cell = e.target.closest('.heatmap-day-cell');
+        if (!cell) return;
+        var date = cell.getAttribute('data-date');
+        if (!date) return;
+        var site = window.currentHeatmapSite || 'all';
+
+        var modalEl = document.getElementById('heatmapDayDetailModal');
+        var titleEl = document.getElementById('heatmapDayDetailModalLabel');
+        var metaEl = document.getElementById('heatmapDayDetailMeta');
+        var loadingEl = document.getElementById('heatmapDayDetailLoading');
+        var errorEl = document.getElementById('heatmapDayDetailError');
+        var wrapEl = document.getElementById('heatmapDayDetailWrap');
+        var tbodyEl = document.getElementById('heatmapDayDetailTbody');
+
+        if (titleEl) titleEl.textContent = 'Detail Hari — ' + date + (site !== 'all' ? ' · ' + site : '');
+        if (metaEl) metaEl.textContent = 'Per planning (karyawan + lokasi): jumlah Inspeksi Hazard, OAK, Observasi yang match.';
+        loadingEl.classList.remove('d-none');
+        errorEl.classList.add('d-none');
+        errorEl.textContent = '';
+        wrapEl.classList.add('d-none');
+        tbodyEl.innerHTML = '';
+
+        if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
+        if (typeof bootstrap !== 'undefined' && bootstrap.Modal) bootstrap.Modal.getOrCreateInstance(modalEl).show();
+        else { modalEl.classList.add('show'); modalEl.style.display = 'block'; document.body.classList.add('modal-open'); }
+
+        var params = new URLSearchParams({ date: date, site: site });
+        fetch(heatmapDayDetailUrl + '?' + params.toString(), { headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+          .then(function(r) { return r.json(); })
+          .then(function(res) {
+            loadingEl.classList.add('d-none');
+            var data = res.data || [];
+            if (data.length === 0) {
+              errorEl.textContent = 'Tidak ada planning untuk tanggal ini' + (site !== 'all' ? ' di site ' + site : '') + '.';
+              errorEl.classList.remove('d-none');
+              return;
+            }
+            errorEl.classList.add('d-none');
+            // Group by karyawan_nama untuk rowspan: hanya kolom Karyawan yang di-merge, Lokasi/Detail per baris
+            var byName = {};
+            data.forEach(function(row) {
+              var n = (row.karyawan_nama || '—').toString();
+              if (!byName[n]) byName[n] = [];
+              byName[n].push(row);
+            });
+            Object.keys(byName).forEach(function(nama) {
+              var list = byName[nama];
+              list.forEach(function(row, i) {
+                var tr = document.createElement('tr');
+                var namaCell = '';
+                if (i === 0) {
+                  namaCell = '<td class="font-medium align-top" rowspan="' + list.length + '">' + nama.replace(/</g, '&lt;') + '</td>';
+                }
+                tr.innerHTML = namaCell +
+                  '<td class="text-nowrap">' + (row.lokasi || '—').toString().replace(/</g, '&lt;') + '</td>' +
+                  '<td class="text-nowrap small">' + (row.detail_lokasi || '—').toString().replace(/</g, '&lt;') + '</td>' +
+                  '<td class="text-center">' + (row.count_inspeksi || 0) + '</td>' +
+                  '<td class="text-center">' + (row.count_oak || 0) + '</td>' +
+                  '<td class="text-center">' + (row.count_observasi || 0) + '</td>';
+                tbodyEl.appendChild(tr);
+              });
+            });
+            wrapEl.classList.remove('d-none');
+          })
+          .catch(function(err) {
+            loadingEl.classList.add('d-none');
+            errorEl.textContent = 'Gagal memuat: ' + (err.message || 'Unknown error');
+            errorEl.classList.remove('d-none');
+          });
+      });
 
       // Refresh kalender: reload halaman agar data heatmap (planned/actual) ter-update dari server
       var refreshBtn = document.getElementById('heatmapRefreshBtn');

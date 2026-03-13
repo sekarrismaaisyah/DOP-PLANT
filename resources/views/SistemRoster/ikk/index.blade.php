@@ -136,7 +136,7 @@
                                                     default => 'secondary'
                                                 };
                                             @endphp
-                                            <span class="badge bg-{{ $statusClass }}">{{ $ikk->status ?? '-' }}</span>
+                                            <span class="badge bg-{{ $statusClass }}" title="Status: {{ $ikk->status ?? '-' }}">{{ $ikk->status_label ?? $ikk->status ?? '-' }}</span>
                                         </td>
                                         <td>{{ $ikk->company_name ?? '-' }}</td>
                                         <td>{{ $ikk->site ?? '-' }}</td>
@@ -165,9 +165,13 @@
                                         </td>
                                         <td>
                                             <div class="d-flex gap-2">
-                                                <a href="{{ route('sistem-roster.ikk.show', $ikk->id) }}" class="btn btn-sm btn-info rounded-3" title="Detail">
-                                                    <i class="material-icons-outlined text-white">visibility</i>
-                                                </a>
+                                                @if(!empty($ikk->id))
+                                                    <a href="{{ route('sistem-roster.ikk.show', $ikk->id) }}" class="btn btn-sm btn-info rounded-3" title="Detail">
+                                                        <i class="material-icons-outlined text-white">visibility</i>
+                                                    </a>
+                                                @else
+                                                    <span class="text-muted">—</span>
+                                                @endif
                                             </div>
                                         </td>
                                     </tr>
