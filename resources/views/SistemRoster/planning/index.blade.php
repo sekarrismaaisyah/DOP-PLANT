@@ -605,6 +605,7 @@
                                         <th style="width: 40px"></th>
                                         <th style="width: 40px">No</th>
                                         <th>Nama</th>
+                                        <th>Site</th>
                                         <th class="text-center">Total kunjungan</th>
                                     </tr>
                                 </thead>
@@ -621,6 +622,18 @@
                                             </td>
                                             <td>{{ $idx }}</td>
                                             <td><strong>{{ $nama }}</strong></td>
+                                            <td>
+                                                @php
+                                                    $sites = collect($items)->pluck('site')->filter()->unique()->values();
+                                                @endphp
+                                                @if($sites->isEmpty())
+                                                    <span class="text-muted">-</span>
+                                                @else
+                                                    @foreach($sites as $site)
+                                                        <span class="badge bg-light text-dark me-1 mb-1">{{ $site }}</span>
+                                                    @endforeach
+                                                @endif
+                                            </td>
                                             <td class="text-center"><strong>{{ $items->count() }}</strong></td>
                                         </tr>
                                         <tr class="planning-detail-row d-none" id="summary-detail-{{ $idx }}">
