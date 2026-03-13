@@ -59,6 +59,13 @@ class PlanningController extends Controller
         $filterSite = $request->get('filter_site', '');
         $filterPerusahaan = $request->get('filter_perusahaan', '');
 
+        // Mapping khusus untuk filter site di UI tab
+        // Contoh: saat pilih HOTE, tampilkan juga data dari HO dan (Eks)plorasi
+        $siteFilterMap = [
+            // Nilai di sini adalah pola LIKE (tanpa wildcard di luar, ditambah di bawah)
+            'HOTE' => ['HOTE', 'HO', 'Eksplorasi', 'Explorasi'],
+        ];
+
         $query = RosterPlanning::with(['karyawans' => function ($q) {
                 $q->select('id', 'roster_planning_id', 'user_id', 'nama_karyawan', 'sid_karyawan');
             }])
@@ -82,7 +89,17 @@ class PlanningController extends Controller
             });
         }
         if ($filterSite !== '') {
-            $query->where('site', 'like', '%' . trim($filterSite) . '%');
+            $key = trim($filterSite);
+            if (isset($siteFilterMap[$key])) {
+                $patterns = $siteFilterMap[$key];
+                $query->where(function ($q) use ($patterns) {
+                    foreach ($patterns as $pattern) {
+                        $q->orWhere('site', 'like', '%' . $pattern . '%');
+                    }
+                });
+            } else {
+                $query->where('site', 'like', '%' . $key . '%');
+            }
         }
         if ($filterPerusahaan !== '') {
             $query->where('perusahaan_pic', 'like', '%' . trim($filterPerusahaan) . '%');
@@ -178,6 +195,12 @@ class PlanningController extends Controller
             ])
             ->whereBetween('tanggal', [$startDate, $endDate]);
 
+        // Mapping khusus untuk filter site di summary per orang
+        $siteFilterMap = [
+            // Pola LIKE (tanpa wildcard di luar)
+            'HOTE' => ['HOTE', 'HO', 'Eksplorasi', 'Explorasi'],
+        ];
+
         if ($search !== '') {
             $term = '%' . trim($search) . '%';
             $query->where(function ($q) use ($term) {
@@ -190,7 +213,17 @@ class PlanningController extends Controller
             });
         }
         if ($filterSite !== '') {
-            $query->where('site', 'like', '%' . trim($filterSite) . '%');
+            $key = trim($filterSite);
+            if (isset($siteFilterMap[$key])) {
+                $patterns = $siteFilterMap[$key];
+                $query->where(function ($q) use ($patterns) {
+                    foreach ($patterns as $pattern) {
+                        $q->orWhere('site', 'like', '%' . $pattern . '%');
+                    }
+                });
+            } else {
+                $query->where('site', 'like', '%' . $key . '%');
+            }
         }
         if ($filterPerusahaan !== '') {
             $query->where('perusahaan_pic', 'like', '%' . trim($filterPerusahaan) . '%');

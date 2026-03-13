@@ -164,9 +164,19 @@
                                 </div>
                                 <div class="col-md-3">
                                     <label for="filter_site" class="form-label">Filter Site</label>
+                                    @php
+                                        // Pastikan opsi HOTE dan MARINE selalu tersedia di dropdown filter,
+                                        // meskipun belum ada di data RosterPlanning untuk periode tersebut.
+                                        $siteFilterOptions = collect($sites ?? [])
+                                            ->push('HOTE')
+                                            ->push('MARINE')
+                                            ->unique()
+                                            ->sort()
+                                            ->values();
+                                    @endphp
                                     <select name="filter_site" id="filter_site" class="form-select">
                                         <option value="">-- Semua Site --</option>
-                                        @foreach($sites ?? [] as $s)
+                                        @foreach($siteFilterOptions as $s)
                                             <option value="{{ $s }}" {{ ($filterSite ?? '') == $s ? 'selected' : '' }}>{{ $s }}</option>
                                         @endforeach
                                     </select>
@@ -219,7 +229,7 @@
 
     <!-- Tabs per Site -->
     @php
-        $siteTabs = ['Semua', 'BMO 1', 'BMO 2', 'BMO 3', 'GMO', 'SMO', 'LMO', 'HO', 'Explorasi'];
+        $siteTabs = ['Semua', 'BMO 1', 'BMO 2', 'BMO 3', 'GMO', 'SMO', 'LMO', 'HOTE', 'MARINE'];
         $currentFilterSite = $filterSite ?? '';
     @endphp
     <div class="row mb-3">
