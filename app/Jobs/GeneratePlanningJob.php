@@ -164,13 +164,13 @@ class GeneratePlanningJob implements ShouldQueue
         $updated = 0;
 
         try {
-            if (!class_exists(ClickHouseService::class)) {
+            if (! class_exists(ClickHouseService::class)) {
                 Log::warning('GeneratePlanningJob IKK: ClickHouseService class not found');
                 return ['created' => 0, 'updated' => 0];
             }
 
             $clickHouse = app(ClickHouseService::class);
-            if (!method_exists($clickHouse, 'query') || !$clickHouse->isConnected()) {
+            if (! method_exists($clickHouse, 'query') || ! $clickHouse->isConnected()) {
                 Log::warning('GeneratePlanningJob IKK: ClickHouse not connected');
                 return ['created' => 0, 'updated' => 0];
             }
@@ -179,10 +179,50 @@ class GeneratePlanningJob implements ShouldQueue
             $endDateStr = addslashes($this->endDate);
             $filterStart = Carbon::parse($this->startDate)->startOfDay();
             $filterEnd = Carbon::parse($this->endDate)->startOfDay();
+            $today = Carbon::today();
 
-            /** WKTT privilege ID: hanya IKK yang di-approve oleh PIC dengan privilege ini (APPROVED + EXPIRED). */
+            /** WKTT privilege ID: digunakan untuk cek IKK yang sudah di-approve WKTT. */
             $wkttPrivilegeId = '7d872114-0924-4c6a-880e-49b3c06b5429';
-            $havingWktt = " HAVING sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED' AND trim(toString(m.m_privilege_id)) = '{$wkttPrivilegeId}', 1, 0)) > 0 ";
+
+            // Preload daftar work_permit_id yang sudah di-approve WKTT (APPROVED/EXPIRED) dan overlap dengan periode generate.
+            $wkttApprovedIds = [];
+            $sqlWktt = "
+                SELECT wp.id
+                FROM hse_automation.ikk_work_permit AS wp
+                INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
+                    ON toString(wp_pic.work_permit_id) = toString(wp.id)
+                    AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
+                LEFT JOIN hse_automation.ikk_m_pic AS m
+                    ON toString(m.id) = toString(wp_pic.m_pic_id)
+                WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
+                  AND toDate(wp.start_date) <= toDate('{$endDateStr}')
+                  AND toDate(wp.end_date)   >= toDate('{$startDateStr}')
+                  AND wp.status IN ('APPROVED', 'EXPIRED')
+                GROUP BY wp.id
+                HAVING sum(
+                    if(
+                        upper(trim(toString(wp_pic.status))) = 'APPROVED'
+                        AND trim(toString(m.m_privilege_id)) = '{$wkttPrivilegeId}',
+                        1,
+                        0
+                    )
+                ) > 0
+            ";
+            try {
+                $wkttRows = $clickHouse->query($sqlWktt);
+                foreach ($wkttRows ?? [] as $row) {
+                    $id = $this->getVal($row, 'id') ?? $this->getVal($row, 'wp.id');
+                    if (is_array($id) && isset($id[0])) {
+                        $id = $id[0];
+                    }
+                    if ($id !== null && $id !== '') {
+                        $wkttApprovedIds[(string) $id] = true;
+                    }
+                }
+            } catch (\Throwable $e) {
+                Log::warning('GeneratePlanningJob IKK: gagal memuat daftar WKTT-approved: ' . $e->getMessage());
+                $wkttApprovedIds = [];
+            }
 
             $batchSize = 100;
             $offset = 0;
@@ -191,32 +231,23 @@ class GeneratePlanningJob implements ShouldQueue
             while ($hasMore) {
                 $sql = "
                     SELECT
-                        wp.id,
-                        wp.code,
-                        wp.company_name,
-                        wp.m_job_id,
-                        wp.start_date,
-                        wp.end_date,
-                        wp.ra_site_name,
-                        wp.location_name,
-                        wp.location_detail_name,
-                        wp.location_detail_id
-                    FROM hse_automation.ikk_work_permit AS wp
-                    INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
-                        ON toString(wp_pic.work_permit_id) = toString(wp.id)
-                        AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
-                    LEFT JOIN hse_automation.ikk_m_pic AS m
-                        ON toString(m.id) = toString(wp_pic.m_pic_id)
-                    WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
-                      AND toDate(wp.start_date) <= toDate('{$endDateStr}')
-                      AND toDate(wp.end_date) >= toDate('{$startDateStr}')
-                      AND wp.status IN ('APPROVED', 'EXPIRED')
-                    GROUP BY
-                        wp.id, wp.code, wp.company_name, wp.m_job_id,
-                        wp.start_date, wp.end_date, wp.ra_site_name,
-                        wp.location_name, wp.location_detail_name, wp.location_detail_id
-                    {$havingWktt}
-                    ORDER BY wp.id
+                        id,
+                        code,
+                        status,
+                        company_name,
+                        m_job_id,
+                        start_date,
+                        end_date,
+                        ra_site_name,
+                        location_name,
+                        location_detail_name,
+                        location_detail_id
+                    FROM hse_automation.ikk_work_permit
+                    WHERE (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                      AND toDate(start_date) <= toDate('{$endDateStr}')
+                      AND toDate(end_date)   >= toDate('{$startDateStr}')
+                      AND status IN ('APPROVED', 'EXPIRED')
+                    ORDER BY id
                     LIMIT {$batchSize} OFFSET {$offset}
                 ";
 
@@ -254,6 +285,11 @@ class GeneratePlanningJob implements ShouldQueue
                     }
                     $wpId = $wpId !== null && $wpId !== '' ? (string) $wpId : null;
                     $code = $this->getVal($row, 'code');
+                    $statusUpper = null;
+                    $statusRaw = $this->getVal($row, 'status');
+                    if ($statusRaw !== null && $statusRaw !== '') {
+                        $statusUpper = strtoupper(trim((string) $statusRaw));
+                    }
                     $startDateIkk = $this->parseDate($this->getVal($row, 'start_date'));
                     $endDateIkk = $this->parseDate($this->getVal($row, 'end_date'));
                     $jobId = $this->getVal($row, 'm_job_id');
@@ -270,6 +306,22 @@ class GeneratePlanningJob implements ShouldQueue
 
                     $currentDate = $filterStart->copy();
                     while ($currentDate->lte($filterEnd)) {
+                        // Logika filter:
+                        // - Jika tanggal planning < hari ini: harus sudah WKTT-approved (APPROVED/EXPIRED + ada di $wkttApprovedIds)
+                        // - Jika tanggal planning >= hari ini: cukup status APPROVED.
+                        if ($currentDate->lt($today)) {
+                            $allowedStatusesPast = ['APPROVED', 'EXPIRED'];
+                            if (! in_array($statusUpper, $allowedStatusesPast, true) || ! isset($wkttApprovedIds[$wpId])) {
+                                $currentDate->addDay();
+                                continue;
+                            }
+                        } else {
+                            if ($statusUpper !== 'APPROVED') {
+                                $currentDate->addDay();
+                                continue;
+                            }
+                        }
+
                         if ($currentDate->gte($ikkStart) && $currentDate->lte($ikkEnd)) {
                             $result = RosterPlanning::updateOrCreate(
                                 [
