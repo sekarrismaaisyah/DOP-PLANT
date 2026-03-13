@@ -108,9 +108,7 @@ class GeneratePlanningJob implements ShouldQueue
                         ? $dop->pengawasMitraKerja->pluck('nama_pengawas')->implode(', ')
                         : null;
 
-                    $perusahaanPic = !empty($dop->perusahaan)
-                        ? $dop->perusahaan
-                        : ($dop->picBerauCoal->isNotEmpty() ? $dop->picBerauCoal->pluck('nama_pic')->implode(', ') : null);
+                    $perusahaanPic = !empty($dop->perusahaan) ? $dop->perusahaan : null;
 
                     $aktivitasText = !empty($dop->aktivitas) ? $dop->aktivitas : $dop->pekerjaan;
 
