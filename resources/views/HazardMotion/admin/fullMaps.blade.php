@@ -4057,6 +4057,13 @@
                         <div class="gm-sub">Probability Insiden</div>
                         </label>
                         <!-- IKK tile dihilangkan dari menu karena sekarang digabung dengan Critical Area (layerTraffic) -->
+
+                        <input class="btn-check" type="checkbox" id="layerTransit" autocomplete="off">
+                        <label class="gm-tile" for="layerTransit" data-layer="transit">
+                            <div class="gm-thumb" style="background-image:url('https://plus.unsplash.com/premium_photo-1663089943187-fe6dc6d32fdb?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
+                            <div class="gm-label">Evaluasi Unit</div>
+                        <div class="gm-sub">Evaluasi Unit Fuel</div>
+                        </label>
                     </div>
                 </div>
             </div>

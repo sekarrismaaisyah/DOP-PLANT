@@ -34,6 +34,7 @@ use App\Http\Controllers\CctvAlertsDashboardController;
 use App\Http\Controllers\InsidenCcrController;
 use App\Http\Controllers\InsidenLpiController;
 use App\Http\Controllers\CctvP2hChecklistController;
+use App\Http\Controllers\FuelingEvaluasiController;
 
 /*
 |--------------------------------------------------------------------------
@@ -105,6 +106,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/cctv-company-data', [HomeController::class, 'companyCctvData'])->name('cctv.company-data');
     Route::get('/company-cctv-data', [HomeController::class, 'getCompanyCctvData'])->name('company-cctv-data');
     Route::get('/company-stats', [HomeController::class, 'getCompanyStats'])->name('company-stats');
+
+    // Fueling Evaluasi
+    Route::get('/fueling-evaluasi', [FuelingEvaluasiController::class, 'index'])->name('fueling-evaluasi.index');
 
     // Chatbot Routes
     Route::prefix('chatbot')->name('chatbot.')->group(function () {
