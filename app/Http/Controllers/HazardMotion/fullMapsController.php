@@ -3936,6 +3936,65 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
+     * Get GPS log history for one unit from nitip.unit_gps_logs (Evaluasi Fuelling Unit).
+     */
+    public function getNitipUnitGpsLogs(Request $request)
+    {
+        $unitId = $request->query('unit_id');
+        if (empty($unitId)) {
+            return response()->json(['success' => false, 'message' => 'unit_id required', 'data' => []], 400);
+        }
+        try {
+            $ch = new ClickHouseService('clickhouse_nitip');
+            if (!$ch->isConnected()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ClickHouse Nitip tidak terhubung',
+                    'data' => [],
+                ], 503);
+            }
+            $limit = (int) $request->query('limit', 200);
+            $limit = min(max($limit, 1), 500);
+            $safeId = "'" . addslashes((string) $unitId) . "'";
+            $sql = "
+                SELECT 
+                    id,
+                    unit_id,
+                    latitude,
+                    longitude,
+                    speed,
+                    battery,
+                    course,
+                    heading,
+                    created_at,
+                    vehicle_number,
+                    vehicle_name,
+                    vendor_name
+                FROM nitip.unit_gps_logs
+                WHERE unit_id = $safeId
+                ORDER BY created_at DESC
+                LIMIT $limit
+            ";
+            $rows = $ch->query($sql);
+            if (!is_array($rows)) {
+                $rows = [];
+            }
+            return response()->json([
+                'success' => true,
+                'data' => $rows,
+                'count' => count($rows),
+            ]);
+        } catch (Exception $e) {
+            Log::error('getNitipUnitGpsLogs: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => [],
+            ], 500);
+        }
+    }
+
+    /**
      * Get photos from hse_ai_validations for gallery
      */
     public function getPhotoGallery(Request $request)

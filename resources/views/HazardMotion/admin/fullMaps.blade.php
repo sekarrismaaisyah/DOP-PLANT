@@ -1417,6 +1417,53 @@
     padding: 12px 14px;
 }
 
+/* Evaluasi Fuelling Unit item (expand = log GPS) */
+.sidebar-list-item.evaluasi-unit-item {
+    flex-direction: column;
+    align-items: stretch;
+    padding: 0;
+}
+.sidebar-list-item.evaluasi-unit-item .evaluasi-unit-detail {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.25s ease;
+    padding: 0 14px;
+    background: #f8f9fa;
+    border-top: 1px solid #e5e7eb;
+}
+.sidebar-list-item.evaluasi-unit-item.expanded .evaluasi-unit-detail {
+    max-height: 400px;
+    overflow-y: auto;
+    padding: 12px 14px;
+}
+.sidebar-list-item.evaluasi-unit-item:hover .list-item-expand-icon {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+}
+.sidebar-list-item.evaluasi-unit-item.expanded .list-item-expand-icon {
+    transform: rotate(180deg);
+    color: #f59e0b;
+}
+.evaluasi-unit-log-table {
+    width: 100%;
+    font-size: 11px;
+    border-collapse: collapse;
+}
+.evaluasi-unit-log-table th,
+.evaluasi-unit-log-table td {
+    padding: 6px 8px;
+    text-align: left;
+    border-bottom: 1px solid #e5e7eb;
+}
+.evaluasi-unit-log-table th {
+    background: #f3f4f6;
+    font-weight: 600;
+    color: #374151;
+    position: sticky;
+    top: 0;
+}
+.evaluasi-unit-log-table td { color: #4b5563; }
+
 .sidebar-list-item[data-type="autoalert"] {
     flex-direction: column;
     align-items: stretch;
@@ -23557,13 +23604,20 @@ source: new ol.source.Vector(),
                 const vendor = (u.vendor_name || '-').toString();
                 const title = no !== '-' && vendor !== '-' ? 'No: ' + no + ' | ' + vendor : no !== '-' ? 'No: ' + no : vendor !== '-' ? vendor : (u.vehicle_name || 'Unit').toString();
                 const firstLetter = (no !== '-' ? no.charAt(0) : (vendor !== '-' ? vendor.charAt(0) : 'U')).toUpperCase();
+                const unitId = (u.id || '').toString();
                 return `
-                    <div class="sidebar-list-item" data-type="evaluasi-unit" data-id="${escapeHtml(String(u.id || ''))}" data-index="${index}">
-                        <div class="list-item-avatar" style="background-color: ${avatarColor}; color: #fff;">
-                            ${escapeHtml(firstLetter)}
+                    <div class="sidebar-list-item evaluasi-unit-item" data-type="evaluasi-unit" data-id="${escapeHtml(unitId)}" data-index="${index}">
+                        <div class="sidebar-list-item-header">
+                            <div class="list-item-avatar" style="background-color: ${avatarColor}; color: #fff;">
+                                ${escapeHtml(firstLetter)}
+                            </div>
+                            <div class="list-item-content" style="flex: 1;">
+                                <div class="list-item-title">${escapeHtml(title)}</div>
+                            </div>
+                            <i class="material-icons-outlined list-item-expand-icon">expand_more</i>
                         </div>
-                        <div class="list-item-content">
-                            <div class="list-item-title">${escapeHtml(title)}</div>
+                        <div class="evaluasi-unit-detail">
+                            <div class="evaluasi-unit-log-placeholder">Klik untuk memuat riwayat GPS</div>
                         </div>
                     </div>
                 `;
@@ -23579,6 +23633,69 @@ source: new ol.source.Vector(),
                 <span style="font-weight: 600; color: #374151;">${count}</span> unit <span style="color: #9ca3af;">(ClickHouse Nitip)</span>
             </div>
             ${listHtml}
+        `;
+        if (count > 0) {
+            evaluasiContent.querySelectorAll('.evaluasi-unit-item').forEach(item => {
+                const header = item.querySelector('.sidebar-list-item-header');
+                const detailEl = item.querySelector('.evaluasi-unit-detail');
+                const unitId = item.getAttribute('data-id');
+                if (!header || !detailEl) return;
+                header.addEventListener('click', function() {
+                    const isExpanded = item.classList.contains('expanded');
+                    item.classList.toggle('expanded', !isExpanded);
+                    if (!isExpanded && detailEl.querySelector('.evaluasi-unit-log-placeholder')) {
+                        loadEvaluasiUnitGpsLogs(unitId, detailEl);
+                    }
+                });
+            });
+        }
+    }
+    
+    function loadEvaluasiUnitGpsLogs(unitId, detailEl) {
+        if (!detailEl) return;
+        detailEl.innerHTML = `
+            <div style="text-align: center; padding: 16px;">
+                <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
+                <p style="margin-top: 8px; font-size: 12px; color: #6b7280;">Memuat riwayat GPS...</p>
+            </div>
+        `;
+        const url = '{{ route("full-maps.api.nitip-unit-gps-logs") }}?unit_id=' + encodeURIComponent(unitId);
+        fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } })
+            .then(r => r.json())
+            .then(result => {
+                if (result.success && Array.isArray(result.data)) {
+                    renderEvaluasiUnitGpsLogs(result.data, detailEl);
+                } else {
+                    detailEl.innerHTML = '<p style="font-size: 12px; color: #dc2626;">' + escapeHtml(result.message || 'Gagal memuat log') + '</p>';
+                }
+            })
+            .catch(err => {
+                detailEl.innerHTML = '<p style="font-size: 12px; color: #dc2626;">' + escapeHtml(err.message || 'Gagal memuat log') + '</p>';
+            });
+    }
+    
+    function renderEvaluasiUnitGpsLogs(logs, detailEl) {
+        if (!detailEl) return;
+        if (!logs || logs.length === 0) {
+            detailEl.innerHTML = '<p style="font-size: 12px; color: #6b7280;">Tidak ada riwayat GPS.</p>';
+            return;
+        }
+        const rows = logs.map(row => {
+            const createdAt = (row.created_at || '-').toString().replace('T', ' ').substring(0, 19);
+            const lat = row.latitude != null ? row.latitude : '-';
+            const lon = row.longitude != null ? row.longitude : '-';
+            const speed = row.speed != null ? row.speed : '-';
+            const battery = row.battery != null ? row.battery : '-';
+            return `<tr><td>${escapeHtml(createdAt)}</td><td>${escapeHtml(String(lat))}</td><td>${escapeHtml(String(lon))}</td><td>${escapeHtml(String(speed))}</td><td>${escapeHtml(String(battery))}</td></tr>`;
+        }).join('');
+        detailEl.innerHTML = `
+            <div style="font-weight: 600; font-size: 12px; color: #374151; margin-bottom: 8px;">Riwayat GPS (${logs.length} log)</div>
+            <div style="max-height: 320px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
+                <table class="evaluasi-unit-log-table">
+                    <thead><tr><th>Waktu</th><th>Lat</th><th>Lon</th><th>Speed</th><th>Battery</th></tr></thead>
+                    <tbody>${rows}</tbody>
+                </table>
+            </div>
         `;
     }
     
