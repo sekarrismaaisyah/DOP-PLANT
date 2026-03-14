@@ -4058,12 +4058,14 @@
                         </label>
                         <!-- IKK tile dihilangkan dari menu karena sekarang digabung dengan Critical Area (layerTraffic) -->
 
-                        <input class="btn-check" type="checkbox" id="layerTransit" autocomplete="off">
-                        <label class="gm-tile" for="layerTransit" data-layer="transit">
+                        <input class="btn-check" type="checkbox" id="layerEvaluasiUnit" autocomplete="off">
+                        <label class="gm-tile" for="layerEvaluasiUnit" data-layer="evaluasi-unit">
                             <div class="gm-thumb" style="background-image:url('https://plus.unsplash.com/premium_photo-1663089943187-fe6dc6d32fdb?q=80&w=1170&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D');"></div>
                             <div class="gm-label">Evaluasi Unit</div>
                         <div class="gm-sub">Evaluasi Unit Fuel</div>
                         </label>
+
+                        
                     </div>
                 </div>
             </div>
@@ -5135,6 +5137,8 @@
     
     // BMO2 PAMA GeoJSON layers
     let areaKerjaBmo2PamaLayer = null;
+    /** Layer boundary saja dari geotaging.js (tanpa warna risk, tanpa kalkulasi) - untuk Evaluasi Unit */
+    let areaKerjaBoundaryOnlyLayer = null;
     let areaCctvBmo2PamaLayer = null;
     let differenceBmo2PamaLayer = null;
     let symmetricalDifferenceBmo2PamaLayer = null;
@@ -5914,6 +5918,20 @@
         });
     }
 
+    /** Style boundary saja (dari geotaging.js) - tanpa warna risk, tanpa kalkulasi. Hanya outline netral. */
+    function getBoundaryOnlyStyle(feature) {
+        return new ol.style.Style({
+            fill: new ol.style.Fill({ color: 'rgba(120, 120, 120, 0.04)' }),
+            stroke: new ol.style.Stroke({
+                color: 'rgba(100, 100, 100, 0.5)',
+                width: 1.5,
+                lineCap: 'round',
+                lineJoin: 'round'
+            }),
+            zIndex: 0
+        });
+    }
+
     // Cache key untuk localStorage (CCTV by coverage per lokasi)
     function getCctvByCoverageCacheKey(lokasiName) {
         const normalized = String(lokasiName || '').trim().replace(/\s+/g, '_');
@@ -6558,13 +6576,14 @@
 
         // Toggle layer ON/OFF - Only one menu can be active at a time
         // Define the menu group checkboxes
-        const menuGroupIds = ['layerSatellite', 'layerTerrain', 'layerTraffic', 'layerTransit', 'layerIkk'];
+        const menuGroupIds = ['layerSatellite', 'layerTerrain', 'layerTraffic', 'layerTransit', 'layerEvaluasiUnit', 'layerIkk'];
         // Map layer checkbox ID -> sidebar tab name (untuk sinkronisasi layer button dengan sidebar)
         const layerToSidebarTab = {
             'layerSatellite': 'cctv',      // Supervisory -> Alert Supervisory
             'layerTerrain': 'insiden',     // Mobility -> Alert Unit & Orang
             'layerTraffic': 'controlroom', // Critical Area -> Alert DOP & IKK
             'layerTransit': 'pja',        // Probability -> Alert Probability
+            'layerEvaluasiUnit': 'pja',   // Evaluasi Unit -> boundary saja dari geotaging.js
             'layerIkk': 'controlroom'
         };
         
@@ -6789,6 +6808,27 @@
                     // Hide all probability popups when transit layer is deactivated
                     hideAllProbabilityPopups();
                 }
+            } else if (layerName === 'evaluasi-unit') {
+                // Evaluasi Unit: hanya boundary dari geotaging.js, tanpa warna risk, tanpa kalkulasi
+                if (isOn) {
+                    console.log('[applyLayer] Evaluasi Unit layer activated - showing boundary only from geotaging.js');
+                    if (areaKerjaBmo2PamaLayer) {
+                        areaKerjaBmo2PamaLayer.setVisible(false);
+                    }
+                    if (areaKerjaBoundaryOnlyLayer) {
+                        areaKerjaBoundaryOnlyLayer.setVisible(true);
+                        areaKerjaBoundaryOnlyLayer.setOpacity(1.0);
+                    }
+                } else {
+                    console.log('[applyLayer] Evaluasi Unit layer deactivated - showing normal area kerja');
+                    if (areaKerjaBoundaryOnlyLayer) {
+                        areaKerjaBoundaryOnlyLayer.setVisible(false);
+                    }
+                    if (areaKerjaBmo2PamaLayer) {
+                        areaKerjaBmo2PamaLayer.setVisible(true);
+                        areaKerjaBmo2PamaLayer.setOpacity(1.0);
+                    }
+                }
             } else if (layerName === 'satellite') {
                 // Switch to satellite map
                 switchMapLayer('satellite');
@@ -6861,6 +6901,9 @@
                     if (areaKerjaBmo2PamaLayer) {
                         areaKerjaBmo2PamaLayer.setVisible(false);
                         console.log('Hiding Area Kerja BMO2 PAMA layer from JS');
+                    }
+                    if (areaKerjaBoundaryOnlyLayer) {
+                        areaKerjaBoundaryOnlyLayer.setVisible(false);
                     }
                     
                     // Load and show daily operation plans (from MySQL)
@@ -11075,6 +11118,19 @@ source: new ol.source.Vector(),
                     // Log extent to verify layer is loaded correctly
                     const extent = areaKerjaBmo2PamaLayer.getSource().getExtent();
                     console.log('✓ Area Kerja Geotagging extent:', extent);
+                    
+                    // Layer boundary saja untuk Evaluasi Unit (dari geotaging.js, tanpa warna risk, tanpa kalkulasi)
+                    areaKerjaBoundaryOnlyLayer = createLayerFromGeoJson32650(
+                        geotaggingGeoJson,
+                        'Area Kerja Boundary Only (Evaluasi Unit)',
+                        getBoundaryOnlyStyle,
+                        409
+                    );
+                    if (areaKerjaBoundaryOnlyLayer) {
+                        areaKerjaBoundaryOnlyLayer.setVisible(false);
+                        map.addLayer(areaKerjaBoundaryOnlyLayer);
+                        console.log('✓ Area Kerja Boundary Only layer added (Evaluasi Unit), features:', areaKerjaBoundaryOnlyLayer.getSource().getFeatures().length);
+                    }
                     
                     // Calculate risk level for all features to display matrix colors automatically
                     console.log('Calculating risk levels for all features to display matrix colors...');
