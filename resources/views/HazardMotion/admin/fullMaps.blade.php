@@ -23785,6 +23785,18 @@ source: new ol.source.Vector(),
         evaluasiUnitRouteAnimationId = requestAnimationFrame(animateUnitAlongRoute);
     }
     
+    // Hitung jarak antara dua koordinat (Haversine) dalam km
+    function haversineDistanceKm(lat1, lon1, lat2, lon2) {
+        const R = 6371;
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
+            Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+            Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+        return R * c;
+    }
+
     function renderEvaluasiUnitGpsLogs(logs, detailEl, unitId, dateStr) {
         if (!detailEl) return;
         const currentDate = dateStr || new Date().toISOString().slice(0, 10);
@@ -23801,25 +23813,30 @@ source: new ol.source.Vector(),
             });
             return;
         }
-        const rows = logs.map(row => {
-            const timeStr = (row.updated_at || row.created_at || '-').toString().replace('T', ' ').substring(0, 19);
-            const lat = row.latitude != null ? row.latitude : '-';
-            const lon = row.longitude != null ? row.longitude : '-';
-            const speed = row.speed != null ? row.speed : '-';
-            const battery = row.battery != null ? row.battery : '-';
-            return `<tr><td>${escapeHtml(timeStr)}</td><td>${escapeHtml(String(lat))}</td><td>${escapeHtml(String(lon))}</td><td>${escapeHtml(String(speed))}</td><td>${escapeHtml(String(battery))}</td></tr>`;
-        }).join('');
+        // Hitung total jarak dari titik ke titik (urutan log)
+        let totalKm = 0;
+        for (let i = 0; i < logs.length - 1; i++) {
+            const a = logs[i], b = logs[i + 1];
+            const lat1 = a.latitude != null ? Number(a.latitude) : null;
+            const lon1 = a.longitude != null ? Number(a.longitude) : null;
+            const lat2 = b.latitude != null ? Number(b.latitude) : null;
+            const lon2 = b.longitude != null ? Number(b.longitude) : null;
+            if (lat1 != null && lon1 != null && lat2 != null && lon2 != null) {
+                totalKm += haversineDistanceKm(lat1, lon1, lat2, lon2);
+            }
+        }
+        const distanceText = totalKm >= 1
+            ? totalKm.toFixed(2) + ' km'
+            : (totalKm * 1000).toFixed(0) + ' m';
         detailEl.innerHTML = `
             <div style="margin-bottom: 8px;">
                 <label style="font-size: 11px; color: #6b7280;">Tanggal (riwayat per hari)</label>
                 <input type="date" class="form-control form-control-sm" value="${escapeHtml(currentDate)}" data-evaluasi-unit-id="${escapeHtml(unitId || '')}" style="font-size: 12px;">
             </div>
-            <div style="font-weight: 600; font-size: 12px; color: #374151; margin-bottom: 8px;">Riwayat GPS (${logs.length} log) — garis di peta</div>
-            <div style="max-height: 280px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
-                <table class="evaluasi-unit-log-table">
-                    <thead><tr><th>Waktu</th><th>Lat</th><th>Lon</th><th>Speed</th><th>Battery</th></tr></thead>
-                    <tbody>${rows}</tbody>
-                </table>
+            <div style="font-weight: 600; font-size: 12px; color: #374151; margin-bottom: 8px;">Jarak yang ditempuh</div>
+            <div style="padding: 16px; background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 8px; margin-bottom: 8px;">
+                <div style="font-size: 24px; font-weight: 700; color: #0369a1;">${escapeHtml(distanceText)}</div>
+                <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">${logs.length} titik GPS — rute ditampilkan di peta</div>
             </div>
         `;
         detailEl.querySelector('input[type="date"]')?.addEventListener('change', function() {
