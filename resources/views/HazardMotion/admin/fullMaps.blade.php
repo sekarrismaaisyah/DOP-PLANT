@@ -965,6 +965,7 @@
 .sidebar-tab.active .tab-avatar-blue { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #3b82f6; }
 .sidebar-tab.active .tab-avatar-teal { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #14b8a6; }
 .sidebar-tab.active .tab-avatar-orange { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #f97316; }
+.sidebar-tab.active .tab-avatar-amber { box-shadow: 0 0 0 2px #fff, 0 0 0 4px #f59e0b; }
 .sidebar-tab .tab-avatar {
     flex-shrink: 0;
     width: 40px;
@@ -982,6 +983,7 @@
 .sidebar-tab .tab-avatar-blue { background: #3b82f6; }
 .sidebar-tab .tab-avatar-teal { background: #14b8a6; }
 .sidebar-tab .tab-avatar-orange { background: #f97316; }
+.sidebar-tab .tab-avatar-amber { background: #f59e0b; }
 .sidebar-tab .tab-content-inner {
     flex: 1;
     min-width: 0;
@@ -4149,6 +4151,14 @@
                             <span class="tab-detail">Probability</span>
                         </div>
                     </button>
+                    <button type="button" class="sidebar-tab" data-tab="evaluasi" title="Evaluasi Fuelling Unit">
+                        <span class="tab-avatar tab-avatar-amber">E</span>
+                        <div class="tab-content-inner">
+                            <span class="tab-label">Evaluasi Fuelling Unit</span>
+                            <span class="tab-subtitle">Boundary area kerja</span>
+                            <span class="tab-detail">Evaluasi Unit Fuel</span>
+                        </div>
+                    </button>
                 </div>
                 <div class="sidebar-body">
                     <div class="sidebar-search">
@@ -4196,8 +4206,8 @@
                         <div class="tab-content" id="tabContentEvaluasi">
                             <div id="evaluasiContent" class="map-selection-container">
                                 <div class="map-selection-title">
-                                    <i class="material-icons-outlined">map</i>
-                                    <span>Pilihan Map Evaluasi</span>
+                                    <i class="material-icons-outlined">local_gas_station</i>
+                                    <span>Evaluasi Fuelling Unit</span>
                                 </div>
                                 <div class="map-selection-grid">
                                     <div class="map-selection-item" data-map="1" data-matrix='{"cctv": {"nyala": true}, "sap": {"exists": true}}'>
@@ -6583,7 +6593,7 @@
             'layerTerrain': 'insiden',     // Mobility -> Alert Unit & Orang
             'layerTraffic': 'controlroom', // Critical Area -> Alert DOP & IKK
             'layerTransit': 'pja',        // Probability -> Alert Probability
-            'layerEvaluasiUnit': 'pja',   // Evaluasi Unit -> boundary saja dari geotaging.js
+            'layerEvaluasiUnit': 'evaluasi',   // Evaluasi Unit -> hanya Evaluasi Fuelling Unit (boundary)
             'layerIkk': 'controlroom'
         };
         
