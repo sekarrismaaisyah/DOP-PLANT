@@ -5135,6 +5135,8 @@
     let dopCctvLinesLayer = null; // Layer untuk garis dari DOP ke CCTV
     let dopCctvMarkersLayer = null; // Layer untuk CCTV markers dari dop_cctv
     let evaluasiUnitRouteLayer = null; // Layer untuk garis putus-putus tracing riwayat GPS unit (Evaluasi Fuelling)
+    let evaluasiUnitMarkerLayer = null;  // Layer untuk marker animasi unit bergerak di sepanjang route
+    let evaluasiUnitRouteAnimationId = null; // requestAnimationFrame id untuk stop animasi
     let popupOverlay = null;
     let cctvToHazardLinesLayer = null; // Layer untuk garis arah dari CCTV ke hazard
     let probabilityOverlays = []; // Array untuk menyimpan probability popup overlays
@@ -6889,6 +6891,14 @@
                         evaluasiUnitRouteLayer.getSource().clear();
                         evaluasiUnitRouteLayer.setVisible(false);
                     }
+                    if (evaluasiUnitRouteAnimationId != null) {
+                        cancelAnimationFrame(evaluasiUnitRouteAnimationId);
+                        evaluasiUnitRouteAnimationId = null;
+                    }
+                    if (evaluasiUnitMarkerLayer) {
+                        evaluasiUnitMarkerLayer.getSource().clear();
+                        evaluasiUnitMarkerLayer.setVisible(false);
+                    }
                 }
             } else if (layerName === 'satellite') {
                 // Switch to satellite map
@@ -8264,6 +8274,23 @@ source: new ol.source.Vector(),
         visible: false
     });
     map.addLayer(evaluasiUnitRouteLayer);
+
+    // Layer untuk marker animasi unit (bergerak dari awal ke akhir route)
+    evaluasiUnitMarkerLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        style: new ol.style.Style({
+            image: new ol.style.Circle({
+                radius: 10,
+                fill: new ol.style.Fill({ color: '#f59e0b' }),
+                stroke: new ol.style.Stroke({ color: '#fff', width: 3 })
+            }),
+            zIndex: 451
+        }),
+        name: 'Evaluasi Unit Animated Marker',
+        zIndex: 451,
+        visible: false
+    });
+    map.addLayer(evaluasiUnitMarkerLayer);
 
     // Function to load daily operation plans from API
     function loadDailyOperationPlans() {
@@ -23676,6 +23703,11 @@ source: new ol.source.Vector(),
     
     function loadEvaluasiUnitGpsLogs(unitId, detailEl, dateParam) {
         if (!detailEl) return;
+        if (evaluasiUnitRouteAnimationId != null) {
+            cancelAnimationFrame(evaluasiUnitRouteAnimationId);
+            evaluasiUnitRouteAnimationId = null;
+        }
+        if (evaluasiUnitMarkerLayer) { evaluasiUnitMarkerLayer.getSource().clear(); evaluasiUnitMarkerLayer.setVisible(false); }
         if (evaluasiUnitRouteLayer) { evaluasiUnitRouteLayer.getSource().clear(); evaluasiUnitRouteLayer.setVisible(false); }
         const dateStr = dateParam || new Date().toISOString().slice(0, 10);
         detailEl.innerHTML = `
@@ -23692,18 +23724,22 @@ source: new ol.source.Vector(),
                     drawEvaluasiUnitRouteOnMap(result.data);
                     renderEvaluasiUnitGpsLogs(result.data, detailEl, unitId, dateStr);
                 } else {
+                    if (evaluasiUnitRouteAnimationId != null) { cancelAnimationFrame(evaluasiUnitRouteAnimationId); evaluasiUnitRouteAnimationId = null; }
+                    if (evaluasiUnitMarkerLayer) { evaluasiUnitMarkerLayer.getSource().clear(); evaluasiUnitMarkerLayer.setVisible(false); }
                     if (evaluasiUnitRouteLayer) { evaluasiUnitRouteLayer.getSource().clear(); evaluasiUnitRouteLayer.setVisible(false); }
                     detailEl.innerHTML = '<p style="font-size: 12px; color: #dc2626;">' + escapeHtml(result.message || 'Gagal memuat log') + '</p>';
                 }
             })
             .catch(err => {
+                if (evaluasiUnitRouteAnimationId != null) { cancelAnimationFrame(evaluasiUnitRouteAnimationId); evaluasiUnitRouteAnimationId = null; }
+                if (evaluasiUnitMarkerLayer) { evaluasiUnitMarkerLayer.getSource().clear(); evaluasiUnitMarkerLayer.setVisible(false); }
                 if (evaluasiUnitRouteLayer) { evaluasiUnitRouteLayer.getSource().clear(); evaluasiUnitRouteLayer.setVisible(false); }
                 detailEl.innerHTML = '<p style="font-size: 12px; color: #dc2626;">' + escapeHtml(err.message || 'Gagal memuat log') + '</p>';
             });
     }
     
     function drawEvaluasiUnitRouteOnMap(logs) {
-        if (!map || !evaluasiUnitRouteLayer || !logs || logs.length === 0) return;
+        if (!map || !evaluasiUnitRouteLayer || !evaluasiUnitMarkerLayer || !logs || logs.length === 0) return;
         const coords = [];
         for (let i = 0; i < logs.length; i++) {
             const lat = logs[i].latitude != null ? parseFloat(logs[i].latitude) : NaN;
@@ -23724,6 +23760,27 @@ source: new ol.source.Vector(),
         evaluasiUnitRouteLayer.setVisible(true);
         const extent = line.getExtent();
         map.getView().fit(extent, { padding: [40, 40, 40, 40], maxZoom: 17, duration: 500 });
+
+        // Animasi unit bergerak dari awal ke akhir (durasi 15 detik)
+        const markerSource = evaluasiUnitMarkerLayer.getSource();
+        markerSource.clear();
+        const pointFeature = new ol.Feature({ geometry: new ol.geom.Point(coords[0]) });
+        markerSource.addFeature(pointFeature);
+        evaluasiUnitMarkerLayer.setVisible(true);
+        const durationMs = 15000;
+        const startTime = performance.now();
+        function animateUnitAlongRoute(timestamp) {
+            const elapsed = (timestamp || performance.now()) - startTime;
+            const t = Math.min(elapsed / durationMs, 1);
+            const coord = line.getCoordinateAt(t);
+            pointFeature.getGeometry().setCoordinates(coord);
+            if (t < 1) {
+                evaluasiUnitRouteAnimationId = requestAnimationFrame(animateUnitAlongRoute);
+            } else {
+                evaluasiUnitRouteAnimationId = null;
+            }
+        }
+        evaluasiUnitRouteAnimationId = requestAnimationFrame(animateUnitAlongRoute);
     }
     
     function renderEvaluasiUnitGpsLogs(logs, detailEl, unitId, dateStr) {
