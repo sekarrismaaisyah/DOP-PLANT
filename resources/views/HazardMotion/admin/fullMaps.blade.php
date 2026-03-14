@@ -23553,13 +23553,13 @@ source: new ol.source.Vector(),
             `;
         } else {
             listHtml = units.map((u, index) => {
-                const name = (u.vehicle_name || u.vehicle_number || u.integration_id || u.id || 'Unit').toString();
                 const no = (u.vehicle_number || '-').toString();
                 const vendor = (u.vendor_name || '-').toString();
                 const lat = u.last_latitude != null ? u.last_latitude : '-';
                 const lon = u.last_longitude != null ? u.last_longitude : '-';
                 const battery = u.last_battery != null ? String(u.last_battery) : '-';
-                const firstLetter = (name.charAt(0) || 'U').toUpperCase();
+                const title = no !== '-' && vendor !== '-' ? 'No: ' + no + ' | ' + vendor : no !== '-' ? 'No: ' + no : vendor !== '-' ? vendor : (u.vehicle_name || 'Unit').toString();
+                const firstLetter = (no !== '-' ? no.charAt(0) : (vendor !== '-' ? vendor.charAt(0) : 'U')).toUpperCase();
                 const metaLine = [lat !== '-' ? 'Lat: ' + lat : '', lon !== '-' ? 'Lon: ' + lon : '', battery !== '-' ? 'Battery: ' + battery : ''].filter(Boolean).join(' | ') || '—';
                 return `
                     <div class="sidebar-list-item" data-type="evaluasi-unit" data-id="${escapeHtml(String(u.id || ''))}" data-index="${index}">
@@ -23567,8 +23567,7 @@ source: new ol.source.Vector(),
                             ${escapeHtml(firstLetter)}
                         </div>
                         <div class="list-item-content">
-                            <div class="list-item-title">${escapeHtml(name)}</div>
-                            <div class="list-item-subtitle">No: ${escapeHtml(no)}${vendor !== '-' ? ' | ' + escapeHtml(vendor) : ''}</div>
+                            <div class="list-item-title">${escapeHtml(title)}</div>
                             <div class="list-item-time">${escapeHtml(metaLine)}</div>
                         </div>
                     </div>
