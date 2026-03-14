@@ -23502,9 +23502,11 @@ source: new ol.source.Vector(),
                 <i class="material-icons-outlined">local_gas_station</i>
                 <span>Evaluasi Fuelling Unit</span>
             </div>
-            <div style="text-align: center; padding: 32px 20px;">
-                <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
-                <p style="margin-top: 12px; color: #6b7280; font-size: 13px;">Memuat data unit dari ClickHouse...</p>
+            <div class="sidebar-list" style="min-height: 120px; display: flex; align-items: center; justify-content: center;">
+                <div style="text-align: center; padding: 24px 16px;">
+                    <div class="spinner-border text-primary" role="status" style="width: 2rem; height: 2rem;"><span class="visually-hidden">Loading...</span></div>
+                    <p style="margin-top: 12px; color: #6b7280; font-size: 13px;">Memuat data unit dari ClickHouse...</p>
+                </div>
             </div>
         `;
         fetch('{{ route("full-maps.api.nitip-units") }}', {
@@ -23526,9 +23528,11 @@ source: new ol.source.Vector(),
                     <i class="material-icons-outlined">local_gas_station</i>
                     <span>Evaluasi Fuelling Unit</span>
                 </div>
-                <div style="text-align: center; padding: 24px 16px; color: #dc2626;">
-                    <i class="material-icons-outlined" style="font-size: 40px;">error_outline</i>
-                    <p style="margin: 8px 0 0 0; font-size: 13px;">${err.message || 'Tidak dapat terhubung ke ClickHouse Nitip'}</p>
+                <div class="sidebar-list" style="min-height: 100px; display: flex; align-items: center; justify-content: center;">
+                    <div style="text-align: center; padding: 24px 16px; color: #dc2626;">
+                        <i class="material-icons-outlined" style="font-size: 40px;">error_outline</i>
+                        <p style="margin: 8px 0 0 0; font-size: 13px;">${escapeHtml(err.message || 'Tidak dapat terhubung ke ClickHouse Nitip')}</p>
+                    </div>
                 </div>
             `;
         });
@@ -23538,39 +23542,49 @@ source: new ol.source.Vector(),
         const evaluasiContent = document.getElementById('evaluasiContent');
         if (!evaluasiContent) return;
         const count = units.length;
+        const avatarColor = '#f59e0b';
         let listHtml = '';
         if (count === 0) {
-            listHtml = '<div style="text-align: center; padding: 24px; color: #6b7280; font-size: 13px;">Tidak ada data unit.</div>';
+            listHtml = `
+                <div class="sidebar-list" style="padding: 24px; text-align: center;">
+                    <i class="material-icons-outlined" style="font-size: 48px; color: #d1d5db;">local_gas_station</i>
+                    <p style="margin: 12px 0 0 0; color: #6b7280; font-size: 13px;">Tidak ada data unit.</p>
+                </div>
+            `;
         } else {
-            listHtml = units.map(u => {
+            listHtml = units.map((u, index) => {
                 const name = (u.vehicle_name || u.vehicle_number || u.integration_id || u.id || 'Unit').toString();
                 const no = (u.vehicle_number || '-').toString();
                 const vendor = (u.vendor_name || '-').toString();
                 const lat = u.last_latitude != null ? u.last_latitude : '-';
                 const lon = u.last_longitude != null ? u.last_longitude : '-';
-                const battery = u.last_battery != null ? u.last_battery : '-';
+                const battery = u.last_battery != null ? String(u.last_battery) : '-';
+                const firstLetter = (name.charAt(0) || 'U').toUpperCase();
+                const metaLine = [lat !== '-' ? 'Lat: ' + lat : '', lon !== '-' ? 'Lon: ' + lon : '', battery !== '-' ? 'Battery: ' + battery : ''].filter(Boolean).join(' | ') || '—';
                 return `
-                    <div class="sidebar-list-item" style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer;">
-                        <div style="font-weight: 600; font-size: 13px; color: #111827;">${escapeHtml(name)}</div>
-                        <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
-                            No: ${escapeHtml(no)} | Vendor: ${escapeHtml(vendor)}
+                    <div class="sidebar-list-item" data-type="evaluasi-unit" data-id="${escapeHtml(String(u.id || ''))}" data-index="${index}">
+                        <div class="list-item-avatar" style="background-color: ${avatarColor}; color: #fff;">
+                            ${escapeHtml(firstLetter)}
                         </div>
-                        <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">
-                            Lat: ${escapeHtml(String(lat))} | Lon: ${escapeHtml(String(lon))} | Battery: ${escapeHtml(String(battery))}
+                        <div class="list-item-content">
+                            <div class="list-item-title">${escapeHtml(name)}</div>
+                            <div class="list-item-subtitle">No: ${escapeHtml(no)}${vendor !== '-' ? ' | ' + escapeHtml(vendor) : ''}</div>
+                            <div class="list-item-time">${escapeHtml(metaLine)}</div>
                         </div>
                     </div>
                 `;
             }).join('');
+            listHtml = '<div class="sidebar-list">' + listHtml + '</div>';
         }
         evaluasiContent.innerHTML = `
             <div class="map-selection-title" style="margin-bottom: 12px;">
                 <i class="material-icons-outlined">local_gas_station</i>
                 <span>Evaluasi Fuelling Unit</span>
             </div>
-            <div style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">Total: ${count} unit (data dari ClickHouse Nitip)</div>
-            <div style="max-height: 400px; overflow-y: auto;">
-                ${listHtml}
+            <div style="font-size: 12px; color: #6b7280; margin-bottom: 10px; padding: 0 2px;">
+                <span style="font-weight: 600; color: #374151;">${count}</span> unit <span style="color: #9ca3af;">(ClickHouse Nitip)</span>
             </div>
+            ${listHtml}
         `;
     }
     
