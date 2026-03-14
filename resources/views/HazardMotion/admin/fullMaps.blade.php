@@ -23555,12 +23555,8 @@ source: new ol.source.Vector(),
             listHtml = units.map((u, index) => {
                 const no = (u.vehicle_number || '-').toString();
                 const vendor = (u.vendor_name || '-').toString();
-                const lat = u.last_latitude != null ? u.last_latitude : '-';
-                const lon = u.last_longitude != null ? u.last_longitude : '-';
-                const battery = u.last_battery != null ? String(u.last_battery) : '-';
                 const title = no !== '-' && vendor !== '-' ? 'No: ' + no + ' | ' + vendor : no !== '-' ? 'No: ' + no : vendor !== '-' ? vendor : (u.vehicle_name || 'Unit').toString();
                 const firstLetter = (no !== '-' ? no.charAt(0) : (vendor !== '-' ? vendor.charAt(0) : 'U')).toUpperCase();
-                const metaLine = [lat !== '-' ? 'Lat: ' + lat : '', lon !== '-' ? 'Lon: ' + lon : '', battery !== '-' ? 'Battery: ' + battery : ''].filter(Boolean).join(' | ') || '—';
                 return `
                     <div class="sidebar-list-item" data-type="evaluasi-unit" data-id="${escapeHtml(String(u.id || ''))}" data-index="${index}">
                         <div class="list-item-avatar" style="background-color: ${avatarColor}; color: #fff;">
@@ -23568,7 +23564,6 @@ source: new ol.source.Vector(),
                         </div>
                         <div class="list-item-content">
                             <div class="list-item-title">${escapeHtml(title)}</div>
-                            <div class="list-item-time">${escapeHtml(metaLine)}</div>
                         </div>
                     </div>
                 `;
