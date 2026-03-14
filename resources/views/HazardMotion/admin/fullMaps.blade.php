@@ -5134,6 +5134,7 @@
     let ikkDopmTodayData = []; // Data DOPM tanggal_dop = hari ini untuk panel card
     let dopCctvLinesLayer = null; // Layer untuk garis dari DOP ke CCTV
     let dopCctvMarkersLayer = null; // Layer untuk CCTV markers dari dop_cctv
+    let evaluasiUnitRouteLayer = null; // Layer untuk garis putus-putus tracing riwayat GPS unit (Evaluasi Fuelling)
     let popupOverlay = null;
     let cctvToHazardLinesLayer = null; // Layer untuk garis arah dari CCTV ke hazard
     let probabilityOverlays = []; // Array untuk menyimpan probability popup overlays
@@ -6885,6 +6886,10 @@
                         areaKerjaBmo2PamaLayer.setVisible(true);
                         areaKerjaBmo2PamaLayer.setOpacity(1.0);
                     }
+                    if (evaluasiUnitRouteLayer) {
+                        evaluasiUnitRouteLayer.getSource().clear();
+                        evaluasiUnitRouteLayer.setVisible(false);
+                    }
                 }
             } else if (layerName === 'satellite') {
                 // Switch to satellite map
@@ -8241,6 +8246,25 @@ source: new ol.source.Vector(),
         visible: true
     });
     map.addLayer(dopCctvMarkersLayer);
+
+    // Layer untuk tracing riwayat GPS unit (Evaluasi Fuelling) - garis putus-putus
+    evaluasiUnitRouteLayer = new ol.layer.Vector({
+        source: new ol.source.Vector(),
+        style: new ol.style.Style({
+            stroke: new ol.style.Stroke({
+                color: '#f59e0b',
+                width: 3,
+                lineDash: [8, 8],
+                lineCap: 'round',
+                lineJoin: 'round'
+            }),
+            zIndex: 450
+        }),
+        name: 'Evaluasi Unit Route',
+        zIndex: 450,
+        visible: false
+    });
+    map.addLayer(evaluasiUnitRouteLayer);
 
     // Function to load daily operation plans from API
     function loadDailyOperationPlans() {
@@ -23644,59 +23668,105 @@ source: new ol.source.Vector(),
                     const isExpanded = item.classList.contains('expanded');
                     item.classList.toggle('expanded', !isExpanded);
                     if (!isExpanded && detailEl.querySelector('.evaluasi-unit-log-placeholder')) {
-                        loadEvaluasiUnitGpsLogs(unitId, detailEl);
+                        loadEvaluasiUnitGpsLogs(unitId, detailEl, null);
                     }
                 });
             });
         }
     }
     
-    function loadEvaluasiUnitGpsLogs(unitId, detailEl) {
+    function loadEvaluasiUnitGpsLogs(unitId, detailEl, dateParam) {
         if (!detailEl) return;
+        if (evaluasiUnitRouteLayer) { evaluasiUnitRouteLayer.getSource().clear(); evaluasiUnitRouteLayer.setVisible(false); }
+        const dateStr = dateParam || new Date().toISOString().slice(0, 10);
         detailEl.innerHTML = `
             <div style="text-align: center; padding: 16px;">
                 <div class="spinner-border spinner-border-sm text-primary" role="status"></div>
                 <p style="margin-top: 8px; font-size: 12px; color: #6b7280;">Memuat riwayat GPS...</p>
             </div>
         `;
-        const url = '{{ route("full-maps.api.nitip-unit-gps-logs") }}?unit_id=' + encodeURIComponent(unitId);
+        const url = '{{ route("full-maps.api.nitip-unit-gps-logs") }}?unit_id=' + encodeURIComponent(unitId) + '&date=' + encodeURIComponent(dateStr);
         fetch(url, { method: 'GET', headers: { 'Accept': 'application/json' } })
             .then(r => r.json())
             .then(result => {
                 if (result.success && Array.isArray(result.data)) {
-                    renderEvaluasiUnitGpsLogs(result.data, detailEl);
+                    drawEvaluasiUnitRouteOnMap(result.data);
+                    renderEvaluasiUnitGpsLogs(result.data, detailEl, unitId, dateStr);
                 } else {
+                    if (evaluasiUnitRouteLayer) { evaluasiUnitRouteLayer.getSource().clear(); evaluasiUnitRouteLayer.setVisible(false); }
                     detailEl.innerHTML = '<p style="font-size: 12px; color: #dc2626;">' + escapeHtml(result.message || 'Gagal memuat log') + '</p>';
                 }
             })
             .catch(err => {
+                if (evaluasiUnitRouteLayer) { evaluasiUnitRouteLayer.getSource().clear(); evaluasiUnitRouteLayer.setVisible(false); }
                 detailEl.innerHTML = '<p style="font-size: 12px; color: #dc2626;">' + escapeHtml(err.message || 'Gagal memuat log') + '</p>';
             });
     }
     
-    function renderEvaluasiUnitGpsLogs(logs, detailEl) {
+    function drawEvaluasiUnitRouteOnMap(logs) {
+        if (!map || !evaluasiUnitRouteLayer || !logs || logs.length === 0) return;
+        const coords = [];
+        for (let i = 0; i < logs.length; i++) {
+            const lat = logs[i].latitude != null ? parseFloat(logs[i].latitude) : NaN;
+            const lon = logs[i].longitude != null ? parseFloat(logs[i].longitude) : NaN;
+            if (!isNaN(lat) && !isNaN(lon)) {
+                coords.push(ol.proj.fromLonLat([lon, lat]));
+            }
+        }
+        const source = evaluasiUnitRouteLayer.getSource();
+        source.clear();
+        if (coords.length < 2) {
+            evaluasiUnitRouteLayer.setVisible(false);
+            return;
+        }
+        const line = new ol.geom.LineString(coords);
+        const feature = new ol.Feature({ geometry: line });
+        source.addFeature(feature);
+        evaluasiUnitRouteLayer.setVisible(true);
+        const extent = line.getExtent();
+        map.getView().fit(extent, { padding: [40, 40, 40, 40], maxZoom: 17, duration: 500 });
+    }
+    
+    function renderEvaluasiUnitGpsLogs(logs, detailEl, unitId, dateStr) {
         if (!detailEl) return;
+        const currentDate = dateStr || new Date().toISOString().slice(0, 10);
         if (!logs || logs.length === 0) {
-            detailEl.innerHTML = '<p style="font-size: 12px; color: #6b7280;">Tidak ada riwayat GPS.</p>';
+            detailEl.innerHTML = `
+                <div style="margin-bottom: 8px;">
+                    <label style="font-size: 11px; color: #6b7280;">Tanggal</label>
+                    <input type="date" class="form-control form-control-sm" value="${escapeHtml(currentDate)}" data-evaluasi-unit-id="${escapeHtml(unitId || '')}" style="font-size: 12px;">
+                </div>
+                <p style="font-size: 12px; color: #6b7280;">Tidak ada riwayat GPS untuk tanggal ini.</p>
+            `;
+            detailEl.querySelector('input[type="date"]')?.addEventListener('change', function() {
+                loadEvaluasiUnitGpsLogs(unitId, detailEl, this.value);
+            });
             return;
         }
         const rows = logs.map(row => {
-            const createdAt = (row.created_at || '-').toString().replace('T', ' ').substring(0, 19);
+            const timeStr = (row.updated_at || row.created_at || '-').toString().replace('T', ' ').substring(0, 19);
             const lat = row.latitude != null ? row.latitude : '-';
             const lon = row.longitude != null ? row.longitude : '-';
             const speed = row.speed != null ? row.speed : '-';
             const battery = row.battery != null ? row.battery : '-';
-            return `<tr><td>${escapeHtml(createdAt)}</td><td>${escapeHtml(String(lat))}</td><td>${escapeHtml(String(lon))}</td><td>${escapeHtml(String(speed))}</td><td>${escapeHtml(String(battery))}</td></tr>`;
+            return `<tr><td>${escapeHtml(timeStr)}</td><td>${escapeHtml(String(lat))}</td><td>${escapeHtml(String(lon))}</td><td>${escapeHtml(String(speed))}</td><td>${escapeHtml(String(battery))}</td></tr>`;
         }).join('');
         detailEl.innerHTML = `
-            <div style="font-weight: 600; font-size: 12px; color: #374151; margin-bottom: 8px;">Riwayat GPS (${logs.length} log)</div>
-            <div style="max-height: 320px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
+            <div style="margin-bottom: 8px;">
+                <label style="font-size: 11px; color: #6b7280;">Tanggal (riwayat per hari)</label>
+                <input type="date" class="form-control form-control-sm" value="${escapeHtml(currentDate)}" data-evaluasi-unit-id="${escapeHtml(unitId || '')}" style="font-size: 12px;">
+            </div>
+            <div style="font-weight: 600; font-size: 12px; color: #374151; margin-bottom: 8px;">Riwayat GPS (${logs.length} log) — garis di peta</div>
+            <div style="max-height: 280px; overflow-y: auto; border: 1px solid #e5e7eb; border-radius: 6px;">
                 <table class="evaluasi-unit-log-table">
                     <thead><tr><th>Waktu</th><th>Lat</th><th>Lon</th><th>Speed</th><th>Battery</th></tr></thead>
                     <tbody>${rows}</tbody>
                 </table>
             </div>
         `;
+        detailEl.querySelector('input[type="date"]')?.addEventListener('change', function() {
+            loadEvaluasiUnitGpsLogs(unitId, detailEl, this.value);
+        });
     }
     
     // Load evaluation summary

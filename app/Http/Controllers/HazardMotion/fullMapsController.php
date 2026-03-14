@@ -3937,12 +3937,20 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
 
     /**
      * Get GPS log history for one unit from nitip.unit_gps_logs (Evaluasi Fuelling Unit).
+     * Optional date=YYYY-MM-DD: filter by that day (default today). Berdasarkan updated_at untuk tracing path.
      */
     public function getNitipUnitGpsLogs(Request $request)
     {
         $unitId = $request->query('unit_id');
         if (empty($unitId)) {
             return response()->json(['success' => false, 'message' => 'unit_id required', 'data' => []], 400);
+        }
+        $dateStr = $request->query('date');
+        if (empty($dateStr)) {
+            $dateStr = now()->format('Y-m-d');
+        }
+        if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateStr)) {
+            return response()->json(['success' => false, 'message' => 'date must be YYYY-MM-DD', 'data' => []], 400);
         }
         try {
             $ch = new ClickHouseService('clickhouse_nitip');
@@ -3953,9 +3961,10 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     'data' => [],
                 ], 503);
             }
-            $limit = (int) $request->query('limit', 200);
-            $limit = min(max($limit, 1), 500);
+            $limit = (int) $request->query('limit', 500);
+            $limit = min(max($limit, 1), 1000);
             $safeId = "'" . addslashes((string) $unitId) . "'";
+            $safeDate = "'" . addslashes($dateStr) . "'";
             $sql = "
                 SELECT 
                     id,
@@ -3967,12 +3976,14 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     course,
                     heading,
                     created_at,
+                    updated_at,
                     vehicle_number,
                     vehicle_name,
                     vendor_name
                 FROM nitip.unit_gps_logs
                 WHERE unit_id = $safeId
-                ORDER BY created_at DESC
+                  AND toDate(updated_at) = $safeDate
+                ORDER BY updated_at ASC
                 LIMIT $limit
             ";
             $rows = $ch->query($sql);
