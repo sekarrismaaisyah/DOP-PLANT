@@ -8275,17 +8275,16 @@ source: new ol.source.Vector(),
     });
     map.addLayer(evaluasiUnitRouteLayer);
 
-    // Layer untuk marker animasi unit (bergerak dari awal ke akhir route) - ikon 🚗
+    // Layer untuk marker animasi unit (bergerak dari awal ke akhir route) - gambar unit.png
     evaluasiUnitMarkerLayer = new ol.layer.Vector({
         source: new ol.source.Vector(),
         style: new ol.style.Style({
-            text: new ol.style.Text({
-                text: '🚗',
-                font: 'bold 28px sans-serif',
-                fill: new ol.style.Fill({ color: '#000' }),
-                offsetY: -14,
-                textAlign: 'center',
-                textBaseline: 'middle'
+            image: new ol.style.Icon({
+                src: '{{ route("images.unit") }}',
+                scale: 0.4,
+                anchor: [0.5, 0.5],
+                anchorXUnits: 'fraction',
+                anchorYUnits: 'fraction'
             }),
             zIndex: 451
         }),
