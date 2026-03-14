@@ -128,6 +128,19 @@ return [
             ],
         ],
 
+        'clickhouse_nitip' => [
+            'driver' => 'clickhouse',
+            'host' => env('CLICKHOUSE_NITIP_HOST', '172.21.1.29'),
+            'port' => env('CLICKHOUSE_NITIP_PORT', '8123'),
+            'database' => env('CLICKHOUSE_NITIP_DATABASE', 'nitip'),
+            'username' => env('CLICKHOUSE_NITIP_USERNAME', 'airbyte'),
+            'password' => env('CLICKHOUSE_NITIP_PASSWORD', 'nobitasan'),
+            'options' => [
+                'timeout' => 30,
+                'protocol' => env('CLICKHOUSE_NITIP_PROTOCOL', 'http'),
+            ],
+        ],
+
         'sqlsrv' => [
             'driver' => 'sqlsrv',
             'url' => env('DATABASE_URL'),

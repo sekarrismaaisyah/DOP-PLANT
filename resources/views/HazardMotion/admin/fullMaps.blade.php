@@ -23493,6 +23493,87 @@ source: new ol.source.Vector(),
         });
     }
     
+    // Load unit list from ClickHouse Nitip (Evaluasi Fuelling Unit)
+    function loadEvaluasiUnitList() {
+        const evaluasiContent = document.getElementById('evaluasiContent');
+        if (!evaluasiContent) return;
+        evaluasiContent.innerHTML = `
+            <div class="map-selection-title" style="margin-bottom: 12px;">
+                <i class="material-icons-outlined">local_gas_station</i>
+                <span>Evaluasi Fuelling Unit</span>
+            </div>
+            <div style="text-align: center; padding: 32px 20px;">
+                <div class="spinner-border text-primary" role="status"><span class="visually-hidden">Loading...</span></div>
+                <p style="margin-top: 12px; color: #6b7280; font-size: 13px;">Memuat data unit dari ClickHouse...</p>
+            </div>
+        `;
+        fetch('{{ route("full-maps.api.nitip-units") }}', {
+            method: 'GET',
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+        })
+        .then(response => response.json())
+        .then(result => {
+            if (result.success && Array.isArray(result.data)) {
+                renderEvaluasiUnitList(result.data);
+            } else {
+                throw new Error(result.message || 'Gagal memuat data unit');
+            }
+        })
+        .catch(err => {
+            console.error('loadEvaluasiUnitList:', err);
+            evaluasiContent.innerHTML = `
+                <div class="map-selection-title" style="margin-bottom: 12px;">
+                    <i class="material-icons-outlined">local_gas_station</i>
+                    <span>Evaluasi Fuelling Unit</span>
+                </div>
+                <div style="text-align: center; padding: 24px 16px; color: #dc2626;">
+                    <i class="material-icons-outlined" style="font-size: 40px;">error_outline</i>
+                    <p style="margin: 8px 0 0 0; font-size: 13px;">${err.message || 'Tidak dapat terhubung ke ClickHouse Nitip'}</p>
+                </div>
+            `;
+        });
+    }
+    
+    function renderEvaluasiUnitList(units) {
+        const evaluasiContent = document.getElementById('evaluasiContent');
+        if (!evaluasiContent) return;
+        const count = units.length;
+        let listHtml = '';
+        if (count === 0) {
+            listHtml = '<div style="text-align: center; padding: 24px; color: #6b7280; font-size: 13px;">Tidak ada data unit.</div>';
+        } else {
+            listHtml = units.map(u => {
+                const name = (u.vehicle_name || u.vehicle_number || u.integration_id || u.id || 'Unit').toString();
+                const no = (u.vehicle_number || '-').toString();
+                const vendor = (u.vendor_name || '-').toString();
+                const lat = u.last_latitude != null ? u.last_latitude : '-';
+                const lon = u.last_longitude != null ? u.last_longitude : '-';
+                const battery = u.last_battery != null ? u.last_battery : '-';
+                return `
+                    <div class="sidebar-list-item" style="padding: 12px; border-bottom: 1px solid #e5e7eb; cursor: pointer;">
+                        <div style="font-weight: 600; font-size: 13px; color: #111827;">${escapeHtml(name)}</div>
+                        <div style="font-size: 11px; color: #6b7280; margin-top: 4px;">
+                            No: ${escapeHtml(no)} | Vendor: ${escapeHtml(vendor)}
+                        </div>
+                        <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">
+                            Lat: ${escapeHtml(String(lat))} | Lon: ${escapeHtml(String(lon))} | Battery: ${escapeHtml(String(battery))}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        evaluasiContent.innerHTML = `
+            <div class="map-selection-title" style="margin-bottom: 12px;">
+                <i class="material-icons-outlined">local_gas_station</i>
+                <span>Evaluasi Fuelling Unit</span>
+            </div>
+            <div style="font-size: 12px; color: #6b7280; margin-bottom: 12px;">Total: ${count} unit (data dari ClickHouse Nitip)</div>
+            <div style="max-height: 400px; overflow-y: auto;">
+                ${listHtml}
+            </div>
+        `;
+    }
+    
     // Load evaluation summary
     function loadEvaluationSummary(type, idLokasi, lokasiName, nomorCctv, cctvName) {
         // Switch to evaluasi tab
@@ -23872,7 +23953,7 @@ source: new ol.source.Vector(),
                 })();
                 break;
             case 'evaluasi':
-                // Evaluasi content will be rendered by loadEvaluationSummary
+                loadEvaluasiUnitList();
                 break;
         }
     }

@@ -15,30 +15,34 @@ class ClickHouseService
     private $timeout;
     private $isConnected = false;
 
-    public function __construct()
+    /** @var string */
+    private $connectionName;
+
+    public function __construct(string $connectionName = 'clickhouse')
     {
-        $host = config('database.connections.clickhouse.host');
-        $port = config('database.connections.clickhouse.port');
-        $protocol = config('database.connections.clickhouse.options.protocol', 'http');
-        
+        $this->connectionName = $connectionName;
+        $conn = config('database.connections.' . $connectionName);
+        $host = $conn['host'] ?? null;
+        $port = $conn['port'] ?? null;
+        $protocol = $conn['options']['protocol'] ?? 'http';
+
         // Jika konfigurasi tidak lengkap, set sebagai tidak terhubung
         if (empty($host) || empty($port)) {
-            Log::info('ClickHouse configuration is incomplete. Host or port is missing.');
+            Log::info('ClickHouse configuration is incomplete for connection [' . $connectionName . ']. Host or port is missing.');
             $this->isConnected = false;
             return;
         }
-        
+
         // Build base URL dengan protocol
-        // Pastikan menggunakan HTTP jika port 8123 (default HTTP port untuk ClickHouse)
         if ($port == 8123 && $protocol == 'https') {
             Log::warning('Port 8123 is typically used for HTTP, not HTTPS. Consider using CLICKHOUSE_PROTOCOL=http');
         }
-        
+
         $this->baseUrl = $protocol . '://' . $host . ':' . $port;
-        $this->username = config('database.connections.clickhouse.username', 'default');
-        $this->password = config('database.connections.clickhouse.password', '');
-        $this->database = config('database.connections.clickhouse.database', 'default');
-        $this->timeout = config('database.connections.clickhouse.options.timeout', 30);
+        $this->username = $conn['username'] ?? 'default';
+        $this->password = $conn['password'] ?? '';
+        $this->database = $conn['database'] ?? 'default';
+        $this->timeout = $conn['options']['timeout'] ?? 30;
         
         Log::info('ClickHouse configuration loaded', [
             'baseUrl' => $this->baseUrl,
@@ -90,10 +94,11 @@ class ClickHouseService
      */
     public function getConnectionInfo()
     {
+        $conn = config('database.connections.' . ($this->connectionName ?? 'clickhouse'), []);
         return [
             'baseUrl' => $this->baseUrl ?? 'Not set',
-            'host' => config('database.connections.clickhouse.host'),
-            'port' => config('database.connections.clickhouse.port'),
+            'host' => $conn['host'] ?? null,
+            'port' => $conn['port'] ?? null,
             'database' => $this->database ?? 'Not set',
             'username' => $this->username ?? 'Not set',
             'isConnected' => $this->isConnected,

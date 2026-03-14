@@ -3823,6 +3823,119 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
+     * Get units and latest GPS from ClickHouse nitip (Evaluasi Fuelling Unit).
+     * Data: nitip.units + nitip.unit_gps_logs (latest per unit).
+     */
+    public function getNitipUnits()
+    {
+        try {
+            $ch = new ClickHouseService('clickhouse_nitip');
+            if (!$ch->isConnected()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ClickHouse Nitip tidak terhubung. Periksa konfigurasi CLICKHOUSE_NITIP_* di .env',
+                    'data' => [],
+                ], 503);
+            }
+
+            $sqlUnits = "
+                SELECT 
+                    id,
+                    vehicle_name,
+                    vehicle_number,
+                    integration_id,
+                    last_latitude,
+                    last_longitude,
+                    last_battery,
+                    last_course,
+                    vendor_name,
+                    vendor_type,
+                    vehicle_type,
+                    created_at,
+                    updated_at
+                FROM nitip.units
+                ORDER BY vehicle_name ASC
+            ";
+            $units = $ch->query($sqlUnits);
+            if (!is_array($units)) {
+                $units = [];
+            }
+
+            // Optional: get latest GPS log per unit (argMax = nilai dari baris dengan created_at max)
+            $unitIds = array_filter(array_column($units, 'id'));
+            $latestGpsByUnit = [];
+            if (!empty($unitIds)) {
+                $idsList = implode(',', array_map(function ($id) {
+                    return "'" . addslashes((string) $id) . "'";
+                }, $unitIds));
+                $sqlLatestGps = "
+                    SELECT 
+                        unit_id,
+                        argMax(latitude, created_at) AS latitude,
+                        argMax(longitude, created_at) AS longitude,
+                        argMax(speed, created_at) AS speed,
+                        argMax(battery, created_at) AS battery,
+                        max(created_at) AS created_at
+                    FROM nitip.unit_gps_logs
+                    WHERE unit_id IN ($idsList)
+                    GROUP BY unit_id
+                ";
+                try {
+                    $latestRows = $ch->query($sqlLatestGps);
+                    if (is_array($latestRows)) {
+                        foreach ($latestRows as $row) {
+                            $uid = $row['unit_id'] ?? null;
+                            if ($uid !== null) {
+                                $latestGpsByUnit[$uid] = $row;
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    Log::warning('ClickHouse nitip unit_gps_logs query failed: ' . $e->getMessage());
+                }
+            }
+
+            $list = [];
+            foreach ($units as $u) {
+                $id = $u['id'] ?? null;
+                $gps = $latestGpsByUnit[$id] ?? null;
+                $lat = $gps['latitude'] ?? $u['last_latitude'] ?? null;
+                $lon = $gps['longitude'] ?? $u['last_longitude'] ?? null;
+                $list[] = [
+                    'id' => $id,
+                    'vehicle_name' => $u['vehicle_name'] ?? null,
+                    'vehicle_number' => $u['vehicle_number'] ?? null,
+                    'integration_id' => $u['integration_id'] ?? null,
+                    'last_latitude' => $lat,
+                    'last_longitude' => $lon,
+                    'last_battery' => $gps['battery'] ?? $u['last_battery'] ?? null,
+                    'last_course' => $u['last_course'] ?? null,
+                    'speed' => $gps['speed'] ?? null,
+                    'vendor_name' => $u['vendor_name'] ?? null,
+                    'vendor_type' => $u['vendor_type'] ?? null,
+                    'vehicle_type' => $u['vehicle_type'] ?? null,
+                    'created_at' => $u['created_at'] ?? null,
+                    'updated_at' => $u['updated_at'] ?? null,
+                    'gps_at' => $gps['created_at'] ?? null,
+                ];
+            }
+
+            return response()->json([
+                'success' => true,
+                'data' => $list,
+                'count' => count($list),
+            ]);
+        } catch (Exception $e) {
+            Log::error('getNitipUnits: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
+                'data' => [],
+            ], 500);
+        }
+    }
+
+    /**
      * Get photos from hse_ai_validations for gallery
      */
     public function getPhotoGallery(Request $request)
