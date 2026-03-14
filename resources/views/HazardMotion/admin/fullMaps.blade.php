@@ -5921,10 +5921,10 @@
     /** Style boundary saja (dari geotaging.js) - tanpa warna risk, tanpa kalkulasi. Hanya outline netral. */
     function getBoundaryOnlyStyle(feature) {
         return new ol.style.Style({
-            fill: new ol.style.Fill({ color: 'rgba(120, 120, 120, 0.04)' }),
+            fill: new ol.style.Fill({ color: 'rgba(255, 193, 7, 0.06)' }),
             stroke: new ol.style.Stroke({
-                color: 'rgba(100, 100, 100, 0.5)',
-                width: 1.5,
+                color: '#f59e0b',
+                width: 2.5,
                 lineCap: 'round',
                 lineJoin: 'round'
             }),
