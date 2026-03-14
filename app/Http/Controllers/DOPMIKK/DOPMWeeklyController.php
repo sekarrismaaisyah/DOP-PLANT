@@ -149,7 +149,7 @@ class DOPMWeeklyController extends Controller
                         SELECT code, start_date, end_date
                         FROM hse_automation.ikk_work_permit
                         WHERE toDate(start_date) <= toDate('" . addslashes($mingguEndStr) . "')
-                          AND toDate(end_date)   >= toDate('" . addslashes($mingguStartStr) . "')
+                          AND subtractDays(toDate(end_date), 1) >= toDate('" . addslashes($mingguStartStr) . "')
                           AND status IN ('APPROVED', 'EXPIRED')
                           AND deleted_at IS NULL
                           {$siteFilterClause}
@@ -169,10 +169,12 @@ class DOPMWeeklyController extends Controller
                             if ($startDate === null || $endDate === null) {
                                 continue;
                             }
+                            // Hari terakhir aktif = end_date - 1 (h-1)
+                            $lastActiveDate = $endDate->copy()->subDay()->startOfDay();
                             for ($i = 0; $i < 7; $i++) {
                                 $dayStart = $mingguStart->copy()->addDays($i)->startOfDay();
                                 $dayEnd = $mingguStart->copy()->addDays($i)->endOfDay();
-                                if ($startDate->lte($dayEnd) && $endDate->gte($dayStart)) {
+                                if ($startDate->lte($dayEnd) && $lastActiveDate->gte($dayStart)) {
                                     $codesPerDay[$i][$code] = true;
                                 }
                             }
@@ -235,7 +237,7 @@ class DOPMWeeklyController extends Controller
                             ON toString(m.id) = toString(wp_pic.m_pic_id)
                         WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
                             AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
-                            AND toDate(wp.end_date)   >= toDate('{$weekStartStr}')
+                            AND subtractDays(toDate(wp.end_date), 1) >= toDate('{$weekStartStr}')
                             {$siteFilterClauseWeekly}
                         GROUP BY wp.code, wp.id, wp.start_date, wp.end_date
                         HAVING sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
@@ -264,9 +266,6 @@ class DOPMWeeklyController extends Controller
                                     $ikkLastActiveDate = $ikkEnd->copy()->subDay()->startOfDay();
                                     $effectiveStart = $ikkStart->lt($weekStartDate) ? $weekStartDate->copy() : $ikkStart->copy();
                                     $effectiveEnd = $ikkLastActiveDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkLastActiveDate->copy();
-                                    if ($effectiveEnd->lt($effectiveStart)) {
-                                        $effectiveEnd = $effectiveStart->copy();
-                                    }
                                     if ($effectiveStart->lte($effectiveEnd)) {
                                         $durasiHari = $effectiveStart->startOfDay()->diffInDays($effectiveEnd->startOfDay()) + 1;
                                         $totalIpkSeharusnya += $durasiHari;
@@ -622,7 +621,7 @@ class DOPMWeeklyController extends Controller
                             ON toString(m.id) = toString(wp_pic.m_pic_id)
                         WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
                             AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
-                            AND toDate(wp.end_date)   >= toDate('{$weekStartStr}')
+                            AND subtractDays(toDate(wp.end_date), 1) >= toDate('{$weekStartStr}')
                             {$siteFilterClause}
                         GROUP BY
                             wp.id, wp.code, wp.name, wp.ra_site_name, wp.company_name,
@@ -1228,9 +1227,6 @@ class DOPMWeeklyController extends Controller
 
                     $effectiveStart = $ikkStartDate->lt($weekStartDate) ? $weekStartDate->copy() : $ikkStartDate->copy();
                     $effectiveEnd = $ikkLastActiveDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkLastActiveDate->copy();
-                    if ($effectiveEnd->lt($effectiveStart)) {
-                        $effectiveEnd = $effectiveStart->copy();
-                    }
 
                     $dailyDetails = [];
                     $ipkCount = 0;
@@ -2206,7 +2202,7 @@ class DOPMWeeklyController extends Controller
                             ON toString(m.id) = toString(wp_pic.m_pic_id)
                         WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
                             AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
-                            AND toDate(wp.end_date)   >= toDate('{$weekStartStr}')
+                            AND subtractDays(toDate(wp.end_date), 1) >= toDate('{$weekStartStr}')
                             {$siteFilterClause}
                         GROUP BY
                             wp.id, wp.code, wp.name, wp.ra_site_name, wp.company_name,
@@ -2321,9 +2317,6 @@ class DOPMWeeklyController extends Controller
 
             $effectiveStart = $ikkStartDate->lt($weekStartDate) ? $weekStartDate->copy() : $ikkStartDate->copy();
             $effectiveEnd = $ikkLastActiveDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkLastActiveDate->copy();
-            if ($effectiveEnd->lt($effectiveStart)) {
-                $effectiveEnd = $effectiveStart->copy();
-            }
 
             $currentDate = $effectiveStart->copy();
             while ($currentDate->lte($effectiveEnd)) {

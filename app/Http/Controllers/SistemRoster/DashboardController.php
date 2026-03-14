@@ -14,6 +14,14 @@ use Illuminate\View\View;
 class DashboardController extends Controller
 {
     /**
+     * Menampilkan halaman Dashboard Coverage Area (Coverage All).
+     */
+    public function coverageAll(): View
+    {
+        return view('SistemRoster.dashboard.coverage-all');
+    }
+
+    /**
      * Menampilkan halaman Performance Dashboard Sistem Roster.
      * Coverage by Location: ada SAP di lokasi (siapapun) — tidak match nama.
      * Detail Plan Pengecekan: OK hanya jika ada SAP dari karyawan yang di-assign (match nama + lokasi + tanggal).

@@ -80,7 +80,7 @@
     <x-page-title title="Roster Planning" pagetitle="Planning & Assignment Karyawan" />
 
     <div class="row">
-        <div class="col-12">
+        <div class="col-8">
             @if (session('success'))
                 <div class="alert alert-success alert-dismissible fade show rounded-4" role="alert">
                     {{ session('success') }}
@@ -104,7 +104,7 @@
 
             @if (($queueConnection ?? 'sync') !== 'sync')
                 <div class="alert alert-secondary alert-dismissible fade show rounded-4" role="alert">
-                    <i class="bx bx-info-circle"></i> Generate berjalan di background. Jika data belum muncul, jalankan queue worker: <code>php artisan queue:work</code>
+                    <i class="bx bx-info-circle"></i>Jika belum muncul data IKK/DOP, Klik tombol Generate Planning di samping ini </i>
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
@@ -116,6 +116,16 @@
                 </div>
             @endif
         </div>
+         <div class="col-4 my-auto">
+                            <form method="POST" action="{{ route('sistem-roster.planning.generate') }}" class="d-flex justify-content-end align-items-end h-100">
+                                @csrf
+                                <input type="hidden" name="start_date" value="{{ $filterStartDate }}">
+                                <input type="hidden" name="end_date" value="{{ $filterEndDate }}">
+                                <button type="submit" class="btn btn-success" id="generateBtn">
+                                    <i class="bx bx-refresh"></i> Generate Planning
+                                </button>
+                            </form>
+                        </div>
     </div>
 
     <!-- Job Progress Section -->
@@ -148,21 +158,21 @@
             <div class="card rounded-4">
                 <div class="card-body">
                     <div class="row g-3">
-                        <div class="col-lg-8">
+                        <div class="col-lg-12">
                             <form method="GET" action="{{ route('sistem-roster.planning.index') }}" id="filterForm" class="row g-3 align-items-end">
-                                <div class="col-12">
+                                <!-- <div class="col-12">
                                     <label for="search" class="form-label">Cari (No IKK, Aktivitas, Lokasi, Site, Perusahaan, Pengawas)</label>
                                     <input type="text" name="search" id="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Ketik untuk cari di semua kolom...">
-                                </div>
-                                <div class="col-md-3">
+                                </div> -->
+                                <div class="col-md-2">
                                     <label for="start_date" class="form-label">Tanggal Mulai</label>
                                     <input type="date" name="start_date" id="start_date" class="form-control" value="{{ $filterStartDate }}">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label for="end_date" class="form-label">Tanggal Selesai</label>
                                     <input type="date" name="end_date" id="end_date" class="form-control" value="{{ $filterEndDate }}">
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label for="filter_site" class="form-label">Filter Site</label>
                                     @php
                                         // Pastikan opsi HOTE dan MARINE selalu tersedia di dropdown filter,
@@ -181,7 +191,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label for="filter_perusahaan" class="form-label">Filter Perusahaan</label>
                                     <select name="filter_perusahaan" id="filter_perusahaan" class="form-select">
                                         <option value="">-- Semua Perusahaan --</option>
@@ -190,15 +200,15 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <div class="col-md-2">
+                                <!-- <div class="col-md-2">
                                     <label for="per_page" class="form-label">Per Halaman</label>
                                     <select name="per_page" id="per_page" class="form-select">
                                         @foreach([10, 25, 50, 100] as $pp)
                                             <option value="{{ $pp }}" {{ $perPage == $pp ? 'selected' : '' }}>{{ $pp }}</option>
                                         @endforeach
                                     </select>
-                                </div>
-                                <div class="col-md-4">
+                                </div> -->
+                                <div class="col-md-2">
                                     <div class="d-flex gap-2">
                                         <button type="submit" class="btn btn-primary">
                                             <i class="bx bx-search"></i> Filter
@@ -211,7 +221,7 @@
                             </form>
                         </div>
                         
-                        <div class="col-lg-4">
+                        <!-- <div class="col-lg-4">
                             <form method="POST" action="{{ route('sistem-roster.planning.generate') }}" class="d-flex justify-content-end align-items-end h-100">
                                 @csrf
                                 <input type="hidden" name="start_date" value="{{ $filterStartDate }}">
@@ -220,7 +230,7 @@
                                     <i class="bx bx-refresh"></i> Generate Planning
                                 </button>
                             </form>
-                        </div>
+                        </div> -->
                     </div>
                 </div>
             </div>
@@ -275,14 +285,9 @@
                         <small class="text-muted">Ringkas per Tanggal, Site & Jenis. Klik tombol [+] untuk melihat detail aktivitas dan assign karyawan.</small>
                     </div>
                     <div class="d-flex gap-2">
-                        @if(count($grouped ?? []) > 0 || count($groupedRoster ?? []) > 0)
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnExpandAllPlanning" title="Expand All">
-                                <i class="material-icons-outlined" style="font-size: 16px;">unfold_more</i>
-                            </button>
-                            <button type="button" class="btn btn-outline-secondary btn-sm" id="btnCollapseAllPlanning" title="Collapse All">
-                                <i class="material-icons-outlined" style="font-size: 16px;">unfold_less</i>
-                            </button>
-                        @endif
+                        <button type="button" class="btn btn-primary btn-sm" id="btnInputIkkManual" title="Tambah IKK dari hse_automation.ikk_work_permit ke planning">
+                            <i class="bx bx-plus-circle me-1"></i> Input Manual Jika Tidak ada IKK pada hari ini
+                        </button>
                     </div>
                 </div>
                 <div class="card-body p-0">
@@ -817,6 +822,42 @@
         </div>
     </div>
 
+    {{-- Modal: Input IKK Manual (pilih IKK dari ikk_work_permit, simpan ke roster_plannings) --}}
+    <div class="modal fade" id="modalInputIkkManual" tabindex="-1" aria-labelledby="modalInputIkkManualLabel" aria-hidden="true" data-bs-backdrop="static">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content rounded-3 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold" id="modalInputIkkManualLabel">
+                        <i class="bx bx-plus-circle me-2 text-primary"></i> Input IKK Manual ke Planning
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <form id="formInputIkkManual">
+                    <div class="modal-body pt-1">
+                        <p class="text-muted small mb-3">Pilih IKK dari <strong>hse_automation.ikk_work_permit</strong>. Setelah disimpan, IKK akan muncul di daftar planning.</p>
+                        <div class="mb-3">
+                            <label for="ikkManualTanggal" class="form-label fw-semibold">Tanggal Planning</label>
+                            <input type="date" class="form-control" id="ikkManualTanggal" name="tanggal" value="{{ $filterStartDate ?? now()->toDateString() }}" required>
+                        </div>
+                        <div class="mb-3">
+                            <label for="selectIkkManual" class="form-label fw-semibold">Pilih IKK</label>
+                            <select id="selectIkkManual" name="ikk_id" class="form-select" style="width:100%;" required>
+                                <option value="">-- Cari / pilih IKK --</option>
+                            </select>
+                            <div class="form-text">Ketik kode, site, lokasi, atau perusahaan untuk mencari.</div>
+                        </div>
+                    </div>
+                    <div class="modal-footer border-0 pt-0 flex-wrap gap-2">
+                        <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="btnSimpanIkkManual">
+                            <i class="bx bx-save me-1"></i> Simpan ke Planning
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
 @endsection
 
 @section('scripts')
@@ -825,6 +866,8 @@
 <script>
 const csrfToken = '{{ csrf_token() }}';
 const usersUrl = '{{ route("sistem-roster.planning.users") }}';
+const ikkListUrl = '{{ route("sistem-roster.planning.ikk-list") }}';
+const storeIkkManualUrl = '{{ route("sistem-roster.planning.store-ikk-manual") }}';
 
 function initKaryawanSelect(container) {
     var $scope = container ? $(container) : $(document);
@@ -1155,6 +1198,104 @@ document.addEventListener('DOMContentLoaded', function() {
             });
         });
     }
+
+    // Input IKK Manual: buka modal, init Select2 (AJAX dari ikk_work_permit), submit simpan ke roster_plannings
+    var btnInputIkkManual = document.getElementById('btnInputIkkManual');
+    var modalInputIkkManual = document.getElementById('modalInputIkkManual');
+    if (btnInputIkkManual && modalInputIkkManual) {
+        var selectIkkManualInited = false;
+        btnInputIkkManual.addEventListener('click', function() {
+            document.getElementById('ikkManualTanggal').value = '{{ $filterStartDate ?? now()->toDateString() }}';
+            var $sel = $('#selectIkkManual');
+            if ($sel.length && $sel.hasClass('select2-hidden-accessible')) {
+                $sel.val(null).trigger('change');
+            } else {
+                $sel.val('');
+            }
+            var modal = new bootstrap.Modal(modalInputIkkManual);
+            modal.show();
+            if (!selectIkkManualInited) {
+                selectIkkManualInited = true;
+                $(modalInputIkkManual).one('shown.bs.modal', function() {
+                    var $sel = $('#selectIkkManual');
+                    if ($sel.length && !$sel.hasClass('select2-hidden-accessible')) {
+                        $sel.select2({
+                            theme: 'bootstrap-5',
+                            placeholder: 'Ketik kode, site, lokasi, atau perusahaan...',
+                            allowClear: true,
+                            minimumInputLength: 0,
+                            dropdownParent: $('#modalInputIkkManual'),
+                            ajax: {
+                                url: ikkListUrl,
+                                dataType: 'json',
+                                delay: 300,
+                                data: function(params) {
+                                    return { q: params.term || '', limit: 30 };
+                                },
+                                processResults: function(data) {
+                                    return { results: data.results || [] };
+                                }
+                            }
+                        });
+                    }
+                });
+            }
+        });
+    }
+
+    document.getElementById('formInputIkkManual') && document.getElementById('formInputIkkManual').addEventListener('submit', function(e) {
+        e.preventDefault();
+        var form = this;
+        var tanggal = document.getElementById('ikkManualTanggal').value;
+        var ikkId = document.getElementById('selectIkkManual').value;
+        if (!tanggal || !ikkId) {
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'warning', title: 'Perhatian', text: 'Pilih tanggal dan IKK.' });
+            } else {
+                alert('Pilih tanggal dan IKK.');
+            }
+            return;
+        }
+        var btn = document.getElementById('btnSimpanIkkManual');
+        if (btn) { btn.disabled = true; btn.innerHTML = '<span class="spinner-border spinner-border-sm me-1"></span> Menyimpan...'; }
+        fetch(storeIkkManualUrl, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json'
+            },
+            body: 'tanggal=' + encodeURIComponent(tanggal) + '&ikk_id=' + encodeURIComponent(ikkId)
+        })
+        .then(function(res) { return res.json().then(function(data) { return { ok: res.ok, data: data }; }); })
+        .then(function(r) {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bx bx-save me-1"></i> Simpan ke Planning'; }
+            if (r.ok && r.data.success) {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'success', title: 'Berhasil', text: r.data.message || 'IKK berhasil ditambahkan ke planning.' }).then(function() {
+                        window.location.reload();
+                    });
+                } else {
+                    alert(r.data.message || 'IKK berhasil ditambahkan.');
+                    window.location.reload();
+                }
+            } else {
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({ icon: 'error', title: 'Gagal', text: r.data.message || 'Gagal menyimpan IKK.' });
+                } else {
+                    alert(r.data.message || 'Gagal menyimpan IKK.');
+                }
+            }
+        })
+        .catch(function() {
+            if (btn) { btn.disabled = false; btn.innerHTML = '<i class="bx bx-save me-1"></i> Simpan ke Planning'; }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({ icon: 'error', title: 'Gagal', text: 'Gagal menyimpan. Silakan coba lagi.' });
+            } else {
+                alert('Gagal menyimpan. Silakan coba lagi.');
+            }
+        });
+    });
 
     // Summary table: Expand All / Collapse All (hanya di dalam #summaryTable)
     var summaryTable = document.getElementById('summaryTable');

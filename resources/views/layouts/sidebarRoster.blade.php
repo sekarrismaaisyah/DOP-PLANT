@@ -72,9 +72,16 @@
           <li>
             <a href="{{ route('sistem-roster.dashboard.index') }}">
               <div class="parent-icon"><i class="material-icons-outlined">dashboard</i></div>
-              <div class="menu-title">Dashboard Report</div>
+              <div class="menu-title">Dashboard Coverage Area</div>
             </a>
           </li>
+
+          <!-- <li>
+            <a href="{{ route('sistem-roster.dashboard.index') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">dashboard</i></div>
+              <div class="menu-title">Dashboard Coverage by Planning</div>
+            </a>
+          </li> -->
 
 
           <li class="menu-label">Planning & Scheduling</li>

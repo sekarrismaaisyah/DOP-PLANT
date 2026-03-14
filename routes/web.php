@@ -566,6 +566,7 @@ Route::middleware(['auth'])->group(function () {
     Route::prefix('sistem-roster')->name('sistem-roster.')->group(function () {
         // Dashboard
         Route::get('/dashboard', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'index'])->name('dashboard.index');
+        Route::get('/dashboard/coverage-all', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'coverageAll'])->name('dashboard.coverage-all');
         Route::get('/dashboard/sap-detail', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'sapDetail'])->name('dashboard.sap-detail');
         Route::get('/dashboard/oak-detail', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'oakDetail'])->name('dashboard.oak-detail');
         Route::get('/dashboard/observasi-detail', [\App\Http\Controllers\SistemRoster\DashboardController::class, 'observasiDetail'])->name('dashboard.observasi-detail');
@@ -625,6 +626,8 @@ Route::middleware(['auth'])->group(function () {
             Route::post('/reset-roster-exclusions', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'resetRosterExclusions'])->name('reset-roster-exclusions');
             Route::get('/job-status', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'jobStatus'])->name('job-status');
             Route::get('/users', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'getUsers'])->name('users');
+            Route::get('/ikk-list', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'getIkkListForPlanning'])->name('ikk-list');
+            Route::post('/store-ikk-manual', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'storeIkkManual'])->name('store-ikk-manual');
             Route::get('/{id}/karyawans', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'getKaryawans'])->name('karyawans');
             Route::get('/{id}/wa-message', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'waMessageContent'])->name('wa-message');
             Route::post('/{id}/assign-karyawan', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'assignKaryawan'])->name('assign-karyawan');

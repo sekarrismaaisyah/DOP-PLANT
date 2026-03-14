@@ -511,6 +511,264 @@ class PlanningController extends Controller
     }
 
     /**
+     * API: Daftar IKK dari hse_automation.ikk_work_permit untuk pilihan input manual ke roster_plannings.
+     */
+    public function getIkkListForPlanning(Request $request): JsonResponse
+    {
+        $search = trim((string) $request->get('q', $request->get('search', '')));
+        $limit = min(50, max(10, (int) $request->get('limit', 30)));
+
+        $items = [];
+        try {
+            if (!class_exists(ClickHouseService::class)) {
+                return response()->json(['results' => []]);
+            }
+            $ch = app(ClickHouseService::class);
+            if (!method_exists($ch, 'query') || !$ch->isConnected()) {
+                return response()->json(['results' => []]);
+            }
+
+            $where = "
+                (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
+                AND wp.status IN ('APPROVED', 'EXPIRED')
+            ";
+            if ($search !== '') {
+                $where .= " AND (
+                    positionCaseInsensitive(wp.code, '" . addslashes($search) . "') > 0
+                    OR positionCaseInsensitive(COALESCE(wp.ra_site_name, ''), '" . addslashes($search) . "') > 0
+                    OR positionCaseInsensitive(COALESCE(wp.company_name, ''), '" . addslashes($search) . "') > 0
+                    OR positionCaseInsensitive(COALESCE(wp.location_name, ''), '" . addslashes($search) . "') > 0
+                    OR positionCaseInsensitive(COALESCE(wp.location_detail_name, ''), '" . addslashes($search) . "') > 0
+                )";
+            }
+
+            $sql = "
+                SELECT
+                    wp.id,
+                    wp.code,
+                    wp.status,
+                    wp.ra_site_name,
+                    wp.company_name,
+                    wp.m_job_id,
+                    wp.start_date,
+                    wp.end_date,
+                    wp.location_name,
+                    wp.location_detail_name,
+                    wp.location_detail_id
+                FROM hse_automation.ikk_work_permit AS wp
+                WHERE {$where}
+                ORDER BY wp.start_date DESC, wp.id DESC
+                LIMIT {$limit}
+            ";
+            $rows = $ch->query($sql);
+
+            $jobIds = [];
+            $wpIds = [];
+            foreach ($rows ?? [] as $row) {
+                $jobId = $this->getClickHouseRowValue($row, 'm_job_id');
+                $wpId = $this->getClickHouseRowValue($row, 'id');
+                if (is_array($wpId)) {
+                    $wpId = $wpId[0] ?? null;
+                }
+                $wpId = $wpId !== null && $wpId !== '' ? (string) $wpId : null;
+                if ($jobId) {
+                    $jobIds[$jobId] = true;
+                }
+                if ($wpId) {
+                    $wpIds[$wpId] = true;
+                }
+            }
+
+            $jobMap = [];
+            if (!empty($jobIds)) {
+                $inJobs = implode(',', array_map(fn($id) => "'" . addslashes((string) $id) . "'", array_keys($jobIds)));
+                $sqlJobs = "SELECT id, name FROM hse_automation.ikk_m_job WHERE id IN ({$inJobs})";
+                $jobRows = $ch->query($sqlJobs);
+                foreach ($jobRows ?? [] as $jr) {
+                    $id = $this->getClickHouseRowValue($jr, 'id');
+                    $name = $this->getClickHouseRowValue($jr, 'name');
+                    if ($id !== null) {
+                        $jobMap[$id] = $name;
+                    }
+                }
+            }
+
+            $employeeMap = [];
+            if (!empty($wpIds)) {
+                $inWpIds = implode(',', array_map(fn($id) => "'" . addslashes($id) . "'", array_keys($wpIds)));
+                $sqlEmp = "
+                    SELECT work_permit_id, employee_name
+                    FROM hse_automation.ikk_work_permit_employee
+                    WHERE work_permit_id IN ({$inWpIds}) AND layer = '1'
+                      AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                ";
+                $empRows = $ch->query($sqlEmp);
+                foreach ($empRows ?? [] as $er) {
+                    $empWpId = $this->getClickHouseRowValue($er, 'work_permit_id');
+                    $name = $this->getClickHouseRowValue($er, 'employee_name');
+                    if ($empWpId && $name) {
+                        if (!isset($employeeMap[$empWpId])) {
+                            $employeeMap[$empWpId] = $name;
+                        } else {
+                            $employeeMap[$empWpId] .= ', ' . $name;
+                        }
+                    }
+                }
+            }
+
+            foreach ($rows ?? [] as $row) {
+                $wpId = $this->getClickHouseRowValue($row, 'id');
+                if (is_array($wpId)) {
+                    $wpId = $wpId[0] ?? null;
+                }
+                $wpId = $wpId !== null && $wpId !== '' ? (string) $wpId : null;
+                if (!$wpId) {
+                    continue;
+                }
+                $code = $this->getClickHouseRowValue($row, 'code');
+                $site = trim($this->getClickHouseRowValue($row, 'ra_site_name') ?? '');
+                $companyName = trim($this->getClickHouseRowValue($row, 'company_name') ?? '');
+                $jobId = $this->getClickHouseRowValue($row, 'm_job_id');
+                $locationName = $this->getClickHouseRowValue($row, 'location_name');
+                $locationDetailName = $this->getClickHouseRowValue($row, 'location_detail_name');
+                $locationDetailId = $this->getClickHouseRowValue($row, 'location_detail_id');
+                $items[] = [
+                    'id' => $wpId,
+                    'text' => $code . ' — ' . ($site ?: 'Lainnya') . ' · ' . ($locationName ?? '-') . ($locationDetailName ? ' / ' . $locationDetailName : ''),
+                    'code' => $code,
+                    'site' => $site ?: null,
+                    'company_name' => $companyName ?: null,
+                    'job_name' => $jobMap[$jobId] ?? null,
+                    'location_name' => $locationName,
+                    'location_detail_name' => $locationDetailName,
+                    'location_detail_id' => $locationDetailId,
+                    'pengawas_langsung' => $employeeMap[$wpId] ?? null,
+                ];
+            }
+        } catch (\Throwable $e) {
+            Log::warning('PlanningController getIkkListForPlanning: ' . $e->getMessage());
+        }
+
+        return response()->json(['results' => $items]);
+    }
+
+    /**
+     * Simpan IKK pilihan (dari ikk_work_permit) ke roster_plannings untuk satu tanggal.
+     */
+    public function storeIkkManual(Request $request): JsonResponse|RedirectResponse
+    {
+        $request->validate([
+            'tanggal' => 'required|date',
+            'ikk_id' => 'required|string|max:100',
+        ]);
+
+        $tanggal = $request->get('tanggal');
+        $wpId = trim($request->get('ikk_id'));
+
+        try {
+            if (!class_exists(ClickHouseService::class)) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Layanan IKK tidak tersedia.'], 502);
+                }
+                return redirect()->back()->with('error', 'Layanan IKK tidak tersedia.');
+            }
+            $ch = app(ClickHouseService::class);
+            if (!method_exists($ch, 'query') || !$ch->isConnected()) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'Koneksi IKK tidak tersedia.'], 502);
+                }
+                return redirect()->back()->with('error', 'Koneksi IKK tidak tersedia.');
+            }
+
+            $idEsc = addslashes($wpId);
+            $sql = "
+                SELECT id, code, status, company_name, m_job_id, start_date, end_date,
+                       ra_site_name, location_name, location_detail_name, location_detail_id
+                FROM hse_automation.ikk_work_permit
+                WHERE id = '{$idEsc}' AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                LIMIT 1
+            ";
+            $rows = $ch->query($sql);
+            if (empty($rows)) {
+                if ($request->wantsJson()) {
+                    return response()->json(['success' => false, 'message' => 'IKK tidak ditemukan.'], 404);
+                }
+                return redirect()->back()->with('error', 'IKK tidak ditemukan.');
+            }
+
+            $row = $rows[0];
+            $code = $this->getClickHouseRowValue($row, 'code');
+            $companyName = trim($this->getClickHouseRowValue($row, 'company_name') ?? '');
+            $jobId = $this->getClickHouseRowValue($row, 'm_job_id');
+            $raSiteName = $this->getClickHouseRowValue($row, 'ra_site_name');
+            $locationName = $this->getClickHouseRowValue($row, 'location_name');
+            $locationDetailName = $this->getClickHouseRowValue($row, 'location_detail_name');
+            $locationDetailId = $this->getClickHouseRowValue($row, 'location_detail_id');
+
+            $jobName = null;
+            if ($jobId) {
+                $inJobs = "'" . addslashes((string) $jobId) . "'";
+                $jobRows = $ch->query("SELECT id, name FROM hse_automation.ikk_m_job WHERE id IN ({$inJobs})");
+                if (!empty($jobRows)) {
+                    $jobName = $this->getClickHouseRowValue($jobRows[0], 'name');
+                }
+            }
+
+            $sqlEmp = "
+                SELECT employee_name FROM hse_automation.ikk_work_permit_employee
+                WHERE work_permit_id = '{$idEsc}' AND layer = '1'
+                  AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+            ";
+            $empRows = $ch->query($sqlEmp);
+            $pengawasLangsung = null;
+            foreach ($empRows ?? [] as $er) {
+                $n = $this->getClickHouseRowValue($er, 'employee_name');
+                if ($n) {
+                    $pengawasLangsung = $pengawasLangsung === null ? $n : $pengawasLangsung . ', ' . $n;
+                }
+            }
+
+            $planning = RosterPlanning::updateOrCreate(
+                [
+                    'source_type' => 'IKK',
+                    'source_id' => $wpId,
+                    'tanggal' => $tanggal,
+                ],
+                [
+                    'no_ikk' => $code,
+                    'site' => $raSiteName,
+                    'aktivitas' => $jobName,
+                    'lokasi' => $locationName,
+                    'detail_lokasi' => $locationDetailName,
+                    'id_detail_lokasi' => $locationDetailId,
+                    'pengawas_langsung' => $pengawasLangsung,
+                    'perusahaan_pic' => $companyName ?: null,
+                    'shift' => null,
+                    'status' => 'draft',
+                ]
+            );
+            if ($planning->wasRecentlyCreated) {
+                $planning->update(['status' => 'draft']);
+            }
+        } catch (\Throwable $e) {
+            Log::error('PlanningController storeIkkManual: ' . $e->getMessage());
+            if ($request->wantsJson()) {
+                return response()->json(['success' => false, 'message' => 'Gagal menyimpan: ' . $e->getMessage()], 500);
+            }
+            return redirect()->back()->with('error', 'Gagal menyimpan: ' . $e->getMessage());
+        }
+
+        if ($request->wantsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'IKK berhasil ditambahkan ke planning.',
+                'planning_id' => $planning->id,
+            ]);
+        }
+        return redirect()->back()->with('success', 'IKK berhasil ditambahkan ke planning.');
+    }
+
+    /**
      * Simpan data roster (acuan) ke roster_plannings. Dipanggil saat user klik "Save ke Planning".
      */
     public function saveRosterToPlanning(Request $request): RedirectResponse|JsonResponse

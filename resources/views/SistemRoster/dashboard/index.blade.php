@@ -883,6 +883,8 @@
     .lmo-kpi-title { color:#475467; font-weight:500; font-size:1.05rem; margin-bottom:2px; }
     .lmo-kpi-value { font-size:2rem; font-weight:900; line-height:1.1; letter-spacing:-.02em; margin-bottom:8px; }
     .lmo-kpi-sub { color:#98a2b3; font-size:.9rem; }
+    .lmo-kpi-card-clickable { cursor: pointer; transition: box-shadow .2s ease, border-color .2s ease; }
+    .lmo-kpi-card-clickable:hover { box-shadow: 0 4px 12px rgba(16,24,40,.08); border-color: var(--lmo-blue, #1b84ff) !important; }
     .lmo-layer-grid {
       display:grid;
       grid-template-columns:repeat(4, minmax(0,1fr));
@@ -1101,6 +1103,8 @@
     #coverageDetailAllModal .modal-content { background: #fff; position: relative; z-index: 1; }
     #heatmapDayDetailModal.modal { z-index: 1060 !important; }
     #heatmapDayDetailModal .modal-content { background: #fff; position: relative; z-index: 1; }
+    #coverageAreaAllModal.modal { z-index: 1060 !important; }
+    #coverageAreaAllModal .modal-content { background: #fff; position: relative; z-index: 1; }
     body.modal-open .modal-backdrop { z-index: 1055 !important; }
 </style>
 @endsection
@@ -1195,7 +1199,7 @@
 
           <!-- KPI cards -->
           <section class="lmo-card-grid">
-            <div class="lmo-kpi-card">
+            <div class="lmo-kpi-card lmo-kpi-card-clickable" id="coverageAreaAllKpiCard" role="button" tabindex="0" title="Klik untuk lihat Dashboard Coverage Area All">
               <div class="lmo-kpi-top">
                 <div class="lmo-kpi-icon lmo-icon-blue"><i class="bi bi-clipboard-data-fill"></i></div>
                 <div class="lmo-delta up"><i class="bi bi-arrow-up-right"></i> </div>
@@ -1445,7 +1449,7 @@
                         $barStyle = $loc->pct >= 80 ? 'width:'.$loc->pct.'%; background:linear-gradient(90deg, #22b573, #16a34a);' : ($loc->pct > 0 ? 'width:'.$loc->pct.'%; background:linear-gradient(90deg, #f59e0b, #d97706);' : 'width:'.max(5, $loc->pct).'%; background:linear-gradient(90deg, #ef4444, #dc2626);');
                         $valClass = $loc->pct >= 80 ? '' : ($loc->pct > 0 ? '' : 'lmo-coverage-val--danger');
                         $pillClass = $loc->pct >= 80 ? 'lmo-pill-optimal' : ($loc->pct > 0 ? 'lmo-pill-incomplete' : 'lmo-pill-critical');
-                        $pillLabel = $loc->pct >= 80 ? 'Optimal' : ($loc->pct > 0 ? 'Incomplete' : 'Critical Gap');
+                        $pillLabel = $loc->pct >= 80 ? 'Sudah Tercover' : ($loc->pct > 0 ? 'Incomplete' : 'Belum Tercover');
                       @endphp
                       <tr data-site="{{ $loc->site ?? '' }}">
                         <td>
@@ -1545,6 +1549,21 @@
                 </div>
                 <div class="modal-footer border-kt-border">
                   <button type="button" class="btn btn-secondary btn-sm" data-bs-dismiss="modal">Tutup</button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Modal: Dashboard Coverage Area All (iframe view coverage-all) --}}
+          <div class="modal fade" id="coverageAreaAllModal" tabindex="-1" aria-labelledby="coverageAreaAllModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+              <div class="modal-content">
+                <div class="modal-header border-kt-border">
+                  <h5 class="modal-title" id="coverageAreaAllModalLabel"><i class="bi bi-clipboard-data-fill me-2"></i>Dashboard Coverage Area All</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-0 bg-light d-flex flex-column" style="min-height: 0;">
+                  <iframe id="coverageAreaAllIframe" src="" title="Coverage Area All" class="w-100 border-0 flex-grow-1" style="min-height: 70vh; height: calc(100vh - 60px);"></iframe>
                 </div>
               </div>
             </div>
@@ -2121,6 +2140,42 @@
           refreshBtn.querySelector('span').textContent = 'Memuat...';
           window.location.reload();
         });
+      }
+    })();
+
+    // Modal Coverage Area All: klik card buka modal, load iframe dengan view coverage-all
+    (function() {
+      var coverageAreaAllUrl = '{{ url()->route("sistem-roster.dashboard.coverage-all") }}';
+      function initCoverageAreaAllModal() {
+        var cardEl = document.getElementById('coverageAreaAllKpiCard');
+        var modalEl = document.getElementById('coverageAreaAllModal');
+        var iframeEl = document.getElementById('coverageAreaAllIframe');
+        if (!cardEl || !modalEl || !iframeEl) return;
+        cardEl.addEventListener('click', function() {
+          if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
+          iframeEl.src = coverageAreaAllUrl;
+          if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+          } else {
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            modalEl.setAttribute('aria-modal', 'true');
+            modalEl.removeAttribute('aria-hidden');
+            document.body.classList.add('modal-open');
+            var backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.setAttribute('data-coverage-area-all-backdrop', '1');
+            document.body.appendChild(backdrop);
+          }
+        });
+        cardEl.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cardEl.click(); }
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCoverageAreaAllModal);
+      } else {
+        initCoverageAreaAllModal();
       }
     })();
 
