@@ -1712,11 +1712,14 @@
                            <h5 class="mb-0 fw-bold">IKK Weekly Tidak Ada IPK</h5>
                            <p class="mb-0 text-muted small">IKK Tidak Ada IPK (Per Hari)</p>
                          </div>
+                         @php
+                           $needVerification = max(0, ($totalIpkSeharusnya ?? 0) - ($totalIpkAda ?? 0));
+                         @endphp
                          <div class="text-center py-3 mt-4">
-                           <h1 class="mb-0 display-5 fw-bold">{{ ($totalIpkSeharusnya ?? 0) - ($totalIpkAda ?? 0) }}</h1>
+                           <h1 class="mb-0 display-5 fw-bold">{{ $needVerification }}</h1>
                          </div>
                          <div class="text-center mt-3">
-                           <p class="mb-0"><span class="text-success me-1">{{ ($totalIpkSeharusnya ?? 0) - ($totalIpkAda ?? 0) }}</span> Need Verification pada Week {{ $weekNumber ?? '-' }}</p>
+                           <p class="mb-0"><span class="text-success me-1">{{ $needVerification }}</span> Need Verification pada Week {{ $weekNumber ?? '-' }}</p>
                          </div>
                        </div>
                       </div>
@@ -1846,8 +1849,8 @@
                               <div class="wh-32 d-flex align-items-center justify-content-center rounded-circle bg-success bg-opacity-10">
                                 <span class="material-icons-outlined text-success" style="font-size: 18px;">verified</span>
                               </div>
-                              <span class="fw-semibold text-white">Comply</span>
-                              <span class="badge bg-success bg-opacity-15 text-success rounded-pill px-2 py-1 small">{{ $totalSiteComply }} Site • {{ $totalIkkComply }} IKK • 100%</span>
+                              <span class="fw-semibold ">Comply</span>
+                              <span class="badge bg-success text-white bg-opacity-15 text-success rounded-pill px-2 py-1 small">{{ $totalSiteComply }} Site • {{ $totalIkkComply }} IKK • 100%</span>
                             </div>
                             @foreach($siteComply as $site)
                             <div class="site-card mb-2">
