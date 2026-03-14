@@ -1984,7 +1984,7 @@
                               <div class="wh-32 d-flex align-items-center justify-content-center rounded-circle bg-danger bg-opacity-10">
                                 <span class="material-icons-outlined text-danger" style="font-size: 18px;">block</span>
                               </div>
-                              <span class="fw-semibold text-white">Propose to Hold</span>
+                              <span class="fw-semibold ">Propose to Hold</span>
                               <span class="badge bg-danger bg-opacity-15 text-danger rounded-pill px-2 py-1 small">&lt;80% • {{ $totalSiteProposeHold }} Site • {{ $totalIkkProposeHold }} IKK</span>
                             </div>
                             @foreach($siteProposeHold as $site)

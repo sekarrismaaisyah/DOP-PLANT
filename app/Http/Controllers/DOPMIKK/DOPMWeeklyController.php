@@ -404,12 +404,12 @@ class DOPMWeeklyController extends Controller
                         $totalPekerjaanBatalWeekly = (int) ($cancelRows[0]['cnt'] ?? 0);
                     }
                     
-                    // Hitung persentase
+                    // Hitung persentase (cap 100%: IPK/OKK di hari non-aktif bisa bikin totalAda > totalSeharusnya)
                     // IPK: persentase berdasarkan jumlah hari IPK yang ada vs yang seharusnya
-                    $pctIkkAdaIpkWeekly = $totalIpkSeharusnya > 0 ? round(($totalIpkAda / $totalIpkSeharusnya) * 100, 1) : 0;
+                    $pctIkkAdaIpkWeekly = $totalIpkSeharusnya > 0 ? min(100, round(($totalIpkAda / $totalIpkSeharusnya) * 100, 1)) : 0;
                     // OKK: persentase berdasarkan jumlah hari OKK comply (L1+L2) vs yang seharusnya
-                    $pctIkkAdaOkkWeekly = $totalOkkSeharusnya > 0 ? round(($totalOkkAda / $totalOkkSeharusnya) * 100, 1) : 0;
-                    $pctComplianceWeekly = round(($pctIkkAdaIpkWeekly + $pctIkkAdaOkkWeekly) / 2, 1);
+                    $pctIkkAdaOkkWeekly = $totalOkkSeharusnya > 0 ? min(100, round(($totalOkkAda / $totalOkkSeharusnya) * 100, 1)) : 0;
+                    $pctComplianceWeekly = min(100, round(($pctIkkAdaIpkWeekly + $pctIkkAdaOkkWeekly) / 2, 1));
                 }
             }
         } catch (\Throwable $e) {
