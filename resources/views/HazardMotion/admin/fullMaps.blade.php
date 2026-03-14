@@ -6867,15 +6867,14 @@
                     hideAllProbabilityPopups();
                 }
             } else if (layerName === 'evaluasi-unit') {
-                // Evaluasi Unit: hanya boundary dari geotaging.js, tanpa warna risk, tanpa kalkulasi
+                // Evaluasi Unit: tanpa boundary geotaging.js, hanya daftar unit + tracing GPS
                 if (isOn) {
-                    console.log('[applyLayer] Evaluasi Unit layer activated - showing boundary only from geotaging.js');
+                    console.log('[applyLayer] Evaluasi Unit layer activated');
                     if (areaKerjaBmo2PamaLayer) {
                         areaKerjaBmo2PamaLayer.setVisible(false);
                     }
                     if (areaKerjaBoundaryOnlyLayer) {
-                        areaKerjaBoundaryOnlyLayer.setVisible(true);
-                        areaKerjaBoundaryOnlyLayer.setOpacity(1.0);
+                        areaKerjaBoundaryOnlyLayer.setVisible(false);
                     }
                 } else {
                     console.log('[applyLayer] Evaluasi Unit layer deactivated - showing normal area kerja');
