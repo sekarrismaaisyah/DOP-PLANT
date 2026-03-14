@@ -2134,6 +2134,19 @@
         </div><!--end row-->
 
         <div class="row mt-3">
+           @php
+               $filterDateStr = $filterDate ?? now()->toDateString();
+               $filterDateCarbon = \Carbon\Carbon::parse($filterDateStr)->startOfDay();
+               $isIkkActiveOnFilterDate = function ($ikk) use ($filterDateCarbon) {
+                   $start = $ikk->start_date ? \Carbon\Carbon::parse($ikk->start_date)->startOfDay() : null;
+                   $end = $ikk->end_date ? \Carbon\Carbon::parse($ikk->end_date)->startOfDay() : null;
+                   if (!$start || !$end) {
+                       return true;
+                   }
+                   $lastActive = $end->copy()->subDay();
+                   return $filterDateCarbon->gte($start) && $filterDateCarbon->lte($lastActive);
+               };
+           @endphp
            <div class="col-12 col-xl-4 d-flex">
             <div class="card w-100 rounded-4">
                <div class="card-body">
@@ -2155,8 +2168,8 @@
                  </div>
                   <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
                   @php
-                        // Gunakan data IKK (work permit) dari ClickHouse untuk Need Action (Merah)
-                        $ikkMerah = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Merah')->values();
+                        // Gunakan data IKK (work permit) dari ClickHouse untuk Need Action (Merah); filter h-1: hanya tampilkan jika filterDate dalam rentang hari aktif (start_date s/d end_date-1)
+                        $ikkMerah = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Merah')->filter($isIkkActiveOnFilterDate)->values();
                     @endphp
                     @forelse($ikkMerah as $ikk)
                      @php
@@ -2238,8 +2251,8 @@
                  </div>
                 <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
                   @php
-                      // Gunakan data IKK (work permit) dari ClickHouse untuk Warning (Kuning)
-                      $ikkKuning = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Kuning')->values();
+                      // Gunakan data IKK (work permit) dari ClickHouse untuk Warning (Kuning); filter h-1: hanya tampilkan jika filterDate dalam rentang hari aktif (start_date s/d end_date-1)
+                      $ikkKuning = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Kuning')->filter($isIkkActiveOnFilterDate)->values();
                   @endphp
                   @forelse($ikkKuning as $ikk)
                   @php
@@ -2321,8 +2334,8 @@
                  </div>
                 <div class="d-flex flex-column gap-4 dopm-matriks-list-scroll">
                   @php
-                      // Gunakan data IKK (work permit) dari ClickHouse untuk Complete (Hijau)
-                      $ikkHijau = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Hijau')->values();
+                      // Gunakan data IKK (work permit) dari ClickHouse untuk Complete (Hijau); filter h-1: hanya tampilkan jika filterDate dalam rentang hari aktif (start_date s/d end_date-1)
+                      $ikkHijau = collect($ikkClickhouseListHarian ?? [])->where('status_matriks', 'Hijau')->filter($isIkkActiveOnFilterDate)->values();
                   @endphp
                   @forelse($ikkHijau as $ikk)
                   @php
