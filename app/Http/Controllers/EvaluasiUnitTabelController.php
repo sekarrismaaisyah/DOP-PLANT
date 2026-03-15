@@ -247,6 +247,67 @@ class EvaluasiUnitTabelController extends Controller
     }
 
     /**
+     * Stats untuk dashboard KPI: total unit beroperasi (jarak > 10m), compliance %, avg waktu jam per unit, avg fuel km/L (null).
+     */
+    public function perHariDashboardStats(Request $request): JsonResponse
+    {
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        if (!$dateFrom || !$dateTo || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+            return response()->json([
+                'total_unit_beroperasi' => 0,
+                'compliance_pct' => 0,
+                'avg_waktu_jam_per_unit' => 0,
+                'avg_fuel_km_per_l' => null,
+            ]);
+        }
+        try {
+            $service = new EvaluasiUnitDataService();
+            $rows = $service->getDailyPerUnitPerDay($dateFrom, $dateTo);
+            $rows = $this->enrichDailyPerUnitWithBecomlineAndKonsumsi($rows);
+        } catch (Exception $e) {
+            Log::error('EvaluasiUnitTabelController::perHariDashboardStats: ' . $e->getMessage());
+            return response()->json([
+                'total_unit_beroperasi' => 0,
+                'compliance_pct' => 0,
+                'avg_waktu_jam_per_unit' => 0,
+                'avg_fuel_km_per_l' => null,
+            ]);
+        }
+        $minKm = 0.01; // 10 meter
+        $operatedRows = array_filter($rows, function ($r) use ($minKm) {
+            $km = isset($r['day_km']) ? (float) $r['day_km'] : 0;
+            return $km > $minKm;
+        });
+        $unitToStatus = [];
+        $totalJamOperated = 0;
+        foreach ($operatedRows as $r) {
+            $noUnit = trim((string) ($r['no_unit'] ?? ''));
+            if ($noUnit !== '') {
+                if (!isset($unitToStatus[$noUnit])) {
+                    $unitToStatus[$noUnit] = trim((string) ($r['status_permit_spip'] ?? ''));
+                }
+                $totalJamOperated += (float) ($r['total_jam'] ?? 0);
+            }
+        }
+        $totalUnitBeroperasi = count($unitToStatus);
+        $passedCount = 0;
+        foreach ($unitToStatus as $status) {
+            if (strtoupper($status) === 'PASSED') {
+                $passedCount++;
+            }
+        }
+        $compliancePct = $totalUnitBeroperasi > 0 ? round($passedCount / $totalUnitBeroperasi * 100, 1) : 0;
+        $avgWaktu = $totalUnitBeroperasi > 0 ? round($totalJamOperated / $totalUnitBeroperasi, 2) : 0;
+        return response()->json([
+            'total_unit_beroperasi' => $totalUnitBeroperasi,
+            'compliance_pct' => $compliancePct,
+            'avg_waktu_jam_per_unit' => $avgWaktu,
+            'avg_fuel_km_per_l' => null,
+        ]);
+    }
+
+    /**
      * Export data Per Hari per Unit ke Excel (TANGGAL | NO UNIT | JARAK | DURASI jam).
      */
     public function exportPerHariExcel(Request $request)

@@ -225,6 +225,7 @@ class EvaluasiUnitDataService
                 'no_unit' => $unitLabels[$unitId] ?? (string) $unitId,
                 'jarak' => $jarakText,
                 'total_jam' => $totalHours,
+                'day_km' => $dayKm,
             ];
         }
         usort($result, function ($a, $b) {

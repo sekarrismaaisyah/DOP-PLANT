@@ -107,24 +107,20 @@
          </div>
          <!-- KPI Cards Row -->
          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Card 1 -->
+            <!-- Card 1: Total unit beroperasi (jarak > 10m) -->
             <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                <div class="flex justify-between items-start mb-3">
-                  <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Active Units</p>
+                  <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Total Unit Beroperasi</p>
                   <div class="bg-primary/10 p-2 rounded-lg text-primary">
                      <span class="material-symbols-outlined text-xl">commute</span>
                   </div>
                </div>
                <div class="flex items-end gap-3">
-                  <h3 class="text-3xl font-bold">142</h3>
-                  <div class="flex items-center text-success text-sm font-bold mb-1">
-                     <span class="material-symbols-outlined text-base">arrow_upward</span>
-                     <span>5.2%</span>
-                  </div>
+                  <h3 class="text-3xl font-bold" id="kpi_total_unit">—</h3>
                </div>
-               <p class="text-xs text-slate-400 mt-2">vs previous month (135 units)</p>
+               <p class="text-xs text-slate-400 mt-2">Unit dengan jarak tempuh &gt; 10 m</p>
             </div>
-            <!-- Card 2 -->
+            <!-- Card 2: Compliance rate (PASSED / total beroperasi) -->
             <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                <div class="flex justify-between items-start mb-3">
                   <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Compliance Rate</p>
@@ -133,36 +129,28 @@
                   </div>
                </div>
                <div class="flex items-center justify-between">
-                  <h3 class="text-3xl font-bold">88%</h3>
-                  <div class="relative w-12 h-12">
-                     <svg class="w-full h-full transform -rotate-90" viewbox="0 0 36 36">
+                  <h3 class="text-3xl font-bold" id="kpi_compliance">—</h3>
+                  <div class="relative w-12 h-12" id="kpi_compliance_ring">
+                     <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
                         <path class="text-slate-100 dark:text-slate-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4"></path>
-                        <path class="text-success" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="88, 100" stroke-linecap="round" stroke-width="4"></path>
+                        <path class="text-success" id="kpi_compliance_arc" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-dasharray="0, 100" stroke-linecap="round" stroke-width="4"></path>
                      </svg>
                   </div>
                </div>
-               <p class="text-xs text-danger font-medium mt-2">-2.1% from last week</p>
+               <p class="text-xs text-slate-400 mt-2">% unit beroperasi dengan status PASSED (Becomline)</p>
             </div>
-            <!-- Card 3 -->
+            <!-- Card 3: Avg waktu per unit (jam) -->
             <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                <div class="flex justify-between items-start mb-3">
-                  <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Avg Duration / Unit</p>
+                  <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Avg Durasi / Unit</p>
                   <div class="bg-warning/10 p-2 rounded-lg text-warning">
                      <span class="material-symbols-outlined text-xl">timer</span>
                   </div>
                </div>
-               <h3 class="text-3xl font-bold">12.4 <span class="text-sm font-normal text-slate-500">jam</span></h3>
-               <div class="mt-4 h-8 w-full flex items-end gap-1">
-                  <div class="bg-primary/30 w-full h-1/2 rounded-sm"></div>
-                  <div class="bg-primary/30 w-full h-3/4 rounded-sm"></div>
-                  <div class="bg-primary/30 w-full h-1/2 rounded-sm"></div>
-                  <div class="bg-primary w-full h-full rounded-sm"></div>
-                  <div class="bg-primary/30 w-full h-2/3 rounded-sm"></div>
-                  <div class="bg-primary/30 w-full h-1/2 rounded-sm"></div>
-                  <div class="bg-primary/30 w-full h-3/4 rounded-sm"></div>
-               </div>
+               <h3 class="text-3xl font-bold"><span id="kpi_avg_waktu">—</span> <span class="text-sm font-normal text-slate-500">jam</span></h3>
+               <p class="text-xs text-slate-400 mt-2">Rata-rata total jam operasi per unit beroperasi</p>
             </div>
-            <!-- Card 4 -->
+            <!-- Card 4: Fuel efficiency (km/L) - coming soon -->
             <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
                <div class="absolute top-0 right-0">
                   <span class="bg-primary text-[10px] text-white px-3 py-1 font-bold rounded-bl-lg uppercase tracking-widest">Coming Soon</span>
@@ -173,8 +161,8 @@
                      <span class="material-symbols-outlined text-xl">local_gas_station</span>
                   </div>
                </div>
-               <h3 class="text-3xl font-bold text-slate-300">--.-</h3>
-               <p class="text-xs text-slate-400 mt-2 italic">Awaiting sensor integration</p>
+               <h3 class="text-3xl font-bold text-slate-300" id="kpi_fuel">—</h3>
+               <p class="text-xs text-slate-400 mt-2 italic">km/L (total km / total konsumsi fuel) — data fuel belum terintegrasi</p>
             </div>
          </div>
          <!-- Main Content Area -->
@@ -341,6 +329,7 @@
       <script>
       (function() {
          var apiUrl = "{{ url()->route('fueling-evaluasi.per-hari.all-data') }}";
+         var statsUrl = "{{ url()->route('fueling-evaluasi.per-hari.dashboard-stats') }}";
          var PAGE_SIZE = 7;
          var dateFrom = document.getElementById('dashboard_date_from');
          var dateTo = document.getElementById('dashboard_date_to');
@@ -361,6 +350,33 @@
             from.setDate(from.getDate() - 30);
             dateFrom.value = from.toISOString().slice(0, 10);
             dateTo.value = to.toISOString().slice(0, 10);
+         }
+
+         function loadStats(from, to) {
+            if (!from || !to) return;
+            fetch(statsUrl + '?date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to), { credentials: 'same-origin' })
+               .then(function(res) { return res.json(); })
+               .then(function(s) {
+                  var totalEl = document.getElementById('kpi_total_unit');
+                  var compEl = document.getElementById('kpi_compliance');
+                  var compArc = document.getElementById('kpi_compliance_arc');
+                  var avgEl = document.getElementById('kpi_avg_waktu');
+                  var fuelEl = document.getElementById('kpi_fuel');
+                  if (totalEl) totalEl.textContent = s.total_unit_beroperasi != null ? Number(s.total_unit_beroperasi) : '—';
+                  if (compEl) compEl.textContent = s.compliance_pct != null ? s.compliance_pct + '%' : '—';
+                  if (compArc) compArc.setAttribute('stroke-dasharray', (s.compliance_pct != null ? s.compliance_pct : 0) + ', 100');
+                  if (avgEl) avgEl.textContent = s.avg_waktu_jam_per_unit != null ? Number(s.avg_waktu_jam_per_unit) : '—';
+                  if (fuelEl) fuelEl.textContent = s.avg_fuel_km_per_l != null ? Number(s.avg_fuel_km_per_l) : '—';
+               })
+               .catch(function() {
+                  var totalEl = document.getElementById('kpi_total_unit');
+                  var compEl = document.getElementById('kpi_compliance');
+                  var avgEl = document.getElementById('kpi_avg_waktu');
+                  if (totalEl) totalEl.textContent = '—';
+                  if (compEl) compEl.textContent = '—';
+                  if (document.getElementById('kpi_compliance_arc')) document.getElementById('kpi_compliance_arc').setAttribute('stroke-dasharray', '0, 100');
+                  if (avgEl) avgEl.textContent = '—';
+               });
          }
 
          function statusBadge(status) {
@@ -436,6 +452,7 @@
             tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm"><span class="inline-block animate-pulse">Memuat data...</span></td></tr>';
             infoEl.textContent = '—';
             if (linkPerhari) linkPerhari.href = "{{ url()->route('fueling-evaluasi.per-hari') }}?date_from=" + encodeURIComponent(from) + "&date_to=" + encodeURIComponent(to);
+            loadStats(from, to);
 
             fetch(apiUrl + '?date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to), { credentials: 'same-origin' })
                .then(function(res) { return res.json(); })
