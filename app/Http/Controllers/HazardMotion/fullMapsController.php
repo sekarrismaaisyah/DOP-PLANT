@@ -30,6 +30,9 @@ use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 use Exception;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class fullMapsController extends Controller
 {
@@ -4001,6 +4004,213 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 'success' => false,
                 'message' => $e->getMessage(),
                 'data' => [],
+            ], 500);
+        }
+    }
+
+    /**
+     * Haversine distance between two points in km (same formula as frontend).
+     */
+    private static function haversineKm(float $lat1, float $lon1, float $lat2, float $lon2): float
+    {
+        $r = 6371;
+        $dLat = deg2rad($lat2 - $lat1);
+        $dLon = deg2rad($lon2 - $lon1);
+        $a = sin($dLat / 2) ** 2
+            + cos(deg2rad($lat1)) * cos(deg2rad($lat2)) * sin($dLon / 2) ** 2;
+        $c = 2 * atan2(sqrt($a), sqrt(1 - $a));
+        return $r * $c;
+    }
+
+    /**
+     * Export Evaluasi Unit ke Excel: NO UNIT | JARAK YANG DITEMPUH | WAKTU AKTIF (total jam) | TANGGAL HARI AKTIF.
+     * Optional: date_from, date_to (YYYY-MM-DD) untuk filter rentang tanggal.
+     */
+    public function exportEvaluasiUnitExcel(Request $request)
+    {
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+        if ($dateFrom && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+            $dateFrom = null;
+        }
+        if ($dateTo && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+            $dateTo = null;
+        }
+
+        try {
+            $ch = new ClickHouseService('clickhouse_nitip');
+            if (!$ch->isConnected()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'ClickHouse Nitip tidak terhubung',
+                ], 503);
+            }
+
+            $sqlUnits = "
+                SELECT id, vehicle_name, vehicle_number
+                FROM nitip.units
+                ORDER BY vehicle_name ASC
+            ";
+            $units = $ch->query($sqlUnits);
+            if (!is_array($units)) {
+                $units = [];
+            }
+
+            $dateFilter = '';
+            if ($dateFrom) {
+                $dateFilter .= " AND toDate(updated_at) >= '" . addslashes($dateFrom) . "'";
+            }
+            if ($dateTo) {
+                $dateFilter .= " AND toDate(updated_at) <= '" . addslashes($dateTo) . "'";
+            }
+
+            $excelRows = [];
+            foreach ($units as $u) {
+                $unitId = $u['id'] ?? null;
+                if ($unitId === null || $unitId === '') {
+                    continue;
+                }
+                $noUnit = trim((string) ($u['vehicle_number'] ?? $u['vehicle_name'] ?? $unitId));
+                if ($noUnit === '') {
+                    $noUnit = (string) $unitId;
+                }
+
+                $safeId = "'" . addslashes((string) $unitId) . "'";
+                $sqlDates = "
+                    SELECT toDate(updated_at) AS log_date
+                    FROM nitip.unit_gps_logs
+                    WHERE unit_id = $safeId
+                      AND latitude IS NOT NULL AND longitude IS NOT NULL
+                      AND latitude != 0 AND longitude != 0
+                    $dateFilter
+                    GROUP BY toDate(updated_at)
+                    ORDER BY log_date ASC
+                ";
+                $dateRows = $ch->query($sqlDates);
+                if (!is_array($dateRows)) {
+                    $dateRows = [];
+                }
+
+                $totalKm = 0.0;
+                $totalSeconds = 0;
+                $activeDates = [];
+
+                foreach ($dateRows as $dr) {
+                    $logDate = $dr['log_date'] ?? null;
+                    if ($logDate === null || $logDate === '') {
+                        continue;
+                    }
+                    $activeDates[] = $logDate;
+
+                    $safeDate = "'" . addslashes((string) $logDate) . "'";
+                    $sqlLogs = "
+                        SELECT latitude, longitude, updated_at
+                        FROM nitip.unit_gps_logs
+                        WHERE unit_id = $safeId
+                          AND toDate(updated_at) = $safeDate
+                          AND latitude IS NOT NULL AND longitude IS NOT NULL
+                        ORDER BY updated_at ASC
+                        LIMIT 2000
+                    ";
+                    $logs = $ch->query($sqlLogs);
+                    if (!is_array($logs)) {
+                        $logs = [];
+                    }
+
+                    $dayKm = 0.0;
+                    for ($i = 0; $i < count($logs) - 1; $i++) {
+                        $a = $logs[$i];
+                        $b = $logs[$i + 1];
+                        $lat1 = isset($a['latitude']) ? (float) $a['latitude'] : null;
+                        $lon1 = isset($a['longitude']) ? (float) $a['longitude'] : null;
+                        $lat2 = isset($b['latitude']) ? (float) $b['latitude'] : null;
+                        $lon2 = isset($b['longitude']) ? (float) $b['longitude'] : null;
+                        if ($lat1 !== null && $lon1 !== null && $lat2 !== null && $lon2 !== null) {
+                            $dayKm += self::haversineKm($lat1, $lon1, $lat2, $lon2);
+                        }
+                    }
+                    $totalKm += $dayKm;
+
+                    if (count($logs) >= 1) {
+                        $firstTs = null;
+                        $lastTs = null;
+                        foreach ($logs as $log) {
+                            $t = $log['updated_at'] ?? null;
+                            if ($t === null || $t === '') {
+                                continue;
+                            }
+                            $ts = is_numeric($t) ? (int) $t : strtotime($t);
+                            if ($ts === false) {
+                                continue;
+                            }
+                            if ($firstTs === null || $ts < $firstTs) {
+                                $firstTs = $ts;
+                            }
+                            if ($lastTs === null || $ts > $lastTs) {
+                                $lastTs = $ts;
+                            }
+                        }
+                        if ($firstTs !== null && $lastTs !== null && $lastTs >= $firstTs) {
+                            $totalSeconds += ($lastTs - $firstTs);
+                        }
+                    }
+                }
+
+                $totalHours = round($totalSeconds / 3600, 2);
+                $jarakText = $totalKm >= 1
+                    ? number_format($totalKm, 2, ',', '.') . ' km'
+                    : number_format($totalKm * 1000, 0, ',', '.') . ' m';
+                $tanggalAktif = count($activeDates) > 0 ? implode(', ', $activeDates) : '-';
+
+                $excelRows[] = [
+                    'no_unit' => $noUnit,
+                    'jarak' => $jarakText,
+                    'jarak_km' => $totalKm,
+                    'waktu_jam' => $totalHours,
+                    'tanggal_aktif' => $tanggalAktif,
+                ];
+            }
+
+            $headers = ['NO UNIT', 'JARAK YANG DITEMPUH', 'WAKTU AKTIF (total jam)', 'TANGGAL HARI AKTIF / ADA LOG'];
+            $spreadsheet = new Spreadsheet();
+            $sheet = $spreadsheet->getActiveSheet();
+            $sheet->setTitle('Evaluasi Unit');
+
+            $col = 1;
+            foreach ($headers as $h) {
+                $sheet->setCellValue(Coordinate::stringFromColumnIndex($col) . '1', $h);
+                $col++;
+            }
+            $lastCol = Coordinate::stringFromColumnIndex(count($headers));
+            $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
+            $sheet->getStyle('A1:' . $lastCol . '1')->getFill()
+                ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setARGB('FFD9EAD3');
+
+            $rowNum = 2;
+            foreach ($excelRows as $row) {
+                $sheet->setCellValue('A' . $rowNum, $row['no_unit']);
+                $sheet->setCellValue('B' . $rowNum, $row['jarak']);
+                $sheet->setCellValue('C' . $rowNum, $row['waktu_jam']);
+                $sheet->setCellValue('D' . $rowNum, $row['tanggal_aktif']);
+                $rowNum++;
+            }
+
+            foreach (range('A', 'D') as $colLetter) {
+                $sheet->getColumnDimension($colLetter)->setAutoSize(true);
+            }
+
+            $filename = 'Evaluasi_Unit_' . date('Y-m-d_His') . '.xlsx';
+            $writer = new Xlsx($spreadsheet);
+            return response()->streamDownload(function () use ($writer) {
+                $writer->save('php://output');
+            }, $filename, [
+                'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            ]);
+        } catch (Exception $e) {
+            Log::error('exportEvaluasiUnitExcel: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
+            return response()->json([
+                'success' => false,
+                'message' => $e->getMessage(),
             ], 500);
         }
     }

@@ -4252,9 +4252,15 @@
                         </div>
                         <div class="tab-content" id="tabContentEvaluasi">
                             <div id="evaluasiContent" class="map-selection-container">
-                                <div class="map-selection-title">
-                                    <i class="material-icons-outlined">local_gas_station</i>
-                                    <span>Evaluasi Fuelling Unit</span>
+                                <div class="map-selection-title" style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                                    <span style="display: flex; align-items: center; gap: 6px;">
+                                        <i class="material-icons-outlined">local_gas_station</i>
+                                        <span>Evaluasi Fuelling Unit</span>
+                                    </span>
+                                    <a href="{{ route('full-maps.export-evaluasi-unit-excel') }}" class="btn btn-sm btn-outline-success" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 4px;">
+                                        <i class="material-icons-outlined" style="font-size: 16px;">download</i>
+                                        <span>Download Excel</span>
+                                    </a>
                                 </div>
                                 <div class="map-selection-grid">
                                     <div class="map-selection-item" data-map="1" data-matrix='{"cctv": {"nyala": true}, "sap": {"exists": true}}'>
@@ -23677,9 +23683,15 @@ source: new ol.source.Vector(),
             listHtml = '<div class="sidebar-list">' + listHtml + '</div>';
         }
         evaluasiContent.innerHTML = `
-            <div class="map-selection-title" style="margin-bottom: 12px;">
-                <i class="material-icons-outlined">local_gas_station</i>
-                <span>Evaluasi Fuelling Unit</span>
+            <div class="map-selection-title" style="margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px;">
+                <span style="display: flex; align-items: center; gap: 6px;">
+                    <i class="material-icons-outlined">local_gas_station</i>
+                    <span>Evaluasi Fuelling Unit</span>
+                </span>
+                <a href="{{ route('full-maps.export-evaluasi-unit-excel') }}" class="btn btn-sm btn-outline-success" target="_blank" rel="noopener" style="display: inline-flex; align-items: center; gap: 4px;">
+                    <i class="material-icons-outlined" style="font-size: 16px;">download</i>
+                    <span>Download Excel</span>
+                </a>
             </div>
             <div style="font-size: 12px; color: #6b7280; margin-bottom: 10px; padding: 0 2px;">
                 <span style="font-weight: 600; color: #374151;">${count}</span> unit <span style="color: #9ca3af;">(ClickHouse Nitip)</span>

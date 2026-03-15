@@ -104,6 +104,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/full-maps/api/photo-gallery', [fullMapsController::class, 'getPhotoGallery'])->name('full-maps.api.photo-gallery');
     Route::get('/full-maps/api/nitip-units', [fullMapsController::class, 'getNitipUnits'])->name('full-maps.api.nitip-units');
     Route::get('/full-maps/api/nitip-unit-gps-logs', [fullMapsController::class, 'getNitipUnitGpsLogs'])->name('full-maps.api.nitip-unit-gps-logs');
+    Route::get('/full-maps/export-evaluasi-unit-excel', [fullMapsController::class, 'exportEvaluasiUnitExcel'])->name('full-maps.export-evaluasi-unit-excel');
     Route::get('/images/unit.png', function () {
         return response()->file(resource_path('images/unit.png'));
     })->name('images.unit');
