@@ -4047,7 +4047,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             }
 
             $sqlUnits = "
-                SELECT id, vehicle_name, vehicle_number
+                SELECT toString(id) AS id, toString(vehicle_name) AS vehicle_name, toString(vehicle_number) AS vehicle_number
                 FROM nitip.units
                 ORDER BY vehicle_name ASC
             ";
@@ -4058,10 +4058,10 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
 
             $dateFilter = '';
             if ($dateFrom) {
-                $dateFilter .= " AND toDate(updated_at) >= '" . addslashes($dateFrom) . "'";
+                $dateFilter .= " AND toDate(parseDateTimeBestEffort(toString(updated_at))) >= '" . addslashes($dateFrom) . "'";
             }
             if ($dateTo) {
-                $dateFilter .= " AND toDate(updated_at) <= '" . addslashes($dateTo) . "'";
+                $dateFilter .= " AND toDate(parseDateTimeBestEffort(toString(updated_at))) <= '" . addslashes($dateTo) . "'";
             }
 
             $excelRows = [];
@@ -4077,13 +4077,12 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
 
                 $safeId = "'" . addslashes((string) $unitId) . "'";
                 $sqlDates = "
-                    SELECT toDate(updated_at) AS log_date
+                    SELECT toDate(parseDateTimeBestEffort(toString(updated_at))) AS log_date
                     FROM nitip.unit_gps_logs
-                    WHERE unit_id = $safeId
-                      AND latitude IS NOT NULL AND longitude IS NOT NULL
-                      AND latitude != 0 AND longitude != 0
+                    WHERE toString(unit_id) = $safeId
+                      AND toFloat64OrZero(latitude) != 0 AND toFloat64OrZero(longitude) != 0
                     $dateFilter
-                    GROUP BY toDate(updated_at)
+                    GROUP BY toDate(parseDateTimeBestEffort(toString(updated_at)))
                     ORDER BY log_date ASC
                 ";
                 $dateRows = $ch->query($sqlDates);
@@ -4104,12 +4103,12 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
 
                     $safeDate = "'" . addslashes((string) $logDate) . "'";
                     $sqlLogs = "
-                        SELECT latitude, longitude, updated_at
+                        SELECT toFloat64(latitude) AS latitude, toFloat64(longitude) AS longitude, toString(updated_at) AS updated_at
                         FROM nitip.unit_gps_logs
-                        WHERE unit_id = $safeId
-                          AND toDate(updated_at) = $safeDate
-                          AND latitude IS NOT NULL AND longitude IS NOT NULL
-                        ORDER BY updated_at ASC
+                        WHERE toString(unit_id) = $safeId
+                          AND toDate(parseDateTimeBestEffort(toString(updated_at))) = $safeDate
+                          AND toFloat64OrZero(latitude) != 0 AND toFloat64OrZero(longitude) != 0
+                        ORDER BY parseDateTimeBestEffort(toString(updated_at)) ASC
                         LIMIT 2000
                     ";
                     $logs = $ch->query($sqlLogs);
