@@ -290,6 +290,28 @@ class EvaluasiUnitTabelController extends Controller
     }
 
     /**
+     * Return possible normalized keys to try when matching a log no_unit to Becomline/konsumsi.
+     * If no_unit contains " - " (e.g. "BMO - BM 365"), also add the part after last " - " so "BM-365" in DB matches.
+     */
+    private function getPossibleMatchKeys(?string $noUnit): array
+    {
+        $noUnit = trim((string) $noUnit);
+        $keys = [];
+        $full = $this->normalizeUnitKey($noUnit);
+        if ($full !== '') {
+            $keys[] = $full;
+        }
+        if (str_contains($noUnit, ' - ')) {
+            $afterLast = trim((string) substr($noUnit, strrpos($noUnit, ' - ') + 3));
+            $suffix = $this->normalizeUnitKey($afterLast);
+            if ($suffix !== '' && !in_array($suffix, $keys, true)) {
+                $keys[] = $suffix;
+            }
+        }
+        return $keys;
+    }
+
+    /**
      * SQL expression to normalize no_registrasi / no_unit the same way as normalizeUnitKey (MySQL).
      */
     private function sqlNormalizedUnitColumn(string $column): string
@@ -299,7 +321,7 @@ class EvaluasiUnitTabelController extends Controller
 
     /**
      * Enrich daily per-unit rows with Becomline (no_registrasi = no_unit) and konsumsi_bbm_unit (no_unit).
-     * Matching is loose: case-insensitive, trim, and ignore spaces/hyphens/underscores/dots (e.g. "BM 265" matches "BM-265").
+     * Matching is loose: case-insensitive, trim, ignore spaces/hyphens; and if log has "X - Y" we also try matching by Y (e.g. "BMO - BM 365" matches "BM-365").
      */
     private function enrichDailyPerUnitWithBecomlineAndKonsumsi(array $rows): array
     {
@@ -311,7 +333,13 @@ class EvaluasiUnitTabelController extends Controller
             return trim((string) ($r['no_unit'] ?? ''));
         }, $rows));
         $noUnits = array_filter($noUnits);
-        $normalizedKeys = array_unique(array_filter(array_map([$this, 'normalizeUnitKey'], $noUnits)));
+        $normalizedKeys = [];
+        foreach ($noUnits as $u) {
+            foreach ($this->getPossibleMatchKeys($u) as $k) {
+                $normalizedKeys[$k] = true;
+            }
+        }
+        $normalizedKeys = array_keys($normalizedKeys);
 
         $becomlineByNoReg = [];
         if (!empty($normalizedKeys)) {
@@ -340,9 +368,21 @@ class EvaluasiUnitTabelController extends Controller
         }
 
         foreach ($rows as $i => $row) {
-            $key = $this->normalizeUnitKey($row['no_unit'] ?? '');
-            $b = $key !== '' ? ($becomlineByNoReg[$key] ?? null) : null;
-            $k = $key !== '' ? ($konsumsiByNoUnit[$key] ?? null) : null;
+            $keys = $this->getPossibleMatchKeys($row['no_unit'] ?? '');
+            $b = null;
+            $k = null;
+            foreach ($keys as $key) {
+                if ($key !== '' && isset($becomlineByNoReg[$key])) {
+                    $b = $becomlineByNoReg[$key];
+                    break;
+                }
+            }
+            foreach ($keys as $key) {
+                if ($key !== '' && isset($konsumsiByNoUnit[$key])) {
+                    $k = $konsumsiByNoUnit[$key];
+                    break;
+                }
+            }
 
             $rows[$i]['perusahaan_pemilik'] = $b ? $b->perusahaan_pemilik : null;
             $rows[$i]['site_operasional'] = $b ? $b->site_operasional : null;
