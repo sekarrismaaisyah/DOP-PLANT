@@ -96,7 +96,7 @@
                </div> -->
                <button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium hover:bg-slate-50">
                <span class="material-symbols-outlined text-lg">calendar_today</span>
-               <span>Oct 24, 2023</span>
+               <span>Hari ini, {{ now()->translatedFormat('d M Y') }}</span>
                </button>
                <div class="flex gap-2">
                   <button class="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:text-primary transition-colors">
@@ -256,7 +256,7 @@
             </div>
          </div>
          <!-- Bottom Performance Trend -->
-         <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
+         <!-- <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
             <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
                <div>
                   <h3 class="font-bold">MTD Performance Trend</h3>
@@ -271,7 +271,6 @@
                   </button>
                </div>
             </div>
-            <!-- Mockup for Line Chart -->
             <div class="h-48 w-full flex items-end justify-between px-2 gap-4">
                <div class="flex-1 bg-primary/10 hover:bg-primary/20 transition-colors rounded-t-sm h-[40%] group relative">
                   <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold opacity-0 group-hover:opacity-100 transition-opacity">72%</span>
@@ -295,7 +294,7 @@
                <span>Week 4</span>
                <span>Week 5</span>
             </div>
-         </div>
+         </div> -->
          <!-- Permit Expiry Timeline mini section -->
          
       </main>
