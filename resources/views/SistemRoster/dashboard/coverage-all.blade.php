@@ -467,7 +467,7 @@
                         }
                      },
                      scales: {
-                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+                        y: { beginAtZero: true, display: false },
                         x: { ticks: { maxRotation: 0, font: { size: 10 } }, grid: { display: false } }
                      }
                   }
