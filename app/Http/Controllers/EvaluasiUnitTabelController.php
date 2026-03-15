@@ -49,4 +49,42 @@ class EvaluasiUnitTabelController extends Controller
             'error' => $error,
         ]);
     }
+
+    /**
+     * Tampilkan ringkasan per hari: total jarak dan total durasi (jam) per tanggal.
+     * Parameter: date_from, date_to. Default: 30 hari terakhir.
+     */
+    public function perHari(Request $request): View
+    {
+        $dateFrom = $request->query('date_from');
+        $dateTo = $request->query('date_to');
+        if ($dateFrom && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom)) {
+            $dateFrom = null;
+        }
+        if ($dateTo && !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+            $dateTo = null;
+        }
+
+        if (!$dateFrom || !$dateTo) {
+            $dateTo = $dateTo ?: Carbon::now()->format('Y-m-d');
+            $dateFrom = $dateFrom ?: Carbon::now()->subDays(30)->format('Y-m-d');
+        }
+
+        $dailyTotals = [];
+        $error = null;
+        try {
+            $service = new EvaluasiUnitDataService();
+            $dailyTotals = $service->getDailyTotals($dateFrom, $dateTo);
+        } catch (Exception $e) {
+            Log::error('EvaluasiUnitTabelController::perHari: ' . $e->getMessage());
+            $error = $e->getMessage();
+        }
+
+        return view('fuelingEvaluasi.per-hari', [
+            'dailyTotals' => $dailyTotals,
+            'dateFrom' => $dateFrom,
+            'dateTo' => $dateTo,
+            'error' => $error,
+        ]);
+    }
 }

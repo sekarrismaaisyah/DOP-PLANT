@@ -58,6 +58,7 @@
                                     Download Excel
                                 </a>
                             @endif
+                            <a href="{{ route('fueling-evaluasi.per-hari') }}" class="btn btn-outline-primary">Ringkasan per Hari</a>
                         </div>
                     </form>
                 </div>
