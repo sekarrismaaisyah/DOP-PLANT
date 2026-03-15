@@ -1109,6 +1109,9 @@
     /* Tour guide button in header */
     .btn-dashboard-tour { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 500; background: linear-gradient(135deg, #1b84ff 0%, #0d6efd 100%); color: #fff; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(27,132,255,.3); transition: transform .15s ease, box-shadow .2s ease; }
     .btn-dashboard-tour:hover { color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(27,132,255,.4); }
+
+    /* Modal coverage (Area All / DOP): header di atas iframe agar tombol tutup tetap bisa diklik */
+    .lmo-coverage-modal-header { position: relative; z-index: 2; background: var(--kt-card) !important; }
     .btn-dashboard-tour i { font-size: 1rem; }
 </style>
 <link rel="stylesheet" href="https://unpkg.com/@sjmc11/tourguidejs/dist/css/tour.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
@@ -1564,11 +1567,11 @@
             </div>
           </div>
 
-          {{-- Modal: Dashboard Coverage Area All (iframe view coverage-all) --}}
+          {{-- Modal: Dashboard Coverage Area All (iframe view coverage-all) — dipindah ke body via JS agar backdrop/klik berfungsi --}}
           <div class="modal fade" id="coverageAreaAllModal" tabindex="-1" aria-labelledby="coverageAreaAllModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
             <div class="modal-dialog modal-dialog-centered modal-xl">
               <div class="modal-content">
-                <div class="modal-header border-kt-border">
+                <div class="modal-header border-kt-border lmo-coverage-modal-header">
                   <h5 class="modal-title" id="coverageAreaAllModalLabel"><i class="bi bi-clipboard-data-fill me-2"></i>Dashboard Coverage Area All</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
@@ -1579,11 +1582,11 @@
             </div>
           </div>
 
-          {{-- Modal: Dashboard Coverage Activity DOP (iframe view coverage-dop) --}}
+          {{-- Modal: Dashboard Coverage Activity DOP (iframe view coverage-dop) — dipindah ke body via JS agar backdrop/klik berfungsi --}}
           <div class="modal fade" id="coverageDopModal" tabindex="-1" aria-labelledby="coverageDopModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
             <div class="modal-dialog modal-dialog-centered modal-xl">
               <div class="modal-content">
-                <div class="modal-header border-kt-border">
+                <div class="modal-header border-kt-border lmo-coverage-modal-header">
                   <h5 class="modal-title" id="coverageDopModalLabel"><i class="bi bi-speedometer2 me-2"></i>Dashboard Coverage Activity DOP</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
@@ -2169,7 +2172,7 @@
       }
     })();
 
-    // Modal Coverage Area All: klik card buka modal, load iframe dengan view coverage-all
+    // Modal Coverage Area All: pindah modal ke body dulu agar backdrop/klik berfungsi, lalu klik card buka modal
     (function() {
       var coverageAreaAllUrl = '{{ url()->route("sistem-roster.dashboard.coverage-all") }}';
       function initCoverageAreaAllModal() {
@@ -2177,8 +2180,8 @@
         var modalEl = document.getElementById('coverageAreaAllModal');
         var iframeEl = document.getElementById('coverageAreaAllIframe');
         if (!cardEl || !modalEl || !iframeEl) return;
+        if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
         cardEl.addEventListener('click', function() {
-          if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
           iframeEl.src = coverageAreaAllUrl;
           if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
@@ -2205,7 +2208,7 @@
       }
     })();
 
-    // Modal Coverage Activity DOP: klik card buka modal, load iframe dengan view coverage-dop
+    // Modal Coverage Activity DOP: pindah modal ke body dulu agar backdrop/klik berfungsi, lalu klik card buka modal
     (function() {
       var coverageDopUrl = '{{ url()->route("sistem-roster.dashboard.coverage-dop") }}';
       function initCoverageDopModal() {
@@ -2213,8 +2216,8 @@
         var modalEl = document.getElementById('coverageDopModal');
         var iframeEl = document.getElementById('coverageDopIframe');
         if (!cardEl || !modalEl || !iframeEl) return;
+        if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
         cardEl.addEventListener('click', function() {
-          if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
           iframeEl.src = coverageDopUrl;
           if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
             bootstrap.Modal.getOrCreateInstance(modalEl).show();
