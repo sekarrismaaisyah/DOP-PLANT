@@ -70,18 +70,18 @@ class EvaluasiUnitTabelController extends Controller
             $dateFrom = $dateFrom ?: Carbon::now()->subDays(30)->format('Y-m-d');
         }
 
-        $dailyTotals = [];
+        $dailyPerUnit = [];
         $error = null;
         try {
             $service = new EvaluasiUnitDataService();
-            $dailyTotals = $service->getDailyTotals($dateFrom, $dateTo);
+            $dailyPerUnit = $service->getDailyPerUnitPerDay($dateFrom, $dateTo);
         } catch (Exception $e) {
             Log::error('EvaluasiUnitTabelController::perHari: ' . $e->getMessage());
             $error = $e->getMessage();
         }
 
         return view('fuelingEvaluasi.per-hari', [
-            'dailyTotals' => $dailyTotals,
+            'dailyPerUnit' => $dailyPerUnit,
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'error' => $error,

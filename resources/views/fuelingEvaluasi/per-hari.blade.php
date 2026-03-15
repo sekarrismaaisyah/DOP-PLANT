@@ -18,7 +18,7 @@
 @endsection
 
 @section('content')
-    <x-page-title title="Evaluasi Unit Per Hari" pagetitle="Ringkasan Total Jarak & Durasi per Tanggal" />
+    <x-page-title title="Evaluasi Unit Per Hari" pagetitle="Jarak & Durasi Masing-masing Unit per Tanggal" />
 
     <div class="row">
         <div class="col-12">
@@ -61,25 +61,27 @@
         <div class="col-12">
             <div class="card rounded-4">
                 <div class="card-header">
-                    <h5 class="card-title mb-0">Total per Hari (semua unit digabung)</h5>
+                    <h5 class="card-title mb-0">Per Hari per Unit (masing-masing unit)</h5>
                 </div>
                 <div class="card-body p-0">
-                    @php $dailyTotals = $dailyTotals ?? []; @endphp
-                    @if (count($dailyTotals) > 0)
+                    @php $dailyPerUnit = $dailyPerUnit ?? []; @endphp
+                    @if (count($dailyPerUnit) > 0)
                         <div class="table-responsive">
                             <table class="table evaluasi-perhari-table mb-0">
                                 <thead>
                                     <tr>
                                         <th>TANGGAL</th>
-                                        <th>TOTAL JARAK YANG DITEMPUH</th>
-                                        <th>TOTAL DURASI (jam)</th>
+                                        <th>NO UNIT</th>
+                                        <th>JARAK YANG DITEMPUH</th>
+                                        <th>DURASI (jam)</th>
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @foreach ($dailyTotals as $row)
+                                    @foreach ($dailyPerUnit as $row)
                                         <tr>
                                             <td>{{ $row['tanggal'] }}</td>
-                                            <td class="text-jarak">{{ $row['total_jarak'] }}</td>
+                                            <td>{{ $row['no_unit'] }}</td>
+                                            <td class="text-jarak">{{ $row['jarak'] }}</td>
                                             <td>{{ $row['total_jam'] }} jam</td>
                                         </tr>
                                     @endforeach

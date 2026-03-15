@@ -171,12 +171,12 @@ class EvaluasiUnitDataService
     }
 
     /**
-     * Ringkasan per hari: total jarak dan total durasi (jam) per tanggal (semua unit digabung).
-     * Konsep sama dengan evaluasi unit: jarak = sum segment GPS, durasi = sum (max-min ts per unit per hari).
+     * Per hari per unit: jarak dan durasi (jam) masing-masing unit per tanggal.
+     * Satu baris per (tanggal, unit). Konsep sama dengan evaluasi unit (bukan rata-rata).
      *
-     * @return array<int, array{tanggal: string, total_jarak: string, total_jam: float}>
+     * @return array<int, array{tanggal: string, no_unit: string, jarak: string, total_jam: float}>
      */
-    public function getDailyTotals(?string $dateFrom, ?string $dateTo): array
+    public function getDailyPerUnitPerDay(?string $dateFrom, ?string $dateTo): array
     {
         if (!$dateFrom || !$dateTo) {
             return [];
@@ -187,34 +187,50 @@ class EvaluasiUnitDataService
             return [];
         }
 
-        $byDate = [];
-        foreach ($dailyRows as $row) {
-            $logDate = $row['log_date'] ?? null;
-            if ($logDate === null || $logDate === '') {
+        $ch = new ClickHouseService('clickhouse_nitip');
+        $sqlUnits = "
+            SELECT toString(id) AS id, toString(vehicle_name) AS vehicle_name, toString(vehicle_number) AS vehicle_number
+            FROM nitip.units
+            ORDER BY vehicle_name ASC
+        ";
+        $units = $ch->query($sqlUnits);
+        if (!is_array($units)) {
+            $units = [];
+        }
+        $unitLabels = [];
+        foreach ($units as $u) {
+            $id = $u['id'] ?? null;
+            if ($id === null || $id === '') {
                 continue;
             }
-            if (!isset($byDate[$logDate])) {
-                $byDate[$logDate] = ['km' => 0.0, 'seconds' => 0];
-            }
-            $byDate[$logDate]['km'] += (float) ($row['day_km'] ?? 0);
-            $byDate[$logDate]['seconds'] += (int) ($row['day_seconds'] ?? 0);
+            $noUnit = trim((string) ($u['vehicle_number'] ?? $u['vehicle_name'] ?? $id));
+            $unitLabels[$id] = $noUnit !== '' ? $noUnit : (string) $id;
         }
 
-        ksort($byDate);
         $result = [];
-        foreach ($byDate as $tanggal => $agg) {
-            $totalKm = $agg['km'];
-            $totalSeconds = $agg['seconds'];
-            $totalHours = round($totalSeconds / 3600, 2);
-            $jarakText = $totalKm >= 1
-                ? number_format($totalKm, 2, ',', '.') . ' km'
-                : number_format($totalKm * 1000, 0, ',', '.') . ' m';
+        foreach ($dailyRows as $row) {
+            $unitId = $row['unit_id'] ?? null;
+            $logDate = $row['log_date'] ?? null;
+            if ($unitId === null || $logDate === null || $logDate === '') {
+                continue;
+            }
+            $dayKm = (float) ($row['day_km'] ?? 0);
+            $daySeconds = (int) ($row['day_seconds'] ?? 0);
+            $totalHours = round($daySeconds / 3600, 2);
+            $jarakText = $dayKm >= 1
+                ? number_format($dayKm, 2, ',', '.') . ' km'
+                : number_format($dayKm * 1000, 0, ',', '.') . ' m';
             $result[] = [
-                'tanggal' => $tanggal,
-                'total_jarak' => $jarakText,
+                'tanggal' => $logDate,
+                'no_unit' => $unitLabels[$unitId] ?? (string) $unitId,
+                'jarak' => $jarakText,
                 'total_jam' => $totalHours,
             ];
         }
+        usort($result, function ($a, $b) {
+            $c = strcmp($a['tanggal'], $b['tanggal']);
+            return $c !== 0 ? $c : strcmp($a['no_unit'], $b['no_unit']);
+        });
         return $result;
     }
 }
