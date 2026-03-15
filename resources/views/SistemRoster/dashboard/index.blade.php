@@ -2193,9 +2193,21 @@
     // --- Dashboard Tour Guide (TourGuide JS) ---
     (function initDashboardTour() {
       var startBtn = document.getElementById('dashboardTourStartBtn');
-      if (!startBtn) return;
       var TourGuideClient = typeof tourguide !== 'undefined' && tourguide.TourGuideClient;
       if (!TourGuideClient) return;
+
+      function getDashboardTourSteps() {
+        var el = function(id) { return document.getElementById(id); };
+        return [
+          { target: el('dashboardTourIntro'), content: '<strong>Dashboard Coverage Performance</strong><br><br>Ini adalah dashboard utama untuk memantau performa coverage operasional di semua lokasi site. Anda dapat melihat KPI coverage, heatmap kesesuaian plan vs actual, dan detail lokasi yang di-assign.', title: 'Selamat datang' },
+          { target: el('coverageAreaAllKpiCard'), content: '<strong>Coverage Area All</strong><br><br>Kartu ini menampilkan persentase coverage area secara keseluruhan. <strong>Klik kartu ini</strong> untuk membuka dashboard detail Coverage Area All.', title: 'Coverage Area All' },
+          { target: el('dashboardTourKpiDop'), content: '<strong>Coverage Activity DOP</strong><br><br>KPI aktivitas coverage berdasarkan DOP (Daily Operation Plan). Klik untuk melihat detail coverage activity DOP.', title: 'Coverage Activity DOP' },
+          { target: el('dashboardTourKpiIkk'), content: '<strong>Coverage Activity BeIKK</strong><br><br>KPI coverage aktivitas BeIKK (Indikator Kinerja Kunci). Menunjukkan tingkat pencapaian coverage untuk aktivitas IKK.', title: 'Coverage Activity IKK' },
+          { target: el('dashboardTourKpiNonKritis'), content: '<strong>Coverage Area Non Kritis</strong><br><br>Persentase coverage untuk area non kritis. Gunakan untuk memantau lokasi yang tidak termasuk kategori kritis.', title: 'Coverage Area Non Kritis' },
+          { target: el('dashboardTourHeatmap'), content: '<strong>Performance Heatmap</strong><br><br>Menampilkan kesesuaian <strong>aktual dan planning</strong> dari assign karyawan untuk setiap aktivitas per hari. Warna menunjukkan tingkat pencapaian (Actual / Plan — Actual SAP). Filter per bulan dan site tersedia di sini.', title: 'Heatmap Kesesuaian' },
+          { target: el('dashboardTourCoverageByLocation'), content: '<strong>Coverage by Location</strong><br><br>Daftar <strong>lokasi dari masing-masing yang di-assign</strong>. Persentase coverage per lokasi, status (Sudah Tercover / Incomplete / Belum Tercover), dan tombol "Lihat Detail" untuk Inspeksi Hazard, OAK & Observasi. Filter berdasarkan tanggal, site, dan tab (All Location, By IKK, By DOP, Non Kritis).', title: 'Lokasi per Assign' }
+        ].filter(function(s) { return s.target; });
+      }
 
       var tg = new TourGuideClient({
         nextLabel: 'Lanjut',
@@ -2205,47 +2217,19 @@
         exitOnEscape: true,
         exitOnClickOutside: true,
         rememberStep: false,
-        steps: [
-          {
-            target: '#dashboardTourIntro',
-            content: '<strong>Dashboard Coverage Performance</strong><br><br>Ini adalah dashboard utama untuk memantau performa coverage operasional di semua lokasi site. Anda dapat melihat KPI coverage, heatmap kesesuaian plan vs actual, dan detail lokasi yang di-assign.',
-            title: 'Selamat datang'
-          },
-          {
-            target: '#coverageAreaAllKpiCard',
-            content: '<strong>Coverage Area All</strong><br><br>Kartu ini menampilkan persentase coverage area secara keseluruhan. <strong>Klik kartu ini</strong> untuk membuka dashboard detail Coverage Area All.',
-            title: 'Coverage Area All'
-          },
-          {
-            target: '#dashboardTourKpiDop',
-            content: '<strong>Coverage Activity DOP</strong><br><br>KPI aktivitas coverage berdasarkan DOP (Daily Operation Plan). Klik untuk melihat detail coverage activity DOP.',
-            title: 'Coverage Activity DOP'
-          },
-          {
-            target: '#dashboardTourKpiIkk',
-            content: '<strong>Coverage Activity BeIKK</strong><br><br>KPI coverage aktivitas BeIKK (Indikator Kinerja Kunci). Menunjukkan tingkat pencapaian coverage untuk aktivitas IKK.',
-            title: 'Coverage Activity IKK'
-          },
-          {
-            target: '#dashboardTourKpiNonKritis',
-            content: '<strong>Coverage Area Non Kritis</strong><br><br>Persentase coverage untuk area non kritis. Gunakan untuk memantau lokasi yang tidak termasuk kategori kritis.',
-            title: 'Coverage Area Non Kritis'
-          },
-          {
-            target: '#dashboardTourHeatmap',
-            content: '<strong>Performance Heatmap</strong><br><br>Menampilkan kesesuaian <strong>aktual dan planning</strong> dari assign karyawan untuk setiap aktivitas per hari. Warna menunjukkan tingkat pencapaian (Actual / Plan — Actual SAP). Filter per bulan dan site tersedia di sini.',
-            title: 'Heatmap Kesesuaian'
-          },
-          {
-            target: '#dashboardTourCoverageByLocation',
-            content: '<strong>Coverage by Location</strong><br><br>Daftar <strong>lokasi dari masing-masing yang di-assign</strong>. Persentase coverage per lokasi, status (Sudah Tercover / Incomplete / Belum Tercover), dan tombol "Lihat Detail" untuk Inspeksi Hazard, OAK & Observasi. Filter berdasarkan tanggal, site, dan tab (All Location, By IKK, By DOP, Non Kritis).',
-            title: 'Lokasi per Assign'
-          }
-        ]
+        steps: getDashboardTourSteps()
       });
 
-      startBtn.addEventListener('click', function() {
+      function startDashboardTour() {
+        tg.setOptions({ steps: getDashboardTourSteps() });
         tg.start();
+      }
+
+      if (startBtn) startBtn.addEventListener('click', startDashboardTour);
+
+      // Auto-buka panduan saat pertama kali akses halaman
+      window.addEventListener('load', function() {
+        setTimeout(startDashboardTour, 600);
       });
     })();
 
