@@ -47,11 +47,12 @@ class DashboardController extends Controller
                 return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage'));
             }
 
+            // Key = lowercase(normalize(lokasi)|normalize(detil)) agar match case-insensitive dengan data SAP
             $masterKeys = [];
             foreach ($rowsMaster as $row) {
                 $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
                 $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
-                $key = $loc . '|' . $det;
+                $key = mb_strtolower($loc . '|' . $det);
                 $masterKeys[$key] = true;
             }
             $totalLokasi = count($masterKeys);
@@ -60,31 +61,46 @@ class DashboardController extends Controller
                 return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage'));
             }
 
-            // 2. Lokasi yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip
+            // 2. Lokasi yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip — pakai DISTINCT agar ringan
             $coveredKeys = [];
 
-            $addCovered = function (array $rows, string $locCol, string $detCol) use (&$coveredKeys) {
-                if (empty($rows) || ! is_array($rows)) {
-                    return;
-                }
+            $addCovered = function ($result, string $locCol, string $detCol) use (&$coveredKeys) {
+                $rows = is_array($result) ? $result : [];
                 foreach ($rows as $r) {
                     $loc = $this->normalizeLocation($this->getClickHouseRowValue($r, $locCol));
                     $det = $this->normalizeLocation($this->getClickHouseRowValue($r, $detCol));
-                    $coveredKeys[$loc . '|' . $det] = true;
+                    $key = mb_strtolower($loc . '|' . $det);
+                    $coveredKeys[$key] = true;
                 }
             };
 
-            $sqlCar = "SELECT trim(ifNull(nama_lokasi, '')) AS loc, trim(ifNull(nama_detail_lokasi, '')) AS det FROM nitip.aaj_car_all_year_from_dav";
-            $addCovered($ch->query($sqlCar) ?: [], 'loc', 'det');
+            $sqlCar = "SELECT DISTINCT trim(ifNull(nama_lokasi, '')) AS loc, trim(ifNull(nama_detail_lokasi, '')) AS det FROM nitip.aaj_car_all_year_from_dav WHERE trim(ifNull(nama_lokasi, '')) != '' OR trim(ifNull(nama_detail_lokasi, '')) != ''";
+            try {
+                $addCovered($ch->query($sqlCar), 'loc', 'det');
+            } catch (\Throwable $e) {
+                Log::warning('DashboardController coverageAll CAR: ' . $e->getMessage());
+            }
 
-            $sqlOak = "SELECT trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det FROM nitip.aaj_vw_car_oak_register_ytd_only";
-            $addCovered($ch->query($sqlOak) ?: [], 'loc', 'det');
+            $sqlOak = "SELECT DISTINCT trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE trim(ifNull(toString(location), '')) != '' OR trim(ifNull(toString(detail_location), '')) != ''";
+            try {
+                $addCovered($ch->query($sqlOak), 'loc', 'det');
+            } catch (\Throwable $e) {
+                Log::warning('DashboardController coverageAll OAK: ' . $e->getMessage());
+            }
 
-            $sqlObs = "SELECT trim(ifNull(toString(Lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det FROM nitip.aaj_database_observasi_from_bep_ytd_only";
-            $addCovered($ch->query($sqlObs) ?: [], 'loc', 'det');
+            $sqlObs = "SELECT DISTINCT trim(ifNull(toString(Lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det FROM nitip.aaj_database_observasi_from_bep_ytd_only WHERE trim(ifNull(toString(Lokasi), '')) != '' OR trim(ifNull(toString(Detil_Lokasi), '')) != ''";
+            try {
+                $addCovered($ch->query($sqlObs), 'loc', 'det');
+            } catch (\Throwable $e) {
+                Log::warning('DashboardController coverageAll Observasi: ' . $e->getMessage());
+            }
 
-            $sqlCoaching = "SELECT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det FROM nitip.bep_vw_database_coaching";
-            $addCovered($ch->query($sqlCoaching) ?: [], 'loc', 'det');
+            $sqlCoaching = "SELECT DISTINCT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det FROM nitip.bep_vw_database_coaching WHERE trim(ifNull(toString(lokasi), '')) != '' OR trim(ifNull(toString(detil_lokasi), '')) != ''";
+            try {
+                $addCovered($ch->query($sqlCoaching), 'loc', 'det');
+            } catch (\Throwable $e) {
+                Log::warning('DashboardController coverageAll Coaching: ' . $e->getMessage());
+            }
 
             foreach (array_keys($masterKeys) as $key) {
                 if (isset($coveredKeys[$key])) {
