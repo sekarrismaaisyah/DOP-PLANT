@@ -1218,13 +1218,13 @@
               <div class="lmo-kpi-sub">Coverage Area All</div>
             </div>
 
-            <div class="lmo-kpi-card" id="dashboardTourKpiDop">
+            <div class="lmo-kpi-card lmo-kpi-card-clickable" id="coverageDopKpiCard" role="button" tabindex="0" title="Klik untuk lihat Dashboard Coverage Activity DOP">
               <div class="lmo-kpi-top">
                 <div class="lmo-kpi-icon lmo-icon-blue"><i class="bi bi-speedometer2"></i></div>
                 <div class="lmo-delta up"><i class="bi bi-arrow-up-right"></i> </div>
               </div>
               <div class="lmo-kpi-title">Coverage Activity DOP</div>
-              <div class="lmo-kpi-value">94.2%</div>
+              <div class="lmo-kpi-value">100%</div>
               <div class="lmo-kpi-sub">Coverage Activity DOP</div>
             </div>
 
@@ -1574,6 +1574,21 @@
                 </div>
                 <div class="modal-body p-0 bg-light d-flex flex-column" style="min-height: 0;">
                   <iframe id="coverageAreaAllIframe" src="" title="Coverage Area All" class="w-100 border-0 flex-grow-1" style="min-height: 70vh; height: calc(100vh - 60px);"></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Modal: Dashboard Coverage Activity DOP (iframe view coverage-dop) --}}
+          <div class="modal fade" id="coverageDopModal" tabindex="-1" aria-labelledby="coverageDopModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+              <div class="modal-content">
+                <div class="modal-header border-kt-border">
+                  <h5 class="modal-title" id="coverageDopModalLabel"><i class="bi bi-speedometer2 me-2"></i>Dashboard Coverage Activity DOP</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-0 bg-light d-flex flex-column" style="min-height: 0;">
+                  <iframe id="coverageDopIframe" src="" title="Coverage Activity DOP" class="w-100 border-0 flex-grow-1" style="min-height: 70vh; height: calc(100vh - 60px);"></iframe>
                 </div>
               </div>
             </div>
@@ -2190,6 +2205,42 @@
       }
     })();
 
+    // Modal Coverage Activity DOP: klik card buka modal, load iframe dengan view coverage-dop
+    (function() {
+      var coverageDopUrl = '{{ url()->route("sistem-roster.dashboard.coverage-dop") }}';
+      function initCoverageDopModal() {
+        var cardEl = document.getElementById('coverageDopKpiCard');
+        var modalEl = document.getElementById('coverageDopModal');
+        var iframeEl = document.getElementById('coverageDopIframe');
+        if (!cardEl || !modalEl || !iframeEl) return;
+        cardEl.addEventListener('click', function() {
+          if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
+          iframeEl.src = coverageDopUrl;
+          if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+          } else {
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            modalEl.setAttribute('aria-modal', 'true');
+            modalEl.removeAttribute('aria-hidden');
+            document.body.classList.add('modal-open');
+            var backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.setAttribute('data-coverage-dop-backdrop', '1');
+            document.body.appendChild(backdrop);
+          }
+        });
+        cardEl.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cardEl.click(); }
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCoverageDopModal);
+      } else {
+        initCoverageDopModal();
+      }
+    })();
+
     // --- Dashboard Tour Guide (TourGuide JS) ---
     (function initDashboardTour() {
       var startBtn = document.getElementById('dashboardTourStartBtn');
@@ -2201,7 +2252,7 @@
         return [
           { target: el('dashboardTourIntro'), content: '<strong>Dashboard Coverage Performance</strong><br><br>Ini adalah dashboard utama untuk memantau performa coverage operasional di semua lokasi site. Anda dapat melihat KPI coverage, heatmap kesesuaian plan vs actual, dan detail lokasi yang di-assign.', title: 'Selamat datang' },
           { target: el('coverageAreaAllKpiCard'), content: '<strong>Coverage Area All</strong><br><br>Kartu ini menampilkan persentase coverage area secara keseluruhan. <strong>Klik kartu ini</strong> untuk membuka dashboard detail Coverage Area All.', title: 'Coverage Area All' },
-          { target: el('dashboardTourKpiDop'), content: '<strong>Coverage Activity DOP</strong><br><br>KPI aktivitas coverage berdasarkan DOP (Daily Operation Plan). Klik untuk melihat detail coverage activity DOP.', title: 'Coverage Activity DOP' },
+          { target: el('coverageDopKpiCard'), content: '<strong>Coverage Activity DOP</strong><br><br>KPI aktivitas coverage berdasarkan DOP (Daily Operation Plan). Klik untuk melihat detail coverage activity DOP.', title: 'Coverage Activity DOP' },
           { target: el('dashboardTourKpiIkk'), content: '<strong>Coverage Activity BeIKK</strong><br><br>KPI coverage aktivitas BeIKK (Indikator Kinerja Kunci). Menunjukkan tingkat pencapaian coverage untuk aktivitas IKK.', title: 'Coverage Activity IKK' },
           { target: el('dashboardTourKpiNonKritis'), content: '<strong>Coverage Area Non Kritis</strong><br><br>Persentase coverage untuk area non kritis. Gunakan untuk memantau lokasi yang tidak termasuk kategori kritis.', title: 'Coverage Area Non Kritis' },
           { target: el('dashboardTourHeatmap'), content: '<strong>Performance Heatmap</strong><br><br>Menampilkan kesesuaian <strong>aktual dan planning</strong> dari assign karyawan untuk setiap aktivitas per hari. Warna menunjukkan tingkat pencapaian (Actual / Plan — Actual SAP). Filter per bulan dan site tersedia di sini.', title: 'Heatmap Kesesuaian' },

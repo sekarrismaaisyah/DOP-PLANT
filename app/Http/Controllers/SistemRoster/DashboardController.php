@@ -275,6 +275,14 @@ class DashboardController extends Controller
     }
 
     /**
+     * Menampilkan halaman Dashboard Coverage Activity DOP (iframe di modal).
+     */
+    public function coverageDop(): View
+    {
+        return view('SistemRoster.dashboard.coverage-dop');
+    }
+
+    /**
      * Menampilkan halaman Performance Dashboard Sistem Roster.
      * Coverage by Location: ada SAP di lokasi (siapapun) — tidak match nama.
      * Detail Plan Pengecekan: OK hanya jika ada SAP dari karyawan yang di-assign (match nama + lokasi + tanggal).
