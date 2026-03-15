@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Becomline;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -19,8 +20,76 @@ class BecomlineController extends Controller
 {
     public function index(): View
     {
-        $items = Becomline::orderBy('perusahaan_pemilik')->orderBy('site_operasional')->orderBy('id')->get();
-        return view('becomline.index', compact('items'));
+        return view('becomline.index');
+    }
+
+    /**
+     * DataTables server-side data (JSON).
+     */
+    public function data(Request $request): JsonResponse
+    {
+        $draw = (int) $request->input('draw', 0);
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+        if ($length < 1 || $length > 100) {
+            $length = 25;
+        }
+        $search = trim((string) ($request->input('search.value') ?? ''));
+        $orderColIndex = (int) $request->input('order.0.column', 1);
+        $orderDir = strtolower($request->input('order.0.dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        $orderColumns = [
+            0 => 'id',
+            1 => 'perusahaan_pemilik',
+            2 => 'site_operasional',
+            3 => 'jenis_unit_spip',
+            4 => 'expired',
+            5 => 'status_permit_spip',
+            6 => 'no_registrasi',
+        ];
+        $orderBy = $orderColumns[$orderColIndex] ?? 'perusahaan_pemilik';
+
+        $query = Becomline::query();
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('perusahaan_pemilik', 'like', '%' . $search . '%')
+                    ->orWhere('site_operasional', 'like', '%' . $search . '%')
+                    ->orWhere('jenis_unit_spip', 'like', '%' . $search . '%')
+                    ->orWhere('status_permit_spip', 'like', '%' . $search . '%')
+                    ->orWhere('no_registrasi', 'like', '%' . $search . '%')
+                    ->orWhereRaw('DATE_FORMAT(expired, "%Y-%m-%d") LIKE ?', ['%' . $search . '%']);
+            });
+        }
+
+        $recordsTotal = Becomline::count();
+        $recordsFiltered = (clone $query)->count();
+        $items = $query->orderBy($orderBy, $orderDir)->skip($start)->take($length)->get();
+
+        $data = [];
+        foreach ($items as $idx => $item) {
+            $editUrl = route('becomline.edit', $item->id);
+            $destroyUrl = route('becomline.destroy', $item->id);
+            $csrf = csrf_token();
+            $aksi = '<a href="' . e($editUrl) . '" class="btn btn-sm btn-outline-primary" title="Edit"><i class="material-icons-outlined" style="font-size:18px">edit</i></a> ';
+            $aksi .= '<form action="' . e($destroyUrl) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Yakin hapus data ini?\');"><input type="hidden" name="_token" value="' . e($csrf) . '"><input type="hidden" name="_method" value="DELETE"><button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus"><i class="material-icons-outlined" style="font-size:18px">delete</i></button></form>';
+            $data[] = [
+                'DT_RowIndex' => $start + $idx + 1,
+                'perusahaan_pemilik' => $item->perusahaan_pemilik ?? '-',
+                'site_operasional' => $item->site_operasional ?? '-',
+                'jenis_unit_spip' => $item->jenis_unit_spip ?? '-',
+                'expired' => $item->expired ? $item->expired->format('d/m/Y') : '-',
+                'status_permit_spip' => $item->status_permit_spip ?? '-',
+                'no_registrasi' => $item->no_registrasi ?? '-',
+                'aksi' => $aksi,
+            ];
+        }
+
+        return response()->json([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]);
     }
 
     public function create(): View

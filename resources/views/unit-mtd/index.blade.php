@@ -37,7 +37,7 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle mb-0">
+                    <table class="table table-bordered table-hover align-middle mb-0" id="tableUnitMtd" style="width:100%">
                         <thead class="table-light">
                             <tr>
                                 <th>No</th>
@@ -50,39 +50,52 @@
                                 <th width="120">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @forelse($items as $idx => $item)
-                            <tr>
-                                <td>{{ $idx + 1 }}</td>
-                                <td>{{ $item->site ?? '-' }}</td>
-                                <td>{{ $item->perusahaan ?? '-' }}</td>
-                                <td>{{ $item->kategori ?? '-' }}</td>
-                                <td>{{ $item->no_unit ?? '-' }}</td>
-                                <td>{{ $item->mtd !== null ? number_format($item->mtd, 2, ',', '.') : '-' }}</td>
-                                <td>{{ $item->avg_per_day !== null ? number_format($item->avg_per_day, 2, ',', '.') : '-' }}</td>
-                                <td>
-                                    <a href="{{ route('unit-mtd.edit', $item->id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
-                                        <i class="material-icons-outlined" style="font-size:18px">edit</i>
-                                    </a>
-                                    <form action="{{ route('unit-mtd.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus data ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
-                                            <i class="material-icons-outlined" style="font-size:18px">delete</i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="8" class="text-center text-muted">Belum ada data. Gunakan Tambah atau Import Excel.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
+@endsection
+
+@section('css')
+<link href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
+@endsection
+
+@section('scripts')
+<script src="{{ URL::asset('build/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ URL::asset('build/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
+<script>
+$(document).ready(function() {
+    $('#tableUnitMtd').DataTable({
+        serverSide: true,
+        processing: true,
+        ajax: '{{ route("unit-mtd.data") }}',
+        columns: [
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+            { data: 'site', name: 'site' },
+            { data: 'perusahaan', name: 'perusahaan' },
+            { data: 'kategori', name: 'kategori' },
+            { data: 'no_unit', name: 'no_unit' },
+            { data: 'mtd', name: 'mtd' },
+            { data: 'avg_per_day', name: 'avg_per_day' },
+            { data: 'aksi', name: 'aksi', orderable: false, searchable: false }
+        ],
+        order: [[1, 'asc']],
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        language: {
+            search: 'Cari:',
+            lengthMenu: 'Tampilkan _MENU_ baris',
+            info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
+            infoEmpty: 'Tidak ada data',
+            infoFiltered: '(filter dari _MAX_ total)',
+            zeroRecords: 'Tidak ada data yang cocok.',
+            paginate: { first: 'Awal', last: 'Akhir', next: 'Selanjutnya', previous: 'Sebelumnya' },
+            processing: 'Memuat...'
+        }
+    });
+});
+</script>
 @endsection

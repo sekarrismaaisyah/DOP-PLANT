@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\UnitMtd;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -18,8 +19,78 @@ class UnitMtdController extends Controller
 {
     public function index(): View
     {
-        $items = UnitMtd::orderBy('site')->orderBy('perusahaan')->orderBy('no_unit')->orderBy('id')->get();
-        return view('unit-mtd.index', compact('items'));
+        return view('unit-mtd.index');
+    }
+
+    /**
+     * DataTables server-side data (JSON).
+     */
+    public function data(Request $request): JsonResponse
+    {
+        $draw = (int) $request->input('draw', 0);
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+        if ($length < 1 || $length > 100) {
+            $length = 25;
+        }
+        $search = trim((string) ($request->input('search.value') ?? ''));
+        $orderColIndex = (int) $request->input('order.0.column', 1);
+        $orderDir = strtolower($request->input('order.0.dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        $orderColumns = [
+            0 => 'id',
+            1 => 'site',
+            2 => 'perusahaan',
+            3 => 'kategori',
+            4 => 'no_unit',
+            5 => 'mtd',
+            6 => 'avg_per_day',
+        ];
+        $orderBy = $orderColumns[$orderColIndex] ?? 'site';
+
+        $query = UnitMtd::query();
+        if ($search !== '') {
+            $query->where(function ($q) use ($search) {
+                $q->where('site', 'like', '%' . $search . '%')
+                    ->orWhere('perusahaan', 'like', '%' . $search . '%')
+                    ->orWhere('kategori', 'like', '%' . $search . '%')
+                    ->orWhere('no_unit', 'like', '%' . $search . '%')
+                    ->orWhereRaw('CAST(mtd AS CHAR) LIKE ?', ['%' . $search . '%'])
+                    ->orWhereRaw('CAST(avg_per_day AS CHAR) LIKE ?', ['%' . $search . '%']);
+            });
+        }
+
+        $recordsTotal = UnitMtd::count();
+        $recordsFiltered = (clone $query)->count();
+        $items = $query->orderBy($orderBy, $orderDir)->skip($start)->take($length)->get();
+
+        $data = [];
+        foreach ($items as $idx => $item) {
+            $editUrl = route('unit-mtd.edit', $item->id);
+            $destroyUrl = route('unit-mtd.destroy', $item->id);
+            $csrf = csrf_token();
+            $mtdStr = $item->mtd !== null ? number_format($item->mtd, 2, ',', '.') : '-';
+            $avgStr = $item->avg_per_day !== null ? number_format($item->avg_per_day, 2, ',', '.') : '-';
+            $aksi = '<a href="' . e($editUrl) . '" class="btn btn-sm btn-outline-primary" title="Edit"><i class="material-icons-outlined" style="font-size:18px">edit</i></a> ';
+            $aksi .= '<form action="' . e($destroyUrl) . '" method="POST" class="d-inline" onsubmit="return confirm(\'Yakin hapus data ini?\');"><input type="hidden" name="_token" value="' . e($csrf) . '"><input type="hidden" name="_method" value="DELETE"><button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus"><i class="material-icons-outlined" style="font-size:18px">delete</i></button></form>';
+            $data[] = [
+                'DT_RowIndex' => $start + $idx + 1,
+                'site' => $item->site ?? '-',
+                'perusahaan' => $item->perusahaan ?? '-',
+                'kategori' => $item->kategori ?? '-',
+                'no_unit' => $item->no_unit ?? '-',
+                'mtd' => $mtdStr,
+                'avg_per_day' => $avgStr,
+                'aksi' => $aksi,
+            ];
+        }
+
+        return response()->json([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]);
     }
 
     public function create(): View

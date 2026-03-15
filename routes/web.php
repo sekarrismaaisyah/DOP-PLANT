@@ -120,10 +120,12 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/fueling-evaluasi', [FuelingEvaluasiController::class, 'index'])->name('fueling-evaluasi.index');
     Route::get('/fueling-evaluasi/tabel', [EvaluasiUnitTabelController::class, 'index'])->name('fueling-evaluasi.tabel');
     Route::get('/fueling-evaluasi/per-hari', [EvaluasiUnitTabelController::class, 'perHari'])->name('fueling-evaluasi.per-hari');
+    Route::get('/fueling-evaluasi/per-hari/data', [EvaluasiUnitTabelController::class, 'perHariData'])->name('fueling-evaluasi.per-hari.data');
     Route::get('/fueling-evaluasi/per-hari/export-excel', [EvaluasiUnitTabelController::class, 'exportPerHariExcel'])->name('fueling-evaluasi.per-hari.export-excel');
 
     // Becomline (CRUD + Import Excel)
     Route::get('/becomline', [BecomlineController::class, 'index'])->name('becomline.index');
+    Route::get('/becomline/data', [BecomlineController::class, 'data'])->name('becomline.data');
     Route::get('/becomline/create', [BecomlineController::class, 'create'])->name('becomline.create');
     Route::post('/becomline', [BecomlineController::class, 'store'])->name('becomline.store');
     Route::get('/becomline/{id}/edit', [BecomlineController::class, 'edit'])->name('becomline.edit');
@@ -135,6 +137,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Unit MTD (CRUD + Import Excel) - Site, Perusahaan, Kategori, No Unit, MTD, AVG per Day
     Route::get('/unit-mtd', [UnitMtdController::class, 'index'])->name('unit-mtd.index');
+    Route::get('/unit-mtd/data', [UnitMtdController::class, 'data'])->name('unit-mtd.data');
     Route::get('/unit-mtd/create', [UnitMtdController::class, 'create'])->name('unit-mtd.create');
     Route::post('/unit-mtd', [UnitMtdController::class, 'store'])->name('unit-mtd.store');
     Route::get('/unit-mtd/{id}/edit', [UnitMtdController::class, 'edit'])->name('unit-mtd.edit');

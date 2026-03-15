@@ -7,6 +7,7 @@ use App\Models\UnitMtd;
 use App\Services\EvaluasiUnitDataService;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
@@ -87,10 +88,118 @@ class EvaluasiUnitTabelController extends Controller
         }
 
         return view('fuelingEvaluasi.per-hari', [
-            'dailyPerUnit' => $dailyPerUnit,
+            'dailyPerUnit' => [],
             'dateFrom' => $dateFrom,
             'dateTo' => $dateTo,
             'error' => $error,
+        ]);
+    }
+
+    /**
+     * DataTables server-side: data Per Hari per Unit (JSON).
+     * Query: date_from, date_to required; plus draw, start, length, search[value], order.
+     */
+    public function perHariData(Request $request): JsonResponse
+    {
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        if (!$dateFrom || !$dateTo || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+            return response()->json([
+                'draw' => (int) $request->input('draw', 0),
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+            ]);
+        }
+
+        $draw = (int) $request->input('draw', 0);
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+        if ($length < 1 || $length > 500) {
+            $length = 25;
+        }
+        $search = trim((string) ($request->input('search.value') ?? ''));
+        $orderColIndex = (int) $request->input('order.0.column', 0);
+        $orderDir = strtolower($request->input('order.0.dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+
+        $orderKeys = [
+            0 => 'tanggal',
+            1 => 'no_unit',
+            2 => 'jarak',
+            3 => 'total_jam',
+            4 => 'perusahaan_pemilik',
+            5 => 'site_operasional',
+            6 => 'jenis_unit_spip',
+            7 => 'expired',
+            8 => 'status_permit_spip',
+            9 => 'mtd',
+            10 => 'avg_per_day',
+        ];
+        $orderKey = $orderKeys[$orderColIndex] ?? 'tanggal';
+
+        try {
+            $service = new EvaluasiUnitDataService();
+            $rows = $service->getDailyPerUnitPerDay($dateFrom, $dateTo);
+            $rows = $this->enrichDailyPerUnitWithBecomlineAndKonsumsi($rows);
+        } catch (Exception $e) {
+            Log::error('EvaluasiUnitTabelController::perHariData: ' . $e->getMessage());
+            return response()->json([
+                'draw' => $draw,
+                'recordsTotal' => 0,
+                'recordsFiltered' => 0,
+                'data' => [],
+            ]);
+        }
+
+        if ($search !== '') {
+            $searchLower = mb_strtolower($search);
+            $rows = array_values(array_filter($rows, function ($r) use ($searchLower) {
+                $concat = mb_strtolower(implode(' ', array_map(function ($v) {
+                    return $v === null ? '' : (string) $v;
+                }, $r)));
+                return str_contains($concat, $searchLower);
+            }));
+        }
+
+        $recordsTotal = count($rows);
+        $recordsFiltered = $recordsTotal;
+
+        usort($rows, function ($a, $b) use ($orderKey, $orderDir) {
+            $va = $a[$orderKey] ?? '';
+            $vb = $b[$orderKey] ?? '';
+            if (is_numeric($va) && is_numeric($vb)) {
+                $cmp = $va <=> $vb;
+            } else {
+                $cmp = strcmp((string) $va, (string) $vb);
+            }
+            return $orderDir === 'desc' ? -$cmp : $cmp;
+        });
+
+        $page = array_slice($rows, $start, $length);
+        $data = [];
+        foreach ($page as $r) {
+            $mtdStr = isset($r['mtd']) && $r['mtd'] !== null ? number_format((float) $r['mtd'], 2, ',', '.') : '-';
+            $avgStr = isset($r['avg_per_day']) && $r['avg_per_day'] !== null ? number_format((float) $r['avg_per_day'], 2, ',', '.') : '-';
+            $data[] = [
+                $r['tanggal'] ?? '-',
+                $r['no_unit'] ?? '-',
+                $r['jarak'] ?? '-',
+                ($r['total_jam'] ?? 0) . ' jam',
+                $r['perusahaan_pemilik'] ?? '-',
+                $r['site_operasional'] ?? '-',
+                $r['jenis_unit_spip'] ?? '-',
+                !empty($r['expired']) ? $r['expired'] : '-',
+                $r['status_permit_spip'] ?? '-',
+                $mtdStr,
+                $avgStr,
+            ];
+        }
+
+        return response()->json([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
         ]);
     }
 

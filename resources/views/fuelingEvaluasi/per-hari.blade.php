@@ -3,6 +3,7 @@
 @section('title', 'Evaluasi Unit Per Hari - Fueling')
 
 @section('css')
+<link href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
 <style>
     .evaluasi-perhari-table { border-collapse: separate; border-spacing: 0; }
     .evaluasi-perhari-table thead th {
@@ -35,14 +36,14 @@
         <div class="col-12">
             <div class="card rounded-4">
                 <div class="card-body">
-                    <form method="get" action="{{ route('fueling-evaluasi.per-hari') }}" class="row g-3 align-items-end">
+                    <form method="get" action="{{ route('fueling-evaluasi.per-hari') }}" class="row g-3 align-items-end" id="formFilterPerHari">
                         <div class="col-md-3">
                             <label class="form-label">Tanggal Dari</label>
-                            <input type="date" name="date_from" class="form-control" value="{{ $dateFrom ?? '' }}" required>
+                            <input type="date" name="date_from" id="date_from" class="form-control" value="{{ $dateFrom ?? '' }}" required>
                         </div>
                         <div class="col-md-3">
                             <label class="form-label">Tanggal Sampai</label>
-                            <input type="date" name="date_to" class="form-control" value="{{ $dateTo ?? '' }}" required>
+                            <input type="date" name="date_to" id="date_to" class="form-control" value="{{ $dateTo ?? '' }}" required>
                         </div>
                         <div class="col-md-4 d-flex gap-2 align-items-center flex-wrap">
                             <button type="submit" class="btn btn-primary">
@@ -71,53 +72,78 @@
                     <h5 class="card-title mb-0">Per Hari per Unit (masing-masing unit)</h5>
                 </div>
                 <div class="card-body p-0">
-                    @php $dailyPerUnit = $dailyPerUnit ?? []; @endphp
-                    @if (count($dailyPerUnit) > 0)
-                        <div class="table-responsive">
-                            <table class="table evaluasi-perhari-table mb-0">
-                                <thead>
-                                    <tr>
-                                        <th>TANGGAL</th>
-                                        <th>NO UNIT</th>
-                                        <th>JARAK YANG DITEMPUH</th>
-                                        <th>DURASI (jam)</th>
-                                        <th>Perusahaan Pemilik</th>
-                                        <th>Site Operasional</th>
-                                        <th>Jenis Unit SPIP</th>
-                                        <th>Expired</th>
-                                        <th>Status Permit SPIP</th>
-                                        <th>MTD</th>
-                                        <th>AVG per Day</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                    @foreach ($dailyPerUnit as $row)
-                                        <tr>
-                                            <td>{{ $row['tanggal'] }}</td>
-                                            <td>{{ $row['no_unit'] }}</td>
-                                            <td class="text-jarak">{{ $row['jarak'] }}</td>
-                                            <td>{{ $row['total_jam'] }} jam</td>
-                                            <td>{{ $row['perusahaan_pemilik'] ?? '-' }}</td>
-                                            <td>{{ $row['site_operasional'] ?? '-' }}</td>
-                                            <td>{{ $row['jenis_unit_spip'] ?? '-' }}</td>
-                                            <td>{{ isset($row['expired']) && $row['expired'] ? $row['expired'] : '-' }}</td>
-                                            <td>{{ $row['status_permit_spip'] ?? '-' }}</td>
-                                            <td>{{ isset($row['mtd']) && $row['mtd'] !== null ? number_format($row['mtd'], 2, ',', '.') : '-' }}</td>
-                                            <td>{{ isset($row['avg_per_day']) && $row['avg_per_day'] !== null ? number_format($row['avg_per_day'], 2, ',', '.') : '-' }}</td>
-                                        </tr>
-                                    @endforeach
-                                </tbody>
-                            </table>
-                        </div>
-                    @else
-                        <div class="text-center py-5 text-muted">
-                            <i class="material-icons-outlined" style="font-size: 48px;">inbox</i>
-                            <p class="mt-2 mb-0">Tidak ada data untuk rentang tanggal yang dipilih.</p>
-                            <p class="small">Gunakan filter di atas dan klik <strong>Filter</strong>.</p>
-                        </div>
-                    @endif
+                    <div class="table-responsive">
+                        <table class="table evaluasi-perhari-table mb-0" id="tablePerHari" style="width:100%">
+                            <thead>
+                                <tr>
+                                    <th>TANGGAL</th>
+                                    <th>NO UNIT</th>
+                                    <th>JARAK YANG DITEMPUH</th>
+                                    <th>DURASI (jam)</th>
+                                    <th>Perusahaan Pemilik</th>
+                                    <th>Site Operasional</th>
+                                    <th>Jenis Unit SPIP</th>
+                                    <th>Expired</th>
+                                    <th>Status Permit SPIP</th>
+                                    <th>MTD</th>
+                                    <th>AVG per Day</th>
+                                </tr>
+                            </thead>
+                            <tbody></tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
+@endsection
+
+@section('scripts')
+<script src="{{ URL::asset('build/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ URL::asset('build/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
+<script>
+(function() {
+    var table = $('#tablePerHari');
+    if (!table.length) return;
+    var dateFrom = document.getElementById('date_from');
+    var dateTo = document.getElementById('date_to');
+    table.DataTable({
+        serverSide: true,
+        processing: true,
+        ajax: {
+            url: '{{ route("fueling-evaluasi.per-hari.data") }}',
+            data: function(d) {
+                d.date_from = dateFrom ? dateFrom.value : '';
+                d.date_to = dateTo ? dateTo.value : '';
+            }
+        },
+        columns: [
+            { data: 0, name: 'tanggal' },
+            { data: 1, name: 'no_unit' },
+            { data: 2, name: 'jarak', className: 'text-jarak' },
+            { data: 3, name: 'total_jam' },
+            { data: 4, name: 'perusahaan_pemilik' },
+            { data: 5, name: 'site_operasional' },
+            { data: 6, name: 'jenis_unit_spip' },
+            { data: 7, name: 'expired' },
+            { data: 8, name: 'status_permit_spip' },
+            { data: 9, name: 'mtd' },
+            { data: 10, name: 'avg_per_day' }
+        ],
+        order: [[0, 'asc'], [1, 'asc']],
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        language: {
+            search: 'Cari:',
+            lengthMenu: 'Tampilkan _MENU_ baris',
+            info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
+            infoEmpty: 'Tidak ada data',
+            infoFiltered: '(filter dari _MAX_ total)',
+            zeroRecords: 'Tidak ada data untuk rentang tanggal yang dipilih.',
+            paginate: { first: 'Awal', last: 'Akhir', next: 'Selanjutnya', previous: 'Sebelumnya' },
+            processing: 'Memuat...'
+        }
+    });
+})();
+</script>
 @endsection

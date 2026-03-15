@@ -37,7 +37,7 @@
                 </div>
 
                 <div class="table-responsive">
-                    <table class="table table-bordered table-hover align-middle mb-0">
+                    <table class="table table-bordered table-hover align-middle mb-0" id="tableBecomline" style="width:100%">
                         <thead class="table-light">
                             <tr>
                                 <th>No</th>
@@ -50,39 +50,52 @@
                                 <th width="120">Aksi</th>
                             </tr>
                         </thead>
-                        <tbody>
-                            @forelse($items as $idx => $item)
-                            <tr>
-                                <td>{{ $idx + 1 }}</td>
-                                <td>{{ $item->perusahaan_pemilik ?? '-' }}</td>
-                                <td>{{ $item->site_operasional ?? '-' }}</td>
-                                <td>{{ $item->jenis_unit_spip ?? '-' }}</td>
-                                <td>{{ $item->expired ? $item->expired->format('d/m/Y') : '-' }}</td>
-                                <td>{{ $item->status_permit_spip ?? '-' }}</td>
-                                <td>{{ $item->no_registrasi ?? '-' }}</td>
-                                <td>
-                                    <a href="{{ route('becomline.edit', $item->id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
-                                        <i class="material-icons-outlined" style="font-size:18px">edit</i>
-                                    </a>
-                                    <form action="{{ route('becomline.destroy', $item->id) }}" method="POST" class="d-inline" onsubmit="return confirm('Yakin hapus data ini?');">
-                                        @csrf
-                                        @method('DELETE')
-                                        <button type="submit" class="btn btn-sm btn-outline-danger" title="Hapus">
-                                            <i class="material-icons-outlined" style="font-size:18px">delete</i>
-                                        </button>
-                                    </form>
-                                </td>
-                            </tr>
-                            @empty
-                            <tr>
-                                <td colspan="8" class="text-center text-muted">Belum ada data. Gunakan Tambah atau Import Excel.</td>
-                            </tr>
-                            @endforelse
-                        </tbody>
+                        <tbody></tbody>
                     </table>
                 </div>
             </div>
         </div>
     </div>
 </div>
+@endsection
+
+@section('css')
+<link href="{{ URL::asset('build/plugins/datatable/css/dataTables.bootstrap5.min.css') }}" rel="stylesheet" />
+@endsection
+
+@section('scripts')
+<script src="{{ URL::asset('build/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
+<script src="{{ URL::asset('build/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
+<script>
+$(document).ready(function() {
+    $('#tableBecomline').DataTable({
+        serverSide: true,
+        processing: true,
+        ajax: '{{ route("becomline.data") }}',
+        columns: [
+            { data: 'DT_RowIndex', name: 'DT_RowIndex', orderable: false, searchable: false, className: 'text-center' },
+            { data: 'perusahaan_pemilik', name: 'perusahaan_pemilik' },
+            { data: 'site_operasional', name: 'site_operasional' },
+            { data: 'jenis_unit_spip', name: 'jenis_unit_spip' },
+            { data: 'expired', name: 'expired' },
+            { data: 'status_permit_spip', name: 'status_permit_spip' },
+            { data: 'no_registrasi', name: 'no_registrasi' },
+            { data: 'aksi', name: 'aksi', orderable: false, searchable: false }
+        ],
+        order: [[1, 'asc']],
+        pageLength: 25,
+        lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+        language: {
+            search: 'Cari:',
+            lengthMenu: 'Tampilkan _MENU_ baris',
+            info: 'Menampilkan _START_ sampai _END_ dari _TOTAL_ data',
+            infoEmpty: 'Tidak ada data',
+            infoFiltered: '(filter dari _MAX_ total)',
+            zeroRecords: 'Tidak ada data yang cocok.',
+            paginate: { first: 'Awal', last: 'Akhir', next: 'Selanjutnya', previous: 'Sebelumnya' },
+            processing: 'Memuat...'
+        }
+    });
+});
+</script>
 @endsection
