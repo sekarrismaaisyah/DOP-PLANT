@@ -89,11 +89,11 @@
                <p class="text-sm text-slate-500">Last updated: <span class="font-medium">Today, 10:45 AM</span> • Source: HSE Automation System</p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-               <div class="flex items-center bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-800">
+               <!-- <div class="flex items-center bg-white dark:bg-slate-900 rounded-lg p-1 border border-slate-200 dark:border-slate-800">
                   <button class="px-4 py-1.5 text-xs font-semibold bg-primary text-white rounded-md shadow-sm">BMO 1</button>
                   <button class="px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md">LMO</button>
                   <button class="px-4 py-1.5 text-xs font-medium text-slate-600 dark:text-slate-400 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-md">GMO</button>
-               </div>
+               </div> -->
                <button class="flex items-center gap-2 px-4 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg text-sm font-medium hover:bg-slate-50">
                <span class="material-symbols-outlined text-lg">calendar_today</span>
                <span>Oct 24, 2023</span>
@@ -385,37 +385,7 @@
             </div>
          </div>
          <!-- Permit Expiry Timeline mini section -->
-         <div class="bg-slate-900 text-white p-6 rounded-xl border border-slate-800 shadow-xl overflow-hidden relative">
-            <div class="absolute top-0 right-0 p-8 opacity-10 pointer-events-none">
-               <span class="material-symbols-outlined text-9xl">schedule</span>
-            </div>
-            <div class="relative z-10">
-               <h3 class="font-bold text-lg mb-4">Critical Permit Deadlines (Next 7 Days)</h3>
-               <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div class="bg-white/10 backdrop-blur-md p-4 rounded-lg border border-white/10 flex items-center gap-4">
-                     <div class="bg-danger/40 w-12 h-12 rounded-lg flex items-center justify-center text-danger font-bold text-xl">28</div>
-                     <div>
-                        <p class="font-bold text-sm">Oct 28</p>
-                        <p class="text-xs text-slate-300">Unit: DT20-112 (SIS)</p>
-                     </div>
-                  </div>
-                  <div class="bg-white/10 backdrop-blur-md p-4 rounded-lg border border-white/10 flex items-center gap-4">
-                     <div class="bg-warning/40 w-12 h-12 rounded-lg flex items-center justify-center text-warning font-bold text-xl">30</div>
-                     <div>
-                        <p class="font-bold text-sm">Oct 30</p>
-                        <p class="text-xs text-slate-300">Unit: GD511-05 (BUMA)</p>
-                     </div>
-                  </div>
-                  <div class="bg-white/10 backdrop-blur-md p-4 rounded-lg border border-white/10 flex items-center gap-4">
-                     <div class="bg-white/20 w-12 h-12 rounded-lg flex items-center justify-center text-slate-200 font-bold text-xl">02</div>
-                     <div>
-                        <p class="font-bold text-sm">Nov 02</p>
-                        <p class="text-xs text-slate-300">Unit: EX200-01 (PAMA)</p>
-                     </div>
-                  </div>
-               </div>
-            </div>
-         </div>
+         
       </main>
       <footer class=" mx-auto px-6 py-8 mt-12 border-t border-slate-200 dark:border-slate-800 text-center">
          <p class="text-sm text-slate-500 font-medium">Data updated hourly | Source: HSE Automation System</p>
