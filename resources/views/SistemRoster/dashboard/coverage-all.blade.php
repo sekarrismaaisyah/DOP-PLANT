@@ -125,16 +125,39 @@
             </section>
          </div>
          <!-- END: TopSection -->
-         <!-- BEGIN: Trend — Total Laporan per Hari (Minggu ini, Min–Sab) -->
-         <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-purpose="trend-week-chart">
-            <h2 class="text-sm font-bold text-gray-700 uppercase mb-1">Total Laporan per Hari (Minggu Ini)</h2>
-            <p class="text-xs text-gray-500 mb-4">Minggu s/d Sabtu — Inspeksi Hazard, OAK, Observasi, Coaching (nitip)</p>
-            <div class="h-72 min-h-[288px] relative">
-               <canvas id="trendWeekChart" aria-label="Total laporan per hari minggu ini"></canvas>
+         <!-- BEGIN: Trend per Site — Total Laporan per Hari (Minggu ini, Min–Sab) -->
+         <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-purpose="trend-per-site">
+            <h2 class="text-sm font-bold text-gray-700 uppercase mb-1">Trend Laporan per Site (Minggu Ini)</h2>
+            <p class="text-xs text-gray-500 mb-4">Minggu s/d Sabtu — geser untuk lihat tiap site. Sumber: Inspeksi, OAK, Observasi, Coaching (nitip)</p>
+            <div class="trend-swiper-wrapper relative">
+               @if(empty($trendBySite))
+               <div class="flex items-center justify-center py-12 text-gray-400 text-sm">Belum ada data trend per site.</div>
+               @else
+               <div class="swiper trend-coverage-swiper">
+                  <div class="swiper-wrapper">
+                     @foreach($trendBySite as $idx => $siteTrend)
+                     <div class="swiper-slide">
+                        <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 h-full">
+                           <h3 class="text-[11px] font-bold text-gray-500 uppercase mb-3">{{ $siteTrend['site'] ?? 'Site' }} Coverage Trend</h3>
+                           <div class="h-32 min-h-[128px] relative">
+                              <canvas id="trendChartSite{{ $idx }}" aria-label="Trend {{ $siteTrend['site'] ?? '' }}"></canvas>
+                           </div>
+                           <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-medium">
+                              @foreach(($siteTrend['labels'] ?? []) as $lbl) <span>{{ $lbl }}</span> @endforeach
+                           </div>
+                        </div>
+                     </div>
+                     @endforeach
+                  </div>
+                  <div class="swiper-button-prev trend-coverage-prev"></div>
+                  <div class="swiper-button-next trend-coverage-next"></div>
+                  <div class="swiper-pagination trend-coverage-pagination"></div>
+               </div>
+               @endif
             </div>
-            <p class="text-[10px] text-gray-400 mt-2 text-center" id="trendWeekLabel">{{ $trendWeekLabel ?? '' }}</p>
+            <p class="text-[10px] text-gray-400 mt-2 text-center trend-swiper-hint">{{ $trendWeekLabel ?? '' }} — Geser kiri/kanan untuk site lainnya</p>
          </section>
-         <!-- END: Trend -->
+         <!-- END: Trend per Site -->
          <!-- BEGIN: DataTablesSection -->
 
          <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
@@ -406,34 +429,32 @@
                summaryCtx.parentElement.innerHTML = '<div class="flex items-center justify-center h-64 text-gray-400 text-sm">Belum ada data coverage per site.</div>';
             }
 
-            // Trend: Total laporan per hari (minggu ini, Min–Sab) — Chart.js line
-            var trendLabels = @json($trendLabels ?? []);
-            var trendCounts = @json($trendCounts ?? []);
-            var trendCtx = document.getElementById('trendWeekChart');
-            if (trendCtx && trendLabels.length) {
-               var trendGradient = trendCtx.getContext('2d').createLinearGradient(0, 0, 0, 280);
-               trendGradient.addColorStop(0, 'rgba(45, 122, 62, 0.35)');
-               trendGradient.addColorStop(1, 'rgba(45, 122, 62, 0.02)');
-               new Chart(trendCtx, {
+            // Trend per site: satu chart line per slide (Minggu ini, Min–Sab)
+            var trendBySite = @json($trendBySite ?? []);
+            trendBySite.forEach(function (siteData, idx) {
+               var canvas = document.getElementById('trendChartSite' + idx);
+               var labels = siteData.labels || [];
+               var counts = siteData.counts || [];
+               if (!canvas || !labels.length) return;
+               var ctx = canvas.getContext('2d');
+               var gradient = ctx.createLinearGradient(0, 0, 0, 128);
+               gradient.addColorStop(0, 'rgba(45, 122, 62, 0.35)');
+               gradient.addColorStop(1, 'rgba(45, 122, 62, 0.02)');
+               new Chart(canvas, {
                   type: 'line',
                   data: {
-                     labels: trendLabels,
-                     datasets: [
-                        {
-                           label: 'Total Laporan',
-                           data: trendCounts,
-                           borderColor: '#2d7a3e',
-                           backgroundColor: trendGradient,
-                           borderWidth: 2,
-                           fill: true,
-                           tension: 0.3,
-                           pointBackgroundColor: '#2d7a3e',
-                           pointBorderColor: '#fff',
-                           pointBorderWidth: 2,
-                           pointRadius: 4,
-                           pointHoverRadius: 6,
-                        }
-                     ]
+                     labels: labels,
+                     datasets: [{
+                        label: 'Total Laporan',
+                        data: counts,
+                        borderColor: '#2d7a3e',
+                        backgroundColor: gradient,
+                        borderWidth: 2,
+                        fill: true,
+                        tension: 0.3,
+                        pointRadius: 3,
+                        pointHoverRadius: 5
+                     }]
                   },
                   options: {
                      responsive: true,
@@ -442,33 +463,16 @@
                      plugins: {
                         legend: { display: false },
                         tooltip: {
-                           backgroundColor: 'rgba(0,0,0,0.8)',
-                           padding: 10,
-                           callbacks: {
-                              label: function (ctx) { return 'Total laporan: ' + ctx.raw; }
-                           }
+                           callbacks: { label: function (c) { return 'Total: ' + c.raw; } }
                         }
                      },
                      scales: {
-                        y: {
-                           beginAtZero: true,
-                           ticks: {
-                              stepSize: 1,
-                              font: { size: 11 },
-                              callback: function (v) { return Number(v) === v ? v : v; }
-                           },
-                           grid: { color: 'rgba(0,0,0,0.06)' }
-                        },
-                        x: {
-                           ticks: { maxRotation: 0, font: { size: 11 } },
-                           grid: { display: false }
-                        }
+                        y: { beginAtZero: true, ticks: { stepSize: 1, font: { size: 10 } }, grid: { color: 'rgba(0,0,0,0.06)' } },
+                        x: { ticks: { maxRotation: 0, font: { size: 10 } }, grid: { display: false } }
                      }
                   }
                });
-            } else if (trendCtx) {
-               trendCtx.parentElement.innerHTML = '<div class="flex items-center justify-center h-72 text-gray-400 text-sm">Belum ada data trend minggu ini.</div>';
-            }
+            });
 
             var swiperEl = document.querySelector('.trend-coverage-swiper');
             if (swiperEl && typeof Swiper !== 'undefined') {

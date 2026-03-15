@@ -32,12 +32,12 @@ class DashboardController extends Controller
         $coverageBySite = [];
         $trendWeekLabel = '';
         $trendLabels = [];
-        $trendCounts = [];
+        $trendBySite = [];
 
         try {
             $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendCounts'));
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite'));
             }
 
             // 1. Master: site + (lokasi, Detil_Lokasi) aktif — status_site, status_lokasi, status_detil_lokasi = '1'
@@ -48,7 +48,7 @@ class DashboardController extends Controller
                   AND trim(ifNull(toString(status_detil_lokasi), '')) = '1'";
             $rowsMaster = $ch->query($sqlMaster);
             if (empty($rowsMaster) || ! is_array($rowsMaster)) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendCounts'));
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite'));
             }
 
             // Key = lowercase(normalize(lokasi)|normalize(detil)); simpan per site untuk chart
@@ -70,7 +70,7 @@ class DashboardController extends Controller
             $totalLokasi = count($masterKeys);
 
             if ($totalLokasi === 0) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendCounts'));
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite'));
             }
 
             // 2. Lokasi yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip — pakai DISTINCT agar ringan
@@ -142,78 +142,76 @@ class DashboardController extends Controller
             }
             usort($coverageBySite, fn ($a, $b) => strcmp($a['site'], $b['site']));
 
-            // Trend: total laporan per hari dalam 1 minggu (Minggu–Sabtu, minggu ini)
+            // Trend per site: total laporan per hari dalam 1 minggu (Minggu–Sabtu) per site
             $weekStart = Carbon::now()->startOfWeek(Carbon::SUNDAY);
             $weekEnd = Carbon::now()->endOfWeek(Carbon::SATURDAY);
             $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y');
             $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
             $trendLabels = [];
-            $trendCounts = [];
-            $countByDate = [];
+            $weekDateStrs = [];
             for ($d = 0; $d < 7; $d++) {
                 $day = $weekStart->copy()->addDays($d);
-                $dateStr = $day->format('Y-m-d');
                 $trendLabels[] = $dayNames[$d] . ' ' . $day->format('d/m');
-                $trendCounts[] = 0;
-                $countByDate[$dateStr] = 0;
+                $weekDateStrs[] = $day->format('Y-m-d');
             }
-            $startStr = $weekStart->format('Y-m-d');
-            $endStr = $weekEnd->format('Y-m-d');
-            $startEsc = addslashes($startStr);
-            $endEsc = addslashes($endStr);
+            $startEsc = addslashes($weekStart->format('Y-m-d'));
+            $endEsc = addslashes($weekEnd->format('Y-m-d'));
 
-            $mergeCounts = function ($result) use (&$countByDate) {
-                $rows = is_array($result) ? $result : [];
-                foreach ($rows as $r) {
-                    $dt = $this->getClickHouseRowValue($r, 'dt');
-                    $cnt = (int) ($this->getClickHouseRowValue($r, 'cnt') ?? 0);
-                    $dateStr = $dt instanceof \DateTimeInterface ? $dt->format('Y-m-d') : (is_string($dt) ? substr($dt, 0, 10) : '');
-                    if ($dateStr !== '' && isset($countByDate[$dateStr])) {
-                        $countByDate[$dateStr] += $cnt;
+            foreach ($coverageBySite as $siteRow) {
+                $siteName = $siteRow['site'] ?? '';
+                $siteEsc = addslashes($siteName);
+                $countByDate = array_fill_keys($weekDateStrs, 0);
+
+                $mergeCounts = function ($result) use (&$countByDate) {
+                    $rows = is_array($result) ? $result : [];
+                    foreach ($rows as $r) {
+                        $dt = $this->getClickHouseRowValue($r, 'dt');
+                        $cnt = (int) ($this->getClickHouseRowValue($r, 'cnt') ?? 0);
+                        $dateStr = $dt instanceof \DateTimeInterface ? $dt->format('Y-m-d') : (is_string($dt) ? substr($dt, 0, 10) : '');
+                        if ($dateStr !== '' && isset($countByDate[$dateStr])) {
+                            $countByDate[$dateStr] += $cnt;
+                        }
                     }
+                };
+
+                try {
+                    $sqlCar = "SELECT toDate(tanggal_pembuatan, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_car_all_year_from_dav WHERE tanggal_pembuatan IS NOT NULL AND toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(tanggal_pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(nama_site), '')) = '{$siteEsc}' GROUP BY dt";
+                    $mergeCounts($ch->query($sqlCar));
+                } catch (\Throwable $e) {
                 }
-            };
+                try {
+                    $sqlOak = "SELECT toDate(submit_date, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE submit_date IS NOT NULL AND toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(site), '')) = '{$siteEsc}' GROUP BY dt";
+                    $mergeCounts($ch->query($sqlOak));
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $sqlObs = "SELECT toDate(Date, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_database_observasi_from_bep_ytd_only WHERE Date IS NOT NULL AND toDate(Date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Date, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(site), '')) = '{$siteEsc}' GROUP BY dt";
+                    $mergeCounts($ch->query($sqlObs));
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $sqlCoaching = "SELECT toDate(Tanggal_Pembuatan, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.bep_vw_database_coaching WHERE Tanggal_Pembuatan IS NOT NULL AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(site), '')) = '{$siteEsc}' GROUP BY dt";
+                    $mergeCounts($ch->query($sqlCoaching));
+                } catch (\Throwable $e) {
+                }
 
-            try {
-                $sqlCarWeek = "SELECT toDate(tanggal_pembuatan, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_car_all_year_from_dav WHERE tanggal_pembuatan IS NOT NULL AND toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(tanggal_pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}') GROUP BY dt";
-                $mergeCounts($ch->query($sqlCarWeek));
-            } catch (\Throwable $e) {
-                Log::warning('DashboardController coverageAll trend CAR: ' . $e->getMessage());
-            }
-            try {
-                $sqlOakWeek = "SELECT toDate(submit_date, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE submit_date IS NOT NULL AND toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}') GROUP BY dt";
-                $mergeCounts($ch->query($sqlOakWeek));
-            } catch (\Throwable $e) {
-                Log::warning('DashboardController coverageAll trend OAK: ' . $e->getMessage());
-            }
-            try {
-                $sqlObsWeek = "SELECT toDate(Date, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_database_observasi_from_bep_ytd_only WHERE Date IS NOT NULL AND toDate(Date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Date, 'Asia/Makassar') <= toDate('{$endEsc}') GROUP BY dt";
-                $mergeCounts($ch->query($sqlObsWeek));
-            } catch (\Throwable $e) {
-                Log::warning('DashboardController coverageAll trend Observasi: ' . $e->getMessage());
-            }
-            try {
-                $sqlCoachingWeek = "SELECT toDate(Tanggal_Pembuatan, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.bep_vw_database_coaching WHERE Tanggal_Pembuatan IS NOT NULL AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}') GROUP BY dt";
-                $mergeCounts($ch->query($sqlCoachingWeek));
-            } catch (\Throwable $e) {
-                Log::warning('DashboardController coverageAll trend Coaching: ' . $e->getMessage());
-            }
-
-            for ($d = 0; $d < 7; $d++) {
-                $dateStr = $weekStart->copy()->addDays($d)->format('Y-m-d');
-                $trendCounts[$d] = $countByDate[$dateStr] ?? 0;
+                $counts = [];
+                foreach ($weekDateStrs as $dateStr) {
+                    $counts[] = $countByDate[$dateStr] ?? 0;
+                }
+                $trendBySite[] = ['site' => $siteName, 'labels' => $trendLabels, 'counts' => $counts];
             }
         } catch (\Throwable $e) {
             Log::warning('DashboardController coverageAll: ' . $e->getMessage());
         }
 
-        if ($trendWeekLabel === '' && (count($trendLabels) === 0 || count($trendCounts) === 0)) {
+        if ($trendWeekLabel === '' && count($trendLabels) === 0) {
             $wStart = Carbon::now()->startOfWeek(Carbon::SUNDAY);
             $wEnd = Carbon::now()->endOfWeek(Carbon::SATURDAY);
             $trendWeekLabel = $wStart->format('d') . '–' . $wEnd->format('d') . ' ' . $wStart->locale('id')->monthName . ' ' . $wStart->format('Y');
         }
 
-        return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendCounts'));
+        return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite'));
     }
 
     /**
