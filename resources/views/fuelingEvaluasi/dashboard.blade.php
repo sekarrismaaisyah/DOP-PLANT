@@ -300,7 +300,7 @@
       </main>
       <footer class=" mx-auto px-6 py-8 mt-12 border-t border-slate-200 dark:border-slate-800 text-center">
          <p class="text-sm text-slate-500 font-medium">Data updated hourly | Source: HSE Automation System</p>
-         <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-[0.2em] font-bold">© 2024 Coal Mining Fleet Ops. All rights reserved.</p>
+         <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-[0.2em] font-bold">© 2026 Berau Coal . All rights reserved.</p>
       </footer>
       <script>
       (function() {
