@@ -29,6 +29,7 @@ class EvaluasiUnitDataService
         $safeTo = "'" . addslashes($dateTo) . "'";
 
         // Satu query: agregat per (unit_id, log_date) -> day_km, day_seconds
+        // Pakai groupArray + arraySlice + arrayMap (tanpa lead() yang tidak ada di ClickHouse 24.x)
         // greatCircleDistance(lon1, lat1, lon2, lat2) returns meters -> /1000 = km
         $sqlAgg = "
             WITH logs AS (
@@ -43,25 +44,31 @@ class EvaluasiUnitDataService
                   AND toDate(parseDateTimeBestEffort(toString(updated_at))) >= $safeFrom
                   AND toDate(parseDateTimeBestEffort(toString(updated_at))) <= $safeTo
             ),
-            with_next AS (
+            grouped AS (
                 SELECT
                     unit_id,
                     log_date,
-                    lat,
-                    lon,
-                    ts,
-                    lead(lat, 1) OVER (PARTITION BY unit_id, log_date ORDER BY ts) AS next_lat,
-                    lead(lon, 1) OVER (PARTITION BY unit_id, log_date ORDER BY ts) AS next_lon
+                    groupArray(lat) ORDER BY ts AS lat_arr,
+                    groupArray(lon) ORDER BY ts AS lon_arr,
+                    min(ts) AS first_ts,
+                    max(ts) AS last_ts
                 FROM logs
+                GROUP BY unit_id, log_date
             )
             SELECT
                 unit_id,
                 log_date,
-                sum(greatCircleDistance(lon, lat, next_lon, next_lat)) / 1000.0 AS day_km,
-                dateDiff('second', min(ts), max(ts)) AS day_seconds
-            FROM with_next
-            WHERE next_lat IS NOT NULL AND next_lon IS NOT NULL
-            GROUP BY unit_id, log_date
+                if(length(lat_arr) >= 2,
+                    arraySum(arrayMap((lon1, lat1, lon2, lat2) -> greatCircleDistance(lon1, lat1, lon2, lat2),
+                        arraySlice(lon_arr, 1, length(lon_arr) - 1),
+                        arraySlice(lat_arr, 1, length(lat_arr) - 1),
+                        arraySlice(lon_arr, 2, length(lon_arr) - 1),
+                        arraySlice(lat_arr, 2, length(lat_arr) - 1)
+                    )) / 1000.0,
+                    0
+                ) AS day_km,
+                dateDiff('second', first_ts, last_ts) AS day_seconds
+            FROM grouped
             ORDER BY unit_id, log_date
         ";
 
