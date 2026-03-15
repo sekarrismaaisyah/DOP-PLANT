@@ -162,7 +162,7 @@
                   </div>
                </div>
                <h3 class="text-3xl font-bold text-slate-300" id="kpi_fuel">—</h3>
-               <p class="text-xs text-slate-400 mt-2 italic">km/L (total km / total konsumsi fuel) — data fuel belum terintegrasi</p>
+               <p class="text-xs text-slate-400 mt-2 italic">km/L (total km / total konsumsi fuel)</p>
             </div>
          </div>
          <!-- Main Content Area -->
