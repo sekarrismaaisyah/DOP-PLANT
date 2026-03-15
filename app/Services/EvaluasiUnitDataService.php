@@ -35,8 +35,8 @@ class EvaluasiUnitDataService
             WITH logs AS (
                 SELECT
                     toString(unit_id) AS unit_id,
-                    toFloat64(latitude) AS lat,
-                    toFloat64(longitude) AS lon,
+                    assumeNotNull(toFloat64(latitude)) AS lat,
+                    assumeNotNull(toFloat64(longitude)) AS lon,
                     parseDateTimeBestEffort(toString(updated_at)) AS ts,
                     toDate(parseDateTimeBestEffort(toString(updated_at))) AS log_date
                 FROM nitip.unit_gps_logs
