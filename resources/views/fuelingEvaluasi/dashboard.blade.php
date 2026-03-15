@@ -190,7 +190,8 @@
                      <button type="button" id="dashboard_btn_load" class="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90">
                         <span class="material-symbols-outlined text-sm">refresh</span> Muat Data
                      </button>
-                     <a href="{{ route('fueling-evaluasi.per-hari') }}?date_from=" id="dashboard_link_perhari" class="text-xs font-medium text-primary hover:underline">Tabel lengkap →</a>
+                     <input type="text" id="dashboard_search" placeholder="Cari..." class="px-3 py-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 w-40" />
+                     <a href="{{ route('fueling-evaluasi.per-hari') }}?date_from=" id="dashboard_link_perhari" class="text-xs font-medium text-primary hover:underline whitespace-nowrap">Tabel lengkap →</a>
                   </div>
                </div>
                <div class="overflow-x-auto">
@@ -199,7 +200,7 @@
                         <tr>
                            <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">TANGGAL</th>
                            <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">NO UNIT</th>
-                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">JARAK YANG DITEMPUH</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">JARAK DITEMPUH</th>
                            <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">DURASI (jam)</th>
                            <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Perusahaan Pemilik</th>
                            <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Site Operasional</th>
@@ -214,8 +215,13 @@
                      </tbody>
                   </table>
                </div>
-               <div class="mt-auto p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+               <div class="mt-auto p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between gap-2 flex-wrap">
                   <p class="text-xs text-slate-500" id="dashboard_table_info">—</p>
+                  <div class="flex items-center gap-2" id="dashboard_pagination">
+                     <button type="button" id="dashboard_prev" class="px-3 py-1 text-xs border border-slate-200 dark:border-slate-700 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 disabled:opacity-50 disabled:pointer-events-none">Prev</button>
+                     <span class="text-xs text-slate-500" id="dashboard_page_text">Halaman 1</span>
+                     <button type="button" id="dashboard_next" class="px-3 py-1 text-xs bg-primary text-white rounded-lg hover:opacity-90 disabled:opacity-50 disabled:pointer-events-none">Next</button>
+                  </div>
                </div>
             </div>
             <!-- Compliance Overview (40%) -->
@@ -335,12 +341,19 @@
       <script>
       (function() {
          var apiUrl = "{{ url()->route('fueling-evaluasi.per-hari.all-data') }}";
+         var PAGE_SIZE = 7;
          var dateFrom = document.getElementById('dashboard_date_from');
          var dateTo = document.getElementById('dashboard_date_to');
          var btnLoad = document.getElementById('dashboard_btn_load');
+         var searchInput = document.getElementById('dashboard_search');
          var tbody = document.getElementById('dashboard_table_body');
          var infoEl = document.getElementById('dashboard_table_info');
          var linkPerhari = document.getElementById('dashboard_link_perhari');
+         var btnPrev = document.getElementById('dashboard_prev');
+         var btnNext = document.getElementById('dashboard_next');
+         var pageText = document.getElementById('dashboard_page_text');
+         var fullData = [];
+         var currentPage = 1;
 
          function setDefaultDates() {
             var to = new Date();
@@ -363,45 +376,61 @@
             return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
          }
 
-         function renderTable(data) {
-            if (!data || data.length === 0) {
-               tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm">Tidak ada data untuk rentang tanggal ini.</td></tr>';
-               infoEl.textContent = '0 baris';
-               return;
-            }
-            var html = '';
-            var maxShow = 200;
-            var show = Math.min(data.length, maxShow);
-            for (var i = 0; i < show; i++) {
-               var r = data[i];
-               var durasi = (r.total_jam != null && r.total_jam !== '') ? (Number(r.total_jam) + ' jam') : '-';
-               html += '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">' +
-                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.tanggal) + '</td>' +
-                  '<td class="px-3 py-3 text-sm font-bold text-primary">' + escapeHtml(r.no_unit) + '</td>' +
-                  '<td class="px-3 py-3 text-sm font-medium">' + escapeHtml(r.jarak) + '</td>' +
-                  '<td class="px-3 py-3 text-sm">' + escapeHtml(durasi) + '</td>' +
-                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.perusahaan_pemilik) + '</td>' +
-                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.site_operasional) + '</td>' +
-                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.jenis_unit_spip) + '</td>' +
-                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.expired) + '</td>' +
-                  '<td class="px-3 py-3">' + statusBadge(r.status_permit_spip) + '</td>' +
-                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.avg_per_day) + '</td>' +
-                  '</tr>';
-            }
-            tbody.innerHTML = html;
-            if (data.length > maxShow) {
-               infoEl.textContent = 'Menampilkan 1-' + maxShow + ' dari ' + data.length + ' baris';
+         function rowMatchSearch(r, q) {
+            if (!q) return true;
+            var low = q.toLowerCase();
+            var concat = [r.tanggal, r.no_unit, r.jarak, r.perusahaan_pemilik, r.site_operasional, r.jenis_unit_spip, r.expired, r.status_permit_spip, r.avg_per_day].join(' ').toLowerCase();
+            return concat.indexOf(low) !== -1;
+         }
+
+         function applyFilterAndRender() {
+            var query = (searchInput && searchInput.value) ? searchInput.value.trim() : '';
+            var filtered = query ? fullData.filter(function(r) { return rowMatchSearch(r, query); }) : fullData;
+            var total = filtered.length;
+            var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
+            currentPage = Math.min(Math.max(1, currentPage), totalPages);
+            var start = (currentPage - 1) * PAGE_SIZE;
+            var pageRows = filtered.slice(start, start + PAGE_SIZE);
+
+            if (pageRows.length === 0) {
+               tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm">' + (fullData.length === 0 ? 'Tidak ada data untuk rentang tanggal ini.' : 'Tidak ada hasil untuk pencarian.') + '</td></tr>';
             } else {
-               infoEl.textContent = 'Menampilkan ' + data.length + ' baris';
+               var html = '';
+               for (var i = 0; i < pageRows.length; i++) {
+                  var r = pageRows[i];
+                  var durasi = (r.total_jam != null && r.total_jam !== '') ? (Number(r.total_jam) + ' jam') : '-';
+                  html += '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">' +
+                     '<td class="px-3 py-3 text-sm">' + escapeHtml(r.tanggal) + '</td>' +
+                     '<td class="px-3 py-3 text-sm font-bold text-primary">' + escapeHtml(r.no_unit) + '</td>' +
+                     '<td class="px-3 py-3 text-sm font-medium">' + escapeHtml(r.jarak) + '</td>' +
+                     '<td class="px-3 py-3 text-sm">' + escapeHtml(durasi) + '</td>' +
+                     '<td class="px-3 py-3 text-sm">' + escapeHtml(r.perusahaan_pemilik) + '</td>' +
+                     '<td class="px-3 py-3 text-sm">' + escapeHtml(r.site_operasional) + '</td>' +
+                     '<td class="px-3 py-3 text-sm">' + escapeHtml(r.jenis_unit_spip) + '</td>' +
+                     '<td class="px-3 py-3 text-sm">' + escapeHtml(r.expired) + '</td>' +
+                     '<td class="px-3 py-3">' + statusBadge(r.status_permit_spip) + '</td>' +
+                     '<td class="px-3 py-3 text-sm">' + escapeHtml(r.avg_per_day) + '</td>' +
+                     '</tr>';
+               }
+               tbody.innerHTML = html;
             }
+            var end = Math.min(start + PAGE_SIZE, total);
+            infoEl.textContent = total === 0 ? '0 baris' : 'Menampilkan ' + (start + 1) + '-' + end + ' dari ' + total + ' baris';
+            if (pageText) pageText.textContent = 'Halaman ' + currentPage + ' dari ' + totalPages;
+            if (btnPrev) { btnPrev.disabled = currentPage <= 1; }
+            if (btnNext) { btnNext.disabled = currentPage >= totalPages; }
          }
 
          function loadData() {
             var from = (dateFrom && dateFrom.value) || '';
             var to = (dateTo && dateTo.value) || '';
             if (!from || !to) {
+               fullData = [];
                tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm">Pilih Tanggal Dari dan Tanggal Sampai.</td></tr>';
                infoEl.textContent = '—';
+               if (pageText) pageText.textContent = 'Halaman 1';
+               if (btnPrev) btnPrev.disabled = true;
+               if (btnNext) btnNext.disabled = true;
                return;
             }
             tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm"><span class="inline-block animate-pulse">Memuat data...</span></td></tr>';
@@ -411,9 +440,12 @@
             fetch(apiUrl + '?date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to), { credentials: 'same-origin' })
                .then(function(res) { return res.json(); })
                .then(function(json) {
-                  renderTable(json.data || []);
+                  fullData = json.data || [];
+                  currentPage = 1;
+                  applyFilterAndRender();
                })
                .catch(function() {
+                  fullData = [];
                   tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-danger text-sm">Gagal memuat data.</td></tr>';
                   infoEl.textContent = '—';
                });
@@ -421,6 +453,9 @@
 
          setDefaultDates();
          if (btnLoad) btnLoad.addEventListener('click', loadData);
+         if (searchInput) searchInput.addEventListener('input', function() { currentPage = 1; applyFilterAndRender(); });
+         if (btnPrev) btnPrev.addEventListener('click', function() { currentPage--; applyFilterAndRender(); });
+         if (btnNext) btnNext.addEventListener('click', function() { currentPage++; applyFilterAndRender(); });
          loadData();
       })();
       </script>
