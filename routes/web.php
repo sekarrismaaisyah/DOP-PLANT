@@ -34,6 +34,7 @@ use App\Http\Controllers\CctvAlertsDashboardController;
 use App\Http\Controllers\InsidenCcrController;
 use App\Http\Controllers\InsidenLpiController;
 use App\Http\Controllers\CctvP2hChecklistController;
+use App\Http\Controllers\EvaluasiUnitTabelController;
 use App\Http\Controllers\FuelingEvaluasiController;
 
 /*
@@ -115,6 +116,7 @@ Route::middleware(['auth'])->group(function () {
 
     // Fueling Evaluasi
     Route::get('/fueling-evaluasi', [FuelingEvaluasiController::class, 'index'])->name('fueling-evaluasi.index');
+    Route::get('/fueling-evaluasi/tabel', [EvaluasiUnitTabelController::class, 'index'])->name('fueling-evaluasi.tabel');
 
     // Chatbot Routes
     Route::prefix('chatbot')->name('chatbot.')->group(function () {
