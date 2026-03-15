@@ -21,10 +21,83 @@ class DashboardController extends Controller
 
     /**
      * Menampilkan halaman Dashboard Coverage Area (Coverage All).
+     * KPI: total lokasi+detail aktif dari nitip.bep_vw_site_lokasi_detil_lokasi (status = 1),
+     * covered = yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip.
      */
     public function coverageAll(): View
     {
-        return view('SistemRoster.dashboard.coverage-all');
+        $totalLokasi = 0;
+        $coveredLokasi = 0;
+        $pctCoverage = 0;
+
+        try {
+            $ch = $this->getClickHouseNitip();
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage'));
+            }
+
+            // 1. Master: (lokasi, Detil_Lokasi) aktif — status_site, status_lokasi, status_detil_lokasi = '1'
+            $sqlMaster = "SELECT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det
+                FROM nitip.bep_vw_site_lokasi_detil_lokasi
+                WHERE trim(ifNull(toString(status_site), '')) = '1'
+                  AND trim(ifNull(toString(status_lokasi), '')) = '1'
+                  AND trim(ifNull(toString(status_detil_lokasi), '')) = '1'";
+            $rowsMaster = $ch->query($sqlMaster);
+            if (empty($rowsMaster) || ! is_array($rowsMaster)) {
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage'));
+            }
+
+            $masterKeys = [];
+            foreach ($rowsMaster as $row) {
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $key = $loc . '|' . $det;
+                $masterKeys[$key] = true;
+            }
+            $totalLokasi = count($masterKeys);
+
+            if ($totalLokasi === 0) {
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage'));
+            }
+
+            // 2. Lokasi yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip
+            $coveredKeys = [];
+
+            $addCovered = function (array $rows, string $locCol, string $detCol) use (&$coveredKeys) {
+                if (empty($rows) || ! is_array($rows)) {
+                    return;
+                }
+                foreach ($rows as $r) {
+                    $loc = $this->normalizeLocation($this->getClickHouseRowValue($r, $locCol));
+                    $det = $this->normalizeLocation($this->getClickHouseRowValue($r, $detCol));
+                    $coveredKeys[$loc . '|' . $det] = true;
+                }
+            };
+
+            $sqlCar = "SELECT trim(ifNull(nama_lokasi, '')) AS loc, trim(ifNull(nama_detail_lokasi, '')) AS det FROM nitip.aaj_car_all_year_from_dav";
+            $addCovered($ch->query($sqlCar) ?: [], 'loc', 'det');
+
+            $sqlOak = "SELECT trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det FROM nitip.aaj_vw_car_oak_register_ytd_only";
+            $addCovered($ch->query($sqlOak) ?: [], 'loc', 'det');
+
+            $sqlObs = "SELECT trim(ifNull(toString(Lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det FROM nitip.aaj_database_observasi_from_bep_ytd_only";
+            $addCovered($ch->query($sqlObs) ?: [], 'loc', 'det');
+
+            $sqlCoaching = "SELECT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det FROM nitip.bep_vw_database_coaching";
+            $addCovered($ch->query($sqlCoaching) ?: [], 'loc', 'det');
+
+            foreach (array_keys($masterKeys) as $key) {
+                if (isset($coveredKeys[$key])) {
+                    $coveredLokasi++;
+                }
+            }
+
+            $pctCoverage = $totalLokasi > 0 ? (int) round($coveredLokasi / $totalLokasi * 100) : 0;
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController coverageAll: ' . $e->getMessage());
+        }
+
+        return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage'));
     }
 
     /**

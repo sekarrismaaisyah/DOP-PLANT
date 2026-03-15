@@ -108,18 +108,18 @@
                   <canvas id="summaryCoverageBarChart" aria-label="Summary Coverage Area Last Week"></canvas>
                </div>
             </section>
-            <!-- Section B: KPI Metrics -->
+            <!-- Section B: KPI Metrics (dari nitip: lokasi+detail aktif vs tercover SAP) -->
             <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center space-y-4" data-purpose="kpi-metrics-card">
-               <div class="text-6xl font-black text-berau-green-light">97%</div>
+               <div class="text-6xl font-black text-berau-green-light">{{ $pctCoverage ?? 0 }}%</div>
                <div class="text-lg font-semibold text-gray-600 uppercase">Overall Coverage Rate</div>
                <div class="w-full border-t border-gray-100 pt-4 grid grid-cols-2 gap-4">
                   <div>
-                     <p class="text-[10px] text-gray-400 font-bold uppercase">Total Sites</p>
-                     <p class="text-2xl font-bold text-gray-800">124</p>
+                     <p class="text-[10px] text-gray-400 font-bold uppercase">Total Lokasi (Aktif)</p>
+                     <p class="text-2xl font-bold text-gray-800">{{ $totalLokasi ?? 0 }}</p>
                   </div>
                   <div>
-                     <p class="text-[10px] text-gray-400 font-bold uppercase">Covered Sites</p>
-                     <p class="text-2xl font-bold text-berau-green-light">120</p>
+                     <p class="text-[10px] text-gray-400 font-bold uppercase">Lokasi Tercover</p>
+                     <p class="text-2xl font-bold text-berau-green-light">{{ $coveredLokasi ?? 0 }}</p>
                   </div>
                </div>
             </section>
