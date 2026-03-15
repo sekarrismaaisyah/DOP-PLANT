@@ -204,6 +204,49 @@ class EvaluasiUnitTabelController extends Controller
     }
 
     /**
+     * Semua data Per Hari per Unit (tanpa pagination) untuk dashboard. JSON: { data: [{ ... }] }.
+     */
+    public function perHariAllData(Request $request): JsonResponse
+    {
+        $dateFrom = $request->input('date_from');
+        $dateTo = $request->input('date_to');
+        if (!$dateFrom || !$dateTo || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateFrom) || !preg_match('/^\d{4}-\d{2}-\d{2}$/', $dateTo)) {
+            return response()->json(['data' => []]);
+        }
+        try {
+            $service = new EvaluasiUnitDataService();
+            $rows = $service->getDailyPerUnitPerDay($dateFrom, $dateTo);
+            $rows = $this->enrichDailyPerUnitWithBecomlineAndKonsumsi($rows);
+        } catch (Exception $e) {
+            Log::error('EvaluasiUnitTabelController::perHariAllData: ' . $e->getMessage());
+            return response()->json(['data' => []]);
+        }
+        usort($rows, function ($a, $b) {
+            $c = strcmp($a['tanggal'] ?? '', $b['tanggal'] ?? '');
+            return $c !== 0 ? $c : strcmp($a['no_unit'] ?? '', $b['no_unit'] ?? '');
+        });
+        $list = [];
+        foreach ($rows as $r) {
+            $mtdStr = isset($r['mtd']) && $r['mtd'] !== null ? number_format((float) $r['mtd'], 2, ',', '.') : '-';
+            $avgStr = isset($r['avg_per_day']) && $r['avg_per_day'] !== null ? number_format((float) $r['avg_per_day'], 2, ',', '.') : '-';
+            $list[] = [
+                'tanggal' => $r['tanggal'] ?? '-',
+                'no_unit' => $r['no_unit'] ?? '-',
+                'jarak' => $r['jarak'] ?? '-',
+                'total_jam' => $r['total_jam'] ?? 0,
+                'perusahaan_pemilik' => $r['perusahaan_pemilik'] ?? '-',
+                'site_operasional' => $r['site_operasional'] ?? '-',
+                'jenis_unit_spip' => $r['jenis_unit_spip'] ?? '-',
+                'expired' => !empty($r['expired']) ? $r['expired'] : '-',
+                'status_permit_spip' => $r['status_permit_spip'] ?? '-',
+                'avg_per_day' => $avgStr,
+                'mtd' => $mtdStr,
+            ];
+        }
+        return response()->json(['data' => $list]);
+    }
+
+    /**
      * Export data Per Hari per Unit ke Excel (TANGGAL | NO UNIT | JARAK | DURASI jam).
      */
     public function exportPerHariExcel(Request $request)

@@ -3,7 +3,7 @@
    <head>
       <meta charset="utf-8"/>
       <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-      <title>Fleet Operations Compliance Dashboard</title>
+      <title>Dashboard</title>
       <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
       <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -49,7 +49,7 @@
                      <span class="material-symbols-outlined text-white">forklift</span>
                   </div>
                   <div>
-                     <h1 class="text-lg font-bold leading-tight">Fleet Operations Compliance</h1>
+                     <h1 class="text-lg font-bold leading-tight">SPIP Dashboard</h1>
                      <p class="text-xs text-slate-500 dark:text-slate-400">Coal Mining Monitoring System</p>
                   </div>
                </div>
@@ -181,100 +181,41 @@
          <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
             <!-- Unit Performance Table (60%) -->
             <div class="lg:col-span-3 bg-white dark:bg-slate-900 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col">
-               <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex justify-between items-center">
+               <div class="p-5 border-b border-slate-100 dark:border-slate-800 flex flex-wrap justify-between items-center gap-3">
                   <h3 class="font-bold">Unit Performance Details</h3>
-                  <div class="flex items-center gap-3">
-                     <label class="flex items-center gap-2 cursor-pointer group">
-                     <input class="rounded text-primary focus:ring-primary h-4 w-4 bg-slate-100 dark:bg-slate-800 border-none" type="checkbox"/>
-                     <span class="text-sm font-medium text-slate-600 dark:text-slate-400 group-hover:text-primary transition-colors">Non-compliant only</span>
-                     </label>
-                     <button class="text-slate-400 hover:text-primary transition-colors">
-                     <span class="material-symbols-outlined">filter_list</span>
+                  <div class="flex flex-wrap items-center gap-3">
+                     <input type="date" id="dashboard_date_from" class="px-3 py-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800"/>
+                     <span class="text-slate-400">s/d</span>
+                     <input type="date" id="dashboard_date_to" class="px-3 py-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800"/>
+                     <button type="button" id="dashboard_btn_load" class="flex items-center gap-1.5 px-4 py-1.5 text-xs font-semibold bg-primary text-white rounded-lg hover:opacity-90">
+                        <span class="material-symbols-outlined text-sm">refresh</span> Muat Data
                      </button>
+                     <a href="{{ route('fueling-evaluasi.per-hari') }}?date_from=" id="dashboard_link_perhari" class="text-xs font-medium text-primary hover:underline">Tabel lengkap →</a>
                   </div>
                </div>
                <div class="overflow-x-auto">
                   <table class="w-full text-left border-collapse">
                      <thead class="bg-slate-50 dark:bg-slate-800/50">
                         <tr>
-                           <th class="px-5 py-3 text-[11px] font-bold text-slate-500 uppercase">Unit No</th>
-                           <th class="px-5 py-3 text-[11px] font-bold text-slate-500 uppercase">Company</th>
-                           <th class="px-5 py-3 text-[11px] font-bold text-slate-500 uppercase">Distance</th>
-                           <th class="px-5 py-3 text-[11px] font-bold text-slate-500 uppercase">Permit Status</th>
-                           <th class="px-5 py-3 text-[11px] font-bold text-slate-500 uppercase">Expiry</th>
-                           <th class="px-5 py-3 text-[11px] font-bold text-slate-500 uppercase">MTD</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">TANGGAL</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">NO UNIT</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">JARAK YANG DITEMPUH</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">DURASI (jam)</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Perusahaan Pemilik</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Site Operasional</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Jenis Unit SPIP</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Expired</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Status Permit SPIP</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">AVG per Day</th>
                         </tr>
                      </thead>
-                     <tbody class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <tr>
-                           <td class="px-5 py-4 font-bold text-primary">HD785-001</td>
-                           <td class="px-5 py-4 text-sm">PAMA</td>
-                           <td class="px-5 py-4 text-sm font-medium">42.5 km</td>
-                           <td class="px-5 py-4">
-                              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
-                              <span class="material-symbols-outlined text-xs">check_circle</span> PASSED
-                              </span>
-                           </td>
-                           <td class="px-5 py-4 text-sm">12 Dec 2024</td>
-                           <td class="px-5 py-4 text-sm font-bold text-success">98.2%</td>
-                        </tr>
-                        <tr>
-                           <td class="px-5 py-4 font-bold text-primary">DT20-112</td>
-                           <td class="px-5 py-4 text-sm">SIS</td>
-                           <td class="px-5 py-4 text-sm font-medium">38.2 km</td>
-                           <td class="px-5 py-4">
-                              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-warning/10 text-warning border border-warning/20">
-                              <span class="material-symbols-outlined text-xs">warning</span> EXPIRING
-                              </span>
-                           </td>
-                           <td class="px-5 py-4 text-sm text-warning font-semibold italic">Oct 30, 2023</td>
-                           <td class="px-5 py-4 text-sm font-bold text-success">92.5%</td>
-                        </tr>
-                        <tr>
-                           <td class="px-5 py-4 font-bold text-primary">GD511-05</td>
-                           <td class="px-5 py-4 text-sm">BUMA</td>
-                           <td class="px-5 py-4 text-sm font-medium">12.1 km</td>
-                           <td class="px-5 py-4">
-                              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-danger/10 text-danger border border-danger/20">
-                              <span class="material-symbols-outlined text-xs">cancel</span> NOT PASSED
-                              </span>
-                           </td>
-                           <td class="px-5 py-4 text-sm text-danger font-bold">EXPIRED</td>
-                           <td class="px-5 py-4 text-sm font-bold text-danger">74.1%</td>
-                        </tr>
-                        <tr>
-                           <td class="px-5 py-4 font-bold text-primary">HD785-042</td>
-                           <td class="px-5 py-4 text-sm">PAMA</td>
-                           <td class="px-5 py-4 text-sm font-medium">45.8 km</td>
-                           <td class="px-5 py-4">
-                              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
-                              <span class="material-symbols-outlined text-xs">check_circle</span> PASSED
-                              </span>
-                           </td>
-                           <td class="px-5 py-4 text-sm">05 Jan 2025</td>
-                           <td class="px-5 py-4 text-sm font-bold text-success">96.8%</td>
-                        </tr>
-                        <tr>
-                           <td class="px-5 py-4 font-bold text-primary">PC200-8</td>
-                           <td class="px-5 py-4 text-sm">BUMA</td>
-                           <td class="px-5 py-4 text-sm font-medium">18.4 km</td>
-                           <td class="px-5 py-4">
-                              <span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20">
-                              <span class="material-symbols-outlined text-xs">check_circle</span> PASSED
-                              </span>
-                           </td>
-                           <td class="px-5 py-4 text-sm">18 Feb 2024</td>
-                           <td class="px-5 py-4 text-sm font-bold text-success">89.4%</td>
-                        </tr>
+                     <tbody id="dashboard_table_body" class="divide-y divide-slate-100 dark:divide-slate-800">
+                        <tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm">Pilih rentang tanggal dan klik Muat Data.</td></tr>
                      </tbody>
                   </table>
                </div>
                <div class="mt-auto p-4 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
-                  <p class="text-xs text-slate-500">Showing 1-5 of 142 units</p>
-                  <div class="flex gap-2">
-                     <button class="px-3 py-1 text-xs border border-slate-200 dark:border-slate-800 rounded-lg hover:bg-slate-50">Prev</button>
-                     <button class="px-3 py-1 text-xs bg-primary text-white rounded-lg">Next</button>
-                  </div>
+                  <p class="text-xs text-slate-500" id="dashboard_table_info">—</p>
                </div>
             </div>
             <!-- Compliance Overview (40%) -->
@@ -391,5 +332,97 @@
          <p class="text-sm text-slate-500 font-medium">Data updated hourly | Source: HSE Automation System</p>
          <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-[0.2em] font-bold">© 2024 Coal Mining Fleet Ops. All rights reserved.</p>
       </footer>
+      <script>
+      (function() {
+         var apiUrl = "{{ url()->route('fueling-evaluasi.per-hari.all-data') }}";
+         var dateFrom = document.getElementById('dashboard_date_from');
+         var dateTo = document.getElementById('dashboard_date_to');
+         var btnLoad = document.getElementById('dashboard_btn_load');
+         var tbody = document.getElementById('dashboard_table_body');
+         var infoEl = document.getElementById('dashboard_table_info');
+         var linkPerhari = document.getElementById('dashboard_link_perhari');
+
+         function setDefaultDates() {
+            var to = new Date();
+            var from = new Date(to);
+            from.setDate(from.getDate() - 30);
+            dateFrom.value = from.toISOString().slice(0, 10);
+            dateTo.value = to.toISOString().slice(0, 10);
+         }
+
+         function statusBadge(status) {
+            var s = (status || '').toUpperCase();
+            if (s === 'PASSED') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20"><span class="material-symbols-outlined text-xs">check_circle</span> PASSED</span>';
+            if (s === 'N/A' || s === 'NOT PASSED' || s === 'EXPIRED') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-danger/10 text-danger border border-danger/20">' + (status || 'N/A') + '</span>';
+            return '<span class="text-sm">' + (status || '-') + '</span>';
+         }
+
+         function escapeHtml(str) {
+            if (str == null) return '';
+            var s = String(str);
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+         }
+
+         function renderTable(data) {
+            if (!data || data.length === 0) {
+               tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm">Tidak ada data untuk rentang tanggal ini.</td></tr>';
+               infoEl.textContent = '0 baris';
+               return;
+            }
+            var html = '';
+            var maxShow = 200;
+            var show = Math.min(data.length, maxShow);
+            for (var i = 0; i < show; i++) {
+               var r = data[i];
+               var durasi = (r.total_jam != null && r.total_jam !== '') ? (Number(r.total_jam) + ' jam') : '-';
+               html += '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">' +
+                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.tanggal) + '</td>' +
+                  '<td class="px-3 py-3 text-sm font-bold text-primary">' + escapeHtml(r.no_unit) + '</td>' +
+                  '<td class="px-3 py-3 text-sm font-medium">' + escapeHtml(r.jarak) + '</td>' +
+                  '<td class="px-3 py-3 text-sm">' + escapeHtml(durasi) + '</td>' +
+                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.perusahaan_pemilik) + '</td>' +
+                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.site_operasional) + '</td>' +
+                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.jenis_unit_spip) + '</td>' +
+                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.expired) + '</td>' +
+                  '<td class="px-3 py-3">' + statusBadge(r.status_permit_spip) + '</td>' +
+                  '<td class="px-3 py-3 text-sm">' + escapeHtml(r.avg_per_day) + '</td>' +
+                  '</tr>';
+            }
+            tbody.innerHTML = html;
+            if (data.length > maxShow) {
+               infoEl.textContent = 'Menampilkan 1-' + maxShow + ' dari ' + data.length + ' baris';
+            } else {
+               infoEl.textContent = 'Menampilkan ' + data.length + ' baris';
+            }
+         }
+
+         function loadData() {
+            var from = (dateFrom && dateFrom.value) || '';
+            var to = (dateTo && dateTo.value) || '';
+            if (!from || !to) {
+               tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm">Pilih Tanggal Dari dan Tanggal Sampai.</td></tr>';
+               infoEl.textContent = '—';
+               return;
+            }
+            tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm"><span class="inline-block animate-pulse">Memuat data...</span></td></tr>';
+            infoEl.textContent = '—';
+            if (linkPerhari) linkPerhari.href = "{{ url()->route('fueling-evaluasi.per-hari') }}?date_from=" + encodeURIComponent(from) + "&date_to=" + encodeURIComponent(to);
+
+            fetch(apiUrl + '?date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to), { credentials: 'same-origin' })
+               .then(function(res) { return res.json(); })
+               .then(function(json) {
+                  renderTable(json.data || []);
+               })
+               .catch(function() {
+                  tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-danger text-sm">Gagal memuat data.</td></tr>';
+                  infoEl.textContent = '—';
+               });
+         }
+
+         setDefaultDates();
+         if (btnLoad) btnLoad.addEventListener('click', loadData);
+         loadData();
+      })();
+      </script>
    </body>
 </html>

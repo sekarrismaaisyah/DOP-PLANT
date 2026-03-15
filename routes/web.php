@@ -122,6 +122,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/fueling-evaluasi/tabel', [EvaluasiUnitTabelController::class, 'index'])->name('fueling-evaluasi.tabel');
     Route::get('/fueling-evaluasi/per-hari', [EvaluasiUnitTabelController::class, 'perHari'])->name('fueling-evaluasi.per-hari');
     Route::get('/fueling-evaluasi/per-hari/data', [EvaluasiUnitTabelController::class, 'perHariData'])->name('fueling-evaluasi.per-hari.data');
+    Route::get('/fueling-evaluasi/per-hari/all-data', [EvaluasiUnitTabelController::class, 'perHariAllData'])->name('fueling-evaluasi.per-hari.all-data');
     Route::get('/fueling-evaluasi/per-hari/export-excel', [EvaluasiUnitTabelController::class, 'exportPerHariExcel'])->name('fueling-evaluasi.per-hari.export-excel');
 
     // Becomline (CRUD + Import Excel)
