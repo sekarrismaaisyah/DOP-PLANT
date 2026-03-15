@@ -142,10 +142,10 @@ class DashboardController extends Controller
             }
             usort($coverageBySite, fn ($a, $b) => strcmp($a['site'], $b['site']));
 
-            // Trend per site: total laporan per hari dalam 1 minggu (Minggu–Sabtu) per site
-            $weekStart = Carbon::now()->startOfWeek(Carbon::SUNDAY);
-            $weekEnd = Carbon::now()->endOfWeek(Carbon::SATURDAY);
-            $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y');
+            // Trend per site: total laporan per hari minggu lalu (Minggu–Sabtu) per site
+            $weekStart = Carbon::now()->subWeek()->startOfWeek(Carbon::SUNDAY);
+            $weekEnd = Carbon::now()->subWeek()->endOfWeek(Carbon::SATURDAY);
+            $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Lalu)';
             $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
             $trendLabels = [];
             $weekDateStrs = [];
@@ -206,9 +206,9 @@ class DashboardController extends Controller
         }
 
         if ($trendWeekLabel === '' && count($trendLabels) === 0) {
-            $wStart = Carbon::now()->startOfWeek(Carbon::SUNDAY);
-            $wEnd = Carbon::now()->endOfWeek(Carbon::SATURDAY);
-            $trendWeekLabel = $wStart->format('d') . '–' . $wEnd->format('d') . ' ' . $wStart->locale('id')->monthName . ' ' . $wStart->format('Y');
+            $wStart = Carbon::now()->subWeek()->startOfWeek(Carbon::SUNDAY);
+            $wEnd = Carbon::now()->subWeek()->endOfWeek(Carbon::SATURDAY);
+            $trendWeekLabel = $wStart->format('d') . '–' . $wEnd->format('d') . ' ' . $wStart->locale('id')->monthName . ' ' . $wStart->format('Y') . ' (Minggu Lalu)';
         }
 
         return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite'));

@@ -127,8 +127,8 @@
          <!-- END: TopSection -->
          <!-- BEGIN: Trend per Site — Total Laporan per Hari (Minggu ini, Min–Sab) -->
          <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-purpose="trend-per-site">
-            <h2 class="text-sm font-bold text-gray-700 uppercase mb-1">Trend Laporan per Site (Minggu Ini)</h2>
-            <p class="text-xs text-gray-500 mb-4">Minggu s/d Sabtu — geser untuk lihat tiap site. Sumber: Inspeksi, OAK, Observasi, Coaching (nitip)</p>
+            <h2 class="text-sm font-bold text-gray-700 uppercase mb-1">Trend Laporan per Site </h2>
+            <p class="text-xs text-gray-500 mb-4">Minggu s/d Sabtu minggu lalu — geser untuk lihat tiap site. Sumber: Inspeksi, OAK, Observasi, Coaching (nitip)</p>
             <div class="trend-swiper-wrapper relative">
                @if(empty($trendBySite))
                <div class="flex items-center justify-center py-12 text-gray-400 text-sm">Belum ada data trend per site.</div>
@@ -149,9 +149,9 @@
                      </div>
                      @endforeach
                   </div>
-                  <div class="swiper-button-prev trend-coverage-prev"></div>
+                  <!-- <div class="swiper-button-prev trend-coverage-prev"></div>
                   <div class="swiper-button-next trend-coverage-next"></div>
-                  <div class="swiper-pagination trend-coverage-pagination"></div>
+                  <div class="swiper-pagination trend-coverage-pagination"></div> -->
                </div>
                @endif
             </div>
