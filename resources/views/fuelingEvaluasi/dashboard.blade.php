@@ -42,7 +42,7 @@
    <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-display">
       <!-- Top Navigation Bar -->
       <header class="sticky top-0 z-50 bg-white dark:bg-slate-900 border-b border-slate-200 dark:border-slate-800 px-6 py-3">
-         <div class="max-w-[1440px] mx-auto flex items-center justify-between gap-4">
+         <div class=" mx-auto flex items-center justify-between gap-4">
             <div class="flex items-center gap-6">
                <div class="flex items-center gap-3">
                   <div class="bg-primary p-2 rounded-lg">
@@ -81,7 +81,7 @@
             </div>
          </div>
       </header>
-      <main class="max-w-[1440px] mx-auto p-6 space-y-6">
+      <main class=" mx-auto p-6 space-y-6">
          <!-- Header Controls -->
          <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div>
@@ -417,7 +417,7 @@
             </div>
          </div>
       </main>
-      <footer class="max-w-[1440px] mx-auto px-6 py-8 mt-12 border-t border-slate-200 dark:border-slate-800 text-center">
+      <footer class=" mx-auto px-6 py-8 mt-12 border-t border-slate-200 dark:border-slate-800 text-center">
          <p class="text-sm text-slate-500 font-medium">Data updated hourly | Source: HSE Automation System</p>
          <p class="text-[10px] text-slate-400 mt-2 uppercase tracking-[0.2em] font-bold">© 2024 Coal Mining Fleet Ops. All rights reserved.</p>
       </footer>
