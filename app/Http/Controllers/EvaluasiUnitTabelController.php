@@ -278,14 +278,28 @@ class EvaluasiUnitTabelController extends Controller
         }
     }
 
+    /**
+     * Normalize unit key for matching: trim, uppercase, then remove spaces, hyphens, underscores, dots.
+     * So "BM 265", "BM-265", "BM.265" all become "BM265" and match.
+     */
     private function normalizeUnitKey(?string $value): string
     {
-        return strtoupper(trim((string) $value));
+        $s = strtoupper(trim((string) $value));
+        $s = str_replace([' ', '-', '_', '.'], '', $s);
+        return $s;
+    }
+
+    /**
+     * SQL expression to normalize no_registrasi / no_unit the same way as normalizeUnitKey (MySQL).
+     */
+    private function sqlNormalizedUnitColumn(string $column): string
+    {
+        return "REPLACE(REPLACE(REPLACE(REPLACE(UPPER(TRIM({$column})), ' ', ''), '-', ''), '_', ''), '.', '')";
     }
 
     /**
      * Enrich daily per-unit rows with Becomline (no_registrasi = no_unit) and konsumsi_bbm_unit (no_unit).
-     * Matching is loose: case-insensitive and trim (UPPER(TRIM(...))).
+     * Matching is loose: case-insensitive, trim, and ignore spaces/hyphens/underscores/dots (e.g. "BM 265" matches "BM-265").
      */
     private function enrichDailyPerUnitWithBecomlineAndKonsumsi(array $rows): array
     {
@@ -302,7 +316,8 @@ class EvaluasiUnitTabelController extends Controller
         $becomlineByNoReg = [];
         if (!empty($normalizedKeys)) {
             $placeholders = implode(',', array_fill(0, count($normalizedKeys), '?'));
-            $becomlines = Becomline::whereRaw("UPPER(TRIM(no_registrasi)) IN ({$placeholders})", array_values($normalizedKeys))->get();
+            $expr = $this->sqlNormalizedUnitColumn('no_registrasi');
+            $becomlines = Becomline::whereRaw("{$expr} IN ({$placeholders})", array_values($normalizedKeys))->get();
             foreach ($becomlines as $b) {
                 $nr = $this->normalizeUnitKey($b->no_registrasi);
                 if ($nr !== '' && !isset($becomlineByNoReg[$nr])) {
@@ -314,7 +329,8 @@ class EvaluasiUnitTabelController extends Controller
         $konsumsiByNoUnit = [];
         if (!empty($normalizedKeys)) {
             $placeholders = implode(',', array_fill(0, count($normalizedKeys), '?'));
-            $konsumesis = UnitMtd::whereRaw("UPPER(TRIM(no_unit)) IN ({$placeholders})", array_values($normalizedKeys))->get();
+            $expr = $this->sqlNormalizedUnitColumn('no_unit');
+            $konsumesis = UnitMtd::whereRaw("{$expr} IN ({$placeholders})", array_values($normalizedKeys))->get();
             foreach ($konsumesis as $k) {
                 $nu = $this->normalizeUnitKey($k->no_unit);
                 if ($nu !== '' && !isset($konsumsiByNoUnit[$nu])) {
