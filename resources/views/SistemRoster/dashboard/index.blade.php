@@ -1105,7 +1105,15 @@
     #heatmapDayDetailModal .modal-content { background: #fff; position: relative; z-index: 1; }
     #coverageAreaAllModal.modal { z-index: 1060 !important; }
     #coverageAreaAllModal .modal-content { background: #fff; position: relative; z-index: 1; }
+    #coverageDopModal.modal { z-index: 1060 !important; }
+    #coverageDopModal .modal-content { background: #fff; position: relative; z-index: 1; }
     body.modal-open .modal-backdrop { z-index: 1055 !important; }
+    /* Saat modal coverage iframe (Area All / DOP) terbuka: naikkan z-index agar di atas overlay/sidebar */
+    body.lmo-coverage-iframe-open .modal-backdrop { z-index: 9998 !important; }
+    body.lmo-coverage-iframe-open #coverageAreaAllModal.modal,
+    body.lmo-coverage-iframe-open #coverageDopModal.modal { z-index: 9999 !important; }
+    #coverageDopModal.modal .modal-dialog,
+    #coverageDopModal.modal .modal-content { pointer-events: auto !important; }
     /* Tour guide button in header */
     .btn-dashboard-tour { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 500; background: linear-gradient(135deg, #1b84ff 0%, #0d6efd 100%); color: #fff; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(27,132,255,.3); transition: transform .15s ease, box-shadow .2s ease; }
     .btn-dashboard-tour:hover { color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(27,132,255,.4); }
@@ -2172,7 +2180,7 @@
       }
     })();
 
-    // Modal Coverage Area All: pindah modal ke body dulu agar backdrop/klik berfungsi, lalu klik card buka modal
+    // Modal Coverage Area All: pindah modal ke body, naikkan z-index saat buka agar bisa diklik/tutup
     (function() {
       var coverageAreaAllUrl = '{{ url()->route("sistem-roster.dashboard.coverage-all") }}';
       function initCoverageAreaAllModal() {
@@ -2181,6 +2189,8 @@
         var iframeEl = document.getElementById('coverageAreaAllIframe');
         if (!cardEl || !modalEl || !iframeEl) return;
         if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
+        modalEl.addEventListener('shown.bs.modal', function() { document.body.classList.add('lmo-coverage-iframe-open'); });
+        modalEl.addEventListener('hidden.bs.modal', function() { document.body.classList.remove('lmo-coverage-iframe-open'); });
         cardEl.addEventListener('click', function() {
           iframeEl.src = coverageAreaAllUrl;
           if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
@@ -2208,7 +2218,7 @@
       }
     })();
 
-    // Modal Coverage Activity DOP: pindah modal ke body dulu agar backdrop/klik berfungsi, lalu klik card buka modal
+    // Modal Coverage Activity DOP: pindah modal ke body, naikkan z-index saat buka agar bisa diklik/tutup
     (function() {
       var coverageDopUrl = '{{ url()->route("sistem-roster.dashboard.coverage-dop") }}';
       function initCoverageDopModal() {
@@ -2217,6 +2227,8 @@
         var iframeEl = document.getElementById('coverageDopIframe');
         if (!cardEl || !modalEl || !iframeEl) return;
         if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
+        modalEl.addEventListener('shown.bs.modal', function() { document.body.classList.add('lmo-coverage-iframe-open'); });
+        modalEl.addEventListener('hidden.bs.modal', function() { document.body.classList.remove('lmo-coverage-iframe-open'); });
         cardEl.addEventListener('click', function() {
           iframeEl.src = coverageDopUrl;
           if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
