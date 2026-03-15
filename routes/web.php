@@ -36,6 +36,7 @@ use App\Http\Controllers\InsidenLpiController;
 use App\Http\Controllers\CctvP2hChecklistController;
 use App\Http\Controllers\EvaluasiUnitTabelController;
 use App\Http\Controllers\FuelingEvaluasiController;
+use App\Http\Controllers\BecomlineController;
 
 /*
 |--------------------------------------------------------------------------
@@ -119,6 +120,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/fueling-evaluasi/tabel', [EvaluasiUnitTabelController::class, 'index'])->name('fueling-evaluasi.tabel');
     Route::get('/fueling-evaluasi/per-hari', [EvaluasiUnitTabelController::class, 'perHari'])->name('fueling-evaluasi.per-hari');
     Route::get('/fueling-evaluasi/per-hari/export-excel', [EvaluasiUnitTabelController::class, 'exportPerHariExcel'])->name('fueling-evaluasi.per-hari.export-excel');
+
+    // Becomline (CRUD + Import Excel)
+    Route::get('/becomline', [BecomlineController::class, 'index'])->name('becomline.index');
+    Route::get('/becomline/create', [BecomlineController::class, 'create'])->name('becomline.create');
+    Route::post('/becomline', [BecomlineController::class, 'store'])->name('becomline.store');
+    Route::get('/becomline/{id}/edit', [BecomlineController::class, 'edit'])->name('becomline.edit');
+    Route::put('/becomline/{id}', [BecomlineController::class, 'update'])->name('becomline.update');
+    Route::delete('/becomline/{id}', [BecomlineController::class, 'destroy'])->name('becomline.destroy');
+    Route::get('/becomline/import/form', [BecomlineController::class, 'importForm'])->name('becomline.import-form');
+    Route::post('/becomline/import', [BecomlineController::class, 'import'])->name('becomline.import');
+    Route::get('/becomline/import/template', [BecomlineController::class, 'downloadTemplate'])->name('becomline.download-template');
 
     // Chatbot Routes
     Route::prefix('chatbot')->name('chatbot.')->group(function () {
