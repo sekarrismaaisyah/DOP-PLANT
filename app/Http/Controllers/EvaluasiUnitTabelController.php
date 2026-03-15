@@ -259,6 +259,10 @@ class EvaluasiUnitTabelController extends Controller
                 'compliance_pct' => 0,
                 'avg_waktu_jam_per_unit' => 0,
                 'avg_fuel_km_per_l' => null,
+                'passed_count' => 0,
+                'expiring_count' => 0,
+                'not_passed_count' => 0,
+                'site_ranking' => [],
             ]);
         }
         try {
@@ -272,6 +276,10 @@ class EvaluasiUnitTabelController extends Controller
                 'compliance_pct' => 0,
                 'avg_waktu_jam_per_unit' => 0,
                 'avg_fuel_km_per_l' => null,
+                'passed_count' => 0,
+                'expiring_count' => 0,
+                'not_passed_count' => 0,
+                'site_ranking' => [],
             ]);
         }
         $minKm = 0.01; // 10 meter
@@ -280,30 +288,81 @@ class EvaluasiUnitTabelController extends Controller
             return $km > $minKm;
         });
         $unitToStatus = [];
+        $unitToExpired = [];
+        $unitToSite = [];
         $totalJamOperated = 0;
+        $expiringEnd = Carbon::now()->addDays(30)->format('Y-m-d');
         foreach ($operatedRows as $r) {
             $noUnit = trim((string) ($r['no_unit'] ?? ''));
             if ($noUnit !== '') {
                 if (!isset($unitToStatus[$noUnit])) {
                     $unitToStatus[$noUnit] = trim((string) ($r['status_permit_spip'] ?? ''));
+                    $unitToExpired[$noUnit] = $r['expired'] ?? null;
+                    $unitToSite[$noUnit] = trim((string) ($r['site_operasional'] ?? ''));
                 }
                 $totalJamOperated += (float) ($r['total_jam'] ?? 0);
             }
         }
         $totalUnitBeroperasi = count($unitToStatus);
         $passedCount = 0;
-        foreach ($unitToStatus as $status) {
-            if (strtoupper($status) === 'PASSED') {
-                $passedCount++;
+        $expiringCount = 0;
+        $notPassedCount = 0;
+        foreach ($unitToStatus as $noUnit => $status) {
+            $statusUpper = strtoupper($status);
+            $expired = $unitToExpired[$noUnit] ?? null;
+            if ($statusUpper === 'PASSED') {
+                if ($expired === null || $expired === '' || $expired === '-') {
+                    $passedCount++;
+                } else {
+                    try {
+                        $expiredDate = Carbon::parse($expired)->startOfDay();
+                        if ($expiredDate->isPast()) {
+                            $notPassedCount++;
+                        } elseif ($expiredDate->format('Y-m-d') <= $expiringEnd) {
+                            $expiringCount++;
+                        } else {
+                            $passedCount++;
+                        }
+                    } catch (\Exception $e) {
+                        $passedCount++;
+                    }
+                }
+            } else {
+                $notPassedCount++;
             }
         }
         $compliancePct = $totalUnitBeroperasi > 0 ? round($passedCount / $totalUnitBeroperasi * 100, 1) : 0;
         $avgWaktu = $totalUnitBeroperasi > 0 ? round($totalJamOperated / $totalUnitBeroperasi, 2) : 0;
+
+        $siteAgg = [];
+        foreach ($unitToSite as $noUnit => $site) {
+            $siteKey = $site !== '' ? $site : '-';
+            if (!isset($siteAgg[$siteKey])) {
+                $siteAgg[$siteKey] = ['total' => 0, 'passed' => 0];
+            }
+            $siteAgg[$siteKey]['total']++;
+            if (strtoupper($unitToStatus[$noUnit] ?? '') === 'PASSED') {
+                $siteAgg[$siteKey]['passed']++;
+            }
+        }
+        $siteRanking = [];
+        foreach ($siteAgg as $siteName => $agg) {
+            $pct = $agg['total'] > 0 ? round($agg['passed'] / $agg['total'] * 100, 0) : 0;
+            $siteRanking[] = ['site' => $siteName, 'total' => $agg['total'], 'passed' => $agg['passed'], 'pct' => $pct];
+        }
+        usort($siteRanking, function ($a, $b) {
+            return $b['pct'] <=> $a['pct'];
+        });
+
         return response()->json([
             'total_unit_beroperasi' => $totalUnitBeroperasi,
             'compliance_pct' => $compliancePct,
             'avg_waktu_jam_per_unit' => $avgWaktu,
             'avg_fuel_km_per_l' => null,
+            'passed_count' => $passedCount,
+            'expiring_count' => $expiringCount,
+            'not_passed_count' => $notPassedCount,
+            'site_ranking' => $siteRanking,
         ]);
     }
 

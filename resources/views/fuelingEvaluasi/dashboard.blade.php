@@ -218,12 +218,15 @@
                <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                   <h3 class="font-bold mb-6">Compliance Status Distribution</h3>
                   <div class="flex items-center justify-center relative mb-6">
-                     <!-- Abstract Donut Shape using Gradients -->
-                     <div class="w-40 h-40 rounded-full border-[12px] border-success relative flex items-center justify-center">
-                        <div class="absolute inset-[-12px] rounded-full border-[12px] border-warning border-t-transparent border-r-transparent border-b-transparent rotate-[30deg]"></div>
-                        <div class="absolute inset-[-12px] rounded-full border-[12px] border-danger border-t-transparent border-l-transparent border-b-transparent rotate-[-15deg]"></div>
-                        <div class="text-center">
-                           <p class="text-3xl font-bold">142</p>
+                     <div class="w-40 h-40 rounded-full relative flex items-center justify-center" id="compliance_donut_ring">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                           <path class="text-slate-100 dark:text-slate-800" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" fill="none" stroke="currentColor" stroke-width="4"></path>
+                           <path id="donut_passed" class="text-success" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="currentColor" stroke-dasharray="0, 100" stroke-linecap="round" stroke-width="4"></path>
+                           <path id="donut_expiring" class="text-warning" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="currentColor" stroke-dasharray="0, 100" stroke-linecap="round" stroke-width="4"></path>
+                           <path id="donut_notpassed" class="text-danger" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831" fill="none" stroke="currentColor" stroke-dasharray="0, 100" stroke-linecap="round" stroke-width="4"></path>
+                        </svg>
+                        <div class="absolute inset-0 flex flex-col items-center justify-center text-center">
+                           <p class="text-3xl font-bold" id="kpi_donut_total">—</p>
                            <p class="text-[10px] text-slate-400 uppercase tracking-widest font-bold">Units</p>
                         </div>
                      </div>
@@ -231,49 +234,23 @@
                   <div class="grid grid-cols-3 gap-2">
                      <div class="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
                         <p class="text-[10px] font-bold text-success uppercase">Passed</p>
-                        <p class="text-lg font-bold">125</p>
+                        <p class="text-lg font-bold" id="kpi_passed">—</p>
                      </div>
                      <div class="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
                         <p class="text-[10px] font-bold text-warning uppercase">Expiring</p>
-                        <p class="text-lg font-bold">12</p>
+                        <p class="text-lg font-bold" id="kpi_expiring">—</p>
                      </div>
                      <div class="text-center p-2 rounded-lg bg-slate-50 dark:bg-slate-800/50">
                         <p class="text-[10px] font-bold text-danger uppercase">Not Passed</p>
-                        <p class="text-lg font-bold">5</p>
+                        <p class="text-lg font-bold" id="kpi_not_passed">—</p>
                      </div>
                   </div>
                </div>
                <!-- Site Distribution Bar Chart -->
                <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
                   <h3 class="font-bold mb-4">Site Performance Ranking</h3>
-                  <div class="space-y-4">
-                     <div class="space-y-1">
-                        <div class="flex justify-between text-xs font-semibold">
-                           <span>BMO 1</span>
-                           <span>94%</span>
-                        </div>
-                        <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                           <div class="bg-primary h-2 rounded-full w-[94%]"></div>
-                        </div>
-                     </div>
-                     <div class="space-y-1">
-                        <div class="flex justify-between text-xs font-semibold">
-                           <span>LMO</span>
-                           <span>82%</span>
-                        </div>
-                        <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                           <div class="bg-primary h-2 rounded-full w-[82%]"></div>
-                        </div>
-                     </div>
-                     <div class="space-y-1">
-                        <div class="flex justify-between text-xs font-semibold">
-                           <span>GMO</span>
-                           <span>78%</span>
-                        </div>
-                        <div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2">
-                           <div class="bg-primary h-2 rounded-full w-[78%]"></div>
-                        </div>
-                     </div>
+                  <div class="space-y-4" id="site_ranking_list">
+                     <p class="text-sm text-slate-500">Memuat...</p>
                   </div>
                </div>
             </div>
@@ -354,6 +331,8 @@
 
          function loadStats(from, to) {
             if (!from || !to) return;
+            var siteListEl = document.getElementById('site_ranking_list');
+            if (siteListEl) siteListEl.innerHTML = '<p class="text-sm text-slate-500">Memuat...</p>';
             fetch(statsUrl + '?date_from=' + encodeURIComponent(from) + '&date_to=' + encodeURIComponent(to), { credentials: 'same-origin' })
                .then(function(res) { return res.json(); })
                .then(function(s) {
@@ -367,6 +346,39 @@
                   if (compArc) compArc.setAttribute('stroke-dasharray', (s.compliance_pct != null ? s.compliance_pct : 0) + ', 100');
                   if (avgEl) avgEl.textContent = s.avg_waktu_jam_per_unit != null ? Number(s.avg_waktu_jam_per_unit) : '—';
                   if (fuelEl) fuelEl.textContent = s.avg_fuel_km_per_l != null ? Number(s.avg_fuel_km_per_l) : '—';
+                  var donutTotal = document.getElementById('kpi_donut_total');
+                  var kpiPassed = document.getElementById('kpi_passed');
+                  var kpiExpiring = document.getElementById('kpi_expiring');
+                  var kpiNotPassed = document.getElementById('kpi_not_passed');
+                  if (donutTotal) donutTotal.textContent = s.total_unit_beroperasi != null ? s.total_unit_beroperasi : '—';
+                  if (kpiPassed) kpiPassed.textContent = s.passed_count != null ? s.passed_count : '—';
+                  if (kpiExpiring) kpiExpiring.textContent = s.expiring_count != null ? s.expiring_count : '—';
+                  if (kpiNotPassed) kpiNotPassed.textContent = s.not_passed_count != null ? s.not_passed_count : '—';
+                  var total = s.total_unit_beroperasi || 0;
+                  var p1 = total > 0 ? (s.passed_count || 0) / total * 100 : 0;
+                  var p2 = total > 0 ? (s.expiring_count || 0) / total * 100 : 0;
+                  var p3 = total > 0 ? (s.not_passed_count || 0) / total * 100 : 0;
+                  var arcPassed = document.getElementById('donut_passed');
+                  var arcExpiring = document.getElementById('donut_expiring');
+                  var arcNotPassed = document.getElementById('donut_notpassed');
+                  if (arcPassed) { arcPassed.setAttribute('stroke-dasharray', p1 + ', 100'); arcPassed.setAttribute('stroke-dashoffset', '0'); }
+                  if (arcExpiring) { arcExpiring.setAttribute('stroke-dasharray', p2 + ', 100'); arcExpiring.setAttribute('stroke-dashoffset', '-' + p1); }
+                  if (arcNotPassed) { arcNotPassed.setAttribute('stroke-dasharray', p3 + ', 100'); arcNotPassed.setAttribute('stroke-dashoffset', '-' + (p1 + p2)); }
+                  var list = s.site_ranking || [];
+                  if (siteListEl) {
+                     if (list.length === 0) {
+                        siteListEl.innerHTML = '<p class="text-sm text-slate-500">Tidak ada data site.</p>';
+                     } else {
+                        var html = '';
+                        for (var i = 0; i < list.length; i++) {
+                           var x = list[i];
+                           var pct = Math.min(100, Math.max(0, x.pct || 0));
+                           var siteLabel = (x.site === '-' ? '(Tanpa site)' : String(x.site)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                           html += '<div class="space-y-1"><div class="flex justify-between text-xs font-semibold"><span>' + siteLabel + '</span><span>' + pct + '%</span></div><div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2"><div class="bg-primary h-2 rounded-full transition-all" style="width:' + pct + '%"></div></div></div>';
+                        }
+                        siteListEl.innerHTML = html;
+                     }
+                  }
                })
                .catch(function() {
                   var totalEl = document.getElementById('kpi_total_unit');
@@ -376,6 +388,21 @@
                   if (compEl) compEl.textContent = '—';
                   if (document.getElementById('kpi_compliance_arc')) document.getElementById('kpi_compliance_arc').setAttribute('stroke-dasharray', '0, 100');
                   if (avgEl) avgEl.textContent = '—';
+                  var donutTotal = document.getElementById('kpi_donut_total');
+                  if (donutTotal) donutTotal.textContent = '—';
+                  var kpiPassed = document.getElementById('kpi_passed');
+                  var kpiExpiring = document.getElementById('kpi_expiring');
+                  var kpiNotPassed = document.getElementById('kpi_not_passed');
+                  if (kpiPassed) kpiPassed.textContent = '—';
+                  if (kpiExpiring) kpiExpiring.textContent = '—';
+                  if (kpiNotPassed) kpiNotPassed.textContent = '—';
+                  var arcPassed = document.getElementById('donut_passed');
+                  var arcExpiring = document.getElementById('donut_expiring');
+                  var arcNotPassed = document.getElementById('donut_notpassed');
+                  if (arcPassed) arcPassed.setAttribute('stroke-dasharray', '0, 100');
+                  if (arcExpiring) arcExpiring.setAttribute('stroke-dasharray', '0, 100');
+                  if (arcNotPassed) arcNotPassed.setAttribute('stroke-dasharray', '0, 100');
+                  if (siteListEl) siteListEl.innerHTML = '<p class="text-sm text-slate-500">Gagal memuat data.</p>';
                });
          }
 
