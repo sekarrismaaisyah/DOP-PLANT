@@ -37,6 +37,7 @@ use App\Http\Controllers\CctvP2hChecklistController;
 use App\Http\Controllers\EvaluasiUnitTabelController;
 use App\Http\Controllers\FuelingEvaluasiController;
 use App\Http\Controllers\BecomlineController;
+use App\Http\Controllers\UnitMtdController;
 
 /*
 |--------------------------------------------------------------------------
@@ -131,6 +132,17 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/becomline/import/form', [BecomlineController::class, 'importForm'])->name('becomline.import-form');
     Route::post('/becomline/import', [BecomlineController::class, 'import'])->name('becomline.import');
     Route::get('/becomline/import/template', [BecomlineController::class, 'downloadTemplate'])->name('becomline.download-template');
+
+    // Unit MTD (CRUD + Import Excel) - Site, Perusahaan, Kategori, No Unit, MTD, AVG per Day
+    Route::get('/unit-mtd', [UnitMtdController::class, 'index'])->name('unit-mtd.index');
+    Route::get('/unit-mtd/create', [UnitMtdController::class, 'create'])->name('unit-mtd.create');
+    Route::post('/unit-mtd', [UnitMtdController::class, 'store'])->name('unit-mtd.store');
+    Route::get('/unit-mtd/{id}/edit', [UnitMtdController::class, 'edit'])->name('unit-mtd.edit');
+    Route::put('/unit-mtd/{id}', [UnitMtdController::class, 'update'])->name('unit-mtd.update');
+    Route::delete('/unit-mtd/{id}', [UnitMtdController::class, 'destroy'])->name('unit-mtd.destroy');
+    Route::get('/unit-mtd/import/form', [UnitMtdController::class, 'importForm'])->name('unit-mtd.import-form');
+    Route::post('/unit-mtd/import', [UnitMtdController::class, 'import'])->name('unit-mtd.import');
+    Route::get('/unit-mtd/import/template', [UnitMtdController::class, 'downloadTemplate'])->name('unit-mtd.download-template');
 
     // Chatbot Routes
     Route::prefix('chatbot')->name('chatbot.')->group(function () {
