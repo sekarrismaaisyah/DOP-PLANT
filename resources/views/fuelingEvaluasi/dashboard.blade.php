@@ -307,7 +307,7 @@
       (function() {
          var apiUrl = "{{ url()->route('fueling-evaluasi.per-hari.all-data') }}";
          var statsUrl = "{{ url()->route('fueling-evaluasi.per-hari.dashboard-stats') }}";
-         var PAGE_SIZE = 7;
+         var PAGE_SIZE = 9;
          var dateFrom = document.getElementById('dashboard_date_from');
          var dateTo = document.getElementById('dashboard_date_to');
          var btnLoad = document.getElementById('dashboard_btn_load');
