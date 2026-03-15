@@ -125,78 +125,16 @@
             </section>
          </div>
          <!-- END: TopSection -->
-         <!-- BEGIN: TrendAnalysisGrid (Swiper - auto slide + scroll kiri/kanan) -->
-         <div class="trend-swiper-wrapper relative">
-            <div class="swiper trend-coverage-swiper">
-               <div class="swiper-wrapper">
-                  <!-- Trend 1 -->
-                  <div class="swiper-slide">
-                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 h-full">
-                        <h3 class="text-[11px] font-bold text-gray-500 uppercase mb-3">BMO Coverage Trend</h3>
-                        <div class="h-32 relative chart-placeholder rounded flex items-center justify-center">
-                           <svg class="w-full h-full px-2" viewbox="0 0 100 40">
-                              <polyline fill="none" points="0,10 25,5 50,15 75,8 100,12" stroke="#228B22" stroke-width="2"></polyline>
-                              <polyline fill="none" points="0,20 25,18 50,25 75,20 100,22" stroke="#DC1432" stroke-dasharray="2" stroke-width="1.5"></polyline>
-                           </svg>
-                        </div>
-                        <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-medium">
-                           <span>Mar 9</span><span>Mar 11</span><span>Mar 13</span>
-                        </div>
-                     </div>
-                  </div>
-                  <!-- Trend 2 -->
-                  <div class="swiper-slide">
-                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 h-full">
-                        <h3 class="text-[11px] font-bold text-gray-500 uppercase mb-3">GMO Coverage Trend</h3>
-                        <div class="h-32 relative chart-placeholder rounded flex items-center justify-center">
-                           <svg class="w-full h-full px-2" viewbox="0 0 100 40">
-                              <polyline fill="none" points="0,15 25,12 50,5 75,8 100,2" stroke="#228B22" stroke-width="2"></polyline>
-                              <polyline fill="none" points="0,25 25,28 50,22 75,26 100,20" stroke="#DC1432" stroke-dasharray="2" stroke-width="1.5"></polyline>
-                           </svg>
-                        </div>
-                        <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-medium">
-                           <span>Mar 9</span><span>Mar 11</span><span>Mar 13</span>
-                        </div>
-                     </div>
-                  </div>
-                  <!-- Trend 3 -->
-                  <div class="swiper-slide">
-                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 h-full">
-                        <h3 class="text-[11px] font-bold text-gray-500 uppercase mb-3">MARINE Coverage Trend</h3>
-                        <div class="h-32 relative chart-placeholder rounded flex items-center justify-center">
-                           <svg class="w-full h-full px-2" viewbox="0 0 100 40">
-                              <polyline fill="none" points="0,5 25,10 50,15 75,5 100,8" stroke="#228B22" stroke-width="2"></polyline>
-                              <polyline fill="none" points="0,15 25,20 50,25 75,18 100,22" stroke="#DC1432" stroke-dasharray="2" stroke-width="1.5"></polyline>
-                           </svg>
-                        </div>
-                        <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-medium">
-                           <span>Mar 9</span><span>Mar 11</span><span>Mar 13</span>
-                        </div>
-                     </div>
-                  </div>
-                  <!-- Trend 4 -->
-                  <div class="swiper-slide">
-                     <div class="bg-white p-4 rounded-xl shadow-sm border border-gray-100 h-full">
-                        <h3 class="text-[11px] font-bold text-gray-500 uppercase mb-3">SMO Coverage Trend</h3>
-                        <div class="h-32 relative chart-placeholder rounded flex items-center justify-center">
-                           <svg class="w-full h-full px-2" viewbox="0 0 100 40">
-                              <polyline fill="none" points="0,8 25,15 50,10 75,12 100,5" stroke="#228B22" stroke-width="2"></polyline>
-                              <polyline fill="none" points="0,20 25,25 50,18 75,22 100,15" stroke="#DC1432" stroke-dasharray="2" stroke-width="1.5"></polyline>
-                           </svg>
-                        </div>
-                        <div class="flex justify-between mt-2 text-[10px] text-gray-400 font-medium">
-                           <span>Mar 9</span><span>Mar 11</span><span>Mar 13</span>
-                        </div>
-                     </div>
-                  </div>
-               </div>
-               <!-- <div class="swiper-button-prev trend-coverage-prev"></div>
-               <div class="swiper-button-next trend-coverage-next"></div>
-               <div class="swiper-pagination trend-coverage-pagination"></div> -->
+         <!-- BEGIN: Trend — Total Laporan per Hari (Minggu ini, Min–Sab) -->
+         <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-purpose="trend-week-chart">
+            <h2 class="text-sm font-bold text-gray-700 uppercase mb-1">Total Laporan per Hari (Minggu Ini)</h2>
+            <p class="text-xs text-gray-500 mb-4">Minggu s/d Sabtu — Inspeksi Hazard, OAK, Observasi, Coaching (nitip)</p>
+            <div class="h-72 min-h-[288px] relative">
+               <canvas id="trendWeekChart" aria-label="Total laporan per hari minggu ini"></canvas>
             </div>
-            <p class="trend-swiper-hint" aria-hidden="true">Geser kiri/kanan untuk melihat card lainnya</p>
-         </div>
-         <!-- END: TrendAnalysisGrid -->
+            <p class="text-[10px] text-gray-400 mt-2 text-center" id="trendWeekLabel">{{ $trendWeekLabel ?? '' }}</p>
+         </section>
+         <!-- END: Trend -->
          <!-- BEGIN: DataTablesSection -->
 
          <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
@@ -468,36 +406,82 @@
                summaryCtx.parentElement.innerHTML = '<div class="flex items-center justify-center h-64 text-gray-400 text-sm">Belum ada data coverage per site.</div>';
             }
 
-            new Swiper('.trend-coverage-swiper', {
-               slidesPerView: 1.15,
-               spaceBetween: 16,
-               loop: false,
-               grabCursor: true,
-               allowTouchMove: true,
-               touchRatio: 1,
-               threshold: 5,
-               resistance: true,
-               resistanceRatio: 0.85,
-               autoplay: {
-                  delay: 3000,
-                  disableOnInteraction: false,
-               },
-               direction: 'horizontal',
-               speed: 400,
-               breakpoints: {
-                  480:  { slidesPerView: 1.5 },
-                  640:  { slidesPerView: 2.2 },
-                  1024: { slidesPerView: 3.2 },
-               },
-               navigation: {
-                  nextEl: '.trend-coverage-next',
-                  prevEl: '.trend-coverage-prev',
-               },
-               pagination: {
-                  el: '.trend-coverage-pagination',
-                  clickable: true,
-               },
-            });
+            // Trend: Total laporan per hari (minggu ini, Min–Sab) — Chart.js line
+            var trendLabels = @json($trendLabels ?? []);
+            var trendCounts = @json($trendCounts ?? []);
+            var trendCtx = document.getElementById('trendWeekChart');
+            if (trendCtx && trendLabels.length) {
+               var trendGradient = trendCtx.getContext('2d').createLinearGradient(0, 0, 0, 280);
+               trendGradient.addColorStop(0, 'rgba(45, 122, 62, 0.35)');
+               trendGradient.addColorStop(1, 'rgba(45, 122, 62, 0.02)');
+               new Chart(trendCtx, {
+                  type: 'line',
+                  data: {
+                     labels: trendLabels,
+                     datasets: [
+                        {
+                           label: 'Total Laporan',
+                           data: trendCounts,
+                           borderColor: '#2d7a3e',
+                           backgroundColor: trendGradient,
+                           borderWidth: 2,
+                           fill: true,
+                           tension: 0.3,
+                           pointBackgroundColor: '#2d7a3e',
+                           pointBorderColor: '#fff',
+                           pointBorderWidth: 2,
+                           pointRadius: 4,
+                           pointHoverRadius: 6,
+                        }
+                     ]
+                  },
+                  options: {
+                     responsive: true,
+                     maintainAspectRatio: false,
+                     interaction: { intersect: false, mode: 'index' },
+                     plugins: {
+                        legend: { display: false },
+                        tooltip: {
+                           backgroundColor: 'rgba(0,0,0,0.8)',
+                           padding: 10,
+                           callbacks: {
+                              label: function (ctx) { return 'Total laporan: ' + ctx.raw; }
+                           }
+                        }
+                     },
+                     scales: {
+                        y: {
+                           beginAtZero: true,
+                           ticks: {
+                              stepSize: 1,
+                              font: { size: 11 },
+                              callback: function (v) { return Number(v) === v ? v : v; }
+                           },
+                           grid: { color: 'rgba(0,0,0,0.06)' }
+                        },
+                        x: {
+                           ticks: { maxRotation: 0, font: { size: 11 } },
+                           grid: { display: false }
+                        }
+                     }
+                  }
+               });
+            } else if (trendCtx) {
+               trendCtx.parentElement.innerHTML = '<div class="flex items-center justify-center h-72 text-gray-400 text-sm">Belum ada data trend minggu ini.</div>';
+            }
+
+            var swiperEl = document.querySelector('.trend-coverage-swiper');
+            if (swiperEl && typeof Swiper !== 'undefined') {
+               new Swiper('.trend-coverage-swiper', {
+                  slidesPerView: 1.15,
+                  spaceBetween: 16,
+                  loop: false,
+                  grabCursor: true,
+                  allowTouchMove: true,
+                  navigation: { nextEl: '.trend-coverage-next', prevEl: '.trend-coverage-prev' },
+                  pagination: { el: '.trend-coverage-pagination', clickable: true },
+               });
+            }
          });
       </script>
    </body>
