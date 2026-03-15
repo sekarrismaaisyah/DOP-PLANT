@@ -218,7 +218,7 @@ class DashboardController extends Controller
 
     /**
      * Data heatmap: per (date, site) -> planned count & actual count.
-     * Actual = CAR (nama + tanggal) OR OAK (nama submit_by + location + detail_location + submit_date) OR Observasi (nama_pelapor + lokasi + detil_lokasi + report_datetime).
+     * Actual = CAR (nama + lokasi + detail_lokasi + tanggal) OR OAK OR Observasi OR Coaching — semuanya match lokasi planning.
      *
      * @return array<int, array{date: string, site: string, planned: int, actual: int}>
      */
@@ -234,7 +234,7 @@ class DashboardController extends Controller
             ->orderBy('tanggal')
             ->get();
 
-        $carByDate = $this->getCarNamaPelaporByDateRange($start, $end);
+        $carByDate = $this->getCarDataByDateRange($start, $end);
         $oakByDate = $this->getOakDataByDateRange($start, $end);
         $observasiByDate = $this->getObservasiDataByDateRange($start, $end);
         $coachingByDate = $this->getCoachingDataByDateRange($start, $end);
@@ -265,12 +265,13 @@ class DashboardController extends Controller
             }
 
             $isActual = false;
-            // CAR: nama pelapor match (existing)
-            $pelaporThatDay = $carByDate[$date] ?? [];
-            foreach (array_keys($karyawanNamesLower) as $namaLower) {
-                if (isset($pelaporThatDay[$namaLower])) {
-                    $isActual = true;
-                    break;
+            // CAR (Inspeksi Hazard): nama_pelapor + nama_lokasi + nama_detail_lokasi + tanggal match
+            if (isset($carByDate[$date][$locationKey])) {
+                foreach (array_keys($karyawanNamesLower) as $namaLower) {
+                    if (isset($carByDate[$date][$locationKey][$namaLower])) {
+                        $isActual = true;
+                        break;
+                    }
                 }
             }
             // OAK: location + detail_location + submit_by match
@@ -605,6 +606,72 @@ class DashboardController extends Controller
             return array_keys($keys);
         } catch (\Throwable $e) {
             Log::warning('DashboardController getCoachingLocationKeysForDate: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * CAR (Inspeksi Hazard) per (date, location_key): set of nama_pelapor (lowercase) dari nitip.aaj_car_all_year_from_dav.
+     * Untuk heatmap: actual jika ada CAR dengan nama_lokasi + nama_detail_lokasi + nama_pelapor + tanggal match planning.
+     *
+     * @return array<string, array<string, array<string, true>>> [date => [ locationKey => [ nama_lower => true ] ] ]
+     */
+    private function getCarDataByDateRange(string $start, string $end): array
+    {
+        $startEsc = addslashes($start);
+        $endEsc = addslashes($end);
+        $conditions = [
+            "tanggal_pembuatan IS NOT NULL",
+            "toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}')",
+            "toDate(tanggal_pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}')",
+            "trim(ifNull(jenis_laporan, '')) IN ('HAZARD', 'INSPEKSI', 'INSPEKSI_HAZARD')",
+        ];
+        $whereClause = implode(' AND ', $conditions);
+        $sql = "SELECT toDate(tanggal_pembuatan, 'Asia/Makassar') AS dt,
+                trim(ifNull(nama_lokasi, '')) AS loc,
+                trim(ifNull(nama_detail_lokasi, '')) AS det,
+                trim(ifNull(nama_pelapor, '')) AS nama_pelapor
+                FROM nitip.aaj_car_all_year_from_dav
+                WHERE {$whereClause}";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return [];
+            }
+            $ch = $this->getClickHouseNitip();
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return [];
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return [];
+            }
+            $byDate = [];
+            foreach ($results as $row) {
+                $dt = $this->getClickHouseRowValue($row, 'dt');
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
+                $dateStr = $dt instanceof \DateTimeInterface
+                    ? $dt->format('Y-m-d')
+                    : (is_string($dt) ? substr($dt, 0, 10) : '');
+                if ($dateStr === '') {
+                    continue;
+                }
+                $locationKey = $loc . '|' . $det;
+                if (! isset($byDate[$dateStr])) {
+                    $byDate[$dateStr] = [];
+                }
+                if (! isset($byDate[$dateStr][$locationKey])) {
+                    $byDate[$dateStr][$locationKey] = [];
+                }
+                if ($nama !== '') {
+                    $byDate[$dateStr][$locationKey][mb_strtolower($nama)] = true;
+                }
+            }
+            return $byDate;
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController getCarDataByDateRange: ' . $e->getMessage());
             return [];
         }
     }
