@@ -118,6 +118,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/fueling-evaluasi', [FuelingEvaluasiController::class, 'index'])->name('fueling-evaluasi.index');
     Route::get('/fueling-evaluasi/tabel', [EvaluasiUnitTabelController::class, 'index'])->name('fueling-evaluasi.tabel');
     Route::get('/fueling-evaluasi/per-hari', [EvaluasiUnitTabelController::class, 'perHari'])->name('fueling-evaluasi.per-hari');
+    Route::get('/fueling-evaluasi/per-hari/export-excel', [EvaluasiUnitTabelController::class, 'exportPerHariExcel'])->name('fueling-evaluasi.per-hari.export-excel');
 
     // Chatbot Routes
     Route::prefix('chatbot')->name('chatbot.')->group(function () {

@@ -44,12 +44,19 @@
                             <label class="form-label">Tanggal Sampai</label>
                             <input type="date" name="date_to" class="form-control" value="{{ $dateTo ?? '' }}" required>
                         </div>
-                        <div class="col-md-4">
+                        <div class="col-md-4 d-flex gap-2 align-items-center flex-wrap">
                             <button type="submit" class="btn btn-primary">
                                 <i class="material-icons-outlined" style="font-size: 1rem; vertical-align: middle;">search</i>
                                 Filter
                             </button>
-                            <a href="{{ route('fueling-evaluasi.tabel') }}" class="btn btn-outline-secondary ms-2">Tabel per Unit</a>
+                            @if (isset($dateFrom) && isset($dateTo))
+                                <a href="{{ route('fueling-evaluasi.per-hari.export-excel', ['date_from' => $dateFrom, 'date_to' => $dateTo]) }}"
+                                   class="btn btn-success" target="_blank" rel="noopener">
+                                    <i class="material-icons-outlined" style="font-size: 1rem; vertical-align: middle;">download</i>
+                                    Download Excel
+                                </a>
+                            @endif
+                            <a href="{{ route('fueling-evaluasi.tabel') }}" class="btn btn-outline-secondary">Tabel per Unit</a>
                         </div>
                     </form>
                 </div>
