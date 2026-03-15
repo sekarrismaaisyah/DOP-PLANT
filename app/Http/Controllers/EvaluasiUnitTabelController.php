@@ -105,8 +105,8 @@ class EvaluasiUnitTabelController extends Controller
             $dateTo = null;
         }
         if (!$dateFrom || !$dateTo) {
-            $dateTo = $dateTo ?: Carbon::now()->format('Y-m-d') : Carbon::now()->format('Y-m-d');
-            $dateFrom = $dateFrom ?: Carbon::now()->subDays(30)->format('Y-m-d') : Carbon::now()->subDays(30)->format('Y-m-d');
+            $dateTo = $dateTo ?: Carbon::now()->format('Y-m-d');
+            $dateFrom = $dateFrom ?: Carbon::now()->subDays(30)->format('Y-m-d');
         }
 
         try {
