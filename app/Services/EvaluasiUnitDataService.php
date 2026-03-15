@@ -48,8 +48,8 @@ class EvaluasiUnitDataService
                 SELECT
                     unit_id,
                     log_date,
-                    groupArray(lat) ORDER BY ts AS lat_arr,
-                    groupArray(lon) ORDER BY ts AS lon_arr,
+                    groupArray(lat ORDER BY ts) AS lat_arr,
+                    groupArray(lon ORDER BY ts) AS lon_arr,
                     min(ts) AS first_ts,
                     max(ts) AS last_ts
                 FROM logs
