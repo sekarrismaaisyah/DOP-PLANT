@@ -29,7 +29,7 @@ class EvaluasiUnitDataService
         $safeTo = "'" . addslashes($dateTo) . "'";
 
         // Satu query: agregat per (unit_id, log_date) -> day_km, day_seconds
-        // Pakai groupArray + arraySlice + arrayMap (tanpa lead() yang tidak ada di ClickHouse 24.x)
+        // groupArray((ts,lat,lon)) lalu arraySort (urut by ts), extract lat_arr/lon_arr (tanpa ORDER BY di groupArray - tidak didukung)
         // greatCircleDistance(lon1, lat1, lon2, lat2) returns meters -> /1000 = km
         $sqlAgg = "
             WITH logs AS (
@@ -48,12 +48,21 @@ class EvaluasiUnitDataService
                 SELECT
                     unit_id,
                     log_date,
-                    groupArray(lat ORDER BY ts) AS lat_arr,
-                    groupArray(lon ORDER BY ts) AS lon_arr,
+                    groupArray((ts, lat, lon)) AS arr,
                     min(ts) AS first_ts,
                     max(ts) AS last_ts
                 FROM logs
                 GROUP BY unit_id, log_date
+            ),
+            with_arrays AS (
+                SELECT
+                    unit_id,
+                    log_date,
+                    arrayMap(t -> t.2, arraySort(arr)) AS lat_arr,
+                    arrayMap(t -> t.3, arraySort(arr)) AS lon_arr,
+                    first_ts,
+                    last_ts
+                FROM grouped
             )
             SELECT
                 unit_id,
@@ -68,7 +77,7 @@ class EvaluasiUnitDataService
                     0
                 ) AS day_km,
                 dateDiff('second', first_ts, last_ts) AS day_seconds
-            FROM grouped
+            FROM with_arrays
             ORDER BY unit_id, log_date
         ";
 
