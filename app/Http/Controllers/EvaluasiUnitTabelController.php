@@ -334,7 +334,9 @@ class EvaluasiUnitTabelController extends Controller
 
     /**
      * Return possible normalized keys to try when matching a log no_unit to Becomline/konsumsi.
-     * If no_unit contains " - " (e.g. "BMO - BM 365"), also add the part after last " - " so "BM-365" in DB matches.
+     * - Full normalized string (e.g. "BMO - LV BM 060" -> "BMOLVBM060").
+     * - Part after last " - " (e.g. "LV BM 060" -> "LVBM060").
+     * - Segments that look like "Letters + optional separator + Digits" (e.g. "BM 060" -> "BM060") so "BMO - LV BM 060" matches "BM-060" in DB.
      */
     private function getPossibleMatchKeys(?string $noUnit): array
     {
@@ -349,6 +351,15 @@ class EvaluasiUnitTabelController extends Controller
             $suffix = $this->normalizeUnitKey($afterLast);
             if ($suffix !== '' && !in_array($suffix, $keys, true)) {
                 $keys[] = $suffix;
+            }
+        }
+        // Extract patterns like "BM 060", "BM-060", "LV 123" (letters + optional space/hyphen/dot + digits) so "BMO - LV BM 060" yields "BM060".
+        if (preg_match_all('/[A-Za-z]+\s*[-.]?\s*\d+/', $noUnit, $m)) {
+            foreach ($m[0] as $segment) {
+                $k = $this->normalizeUnitKey($segment);
+                if ($k !== '' && !in_array($k, $keys, true)) {
+                    $keys[] = $k;
+                }
             }
         }
         return $keys;
