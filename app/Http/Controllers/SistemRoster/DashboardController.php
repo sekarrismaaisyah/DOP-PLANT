@@ -276,10 +276,24 @@ class DashboardController extends Controller
 
     /**
      * Menampilkan halaman Dashboard Coverage Activity DOP (iframe di modal).
+     * View memakai variabel yang sama dengan coverage-all; beri default kosong agar tidak error.
      */
     public function coverageDop(): View
     {
-        return view('SistemRoster.dashboard.coverage-dop');
+        $totalLokasi = 0;
+        $coveredLokasi = 0;
+        $pctCoverage = 0;
+        $coverageBySite = [];
+        $trendWeekLabel = '';
+        $trendLabels = [];
+        $trendBySite = [];
+        $coverageDailyRows = [];
+        $coverageDailyDates = [];
+
+        return view('SistemRoster.dashboard.coverage-dop', compact(
+            'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
+            'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'
+        ));
     }
 
     /**

@@ -1120,6 +1120,7 @@
 
     /* Modal coverage (Area All / DOP): header di atas iframe agar tombol tutup tetap bisa diklik */
     .lmo-coverage-modal-header { position: relative; z-index: 2; background: var(--kt-card) !important; }
+    .lmo-coverage-modal-body { min-height: 70vh; }
     .btn-dashboard-tour i { font-size: 1rem; }
 </style>
 <link rel="stylesheet" href="https://unpkg.com/@sjmc11/tourguidejs/dist/css/tour.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
@@ -1598,8 +1599,8 @@
                   <h5 class="modal-title" id="coverageDopModalLabel"><i class="bi bi-speedometer2 me-2"></i>Dashboard Coverage Activity DOP</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
                 </div>
-                <div class="modal-body p-0 bg-light d-flex flex-column" style="min-height: 0;">
-                  <iframe id="coverageDopIframe" src="" title="Coverage Activity DOP" class="w-100 border-0 flex-grow-1" style="min-height: 70vh; height: calc(100vh - 60px);"></iframe>
+                <div class="modal-body p-0 bg-light d-flex flex-column lmo-coverage-modal-body">
+                  <iframe id="coverageDopIframe" src="" title="Coverage Activity DOP" class="w-100 border-0 flex-grow-1" style="min-height: 70vh; height: calc(100vh - 120px);"></iframe>
                 </div>
               </div>
             </div>
