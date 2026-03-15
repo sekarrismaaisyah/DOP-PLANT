@@ -164,7 +164,7 @@
             <header class="bg-gray-50 border-b border-gray-200 px-4 py-2">
                <h2 class="text-xs font-bold uppercase tracking-wider">E. COVERAGE DAILY - LOKASI TERLAPOR</h2>
             </header>
-            <div class="overflow-x-auto">
+            <div class="overflow-auto max-h-[320px]">
                <table class="w-full text-[10px] border-collapse" id="coverage-table">
                   <thead>
                      <tr class="bg-white border-b border-gray-200 text-left">

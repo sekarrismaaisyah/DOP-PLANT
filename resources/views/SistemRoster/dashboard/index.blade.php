@@ -1106,7 +1106,12 @@
     #coverageAreaAllModal.modal { z-index: 1060 !important; }
     #coverageAreaAllModal .modal-content { background: #fff; position: relative; z-index: 1; }
     body.modal-open .modal-backdrop { z-index: 1055 !important; }
+    /* Tour guide button in header */
+    .btn-dashboard-tour { display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 10px; font-size: 12px; font-weight: 500; background: linear-gradient(135deg, #1b84ff 0%, #0d6efd 100%); color: #fff; border: none; cursor: pointer; box-shadow: 0 2px 8px rgba(27,132,255,.3); transition: transform .15s ease, box-shadow .2s ease; }
+    .btn-dashboard-tour:hover { color: #fff; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(27,132,255,.4); }
+    .btn-dashboard-tour i { font-size: 1rem; }
 </style>
+<link rel="stylesheet" href="https://unpkg.com/@sjmc11/tourguidejs/dist/css/tour.min.css" crossorigin="anonymous" referrerpolicy="no-referrer">
 @endsection
 
 @section('content')
@@ -1153,6 +1158,7 @@
       }
     }
   </script>
+  <script src="https://unpkg.com/@sjmc11/tourguidejs/dist/tour.js" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
 
 <div class="min-h-screen flex">
@@ -1167,7 +1173,7 @@
         <!-- LMO Coverage Performance Overview (Bootstrap-style) -->
         <div class="lmo-coverage-root">
           <!-- Page header -->
-          <section class="lmo-page-head">
+          <section class="lmo-page-head" id="dashboardTourIntro">
             <div class="lmo-breadcrumb-row">
               <span>Critical Area Monitoring</span>
               <span>›</span>
@@ -1181,6 +1187,9 @@
               </div>
 
               <div class="lmo-head-actions">
+                <button type="button" class="btn-dashboard-tour" id="dashboardTourStartBtn" title="Mulai panduan dashboard">
+                  <i class="bi bi-info-circle-fill"></i> Panduan Dashboard
+                </button>
                 <div class="lmo-live-pill">Live Operational</div>
 
                 <div class="lmo-segmented" role="tablist" aria-label="Period filter">
@@ -1209,7 +1218,7 @@
               <div class="lmo-kpi-sub">Coverage Area All</div>
             </div>
 
-            <div class="lmo-kpi-card">
+            <div class="lmo-kpi-card" id="dashboardTourKpiDop">
               <div class="lmo-kpi-top">
                 <div class="lmo-kpi-icon lmo-icon-blue"><i class="bi bi-speedometer2"></i></div>
                 <div class="lmo-delta up"><i class="bi bi-arrow-up-right"></i> </div>
@@ -1219,7 +1228,7 @@
               <div class="lmo-kpi-sub">Coverage Activity DOP</div>
             </div>
 
-            <div class="lmo-kpi-card">
+            <div class="lmo-kpi-card" id="dashboardTourKpiIkk">
               <div class="lmo-kpi-top">
                 <div class="lmo-kpi-icon lmo-icon-green"><i class="bi bi-check-circle-fill"></i></div>
                 <div class="lmo-delta down"><i class="bi bi-arrow-down-right"></i></div>
@@ -1229,7 +1238,7 @@
               <div class="lmo-kpi-sub">Coverage Activity BeIKK</div>
             </div>
 
-            <div class="lmo-kpi-card">
+            <div class="lmo-kpi-card" id="dashboardTourKpiNonKritis">
               <div class="lmo-kpi-top">
                 <div class="lmo-kpi-icon lmo-icon-red"><i class="bi bi-exclamation-triangle-fill"></i></div>
                 <div class="lmo-delta down" style="color:#f04438;"><i class="bi bi-arrow-up-right"></i> </div>
@@ -1278,7 +1287,7 @@
          
         </div>
 
-        <section class="kt-card animate-in heatmap-calendar-section" style="animation-delay:.05s">
+        <section class="kt-card animate-in heatmap-calendar-section" id="dashboardTourHeatmap" style="animation-delay:.05s">
           <div class="kt-card-header heatmap-header">
             <div class="flex-shrink-0">
               <div class="kt-card-title">Performance Heatmap</div>
@@ -1376,7 +1385,7 @@
 
    
 
-        <section class="animate-in" style="animation-delay:.1s">
+        <section class="animate-in" id="dashboardTourCoverageByLocation" style="animation-delay:.1s">
           <div class="kt-card w-full lmo-coverage-card">
             <div class="kt-card-header lmo-coverage-header flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
               <div class="flex items-center gap-3">
@@ -2179,6 +2188,65 @@
       } else {
         initCoverageAreaAllModal();
       }
+    })();
+
+    // --- Dashboard Tour Guide (TourGuide JS) ---
+    (function initDashboardTour() {
+      var startBtn = document.getElementById('dashboardTourStartBtn');
+      if (!startBtn) return;
+      var TourGuideClient = typeof tourguide !== 'undefined' && tourguide.TourGuideClient;
+      if (!TourGuideClient) return;
+
+      var tg = new TourGuideClient({
+        nextLabel: 'Lanjut',
+        prevLabel: 'Kembali',
+        finishLabel: 'Selesai',
+        showStepProgress: true,
+        exitOnEscape: true,
+        exitOnClickOutside: true,
+        rememberStep: false,
+        steps: [
+          {
+            target: '#dashboardTourIntro',
+            content: '<strong>Dashboard Coverage Performance</strong><br><br>Ini adalah dashboard utama untuk memantau performa coverage operasional di semua lokasi site. Anda dapat melihat KPI coverage, heatmap kesesuaian plan vs actual, dan detail lokasi yang di-assign.',
+            title: 'Selamat datang'
+          },
+          {
+            target: '#coverageAreaAllKpiCard',
+            content: '<strong>Coverage Area All</strong><br><br>Kartu ini menampilkan persentase coverage area secara keseluruhan. <strong>Klik kartu ini</strong> untuk membuka dashboard detail Coverage Area All.',
+            title: 'Coverage Area All'
+          },
+          {
+            target: '#dashboardTourKpiDop',
+            content: '<strong>Coverage Activity DOP</strong><br><br>KPI aktivitas coverage berdasarkan DOP (Daily Operation Plan). Klik untuk melihat detail coverage activity DOP.',
+            title: 'Coverage Activity DOP'
+          },
+          {
+            target: '#dashboardTourKpiIkk',
+            content: '<strong>Coverage Activity BeIKK</strong><br><br>KPI coverage aktivitas BeIKK (Indikator Kinerja Kunci). Menunjukkan tingkat pencapaian coverage untuk aktivitas IKK.',
+            title: 'Coverage Activity IKK'
+          },
+          {
+            target: '#dashboardTourKpiNonKritis',
+            content: '<strong>Coverage Area Non Kritis</strong><br><br>Persentase coverage untuk area non kritis. Gunakan untuk memantau lokasi yang tidak termasuk kategori kritis.',
+            title: 'Coverage Area Non Kritis'
+          },
+          {
+            target: '#dashboardTourHeatmap',
+            content: '<strong>Performance Heatmap</strong><br><br>Menampilkan kesesuaian <strong>aktual dan planning</strong> dari assign karyawan untuk setiap aktivitas per hari. Warna menunjukkan tingkat pencapaian (Actual / Plan — Actual SAP). Filter per bulan dan site tersedia di sini.',
+            title: 'Heatmap Kesesuaian'
+          },
+          {
+            target: '#dashboardTourCoverageByLocation',
+            content: '<strong>Coverage by Location</strong><br><br>Daftar <strong>lokasi dari masing-masing yang di-assign</strong>. Persentase coverage per lokasi, status (Sudah Tercover / Incomplete / Belum Tercover), dan tombol "Lihat Detail" untuk Inspeksi Hazard, OAK & Observasi. Filter berdasarkan tanggal, site, dan tab (All Location, By IKK, By DOP, Non Kritis).',
+            title: 'Lokasi per Assign'
+          }
+        ]
+      });
+
+      startBtn.addEventListener('click', function() {
+        tg.start();
+      });
     })();
 
     // --- Animate progress bars on load ---
