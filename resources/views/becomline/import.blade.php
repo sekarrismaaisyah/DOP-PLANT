@@ -30,6 +30,7 @@
                         <li><strong>Jenis Unit SPIP</strong> — teks</li>
                         <li><strong>Expired</strong> — tanggal (contoh: Tuesday, 09 March 2027 atau YYYY-MM-DD). Boleh kosong.</li>
                         <li><strong>Status Permit SPIP</strong> — teks (contoh: PASSED, N/A)</li>
+                        <li><strong>No Register</strong> — teks (contoh: BMCEX-241, MTN-470)</li>
                     </ul>
                 </div>
 

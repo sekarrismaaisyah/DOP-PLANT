@@ -46,6 +46,7 @@
                                 <th>Jenis Unit SPIP</th>
                                 <th>Expired</th>
                                 <th>Status Permit SPIP</th>
+                                <th>No Register</th>
                                 <th width="120">Aksi</th>
                             </tr>
                         </thead>
@@ -58,6 +59,7 @@
                                 <td>{{ $item->jenis_unit_spip ?? '-' }}</td>
                                 <td>{{ $item->expired ? $item->expired->format('d/m/Y') : '-' }}</td>
                                 <td>{{ $item->status_permit_spip ?? '-' }}</td>
+                                <td>{{ $item->no_registrasi ?? '-' }}</td>
                                 <td>
                                     <a href="{{ route('becomline.edit', $item->id) }}" class="btn btn-sm btn-outline-primary" title="Edit">
                                         <i class="material-icons-outlined" style="font-size:18px">edit</i>
@@ -73,7 +75,7 @@
                             </tr>
                             @empty
                             <tr>
-                                <td colspan="7" class="text-center text-muted">Belum ada data. Gunakan Tambah atau Import Excel.</td>
+                                <td colspan="8" class="text-center text-muted">Belum ada data. Gunakan Tambah atau Import Excel.</td>
                             </tr>
                             @endforelse
                         </tbody>

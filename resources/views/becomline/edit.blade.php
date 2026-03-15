@@ -44,6 +44,11 @@
                             <input type="text" class="form-control @error('status_permit_spip') is-invalid @enderror" id="status_permit_spip" name="status_permit_spip" value="{{ old('status_permit_spip', $item->status_permit_spip) }}" maxlength="100">
                             @error('status_permit_spip')<div class="invalid-feedback">{{ $message }}</div>@enderror
                         </div>
+                        <div class="col-md-6">
+                            <label for="no_registrasi" class="form-label">No Register</label>
+                            <input type="text" class="form-control @error('no_registrasi') is-invalid @enderror" id="no_registrasi" name="no_registrasi" value="{{ old('no_registrasi', $item->no_registrasi) }}" maxlength="100">
+                            @error('no_registrasi')<div class="invalid-feedback">{{ $message }}</div>@enderror
+                        </div>
                         <div class="col-12">
                             <button type="submit" class="btn btn-primary"><i class="material-icons-outlined">save</i> Simpan</button>
                             <a href="{{ route('becomline.index') }}" class="btn btn-outline-secondary">Batal</a>

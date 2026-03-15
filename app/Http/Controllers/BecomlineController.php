@@ -36,6 +36,7 @@ class BecomlineController extends Controller
             'jenis_unit_spip' => 'nullable|string|max:255',
             'expired' => 'nullable|date',
             'status_permit_spip' => 'nullable|string|max:100',
+            'no_registrasi' => 'nullable|string|max:100',
         ]);
 
         Becomline::create([
@@ -44,6 +45,7 @@ class BecomlineController extends Controller
             'jenis_unit_spip' => $request->jenis_unit_spip,
             'expired' => $request->filled('expired') ? $request->expired : null,
             'status_permit_spip' => $request->status_permit_spip,
+            'no_registrasi' => $request->no_registrasi,
         ]);
 
         return redirect()->route('becomline.index')->with('success', 'Data berhasil ditambah.');
@@ -65,6 +67,7 @@ class BecomlineController extends Controller
             'jenis_unit_spip' => 'nullable|string|max:255',
             'expired' => 'nullable|date',
             'status_permit_spip' => 'nullable|string|max:100',
+            'no_registrasi' => 'nullable|string|max:100',
         ]);
 
         $item->update([
@@ -73,6 +76,7 @@ class BecomlineController extends Controller
             'jenis_unit_spip' => $request->jenis_unit_spip,
             'expired' => $request->filled('expired') ? $request->expired : null,
             'status_permit_spip' => $request->status_permit_spip,
+            'no_registrasi' => $request->no_registrasi,
         ]);
 
         return redirect()->route('becomline.index')->with('success', 'Data berhasil diubah.');
@@ -98,7 +102,7 @@ class BecomlineController extends Controller
      */
     public function downloadTemplate()
     {
-        $headers = ['Perusahaan Pemilik', 'Site Operasional', 'Jenis Unit SPIP', 'Expired', 'Status Permit SPIP'];
+        $headers = ['Perusahaan Pemilik', 'Site Operasional', 'Jenis Unit SPIP', 'Expired', 'Status Permit SPIP', 'No Register'];
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         $sheet->setTitle('Template');
@@ -118,14 +122,16 @@ class BecomlineController extends Controller
         $sheet->setCellValue('C2', 'A2B-TRACK - EXCAVATOR');
         $sheet->setCellValue('D2', 'Tuesday, 09 March 2027');
         $sheet->setCellValue('E2', 'PASSED');
+        $sheet->setCellValue('F2', 'BMCEX-241');
 
         $sheet->setCellValue('A3', 'PT Madhani Talatah Nusantara');
         $sheet->setCellValue('B3', 'SMO');
         $sheet->setCellValue('C3', 'TRANSPORTASI SUPPORT');
         $sheet->setCellValue('D3', '');
         $sheet->setCellValue('E3', 'N/A');
+        $sheet->setCellValue('F3', 'MTN-470');
 
-        foreach (range('A', 'E') as $c) {
+        foreach (range('A', 'F') as $c) {
             $sheet->getColumnDimension($c)->setAutoSize(true);
         }
 
@@ -173,6 +179,7 @@ class BecomlineController extends Controller
                 $jenisUnit = isset($row[2]) ? trim((string) $row[2]) : '';
                 $expiredRaw = isset($row[3]) ? trim((string) $row[3]) : '';
                 $status = isset($row[4]) ? trim((string) $row[4]) : '';
+                $noRegistrasi = isset($row[5]) ? trim((string) $row[5]) : '';
 
                 $expired = null;
                 if ($expiredRaw !== '') {
@@ -195,6 +202,7 @@ class BecomlineController extends Controller
                     'jenis_unit_spip' => $jenisUnit ?: null,
                     'expired' => $expired,
                     'status_permit_spip' => $status ?: null,
+                    'no_registrasi' => $noRegistrasi ?: null,
                 ]);
                 $imported++;
                 $rowNum++;

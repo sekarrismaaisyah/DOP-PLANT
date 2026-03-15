@@ -17,6 +17,7 @@ class Becomline extends Model
         'jenis_unit_spip',
         'expired',
         'status_permit_spip',
+        'no_registrasi',
     ];
 
     protected $casts = [
