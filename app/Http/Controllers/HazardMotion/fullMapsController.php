@@ -4080,7 +4080,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     SELECT toDate(parseDateTimeBestEffort(toString(updated_at))) AS log_date
                     FROM nitip.unit_gps_logs
                     WHERE toString(unit_id) = $safeId
-                      AND toFloat64OrZero(latitude) != 0 AND toFloat64OrZero(longitude) != 0
+                      AND toFloat64(latitude) != 0 AND toFloat64(longitude) != 0
                     $dateFilter
                     GROUP BY toDate(parseDateTimeBestEffort(toString(updated_at)))
                     ORDER BY log_date ASC
@@ -4107,7 +4107,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                         FROM nitip.unit_gps_logs
                         WHERE toString(unit_id) = $safeId
                           AND toDate(parseDateTimeBestEffort(toString(updated_at))) = $safeDate
-                          AND toFloat64OrZero(latitude) != 0 AND toFloat64OrZero(longitude) != 0
+                          AND toFloat64(latitude) != 0 AND toFloat64(longitude) != 0
                         ORDER BY parseDateTimeBestEffort(toString(updated_at)) ASC
                         LIMIT 2000
                     ";
