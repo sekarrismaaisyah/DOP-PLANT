@@ -1336,7 +1336,7 @@
          
         </section>
 
-        {{-- Modal: Detail per hari heatmap (per karyawan + lokasi: Inspeksi, OAK, Observasi) --}}
+        {{-- Modal: Detail per hari heatmap (per karyawan + lokasi: Inspeksi, OAK, Observasi, Coaching) --}}
         <div class="modal fade" id="heatmapDayDetailModal" tabindex="-1" aria-labelledby="heatmapDayDetailModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
           <div class="modal-dialog modal-dialog-centered modal-lg">
             <div class="modal-content">
@@ -1360,6 +1360,7 @@
                         <th class="text-center">Inspeksi</th>
                         <th class="text-center">OAK</th>
                         <th class="text-center">Observasi</th>
+                        <th class="text-center">Coaching</th>
                       </tr>
                     </thead>
                     <tbody id="heatmapDayDetailTbody"></tbody>
@@ -1384,7 +1385,7 @@
                 </div>
                 <div>
                   <div class="kt-card-title">Coverage by Location</div>
-                  <div class="kt-card-subtitle">Data dari roster_plannings — Completion % per hari (ada SAP, OAK, atau Observasi di lokasi dari siapapun; tidak match nama). Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
+                  <div class="kt-card-subtitle">Data dari roster_plannings — Completion % per hari (ada SAP, OAK, Observasi, atau Coaching di lokasi dari siapapun; tidak match nama). Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
                 </div>
               </div>
               <div class="flex flex-nowrap items-center gap-3 w-full min-w-0">
@@ -1575,7 +1576,7 @@
           <div class="kt-card-header flex-col items-start gap-4 lg:flex-row lg:items-center lg:justify-between">
             <div>
               <div class="kt-card-title">Detail Plan Pengecekan</div>
-              <div class="kt-card-subtitle">Per lokasi & karyawan — OK = ada SAP, OAK, atau Observasi dari karyawan yang di-assign (match nama + lokasi + tanggal); NOT OK = belum ada. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
+              <div class="kt-card-subtitle">Per lokasi & karyawan — OK = ada SAP, OAK, Observasi, atau Coaching dari karyawan yang di-assign (match nama + lokasi + tanggal); NOT OK = belum ada. Tanggal: <strong>{{ \Carbon\Carbon::parse($filterDate ?? now())->format('d/m/Y') }}</strong></div>
             </div>
 
             <div class="w-full lg:w-auto flex flex-col sm:flex-row gap-2 sm:items-center">
@@ -2074,7 +2075,7 @@
         var tbodyEl = document.getElementById('heatmapDayDetailTbody');
 
         if (titleEl) titleEl.textContent = 'Detail Hari — ' + date + (site !== 'all' ? ' · ' + site : '');
-        if (metaEl) metaEl.textContent = 'Per planning (karyawan + lokasi): jumlah Inspeksi Hazard, OAK, Observasi yang match.';
+        if (metaEl) metaEl.textContent = 'Per planning (karyawan + lokasi): jumlah Inspeksi Hazard, OAK, Observasi, Coaching yang match.';
         loadingEl.classList.remove('d-none');
         errorEl.classList.add('d-none');
         errorEl.textContent = '';
@@ -2117,7 +2118,8 @@
                   '<td class="text-nowrap small">' + (row.detail_lokasi || '—').toString().replace(/</g, '&lt;') + '</td>' +
                   '<td class="text-center">' + (row.count_inspeksi || 0) + '</td>' +
                   '<td class="text-center">' + (row.count_oak || 0) + '</td>' +
-                  '<td class="text-center">' + (row.count_observasi || 0) + '</td>';
+                  '<td class="text-center">' + (row.count_observasi || 0) + '</td>' +
+                  '<td class="text-center">' + (row.count_coaching || 0) + '</td>';
                 tbodyEl.appendChild(tr);
               });
             });

@@ -13,6 +13,12 @@ use Illuminate\View\View;
 
 class DashboardController extends Controller
 {
+    /** Koneksi ClickHouse untuk data nitip (172.21.1.29, database nitip). */
+    private function getClickHouseNitip(): ClickHouseService
+    {
+        return app(ClickHouseService::class, ['connectionName' => 'clickhouse_nitip']);
+    }
+
     /**
      * Menampilkan halaman Dashboard Coverage Area (Coverage All).
      */
@@ -42,25 +48,29 @@ class DashboardController extends Controller
 
         $filterDateStr = $filterDate->format('Y-m-d');
         $carHazardInspeksiForDate = $this->getCarHazardInspeksiFromClickHouseForDate($filterDateStr);
-        // Coverage by Location: tidak match nama — lokasi covered jika ada SAP ATAU OAK ATAU Observasi (siapapun) di lokasi itu
+        // Coverage by Location: tidak match nama — lokasi covered jika ada SAP ATAU OAK ATAU Observasi ATAU Coaching (siapapun) di lokasi itu
         $oakLocationKeysForDate = $this->getOakLocationKeysForDate($filterDateStr);
         $observasiLocationKeysForDate = $this->getObservasiLocationKeysForDate($filterDateStr);
-        // Detail Plan: match sampai nama — butuh OAK & Observasi per (date, locationKey, nama) untuk filter date saja
+        $coachingLocationKeysForDate = $this->getCoachingLocationKeysForDate($filterDateStr);
+        // Detail Plan: match sampai nama — butuh OAK, Observasi, Coaching per (date, locationKey, nama) untuk filter date saja
         $oakForDate = $this->getOakDataByDateRange($filterDateStr, $filterDateStr);
         $observasiForDate = $this->getObservasiDataByDateRange($filterDateStr, $filterDateStr);
+        $coachingForDate = $this->getCoachingDataByDateRange($filterDateStr, $filterDateStr);
         $oakByLocForDate = $oakForDate[$filterDateStr] ?? [];
         $observasiByLocForDate = $observasiForDate[$filterDateStr] ?? [];
+        $coachingByLocForDate = $coachingForDate[$filterDateStr] ?? [];
 
         foreach ($assignedPlannings as $planning) {
             $planLokasiNorm = $this->normalizeLocation($planning->lokasi ?? '');
             $planDetailNorm = $this->normalizeLocation($planning->detail_lokasi ?? '');
             $locationKey = $planLokasiNorm . '|' . $planDetailNorm;
 
-            // Coverage by Location: ada SAP atau OAK atau Observasi di lokasi (siapapun) — tidak match nama
+            // Coverage by Location: ada SAP atau OAK atau Observasi atau Coaching di lokasi (siapapun) — tidak match nama
             $matchCoverage = $this->planningMatchHazardInspeksiByLokasi($planning, $carHazardInspeksiForDate);
             $coveredByOak = in_array($locationKey, $oakLocationKeysForDate, true);
             $coveredByObservasi = in_array($locationKey, $observasiLocationKeysForDate, true);
-            $planning->setAttribute('car_status_coverage', ($matchCoverage['ok'] || $coveredByOak || $coveredByObservasi) ? 'ok' : 'notok');
+            $coveredByCoaching = in_array($locationKey, $coachingLocationKeysForDate, true);
+            $planning->setAttribute('car_status_coverage', ($matchCoverage['ok'] || $coveredByOak || $coveredByObservasi || $coveredByCoaching) ? 'ok' : 'notok');
             $planning->setAttribute('car_task_id_coverage', $matchCoverage['task_id']);
 
             // Detail Plan Pengecekan: OK jika ada SAP atau OAK atau Observasi dari karyawan yang di-assign (match nama + lokasi + tanggal)
@@ -91,6 +101,15 @@ class DashboardController extends Controller
                         if (isset($observasiByLocForDate[$locationKey][$namaLower])) {
                             $carStatus = 'ok';
                             $carJenisSap = $carJenisSap ?? 'Observasi';
+                            break;
+                        }
+                    }
+                }
+                if ($carStatus !== 'ok' && isset($coachingByLocForDate[$locationKey])) {
+                    foreach (array_keys($karyawanNamesLower) as $namaLower) {
+                        if (isset($coachingByLocForDate[$locationKey][$namaLower])) {
+                            $carStatus = 'ok';
+                            $carJenisSap = $carJenisSap ?? 'Coaching';
                             break;
                         }
                     }
@@ -218,6 +237,7 @@ class DashboardController extends Controller
         $carByDate = $this->getCarNamaPelaporByDateRange($start, $end);
         $oakByDate = $this->getOakDataByDateRange($start, $end);
         $observasiByDate = $this->getObservasiDataByDateRange($start, $end);
+        $coachingByDate = $this->getCoachingDataByDateRange($start, $end);
 
         $byKey = [];
         foreach ($plannings as $p) {
@@ -271,6 +291,15 @@ class DashboardController extends Controller
                     }
                 }
             }
+            // Coaching: lokasi + detil_lokasi + nama_coach match
+            if (! $isActual && isset($coachingByDate[$date][$locationKey])) {
+                foreach (array_keys($karyawanNamesLower) as $namaLower) {
+                    if (isset($coachingByDate[$date][$locationKey][$namaLower])) {
+                        $isActual = true;
+                        break;
+                    }
+                }
+            }
 
             if ($isActual) {
                 $byKey[$key]['actual']++;
@@ -294,7 +323,7 @@ class DashboardController extends Controller
                 trim(ifNull(toString(location), '')) AS loc,
                 trim(ifNull(toString(detail_location), '')) AS det,
                 trim(ifNull(toString(submit_by), '')) AS submit_by
-                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                FROM nitip.aaj_vw_car_oak_register_ytd_only
                 WHERE submit_date IS NOT NULL
                   AND toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}')
                   AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}')";
@@ -303,7 +332,7 @@ class DashboardController extends Controller
             if (! class_exists(ClickHouseService::class)) {
                 return [];
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return [];
             }
@@ -342,9 +371,9 @@ class DashboardController extends Controller
     }
 
     /**
-     * Observasi per (date, location_key): set of nama_pelapor (lowercase) from aaj_database_observasi_from_bep_ytd_only.
+     * Observasi per (date, location_key): set of nama_pelapor (lowercase) from nitip.aaj_database_observasi_from_bep_ytd_only.
      * Untuk heatmap: actual jika ada Observasi dengan lokasi+detil_lokasi match dan nama_pelapor = salah satu karyawan assign.
-     * Database: hse_automation (sesuaikan ke beats jika env pakai beats).
+     * Kolom tanggal di nitip: Date (DateTime64).
      *
      * @return array<string, array<string, array<string, true>>> [date => [ locationKey => [ nama_lower => true ] ] ]
      */
@@ -352,21 +381,20 @@ class DashboardController extends Controller
     {
         $startEsc = addslashes($start);
         $endEsc = addslashes($end);
-        $db = 'hse_automation';
-        $sql = "SELECT toDate(report_datetime, 'Asia/Makassar') AS dt,
-                trim(ifNull(toString(lokasi), '')) AS loc,
-                trim(ifNull(toString(detil_lokasi), '')) AS det,
+        $sql = "SELECT toDate(Date, 'Asia/Makassar') AS dt,
+                trim(ifNull(toString(Lokasi), '')) AS loc,
+                trim(ifNull(toString(Detil_Lokasi), '')) AS det,
                 trim(ifNull(toString(nama_pelapor), '')) AS nama_pelapor
-                FROM {$db}.aaj_database_observasi_from_bep_ytd_only
-                WHERE report_datetime IS NOT NULL
-                  AND toDate(report_datetime, 'Asia/Makassar') >= toDate('{$startEsc}')
-                  AND toDate(report_datetime, 'Asia/Makassar') <= toDate('{$endEsc}')";
+                FROM nitip.aaj_database_observasi_from_bep_ytd_only
+                WHERE Date IS NOT NULL
+                  AND toDate(Date, 'Asia/Makassar') >= toDate('{$startEsc}')
+                  AND toDate(Date, 'Asia/Makassar') <= toDate('{$endEsc}')";
 
         try {
             if (! class_exists(ClickHouseService::class)) {
                 return [];
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return [];
             }
@@ -414,14 +442,14 @@ class DashboardController extends Controller
     {
         $dateEsc = addslashes($dateStr);
         $sql = "SELECT trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det
-                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                FROM nitip.aaj_vw_car_oak_register_ytd_only
                 WHERE submit_date IS NOT NULL AND toDate(submit_date, 'Asia/Makassar') = toDate('{$dateEsc}')";
 
         try {
             if (! class_exists(ClickHouseService::class)) {
                 return [];
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return [];
             }
@@ -452,16 +480,15 @@ class DashboardController extends Controller
     private function getObservasiLocationKeysForDate(string $dateStr): array
     {
         $dateEsc = addslashes($dateStr);
-        $db = 'hse_automation';
-        $sql = "SELECT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det
-                FROM {$db}.aaj_database_observasi_from_bep_ytd_only
-                WHERE report_datetime IS NOT NULL AND toDate(report_datetime, 'Asia/Makassar') = toDate('{$dateEsc}')";
+        $sql = "SELECT trim(ifNull(toString(Lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det
+                FROM nitip.aaj_database_observasi_from_bep_ytd_only
+                WHERE Date IS NOT NULL AND toDate(Date, 'Asia/Makassar') = toDate('{$dateEsc}')";
 
         try {
             if (! class_exists(ClickHouseService::class)) {
                 return [];
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return [];
             }
@@ -484,6 +511,105 @@ class DashboardController extends Controller
     }
 
     /**
+     * Coaching per (date, location_key): set of nama_coach (lowercase) dari nitip.bep_vw_database_coaching.
+     * Match: nama_coach = salah satu karyawan assign, lokasi + detil_lokasi + Tanggal_Pembuatan.
+     *
+     * @return array<string, array<string, array<string, true>>> [date => [ locationKey => [ nama_lower => true ] ] ]
+     */
+    private function getCoachingDataByDateRange(string $start, string $end): array
+    {
+        $startEsc = addslashes($start);
+        $endEsc = addslashes($end);
+        $sql = "SELECT toDate(Tanggal_Pembuatan, 'Asia/Makassar') AS dt,
+                trim(ifNull(toString(lokasi), '')) AS loc,
+                trim(ifNull(toString(detil_lokasi), '')) AS det,
+                trim(ifNull(toString(nama_coach), '')) AS nama_coach
+                FROM nitip.bep_vw_database_coaching
+                WHERE Tanggal_Pembuatan IS NOT NULL
+                  AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}')
+                  AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}')";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return [];
+            }
+            $ch = $this->getClickHouseNitip();
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return [];
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return [];
+            }
+            $byDate = [];
+            foreach ($results as $row) {
+                $dt = $this->getClickHouseRowValue($row, 'dt');
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_coach'));
+                $dateStr = $dt instanceof \DateTimeInterface
+                    ? $dt->format('Y-m-d')
+                    : (is_string($dt) ? substr($dt, 0, 10) : '');
+                if ($dateStr === '') {
+                    continue;
+                }
+                $locationKey = $loc . '|' . $det;
+                if (! isset($byDate[$dateStr])) {
+                    $byDate[$dateStr] = [];
+                }
+                if (! isset($byDate[$dateStr][$locationKey])) {
+                    $byDate[$dateStr][$locationKey] = [];
+                }
+                if ($nama !== '') {
+                    $byDate[$dateStr][$locationKey][mb_strtolower($nama)] = true;
+                }
+            }
+            return $byDate;
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController getCoachingDataByDateRange: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Coaching: daftar location key yang punya minimal 1 record pada tanggal tersebut (untuk coverage by location).
+     *
+     * @return array<int, string>
+     */
+    private function getCoachingLocationKeysForDate(string $dateStr): array
+    {
+        $dateEsc = addslashes($dateStr);
+        $sql = "SELECT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det
+                FROM nitip.bep_vw_database_coaching
+                WHERE Tanggal_Pembuatan IS NOT NULL AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') = toDate('{$dateEsc}')";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return [];
+            }
+            $ch = $this->getClickHouseNitip();
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return [];
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return [];
+            }
+            $keys = [];
+            foreach ($results as $row) {
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $key = $loc . '|' . $det;
+                $keys[$key] = true;
+            }
+            return array_keys($keys);
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController getCoachingLocationKeysForDate: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
      * ClickHouse: untuk setiap tanggal di range, daftar nama_pelapor (lowercase) yang ada.
      *
      * @return array<string, array<string, true>> key = date Y-m-d, value = map nama_lower => true
@@ -497,13 +623,13 @@ class DashboardController extends Controller
         ];
         $whereClause = implode(' AND ', $conditions);
         $sql = "SELECT toDate(tanggal_pembuatan, 'Asia/Makassar') AS dt, trim(ifNull(nama_pelapor, '')) AS nama_pelapor "
-            . "FROM hse_automation.aaj_car_all_year_from_dav WHERE {$whereClause}";
+            . "FROM nitip.aaj_car_all_year_from_dav WHERE {$whereClause}";
 
         try {
             if (! class_exists(ClickHouseService::class)) {
                 return [];
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return [];
             }
@@ -561,13 +687,13 @@ class DashboardController extends Controller
             "trim(ifNull(jenis_laporan, '')) IN ('HAZARD', 'INSPEKSI', 'INSPEKSI_HAZARD')",
         ];
         $whereClause = implode(' AND ', $conditions);
-        $sql = "SELECT id, trim(ifNull(nama_pelapor, '')) AS nama_pelapor, trim(ifNull(nama_lokasi, '')) AS nama_lokasi, trim(ifNull(nama_detail_lokasi, '')) AS nama_detail_lokasi, trim(ifNull(jenis_laporan, '')) AS jenis_laporan FROM hse_automation.aaj_car_all_year_from_dav WHERE {$whereClause}";
+        $sql = "SELECT id, trim(ifNull(nama_pelapor, '')) AS nama_pelapor, trim(ifNull(nama_lokasi, '')) AS nama_lokasi, trim(ifNull(nama_detail_lokasi, '')) AS nama_detail_lokasi, trim(ifNull(jenis_laporan, '')) AS jenis_laporan FROM nitip.aaj_car_all_year_from_dav WHERE {$whereClause}";
 
         try {
             if (! class_exists(ClickHouseService::class)) {
                 return [];
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return [];
             }
@@ -606,7 +732,7 @@ class DashboardController extends Controller
     {
         $dateEsc = addslashes($dateStr);
         $sql = "SELECT trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det, trim(ifNull(toString(submit_by), '')) AS submit_by, count() AS cnt
-                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                FROM nitip.aaj_vw_car_oak_register_ytd_only
                 WHERE submit_date IS NOT NULL AND toDate(submit_date, 'Asia/Makassar') = toDate('{$dateEsc}')
                 GROUP BY location, detail_location, submit_by";
 
@@ -614,7 +740,7 @@ class DashboardController extends Controller
             if (! class_exists(ClickHouseService::class)) {
                 return [];
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return [];
             }
@@ -651,17 +777,16 @@ class DashboardController extends Controller
     private function getObservasiCountsForDate(string $dateStr): array
     {
         $dateEsc = addslashes($dateStr);
-        $db = 'hse_automation';
-        $sql = "SELECT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det, trim(ifNull(toString(nama_pelapor), '')) AS nama_pelapor, count() AS cnt
-                FROM {$db}.aaj_database_observasi_from_bep_ytd_only
-                WHERE report_datetime IS NOT NULL AND toDate(report_datetime, 'Asia/Makassar') = toDate('{$dateEsc}')
-                GROUP BY lokasi, detil_lokasi, nama_pelapor";
+        $sql = "SELECT trim(ifNull(toString(Lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det, trim(ifNull(toString(nama_pelapor), '')) AS nama_pelapor, count() AS cnt
+                FROM nitip.aaj_database_observasi_from_bep_ytd_only
+                WHERE Date IS NOT NULL AND toDate(Date, 'Asia/Makassar') = toDate('{$dateEsc}')
+                GROUP BY Lokasi, Detil_Lokasi, nama_pelapor";
 
         try {
             if (! class_exists(ClickHouseService::class)) {
                 return [];
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return [];
             }
@@ -691,7 +816,53 @@ class DashboardController extends Controller
     }
 
     /**
-     * API: Detail per hari heatmap — per planning (karyawan + lokasi) dengan count Inspeksi, OAK, Observasi.
+     * Coaching count per (locationKey, nama_lower) untuk satu tanggal. Match nama_coach = karyawan assign.
+     *
+     * @return array<string, array<string, int>>
+     */
+    private function getCoachingCountsForDate(string $dateStr): array
+    {
+        $dateEsc = addslashes($dateStr);
+        $sql = "SELECT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det, trim(ifNull(toString(nama_coach), '')) AS nama_coach, count() AS cnt
+                FROM nitip.bep_vw_database_coaching
+                WHERE Tanggal_Pembuatan IS NOT NULL AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') = toDate('{$dateEsc}')
+                GROUP BY lokasi, detil_lokasi, nama_coach";
+
+        try {
+            if (! class_exists(ClickHouseService::class)) {
+                return [];
+            }
+            $ch = $this->getClickHouseNitip();
+            if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+                return [];
+            }
+            $results = $ch->query($sql);
+            if (empty($results) || ! is_array($results)) {
+                return [];
+            }
+            $out = [];
+            foreach ($results as $row) {
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_coach'));
+                $cnt = (int) ($this->getClickHouseRowValue($row, 'cnt') ?? 0);
+                $key = $loc . '|' . $det;
+                if (! isset($out[$key])) {
+                    $out[$key] = [];
+                }
+                if ($nama !== '') {
+                    $out[$key][mb_strtolower($nama)] = $cnt;
+                }
+            }
+            return $out;
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController getCoachingCountsForDate: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * API: Detail per hari heatmap — per planning (karyawan + lokasi) dengan count Inspeksi, OAK, Observasi, Coaching.
      * GET ?date=Y-m-d&site=...
      */
     public function heatmapDayDetail(Request $request): JsonResponse
@@ -716,6 +887,7 @@ class DashboardController extends Controller
         $carList = $this->getCarHazardInspeksiFromClickHouseForDate($dateStr);
         $oakCounts = $this->getOakCountsForDate($dateStr);
         $observasiCounts = $this->getObservasiCountsForDate($dateStr);
+        $coachingCounts = $this->getCoachingCountsForDate($dateStr);
 
         $rows = [];
         foreach ($plannings as $planning) {
@@ -732,6 +904,7 @@ class DashboardController extends Controller
                     'count_inspeksi' => 0,
                     'count_oak' => 0,
                     'count_observasi' => 0,
+                    'count_coaching' => 0,
                 ];
                 continue;
             }
@@ -751,6 +924,7 @@ class DashboardController extends Controller
                 }
                 $countOak = isset($oakCounts[$locationKey][$namaLower]) ? $oakCounts[$locationKey][$namaLower] : 0;
                 $countObservasi = isset($observasiCounts[$locationKey][$namaLower]) ? $observasiCounts[$locationKey][$namaLower] : 0;
+                $countCoaching = isset($coachingCounts[$locationKey][$namaLower]) ? $coachingCounts[$locationKey][$namaLower] : 0;
 
                 $rows[] = [
                     'karyawan_nama' => $nama ?: '—',
@@ -759,6 +933,7 @@ class DashboardController extends Controller
                     'count_inspeksi' => $countInspeksi,
                     'count_oak' => $countOak,
                     'count_observasi' => $countObservasi,
+                    'count_coaching' => $countCoaching,
                 ];
             }
         }
@@ -775,11 +950,13 @@ class DashboardController extends Controller
                     'count_inspeksi' => 0,
                     'count_oak' => 0,
                     'count_observasi' => 0,
+                    'count_coaching' => 0,
                 ];
             }
             $grouped[$key]['count_inspeksi'] += (int) ($r['count_inspeksi'] ?? 0);
             $grouped[$key]['count_oak'] += (int) ($r['count_oak'] ?? 0);
             $grouped[$key]['count_observasi'] += (int) ($r['count_observasi'] ?? 0);
+            $grouped[$key]['count_coaching'] += (int) ($r['count_coaching'] ?? 0);
         }
         $rows = array_values($grouped);
 
@@ -919,7 +1096,7 @@ class DashboardController extends Controller
             tanggal_janji,
             tanggal_aktual_penyelesaian,
             waktu_verifikasi
-            FROM hse_automation.aaj_car_all_year_from_dav
+            FROM nitip.aaj_car_all_year_from_dav
             WHERE {$whereClause}
             ORDER BY toDateTime(ifNull(tanggal_pembuatan, bedraft_date)) DESC";
 
@@ -927,7 +1104,7 @@ class DashboardController extends Controller
             if (! class_exists(ClickHouseService::class)) {
                 return response()->json(['data' => [], 'message' => 'ClickHouse not available']);
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return response()->json(['data' => [], 'message' => 'ClickHouse not connected']);
             }
@@ -994,7 +1171,7 @@ class DashboardController extends Controller
                 is_be_draft, mobile_uuid, submit_date, bedraft_date, sib_register, sub_activity, kode_sid_team,
                 conveyance_type, detail_location, tools_observasi, id_employee_team, kode_sid_pelapor, company_submit_by,
                 lifting_equipment, location_description, jabatan_fungsional_team, jabatan_fungsional_submiter
-                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                FROM nitip.aaj_vw_car_oak_register_ytd_only
                 WHERE toDate(submit_date, 'Asia/Makassar') = toDate('{$dateEsc}')
                   AND trim(ifNull(toString(location), '')) = '{$locEsc}'
                   AND trim(ifNull(toString(detail_location), '')) = '{$detEsc}'
@@ -1004,7 +1181,7 @@ class DashboardController extends Controller
             if (! class_exists(ClickHouseService::class)) {
                 return response()->json(['data' => [], 'message' => 'ClickHouse not available']);
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return response()->json(['data' => [], 'message' => 'ClickHouse not connected']);
             }
@@ -1039,7 +1216,7 @@ class DashboardController extends Controller
     }
 
     /**
-     * API: Detail Observasi by lokasi, detail_lokasi, date. Match lokasi + detil_lokasi + toDate(report_datetime).
+     * API: Detail Observasi by lokasi, detail_lokasi, date. Sumber: nitip.aaj_database_observasi_from_bep_ytd_only (kolom Date).
      * GET ?lokasi=...&detail_lokasi=...&date=Y-m-d
      */
     public function observasiDetail(Request $request): JsonResponse
@@ -1051,25 +1228,24 @@ class DashboardController extends Controller
             return response()->json(['data' => [], 'message' => 'lokasi, detail_lokasi, date (Y-m-d) required']);
         }
 
-        $db = 'hse_automation';
         $locEsc = addslashes($lokasi);
         $detEsc = addslashes($detailLokasi);
         $dateEsc = addslashes($dateStr);
-        $sql = "SELECT task_id, report_datetime, id_pelapor, nama_pelapor, kode_sid_pelapor, site, lokasi, detil_lokasi,
+        $sql = "SELECT _Task AS task_id, Date AS report_datetime, id_pelapor, nama_pelapor, kode_sid_pelapor, site, Lokasi AS lokasi, Detil_Lokasi AS detil_lokasi,
                 jenis_kegiatan, tools_observasi, tindakan_perbaikan, umpan_balik, catatan, tipe, url_photo,
                 nama_perusahaan, jabatan_fungsional
-                FROM {$db}.aaj_database_observasi_from_bep_ytd_only
-                WHERE report_datetime IS NOT NULL
-                  AND toDate(report_datetime, 'Asia/Makassar') = toDate('{$dateEsc}')
-                  AND trim(ifNull(toString(lokasi), '')) = '{$locEsc}'
-                  AND trim(ifNull(toString(detil_lokasi), '')) = '{$detEsc}'
-                ORDER BY toDateTime(report_datetime) DESC";
+                FROM nitip.aaj_database_observasi_from_bep_ytd_only
+                WHERE Date IS NOT NULL
+                  AND toDate(Date, 'Asia/Makassar') = toDate('{$dateEsc}')
+                  AND trim(ifNull(toString(Lokasi), '')) = '{$locEsc}'
+                  AND trim(ifNull(toString(Detil_Lokasi), '')) = '{$detEsc}'
+                ORDER BY toDateTime(Date) DESC";
 
         try {
             if (! class_exists(ClickHouseService::class)) {
                 return response()->json(['data' => [], 'message' => 'ClickHouse not available']);
             }
-            $ch = app(ClickHouseService::class);
+            $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
                 return response()->json(['data' => [], 'message' => 'ClickHouse not connected']);
             }
