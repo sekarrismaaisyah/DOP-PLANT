@@ -171,64 +171,28 @@
                         <th class="p-2 border-r border-gray-100 min-w-[80px]">Site Used.</th>
                         <th class="p-2 border-r border-gray-100 min-w-[150px]">Lokasi</th>
                         <th class="p-2 border-r border-gray-100 min-w-[120px]">Pembagian Area</th>
-                        <th class="p-2 border-r border-gray-100 text-center w-40">March 9, 2026</th>
-                        <th class="p-2 border-r border-gray-100 text-center w-40">March 10, 2026</th>
-                        <th class="p-2 border-r border-gray-100 text-center w-40">March 11, 2026</th>
-                        <th class="p-2 border-r border-gray-100 text-center w-40">March 12, 2026</th>
-                        <th class="p-2 text-center w-40">March 13, 2026</th>
+                        @foreach($coverageDailyDates ?? [] as $d)
+                        <th class="p-2 {{ $loop->last ? '' : 'border-r border-gray-100' }} text-center w-40">{{ $d['label'] }}</th>
+                        @endforeach
                      </tr>
                   </thead>
                   <tbody>
+                     @foreach($coverageDailyRows ?? [] as $i => $row)
                      <tr class="border-b border-gray-50">
-                        <td class="p-2 font-bold align-top">BMO 1</td>
-                        <td class="p-2">(B 56) Area Kerja FAD</td>
-                        <td class="p-2">Area Kritis</td>
-                        <td class="p-2 text-center status-green">100%<br/>(1/1)</td>
-                        <td class="p-2 text-center status-red">0%<br/>(0/1)</td>
-                        <td class="p-2 border border-gray-100">-</td>
-                        <td class="p-2 border border-gray-100">-</td>
-                        <td class="p-2 border border-gray-100">-</td>
+                        <td class="p-2 {{ ($i === 0 || ($coverageDailyRows[$i - 1]['site'] ?? '') !== ($row['site'] ?? '')) ? 'font-bold align-top' : '' }} border-r border-gray-100">
+                           @if($i === 0 || ($coverageDailyRows[$i - 1]['site'] ?? '') !== ($row['site'] ?? '')){{ $row['site'] ?? '' }}@endif
+                        </td>
+                        <td class="p-2 border-r border-gray-100">{{ $row['lokasi'] ?? '' }}</td>
+                        <td class="p-2 border-r border-gray-100">{{ $row['pembagian_area'] ?? '' }}</td>
+                        @foreach($coverageDailyDates ?? [] as $d)
+                        @php $cell = $row['days'][$d['date']] ?? ['pct' => 0, 'covered' => 0, 'total' => 1, 'status' => 'status-red']; @endphp
+                        <td class="p-2 text-center {{ $cell['status'] }} {{ $loop->last ? '' : 'border-r border-gray-100' }}">{{ $cell['pct'] }}%<br/>({{ $cell['covered'] }}/{{ $cell['total'] }})</td>
+                        @endforeach
                      </tr>
-                     <tr class="border-b border-gray-50">
-                        <td class="p-2"></td>
-                        <td class="p-2">(BUMA) Pos Pengawas</td>
-                        <td class="p-2">Area Non Kritis</td>
-                        <td class="p-2 text-center status-green">100%<br/>(1/1)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(1/1)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(1/1)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(1/1)</td>
-                        <td class="p-2 text-center status-red">0%<br/>(0/1)</td>
-                     </tr>
-                     <tr class="border-b border-gray-50">
-                        <td class="p-2"></td>
-                        <td class="p-2">(BUMA) Workshop</td>
-                        <td class="p-2">Area Non Kritis</td>
-                        <td class="p-2 text-center status-light-green">86%<br/>(6/7)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(7/7)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(7/7)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(7/7)</td>
-                        <td class="p-2 text-center status-yellow">57%<br/>(4/7)</td>
-                     </tr>
-                     <tr class="border-b border-gray-50">
-                        <td class="p-2"></td>
-                        <td class="p-2">Area Revegetasi</td>
-                        <td class="p-2">Area Non Kritis</td>
-                        <td class="p-2 text-center status-green">100%<br/>(1/1)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(1/1)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(1/1)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(1/1)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(1/1)</td>
-                     </tr>
-                     <tr class="border-b border-gray-50">
-                        <td class="p-2"></td>
-                        <td class="p-2">Area Transportasi</td>
-                        <td class="p-2">Area Non Kritis</td>
-                        <td class="p-2 text-center status-green">100%<br/>(3/3)</td>
-                        <td class="p-2 text-center status-yellow">67%<br/>(2/3)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(3/3)</td>
-                        <td class="p-2 text-center status-green">100%<br/>(3/3)</td>
-                        <td class="p-2 text-center status-yellow">67%<br/>(2/3)</td>
-                     </tr>
+                     @endforeach
+                     @if(empty($coverageDailyRows))
+                     <tr class="border-b border-gray-50"><td class="p-2 text-gray-400" colspan="{{ 3 + count($coverageDailyDates ?? []) }}">Belum ada data lokasi.</td></tr>
+                     @endif
                   </tbody>
                </table>
             </div>
@@ -479,9 +443,10 @@
                new Swiper('.trend-coverage-swiper', {
                   slidesPerView: 1.15,
                   spaceBetween: 16,
-                  loop: false,
+                  loop: true,
                   grabCursor: true,
                   allowTouchMove: true,
+                  autoplay: { delay: 3500, disableOnInteraction: false },
                   navigation: { nextEl: '.trend-coverage-next', prevEl: '.trend-coverage-prev' },
                   pagination: { el: '.trend-coverage-pagination', clickable: true },
                });

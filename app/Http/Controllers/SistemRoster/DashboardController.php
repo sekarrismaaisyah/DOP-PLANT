@@ -33,11 +33,13 @@ class DashboardController extends Controller
         $trendWeekLabel = '';
         $trendLabels = [];
         $trendBySite = [];
+        $coverageDailyRows = [];
+        $coverageDailyDates = [];
 
         try {
             $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite'));
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
             }
 
             // 1. Master: site + (lokasi, Detil_Lokasi) aktif — status_site, status_lokasi, status_detil_lokasi = '1'
@@ -48,16 +50,19 @@ class DashboardController extends Controller
                   AND trim(ifNull(toString(status_detil_lokasi), '')) = '1'";
             $rowsMaster = $ch->query($sqlMaster);
             if (empty($rowsMaster) || ! is_array($rowsMaster)) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite'));
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
             }
 
             // Key = lowercase(normalize(lokasi)|normalize(detil)); simpan per site untuk chart
             $masterKeys = [];
             $masterKeysBySite = [];
+            $coverageDailyRows = [];
             foreach ($rowsMaster as $row) {
                 $site = trim((string) $this->getClickHouseRowValue($row, 'site'));
-                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
-                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $locRaw = trim((string) $this->getClickHouseRowValue($row, 'loc'));
+                $detRaw = trim((string) $this->getClickHouseRowValue($row, 'det'));
+                $loc = $this->normalizeLocation($locRaw);
+                $det = $this->normalizeLocation($detRaw);
                 $key = mb_strtolower($loc . '|' . $det);
                 $masterKeys[$key] = true;
                 if ($site !== '') {
@@ -66,11 +71,13 @@ class DashboardController extends Controller
                     }
                     $masterKeysBySite[$site][$key] = true;
                 }
+                $coverageDailyRows[] = ['site' => $site, 'lokasi' => $locRaw, 'pembagian_area' => $detRaw, 'key' => $key];
             }
+            usort($coverageDailyRows, fn ($a, $b) => strcmp($a['site'], $b['site']) ?: strcmp($a['lokasi'], $b['lokasi']) ?: strcmp($a['pembagian_area'], $b['pembagian_area']));
             $totalLokasi = count($masterKeys);
 
             if ($totalLokasi === 0) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite'));
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
             }
 
             // 2. Lokasi yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip — pakai DISTINCT agar ringan
@@ -157,6 +164,59 @@ class DashboardController extends Controller
             $startEsc = addslashes($weekStart->format('Y-m-d'));
             $endEsc = addslashes($weekEnd->format('Y-m-d'));
 
+            // Coverage Daily: which (lokasi|detil) have SAP per day in week lalu
+            $coveredByDate = array_fill_keys($weekDateStrs, []);
+            $addCoveredByDate = function ($result) use (&$coveredByDate) {
+                $rows = is_array($result) ? $result : [];
+                foreach ($rows as $r) {
+                    $dt = $this->getClickHouseRowValue($r, 'dt');
+                    $dateStr = $dt instanceof \DateTimeInterface ? $dt->format('Y-m-d') : (is_string($dt) ? substr($dt, 0, 10) : '');
+                    if ($dateStr === '' || ! isset($coveredByDate[$dateStr])) {
+                        continue;
+                    }
+                    $loc = $this->normalizeLocation($this->getClickHouseRowValue($r, 'loc'));
+                    $det = $this->normalizeLocation($this->getClickHouseRowValue($r, 'det'));
+                    $key = mb_strtolower($loc . '|' . $det);
+                    $coveredByDate[$dateStr][$key] = true;
+                }
+            };
+            try {
+                $sqlCarDaily = "SELECT toDate(tanggal_pembuatan, 'Asia/Makassar') AS dt, trim(ifNull(toString(nama_lokasi), '')) AS loc, trim(ifNull(toString(nama_detail_lokasi), '')) AS det FROM nitip.aaj_car_all_year_from_dav WHERE toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(tanggal_pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}')";
+                $addCoveredByDate($ch->query($sqlCarDaily));
+            } catch (\Throwable $e) {
+            }
+            try {
+                $sqlOakDaily = "SELECT toDate(submit_date, 'Asia/Makassar') AS dt, trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}')";
+                $addCoveredByDate($ch->query($sqlOakDaily));
+            } catch (\Throwable $e) {
+            }
+            try {
+                $sqlObsDaily = "SELECT toDate(Date, 'Asia/Makassar') AS dt, trim(ifNull(toString(Lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det FROM nitip.aaj_database_observasi_from_bep_ytd_only WHERE toDate(Date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Date, 'Asia/Makassar') <= toDate('{$endEsc}')";
+                $addCoveredByDate($ch->query($sqlObsDaily));
+            } catch (\Throwable $e) {
+            }
+            try {
+                $sqlCoachingDaily = "SELECT toDate(Tanggal_Pembuatan, 'Asia/Makassar') AS dt, trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det FROM nitip.bep_vw_database_coaching WHERE toDate(Tanggal_Pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}')";
+                $addCoveredByDate($ch->query($sqlCoachingDaily));
+            } catch (\Throwable $e) {
+            }
+            foreach ($weekDateStrs as $dateStr) {
+                $coverageDailyDates[] = ['date' => $dateStr, 'label' => Carbon::parse($dateStr)->format('F j, Y')];
+            }
+            foreach ($coverageDailyRows as &$crow) {
+                $crow['days'] = [];
+                foreach ($weekDateStrs as $dateStr) {
+                    $covered = isset($coveredByDate[$dateStr][$crow['key']]);
+                    $crow['days'][$dateStr] = [
+                        'pct' => $covered ? 100 : 0,
+                        'covered' => $covered ? 1 : 0,
+                        'total' => 1,
+                        'status' => $covered ? 'status-green' : 'status-red',
+                    ];
+                }
+            }
+            unset($crow);
+
             foreach ($coverageBySite as $siteRow) {
                 $siteName = $siteRow['site'] ?? '';
                 $siteEsc = addslashes($siteName);
@@ -211,7 +271,7 @@ class DashboardController extends Controller
             $trendWeekLabel = $wStart->format('d') . '–' . $wEnd->format('d') . ' ' . $wStart->locale('id')->monthName . ' ' . $wStart->format('Y') . ' (Minggu Lalu)';
         }
 
-        return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite'));
+        return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
     }
 
     /**
