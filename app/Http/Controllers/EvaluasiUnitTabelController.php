@@ -169,11 +169,14 @@ class EvaluasiUnitTabelController extends Controller
         }
     }
 
+    private function normalizeUnitKey(?string $value): string
+    {
+        return strtoupper(trim((string) $value));
+    }
+
     /**
      * Enrich daily per-unit rows with Becomline (no_registrasi = no_unit) and konsumsi_bbm_unit (no_unit).
-     *
-     * @param array<int, array{tanggal: string, no_unit: string, jarak: string, total_jam: float}> $rows
-     * @return array<int, array{tanggal: string, no_unit: string, jarak: string, total_jam: float, perusahaan_pemilik?: string, site_operasional?: string, jenis_unit_spip?: string, expired?: string, status_permit_spip?: string, mtd?: string|float, avg_per_day?: string|float}>
+     * Matching is loose: case-insensitive and trim (UPPER(TRIM(...))).
      */
     private function enrichDailyPerUnitWithBecomlineAndKonsumsi(array $rows): array
     {
@@ -185,12 +188,14 @@ class EvaluasiUnitTabelController extends Controller
             return trim((string) ($r['no_unit'] ?? ''));
         }, $rows));
         $noUnits = array_filter($noUnits);
+        $normalizedKeys = array_unique(array_filter(array_map([$this, 'normalizeUnitKey'], $noUnits)));
 
         $becomlineByNoReg = [];
-        if (!empty($noUnits)) {
-            $becomlines = Becomline::whereIn('no_registrasi', $noUnits)->get();
+        if (!empty($normalizedKeys)) {
+            $placeholders = implode(',', array_fill(0, count($normalizedKeys), '?'));
+            $becomlines = Becomline::whereRaw("UPPER(TRIM(no_registrasi)) IN ({$placeholders})", array_values($normalizedKeys))->get();
             foreach ($becomlines as $b) {
-                $nr = trim((string) $b->no_registrasi);
+                $nr = $this->normalizeUnitKey($b->no_registrasi);
                 if ($nr !== '' && !isset($becomlineByNoReg[$nr])) {
                     $becomlineByNoReg[$nr] = $b;
                 }
@@ -198,10 +203,11 @@ class EvaluasiUnitTabelController extends Controller
         }
 
         $konsumsiByNoUnit = [];
-        if (!empty($noUnits)) {
-            $konsumesis = UnitMtd::whereIn('no_unit', $noUnits)->get();
+        if (!empty($normalizedKeys)) {
+            $placeholders = implode(',', array_fill(0, count($normalizedKeys), '?'));
+            $konsumesis = UnitMtd::whereRaw("UPPER(TRIM(no_unit)) IN ({$placeholders})", array_values($normalizedKeys))->get();
             foreach ($konsumesis as $k) {
-                $nu = trim((string) $k->no_unit);
+                $nu = $this->normalizeUnitKey($k->no_unit);
                 if ($nu !== '' && !isset($konsumsiByNoUnit[$nu])) {
                     $konsumsiByNoUnit[$nu] = $k;
                 }
@@ -209,9 +215,9 @@ class EvaluasiUnitTabelController extends Controller
         }
 
         foreach ($rows as $i => $row) {
-            $noUnit = trim((string) ($row['no_unit'] ?? ''));
-            $b = $becomlineByNoReg[$noUnit] ?? null;
-            $k = $konsumsiByNoUnit[$noUnit] ?? null;
+            $key = $this->normalizeUnitKey($row['no_unit'] ?? '');
+            $b = $key !== '' ? ($becomlineByNoReg[$key] ?? null) : null;
+            $k = $key !== '' ? ($konsumsiByNoUnit[$key] ?? null) : null;
 
             $rows[$i]['perusahaan_pemilik'] = $b ? $b->perusahaan_pemilik : null;
             $rows[$i]['site_operasional'] = $b ? $b->site_operasional : null;
