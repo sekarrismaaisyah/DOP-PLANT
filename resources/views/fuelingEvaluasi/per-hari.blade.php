@@ -81,6 +81,13 @@
                                         <th>NO UNIT</th>
                                         <th>JARAK YANG DITEMPUH</th>
                                         <th>DURASI (jam)</th>
+                                        <th>Perusahaan Pemilik</th>
+                                        <th>Site Operasional</th>
+                                        <th>Jenis Unit SPIP</th>
+                                        <th>Expired</th>
+                                        <th>Status Permit SPIP</th>
+                                        <th>MTD</th>
+                                        <th>AVG per Day</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -90,6 +97,13 @@
                                             <td>{{ $row['no_unit'] }}</td>
                                             <td class="text-jarak">{{ $row['jarak'] }}</td>
                                             <td>{{ $row['total_jam'] }} jam</td>
+                                            <td>{{ $row['perusahaan_pemilik'] ?? '-' }}</td>
+                                            <td>{{ $row['site_operasional'] ?? '-' }}</td>
+                                            <td>{{ $row['jenis_unit_spip'] ?? '-' }}</td>
+                                            <td>{{ isset($row['expired']) && $row['expired'] ? $row['expired'] : '-' }}</td>
+                                            <td>{{ $row['status_permit_spip'] ?? '-' }}</td>
+                                            <td>{{ isset($row['mtd']) && $row['mtd'] !== null ? number_format($row['mtd'], 2, ',', '.') : '-' }}</td>
+                                            <td>{{ isset($row['avg_per_day']) && $row['avg_per_day'] !== null ? number_format($row['avg_per_day'], 2, ',', '.') : '-' }}</td>
                                         </tr>
                                     @endforeach
                                 </tbody>

@@ -2,6 +2,8 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Becomline;
+use App\Models\UnitMtd;
 use App\Services\EvaluasiUnitDataService;
 use Carbon\Carbon;
 use Exception;
@@ -78,6 +80,7 @@ class EvaluasiUnitTabelController extends Controller
         try {
             $service = new EvaluasiUnitDataService();
             $dailyPerUnit = $service->getDailyPerUnitPerDay($dateFrom, $dateTo);
+            $dailyPerUnit = $this->enrichDailyPerUnitWithBecomlineAndKonsumsi($dailyPerUnit);
         } catch (Exception $e) {
             Log::error('EvaluasiUnitTabelController::perHari: ' . $e->getMessage());
             $error = $e->getMessage();
@@ -112,8 +115,13 @@ class EvaluasiUnitTabelController extends Controller
         try {
             $service = new EvaluasiUnitDataService();
             $rows = $service->getDailyPerUnitPerDay($dateFrom, $dateTo);
+            $rows = $this->enrichDailyPerUnitWithBecomlineAndKonsumsi($rows);
 
-            $headers = ['TANGGAL', 'NO UNIT', 'JARAK YANG DITEMPUH', 'DURASI (jam)'];
+            $headers = [
+                'TANGGAL', 'NO UNIT', 'JARAK YANG DITEMPUH', 'DURASI (jam)',
+                'Perusahaan Pemilik', 'Site Operasional', 'Jenis Unit SPIP', 'Expired', 'Status Permit SPIP',
+                'MTD', 'AVG per Day',
+            ];
             $spreadsheet = new Spreadsheet();
             $sheet = $spreadsheet->getActiveSheet();
             $sheet->setTitle('Per Hari per Unit');
@@ -134,10 +142,17 @@ class EvaluasiUnitTabelController extends Controller
                 $sheet->setCellValue('B' . $rowNum, $row['no_unit']);
                 $sheet->setCellValue('C' . $rowNum, $row['jarak']);
                 $sheet->setCellValue('D' . $rowNum, $row['total_jam']);
+                $sheet->setCellValue('E' . $rowNum, $row['perusahaan_pemilik'] ?? '');
+                $sheet->setCellValue('F' . $rowNum, $row['site_operasional'] ?? '');
+                $sheet->setCellValue('G' . $rowNum, $row['jenis_unit_spip'] ?? '');
+                $sheet->setCellValue('H' . $rowNum, isset($row['expired']) && $row['expired'] ? $row['expired'] : '');
+                $sheet->setCellValue('I' . $rowNum, $row['status_permit_spip'] ?? '');
+                $sheet->setCellValue('J' . $rowNum, $row['mtd'] ?? '');
+                $sheet->setCellValue('K' . $rowNum, $row['avg_per_day'] ?? '');
                 $rowNum++;
             }
 
-            foreach (range('A', 'D') as $colLetter) {
+            foreach (range('A', 'K') as $colLetter) {
                 $sheet->getColumnDimension($colLetter)->setAutoSize(true);
             }
 
@@ -152,5 +167,61 @@ class EvaluasiUnitTabelController extends Controller
             Log::error('EvaluasiUnitTabelController::exportPerHariExcel: ' . $e->getMessage());
             return response()->json(['success' => false, 'message' => $e->getMessage()], 500);
         }
+    }
+
+    /**
+     * Enrich daily per-unit rows with Becomline (no_registrasi = no_unit) and konsumsi_bbm_unit (no_unit).
+     *
+     * @param array<int, array{tanggal: string, no_unit: string, jarak: string, total_jam: float}> $rows
+     * @return array<int, array{tanggal: string, no_unit: string, jarak: string, total_jam: float, perusahaan_pemilik?: string, site_operasional?: string, jenis_unit_spip?: string, expired?: string, status_permit_spip?: string, mtd?: string|float, avg_per_day?: string|float}>
+     */
+    private function enrichDailyPerUnitWithBecomlineAndKonsumsi(array $rows): array
+    {
+        if (empty($rows)) {
+            return $rows;
+        }
+
+        $noUnits = array_unique(array_map(function ($r) {
+            return trim((string) ($r['no_unit'] ?? ''));
+        }, $rows));
+        $noUnits = array_filter($noUnits);
+
+        $becomlineByNoReg = [];
+        if (!empty($noUnits)) {
+            $becomlines = Becomline::whereIn('no_registrasi', $noUnits)->get();
+            foreach ($becomlines as $b) {
+                $nr = trim((string) $b->no_registrasi);
+                if ($nr !== '' && !isset($becomlineByNoReg[$nr])) {
+                    $becomlineByNoReg[$nr] = $b;
+                }
+            }
+        }
+
+        $konsumsiByNoUnit = [];
+        if (!empty($noUnits)) {
+            $konsumesis = UnitMtd::whereIn('no_unit', $noUnits)->get();
+            foreach ($konsumesis as $k) {
+                $nu = trim((string) $k->no_unit);
+                if ($nu !== '' && !isset($konsumsiByNoUnit[$nu])) {
+                    $konsumsiByNoUnit[$nu] = $k;
+                }
+            }
+        }
+
+        foreach ($rows as $i => $row) {
+            $noUnit = trim((string) ($row['no_unit'] ?? ''));
+            $b = $becomlineByNoReg[$noUnit] ?? null;
+            $k = $konsumsiByNoUnit[$noUnit] ?? null;
+
+            $rows[$i]['perusahaan_pemilik'] = $b ? $b->perusahaan_pemilik : null;
+            $rows[$i]['site_operasional'] = $b ? $b->site_operasional : null;
+            $rows[$i]['jenis_unit_spip'] = $b ? $b->jenis_unit_spip : null;
+            $rows[$i]['expired'] = $b && $b->expired ? $b->expired->format('Y-m-d') : null;
+            $rows[$i]['status_permit_spip'] = $b ? $b->status_permit_spip : null;
+            $rows[$i]['mtd'] = $k !== null && $k->mtd !== null ? (float) $k->mtd : null;
+            $rows[$i]['avg_per_day'] = $k !== null && $k->avg_per_day !== null ? (float) $k->avg_per_day : null;
+        }
+
+        return $rows;
     }
 }
