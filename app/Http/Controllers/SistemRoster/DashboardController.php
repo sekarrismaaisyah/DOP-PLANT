@@ -29,36 +29,45 @@ class DashboardController extends Controller
         $totalLokasi = 0;
         $coveredLokasi = 0;
         $pctCoverage = 0;
+        $coverageBySite = [];
 
         try {
             $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage'));
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite'));
             }
 
-            // 1. Master: (lokasi, Detil_Lokasi) aktif — status_site, status_lokasi, status_detil_lokasi = '1'
-            $sqlMaster = "SELECT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det
+            // 1. Master: site + (lokasi, Detil_Lokasi) aktif — status_site, status_lokasi, status_detil_lokasi = '1'
+            $sqlMaster = "SELECT trim(ifNull(toString(site), '')) AS site, trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det
                 FROM nitip.bep_vw_site_lokasi_detil_lokasi
                 WHERE trim(ifNull(toString(status_site), '')) = '1'
                   AND trim(ifNull(toString(status_lokasi), '')) = '1'
                   AND trim(ifNull(toString(status_detil_lokasi), '')) = '1'";
             $rowsMaster = $ch->query($sqlMaster);
             if (empty($rowsMaster) || ! is_array($rowsMaster)) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage'));
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite'));
             }
 
-            // Key = lowercase(normalize(lokasi)|normalize(detil)) agar match case-insensitive dengan data SAP
+            // Key = lowercase(normalize(lokasi)|normalize(detil)); simpan per site untuk chart
             $masterKeys = [];
+            $masterKeysBySite = [];
             foreach ($rowsMaster as $row) {
+                $site = trim((string) $this->getClickHouseRowValue($row, 'site'));
                 $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
                 $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
                 $key = mb_strtolower($loc . '|' . $det);
                 $masterKeys[$key] = true;
+                if ($site !== '') {
+                    if (! isset($masterKeysBySite[$site])) {
+                        $masterKeysBySite[$site] = [];
+                    }
+                    $masterKeysBySite[$site][$key] = true;
+                }
             }
             $totalLokasi = count($masterKeys);
 
             if ($totalLokasi === 0) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage'));
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite'));
             }
 
             // 2. Lokasi yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip — pakai DISTINCT agar ringan
@@ -109,11 +118,31 @@ class DashboardController extends Controller
             }
 
             $pctCoverage = $totalLokasi > 0 ? (int) round($coveredLokasi / $totalLokasi * 100) : 0;
+
+            // Coverage per site untuk bar chart: total & covered lokasi per site, lalu % coverage
+            $coverageBySite = [];
+            foreach ($masterKeysBySite as $siteName => $keys) {
+                $totalSite = count($keys);
+                $coveredSite = 0;
+                foreach (array_keys($keys) as $key) {
+                    if (isset($coveredKeys[$key])) {
+                        $coveredSite++;
+                    }
+                }
+                $pctSite = $totalSite > 0 ? (int) round($coveredSite / $totalSite * 100) : 0;
+                $coverageBySite[] = [
+                    'site' => $siteName,
+                    'total' => $totalSite,
+                    'covered' => $coveredSite,
+                    'pct' => $pctSite,
+                ];
+            }
+            usort($coverageBySite, fn ($a, $b) => strcmp($a['site'], $b['site']));
         } catch (\Throwable $e) {
             Log::warning('DashboardController coverageAll: ' . $e->getMessage());
         }
 
-        return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage'));
+        return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite'));
     }
 
     /**

@@ -101,11 +101,11 @@
          <!-- END: FilterBar -->
          <!-- BEGIN: TopSection -->
          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <!-- Section A: Summary Bar Chart (Chart.js) -->
+            <!-- Section A: Summary Bar Chart — coverage per site (lokasi+detail aktif vs tercover SAP) -->
             <section class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-purpose="summary-bar-chart">
-               <h2 class="text-sm font-bold text-gray-700 uppercase mb-6">SUMMARY COVERAGE AREA LAST WEEK</h2>
+               <h2 class="text-sm font-bold text-gray-700 uppercase mb-6">Coverage per Site (Lokasi + Detail Aktif vs Ada SAP)</h2>
                <div class="h-64 min-h-[256px] relative">
-                  <canvas id="summaryCoverageBarChart" aria-label="Summary Coverage Area Last Week"></canvas>
+                  <canvas id="summaryCoverageBarChart" aria-label="Coverage per Site"></canvas>
                </div>
             </section>
             <!-- Section B: KPI Metrics (dari nitip: lokasi+detail aktif vs tercover SAP) -->
@@ -396,19 +396,32 @@
       <script src="https://cdn.jsdelivr.net/npm/swiper@11/swiper-bundle.min.js"></script>
       <script>
          document.addEventListener('DOMContentLoaded', function () {
-            // Summary Coverage Bar Chart
+            // Summary Coverage Bar Chart — data dari backend (coverage per site)
+            var coverageBySite = @json($coverageBySite ?? []);
             var summaryCtx = document.getElementById('summaryCoverageBarChart');
-            if (summaryCtx) {
+            if (summaryCtx && coverageBySite.length) {
+               var labels = coverageBySite.map(function (r) { return r.site || '—'; });
+               var pctData = coverageBySite.map(function (r) { return r.pct; });
                new Chart(summaryCtx, {
                   type: 'bar',
                   data: {
-                     labels: ['BMO 1', 'BMO 2', 'BMO 3', 'EKSPLORASI', 'GMO', 'HO', 'LMO', 'MARINE', 'PMO', 'SMO'],
+                     labels: labels,
                      datasets: [
                         {
-                           label: 'Actual',
-                           data: [88, 90, 82, 55, 98, 70, 78, 96, 85, 92],
-                           backgroundColor: 'rgba(34, 139, 34, 0.9)',
-                           borderColor: '#1a5f2a',
+                           label: 'Coverage %',
+                           data: pctData,
+                           backgroundColor: function (ctx) {
+                              var v = ctx.raw;
+                              if (v >= 80) return 'rgba(34, 139, 34, 0.9)';
+                              if (v > 0) return 'rgba(245, 158, 11, 0.9)';
+                              return 'rgba(220, 38, 38, 0.7)';
+                           },
+                           borderColor: function (ctx) {
+                              var v = ctx.raw;
+                              if (v >= 80) return '#1a5f2a';
+                              if (v > 0) return '#b45309';
+                              return '#b91c1c';
+                           },
                            borderWidth: 1,
                            borderRadius: { topLeft: 4, topRight: 4 },
                            borderSkipped: false,
@@ -423,7 +436,12 @@
                         legend: { display: false },
                         tooltip: {
                            callbacks: {
-                              label: function (ctx) { return 'Actual: ' + ctx.raw + '%'; }
+                              afterLabel: function (ctx) {
+                                 var i = ctx.dataIndex;
+                                 var r = coverageBySite[i];
+                                 return r ? (r.covered + ' / ' + r.total + ' lokasi tercover') : '';
+                              },
+                              label: function (ctx) { return 'Coverage: ' + ctx.raw + '%'; }
                            }
                         }
                      },
@@ -446,6 +464,8 @@
                      datasets: { bar: { barPercentage: 0.6, categoryPercentage: 0.8 } }
                   }
                });
+            } else if (summaryCtx) {
+               summaryCtx.parentElement.innerHTML = '<div class="flex items-center justify-center h-64 text-gray-400 text-sm">Belum ada data coverage per site.</div>';
             }
 
             new Swiper('.trend-coverage-swiper', {
