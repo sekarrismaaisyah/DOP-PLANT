@@ -141,7 +141,9 @@ class EvaluasiUnitDataService
             $jarakText = $totalKm >= 1
                 ? number_format($totalKm, 2, ',', '.') . ' km'
                 : number_format($totalKm * 1000, 0, ',', '.') . ' m';
-            $tanggalAktif = count($activeDates) > 0 ? implode(', ', $activeDates) : '-';
+            $tanggalAktif = count($activeDates) > 0
+                ? min($activeDates) . ' - ' . max($activeDates)
+                : '-';
 
             $result[] = [
                 'no_unit' => $unitLabels[$unitId] ?? (string) $unitId,
