@@ -3,8 +3,10 @@
 namespace App\Http\Controllers\SistemRoster;
 
 use App\Http\Controllers\Controller;
+use App\Models\DailyOperationPlan;
 use App\Models\RosterPlanning;
 use App\Services\ClickHouseService;
+use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -276,7 +278,8 @@ class DashboardController extends Controller
 
     /**
      * Menampilkan halaman Dashboard Coverage Activity DOP (iframe di modal).
-     * View memakai variabel yang sama dengan coverage-all; beri default kosong agar tidak error.
+     * Master = lokasi + detail_lokasi dari daily_operation_plans minggu ini (site kosong pakai unit_id).
+     * Covered = sama seperti coverage-all: ada SAP (CAR, OAK, Observasi, Coaching) di nitip.
      */
     public function coverageDop(): View
     {
@@ -289,6 +292,233 @@ class DashboardController extends Controller
         $trendBySite = [];
         $coverageDailyRows = [];
         $coverageDailyDates = [];
+
+        $weekStart = Carbon::now()->startOfWeek(Carbon::SUNDAY);
+        $weekEnd = Carbon::now()->endOfWeek(Carbon::SATURDAY);
+        $weekStartStr = $weekStart->format('Y-m-d');
+        $weekEndStr = $weekEnd->format('Y-m-d');
+
+        $dopRows = DB::table('daily_operation_plans')
+            ->where('status', 1)
+            ->whereBetween('tanggal', [$weekStartStr, $weekEndStr])
+            ->selectRaw('COALESCE(NULLIF(TRIM(site), ""), unit_id) as site, lokasi, detail_lokasi')
+            ->distinct()
+            ->get();
+
+        $masterKeys = [];
+        $masterKeysBySite = [];
+        $coverageDailyRows = [];
+        foreach ($dopRows as $row) {
+            $site = trim((string) ($row->site ?? ''));
+            $locRaw = trim((string) ($row->lokasi ?? ''));
+            $detRaw = trim((string) ($row->detail_lokasi ?? ''));
+            $loc = $this->normalizeLocation($locRaw);
+            $det = $this->normalizeLocation($detRaw);
+            $key = mb_strtolower($loc . '|' . $det);
+            $masterKeys[$key] = true;
+            if ($site !== '') {
+                if (! isset($masterKeysBySite[$site])) {
+                    $masterKeysBySite[$site] = [];
+                }
+                $masterKeysBySite[$site][$key] = true;
+            }
+            $coverageDailyRows[] = ['site' => $site, 'lokasi' => $locRaw, 'pembagian_area' => $detRaw, 'key' => $key];
+        }
+        usort($coverageDailyRows, fn ($a, $b) => strcmp($a['site'], $b['site']) ?: strcmp($a['lokasi'], $b['lokasi']) ?: strcmp($a['pembagian_area'], $b['pembagian_area']));
+        $totalLokasi = count($masterKeys);
+
+        if ($totalLokasi === 0) {
+            $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Ini)';
+            for ($d = 0; $d < 7; $d++) {
+                $day = $weekStart->copy()->addDays($d);
+                $coverageDailyDates[] = ['date' => $day->format('Y-m-d'), 'label' => $day->format('F j, Y')];
+            }
+            return view('SistemRoster.dashboard.coverage-dop', compact(
+                'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
+                'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'
+            ));
+        }
+
+        $coveredKeys = [];
+        $addCovered = function ($result, string $locCol, string $detCol) use (&$coveredKeys) {
+            $rows = is_array($result) ? $result : [];
+            foreach ($rows as $r) {
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($r, $locCol));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($r, $detCol));
+                $key = mb_strtolower($loc . '|' . $det);
+                $coveredKeys[$key] = true;
+            }
+        };
+
+        try {
+            $ch = $this->getClickHouseNitip();
+            if (method_exists($ch, 'query') && $ch->isConnected()) {
+                try {
+                    $addCovered($ch->query("SELECT DISTINCT trim(ifNull(nama_lokasi, '')) AS loc, trim(ifNull(nama_detail_lokasi, '')) AS det FROM nitip.aaj_car_all_year_from_dav WHERE trim(ifNull(nama_lokasi, '')) != '' OR trim(ifNull(nama_detail_lokasi, '')) != ''"), 'loc', 'det');
+                } catch (\Throwable $e) {
+                    Log::warning('DashboardController coverageDop CAR: ' . $e->getMessage());
+                }
+                try {
+                    $addCovered($ch->query("SELECT DISTINCT trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE trim(ifNull(toString(location), '')) != '' OR trim(ifNull(toString(detail_location), '')) != ''"), 'loc', 'det');
+                } catch (\Throwable $e) {
+                    Log::warning('DashboardController coverageDop OAK: ' . $e->getMessage());
+                }
+                try {
+                    $addCovered($ch->query("SELECT DISTINCT trim(ifNull(toString(Lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det FROM nitip.aaj_database_observasi_from_bep_ytd_only WHERE trim(ifNull(toString(Lokasi), '')) != '' OR trim(ifNull(toString(Detil_Lokasi), '')) != ''"), 'loc', 'det');
+                } catch (\Throwable $e) {
+                    Log::warning('DashboardController coverageDop Observasi: ' . $e->getMessage());
+                }
+                try {
+                    $addCovered($ch->query("SELECT DISTINCT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det FROM nitip.bep_vw_database_coaching WHERE trim(ifNull(toString(lokasi), '')) != '' OR trim(ifNull(toString(detil_lokasi), '')) != ''"), 'loc', 'det');
+                } catch (\Throwable $e) {
+                    Log::warning('DashboardController coverageDop Coaching: ' . $e->getMessage());
+                }
+            }
+        } catch (\Throwable $e) {
+            Log::warning('DashboardController coverageDop nitip: ' . $e->getMessage());
+        }
+
+        foreach (array_keys($masterKeys) as $key) {
+            if (isset($coveredKeys[$key])) {
+                $coveredLokasi++;
+            }
+        }
+        $pctCoverage = $totalLokasi > 0 ? (int) round($coveredLokasi / $totalLokasi * 100) : 0;
+
+        $coverageBySite = [];
+        foreach ($masterKeysBySite as $siteName => $keys) {
+            $totalSite = count($keys);
+            $coveredSite = 0;
+            foreach (array_keys($keys) as $key) {
+                if (isset($coveredKeys[$key])) {
+                    $coveredSite++;
+                }
+            }
+            $pctSite = $totalSite > 0 ? (int) round($coveredSite / $totalSite * 100) : 0;
+            $coverageBySite[] = [
+                'site' => $siteName,
+                'total' => $totalSite,
+                'covered' => $coveredSite,
+                'pct' => $pctSite,
+            ];
+        }
+        usort($coverageBySite, fn ($a, $b) => strcmp($a['site'], $b['site']));
+
+        $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Ini)';
+        $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        $trendLabels = [];
+        $weekDateStrs = [];
+        for ($d = 0; $d < 7; $d++) {
+            $day = $weekStart->copy()->addDays($d);
+            $trendLabels[] = $dayNames[$d] . ' ' . $day->format('d/m');
+            $weekDateStrs[] = $day->format('Y-m-d');
+        }
+        $startEsc = addslashes($weekStartStr);
+        $endEsc = addslashes($weekEndStr);
+
+        $coveredByDate = array_fill_keys($weekDateStrs, []);
+        $addCoveredByDate = function ($result) use (&$coveredByDate) {
+            $rows = is_array($result) ? $result : [];
+            foreach ($rows as $r) {
+                $dt = $this->getClickHouseRowValue($r, 'dt');
+                $dateStr = $dt instanceof \DateTimeInterface ? $dt->format('Y-m-d') : (is_string($dt) ? substr($dt, 0, 10) : '');
+                if ($dateStr === '' || ! isset($coveredByDate[$dateStr])) {
+                    continue;
+                }
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($r, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($r, 'det'));
+                $key = mb_strtolower($loc . '|' . $det);
+                $coveredByDate[$dateStr][$key] = true;
+            }
+        };
+
+        try {
+            $ch = $this->getClickHouseNitip();
+            if (method_exists($ch, 'query') && $ch->isConnected()) {
+                try {
+                    $sqlCarDaily = "SELECT toDate(tanggal_pembuatan, 'Asia/Makassar') AS dt, trim(ifNull(toString(nama_lokasi), '')) AS loc, trim(ifNull(toString(nama_detail_lokasi), '')) AS det FROM nitip.aaj_car_all_year_from_dav WHERE toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(tanggal_pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}')";
+                    $addCoveredByDate($ch->query($sqlCarDaily));
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $sqlOakDaily = "SELECT toDate(submit_date, 'Asia/Makassar') AS dt, trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}')";
+                    $addCoveredByDate($ch->query($sqlOakDaily));
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $sqlObsDaily = "SELECT toDate(Date, 'Asia/Makassar') AS dt, trim(ifNull(toString(Lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det FROM nitip.aaj_database_observasi_from_bep_ytd_only WHERE toDate(Date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Date, 'Asia/Makassar') <= toDate('{$endEsc}')";
+                    $addCoveredByDate($ch->query($sqlObsDaily));
+                } catch (\Throwable $e) {
+                }
+                try {
+                    $sqlCoachingDaily = "SELECT toDate(Tanggal_Pembuatan, 'Asia/Makassar') AS dt, trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det FROM nitip.bep_vw_database_coaching WHERE toDate(Tanggal_Pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}')";
+                    $addCoveredByDate($ch->query($sqlCoachingDaily));
+                } catch (\Throwable $e) {
+                }
+            }
+        } catch (\Throwable $e) {
+        }
+
+        foreach ($weekDateStrs as $dateStr) {
+            $coverageDailyDates[] = ['date' => $dateStr, 'label' => Carbon::parse($dateStr)->format('F j, Y')];
+        }
+        foreach ($coverageDailyRows as &$crow) {
+            $crow['days'] = [];
+            foreach ($weekDateStrs as $dateStr) {
+                $covered = isset($coveredByDate[$dateStr][$crow['key']]);
+                $crow['days'][$dateStr] = [
+                    'pct' => $covered ? 100 : 0,
+                    'covered' => $covered ? 1 : 0,
+                    'total' => 1,
+                    'status' => $covered ? 'status-green' : 'status-red',
+                ];
+            }
+        }
+        unset($crow);
+
+        foreach ($coverageBySite as $siteRow) {
+            $siteName = $siteRow['site'] ?? '';
+            $siteEsc = addslashes($siteName);
+            $countByDate = array_fill_keys($weekDateStrs, 0);
+            $mergeCounts = function ($result) use (&$countByDate) {
+                $rows = is_array($result) ? $result : [];
+                foreach ($rows as $r) {
+                    $dt = $this->getClickHouseRowValue($r, 'dt');
+                    $cnt = (int) ($this->getClickHouseRowValue($r, 'cnt') ?? 0);
+                    $dateStr = $dt instanceof \DateTimeInterface ? $dt->format('Y-m-d') : (is_string($dt) ? substr($dt, 0, 10) : '');
+                    if ($dateStr !== '' && isset($countByDate[$dateStr])) {
+                        $countByDate[$dateStr] += $cnt;
+                    }
+                }
+            };
+            try {
+                $ch = $this->getClickHouseNitip();
+                if (method_exists($ch, 'query') && $ch->isConnected()) {
+                    try {
+                        $mergeCounts($ch->query("SELECT toDate(tanggal_pembuatan, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_car_all_year_from_dav WHERE tanggal_pembuatan IS NOT NULL AND toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(tanggal_pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(nama_site), '')) = '{$siteEsc}' GROUP BY dt"));
+                    } catch (\Throwable $e) {
+                    }
+                    try {
+                        $mergeCounts($ch->query("SELECT toDate(submit_date, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE submit_date IS NOT NULL AND toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(site), '')) = '{$siteEsc}' GROUP BY dt"));
+                    } catch (\Throwable $e) {
+                    }
+                    try {
+                        $mergeCounts($ch->query("SELECT toDate(Date, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_database_observasi_from_bep_ytd_only WHERE Date IS NOT NULL AND toDate(Date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Date, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(site), '')) = '{$siteEsc}' GROUP BY dt"));
+                    } catch (\Throwable $e) {
+                    }
+                    try {
+                        $mergeCounts($ch->query("SELECT toDate(Tanggal_Pembuatan, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.bep_vw_database_coaching WHERE Tanggal_Pembuatan IS NOT NULL AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(site), '')) = '{$siteEsc}' GROUP BY dt"));
+                    } catch (\Throwable $e) {
+                    }
+                }
+            } catch (\Throwable $e) {
+            }
+            $counts = [];
+            foreach ($weekDateStrs as $dateStr) {
+                $counts[] = $countByDate[$dateStr] ?? 0;
+            }
+            $trendBySite[] = ['site' => $siteName, 'labels' => $trendLabels, 'counts' => $counts];
+        }
 
         return view('SistemRoster.dashboard.coverage-dop', compact(
             'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
