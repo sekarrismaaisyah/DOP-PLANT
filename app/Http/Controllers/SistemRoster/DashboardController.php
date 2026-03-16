@@ -26,8 +26,26 @@ class DashboardController extends Controller
      * Menampilkan halaman Dashboard Coverage Area (Coverage All).
      * KPI: total lokasi+detail aktif dari nitip.bep_vw_site_lokasi_detil_lokasi (status = 1),
      * covered = yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip.
+     * Hasil di-cache 2 menit (data berdasarkan minggu lalu).
      */
     public function coverageAll(): View
+    {
+        $weekStart = Carbon::now()->subWeek()->startOfWeek(Carbon::SUNDAY)->format('Y-m-d');
+        $cacheKey = 'sistem_roster_coverage_all_' . $weekStart;
+
+        $data = Cache::remember($cacheKey, 120, function () {
+            return $this->computeCoverageAllData();
+        });
+
+        return view('SistemRoster.dashboard.coverage-all', $data);
+    }
+
+    /**
+     * Hitung data untuk Coverage All (dipanggil dari coverageAll atau dari cache callback).
+     *
+     * @return array<string, mixed>
+     */
+    private function computeCoverageAllData(): array
     {
         $totalLokasi = 0;
         $coveredLokasi = 0;
@@ -42,7 +60,7 @@ class DashboardController extends Controller
         try {
             $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
+                return compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates');
             }
 
             // 1. Master: site + (lokasi, Detil_Lokasi) aktif — status_site, status_lokasi, status_detil_lokasi = '1'
@@ -53,7 +71,7 @@ class DashboardController extends Controller
                   AND trim(ifNull(toString(status_detil_lokasi), '')) = '1'";
             $rowsMaster = $ch->query($sqlMaster);
             if (empty($rowsMaster) || ! is_array($rowsMaster)) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
+                return compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates');
             }
 
             // Key = lowercase(normalize(lokasi)|normalize(detil)); simpan per site untuk chart
@@ -80,7 +98,7 @@ class DashboardController extends Controller
             $totalLokasi = count($masterKeys);
 
             if ($totalLokasi === 0) {
-                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
+                return compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates');
             }
 
             // 2. Lokasi yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip — pakai DISTINCT agar ringan
@@ -274,15 +292,33 @@ class DashboardController extends Controller
             $trendWeekLabel = $wStart->format('d') . '–' . $wEnd->format('d') . ' ' . $wStart->locale('id')->monthName . ' ' . $wStart->format('Y') . ' (Minggu Lalu)';
         }
 
-        return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
+        return compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates');
     }
 
     /**
      * Menampilkan halaman Dashboard Coverage Activity DOP (iframe di modal).
      * Master = lokasi + detail_lokasi dari daily_operation_plans minggu lalu (site kosong pakai unit_id).
      * Covered = sama seperti coverage-all: ada SAP (CAR, OAK, Observasi, Coaching) di nitip.
+     * Hasil di-cache 2 menit (data berdasarkan minggu lalu).
      */
     public function coverageDop(): View
+    {
+        $weekStartStr = Carbon::now()->subWeek()->startOfWeek(Carbon::SUNDAY)->format('Y-m-d');
+        $cacheKey = 'sistem_roster_coverage_dop_' . $weekStartStr;
+
+        $data = Cache::remember($cacheKey, 120, function () {
+            return $this->computeCoverageDopData();
+        });
+
+        return view('SistemRoster.dashboard.coverage-dop', $data);
+    }
+
+    /**
+     * Hitung data untuk Coverage DOP (dipanggil dari coverageDop atau dari cache callback).
+     *
+     * @return array<string, mixed>
+     */
+    private function computeCoverageDopData(): array
     {
         $totalLokasi = 0;
         $coveredLokasi = 0;
@@ -334,10 +370,10 @@ class DashboardController extends Controller
                 $day = $weekStart->copy()->addDays($d);
                 $coverageDailyDates[] = ['date' => $day->format('Y-m-d'), 'label' => $day->format('F j, Y')];
             }
-            return view('SistemRoster.dashboard.coverage-dop', compact(
+            return compact(
                 'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
                 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'
-            ));
+            );
         }
 
         $coveredKeys = [];
@@ -521,10 +557,10 @@ class DashboardController extends Controller
             $trendBySite[] = ['site' => $siteName, 'labels' => $trendLabels, 'counts' => $counts];
         }
 
-        return view('SistemRoster.dashboard.coverage-dop', compact(
+        return compact(
             'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
             'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'
-        ));
+        );
     }
 
     /**

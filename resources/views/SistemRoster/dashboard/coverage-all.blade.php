@@ -160,7 +160,7 @@
          <!-- END: Trend per Site -->
          <!-- BEGIN: DataTablesSection -->
 
-         <!-- <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
+         <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
             <header class="bg-gray-50 border-b border-gray-200 px-4 py-2">
                <h2 class="text-xs font-bold uppercase tracking-wider">E. COVERAGE DAILY - LOKASI TERLAPOR</h2>
             </header>
@@ -196,7 +196,7 @@
                   </tbody>
                </table>
             </div>
-         </section> -->
+         </section>
 
 
 
