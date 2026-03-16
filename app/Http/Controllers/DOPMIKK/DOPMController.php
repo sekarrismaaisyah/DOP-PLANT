@@ -35,9 +35,9 @@ class DOPMController extends Controller
         // Normalisasi: null / kosong / spasi = Semua Site (jangan filter by site)
         $filterSite = trim((string) ($request->query('site') ?? ''));
 
-        // Scope tanggal & status (exclude Cancel)
+        // Scope tanggal & status (exclude Cancel) — hanya tanggal_dop agar index bisa dipakai
         $scopeDate = function ($q) use ($filterDate) {
-            $q->whereDate('tanggal_dop', $filterDate)->orWhereDate('timestamp', $filterDate);
+            $q->whereDate('tanggal_dop', $filterDate);
         };
         $scopeNotCancel = function ($q) {
             $q->whereNull('status')->orWhereNotIn('status', ['Cancel', 'CANCEL']);
@@ -85,6 +85,9 @@ class DOPMController extends Controller
                 ->orWhereBetween('timestamp', [$mingguStart, $mingguEnd]);
         };
         $totalDopmMingguIni = Dopm::where($scopeWeek)->where($scopeNotCancel)->when($filterSite !== '', $scopeSite)->count();
+
+        // Daftar DOPM tidak lagi di-load (dashboard pakai data IKK ClickHouse)
+        $dopmListHarian = collect([]);
 
         // Total IKK ClickHouse minggu ini (APPROVED + EXPIRED) + data per hari untuk chart
         $totalIkkClickhouseMingguIni = 0;
@@ -155,14 +158,6 @@ class DOPMController extends Controller
         $totalPekerjaanBatalHarian = IpkIkk::whereDate('ts', $filterDate)
             ->whereIn('status_pekerjaan', ['Batal', 'BATAL'])
             ->count();
-
-        // Daftar DOPM untuk tanggal terpilih (+ optional site)
-        $dopmListHarian = Dopm::where($scopeDate)
-            ->where($scopeNotCancel)
-            ->when($filterSite !== '', $scopeSite)
-            ->orderBy('tanggal_dop')
-            ->orderBy('id')
-            ->get();
 
         // Hitung total IKK/OKK hanya dari kode_ikk yang ada di DOPM terfilter (konsisten dengan filter site)
         $kodeIkksAll = $dopmListHarian->pluck('kode_ikk')->filter()->unique()->values()->all();
