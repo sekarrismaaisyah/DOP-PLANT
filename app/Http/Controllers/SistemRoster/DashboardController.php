@@ -707,6 +707,7 @@ class DashboardController extends Controller
             ));
         }
 
+        // Hanya gunakan OAK sebagai sumber coverage IKK (tanpa CAR/Observasi/Coaching)
         $coveredKeys = [];
         $addCovered = function ($result, string $locCol, string $detCol) use (&$coveredKeys) {
             $rows = is_array($result) ? $result : [];
@@ -722,24 +723,9 @@ class DashboardController extends Controller
             $ch = $this->getClickHouseNitip();
             if (method_exists($ch, 'query') && $ch->isConnected()) {
                 try {
-                    $addCovered($ch->query("SELECT DISTINCT trim(ifNull(nama_lokasi, '')) AS loc, trim(ifNull(nama_detail_lokasi, '')) AS det FROM nitip.aaj_car_all_year_from_dav WHERE trim(ifNull(nama_lokasi, '')) != '' OR trim(ifNull(nama_detail_lokasi, '')) != ''"), 'loc', 'det');
-                } catch (\Throwable $e) {
-                    Log::warning('DashboardController coverageIkk CAR: ' . $e->getMessage());
-                }
-                try {
                     $addCovered($ch->query("SELECT DISTINCT trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE trim(ifNull(toString(location), '')) != '' OR trim(ifNull(toString(detail_location), '')) != ''"), 'loc', 'det');
                 } catch (\Throwable $e) {
                     Log::warning('DashboardController coverageIkk OAK: ' . $e->getMessage());
-                }
-                try {
-                    $addCovered($ch->query("SELECT DISTINCT trim(ifNull(toString(Lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det FROM nitip.aaj_database_observasi_from_bep_ytd_only WHERE trim(ifNull(toString(Lokasi), '')) != '' OR trim(ifNull(toString(Detil_Lokasi), '')) != ''"), 'loc', 'det');
-                } catch (\Throwable $e) {
-                    Log::warning('DashboardController coverageIkk Observasi: ' . $e->getMessage());
-                }
-                try {
-                    $addCovered($ch->query("SELECT DISTINCT trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det FROM nitip.bep_vw_database_coaching WHERE trim(ifNull(toString(lokasi), '')) != '' OR trim(ifNull(toString(detil_lokasi), '')) != ''"), 'loc', 'det');
-                } catch (\Throwable $e) {
-                    Log::warning('DashboardController coverageIkk Coaching: ' . $e->getMessage());
                 }
             }
         } catch (\Throwable $e) {
@@ -772,6 +758,7 @@ class DashboardController extends Controller
         }
         usort($coverageBySite, fn ($a, $b) => strcmp($a['site'], $b['site']));
 
+        // Hanya OAK per hari (tanpa CAR/Observasi/Coaching)
         $coveredByDate = array_fill_keys($weekDateStrs, []);
         $addCoveredByDate = function ($result) use (&$coveredByDate) {
             $rows = is_array($result) ? $result : [];
@@ -792,19 +779,7 @@ class DashboardController extends Controller
             $ch = $this->getClickHouseNitip();
             if (method_exists($ch, 'query') && $ch->isConnected()) {
                 try {
-                    $addCoveredByDate($ch->query("SELECT toDate(tanggal_pembuatan, 'Asia/Makassar') AS dt, trim(ifNull(toString(nama_lokasi), '')) AS loc, trim(ifNull(toString(nama_detail_lokasi), '')) AS det FROM nitip.aaj_car_all_year_from_dav WHERE toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(tanggal_pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}')"));
-                } catch (\Throwable $e) {
-                }
-                try {
                     $addCoveredByDate($ch->query("SELECT toDate(submit_date, 'Asia/Makassar') AS dt, trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}')"));
-                } catch (\Throwable $e) {
-                }
-                try {
-                    $addCoveredByDate($ch->query("SELECT toDate(Date, 'Asia/Makassar') AS dt, trim(ifNull(toString(Lokasi), '')) AS loc, trim(ifNull(toString(Detil_Lokasi), '')) AS det FROM nitip.aaj_database_observasi_from_bep_ytd_only WHERE toDate(Date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Date, 'Asia/Makassar') <= toDate('{$endEsc}')"));
-                } catch (\Throwable $e) {
-                }
-                try {
-                    $addCoveredByDate($ch->query("SELECT toDate(Tanggal_Pembuatan, 'Asia/Makassar') AS dt, trim(ifNull(toString(lokasi), '')) AS loc, trim(ifNull(toString(detil_lokasi), '')) AS det FROM nitip.bep_vw_database_coaching WHERE toDate(Tanggal_Pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}')"));
                 } catch (\Throwable $e) {
                 }
             }
@@ -847,6 +822,7 @@ class DashboardController extends Controller
             ];
         }
 
+        // Trend per site juga hanya berdasarkan jumlah OAK per hari
         foreach ($coverageBySite as $siteRow) {
             $siteName = $siteRow['site'] ?? '';
             $siteEsc = addslashes($siteName);
@@ -866,19 +842,7 @@ class DashboardController extends Controller
                 $ch = $this->getClickHouseNitip();
                 if (method_exists($ch, 'query') && $ch->isConnected()) {
                     try {
-                        $mergeCounts($ch->query("SELECT toDate(tanggal_pembuatan, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_car_all_year_from_dav WHERE tanggal_pembuatan IS NOT NULL AND toDate(tanggal_pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(tanggal_pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(nama_site), '')) = '{$siteEsc}' GROUP BY dt"));
-                    } catch (\Throwable $e) {
-                    }
-                    try {
                         $mergeCounts($ch->query("SELECT toDate(submit_date, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE submit_date IS NOT NULL AND toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(site), '')) = '{$siteEsc}' GROUP BY dt"));
-                    } catch (\Throwable $e) {
-                    }
-                    try {
-                        $mergeCounts($ch->query("SELECT toDate(Date, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.aaj_database_observasi_from_bep_ytd_only WHERE Date IS NOT NULL AND toDate(Date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Date, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(site), '')) = '{$siteEsc}' GROUP BY dt"));
-                    } catch (\Throwable $e) {
-                    }
-                    try {
-                        $mergeCounts($ch->query("SELECT toDate(Tanggal_Pembuatan, 'Asia/Makassar') AS dt, count() AS cnt FROM nitip.bep_vw_database_coaching WHERE Tanggal_Pembuatan IS NOT NULL AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(Tanggal_Pembuatan, 'Asia/Makassar') <= toDate('{$endEsc}') AND trim(ifNull(toString(site), '')) = '{$siteEsc}' GROUP BY dt"));
                     } catch (\Throwable $e) {
                     }
                 }

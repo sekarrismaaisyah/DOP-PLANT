@@ -166,43 +166,42 @@
                   <button type="button" class="w-full flex items-center gap-3 px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-100" data-site-toggle aria-expanded="false">
                      <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded bg-berau-green-light text-white text-sm font-bold site-accordion-icon">+</span>
                      <span class="font-bold text-gray-800 min-w-[100px]">{{ $siteSummary['site'] ?? '—' }}</span>
-                     <span class="text-[10px] text-gray-500 flex-1">Kode IKK:</span>
-                     <span class="flex flex-wrap gap-1">
-                        @foreach($siteSummary['activities'] ?? [] as $act)
-                        <span class="px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-[10px]">{{ $act }}</span>
-                        @endforeach
-                        @if(empty($siteSummary['activities']))
-                        <span class="text-gray-400 text-[10px]">—</span>
-                        @endif
-                     </span>
+                     <span class="text-[10px] text-gray-500 flex-1">IKK di Site ini</span>
                      <span class="flex-shrink-0 px-2 py-1 rounded text-[10px] font-semibold {{ ($siteSummary['oakInWeek'] ?? false) ? 'bg-success-green text-white' : 'bg-alert-red text-white' }}">
-                        OAK di week: {{ ($siteSummary['oakInWeek'] ?? false) ? 'Ada' : 'Tidak' }}
+                        OAK di minggu ini: {{ ($siteSummary['oakInWeek'] ?? false) ? 'Ada' : 'Tidak' }}
                      </span>
                   </button>
                   <div class="hidden border-t border-gray-100 bg-white" data-site-detail>
-                     <div class="overflow-auto max-h-[280px]">
+                     <div class="overflow-auto max-h-[320px]">
                         <table class="w-full text-[10px] border-collapse">
                            <thead>
                               <tr class="bg-gray-50 border-b border-gray-200 text-left">
-                                 <th class="p-2 border-r border-gray-100 min-w-[120px]">Lokasi</th>
-                                 <th class="p-2 border-r border-gray-100 min-w-[120px]">Pembagian Area</th>
-                                 <th class="p-2 border-r border-gray-100 min-w-[140px]">Kode IKK</th>
+                                 <th class="p-2 border-r border-gray-100 min-w-[80px]">Kode IKK</th>
+                                 <th class="p-2 border-r border-gray-100 min-w-[140px]">Lokasi</th>
+                                 <th class="p-2 border-r border-gray-100 min-w-[140px]">Pembagian Area</th>
                                  @foreach($coverageDailyDates ?? [] as $d)
-                                 <th class="p-2 {{ $loop->last ? '' : 'border-r border-gray-100' }} text-center w-28">{{ date('d/m', strtotime($d['date'] ?? '')) }}</th>
+                                 <th class="p-2 {{ $loop->last ? '' : 'border-r border-gray-100' }} text-center w-24">{{ date('d/m', strtotime($d['date'] ?? '')) }}</th>
                                  @endforeach
                               </tr>
                            </thead>
                            <tbody>
                               @foreach($siteSummary['details'] ?? [] as $det)
-                              <tr class="border-b border-gray-50">
-                                 <td class="p-2 border-r border-gray-100">{{ $det['lokasi'] ?? '' }}</td>
-                                 <td class="p-2 border-r border-gray-100">{{ $det['pembagian_area'] ?? '' }}</td>
-                                 <td class="p-2 border-r border-gray-100">{{ implode(', ', $det['codes'] ?? []) ?: '—' }}</td>
-                                 @foreach($coverageDailyDates ?? [] as $d)
-                                 @php $cell = $det['days'][$d['date']] ?? ['covered' => 0]; @endphp
-                                 <td class="p-2 text-center {{ !empty($cell['covered']) ? 'status-green' : 'status-red' }} {{ $loop->last ? '' : 'border-r border-gray-100' }}">{{ !empty($cell['covered']) ? 'Ada' : 'Tidak' }}</td>
+                                 @php
+                                    $codes = $det['codes'] ?? [];
+                                 @endphp
+                                 @foreach($codes as $code)
+                                 <tr class="border-b border-gray-50">
+                                    <td class="p-2 border-r border-gray-100 font-semibold text-berau-green-light">{{ $code }}</td>
+                                    <td class="p-2 border-r border-gray-100">{{ $det['lokasi'] ?? '' }}</td>
+                                    <td class="p-2 border-r border-gray-100">{{ $det['pembagian_area'] ?? '' }}</td>
+                                    @foreach($coverageDailyDates ?? [] as $d)
+                                       @php $cell = $det['days'][$d['date']] ?? ['covered' => 0]; @endphp
+                                       <td class="p-2 text-center {{ !empty($cell['covered']) ? 'status-green' : 'status-red' }} {{ $loop->last ? '' : 'border-r border-gray-100' }}">
+                                          {{ !empty($cell['covered']) ? 'Ada OAK' : 'Tidak' }}
+                                       </td>
+                                    @endforeach
+                                 </tr>
                                  @endforeach
-                              </tr>
                               @endforeach
                            </tbody>
                         </table>
