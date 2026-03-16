@@ -1111,7 +1111,8 @@
     /* Saat modal coverage iframe (Area All / DOP) terbuka: naikkan z-index agar di atas overlay/sidebar */
     body.lmo-coverage-iframe-open .modal-backdrop { z-index: 9998 !important; }
     body.lmo-coverage-iframe-open #coverageAreaAllModal.modal,
-    body.lmo-coverage-iframe-open #coverageDopModal.modal { z-index: 9999 !important; }
+    body.lmo-coverage-iframe-open #coverageDopModal.modal,
+    body.lmo-coverage-iframe-open #coverageIkkModal.modal { z-index: 9999 !important; }
     #coverageDopModal.modal .modal-dialog,
     #coverageDopModal.modal .modal-content { pointer-events: auto !important; }
     /* Tour guide button in header */
