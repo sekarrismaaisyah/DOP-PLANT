@@ -355,11 +355,25 @@ class EvaluasiUnitTabelController extends Controller
                 return $b['pct'] <=> $a['pct'];
             });
 
+            // Fuel Efficiency (km/L) = Total KM / Total Fuel. Hanya baris yang punya angka (bukan null/'-') untuk jarak dan fuel.
+            $fuelRows = array_filter($rows, function ($r) {
+                $km = isset($r['day_km']) ? (float) $r['day_km'] : null;
+                $fuel = isset($r['avg_per_day']) && $r['avg_per_day'] !== null && $r['avg_per_day'] !== '' && $r['avg_per_day'] !== '-' ? (float) $r['avg_per_day'] : null;
+                return $km !== null && $km > 0 && $fuel !== null && $fuel > 0;
+            });
+            $totalKmFuel = 0;
+            $totalFuelLiters = 0;
+            foreach ($fuelRows as $r) {
+                $totalKmFuel += (float) $r['day_km'];
+                $totalFuelLiters += (float) $r['avg_per_day'];
+            }
+            $avgFuelKmPerL = ($totalFuelLiters > 0) ? round($totalKmFuel / $totalFuelLiters, 2) : null;
+
             return [
                 'total_unit_beroperasi' => $totalUnitBeroperasi,
                 'compliance_pct' => $compliancePct,
                 'avg_waktu_jam_per_unit' => $avgWaktu,
-                'avg_fuel_km_per_l' => null,
+                'avg_fuel_km_per_l' => $avgFuelKmPerL,
                 'passed_count' => $passedCount,
                 'expiring_count' => $expiringCount,
                 'not_passed_count' => $notPassedCount,

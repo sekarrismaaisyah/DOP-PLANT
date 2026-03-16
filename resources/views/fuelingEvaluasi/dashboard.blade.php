@@ -152,17 +152,14 @@
             </div>
             <!-- Card 4: Fuel efficiency (km/L) - coming soon -->
             <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
-               <div class="absolute top-0 right-0">
-                  <span class="bg-primary text-[10px] text-white px-3 py-1 font-bold rounded-bl-lg uppercase tracking-widest">Coming Soon</span>
-               </div>
                <div class="flex justify-between items-start mb-3">
                   <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Fuel Efficiency</p>
                   <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-slate-400">
                      <span class="material-symbols-outlined text-xl">local_gas_station</span>
                   </div>
                </div>
-               <h3 class="text-3xl font-bold text-slate-300" id="kpi_fuel">—</h3>
-               <p class="text-xs text-slate-400 mt-2 italic">km/L (total km / total konsumsi fuel)</p>
+               <h3 class="text-3xl font-bold text-slate-800 dark:text-slate-200" id="kpi_fuel">—</h3>
+               <p class="text-xs text-slate-400 mt-2 italic">km/L = Total KM (semua unit) ÷ Total Fuel (liter). Baris null/— tidak dihitung.</p>
             </div>
          </div>
          <!-- Main Content Area -->
@@ -344,7 +341,7 @@
                   if (compEl) compEl.textContent = s.compliance_pct != null ? s.compliance_pct + '%' : '—';
                   if (compArc) compArc.setAttribute('stroke-dasharray', (s.compliance_pct != null ? s.compliance_pct : 0) + ', 100');
                   if (avgEl) avgEl.textContent = s.avg_waktu_jam_per_unit != null ? Number(s.avg_waktu_jam_per_unit) : '—';
-                  if (fuelEl) fuelEl.textContent = s.avg_fuel_km_per_l != null ? Number(s.avg_fuel_km_per_l) : '—';
+                  if (fuelEl) fuelEl.textContent = s.avg_fuel_km_per_l != null ? (Number(s.avg_fuel_km_per_l) + ' km/l') : '—';
                   var donutTotal = document.getElementById('kpi_donut_total');
                   var kpiPassed = document.getElementById('kpi_passed');
                   var kpiExpiring = document.getElementById('kpi_expiring');
@@ -387,6 +384,8 @@
                   if (compEl) compEl.textContent = '—';
                   if (document.getElementById('kpi_compliance_arc')) document.getElementById('kpi_compliance_arc').setAttribute('stroke-dasharray', '0, 100');
                   if (avgEl) avgEl.textContent = '—';
+                  var fuelEl = document.getElementById('kpi_fuel');
+                  if (fuelEl) fuelEl.textContent = '—';
                   var donutTotal = document.getElementById('kpi_donut_total');
                   if (donutTotal) donutTotal.textContent = '—';
                   var kpiPassed = document.getElementById('kpi_passed');
