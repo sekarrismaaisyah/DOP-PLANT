@@ -278,7 +278,7 @@ class DashboardController extends Controller
 
     /**
      * Menampilkan halaman Dashboard Coverage Activity DOP (iframe di modal).
-     * Master = lokasi + detail_lokasi dari daily_operation_plans minggu ini (site kosong pakai unit_id).
+     * Master = lokasi + detail_lokasi dari daily_operation_plans minggu lalu (site kosong pakai unit_id).
      * Covered = sama seperti coverage-all: ada SAP (CAR, OAK, Observasi, Coaching) di nitip.
      */
     public function coverageDop(): View
@@ -293,16 +293,15 @@ class DashboardController extends Controller
         $coverageDailyRows = [];
         $coverageDailyDates = [];
 
-        $weekStart = Carbon::now()->startOfWeek(Carbon::SUNDAY);
-        $weekEnd = Carbon::now()->endOfWeek(Carbon::SATURDAY);
+        $weekStart = Carbon::now()->subWeek()->startOfWeek(Carbon::SUNDAY);
+        $weekEnd = Carbon::now()->subWeek()->endOfWeek(Carbon::SATURDAY);
         $weekStartStr = $weekStart->format('Y-m-d');
         $weekEndStr = $weekEnd->format('Y-m-d');
 
         $dopRows = DB::table('daily_operation_plans')
             ->where('status', 1)
             ->whereBetween('tanggal', [$weekStartStr, $weekEndStr])
-            ->selectRaw('COALESCE(NULLIF(TRIM(site), ""), unit_id) as site, lokasi, detail_lokasi')
-            ->distinct()
+            ->selectRaw('COALESCE(NULLIF(TRIM(site), ""), unit_id) as site, lokasi, detail_lokasi, aktivitas')
             ->get();
 
         $masterKeys = [];
@@ -312,6 +311,7 @@ class DashboardController extends Controller
             $site = trim((string) ($row->site ?? ''));
             $locRaw = trim((string) ($row->lokasi ?? ''));
             $detRaw = trim((string) ($row->detail_lokasi ?? ''));
+            $aktivitas = trim((string) ($row->aktivitas ?? ''));
             $loc = $this->normalizeLocation($locRaw);
             $det = $this->normalizeLocation($detRaw);
             $key = mb_strtolower($loc . '|' . $det);
@@ -322,13 +322,13 @@ class DashboardController extends Controller
                 }
                 $masterKeysBySite[$site][$key] = true;
             }
-            $coverageDailyRows[] = ['site' => $site, 'lokasi' => $locRaw, 'pembagian_area' => $detRaw, 'key' => $key];
+            $coverageDailyRows[] = ['site' => $site, 'lokasi' => $locRaw, 'pembagian_area' => $detRaw, 'aktivitas' => $aktivitas, 'key' => $key];
         }
-        usort($coverageDailyRows, fn ($a, $b) => strcmp($a['site'], $b['site']) ?: strcmp($a['lokasi'], $b['lokasi']) ?: strcmp($a['pembagian_area'], $b['pembagian_area']));
+        usort($coverageDailyRows, fn ($a, $b) => strcmp($a['site'], $b['site']) ?: strcmp($a['lokasi'], $b['lokasi']) ?: strcmp($a['pembagian_area'], $b['pembagian_area']) ?: strcmp($a['aktivitas'] ?? '', $b['aktivitas'] ?? ''));
         $totalLokasi = count($masterKeys);
 
         if ($totalLokasi === 0) {
-            $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Ini)';
+            $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Lalu)';
             for ($d = 0; $d < 7; $d++) {
                 $day = $weekStart->copy()->addDays($d);
                 $coverageDailyDates[] = ['date' => $day->format('Y-m-d'), 'label' => $day->format('F j, Y')];
@@ -404,7 +404,7 @@ class DashboardController extends Controller
         }
         usort($coverageBySite, fn ($a, $b) => strcmp($a['site'], $b['site']));
 
-        $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Ini)';
+        $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Lalu)';
         $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
         $trendLabels = [];
         $weekDateStrs = [];
@@ -751,9 +751,7 @@ class DashboardController extends Controller
             }
             $byKey[$key]['planned']++;
 
-            $planLokasiNorm = $this->normalizeLocation($p->lokasi ?? '');
-            $planDetailNorm = $this->normalizeLocation($p->detail_lokasi ?? '');
-            $locationKey = $planLokasiNorm . '|' . $planDetailNorm;
+            $locationKey = $this->locationKeyForSapMatch($p->lokasi ?? '', $p->detail_lokasi ?? '');
 
             $karyawanNamesLower = [];
             foreach ($p->karyawans ?? [] as $k) {
@@ -843,8 +841,8 @@ class DashboardController extends Controller
             $byDate = [];
             foreach ($results as $row) {
                 $dt = $this->getClickHouseRowValue($row, 'dt');
-                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
-                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
+                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'submit_by'));
                 $dateStr = $dt instanceof \DateTimeInterface
                     ? $dt->format('Y-m-d')
@@ -852,7 +850,7 @@ class DashboardController extends Controller
                 if ($dateStr === '') {
                     continue;
                 }
-                $locationKey = $loc . '|' . $det;
+                $locationKey = $this->locationKeyForSapMatch($loc, $det);
                 if (! isset($byDate[$dateStr])) {
                     $byDate[$dateStr] = [];
                 }
@@ -905,8 +903,8 @@ class DashboardController extends Controller
             $byDate = [];
             foreach ($results as $row) {
                 $dt = $this->getClickHouseRowValue($row, 'dt');
-                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
-                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
+                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
                 $dateStr = $dt instanceof \DateTimeInterface
                     ? $dt->format('Y-m-d')
@@ -914,7 +912,7 @@ class DashboardController extends Controller
                 if ($dateStr === '') {
                     continue;
                 }
-                $locationKey = $loc . '|' . $det;
+                $locationKey = $this->locationKeyForSapMatch($loc, $det);
                 if (! isset($byDate[$dateStr])) {
                     $byDate[$dateStr] = [];
                 }
@@ -1044,8 +1042,8 @@ class DashboardController extends Controller
             $byDate = [];
             foreach ($results as $row) {
                 $dt = $this->getClickHouseRowValue($row, 'dt');
-                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
-                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
+                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_coach'));
                 $dateStr = $dt instanceof \DateTimeInterface
                     ? $dt->format('Y-m-d')
@@ -1053,7 +1051,7 @@ class DashboardController extends Controller
                 if ($dateStr === '') {
                     continue;
                 }
-                $locationKey = $loc . '|' . $det;
+                $locationKey = $this->locationKeyForSapMatch($loc, $det);
                 if (! isset($byDate[$dateStr])) {
                     $byDate[$dateStr] = [];
                 }
@@ -1148,8 +1146,8 @@ class DashboardController extends Controller
             $byDate = [];
             foreach ($results as $row) {
                 $dt = $this->getClickHouseRowValue($row, 'dt');
-                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
-                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
+                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
                 $dateStr = $dt instanceof \DateTimeInterface
                     ? $dt->format('Y-m-d')
@@ -1157,7 +1155,7 @@ class DashboardController extends Controller
                 if ($dateStr === '') {
                     continue;
                 }
-                $locationKey = $loc . '|' . $det;
+                $locationKey = $this->locationKeyForSapMatch($loc, $det);
                 if (! isset($byDate[$dateStr])) {
                     $byDate[$dateStr] = [];
                 }
@@ -1240,6 +1238,21 @@ class DashboardController extends Controller
     }
 
     /**
+     * Key lokasi kanonik untuk match SAP (heatmap actual + detail): lowercase, hapus kurung, collapse spasi.
+     * Agar "(B8) Pit CD" dan "B8 Pit CD" dari planning vs nitip match.
+     */
+    private function locationKeyForSapMatch(?string $lokasi, ?string $detail): string
+    {
+        $a = $this->normalizeLocation($lokasi);
+        $b = $this->normalizeLocation($detail);
+        $a = preg_replace('/\s*[()]\s*/', ' ', $a);
+        $b = preg_replace('/\s*[()]\s*/', ' ', $b);
+        $a = preg_replace('/\s+/', ' ', trim($a));
+        $b = preg_replace('/\s+/', ' ', trim($b));
+        return mb_strtolower($a) . '|' . mb_strtolower($b);
+    }
+
+    /**
      * Ambil data hazard inspeksi (CAR jenis HAZARD/INSPEKSI, status SUBMITTED) dari ClickHouse untuk tanggal tertentu.
      * Digunakan untuk match: nama pelapor + lokasi + detail lokasi + tanggal.
      *
@@ -1271,14 +1284,15 @@ class DashboardController extends Controller
             foreach ($results as $row) {
                 $id = $this->getClickHouseRowValue($row, 'id');
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
-                $lokasi = $this->normalizeLocation($this->getClickHouseRowValue($row, 'nama_lokasi'));
-                $detailLokasi = $this->normalizeLocation($this->getClickHouseRowValue($row, 'nama_detail_lokasi'));
+                $lokasiRaw = trim((string) $this->getClickHouseRowValue($row, 'nama_lokasi'));
+                $detailRaw = trim((string) $this->getClickHouseRowValue($row, 'nama_detail_lokasi'));
                 $jenisLaporan = trim((string) $this->getClickHouseRowValue($row, 'jenis_laporan'));
                 $list[] = [
                     'id' => $id,
                     'nama_lower' => $nama !== '' ? mb_strtolower($nama) : '',
-                    'lokasi_norm' => $lokasi,
-                    'detail_lokasi_norm' => $detailLokasi,
+                    'lokasi_norm' => $this->normalizeLocation($lokasiRaw),
+                    'detail_lokasi_norm' => $this->normalizeLocation($detailRaw),
+                    'location_key' => $this->locationKeyForSapMatch($lokasiRaw, $detailRaw),
                     'jenis_laporan' => $jenisLaporan !== '' ? $jenisLaporan : null,
                 ];
             }
@@ -1316,11 +1330,11 @@ class DashboardController extends Controller
             }
             $out = [];
             foreach ($results as $row) {
-                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
-                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
+                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'submit_by'));
                 $cnt = (int) ($this->getClickHouseRowValue($row, 'cnt') ?? 0);
-                $key = $loc . '|' . $det;
+                $key = $this->locationKeyForSapMatch($loc, $det);
                 if (! isset($out[$key])) {
                     $out[$key] = [];
                 }
@@ -1362,11 +1376,11 @@ class DashboardController extends Controller
             }
             $out = [];
             foreach ($results as $row) {
-                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
-                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
+                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
                 $cnt = (int) ($this->getClickHouseRowValue($row, 'cnt') ?? 0);
-                $key = $loc . '|' . $det;
+                $key = $this->locationKeyForSapMatch($loc, $det);
                 if (! isset($out[$key])) {
                     $out[$key] = [];
                 }
@@ -1408,11 +1422,11 @@ class DashboardController extends Controller
             }
             $out = [];
             foreach ($results as $row) {
-                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
-                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
+                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
+                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_coach'));
                 $cnt = (int) ($this->getClickHouseRowValue($row, 'cnt') ?? 0);
-                $key = $loc . '|' . $det;
+                $key = $this->locationKeyForSapMatch($loc, $det);
                 if (! isset($out[$key])) {
                     $out[$key] = [];
                 }
@@ -1457,9 +1471,7 @@ class DashboardController extends Controller
 
         $rows = [];
         foreach ($plannings as $planning) {
-            $planLokasiNorm = $this->normalizeLocation($planning->lokasi ?? '');
-            $planDetailNorm = $this->normalizeLocation($planning->detail_lokasi ?? '');
-            $locationKey = $planLokasiNorm . '|' . $planDetailNorm;
+            $locationKey = $this->locationKeyForSapMatch($planning->lokasi ?? '', $planning->detail_lokasi ?? '');
 
             $karyawans = $planning->karyawans ?? collect();
             if ($karyawans->isEmpty()) {
@@ -1481,7 +1493,7 @@ class DashboardController extends Controller
 
                 $countInspeksi = 0;
                 foreach ($carList as $item) {
-                    if ($item['lokasi_norm'] !== $planLokasiNorm || $item['detail_lokasi_norm'] !== $planDetailNorm) {
+                    if (($item['location_key'] ?? '') !== $locationKey) {
                         continue;
                     }
                     if ($item['nama_lower'] !== '' && $item['nama_lower'] === $namaLower) {

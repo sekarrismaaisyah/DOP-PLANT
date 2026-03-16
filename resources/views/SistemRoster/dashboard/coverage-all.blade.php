@@ -160,7 +160,7 @@
          <!-- END: Trend per Site -->
          <!-- BEGIN: DataTablesSection -->
 
-         <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
+         <!-- <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
             <header class="bg-gray-50 border-b border-gray-200 px-4 py-2">
                <h2 class="text-xs font-bold uppercase tracking-wider">E. COVERAGE DAILY - LOKASI TERLAPOR</h2>
             </header>
@@ -196,120 +196,10 @@
                   </tbody>
                </table>
             </div>
-         </section>
+         </section> -->
 
 
 
-         <div class="grid grid-cols-1 xl:grid-cols-2 gap-4" data-purpose="detailed-data-tables">
-            <!-- Table 1 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-               <div class="bg-[#4a4a4a] p-3">
-                  <h3 class="text-white text-xs font-bold uppercase">Coverage by Site</h3>
-               </div>
-               <div class="overflow-x-auto">
-                  <table class="w-full text-xs text-left border-collapse">
-                     <thead class="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                           <th class="p-3 font-bold text-gray-600">Site Name</th>
-                           <th class="p-3 font-bold text-gray-600 text-center">Mar 09</th>
-                           <th class="p-3 font-bold text-gray-600 text-center">Mar 10</th>
-                           <th class="p-3 font-bold text-gray-600 text-center">Mar 11</th>
-                           <th class="p-3 font-bold text-gray-600 text-center">Mar 12</th>
-                           <th class="p-3 font-bold text-gray-600 text-center">Mar 13</th>
-                        </tr>
-                     </thead>
-                     <tbody>
-                        <tr class="border-b border-gray-50">
-                           <td class="p-3 font-medium">Lati Central</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">98%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">97%</td>
-                           <td class="p-3 text-center bg-warn-yellow font-bold">94%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">96%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">95%</td>
-                        </tr>
-                        <tr class="border-b border-gray-50">
-                           <td class="p-3 font-medium">Binungan Block 7</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">99%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">98%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">99%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">97%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">99%</td>
-                        </tr>
-                        <tr class="border-b border-gray-50">
-                           <td class="p-3 font-medium">Sambarata North</td>
-                           <td class="p-3 text-center bg-alert-red text-white font-bold">82%</td>
-                           <td class="p-3 text-center bg-warn-yellow font-bold">88%</td>
-                           <td class="p-3 text-center bg-warn-yellow font-bold">92%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">95%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">97%</td>
-                        </tr>
-                        <tr class="border-b border-gray-50">
-                           <td class="p-3 font-medium">Gurimba Port</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">95%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">95%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">96%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">95%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">96%</td>
-                        </tr>
-                     </tbody>
-                  </table>
-               </div>
-            </div>
-            <!-- Table 2 -->
-            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-               <div class="bg-[#4a4a4a] p-3">
-                  <h3 class="text-white text-xs font-bold uppercase">Coverage by Area Type</h3>
-               </div>
-               <div class="overflow-x-auto">
-                  <table class="w-full text-xs text-left border-collapse">
-                     <thead class="bg-gray-50 border-b border-gray-100">
-                        <tr>
-                           <th class="p-3 font-bold text-gray-600">Area Type</th>
-                           <th class="p-3 font-bold text-gray-600 text-center">Mar 09</th>
-                           <th class="p-3 font-bold text-gray-600 text-center">Mar 10</th>
-                           <th class="p-3 font-bold text-gray-600 text-center">Mar 11</th>
-                           <th class="p-3 font-bold text-gray-600 text-center">Mar 12</th>
-                           <th class="p-3 font-bold text-gray-600 text-center">Mar 13</th>
-                        </tr>
-                     </thead>
-                     <tbody>
-                        <tr class="border-b border-gray-50">
-                           <td class="p-3 font-medium">Production Area</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">96%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">96%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">95%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">97%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">98%</td>
-                        </tr>
-                        <tr class="border-b border-gray-50">
-                           <td class="p-3 font-medium">Disposal Area</td>
-                           <td class="p-3 text-center bg-warn-yellow font-bold">91%</td>
-                           <td class="p-3 text-center bg-warn-yellow font-bold">89%</td>
-                           <td class="p-3 text-center bg-alert-red text-white font-bold">84%</td>
-                           <td class="p-3 text-center bg-warn-yellow font-bold">88%</td>
-                           <td class="p-3 text-center bg-warn-yellow font-bold">92%</td>
-                        </tr>
-                        <tr class="border-b border-gray-50">
-                           <td class="p-3 font-medium">Logistics Path</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">100%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">100%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">99%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">100%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">100%</td>
-                        </tr>
-                        <tr class="border-b border-gray-50">
-                           <td class="p-3 font-medium">Workshop Area</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">97%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">97%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">98%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">97%</td>
-                           <td class="p-3 text-center bg-soft-green font-bold">97%</td>
-                        </tr>
-                     </tbody>
-                  </table>
-               </div>
-            </div>
-         </div>
          <!-- END: DataTablesSection -->
       </main>
       <footer class="p-6 text-center text-gray-400 text-xs">
