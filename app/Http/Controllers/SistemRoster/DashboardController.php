@@ -338,13 +338,16 @@ class DashboardController extends Controller
         $dopRows = DB::table('daily_operation_plans')
             ->where('status', 1)
             ->whereBetween('tanggal', [$weekStartStr, $weekEndStr])
-            ->selectRaw('COALESCE(NULLIF(TRIM(site), ""), unit_id) as site, lokasi, detail_lokasi, aktivitas')
+            ->selectRaw('tanggal, COALESCE(NULLIF(TRIM(site), ""), unit_id) as site, lokasi, detail_lokasi, aktivitas')
             ->get();
 
         $masterKeys = [];
         $masterKeysBySite = [];
         $coverageDailyRows = [];
         foreach ($dopRows as $row) {
+            $tanggal = $row->tanggal instanceof \DateTimeInterface
+                ? $row->tanggal->format('Y-m-d')
+                : (is_string($row->tanggal) ? substr($row->tanggal, 0, 10) : '');
             $site = trim((string) ($row->site ?? ''));
             $locRaw = trim((string) ($row->lokasi ?? ''));
             $detRaw = trim((string) ($row->detail_lokasi ?? ''));
@@ -359,9 +362,9 @@ class DashboardController extends Controller
                 }
                 $masterKeysBySite[$site][$key] = true;
             }
-            $coverageDailyRows[] = ['site' => $site, 'lokasi' => $locRaw, 'pembagian_area' => $detRaw, 'aktivitas' => $aktivitas, 'key' => $key];
+            $coverageDailyRows[] = ['site' => $site, 'lokasi' => $locRaw, 'pembagian_area' => $detRaw, 'aktivitas' => $aktivitas, 'key' => $key, 'tanggal' => $tanggal];
         }
-        usort($coverageDailyRows, fn ($a, $b) => strcmp($a['site'], $b['site']) ?: strcmp($a['lokasi'], $b['lokasi']) ?: strcmp($a['pembagian_area'], $b['pembagian_area']) ?: strcmp($a['aktivitas'] ?? '', $b['aktivitas'] ?? ''));
+        usort($coverageDailyRows, fn ($a, $b) => strcmp($a['site'], $b['site']) ?: strcmp($a['lokasi'], $b['lokasi']) ?: strcmp($a['pembagian_area'], $b['pembagian_area']) ?: strcmp($a['aktivitas'] ?? '', $b['aktivitas'] ?? '') ?: strcmp($a['tanggal'] ?? '', $b['tanggal'] ?? ''));
         $totalLokasi = count($masterKeys);
 
         if ($totalLokasi === 0) {
@@ -538,6 +541,7 @@ class DashboardController extends Controller
                 'lokasi' => $row['lokasi'] ?? '',
                 'pembagian_area' => $row['pembagian_area'] ?? '',
                 'aktivitas' => $row['aktivitas'] ?? '',
+                'tanggal' => $row['tanggal'] ?? '',
                 'days' => $row['days'] ?? [],
             ];
             foreach ($row['days'] ?? [] as $dayData) {

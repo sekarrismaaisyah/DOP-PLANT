@@ -198,13 +198,18 @@
                            </thead>
                            <tbody>
                               @foreach($siteSummary['details'] ?? [] as $det)
+                              @php $tanggalDop = $det['tanggal'] ?? ''; @endphp
                               <tr class="border-b border-gray-50">
                                  <td class="p-2 border-r border-gray-100">{{ $det['lokasi'] ?? '' }}</td>
                                  <td class="p-2 border-r border-gray-100">{{ $det['pembagian_area'] ?? '' }}</td>
                                  <td class="p-2 border-r border-gray-100">{{ $det['aktivitas'] ?? '' }}</td>
                                  @foreach($coverageDailyDates ?? [] as $d)
+                                 @if(($d['date'] ?? '') === $tanggalDop)
                                  @php $cell = $det['days'][$d['date']] ?? ['covered' => 0]; @endphp
                                  <td class="p-2 text-center {{ !empty($cell['covered']) ? 'status-green' : 'status-red' }} {{ $loop->last ? '' : 'border-r border-gray-100' }}">{{ !empty($cell['covered']) ? 'Ada' : 'Tidak' }}</td>
+                                 @else
+                                 <td class="p-2 text-center text-gray-300 {{ $loop->last ? '' : 'border-r border-gray-100' }}">—</td>
+                                 @endif
                                  @endforeach
                               </tr>
                               @endforeach
