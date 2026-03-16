@@ -68,15 +68,11 @@
          <!-- BEGIN: FilterBar -->
          <nav class="bg-white p-4 rounded-lg shadow-sm flex flex-wrap gap-4 items-center" data-purpose="filter-controls">
             <div class="flex flex-col gap-1">
-               <label class="text-[10px] font-semibold uppercase text-gray-500">Duration</label>
-               <select class="bg-gray-50 border-none rounded-lg py-2 px-4 text-sm font-medium shadow-sm focus:ring-berau-green-light min-w-[150px]">
-                  <option>Last 4 Week</option>
-               </select>
-            </div>
-            <div class="flex flex-col gap-1">
-               <label class="text-[10px] font-semibold uppercase text-gray-500">Timeframe</label>
-               <select class="bg-gray-50 border-none rounded-lg py-2 px-4 text-sm font-medium shadow-sm focus:ring-berau-green-light min-w-[120px]">
-                  <option>Week</option>
+               <label class="text-[10px] font-semibold uppercase text-gray-500">Minggu (Senin–Minggu)</label>
+               <select id="filter-week" class="bg-gray-50 border-none rounded-lg py-2 px-4 text-sm font-medium shadow-sm focus:ring-berau-green-light min-w-[200px]" data-current-url="{{ url()->current() }}">
+                  @foreach($availableWeeks ?? [] as $w)
+                  <option value="{{ $w['value'] }}" {{ ($selectedWeekValue ?? '') === $w['value'] ? 'selected' : '' }}>{{ $w['label'] }}</option>
+                  @endforeach
                </select>
             </div>
             <div class="flex flex-col gap-1">
@@ -101,20 +97,20 @@
          <!-- END: FilterBar -->
          <!-- BEGIN: TopSection -->
          <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-            <!-- Section A: Summary Bar Chart — coverage per site (DOP minggu lalu vs tercover SAP) -->
+            <!-- Section A: Summary Bar Chart — coverage per site (IKK vs Ada SAP) -->
             <section class="lg:col-span-2 bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-purpose="summary-bar-chart">
-               <h2 class="text-sm font-bold text-gray-700 uppercase mb-6">Coverage per Site (DOP Minggu Lalu vs Ada SAP)</h2>
+               <h2 class="text-sm font-bold text-gray-700 uppercase mb-6">Coverage per Site (Lokasi IKK vs Ada SAP)</h2>
                <div class="h-64 min-h-[256px] relative">
                   <canvas id="summaryCoverageBarChart" aria-label="Coverage per Site"></canvas>
                </div>
             </section>
-            <!-- Section B: KPI Metrics (DOP minggu lalu vs tercover SAP) -->
+            <!-- Section B: KPI Metrics (Lokasi IKK vs tercover SAP) -->
             <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center space-y-4" data-purpose="kpi-metrics-card">
                <div class="text-6xl font-black text-berau-green-light">{{ $pctCoverage ?? 0 }}%</div>
-               <div class="text-lg font-semibold text-gray-600 uppercase">Overall Coverage Rate (Minggu Lalu)</div>
+               <div class="text-lg font-semibold text-gray-600 uppercase">Overall Coverage Rate (Minggu Terpilih)</div>
                <div class="w-full border-t border-gray-100 pt-4 grid grid-cols-2 gap-4">
                   <div>
-                     <p class="text-[10px] text-gray-400 font-bold uppercase">Total Lokasi DOP (Minggu Lalu)</p>
+                     <p class="text-[10px] text-gray-400 font-bold uppercase">Total Lokasi IKK (Minggu Terpilih)</p>
                      <p class="text-2xl font-bold text-gray-800">{{ $totalLokasi ?? 0 }}</p>
                   </div>
                   <div>
@@ -127,8 +123,8 @@
          <!-- END: TopSection -->
          <!-- BEGIN: Trend per Site — Total Laporan per Hari (Minggu ini, Min–Sab) -->
          <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-purpose="trend-per-site">
-            <h2 class="text-sm font-bold text-gray-700 uppercase mb-1">Trend Laporan per Site (Minggu Lalu)</h2>
-            <p class="text-xs text-gray-500 mb-4">Minggu s/d Sabtu minggu lalu — geser untuk lihat tiap site. Sumber: Inspeksi, OAK, Observasi, Coaching (nitip)</p>
+            <h2 class="text-sm font-bold text-gray-700 uppercase mb-1">Trend Laporan per Site (Minggu Terpilih)</h2>
+            <p class="text-xs text-gray-500 mb-4">Senin s/d Minggu — geser untuk lihat tiap site. Sumber: Inspeksi, OAK, Observasi, Coaching (nitip)</p>
             <div class="trend-swiper-wrapper relative">
                @if(empty($trendBySite))
                <div class="flex items-center justify-center py-12 text-gray-400 text-sm">Belum ada data trend per site.</div>
@@ -162,7 +158,7 @@
          <!-- BEGIN: Per Site - Aktivitas & OAK di Week -->
          <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
             <header class="bg-gray-50 border-b border-gray-200 px-4 py-2">
-               <h2 class="text-xs font-bold uppercase tracking-wider">D. PER SITE - AKTIVITAS & OAK MINGGU INI</h2>
+               <h2 class="text-xs font-bold uppercase tracking-wider">D. PER SITE - LOKASI IKK & OAK MINGGU INI</h2>
             </header>
             <div class="p-4 space-y-2">
                @forelse($siteActivitiesSummary ?? [] as $siteSummary)
@@ -170,7 +166,7 @@
                   <button type="button" class="w-full flex items-center gap-3 px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-100" data-site-toggle aria-expanded="false">
                      <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded bg-berau-green-light text-white text-sm font-bold site-accordion-icon">+</span>
                      <span class="font-bold text-gray-800 min-w-[100px]">{{ $siteSummary['site'] ?? '—' }}</span>
-                     <span class="text-[10px] text-gray-500 flex-1">Aktivitas:</span>
+                     <span class="text-[10px] text-gray-500 flex-1">Kode IKK:</span>
                      <span class="flex flex-wrap gap-1">
                         @foreach($siteSummary['activities'] ?? [] as $act)
                         <span class="px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-[10px]">{{ $act }}</span>
@@ -190,7 +186,7 @@
                               <tr class="bg-gray-50 border-b border-gray-200 text-left">
                                  <th class="p-2 border-r border-gray-100 min-w-[120px]">Lokasi</th>
                                  <th class="p-2 border-r border-gray-100 min-w-[120px]">Pembagian Area</th>
-                                 <th class="p-2 border-r border-gray-100 min-w-[140px]">Aktivitas</th>
+                                 <th class="p-2 border-r border-gray-100 min-w-[140px]">Kode IKK</th>
                                  @foreach($coverageDailyDates ?? [] as $d)
                                  <th class="p-2 {{ $loop->last ? '' : 'border-r border-gray-100' }} text-center w-28">{{ date('d/m', strtotime($d['date'] ?? '')) }}</th>
                                  @endforeach
@@ -198,18 +194,13 @@
                            </thead>
                            <tbody>
                               @foreach($siteSummary['details'] ?? [] as $det)
-                              @php $tanggalDop = $det['tanggal'] ?? ''; @endphp
                               <tr class="border-b border-gray-50">
                                  <td class="p-2 border-r border-gray-100">{{ $det['lokasi'] ?? '' }}</td>
                                  <td class="p-2 border-r border-gray-100">{{ $det['pembagian_area'] ?? '' }}</td>
-                                 <td class="p-2 border-r border-gray-100">{{ $det['aktivitas'] ?? '' }}</td>
+                                 <td class="p-2 border-r border-gray-100">{{ implode(', ', $det['codes'] ?? []) ?: '—' }}</td>
                                  @foreach($coverageDailyDates ?? [] as $d)
-                                 @if(($d['date'] ?? '') === $tanggalDop)
                                  @php $cell = $det['days'][$d['date']] ?? ['covered' => 0]; @endphp
                                  <td class="p-2 text-center {{ !empty($cell['covered']) ? 'status-green' : 'status-red' }} {{ $loop->last ? '' : 'border-r border-gray-100' }}">{{ !empty($cell['covered']) ? 'Ada' : 'Tidak' }}</td>
-                                 @else
-                                 <td class="p-2 text-center text-gray-300 {{ $loop->last ? '' : 'border-r border-gray-100' }}">—</td>
-                                 @endif
                                  @endforeach
                               </tr>
                               @endforeach
@@ -228,7 +219,7 @@
 
          <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
             <header class="bg-gray-50 border-b border-gray-200 px-4 py-2">
-               <h2 class="text-xs font-bold uppercase tracking-wider">E. COVERAGE DAILY - LOKASI TERLAPOR</h2>
+               <h2 class="text-xs font-bold uppercase tracking-wider">E. COVERAGE DAILY - LOKASI IKK TERLAPOR</h2>
             </header>
             <div class="overflow-auto max-h-[320px]">
                <table class="w-full text-[10px] border-collapse" id="coverage-table">
@@ -237,7 +228,7 @@
                         <th class="p-2 border-r border-gray-100 min-w-[80px]">Site Used.</th>
                         <th class="p-2 border-r border-gray-100 min-w-[150px]">Lokasi</th>
                         <th class="p-2 border-r border-gray-100 min-w-[120px]">Pembagian Area</th>
-                        <th class="p-2 border-r border-gray-100 min-w-[140px]">Aktivitas</th>
+                        <th class="p-2 border-r border-gray-100 min-w-[140px]">Kode IKK</th>
                         @foreach($coverageDailyDates ?? [] as $d)
                         <th class="p-2 {{ $loop->last ? '' : 'border-r border-gray-100' }} text-center w-40">{{ $d['label'] }}</th>
                         @endforeach
@@ -251,7 +242,7 @@
                         </td>
                         <td class="p-2 border-r border-gray-100">{{ $row['lokasi'] ?? '' }}</td>
                         <td class="p-2 border-r border-gray-100">{{ $row['pembagian_area'] ?? '' }}</td>
-                        <td class="p-2 border-r border-gray-100">{{ $row['aktivitas'] ?? '' }}</td>
+                        <td class="p-2 border-r border-gray-100">{{ implode(', ', $row['codes'] ?? []) ?: '—' }}</td>
                         @foreach($coverageDailyDates ?? [] as $d)
                         @php $cell = $row['days'][$d['date']] ?? ['pct' => 0, 'covered' => 0, 'total' => 1, 'status' => 'status-red']; @endphp
                         <td class="p-2 text-center {{ $cell['status'] }} {{ $loop->last ? '' : 'border-r border-gray-100' }}">{{ $cell['pct'] }}%<br/>({{ $cell['covered'] }}/{{ $cell['total'] }})</td>
@@ -411,7 +402,18 @@
                });
             }
 
-            // Accordion Per Site - Aktivitas & SAP
+            // Filter Week: redirect saat pilih minggu (Senin–Minggu)
+            var filterWeek = document.getElementById('filter-week');
+            if (filterWeek) {
+               filterWeek.addEventListener('change', function () {
+                  var baseUrl = this.getAttribute('data-current-url') || window.location.pathname;
+                  var url = new URL(baseUrl, window.location.origin);
+                  url.searchParams.set('week', this.value);
+                  window.location.href = url.toString();
+               });
+            }
+
+            // Accordion Per Site - Lokasi IKK & SAP
             document.querySelectorAll('[data-site-toggle]').forEach(function (btn) {
                btn.addEventListener('click', function () {
                   var wrapper = this.closest('[data-site-accordion]');

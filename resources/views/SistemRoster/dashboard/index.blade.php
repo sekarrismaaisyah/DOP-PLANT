@@ -1240,7 +1240,7 @@
               <div class="lmo-kpi-sub">Coverage Activity DOP</div>
             </div>
 
-            <div class="lmo-kpi-card" id="dashboardTourKpiIkk">
+            <div class="lmo-kpi-card lmo-kpi-card-clickable" id="coverageIkkKpiCard" role="button" tabindex="0" title="Klik untuk lihat Dashboard Coverage Activity BeIKK">
               <div class="lmo-kpi-top">
                 <div class="lmo-kpi-icon lmo-icon-green"><i class="bi bi-check-circle-fill"></i></div>
                 <div class="lmo-delta down"><i class="bi bi-arrow-down-right"></i></div>
@@ -1601,6 +1601,21 @@
                 </div>
                 <div class="modal-body p-0 bg-light d-flex flex-column lmo-coverage-modal-body">
                   <iframe id="coverageDopIframe" src="" title="Coverage Activity DOP" class="w-100 border-0 flex-grow-1" style="min-height: 70vh; height: calc(100vh - 120px);"></iframe>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {{-- Modal: Dashboard Coverage Activity BeIKK (iframe view coverage-ikk) --}}
+          <div class="modal fade" id="coverageIkkModal" tabindex="-1" aria-labelledby="coverageIkkModalLabel" aria-hidden="true" data-bs-backdrop="true" data-bs-keyboard="true">
+            <div class="modal-dialog modal-dialog-centered modal-xl">
+              <div class="modal-content">
+                <div class="modal-header border-kt-border lmo-coverage-modal-header">
+                  <h5 class="modal-title" id="coverageIkkModalLabel"><i class="bi bi-check-circle me-2"></i>Dashboard Coverage Activity BeIKK</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Tutup"></button>
+                </div>
+                <div class="modal-body p-0 bg-light d-flex flex-column lmo-coverage-modal-body">
+                  <iframe id="coverageIkkIframe" src="" title="Coverage Activity BeIKK" class="w-100 border-0 flex-grow-1" style="min-height: 70vh; height: calc(100vh - 120px);"></iframe>
                 </div>
               </div>
             </div>
@@ -2257,6 +2272,44 @@
       }
     })();
 
+    // Modal Coverage Activity BeIKK: sama seperti DOP, iframe load coverage-ikk
+    (function() {
+      var coverageIkkUrl = '{{ url()->route("sistem-roster.dashboard.coverage-ikk") }}';
+      function initCoverageIkkModal() {
+        var cardEl = document.getElementById('coverageIkkKpiCard');
+        var modalEl = document.getElementById('coverageIkkModal');
+        var iframeEl = document.getElementById('coverageIkkIframe');
+        if (!cardEl || !modalEl || !iframeEl) return;
+        if (modalEl.parentNode !== document.body) document.body.appendChild(modalEl);
+        modalEl.addEventListener('shown.bs.modal', function() { document.body.classList.add('lmo-coverage-iframe-open'); });
+        modalEl.addEventListener('hidden.bs.modal', function() { document.body.classList.remove('lmo-coverage-iframe-open'); });
+        cardEl.addEventListener('click', function() {
+          iframeEl.src = coverageIkkUrl;
+          if (typeof bootstrap !== 'undefined' && bootstrap.Modal) {
+            bootstrap.Modal.getOrCreateInstance(modalEl).show();
+          } else {
+            modalEl.classList.add('show');
+            modalEl.style.display = 'block';
+            modalEl.setAttribute('aria-modal', 'true');
+            modalEl.removeAttribute('aria-hidden');
+            document.body.classList.add('modal-open');
+            var backdrop = document.createElement('div');
+            backdrop.className = 'modal-backdrop fade show';
+            backdrop.setAttribute('data-coverage-ikk-backdrop', '1');
+            document.body.appendChild(backdrop);
+          }
+        });
+        cardEl.addEventListener('keydown', function(e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); cardEl.click(); }
+        });
+      }
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initCoverageIkkModal);
+      } else {
+        initCoverageIkkModal();
+      }
+    })();
+
     // --- Dashboard Tour Guide (TourGuide JS) ---
     (function initDashboardTour() {
       var startBtn = document.getElementById('dashboardTourStartBtn');
@@ -2269,7 +2322,7 @@
           { target: el('dashboardTourIntro'), content: '<strong>Dashboard Coverage Performance</strong><br><br>Ini adalah dashboard utama untuk memantau performa coverage operasional di semua lokasi site. Anda dapat melihat KPI coverage, heatmap kesesuaian plan vs actual, dan detail lokasi yang di-assign.', title: 'Selamat datang' },
           { target: el('coverageAreaAllKpiCard'), content: '<strong>Coverage Area All</strong><br><br>Kartu ini menampilkan persentase coverage area secara keseluruhan. <strong>Klik kartu ini</strong> untuk membuka dashboard detail Coverage Area All.', title: 'Coverage Area All' },
           { target: el('coverageDopKpiCard'), content: '<strong>Coverage Activity DOP</strong><br><br>KPI aktivitas coverage berdasarkan DOP (Daily Operation Plan). Klik untuk melihat detail coverage activity DOP.', title: 'Coverage Activity DOP' },
-          { target: el('dashboardTourKpiIkk'), content: '<strong>Coverage Activity BeIKK</strong><br><br>KPI coverage aktivitas BeIKK (Indikator Kinerja Kunci). Menunjukkan tingkat pencapaian coverage untuk aktivitas IKK.', title: 'Coverage Activity IKK' },
+          { target: el('coverageIkkKpiCard'), content: '<strong>Coverage Activity BeIKK</strong><br><br>KPI coverage aktivitas BeIKK (Indikator Kinerja Kunci). Klik untuk melihat detail coverage activity BeIKK.', title: 'Coverage Activity IKK' },
           { target: el('dashboardTourKpiNonKritis'), content: '<strong>Coverage Area Non Kritis</strong><br><br>Persentase coverage untuk area non kritis. Gunakan untuk memantau lokasi yang tidak termasuk kategori kritis.', title: 'Coverage Area Non Kritis' },
           { target: el('dashboardTourHeatmap'), content: '<strong>Performance Heatmap</strong><br><br>Menampilkan kesesuaian <strong>aktual dan planning</strong> dari assign karyawan untuk setiap aktivitas per hari. Warna menunjukkan tingkat pencapaian (Actual / Plan — Actual SAP). Filter per bulan dan site tersedia di sini.', title: 'Heatmap Kesesuaian' },
           { target: el('dashboardTourCoverageByLocation'), content: '<strong>Coverage by Location</strong><br><br>Daftar <strong>lokasi dari masing-masing yang di-assign</strong>. Persentase coverage per lokasi, status (Sudah Tercover / Incomplete / Belum Tercover), dan tombol "Lihat Detail" untuk Inspeksi Hazard, OAK & Observasi. Filter berdasarkan tanggal, site, dan tab (All Location, By IKK, By DOP, Non Kritis).', title: 'Lokasi per Assign' }
