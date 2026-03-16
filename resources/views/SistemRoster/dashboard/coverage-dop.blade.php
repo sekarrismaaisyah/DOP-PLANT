@@ -159,10 +159,10 @@
          </section>
          <!-- END: Trend per Site -->
 
-         <!-- BEGIN: Per Site - Aktivitas & SAP di Week -->
+         <!-- BEGIN: Per Site - Aktivitas & OAK di Week -->
          <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
             <header class="bg-gray-50 border-b border-gray-200 px-4 py-2">
-               <h2 class="text-xs font-bold uppercase tracking-wider">D. PER SITE - AKTIVITAS & SAP MINGGU INI</h2>
+               <h2 class="text-xs font-bold uppercase tracking-wider">D. PER SITE - AKTIVITAS & OAK MINGGU INI</h2>
             </header>
             <div class="p-4 space-y-2">
                @forelse($siteActivitiesSummary ?? [] as $siteSummary)
@@ -179,8 +179,8 @@
                         <span class="text-gray-400 text-[10px]">—</span>
                         @endif
                      </span>
-                     <span class="flex-shrink-0 px-2 py-1 rounded text-[10px] font-semibold {{ ($siteSummary['sapInWeek'] ?? false) ? 'bg-success-green text-white' : 'bg-alert-red text-white' }}">
-                        SAP di week: {{ ($siteSummary['sapInWeek'] ?? false) ? 'Ada' : 'Tidak' }}
+                     <span class="flex-shrink-0 px-2 py-1 rounded text-[10px] font-semibold {{ ($siteSummary['oakInWeek'] ?? false) ? 'bg-success-green text-white' : 'bg-alert-red text-white' }}">
+                        OAK di week: {{ ($siteSummary['oakInWeek'] ?? false) ? 'Ada' : 'Tidak' }}
                      </span>
                   </button>
                   <div class="hidden border-t border-gray-100 bg-white" data-site-detail>
@@ -223,7 +223,7 @@
                @endforelse
             </div>
          </section>
-         <!-- END: Per Site - Aktivitas & SAP di Week -->
+         <!-- END: Per Site - Aktivitas & OAK di Week -->
          <!-- BEGIN: DataTablesSection -->
 
          <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">

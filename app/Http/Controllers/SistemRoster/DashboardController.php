@@ -459,6 +459,7 @@ class DashboardController extends Controller
         $endEsc = addslashes($weekEndStr);
 
         $coveredByDate = array_fill_keys($weekDateStrs, []);
+        $coveredByDateOak = array_fill_keys($weekDateStrs, []);
         $addCoveredByDate = function ($result) use (&$coveredByDate) {
             $rows = is_array($result) ? $result : [];
             foreach ($rows as $r) {
@@ -473,6 +474,20 @@ class DashboardController extends Controller
                 $coveredByDate[$dateStr][$key] = true;
             }
         };
+        $addCoveredByDateOak = function ($result) use (&$coveredByDateOak) {
+            $rows = is_array($result) ? $result : [];
+            foreach ($rows as $r) {
+                $dt = $this->getClickHouseRowValue($r, 'dt');
+                $dateStr = $dt instanceof \DateTimeInterface ? $dt->format('Y-m-d') : (is_string($dt) ? substr($dt, 0, 10) : '');
+                if ($dateStr === '' || ! isset($coveredByDateOak[$dateStr])) {
+                    continue;
+                }
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($r, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($r, 'det'));
+                $key = mb_strtolower($loc . '|' . $det);
+                $coveredByDateOak[$dateStr][$key] = true;
+            }
+        };
 
         try {
             $ch = $this->getClickHouseNitip();
@@ -485,6 +500,7 @@ class DashboardController extends Controller
                 try {
                     $sqlOakDaily = "SELECT toDate(submit_date, 'Asia/Makassar') AS dt, trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}')";
                     $addCoveredByDate($ch->query($sqlOakDaily));
+                    $addCoveredByDateOak($ch->query($sqlOakDaily));
                 } catch (\Throwable $e) {
                 }
                 try {
@@ -506,6 +522,7 @@ class DashboardController extends Controller
         }
         foreach ($coverageDailyRows as &$crow) {
             $crow['days'] = [];
+            $crow['days_oak'] = [];
             foreach ($weekDateStrs as $dateStr) {
                 $covered = isset($coveredByDate[$dateStr][$crow['key']]);
                 $crow['days'][$dateStr] = [
@@ -514,11 +531,18 @@ class DashboardController extends Controller
                     'total' => 1,
                     'status' => $covered ? 'status-green' : 'status-red',
                 ];
+                $coveredOak = isset($coveredByDateOak[$dateStr][$crow['key']]);
+                $crow['days_oak'][$dateStr] = [
+                    'pct' => $coveredOak ? 100 : 0,
+                    'covered' => $coveredOak ? 1 : 0,
+                    'total' => 1,
+                    'status' => $coveredOak ? 'status-green' : 'status-red',
+                ];
             }
         }
         unset($crow);
 
-        // Ringkasan per site: aktivitas unik, detail (expand), dan SAP di week ada/tidak
+        // Ringkasan per site: aktivitas unik, detail (expand), OAK saja (aaj_vw_car_oak_register_ytd_only)
         $siteActivitiesSummary = [];
         foreach ($coverageDailyRows as $row) {
             $site = trim((string) ($row['site'] ?? ''));
@@ -530,7 +554,7 @@ class DashboardController extends Controller
                     'site' => $site,
                     'activities' => [],
                     'details' => [],
-                    'sapInWeek' => false,
+                    'oakInWeek' => false,
                 ];
             }
             $act = trim((string) ($row['aktivitas'] ?? ''));
@@ -542,11 +566,11 @@ class DashboardController extends Controller
                 'pembagian_area' => $row['pembagian_area'] ?? '',
                 'aktivitas' => $row['aktivitas'] ?? '',
                 'tanggal' => $row['tanggal'] ?? '',
-                'days' => $row['days'] ?? [],
+                'days' => $row['days_oak'] ?? [],
             ];
-            foreach ($row['days'] ?? [] as $dayData) {
+            foreach ($row['days_oak'] ?? [] as $dayData) {
                 if (! empty($dayData['covered'])) {
-                    $siteActivitiesSummary[$site]['sapInWeek'] = true;
+                    $siteActivitiesSummary[$site]['oakInWeek'] = true;
                     break;
                 }
             }
