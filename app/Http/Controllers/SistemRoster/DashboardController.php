@@ -293,10 +293,38 @@ class DashboardController extends Controller
         $coverageDailyRows = [];
         $coverageDailyDates = [];
 
-        $weekStart = Carbon::now()->subWeek()->startOfWeek(Carbon::SUNDAY);
-        $weekEnd = Carbon::now()->subWeek()->endOfWeek(Carbon::SATURDAY);
+        // Minggu = Senin s/d Minggu (Monday = start of week)
+        $today = Carbon::now()->startOfDay();
+        $lastWeekMonday = $today->copy()->subWeek()->startOfWeek(Carbon::MONDAY);
+
+        $availableWeeks = [];
+        for ($i = 0; $i < 12; $i++) {
+            $monday = $lastWeekMonday->copy()->subWeeks($i);
+            $sunday = $monday->copy()->addDays(6);
+            $availableWeeks[] = [
+                'value' => $monday->format('Y-m-d'),
+                'label' => $monday->format('d') . '–' . $sunday->format('d') . ' ' . $monday->locale('id')->monthName . ' ' . $monday->format('Y'),
+            ];
+        }
+
+        $weekParam = request('week');
+        if ($weekParam && preg_match('/^\d{4}-\d{2}-\d{2}$/', $weekParam)) {
+            $weekStart = Carbon::parse($weekParam)->startOfDay()->startOfWeek(Carbon::MONDAY);
+        } else {
+            $weekStart = $lastWeekMonday->copy();
+        }
+        $weekEnd = $weekStart->copy()->addDays(6);
         $weekStartStr = $weekStart->format('Y-m-d');
         $weekEndStr = $weekEnd->format('Y-m-d');
+        $selectedWeekValue = $weekStartStr;
+
+        $inList = collect($availableWeeks)->contains('value', $weekStartStr);
+        if (! $inList) {
+            array_unshift($availableWeeks, [
+                'value' => $weekStartStr,
+                'label' => $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y'),
+            ]);
+        }
 
         $dopRows = DB::table('daily_operation_plans')
             ->where('status', 1)
@@ -328,14 +356,15 @@ class DashboardController extends Controller
         $totalLokasi = count($masterKeys);
 
         if ($totalLokasi === 0) {
-            $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Ini)';
+            $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y');
             for ($d = 0; $d < 7; $d++) {
                 $day = $weekStart->copy()->addDays($d);
                 $coverageDailyDates[] = ['date' => $day->format('Y-m-d'), 'label' => $day->format('F j, Y')];
             }
             return view('SistemRoster.dashboard.coverage-dop', compact(
                 'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
-                'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'
+                'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates',
+                'availableWeeks', 'selectedWeekValue'
             ));
         }
 
@@ -404,8 +433,8 @@ class DashboardController extends Controller
         }
         usort($coverageBySite, fn ($a, $b) => strcmp($a['site'], $b['site']));
 
-        $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Ini)';
-        $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
+        $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y');
+        $dayNames = ['Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab', 'Min'];
         $trendLabels = [];
         $weekDateStrs = [];
         for ($d = 0; $d < 7; $d++) {
@@ -522,7 +551,8 @@ class DashboardController extends Controller
 
         return view('SistemRoster.dashboard.coverage-dop', compact(
             'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
-            'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'
+            'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates',
+            'availableWeeks', 'selectedWeekValue'
         ));
     }
 

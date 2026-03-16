@@ -68,15 +68,11 @@
          <!-- BEGIN: FilterBar -->
          <nav class="bg-white p-4 rounded-lg shadow-sm flex flex-wrap gap-4 items-center" data-purpose="filter-controls">
             <div class="flex flex-col gap-1">
-               <label class="text-[10px] font-semibold uppercase text-gray-500">Duration</label>
-               <select class="bg-gray-50 border-none rounded-lg py-2 px-4 text-sm font-medium shadow-sm focus:ring-berau-green-light min-w-[150px]">
-                  <option>Last 4 Week</option>
-               </select>
-            </div>
-            <div class="flex flex-col gap-1">
-               <label class="text-[10px] font-semibold uppercase text-gray-500">Timeframe</label>
-               <select class="bg-gray-50 border-none rounded-lg py-2 px-4 text-sm font-medium shadow-sm focus:ring-berau-green-light min-w-[120px]">
-                  <option>Week</option>
+               <label class="text-[10px] font-semibold uppercase text-gray-500">Minggu (Senin–Minggu)</label>
+               <select id="filter-week" class="bg-gray-50 border-none rounded-lg py-2 px-4 text-sm font-medium shadow-sm focus:ring-berau-green-light min-w-[200px]" data-current-url="{{ url()->current() }}">
+                  @foreach($availableWeeks ?? [] as $w)
+                  <option value="{{ $w['value'] }}" {{ ($selectedWeekValue ?? '') === $w['value'] ? 'selected' : '' }}>{{ $w['label'] }}</option>
+                  @endforeach
                </select>
             </div>
             <div class="flex flex-col gap-1">
@@ -111,10 +107,10 @@
             <!-- Section B: KPI Metrics (DOP minggu lalu vs tercover SAP) -->
             <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100 flex flex-col justify-center items-center text-center space-y-4" data-purpose="kpi-metrics-card">
                <div class="text-6xl font-black text-berau-green-light">{{ $pctCoverage ?? 0 }}%</div>
-               <div class="text-lg font-semibold text-gray-600 uppercase">Overall Coverage Rate (Minggu Lalu)</div>
+               <div class="text-lg font-semibold text-gray-600 uppercase">Overall Coverage Rate (Minggu Terpilih)</div>
                <div class="w-full border-t border-gray-100 pt-4 grid grid-cols-2 gap-4">
                   <div>
-                     <p class="text-[10px] text-gray-400 font-bold uppercase">Total Lokasi DOP (Minggu Lalu)</p>
+                     <p class="text-[10px] text-gray-400 font-bold uppercase">Total Lokasi DOP (Minggu Terpilih)</p>
                      <p class="text-2xl font-bold text-gray-800">{{ $totalLokasi ?? 0 }}</p>
                   </div>
                   <div>
@@ -127,8 +123,8 @@
          <!-- END: TopSection -->
          <!-- BEGIN: Trend per Site — Total Laporan per Hari (Minggu ini, Min–Sab) -->
          <section class="bg-white p-5 rounded-xl shadow-sm border border-gray-100" data-purpose="trend-per-site">
-            <h2 class="text-sm font-bold text-gray-700 uppercase mb-1">Trend Laporan per Site (Minggu Lalu)</h2>
-            <p class="text-xs text-gray-500 mb-4">Minggu s/d Sabtu minggu lalu — geser untuk lihat tiap site. Sumber: Inspeksi, OAK, Observasi, Coaching (nitip)</p>
+            <h2 class="text-sm font-bold text-gray-700 uppercase mb-1">Trend Laporan per Site</h2>
+            <p class="text-xs text-gray-500 mb-4">Senin s/d Minggu (minggu terpilih) — geser untuk lihat tiap site. Sumber: Inspeksi, OAK, Observasi, Coaching (nitip)</p>
             <div class="trend-swiper-wrapper relative">
                @if(empty($trendBySite))
                <div class="flex items-center justify-center py-12 text-gray-400 text-sm">Belum ada data trend per site.</div>
@@ -162,7 +158,7 @@
          <!-- BEGIN: Per Site - Aktivitas & OAK di Week -->
          <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
             <header class="bg-gray-50 border-b border-gray-200 px-4 py-2">
-               <h2 class="text-xs font-bold uppercase tracking-wider">D. PER SITE - AKTIVITAS & OAK MINGGU INI</h2>
+               <h2 class="text-xs font-bold uppercase tracking-wider">D. PER SITE - AKTIVITAS & OAK (MINGGU TERPILIH)</h2>
             </header>
             <div class="p-4 space-y-2">
                @forelse($siteActivitiesSummary ?? [] as $siteSummary)
@@ -408,6 +404,17 @@
                   autoplay: { delay: 3500, disableOnInteraction: false },
                   navigation: { nextEl: '.trend-coverage-next', prevEl: '.trend-coverage-prev' },
                   pagination: { el: '.trend-coverage-pagination', clickable: true },
+               });
+            }
+
+            // Filter Week: redirect saat pilih minggu (Senin–Minggu)
+            var filterWeek = document.getElementById('filter-week');
+            if (filterWeek) {
+               filterWeek.addEventListener('change', function () {
+                  var baseUrl = this.getAttribute('data-current-url') || window.location.pathname;
+                  var url = new URL(baseUrl, window.location.origin);
+                  url.searchParams.set('week', this.value);
+                  window.location.href = url.toString();
                });
             }
 
