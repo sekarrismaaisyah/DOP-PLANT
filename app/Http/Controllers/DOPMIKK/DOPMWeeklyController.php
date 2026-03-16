@@ -202,7 +202,9 @@ class DOPMWeeklyController extends Controller
         $totalIpkAda = 0;
         $totalOkkSeharusnya = 0;
         $totalOkkAda = 0;
-        
+        /** @var array<int, array<string, mixed>>|null Daftar WP dari ClickHouse (satu sumber untuk statistik + tabel) */
+        $clickHouseWpRowsForWeekly = null;
+
         // Tentukan cut off date untuk IPK/OKK
         $cutoffDate = Carbon::parse(config('dopm.ipk_okk_clickhouse_cutoff_date', '2025-02-20'))->startOfDay();
         $useClickHouseForWeekly = $weekStartDate->gte($cutoffDate);
@@ -214,21 +216,32 @@ class DOPMWeeklyController extends Controller
                     $weekStartStr = $weekStartDate->format('Y-m-d');
                     $weekEndStr = $weekEndDate->format('Y-m-d');
                     
-                    $siteFilterClauseWeekly = '';
+                    // Filter site (sama persis dengan query tabel agar satu sumber kebenaran)
+                    $siteFilterClauseForWp = '';
                     if ($filterSite !== '' && $filterSite !== null) {
                         if ($filterSite === 'Lainnya') {
-                            $siteFilterClauseWeekly = " AND trim(COALESCE(ra_site_name, '')) = ''";
+                            $siteFilterClauseForWp = " AND trim(COALESCE(wp.ra_site_name, '')) = ''";
                         } else {
-                            $siteFilterClauseWeekly = " AND trim(COALESCE(ra_site_name, '')) = '" . addslashes($filterSite) . "'";
+                            $siteFilterClauseForWp = " AND trim(COALESCE(wp.ra_site_name, '')) = '" . addslashes($filterSite) . "'";
                         }
                     }
                     
-                    // Query IKK yang OVERLAP dengan rentang week (distinct by code)
-                    // IKK aktif = start_date <= akhir_minggu DAN end_date >= awal_minggu
-                    // Hanya yang sudah di-approve oleh WKTT
-                    // Ambil juga start_date dan end_date untuk hitung durasi IPK yang seharusnya
-                    $sqlWeeklyIkk = "
-                        SELECT wp.code AS code, wp.id AS id, wp.start_date AS ikk_start_date, wp.end_date AS ikk_end_date
+                    // Satu query WP untuk statistik mingguan DAN tabel (konsisten: IKK yang tampil = IKK yang masuk persen)
+                    $sqlWorkPermitsForWeekly = "
+                        SELECT
+                            wp.id AS id,
+                            wp.code AS code,
+                            wp.name AS name,
+                            wp.ra_site_name AS ra_site_name,
+                            wp.company_name AS company_name,
+                            wp.status AS status,
+                            wp.m_job_id AS m_job_id,
+                            wp.start_date AS start_date,
+                            wp.end_date AS end_date,
+                            wp.location_name AS location_name,
+                            wp.location_detail_name AS location_detail_name,
+                            groupUniqArray(if(trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', ifNull(m.employee_name, concat('UNKNOWN:', toString(wp_pic.m_pic_id))), null)) AS approver_names,
+                            count() AS total_pic
                         FROM hse_automation.ikk_work_permit AS wp
                         INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
                             ON toString(wp_pic.work_permit_id) = toString(wp.id)
@@ -238,39 +251,35 @@ class DOPMWeeklyController extends Controller
                         WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
                             AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
                             AND subtractDays(toDate(wp.end_date), 1) >= toDate('{$weekStartStr}')
-                            {$siteFilterClauseWeekly}
-                        GROUP BY wp.code, wp.id, wp.start_date, wp.end_date
-                        HAVING sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
-                            AND trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', 1, 0)) > 0
+                            {$siteFilterClauseForWp}
+                        GROUP BY
+                            wp.id, wp.code, wp.name, wp.ra_site_name, wp.company_name,
+                            wp.status, wp.m_job_id,
+                            wp.start_date, wp.end_date, wp.location_name, wp.location_detail_name
+                        HAVING
+                            sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
+                                AND trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', 1, 0)) > 0
+                        ORDER BY wp.start_date ASC
                     ";
-                    $weeklyIkkRows = $clickHouse->query($sqlWeeklyIkk);
+                    $clickHouseWpRowsForWeekly = $clickHouse->query($sqlWorkPermitsForWeekly);
                     $weeklyIkkCodes = [];
                     $weeklyIkkIds = [];
                     $weeklyIkkDurations = []; // Simpan durasi per code untuk MySQL fallback
                     $totalIpkSeharusnya = 0;
-                    if (!empty($weeklyIkkRows)) {
-                        foreach ($weeklyIkkRows as $row) {
-                            $code = isset($row['code']) ? trim((string) $row['code']) : '';
-                            $id = isset($row['id']) ? trim((string) $row['id']) : '';
+                    if (!empty($clickHouseWpRowsForWeekly)) {
+                        foreach ($clickHouseWpRowsForWeekly as $row) {
+                            $code = trim((string) self::getClickHouseRowValue($row, 'code'));
+                            $id = trim((string) self::getClickHouseRowValue($row, 'id'));
                             if ($code !== '') {
                                 $weeklyIkkCodes[$code] = true;
                             }
                             if ($id !== '') {
                                 $weeklyIkkIds[$id] = $code;
-                                
-                                // Hitung durasi IKK (dalam hari) yang overlap dengan range minggu
-                                // Hari terakhir aktif = date(end_date) - 1 (pekerjaan selesai di pagi end_date)
-                                $ikkStart = self::parseEndDate(self::getClickHouseRowValue($row, 'ikk_start_date'));
-                                $ikkEnd = self::parseEndDate(self::getClickHouseRowValue($row, 'ikk_end_date'));
-                                if ($ikkStart !== null && $ikkEnd !== null) {
-                                    $ikkLastActiveDate = $ikkEnd->copy()->subDay()->startOfDay();
-                                    $effectiveStart = $ikkStart->lt($weekStartDate) ? $weekStartDate->copy() : $ikkStart->copy();
-                                    $effectiveEnd = $ikkLastActiveDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkLastActiveDate->copy();
-                                    if ($effectiveStart->lte($effectiveEnd)) {
-                                        $durasiHari = $effectiveStart->startOfDay()->diffInDays($effectiveEnd->startOfDay()) + 1;
-                                        $totalIpkSeharusnya += $durasiHari;
-                                        $weeklyIkkDurations[$code] = ($weeklyIkkDurations[$code] ?? 0) + $durasiHari;
-                                    }
+                                // Hitung durasi IKK (dalam hari) yang overlap dengan range minggu; parsing robust agar slot-hari tidak hilang
+                                $durasiHari = self::computeIkkActiveDaysInWeek($row, $weekStartDate, $weekEndDate);
+                                if ($durasiHari > 0) {
+                                    $totalIpkSeharusnya += $durasiHari;
+                                    $weeklyIkkDurations[$code] = ($weeklyIkkDurations[$code] ?? 0) + $durasiHari;
                                 }
                             }
                         }
@@ -598,42 +607,46 @@ class DOPMWeeklyController extends Controller
                         }
                     }
 
-                    $sqlWorkPermits = "
-                        SELECT
-                            wp.id AS id,
-                            wp.code AS code,
-                            wp.name AS name,
-                            wp.ra_site_name AS ra_site_name,
-                            wp.company_name AS company_name,
-                            wp.status AS status,
-                            wp.m_job_id AS m_job_id,
-                            wp.start_date AS start_date,
-                            wp.end_date AS end_date,
-                            wp.location_name AS location_name,
-                            wp.location_detail_name AS location_detail_name,
-                            groupUniqArray(if(trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', ifNull(m.employee_name, concat('UNKNOWN:', toString(wp_pic.m_pic_id))), null)) AS approver_names,
-                            count() AS total_pic
-                        FROM hse_automation.ikk_work_permit AS wp
-                        INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
-                            ON toString(wp_pic.work_permit_id) = toString(wp.id)
-                            AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
-                        LEFT JOIN hse_automation.ikk_m_pic AS m
-                            ON toString(m.id) = toString(wp_pic.m_pic_id)
-                        WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
-                            AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
-                            AND subtractDays(toDate(wp.end_date), 1) >= toDate('{$weekStartStr}')
-                            {$siteFilterClause}
-                        GROUP BY
-                            wp.id, wp.code, wp.name, wp.ra_site_name, wp.company_name,
-                            wp.status, wp.m_job_id,
-                            wp.start_date, wp.end_date, wp.location_name, wp.location_detail_name
-                        HAVING
-                            sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
-                                AND trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', 1, 0)) > 0
-                        ORDER BY wp.start_date ASC
-                    ";
-
-                    $wpRows = $clickHouse->query($sqlWorkPermits);
+                    // Gunakan daftar WP yang sama dengan statistik mingguan (satu sumber kebenaran)
+                    if (isset($clickHouseWpRowsForWeekly) && is_array($clickHouseWpRowsForWeekly) && !empty($clickHouseWpRowsForWeekly)) {
+                        $wpRows = $clickHouseWpRowsForWeekly;
+                    } else {
+                        $sqlWorkPermits = "
+                            SELECT
+                                wp.id AS id,
+                                wp.code AS code,
+                                wp.name AS name,
+                                wp.ra_site_name AS ra_site_name,
+                                wp.company_name AS company_name,
+                                wp.status AS status,
+                                wp.m_job_id AS m_job_id,
+                                wp.start_date AS start_date,
+                                wp.end_date AS end_date,
+                                wp.location_name AS location_name,
+                                wp.location_detail_name AS location_detail_name,
+                                groupUniqArray(if(trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', ifNull(m.employee_name, concat('UNKNOWN:', toString(wp_pic.m_pic_id))), null)) AS approver_names,
+                                count() AS total_pic
+                            FROM hse_automation.ikk_work_permit AS wp
+                            INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
+                                ON toString(wp_pic.work_permit_id) = toString(wp.id)
+                                AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
+                            LEFT JOIN hse_automation.ikk_m_pic AS m
+                                ON toString(m.id) = toString(wp_pic.m_pic_id)
+                            WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
+                                AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
+                                AND subtractDays(toDate(wp.end_date), 1) >= toDate('{$weekStartStr}')
+                                {$siteFilterClause}
+                            GROUP BY
+                                wp.id, wp.code, wp.name, wp.ra_site_name, wp.company_name,
+                                wp.status, wp.m_job_id,
+                                wp.start_date, wp.end_date, wp.location_name, wp.location_detail_name
+                            HAVING
+                                sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
+                                    AND trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', 1, 0)) > 0
+                            ORDER BY wp.start_date ASC
+                        ";
+                        $wpRows = $clickHouse->query($sqlWorkPermits);
+                    }
 
                     // Log hasil query: jumlah baris, struktur kolom, dan sample data
                     $rowCount = is_array($wpRows) ? count($wpRows) : 0;
@@ -3843,6 +3856,59 @@ class DOPMWeeklyController extends Controller
         } catch (\Throwable $e) {
             return null;
         }
+    }
+
+    /**
+     * Parse tanggal dari ClickHouse dengan fallback: coba parseEndDate, lalu coba ekstrak Y-m-d dari string.
+     * Agar slot-hari IKK tidak hilang saat format datetime aneh (mis. DateTime64).
+     */
+    private static function parseDateSafe(mixed $value): ?\Carbon\Carbon
+    {
+        $parsed = self::parseEndDate($value);
+        if ($parsed !== null) {
+            return $parsed;
+        }
+        if ($value === null || $value === '') {
+            return null;
+        }
+        $tz = config('app.timezone', 'UTC');
+        try {
+            $str = is_string($value) ? trim($value) : (string) $value;
+            if ($str === '') {
+                return null;
+            }
+            // Coba ambil 10 karakter pertama (Y-m-d) atau 19 (Y-m-d H:i:s)
+            if (preg_match('/^(\d{4}-\d{2}-\d{2})/', $str, $m)) {
+                return \Carbon\Carbon::parse($m[1], $tz);
+            }
+            if (preg_match('/^(\d{2}[\/\-]\d{2}[\/\-]\d{4})/', $str, $m)) {
+                return \Carbon\Carbon::parse($m[1], $tz);
+            }
+        } catch (\Throwable $e) {
+            // ignore
+        }
+        return null;
+    }
+
+    /**
+     * Hitung jumlah hari aktif IKK dalam minggu (overlap start_date..end_date-1 dengan week).
+     * Menggunakan parsing robust agar setiap WP yang ada di daftar ikut menyumbang slot-hari.
+     */
+    private static function computeIkkActiveDaysInWeek(array $row, Carbon $weekStartDate, Carbon $weekEndDate): int
+    {
+        $ikkStart = self::parseDateSafe(self::getClickHouseRowValue($row, 'start_date'));
+        $ikkEnd = self::parseDateSafe(self::getClickHouseRowValue($row, 'end_date'));
+        if ($ikkStart === null || $ikkEnd === null) {
+            return 0;
+        }
+        // Hari terakhir aktif = end_date - 1 (pekerjaan selesai di pagi end_date)
+        $ikkLastActiveDate = $ikkEnd->copy()->subDay()->startOfDay();
+        $effectiveStart = $ikkStart->lt($weekStartDate) ? $weekStartDate->copy() : $ikkStart->copy()->startOfDay();
+        $effectiveEnd = $ikkLastActiveDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkLastActiveDate->copy();
+        if (!$effectiveStart->lte($effectiveEnd)) {
+            return 0;
+        }
+        return $effectiveStart->diffInDays($effectiveEnd) + 1;
     }
 
     /**
