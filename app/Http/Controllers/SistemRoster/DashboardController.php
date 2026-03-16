@@ -370,9 +370,11 @@ class DashboardController extends Controller
                 $day = $weekStart->copy()->addDays($d);
                 $coverageDailyDates[] = ['date' => $day->format('Y-m-d'), 'label' => $day->format('F j, Y')];
             }
+            $siteActivitiesSummary = [];
             return compact(
                 'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
-                'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'
+                'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates',
+                'siteActivitiesSummary'
             );
         }
 
@@ -513,6 +515,41 @@ class DashboardController extends Controller
         }
         unset($crow);
 
+        // Ringkasan per site: aktivitas unik, detail (expand), dan SAP di week ada/tidak
+        $siteActivitiesSummary = [];
+        foreach ($coverageDailyRows as $row) {
+            $site = trim((string) ($row['site'] ?? ''));
+            if ($site === '') {
+                continue;
+            }
+            if (! isset($siteActivitiesSummary[$site])) {
+                $siteActivitiesSummary[$site] = [
+                    'site' => $site,
+                    'activities' => [],
+                    'details' => [],
+                    'sapInWeek' => false,
+                ];
+            }
+            $act = trim((string) ($row['aktivitas'] ?? ''));
+            if ($act !== '' && ! in_array($act, $siteActivitiesSummary[$site]['activities'], true)) {
+                $siteActivitiesSummary[$site]['activities'][] = $act;
+            }
+            $siteActivitiesSummary[$site]['details'][] = [
+                'lokasi' => $row['lokasi'] ?? '',
+                'pembagian_area' => $row['pembagian_area'] ?? '',
+                'aktivitas' => $row['aktivitas'] ?? '',
+                'days' => $row['days'] ?? [],
+            ];
+            foreach ($row['days'] ?? [] as $dayData) {
+                if (! empty($dayData['covered'])) {
+                    $siteActivitiesSummary[$site]['sapInWeek'] = true;
+                    break;
+                }
+            }
+        }
+        $siteActivitiesSummary = array_values($siteActivitiesSummary);
+        usort($siteActivitiesSummary, fn ($a, $b) => strcmp($a['site'], $b['site']));
+
         foreach ($coverageBySite as $siteRow) {
             $siteName = $siteRow['site'] ?? '';
             $siteEsc = addslashes($siteName);
@@ -559,7 +596,8 @@ class DashboardController extends Controller
 
         return compact(
             'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
-            'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'
+            'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates',
+            'siteActivitiesSummary'
         );
     }
 

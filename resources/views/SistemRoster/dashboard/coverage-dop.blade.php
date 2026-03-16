@@ -158,6 +158,67 @@
             <p class="text-[10px] text-gray-400 mt-2 text-center trend-swiper-hint">{{ $trendWeekLabel ?? '' }} — Geser kiri/kanan untuk site lainnya</p>
          </section>
          <!-- END: Trend per Site -->
+
+         <!-- BEGIN: Per Site - Aktivitas & SAP di Week -->
+         <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
+            <header class="bg-gray-50 border-b border-gray-200 px-4 py-2">
+               <h2 class="text-xs font-bold uppercase tracking-wider">D. PER SITE - AKTIVITAS & SAP MINGGU INI</h2>
+            </header>
+            <div class="p-4 space-y-2">
+               @forelse($siteActivitiesSummary ?? [] as $siteSummary)
+               <div class="border border-gray-200 rounded-lg overflow-hidden" data-site-accordion>
+                  <button type="button" class="w-full flex items-center gap-3 px-4 py-3 text-left bg-gray-50 hover:bg-gray-100 transition-colors border-b border-gray-100" data-site-toggle aria-expanded="false">
+                     <span class="flex-shrink-0 w-6 h-6 flex items-center justify-center rounded bg-berau-green-light text-white text-sm font-bold site-accordion-icon">+</span>
+                     <span class="font-bold text-gray-800 min-w-[100px]">{{ $siteSummary['site'] ?? '—' }}</span>
+                     <span class="text-[10px] text-gray-500 flex-1">Aktivitas:</span>
+                     <span class="flex flex-wrap gap-1">
+                        @foreach($siteSummary['activities'] ?? [] as $act)
+                        <span class="px-2 py-0.5 rounded bg-gray-200 text-gray-700 text-[10px]">{{ $act }}</span>
+                        @endforeach
+                        @if(empty($siteSummary['activities']))
+                        <span class="text-gray-400 text-[10px]">—</span>
+                        @endif
+                     </span>
+                     <span class="flex-shrink-0 px-2 py-1 rounded text-[10px] font-semibold {{ ($siteSummary['sapInWeek'] ?? false) ? 'bg-success-green text-white' : 'bg-alert-red text-white' }}">
+                        SAP di week: {{ ($siteSummary['sapInWeek'] ?? false) ? 'Ada' : 'Tidak' }}
+                     </span>
+                  </button>
+                  <div class="hidden border-t border-gray-100 bg-white" data-site-detail>
+                     <div class="overflow-auto max-h-[280px]">
+                        <table class="w-full text-[10px] border-collapse">
+                           <thead>
+                              <tr class="bg-gray-50 border-b border-gray-200 text-left">
+                                 <th class="p-2 border-r border-gray-100 min-w-[120px]">Lokasi</th>
+                                 <th class="p-2 border-r border-gray-100 min-w-[120px]">Pembagian Area</th>
+                                 <th class="p-2 border-r border-gray-100 min-w-[140px]">Aktivitas</th>
+                                 @foreach($coverageDailyDates ?? [] as $d)
+                                 <th class="p-2 {{ $loop->last ? '' : 'border-r border-gray-100' }} text-center w-28">{{ date('d/m', strtotime($d['date'] ?? '')) }}</th>
+                                 @endforeach
+                              </tr>
+                           </thead>
+                           <tbody>
+                              @foreach($siteSummary['details'] ?? [] as $det)
+                              <tr class="border-b border-gray-50">
+                                 <td class="p-2 border-r border-gray-100">{{ $det['lokasi'] ?? '' }}</td>
+                                 <td class="p-2 border-r border-gray-100">{{ $det['pembagian_area'] ?? '' }}</td>
+                                 <td class="p-2 border-r border-gray-100">{{ $det['aktivitas'] ?? '' }}</td>
+                                 @foreach($coverageDailyDates ?? [] as $d)
+                                 @php $cell = $det['days'][$d['date']] ?? ['covered' => 0]; @endphp
+                                 <td class="p-2 text-center {{ !empty($cell['covered']) ? 'status-green' : 'status-red' }} {{ $loop->last ? '' : 'border-r border-gray-100' }}">{{ !empty($cell['covered']) ? 'Ada' : 'Tidak' }}</td>
+                                 @endforeach
+                              </tr>
+                              @endforeach
+                           </tbody>
+                        </table>
+                     </div>
+                  </div>
+               </div>
+               @empty
+               <p class="text-gray-400 text-sm py-2">Belum ada data site.</p>
+               @endforelse
+            </div>
+         </section>
+         <!-- END: Per Site - Aktivitas & SAP di Week -->
          <!-- BEGIN: DataTablesSection -->
 
          <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
@@ -344,6 +405,19 @@
                   pagination: { el: '.trend-coverage-pagination', clickable: true },
                });
             }
+
+            // Accordion Per Site - Aktivitas & SAP
+            document.querySelectorAll('[data-site-toggle]').forEach(function (btn) {
+               btn.addEventListener('click', function () {
+                  var wrapper = this.closest('[data-site-accordion]');
+                  var detail = wrapper ? wrapper.querySelector('[data-site-detail]') : null;
+                  var icon = wrapper ? wrapper.querySelector('.site-accordion-icon') : null;
+                  var expanded = this.getAttribute('aria-expanded') === 'true';
+                  if (detail) detail.classList.toggle('hidden', expanded);
+                  if (icon) icon.textContent = expanded ? '+' : '−';
+                  this.setAttribute('aria-expanded', !expanded);
+               });
+            });
          });
       </script>
    </body>
