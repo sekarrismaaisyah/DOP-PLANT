@@ -6,8 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Models\DailyOperationPlan;
 use App\Models\RosterPlanning;
 use App\Services\ClickHouseService;
-use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -546,15 +547,25 @@ class DashboardController extends Controller
             ->get();
 
         $filterDateStr = $filterDate->format('Y-m-d');
-        $carHazardInspeksiForDate = $this->getCarHazardInspeksiFromClickHouseForDate($filterDateStr);
-        // Coverage by Location: tidak match nama — lokasi covered jika ada SAP ATAU OAK ATAU Observasi ATAU Coaching (siapapun) di lokasi itu
-        $oakLocationKeysForDate = $this->getOakLocationKeysForDate($filterDateStr);
-        $observasiLocationKeysForDate = $this->getObservasiLocationKeysForDate($filterDateStr);
-        $coachingLocationKeysForDate = $this->getCoachingLocationKeysForDate($filterDateStr);
-        // Detail Plan: match sampai nama — butuh OAK, Observasi, Coaching per (date, locationKey, nama) untuk filter date saja
-        $oakForDate = $this->getOakDataByDateRange($filterDateStr, $filterDateStr);
-        $observasiForDate = $this->getObservasiDataByDateRange($filterDateStr, $filterDateStr);
-        $coachingForDate = $this->getCoachingDataByDateRange($filterDateStr, $filterDateStr);
+        $nitipCacheKey = 'sistem_roster_dashboard_nitip_' . $filterDateStr;
+        $nitipData = Cache::remember($nitipCacheKey, 60, function () use ($filterDateStr) {
+            return [
+                'car' => $this->getCarHazardInspeksiFromClickHouseForDate($filterDateStr),
+                'oak_keys' => $this->getOakLocationKeysForDate($filterDateStr),
+                'observasi_keys' => $this->getObservasiLocationKeysForDate($filterDateStr),
+                'coaching_keys' => $this->getCoachingLocationKeysForDate($filterDateStr),
+                'oak_range' => $this->getOakDataByDateRange($filterDateStr, $filterDateStr),
+                'observasi_range' => $this->getObservasiDataByDateRange($filterDateStr, $filterDateStr),
+                'coaching_range' => $this->getCoachingDataByDateRange($filterDateStr, $filterDateStr),
+            ];
+        });
+        $carHazardInspeksiForDate = $nitipData['car'];
+        $oakLocationKeysForDate = $nitipData['oak_keys'];
+        $observasiLocationKeysForDate = $nitipData['observasi_keys'];
+        $coachingLocationKeysForDate = $nitipData['coaching_keys'];
+        $oakForDate = $nitipData['oak_range'];
+        $observasiForDate = $nitipData['observasi_range'];
+        $coachingForDate = $nitipData['coaching_range'];
         $oakByLocForDate = $oakForDate[$filterDateStr] ?? [];
         $observasiByLocForDate = $observasiForDate[$filterDateStr] ?? [];
         $coachingByLocForDate = $coachingForDate[$filterDateStr] ?? [];
@@ -701,7 +712,7 @@ class DashboardController extends Controller
         }
         $detailByLokasi = $detailRows;
 
-        $heatmapData = $this->buildHeatmapData();
+        $heatmapData = Cache::remember('sistem_roster_heatmap_data', 120, fn () => $this->buildHeatmapData());
 
         return view('SistemRoster.dashboard.index', [
             'assignedPlannings' => $assignedPlannings,
@@ -723,11 +734,11 @@ class DashboardController extends Controller
      */
     private function buildHeatmapData(): array
     {
-        $start = now()->subMonths(2)->startOfMonth()->format('Y-m-d');
-        $end = now()->addMonths(2)->endOfMonth()->format('Y-m-d');
+        $start = now()->subMonths(1)->startOfMonth()->format('Y-m-d');
+        $end = now()->addMonths(1)->endOfMonth()->format('Y-m-d');
 
-        // Planned = planning yang sudah punya minimal 1 karyawan (roster_planning_karyawans), bukan berdasarkan status
-        $plannings = RosterPlanning::with('karyawans')
+        $plannings = RosterPlanning::select('id', 'tanggal', 'site', 'lokasi', 'detail_lokasi')
+            ->with('karyawans:roster_planning_id,nama_karyawan')
             ->whereBetween('tanggal', [$start, $end])
             ->whereHas('karyawans')
             ->orderBy('tanggal')
