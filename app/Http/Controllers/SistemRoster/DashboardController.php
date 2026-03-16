@@ -361,10 +361,11 @@ class DashboardController extends Controller
                 $day = $weekStart->copy()->addDays($d);
                 $coverageDailyDates[] = ['date' => $day->format('Y-m-d'), 'label' => $day->format('F j, Y')];
             }
+            $siteActivitiesSummary = [];
             return view('SistemRoster.dashboard.coverage-dop', compact(
                 'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
                 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates',
-                'availableWeeks', 'selectedWeekValue'
+                'siteActivitiesSummary', 'availableWeeks', 'selectedWeekValue'
             ));
         }
 
@@ -505,6 +506,28 @@ class DashboardController extends Controller
         }
         unset($crow);
 
+        $siteActivitiesSummary = [];
+        foreach ($coverageBySite as $siteRow) {
+            $siteName = $siteRow['site'] ?? '';
+            $siteRows = array_filter($coverageDailyRows, fn ($r) => ($r['site'] ?? '') === $siteName);
+            $activities = array_values(array_unique(array_filter(array_map(fn ($r) => $r['aktivitas'] ?? '', $siteRows))));
+            $oakInWeek = false;
+            foreach ($siteRows as $r) {
+                foreach ($weekDateStrs as $dateStr) {
+                    if (! empty(($r['days'][$dateStr] ?? [])['covered'])) {
+                        $oakInWeek = true;
+                        break 2;
+                    }
+                }
+            }
+            $siteActivitiesSummary[] = [
+                'site' => $siteName,
+                'activities' => $activities,
+                'oakInWeek' => $oakInWeek,
+                'details' => array_values($siteRows),
+            ];
+        }
+
         foreach ($coverageBySite as $siteRow) {
             $siteName = $siteRow['site'] ?? '';
             $siteEsc = addslashes($siteName);
@@ -552,7 +575,7 @@ class DashboardController extends Controller
         return view('SistemRoster.dashboard.coverage-dop', compact(
             'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
             'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates',
-            'availableWeeks', 'selectedWeekValue'
+            'siteActivitiesSummary', 'availableWeeks', 'selectedWeekValue'
         ));
     }
 
