@@ -56,11 +56,13 @@ class DOPMController extends Controller
             }
         };
 
-        // Daftar site untuk dropdown (tanggal terpilih, bukan Cancel)
+        // Daftar site untuk dropdown (tanggal terpilih, bukan Cancel) — hanya ambil kolom site, hindari load semua baris
         $siteList = Dopm::where($scopeDate)
             ->where($scopeNotCancel)
-            ->get()
-            ->map(fn ($d) => trim($d->site_ijin_kerja_khusus ?? '') ?: 'Lainnya')
+            ->select('site_ijin_kerja_khusus')
+            ->distinct()
+            ->pluck('site_ijin_kerja_khusus')
+            ->map(fn ($s) => trim((string) ($s ?? '')) ?: 'Lainnya')
             ->unique()
             ->sort()
             ->values()
@@ -268,6 +270,23 @@ class DOPMController extends Controller
         });
 
         // Chart DOPM vs IPK vs OKK per jenis_ijin_kerja_khusus (3 bar per jenis)
+        // Optimasi: satu query IPK dan satu query OKK per kode_ikk, lalu agregasi per jenis di PHP (hindari N+1)
+        $ipkCountByKodeChart = [];
+        $okkCountByKodeChart = [];
+        if (!empty($kodeIkks)) {
+            $ipkCountByKodeChart = IpkIkk::whereDate('ts', $filterDate)
+                ->whereIn('kode_ikk', $kodeIkks)
+                ->selectRaw('kode_ikk, count(*) as cnt')
+                ->groupBy('kode_ikk')
+                ->pluck('cnt', 'kode_ikk')
+                ->all();
+            $okkCountByKodeChart = Okk::whereDate('ts', $filterDate)
+                ->whereIn('kode_ikk', $kodeIkks)
+                ->selectRaw('kode_ikk, count(*) as cnt')
+                ->groupBy('kode_ikk')
+                ->pluck('cnt', 'kode_ikk')
+                ->all();
+        }
         $chartJenisLabels = [];
         $chartDopmPerJenis = [];
         $chartIpkPerJenis = [];
@@ -282,10 +301,10 @@ class DOPMController extends Controller
             $kodeIkksJenis = $dopmPerJenis->pluck('kode_ikk')->filter()->unique()->values()->all();
             $chartIpkPerJenis[] = empty($kodeIkksJenis)
                 ? 0
-                : IpkIkk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $kodeIkksJenis)->count();
+                : (int) array_sum(array_map(fn ($k) => (int) ($ipkCountByKodeChart[$k] ?? 0), $kodeIkksJenis));
             $chartOkkPerJenis[] = empty($kodeIkksJenis)
                 ? 0
-                : Okk::whereDate('ts', $filterDate)->whereIn('kode_ikk', $kodeIkksJenis)->count();
+                : (int) array_sum(array_map(fn ($k) => (int) ($okkCountByKodeChart[$k] ?? 0), $kodeIkksJenis));
         }
 
         // Data IKK (work permit) dari ClickHouse untuk tampilan harian
@@ -1136,6 +1155,7 @@ class DOPMController extends Controller
             'ikkClickhouseListHarian' => $ikkClickhouseListHarian,
             'dopmAlertLogs' => DopmAlertLog::query()
                 ->where('tanggal', $filterDate)
+                ->select(['id', 'tanggal', 'jam', 'need_action_count', 'warning_count', 'created_at'])
                 ->orderBy('jam')
                 ->get(),
         ]);
@@ -1286,11 +1306,13 @@ class DOPMController extends Controller
             }
         };
 
-        // Daftar site untuk dropdown (tanggal terpilih, bukan Cancel)
+        // Daftar site untuk dropdown (tanggal terpilih, bukan Cancel) — hanya ambil kolom site
         $siteList = Dopm::where($scopeDate)
             ->where($scopeNotCancel)
-            ->get()
-            ->map(fn ($d) => trim($d->site_ijin_kerja_khusus ?? '') ?: 'Lainnya')
+            ->select('site_ijin_kerja_khusus')
+            ->distinct()
+            ->pluck('site_ijin_kerja_khusus')
+            ->map(fn ($s) => trim((string) ($s ?? '')) ?: 'Lainnya')
             ->unique()
             ->sort()
             ->values()

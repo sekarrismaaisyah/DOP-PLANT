@@ -6,9 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\DailyOperationPlan;
 use App\Models\RosterPlanning;
 use App\Services\ClickHouseService;
-use Carbon\Carbon;
-use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
@@ -26,26 +25,8 @@ class DashboardController extends Controller
      * Menampilkan halaman Dashboard Coverage Area (Coverage All).
      * KPI: total lokasi+detail aktif dari nitip.bep_vw_site_lokasi_detil_lokasi (status = 1),
      * covered = yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip.
-     * Hasil di-cache 2 menit (data berdasarkan minggu lalu).
      */
     public function coverageAll(): View
-    {
-        $weekStart = Carbon::now()->subWeek()->startOfWeek(Carbon::SUNDAY)->format('Y-m-d');
-        $cacheKey = 'sistem_roster_coverage_all_' . $weekStart;
-
-        $data = Cache::remember($cacheKey, 120, function () {
-            return $this->computeCoverageAllData();
-        });
-
-        return view('SistemRoster.dashboard.coverage-all', $data);
-    }
-
-    /**
-     * Hitung data untuk Coverage All (dipanggil dari coverageAll atau dari cache callback).
-     *
-     * @return array<string, mixed>
-     */
-    private function computeCoverageAllData(): array
     {
         $totalLokasi = 0;
         $coveredLokasi = 0;
@@ -60,7 +41,7 @@ class DashboardController extends Controller
         try {
             $ch = $this->getClickHouseNitip();
             if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
-                return compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates');
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
             }
 
             // 1. Master: site + (lokasi, Detil_Lokasi) aktif — status_site, status_lokasi, status_detil_lokasi = '1'
@@ -71,7 +52,7 @@ class DashboardController extends Controller
                   AND trim(ifNull(toString(status_detil_lokasi), '')) = '1'";
             $rowsMaster = $ch->query($sqlMaster);
             if (empty($rowsMaster) || ! is_array($rowsMaster)) {
-                return compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates');
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
             }
 
             // Key = lowercase(normalize(lokasi)|normalize(detil)); simpan per site untuk chart
@@ -98,7 +79,7 @@ class DashboardController extends Controller
             $totalLokasi = count($masterKeys);
 
             if ($totalLokasi === 0) {
-                return compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates');
+                return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
             }
 
             // 2. Lokasi yang punya minimal satu SAP (Inspeksi, OAK, Observasi, Coaching) di nitip — pakai DISTINCT agar ringan
@@ -292,33 +273,15 @@ class DashboardController extends Controller
             $trendWeekLabel = $wStart->format('d') . '–' . $wEnd->format('d') . ' ' . $wStart->locale('id')->monthName . ' ' . $wStart->format('Y') . ' (Minggu Lalu)';
         }
 
-        return compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates');
+        return view('SistemRoster.dashboard.coverage-all', compact('totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite', 'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'));
     }
 
     /**
      * Menampilkan halaman Dashboard Coverage Activity DOP (iframe di modal).
      * Master = lokasi + detail_lokasi dari daily_operation_plans minggu lalu (site kosong pakai unit_id).
      * Covered = sama seperti coverage-all: ada SAP (CAR, OAK, Observasi, Coaching) di nitip.
-     * Hasil di-cache 2 menit (data berdasarkan minggu lalu).
      */
     public function coverageDop(): View
-    {
-        $weekStartStr = Carbon::now()->subWeek()->startOfWeek(Carbon::SUNDAY)->format('Y-m-d');
-        $cacheKey = 'sistem_roster_coverage_dop_' . $weekStartStr;
-
-        $data = Cache::remember($cacheKey, 120, function () {
-            return $this->computeCoverageDopData();
-        });
-
-        return view('SistemRoster.dashboard.coverage-dop', $data);
-    }
-
-    /**
-     * Hitung data untuk Coverage DOP (dipanggil dari coverageDop atau dari cache callback).
-     *
-     * @return array<string, mixed>
-     */
-    private function computeCoverageDopData(): array
     {
         $totalLokasi = 0;
         $coveredLokasi = 0;
@@ -338,16 +301,13 @@ class DashboardController extends Controller
         $dopRows = DB::table('daily_operation_plans')
             ->where('status', 1)
             ->whereBetween('tanggal', [$weekStartStr, $weekEndStr])
-            ->selectRaw('tanggal, COALESCE(NULLIF(TRIM(site), ""), unit_id) as site, lokasi, detail_lokasi, aktivitas')
+            ->selectRaw('COALESCE(NULLIF(TRIM(site), ""), unit_id) as site, lokasi, detail_lokasi, aktivitas')
             ->get();
 
         $masterKeys = [];
         $masterKeysBySite = [];
         $coverageDailyRows = [];
         foreach ($dopRows as $row) {
-            $tanggal = $row->tanggal instanceof \DateTimeInterface
-                ? $row->tanggal->format('Y-m-d')
-                : (is_string($row->tanggal) ? substr($row->tanggal, 0, 10) : '');
             $site = trim((string) ($row->site ?? ''));
             $locRaw = trim((string) ($row->lokasi ?? ''));
             $detRaw = trim((string) ($row->detail_lokasi ?? ''));
@@ -362,23 +322,21 @@ class DashboardController extends Controller
                 }
                 $masterKeysBySite[$site][$key] = true;
             }
-            $coverageDailyRows[] = ['site' => $site, 'lokasi' => $locRaw, 'pembagian_area' => $detRaw, 'aktivitas' => $aktivitas, 'key' => $key, 'tanggal' => $tanggal];
+            $coverageDailyRows[] = ['site' => $site, 'lokasi' => $locRaw, 'pembagian_area' => $detRaw, 'aktivitas' => $aktivitas, 'key' => $key];
         }
-        usort($coverageDailyRows, fn ($a, $b) => strcmp($a['site'], $b['site']) ?: strcmp($a['lokasi'], $b['lokasi']) ?: strcmp($a['pembagian_area'], $b['pembagian_area']) ?: strcmp($a['aktivitas'] ?? '', $b['aktivitas'] ?? '') ?: strcmp($a['tanggal'] ?? '', $b['tanggal'] ?? ''));
+        usort($coverageDailyRows, fn ($a, $b) => strcmp($a['site'], $b['site']) ?: strcmp($a['lokasi'], $b['lokasi']) ?: strcmp($a['pembagian_area'], $b['pembagian_area']) ?: strcmp($a['aktivitas'] ?? '', $b['aktivitas'] ?? ''));
         $totalLokasi = count($masterKeys);
 
         if ($totalLokasi === 0) {
-            $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Lalu)';
+            $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Ini)';
             for ($d = 0; $d < 7; $d++) {
                 $day = $weekStart->copy()->addDays($d);
                 $coverageDailyDates[] = ['date' => $day->format('Y-m-d'), 'label' => $day->format('F j, Y')];
             }
-            $siteActivitiesSummary = [];
-            return compact(
+            return view('SistemRoster.dashboard.coverage-dop', compact(
                 'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
-                'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates',
-                'siteActivitiesSummary'
-            );
+                'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'
+            ));
         }
 
         $coveredKeys = [];
@@ -446,7 +404,7 @@ class DashboardController extends Controller
         }
         usort($coverageBySite, fn ($a, $b) => strcmp($a['site'], $b['site']));
 
-        $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Lalu)';
+        $trendWeekLabel = $weekStart->format('d') . '–' . $weekEnd->format('d') . ' ' . $weekStart->locale('id')->monthName . ' ' . $weekStart->format('Y') . ' (Minggu Ini)';
         $dayNames = ['Min', 'Sen', 'Sel', 'Rab', 'Kam', 'Jum', 'Sab'];
         $trendLabels = [];
         $weekDateStrs = [];
@@ -459,7 +417,6 @@ class DashboardController extends Controller
         $endEsc = addslashes($weekEndStr);
 
         $coveredByDate = array_fill_keys($weekDateStrs, []);
-        $coveredByDateOak = array_fill_keys($weekDateStrs, []);
         $addCoveredByDate = function ($result) use (&$coveredByDate) {
             $rows = is_array($result) ? $result : [];
             foreach ($rows as $r) {
@@ -474,20 +431,6 @@ class DashboardController extends Controller
                 $coveredByDate[$dateStr][$key] = true;
             }
         };
-        $addCoveredByDateOak = function ($result) use (&$coveredByDateOak) {
-            $rows = is_array($result) ? $result : [];
-            foreach ($rows as $r) {
-                $dt = $this->getClickHouseRowValue($r, 'dt');
-                $dateStr = $dt instanceof \DateTimeInterface ? $dt->format('Y-m-d') : (is_string($dt) ? substr($dt, 0, 10) : '');
-                if ($dateStr === '' || ! isset($coveredByDateOak[$dateStr])) {
-                    continue;
-                }
-                $loc = $this->normalizeLocation($this->getClickHouseRowValue($r, 'loc'));
-                $det = $this->normalizeLocation($this->getClickHouseRowValue($r, 'det'));
-                $key = mb_strtolower($loc . '|' . $det);
-                $coveredByDateOak[$dateStr][$key] = true;
-            }
-        };
 
         try {
             $ch = $this->getClickHouseNitip();
@@ -500,7 +443,6 @@ class DashboardController extends Controller
                 try {
                     $sqlOakDaily = "SELECT toDate(submit_date, 'Asia/Makassar') AS dt, trim(ifNull(toString(location), '')) AS loc, trim(ifNull(toString(detail_location), '')) AS det FROM nitip.aaj_vw_car_oak_register_ytd_only WHERE toDate(submit_date, 'Asia/Makassar') >= toDate('{$startEsc}') AND toDate(submit_date, 'Asia/Makassar') <= toDate('{$endEsc}')";
                     $addCoveredByDate($ch->query($sqlOakDaily));
-                    $addCoveredByDateOak($ch->query($sqlOakDaily));
                 } catch (\Throwable $e) {
                 }
                 try {
@@ -522,7 +464,6 @@ class DashboardController extends Controller
         }
         foreach ($coverageDailyRows as &$crow) {
             $crow['days'] = [];
-            $crow['days_oak'] = [];
             foreach ($weekDateStrs as $dateStr) {
                 $covered = isset($coveredByDate[$dateStr][$crow['key']]);
                 $crow['days'][$dateStr] = [
@@ -531,52 +472,9 @@ class DashboardController extends Controller
                     'total' => 1,
                     'status' => $covered ? 'status-green' : 'status-red',
                 ];
-                $coveredOak = isset($coveredByDateOak[$dateStr][$crow['key']]);
-                $crow['days_oak'][$dateStr] = [
-                    'pct' => $coveredOak ? 100 : 0,
-                    'covered' => $coveredOak ? 1 : 0,
-                    'total' => 1,
-                    'status' => $coveredOak ? 'status-green' : 'status-red',
-                ];
             }
         }
         unset($crow);
-
-        // Ringkasan per site: aktivitas unik, detail (expand), OAK saja (aaj_vw_car_oak_register_ytd_only)
-        $siteActivitiesSummary = [];
-        foreach ($coverageDailyRows as $row) {
-            $site = trim((string) ($row['site'] ?? ''));
-            if ($site === '') {
-                continue;
-            }
-            if (! isset($siteActivitiesSummary[$site])) {
-                $siteActivitiesSummary[$site] = [
-                    'site' => $site,
-                    'activities' => [],
-                    'details' => [],
-                    'oakInWeek' => false,
-                ];
-            }
-            $act = trim((string) ($row['aktivitas'] ?? ''));
-            if ($act !== '' && ! in_array($act, $siteActivitiesSummary[$site]['activities'], true)) {
-                $siteActivitiesSummary[$site]['activities'][] = $act;
-            }
-            $siteActivitiesSummary[$site]['details'][] = [
-                'lokasi' => $row['lokasi'] ?? '',
-                'pembagian_area' => $row['pembagian_area'] ?? '',
-                'aktivitas' => $row['aktivitas'] ?? '',
-                'tanggal' => $row['tanggal'] ?? '',
-                'days' => $row['days_oak'] ?? [],
-            ];
-            foreach ($row['days_oak'] ?? [] as $dayData) {
-                if (! empty($dayData['covered'])) {
-                    $siteActivitiesSummary[$site]['oakInWeek'] = true;
-                    break;
-                }
-            }
-        }
-        $siteActivitiesSummary = array_values($siteActivitiesSummary);
-        usort($siteActivitiesSummary, fn ($a, $b) => strcmp($a['site'], $b['site']));
 
         foreach ($coverageBySite as $siteRow) {
             $siteName = $siteRow['site'] ?? '';
@@ -622,11 +520,10 @@ class DashboardController extends Controller
             $trendBySite[] = ['site' => $siteName, 'labels' => $trendLabels, 'counts' => $counts];
         }
 
-        return compact(
+        return view('SistemRoster.dashboard.coverage-dop', compact(
             'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
-            'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates',
-            'siteActivitiesSummary'
-        );
+            'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates'
+        ));
     }
 
     /**
@@ -649,25 +546,15 @@ class DashboardController extends Controller
             ->get();
 
         $filterDateStr = $filterDate->format('Y-m-d');
-        $nitipCacheKey = 'sistem_roster_dashboard_nitip_' . $filterDateStr;
-        $nitipData = Cache::remember($nitipCacheKey, 60, function () use ($filterDateStr) {
-            return [
-                'car' => $this->getCarHazardInspeksiFromClickHouseForDate($filterDateStr),
-                'oak_keys' => $this->getOakLocationKeysForDate($filterDateStr),
-                'observasi_keys' => $this->getObservasiLocationKeysForDate($filterDateStr),
-                'coaching_keys' => $this->getCoachingLocationKeysForDate($filterDateStr),
-                'oak_range' => $this->getOakDataByDateRange($filterDateStr, $filterDateStr),
-                'observasi_range' => $this->getObservasiDataByDateRange($filterDateStr, $filterDateStr),
-                'coaching_range' => $this->getCoachingDataByDateRange($filterDateStr, $filterDateStr),
-            ];
-        });
-        $carHazardInspeksiForDate = $nitipData['car'];
-        $oakLocationKeysForDate = $nitipData['oak_keys'];
-        $observasiLocationKeysForDate = $nitipData['observasi_keys'];
-        $coachingLocationKeysForDate = $nitipData['coaching_keys'];
-        $oakForDate = $nitipData['oak_range'];
-        $observasiForDate = $nitipData['observasi_range'];
-        $coachingForDate = $nitipData['coaching_range'];
+        $carHazardInspeksiForDate = $this->getCarHazardInspeksiFromClickHouseForDate($filterDateStr);
+        // Coverage by Location: tidak match nama — lokasi covered jika ada SAP ATAU OAK ATAU Observasi ATAU Coaching (siapapun) di lokasi itu
+        $oakLocationKeysForDate = $this->getOakLocationKeysForDate($filterDateStr);
+        $observasiLocationKeysForDate = $this->getObservasiLocationKeysForDate($filterDateStr);
+        $coachingLocationKeysForDate = $this->getCoachingLocationKeysForDate($filterDateStr);
+        // Detail Plan: match sampai nama — butuh OAK, Observasi, Coaching per (date, locationKey, nama) untuk filter date saja
+        $oakForDate = $this->getOakDataByDateRange($filterDateStr, $filterDateStr);
+        $observasiForDate = $this->getObservasiDataByDateRange($filterDateStr, $filterDateStr);
+        $coachingForDate = $this->getCoachingDataByDateRange($filterDateStr, $filterDateStr);
         $oakByLocForDate = $oakForDate[$filterDateStr] ?? [];
         $observasiByLocForDate = $observasiForDate[$filterDateStr] ?? [];
         $coachingByLocForDate = $coachingForDate[$filterDateStr] ?? [];
@@ -814,7 +701,7 @@ class DashboardController extends Controller
         }
         $detailByLokasi = $detailRows;
 
-        $heatmapData = Cache::remember('sistem_roster_heatmap_data', 120, fn () => $this->buildHeatmapData());
+        $heatmapData = $this->buildHeatmapData();
 
         return view('SistemRoster.dashboard.index', [
             'assignedPlannings' => $assignedPlannings,
@@ -836,11 +723,11 @@ class DashboardController extends Controller
      */
     private function buildHeatmapData(): array
     {
-        $start = now()->subMonths(1)->startOfMonth()->format('Y-m-d');
-        $end = now()->addMonths(1)->endOfMonth()->format('Y-m-d');
+        $start = now()->subMonths(2)->startOfMonth()->format('Y-m-d');
+        $end = now()->addMonths(2)->endOfMonth()->format('Y-m-d');
 
-        $plannings = RosterPlanning::select('id', 'tanggal', 'site', 'lokasi', 'detail_lokasi')
-            ->with('karyawans:roster_planning_id,nama_karyawan')
+        // Planned = planning yang sudah punya minimal 1 karyawan (roster_planning_karyawans), bukan berdasarkan status
+        $plannings = RosterPlanning::with('karyawans')
             ->whereBetween('tanggal', [$start, $end])
             ->whereHas('karyawans')
             ->orderBy('tanggal')
@@ -864,7 +751,9 @@ class DashboardController extends Controller
             }
             $byKey[$key]['planned']++;
 
-            $locationKey = $this->locationKeyForSapMatch($p->lokasi ?? '', $p->detail_lokasi ?? '');
+            $planLokasiNorm = $this->normalizeLocation($p->lokasi ?? '');
+            $planDetailNorm = $this->normalizeLocation($p->detail_lokasi ?? '');
+            $locationKey = $planLokasiNorm . '|' . $planDetailNorm;
 
             $karyawanNamesLower = [];
             foreach ($p->karyawans ?? [] as $k) {
@@ -954,8 +843,8 @@ class DashboardController extends Controller
             $byDate = [];
             foreach ($results as $row) {
                 $dt = $this->getClickHouseRowValue($row, 'dt');
-                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
-                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'submit_by'));
                 $dateStr = $dt instanceof \DateTimeInterface
                     ? $dt->format('Y-m-d')
@@ -963,7 +852,7 @@ class DashboardController extends Controller
                 if ($dateStr === '') {
                     continue;
                 }
-                $locationKey = $this->locationKeyForSapMatch($loc, $det);
+                $locationKey = $loc . '|' . $det;
                 if (! isset($byDate[$dateStr])) {
                     $byDate[$dateStr] = [];
                 }
@@ -1016,8 +905,8 @@ class DashboardController extends Controller
             $byDate = [];
             foreach ($results as $row) {
                 $dt = $this->getClickHouseRowValue($row, 'dt');
-                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
-                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
                 $dateStr = $dt instanceof \DateTimeInterface
                     ? $dt->format('Y-m-d')
@@ -1025,7 +914,7 @@ class DashboardController extends Controller
                 if ($dateStr === '') {
                     continue;
                 }
-                $locationKey = $this->locationKeyForSapMatch($loc, $det);
+                $locationKey = $loc . '|' . $det;
                 if (! isset($byDate[$dateStr])) {
                     $byDate[$dateStr] = [];
                 }
@@ -1155,8 +1044,8 @@ class DashboardController extends Controller
             $byDate = [];
             foreach ($results as $row) {
                 $dt = $this->getClickHouseRowValue($row, 'dt');
-                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
-                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_coach'));
                 $dateStr = $dt instanceof \DateTimeInterface
                     ? $dt->format('Y-m-d')
@@ -1164,7 +1053,7 @@ class DashboardController extends Controller
                 if ($dateStr === '') {
                     continue;
                 }
-                $locationKey = $this->locationKeyForSapMatch($loc, $det);
+                $locationKey = $loc . '|' . $det;
                 if (! isset($byDate[$dateStr])) {
                     $byDate[$dateStr] = [];
                 }
@@ -1259,8 +1148,8 @@ class DashboardController extends Controller
             $byDate = [];
             foreach ($results as $row) {
                 $dt = $this->getClickHouseRowValue($row, 'dt');
-                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
-                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
                 $dateStr = $dt instanceof \DateTimeInterface
                     ? $dt->format('Y-m-d')
@@ -1268,7 +1157,7 @@ class DashboardController extends Controller
                 if ($dateStr === '') {
                     continue;
                 }
-                $locationKey = $this->locationKeyForSapMatch($loc, $det);
+                $locationKey = $loc . '|' . $det;
                 if (! isset($byDate[$dateStr])) {
                     $byDate[$dateStr] = [];
                 }
@@ -1351,21 +1240,6 @@ class DashboardController extends Controller
     }
 
     /**
-     * Key lokasi kanonik untuk match SAP (heatmap actual + detail): lowercase, hapus kurung, collapse spasi.
-     * Agar "(B8) Pit CD" dan "B8 Pit CD" dari planning vs nitip match.
-     */
-    private function locationKeyForSapMatch(?string $lokasi, ?string $detail): string
-    {
-        $a = $this->normalizeLocation($lokasi);
-        $b = $this->normalizeLocation($detail);
-        $a = preg_replace('/\s*[()]\s*/', ' ', $a);
-        $b = preg_replace('/\s*[()]\s*/', ' ', $b);
-        $a = preg_replace('/\s+/', ' ', trim($a));
-        $b = preg_replace('/\s+/', ' ', trim($b));
-        return mb_strtolower($a) . '|' . mb_strtolower($b);
-    }
-
-    /**
      * Ambil data hazard inspeksi (CAR jenis HAZARD/INSPEKSI, status SUBMITTED) dari ClickHouse untuk tanggal tertentu.
      * Digunakan untuk match: nama pelapor + lokasi + detail lokasi + tanggal.
      *
@@ -1397,15 +1271,14 @@ class DashboardController extends Controller
             foreach ($results as $row) {
                 $id = $this->getClickHouseRowValue($row, 'id');
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
-                $lokasiRaw = trim((string) $this->getClickHouseRowValue($row, 'nama_lokasi'));
-                $detailRaw = trim((string) $this->getClickHouseRowValue($row, 'nama_detail_lokasi'));
+                $lokasi = $this->normalizeLocation($this->getClickHouseRowValue($row, 'nama_lokasi'));
+                $detailLokasi = $this->normalizeLocation($this->getClickHouseRowValue($row, 'nama_detail_lokasi'));
                 $jenisLaporan = trim((string) $this->getClickHouseRowValue($row, 'jenis_laporan'));
                 $list[] = [
                     'id' => $id,
                     'nama_lower' => $nama !== '' ? mb_strtolower($nama) : '',
-                    'lokasi_norm' => $this->normalizeLocation($lokasiRaw),
-                    'detail_lokasi_norm' => $this->normalizeLocation($detailRaw),
-                    'location_key' => $this->locationKeyForSapMatch($lokasiRaw, $detailRaw),
+                    'lokasi_norm' => $lokasi,
+                    'detail_lokasi_norm' => $detailLokasi,
                     'jenis_laporan' => $jenisLaporan !== '' ? $jenisLaporan : null,
                 ];
             }
@@ -1443,11 +1316,11 @@ class DashboardController extends Controller
             }
             $out = [];
             foreach ($results as $row) {
-                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
-                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'submit_by'));
                 $cnt = (int) ($this->getClickHouseRowValue($row, 'cnt') ?? 0);
-                $key = $this->locationKeyForSapMatch($loc, $det);
+                $key = $loc . '|' . $det;
                 if (! isset($out[$key])) {
                     $out[$key] = [];
                 }
@@ -1489,11 +1362,11 @@ class DashboardController extends Controller
             }
             $out = [];
             foreach ($results as $row) {
-                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
-                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_pelapor'));
                 $cnt = (int) ($this->getClickHouseRowValue($row, 'cnt') ?? 0);
-                $key = $this->locationKeyForSapMatch($loc, $det);
+                $key = $loc . '|' . $det;
                 if (! isset($out[$key])) {
                     $out[$key] = [];
                 }
@@ -1535,11 +1408,11 @@ class DashboardController extends Controller
             }
             $out = [];
             foreach ($results as $row) {
-                $loc = trim((string) $this->getClickHouseRowValue($row, 'loc'));
-                $det = trim((string) $this->getClickHouseRowValue($row, 'det'));
+                $loc = $this->normalizeLocation($this->getClickHouseRowValue($row, 'loc'));
+                $det = $this->normalizeLocation($this->getClickHouseRowValue($row, 'det'));
                 $nama = trim((string) $this->getClickHouseRowValue($row, 'nama_coach'));
                 $cnt = (int) ($this->getClickHouseRowValue($row, 'cnt') ?? 0);
-                $key = $this->locationKeyForSapMatch($loc, $det);
+                $key = $loc . '|' . $det;
                 if (! isset($out[$key])) {
                     $out[$key] = [];
                 }
@@ -1584,7 +1457,9 @@ class DashboardController extends Controller
 
         $rows = [];
         foreach ($plannings as $planning) {
-            $locationKey = $this->locationKeyForSapMatch($planning->lokasi ?? '', $planning->detail_lokasi ?? '');
+            $planLokasiNorm = $this->normalizeLocation($planning->lokasi ?? '');
+            $planDetailNorm = $this->normalizeLocation($planning->detail_lokasi ?? '');
+            $locationKey = $planLokasiNorm . '|' . $planDetailNorm;
 
             $karyawans = $planning->karyawans ?? collect();
             if ($karyawans->isEmpty()) {
@@ -1606,7 +1481,7 @@ class DashboardController extends Controller
 
                 $countInspeksi = 0;
                 foreach ($carList as $item) {
-                    if (($item['location_key'] ?? '') !== $locationKey) {
+                    if ($item['lokasi_norm'] !== $planLokasiNorm || $item['detail_lokasi_norm'] !== $planDetailNorm) {
                         continue;
                     }
                     if ($item['nama_lower'] !== '' && $item['nama_lower'] === $namaLower) {
