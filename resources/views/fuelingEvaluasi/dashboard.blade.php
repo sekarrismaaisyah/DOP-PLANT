@@ -159,7 +159,7 @@
                   </div>
                </div>
                <h3 class="text-3xl font-bold text-slate-800 dark:text-slate-200" id="kpi_fuel">—</h3>
-               <p class="text-xs text-slate-400 mt-2 italic">km/L = Total KM (semua unit) ÷ Total Fuel (liter). Baris null/— tidak dihitung.</p>
+               <p class="text-xs text-slate-400 mt-2 italic">km/L = Total KM ÷ Total Fuel. Hanya unit yang punya data avg BBM; baris null/— tidak dihitung.</p>
             </div>
          </div>
          <!-- Main Content Area -->
@@ -193,10 +193,11 @@
                            <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Expired</th>
                            <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Status Permit SPIP</th>
                            <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">AVG per Day</th>
+                           <th class="px-3 py-2.5 text-[11px] font-bold text-slate-500 uppercase whitespace-nowrap">Fuel Ratio (km/L)</th>
                         </tr>
                      </thead>
                      <tbody id="dashboard_table_body" class="divide-y divide-slate-100 dark:divide-slate-800">
-                        <tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm">Pilih rentang tanggal dan klik Muat Data.</td></tr>
+                        <tr><td colspan="11" class="px-5 py-8 text-center text-slate-500 text-sm">Pilih rentang tanggal dan klik Muat Data.</td></tr>
                      </tbody>
                   </table>
                </div>
@@ -434,7 +435,7 @@
             var pageRows = filtered.slice(start, start + PAGE_SIZE);
 
             if (pageRows.length === 0) {
-               tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm">' + (fullData.length === 0 ? 'Tidak ada data untuk rentang tanggal ini.' : 'Tidak ada hasil untuk pencarian.') + '</td></tr>';
+               tbody.innerHTML = '<tr><td colspan="11" class="px-5 py-8 text-center text-slate-500 text-sm">' + (fullData.length === 0 ? 'Tidak ada data untuk rentang tanggal ini.' : 'Tidak ada hasil untuk pencarian.') + '</td></tr>';
             } else {
                var html = '';
                for (var i = 0; i < pageRows.length; i++) {
@@ -451,6 +452,7 @@
                      '<td class="px-3 py-3 text-sm">' + escapeHtml(r.expired) + '</td>' +
                      '<td class="px-3 py-3">' + statusBadge(r.status_permit_spip) + '</td>' +
                      '<td class="px-3 py-3 text-sm">' + escapeHtml(r.avg_per_day) + '</td>' +
+                     '<td class="px-3 py-3 text-sm font-medium">' + (r.fuel_ratio != null ? escapeHtml(Number(r.fuel_ratio)) + ' km/l' : '—') + '</td>' +
                      '</tr>';
                }
                tbody.innerHTML = html;
@@ -467,14 +469,14 @@
             var to = (dateTo && dateTo.value) || '';
             if (!from || !to) {
                fullData = [];
-               tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm">Pilih Tanggal Dari dan Tanggal Sampai.</td></tr>';
+               tbody.innerHTML = '<tr><td colspan="11" class="px-5 py-8 text-center text-slate-500 text-sm">Pilih Tanggal Dari dan Tanggal Sampai.</td></tr>';
                infoEl.textContent = '—';
                if (pageText) pageText.textContent = 'Halaman 1';
                if (btnPrev) btnPrev.disabled = true;
                if (btnNext) btnNext.disabled = true;
                return;
             }
-            tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-slate-500 text-sm"><span class="inline-block animate-pulse">Memuat data...</span></td></tr>';
+            tbody.innerHTML = '<tr><td colspan="11" class="px-5 py-8 text-center text-slate-500 text-sm"><span class="inline-block animate-pulse">Memuat data...</span></td></tr>';
             infoEl.textContent = '—';
             if (linkPerhari) linkPerhari.href = "{{ url()->route('fueling-evaluasi.per-hari') }}?date_from=" + encodeURIComponent(from) + "&date_to=" + encodeURIComponent(to);
             loadStats(from, to);
@@ -488,7 +490,7 @@
                })
                .catch(function() {
                   fullData = [];
-                  tbody.innerHTML = '<tr><td colspan="10" class="px-5 py-8 text-center text-danger text-sm">Gagal memuat data.</td></tr>';
+                  tbody.innerHTML = '<tr><td colspan="11" class="px-5 py-8 text-center text-danger text-sm">Gagal memuat data.</td></tr>';
                   infoEl.textContent = '—';
                });
          }

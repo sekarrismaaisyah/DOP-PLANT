@@ -233,6 +233,9 @@ class EvaluasiUnitTabelController extends Controller
             foreach ($rows as $r) {
                 $mtdStr = isset($r['mtd']) && $r['mtd'] !== null ? number_format((float) $r['mtd'], 2, ',', '.') : '-';
                 $avgStr = isset($r['avg_per_day']) && $r['avg_per_day'] !== null ? number_format((float) $r['avg_per_day'], 2, ',', '.') : '-';
+                $dayKm = isset($r['day_km']) ? (float) $r['day_km'] : null;
+                $fuel = isset($r['avg_per_day']) && $r['avg_per_day'] !== null && $r['avg_per_day'] !== '' ? (float) $r['avg_per_day'] : null;
+                $fuelRatio = ($dayKm !== null && $dayKm > 0 && $fuel !== null && $fuel > 0) ? round($dayKm / $fuel, 2) : null;
                 $out[] = [
                     'tanggal' => $r['tanggal'] ?? '-',
                     'no_unit' => $r['no_unit'] ?? '-',
@@ -244,6 +247,7 @@ class EvaluasiUnitTabelController extends Controller
                     'expired' => !empty($r['expired']) ? $r['expired'] : '-',
                     'status_permit_spip' => $r['status_permit_spip'] ?? '-',
                     'avg_per_day' => $avgStr,
+                    'fuel_ratio' => $fuelRatio,
                     'mtd' => $mtdStr,
                 ];
             }
