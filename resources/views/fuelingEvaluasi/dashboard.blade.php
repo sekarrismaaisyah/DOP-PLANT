@@ -99,7 +99,7 @@
                <span>Hari ini, {{ now()->translatedFormat('d M Y') }}</span>
                </button>
                <div class="flex gap-2">
-                  <button class="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:text-primary transition-colors">
+                  <button type="button" id="dashboard_btn_download" class="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:text-primary transition-colors" title="Download data Unit Performance (CSV)">
                   <span class="material-symbols-outlined">download</span>
                   </button>
                </div>
@@ -659,8 +659,63 @@
                });
          }
 
+         function getFilteredData() {
+            var query = (searchInput && searchInput.value) ? searchInput.value.trim() : '';
+            var jenisSpip = (filterJenisSpip && filterJenisSpip.value) ? filterJenisSpip.value : '';
+            return fullData.filter(function(r) {
+               if (query && !rowMatchSearch(r, query)) return false;
+               if (jenisSpip && (r.jenis_unit_spip || '') !== jenisSpip) return false;
+               return true;
+            });
+         }
+
+         function downloadCSV() {
+            var filtered = getFilteredData();
+            if (filtered.length === 0) {
+               alert('Tidak ada data untuk didownload. Pilih rentang tanggal dan klik Muat Data, atau pastikan filter menghasilkan data.');
+               return;
+            }
+            var headers = ['TANGGAL', 'NO UNIT', 'JARAK DITEMPUH', 'DURASI (jam)', 'Perusahaan Pemilik', 'Site Operasional', 'Jenis Unit SPIP', 'Expired', 'Status Permit SPIP', 'AVG per Day', 'Fuel Ratio (km/L)'];
+            var escapeCsv = function(val) {
+               if (val == null) return '';
+               var s = String(val).replace(/"/g, '""');
+               if (/[,\n\r"]/.test(s)) return '"' + s + '"';
+               return s;
+            };
+            var rows = [headers.map(escapeCsv).join(',')];
+            for (var i = 0; i < filtered.length; i++) {
+               var r = filtered[i];
+               var durasi = (r.total_jam != null && r.total_jam !== '') ? (Number(r.total_jam) + ' jam') : '-';
+               var rowStatus = computeRowStatus(r);
+               rows.push([
+                  escapeCsv(r.tanggal),
+                  escapeCsv(r.no_unit),
+                  escapeCsv(r.jarak),
+                  escapeCsv(durasi),
+                  escapeCsv(r.perusahaan_pemilik),
+                  escapeCsv(r.site_operasional),
+                  escapeCsv(r.jenis_unit_spip),
+                  escapeCsv(r.expired),
+                  escapeCsv(rowStatus),
+                  escapeCsv(r.avg_per_day),
+                  escapeCsv(r.fuel_ratio != null ? Number(r.fuel_ratio) + ' km/l' : '—')
+               ].join(','));
+            }
+            var csv = '\uFEFF' + rows.join('\r\n');
+            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            var link = document.createElement('a');
+            var from = (dateFrom && dateFrom.value) || 'date';
+            var to = (dateTo && dateTo.value) || 'date';
+            link.href = URL.createObjectURL(blob);
+            link.download = 'unit-performance-' + from + '_' + to + '.csv';
+            link.click();
+            URL.revokeObjectURL(link.href);
+         }
+
          setDefaultDates();
          if (btnLoad) btnLoad.addEventListener('click', loadData);
+         var btnDownload = document.getElementById('dashboard_btn_download');
+         if (btnDownload) btnDownload.addEventListener('click', downloadCSV);
          if (searchInput) searchInput.addEventListener('input', function() { currentPage = 1; applyFilterAndRender(); });
          if (filterJenisSpip) filterJenisSpip.addEventListener('change', function() { currentPage = 1; applyFilterAndRender(); });
          if (btnPrev) btnPrev.addEventListener('click', function() { currentPage--; applyFilterAndRender(); });
