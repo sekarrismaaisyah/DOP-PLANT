@@ -36,7 +36,12 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class fullMapsController extends Controller
 {
-   
+    /** Koneksi ClickHouse untuk data nitip (database nitip, unit_gps_logs). */
+    private function getClickHouseNitip(): ClickHouseService
+    {
+        return app(ClickHouseService::class, ['connectionName' => 'clickhouse_nitip']);
+    }
+
     // public function index()
     // {
        
@@ -3825,13 +3830,122 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
     }
 
     /**
+     * Get unit vehicles for fullMaps from ClickHouse Nitip unit_gps_logs.
+     * Only today's data (by updated_at), one row per unit (latest updated_at per unit_id).
+     */
+    private function getUnitVehiclesFromClickHouseNitip(): array
+    {
+        try {
+            $ch = $this->getClickHouseNitip();
+            if (!$ch->isConnected()) {
+                Log::info('ClickHouse Nitip not connected, unit vehicles will be empty.');
+                return [];
+            }
+
+            $sql = "
+                SELECT 
+                    unit_id,
+                    argMax(id, updated_at) AS id,
+                    argMax(integration_id, updated_at) AS integration_id,
+                    argMax(latitude, updated_at) AS latitude,
+                    argMax(longitude, updated_at) AS longitude,
+                    argMax(speed, updated_at) AS speed,
+                    argMax(course, updated_at) AS course,
+                    argMax(battery, updated_at) AS battery,
+                    argMax(heading, updated_at) AS heading,
+                    argMax(vehicle_number, updated_at) AS vehicle_number,
+                    argMax(vehicle_name, updated_at) AS vehicle_name,
+                    argMax(vendor_name, updated_at) AS vendor_name,
+                    argMax(vendor_type, updated_at) AS vendor_type,
+                    argMax(vehicle_type, updated_at) AS vehicle_type,
+                    argMax(timezone, updated_at) AS timezone,
+                    argMax(user_id, updated_at) AS user_id,
+                    max(updated_at) AS updated_at,
+                    argMax(created_at, updated_at) AS created_at
+                FROM nitip.unit_gps_logs
+                WHERE toDate(updated_at) = today()
+                  AND is_unit = true
+                  AND latitude IS NOT NULL
+                  AND longitude IS NOT NULL
+                  AND toFloat64OrZero(latitude) != 0
+                  AND toFloat64OrZero(longitude) != 0
+                GROUP BY unit_id
+                ORDER BY updated_at DESC
+            ";
+            $rows = $ch->query($sql);
+            if (!is_array($rows)) {
+                return [];
+            }
+
+            $list = [];
+            foreach ($rows as $row) {
+                $lat = $row['latitude'] ?? null;
+                $lon = $row['longitude'] ?? null;
+                if ($lat === null || $lon === null || (float) $lat === 0.0 || (float) $lon === 0.0) {
+                    continue;
+                }
+                $list[] = [
+                    'id' => $row['id'] ?? null,
+                    'unit_id' => $row['unit_id'] ?? null,
+                    'integration_id' => $row['integration_id'] ?? null,
+                    'latitude' => (float) $lat,
+                    'longitude' => (float) $lon,
+                    'course' => isset($row['course']) ? (float) $row['course'] : 0,
+                    'speed' => isset($row['speed']) ? (float) $row['speed'] : null,
+                    'heading' => isset($row['heading']) ? (float) $row['heading'] : null,
+                    'battery' => isset($row['battery']) ? (float) $row['battery'] : 0,
+                    'vehicle_type' => $row['vehicle_type'] ?? 'Unknown',
+                    'vehicle_number' => $row['vehicle_number'] ?? 'N/A',
+                    'vehicle_name' => $row['vehicle_name'] ?? 'N/A',
+                    'vendor_name' => $row['vendor_name'] ?? 'N/A',
+                    'vendor_type' => $row['vendor_type'] ?? null,
+                    'user_id' => $row['user_id'] ?? null,
+                    'is_unit' => true,
+                    'timezone' => $row['timezone'] ?? null,
+                    'created_at' => $row['created_at'] ?? null,
+                    'updated_at' => $row['updated_at'] ?? null,
+                    'user' => null,
+                ];
+            }
+            Log::info('Unit vehicles from ClickHouse Nitip unit_gps_logs (today, latest per unit)', ['count' => count($list)]);
+            return $list;
+        } catch (Exception $e) {
+            Log::warning('getUnitVehiclesFromClickHouseNitip failed: ' . $e->getMessage());
+            return [];
+        }
+    }
+
+    /**
+     * Get unit vehicles via API (for refreshUnitVehicles in fullMaps).
+     * Source: ClickHouse Nitip unit_gps_logs only (today, latest per unit).
+     */
+    public function getUnitVehicles(Request $request)
+    {
+        try {
+            $unitVehicles = $this->getUnitVehiclesFromClickHouseNitip();
+            return response()->json([
+                'success' => true,
+                'unitVehicles' => $unitVehicles,
+                'count' => count($unitVehicles),
+            ]);
+        } catch (Exception $e) {
+            Log::error('fullMaps getUnitVehicles: ' . $e->getMessage());
+            return response()->json([
+                'success' => false,
+                'error' => $e->getMessage(),
+                'unitVehicles' => [],
+            ], 500);
+        }
+    }
+
+    /**
      * Get units and latest GPS from ClickHouse nitip (Evaluasi Fuelling Unit).
      * Data: nitip.units + nitip.unit_gps_logs (latest per unit).
      */
     public function getNitipUnits()
     {
         try {
-            $ch = new ClickHouseService('clickhouse_nitip');
+            $ch = $this->getClickHouseNitip();
             if (!$ch->isConnected()) {
                 return response()->json([
                     'success' => false,
@@ -3955,7 +4069,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
             return response()->json(['success' => false, 'message' => 'date must be YYYY-MM-DD', 'data' => []], 400);
         }
         try {
-            $ch = new ClickHouseService('clickhouse_nitip');
+            $ch = $this->getClickHouseNitip();
             if (!$ch->isConnected()) {
                 return response()->json([
                     'success' => false,

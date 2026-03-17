@@ -11106,7 +11106,7 @@ source: new ol.source.Vector(),
     // Function to refresh unit vehicle data from server
     async function refreshUnitVehicles() {
         try {
-            const response = await fetch('{{ route("maps.api.unit-vehicles") }}');
+            const response = await fetch('{{ route("full-maps.api.unit-vehicles") }}');
             if (response.ok) {
                 const data = await response.json();
                 if (data.success && data.unitVehicles) {
