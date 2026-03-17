@@ -928,11 +928,13 @@ class DOPMWeeklyController extends Controller
             }
         }
 
-        // IKK batal karena reschedule: code_before di ikk_reschedule (ClickHouse hse_automation) dengan reschedule_type=RESCHEDULE, status=APPROVE
+        // IKK batal karena reschedule: code_before di ikk_reschedule (ClickHouse), hanya untuk minggu yang dipilih (date_before dalam week)
         $rescheduleBatalCodes = [];
         if (class_exists(\App\Services\ClickHouseService::class)) {
             $chReschedule = app(\App\Services\ClickHouseService::class);
             if (method_exists($chReschedule, 'query') && $chReschedule->isConnected()) {
+                $weekStartStrReschedule = $weekStartDate->format('Y-m-d');
+                $weekEndStrReschedule = $weekEndDate->format('Y-m-d');
                 $sqlReschedule = "
                     SELECT DISTINCT code_before
                     FROM hse_automation.ikk_reschedule
@@ -941,6 +943,8 @@ class DOPMWeeklyController extends Controller
                       AND code_before IS NOT NULL
                       AND trim(toString(code_before)) != ''
                       AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                      AND toDate(date_before) >= toDate('" . addslashes($weekStartStrReschedule) . "')
+                      AND toDate(date_before) <= toDate('" . addslashes($weekEndStrReschedule) . "')
                 ";
                 $rescheduleRows = $chReschedule->query($sqlReschedule);
                 foreach ($rescheduleRows ?? [] as $r) {

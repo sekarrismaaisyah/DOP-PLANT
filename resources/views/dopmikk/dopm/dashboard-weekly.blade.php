@@ -1729,10 +1729,10 @@
                      <div class="card-body">
                        <div class="mb-2">
                          <h5 class="mb-0 fw-bold">Pekerjaan Reschedule</h5>
-                         <p class="mb-0 text-muted small">Total IKK Reschedule/Batal</p>
+                         <p class="mb-0 text-muted small">Total IKK Reschedule/Batal (week ini, distinct per kode)</p>
                        </div>
                        <div class="text-center py-3 mt-4">
-                         <h5 class="mb-0 display-5 fw-bold">{{ number_format(count($rescheduleBatalCodes ?? [])) }} Reschedule</h5>
+                         <h5 class="mb-0 display-5 fw-bold">{{ number_format(count($rescheduleBatalCodes ?? [])) }} </h5>
                        </div>
                        <div class="text-center mt-3">
                          <p class="mb-0 text-muted small">Data dari ikk_reschedule (ClickHouse)</p>
