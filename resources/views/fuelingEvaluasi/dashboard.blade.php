@@ -429,6 +429,89 @@
             return concat.indexOf(low) !== -1;
          }
 
+         function updateStatsFromFiltered(filtered) {
+            var totalUnit = 0;
+            var units = {};
+            for (var i = 0; i < filtered.length; i++) {
+               var u = filtered[i].no_unit;
+               if (u != null && u !== '' && !units[u]) { units[u] = true; totalUnit++; }
+            }
+            var passedCount = 0, expiringCount = 0, notPassedCount = 0;
+            for (var j = 0; j < filtered.length; j++) {
+               var st = (filtered[j].status_permit_spip || '').toUpperCase();
+               if (st === 'PASSED') passedCount++;
+               else if (st.indexOf('EXPIR') !== -1) expiringCount++;
+               else notPassedCount++;
+            }
+            var totalRows = filtered.length;
+            var compliancePct = totalRows > 0 ? (passedCount / totalRows * 100) : 0;
+            var sumJam = 0, countJam = 0;
+            for (var k = 0; k < filtered.length; k++) {
+               var jm = filtered[k].total_jam;
+               if (jm != null && jm !== '' && !isNaN(Number(jm))) { sumJam += Number(jm); countJam++; }
+            }
+            var avgWaktu = countJam > 0 ? sumJam / countJam : null;
+            var sumFuel = 0, countFuel = 0;
+            for (var m = 0; m < filtered.length; m++) {
+               var fr = filtered[m].fuel_ratio;
+               if (fr != null && fr !== '' && !isNaN(Number(fr))) { sumFuel += Number(fr); countFuel++; }
+            }
+            var avgFuel = countFuel > 0 ? sumFuel / countFuel : null;
+            var siteCount = {};
+            for (var n = 0; n < filtered.length; n++) {
+               var site = filtered[n].site_operasional;
+               site = (site == null || site === '') ? '-' : String(site);
+               siteCount[site] = (siteCount[site] || 0) + 1;
+            }
+            var siteList = [];
+            for (var key in siteCount) siteList.push({ site: key, count: siteCount[key] });
+            siteList.sort(function(a, b) { return b.count - a.count; });
+            for (var s = 0; s < siteList.length; s++) siteList[s].pct = totalRows > 0 ? (siteList[s].count / totalRows * 100) : 0;
+
+            var totalEl = document.getElementById('kpi_total_unit');
+            var compEl = document.getElementById('kpi_compliance');
+            var compArc = document.getElementById('kpi_compliance_arc');
+            var avgEl = document.getElementById('kpi_avg_waktu');
+            var fuelEl = document.getElementById('kpi_fuel');
+            if (totalEl) totalEl.textContent = totalUnit || '—';
+            if (compEl) compEl.textContent = (compliancePct != null ? Math.round(compliancePct) + '%' : '—');
+            if (compArc) compArc.setAttribute('stroke-dasharray', (compliancePct != null ? compliancePct : 0) + ', 100');
+            if (avgEl) avgEl.textContent = avgWaktu != null ? Number(avgWaktu.toFixed(2)) : '—';
+            if (fuelEl) fuelEl.textContent = avgFuel != null ? (Number(avgFuel.toFixed(2)) + ' km/l') : '—';
+            var donutTotal = document.getElementById('kpi_donut_total');
+            var kpiPassed = document.getElementById('kpi_passed');
+            var kpiExpiring = document.getElementById('kpi_expiring');
+            var kpiNotPassed = document.getElementById('kpi_not_passed');
+            if (donutTotal) donutTotal.textContent = totalRows || '—';
+            if (kpiPassed) kpiPassed.textContent = passedCount;
+            if (kpiExpiring) kpiExpiring.textContent = expiringCount;
+            if (kpiNotPassed) kpiNotPassed.textContent = notPassedCount;
+            var p1 = totalRows > 0 ? passedCount / totalRows * 100 : 0;
+            var p2 = totalRows > 0 ? expiringCount / totalRows * 100 : 0;
+            var p3 = totalRows > 0 ? notPassedCount / totalRows * 100 : 0;
+            var arcPassed = document.getElementById('donut_passed');
+            var arcExpiring = document.getElementById('donut_expiring');
+            var arcNotPassed = document.getElementById('donut_notpassed');
+            if (arcPassed) { arcPassed.setAttribute('stroke-dasharray', p1 + ', 100'); arcPassed.setAttribute('stroke-dashoffset', '0'); }
+            if (arcExpiring) { arcExpiring.setAttribute('stroke-dasharray', p2 + ', 100'); arcExpiring.setAttribute('stroke-dashoffset', '-' + p1); }
+            if (arcNotPassed) { arcNotPassed.setAttribute('stroke-dasharray', p3 + ', 100'); arcNotPassed.setAttribute('stroke-dashoffset', '-' + (p1 + p2)); }
+            var siteListEl = document.getElementById('site_ranking_list');
+            if (siteListEl) {
+               if (siteList.length === 0) {
+                  siteListEl.innerHTML = '<p class="text-sm text-slate-500">Tidak ada data site.</p>';
+               } else {
+                  var html = '';
+                  for (var i = 0; i < siteList.length; i++) {
+                     var x = siteList[i];
+                     var pct = Math.min(100, Math.max(0, x.pct || 0));
+                     var siteLabel = (x.site === '-' ? '(Tanpa site)' : String(x.site)).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+                     html += '<div class="space-y-1"><div class="flex justify-between text-xs font-semibold"><span>' + siteLabel + '</span><span>' + Math.round(pct) + '%</span></div><div class="w-full bg-slate-100 dark:bg-slate-800 rounded-full h-2"><div class="bg-primary h-2 rounded-full transition-all" style="width:' + pct + '%"></div></div></div>';
+                  }
+                  siteListEl.innerHTML = html;
+               }
+            }
+         }
+
          function applyFilterAndRender() {
             var query = (searchInput && searchInput.value) ? searchInput.value.trim() : '';
             var jenisSpip = (filterJenisSpip && filterJenisSpip.value) ? filterJenisSpip.value : '';
@@ -471,6 +554,7 @@
             if (pageText) pageText.textContent = 'Halaman ' + currentPage + ' dari ' + totalPages;
             if (btnPrev) { btnPrev.disabled = currentPage <= 1; }
             if (btnNext) { btnNext.disabled = currentPage >= totalPages; }
+            updateStatsFromFiltered(filtered);
          }
 
          function loadData() {
