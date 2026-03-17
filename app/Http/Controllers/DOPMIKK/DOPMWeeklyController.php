@@ -934,7 +934,7 @@ class DOPMWeeklyController extends Controller
             $chReschedule = app(\App\Services\ClickHouseService::class);
             if (method_exists($chReschedule, 'query') && $chReschedule->isConnected()) {
                 $sqlReschedule = "
-                    SELECT code_before
+                    SELECT DISTINCT code_before
                     FROM hse_automation.ikk_reschedule
                     WHERE upper(trim(toString(reschedule_type))) = 'RESCHEDULE'
                       AND upper(trim(toString(status))) = 'APPROVE'
