@@ -112,9 +112,6 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/images/unit.png', function () {
         return response()->file(resource_path('images/unit.png'));
     })->name('images.unit');
-    Route::get('/images/lv.png', function () {
-        return response()->file(resource_path('images/lv.png'));
-    })->name('images.lv');
     Route::get('/clickhouse-status', [HomeController::class, 'checkClickHouseStatus'])->name('clickhouse.status');
     Route::get('/cctv-company-data', [HomeController::class, 'companyCctvData'])->name('cctv.company-data');
     Route::get('/company-cctv-data', [HomeController::class, 'getCompanyCctvData'])->name('company-cctv-data');
