@@ -437,9 +437,33 @@
                });
          }
 
+         function computeRowStatus(row) {
+            var base = (row.status_permit_spip || '').toString().trim();
+            var expired = row.expired;
+            if (!expired || expired === '-' || expired === '') {
+               return base || '-';
+            }
+            var expiredDate = new Date(expired);
+            if (isNaN(expiredDate.getTime())) {
+               return base || '-';
+            }
+            var now = new Date();
+            now.setHours(0, 0, 0, 0);
+            var end = new Date(now.getTime());
+            end.setDate(end.getDate() + 30);
+            if (expiredDate < now) {
+               return 'EXPIRED';
+            }
+            if (expiredDate <= end) {
+               return 'EXPIRING';
+            }
+            return base || '-';
+         }
+
          function statusBadge(status) {
             var s = (status || '').toUpperCase();
             if (s === 'PASSED') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-success/10 text-success border border-success/20"><span class="material-symbols-outlined text-xs">check_circle</span> PASSED</span>';
+            if (s === 'EXPIRING') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-warning/10 text-warning border border-warning/20"><span class="material-symbols-outlined text-xs">schedule</span> EXPIRING</span>';
             if (s === 'N/A' || s === 'NOT PASSED' || s === 'EXPIRED') return '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-danger/10 text-danger border border-danger/20">' + (status || 'N/A') + '</span>';
             return '<span class="text-sm">' + (status || '-') + '</span>';
          }
@@ -568,6 +592,7 @@
                for (var i = 0; i < pageRows.length; i++) {
                   var r = pageRows[i];
                   var durasi = (r.total_jam != null && r.total_jam !== '') ? (Number(r.total_jam) + ' jam') : '-';
+                  var rowStatus = computeRowStatus(r);
                   html += '<tr class="hover:bg-slate-50 dark:hover:bg-slate-800/50">' +
                      '<td class="px-3 py-3 text-sm">' + escapeHtml(r.tanggal) + '</td>' +
                      '<td class="px-3 py-3 text-sm font-bold text-primary">' + escapeHtml(r.no_unit) + '</td>' +
@@ -577,7 +602,7 @@
                      '<td class="px-3 py-3 text-sm">' + escapeHtml(r.site_operasional) + '</td>' +
                      '<td class="px-3 py-3 text-sm">' + escapeHtml(r.jenis_unit_spip) + '</td>' +
                      '<td class="px-3 py-3 text-sm">' + escapeHtml(r.expired) + '</td>' +
-                     '<td class="px-3 py-3">' + statusBadge(r.status_permit_spip) + '</td>' +
+                     '<td class="px-3 py-3">' + statusBadge(rowStatus) + '</td>' +
                      '<td class="px-3 py-3 text-sm">' + escapeHtml(r.avg_per_day) + '</td>' +
                      '<td class="px-3 py-3 text-sm font-medium">' + (r.fuel_ratio != null ? escapeHtml(Number(r.fuel_ratio)) + ' km/l' : '—') + '</td>' +
                      '</tr>';
