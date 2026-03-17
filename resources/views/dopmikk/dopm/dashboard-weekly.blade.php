@@ -2679,6 +2679,7 @@
                                        </tr>
                                     </thead>
                                     <tbody>
+                                        @php $rescheduleBatalCodesList = $rescheduleBatalCodes ?? []; @endphp
                                         @foreach($ikkClickhouseListHarian as $ikk)
                                             @php
                                                 $totalHari = $ikk->total_hari ?? 0;
@@ -2729,7 +2730,14 @@
                                                 <td><small>{{ \Illuminate\Support\Str::limit($ikk->nama_pekerjaan ?? '-', 25) }}</small></td>
                                                 <td><small>{{ \Illuminate\Support\Str::limit($ikk->perusahaan ?? '-', 20) }}</small></td>
                                                 <td><small>{{ $periode }}</small></td>
-                                                <td><span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span></td>
+                                                <td>
+                                                    @php $isRescheduleBatal = in_array($ikk->code ?? '', $rescheduleBatalCodesList, true); @endphp
+                                                    @if($isRescheduleBatal)
+                                                        <span class="badge bg-warning text-dark" title="IKK dibatalkan karena reschedule (code_before di ikk_reschedule, RESCHEDULE, APPROVE)">RESCHEDULE/Batal</span>
+                                                    @else
+                                                        <span class="badge bg-secondary">{{ $ikk->status ?? '-' }}</span>
+                                                    @endif
+                                                </td>
                                                 <td>
                                                     <span class="badge {{ $ipkBadgeClass }}" title="IPK: {{ $ipkCount }}/{{ $totalHari }} hari">
                                                         {{ $ipkCount }}/{{ $totalHari }}

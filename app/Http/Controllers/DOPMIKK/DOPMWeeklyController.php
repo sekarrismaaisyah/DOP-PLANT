@@ -928,6 +928,21 @@ class DOPMWeeklyController extends Controller
             }
         }
 
+        // IKK batal karena reschedule: code_before di ikk_reschedule dengan reschedule_type=RESCHEDULE, status=APPROVE
+        $rescheduleBatalCodes = \Illuminate\Support\Facades\DB::table('ikk_reschedule')
+            ->where('reschedule_type', 'RESCHEDULE')
+            ->where('status', 'APPROVE')
+            ->whereNotNull('code_before')
+            ->where('code_before', '!=', '')
+            ->when(\Illuminate\Support\Facades\Schema::hasColumn('ikk_reschedule', 'deleted_at'), fn ($q) => $q->whereNull('deleted_at'))
+            ->pluck('code_before')
+            ->map(fn ($c) => trim((string) $c))
+            ->filter(fn ($c) => $c !== '')
+            ->unique()
+            ->values()
+            ->all();
+        $cancelKodeIkk = array_values(array_unique(array_merge($cancelKodeIkk ?? [], $rescheduleBatalCodes)));
+
         // Kode work permit (non-cancel) untuk pre-load dan persentase
         $workPermitCodes = array_values(array_unique(array_filter(array_map(function ($ikk) use ($cancelKodeIkk) {
             $c = $ikk->code ?? '';
@@ -1867,6 +1882,7 @@ class DOPMWeeklyController extends Controller
             'chartIzinKerjaPerMatriks' => $chartIzinKerjaPerMatriks,
             'ikkClickhouseListHarian' => $ikkClickhouseListHarian,
             'complianceByDay' => $complianceByDay,
+            'rescheduleBatalCodes' => $rescheduleBatalCodes ?? [],
         ]);
     }
 
