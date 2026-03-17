@@ -9784,7 +9784,15 @@ source: new ol.source.Vector(),
 
     // Function to create vehicle unit icon (mirip dengan CCTV icon style)
     function createVehicleUnitIcon(unit) {
-        // Determine color based on vehicle type
+        // LV / Light Vehicle: use dedicated image from resources/images/lv.png
+        if (unit && unit.vehicle_type) {
+            const vt = String(unit.vehicle_type).toLowerCase().trim();
+            if (vt === 'lv' || vt === 'light vehicle') {
+                return "{{ url('/images/lv.png') }}";
+            }
+        }
+
+        // Determine color based on vehicle type (for canvas-drawn icon)
         let fillColor = '#3b82f6'; // Default blue
         if (unit.vehicle_type) {
             const vehicleType = unit.vehicle_type.toLowerCase();

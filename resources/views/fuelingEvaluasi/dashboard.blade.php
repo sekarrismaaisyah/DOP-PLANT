@@ -153,7 +153,7 @@
             <!-- Card 4: Fuel efficiency (km/L) - coming soon -->
             <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm relative overflow-hidden">
                <div class="flex justify-between items-start mb-3">
-                  <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Fuel Efficiency</p>
+                  <p class="text-sm font-medium text-slate-500 uppercase tracking-wider">Fuel Ratio</p>
                   <div class="bg-slate-100 dark:bg-slate-800 p-2 rounded-lg text-slate-400">
                      <span class="material-symbols-outlined text-xl">local_gas_station</span>
                   </div>
