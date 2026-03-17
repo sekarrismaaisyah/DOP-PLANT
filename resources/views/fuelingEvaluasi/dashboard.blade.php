@@ -176,6 +176,9 @@
                         <span class="material-symbols-outlined text-sm">refresh</span> Muat Data
                      </button>
                      <input type="text" id="dashboard_search" placeholder="Cari..." class="px-3 py-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 w-40" />
+                     <select id="dashboard_filter_jenis_spip" class="px-3 py-1.5 text-sm border border-slate-200 dark:border-slate-700 rounded-lg bg-white dark:bg-slate-800 min-w-[120px]">
+                        <option value="">Semua Jenis Unit SPIP</option>
+                     </select>
                      <a href="{{ route('fueling-evaluasi.per-hari') }}?date_from=" id="dashboard_link_perhari" class="text-xs font-medium text-primary hover:underline whitespace-nowrap">Tabel lengkap →</a>
                   </div>
                </div>
@@ -309,6 +312,7 @@
          var dateTo = document.getElementById('dashboard_date_to');
          var btnLoad = document.getElementById('dashboard_btn_load');
          var searchInput = document.getElementById('dashboard_search');
+         var filterJenisSpip = document.getElementById('dashboard_filter_jenis_spip');
          var tbody = document.getElementById('dashboard_table_body');
          var infoEl = document.getElementById('dashboard_table_info');
          var linkPerhari = document.getElementById('dashboard_link_perhari');
@@ -427,7 +431,12 @@
 
          function applyFilterAndRender() {
             var query = (searchInput && searchInput.value) ? searchInput.value.trim() : '';
-            var filtered = query ? fullData.filter(function(r) { return rowMatchSearch(r, query); }) : fullData;
+            var jenisSpip = (filterJenisSpip && filterJenisSpip.value) ? filterJenisSpip.value : '';
+            var filtered = fullData.filter(function(r) {
+               if (query && !rowMatchSearch(r, query)) return false;
+               if (jenisSpip && (r.jenis_unit_spip || '') !== jenisSpip) return false;
+               return true;
+            });
             var total = filtered.length;
             var totalPages = Math.max(1, Math.ceil(total / PAGE_SIZE));
             currentPage = Math.min(Math.max(1, currentPage), totalPages);
@@ -485,6 +494,15 @@
                .then(function(res) { return res.json(); })
                .then(function(json) {
                   fullData = json.data || [];
+                  var seen = {};
+                  var opts = [{ value: '', label: 'Semua Jenis Unit SPIP' }];
+                  for (var i = 0; i < fullData.length; i++) {
+                     var j = fullData[i].jenis_unit_spip;
+                     if (j != null && j !== '' && !seen[j]) { seen[j] = true; opts.push({ value: String(j), label: String(j) }); }
+                  }
+                  if (filterJenisSpip) {
+                     filterJenisSpip.innerHTML = opts.map(function(o) { return '<option value="' + escapeHtml(o.value) + '">' + escapeHtml(o.label) + '</option>'; }).join('');
+                  }
                   currentPage = 1;
                   applyFilterAndRender();
                })
@@ -498,6 +516,7 @@
          setDefaultDates();
          if (btnLoad) btnLoad.addEventListener('click', loadData);
          if (searchInput) searchInput.addEventListener('input', function() { currentPage = 1; applyFilterAndRender(); });
+         if (filterJenisSpip) filterJenisSpip.addEventListener('change', function() { currentPage = 1; applyFilterAndRender(); });
          if (btnPrev) btnPrev.addEventListener('click', function() { currentPage--; applyFilterAndRender(); });
          if (btnNext) btnNext.addEventListener('click', function() { currentPage++; applyFilterAndRender(); });
          loadData();
