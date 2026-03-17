@@ -38,6 +38,7 @@
          body { font-family: 'Inter', sans-serif; }
          .scrollbar-hide::-webkit-scrollbar { display: none; }
       </style>
+      <script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
    </head>
    <body class="bg-background-light dark:bg-background-dark text-slate-900 dark:text-slate-100 min-h-screen font-display">
       <!-- Top Navigation Bar -->
@@ -99,7 +100,7 @@
                <span>Hari ini, {{ now()->translatedFormat('d M Y') }}</span>
                </button>
                <div class="flex gap-2">
-                  <button type="button" id="dashboard_btn_download" class="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:text-primary transition-colors" title="Download data Unit Performance (CSV)">
+                  <button type="button" id="dashboard_btn_download" class="p-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg hover:text-primary transition-colors" title="Download data Unit Performance (Excel)">
                   <span class="material-symbols-outlined">download</span>
                   </button>
                </div>
@@ -669,53 +670,106 @@
             });
          }
 
-         function downloadCSV() {
+         function downloadExcel() {
             var filtered = getFilteredData();
             if (filtered.length === 0) {
                alert('Tidak ada data untuk didownload. Pilih rentang tanggal dan klik Muat Data, atau pastikan filter menghasilkan data.');
                return;
             }
             var headers = ['TANGGAL', 'NO UNIT', 'JARAK DITEMPUH', 'DURASI (jam)', 'Perusahaan Pemilik', 'Site Operasional', 'Jenis Unit SPIP', 'Expired', 'Status Permit SPIP', 'AVG per Day', 'Fuel Ratio (km/L)'];
-            var escapeCsv = function(val) {
-               if (val == null) return '';
-               var s = String(val).replace(/"/g, '""');
-               if (/[,\n\r"]/.test(s)) return '"' + s + '"';
-               return s;
-            };
-            var rows = [headers.map(escapeCsv).join(',')];
+            var from = (dateFrom && dateFrom.value) || 'date';
+            var to = (dateTo && dateTo.value) || 'date';
+
+            var workbook = new ExcelJS.Workbook();
+            workbook.creator = 'SPIP Dashboard';
+            workbook.created = new Date();
+            var sheet = workbook.addWorksheet('Unit Performance', {
+               views: [{ state: 'frozen', ySplit: 1, activeCell: 'A2' }],
+               properties: { defaultRowHeight: 20 }
+            });
+
+            sheet.columns = [
+               { width: 12 },
+               { width: 14 },
+               { width: 16 },
+               { width: 14 },
+               { width: 22 },
+               { width: 20 },
+               { width: 18 },
+               { width: 12 },
+               { width: 18 },
+               { width: 14 },
+               { width: 16 }
+            ];
+
+            var headerRow = sheet.getRow(1);
+            headerRow.values = [null].concat(headers);
+            headerRow.font = { bold: true, color: { argb: 'FFFFFFFF' }, size: 11 };
+            headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FF1e3fae' } };
+            headerRow.alignment = { vertical: 'middle', wrapText: true };
+            headerRow.height = 24;
+
+            for (var col = 1; col <= headers.length; col++) {
+               headerRow.getCell(col).border = {
+                  top: { style: 'thin' },
+                  left: { style: 'thin' },
+                  bottom: { style: 'thin' },
+                  right: { style: 'thin' }
+               };
+            }
+
             for (var i = 0; i < filtered.length; i++) {
                var r = filtered[i];
                var durasi = (r.total_jam != null && r.total_jam !== '') ? (Number(r.total_jam) + ' jam') : '-';
                var rowStatus = computeRowStatus(r);
-               rows.push([
-                  escapeCsv(r.tanggal),
-                  escapeCsv(r.no_unit),
-                  escapeCsv(r.jarak),
-                  escapeCsv(durasi),
-                  escapeCsv(r.perusahaan_pemilik),
-                  escapeCsv(r.site_operasional),
-                  escapeCsv(r.jenis_unit_spip),
-                  escapeCsv(r.expired),
-                  escapeCsv(rowStatus),
-                  escapeCsv(r.avg_per_day),
-                  escapeCsv(r.fuel_ratio != null ? Number(r.fuel_ratio) + ' km/l' : '—')
-               ].join(','));
+               var rowNum = i + 2;
+               var row = sheet.getRow(rowNum);
+               row.values = [
+                  null,
+                  r.tanggal || '',
+                  r.no_unit || '',
+                  r.jarak != null ? r.jarak : '',
+                  durasi,
+                  r.perusahaan_pemilik || '',
+                  r.site_operasional || '',
+                  r.jenis_unit_spip || '',
+                  r.expired || '',
+                  rowStatus || '',
+                  r.avg_per_day || '',
+                  r.fuel_ratio != null ? Number(r.fuel_ratio) + ' km/l' : '—'
+               ];
+               row.alignment = { vertical: 'middle', wrapText: true };
+               for (var c = 1; c <= headers.length; c++) {
+                  row.getCell(c).border = {
+                     top: { style: 'thin' },
+                     left: { style: 'thin' },
+                     bottom: { style: 'thin' },
+                     right: { style: 'thin' }
+                  };
+               }
+               if (rowNum % 2 === 0) {
+                  for (var c = 1; c <= headers.length; c++) {
+                     row.getCell(c).fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFF8FAFC' } };
+                  }
+               }
             }
-            var csv = '\uFEFF' + rows.join('\r\n');
-            var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-            var link = document.createElement('a');
-            var from = (dateFrom && dateFrom.value) || 'date';
-            var to = (dateTo && dateTo.value) || 'date';
-            link.href = URL.createObjectURL(blob);
-            link.download = 'unit-performance-' + from + '_' + to + '.csv';
-            link.click();
-            URL.revokeObjectURL(link.href);
+
+            workbook.xlsx.writeBuffer().then(function(buffer) {
+               var blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
+               var link = document.createElement('a');
+               link.href = URL.createObjectURL(blob);
+               link.download = 'Unit-Performance-' + from + '_' + to + '.xlsx';
+               link.click();
+               URL.revokeObjectURL(link.href);
+            }).catch(function(err) {
+               alert('Gagal membuat file Excel: ' + (err && err.message ? err.message : 'Unknown error'));
+            });
          }
 
          setDefaultDates();
          if (btnLoad) btnLoad.addEventListener('click', loadData);
          var btnDownload = document.getElementById('dashboard_btn_download');
-         if (btnDownload) btnDownload.addEventListener('click', downloadCSV);
+         if (btnDownload) btnDownload.addEventListener('click', downloadExcel);
          if (searchInput) searchInput.addEventListener('input', function() { currentPage = 1; applyFilterAndRender(); });
          if (filterJenisSpip) filterJenisSpip.addEventListener('change', function() { currentPage = 1; applyFilterAndRender(); });
          if (btnPrev) btnPrev.addEventListener('click', function() { currentPage--; applyFilterAndRender(); });
