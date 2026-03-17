@@ -430,21 +430,45 @@
          }
 
          function updateStatsFromFiltered(filtered) {
-            var totalUnit = 0;
-            var units = {};
+            var unitToStatus = {};
+            var unitToExpired = {};
             for (var i = 0; i < filtered.length; i++) {
                var u = filtered[i].no_unit;
-               if (u != null && u !== '' && !units[u]) { units[u] = true; totalUnit++; }
+               if (u != null && u !== '' && !unitToStatus.hasOwnProperty(u)) {
+                  unitToStatus[u] = (filtered[i].status_permit_spip || '').toString().trim();
+                  unitToExpired[u] = filtered[i].expired;
+               }
             }
+            var totalUnit = Object.keys(unitToStatus).length;
             var passedCount = 0, expiringCount = 0, notPassedCount = 0;
-            for (var j = 0; j < filtered.length; j++) {
-               var st = (filtered[j].status_permit_spip || '').toUpperCase();
-               if (st === 'PASSED') passedCount++;
-               else if (st.indexOf('EXPIR') !== -1) expiringCount++;
-               else notPassedCount++;
+            var expiringEnd = new Date();
+            expiringEnd.setDate(expiringEnd.getDate() + 30);
+            for (var noUnit in unitToStatus) {
+               var st = (unitToStatus[noUnit] || '').toUpperCase();
+               var expired = unitToExpired[noUnit];
+               if (st === 'PASSED') {
+                  if (expired == null || expired === '' || expired === '-') {
+                     passedCount++;
+                  } else {
+                     try {
+                        var expiredDate = new Date(expired);
+                        if (isNaN(expiredDate.getTime())) { passedCount++; continue; }
+                        var now = new Date();
+                        if (expiredDate < now) {
+                           notPassedCount++;
+                        } else if (expiredDate <= expiringEnd) {
+                           expiringCount++;
+                        } else {
+                           passedCount++;
+                        }
+                     } catch (e) { passedCount++; }
+                  }
+               } else {
+                  notPassedCount++;
+               }
             }
             var totalRows = filtered.length;
-            var compliancePct = totalRows > 0 ? (passedCount / totalRows * 100) : 0;
+            var compliancePct = totalUnit > 0 ? (passedCount / totalUnit * 100) : 0;
             var sumJam = 0, countJam = 0;
             for (var k = 0; k < filtered.length; k++) {
                var jm = filtered[k].total_jam;
@@ -482,13 +506,13 @@
             var kpiPassed = document.getElementById('kpi_passed');
             var kpiExpiring = document.getElementById('kpi_expiring');
             var kpiNotPassed = document.getElementById('kpi_not_passed');
-            if (donutTotal) donutTotal.textContent = totalRows || '—';
+            if (donutTotal) donutTotal.textContent = totalUnit || '—';
             if (kpiPassed) kpiPassed.textContent = passedCount;
             if (kpiExpiring) kpiExpiring.textContent = expiringCount;
             if (kpiNotPassed) kpiNotPassed.textContent = notPassedCount;
-            var p1 = totalRows > 0 ? passedCount / totalRows * 100 : 0;
-            var p2 = totalRows > 0 ? expiringCount / totalRows * 100 : 0;
-            var p3 = totalRows > 0 ? notPassedCount / totalRows * 100 : 0;
+            var p1 = totalUnit > 0 ? passedCount / totalUnit * 100 : 0;
+            var p2 = totalUnit > 0 ? expiringCount / totalUnit * 100 : 0;
+            var p3 = totalUnit > 0 ? notPassedCount / totalUnit * 100 : 0;
             var arcPassed = document.getElementById('donut_passed');
             var arcExpiring = document.getElementById('donut_expiring');
             var arcNotPassed = document.getElementById('donut_notpassed');
