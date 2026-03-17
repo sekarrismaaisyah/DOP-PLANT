@@ -195,10 +195,22 @@
                                     <td class="p-2 border-r border-gray-100">{{ $det['lokasi'] ?? '' }}</td>
                                     <td class="p-2 border-r border-gray-100">{{ $det['pembagian_area'] ?? '' }}</td>
                                     @foreach($coverageDailyDates ?? [] as $d)
-                                       @php $cell = $det['days'][$d['date']] ?? ['covered' => 0]; @endphp
-                                       <td class="p-2 text-center {{ !empty($cell['covered']) ? 'status-green' : 'status-red' }} {{ $loop->last ? '' : 'border-r border-gray-100' }}">
-                                          {{ !empty($cell['covered']) ? 'Ada OAK' : 'Tidak' }}
-                                       </td>
+                                       @php
+                                          $cell = $det['days'][$d['date']] ?? ['covered' => 0];
+                                          $period = $ikkPeriods[$code] ?? null;
+                                          $dateStr = $d['date'] ?? null;
+                                          $isActive = false;
+                                          if ($period && !empty($period['start']) && !empty($period['end']) && $dateStr) {
+                                              $isActive = $dateStr >= $period['start'] && $dateStr <= $period['end'];
+                                          }
+                                       @endphp
+                                       @if(!$isActive)
+                                          <td class="p-2 text-center text-gray-300 {{ $loop->last ? '' : 'border-r border-gray-100' }}">—</td>
+                                       @else
+                                          <td class="p-2 text-center {{ !empty($cell['covered']) ? 'status-green' : 'status-red' }} {{ $loop->last ? '' : 'border-r border-gray-100' }}">
+                                             {{ !empty($cell['covered']) ? 'Ada OAK' : 'Tidak' }}
+                                          </td>
+                                       @endif
                                     @endforeach
                                  </tr>
                                  @endforeach
@@ -216,7 +228,7 @@
          <!-- END: Per Site - Aktivitas & OAK di Week -->
          <!-- BEGIN: DataTablesSection -->
 
-         <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
+         <!-- <section class="bg-white border border-gray-200 rounded shadow-sm overflow-hidden">
             <header class="bg-gray-50 border-b border-gray-200 px-4 py-2">
                <h2 class="text-xs font-bold uppercase tracking-wider">E. COVERAGE DAILY - LOKASI IKK TERLAPOR</h2>
             </header>
@@ -254,7 +266,7 @@
                   </tbody>
                </table>
             </div>
-         </section>
+         </section> -->
 
 
 

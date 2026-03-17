@@ -649,6 +649,7 @@ class DashboardController extends Controller
         $masterKeys = [];
         $masterKeysBySite = [];
         $ikkRowsRaw = [];
+        $ikkPeriods = [];
 
         try {
             $chHse = $this->getClickHouse();
@@ -683,6 +684,17 @@ class DashboardController extends Controller
                         }
                         if ($code !== '' && ! in_array($code, $ikkRowsRaw[$key]['codes'], true)) {
                             $ikkRowsRaw[$key]['codes'][] = $code;
+                        }
+
+                        if ($code !== '') {
+                            $startVal = $this->getClickHouseRowValue($row, 'start_date');
+                            $endVal = $this->getClickHouseRowValue($row, 'end_date');
+                            $startStr = $this->getClickHouseDateString($startVal);
+                            $endStr = $this->getClickHouseDateString($endVal);
+                            $ikkPeriods[$code] = [
+                                'start' => $startStr,
+                                'end' => $endStr,
+                            ];
                         }
                     }
                 }
@@ -858,7 +870,7 @@ class DashboardController extends Controller
         return view('SistemRoster.dashboard.coverage-ikk', compact(
             'totalLokasi', 'coveredLokasi', 'pctCoverage', 'coverageBySite',
             'trendWeekLabel', 'trendLabels', 'trendBySite', 'coverageDailyRows', 'coverageDailyDates',
-            'siteActivitiesSummary', 'availableWeeks', 'selectedWeekValue'
+            'siteActivitiesSummary', 'availableWeeks', 'selectedWeekValue', 'ikkPeriods'
         ));
     }
 
@@ -2206,5 +2218,19 @@ class DashboardController extends Controller
             }
         }
         return $row[$key] ?? null;
+    }
+
+    private function getClickHouseDateString(mixed $value): ?string
+    {
+        if ($value === null || $value === '') {
+            return null;
+        }
+        if ($value instanceof \DateTimeInterface) {
+            return $value->format('Y-m-d');
+        }
+        if (is_string($value)) {
+            return substr($value, 0, 10);
+        }
+        return null;
     }
 }

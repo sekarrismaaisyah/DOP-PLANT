@@ -19,7 +19,6 @@ use App\Models\Dopm;
 use App\Models\HseAiValidation;
 use App\Models\IpkIkk;
 use App\Models\Okk;
-use App\Services\BesigmaDbService;
 use App\Services\ClickHouseService;
 use App\Services\EvaluasiUnitDataService;
 use App\Services\TelegramBotService;
@@ -411,13 +410,12 @@ class fullMapsController extends Controller
             $tbcChange = 100;
         }
 
-        // Get unit vehicle data from besigma database
+        // Get unit vehicle data from ClickHouse Nitip only (unit_gps_logs: today, latest per unit)
         $unitVehicles = [];
         try {
-            $besigmaService = new BesigmaDbService();
-            $unitVehicles = $besigmaService->getCombinedUnitData();
+            $unitVehicles = $this->getUnitVehiclesFromClickHouseNitip();
         } catch (Exception $e) {
-            Log::error('Error fetching unit vehicles: ' . $e->getMessage());
+            Log::error('Error fetching unit vehicles from ClickHouse Nitip: ' . $e->getMessage());
             $unitVehicles = [];
         }
 
