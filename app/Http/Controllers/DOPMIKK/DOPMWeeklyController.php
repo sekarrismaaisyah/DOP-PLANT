@@ -928,19 +928,30 @@ class DOPMWeeklyController extends Controller
             }
         }
 
-        // IKK batal karena reschedule: code_before di ikk_reschedule dengan reschedule_type=RESCHEDULE, status=APPROVE
-        $rescheduleBatalCodes = \Illuminate\Support\Facades\DB::table('ikk_reschedule')
-            ->where('reschedule_type', 'RESCHEDULE')
-            ->where('status', 'APPROVE')
-            ->whereNotNull('code_before')
-            ->where('code_before', '!=', '')
-            ->when(\Illuminate\Support\Facades\Schema::hasColumn('ikk_reschedule', 'deleted_at'), fn ($q) => $q->whereNull('deleted_at'))
-            ->pluck('code_before')
-            ->map(fn ($c) => trim((string) $c))
-            ->filter(fn ($c) => $c !== '')
-            ->unique()
-            ->values()
-            ->all();
+        // IKK batal karena reschedule: code_before di ikk_reschedule (ClickHouse hse_automation) dengan reschedule_type=RESCHEDULE, status=APPROVE
+        $rescheduleBatalCodes = [];
+        if (class_exists(\App\Services\ClickHouseService::class)) {
+            $chReschedule = app(\App\Services\ClickHouseService::class);
+            if (method_exists($chReschedule, 'query') && $chReschedule->isConnected()) {
+                $sqlReschedule = "
+                    SELECT code_before
+                    FROM hse_automation.ikk_reschedule
+                    WHERE upper(trim(toString(reschedule_type))) = 'RESCHEDULE'
+                      AND upper(trim(toString(status))) = 'APPROVE'
+                      AND code_before IS NOT NULL
+                      AND trim(toString(code_before)) != ''
+                      AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                ";
+                $rescheduleRows = $chReschedule->query($sqlReschedule);
+                foreach ($rescheduleRows ?? [] as $r) {
+                    $cb = trim((string) self::getClickHouseRowValue($r, 'code_before'));
+                    if ($cb !== '') {
+                        $rescheduleBatalCodes[] = $cb;
+                    }
+                }
+                $rescheduleBatalCodes = array_values(array_unique($rescheduleBatalCodes));
+            }
+        }
         $cancelKodeIkk = array_values(array_unique(array_merge($cancelKodeIkk ?? [], $rescheduleBatalCodes)));
 
         // Kode work permit (non-cancel) untuk pre-load dan persentase
