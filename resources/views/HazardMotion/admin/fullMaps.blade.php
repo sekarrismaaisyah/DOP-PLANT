@@ -9982,20 +9982,20 @@ source: new ol.source.Vector(),
             const iconUrl = createVehicleUnitIcon(unit);
             const course = parseFloat(unit.course) || 0;
 
-            // Responsive scale: icon kecil saat zoom jauh, sedikit membesar saat sangat dekat
-            let scale = 0.25; // default kecil
+            // Responsive scale: icon sangat kecil saat zoom jauh, sedikit membesar saat sangat dekat
+            let scale = 0.12; // default sangat kecil
             try {
                 const view = map && typeof map.getView === 'function' ? map.getView() : null;
                 const zoom = view && typeof view.getZoom === 'function' ? (view.getZoom() || 0) : 0;
 
                 if (zoom >= 14 && zoom < 17) {
-                    scale = 0.32;
+                    scale = 0.16;
                 } else if (zoom >= 17) {
-                    scale = 0.42;
+                    scale = 0.22;
                 }
             } catch (e) {
                 // fallback: gunakan scale default kecil
-                scale = 0.25;
+                scale = 0.12;
             }
             
             return new ol.style.Style({
