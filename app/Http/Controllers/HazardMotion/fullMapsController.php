@@ -3842,30 +3842,31 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 return [];
             }
 
-            // Filter in subquery so WHERE only uses table columns (avoids ILLEGAL_AGGREGATION).
+            // Subquery: alias updated_at AS ts so outer aggregates use ts (avoids "aggregate inside aggregate").
             $sql = "
                 SELECT 
                     unit_id,
-                    argMax(id, updated_at) AS id,
-                    argMax(integration_id, updated_at) AS integration_id,
-                    argMax(latitude, updated_at) AS latitude,
-                    argMax(longitude, updated_at) AS longitude,
-                    argMax(speed, updated_at) AS speed,
-                    argMax(course, updated_at) AS course,
-                    argMax(battery, updated_at) AS battery,
-                    argMax(heading, updated_at) AS heading,
-                    argMax(vehicle_number, updated_at) AS vehicle_number,
-                    argMax(vehicle_name, updated_at) AS vehicle_name,
-                    argMax(vendor_name, updated_at) AS vendor_name,
-                    argMax(vendor_type, updated_at) AS vendor_type,
-                    argMax(vehicle_type, updated_at) AS vehicle_type,
-                    argMax(timezone, updated_at) AS timezone,
-                    argMax(user_id, updated_at) AS user_id,
-                    max(updated_at) AS updated_at,
-                    argMax(created_at, updated_at) AS created_at
+                    argMax(id, ts) AS id,
+                    argMax(integration_id, ts) AS integration_id,
+                    argMax(latitude, ts) AS latitude,
+                    argMax(longitude, ts) AS longitude,
+                    argMax(speed, ts) AS speed,
+                    argMax(course, ts) AS course,
+                    argMax(battery, ts) AS battery,
+                    argMax(heading, ts) AS heading,
+                    argMax(vehicle_number, ts) AS vehicle_number,
+                    argMax(vehicle_name, ts) AS vehicle_name,
+                    argMax(vendor_name, ts) AS vendor_name,
+                    argMax(vendor_type, ts) AS vendor_type,
+                    argMax(vehicle_type, ts) AS vehicle_type,
+                    argMax(timezone, ts) AS timezone,
+                    argMax(user_id, ts) AS user_id,
+                    max(ts) AS updated_at,
+                    argMax(created_at, ts) AS created_at
                 FROM (
                     SELECT unit_id, id, integration_id, latitude, longitude, speed, course, battery, heading,
-                           vehicle_number, vehicle_name, vendor_name, vendor_type, vehicle_type, timezone, user_id, updated_at, created_at
+                           vehicle_number, vehicle_name, vendor_name, vendor_type, vehicle_type, timezone, user_id,
+                           updated_at AS ts, created_at
                     FROM nitip.unit_gps_logs
                     WHERE toDate(updated_at) = today()
                       AND is_unit = true
@@ -3875,7 +3876,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                       AND toFloat64OrZero(longitude) != 0
                 )
                 GROUP BY unit_id
-                ORDER BY max(updated_at) DESC
+                ORDER BY max(ts) DESC
             ";
             $rows = $ch->query($sql);
             if (!is_array($rows)) {
