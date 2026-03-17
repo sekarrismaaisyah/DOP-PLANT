@@ -92,6 +92,59 @@ class BecomlineController extends Controller
         ]);
     }
 
+    /**
+     * Stats dari data Becomline: total, passed_count, expiring_count, not_passed_count.
+     * Optional: ?jenis_unit_spip=... untuk filter.
+     */
+    public function stats(Request $request): JsonResponse
+    {
+        $query = Becomline::query();
+        $jenisSpip = $request->query('jenis_unit_spip');
+        if ($jenisSpip !== null && $jenisSpip !== '') {
+            $query->where('jenis_unit_spip', $jenisSpip);
+        }
+        $rows = $query->get();
+        $expiringEnd = Carbon::now()->addDays(30)->format('Y-m-d');
+        $passedCount = 0;
+        $expiringCount = 0;
+        $notPassedCount = 0;
+        foreach ($rows as $r) {
+            $statusUpper = strtoupper(trim((string) ($r->status_permit_spip ?? '')));
+            $expired = $r->expired;
+            $expiredEmpty = $expired === null || $expired === '' || $expired === '-'
+                || (is_string($expired) && trim($expired) === '');
+            if ($statusUpper === 'PASSED') {
+                if ($expiredEmpty) {
+                    $passedCount++;
+                } else {
+                    try {
+                        $expiredDate = Carbon::parse($expired)->startOfDay();
+                        if ($expiredDate->isPast()) {
+                            $notPassedCount++;
+                        } elseif ($expiredDate->format('Y-m-d') <= $expiringEnd) {
+                            $expiringCount++;
+                        } else {
+                            $passedCount++;
+                        }
+                    } catch (\Exception $e) {
+                        $passedCount++;
+                    }
+                }
+            } else {
+                $notPassedCount++;
+            }
+        }
+        $total = $rows->count();
+        $compliancePct = $total > 0 ? round($passedCount / $total * 100, 1) : 0;
+        return response()->json([
+            'total' => $total,
+            'passed_count' => $passedCount,
+            'expiring_count' => $expiringCount,
+            'not_passed_count' => $notPassedCount,
+            'compliance_pct' => $compliancePct,
+        ]);
+    }
+
     public function create(): View
     {
         return view('becomline.create');

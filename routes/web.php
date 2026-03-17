@@ -133,6 +133,7 @@ Route::middleware(['auth'])->group(function () {
     // Becomline (CRUD + Import Excel)
     Route::get('/becomline', [BecomlineController::class, 'index'])->name('becomline.index');
     Route::get('/becomline/data', [BecomlineController::class, 'data'])->name('becomline.data');
+    Route::get('/becomline/stats', [BecomlineController::class, 'stats'])->name('becomline.stats');
     Route::get('/becomline/create', [BecomlineController::class, 'create'])->name('becomline.create');
     Route::post('/becomline', [BecomlineController::class, 'store'])->name('becomline.store');
     Route::get('/becomline/{id}/edit', [BecomlineController::class, 'edit'])->name('becomline.edit');

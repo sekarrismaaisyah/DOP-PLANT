@@ -217,7 +217,8 @@
             <div class="lg:col-span-2 space-y-6">
                <!-- Donut Chart -->
                <div class="bg-white dark:bg-slate-900 p-5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-sm">
-                  <h3 class="font-bold mb-6">Compliance Status Distribution</h3>
+                  <h3 class="font-bold mb-1">Compliance Status Distribution</h3>
+                  <p class="text-xs text-slate-500 dark:text-slate-400 mb-6">Sumber: Data Becomline (route /becomline)</p>
                   <div class="flex items-center justify-center relative mb-6">
                      <div class="w-40 h-40 rounded-full relative flex items-center justify-center" id="compliance_donut_ring">
                         <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
@@ -307,6 +308,7 @@
       (function() {
          var apiUrl = "{{ url()->route('fueling-evaluasi.per-hari.all-data') }}";
          var statsUrl = "{{ url()->route('fueling-evaluasi.per-hari.dashboard-stats') }}";
+         var becomlineStatsUrl = "{{ url()->route('becomline.stats') }}";
          var PAGE_SIZE = 9;
          var dateFrom = document.getElementById('dashboard_date_from');
          var dateTo = document.getElementById('dashboard_date_to');
@@ -330,6 +332,49 @@
             dateTo.value = to.toISOString().slice(0, 10);
          }
 
+         function loadBecomlineDonut(jenisSpip) {
+            var url = becomlineStatsUrl;
+            if (jenisSpip) url += '?jenis_unit_spip=' + encodeURIComponent(jenisSpip);
+            fetch(url, { credentials: 'same-origin' })
+               .then(function(res) { return res.json(); })
+               .then(function(b) {
+                  var total = b.total != null ? Number(b.total) : 0;
+                  var donutTotal = document.getElementById('kpi_donut_total');
+                  var kpiPassed = document.getElementById('kpi_passed');
+                  var kpiExpiring = document.getElementById('kpi_expiring');
+                  var kpiNotPassed = document.getElementById('kpi_not_passed');
+                  if (donutTotal) donutTotal.textContent = total || '—';
+                  if (kpiPassed) kpiPassed.textContent = b.passed_count != null ? b.passed_count : '—';
+                  if (kpiExpiring) kpiExpiring.textContent = b.expiring_count != null ? b.expiring_count : '—';
+                  if (kpiNotPassed) kpiNotPassed.textContent = b.not_passed_count != null ? b.not_passed_count : '—';
+                  var p1 = total > 0 ? (b.passed_count || 0) / total * 100 : 0;
+                  var p2 = total > 0 ? (b.expiring_count || 0) / total * 100 : 0;
+                  var p3 = total > 0 ? (b.not_passed_count || 0) / total * 100 : 0;
+                  var arcPassed = document.getElementById('donut_passed');
+                  var arcExpiring = document.getElementById('donut_expiring');
+                  var arcNotPassed = document.getElementById('donut_notpassed');
+                  if (arcPassed) { arcPassed.setAttribute('stroke-dasharray', p1 + ', 100'); arcPassed.setAttribute('stroke-dashoffset', '0'); }
+                  if (arcExpiring) { arcExpiring.setAttribute('stroke-dasharray', p2 + ', 100'); arcExpiring.setAttribute('stroke-dashoffset', '-' + p1); }
+                  if (arcNotPassed) { arcNotPassed.setAttribute('stroke-dasharray', p3 + ', 100'); arcNotPassed.setAttribute('stroke-dashoffset', '-' + (p1 + p2)); }
+               })
+               .catch(function() {
+                  var donutTotal = document.getElementById('kpi_donut_total');
+                  var kpiPassed = document.getElementById('kpi_passed');
+                  var kpiExpiring = document.getElementById('kpi_expiring');
+                  var kpiNotPassed = document.getElementById('kpi_not_passed');
+                  if (donutTotal) donutTotal.textContent = '—';
+                  if (kpiPassed) kpiPassed.textContent = '—';
+                  if (kpiExpiring) kpiExpiring.textContent = '—';
+                  if (kpiNotPassed) kpiNotPassed.textContent = '—';
+                  var arcPassed = document.getElementById('donut_passed');
+                  var arcExpiring = document.getElementById('donut_expiring');
+                  var arcNotPassed = document.getElementById('donut_notpassed');
+                  if (arcPassed) arcPassed.setAttribute('stroke-dasharray', '0, 100');
+                  if (arcExpiring) arcExpiring.setAttribute('stroke-dasharray', '0, 100');
+                  if (arcNotPassed) arcNotPassed.setAttribute('stroke-dasharray', '0, 100');
+               });
+         }
+
          function loadStats(from, to) {
             if (!from || !to) return;
             var siteListEl = document.getElementById('site_ranking_list');
@@ -347,25 +392,8 @@
                   if (compArc) compArc.setAttribute('stroke-dasharray', (s.compliance_pct != null ? s.compliance_pct : 0) + ', 100');
                   if (avgEl) avgEl.textContent = s.avg_waktu_jam_per_unit != null ? Number(s.avg_waktu_jam_per_unit) : '—';
                   if (fuelEl) fuelEl.textContent = s.avg_fuel_km_per_l != null ? (Number(s.avg_fuel_km_per_l) + ' km/l') : '—';
-                  var donutTotal = document.getElementById('kpi_donut_total');
-                  var kpiPassed = document.getElementById('kpi_passed');
-                  var kpiExpiring = document.getElementById('kpi_expiring');
-                  var kpiNotPassed = document.getElementById('kpi_not_passed');
-                  if (donutTotal) donutTotal.textContent = s.total_unit_beroperasi != null ? s.total_unit_beroperasi : '—';
-                  if (kpiPassed) kpiPassed.textContent = s.passed_count != null ? s.passed_count : '—';
-                  if (kpiExpiring) kpiExpiring.textContent = s.expiring_count != null ? s.expiring_count : '—';
-                  if (kpiNotPassed) kpiNotPassed.textContent = s.not_passed_count != null ? s.not_passed_count : '—';
-                  var total = s.total_unit_beroperasi || 0;
-                  var p1 = total > 0 ? (s.passed_count || 0) / total * 100 : 0;
-                  var p2 = total > 0 ? (s.expiring_count || 0) / total * 100 : 0;
-                  var p3 = total > 0 ? (s.not_passed_count || 0) / total * 100 : 0;
-                  var arcPassed = document.getElementById('donut_passed');
-                  var arcExpiring = document.getElementById('donut_expiring');
-                  var arcNotPassed = document.getElementById('donut_notpassed');
-                  if (arcPassed) { arcPassed.setAttribute('stroke-dasharray', p1 + ', 100'); arcPassed.setAttribute('stroke-dashoffset', '0'); }
-                  if (arcExpiring) { arcExpiring.setAttribute('stroke-dasharray', p2 + ', 100'); arcExpiring.setAttribute('stroke-dashoffset', '-' + p1); }
-                  if (arcNotPassed) { arcNotPassed.setAttribute('stroke-dasharray', p3 + ', 100'); arcNotPassed.setAttribute('stroke-dashoffset', '-' + (p1 + p2)); }
                   var list = s.site_ranking || [];
+                  loadBecomlineDonut(null);
                   if (siteListEl) {
                      if (list.length === 0) {
                         siteListEl.innerHTML = '<p class="text-sm text-slate-500">Tidak ada data site.</p>';
@@ -502,23 +530,6 @@
             if (compArc) compArc.setAttribute('stroke-dasharray', (compliancePct != null ? compliancePct : 0) + ', 100');
             if (avgEl) avgEl.textContent = avgWaktu != null ? Number(avgWaktu.toFixed(2)) : '—';
             if (fuelEl) fuelEl.textContent = avgFuel != null ? (Number(avgFuel.toFixed(2)) + ' km/l') : '—';
-            var donutTotal = document.getElementById('kpi_donut_total');
-            var kpiPassed = document.getElementById('kpi_passed');
-            var kpiExpiring = document.getElementById('kpi_expiring');
-            var kpiNotPassed = document.getElementById('kpi_not_passed');
-            if (donutTotal) donutTotal.textContent = totalUnit || '—';
-            if (kpiPassed) kpiPassed.textContent = passedCount;
-            if (kpiExpiring) kpiExpiring.textContent = expiringCount;
-            if (kpiNotPassed) kpiNotPassed.textContent = notPassedCount;
-            var p1 = totalUnit > 0 ? passedCount / totalUnit * 100 : 0;
-            var p2 = totalUnit > 0 ? expiringCount / totalUnit * 100 : 0;
-            var p3 = totalUnit > 0 ? notPassedCount / totalUnit * 100 : 0;
-            var arcPassed = document.getElementById('donut_passed');
-            var arcExpiring = document.getElementById('donut_expiring');
-            var arcNotPassed = document.getElementById('donut_notpassed');
-            if (arcPassed) { arcPassed.setAttribute('stroke-dasharray', p1 + ', 100'); arcPassed.setAttribute('stroke-dashoffset', '0'); }
-            if (arcExpiring) { arcExpiring.setAttribute('stroke-dasharray', p2 + ', 100'); arcExpiring.setAttribute('stroke-dashoffset', '-' + p1); }
-            if (arcNotPassed) { arcNotPassed.setAttribute('stroke-dasharray', p3 + ', 100'); arcNotPassed.setAttribute('stroke-dashoffset', '-' + (p1 + p2)); }
             var siteListEl = document.getElementById('site_ranking_list');
             if (siteListEl) {
                if (siteList.length === 0) {
@@ -579,6 +590,8 @@
             if (btnPrev) { btnPrev.disabled = currentPage <= 1; }
             if (btnNext) { btnNext.disabled = currentPage >= totalPages; }
             updateStatsFromFiltered(filtered);
+            var jenisForDonut = (filterJenisSpip && filterJenisSpip.value) ? filterJenisSpip.value : null;
+            loadBecomlineDonut(jenisForDonut);
          }
 
          function loadData() {
