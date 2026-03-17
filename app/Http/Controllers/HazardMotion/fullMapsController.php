@@ -3842,6 +3842,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                 return [];
             }
 
+            // Filter in subquery so WHERE only uses table columns (avoids ILLEGAL_AGGREGATION).
             $sql = "
                 SELECT 
                     unit_id,
@@ -3862,15 +3863,19 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     argMax(user_id, updated_at) AS user_id,
                     max(updated_at) AS updated_at,
                     argMax(created_at, updated_at) AS created_at
-                FROM nitip.unit_gps_logs
-                WHERE toDate(updated_at) = today()
-                  AND is_unit = true
-                  AND latitude IS NOT NULL
-                  AND longitude IS NOT NULL
-                  AND toFloat64OrZero(latitude) != 0
-                  AND toFloat64OrZero(longitude) != 0
+                FROM (
+                    SELECT unit_id, id, integration_id, latitude, longitude, speed, course, battery, heading,
+                           vehicle_number, vehicle_name, vendor_name, vendor_type, vehicle_type, timezone, user_id, updated_at, created_at
+                    FROM nitip.unit_gps_logs
+                    WHERE toDate(updated_at) = today()
+                      AND is_unit = true
+                      AND latitude IS NOT NULL
+                      AND longitude IS NOT NULL
+                      AND toFloat64OrZero(latitude) != 0
+                      AND toFloat64OrZero(longitude) != 0
+                )
                 GROUP BY unit_id
-                ORDER BY updated_at DESC
+                ORDER BY max(updated_at) DESC
             ";
             $rows = $ch->query($sql);
             if (!is_array($rows)) {
