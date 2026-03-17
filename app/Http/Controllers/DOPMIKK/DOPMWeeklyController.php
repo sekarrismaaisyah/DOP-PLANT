@@ -2342,6 +2342,34 @@ class DOPMWeeklyController extends Controller
         }
         $ikkList = array_values($byCode);
 
+        // IKK batal karena reschedule: code_before di ikk_reschedule (ClickHouse) dengan RESCHEDULE + APPROVE
+        $rescheduleBatalCodesExport = [];
+        if ($clickHouse && method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+            $sqlRescheduleExport = "
+                SELECT code_before
+                FROM hse_automation.ikk_reschedule
+                WHERE upper(trim(toString(reschedule_type))) = 'RESCHEDULE'
+                  AND upper(trim(toString(status))) = 'APPROVE'
+                  AND code_before IS NOT NULL
+                  AND trim(toString(code_before)) != ''
+                  AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+            ";
+            $rescheduleRowsExport = $clickHouse->query($sqlRescheduleExport);
+            foreach ($rescheduleRowsExport ?? [] as $r) {
+                $cb = trim((string) self::getClickHouseRowValue($r, 'code_before'));
+                if ($cb !== '') {
+                    $rescheduleBatalCodesExport[] = $cb;
+                }
+            }
+            $rescheduleBatalCodesExport = array_values(array_unique($rescheduleBatalCodesExport));
+        }
+        foreach ($ikkList as &$ikkRef) {
+            if (in_array($ikkRef['code'] ?? '', $rescheduleBatalCodesExport, true)) {
+                $ikkRef['status'] = 'RESCHEDULE/Batal';
+            }
+        }
+        unset($ikkRef);
+
         $excelRows = [];
         foreach ($ikkList as $ikk) {
             $wpId = $ikk['id'];
