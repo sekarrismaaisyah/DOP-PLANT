@@ -9790,6 +9790,10 @@ source: new ol.source.Vector(),
             if (vt === 'lv' || vt === 'light vehicle') {
                 return "{{ url('/images/lv.png') }}";
             }
+            // LARGE TRUCK: use dedicated image from resources/images/LARGE_TRUCK.png
+            if (vt === 'large truck' || vt === 'large_truck' || vt === 'largetruck') {
+                return "{{ url('/images/LARGE_TRUCK.png') }}";
+            }
         }
 
         // Determine color based on vehicle type (for canvas-drawn icon)
