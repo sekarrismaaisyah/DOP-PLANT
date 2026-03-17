@@ -5095,6 +5095,7 @@
     const insidenDataset = @json($insidenGroups);
     const insidenDatasetMap = new Map(insidenDataset.map(item => [item.no_kecelakaan, item]));
     let unitVehicles = @json($unitVehicles ?? []);
+    const unitLvIconUrl = '{{ url(route("images.lv")) }}';
     const luasanComparisons = [];
     let currentHlsInstance = null;
     const defaultCctvRtspUrl = 'rtsp://gkr:Berau2025!@10.1.162.180:554/hocomdev';
@@ -9784,6 +9785,11 @@ source: new ol.source.Vector(),
 
     // Function to create vehicle unit icon (mirip dengan CCTV icon style)
     function createVehicleUnitIcon(unit) {
+        // LV (Light Vehicle): gunakan gambar resources/images/lv.png
+        if (unit.vehicle_type && String(unit.vehicle_type).trim().toLowerCase() === 'lv') {
+            return typeof unitLvIconUrl !== 'undefined' ? unitLvIconUrl : '';
+        }
+
         // Determine color based on vehicle type
         let fillColor = '#3b82f6'; // Default blue
         if (unit.vehicle_type) {
@@ -9973,8 +9979,9 @@ source: new ol.source.Vector(),
             
             const iconUrl = createVehicleUnitIcon(unit);
             const course = parseFloat(unit.course) || 0;
-            
-            return new ol.style.Style({
+            const vehicleNumber = unit.vehicle_number || unit.vehicle_name || '';
+
+            const iconStyle = new ol.style.Style({
                 image: new ol.style.Icon({
                     src: iconUrl,
                     scale: 1.0,  // Full scale like CCTV
@@ -9985,6 +9992,23 @@ source: new ol.source.Vector(),
                     rotation: course * Math.PI / 180 // Rotate based on course (convert degrees to radians)
                 })
             });
+
+            // vehicle_number di samping ikon unit
+            const styles = [iconStyle];
+            if (vehicleNumber) {
+                styles.push(new ol.style.Style({
+                    text: new ol.style.Text({
+                        text: vehicleNumber,
+                        font: 'bold 11px Arial',
+                        fill: new ol.style.Fill({ color: '#1f2937' }),
+                        stroke: new ol.style.Stroke({ color: '#fff', width: 2 }),
+                        offsetX: 32,
+                        offsetY: -18,
+                        overflow: true
+                    })
+                }));
+            }
+            return styles;
         },
         zIndex: 1002  // Z-index above CCTV layer
     });
