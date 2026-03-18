@@ -19,6 +19,7 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -75,50 +76,73 @@ class DOPController extends Controller
     }
 
     /**
-     * Ambil daftar lokasi dari ClickHouse: hse_automation.lokasi_detail_lokasi (status = 1).
+     * Ambil daftar lokasi unik dari ClickHouse: hse_automation.lokasi_detail_lokasi (status = 1).
+     * Hasil di-cache 10 menit untuk mengurangi query dan lag.
      */
     private function getLokasiFromClickHouse(): array
     {
-        try {
-            $clickHouse = app(ClickHouseService::class);
-            if (!$clickHouse->isConnected()) {
-                Log::info('DOP: ClickHouse not connected, lokasi list empty');
-                return [];
-            }
+        $cacheKey = 'dop_lokasi_list_v1';
+        $ttlSeconds = 600; // 10 menit
 
-            $sql = "
-                SELECT
-                    toString(site) as site,
-                    toString(lokasi) as lokasi,
-                    toString(coalesce(detil_lokasi, '')) as detil_lokasi
-                FROM hse_automation.lokasi_detail_lokasi
-                WHERE status_site = 1 AND status_lokasi = 1 AND status_detil_lokasi = 1
-                ORDER BY site, lokasi, detil_lokasi
-            ";
-
+        return Cache::remember($cacheKey, $ttlSeconds, function () {
             try {
-                $rows = $clickHouse->query($sql) ?? [];
-            } catch (\Throwable $e) {
-                // Fallback jika kolom detail bernama "Detil Lokasi" (dengan spasi)
+                $clickHouse = app(ClickHouseService::class);
+                if (!$clickHouse->isConnected()) {
+                    Log::info('DOP: ClickHouse not connected, lokasi list empty');
+                    return [];
+                }
+
+                // GROUP BY agar hanya 1 baris per kombinasi (site, lokasi, detil_lokasi) — hilangkan duplikat di DB
                 $sql = "
                     SELECT
-                        toString(site) as site,
-                        toString(lokasi) as lokasi,
-                        toString(coalesce(`Detil Lokasi`, '')) as detil_lokasi
+                        toString(site) AS site,
+                        toString(lokasi) AS lokasi,
+                        toString(coalesce(detil_lokasi, '')) AS detil_lokasi
                     FROM hse_automation.lokasi_detail_lokasi
                     WHERE status_site = 1 AND status_lokasi = 1 AND status_detil_lokasi = 1
+                    GROUP BY site, lokasi, detil_lokasi
                     ORDER BY site, lokasi, detil_lokasi
                 ";
-                $rows = $clickHouse->query($sql) ?? [];
+
+                try {
+                    $rows = $clickHouse->query($sql) ?? [];
+                } catch (\Throwable $e) {
+                    $sql = "
+                        SELECT
+                            toString(site) AS site,
+                            toString(lokasi) AS lokasi,
+                            toString(coalesce(\`Detil Lokasi\`, '')) AS detil_lokasi
+                        FROM hse_automation.lokasi_detail_lokasi
+                        WHERE status_site = 1 AND status_lokasi = 1 AND status_detil_lokasi = 1
+                        GROUP BY site, lokasi, \`Detil Lokasi\`
+                        ORDER BY site, lokasi, detil_lokasi
+                    ";
+                    $rows = $clickHouse->query($sql) ?? [];
+                }
+
+                // Deduplikasi di PHP berdasarkan key (jaga-jaga jika DB masih return duplikat)
+                $seen = [];
+                $unique = [];
+                foreach ($rows as $r) {
+                    $site = $r['site'] ?? '';
+                    $lokasi = $r['lokasi'] ?? '';
+                    $detil = $r['detil_lokasi'] ?? '';
+                    $key = $site . '|' . $lokasi . '|' . $detil;
+                    if (!isset($seen[$key])) {
+                        $seen[$key] = true;
+                        $unique[] = $r;
+                    }
+                }
+
+                if (!empty($unique)) {
+                    Log::info('DOP: Lokasi loaded from ClickHouse (unique): ' . count($unique));
+                }
+                return array_values($unique);
+            } catch (\Throwable $e) {
+                Log::warning('DOP: Could not load lokasi from ClickHouse: ' . $e->getMessage());
+                return [];
             }
-            if (!empty($rows)) {
-                Log::info('DOP: Lokasi loaded from hse_automation.lokasi_detail_lokasi, count: ' . count($rows));
-            }
-            return $rows;
-        } catch (\Throwable $e) {
-            Log::warning('DOP: Could not load lokasi from ClickHouse: ' . $e->getMessage());
-            return [];
-        }
+        });
     }
 
     public function store(Request $request): RedirectResponse

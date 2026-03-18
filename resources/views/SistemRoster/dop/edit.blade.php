@@ -60,11 +60,15 @@
                                 <select id="lokasi_select" class="form-select" data-placeholder="Cari atau pilih lokasi...">
                                     <option value="">-- Pilih Lokasi --</option>
                                     @isset($lokasiList)
+                                        @php $lokasiSeen = []; @endphp
                                         @foreach($lokasiList as $loc)
                                             @php
                                                 $site = $loc['site'] ?? '';
                                                 $lokasi = $loc['lokasi'] ?? '';
                                                 $detil = $loc['detil_lokasi'] ?? '';
+                                                $key = $site . '|' . $lokasi . '|' . $detil;
+                                                if (isset($lokasiSeen[$key])) { continue; }
+                                                $lokasiSeen[$key] = true;
                                                 $label = trim(implode(' - ', array_filter([$site, $lokasi, $detil])));
                                                 $value = json_encode(['site' => $site, 'lokasi' => $lokasi, 'detil_lokasi' => $detil]);
                                             @endphp
