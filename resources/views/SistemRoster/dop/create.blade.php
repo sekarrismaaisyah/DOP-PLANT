@@ -181,7 +181,7 @@
                                     @endforeach
                                 </select>
                                 @if(empty($lokasiList))
-                                    <small class="text-warning d-block mt-1"><i class="bx bx-info-circle"></i> </small>
+                                    <small class="text-warning d-block mt-1"><i class="bx bx-info-circle"></i> Data lokasi belum tersedia. Cek koneksi ClickHouse di server atau jalankan: <code>php artisan cache:forget dop_lokasi_list_v1</code></small>
                                 @endif
                             </div>
                             <div class="col-md-6">
