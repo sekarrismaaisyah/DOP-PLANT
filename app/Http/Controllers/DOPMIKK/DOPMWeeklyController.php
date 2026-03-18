@@ -1050,6 +1050,92 @@ class DOPMWeeklyController extends Controller
                                 ]);
                             }
                         }
+                        // Merge IPK/OKK dari tanggal end_date ke hari terakhir: IKK yang lastActiveDate = filterDate dan end_date > filterDate, agar IPK/OKK yang diisi di tanggal end_date ikut diakui untuk status matriks
+                        $filterDateCarbon = Carbon::parse($filterDate)->startOfDay();
+                        $mergeEndDateList = [];
+                        foreach ($ikkClickhouseListHarian as $ikk) {
+                            try {
+                                $endDate = Carbon::parse($ikk->end_date)->startOfDay();
+                                $lastActive = $endDate->copy()->subDay();
+                                $code = $ikk->code ?? null;
+                                $id = $ikk->id ?? null;
+                                if ($id !== null && $code !== null && $code !== '' && in_array($code, $workPermitCodes, true)
+                                    && $lastActive->eq($filterDateCarbon) && $endDate->gt($filterDateCarbon)) {
+                                    $mergeEndDateList[] = ['wp_id' => $id, 'code' => $code, 'end_date_str' => $endDate->format('Y-m-d')];
+                                }
+                            } catch (\Throwable $e) {
+                                continue;
+                            }
+                        }
+                        if (!empty($mergeEndDateList)) {
+                            $inClauses = [];
+                            foreach ($mergeEndDateList as $item) {
+                                $wpEsc = addslashes((string) $item['wp_id']);
+                                $dEsc = addslashes($item['end_date_str']);
+                                $inClauses[] = "(work_permit_id = '{$wpEsc}' AND toDate(start_date) = toDate('{$dEsc}'))";
+                            }
+                            $sqlIpkEndDate = "
+                                SELECT id, work_permit_id, code, status, job_status, start_date, created_at, supervisor_id, cctv
+                                FROM hse_automation.ipk_assessment
+                                WHERE (" . implode(' OR ', $inClauses) . ")
+                                  AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                                ORDER BY created_at DESC
+                            ";
+                            $ipkRowsEndDate = $ch->query($sqlIpkEndDate);
+                            foreach ($ipkRowsEndDate ?? [] as $r) {
+                                $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                                $code = $wpIdToCode[$wpId] ?? null;
+                                if ($code !== null && !isset($ipkByKode[$code])) {
+                                    $ipkByKode[$code] = (object) [
+                                        'kode_ikk' => $code,
+                                        'durasi_jam' => null,
+                                        'status_pekerjaan' => self::getClickHouseRowValue($r, 'job_status'),
+                                    ];
+                                }
+                            }
+                            $okkEndDateInClauses = [];
+                            foreach ($mergeEndDateList as $item) {
+                                $wpEsc = addslashes((string) $item['wp_id']);
+                                $dEsc = addslashes($item['end_date_str']);
+                                $okkEndDateInClauses[] = "(work_permit_id = '{$wpEsc}' AND toDate(created_at) = toDate('{$dEsc}'))";
+                            }
+                            $sqlOkkEndDate = "
+                                SELECT id, work_permit_id, code, status, created_at, supervisor_id, indirect_supervisor_id
+                                FROM hse_automation.okk_assessment
+                                WHERE (" . implode(' OR ', $okkEndDateInClauses) . ")
+                                  AND upper(trim(toString(status))) = 'SUBMITTED'
+                                  AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+                                ORDER BY created_at ASC
+                            ";
+                            $okkRowsEndDate = $ch->query($sqlOkkEndDate);
+                            foreach ($okkRowsEndDate ?? [] as $r) {
+                                $wpId = self::getClickHouseRowValue($r, 'work_permit_id');
+                                $code = $wpIdToCode[$wpId] ?? null;
+                                if ($code !== null) {
+                                    if (!isset($okkByKode[$code])) {
+                                        $okkByKode[$code] = collect();
+                                    }
+                                    $ts = self::getClickHouseRowValue($r, 'created_at');
+                                    $tsStr = self::formatClickHouseTsForAppTz($ts);
+                                    $supId = self::getClickHouseRowValue($r, 'supervisor_id');
+                                    $indirectSupId = self::getClickHouseRowValue($r, 'indirect_supervisor_id');
+                                    if ($supId !== null && $supId !== '') {
+                                        $okkSupervisorIdsBatch[] = $supId;
+                                    }
+                                    if ($indirectSupId !== null && $indirectSupId !== '') {
+                                        $okkIndirectSupervisorIdsBatch[] = $indirectSupId;
+                                    }
+                                    $okkByKode[$code]->push((object) [
+                                        'supervisor_id' => $supId,
+                                        'indirect_supervisor_id' => $indirectSupId,
+                                        'ts' => $tsStr,
+                                        'nama_pengawas' => null,
+                                        'layer_pengawas' => null,
+                                        'kode_sid' => null,
+                                    ]);
+                                }
+                            }
+                        }
                         // Enrich OKK: kode_sid & layer dari ikk_work_permit_employee; OKK L2 up jika indirect_supervisor_id NOT NULL, layer dari row yang id = indirect_supervisor_id
                         if (!empty($okkSupervisorIdsBatch) || !empty($okkIndirectSupervisorIdsBatch)) {
                             try {
@@ -1318,6 +1404,38 @@ class DOPMWeeklyController extends Controller
                         ];
 
                         $currentDate->addDay();
+                    }
+
+                    // Jika end_date (tanggal) > effectiveEnd, IPK/OKK yang ada di tanggal end_date diakui sebagai memenuhi hari terakhir (effectiveEnd)
+                    try {
+                        $ikkEndDateAsDate = Carbon::parse($ikk->end_date)->startOfDay();
+                        if ($ikkEndDateAsDate->gt($effectiveEnd) && !empty($dailyDetails)) {
+                            $endDateStr = $ikkEndDateAsDate->format('Y-m-d');
+                            $endDateEsc = addslashes($endDateStr);
+                            $lastIdx = count($dailyDetails) - 1;
+                            $sqlIpkEnd = "SELECT code, job_status FROM hse_automation.ipk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(start_date) = toDate('{$endDateEsc}') AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) ORDER BY created_at DESC LIMIT 1";
+                            $ipkRowsEnd = $ch->query($sqlIpkEnd);
+                            if (!empty($ipkRowsEnd)) {
+                                if (!($dailyDetails[$lastIdx]['has_ipk'] ?? false)) {
+                                    $dailyDetails[$lastIdx]['has_ipk'] = true;
+                                    $dailyDetails[$lastIdx]['ipk_kode'] = self::getClickHouseRowValue($ipkRowsEnd[0], 'code');
+                                    $dailyDetails[$lastIdx]['ipk_status'] = self::getClickHouseRowValue($ipkRowsEnd[0], 'job_status');
+                                    $ipkCount++;
+                                }
+                            }
+                            $sqlOkkEnd = "SELECT code, status FROM hse_automation.okk_assessment WHERE work_permit_id = '{$wpIdEsc}' AND toDate(created_at) = toDate('{$endDateEsc}') AND upper(trim(toString(status))) = 'SUBMITTED' AND (deleted_at IS NULL OR deleted_at = toDateTime(0)) ORDER BY created_at DESC LIMIT 1";
+                            $okkRowsEnd = $ch->query($sqlOkkEnd);
+                            if (!empty($okkRowsEnd)) {
+                                if (!($dailyDetails[$lastIdx]['has_okk'] ?? false)) {
+                                    $dailyDetails[$lastIdx]['has_okk'] = true;
+                                    $dailyDetails[$lastIdx]['okk_kode'] = self::getClickHouseRowValue($okkRowsEnd[0], 'code');
+                                    $dailyDetails[$lastIdx]['okk_status'] = self::getClickHouseRowValue($okkRowsEnd[0], 'status');
+                                    $okkCount++;
+                                }
+                            }
+                        }
+                    } catch (\Throwable $e) {
+                        // ignore parse/query error
                     }
 
                     $ikk->daily_details = $dailyDetails;
