@@ -181,7 +181,7 @@
                                     @endforeach
                                 </select>
                                 @if(empty($lokasiList))
-                                    <small class="text-warning d-block mt-1"><i class="bx bx-info-circle"></i> Data lokasi belum tersedia. Pastikan ClickHouse terhubung dan tabel <code>hse_automation.lokasi_detail_lokasi</code> dapat diakses.</small>
+                                    <small class="text-warning d-block mt-1"><i class="bx bx-info-circle"></i> </small>
                                 @endif
                             </div>
                             <div class="col-md-6">

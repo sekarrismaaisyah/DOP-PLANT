@@ -91,9 +91,8 @@ class DOPController extends Controller
                     Log::info('DOP: ClickHouse not connected, lokasi list empty');
                     return [];
                 }
-
                 // GROUP BY agar hanya 1 baris per kombinasi (site, lokasi, detil_lokasi) — hilangkan duplikat di DB
-                $sql = "
+                $sql = <<<SQL
                     SELECT
                         toString(site) AS site,
                         toString(lokasi) AS lokasi,
@@ -102,21 +101,22 @@ class DOPController extends Controller
                     WHERE status_site = 1 AND status_lokasi = 1 AND status_detil_lokasi = 1
                     GROUP BY site, lokasi, detil_lokasi
                     ORDER BY site, lokasi, detil_lokasi
-                ";
+                SQL;
 
                 try {
                     $rows = $clickHouse->query($sql) ?? [];
                 } catch (\Throwable $e) {
-                    $sql = "
+                    // Fallback jika nama kolom detail adalah `Detil Lokasi`
+                    $sql = <<<SQL
                         SELECT
                             toString(site) AS site,
                             toString(lokasi) AS lokasi,
-                            toString(coalesce(\`Detil Lokasi\`, '')) AS detil_lokasi
+                            toString(coalesce(`Detil Lokasi`, '')) AS detil_lokasi
                         FROM hse_automation.lokasi_detail_lokasi
                         WHERE status_site = 1 AND status_lokasi = 1 AND status_detil_lokasi = 1
-                        GROUP BY site, lokasi, \`Detil Lokasi\`
+                        GROUP BY site, lokasi, `Detil Lokasi`
                         ORDER BY site, lokasi, detil_lokasi
-                    ";
+                    SQL;
                     $rows = $clickHouse->query($sql) ?? [];
                 }
 
