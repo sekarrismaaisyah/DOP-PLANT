@@ -11,6 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Http;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
@@ -66,6 +67,24 @@ class DOPMWeeklyController extends Controller
         // Hitung tanggal Senin (start) dan Minggu (end) dari week yang dipilih
         $weekStartDate = Carbon::now()->setISODate($weekYear, $weekNumber, 1)->startOfDay(); // 1 = Senin
         $weekEndDate = $weekStartDate->copy()->addDays(6)->endOfDay(); // Minggu
+
+        // Server-side cache untuk mencegah query berat berulang saat user bolak-balik week/filter yang sama.
+        $cacheVersion = 'v1';
+        $cacheTtlSeconds = (int) env('DOPM_WEEKLY_CACHE_TTL', 300); // default 5 menit
+        $cacheUserKey = auth()->check() ? (string) auth()->id() : 'guest';
+        $dashboardCacheKey = 'dopm_weekly_dashboard:' . sha1(json_encode([
+            'v' => $cacheVersion,
+            'date' => $filterDate,
+            'site' => $filterSite,
+            'week' => $filterWeek,
+            'user' => $cacheUserKey,
+        ]));
+        if ($cacheTtlSeconds > 0) {
+            $cachedViewData = Cache::get($dashboardCacheKey);
+            if (is_array($cachedViewData)) {
+                return view('dopmikk.dopm.dashboard-weekly', $cachedViewData);
+            }
+        }
         
         // Generate daftar week untuk dropdown (dari minggu 1 tahun ini sampai minggu saat ini + 2)
         $currentYear = now()->year;
@@ -2058,7 +2077,7 @@ class DOPMWeeklyController extends Controller
             \Illuminate\Support\Facades\Log::debug('Dashboard complianceByDay: ' . $e->getMessage());
         }
 
-        return view('dopmikk.dopm.dashboard-weekly', [
+        $viewData = [
             'filterDate' => $filterDate,
             'filterSite' => $filterSite,
             'siteList' => $siteList,
@@ -2117,7 +2136,13 @@ class DOPMWeeklyController extends Controller
             'ikkClickhouseListHarian' => $ikkClickhouseListHarian,
             'complianceByDay' => $complianceByDay,
             'rescheduleBatalCodes' => $rescheduleBatalCodes ?? [],
-        ]);
+        ];
+
+        if ($cacheTtlSeconds > 0) {
+            Cache::put($dashboardCacheKey, $viewData, now()->addSeconds($cacheTtlSeconds));
+        }
+
+        return view('dopmikk.dopm.dashboard-weekly', $viewData);
     }
 
     /**
