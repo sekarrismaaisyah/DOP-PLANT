@@ -61,6 +61,23 @@ class MapBaseController extends Controller
                 'company' => 'PT Madhani Talatah Nusantara',
                 'sites' => ['SMO']
             ],
+            // Alias role lama/alternatif yang sudah dipakai di beberapa view
+            'hazard-motion-it-pama' => [
+                'company' => 'PT Pamapersada Nusantara',
+                'sites' => ['BMO 2']
+            ],
+            'hazard_motion_it_pama' => [
+                'company' => 'PT Pamapersada Nusantara',
+                'sites' => ['BMO 2']
+            ],
+            'hazard-motion-it-mtl' => [
+                'company' => 'PT Madhani Talatah Nusantara',
+                'sites' => ['SMO']
+            ],
+            'hazard_motion_it_mtl' => [
+                'company' => 'PT Madhani Talatah Nusantara',
+                'sites' => ['SMO']
+            ],
             // Add more role mappings here as needed
             // Example:
             // 'control_room_site_a' => [
@@ -1846,8 +1863,20 @@ class MapBaseController extends Controller
             $isAdminHazardMotion = false;
             
             if ($user) {
-                $isControlRoomPama = $user->hasRole('control_room_pama') || $user->hasRole('control-room-pama');
-                $isControlRoomMtn = $user->hasRole('control_room_mtn') || $user->hasRole('control-room-mtn');
+                $isControlRoomPama =
+                    $user->hasRole('control_room_pama') ||
+                    $user->hasRole('control-room-pama') ||
+                    $user->hasRole('hazard-motion-it-pama') ||
+                    $user->hasRole('hazard_motion_it_pama') ||
+                    $user->hasPermission('hazard-motion-it-pama');
+
+                $isControlRoomMtn =
+                    $user->hasRole('control_room_mtn') ||
+                    $user->hasRole('control-room-mtn') ||
+                    $user->hasRole('hazard-motion-it-mtl') ||
+                    $user->hasRole('hazard_motion_it_mtl') ||
+                    $user->hasPermission('hazard-motion-it-mtl');
+
                 $isAdminHazardMotion = $user->hasRole('admin_hazard_motion') || $user->hasRole('admin-hazard-motion');
             }
             
@@ -7106,6 +7135,8 @@ class MapBaseController extends Controller
             $roleAccess = $this->getAllowedCompanyAndSiteByRole();
             $allowedCompany = $roleAccess['company'];
             $allowedSites = $roleAccess['sites'];
+            $requestedCompany = trim((string) $request->query('company', '__all__'));
+            $requestedSite = trim((string) $request->query('site', '__all__'));
             
             // Ambil semua data CCTV dari cctv_data_bmo2 dan group by control_room
             $query = CctvData::whereNotNull('control_room')
@@ -7115,11 +7146,15 @@ class MapBaseController extends Controller
             // Filter by company if user has specific role
             if ($allowedCompany) {
                 $query->whereRaw('TRIM(perusahaan) = ?', [$allowedCompany]);
+            } elseif ($requestedCompany !== '' && $requestedCompany !== '__all__') {
+                $query->whereRaw('TRIM(perusahaan) = ?', [$requestedCompany]);
             }
             
             // Filter by sites if user has specific role with site restrictions
             if (!empty($allowedSites)) {
                 $query->whereIn('site', $allowedSites);
+            } elseif ($requestedSite !== '' && $requestedSite !== '__all__') {
+                $query->whereRaw('TRIM(site) = ?', [$requestedSite]);
             }
             
             // Get all CCTV data
