@@ -83,6 +83,27 @@ class MapBaseController extends Controller
             }
         }
 
+        // Fallback: some users are restricted via permissions (not roles)
+        $permissionAccessMap = [
+            'hazard-motion-it-pama' => [
+                'company' => 'PT Pamapersada Nusantara',
+                'sites' => ['BMO 2']
+            ],
+            'hazard-motion-it-mtl' => [
+                'company' => 'PT Madhani Talatah Nusantara',
+                'sites' => ['SMO']
+            ],
+        ];
+
+        foreach ($permissionAccessMap as $permissionSlug => $access) {
+            if ($user->hasPermission($permissionSlug)) {
+                return [
+                    'company' => $access['company'],
+                    'sites' => $access['sites']
+                ];
+            }
+        }
+
         // Admin or other roles can see all companies and sites
         return ['company' => null, 'sites' => []];
     }
