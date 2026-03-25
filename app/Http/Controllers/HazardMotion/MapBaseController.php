@@ -28,6 +28,54 @@ use Exception;
 class MapBaseController extends Controller
 {
     /**
+     * Normalize role/permission slug for safe comparison.
+     */
+    private function normalizeSlug($value): string
+    {
+        return strtolower(str_replace('_', '-', trim((string) $value)));
+    }
+
+    /**
+     * Robust role check: hasRole(), pivot roles.slug/name, and users.role fallback.
+     */
+    private function userHasAnyRoleAlias($user, array $aliases): bool
+    {
+        if (!$user) {
+            return false;
+        }
+
+        $normalizedAliases = array_values(array_unique(array_map(function ($alias) {
+            return $this->normalizeSlug($alias);
+        }, $aliases)));
+
+        // 1) Existing helper check
+        foreach ($aliases as $alias) {
+            if ($user->hasRole($alias)) {
+                return true;
+            }
+        }
+
+        // 2) Direct DB check via pivot relation (roles.slug / roles.name)
+        $slugVariants = [];
+        foreach ($normalizedAliases as $alias) {
+            $slugVariants[] = $alias;
+            $slugVariants[] = str_replace('-', '_', $alias);
+        }
+        $slugVariants = array_values(array_unique($slugVariants));
+
+        if ($user->roles()->whereIn('slug', $slugVariants)->exists()) {
+            return true;
+        }
+        if ($user->roles()->whereIn('name', $slugVariants)->exists()) {
+            return true;
+        }
+
+        // 3) Legacy users.role column
+        $userRoleValue = $this->normalizeSlug($user->role ?? '');
+        return $userRoleValue !== '' && in_array($userRoleValue, $normalizedAliases, true);
+    }
+
+    /**
      * Get allowed company and site based on user role
      * Returns array with 'company' and 'sites' keys
      * - 'company': company name if restricted, null if all companies allowed
@@ -92,25 +140,11 @@ class MapBaseController extends Controller
 
         // Check user's roles and return first matching restriction
         foreach ($roleAccessMap as $roleSlug => $access) {
-            if ($user->hasRole($roleSlug)) {
+            if ($this->userHasAnyRoleAlias($user, [$roleSlug])) {
                 return [
                     'company' => $access['company'],
                     'sites' => $access['sites']
                 ];
-            }
-        }
-
-        // Fallback: support legacy assignment via users.role column
-        $userRoleValue = strtolower(str_replace('_', '-', trim((string) ($user->role ?? ''))));
-        if ($userRoleValue !== '') {
-            foreach ($roleAccessMap as $roleSlug => $access) {
-                $normalizedRoleSlug = strtolower(str_replace('_', '-', $roleSlug));
-                if ($userRoleValue === $normalizedRoleSlug) {
-                    return [
-                        'company' => $access['company'],
-                        'sites' => $access['sites']
-                    ];
-                }
             }
         }
 
@@ -1877,23 +1911,23 @@ class MapBaseController extends Controller
             $isAdminHazardMotion = false;
             
             if ($user) {
-                $userRoleValue = strtolower(str_replace('_', '-', trim((string) ($user->role ?? ''))));
-
                 $isControlRoomPama =
-                    $user->hasRole('control_room_pama') ||
-                    $user->hasRole('control-room-pama') ||
-                    $user->hasRole('hazard-motion-it-pama') ||
-                    $user->hasRole('hazard_motion_it_pama') ||
-                    $user->hasPermission('hazard-motion-it-pama') ||
-                    in_array($userRoleValue, ['control-room-pama', 'hazard-motion-it-pama'], true);
+                    $this->userHasAnyRoleAlias($user, [
+                        'control_room_pama',
+                        'control-room-pama',
+                        'hazard-motion-it-pama',
+                        'hazard_motion_it_pama',
+                    ]) ||
+                    $user->hasPermission('hazard-motion-it-pama');
 
                 $isControlRoomMtn =
-                    $user->hasRole('control_room_mtn') ||
-                    $user->hasRole('control-room-mtn') ||
-                    $user->hasRole('hazard-motion-it-mtl') ||
-                    $user->hasRole('hazard_motion_it_mtl') ||
-                    $user->hasPermission('hazard-motion-it-mtl') ||
-                    in_array($userRoleValue, ['control-room-mtn', 'hazard-motion-it-mtl'], true);
+                    $this->userHasAnyRoleAlias($user, [
+                        'control_room_mtn',
+                        'control-room-mtn',
+                        'hazard-motion-it-mtl',
+                        'hazard_motion_it_mtl',
+                    ]) ||
+                    $user->hasPermission('hazard-motion-it-mtl');
 
                 $isAdminHazardMotion = $user->hasRole('admin_hazard_motion') || $user->hasRole('admin-hazard-motion');
             }
