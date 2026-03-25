@@ -100,6 +100,20 @@ class MapBaseController extends Controller
             }
         }
 
+        // Fallback: support legacy assignment via users.role column
+        $userRoleValue = strtolower(str_replace('_', '-', trim((string) ($user->role ?? ''))));
+        if ($userRoleValue !== '') {
+            foreach ($roleAccessMap as $roleSlug => $access) {
+                $normalizedRoleSlug = strtolower(str_replace('_', '-', $roleSlug));
+                if ($userRoleValue === $normalizedRoleSlug) {
+                    return [
+                        'company' => $access['company'],
+                        'sites' => $access['sites']
+                    ];
+                }
+            }
+        }
+
         // Fallback: some users are restricted via permissions (not roles)
         $permissionAccessMap = [
             'hazard-motion-it-pama' => [
@@ -1863,19 +1877,23 @@ class MapBaseController extends Controller
             $isAdminHazardMotion = false;
             
             if ($user) {
+                $userRoleValue = strtolower(str_replace('_', '-', trim((string) ($user->role ?? ''))));
+
                 $isControlRoomPama =
                     $user->hasRole('control_room_pama') ||
                     $user->hasRole('control-room-pama') ||
                     $user->hasRole('hazard-motion-it-pama') ||
                     $user->hasRole('hazard_motion_it_pama') ||
-                    $user->hasPermission('hazard-motion-it-pama');
+                    $user->hasPermission('hazard-motion-it-pama') ||
+                    in_array($userRoleValue, ['control-room-pama', 'hazard-motion-it-pama'], true);
 
                 $isControlRoomMtn =
                     $user->hasRole('control_room_mtn') ||
                     $user->hasRole('control-room-mtn') ||
                     $user->hasRole('hazard-motion-it-mtl') ||
                     $user->hasRole('hazard_motion_it_mtl') ||
-                    $user->hasPermission('hazard-motion-it-mtl');
+                    $user->hasPermission('hazard-motion-it-mtl') ||
+                    in_array($userRoleValue, ['control-room-mtn', 'hazard-motion-it-mtl'], true);
 
                 $isAdminHazardMotion = $user->hasRole('admin_hazard_motion') || $user->hasRole('admin-hazard-motion');
             }
