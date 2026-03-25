@@ -506,6 +506,7 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/dashboard-weekly', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'dashboard'])->name('dashboard-weekly');
             Route::get('/dashboard-weekly/export-ikk-excel', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'exportIkkExcel'])->name('dashboard-weekly.export-ikk-excel');
             Route::get('/dashboard-weekly/api/compliance-by-month', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'getComplianceByMonth'])->name('dashboard-weekly.api.compliance-by-month');
+            Route::get('/dashboard-weekly/api/ikk-daily-details', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'getIkkDailyDetails'])->name('dashboard-weekly.api.ikk-daily-details');
             Route::get('/alert-log', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'alertLog'])->name('alert-log');
             Route::get('/issue-closure', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'issueClosure'])->name('issue-closure');
             Route::get('/', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'index'])->name('index');

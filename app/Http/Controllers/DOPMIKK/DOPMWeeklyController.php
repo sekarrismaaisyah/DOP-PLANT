@@ -1566,6 +1566,11 @@ class DOPMWeeklyController extends Controller
             }
         }
 
+        // Jangan kirim daily_details ke Blade (HTML sangat besar); detail harian diload via API saat baris di-expand.
+        foreach ($ikkClickhouseListHarian as $ikkStrip) {
+            unset($ikkStrip->daily_details);
+        }
+
         // Persentase IKK ada IPK / IKK ada OKK (workPermitCodes sudah dihitung di atas)
         if (!empty($workPermitCodes)) {
             if ($useChIpkOkk) {
@@ -2424,6 +2429,107 @@ class DOPMWeeklyController extends Controller
             'month' => $month,
             'complianceByDay' => $complianceByDay,
         ]);
+    }
+
+    /**
+     * API: detail IPK/OKK per tanggal untuk satu work permit (lazy load di dashboard weekly).
+     */
+    public function getIkkDailyDetails(Request $request): JsonResponse
+    {
+        $wpId = trim((string) $request->query('work_permit_id', ''));
+        if ($wpId === '') {
+            return response()->json(['success' => false, 'message' => 'work_permit_id wajib'], 422);
+        }
+
+        $filterWeek = $request->query('week', '');
+        if ($filterWeek === '' || !preg_match('/^\d{4}-W\d{2}$/', $filterWeek)) {
+            return response()->json(['success' => false, 'message' => 'week tidak valid (format YYYY-Www)'], 422);
+        }
+
+        $filterSite = $request->query('site');
+        if ($filterSite === null || trim((string) $filterSite) === '') {
+            $filterSite = '';
+        } else {
+            $filterSite = trim((string) $filterSite);
+        }
+
+        preg_match('/^(\d{4})-W(\d{2})$/', $filterWeek, $weekMatches);
+        $weekYear = (int) ($weekMatches[1] ?? now()->year);
+        $weekNumber = (int) ($weekMatches[2] ?? now()->weekOfYear);
+        $weekStartDate = Carbon::now()->setISODate($weekYear, $weekNumber, 1)->startOfDay();
+        $weekEndDate = $weekStartDate->copy()->addDays(6)->endOfDay();
+        $weekStartStr = $weekStartDate->format('Y-m-d');
+        $weekEndStr = $weekEndDate->format('Y-m-d');
+
+        $siteFilterClause = '';
+        if ($filterSite !== '') {
+            if ($filterSite === 'Lainnya') {
+                $siteFilterClause = " AND trim(COALESCE(wp.ra_site_name, '')) = ''";
+            } else {
+                $siteFilterClause = " AND trim(COALESCE(wp.ra_site_name, '')) = '" . addslashes($filterSite) . "'";
+            }
+        }
+
+        $wpIdEsc = addslashes($wpId);
+        if (!class_exists(\App\Services\ClickHouseService::class)) {
+            return response()->json(['success' => false, 'message' => 'ClickHouse tidak tersedia'], 503);
+        }
+        $ch = app(\App\Services\ClickHouseService::class);
+        if (!method_exists($ch, 'query') || !$ch->isConnected()) {
+            return response()->json(['success' => false, 'message' => 'ClickHouse tidak terhubung'], 503);
+        }
+
+        $sqlVerify = "
+            SELECT wp.start_date AS start_date, wp.end_date AS end_date
+            FROM hse_automation.ikk_work_permit AS wp
+            INNER JOIN hse_automation.ikk_work_permit_pic AS wp_pic
+                ON toString(wp_pic.work_permit_id) = toString(wp.id)
+                AND (wp_pic.deleted_at IS NULL OR wp_pic.deleted_at = toDateTime(0))
+            LEFT JOIN hse_automation.ikk_m_pic AS m
+                ON toString(m.id) = toString(wp_pic.m_pic_id)
+            WHERE (wp.deleted_at IS NULL OR wp.deleted_at = toDateTime(0))
+                AND toString(wp.id) = '{$wpIdEsc}'
+                AND toDate(wp.start_date) <= toDate('{$weekEndStr}')
+                AND subtractDays(toDate(wp.end_date), 1) >= toDate('{$weekStartStr}')
+                {$siteFilterClause}
+            GROUP BY wp.id, wp.start_date, wp.end_date
+            HAVING
+                sum(if(upper(trim(toString(wp_pic.status))) = 'APPROVED'
+                    AND trim(toString(m.m_privilege_id)) = '7d872114-0924-4c6a-880e-49b3c06b5429', 1, 0)) > 0
+            LIMIT 1
+        ";
+
+        $rows = $ch->query($sqlVerify);
+        if (empty($rows)) {
+            return response()->json(['success' => false, 'message' => 'Work permit tidak ditemukan atau tidak overlap minggu ini'], 404);
+        }
+
+        $startRaw = self::getClickHouseRowValue($rows[0], 'start_date');
+        $endRaw = self::getClickHouseRowValue($rows[0], 'end_date');
+
+        $cacheKey = 'dopm_ikk_daily:' . sha1($wpId . '|' . $filterWeek . '|' . $filterSite);
+        $ttl = (int) env('DOPM_IKK_DAILY_CACHE_TTL', 120);
+        if ($ttl > 0) {
+            $cached = Cache::get($cacheKey);
+            if (is_array($cached)) {
+                return response()->json(['success' => true] + $cached);
+            }
+        }
+
+        $payload = self::computeDailyDetailsForSingleWorkPermitFromClickHouse(
+            $wpId,
+            $startRaw,
+            $endRaw,
+            $weekStartDate,
+            $weekEndDate,
+            $ch
+        );
+
+        if ($ttl > 0) {
+            Cache::put($cacheKey, $payload, now()->addSeconds($ttl));
+        }
+
+        return response()->json(['success' => true] + $payload);
     }
 
     /**
@@ -4259,6 +4365,174 @@ class DOPMWeeklyController extends Controller
         } catch (\Throwable $e) {
             return is_string($value) ? $value : '';
         }
+    }
+
+    /**
+     * Hitung daily_details + ipk/okk count untuk satu work permit (2 query ClickHouse batch).
+     */
+    private static function computeDailyDetailsForSingleWorkPermitFromClickHouse(
+        string $wpId,
+        mixed $startDateRaw,
+        mixed $endDateRaw,
+        Carbon $weekStartDate,
+        Carbon $weekEndDate,
+        object $ch
+    ): array {
+        if (!method_exists($ch, 'query') || !$ch->isConnected()) {
+            return ['daily_details' => [], 'ipk_count' => 0, 'okk_count' => 0, 'total_hari' => 0];
+        }
+
+        try {
+            $ikkStartDate = Carbon::parse($startDateRaw)->startOfDay();
+            $ikkEndDate = Carbon::parse($endDateRaw)->startOfDay();
+            $ikkLastActiveDate = $ikkEndDate->copy()->subDay();
+        } catch (\Throwable $e) {
+            return ['daily_details' => [], 'ipk_count' => 0, 'okk_count' => 0, 'total_hari' => 0];
+        }
+
+        $effectiveStart = $ikkStartDate->lt($weekStartDate) ? $weekStartDate->copy()->startOfDay() : $ikkStartDate->copy();
+        $effectiveEnd = $ikkLastActiveDate->gt($weekEndDate) ? $weekEndDate->copy()->startOfDay() : $ikkLastActiveDate->copy();
+        $includeEndDateMerge = $ikkEndDate->gt($effectiveEnd);
+
+        $requiredDates = [];
+        if ($effectiveStart->lte($effectiveEnd)) {
+            $cursor = $effectiveStart->copy();
+            while ($cursor->lte($effectiveEnd)) {
+                $requiredDates[] = $cursor->format('Y-m-d');
+                $cursor->addDay();
+            }
+        }
+        if ($includeEndDateMerge) {
+            $requiredDates[] = $ikkEndDate->format('Y-m-d');
+        }
+        $requiredDates = array_values(array_unique($requiredDates));
+
+        if (empty($requiredDates)) {
+            return ['daily_details' => [], 'ipk_count' => 0, 'okk_count' => 0, 'total_hari' => 0];
+        }
+
+        $minDate = min($requiredDates);
+        $maxDate = max($requiredDates);
+        $wpIdEsc = addslashes($wpId);
+        $minDateEsc = addslashes($minDate);
+        $maxDateEsc = addslashes($maxDate);
+        $requiredDateSet = array_fill_keys($requiredDates, true);
+        $endDateStr = $ikkEndDate->format('Y-m-d');
+
+        $sqlIpkBatch = "
+            SELECT work_permit_id, toDate(start_date) AS d,
+                   argMax(code, created_at) AS code,
+                   argMax(job_status, created_at) AS job_status
+            FROM hse_automation.ipk_assessment
+            WHERE work_permit_id = '{$wpIdEsc}'
+              AND toDate(start_date) >= toDate('{$minDateEsc}')
+              AND toDate(start_date) <= toDate('{$maxDateEsc}')
+              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+            GROUP BY work_permit_id, d
+        ";
+        $ipkByWpDate = [];
+        foreach ($ch->query($sqlIpkBatch) ?? [] as $r) {
+            $w = (string) self::getClickHouseRowValue($r, 'work_permit_id');
+            $dateStr = (string) self::getClickHouseRowValue($r, 'd');
+            if ($w === '' || $dateStr === '' || !isset($requiredDateSet[$dateStr])) {
+                continue;
+            }
+            $ipkByWpDate[$w . '|' . $dateStr] = [
+                'code' => self::getClickHouseRowValue($r, 'code'),
+                'job_status' => self::getClickHouseRowValue($r, 'job_status'),
+            ];
+        }
+
+        $sqlOkkBatch = "
+            SELECT work_permit_id, toDate(created_at) AS d,
+                   argMax(code, created_at) AS code,
+                   argMax(status, created_at) AS status
+            FROM hse_automation.okk_assessment
+            WHERE work_permit_id = '{$wpIdEsc}'
+              AND toDate(created_at) >= toDate('{$minDateEsc}')
+              AND toDate(created_at) <= toDate('{$maxDateEsc}')
+              AND upper(trim(toString(status))) = 'SUBMITTED'
+              AND (deleted_at IS NULL OR deleted_at = toDateTime(0))
+            GROUP BY work_permit_id, d
+        ";
+        $okkByWpDate = [];
+        foreach ($ch->query($sqlOkkBatch) ?? [] as $r) {
+            $w = (string) self::getClickHouseRowValue($r, 'work_permit_id');
+            $dateStr = (string) self::getClickHouseRowValue($r, 'd');
+            if ($w === '' || $dateStr === '' || !isset($requiredDateSet[$dateStr])) {
+                continue;
+            }
+            $okkByWpDate[$w . '|' . $dateStr] = [
+                'code' => self::getClickHouseRowValue($r, 'code'),
+                'status' => self::getClickHouseRowValue($r, 'status'),
+            ];
+        }
+
+        $dailyDetails = [];
+        $ipkCount = 0;
+        $okkCount = 0;
+
+        if ($effectiveStart->lte($effectiveEnd)) {
+            $cursor = $effectiveStart->copy();
+            while ($cursor->lte($effectiveEnd)) {
+                $dateStr = $cursor->format('Y-m-d');
+                $key = $wpId . '|' . $dateStr;
+
+                $ipkRow = $ipkByWpDate[$key] ?? null;
+                $okkRow = $okkByWpDate[$key] ?? null;
+
+                $hasIpk = $ipkRow !== null;
+                $hasOkk = $okkRow !== null;
+
+                if ($hasIpk) {
+                    $ipkCount++;
+                }
+                if ($hasOkk) {
+                    $okkCount++;
+                }
+
+                $dailyDetails[] = [
+                    'tanggal' => $cursor->format('d/m/Y'),
+                    'hari' => $cursor->locale('id')->translatedFormat('l'),
+                    'has_ipk' => $hasIpk,
+                    'ipk_kode' => $hasIpk ? ($ipkRow['code'] ?? null) : null,
+                    'ipk_status' => $hasIpk ? ($ipkRow['job_status'] ?? null) : null,
+                    'has_okk' => $hasOkk,
+                    'okk_kode' => $hasOkk ? ($okkRow['code'] ?? null) : null,
+                    'okk_status' => $hasOkk ? ($okkRow['status'] ?? null) : null,
+                ];
+
+                $cursor->addDay();
+            }
+        }
+
+        if ($includeEndDateMerge && !empty($dailyDetails)) {
+            $lastIdx = count($dailyDetails) - 1;
+            $endKey = $wpId . '|' . $endDateStr;
+
+            $ipkEnd = $ipkByWpDate[$endKey] ?? null;
+            if ($ipkEnd !== null && !($dailyDetails[$lastIdx]['has_ipk'] ?? false)) {
+                $dailyDetails[$lastIdx]['has_ipk'] = true;
+                $dailyDetails[$lastIdx]['ipk_kode'] = $ipkEnd['code'] ?? null;
+                $dailyDetails[$lastIdx]['ipk_status'] = $ipkEnd['job_status'] ?? null;
+                $ipkCount++;
+            }
+
+            $okkEnd = $okkByWpDate[$endKey] ?? null;
+            if ($okkEnd !== null && !($dailyDetails[$lastIdx]['has_okk'] ?? false)) {
+                $dailyDetails[$lastIdx]['has_okk'] = true;
+                $dailyDetails[$lastIdx]['okk_kode'] = $okkEnd['code'] ?? null;
+                $dailyDetails[$lastIdx]['okk_status'] = $okkEnd['status'] ?? null;
+                $okkCount++;
+            }
+        }
+
+        return [
+            'daily_details' => $dailyDetails,
+            'ipk_count' => $ipkCount,
+            'okk_count' => $okkCount,
+            'total_hari' => count($dailyDetails),
+        ];
     }
 
     /**

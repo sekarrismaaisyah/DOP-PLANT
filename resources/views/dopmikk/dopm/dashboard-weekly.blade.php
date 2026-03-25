@@ -2685,7 +2685,6 @@
                                                 $totalHari = $ikk->total_hari ?? 0;
                                                 $ipkCount = $ikk->ipk_count ?? 0;
                                                 $okkCount = $ikk->okk_count ?? 0;
-                                                $dailyDetails = $ikk->daily_details ?? [];
                                                 
                                                 // Badge class untuk IPK
                                                 if ($totalHari > 0 && $ipkCount >= $totalHari) {
@@ -2758,8 +2757,13 @@
                                                     @endif
                                                 </td>
                                             </tr>
-                                            {{-- Detail Row (Hidden by default) --}}
-                                            <tr class="ikk-detail-row d-none" id="ikk-detail-{{ $loop->iteration }}">
+                                            {{-- Detail row: ringkasan layer/lokasi statis; tabel harian dimuat via API saat expand (kurangi HTML & parse DOM) --}}
+                                            <tr class="ikk-detail-row d-none"
+                                                id="ikk-detail-{{ $loop->iteration }}"
+                                                data-work-permit-id="{{ e($ikk->id ?? '') }}"
+                                                data-week="{{ e($filterWeek ?? '') }}"
+                                                data-site="{{ e(request('site', '')) }}"
+                                                data-detail-state="idle">
                                                 <td colspan="12" class="p-0 bg-light">
                                                     <div class="p-3">
                                                         <div class="row mb-2">
@@ -2778,72 +2782,15 @@
                                                                 </small>
                                                             </div>
                                                         </div>
-                                                        <div class="table-responsive">
-                                                            <table class="table table-sm table-bordered mb-0 bg-white">
-                                                                <thead class="table-secondary">
-                                                                    <tr>
-                                                                        <th style="width: 120px;">Tanggal</th>
-                                                                        <th style="width: 100px;">Hari</th>
-                                                                        <th>IPK</th>
-                                                                        <th>Detail IPK</th>
-                                                                        <th>OKK</th>
-                                                                        <th>Detail OKK</th>
-                                                                    </tr>
-                                                                </thead>
-                                                                <tbody>
-                                                                    @forelse($dailyDetails as $detail)
-                                                                        <tr>
-                                                                            <td>{{ $detail['tanggal'] ?? '-' }}</td>
-                                                                            <td>{{ $detail['hari'] ?? '-' }}</td>
-                                                                            <td class="text-center">
-                                                                                @if($detail['has_ipk'] ?? false)
-                                                                                    <span class="badge bg-success">Ada</span>
-                                                                                @else
-                                                                                    <span class="badge bg-danger">Tidak</span>
-                                                                                @endif
-                                                                            </td>
-                                                                            <td>
-                                                                                @if($detail['has_ipk'] ?? false)
-                                                                                    <small>
-                                                                                        <strong>Kode:</strong> {{ $detail['ipk_kode'] ?? '-' }}<br>
-                                                                                        <strong>Status:</strong> {{ $detail['ipk_status'] ?? '-' }}
-                                                                                    </small>
-                                                                                @else
-                                                                                    <span class="text-muted">-</span>
-                                                                                @endif
-                                                                            </td>
-                                                                            <td class="text-center">
-                                                                                @if($detail['has_okk'] ?? false)
-                                                                                    <span class="badge bg-success">Ada</span>
-                                                                                @else
-                                                                                    <span class="badge bg-danger">Tidak</span>
-                                                                                @endif
-                                                                            </td>
-                                                                            <td>
-                                                                                @if($detail['has_okk'] ?? false)
-                                                                                    <small>
-                                                                                        <strong>Kode:</strong> {{ $detail['okk_kode'] ?? '-' }}<br>
-                                                                                        <strong>Status:</strong> {{ $detail['okk_status'] ?? '-' }}
-                                                                                    </small>
-                                                                                @else
-                                                                                    <span class="text-muted">-</span>
-                                                                                @endif
-                                                                            </td>
-                                                                        </tr>
-                                                                    @empty
-                                                                        <tr>
-                                                                            <td colspan="6" class="text-center text-muted">Tidak ada data tanggal</td>
-                                                                        </tr>
-                                                                    @endforelse
-                                                                </tbody>
-                                                            </table>
+                                                        <div class="ikk-detail-loading d-none text-center py-3">
+                                                            <div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading…</span></div>
                                                         </div>
-                                                        <div class="mt-2">
-                                                            <small class="text-muted">
-                                                                <strong>Summary:</strong> 
-                                                                IPK {{ $ipkCount }}/{{ $totalHari }} hari ({{ $totalHari > 0 ? round($ipkCount / $totalHari * 100) : 0 }}%) | 
-                                                                OKK {{ $okkCount }}/{{ $totalHari }} hari ({{ $totalHari > 0 ? round($okkCount / $totalHari * 100) : 0 }}%)
-                                                            </small>
+                                                        <div class="ikk-detail-error d-none alert alert-warning small py-2 mb-0"></div>
+                                                        <div class="ikk-detail-table-host d-none"></div>
+                                                        <div class="mt-2 ikk-detail-summary text-muted small" data-ipk="{{ $ipkCount }}" data-okk="{{ $okkCount }}" data-total="{{ $totalHari }}">
+                                                            <strong>Summary (badge):</strong>
+                                                            IPK {{ $ipkCount }}/{{ $totalHari }} hari ({{ $totalHari > 0 ? round($ipkCount / $totalHari * 100) : 0 }}%) |
+                                                            OKK {{ $okkCount }}/{{ $totalHari }} hari ({{ $totalHari > 0 ? round($okkCount / $totalHari * 100) : 0 }}%)
                                                         </div>
                                                     </div>
                                                 </td>
@@ -2852,62 +2799,6 @@
                                     </tbody>
                                 </table>
                             </div>
-                            
-                            {{-- JavaScript untuk Expand/Collapse --}}
-                            <script>
-                                document.addEventListener('DOMContentLoaded', function() {
-                                    // Toggle individual row
-                                    document.querySelectorAll('.ikk-toggle-btn').forEach(function(btn) {
-                                        btn.addEventListener('click', function() {
-                                            var targetId = this.getAttribute('data-target');
-                                            var targetRow = document.getElementById(targetId);
-                                            var icon = this.querySelector('i');
-                                            
-                                            if (targetRow.classList.contains('d-none')) {
-                                                targetRow.classList.remove('d-none');
-                                                icon.textContent = 'remove';
-                                                this.classList.remove('btn-outline-primary');
-                                                this.classList.add('btn-primary');
-                                            } else {
-                                                targetRow.classList.add('d-none');
-                                                icon.textContent = 'add';
-                                                this.classList.remove('btn-primary');
-                                                this.classList.add('btn-outline-primary');
-                                            }
-                                        });
-                                    });
-                                    
-                                    // Expand All
-                                    var btnExpandAll = document.getElementById('btnExpandAllIkk');
-                                    if (btnExpandAll) {
-                                        btnExpandAll.addEventListener('click', function() {
-                                            document.querySelectorAll('.ikk-detail-row').forEach(function(row) {
-                                                row.classList.remove('d-none');
-                                            });
-                                            document.querySelectorAll('.ikk-toggle-btn').forEach(function(btn) {
-                                                btn.querySelector('i').textContent = 'remove';
-                                                btn.classList.remove('btn-outline-primary');
-                                                btn.classList.add('btn-primary');
-                                            });
-                                        });
-                                    }
-                                    
-                                    // Collapse All
-                                    var btnCollapseAll = document.getElementById('btnCollapseAllIkk');
-                                    if (btnCollapseAll) {
-                                        btnCollapseAll.addEventListener('click', function() {
-                                            document.querySelectorAll('.ikk-detail-row').forEach(function(row) {
-                                                row.classList.add('d-none');
-                                            });
-                                            document.querySelectorAll('.ikk-toggle-btn').forEach(function(btn) {
-                                                btn.querySelector('i').textContent = 'add';
-                                                btn.classList.remove('btn-primary');
-                                                btn.classList.add('btn-outline-primary');
-                                            });
-                                        });
-                                    }
-                                });
-                            </script>
                         @else
                             <div class="p-4 text-center text-muted">
                                 <i class="material-icons-outlined" style="font-size: 48px;">inbox</i>
@@ -3336,9 +3227,7 @@
 
 @section('scripts')
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/ol@8.2.0/dist/ol.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/proj4@2.9.0/dist/proj4.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/hls.js@1.5.7/dist/hls.min.js"></script>
+{{-- OpenLayers / proj4 / hls tidak dipakai di halaman weekly — dihilangkan untuk percepat load --}}
 <script src="{{ URL::asset('build/plugins/datatable/js/jquery.dataTables.min.js') }}"></script>
 <script src="{{ URL::asset('build/plugins/datatable/js/dataTables.bootstrap5.min.js') }}"></script>
 <!-- Load BMO2 PAMA GeoJSON data -->
@@ -3605,6 +3494,9 @@
 </script>
 
 <script>
+window.DOPM_WEEKLY_IKK_DAILY_URL = @json(route('dopmikk.dopm.dashboard-weekly.api.ikk-daily-details'));
+</script>
+<script>
 (function() {
   var filterDateStr = @json($filterDate ?? now()->toDateString());
   var filterSite = @json($filterSite ?? '');
@@ -3814,15 +3706,15 @@
         });
     }
 
-    // Inisialisasi Bootstrap Tooltip untuk menampilkan alasan status matriks
-    var tooltipTriggerList = [].slice.call(document.querySelectorAll('[data-bs-toggle="tooltip"]'));
-    tooltipTriggerList.forEach(function (tooltipTriggerEl) {
-        new bootstrap.Tooltip(tooltipTriggerEl, {
-            html: true,
-            placement: 'top',
-            trigger: 'hover'
-        });
-    });
+    // Tooltip: inisialisasi malas (mouseover bubble + capture) agar tidak ratusan Tooltip di DOMContentLoaded
+    document.addEventListener('mouseover', function(e) {
+        var el = e.target.closest('[data-bs-toggle="tooltip"]');
+        if (!el || el.dataset.dopmTooltipInit === '1') return;
+        el.dataset.dopmTooltipInit = '1';
+        try {
+            new bootstrap.Tooltip(el, { html: true, placement: 'top', trigger: 'hover' });
+        } catch (err) { /* ignore */ }
+    }, true);
 
     var modalApiUrl = @json(route('dopmikk.api.ikk-modal-data'));
     var layer1UsersApiUrl = @json(route('dopmikk.api.layer1-users'));
@@ -3855,6 +3747,167 @@
     } catch (e) {
         console.warn('[DOPM Weekly] DataTable tableDopmHarian:', e);
     }
+
+    // IKK weekly: expand + lazy-load detail harian (HTML awal ringan)
+    function initIkkWeeklyLazyDetails() {
+        var ikkDailyUrl = window.DOPM_WEEKLY_IKK_DAILY_URL || '';
+        function escHtml(s) {
+            if (s == null || s === '') return '';
+            var d = document.createElement('div');
+            d.textContent = String(s);
+            return d.innerHTML;
+        }
+        function buildDailyTableHtml(details) {
+            var h = '<div class="table-responsive"><table class="table table-sm table-bordered mb-0 bg-white"><thead class="table-secondary"><tr><th style="width:120px">Tanggal</th><th style="width:100px">Hari</th><th>IPK</th><th>Detail IPK</th><th>OKK</th><th>Detail OKK</th></tr></thead><tbody>';
+            (details || []).forEach(function(d) {
+                var ipkBadge = d.has_ipk ? '<span class="badge bg-success">Ada</span>' : '<span class="badge bg-danger">Tidak</span>';
+                var okkBadge = d.has_okk ? '<span class="badge bg-success">Ada</span>' : '<span class="badge bg-danger">Tidak</span>';
+                var ipkDet = d.has_ipk ? '<small><strong>Kode:</strong> ' + escHtml(d.ipk_kode) + '<br><strong>Status:</strong> ' + escHtml(d.ipk_status) + '</small>' : '<span class="text-muted">-</span>';
+                var okkDet = d.has_okk ? '<small><strong>Kode:</strong> ' + escHtml(d.okk_kode) + '<br><strong>Status:</strong> ' + escHtml(d.okk_status) + '</small>' : '<span class="text-muted">-</span>';
+                h += '<tr><td>' + escHtml(d.tanggal) + '</td><td>' + escHtml(d.hari) + '</td><td class="text-center">' + ipkBadge + '</td><td>' + ipkDet + '</td><td class="text-center">' + okkBadge + '</td><td>' + okkDet + '</td></tr>';
+            });
+            h += '</tbody></table></div>';
+            return h;
+        }
+        function updateSummaryEl(summaryEl, ipk, okk, total) {
+            if (!summaryEl) return;
+            var pIpk = total > 0 ? Math.round(ipk / total * 100) : 0;
+            var pOkk = total > 0 ? Math.round(okk / total * 100) : 0;
+            summaryEl.innerHTML = '<strong>Summary:</strong> IPK ' + ipk + '/' + total + ' hari (' + pIpk + '%) | OKK ' + okk + '/' + total + ' hari (' + pOkk + '%)';
+        }
+        function loadIkkDailyDetail(detailRow, done) {
+            done = done || function() {};
+            if (!ikkDailyUrl || !detailRow) { done(); return; }
+            var state = detailRow.getAttribute('data-detail-state');
+            if (state === 'loaded' || state === 'loading') { done(); return; }
+
+            var wpId = detailRow.getAttribute('data-work-permit-id');
+            var week = detailRow.getAttribute('data-week');
+            var site = detailRow.getAttribute('data-site') || '';
+            if (!wpId || !week) { done(); return; }
+
+            detailRow.setAttribute('data-detail-state', 'loading');
+            var loadingEl = detailRow.querySelector('.ikk-detail-loading');
+            var errEl = detailRow.querySelector('.ikk-detail-error');
+            var hostEl = detailRow.querySelector('.ikk-detail-table-host');
+            if (errEl) { errEl.classList.add('d-none'); errEl.textContent = ''; }
+            if (loadingEl) loadingEl.classList.remove('d-none');
+            if (hostEl) { hostEl.classList.add('d-none'); hostEl.innerHTML = ''; }
+
+            var url = ikkDailyUrl + '?work_permit_id=' + encodeURIComponent(wpId) + '&week=' + encodeURIComponent(week);
+            if (site) url += '&site=' + encodeURIComponent(site);
+
+            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
+                .then(function(r) {
+                    return r.json().then(function(data) {
+                        if (!r.ok) throw new Error((data && data.message) ? data.message : ('HTTP ' + r.status));
+                        return data;
+                    });
+                })
+                .then(function(res) {
+                    if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Gagal memuat');
+                    if (loadingEl) loadingEl.classList.add('d-none');
+                    var details = res.daily_details || [];
+                    if (hostEl) {
+                        hostEl.innerHTML = details.length ? buildDailyTableHtml(details) : '<p class="text-muted small mb-0">Tidak ada data tanggal</p>';
+                        hostEl.classList.remove('d-none');
+                    }
+                    var summaryEl = detailRow.querySelector('.ikk-detail-summary');
+                    updateSummaryEl(summaryEl, res.ipk_count || 0, res.okk_count || 0, res.total_hari || 0);
+                    detailRow.setAttribute('data-detail-state', 'loaded');
+                    done();
+                })
+                .catch(function(err) {
+                    if (loadingEl) loadingEl.classList.add('d-none');
+                    if (errEl) {
+                        errEl.textContent = err.message || 'Gagal memuat detail';
+                        errEl.classList.remove('d-none');
+                    }
+                    detailRow.setAttribute('data-detail-state', 'error');
+                    done();
+                });
+        }
+
+        var loadQueue = [];
+        var activeLoads = 0;
+        var maxConcurrent = 4;
+        function pumpQueue() {
+            while (activeLoads < maxConcurrent && loadQueue.length) {
+                var row = loadQueue.shift();
+                activeLoads++;
+                loadIkkDailyDetail(row, function() {
+                    activeLoads--;
+                    pumpQueue();
+                });
+            }
+        }
+        function scheduleLoadDetail(row) {
+            if (!row) return;
+            var st = row.getAttribute('data-detail-state');
+            if (st === 'loaded') return;
+            loadQueue.push(row);
+            pumpQueue();
+        }
+
+        document.addEventListener('click', function(e) {
+            var btn = e.target.closest('.ikk-toggle-btn');
+            if (!btn || !document.getElementById('tableIkkClickhouseHarian')) return;
+            var targetId = btn.getAttribute('data-target');
+            if (!targetId) return;
+            var targetRow = document.getElementById(targetId);
+            if (!targetRow) return;
+            var icon = btn.querySelector('i');
+
+            if (targetRow.classList.contains('d-none')) {
+                targetRow.classList.remove('d-none');
+                if (icon) icon.textContent = 'remove';
+                btn.classList.remove('btn-outline-primary');
+                btn.classList.add('btn-primary');
+                scheduleLoadDetail(targetRow);
+            } else {
+                targetRow.classList.add('d-none');
+                if (icon) icon.textContent = 'add';
+                btn.classList.remove('btn-primary');
+                btn.classList.add('btn-outline-primary');
+            }
+        });
+
+        var btnExpandAll = document.getElementById('btnExpandAllIkk');
+        if (btnExpandAll) {
+            btnExpandAll.addEventListener('click', function() {
+                document.querySelectorAll('#tableIkkClickhouseHarian .ikk-detail-row').forEach(function(row) {
+                    row.classList.remove('d-none');
+                    scheduleLoadDetail(row);
+                });
+                document.querySelectorAll('#tableIkkClickhouseHarian .ikk-toggle-btn').forEach(function(b) {
+                    var ic = b.querySelector('i');
+                    if (ic) ic.textContent = 'remove';
+                    b.classList.remove('btn-outline-primary');
+                    b.classList.add('btn-primary');
+                });
+            });
+        }
+        var btnCollapseAll = document.getElementById('btnCollapseAllIkk');
+        if (btnCollapseAll) {
+            btnCollapseAll.addEventListener('click', function() {
+                document.querySelectorAll('#tableIkkClickhouseHarian .ikk-detail-row').forEach(function(row) {
+                    row.classList.add('d-none');
+                });
+                document.querySelectorAll('#tableIkkClickhouseHarian .ikk-toggle-btn').forEach(function(b) {
+                    var ic = b.querySelector('i');
+                    if (ic) ic.textContent = 'add';
+                    b.classList.remove('btn-primary');
+                    b.classList.add('btn-outline-primary');
+                });
+            });
+        }
+    }
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', initIkkWeeklyLazyDetails);
+    } else {
+        initIkkWeeklyLazyDetails();
+    }
+
     // Tabel IKK ClickHouse punya baris expand (colspan) yang tidak kompatibel dengan DataTables — jangan init agar tidak error _DT_CellIndex
     // try {
     //     if ($.fn.DataTable && document.getElementById('tableIkkClickhouseHarian')) {

@@ -53,6 +53,14 @@ class MapBaseController extends Controller
                 'company' => 'PT Pamapersada Nusantara',
                 'sites' => ['BMO 2'] // User dengan role ini hanya bisa akses site BMO 2
             ],
+            'control_room_mtn' => [
+                'company' => 'PT Madhani Talatah Nusantara',
+                'sites' => ['SMO'] // User dengan role ini hanya bisa akses site SMO
+            ],
+            'control-room-mtn' => [
+                'company' => 'PT Madhani Talatah Nusantara',
+                'sites' => ['SMO']
+            ],
             // Add more role mappings here as needed
             // Example:
             // 'control_room_site_a' => [
@@ -1813,10 +1821,12 @@ class MapBaseController extends Controller
             // Check user role for filtering
             $user = Auth::user();
             $isControlRoomPama = false;
+            $isControlRoomMtn = false;
             $isAdminHazardMotion = false;
             
             if ($user) {
                 $isControlRoomPama = $user->hasRole('control_room_pama') || $user->hasRole('control-room-pama');
+                $isControlRoomMtn = $user->hasRole('control_room_mtn') || $user->hasRole('control-room-mtn');
                 $isAdminHazardMotion = $user->hasRole('admin_hazard_motion') || $user->hasRole('admin-hazard-motion');
             }
             
@@ -1927,6 +1937,11 @@ class MapBaseController extends Controller
                 $cctvCoverageQuery->where(function($query) {
                     $query->whereRaw('TRIM(cctv_data_bmo2.site) = ?', ['BMO 2'])
                           ->whereRaw('TRIM(cctv_data_bmo2.perusahaan) = ?', ['PT Pamapersada Nusantara']);
+                });
+            } elseif ($isControlRoomMtn && !$isAdminHazardMotion) {
+                $cctvCoverageQuery->where(function($query) {
+                    $query->whereRaw('TRIM(cctv_data_bmo2.site) = ?', ['SMO'])
+                          ->whereRaw('TRIM(cctv_data_bmo2.perusahaan) = ?', ['PT Madhani Talatah Nusantara']);
                 });
             }
             // If user is admin_hazard_motion, show all data (no filter)
