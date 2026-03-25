@@ -2185,7 +2185,12 @@
                       <span class="material-icons-outlined">notifications_active</span>
                     </span>
                     <h3 class="mb-0" id="">
-                      @if(Auth::check() && (Auth::user()->hasRole('control_room_pama') || Auth::user()->hasRole('control-room-pama')))
+                      @if(Auth::check() && (
+                        Auth::user()->hasRole('control_room_pama') ||
+                        Auth::user()->hasRole('control-room-pama') ||
+                        Auth::user()->hasRole('control_room_mtn') ||
+                        Auth::user()->hasRole('control-room-mtn')
+                      ))
                         218
                       @elseif(Auth::check() && (Auth::user()->hasRole('admin_hazard_motion') || Auth::user()->hasRole('admin-hazard-motion')))
                         1410
