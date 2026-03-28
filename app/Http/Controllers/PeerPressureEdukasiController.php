@@ -1,11 +1,17 @@
 <?php
 
+declare(strict_types=1);
+
 namespace App\Http\Controllers;
 
+use App\Actions\PeerPressure\GetPeerPressureKejadianDetailForDashboardAction;
+use App\Actions\PeerPressure\ListPeerPressureDashboardKejadianAction;
 use App\Models\PeerPressureKejadianEdukasi;
+use App\Services\PeerPressure\PeerPressureKaryawanNitipService;
 use App\Models\PeerPressurePesertaEdukasi;
 use Carbon\Carbon;
 use Exception;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -73,6 +79,37 @@ class PeerPressureEdukasiController extends Controller
         ]);
     }
 
+    /**
+     * Dashboard evaluasi Peer Pressure (data kejadian + peserta dari database).
+     */
+    public function dashboard(
+        ListPeerPressureDashboardKejadianAction $listDashboardKejadian,
+        PeerPressureKaryawanNitipService $karyawanNitip
+    ): View {
+        $kejadian = $listDashboardKejadian();
+
+        $peerSids = [];
+        foreach ($kejadian as $k) {
+            foreach ($k->peserta->where('peran', 'peer') as $p) {
+                $peerSids[] = $p->sid;
+            }
+        }
+        $peerFotoUrls = $karyawanNitip->fotoUrlsByKodeSids($peerSids);
+
+        return view('peer-pressure-edukasi.dashboard', [
+            'kejadian' => $kejadian,
+            'peerFotoUrls' => $peerFotoUrls,
+        ]);
+    }
+
+    /**
+     * Detail kejadian untuk modal dashboard (JSON).
+     */
+    public function kejadianDetail(int $id, GetPeerPressureKejadianDetailForDashboardAction $detail): JsonResponse
+    {
+        return response()->json($detail($id));
+    }
+
     public function import(Request $request): RedirectResponse
     {
         $request->validate([
@@ -81,11 +118,16 @@ class PeerPressureEdukasiController extends Controller
             'excel_file.required' => 'File Excel wajib diupload.',
         ]);
 
+        $prevExcelCalendar = ExcelDate::getExcelCalendar();
+
         try {
             $file = $request->file('excel_file');
             $spreadsheet = IOFactory::load($file->getRealPath());
+            ExcelDate::setExcelCalendar($spreadsheet->getExcelCalendar());
+
             $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray(null, true, true, false);
+            // Nilai mentah (serial Excel untuk tanggal/waktu), bukan string terformat — hindari salah parse & locale Carbon.
+            $rows = $worksheet->toArray(null, true, false, false);
 
             if (count($rows) < 2) {
                 return redirect()->route('peer-pressure-edukasi.index')
@@ -164,6 +206,8 @@ class PeerPressureEdukasiController extends Controller
 
             return redirect()->route('peer-pressure-edukasi.index')
                 ->with('error', 'Import gagal: ' . $e->getMessage());
+        } finally {
+            ExcelDate::setExcelCalendar($prevExcelCalendar);
         }
     }
 
@@ -302,9 +346,23 @@ class PeerPressureEdukasiController extends Controller
         if ($s === '') {
             return null;
         }
-        try {
-            return Carbon::createFromFormat('d/m/Y', $s)->format('Y-m-d');
-        } catch (Exception $e) {
+        // Tanggal teks: selalu DD/MM/YYYY (Indonesia). Jangan pakai Carbon::parse dulu — bisa dianggap MM/DD (mis. 01/02/2026 jadi 2 Jan, bukan 1 Feb).
+        if (preg_match('/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/', $s, $m)) {
+            try {
+                $day = (int) $m[1];
+                $month = (int) $m[2];
+                $year = (int) $m[3];
+
+                return Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
+            } catch (Exception $e) {
+                // lanjut ke format lain
+            }
+        }
+        foreach (['Y-m-d', 'd/m/Y', 'j/n/Y', 'd-m-Y', 'j-n-Y'] as $fmt) {
+            try {
+                return Carbon::createFromFormat($fmt, $s)->format('Y-m-d');
+            } catch (Exception $e) {
+            }
         }
         try {
             return Carbon::parse($s)->format('Y-m-d');

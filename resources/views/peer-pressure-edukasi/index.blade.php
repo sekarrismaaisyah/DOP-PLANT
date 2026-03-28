@@ -25,6 +25,7 @@
                 <p class="text-muted small mb-3">
                     Baris pertama = header. Satu kejadian dimulai saat kolom <strong>Tanggal Temuan</strong> terisi.
                     Baris berikutnya dengan Tanggal Temuan kosong akan ditambahkan sebagai peserta (SID Pelanggar/Peer) pada kejadian yang sama.
+                    Tanggal di Excel (tanggal temuan &amp; edukasi) memakai <strong>DD/MM/YYYY</strong> atau format tanggal Excel; import membaca nilai asli sel sehingga sama dengan yang tampil di spreadsheet.
                 </p>
                 <div class="d-flex flex-wrap gap-2 mb-3">
                     <a href="{{ route('peer-pressure-edukasi.download-template') }}" class="btn btn-outline-primary btn-sm">
