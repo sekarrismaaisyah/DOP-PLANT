@@ -18,11 +18,16 @@ return [
     | Cache response agar filter/week yang sama tidak menjalankan ulang query
     | ClickHouse/MySQL berat. TTL dalam detik; 0 = tanpa cache.
     */
-    'weekly_dashboard_cache_ttl' => (int) env('DOPM_WEEKLY_CACHE_TTL', 300),
+    'weekly_dashboard_cache_ttl' => (int) env('DOPM_WEEKLY_CACHE_TTL', 600),
 
     /*
     | Batas eksekusi PHP untuk request dashboard (0 = tidak mengubah default php.ini).
-    | Naikkan jika masih timeout setelah index + cache.
     */
-    'weekly_dashboard_max_execution_seconds' => (int) env('DOPM_WEEKLY_MAX_EXECUTION_SECONDS', 120),
+    'weekly_dashboard_max_execution_seconds' => (int) env('DOPM_WEEKLY_MAX_EXECUTION_SECONDS', 300),
+
+    /*
+    | Detail IPK/OKK per hari: di-render di server (batch ClickHouse) hanya jika jumlah IKK ≤ nilai ini.
+    | Jika lebih, detail dimuat per baris via API saat expand (mencegah timeout). 0 = selalu server-side (tanpa batas).
+    */
+    'weekly_ikk_daily_server_side_max' => (int) env('DOPM_WEEKLY_IKK_DAILY_SERVER_MAX', 30),
 ];

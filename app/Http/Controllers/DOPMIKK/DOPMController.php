@@ -2095,6 +2095,7 @@ class DOPMController extends Controller
             'chartIzinKerjaPerMatriks' => $chartIzinKerjaPerMatriks,
             'ikkClickhouseListHarian' => $ikkClickhouseListHarian,
             'ikkDailyDetailsByWpId' => [],
+            'ikkDailyDetailsLazyLoad' => false,
         ]);
     }
 

@@ -2767,45 +2767,6 @@
                                                     @endif
                                                 </td>
                                             </tr>
-                                            @if($lazyDaily)
-                                            <tr class="ikk-detail-row d-none"
-                                                id="ikk-detail-{{ $loop->iteration }}"
-                                                data-work-permit-id="{{ e($ikk->id ?? '') }}"
-                                                data-week="{{ e($filterWeek ?? '') }}"
-                                                data-site="{{ e(request('site', '')) }}"
-                                                data-detail-state="idle">
-                                                <td colspan="12" class="p-0 bg-light">
-                                                    <div class="p-3">
-                                                        <div class="row mb-2">
-                                                            <div class="col-md-6">
-                                                                <small class="text-muted">
-                                                                    <strong>Layer 1:</strong> {{ $ikk->nama_layer_1 ?? '-' }}<br>
-                                                                    <strong>Layer 2:</strong> {{ $ikk->nama_layer_2 ?? '-' }}<br>
-                                                                    <strong>Layer 3:</strong> {{ $ikk->nama_layer_3 ?? '-' }}<br>
-                                                                    <strong>Layer 4:</strong> {{ $ikk->nama_layer_4 ?? '-' }}
-                                                                </small>
-                                                            </div>
-                                                            <div class="col-md-6">
-                                                                <small class="text-muted">
-                                                                    <strong>Lokasi:</strong> {{ $ikk->location_name ?? '-' }}<br>
-                                                                    <strong>Detail Lokasi:</strong> {{ $ikk->location_detail_name ?? '-' }}
-                                                                </small>
-                                                            </div>
-                                                        </div>
-                                                        <div class="ikk-detail-loading d-none text-center py-3">
-                                                            <div class="spinner-border spinner-border-sm text-primary" role="status"><span class="visually-hidden">Loading…</span></div>
-                                                        </div>
-                                                        <div class="ikk-detail-error d-none alert alert-warning small py-2 mb-0"></div>
-                                                        <div class="ikk-detail-table-host d-none"></div>
-                                                        <div class="mt-2 ikk-detail-summary text-muted small" data-ipk="{{ $ipkCount }}" data-okk="{{ $okkCount }}" data-total="{{ $totalHari }}">
-                                                            <strong>Summary (badge):</strong>
-                                                            IPK {{ $ipkCount }}/{{ $totalHari }} hari ({{ $totalHari > 0 ? round($ipkCount / $totalHari * 100) : 0 }}%) |
-                                                            OKK {{ $okkCount }}/{{ $totalHari }} hari ({{ $totalHari > 0 ? round($okkCount / $totalHari * 100) : 0 }}%)
-                                                        </div>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                            @else
                                             @php
                                                 $dailyPayload = ($ikkDailyDetailsByWpId ?? [])[$ikk->id ?? ''] ?? ['daily_details' => [], 'ipk_count' => 0, 'okk_count' => 0, 'total_hari' => 0];
                                                 $dailyRows = $dailyPayload['daily_details'] ?? [];
@@ -2813,6 +2774,7 @@
                                                 $sumOkk = (int) ($dailyPayload['okk_count'] ?? 0);
                                                 $sumTotal = (int) ($dailyPayload['total_hari'] ?? 0);
                                             @endphp
+                                            {{-- Detail row: layer/lokasi + tabel harian IPK/OKK (data dari server) --}}
                                             <tr class="ikk-detail-row d-none"
                                                 id="ikk-detail-{{ $loop->iteration }}"
                                                 data-detail-state="loaded">
@@ -2896,7 +2858,6 @@
                                                     </div>
                                                 </td>
                                             </tr>
-                                            @endif
                                         @endforeach
                                     </tbody>
                                 </table>
@@ -3866,109 +3827,8 @@
         console.warn('[DOPM Weekly] DataTable tableDopmHarian:', e);
     }
 
-    window.DOPM_WEEKLY_IKK_DAILY_LAZY = @json(!empty($ikkDailyDetailsLazyLoad ?? false));
-    @if(!empty($ikkDailyDetailsLazyLoad ?? false))
-    window.DOPM_WEEKLY_IKK_DAILY_URL = @json(route('dopmikk.dopm.dashboard-weekly.api.ikk-daily-details'));
-    @endif
-
-    // IKK weekly: expand/collapse; jika DOPM_WEEKLY_IKK_DAILY_LAZY, muat detail harian via API saat expand
+    // IKK weekly: expand/collapse saja (detail harian sudah di-render di server)
     function initIkkWeeklyLazyDetails() {
-        var useLazyDaily = window.DOPM_WEEKLY_IKK_DAILY_LAZY === true;
-        var ikkDailyUrl = window.DOPM_WEEKLY_IKK_DAILY_URL || '';
-
-        function escHtml(s) {
-            if (s == null || s === '') return '';
-            var d = document.createElement('div');
-            d.textContent = String(s);
-            return d.innerHTML;
-        }
-        function buildDailyTableHtml(details) {
-            var h = '<div class="table-responsive"><table class="table table-sm table-bordered mb-0 bg-white"><thead class="table-secondary"><tr><th style="width:120px">Tanggal</th><th style="width:100px">Hari</th><th>IPK</th><th>Detail IPK</th><th>OKK</th><th>Detail OKK</th></tr></thead><tbody>';
-            (details || []).forEach(function(d) {
-                var ipkBadge = d.has_ipk ? '<span class="badge bg-success">Ada</span>' : '<span class="badge bg-danger">Tidak</span>';
-                var okkBadge = d.has_okk ? '<span class="badge bg-success">Ada</span>' : '<span class="badge bg-danger">Tidak</span>';
-                var ipkDet = d.has_ipk ? '<small><strong>Kode:</strong> ' + escHtml(d.ipk_kode) + '<br><strong>Status:</strong> ' + escHtml(d.ipk_status) + '</small>' : '<span class="text-muted">-</span>';
-                var okkDet = d.has_okk ? '<small><strong>Kode:</strong> ' + escHtml(d.okk_kode) + '<br><strong>Status:</strong> ' + escHtml(d.okk_status) + '</small>' : '<span class="text-muted">-</span>';
-                h += '<tr><td>' + escHtml(d.tanggal) + '</td><td>' + escHtml(d.hari) + '</td><td class="text-center">' + ipkBadge + '</td><td>' + ipkDet + '</td><td class="text-center">' + okkBadge + '</td><td>' + okkDet + '</td></tr>';
-            });
-            h += '</tbody></table></div>';
-            return h;
-        }
-        function updateSummaryEl(summaryEl, ipk, okk, total) {
-            if (!summaryEl) return;
-            var pIpk = total > 0 ? Math.round(ipk / total * 100) : 0;
-            var pOkk = total > 0 ? Math.round(okk / total * 100) : 0;
-            summaryEl.innerHTML = '<strong>Summary:</strong> IPK ' + ipk + '/' + total + ' hari (' + pIpk + '%) | OKK ' + okk + '/' + total + ' hari (' + pOkk + '%)';
-        }
-        function loadIkkDailyDetail(detailRow, done) {
-            done = done || function() {};
-            if (!useLazyDaily || !ikkDailyUrl || !detailRow) { done(); return; }
-            var state = detailRow.getAttribute('data-detail-state');
-            if (state === 'loaded' || state === 'loading') { done(); return; }
-            var wpId = detailRow.getAttribute('data-work-permit-id');
-            var week = detailRow.getAttribute('data-week');
-            var site = detailRow.getAttribute('data-site') || '';
-            if (!wpId || !week) { done(); return; }
-            detailRow.setAttribute('data-detail-state', 'loading');
-            var loadingEl = detailRow.querySelector('.ikk-detail-loading');
-            var errEl = detailRow.querySelector('.ikk-detail-error');
-            var hostEl = detailRow.querySelector('.ikk-detail-table-host');
-            if (errEl) { errEl.classList.add('d-none'); errEl.textContent = ''; }
-            if (loadingEl) loadingEl.classList.remove('d-none');
-            if (hostEl) { hostEl.classList.add('d-none'); hostEl.innerHTML = ''; }
-            var url = ikkDailyUrl + '?work_permit_id=' + encodeURIComponent(wpId) + '&week=' + encodeURIComponent(week);
-            if (site) url += '&site=' + encodeURIComponent(site);
-            fetch(url, { headers: { 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' } })
-                .then(function(r) {
-                    return r.json().then(function(data) {
-                        if (!r.ok) throw new Error((data && data.message) ? data.message : ('HTTP ' + r.status));
-                        return data;
-                    });
-                })
-                .then(function(res) {
-                    if (!res || !res.success) throw new Error(res && res.message ? res.message : 'Gagal memuat');
-                    if (loadingEl) loadingEl.classList.add('d-none');
-                    var details = res.daily_details || [];
-                    if (hostEl) {
-                        hostEl.innerHTML = details.length ? buildDailyTableHtml(details) : '<p class="text-muted small mb-0">Tidak ada data tanggal</p>';
-                        hostEl.classList.remove('d-none');
-                    }
-                    var summaryEl = detailRow.querySelector('.ikk-detail-summary');
-                    updateSummaryEl(summaryEl, res.ipk_count || 0, res.okk_count || 0, res.total_hari || 0);
-                    detailRow.setAttribute('data-detail-state', 'loaded');
-                    done();
-                })
-                .catch(function(err) {
-                    if (loadingEl) loadingEl.classList.add('d-none');
-                    if (errEl) {
-                        errEl.textContent = err.message || 'Gagal memuat detail';
-                        errEl.classList.remove('d-none');
-                    }
-                    detailRow.setAttribute('data-detail-state', 'error');
-                    done();
-                });
-        }
-        var loadQueue = [];
-        var activeLoads = 0;
-        var maxConcurrent = 4;
-        function pumpQueue() {
-            while (activeLoads < maxConcurrent && loadQueue.length) {
-                var row = loadQueue.shift();
-                activeLoads++;
-                loadIkkDailyDetail(row, function() {
-                    activeLoads--;
-                    pumpQueue();
-                });
-            }
-        }
-        function scheduleLoadDetail(row) {
-            if (!row || !useLazyDaily) return;
-            var st = row.getAttribute('data-detail-state');
-            if (st === 'loaded') return;
-            loadQueue.push(row);
-            pumpQueue();
-        }
-
         document.addEventListener('click', function(e) {
             var btn = e.target.closest('.ikk-toggle-btn');
             if (!btn || !document.getElementById('tableIkkClickhouseHarian')) return;
@@ -3977,12 +3837,12 @@
             var targetRow = document.getElementById(targetId);
             if (!targetRow) return;
             var icon = btn.querySelector('i');
+
             if (targetRow.classList.contains('d-none')) {
                 targetRow.classList.remove('d-none');
                 if (icon) icon.textContent = 'remove';
                 btn.classList.remove('btn-outline-primary');
                 btn.classList.add('btn-primary');
-                scheduleLoadDetail(targetRow);
             } else {
                 targetRow.classList.add('d-none');
                 if (icon) icon.textContent = 'add';
@@ -3996,7 +3856,6 @@
             btnExpandAll.addEventListener('click', function() {
                 document.querySelectorAll('#tableIkkClickhouseHarian .ikk-detail-row').forEach(function(row) {
                     row.classList.remove('d-none');
-                    scheduleLoadDetail(row);
                 });
                 document.querySelectorAll('#tableIkkClickhouseHarian .ikk-toggle-btn').forEach(function(b) {
                     var ic = b.querySelector('i');

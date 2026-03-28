@@ -76,7 +76,7 @@
             </a>
           </li>
            <li>
-            <a href="{{ route('dopmikk.dopm.dashboard-weekly') }}">
+            <a href="{{ route('dopmikk.dopm.dashboard-weekly.home') }}">
               <div class="parent-icon"><i class="material-icons-outlined">dashboard</i></div>
               <div class="menu-title">Dashboard Report</div>
             </a>

@@ -1,5 +1,6 @@
 <?php
 
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\HomeController;
 use App\Http\Controllers\DatabaseController;
@@ -502,11 +503,49 @@ Route::middleware(['auth'])->group(function () {
         // DOPM
         Route::prefix('dopm')->name('dopm.')->group(function () {
             Route::get('/dashboard', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'dashboard'])->name('dashboard');
-            // Dashboard Weekly menggunakan controller khusus agar bisa menampilkan status APPROVED & EXPIRED
-            Route::get('/dashboard-weekly', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'dashboard'])->name('dashboard-weekly');
-            Route::get('/dashboard-weekly/export-ikk-excel', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'exportIkkExcel'])->name('dashboard-weekly.export-ikk-excel');
+            // Dashboard Weekly: week di path (RESTful). Query opsional: site, date (hari dalam minggu untuk detail harian).
+            Route::get('/dashboard-weekly/export-ikk-excel', function (Request $request) {
+                $week = $request->query('week', now()->format('o-\WW'));
+                if (! preg_match('/^\d{4}-W\d{2}$/', (string) $week)) {
+                    $week = now()->format('o-\WW');
+                }
+                $to = route('dopmikk.dopm.dashboard-weekly.export-ikk-excel', ['week' => $week]);
+                if ($request->filled('site')) {
+                    $to .= '?'.http_build_query(['site' => $request->query('site')]);
+                }
+
+                return redirect()->to($to, 301);
+            });
+            Route::get('/dashboard-weekly/{week}/export-ikk-excel', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'exportIkkExcel'])
+                ->where('week', '^\d{4}-W\d{2}$')
+                ->name('dashboard-weekly.export-ikk-excel');
             Route::get('/dashboard-weekly/api/compliance-by-month', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'getComplianceByMonth'])->name('dashboard-weekly.api.compliance-by-month');
             Route::get('/dashboard-weekly/api/ikk-daily-details', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'getIkkDailyDetails'])->name('dashboard-weekly.api.ikk-daily-details');
+            Route::get('/dashboard-weekly/{week}', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'dashboard'])
+                ->where('week', '^\d{4}-W\d{2}$')
+                ->name('dashboard-weekly');
+            Route::get('/dashboard-weekly', function (Request $request) {
+                $week = $request->query('week', now()->format('o-\WW'));
+                if (! preg_match('/^\d{4}-W\d{2}$/', (string) $week)) {
+                    $week = now()->format('o-\WW');
+                }
+                $to = route('dopmikk.dopm.dashboard-weekly', ['week' => $week]);
+                $query = [];
+                if ($request->filled('site')) {
+                    $query['site'] = $request->query('site');
+                }
+                if ($request->filled('date')) {
+                    $d = $request->query('date');
+                    if (is_string($d) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)) {
+                        $query['date'] = $d;
+                    }
+                }
+                if ($query !== []) {
+                    $to .= '?'.http_build_query($query);
+                }
+
+                return redirect()->to($to, 301);
+            })->name('dashboard-weekly.home');
             Route::get('/alert-log', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'alertLog'])->name('alert-log');
             Route::get('/issue-closure', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'issueClosure'])->name('issue-closure');
             Route::get('/', [\App\Http\Controllers\DOPMIKK\DOPMController::class, 'index'])->name('index');
