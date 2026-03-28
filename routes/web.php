@@ -38,6 +38,7 @@ use App\Http\Controllers\CctvP2hChecklistController;
 use App\Http\Controllers\EvaluasiUnitTabelController;
 use App\Http\Controllers\FuelingEvaluasiController;
 use App\Http\Controllers\BecomlineController;
+use App\Http\Controllers\PeerPressureEdukasiController;
 use App\Http\Controllers\UnitMtdController;
 
 /*
@@ -146,6 +147,11 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/becomline/import/form', [BecomlineController::class, 'importForm'])->name('becomline.import-form');
     Route::post('/becomline/import', [BecomlineController::class, 'import'])->name('becomline.import');
     Route::get('/becomline/import/template', [BecomlineController::class, 'downloadTemplate'])->name('becomline.download-template');
+
+    // Peer Pressure — kejadian edukasi + import Excel
+    Route::get('/peer-pressure-edukasi', [PeerPressureEdukasiController::class, 'index'])->name('peer-pressure-edukasi.index');
+    Route::post('/peer-pressure-edukasi/import', [PeerPressureEdukasiController::class, 'import'])->name('peer-pressure-edukasi.import');
+    Route::get('/peer-pressure-edukasi/template', [PeerPressureEdukasiController::class, 'downloadTemplate'])->name('peer-pressure-edukasi.download-template');
 
     // Unit MTD (CRUD + Import Excel) - Site, Perusahaan, Kategori, No Unit, MTD, AVG per Day
     Route::get('/unit-mtd', [UnitMtdController::class, 'index'])->name('unit-mtd.index');
