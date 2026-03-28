@@ -147,6 +147,33 @@
       </header>
       <!-- Main Content Area -->
       <main class="flex-grow w-full  mx-auto p-8 space-y-8">
+         @php
+            $wt = $weeklyTrend ?? [
+                'weeks' => [],
+                'max_count' => 0,
+                'avg_count' => 0,
+                'target_line_bottom_pct' => 0,
+                'period_caption' => 'Semua data (per bulan)',
+                'chart_year' => null,
+                'chart_month' => null,
+                'month_label' => '',
+                'period_scope' => 'all',
+                'avg_legend_label' => 'Rata-rata bulanan',
+            ];
+            $pickerYear = (int) min(max(now()->year, 2025), 2026);
+            $pickerMonth = (int) now()->month;
+            $cy = ($chartPeriodMonth ?? false) ? (int) ($chartYear ?? $pickerYear) : $pickerYear;
+            $cm = ($chartPeriodMonth ?? false) ? (int) ($chartMonth ?? $pickerMonth) : $pickerMonth;
+            $peerResetParams = [];
+            if (($q ?? '') !== '') {
+                $peerResetParams['q'] = $q;
+            }
+            if (!empty($chartPeriodMonth)) {
+                $peerResetParams['year'] = $chartYear;
+                $peerResetParams['month'] = $chartMonth;
+            }
+            $monthsShort = [1 => 'Jan', 2 => 'Peb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'];
+         @endphp
          <!-- Header & Top Filters -->
          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 pb-6 border-b border-outline-variant/30">
             <div>
@@ -156,26 +183,38 @@
                   <span class="text-primary">Peer Pressure Evaluation</span>
                </nav>
                <h2 class="font-headline font-extrabold text-4xl text-on-background tracking-tight">Peer Pressure Evaluation</h2>
-               <p class="text-on-surface-variant font-medium mt-1">Program performance metrics for Q3 2024 • Updated 5 mins ago</p>
+               <p class="text-on-surface-variant font-medium mt-1">Program performance metrics 2025 - 2026 • Updated 5 mins ago</p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-               <div class="bg-white px-4 py-2.5 rounded-xl border border-outline-variant/30 flex items-center gap-2 text-sm font-semibold text-on-surface-variant cursor-pointer hover:shadow-md transition-all">
+               <!-- <div class="bg-white px-4 py-2.5 rounded-xl border border-outline-variant/30 flex items-center gap-2 text-sm font-semibold text-on-surface-variant cursor-pointer hover:shadow-md transition-all">
                   <span class="material-symbols-outlined text-lg" data-icon="calendar_today">calendar_today</span>
                   Last 30 Days
                   <span class="material-symbols-outlined text-lg">expand_more</span>
-               </div>
-               <div class="bg-white px-4 py-2.5 rounded-xl border border-outline-variant/30 flex items-center gap-2 text-sm font-semibold text-on-surface-variant cursor-pointer hover:shadow-md transition-all">
-                  <span class="material-symbols-outlined text-lg" data-icon="category">category</span>
-                  All Departments
-                  <span class="material-symbols-outlined text-lg">expand_more</span>
-               </div>
-               <button class="signature-gradient text-white font-bold px-6 py-2.5 rounded-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2">
+               </div> -->
+                <button type="button" id="peer-open-weekly-period" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-4 py-3 text-left shadow-inner transition-colors hover:bg-surface-container-high sm:w-auto sm:min-w-[14rem]">
+                        <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
+                        <span class="flex min-w-0 flex-1 flex-col items-start">
+                           <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Periode chart</span>
+                           <span id="peer-weekly-period-label" class="truncate text-sm font-bold text-on-surface">{{ $wt['period_caption'] ?? 'Pilih bulan' }}</span>
+                        </span>
+                        <span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+                     </button>
+
+              
+               <!-- <button class="signature-gradient text-white font-bold px-6 py-2.5 rounded-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2">
                <span class="material-symbols-outlined text-lg" data-icon="file_download">file_download</span>
                Export Report
-               </button>
+               </button> -->
             </div>
          </div>
          <!-- KPI Row -->
+         @php
+            $kpi = $kpi ?? [];
+            $kpiTotal = (int) ($kpi['total_cases'] ?? 0);
+            $kpiCompletion = (float) ($kpi['completion_rate'] ?? 0);
+            $kpiBarW = max(0, min(100, $kpiCompletion));
+            $kpiTrendPct = $kpi['total_cases_trend_pct'] ?? null;
+         @endphp
          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
                <div class="flex justify-between items-start">
@@ -185,11 +224,17 @@
                   </div>
                </div>
                <div class="mt-4">
-                  <p class="font-headline font-extrabold text-4xl">1,284</p>
-                  <p class="text-[#059669] text-[11px] font-bold flex items-center gap-1 mt-1">
-                     <span class="material-symbols-outlined text-xs" data-icon="trending_down">trending_down</span>
-                     12% from last month
+                  <p id="peer-kpi-total" class="font-headline font-extrabold text-4xl">{{ number_format($kpiTotal) }}</p>
+                  <div id="peer-kpi-total-trend" class="mt-1">
+                  @if($kpiTrendPct !== null)
+                  <p class="text-[11px] font-bold flex items-center gap-1 {{ $kpiTrendPct <= 0 ? 'text-[#059669]' : 'text-error' }}">
+                     <span class="material-symbols-outlined text-xs" data-icon="{{ $kpiTrendPct <= 0 ? 'trending_down' : 'trending_up' }}">{{ $kpiTrendPct <= 0 ? 'trending_down' : 'trending_up' }}</span>
+                     {{ $kpi['total_cases_trend_label'] ?? '' }}
                   </p>
+                  @else
+                  <p class="text-on-surface-variant text-[11px] font-medium">{{ $kpi['total_cases_trend_label'] ?? '—' }}</p>
+                  @endif
+                  </div>
                </div>
             </div>
             <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
@@ -200,12 +245,17 @@
                   </div>
                </div>
                <div class="mt-4">
-                  <div class="flex justify-between items-end">
-                     <p class="font-headline font-extrabold text-4xl">98.2%</p>
-                     <span class="text-[11px] font-bold text-[#16a34a]">+0.4%</span>
+                  <div class="flex justify-between items-end gap-2">
+                     <p id="peer-kpi-completion" class="font-headline font-extrabold text-4xl">{{ number_format($kpiCompletion, 1) }}%</p>
+                     @if(isset($kpi['completion_rate_delta_pp']) && $kpi['completion_rate_delta_pp'] !== null)
+                     <span id="peer-kpi-completion-delta" class="text-[11px] font-bold shrink-0 {{ ($kpi['completion_rate_delta_pp'] ?? 0) >= 0 ? 'text-[#16a34a]' : 'text-error' }}">{{ ($kpi['completion_rate_delta_pp'] ?? 0) >= 0 ? '+' : '' }}{{ number_format((float) $kpi['completion_rate_delta_pp'], 1) }} p.p.</span>
+                     @else
+                     <span id="peer-kpi-completion-delta" class="text-[11px] font-bold text-on-surface-variant shrink-0">—</span>
+                     @endif
                   </div>
+                  <p id="peer-kpi-completion-hint" class="text-on-surface-variant text-[10px] font-medium mt-1">{{ ($chartPeriodMonth ?? false) ? 'Selesai (CLOSED/SELESAI) ÷ total kejadian pada bulan yang dipilih' : 'Selesai (CLOSED/SELESAI) ÷ total kejadian (seluruh data)' }}</p>
                   <div class="w-full bg-[#f1f5f9] h-2 rounded-full mt-3 overflow-hidden border border-outline-variant/10">
-                     <div class="bg-[#16a34a] h-full rounded-full" style="width: 98.2%"></div>
+                     <div id="peer-kpi-completion-bar" class="bg-[#16a34a] h-full rounded-full transition-all" style="width: {{ $kpiBarW }}%"></div>
                   </div>
                </div>
             </div>
@@ -217,8 +267,8 @@
                   </div>
                </div>
                <div class="mt-4">
-                  <p class="font-headline font-extrabold text-4xl">6.4</p>
-                  <p class="text-on-surface-variant text-[11px] font-medium mt-1">Target: 5-8 peers</p>
+                  <p id="peer-kpi-avg-peer" class="font-headline font-extrabold text-4xl">{{ number_format((float) ($kpi['avg_peer_count'] ?? 0), 1) }}</p>
+                  <p class="text-on-surface-variant text-[11px] font-medium mt-1">Rata-rata jumlah peer per kejadian · Target: 5–8 peers</p>
                </div>
             </div>
             <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
@@ -229,99 +279,210 @@
                   </div>
                </div>
                <div class="mt-4">
-                  <p class="font-headline font-extrabold text-4xl">14.8m</p>
-                  <p class="text-on-surface-variant text-[11px] font-medium mt-1">Target: 15 mins</p>
+                  <p id="peer-kpi-avg-duration" class="font-headline font-extrabold text-4xl">{{ number_format((float) ($kpi['avg_duration_minutes'] ?? 0), 1) }}<span class="text-2xl font-bold">m</span></p>
+                  <p class="text-on-surface-variant text-[11px] font-medium mt-1">Rata-rata durasi edukasi (menit) · Target: 15 mins</p>
                </div>
             </div>
          </div>
          <!-- Charts & Recommendations Grid -->
          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- Trend Analysis -->
-            <div class="lg:col-span-8 bg-white p-8 rounded-2xl anchored-card">
+            @php
+               $wtWeeks = $wt['weeks'] ?? [];
+               $wtLinePct = (float) ($wt['target_line_bottom_pct'] ?? 0);
+            @endphp
+            <div id="peer-weekly-chart-card" class="relative lg:col-span-8 bg-white p-8 rounded-2xl anchored-card">
+               <div id="peer-weekly-chart-loading" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center rounded-2xl bg-white/85 backdrop-blur-[2px]" aria-live="polite" aria-busy="false">
+                  <span class="material-symbols-outlined text-4xl animate-spin text-primary" style="animation-duration:1.1s">progress_activity</span>
+                  <p class="mt-3 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Memuat chart…</p>
+               </div>
                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                   <div>
                      <h3 class="font-headline font-bold text-xl">Cases Trend Analysis</h3>
-                     <p class="text-xs text-on-surface-variant font-medium">Weekly distribution of reported safety cases</p>
+                     <!-- <p class="text-xs text-on-surface-variant font-medium">Per minggu ISO dalam bulan dipilih; kejadian dihitung per potongan tanggal dalam bulan (tanggal temuan)</p> -->
+                     <p id="peer-trend-period-caption" class="text-[10px] text-on-surface-variant/80 font-medium mt-1">{{ $wt['period_caption'] ?? '' }}</p>
                   </div>
-                  <div class="flex items-center gap-6 text-[10px] font-bold uppercase tracking-wider">
-                     <span class="flex items-center gap-2">
-                     <span class="w-3 h-3 bg-primary rounded-full shadow-sm"></span> 
-                     Actual Performance
-                     </span>
-                     <span class="flex items-center gap-2">
-                     <span class="w-3 h-1 bg-error/30 rounded-full border-t border-dashed border-error"></span> 
-                     -25% Target Line
-                     </span>
-                  </div>
-               </div>
-               <div class="h-80 flex items-end justify-between gap-4 px-2 relative">
-                  <div class="absolute bottom-[25%] left-0 w-full h-px border-t-2 border-dashed border-error opacity-40 z-0"></div>
-                  <div class="flex-grow h-full flex items-end gap-3 z-10">
-                     <div class="w-full bg-[#f8fafc] border-x border-t border-outline-variant/10 h-full flex flex-col justify-end group cursor-pointer rounded-t-lg">
-                        <div class="bg-primary h-[60%] rounded-t-md transition-all group-hover:bg-primary-dim relative shadow-lg">
-                           <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold hidden group-hover:block">182</span>
-                        </div>
+                  <div class="flex w-full flex-col items-stretch gap-3 sm:items-end lg:max-w-md">
+                     <div class="flex flex-wrap items-center justify-end gap-4 sm:gap-6 text-[10px] font-bold uppercase tracking-wider">
+                        <span class="flex items-center gap-2">
+                        <span class="w-3 h-3 bg-primary rounded-full shadow-sm"></span>
+                        Kejadian (aktual)
+                        </span>
+                        <span class="flex items-center gap-2">
+                        <span class="w-3 h-1 bg-error/30 rounded-full border-t border-dashed border-error"></span>
+                        <span id="peer-trend-avg-label">{{ $wt['avg_legend_label'] ?? 'Rata-rata' }}</span> (<span id="peer-trend-avg">{{ number_format((float) ($wt['avg_count'] ?? 0), 1) }}</span>)
+                        </span>
                      </div>
-                     <div class="w-full bg-[#f8fafc] border-x border-t border-outline-variant/10 h-full flex flex-col justify-end group cursor-pointer rounded-t-lg">
-                        <div class="bg-primary h-[50%] rounded-t-md transition-all group-hover:bg-primary-dim relative shadow-lg">
-                           <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold hidden group-hover:block">145</span>
-                        </div>
-                     </div>
-                     <div class="w-full bg-[#f8fafc] border-x border-t border-outline-variant/10 h-full flex flex-col justify-end group cursor-pointer rounded-t-lg">
-                        <div class="bg-primary h-[70%] rounded-t-md transition-all group-hover:bg-primary-dim relative shadow-lg">
-                           <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold hidden group-hover:block">210</span>
-                        </div>
-                     </div>
-                     <div class="w-full bg-[#f8fafc] border-x border-t border-outline-variant/10 h-full flex flex-col justify-end group cursor-pointer rounded-t-lg">
-                        <div class="bg-primary h-[40%] rounded-t-md transition-all group-hover:bg-primary-dim relative shadow-lg">
-                           <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold hidden group-hover:block">120</span>
-                        </div>
-                     </div>
-                     <div class="w-full bg-[#f8fafc] border-x border-t border-outline-variant/10 h-full flex flex-col justify-end group cursor-pointer rounded-t-lg">
-                        <div class="bg-primary h-[30%] rounded-t-md transition-all group-hover:bg-primary-dim relative shadow-lg">
-                           <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold hidden group-hover:block">95</span>
-                        </div>
-                     </div>
-                     <div class="w-full bg-[#f8fafc] border-x border-t border-outline-variant/10 h-full flex flex-col justify-end group cursor-pointer rounded-t-lg">
-                        <div class="bg-primary h-[20%] rounded-t-md transition-all group-hover:bg-primary-dim relative shadow-lg">
-                           <span class="absolute -top-6 left-1/2 -translate-x-1/2 text-[10px] font-bold hidden group-hover:block">68</span>
-                        </div>
-                     </div>
+                     <!-- <button type="button" id="peer-open-weekly-period" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-4 py-3 text-left shadow-inner transition-colors hover:bg-surface-container-high sm:w-auto sm:min-w-[14rem]">
+                        <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
+                        <span class="flex min-w-0 flex-1 flex-col items-start">
+                           <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Periode chart</span>
+                           <span id="peer-weekly-period-label" class="truncate text-sm font-bold text-on-surface">{{ $wt['period_caption'] ?? 'Pilih bulan' }}</span>
+                        </span>
+                        <span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+                     </button> -->
                   </div>
                </div>
-               <div class="flex justify-between mt-6 px-2 text-[10px] text-on-surface-variant font-bold uppercase tracking-widest">
-                  <span>WK 28</span><span>WK 29</span><span>WK 30</span><span>WK 31</span><span>WK 32</span><span>WK 33</span>
+               <div class="peer-chart-scroll w-full overflow-x-auto">
+                  <div class="peer-chart-scroll-inner w-max min-w-full px-2">
+                     <div class="relative h-80">
+                        <div id="peer-chart-target-line-wrap" class="@if(($wt['max_count'] ?? 0) <= 0) hidden @endif pointer-events-none absolute left-0 right-0 z-0 h-px border-t-2 border-dashed border-error opacity-40" style="bottom: {{ min(100, max(0, $wtLinePct)) }}%"></div>
+                        <div id="peer-chart-bars" class="peer-chart-bars relative z-10 flex h-full w-full items-stretch gap-1 sm:gap-2">
+                           @forelse ($wtWeeks as $w)
+                           <div class="peer-chart-bar-col flex h-full min-h-0 flex-1 basis-0 min-w-[2rem] flex-col justify-end rounded-t-lg border-x border-t border-outline-variant/10 bg-[#f8fafc] group" title="{{ $w['range_short'] ?? '' }}: {{ (int) ($w['count'] ?? 0) }} kejadian">
+                              <div class="relative w-full rounded-t-md bg-primary shadow-lg transition-all group-hover:bg-primary-dim" style="height: {{ min(100, max(0, (float) ($w['bar_height_pct'] ?? 0))) }}%">
+                                 <span class="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-on-surface">{{ (int) ($w['count'] ?? 0) }}</span>
+                              </div>
+                           </div>
+                           @empty
+                           <div class="peer-chart-empty flex w-full min-w-full items-center justify-center py-12 text-sm text-on-surface-variant">Belum ada data untuk chart.</div>
+                           @endforelse
+                        </div>
+                     </div>
+                     <div id="peer-chart-axis-labels" class="mt-6 flex w-full gap-1 sm:gap-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
+                        @foreach ($wtWeeks as $w)
+                        <span class="peer-chart-axis-tick min-w-[2rem] flex-1 basis-0 text-center leading-tight">{{ $w['label'] ?? '—' }}</span>
+                        @endforeach
+                     </div>
+                  </div>
                </div>
             </div>
-            <!-- Priority Panels -->
+            <!-- Priority Panels: ringkasan evaluasi (aturan + agregasi data) -->
+            @php
+               $es = $evaluationSummary ?? ['generated_at' => '', 'total_kejadian' => 0, 'rows' => [], 'narrative' => '', 'repeat_period_caption' => 'Seluruh data', 'chart_period_month' => false];
+               $esRows = $es['rows'] ?? [];
+            @endphp
             <div class="lg:col-span-4 flex flex-col gap-6">
-               <div class="bg-[#fff5f5] p-6 rounded-2xl anchored-card relative overflow-hidden group border-error/20">
-                  <div class="absolute top-0 left-0 w-2 h-full bg-error"></div>
-                  <div class="flex items-center justify-between mb-4">
-                     <div class="flex items-center gap-2 text-error">
-                        <span class="material-symbols-outlined text-lg" data-icon="report">report</span>
-                        <span class="text-[10px] font-bold uppercase tracking-[0.2em]">Urgent Action</span>
+               <div class="rounded-2xl border border-outline-variant/20 bg-white p-6 shadow-sm anchored-card">
+                  <div class="mb-4 flex items-start justify-between gap-3">
+                     <div class="flex min-w-0 items-center gap-2">
+                        <span class="material-symbols-outlined shrink-0 text-2xl text-primary" data-icon="smart_toy">smart_toy</span>
+                        <div class="min-w-0">
+                           <h4 class="font-headline text-base font-bold text-on-surface">Ringkasan evaluasi data</h4>
+                           <!-- <p id="peer-eval-scope-subtitle" class="text-[10px] font-bold uppercase tracking-wider text-primary/90">{{ ($chartPeriodMonth ?? false) ? ('Sesuai periode chart: '.($es['repeat_period_caption'] ?? '')) : 'Sesuai periode chart: seluruh data' }}</p> -->
+                           <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Repeat Violator mengikuti filter yang sama dengan chart</p>
+                        </div>
                      </div>
-                     <span class="text-[10px] font-bold text-on-surface-variant">Aug 24, 2024</span>
+                     <span class="shrink-0 rounded-full bg-[#f1f5f9] px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant" title="Bukan model AI eksternal">Aturan data</span>
                   </div>
-                  <h4 class="font-headline font-bold text-lg mb-2 group-hover:text-primary transition-colors">Fatigue Intervention Needed</h4>
-                  <p class="text-sm text-on-surface-variant leading-relaxed mb-6">Deviation spike detected in Night Shift Operation. 23% increase in fatigue-related alerts at Sector 7.</p>
-                  <button class="text-xs font-bold text-primary flex items-center gap-1 group-hover:gap-2 transition-all">
-                  Action Intervention Plan <span class="material-symbols-outlined text-sm" data-icon="arrow_forward">arrow_forward</span>
-                  </button>
-               </div>
-               <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
-                  <div>
-                     <div class="flex items-center gap-2 mb-4 text-[#d97706]">
-                        <span class="material-symbols-outlined text-lg" data-icon="priority_high">priority_high</span>
-                        <span class="text-[10px] font-bold uppercase tracking-[0.2em]">High Priority</span>
+                  <p id="peer-eval-narrative" class="mb-4 text-xs leading-relaxed text-on-surface-variant">{{ $es['narrative'] ?? '' }}</p>
+                  <div class="overflow-x-auto rounded-xl border border-outline-variant/20">
+                     <table class="w-full min-w-[520px] text-left text-[11px]">
+                        <thead>
+                           <tr class="border-b border-outline-variant/20 bg-[#f8fafc] text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                              <th class="w-[22%] px-2 py-2 sm:px-3">Metric</th>
+                              <th class="px-2 py-2 sm:px-3">Deskripsi</th>
+                              <th class="w-[32%] px-2 py-2 text-right sm:px-3">Action threshold</th>
+                           </tr>
+                        </thead>
+                        <tbody id="peer-eval-tbody" class="divide-y divide-outline-variant/15 text-on-surface">
+                           @forelse ($esRows as $row)
+                           <tr class="bg-white hover:bg-[#fafbfc]">
+                              <td class="px-2 py-2.5 align-top font-bold sm:px-3">{{ $row['metric'] ?? '—' }}</td>
+                              <td class="max-w-[14rem] px-2 py-2.5 align-top text-on-surface-variant sm:max-w-none sm:px-3">{{ $row['description'] ?? '—' }}</td>
+                              <td class="px-2 py-2.5 text-right sm:px-3">
+                                 <span class="inline-flex items-center justify-end gap-1.5">
+                                    <span class="h-2 w-2 shrink-0 rounded-full @if(($row['status'] ?? '') === 'critical') bg-red-500 @elseif(($row['status'] ?? '') === 'warning') bg-amber-500 @elseif(($row['status'] ?? '') === 'ok') bg-emerald-500 @else bg-slate-400 @endif" aria-hidden="true"></span>
+                                    <span class="text-[10px] font-semibold leading-snug">{{ $row['action_threshold'] ?? '—' }}</span>
+                                 </span>
+                              </td>
+                           </tr>
+                           @empty
+                           <tr>
+                              <td colspan="3" class="px-3 py-6 text-center text-on-surface-variant">Belum ada data untuk evaluasi.</td>
+                           </tr>
+                           @endforelse
+                        </tbody>
+                     </table>
+                  </div>
+                  @php $rvRow = collect($esRows)->firstWhere('key', 'repeat_violator'); @endphp
+                  <div id="peer-eval-repeat-block" class="mt-4 @if(!$rvRow || empty($rvRow['violators_detail'])) hidden @endif">
+                     <p id="peer-eval-repeat-title" class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Pelanggar repetitif ({{ $es['repeat_period_caption'] ?? 'Seluruh data' }})</p>
+                     <div class="max-h-48 overflow-y-auto overflow-x-auto rounded-xl border border-outline-variant/20">
+                        <table class="w-full min-w-[480px] text-left text-[10px]">
+                           <thead class="sticky top-0 z-[1] border-b border-outline-variant/20 bg-[#f1f5f9] text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                              <tr>
+                                 <th class="px-2 py-1.5">Nama</th>
+                                 <th class="px-2 py-1.5">SID</th>
+                                 <th class="px-2 py-1.5">Dept</th>
+                                 <th class="px-2 py-1.5 text-right">×</th>
+                              </tr>
+                           </thead>
+                           <tbody id="peer-eval-repeat-tbody" class="divide-y divide-outline-variant/10 text-on-surface">
+                              @foreach (($rvRow['violators_detail'] ?? []) as $v)
+                              <tr class="peer-rv-toggle cursor-pointer transition-colors hover:bg-[#f8fafc]" role="button" tabindex="0" aria-expanded="false">
+                                 <td class="max-w-[7rem] truncate px-2 py-1.5 font-medium" title="{{ $v['nama'] ?? '' }}">{{ $v['nama'] ?? '—' }}</td>
+                                 <td class="px-2 py-1.5 font-mono text-[9px] text-on-surface-variant">{{ $v['sid'] ?? '—' }}</td>
+                                 <td class="max-w-[6rem] truncate px-2 py-1.5 text-on-surface-variant" title="{{ $v['departemen'] ?? '' }}">{{ $v['departemen'] ?? '—' }}</td>
+                                 <td class="whitespace-nowrap px-2 py-1.5 text-right">
+                                    <span class="inline-flex max-w-full flex-nowrap items-center justify-end gap-0.5">
+                                       <span class="shrink-0 font-bold tabular-nums">{{ (int) ($v['kasus'] ?? 0) }}×</span>
+                                       <span class="material-symbols-outlined peer-rv-chevron shrink-0 text-base leading-none text-on-surface-variant" aria-hidden="true">expand_more</span>
+                                    </span>
+                                 </td>
+                              </tr>
+                              <tr class="peer-rv-expand hidden bg-[#f8fafc]/90">
+                                 <td colspan="4" class="border-t border-outline-variant/10 px-3 py-2">
+                                    <p class="mb-1.5 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">Tanggal &amp; kategori deviasi</p>
+                                    <div class="overflow-x-auto rounded-lg border border-outline-variant/15 bg-white">
+                                       <table class="w-full min-w-[280px] border-collapse text-left text-[9px] text-on-surface">
+                                          <thead>
+                                             <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[8px] font-bold uppercase tracking-wide text-on-surface-variant">
+                                                <th class="whitespace-nowrap px-2 py-1.5">Tanggal</th>
+                                                <th class="px-2 py-1.5">Kategori deviasi</th>
+                                             </tr>
+                                          </thead>
+                                          <tbody class="divide-y divide-outline-variant/10">
+                                             @foreach (($v['kejadian_list'] ?? []) as $kj)
+                                             <tr>
+                                                <td class="whitespace-nowrap px-2 py-1 font-medium tabular-nums">{{ $kj['tanggal_label'] ?? '—' }}</td>
+                                                <td class="px-2 py-1 text-on-surface-variant">{{ $kj['kategori_deviasi'] ?? '—' }}</td>
+                                             </tr>
+                                             @endforeach
+                                          </tbody>
+                                       </table>
+                                    </div>
+                                 </td>
+                              </tr>
+                              @endforeach
+                           </tbody>
+                        </table>
                      </div>
-                     <h4 class="font-headline font-bold text-lg mb-2">BeRecord Compliance</h4>
-                     <p class="text-sm text-on-surface-variant leading-relaxed">Evidence links missing for Loading Area cases from Aug 12-14. 12 records affected.</p>
                   </div>
-                  <button class="mt-6 text-xs font-bold text-on-surface-variant hover:text-primary transition-colors flex items-center gap-1">
-                  Review Records <span class="material-symbols-outlined text-sm">open_in_new</span>
-                  </button>
+                  <!-- @php $recRow = collect($esRows)->firstWhere('key', 'recency'); $recD = $recRow['recency_detail'] ?? null; @endphp
+                  <div id="peer-eval-recency-wrap" class="mt-4 @if(!$recD) hidden @endif">
+                     <div id="peer-eval-recency-inner">
+                        @if($recD)
+                        <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Recency Score — data</p>
+                        <div class="overflow-x-auto rounded-xl border border-outline-variant/20 bg-white">
+                           <table class="w-full min-w-[260px] text-left text-[10px] text-on-surface">
+                              <tbody class="divide-y divide-outline-variant/10">
+                                 <tr>
+                                    <th class="w-[42%] whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan terbaru</th>
+                                    <td class="px-2 py-2 font-medium">{{ $recD['latest']['tanggal_label'] ?? '—' }} <span class="font-mono text-[9px] text-on-surface-variant">#{{ (int) ($recD['latest']['kejadian_id'] ?? 0) }}</span></td>
+                                 </tr>
+                                 <tr>
+                                    <th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan sebelumnya</th>
+                                    <td class="px-2 py-2 font-medium">{{ $recD['previous']['tanggal_label'] ?? '—' }} <span class="font-mono text-[9px] text-on-surface-variant">#{{ (int) ($recD['previous']['kejadian_id'] ?? 0) }}</span></td>
+                                 </tr>
+                                 <tr>
+                                    <th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Selisih kalender</th>
+                                    <td class="px-2 py-2 font-semibold tabular-nums">{{ (int) ($recD['gap_days'] ?? 0) }} hari</td>
+                                 </tr>
+                              </tbody>
+                           </table>
+                        </div>
+                        <p class="mt-2 text-[9px] text-on-surface-variant">Dua tanggal temuan terbaru, seluruh data (urut tanggal temuan &amp; ID DESC).</p>
+                        @endif
+                     </div>
+                  </div> -->
+                  <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                     <p id="peer-eval-footer-meta" class="text-[10px] text-on-surface-variant">Diperbarui {{ $es['generated_at'] ?? '—' }} · {{ (int) ($es['total_kejadian'] ?? 0) }} kejadian</p>
+                     <button type="button" id="peer-open-evaluation-modal" class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-opacity hover:opacity-95">
+                        Lihat detail evaluasi
+                        <span class="material-symbols-outlined text-base" data-icon="arrow_forward">arrow_forward</span>
+                     </button>
+                  </div>
                </div>
             </div>
          </div>
@@ -433,22 +594,38 @@
          </div>
          <!-- Data Table Section -->
          <div class="bg-white rounded-2xl anchored-card overflow-hidden">
-            <div class="p-6 border-b border-outline-variant/20 flex flex-col md:flex-row justify-between items-center gap-4">
+            <div class="p-6 border-b border-outline-variant/20 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                <div>
                   <h3 class="font-headline font-bold text-xl">Data Peer Pressure</h3>
                   <p class="text-xs text-on-surface-variant font-medium">Detailed log of safety incidents and peer interactions</p>
                </div>
-               <div class="flex gap-3">
-                  <div class="flex bg-[#f1f5f9] p-1 rounded-xl border border-outline-variant/20">
-                     <button class="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-white shadow-sm rounded-lg border border-outline-variant/10">Real-time</button>
-                     <button class="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors">Archived</button>
+               <div class="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
+                  <form id="peer-dashboard-search-form" method="get" action="{{ route('peer-pressure-edukasi.dashboard') }}" class="flex w-full min-w-0 flex-1 flex-col gap-2 sm:max-w-md sm:flex-row sm:items-center">
+                     <input type="hidden" id="peer-dashboard-year" name="year" value="{{ (int) $cy }}" @if(empty($chartPeriodMonth)) disabled @endif>
+                     <input type="hidden" id="peer-dashboard-month" name="month" value="{{ (int) $cm }}" @if(empty($chartPeriodMonth)) disabled @endif>
+                     <div class="relative min-w-0 flex-1">
+                        <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 z-0 -translate-y-1/2 text-lg text-on-surface-variant">search</span>
+                        <input type="search" name="q" value="{{ $q ?? '' }}" placeholder="Cari lokasi, kategori, dept, SID, nama, leader, status…" autocomplete="off" class="w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] py-2 pl-10 pr-3 text-sm text-on-surface outline-none transition-shadow placeholder:text-on-surface-variant/60 focus:border-primary/40 focus:ring-2 focus:ring-primary/15" aria-label="Cari data kejadian">
+                     </div>
+                     <div class="flex shrink-0 gap-2">
+                        <button type="submit" class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-outline-variant/30 bg-white px-4 py-2 text-xs font-bold shadow-sm transition-colors hover:bg-surface-container-high">Cari</button>
+                        @if(filled($q ?? null))
+                        <a href="{{ route('peer-pressure-edukasi.dashboard', $peerResetParams) }}" class="inline-flex items-center justify-center rounded-xl px-3 py-2 text-xs font-bold text-on-surface-variant hover:bg-[#f1f5f9]">Reset</a>
+                        @endif
+                     </div>
+                  </form>
+                  <div class="flex flex-wrap items-center gap-3">
+                     <div class="flex bg-[#f1f5f9] p-1 rounded-xl border border-outline-variant/20">
+                        <button type="button" class="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider bg-white shadow-sm rounded-lg border border-outline-variant/10">Real-time</button>
+                        <button type="button" class="px-4 py-1.5 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant hover:text-primary transition-colors">Archived</button>
+                     </div>
+                     <button type="button" class="px-4 py-2 bg-white text-xs font-bold rounded-xl hover:bg-surface-container-high transition-colors flex items-center gap-2 border border-outline-variant/30 shadow-sm">
+                     <span class="material-symbols-outlined text-sm">filter_list</span> Filters
+                     </button>
+                     <button type="button" class="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow-md transition-transform active:scale-95 flex items-center gap-2">
+                     <span class="material-symbols-outlined text-sm">download</span> CSV
+                     </button>
                   </div>
-                  <button class="px-4 py-2 bg-white text-xs font-bold rounded-xl hover:bg-surface-container-high transition-colors flex items-center gap-2 border border-outline-variant/30 shadow-sm">
-                  <span class="material-symbols-outlined text-sm">filter_list</span> Filters
-                  </button>
-                  <button class="px-4 py-2 bg-primary text-white text-xs font-bold rounded-xl shadow-md transition-transform active:scale-95 flex items-center gap-2">
-                  <span class="material-symbols-outlined text-sm">download</span> CSV
-                  </button>
                </div>
             </div>
             <div class="overflow-x-auto">
@@ -528,7 +705,7 @@
                      </tr>
                      @empty
                      <tr>
-                        <td colspan="6" class="px-8 py-10 text-center text-sm text-on-surface-variant font-medium">Belum ada data kejadian.</td>
+                        <td colspan="6" class="px-8 py-10 text-center text-sm text-on-surface-variant font-medium">@if(filled($q ?? null))Tidak ada hasil untuk pencarian ini.@else Belum ada data kejadian.@endif</td>
                      </tr>
                      @endforelse
                   </tbody>
@@ -660,6 +837,140 @@
             </div>
          </footer>
       </main>
+      <!-- Modal pilih periode chart mingguan -->
+      <div id="peer-weekly-period-modal" class="hidden fixed inset-0 z-[205] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-weekly-period-title">
+         <div class="absolute inset-0 peer-weekly-period-backdrop cursor-pointer" aria-hidden="true"></div>
+         <div class="relative z-10 w-full max-w-md rounded-2xl border border-outline-variant/20 bg-white p-6 shadow-xl">
+            <h3 id="peer-weekly-period-title" class="font-headline mb-1 text-lg font-bold text-on-surface">Pilih periode chart</h3>
+            <p class="mb-4 text-xs text-on-surface-variant">Semua data: agregasi per bulan (2025–2026). Atau pilih tahun lalu bulan — chart per minggu ISO dalam bulan tersebut.</p>
+            <button type="button" id="peer-modal-all-data" class="peer-modal-all-data mb-4 w-full rounded-xl border py-3 text-sm font-bold transition-colors {{ ($chartPeriodMonth ?? false) ? 'border-outline-variant/20 bg-[#f8fafc] text-on-surface hover:bg-surface-container-high' : 'border-primary bg-primary text-white shadow-sm' }}">
+               Semua data
+            </button>
+            <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Tahun</p>
+            <div class="mb-4 flex gap-2" id="peer-modal-years">
+               @foreach ([2025, 2026] as $y)
+               <button type="button" class="peer-modal-year flex-1 rounded-lg border border-outline-variant/20 py-2.5 text-sm font-bold transition-colors {{ ($chartPeriodMonth ?? false) && $cy === $y ? 'bg-primary text-white shadow-sm' : 'bg-[#f8fafc] text-on-surface-variant hover:bg-surface-container-high' }}" data-year="{{ $y }}">{{ $y }}</button>
+               @endforeach
+            </div>
+            <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Bulan</p>
+            <div class="grid grid-cols-4 gap-1.5 sm:grid-cols-6" id="peer-modal-months">
+               @foreach (range(1, 12) as $m)
+               <button type="button" class="peer-modal-month rounded-lg border border-outline-variant/15 py-2 text-[10px] font-bold uppercase tracking-wide transition-colors {{ ($chartPeriodMonth ?? false) && $cm === $m ? 'bg-primary text-white shadow-sm' : 'bg-white text-on-surface-variant hover:bg-surface-container-high' }}" data-month="{{ $m }}">{{ $monthsShort[$m] }}</button>
+               @endforeach
+            </div>
+            <div class="mt-6 flex justify-end gap-2">
+               <button type="button" id="peer-weekly-period-cancel" class="rounded-xl px-4 py-2 text-xs font-bold text-on-surface-variant hover:bg-[#f1f5f9]">Batal</button>
+               <button type="button" id="peer-weekly-period-apply" class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm hover:opacity-95">Terapkan</button>
+            </div>
+         </div>
+      </div>
+      <!-- Modal ringkasan evaluasi data -->
+      <div id="peer-evaluation-summary-modal" class="hidden fixed inset-0 z-[204] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-evaluation-summary-title">
+         <div class="absolute inset-0 cursor-pointer peer-evaluation-summary-backdrop" aria-hidden="true"></div>
+         <div class="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
+            <div class="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant/20 px-5 py-4 sm:px-6">
+               <div>
+                  <h2 id="peer-evaluation-summary-title" class="font-headline text-lg font-bold text-on-surface">Detail evaluasi</h2>
+                  <p id="peer-eval-modal-subtitle" class="mt-1 text-xs text-on-surface-variant">{{ ($chartPeriodMonth ?? false) ? ('Ringkasan per metrik & pelanggar repetitif · periode chart: '.($es['repeat_period_caption'] ?? '')) : 'Ringkasan per metrik & pelanggar repetitif · seluruh data' }}</p>
+               </div>
+               <button type="button" id="peer-evaluation-summary-close" class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
+                  <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
+               </button>
+            </div>
+            <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+               <div id="peer-evaluation-modal-dynamic">
+               @foreach ($esRows as $row)
+               <div class="mb-4 rounded-xl border border-outline-variant/20 bg-[#f8fafc] px-4 py-3 last:mb-0">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{{ $row['metric'] ?? '—' }}</p>
+                  @if(!empty($row['detail_bullets']))
+                  <ul class="mt-2 list-inside list-disc space-y-1 text-[13px] leading-relaxed text-on-surface">
+                     @foreach ($row['detail_bullets'] as $b)
+                     <li>{{ $b }}</li>
+                     @endforeach
+                  </ul>
+                  @endif
+                  @if(($row['key'] ?? '') === 'repeat_violator' && !empty($row['violators_detail']))
+                  <div class="mt-4 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">
+                     <table class="w-full min-w-[520px] text-left text-[12px] text-on-surface">
+                        <thead>
+                           <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+                              <th class="px-3 py-2">Nama</th>
+                              <th class="px-3 py-2">SID</th>
+                              <th class="px-3 py-2">Departemen</th>
+                              <th class="px-3 py-2 text-right">Repetitif</th>
+                           </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                           @foreach ($row['violators_detail'] as $v)
+                           <tr class="peer-rv-toggle cursor-pointer transition-colors hover:bg-[#fafbfc]" role="button" tabindex="0" aria-expanded="false">
+                              <td class="px-3 py-2 font-medium">{{ $v['nama'] ?? '—' }}</td>
+                              <td class="px-3 py-2 font-mono text-[11px] text-on-surface-variant">{{ $v['sid'] ?? '—' }}</td>
+                              <td class="px-3 py-2 text-on-surface-variant">{{ $v['departemen'] ?? '—' }}</td>
+                              <td class="whitespace-nowrap px-3 py-2 text-right">
+                                 <span class="inline-flex max-w-full flex-nowrap items-center justify-end gap-1">
+                                    <span class="shrink-0 font-bold tabular-nums">{{ (int) ($v['kasus'] ?? 0) }}×</span>
+                                    <span class="material-symbols-outlined peer-rv-chevron shrink-0 text-lg leading-none text-on-surface-variant" aria-hidden="true">expand_more</span>
+                                 </span>
+                              </td>
+                           </tr>
+                           <tr class="peer-rv-expand hidden bg-[#f8fafc]/90">
+                              <td colspan="4" class="border-t border-outline-variant/10 px-4 py-3">
+                                 <p class="mb-2 text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Tanggal &amp; kategori deviasi</p>
+                                 <div class="overflow-x-auto rounded-lg border border-outline-variant/15 bg-white">
+                                    <table class="w-full min-w-[320px] border-collapse text-left text-[12px] text-on-surface">
+                                       <thead>
+                                          <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                                             <th class="whitespace-nowrap px-3 py-2">Tanggal</th>
+                                             <th class="px-3 py-2">Kategori deviasi</th>
+                                          </tr>
+                                       </thead>
+                                       <tbody class="divide-y divide-outline-variant/10">
+                                          @foreach (($v['kejadian_list'] ?? []) as $kj)
+                                          <tr>
+                                             <td class="whitespace-nowrap px-3 py-2 font-medium tabular-nums">{{ $kj['tanggal_label'] ?? '—' }}</td>
+                                             <td class="px-3 py-2 text-on-surface-variant">{{ $kj['kategori_deviasi'] ?? '—' }}</td>
+                                          </tr>
+                                          @endforeach
+                                       </tbody>
+                                    </table>
+                                 </div>
+                              </td>
+                           </tr>
+                           @endforeach
+                        </tbody>
+                     </table>
+                  </div>
+                  <p class="mt-2 text-[10px] text-on-surface-variant">Nama dari peserta pada kejadian terbaru per SID. Kolom Dept: gabungan unik. Detail: tanggal temuan &amp; kategori deviasi per kejadian.</p>
+                  @endif
+                  @if(($row['key'] ?? '') === 'recency' && !empty($row['recency_detail']))
+                  @php $rd = $row['recency_detail']; @endphp
+                  <div class="mt-4 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">
+                     <table class="w-full min-w-[300px] text-left text-[12px] text-on-surface">
+                        <tbody class="divide-y divide-outline-variant/10">
+                           <tr>
+                              <th class="w-[40%] whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Temuan terbaru</th>
+                              <td class="px-3 py-2.5 font-medium">{{ $rd['latest']['tanggal_label'] ?? '—' }} <span class="font-mono text-[11px] text-on-surface-variant">#{{ (int) ($rd['latest']['kejadian_id'] ?? 0) }}</span></td>
+                           </tr>
+                           <tr>
+                              <th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Temuan sebelumnya</th>
+                              <td class="px-3 py-2.5 font-medium">{{ $rd['previous']['tanggal_label'] ?? '—' }} <span class="font-mono text-[11px] text-on-surface-variant">#{{ (int) ($rd['previous']['kejadian_id'] ?? 0) }}</span></td>
+                           </tr>
+                           <tr>
+                              <th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Selisih kalender</th>
+                              <td class="px-3 py-2.5 font-semibold tabular-nums">{{ (int) ($rd['gap_days'] ?? 0) }} hari</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
+                  <p class="mt-2 text-[10px] text-on-surface-variant">Global: seluruh kejadian di database; urut tanggal temuan &amp; ID terbaru.</p>
+                  @endif
+               </div>
+               @endforeach
+               </div>
+               <p class="mt-2 text-[10px] text-on-surface-variant">Sumber: tabel peer_pressure_kejadian_edukasi &amp; peer_pressure_peserta_edukasi. Metrik dihitung saat halaman dimuat.</p>
+            </div>
+         </div>
+      </div>
       <!-- Detail modal (data dari API peer-pressure-edukasi.kejadian.detail) -->
       <div id="peer-pressure-detail-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-pressure-detail-title">
          <div class="absolute inset-0 peer-pressure-modal-backdrop" aria-hidden="true"></div>
@@ -960,6 +1271,673 @@
         modal.querySelector('.peer-pressure-modal-backdrop').addEventListener('click', closeModal);
         document.addEventListener('keydown', function (e) {
           if (e.key === 'Escape' && modal && !modal.classList.contains('hidden')) closeModal();
+        });
+      })();
+      </script>
+      <script>
+      (function () {
+        const weeklyTrendUrl = @json(route('peer-pressure-edukasi.dashboard.weekly-trend'));
+        const modal = document.getElementById('peer-weekly-period-modal');
+        const backdrop = modal ? modal.querySelector('.peer-weekly-period-backdrop') : null;
+        const openBtn = document.getElementById('peer-open-weekly-period');
+        const cancelBtn = document.getElementById('peer-weekly-period-cancel');
+        const applyBtn = document.getElementById('peer-weekly-period-apply');
+        const allDataBtn = document.getElementById('peer-modal-all-data');
+        const loadingEl = document.getElementById('peer-weekly-chart-loading');
+        var state = {
+          all: {{ ($chartPeriodMonth ?? false) ? 'false' : 'true' }},
+          year: {{ (int) $cy }},
+          month: {{ (int) $cm }}
+        };
+        var tempYear = state.year;
+        var tempMonth = state.month;
+        var tempAll = state.all;
+
+        function selYearClass(on) {
+          return on
+            ? 'peer-modal-year flex-1 rounded-lg border border-primary py-2.5 text-sm font-bold transition-colors bg-primary text-white shadow-sm'
+            : 'peer-modal-year flex-1 rounded-lg border border-outline-variant/20 py-2.5 text-sm font-bold transition-colors bg-[#f8fafc] text-on-surface-variant hover:bg-surface-container-high';
+        }
+        function selMonthClass(on) {
+          return on
+            ? 'peer-modal-month rounded-lg border border-primary py-2 text-[10px] font-bold uppercase tracking-wide transition-colors bg-primary text-white shadow-sm'
+            : 'peer-modal-month rounded-lg border border-outline-variant/15 py-2 text-[10px] font-bold uppercase tracking-wide transition-colors bg-white text-on-surface-variant hover:bg-surface-container-high';
+        }
+        function selAllDataClass(on) {
+          return on
+            ? 'peer-modal-all-data mb-4 w-full rounded-xl border border-primary bg-primary py-3 text-sm font-bold text-white shadow-sm transition-colors'
+            : 'peer-modal-all-data mb-4 w-full rounded-xl border border-outline-variant/20 bg-[#f8fafc] py-3 text-sm font-bold text-on-surface-variant transition-colors hover:bg-surface-container-high';
+        }
+        function syncModalHighlight() {
+          if (allDataBtn) allDataBtn.className = selAllDataClass(tempAll);
+          document.querySelectorAll('.peer-modal-year').forEach(function (b) {
+            var on = !tempAll && +b.getAttribute('data-year') === tempYear;
+            b.className = selYearClass(on);
+          });
+          document.querySelectorAll('.peer-modal-month').forEach(function (b) {
+            var on = !tempAll && +b.getAttribute('data-month') === tempMonth;
+            b.className = selMonthClass(on);
+          });
+        }
+        function openWeeklyModal() {
+          tempAll = state.all;
+          tempYear = state.year;
+          tempMonth = state.month;
+          syncModalHighlight();
+          if (modal) {
+            modal.classList.remove('hidden');
+            modal.setAttribute('aria-hidden', 'false');
+          }
+        }
+        function closeWeeklyModal() {
+          if (modal) {
+            modal.classList.add('hidden');
+            modal.setAttribute('aria-hidden', 'true');
+          }
+        }
+        function renderKpi(kpi, periodScope) {
+          if (!kpi) return;
+          var hintEl = document.getElementById('peer-kpi-completion-hint');
+          if (hintEl && periodScope) {
+            hintEl.textContent =
+              periodScope === 'month'
+                ? 'Selesai (CLOSED/SELESAI) ÷ total kejadian pada bulan yang dipilih'
+                : 'Selesai (CLOSED/SELESAI) ÷ total kejadian (seluruh data)';
+          }
+          var totalEl = document.getElementById('peer-kpi-total');
+          var trendEl = document.getElementById('peer-kpi-total-trend');
+          var compEl = document.getElementById('peer-kpi-completion');
+          var deltaEl = document.getElementById('peer-kpi-completion-delta');
+          var barEl = document.getElementById('peer-kpi-completion-bar');
+          var peerEl = document.getElementById('peer-kpi-avg-peer');
+          var durEl = document.getElementById('peer-kpi-avg-duration');
+          if (totalEl) totalEl.textContent = Number(kpi.total_cases != null ? kpi.total_cases : 0).toLocaleString('id-ID');
+          if (trendEl) {
+            var pct = kpi.total_cases_trend_pct;
+            var label = kpi.total_cases_trend_label != null ? String(kpi.total_cases_trend_label) : '—';
+            if (pct !== null && pct !== undefined && !isNaN(Number(pct))) {
+              var n = Number(pct);
+              var down = n <= 0;
+              var icon = down ? 'trending_down' : 'trending_up';
+              var color = down ? 'text-[#059669]' : 'text-error';
+              trendEl.innerHTML =
+                '<p class="text-[11px] font-bold flex items-center gap-1 ' +
+                color +
+                '"><span class="material-symbols-outlined text-xs" data-icon="' +
+                icon +
+                '">' +
+                icon +
+                '</span>' +
+                label.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+                '</p>';
+            } else {
+              trendEl.innerHTML =
+                '<p class="text-on-surface-variant text-[11px] font-medium">' +
+                label.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
+                '</p>';
+            }
+          }
+          if (compEl) {
+            var cr = Number(kpi.completion_rate != null ? kpi.completion_rate : 0);
+            compEl.textContent = (isNaN(cr) ? 0 : cr).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+          }
+          if (deltaEl) {
+            var d = kpi.completion_rate_delta_pp;
+            if (d !== null && d !== undefined && !isNaN(Number(d))) {
+              var dn = Number(d);
+              deltaEl.className =
+                'text-[11px] font-bold shrink-0 ' + (dn >= 0 ? 'text-[#16a34a]' : 'text-error');
+              deltaEl.textContent = (dn >= 0 ? '+' : '') + dn.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' p.p.';
+            } else {
+              deltaEl.className = 'text-[11px] font-bold text-on-surface-variant shrink-0';
+              deltaEl.textContent = '—';
+            }
+          }
+          if (barEl) {
+            var w = Number(kpi.completion_rate != null ? kpi.completion_rate : 0);
+            if (isNaN(w)) w = 0;
+            w = Math.min(100, Math.max(0, w));
+            barEl.style.width = w + '%';
+          }
+          if (peerEl) {
+            var ap = Number(kpi.avg_peer_count != null ? kpi.avg_peer_count : 0);
+            peerEl.textContent = (isNaN(ap) ? 0 : ap).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+          }
+          if (durEl) {
+            var ad = Number(kpi.avg_duration_minutes != null ? kpi.avg_duration_minutes : 0);
+            var v = (isNaN(ad) ? 0 : ad).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            durEl.innerHTML = v + '<span class="text-2xl font-bold">m</span>';
+          }
+        }
+        function escHtml(s) {
+          if (s == null) return '';
+          return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        }
+        function escAttr(s) {
+          if (s == null) return '';
+          return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/"/g, '&quot;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        }
+        function evalStatusDotClass(st) {
+          if (st === 'critical') return 'bg-red-500';
+          if (st === 'warning') return 'bg-amber-500';
+          if (st === 'ok') return 'bg-emerald-500';
+          return 'bg-slate-400';
+        }
+        function buildPeerRvKejadianDetailHtml(klist, sizeClass) {
+          var isModal = sizeClass === 'modal';
+          var th = isModal ? 'text-[10px] px-3 py-2' : 'text-[8px] px-2 py-1.5';
+          var tdD = isModal ? 'text-[12px] px-3 py-2' : 'text-[9px] px-2 py-1';
+          var minW = isModal ? 'min-w-[320px]' : 'min-w-[280px]';
+          var rows = (klist || [])
+            .map(function (kj) {
+              var kat = kj.kategori_deviasi != null ? String(kj.kategori_deviasi) : '—';
+              return (
+                '<tr>' +
+                '<td class="' +
+                tdD +
+                ' whitespace-nowrap font-medium tabular-nums text-on-surface">' +
+                escHtml(kj.tanggal_label) +
+                '</td>' +
+                '<td class="' +
+                tdD +
+                ' text-on-surface-variant">' +
+                escHtml(kat) +
+                '</td></tr>'
+              );
+            })
+            .join('');
+          return (
+            '<div class="overflow-x-auto rounded-lg border border-outline-variant/15 bg-white">' +
+            '<table class="w-full ' +
+            minW +
+            ' border-collapse text-left text-on-surface">' +
+            '<thead><tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-left font-bold uppercase tracking-wide text-on-surface-variant ' +
+            th +
+            '">' +
+            '<th class="whitespace-nowrap">Tanggal</th><th>Kategori deviasi</th></tr></thead>' +
+            '<tbody class="divide-y divide-outline-variant/10">' +
+            rows +
+            '</tbody></table></div>'
+          );
+        }
+        function buildPeerRvCardRowsHtml(violators) {
+          return violators
+            .map(function (v) {
+              var kasus = parseInt(String(v.kasus != null ? v.kasus : 0), 10) || 0;
+              var detailTbl = buildPeerRvKejadianDetailHtml(v.kejadian_list, 'card');
+              return (
+                '<tr class="peer-rv-toggle cursor-pointer transition-colors hover:bg-[#f8fafc]" role="button" tabindex="0" aria-expanded="false">' +
+                '<td class="max-w-[7rem] truncate px-2 py-1.5 font-medium" title="' +
+                escAttr(v.nama || '') +
+                '">' +
+                escHtml(v.nama || '—') +
+                '</td>' +
+                '<td class="px-2 py-1.5 font-mono text-[9px] text-on-surface-variant">' +
+                escHtml(v.sid || '—') +
+                '</td>' +
+                '<td class="max-w-[6rem] truncate px-2 py-1.5 text-on-surface-variant" title="' +
+                escAttr(v.departemen || '') +
+                '">' +
+                escHtml(v.departemen || '—') +
+                '</td>' +
+                '<td class="whitespace-nowrap px-2 py-1.5 text-right">' +
+                '<span class="inline-flex max-w-full flex-nowrap items-center justify-end gap-0.5">' +
+                '<span class="shrink-0 font-bold tabular-nums">' +
+                kasus +
+                '×</span>' +
+                '<span class="material-symbols-outlined peer-rv-chevron shrink-0 text-base leading-none text-on-surface-variant" aria-hidden="true">expand_more</span>' +
+                '</span></td></tr>' +
+                '<tr class="peer-rv-expand hidden bg-[#f8fafc]/90">' +
+                '<td colspan="4" class="border-t border-outline-variant/10 px-3 py-2">' +
+                '<p class="mb-1.5 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">Tanggal &amp; kategori deviasi</p>' +
+                detailTbl +
+                '</td></tr>'
+              );
+            })
+            .join('');
+        }
+        function buildPeerRvModalRowsHtml(violators) {
+          return violators
+            .map(function (v) {
+              var kasus = parseInt(String(v.kasus != null ? v.kasus : 0), 10) || 0;
+              var detailTbl = buildPeerRvKejadianDetailHtml(v.kejadian_list, 'modal');
+              return (
+                '<tr class="peer-rv-toggle cursor-pointer transition-colors hover:bg-[#fafbfc]" role="button" tabindex="0" aria-expanded="false">' +
+                '<td class="px-3 py-2 font-medium">' +
+                escHtml(v.nama || '—') +
+                '</td>' +
+                '<td class="px-3 py-2 font-mono text-[11px] text-on-surface-variant">' +
+                escHtml(v.sid || '—') +
+                '</td>' +
+                '<td class="px-3 py-2 text-on-surface-variant">' +
+                escHtml(v.departemen || '—') +
+                '</td>' +
+                '<td class="whitespace-nowrap px-3 py-2 text-right">' +
+                '<span class="inline-flex max-w-full flex-nowrap items-center justify-end gap-1">' +
+                '<span class="shrink-0 font-bold tabular-nums">' +
+                kasus +
+                '×</span>' +
+                '<span class="material-symbols-outlined peer-rv-chevron shrink-0 text-lg leading-none text-on-surface-variant" aria-hidden="true">expand_more</span>' +
+                '</span></td></tr>' +
+                '<tr class="peer-rv-expand hidden bg-[#f8fafc]/90">' +
+                '<td colspan="4" class="border-t border-outline-variant/10 px-4 py-3">' +
+                '<p class="mb-2 text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Tanggal &amp; kategori deviasi</p>' +
+                detailTbl +
+                '</td></tr>'
+              );
+            })
+            .join('');
+        }
+        function buildRecencyCardSectionHtml(rd) {
+          if (!rd || !rd.latest || !rd.previous) return '';
+          var gap = parseInt(String(rd.gap_days != null ? rd.gap_days : 0), 10) || 0;
+          var lid = parseInt(String(rd.latest.kejadian_id != null ? rd.latest.kejadian_id : 0), 10) || 0;
+          var pid = parseInt(String(rd.previous.kejadian_id != null ? rd.previous.kejadian_id : 0), 10) || 0;
+          return (
+            '<p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Recency Score — data</p>' +
+            '<div class="overflow-x-auto rounded-xl border border-outline-variant/20 bg-white">' +
+            '<table class="w-full min-w-[260px] text-left text-[10px] text-on-surface">' +
+            '<tbody class="divide-y divide-outline-variant/10">' +
+            '<tr><th class="w-[42%] whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan terbaru</th><td class="px-2 py-2 font-medium">' +
+            escHtml(rd.latest.tanggal_label) +
+            ' <span class="font-mono text-[9px] text-on-surface-variant">#' +
+            lid +
+            '</span></td></tr>' +
+            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan sebelumnya</th><td class="px-2 py-2 font-medium">' +
+            escHtml(rd.previous.tanggal_label) +
+            ' <span class="font-mono text-[9px] text-on-surface-variant">#' +
+            pid +
+            '</span></td></tr>' +
+            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Selisih kalender</th><td class="px-2 py-2 font-semibold tabular-nums">' +
+            gap +
+            ' hari</td></tr>' +
+            '</tbody></table></div>' +
+            '<p class="mt-2 text-[9px] text-on-surface-variant">Dua tanggal temuan terbaru, seluruh data (urut tanggal temuan &amp; ID DESC).</p>'
+          );
+        }
+        function buildRecencyModalExtraHtml(rd) {
+          if (!rd || !rd.latest || !rd.previous) return '';
+          var gap = parseInt(String(rd.gap_days != null ? rd.gap_days : 0), 10) || 0;
+          var lid = parseInt(String(rd.latest.kejadian_id != null ? rd.latest.kejadian_id : 0), 10) || 0;
+          var pid = parseInt(String(rd.previous.kejadian_id != null ? rd.previous.kejadian_id : 0), 10) || 0;
+          return (
+            '<div class="mt-4 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">' +
+            '<table class="w-full min-w-[300px] text-left text-[12px] text-on-surface">' +
+            '<tbody class="divide-y divide-outline-variant/10">' +
+            '<tr><th class="w-[40%] whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Temuan terbaru</th><td class="px-3 py-2.5 font-medium">' +
+            escHtml(rd.latest.tanggal_label) +
+            ' <span class="font-mono text-[11px] text-on-surface-variant">#' +
+            lid +
+            '</span></td></tr>' +
+            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Temuan sebelumnya</th><td class="px-3 py-2.5 font-medium">' +
+            escHtml(rd.previous.tanggal_label) +
+            ' <span class="font-mono text-[11px] text-on-surface-variant">#' +
+            pid +
+            '</span></td></tr>' +
+            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Selisih kalender</th><td class="px-3 py-2.5 font-semibold tabular-nums">' +
+            gap +
+            ' hari</td></tr>' +
+            '</tbody></table></div>' +
+            '<p class="mt-2 text-[10px] text-on-surface-variant">Global: seluruh kejadian di database; urut tanggal temuan &amp; ID terbaru.</p>'
+          );
+        }
+        function renderEvaluationSummary(es) {
+          if (!es || typeof es !== 'object') return;
+          var scopeEl = document.getElementById('peer-eval-scope-subtitle');
+          if (scopeEl) {
+            scopeEl.textContent = es.chart_period_month
+              ? 'Sesuai periode chart: ' + (es.repeat_period_caption || '')
+              : 'Sesuai periode chart: seluruh data';
+          }
+          var modalSub = document.getElementById('peer-eval-modal-subtitle');
+          if (modalSub) {
+            modalSub.textContent = es.chart_period_month
+              ? 'Ringkasan per metrik & pelanggar repetitif · periode chart: ' + (es.repeat_period_caption || '')
+              : 'Ringkasan per metrik & pelanggar repetitif · seluruh data';
+          }
+          var nar = document.getElementById('peer-eval-narrative');
+          if (nar) nar.textContent = es.narrative || '';
+          var rows = es.rows || [];
+          var tbody = document.getElementById('peer-eval-tbody');
+          if (tbody) {
+            if (!rows.length) {
+              tbody.innerHTML =
+                '<tr><td colspan="3" class="px-3 py-6 text-center text-on-surface-variant">Belum ada data untuk evaluasi.</td></tr>';
+            } else {
+              tbody.innerHTML = rows
+                .map(function (row) {
+                  var st = row.status || '';
+                  return (
+                    '<tr class="bg-white hover:bg-[#fafbfc]">' +
+                    '<td class="px-2 py-2.5 align-top font-bold sm:px-3">' +
+                    escHtml(row.metric) +
+                    '</td>' +
+                    '<td class="max-w-[14rem] px-2 py-2.5 align-top text-on-surface-variant sm:max-w-none sm:px-3">' +
+                    escHtml(row.description) +
+                    '</td>' +
+                    '<td class="px-2 py-2.5 text-right sm:px-3">' +
+                    '<span class="inline-flex items-center justify-end gap-1.5">' +
+                    '<span class="h-2 w-2 shrink-0 rounded-full ' +
+                    evalStatusDotClass(st) +
+                    '" aria-hidden="true"></span>' +
+                    '<span class="text-[10px] font-semibold leading-snug">' +
+                    escHtml(row.action_threshold) +
+                    '</span></span></td></tr>'
+                  );
+                })
+                .join('');
+            }
+          }
+          var rvRow = null;
+          for (var ri = 0; ri < rows.length; ri++) {
+            if (rows[ri].key === 'repeat_violator') {
+              rvRow = rows[ri];
+              break;
+            }
+          }
+          var violators = rvRow && rvRow.violators_detail ? rvRow.violators_detail : [];
+          var repeatBlock = document.getElementById('peer-eval-repeat-block');
+          var repeatTitle = document.getElementById('peer-eval-repeat-title');
+          var repeatTbody = document.getElementById('peer-eval-repeat-tbody');
+          if (repeatBlock) {
+            if (violators.length) repeatBlock.classList.remove('hidden');
+            else repeatBlock.classList.add('hidden');
+          }
+          if (repeatTitle) {
+            repeatTitle.textContent =
+              'Pelanggar repetitif (' + (es.repeat_period_caption || 'Seluruh data') + ')';
+          }
+          if (repeatTbody) {
+            repeatTbody.innerHTML = buildPeerRvCardRowsHtml(violators);
+          }
+          var recRowJs = null;
+          for (var rj = 0; rj < rows.length; rj++) {
+            if (rows[rj].key === 'recency') {
+              recRowJs = rows[rj];
+              break;
+            }
+          }
+          var recWrap = document.getElementById('peer-eval-recency-wrap');
+          var recInner = document.getElementById('peer-eval-recency-inner');
+          if (recWrap && recInner) {
+            var rd = recRowJs && recRowJs.recency_detail ? recRowJs.recency_detail : null;
+            if (!rd) {
+              recWrap.classList.add('hidden');
+              recInner.innerHTML = '';
+            } else {
+              recWrap.classList.remove('hidden');
+              recInner.innerHTML = buildRecencyCardSectionHtml(rd);
+            }
+          }
+          var foot = document.getElementById('peer-eval-footer-meta');
+          if (foot) {
+            foot.textContent =
+              'Diperbarui ' +
+              (es.generated_at || '—') +
+              ' · ' +
+              (parseInt(String(es.total_kejadian != null ? es.total_kejadian : 0), 10) || 0) +
+              ' kejadian';
+          }
+          var modalDyn = document.getElementById('peer-evaluation-modal-dynamic');
+          if (modalDyn) {
+            var detailBlocks = rows
+              .map(function (row) {
+                var bullets = row.detail_bullets || [];
+                var ul =
+                  bullets.length > 0
+                    ? '<ul class="mt-2 list-inside list-disc space-y-1 text-[13px] leading-relaxed text-on-surface">' +
+                      bullets
+                        .map(function (b) {
+                          return '<li>' + escHtml(b) + '</li>';
+                        })
+                        .join('') +
+                      '</ul>'
+                    : '';
+                var extra = '';
+                if (row.key === 'repeat_violator' && row.violators_detail && row.violators_detail.length) {
+                  extra +=
+                    '<div class="mt-4 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">' +
+                    '<table class="w-full min-w-[520px] text-left text-[12px] text-on-surface">' +
+                    '<thead><tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">' +
+                    '<th class="px-3 py-2">Nama</th><th class="px-3 py-2">SID</th><th class="px-3 py-2">Departemen</th>' +
+                    '<th class="px-3 py-2 text-right">Repetitif</th></tr></thead><tbody class="divide-y divide-outline-variant/10">';
+                  extra += buildPeerRvModalRowsHtml(row.violators_detail);
+                  extra += '</tbody></table></div>';
+                  extra +=
+                    '<p class="mt-2 text-[10px] text-on-surface-variant">Nama dari peserta pada kejadian terbaru per SID. Kolom Dept: gabungan unik. Detail: tanggal temuan &amp; kategori deviasi per kejadian.</p>';
+                }
+                if (row.key === 'recency' && row.recency_detail) {
+                  extra += buildRecencyModalExtraHtml(row.recency_detail);
+                }
+                return (
+                  '<div class="mb-4 rounded-xl border border-outline-variant/20 bg-[#f8fafc] px-4 py-3 last:mb-0">' +
+                  '<p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">' +
+                  escHtml(row.metric) +
+                  '</p>' +
+                  ul +
+                  extra +
+                  '</div>'
+                );
+              })
+              .join('');
+            modalDyn.innerHTML = detailBlocks;
+          }
+        }
+        function renderWeeklyChart(wt) {
+          var cap = document.getElementById('peer-trend-period-caption');
+          var lbl = document.getElementById('peer-weekly-period-label');
+          var avg = document.getElementById('peer-trend-avg');
+          var avgLeg = document.getElementById('peer-trend-avg-label');
+          if (cap) cap.textContent = wt.period_caption || '';
+          if (lbl) lbl.textContent = wt.period_caption || '—';
+          if (avg) avg.textContent = (Number(wt.avg_count) || 0).toFixed(1);
+          if (avgLeg && wt.avg_legend_label) avgLeg.textContent = wt.avg_legend_label;
+          var lineWrap = document.getElementById('peer-chart-target-line-wrap');
+          var maxC = wt.max_count || 0;
+          if (lineWrap) {
+            if (maxC > 0) {
+              lineWrap.classList.remove('hidden');
+              var pct = Math.min(100, Math.max(0, Number(wt.target_line_bottom_pct) || 0));
+              lineWrap.style.bottom = pct + '%';
+            } else {
+              lineWrap.classList.add('hidden');
+            }
+          }
+          var bars = document.getElementById('peer-chart-bars');
+          if (!bars) return;
+          bars.innerHTML = '';
+          var weeks = wt.weeks || [];
+          if (!weeks.length) {
+            var empty = document.createElement('div');
+            empty.className =
+              'peer-chart-empty flex w-full min-w-full flex-[1_1_100%] basis-full items-center justify-center py-12 text-sm text-on-surface-variant';
+            empty.textContent = 'Belum ada data untuk chart.';
+            bars.appendChild(empty);
+          } else {
+            weeks.forEach(function (w) {
+              var h = Math.min(100, Math.max(0, Number(w.bar_height_pct) || 0));
+              var cnt = parseInt(String(w.count != null ? w.count : 0), 10) || 0;
+              var col = document.createElement('div');
+              col.className =
+                'peer-chart-bar-col flex h-full min-h-0 flex-1 basis-0 min-w-[2rem] flex-col justify-end rounded-t-lg border-x border-t border-outline-variant/10 bg-[#f8fafc] group';
+              col.title = (w.range_short || '') + ': ' + cnt + ' kejadian';
+              var inner = document.createElement('div');
+              inner.className = 'relative w-full rounded-t-md bg-primary shadow-lg transition-all group-hover:bg-primary-dim';
+              inner.style.height = h + '%';
+              var sp = document.createElement('span');
+              sp.className = 'absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-on-surface';
+              sp.textContent = String(cnt);
+              inner.appendChild(sp);
+              col.appendChild(inner);
+              bars.appendChild(col);
+            });
+          }
+          var labels = document.getElementById('peer-chart-axis-labels');
+          if (labels) {
+            labels.innerHTML = '';
+            weeks.forEach(function (w) {
+              var s = document.createElement('span');
+              s.className = 'peer-chart-axis-tick min-w-[2rem] flex-1 basis-0 text-center leading-tight';
+              s.textContent = w.label || '—';
+              labels.appendChild(s);
+            });
+          }
+          if (wt.period_scope === 'all') {
+            state.all = true;
+          } else {
+            state.all = false;
+            state.year = wt.chart_year != null ? +wt.chart_year : state.year;
+            state.month = wt.chart_month != null ? +wt.chart_month : state.month;
+          }
+        }
+        function updateFormHiddenAndUrl() {
+          var yEl = document.getElementById('peer-dashboard-year');
+          var mEl = document.getElementById('peer-dashboard-month');
+          if (state.all) {
+            if (yEl) {
+              yEl.setAttribute('disabled', 'disabled');
+            }
+            if (mEl) {
+              mEl.setAttribute('disabled', 'disabled');
+            }
+          } else {
+            if (yEl) {
+              yEl.removeAttribute('disabled');
+              yEl.value = String(state.year);
+            }
+            if (mEl) {
+              mEl.removeAttribute('disabled');
+              mEl.value = String(state.month);
+            }
+          }
+          try {
+            var u = new URL(window.location.href);
+            if (state.all) {
+              u.searchParams.delete('year');
+              u.searchParams.delete('month');
+            } else {
+              u.searchParams.set('year', String(state.year));
+              u.searchParams.set('month', String(state.month));
+            }
+            var qIn = document.querySelector('#peer-dashboard-search-form input[name="q"]');
+            if (qIn && qIn.value) u.searchParams.set('q', qIn.value);
+            else u.searchParams.delete('q');
+            window.history.replaceState({}, '', u.toString());
+          } catch (e) {}
+        }
+        if (openBtn) openBtn.addEventListener('click', openWeeklyModal);
+        if (backdrop) backdrop.addEventListener('click', closeWeeklyModal);
+        if (cancelBtn) cancelBtn.addEventListener('click', closeWeeklyModal);
+        if (allDataBtn) {
+          allDataBtn.addEventListener('click', function () {
+            tempAll = true;
+            syncModalHighlight();
+          });
+        }
+        document.querySelectorAll('.peer-modal-year').forEach(function (b) {
+          b.addEventListener('click', function () {
+            tempAll = false;
+            tempYear = +b.getAttribute('data-year');
+            syncModalHighlight();
+          });
+        });
+        document.querySelectorAll('.peer-modal-month').forEach(function (b) {
+          b.addEventListener('click', function () {
+            tempAll = false;
+            tempMonth = +b.getAttribute('data-month');
+            syncModalHighlight();
+          });
+        });
+        if (applyBtn) {
+          applyBtn.addEventListener('click', function () {
+            closeWeeklyModal();
+            if (loadingEl) {
+              loadingEl.classList.remove('hidden');
+              loadingEl.setAttribute('aria-busy', 'true');
+            }
+            var u = new URL(weeklyTrendUrl, window.location.origin);
+            if (!tempAll) {
+              u.searchParams.set('year', String(tempYear));
+              u.searchParams.set('month', String(tempMonth));
+            }
+            fetch(u.toString(), {
+              headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+              credentials: 'same-origin'
+            })
+              .then(function (r) {
+                if (!r.ok) throw new Error('Gagal memuat data chart');
+                return r.json();
+              })
+              .then(function (wt) {
+                renderWeeklyChart(wt);
+                if (wt.kpi) renderKpi(wt.kpi, wt.period_scope);
+                if (wt.evaluation_summary) renderEvaluationSummary(wt.evaluation_summary);
+                updateFormHiddenAndUrl();
+              })
+              .catch(function (err) {
+                alert(err.message || 'Terjadi kesalahan');
+              })
+              .finally(function () {
+                if (loadingEl) {
+                  loadingEl.classList.add('hidden');
+                  loadingEl.setAttribute('aria-busy', 'false');
+                }
+              });
+          });
+        }
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape' || !modal || modal.classList.contains('hidden')) return;
+          closeWeeklyModal();
+        });
+        document.addEventListener('click', function (e) {
+          var t = e.target.closest('tr.peer-rv-toggle');
+          if (!t) return;
+          var detail = t.nextElementSibling;
+          if (!detail || !detail.classList.contains('peer-rv-expand')) return;
+          detail.classList.toggle('hidden');
+          var isOpen = !detail.classList.contains('hidden');
+          var ch = t.querySelector('.peer-rv-chevron');
+          if (ch) ch.textContent = isOpen ? 'expand_less' : 'expand_more';
+          t.setAttribute('aria-expanded', isOpen ? 'true' : 'false');
+        });
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          var t = e.target.closest('tr.peer-rv-toggle');
+          if (!t || document.activeElement !== t) return;
+          e.preventDefault();
+          t.click();
+        });
+      })();
+      </script>
+      <script>
+      (function () {
+        var modal = document.getElementById('peer-evaluation-summary-modal');
+        var openBtn = document.getElementById('peer-open-evaluation-modal');
+        var closeBtn = document.getElementById('peer-evaluation-summary-close');
+        var backdrop = modal ? modal.querySelector('.peer-evaluation-summary-backdrop') : null;
+        function openModal() {
+          if (!modal) return;
+          modal.classList.remove('hidden');
+          modal.setAttribute('aria-hidden', 'false');
+        }
+        function closeModal() {
+          if (!modal) return;
+          modal.classList.add('hidden');
+          modal.setAttribute('aria-hidden', 'true');
+        }
+        if (openBtn) openBtn.addEventListener('click', openModal);
+        if (closeBtn) closeBtn.addEventListener('click', closeModal);
+        if (backdrop) backdrop.addEventListener('click', closeModal);
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape' || !modal || modal.classList.contains('hidden')) return;
+          closeModal();
         });
       })();
       </script>

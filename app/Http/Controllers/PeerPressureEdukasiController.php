@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\PeerPressure\GetPeerPressureDashboardEvaluationSummaryAction;
+use App\Actions\PeerPressure\GetPeerPressureDashboardKpiStatsAction;
+use App\Actions\PeerPressure\GetPeerPressureDashboardWeeklyTrendAction;
 use App\Actions\PeerPressure\GetPeerPressureKejadianDetailForDashboardAction;
 use App\Actions\PeerPressure\ListPeerPressureDashboardKejadianAction;
 use App\Models\PeerPressureKejadianEdukasi;
@@ -83,10 +86,31 @@ class PeerPressureEdukasiController extends Controller
      * Dashboard evaluasi Peer Pressure (data kejadian + peserta dari database).
      */
     public function dashboard(
+        Request $request,
         ListPeerPressureDashboardKejadianAction $listDashboardKejadian,
-        PeerPressureKaryawanNitipService $karyawanNitip
+        PeerPressureKaryawanNitipService $karyawanNitip,
+        GetPeerPressureDashboardKpiStatsAction $dashboardKpiStats,
+        GetPeerPressureDashboardWeeklyTrendAction $weeklyTrend,
+        GetPeerPressureDashboardEvaluationSummaryAction $evaluationSummary
     ): View {
-        $kejadian = $listDashboardKejadian();
+        $q = trim((string) $request->get('q', ''));
+        $chartPeriodMonth = $request->filled('year') && $request->filled('month');
+
+        if ($chartPeriodMonth) {
+            $chartYear = (int) $request->get('year');
+            $chartMonth = (int) $request->get('month');
+            $chartYear = max(GetPeerPressureDashboardWeeklyTrendAction::MIN_YEAR, min(GetPeerPressureDashboardWeeklyTrendAction::MAX_YEAR, $chartYear));
+            $chartMonth = max(1, min(12, $chartMonth));
+            $kpiData = $dashboardKpiStats($chartYear, $chartMonth);
+            $weeklyTrendData = $weeklyTrend($chartYear, $chartMonth);
+        } else {
+            $chartYear = null;
+            $chartMonth = null;
+            $kpiData = $dashboardKpiStats();
+            $weeklyTrendData = $weeklyTrend();
+        }
+
+        $kejadian = $listDashboardKejadian($q !== '' ? $q : null);
 
         $peerSids = [];
         foreach ($kejadian as $k) {
@@ -99,7 +123,52 @@ class PeerPressureEdukasiController extends Controller
         return view('peer-pressure-edukasi.dashboard', [
             'kejadian' => $kejadian,
             'peerFotoUrls' => $peerFotoUrls,
+            'q' => $q,
+            'kpi' => $kpiData,
+            'weeklyTrend' => $weeklyTrendData,
+            'chartYear' => $chartYear,
+            'chartMonth' => $chartMonth,
+            'chartPeriodMonth' => $chartPeriodMonth,
+            'evaluationSummary' => $evaluationSummary(
+                $chartPeriodMonth ? $chartYear : null,
+                $chartPeriodMonth ? $chartMonth : null
+            ),
         ]);
+    }
+
+    /**
+     * Data chart trend mingguan (JSON) untuk filter periode via popup di dashboard.
+     */
+    public function weeklyTrendData(
+        Request $request,
+        GetPeerPressureDashboardWeeklyTrendAction $weeklyTrend,
+        GetPeerPressureDashboardKpiStatsAction $dashboardKpiStats,
+        GetPeerPressureDashboardEvaluationSummaryAction $evaluationSummary
+    ): JsonResponse {
+        $chartPeriodMonth = $request->filled('year') && $request->filled('month');
+
+        if ($chartPeriodMonth) {
+            $chartYear = (int) $request->get('year');
+            $chartMonth = (int) $request->get('month');
+            $chartYear = max(GetPeerPressureDashboardWeeklyTrendAction::MIN_YEAR, min(GetPeerPressureDashboardWeeklyTrendAction::MAX_YEAR, $chartYear));
+            $chartMonth = max(1, min(12, $chartMonth));
+
+            return response()->json(array_merge(
+                $weeklyTrend($chartYear, $chartMonth),
+                [
+                    'kpi' => $dashboardKpiStats($chartYear, $chartMonth),
+                    'evaluation_summary' => $evaluationSummary($chartYear, $chartMonth),
+                ]
+            ));
+        }
+
+        return response()->json(array_merge(
+            $weeklyTrend(),
+            [
+                'kpi' => $dashboardKpiStats(),
+                'evaluation_summary' => $evaluationSummary(),
+            ]
+        ));
     }
 
     /**
