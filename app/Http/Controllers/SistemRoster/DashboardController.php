@@ -1065,7 +1065,9 @@ class DashboardController extends Controller
 
     /**
      * Data heatmap: per (date, site) -> planned count & actual count.
-     * Actual = CAR (nama + lokasi + detail_lokasi + tanggal) OR OAK OR Observasi OR Coaching — semuanya match lokasi planning.
+     * Planned = jumlah karyawan unik yang di-assign.
+     * Actual = jumlah karyawan unik assign yang punya SAP (CAR Hazard/Inspeksi)
+     * pada lokasi + detail lokasi planning di tanggal yang sama.
      *
      * @return array<int, array{date: string, site: string, planned: int, actual: int}>
      */
@@ -1082,9 +1084,6 @@ class DashboardController extends Controller
             ->get();
 
         $carByDate = $this->getCarDataByDateRange($start, $end);
-        $oakByDate = $this->getOakDataByDateRange($start, $end);
-        $observasiByDate = $this->getObservasiDataByDateRange($start, $end);
-        $coachingByDate = $this->getCoachingDataByDateRange($start, $end);
 
         $byKey = [];
         foreach ($plannings as $p) {
@@ -1095,66 +1094,43 @@ class DashboardController extends Controller
             $site = trim((string) ($p->site ?? ''));
             $key = $date . '|' . $site;
             if (! isset($byKey[$key])) {
-                $byKey[$key] = ['date' => $date, 'site' => $site, 'planned' => 0, 'actual' => 0];
+                $byKey[$key] = [
+                    'date' => $date,
+                    'site' => $site,
+                    'planned_names' => [],
+                    'actual_names' => [],
+                ];
             }
-            $byKey[$key]['planned']++;
 
             $planLokasiNorm = $this->normalizeLocation($p->lokasi ?? '');
             $planDetailNorm = $this->normalizeLocation($p->detail_lokasi ?? '');
             $locationKey = $planLokasiNorm . '|' . $planDetailNorm;
 
-            $karyawanNamesLower = [];
             foreach ($p->karyawans ?? [] as $k) {
                 $nama = trim((string) ($k->nama_karyawan ?? ''));
                 if ($nama !== '') {
-                    $karyawanNamesLower[mb_strtolower($nama)] = true;
-                }
-            }
+                    $namaLower = mb_strtolower($nama);
+                    $byKey[$key]['planned_names'][$namaLower] = true;
 
-            $isActual = false;
-            // CAR (Inspeksi Hazard): nama_pelapor + nama_lokasi + nama_detail_lokasi + tanggal match
-            if (isset($carByDate[$date][$locationKey])) {
-                foreach (array_keys($karyawanNamesLower) as $namaLower) {
+                    // Actual untuk heatmap hanya SAP (CAR) yang match nama + lokasi + detail + tanggal.
                     if (isset($carByDate[$date][$locationKey][$namaLower])) {
-                        $isActual = true;
-                        break;
+                        $byKey[$key]['actual_names'][$namaLower] = true;
                     }
                 }
-            }
-            // OAK: location + detail_location + submit_by match
-            if (! $isActual && isset($oakByDate[$date][$locationKey])) {
-                foreach (array_keys($karyawanNamesLower) as $namaLower) {
-                    if (isset($oakByDate[$date][$locationKey][$namaLower])) {
-                        $isActual = true;
-                        break;
-                    }
-                }
-            }
-            // Observasi: lokasi + detil_lokasi + nama_pelapor match
-            if (! $isActual && isset($observasiByDate[$date][$locationKey])) {
-                foreach (array_keys($karyawanNamesLower) as $namaLower) {
-                    if (isset($observasiByDate[$date][$locationKey][$namaLower])) {
-                        $isActual = true;
-                        break;
-                    }
-                }
-            }
-            // Coaching: lokasi + detil_lokasi + nama_coach match
-            if (! $isActual && isset($coachingByDate[$date][$locationKey])) {
-                foreach (array_keys($karyawanNamesLower) as $namaLower) {
-                    if (isset($coachingByDate[$date][$locationKey][$namaLower])) {
-                        $isActual = true;
-                        break;
-                    }
-                }
-            }
-
-            if ($isActual) {
-                $byKey[$key]['actual']++;
             }
         }
 
-        return array_values($byKey);
+        $out = [];
+        foreach ($byKey as $item) {
+            $out[] = [
+                'date' => $item['date'],
+                'site' => $item['site'],
+                'planned' => count($item['planned_names'] ?? []),
+                'actual' => count($item['actual_names'] ?? []),
+            ];
+        }
+
+        return $out;
     }
 
     /**

@@ -123,7 +123,7 @@ return [
             'username' => env('CLICKHOUSE_USERNAME'),
             'password' => env('CLICKHOUSE_PASSWORD'),
             'options' => [
-                'timeout' => 30,
+                'timeout' => (int) env('CLICKHOUSE_HTTP_TIMEOUT', 120),
                 'protocol' => env('CLICKHOUSE_PROTOCOL', 'http'),
             ],
         ],

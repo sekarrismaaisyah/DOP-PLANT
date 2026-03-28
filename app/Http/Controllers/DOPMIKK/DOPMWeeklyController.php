@@ -44,6 +44,12 @@ class DOPMWeeklyController extends Controller
      */
     public function dashboard(Request $request): View
     {
+        $maxExec = (int) config('dopm.weekly_dashboard_max_execution_seconds', 0);
+        if ($maxExec > 0) {
+            @set_time_limit($maxExec);
+            @ini_set('max_execution_time', (string) $maxExec);
+        }
+
         $filterDate = $request->get('date', now()->toDateString());
         if (!preg_match('/^\d{4}-\d{2}-\d{2}$/', $filterDate)) {
             $filterDate = now()->toDateString();
@@ -70,7 +76,7 @@ class DOPMWeeklyController extends Controller
 
         // Server-side cache untuk mencegah query berat berulang saat user bolak-balik week/filter yang sama.
         $cacheVersion = 'v1';
-        $cacheTtlSeconds = (int) env('DOPM_WEEKLY_CACHE_TTL', 300); // default 5 menit
+        $cacheTtlSeconds = (int) config('dopm.weekly_dashboard_cache_ttl', 300);
         $cacheUserKey = auth()->check() ? (string) auth()->id() : 'guest';
         $dashboardCacheKey = 'dopm_weekly_dashboard:' . sha1(json_encode([
             'v' => $cacheVersion,
@@ -667,26 +673,27 @@ class DOPMWeeklyController extends Controller
                         $wpRows = $clickHouse->query($sqlWorkPermits);
                     }
 
-                    // Log hasil query: jumlah baris, struktur kolom, dan sample data
-                    $rowCount = is_array($wpRows) ? count($wpRows) : 0;
-                    $firstRow = $wpRows[0] ?? null;
-                    $sampleRows = [];
-                    if (is_array($wpRows) && !empty($wpRows)) {
-                        foreach (array_slice($wpRows, 0, 3) as $i => $r) {
-                            $sampleRows[] = is_array($r) ? $r : (array) $r;
+                    if (config('app.debug')) {
+                        $rowCount = is_array($wpRows) ? count($wpRows) : 0;
+                        $firstRow = $wpRows[0] ?? null;
+                        $sampleRows = [];
+                        if (is_array($wpRows) && !empty($wpRows)) {
+                            foreach (array_slice($wpRows, 0, 3) as $i => $r) {
+                                $sampleRows[] = is_array($r) ? $r : (array) $r;
+                            }
                         }
+                        \Illuminate\Support\Facades\Log::debug('ClickHouse work permit query result (weekly)', [
+                            'query' => 'sqlWorkPermits (wp + wp_pic + m_pic, HAVING all PIC APPROVED)',
+                            'params' => [
+                                'weekStart' => $weekStartStr,
+                                'weekEnd' => $weekEndStr,
+                                'site' => $filterSite,
+                            ],
+                            'row_count' => $rowCount,
+                            'column_keys' => $firstRow !== null ? array_keys(is_array($firstRow) ? $firstRow : (array) $firstRow) : [],
+                            'sample_rows' => $sampleRows,
+                        ]);
                     }
-                    \Illuminate\Support\Facades\Log::debug('ClickHouse work permit query result (weekly)', [
-                        'query' => 'sqlWorkPermits (wp + wp_pic + m_pic, HAVING all PIC APPROVED)',
-                        'params' => [
-                            'weekStart' => $weekStartStr,
-                            'weekEnd' => $weekEndStr,
-                            'site' => $filterSite,
-                        ],
-                        'row_count' => $rowCount,
-                        'column_keys' => $firstRow !== null ? array_keys(is_array($firstRow) ? $firstRow : (array) $firstRow) : [],
-                        'sample_rows' => $sampleRows,
-                    ]);
 
                     if (!empty($wpRows)) {
                         // Map job_id -> job_name
@@ -848,10 +855,12 @@ class DOPMWeeklyController extends Controller
             $ikkClickhouseListHarian = array_values($byCode);
         }
 
-        \Illuminate\Support\Facades\Log::debug('IKK list size', [
-            'count' => count($ikkClickhouseListHarian),
-            'approved_count' => $totalWorkPermitApprovedHarian,
-        ]);
+        if (config('app.debug')) {
+            \Illuminate\Support\Facades\Log::debug('IKK list size', [
+                'count' => count($ikkClickhouseListHarian),
+                'approved_count' => $totalWorkPermitApprovedHarian,
+            ]);
+        }
 
         // Status pekerjaan & daftar IKK batal: dari MySQL atau ClickHouse sesuai cutoff
         $useChIpkOkk = self::useClickHouseForIpkOkk($filterDate);

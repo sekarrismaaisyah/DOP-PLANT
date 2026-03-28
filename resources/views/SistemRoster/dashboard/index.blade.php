@@ -1304,7 +1304,7 @@
           <div class="kt-card-header heatmap-header">
             <div class="flex-shrink-0">
               <div class="kt-card-title">Performance Heatmap</div>
-              <div class="kt-card-subtitle">Actual / Plan — Actual SAP</div>
+              <div class="kt-card-subtitle">Actual / Plan — Karyawan unik dengan SAP</div>
             </div>
 
             <div class="heatmap-toolbar">
@@ -2127,7 +2127,7 @@
         var tbodyEl = document.getElementById('heatmapDayDetailTbody');
 
         if (titleEl) titleEl.textContent = 'Detail Hari — ' + date + (site !== 'all' ? ' · ' + site : '');
-        if (metaEl) metaEl.textContent = 'Per planning (karyawan + lokasi): jumlah Inspeksi Hazard, OAK, Observasi, Coaching yang match.';
+        if (metaEl) metaEl.textContent = 'Per karyawan unik yang di-assign: dihitung apakah sudah ada SAP (Hazard/Inspeksi) yang match lokasi + detail lokasi pada tanggal ini.';
         loadingEl.classList.remove('d-none');
         errorEl.classList.add('d-none');
         errorEl.textContent = '';
@@ -2325,7 +2325,7 @@
           { target: el('coverageDopKpiCard'), content: '<strong>Coverage Activity DOP</strong><br><br>KPI aktivitas coverage berdasarkan DOP (Daily Operation Plan). Klik untuk melihat detail coverage activity DOP.', title: 'Coverage Activity DOP' },
           { target: el('coverageIkkKpiCard'), content: '<strong>Coverage Activity BeIKK</strong><br><br>KPI coverage aktivitas BeIKK (Indikator Kinerja Kunci). Klik untuk melihat detail coverage activity BeIKK.', title: 'Coverage Activity IKK' },
           { target: el('dashboardTourKpiNonKritis'), content: '<strong>Coverage Area Non Kritis</strong><br><br>Persentase coverage untuk area non kritis. Gunakan untuk memantau lokasi yang tidak termasuk kategori kritis.', title: 'Coverage Area Non Kritis' },
-          { target: el('dashboardTourHeatmap'), content: '<strong>Performance Heatmap</strong><br><br>Menampilkan kesesuaian <strong>aktual dan planning</strong> dari assign karyawan untuk setiap aktivitas per hari. Warna menunjukkan tingkat pencapaian (Actual / Plan — Actual SAP). Filter per bulan dan site tersedia di sini.', title: 'Heatmap Kesesuaian' },
+          { target: el('dashboardTourHeatmap'), content: '<strong>Performance Heatmap</strong><br><br>Menampilkan kesesuaian <strong>aktual dan planning</strong> dari karyawan assign per hari. Perhitungan menggunakan karyawan unik: <strong>Actual / Plan</strong> = jumlah karyawan unik yang sudah punya SAP dibanding total karyawan unik yang di-planning. Filter per bulan dan site tersedia di sini.', title: 'Heatmap Kesesuaian' },
           { target: el('dashboardTourCoverageByLocation'), content: '<strong>Coverage by Location</strong><br><br>Daftar <strong>lokasi dari masing-masing yang di-assign</strong>. Persentase coverage per lokasi, status (Sudah Tercover / Incomplete / Belum Tercover), dan tombol "Lihat Detail" untuk Inspeksi Hazard, OAK & Observasi. Filter berdasarkan tanggal, site, dan tab (All Location, By IKK, By DOP, Non Kritis).', title: 'Lokasi per Assign' }
         ].filter(function(s) { return s.target; });
       }
