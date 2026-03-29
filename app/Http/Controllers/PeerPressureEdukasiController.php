@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\PeerPressure\GetPeerPressureDashboardEvaluationSummaryAction;
+use App\Actions\PeerPressure\GetPeerPressureDashboardInsightCardsAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardKpiStatsAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardWeeklyTrendAction;
 use App\Actions\PeerPressure\GetPeerPressureKejadianDetailForDashboardAction;
+use App\Actions\PeerPressure\GetPeerPressurePelanggarProfilingDetailAction;
 use App\Actions\PeerPressure\ListPeerPressureDashboardKejadianAction;
 use App\Models\PeerPressureKejadianEdukasi;
 use App\Services\PeerPressure\PeerPressureKaryawanNitipService;
@@ -91,7 +93,8 @@ class PeerPressureEdukasiController extends Controller
         PeerPressureKaryawanNitipService $karyawanNitip,
         GetPeerPressureDashboardKpiStatsAction $dashboardKpiStats,
         GetPeerPressureDashboardWeeklyTrendAction $weeklyTrend,
-        GetPeerPressureDashboardEvaluationSummaryAction $evaluationSummary
+        GetPeerPressureDashboardEvaluationSummaryAction $evaluationSummary,
+        GetPeerPressureDashboardInsightCardsAction $insightCards
     ): View {
         $q = trim((string) $request->get('q', ''));
         $chartPeriodMonth = $request->filled('year') && $request->filled('month');
@@ -129,7 +132,11 @@ class PeerPressureEdukasiController extends Controller
             'chartYear' => $chartYear,
             'chartMonth' => $chartMonth,
             'chartPeriodMonth' => $chartPeriodMonth,
-            'evaluationSummary' => $evaluationSummary(
+            'evaluationSummary' =>             $evaluationSummary(
+                $chartPeriodMonth ? $chartYear : null,
+                $chartPeriodMonth ? $chartMonth : null
+            ),
+            'insightCards' => $insightCards(
                 $chartPeriodMonth ? $chartYear : null,
                 $chartPeriodMonth ? $chartMonth : null
             ),
@@ -143,7 +150,8 @@ class PeerPressureEdukasiController extends Controller
         Request $request,
         GetPeerPressureDashboardWeeklyTrendAction $weeklyTrend,
         GetPeerPressureDashboardKpiStatsAction $dashboardKpiStats,
-        GetPeerPressureDashboardEvaluationSummaryAction $evaluationSummary
+        GetPeerPressureDashboardEvaluationSummaryAction $evaluationSummary,
+        GetPeerPressureDashboardInsightCardsAction $insightCards
     ): JsonResponse {
         $chartPeriodMonth = $request->filled('year') && $request->filled('month');
 
@@ -158,6 +166,7 @@ class PeerPressureEdukasiController extends Controller
                 [
                     'kpi' => $dashboardKpiStats($chartYear, $chartMonth),
                     'evaluation_summary' => $evaluationSummary($chartYear, $chartMonth),
+                    'insight_cards' => $insightCards($chartYear, $chartMonth),
                 ]
             ));
         }
@@ -167,6 +176,7 @@ class PeerPressureEdukasiController extends Controller
             [
                 'kpi' => $dashboardKpiStats(),
                 'evaluation_summary' => $evaluationSummary(),
+                'insight_cards' => $insightCards(),
             ]
         ));
     }
@@ -177,6 +187,21 @@ class PeerPressureEdukasiController extends Controller
     public function kejadianDetail(int $id, GetPeerPressureKejadianDetailForDashboardAction $detail): JsonResponse
     {
         return response()->json($detail($id));
+    }
+
+    /**
+     * Detail profiling pelanggar (JSON) untuk modal dashboard — query ?sid=
+     */
+    public function pelanggarProfilingDetail(
+        Request $request,
+        GetPeerPressurePelanggarProfilingDetailAction $action
+    ): JsonResponse {
+        $sid = trim((string) $request->query('sid', ''));
+        if ($sid === '') {
+            return response()->json(['message' => 'Parameter sid wajib diisi.'], 422);
+        }
+
+        return response()->json($action($sid));
     }
 
     public function import(Request $request): RedirectResponse

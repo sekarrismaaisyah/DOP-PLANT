@@ -31,7 +31,9 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
      *     status: 'critical'|'warning'|'ok'|'neutral',
      *     detail_bullets: list<string>,
      *     violators_detail?: list<array{nama: string, sid: string, departemen: string, kasus: int, kejadian_list: list<array{kejadian_id: int, tanggal_temuan: string, tanggal_label: string, kategori_deviasi: string}>}>,
-     *     recency_detail?: array{latest: array{kejadian_id: int, tanggal_label: string}, previous: array{kejadian_id: int, tanggal_label: string}, gap_days: int}
+     *     recency_detail?: array{latest: array{kejadian_id: int, tanggal_label: string, kategori_deviasi: string}, previous: array{kejadian_id: int, tanggal_label: string, kategori_deviasi: string}, gap_days: int, footnote: string, pelanggar_nama: string, pelanggar_sid: string, metric_explanation: string},
+     *     deviation_variety_detail?: array{distinct_count: int, categories: list<array{kategori_deviasi: string, jumlah: int}>},
+     *     peer_correlation_detail?: array{definition: string, total_unique_pairs: int, pairs_with_freq_gte_2: int, max_pair_frequency: int, top_pairs: list<array{pelanggar_sid: string, peer_sid: string, frekuensi: int}>}
      *   }>,
      *   narrative: string,
      *   repeat_period_caption: string,
@@ -53,7 +55,7 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
 
         $rows = [
             $this->rowRepeatViolator($y, $m, $repeatPeriodCaption),
-            $this->rowRecency($total),
+            $this->rowRecency($y, $m, $repeatPeriodCaption),
             $this->rowDeviationVariety(),
             $this->rowPeerCorrelation(),
         ];
@@ -251,61 +253,157 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
     }
 
     /**
-     * @return array{key: string, metric: string, description: string, action_threshold: string, status: 'critical'|'warning'|'ok'|'neutral', detail_bullets: list<string>, recency_detail?: array{latest: array{kejadian_id: int, tanggal_label: string}, previous: array{kejadian_id: int, tanggal_label: string}, gap_days: int}}
+     * @param positive-int|null $year
+     * @param int<1,12>|null $month
+     *
+     * @return array{key: string, metric: string, description: string, action_threshold: string, status: 'critical'|'warning'|'ok'|'neutral', detail_bullets: list<string>, recency_detail?: array{latest: array{kejadian_id: int, tanggal_label: string, kategori_deviasi: string}, previous: array{kejadian_id: int, tanggal_label: string, kategori_deviasi: string}, gap_days: int, footnote: string, pelanggar_nama: string, pelanggar_sid: string, metric_explanation: string}}
      */
-    private function rowRecency(int $total): array
+    private function rowRecency(?int $year, ?int $month, string $repeatPeriodCaption): array
     {
-        if ($total < 2) {
-            return [
-                'key' => 'recency',
-                'metric' => 'Recency Score',
-                'description' => 'Jarak hari antara pelanggaran terakhir & sebelumnya (global, tanggal temuan)',
-                'action_threshold' => '— Data belum cukup (perlu ≥ 2 kejadian)',
-                'status' => 'neutral',
-                'detail_bullets' => [
-                    'Saat ini hanya ' . $total . ' kejadian di database.',
-                ],
+        $inMonth = $year !== null && $month !== null;
+        $scopeDesc = $inMonth
+            ? 'Jarak antar dua pelanggaran terbaru oleh pelanggar yang sama (SID), dalam periode chart'
+            : 'Jarak antar dua pelanggaran terbaru oleh pelanggar yang sama (SID), seluruh data';
+
+        $metricExplanation = 'Metrik ini mengukur seberapa "segar" atau baru sebuah pelanggaran terjadi setelah pelanggaran sebelumnya oleh orang yang sama (satu SID). Selisih hari kecil berarti pelanggaran berulang dalam waktu singkat.';
+
+        $base = DB::table('peer_pressure_peserta_edukasi as p')
+            ->join('peer_pressure_kejadian_edukasi as k', 'k.id', '=', 'p.kejadian_edukasi_id')
+            ->where('p.peran', 'pelanggar');
+
+        if ($inMonth) {
+            $start = Carbon::create($year, $month, 1)->startOfDay();
+            $end = $start->copy()->endOfMonth();
+            $base->where('k.tanggal_temuan', '>=', $start->toDateString())
+                ->where('k.tanggal_temuan', '<=', $end->toDateString());
+        }
+
+        $raw = $base
+            ->orderByDesc('k.tanggal_temuan')
+            ->orderByDesc('k.id')
+            ->select([
+                'p.sid',
+                'p.nama',
+                'k.id as kejadian_id',
+                'k.tanggal_temuan',
+                'k.kategori_deviasi',
+            ])
+            ->get();
+
+        /** @var \Illuminate\Support\Collection<string, \Illuminate\Support\Collection<int, object>> $bySid */
+        $bySid = $raw->groupBy('sid');
+
+        $candidates = [];
+        foreach ($bySid as $sid => $items) {
+            if ($items->groupBy('kejadian_id')->count() < 2) {
+                continue;
+            }
+
+            $rows = [];
+            foreach ($items->groupBy('kejadian_id') as $kid => $grp) {
+                $first = $grp->first();
+                $katRaw = $first->kategori_deviasi ?? null;
+                $katStr = $katRaw !== null && !($katRaw instanceof \DateTimeInterface) ? trim((string) $katRaw) : '';
+
+                $rows[] = [
+                    'id' => (int) $kid,
+                    'tanggal' => $first->tanggal_temuan,
+                    'kategori_deviasi' => $katStr !== '' ? $katStr : '—',
+                ];
+            }
+
+            usort($rows, function (array $a, array $b): int {
+                $c = strcmp($this->tanggalTemuanIso($b['tanggal']), $this->tanggalTemuanIso($a['tanggal']));
+
+                return $c !== 0 ? $c : $b['id'] <=> $a['id'];
+            });
+
+            $latest = $rows[0];
+            $prev = $rows[1];
+
+            $d0 = Carbon::parse($latest['tanggal'])->startOfDay();
+            $d1 = Carbon::parse($prev['tanggal'])->startOfDay();
+            $gap = (int) abs($d0->diffInDays($d1));
+
+            $namaRaw = $items->first() && isset($items->first()->nama) ? trim((string) $items->first()->nama) : '';
+            $nama = $namaRaw !== '' ? $namaRaw : '—';
+
+            $candidates[] = [
+                'sid' => (string) $sid,
+                'nama' => $nama,
+                'latest' => $latest,
+                'previous' => $prev,
+                'gap' => $gap,
             ];
         }
 
-        $lastTwo = PeerPressureKejadianEdukasi::query()
-            ->orderByDesc('tanggal_temuan')
-            ->orderByDesc('id')
-            ->limit(2)
-            ->get(['tanggal_temuan', 'id']);
+        if ($candidates === []) {
+            $msg = $inMonth
+                ? 'Tidak ada pelanggar dengan ≥ 2 kejadian berbeda dalam ' . $repeatPeriodCaption . ' (perlu satu SID dengan minimal dua temuan).'
+                : 'Tidak ada pelanggar dengan ≥ 2 kejadian berbeda di seluruh data.';
 
-        $d0 = Carbon::parse($lastTwo[0]->tanggal_temuan)->startOfDay();
-        $d1 = Carbon::parse($lastTwo[1]->tanggal_temuan)->startOfDay();
-        $gap = (int) abs($d0->diffInDays($d1));
+            return [
+                'key' => 'recency',
+                'metric' => 'Recency Score',
+                'description' => $scopeDesc,
+                'action_threshold' => '— Data belum cukup (perlu ≥ 2 kejadian per SID dalam periode)',
+                'status' => 'neutral',
+                'detail_bullets' => [$msg],
+            ];
+        }
 
+        usort($candidates, function (array $a, array $b): int {
+            if ($a['gap'] !== $b['gap']) {
+                return $a['gap'] <=> $b['gap'];
+            }
+
+            return strcmp(
+                $this->tanggalTemuanIso($b['latest']['tanggal']),
+                $this->tanggalTemuanIso($a['latest']['tanggal'])
+            );
+        });
+
+        $pick = $candidates[0];
+
+        $gap = $pick['gap'];
         $highRisk = $gap < self::RECENCY_HIGH_RISK_DAYS;
         $threshold = $highRisk
-            ? '🔴 < 7 hari = High Risk (selisih ' . $gap . ' hari)'
-            : '🟢 ≥ 7 hari (selisih ' . $gap . ' hari — risiko relatif lebih rendah)';
+            ? '🔴 < 7 hari = High Risk (selisih ' . $gap . ' hari, SID ' . $pick['sid'] . ')'
+            : '🟢 ≥ 7 hari (selisih ' . $gap . ' hari — SID ' . $pick['sid'] . ')';
+
+        $footnote = $inMonth
+            ? 'Pasangan kejadian untuk SID ini: dua temuan terbaru per pelanggar dalam ' . $repeatPeriodCaption . ' (filter sama dengan chart). Ditampilkan SID dengan selisih kalender terkecil (pola terpadat).'
+            : 'Pasangan kejadian untuk SID ini: dua temuan terbaru per pelanggar pada seluruh data. Ditampilkan SID dengan selisih kalender terkecil (pola terpadat).';
 
         return [
             'key' => 'recency',
             'metric' => 'Recency Score',
-            'description' => 'Jarak hari antara pelanggaran terakhir & sebelumnya (global, tanggal temuan)',
+            'description' => $scopeDesc,
             'action_threshold' => $threshold,
             'status' => $highRisk ? 'critical' : 'ok',
             'detail_bullets' => [],
             'recency_detail' => [
+                'pelanggar_nama' => $pick['nama'],
+                'pelanggar_sid' => $pick['sid'],
                 'latest' => [
-                    'kejadian_id' => (int) $lastTwo[0]->id,
-                    'tanggal_label' => $this->formatTanggalTemuanLabel($lastTwo[0]->tanggal_temuan),
+                    'kejadian_id' => $pick['latest']['id'],
+                    'tanggal_label' => $this->formatTanggalTemuanLabel($pick['latest']['tanggal']),
+                    'kategori_deviasi' => $pick['latest']['kategori_deviasi'],
                 ],
                 'previous' => [
-                    'kejadian_id' => (int) $lastTwo[1]->id,
-                    'tanggal_label' => $this->formatTanggalTemuanLabel($lastTwo[1]->tanggal_temuan),
+                    'kejadian_id' => $pick['previous']['id'],
+                    'tanggal_label' => $this->formatTanggalTemuanLabel($pick['previous']['tanggal']),
+                    'kategori_deviasi' => $pick['previous']['kategori_deviasi'],
                 ],
                 'gap_days' => $gap,
+                'footnote' => $footnote,
+                'metric_explanation' => $metricExplanation,
             ],
         ];
     }
 
     /**
-     * @return array{key: string, metric: string, description: string, action_threshold: string, status: 'critical'|'warning'|'ok'|'neutral', detail_bullets: list<string>}
+     * @return array{key: string, metric: string, description: string, action_threshold: string, status: 'critical'|'warning'|'ok'|'neutral', detail_bullets: list<string>, deviation_variety_detail?: array{distinct_count: int, categories: list<array{kategori_deviasi: string, jumlah: int}>}}
      */
     private function rowDeviationVariety(): array
     {
@@ -331,11 +429,12 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
                 ? '🟢 Di bawah ambang pola (' . $n . ' jenis berbeda)'
                 : '— Belum ada kategori_deviasi terisi');
 
-        $bullets = [
-            'Query: COUNT(DISTINCT kategori_deviasi) pada peer_pressure_kejadian_edukasi.',
-        ];
+        $categoryRows = [];
         foreach ($categories as $row) {
-            $bullets[] = $row->kategori_deviasi . ': ' . (int) $row->jumlah . ' kejadian.';
+            $categoryRows[] = [
+                'kategori_deviasi' => (string) $row->kategori_deviasi,
+                'jumlah' => (int) $row->jumlah,
+            ];
         }
 
         return [
@@ -344,12 +443,16 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
             'description' => 'Jumlah jenis deviasi berbeda yang tercatat (kategori_deviasi)',
             'action_threshold' => $threshold,
             'status' => $pattern ? 'warning' : ($n > 0 ? 'ok' : 'neutral'),
-            'detail_bullets' => $bullets,
+            'detail_bullets' => [],
+            'deviation_variety_detail' => [
+                'distinct_count' => $n,
+                'categories' => $categoryRows,
+            ],
         ];
     }
 
     /**
-     * @return array{key: string, metric: string, description: string, action_threshold: string, status: 'critical'|'warning'|'ok'|'neutral', detail_bullets: list<string>}
+     * @return array{key: string, metric: string, description: string, action_threshold: string, status: 'critical'|'warning'|'ok'|'neutral', detail_bullets: list<string>, peer_correlation_detail: array{definition: string, total_unique_pairs: int, pairs_with_freq_gte_2: int, max_pair_frequency: int, top_pairs: list<array{pelanggar_sid: string, peer_sid: string, frekuensi: int}>}}
      */
     private function rowPeerCorrelation(): array
     {
@@ -368,7 +471,12 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
                         continue;
                     }
                     foreach ($k->peserta->where('peran', 'peer') as $peer) {
-                        $key = $pel->sid . '|' . $peer->sid;
+                        $sidPel = (string) ($pel->sid ?? '');
+                        $sidPeer = (string) ($peer->sid ?? '');
+                        if ($sidPel !== '' && $sidPel === $sidPeer) {
+                            continue;
+                        }
+                        $key = $sidPel . '|' . $sidPeer;
                         $pairCounts[$key] = ($pairCounts[$key] ?? 0) + 1;
                     }
                 }
@@ -386,17 +494,14 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
             ? '⚠️ Investigasi grup dynamics (' . $pasanganBerulang . ' pasangan pelanggar–peer berulang)'
             : '🟢 Tidak ada pasangan pelanggar–peer yang muncul di >1 kejadian';
 
-        $bullets = [
-            'Definisi pasangan: SID pelanggar + SID peer dalam satu kejadian (multi peer = beberapa pasangan per kejadian).',
-            'Total pasangan unik (semua kejadian): ' . count($pairCounts) . '.',
-            'Pasangan dengan frekuensi ≥ 2: ' . $pasanganBerulang . '.',
-            'Frekuensi maksimal satu pasangan: ' . $maxPair . ' kejadian.',
-        ];
+        $topPairRows = [];
         foreach ($topRepeated as $key => $c) {
             $parts = explode('|', $key, 2);
-            $v = $parts[0] ?? '';
-            $p = $parts[1] ?? '';
-            $bullets[] = 'Pelanggar ' . $v . ' + Peer ' . $p . ': ' . $c . ' kali.';
+            $topPairRows[] = [
+                'pelanggar_sid' => (string) ($parts[0] ?? ''),
+                'peer_sid' => (string) ($parts[1] ?? ''),
+                'frekuensi' => (int) $c,
+            ];
         }
 
         return [
@@ -405,7 +510,14 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
             'description' => 'Apakah pelanggar sering muncul dengan peer yang sama?',
             'action_threshold' => $threshold,
             'status' => $flag ? 'warning' : 'ok',
-            'detail_bullets' => $bullets,
+            'detail_bullets' => [],
+            'peer_correlation_detail' => [
+                'definition' => 'Definisi pasangan: SID pelanggar + SID peer berbeda dalam satu kejadian (multi peer = beberapa pasangan per kejadian). Pasangan dengan SID pelanggar = SID peer diabaikan — satu SID hanya satu orang.',
+                'total_unique_pairs' => count($pairCounts),
+                'pairs_with_freq_gte_2' => $pasanganBerulang,
+                'max_pair_frequency' => $maxPair,
+                'top_pairs' => $topPairRows,
+            ],
         ];
     }
 

@@ -395,7 +395,7 @@
                         </tbody>
                      </table>
                   </div>
-                  @php $rvRow = collect($esRows)->firstWhere('key', 'repeat_violator'); @endphp
+                  <!-- @php $rvRow = collect($esRows)->firstWhere('key', 'repeat_violator'); @endphp
                   <div id="peer-eval-repeat-block" class="mt-4 @if(!$rvRow || empty($rvRow['violators_detail'])) hidden @endif">
                      <p id="peer-eval-repeat-title" class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Pelanggar repetitif ({{ $es['repeat_period_caption'] ?? 'Seluruh data' }})</p>
                      <div class="max-h-48 overflow-y-auto overflow-x-auto rounded-xl border border-outline-variant/20">
@@ -449,21 +449,40 @@
                         </table>
                      </div>
                   </div>
-                  <!-- @php $recRow = collect($esRows)->firstWhere('key', 'recency'); $recD = $recRow['recency_detail'] ?? null; @endphp
+                  @php $recRow = collect($esRows)->firstWhere('key', 'recency'); $recD = $recRow['recency_detail'] ?? null; @endphp
                   <div id="peer-eval-recency-wrap" class="mt-4 @if(!$recD) hidden @endif">
                      <div id="peer-eval-recency-inner">
                         @if($recD)
                         <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Recency Score — data</p>
+                        <p class="mb-3 text-[9px] leading-relaxed text-on-surface-variant">{{ $recD['metric_explanation'] ?? '' }}</p>
                         <div class="overflow-x-auto rounded-xl border border-outline-variant/20 bg-white">
                            <table class="w-full min-w-[260px] text-left text-[10px] text-on-surface">
                               <tbody class="divide-y divide-outline-variant/10">
                                  <tr>
-                                    <th class="w-[42%] whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan terbaru</th>
-                                    <td class="px-2 py-2 font-medium">{{ $recD['latest']['tanggal_label'] ?? '—' }} <span class="font-mono text-[9px] text-on-surface-variant">#{{ (int) ($recD['latest']['kejadian_id'] ?? 0) }}</span></td>
+                                    <th class="w-[42%] whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Pelanggar</th>
+                                    <td class="px-2 py-2 font-medium">{{ $recD['pelanggar_nama'] ?? '—' }}</td>
+                                 </tr>
+                                 <tr>
+                                    <th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">SID</th>
+                                    <td class="px-2 py-2 font-mono text-[9px] text-on-surface-variant">{{ $recD['pelanggar_sid'] ?? '—' }}</td>
+                                 </tr>
+                                 <tr>
+                                    <th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan terbaru</th>
+                                    <td class="px-2 py-2 align-top">
+                                       <div class="flex flex-col gap-0.5">
+                                          <span class="font-medium">{{ $recD['latest']['tanggal_label'] ?? '—' }} <span class="font-mono text-[9px] text-on-surface-variant">#{{ (int) ($recD['latest']['kejadian_id'] ?? 0) }}</span></span>
+                                          <span class="text-[8px] leading-snug text-on-surface-variant"><span class="font-semibold">Kategori deviasi:</span> {{ $recD['latest']['kategori_deviasi'] ?? '—' }}</span>
+                                       </div>
+                                    </td>
                                  </tr>
                                  <tr>
                                     <th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan sebelumnya</th>
-                                    <td class="px-2 py-2 font-medium">{{ $recD['previous']['tanggal_label'] ?? '—' }} <span class="font-mono text-[9px] text-on-surface-variant">#{{ (int) ($recD['previous']['kejadian_id'] ?? 0) }}</span></td>
+                                    <td class="px-2 py-2 align-top">
+                                       <div class="flex flex-col gap-0.5">
+                                          <span class="font-medium">{{ $recD['previous']['tanggal_label'] ?? '—' }} <span class="font-mono text-[9px] text-on-surface-variant">#{{ (int) ($recD['previous']['kejadian_id'] ?? 0) }}</span></span>
+                                          <span class="text-[8px] leading-snug text-on-surface-variant"><span class="font-semibold">Kategori deviasi:</span> {{ $recD['previous']['kategori_deviasi'] ?? '—' }}</span>
+                                       </div>
+                                    </td>
                                  </tr>
                                  <tr>
                                     <th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Selisih kalender</th>
@@ -472,7 +491,7 @@
                               </tbody>
                            </table>
                         </div>
-                        <p class="mt-2 text-[9px] text-on-surface-variant">Dua tanggal temuan terbaru, seluruh data (urut tanggal temuan &amp; ID DESC).</p>
+                        <p class="mt-2 text-[9px] text-on-surface-variant">{{ $recD['footnote'] ?? '' }}</p>
                         @endif
                      </div>
                   </div> -->
@@ -487,108 +506,123 @@
             </div>
          </div>
          <!-- Secondary Metrics Grid -->
-         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+         @php
+            $ic = isset($insightCards) ? $insightCards : [
+                'deviation' => ['total' => 0, 'total_label' => '0', 'conic_gradient' => 'conic-gradient(rgb(241 245 249) 0% 100%)', 'categories' => []],
+                'compliance' => ['berecord_pct' => 0, 'evidence_pct' => 0, 'size_pct' => 0, 'h1_pct' => 0, 'duration_label' => '—', 'triangle_rotate_deg' => 12],
+                'locations' => [],
+                'profiling_pelanggar' => [],
+            ];
+            $dvCats = $ic['deviation']['categories'] ?? [];
+            $locRows = $ic['locations'] ?? [];
+            $profilingPelanggar = $ic['profiling_pelanggar'] ?? [];
+            $co = $ic['compliance'] ?? [];
+         @endphp
+         <div id="peer-insight-cards-root" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             <div class="bg-white p-6 rounded-2xl anchored-card">
                <h3 class="font-headline font-bold text-[11px] mb-6 uppercase tracking-widest text-on-surface-variant">Deviation Category</h3>
                <div class="flex justify-center mb-8">
-                  <div class="relative w-36 h-36 rounded-full border-[14px] border-primary flex items-center justify-center shadow-inner">
-                     <div class="absolute inset-0 border-[14px] border-secondary border-t-transparent border-l-transparent rotate-45 rounded-full"></div>
-                     <div class="text-center">
-                        <span class="block font-extrabold text-2xl">1.2k</span>
-                        <span class="block text-[9px] uppercase font-bold text-on-surface-variant">Total</span>
+                  <div class="relative w-36 h-36 rounded-full p-[14px] shadow-inner" style="background: {{ $ic['deviation']['conic_gradient'] ?? 'conic-gradient(rgb(241 245 249) 0% 100%)' }}">
+                     <div class="flex h-full w-full items-center justify-center rounded-full bg-white">
+                        <div class="text-center">
+                           <span class="block font-extrabold text-2xl tabular-nums">{{ $ic['deviation']['total_label'] ?? '0' }}</span>
+                           <span class="block text-[9px] uppercase font-bold text-on-surface-variant">Total</span>
+                        </div>
                      </div>
                   </div>
                </div>
-               <div class="space-y-3">
-                  <div class="flex justify-between items-center text-xs">
-                     <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-primary shadow-sm"></span> PSPP/Violations</span>
-                     <span class="font-bold">62%</span>
+               <div class="max-h-64 space-y-3 overflow-y-auto overflow-x-hidden pr-1">
+                  @forelse ($dvCats as $row)
+                  <div class="flex justify-between items-center gap-2 text-xs">
+                     <span class="flex min-w-0 flex-1 items-center gap-2">
+                        <span class="h-2.5 w-2.5 shrink-0 rounded-full shadow-sm ring-1 ring-black/5" style="background: {{ $row['color'] ?? 'hsl(215 14% 72%)' }}"></span>
+                        <span class="truncate" title="{{ $row['kategori_deviasi'] ?? '' }}">{{ $row['kategori_deviasi'] ?? '—' }}</span>
+                     </span>
+                     <span class="shrink-0 font-bold tabular-nums">{{ number_format((float) ($row['pct'] ?? 0), 1, ',', '.') }}%</span>
                   </div>
-                  <div class="flex justify-between items-center text-xs">
-                     <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-secondary shadow-sm"></span> Alert Fatigue</span>
-                     <span class="font-bold">28%</span>
-                  </div>
-                  <div class="flex justify-between items-center text-xs">
-                     <span class="flex items-center gap-2"><span class="w-2.5 h-2.5 rounded-full bg-tertiary shadow-sm"></span> TBC Hazards</span>
-                     <span class="font-bold">10%</span>
-                  </div>
+                  @empty
+                  <p class="text-[11px] text-on-surface-variant">Belum ada data.</p>
+                  @endforelse
                </div>
             </div>
             <div class="bg-white p-6 rounded-2xl anchored-card">
                <h3 class="font-headline font-bold text-[11px] mb-6 uppercase tracking-widest text-on-surface-variant">Compliance Radar</h3>
-               <div class="relative w-full aspect-square flex items-center justify-center">
+               <div class="relative flex aspect-square w-full items-center justify-center">
                   <div class="absolute inset-0 flex items-center justify-center">
                      <div class="w-[85%] h-[85%] border border-outline-variant/20 rounded-full"></div>
                      <div class="absolute w-[60%] h-[60%] border border-outline-variant/20 rounded-full"></div>
                      <div class="absolute w-[35%] h-[35%] border border-outline-variant/20 rounded-full"></div>
                   </div>
-                  <div class="w-0 h-0 border-l-[45px] border-l-transparent border-r-[45px] border-r-transparent border-b-[70px] border-b-primary/40 rotate-12 scale-125 transition-transform hover:scale-150 cursor-crosshair"></div>
-                  <div class="absolute inset-0 p-1 flex flex-col justify-between items-center text-[10px] font-bold text-on-surface-variant uppercase tracking-tighter">
-                     <span>BeRecord</span>
-                     <div class="w-full flex justify-between px-1">
-                        <span>Evidence</span>
-                        <span>Size</span>
+                  <div class="w-0 h-0 scale-125 cursor-crosshair border-b-[70px] border-l-[45px] border-r-[45px] border-b-primary/40 border-l-transparent border-r-transparent transition-transform hover:scale-150" style="transform: rotate({{ (float) ($co['triangle_rotate_deg'] ?? 12) }}deg)"></div>
+                  <div class="absolute inset-0 flex flex-col justify-between p-1 text-center text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">
+                     <span class="flex flex-col items-center gap-0.5 leading-tight">
+                        <span>BeRecord</span>
+                        <span class="text-[9px] font-bold tabular-nums text-primary">{{ number_format((float) ($co['berecord_pct'] ?? 0), 0, ',', '.') }}%</span>
+                     </span>
+                     <div class="flex w-full justify-between px-1">
+                        <span class="flex flex-col items-center gap-0.5 leading-tight">
+                           <span>Evidence</span>
+                           <span class="text-[9px] font-bold tabular-nums text-primary">{{ number_format((float) ($co['evidence_pct'] ?? 0), 0, ',', '.') }}%</span>
+                        </span>
+                        <span class="flex flex-col items-center gap-0.5 leading-tight">
+                           <span>Size</span>
+                           <span class="text-[9px] font-bold tabular-nums text-primary">{{ number_format((float) ($co['size_pct'] ?? 0), 0, ',', '.') }}%</span>
+                        </span>
                      </div>
-                     <div class="w-full flex justify-between px-3 pb-3">
-                        <span>H+1</span>
-                        <span>Duration</span>
+                     <div class="flex w-full justify-between px-3 pb-3">
+                        <span class="flex flex-col items-center gap-0.5 leading-tight">
+                           <span>H+1</span>
+                           <span class="text-[9px] font-bold tabular-nums text-primary">{{ number_format((float) ($co['h1_pct'] ?? 0), 0, ',', '.') }}%</span>
+                        </span>
+                        <span class="flex flex-col items-center gap-0.5 leading-tight">
+                           <span>Duration</span>
+                           <span class="text-[9px] font-bold tabular-nums text-primary">{{ $co['duration_label'] ?? '—' }}</span>
+                        </span>
                      </div>
                   </div>
                </div>
             </div>
             <div class="bg-white p-6 rounded-2xl anchored-card">
                <h3 class="font-headline font-bold text-[11px] mb-6 uppercase tracking-widest text-on-surface-variant">Location Analysis</h3>
-               <div class="space-y-5">
+               <div class="peer-loc-scroll max-h-96 space-y-5 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                  @forelse ($locRows as $loc)
                   <div class="space-y-2">
-                     <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider"><span>Loading Area</span><span class="text-primary">342</span></div>
+                     <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">
+                        <span class="min-w-0 truncate pr-2" title="{{ $loc['name'] ?? '' }}">{{ $loc['name'] ?? '—' }}</span>
+                        <span class="shrink-0 text-primary tabular-nums">{{ (int) ($loc['count'] ?? 0) }}</span>
+                     </div>
                      <div class="w-full bg-[#f1f5f9] h-2.5 rounded-full overflow-hidden border border-outline-variant/10 shadow-inner">
-                        <div class="bg-primary h-full rounded-full" style="width: 85%"></div>
+                        <div class="bg-primary h-full rounded-full transition-[width] duration-300" style="width: {{ max(0, min(100, (float) ($loc['bar_pct'] ?? 0))) }}%"></div>
                      </div>
                   </div>
-                  <div class="space-y-2">
-                     <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider"><span>Mine Road</span><span class="text-primary">211</span></div>
-                     <div class="w-full bg-[#f1f5f9] h-2.5 rounded-full overflow-hidden border border-outline-variant/10 shadow-inner">
-                        <div class="bg-primary h-full rounded-full" style="width: 60%"></div>
-                     </div>
-                  </div>
-                  <div class="space-y-2">
-                     <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider"><span>Drill/Blast</span><span class="text-primary">154</span></div>
-                     <div class="w-full bg-[#f1f5f9] h-2.5 rounded-full overflow-hidden border border-outline-variant/10 shadow-inner">
-                        <div class="bg-primary h-full rounded-full" style="width: 45%"></div>
-                     </div>
-                  </div>
-                  <div class="space-y-2">
-                     <div class="flex justify-between text-[10px] font-bold uppercase tracking-wider"><span>Workshop</span><span class="text-primary">98</span></div>
-                     <div class="w-full bg-[#f1f5f9] h-2.5 rounded-full overflow-hidden border border-outline-variant/10 shadow-inner">
-                        <div class="bg-primary h-full rounded-full" style="width: 30%"></div>
-                     </div>
-                  </div>
+                  @empty
+                  <p class="text-[11px] text-on-surface-variant">Belum ada data lokasi.</p>
+                  @endforelse
                </div>
             </div>
             <div class="bg-white p-6 rounded-2xl anchored-card">
-               <h3 class="font-headline font-bold text-[11px] mb-6 uppercase tracking-widest text-on-surface-variant">Program Health</h3>
-               <div class="space-y-7">
-                  <div>
-                     <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Blindspot Detection</p>
-                     <div class="flex items-center justify-between">
-                        <span class="text-3xl font-extrabold text-[#059669]">18%</span>
-                        <span class="px-2 py-0.5 bg-[#dcfce7] text-[#16a34a] text-[9px] font-bold rounded border border-[#16a34a]/20">TARGET &lt; 23%</span>
+               <h3 class="font-headline font-bold text-[11px] mb-2 uppercase tracking-widest text-on-surface-variant">Profiling Analysis</h3>
+               <p class="mb-4 text-[10px] leading-snug text-on-surface-variant">Pelanggar dengan kejadian terbanyak; korelasi = porsi terhadap total insiden pada periode yang sama.</p>
+               <div class="max-h-80 space-y-2.5 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+                  @forelse ($profilingPelanggar as $p)
+                  <div class="peer-profiling-row flex items-center gap-3 rounded-xl border border-outline-variant/15 bg-[#fafbfc] p-2.5 cursor-pointer transition-colors hover:bg-[#f1f5f9] hover:border-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30" role="button" tabindex="0" data-sid="{{ $p['sid'] ?? '' }}" data-nama="{{ $p['nama'] ?? '' }}">
+                     @if(!empty($p['foto_url']))
+                     <img src="{{ $p['foto_url'] }}" alt="" class="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-outline-variant/20" loading="lazy" decoding="async" />
+                     @else
+                     <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/12 text-sm font-bold uppercase text-primary ring-1 ring-outline-variant/20" aria-hidden="true">{{ mb_substr((string) ($p['nama'] ?? '?'), 0, 1) }}</div>
+                     @endif
+                     <div class="min-w-0 flex-1">
+                        <p class="truncate text-xs font-bold text-on-surface" title="{{ $p['nama'] ?? '' }}">{{ $p['nama'] ?? '—' }}</p>
+                        <p class="font-mono text-[10px] text-on-surface-variant">{{ $p['sid'] ?? '—' }}</p>
+                     </div>
+                     <div class="shrink-0 text-right">
+                        <p class="text-base font-extrabold tabular-nums leading-tight text-primary">{{ (int) ($p['kasus'] ?? 0) }}×</p>
+                        <p class="text-[9px] text-on-surface-variant">{{ number_format((float) ($p['insiden_share_pct'] ?? 0), 1, ',', '.') }}% insiden</p>
                      </div>
                   </div>
-                  <div>
-                     <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Repeat Offender Rate</p>
-                     <div class="flex items-center justify-between">
-                        <span class="text-3xl font-extrabold text-error">4.2%</span>
-                        <span class="px-2 py-0.5 bg-error/10 text-error text-[9px] font-bold rounded border border-error/20">+1.1% RISK</span>
-                     </div>
-                  </div>
-                  <div>
-                     <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest mb-2">Speak-Up Growth</p>
-                     <div class="flex items-center justify-between">
-                        <span class="text-3xl font-extrabold text-primary">+34%</span>
-                        <span class="px-2 py-0.5 bg-primary/10 text-primary text-[9px] font-bold rounded border border-primary/20">QOQ GROWTH</span>
-                     </div>
-                  </div>
+                  @empty
+                  <p class="text-[11px] text-on-surface-variant">Belum ada data pelanggar pada periode ini.</p>
+                  @endforelse
                </div>
             </div>
          </div>
@@ -882,7 +916,82 @@
                @foreach ($esRows as $row)
                <div class="mb-4 rounded-xl border border-outline-variant/20 bg-[#f8fafc] px-4 py-3 last:mb-0">
                   <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{{ $row['metric'] ?? '—' }}</p>
-                  @if(!empty($row['detail_bullets']))
+                  @if(($row['key'] ?? '') === 'deviation_variety' && !empty($row['deviation_variety_detail']))
+                  @php $dv = $row['deviation_variety_detail']; @endphp
+                  <div class="mt-3 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">
+                     <table class="w-full min-w-[280px] text-left text-[12px] text-on-surface">
+                        <thead>
+                           <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                              <th class="px-3 py-2">Kategori deviasi</th>
+                              <th class="whitespace-nowrap px-3 py-2 text-right">Kejadian</th>
+                           </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                           @forelse (($dv['categories'] ?? []) as $cat)
+                           <tr class="hover:bg-[#fafbfc]">
+                              <td class="px-3 py-2">{{ $cat['kategori_deviasi'] ?? '—' }}</td>
+                              <td class="px-3 py-2 text-right tabular-nums font-semibold">{{ (int) ($cat['jumlah'] ?? 0) }}</td>
+                           </tr>
+                           @empty
+                           <tr>
+                              <td colspan="2" class="px-3 py-4 text-center text-[11px] text-on-surface-variant">Belum ada data kategori.</td>
+                           </tr>
+                           @endforelse
+                        </tbody>
+                     </table>
+                  </div>
+                  @elseif(($row['key'] ?? '') === 'peer_correlation' && !empty($row['peer_correlation_detail']))
+                  @php $pc = $row['peer_correlation_detail']; @endphp
+                  <p class="mt-2 text-[11px] leading-relaxed text-on-surface">{{ $pc['definition'] ?? '' }}</p>
+                  <div class="mt-3 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">
+                     <table class="w-full min-w-[260px] text-left text-[12px] text-on-surface">
+                        <thead>
+                           <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                              <th class="px-3 py-2">Metrik</th>
+                              <th class="whitespace-nowrap px-3 py-2 text-right">Nilai</th>
+                           </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                           <tr class="hover:bg-[#fafbfc]">
+                              <td class="px-3 py-2">Total pasangan unik (semua kejadian)</td>
+                              <td class="px-3 py-2 text-right tabular-nums font-semibold">{{ (int) ($pc['total_unique_pairs'] ?? 0) }}</td>
+                           </tr>
+                           <tr class="hover:bg-[#fafbfc]">
+                              <td class="px-3 py-2">Pasangan dengan frekuensi ≥ 2</td>
+                              <td class="px-3 py-2 text-right tabular-nums font-semibold">{{ (int) ($pc['pairs_with_freq_gte_2'] ?? 0) }}</td>
+                           </tr>
+                           <tr class="hover:bg-[#fafbfc]">
+                              <td class="px-3 py-2">Frekuensi maksimal satu pasangan</td>
+                              <td class="px-3 py-2 text-right tabular-nums font-semibold">{{ (int) ($pc['max_pair_frequency'] ?? 0) }} kejadian</td>
+                           </tr>
+                        </tbody>
+                     </table>
+                  </div>
+                  <div class="mt-3 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">
+                     <table class="w-full min-w-[320px] text-left text-[12px] text-on-surface">
+                        <thead>
+                           <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                              <th class="px-3 py-2">Pelanggar (SID)</th>
+                              <th class="px-3 py-2">Peer (SID)</th>
+                              <th class="whitespace-nowrap px-3 py-2 text-right">Frekuensi</th>
+                           </tr>
+                        </thead>
+                        <tbody class="divide-y divide-outline-variant/10">
+                           @forelse (($pc['top_pairs'] ?? []) as $tp)
+                           <tr class="hover:bg-[#fafbfc]">
+                              <td class="px-3 py-2 font-mono text-[11px]">{{ $tp['pelanggar_sid'] ?? '—' }}</td>
+                              <td class="px-3 py-2 font-mono text-[11px]">{{ $tp['peer_sid'] ?? '—' }}</td>
+                              <td class="px-3 py-2 text-right tabular-nums font-semibold">{{ (int) ($tp['frekuensi'] ?? 0) }}×</td>
+                           </tr>
+                           @empty
+                           <tr>
+                              <td colspan="3" class="px-3 py-4 text-center text-[11px] text-on-surface-variant">Tidak ada pasangan berulang (frekuensi ≥ 2).</td>
+                           </tr>
+                           @endforelse
+                        </tbody>
+                     </table>
+                  </div>
+                  @elseif(!empty($row['detail_bullets']))
                   <ul class="mt-2 list-inside list-disc space-y-1 text-[13px] leading-relaxed text-on-surface">
                      @foreach ($row['detail_bullets'] as $b)
                      <li>{{ $b }}</li>
@@ -944,16 +1053,35 @@
                   @endif
                   @if(($row['key'] ?? '') === 'recency' && !empty($row['recency_detail']))
                   @php $rd = $row['recency_detail']; @endphp
-                  <div class="mt-4 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">
+                  <p class="mt-2 text-[12px] leading-relaxed text-on-surface-variant">{{ $rd['metric_explanation'] ?? '' }}</p>
+                  <div class="mt-3 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">
                      <table class="w-full min-w-[300px] text-left text-[12px] text-on-surface">
                         <tbody class="divide-y divide-outline-variant/10">
                            <tr>
+                              <th class="w-[40%] whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Pelanggar</th>
+                              <td class="px-3 py-2.5 font-medium">{{ $rd['pelanggar_nama'] ?? '—' }}</td>
+                           </tr>
+                           <tr>
+                              <th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">SID</th>
+                              <td class="px-3 py-2.5 font-mono text-[11px] text-on-surface-variant">{{ $rd['pelanggar_sid'] ?? '—' }}</td>
+                           </tr>
+                           <tr>
                               <th class="w-[40%] whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Temuan terbaru</th>
-                              <td class="px-3 py-2.5 font-medium">{{ $rd['latest']['tanggal_label'] ?? '—' }} <span class="font-mono text-[11px] text-on-surface-variant">#{{ (int) ($rd['latest']['kejadian_id'] ?? 0) }}</span></td>
+                              <td class="px-3 py-2.5 align-top">
+                                 <div class="flex flex-col gap-1">
+                                    <span class="font-medium">{{ $rd['latest']['tanggal_label'] ?? '—' }} <span class="font-mono text-[11px] text-on-surface-variant">#{{ (int) ($rd['latest']['kejadian_id'] ?? 0) }}</span></span>
+                                    <span class="text-[11px] leading-snug text-on-surface-variant"><span class="font-semibold">Kategori deviasi:</span> {{ $rd['latest']['kategori_deviasi'] ?? '—' }}</span>
+                                 </div>
+                              </td>
                            </tr>
                            <tr>
                               <th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Temuan sebelumnya</th>
-                              <td class="px-3 py-2.5 font-medium">{{ $rd['previous']['tanggal_label'] ?? '—' }} <span class="font-mono text-[11px] text-on-surface-variant">#{{ (int) ($rd['previous']['kejadian_id'] ?? 0) }}</span></td>
+                              <td class="px-3 py-2.5 align-top">
+                                 <div class="flex flex-col gap-1">
+                                    <span class="font-medium">{{ $rd['previous']['tanggal_label'] ?? '—' }} <span class="font-mono text-[11px] text-on-surface-variant">#{{ (int) ($rd['previous']['kejadian_id'] ?? 0) }}</span></span>
+                                    <span class="text-[11px] leading-snug text-on-surface-variant"><span class="font-semibold">Kategori deviasi:</span> {{ $rd['previous']['kategori_deviasi'] ?? '—' }}</span>
+                                 </div>
+                              </td>
                            </tr>
                            <tr>
                               <th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Selisih kalender</th>
@@ -962,7 +1090,7 @@
                         </tbody>
                      </table>
                   </div>
-                  <p class="mt-2 text-[10px] text-on-surface-variant">Global: seluruh kejadian di database; urut tanggal temuan &amp; ID terbaru.</p>
+                  <p class="mt-2 text-[10px] text-on-surface-variant">{{ $rd['footnote'] ?? '' }}</p>
                   @endif
                </div>
                @endforeach
@@ -991,6 +1119,45 @@
                </div>
                <div id="peer-pressure-detail-error" class="hidden text-center py-12 text-error text-sm font-medium"></div>
                <div id="peer-pressure-detail-content" class="hidden max-w-full"></div>
+            </div>
+         </div>
+      </div>
+      <!-- Modal detail profiling pelanggar (klik baris Profiling Analysis) -->
+      <div id="peer-pelanggar-profiling-modal" class="hidden fixed inset-0 z-[203] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-pelanggar-profiling-title">
+         <div class="absolute inset-0 peer-pelanggar-profiling-backdrop" aria-hidden="true"></div>
+         <div class="relative z-10 flex max-h-[min(94vh,920px)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white shadow-xl">
+            <div class="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant/15 px-5 py-4 sm:px-6">
+               <div class="min-w-0 flex items-start gap-3">
+                  <span class="material-symbols-outlined mt-0.5 shrink-0 text-primary text-2xl" data-icon="assignment">assignment</span>
+                  <div class="min-w-0">
+                     <h2 id="peer-pelanggar-profiling-title" class="font-headline text-base font-bold leading-snug text-on-surface sm:text-lg">Detail pelanggar</h2>
+                     <p id="peer-pelanggar-profiling-subtitle" class="mt-0.5 truncate text-xs text-on-surface-variant font-mono"></p>
+                  </div>
+               </div>
+               <button type="button" id="peer-pelanggar-profiling-close" class="shrink-0 rounded-xl p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
+                  <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
+               </button>
+            </div>
+            <div id="peer-pelanggar-profiling-scroll" class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+               <div id="peer-pelanggar-profiling-loading" class="hidden flex flex-col items-center justify-center gap-3 py-16 text-on-surface-variant">
+                  <span class="material-symbols-outlined animate-pulse text-4xl text-primary" data-icon="progress_activity">progress_activity</span>
+                  <p class="text-xs font-bold uppercase tracking-widest">Memuat detail profiling…</p>
+               </div>
+               <div id="peer-pelanggar-profiling-error" class="hidden rounded-xl border border-error/25 bg-error/5 px-4 py-3 text-sm text-error"></div>
+               <div id="peer-pelanggar-profiling-body" class="hidden space-y-6"></div>
+            </div>
+            <div id="peer-pelanggar-profiling-footer" class="hidden shrink-0 flex flex-wrap items-center justify-end gap-2 border-t border-outline-variant/15 bg-[#fafbfc] px-5 py-4 sm:px-6">
+               <button type="button" id="peer-pelanggar-profiling-note" class="inline-flex items-center gap-1.5 rounded-xl border border-outline-variant/30 bg-white px-4 py-2.5 text-xs font-bold text-on-surface shadow-sm transition-colors hover:bg-surface-container-high">
+                  <span class="material-symbols-outlined text-base" data-icon="edit_note">edit_note</span>
+                  Catat tindakan
+               </button>
+               <button type="button" id="peer-pelanggar-profiling-pdf" class="inline-flex items-center gap-1.5 rounded-xl border border-outline-variant/30 bg-white px-4 py-2.5 text-xs font-bold text-on-surface shadow-sm transition-colors hover:bg-surface-container-high">
+                  <span class="material-symbols-outlined text-base" data-icon="picture_as_pdf">picture_as_pdf</span>
+                  Export PDF
+               </button>
+               <button type="button" id="peer-pelanggar-profiling-close2" class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-opacity hover:opacity-95">
+                  Tutup
+               </button>
             </div>
          </div>
       </div>
@@ -1409,6 +1576,186 @@
             durEl.innerHTML = v + '<span class="text-2xl font-bold">m</span>';
           }
         }
+        function renderInsightCards(ic) {
+          if (!ic || typeof ic !== 'object') return;
+          var root = document.getElementById('peer-insight-cards-root');
+          if (!root) return;
+          var dev = ic.deviation || {};
+          var co = ic.compliance || {};
+          var locs = ic.locations || [];
+          var prof = ic.profiling_pelanggar || [];
+          var cg = dev.conic_gradient || 'conic-gradient(rgb(241 245 249) 0% 100%)';
+          var rot = Number(co.triangle_rotate_deg != null ? co.triangle_rotate_deg : 12);
+          if (isNaN(rot)) rot = 12;
+          function pctStr(x) {
+            var n = Number(x != null ? x : 0);
+            if (isNaN(n)) n = 0;
+            return n.toLocaleString('id-ID', { minimumFractionDigits: 0, maximumFractionDigits: 0 });
+          }
+          function pct1(x) {
+            var n = Number(x != null ? x : 0);
+            if (isNaN(n)) n = 0;
+            return n.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+          }
+          var cats = dev.categories || [];
+          var segRows = cats
+            .map(function (row) {
+              var name = row.kategori_deviasi != null ? String(row.kategori_deviasi) : '—';
+              var p = Number(row.pct != null ? row.pct : 0);
+              if (isNaN(p)) p = 0;
+              var col = row.color != null ? String(row.color) : 'hsl(215 14% 72%)';
+              col = col.replace(/[<>"']/g, '');
+              return (
+                '<div class="flex justify-between items-center gap-2 text-xs">' +
+                '<span class="flex min-w-0 flex-1 items-center gap-2">' +
+                '<span class="h-2.5 w-2.5 shrink-0 rounded-full shadow-sm ring-1 ring-black/5" style="background:' +
+                col +
+                '"></span>' +
+                '<span class="truncate" title="' +
+                escAttr(name) +
+                '">' +
+                escHtml(name) +
+                '</span></span>' +
+                '<span class="shrink-0 font-bold tabular-nums">' +
+                p.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) +
+                '%</span></div>'
+              );
+            })
+            .join('');
+          if (!segRows) {
+            segRows = '<p class="text-[11px] text-on-surface-variant">Belum ada data.</p>';
+          }
+          var locHtml = locs
+            .map(function (loc) {
+              var bw = Number(loc.bar_pct != null ? loc.bar_pct : 0);
+              if (isNaN(bw)) bw = 0;
+              bw = Math.min(100, Math.max(0, bw));
+              var cnt = parseInt(String(loc.count != null ? loc.count : 0), 10) || 0;
+              return (
+                '<div class="space-y-2">' +
+                '<div class="flex justify-between text-[10px] font-bold uppercase tracking-wider">' +
+                '<span class="min-w-0 truncate pr-2" title="' +
+                escAttr(loc.name || '') +
+                '">' +
+                escHtml(loc.name || '—') +
+                '</span>' +
+                '<span class="shrink-0 text-primary tabular-nums">' +
+                cnt +
+                '</span></div>' +
+                '<div class="w-full bg-[#f1f5f9] h-2.5 rounded-full overflow-hidden border border-outline-variant/10 shadow-inner">' +
+                '<div class="bg-primary h-full rounded-full transition-[width] duration-300" style="width:' +
+                bw +
+                '%"></div></div></div>'
+              );
+            })
+            .join('');
+          if (!locHtml) {
+            locHtml = '<p class="text-[11px] text-on-surface-variant">Belum ada data lokasi.</p>';
+          }
+          var profHtml = prof
+            .map(function (p) {
+              var nama = p.nama != null ? String(p.nama) : '—';
+              var sid = p.sid != null ? String(p.sid) : '—';
+              var kasus = parseInt(String(p.kasus != null ? p.kasus : 0), 10) || 0;
+              var share = Number(p.insiden_share_pct != null ? p.insiden_share_pct : 0);
+              if (isNaN(share)) share = 0;
+              var foto = p.foto_url != null ? String(p.foto_url).trim() : '';
+              foto = foto.replace(/[<>"']/g, '');
+              var ini = nama.length ? nama.charAt(0) : '?';
+              var av = foto
+                ? '<img src="' +
+                  escAttr(foto) +
+                  '" alt="" class="h-11 w-11 shrink-0 rounded-full object-cover ring-1 ring-outline-variant/20" loading="lazy" decoding="async" />'
+                : '<div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/12 text-sm font-bold uppercase text-primary ring-1 ring-outline-variant/20" aria-hidden="true">' +
+                  escHtml(ini) +
+                  '</div>';
+              return (
+                '<div class="peer-profiling-row flex items-center gap-3 rounded-xl border border-outline-variant/15 bg-[#fafbfc] p-2.5 cursor-pointer transition-colors hover:bg-[#f1f5f9] hover:border-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30" role="button" tabindex="0" data-sid="' +
+                escAttr(sid) +
+                '" data-nama="' +
+                escAttr(nama) +
+                '">' +
+                av +
+                '<div class="min-w-0 flex-1">' +
+                '<p class="truncate text-xs font-bold text-on-surface" title="' +
+                escAttr(nama) +
+                '">' +
+                escHtml(nama) +
+                '</p>' +
+                '<p class="font-mono text-[10px] text-on-surface-variant">' +
+                escHtml(sid) +
+                '</p></div>' +
+                '<div class="shrink-0 text-right">' +
+                '<p class="text-base font-extrabold tabular-nums leading-tight text-primary">' +
+                kasus +
+                '×</p>' +
+                '<p class="text-[9px] text-on-surface-variant">' +
+                share.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) +
+                '% insiden</p></div></div>'
+              );
+            })
+            .join('');
+          if (!profHtml) {
+            profHtml = '<p class="text-[11px] text-on-surface-variant">Belum ada data pelanggar pada periode ini.</p>';
+          }
+          root.innerHTML =
+            '<div class="bg-white p-6 rounded-2xl anchored-card">' +
+            '<h3 class="font-headline font-bold text-[11px] mb-6 uppercase tracking-widest text-on-surface-variant">Deviation Category</h3>' +
+            '<div class="flex justify-center mb-8">' +
+            '<div class="relative w-36 h-36 rounded-full p-[14px] shadow-inner" style="background:' +
+            cg +
+            '">' +
+            '<div class="flex h-full w-full items-center justify-center rounded-full bg-white">' +
+            '<div class="text-center">' +
+            '<span class="block font-extrabold text-2xl tabular-nums">' +
+            escHtml(dev.total_label || '0') +
+            '</span>' +
+            '<span class="block text-[9px] uppercase font-bold text-on-surface-variant">Total</span>' +
+            '</div></div></div></div>' +
+            '<div class="max-h-64 space-y-3 overflow-y-auto overflow-x-hidden pr-1">' +
+            segRows +
+            '</div>' +
+            '</div>' +
+            '<div class="bg-white p-6 rounded-2xl anchored-card">' +
+            '<h3 class="font-headline font-bold text-[11px] mb-6 uppercase tracking-widest text-on-surface-variant">Compliance Radar</h3>' +
+            '<div class="relative flex aspect-square w-full items-center justify-center">' +
+            '<div class="absolute inset-0 flex items-center justify-center">' +
+            '<div class="w-[85%] h-[85%] border border-outline-variant/20 rounded-full"></div>' +
+            '<div class="absolute w-[60%] h-[60%] border border-outline-variant/20 rounded-full"></div>' +
+            '<div class="absolute w-[35%] h-[35%] border border-outline-variant/20 rounded-full"></div></div>' +
+            '<div class="w-0 h-0 scale-125 cursor-crosshair border-b-[70px] border-l-[45px] border-r-[45px] border-b-primary/40 border-l-transparent border-r-transparent transition-transform hover:scale-150" style="transform:rotate(' +
+            rot +
+            'deg)"></div>' +
+            '<div class="absolute inset-0 flex flex-col justify-between p-1 text-center text-[10px] font-bold uppercase tracking-tighter text-on-surface-variant">' +
+            '<span class="flex flex-col items-center gap-0.5 leading-tight"><span>BeRecord</span><span class="text-[9px] font-bold tabular-nums text-primary">' +
+            pctStr(co.berecord_pct) +
+            '%</span></span>' +
+            '<div class="flex w-full justify-between px-1">' +
+            '<span class="flex flex-col items-center gap-0.5 leading-tight"><span>Evidence</span><span class="text-[9px] font-bold tabular-nums text-primary">' +
+            pctStr(co.evidence_pct) +
+            '%</span></span>' +
+            '<span class="flex flex-col items-center gap-0.5 leading-tight"><span>Size</span><span class="text-[9px] font-bold tabular-nums text-primary">' +
+            pctStr(co.size_pct) +
+            '%</span></span></div>' +
+            '<div class="flex w-full justify-between px-3 pb-3">' +
+            '<span class="flex flex-col items-center gap-0.5 leading-tight"><span>H+1</span><span class="text-[9px] font-bold tabular-nums text-primary">' +
+            pctStr(co.h1_pct) +
+            '%</span></span>' +
+            '<span class="flex flex-col items-center gap-0.5 leading-tight"><span>Duration</span><span class="text-[9px] font-bold tabular-nums text-primary">' +
+            escHtml(co.duration_label || '—') +
+            '</span></span></div></div></div></div>' +
+            '<div class="bg-white p-6 rounded-2xl anchored-card">' +
+            '<h3 class="font-headline font-bold text-[11px] mb-6 uppercase tracking-widest text-on-surface-variant">Location Analysis</h3>' +
+            '<div class="peer-loc-scroll max-h-96 space-y-5 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">' +
+            locHtml +
+            '</div></div>' +
+            '<div class="bg-white p-6 rounded-2xl anchored-card">' +
+            '<h3 class="font-headline font-bold text-[11px] mb-2 uppercase tracking-widest text-on-surface-variant">Profiling Analysis</h3>' +
+            '<p class="mb-4 text-[10px] leading-snug text-on-surface-variant">Pelanggar dengan kejadian terbanyak; korelasi = porsi terhadap total insiden pada periode yang sama.</p>' +
+            '<div class="max-h-80 space-y-2.5 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">' +
+            profHtml +
+            '</div></div>';
+        }
         function escHtml(s) {
           if (s == null) return '';
           return String(s)
@@ -1542,24 +1889,45 @@
           var pid = parseInt(String(rd.previous.kejadian_id != null ? rd.previous.kejadian_id : 0), 10) || 0;
           return (
             '<p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Recency Score — data</p>' +
+            '<p class="mb-3 text-[9px] leading-relaxed text-on-surface-variant">' +
+            escHtml(rd.metric_explanation || '') +
+            '</p>' +
             '<div class="overflow-x-auto rounded-xl border border-outline-variant/20 bg-white">' +
             '<table class="w-full min-w-[260px] text-left text-[10px] text-on-surface">' +
             '<tbody class="divide-y divide-outline-variant/10">' +
-            '<tr><th class="w-[42%] whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan terbaru</th><td class="px-2 py-2 font-medium">' +
+            '<tr><th class="w-[42%] whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Pelanggar</th><td class="px-2 py-2 font-medium">' +
+            escHtml(rd.pelanggar_nama || '—') +
+            '</td></tr>' +
+            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">SID</th><td class="px-2 py-2 font-mono text-[9px] text-on-surface-variant">' +
+            escHtml(rd.pelanggar_sid || '—') +
+            '</td></tr>' +
+            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan terbaru</th><td class="px-2 py-2 align-top">' +
+            '<div class="flex flex-col gap-0.5">' +
+            '<span class="font-medium">' +
             escHtml(rd.latest.tanggal_label) +
             ' <span class="font-mono text-[9px] text-on-surface-variant">#' +
             lid +
-            '</span></td></tr>' +
-            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan sebelumnya</th><td class="px-2 py-2 font-medium">' +
+            '</span></span>' +
+            '<span class="text-[8px] leading-snug text-on-surface-variant"><span class="font-semibold">Kategori deviasi:</span> ' +
+            escHtml(rd.latest.kategori_deviasi || '—') +
+            '</span></div></td></tr>' +
+            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan sebelumnya</th><td class="px-2 py-2 align-top">' +
+            '<div class="flex flex-col gap-0.5">' +
+            '<span class="font-medium">' +
             escHtml(rd.previous.tanggal_label) +
             ' <span class="font-mono text-[9px] text-on-surface-variant">#' +
             pid +
-            '</span></td></tr>' +
+            '</span></span>' +
+            '<span class="text-[8px] leading-snug text-on-surface-variant"><span class="font-semibold">Kategori deviasi:</span> ' +
+            escHtml(rd.previous.kategori_deviasi || '—') +
+            '</span></div></td></tr>' +
             '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Selisih kalender</th><td class="px-2 py-2 font-semibold tabular-nums">' +
             gap +
             ' hari</td></tr>' +
             '</tbody></table></div>' +
-            '<p class="mt-2 text-[9px] text-on-surface-variant">Dua tanggal temuan terbaru, seluruh data (urut tanggal temuan &amp; ID DESC).</p>'
+            '<p class="mt-2 text-[9px] text-on-surface-variant">' +
+            escHtml(rd.footnote || '') +
+            '</p>'
           );
         }
         function buildRecencyModalExtraHtml(rd) {
@@ -1568,24 +1936,144 @@
           var lid = parseInt(String(rd.latest.kejadian_id != null ? rd.latest.kejadian_id : 0), 10) || 0;
           var pid = parseInt(String(rd.previous.kejadian_id != null ? rd.previous.kejadian_id : 0), 10) || 0;
           return (
-            '<div class="mt-4 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">' +
+            '<p class="mt-2 text-[12px] leading-relaxed text-on-surface-variant">' +
+            escHtml(rd.metric_explanation || '') +
+            '</p>' +
+            '<div class="mt-3 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">' +
             '<table class="w-full min-w-[300px] text-left text-[12px] text-on-surface">' +
             '<tbody class="divide-y divide-outline-variant/10">' +
-            '<tr><th class="w-[40%] whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Temuan terbaru</th><td class="px-3 py-2.5 font-medium">' +
+            '<tr><th class="w-[40%] whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Pelanggar</th><td class="px-3 py-2.5 font-medium">' +
+            escHtml(rd.pelanggar_nama || '—') +
+            '</td></tr>' +
+            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">SID</th><td class="px-3 py-2.5 font-mono text-[11px] text-on-surface-variant">' +
+            escHtml(rd.pelanggar_sid || '—') +
+            '</td></tr>' +
+            '<tr><th class="w-[40%] whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Temuan terbaru</th><td class="px-3 py-2.5 align-top">' +
+            '<div class="flex flex-col gap-1">' +
+            '<span class="font-medium">' +
             escHtml(rd.latest.tanggal_label) +
             ' <span class="font-mono text-[11px] text-on-surface-variant">#' +
             lid +
-            '</span></td></tr>' +
-            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Temuan sebelumnya</th><td class="px-3 py-2.5 font-medium">' +
+            '</span></span>' +
+            '<span class="text-[11px] leading-snug text-on-surface-variant"><span class="font-semibold">Kategori deviasi:</span> ' +
+            escHtml(rd.latest.kategori_deviasi || '—') +
+            '</span></div></td></tr>' +
+            '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Temuan sebelumnya</th><td class="px-3 py-2.5 align-top">' +
+            '<div class="flex flex-col gap-1">' +
+            '<span class="font-medium">' +
             escHtml(rd.previous.tanggal_label) +
             ' <span class="font-mono text-[11px] text-on-surface-variant">#' +
             pid +
-            '</span></td></tr>' +
+            '</span></span>' +
+            '<span class="text-[11px] leading-snug text-on-surface-variant"><span class="font-semibold">Kategori deviasi:</span> ' +
+            escHtml(rd.previous.kategori_deviasi || '—') +
+            '</span></div></td></tr>' +
             '<tr><th class="whitespace-nowrap bg-[#f8fafc] px-3 py-2.5 align-top text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">Selisih kalender</th><td class="px-3 py-2.5 font-semibold tabular-nums">' +
             gap +
             ' hari</td></tr>' +
             '</tbody></table></div>' +
-            '<p class="mt-2 text-[10px] text-on-surface-variant">Global: seluruh kejadian di database; urut tanggal temuan &amp; ID terbaru.</p>'
+            '<p class="mt-2 text-[10px] text-on-surface-variant">' +
+            escHtml(rd.footnote || '') +
+            '</p>'
+          );
+        }
+        function buildDeviationVarietyModalHtml(dv) {
+          if (!dv || typeof dv !== 'object') return '';
+          var cats = dv.categories || [];
+          var rows = cats
+            .map(function (cat) {
+              var k = escHtml(cat.kategori_deviasi != null ? String(cat.kategori_deviasi) : '—');
+              var j = parseInt(String(cat.jumlah != null ? cat.jumlah : 0), 10) || 0;
+              return (
+                '<tr class="hover:bg-[#fafbfc]">' +
+                '<td class="px-3 py-2">' +
+                k +
+                '</td>' +
+                '<td class="px-3 py-2 text-right tabular-nums font-semibold">' +
+                j +
+                '</td>' +
+                '</tr>'
+              );
+            })
+            .join('');
+          if (!rows) {
+            rows =
+              '<tr><td colspan="2" class="px-3 py-4 text-center text-[11px] text-on-surface-variant">Belum ada data kategori.</td></tr>';
+          }
+          return (
+            '<div class="mt-3 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">' +
+            '<table class="w-full min-w-[280px] text-left text-[12px] text-on-surface">' +
+            '<thead><tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">' +
+            '<th class="px-3 py-2">Kategori deviasi</th>' +
+            '<th class="whitespace-nowrap px-3 py-2 text-right">Kejadian</th>' +
+            '</tr></thead>' +
+            '<tbody class="divide-y divide-outline-variant/10">' +
+            rows +
+            '</tbody></table></div>'
+          );
+        }
+        function buildPeerCorrelationModalHtml(pc) {
+          if (!pc || typeof pc !== 'object') return '';
+          var def = escHtml(pc.definition || '');
+          var tu = parseInt(String(pc.total_unique_pairs != null ? pc.total_unique_pairs : 0), 10) || 0;
+          var g2 = parseInt(String(pc.pairs_with_freq_gte_2 != null ? pc.pairs_with_freq_gte_2 : 0), 10) || 0;
+          var mx = parseInt(String(pc.max_pair_frequency != null ? pc.max_pair_frequency : 0), 10) || 0;
+          var top = pc.top_pairs || [];
+          var pairRows = top
+            .map(function (tp) {
+              var pl = escHtml(tp.pelanggar_sid != null ? String(tp.pelanggar_sid) : '—');
+              var pr = escHtml(tp.peer_sid != null ? String(tp.peer_sid) : '—');
+              var f = parseInt(String(tp.frekuensi != null ? tp.frekuensi : 0), 10) || 0;
+              return (
+                '<tr class="hover:bg-[#fafbfc]">' +
+                '<td class="px-3 py-2 font-mono text-[11px]">' +
+                pl +
+                '</td>' +
+                '<td class="px-3 py-2 font-mono text-[11px]">' +
+                pr +
+                '</td>' +
+                '<td class="px-3 py-2 text-right tabular-nums font-semibold">' +
+                f +
+                '×</td>' +
+                '</tr>'
+              );
+            })
+            .join('');
+          if (!pairRows) {
+            pairRows =
+              '<tr><td colspan="3" class="px-3 py-4 text-center text-[11px] text-on-surface-variant">Tidak ada pasangan berulang (frekuensi ≥ 2).</td></tr>';
+          }
+          return (
+            '<p class="mt-2 text-[11px] leading-relaxed text-on-surface">' +
+            def +
+            '</p>' +
+            '<div class="mt-3 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">' +
+            '<table class="w-full min-w-[260px] text-left text-[12px] text-on-surface">' +
+            '<thead><tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">' +
+            '<th class="px-3 py-2">Metrik</th>' +
+            '<th class="whitespace-nowrap px-3 py-2 text-right">Nilai</th>' +
+            '</tr></thead>' +
+            '<tbody class="divide-y divide-outline-variant/10">' +
+            '<tr class="hover:bg-[#fafbfc]"><td class="px-3 py-2">Total pasangan unik (semua kejadian)</td><td class="px-3 py-2 text-right tabular-nums font-semibold">' +
+            tu +
+            '</td></tr>' +
+            '<tr class="hover:bg-[#fafbfc]"><td class="px-3 py-2">Pasangan dengan frekuensi ≥ 2</td><td class="px-3 py-2 text-right tabular-nums font-semibold">' +
+            g2 +
+            '</td></tr>' +
+            '<tr class="hover:bg-[#fafbfc]"><td class="px-3 py-2">Frekuensi maksimal satu pasangan</td><td class="px-3 py-2 text-right tabular-nums font-semibold">' +
+            mx +
+            ' kejadian</td></tr>' +
+            '</tbody></table></div>' +
+            '<div class="mt-3 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">' +
+            '<table class="w-full min-w-[320px] text-left text-[12px] text-on-surface">' +
+            '<thead><tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">' +
+            '<th class="px-3 py-2">Pelanggar (SID)</th>' +
+            '<th class="px-3 py-2">Peer (SID)</th>' +
+            '<th class="whitespace-nowrap px-3 py-2 text-right">Frekuensi</th>' +
+            '</tr></thead>' +
+            '<tbody class="divide-y divide-outline-variant/10">' +
+            pairRows +
+            '</tbody></table></div>'
           );
         }
         function renderEvaluationSummary(es) {
@@ -1690,8 +2178,10 @@
             var detailBlocks = rows
               .map(function (row) {
                 var bullets = row.detail_bullets || [];
+                var useDv = row.key === 'deviation_variety' && row.deviation_variety_detail;
+                var usePc = row.key === 'peer_correlation' && row.peer_correlation_detail;
                 var ul =
-                  bullets.length > 0
+                  !useDv && !usePc && bullets.length > 0
                     ? '<ul class="mt-2 list-inside list-disc space-y-1 text-[13px] leading-relaxed text-on-surface">' +
                       bullets
                         .map(function (b) {
@@ -1701,6 +2191,12 @@
                       '</ul>'
                     : '';
                 var extra = '';
+                if (useDv) {
+                  extra += buildDeviationVarietyModalHtml(row.deviation_variety_detail);
+                }
+                if (usePc) {
+                  extra += buildPeerCorrelationModalHtml(row.peer_correlation_detail);
+                }
                 if (row.key === 'repeat_violator' && row.violators_detail && row.violators_detail.length) {
                   extra +=
                     '<div class="mt-4 overflow-x-auto rounded-lg border border-outline-variant/20 bg-white">' +
@@ -1879,6 +2375,7 @@
                 renderWeeklyChart(wt);
                 if (wt.kpi) renderKpi(wt.kpi, wt.period_scope);
                 if (wt.evaluation_summary) renderEvaluationSummary(wt.evaluation_summary);
+                if (wt.insight_cards) renderInsightCards(wt.insight_cards);
                 updateFormHiddenAndUrl();
               })
               .catch(function (err) {
@@ -1939,6 +2436,356 @@
           if (e.key !== 'Escape' || !modal || modal.classList.contains('hidden')) return;
           closeModal();
         });
+      })();
+      </script>
+      <script>
+      (function () {
+        var profilingDetailUrl = @json(route('peer-pressure-edukasi.dashboard.pelanggar-profiling'));
+        var modal = document.getElementById('peer-pelanggar-profiling-modal');
+        var titleEl = document.getElementById('peer-pelanggar-profiling-title');
+        var subEl = document.getElementById('peer-pelanggar-profiling-subtitle');
+        var loadingEl = document.getElementById('peer-pelanggar-profiling-loading');
+        var errorEl = document.getElementById('peer-pelanggar-profiling-error');
+        var bodyEl = document.getElementById('peer-pelanggar-profiling-body');
+        var footerEl = document.getElementById('peer-pelanggar-profiling-footer');
+        var closeBtn = document.getElementById('peer-pelanggar-profiling-close');
+        var closeBtn2 = document.getElementById('peer-pelanggar-profiling-close2');
+        var noteBtn = document.getElementById('peer-pelanggar-profiling-note');
+        var pdfBtn = document.getElementById('peer-pelanggar-profiling-pdf');
+        var backdrop = modal ? modal.querySelector('.peer-pelanggar-profiling-backdrop') : null;
+
+        function esc(s) {
+          if (s == null) return '';
+          var d = document.createElement('div');
+          d.textContent = String(s);
+          return d.innerHTML;
+        }
+
+        function setOpen(open) {
+          if (!modal) return;
+          if (open) {
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('overflow-hidden');
+          } else {
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('overflow-hidden');
+          }
+        }
+
+        function showLoading() {
+          if (loadingEl) {
+            loadingEl.classList.remove('hidden');
+            loadingEl.classList.add('flex');
+          }
+          if (errorEl) errorEl.classList.add('hidden');
+          if (bodyEl) {
+            bodyEl.classList.add('hidden');
+            bodyEl.innerHTML = '';
+          }
+          if (footerEl) footerEl.classList.add('hidden');
+        }
+
+        function showError(msg) {
+          if (loadingEl) {
+            loadingEl.classList.add('hidden');
+            loadingEl.classList.remove('flex');
+          }
+          if (bodyEl) bodyEl.classList.add('hidden');
+          if (footerEl) footerEl.classList.add('hidden');
+          if (errorEl) {
+            errorEl.classList.remove('hidden');
+            errorEl.textContent = msg || 'Terjadi kesalahan.';
+          }
+        }
+
+        function sectionTitle(icon, text) {
+          return (
+            '<div class="flex items-center gap-2 text-on-surface">' +
+            '<span class="material-symbols-outlined text-lg text-primary" data-icon="' +
+            esc(icon) +
+            '">' +
+            esc(icon) +
+            '</span>' +
+            '<h3 class="text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">' +
+            esc(text) +
+            '</h3></div>' +
+            '<div class="my-2 border-t border-outline-variant/20"></div>'
+          );
+        }
+
+        function buildRecencyChart(gaps) {
+          if (!gaps || gaps.length === 0) {
+            return '<p class="text-[11px] leading-relaxed text-on-surface-variant">Belum cukup data interval (minimal 2 kejadian dalam jendela).</p>';
+          }
+          var w = 100;
+          var h = 40;
+          var pad = 8;
+          var maxG = Math.max.apply(null, gaps);
+          var minG = Math.min.apply(null, gaps);
+          var range = Math.max(maxG - minG, 1);
+          var n = gaps.length;
+          var pts = gaps.map(function (g, i) {
+            var x = n === 1 ? w / 2 : pad + (i / (n - 1)) * (w - 2 * pad);
+            var y = h - pad - ((g - minG) / range) * (h - 2 * pad);
+            return [x, y];
+          });
+          var dPath = pts
+            .map(function (pt, i) {
+              return (i === 0 ? 'M' : 'L') + pt[0].toFixed(2) + ' ' + pt[1].toFixed(2);
+            })
+            .join(' ');
+          var circles = pts
+            .map(function (pt) {
+              return (
+                '<circle cx="' +
+                pt[0].toFixed(2) +
+                '" cy="' +
+                pt[1].toFixed(2) +
+                '" r="2" fill="currentColor" class="text-primary" />'
+              );
+            })
+            .join('');
+          var labelRow = gaps
+            .map(function (g) {
+              return '<span class="text-[10px] font-extrabold tabular-nums text-primary">' + esc(String(g)) + ' h</span>';
+            })
+            .join('<span class="px-1 text-on-surface-variant/45">→</span>');
+          return (
+            '<div class="space-y-3">' +
+            '<svg class="w-full max-w-md text-primary" viewBox="0 0 ' +
+            w +
+            ' ' +
+            h +
+            '" preserveAspectRatio="xMidYMid meet" aria-hidden="true">' +
+            '<path d="' +
+            dPath +
+            '" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" />' +
+            circles +
+            '</svg>' +
+            '<div class="flex flex-wrap items-center gap-1">' +
+            labelRow +
+            '</div></div>'
+          );
+        }
+
+        function trendBlock(d) {
+          var tr = d.recency_trend || 'stable';
+          var icon = tr === 'worsening' ? 'trending_down' : tr === 'improving' ? 'trending_up' : 'timeline';
+          var cls =
+            tr === 'worsening'
+              ? 'text-amber-700 bg-amber-50 border-amber-200/80'
+              : tr === 'improving'
+                ? 'text-[#059669] bg-[#ecfdf5] border-[#059669]/25'
+                : 'text-on-surface-variant bg-[#f8fafc] border-outline-variant/20';
+          return (
+            '<p class="mt-2 flex items-start gap-2 rounded-xl border px-3 py-2 text-[11px] leading-snug ' +
+            cls +
+            '">' +
+            '<span class="material-symbols-outlined shrink-0 text-base" data-icon="' +
+            esc(icon) +
+            '">' +
+            esc(icon) +
+            '</span><span>' +
+            esc(d.recency_caption || '') +
+            '</span></p>'
+          );
+        }
+
+        function renderBody(d) {
+          var st = d.status_level || 'normal';
+          var stCls =
+            st === 'high'
+              ? 'text-amber-800 bg-amber-50 border-amber-200/90'
+              : st === 'moderate'
+                ? 'text-amber-800/90 bg-amber-50/80 border-amber-200/60'
+                : 'text-[#059669] bg-[#ecfdf5] border-[#059669]/25';
+          var rows = (d.riwayat || [])
+            .map(function (r) {
+              return (
+                '<tr class="border-b border-outline-variant/10">' +
+                '<td class="whitespace-nowrap px-2 py-2 text-[11px] font-medium tabular-nums text-on-surface">' +
+                esc(r.tanggal_short) +
+                '</td>' +
+                '<td class="px-2 py-2 text-[11px] text-on-surface">' +
+                esc(r.kategori) +
+                '</td>' +
+                '<td class="px-2 py-2 text-[11px] text-on-surface-variant">' +
+                esc(r.lokasi) +
+                '</td>' +
+                '<td class="whitespace-nowrap px-2 py-2 text-[10px] font-bold uppercase text-on-surface-variant">' +
+                esc(r.status) +
+                '</td></tr>'
+              );
+            })
+            .join('');
+          var kor = (d.korelasi || [])
+            .map(function (line) {
+              return (
+                '<li class="flex gap-2 text-[11px] leading-relaxed text-on-surface">' +
+                '<span class="shrink-0 text-[#059669]">✓</span><span>' +
+                esc(line) +
+                '</span></li>'
+              );
+            })
+            .join('');
+          var rek = (d.rekomendasi || [])
+            .map(function (line) {
+              return (
+                '<li class="flex gap-2.5 text-[11px] leading-relaxed text-on-surface">' +
+                '<span class="mt-0.5 inline-flex h-4 w-4 shrink-0 rounded border border-outline-variant/35 bg-white"></span>' +
+                '<span>' +
+                esc(line) +
+                '</span></li>'
+              );
+            })
+            .join('');
+          return (
+            '<p class="text-[10px] leading-relaxed text-on-surface-variant">' +
+            esc(d.window_caption || '') +
+            '</p>' +
+            '<section class="rounded-xl border border-outline-variant/15 bg-[#fafbfc] p-4">' +
+            sectionTitle('person', 'Informasi dasar') +
+            '<div class="grid grid-cols-1 gap-3 text-[11px] sm:grid-cols-2">' +
+            '<div><span class="block text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">NPK</span><span class="font-mono font-semibold text-on-surface">' +
+            esc(d.npk) +
+            '</span></div>' +
+            '<div><span class="block text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">Departemen</span><span class="text-on-surface">' +
+            esc(d.departemen) +
+            '</span></div>' +
+            '<div><span class="block text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">Posisi</span><span class="text-on-surface">' +
+            esc(d.posisi) +
+            '</span></div>' +
+            '<div><span class="block text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">Grup</span><span class="text-on-surface">' +
+            esc(d.grup) +
+            '</span></div>' +
+            '<div><span class="block text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">Status</span><span class="inline-flex rounded-lg border px-2 py-0.5 text-[10px] font-bold ' +
+            stCls +
+            '">' +
+            esc(d.status_label) +
+            '</span></div>' +
+            '<div><span class="block text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">Last education</span><span class="tabular-nums text-on-surface">' +
+            esc(d.last_education_label) +
+            '</span></div></div></section>' +
+            '<section class="rounded-xl border border-outline-variant/15 bg-white p-4">' +
+            sectionTitle('table_chart', 'Riwayat pelanggaran (6 bulan terakhir)') +
+            '<div class="overflow-x-auto rounded-lg border border-outline-variant/15">' +
+            '<table class="w-full min-w-[280px] text-left text-[11px]">' +
+            '<thead class="bg-[#f8fafc] text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">' +
+            '<tr><th class="px-2 py-2">Tanggal</th><th class="px-2 py-2">Kategori</th><th class="px-2 py-2">Lokasi</th><th class="px-2 py-2">Status</th></tr></thead>' +
+            '<tbody>' +
+            (rows || '<tr><td colspan="4" class="px-2 py-3 text-on-surface-variant">Tidak ada baris.</td></tr>') +
+            '</tbody></table></div></section>' +
+            '<section class="rounded-xl border border-outline-variant/15 bg-white p-4">' +
+            sectionTitle('show_chart', 'Recency score trend') +
+            buildRecencyChart(d.recency_gap_days || []) +
+            trendBlock(d) +
+            '</section>' +
+            '<section class="rounded-xl border border-outline-variant/15 bg-white p-4">' +
+            sectionTitle('hub', 'Korelasi terdeteksi') +
+            '<ul class="space-y-2">' +
+            (kor || '<li class="text-[11px] text-on-surface-variant">—</li>') +
+            '</ul></section>' +
+            '<section class="rounded-xl border border-outline-variant/15 bg-white p-4">' +
+            sectionTitle('task_alt', 'Rekomendasi tindakan') +
+            '<ul class="space-y-2.5">' +
+            rek +
+            '</ul></section>'
+          );
+        }
+
+        function openProfiling(sid, nama) {
+          if (!modal || !sid) return;
+          var label = (nama || '').trim() ? String(nama).trim().toUpperCase() : 'PELANGGAR';
+          if (titleEl) {
+            titleEl.textContent = 'Detail pelanggar: ' + label + ' (' + String(sid).trim() + ')';
+          }
+          if (subEl) subEl.textContent = '';
+          setOpen(true);
+          showLoading();
+          fetch(profilingDetailUrl + '?sid=' + encodeURIComponent(String(sid).trim()), {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin',
+          })
+            .then(function (res) {
+              return res.json().then(function (data) {
+                if (!res.ok) {
+                  throw new Error((data && data.message) || res.statusText || 'Gagal memuat data.');
+                }
+                return data;
+              });
+            })
+            .then(function (d) {
+              if (loadingEl) {
+                loadingEl.classList.add('hidden');
+                loadingEl.classList.remove('flex');
+              }
+              if (errorEl) errorEl.classList.add('hidden');
+              if (bodyEl) {
+                bodyEl.innerHTML = renderBody(d);
+                bodyEl.classList.remove('hidden');
+              }
+              if (footerEl) footerEl.classList.remove('hidden');
+            })
+            .catch(function (err) {
+              showError(err.message || 'Gagal memuat detail.');
+            });
+        }
+
+        function closeProfiling() {
+          setOpen(false);
+        }
+
+        if (closeBtn) closeBtn.addEventListener('click', closeProfiling);
+        if (closeBtn2) closeBtn2.addEventListener('click', closeProfiling);
+        if (backdrop) backdrop.addEventListener('click', closeProfiling);
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape' || !modal || modal.classList.contains('hidden')) return;
+          closeProfiling();
+        });
+
+        document.addEventListener('click', function (e) {
+          var row = e.target.closest('#peer-insight-cards-root .peer-profiling-row');
+          if (!row) return;
+          e.preventDefault();
+          openProfiling(row.getAttribute('data-sid'), row.getAttribute('data-nama'));
+        });
+
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          var row = e.target.closest('#peer-insight-cards-root .peer-profiling-row');
+          if (!row) return;
+          e.preventDefault();
+          openProfiling(row.getAttribute('data-sid'), row.getAttribute('data-nama'));
+        });
+
+        if (noteBtn) {
+          noteBtn.addEventListener('click', function () {
+            window.alert('Catat tindakan melalui prosedur internal HSE / sistem dokumentasi yang berlaku.');
+          });
+        }
+        if (pdfBtn) {
+          pdfBtn.addEventListener('click', function () {
+            var el = document.getElementById('peer-pelanggar-profiling-body');
+            if (!el || el.classList.contains('hidden')) return;
+            var w = window.open('', '_blank');
+            if (!w) return;
+            w.document.write(
+              '<!DOCTYPE html><html><head><meta charset="utf-8"><title>Detail pelanggar</title><style>body{font-family:system-ui,sans-serif;padding:24px;font-size:12px;color:#111;} h1{font-size:16px;} table{border-collapse:collapse;width:100%;margin-top:12px;} th,td{border:1px solid #ccc;padding:6px;text-align:left;}</style></head><body><h1>Detail pelanggar</h1>'
+            );
+            w.document.write(el.innerHTML);
+            w.document.write('</body></html>');
+            w.document.close();
+            w.focus();
+            w.print();
+            try {
+              w.close();
+            } catch (err) {}
+          });
+        }
       })();
       </script>
    </body>

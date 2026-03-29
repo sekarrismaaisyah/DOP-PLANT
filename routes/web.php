@@ -152,6 +152,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/peer-pressure-edukasi', [PeerPressureEdukasiController::class, 'index'])->name('peer-pressure-edukasi.index');
     Route::get('/peer-pressure-edukasi/dashboard', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.dashboard');
     Route::get('/peer-pressure-edukasi/dashboard/weekly-trend', [PeerPressureEdukasiController::class, 'weeklyTrendData'])->name('peer-pressure-edukasi.dashboard.weekly-trend');
+    Route::get('/peer-pressure-edukasi/dashboard/pelanggar-profiling', [PeerPressureEdukasiController::class, 'pelanggarProfilingDetail'])->name('peer-pressure-edukasi.dashboard.pelanggar-profiling');
     Route::get('/peer-pressure-edukasi/kejadian/{id}', [PeerPressureEdukasiController::class, 'kejadianDetail'])
         ->whereNumber('id')
         ->name('peer-pressure-edukasi.kejadian.detail');
