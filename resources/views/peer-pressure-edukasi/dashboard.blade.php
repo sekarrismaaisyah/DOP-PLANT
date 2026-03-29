@@ -214,11 +214,29 @@
             $kpiCompletion = (float) ($kpi['completion_rate'] ?? 0);
             $kpiBarW = max(0, min(100, $kpiCompletion));
             $kpiTrendPct = $kpi['total_cases_trend_pct'] ?? null;
+            $icPre = $insightCards ?? [];
+            $dvPre = $icPre['deviation'] ?? [];
+            $dvPreCats = $dvPre['categories'] ?? [];
+            $dvPreTotal = (int) ($dvPre['total'] ?? 0);
+            $dvPreSumJumlah = (int) collect($dvPreCats)->sum(fn ($r) => (int) ($r['jumlah'] ?? 0));
+            $dvPreFooterTotal = $dvPreSumJumlah > 0 ? $dvPreSumJumlah : $dvPreTotal;
          @endphp
          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+         <button type="button" id="peer-kpi-deviation-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-deviation-category-modal">
+               <div class="flex justify-between items-start">
+                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Total Deviasi Pelanggaran</span>
+                  <div class="p-2 bg-[#fef3c7] rounded-lg">
+                     <span class="material-symbols-outlined text-[#d97706]" data-icon="groups">groups</span>
+                  </div>
+               </div>
+               <div class="mt-4">
+                  <p id="peer-kpi-deviation-total" class="font-headline font-extrabold text-4xl tabular-nums">{{ number_format($dvPreTotal) }}</p>
+                  <p class="text-on-surface-variant text-[11px] font-medium mt-1">Jumlah kejadian menurut kategori deviasi · klik untuk detail</p>
+               </div>
+            </button>
             <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
                <div class="flex justify-between items-start">
-                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Total Cases</span>
+                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Pelaksanaan Peer Pressure</span>
                   <div class="p-2 bg-primary/10 rounded-lg">
                      <span class="material-symbols-outlined text-primary" data-icon="assignment_late">assignment_late</span>
                   </div>
@@ -239,7 +257,7 @@
             </div>
             <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
                <div class="flex justify-between items-start">
-                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Completion Rate</span>
+                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Pelaksanaan Rate</span>
                   <div class="p-2 bg-[#dcfce7] rounded-lg">
                      <span class="material-symbols-outlined text-[#16a34a]" data-icon="task_alt">task_alt</span>
                   </div>
@@ -259,30 +277,21 @@
                   </div>
                </div>
             </div>
-            <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
+           
+            <button type="button" id="peer-kpi-compliance-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-secondary/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-compliance-detail-modal">
                <div class="flex justify-between items-start">
-                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Avg Group Size</span>
-                  <div class="p-2 bg-[#fef3c7] rounded-lg">
-                     <span class="material-symbols-outlined text-[#d97706]" data-icon="groups">groups</span>
-                  </div>
-               </div>
-               <div class="mt-4">
-                  <p id="peer-kpi-avg-peer" class="font-headline font-extrabold text-4xl">{{ number_format((float) ($kpi['avg_peer_count'] ?? 0), 1) }}</p>
-                  <p class="text-on-surface-variant text-[11px] font-medium mt-1">Rata-rata jumlah peer per kejadian · Target: 5–8 peers</p>
-               </div>
-            </div>
-            <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
-               <div class="flex justify-between items-start">
-                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Education Duration</span>
+                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Pelaksanaan Comply</span>
                   <div class="p-2 bg-secondary/10 rounded-lg">
-                     <span class="material-symbols-outlined text-secondary" data-icon="timer">timer</span>
+                     <span class="material-symbols-outlined text-secondary" data-icon="verified">verified</span>
                   </div>
                </div>
                <div class="mt-4">
-                  <p id="peer-kpi-avg-duration" class="font-headline font-extrabold text-4xl">{{ number_format((float) ($kpi['avg_duration_minutes'] ?? 0), 1) }}<span class="text-2xl font-bold">m</span></p>
-                  <p class="text-on-surface-variant text-[11px] font-medium mt-1">Rata-rata durasi edukasi (menit) · Target: 15 mins</p>
+                  <p id="peer-kpi-pelaksanaan-compliance" class="font-headline font-extrabold text-4xl">{{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}<span class="text-2xl font-bold">%</span></p>
+                  <p class="text-on-surface-variant text-[11px] font-medium mt-1 leading-snug">
+                     <span id="peer-kpi-pelaksanaan-compliance-count">{{ (int) ($kpi['peer_pressure_compliance_comply'] ?? 0) }}/{{ (int) ($kpi['peer_pressure_compliance_total'] ?? 0) }}</span> kejadian (5 kategori). Klik untuk penjelasan detail.
+                  </p>
                </div>
-            </div>
+            </button>
          </div>
          <!-- Charts & Recommendations Grid -->
          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -290,6 +299,9 @@
             @php
                $wtWeeks = $wt['weeks'] ?? [];
                $wtLinePct = (float) ($wt['target_line_bottom_pct'] ?? 0);
+               $wtDevCats = $wt['deviation_categories'] ?? [];
+               $wtGran = $wt['chart_granularity'] ?? 'month';
+               $wtGranLabel = $wtGran === 'week' ? 'Per minggu (dalam bulan dipilih)' : 'Per bulan';
             @endphp
             <div id="peer-weekly-chart-card" class="relative lg:col-span-8 bg-white p-8 rounded-2xl anchored-card">
                <div id="peer-weekly-chart-loading" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center rounded-2xl bg-white/85 backdrop-blur-[2px]" aria-live="polite" aria-busy="false">
@@ -298,20 +310,24 @@
                </div>
                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
                   <div>
-                     <h3 class="font-headline font-bold text-xl">Cases Trend Analysis</h3>
-                     <!-- <p class="text-xs text-on-surface-variant font-medium">Per minggu ISO dalam bulan dipilih; kejadian dihitung per potongan tanggal dalam bulan (tanggal temuan)</p> -->
+                     <h3 class="font-headline font-bold text-xl">Trend Pelanggaran</h3>
+                     <!-- <p id="peer-trend-chart-subtitle" class="text-[10px] text-on-surface-variant font-medium mt-0.5">{{ $wtGranLabel }} · batang bertumpuk = kategori deviasi (peer pressure), berdasarkan tanggal temuan</p> -->
                      <p id="peer-trend-period-caption" class="text-[10px] text-on-surface-variant/80 font-medium mt-1">{{ $wt['period_caption'] ?? '' }}</p>
                   </div>
-                  <div class="flex w-full flex-col items-stretch gap-3 sm:items-end lg:max-w-md">
-                     <div class="flex flex-wrap items-center justify-end gap-4 sm:gap-6 text-[10px] font-bold uppercase tracking-wider">
-                        <span class="flex items-center gap-2">
-                        <span class="w-3 h-3 bg-primary rounded-full shadow-sm"></span>
-                        Kejadian (aktual)
+                  <div class="flex w-full flex-col items-stretch gap-3 sm:items-end lg:max-w-2xl">
+                     <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                        <div id="peer-trend-legend-cats-inner" class="flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
+                        @foreach ($wtDevCats as $dc)
+                        <span class="inline-flex items-center gap-1.5" title="{{ $dc['label'] ?? '' }}">
+                           <span class="h-2.5 w-2.5 shrink-0 rounded-sm shadow-sm ring-1 ring-black/5" style="background-color: {{ $dc['color'] ?? '#94a3b8' }}"></span>
+                           <span class="max-w-[10rem] truncate sm:max-w-none">{{ $dc['label'] ?? '' }}</span>
                         </span>
-                        <span class="flex items-center gap-2">
-                        <span class="w-3 h-1 bg-error/30 rounded-full border-t border-dashed border-error"></span>
+                        @endforeach
+                        </div>
+                        <!-- <span class="flex items-center gap-2 border-l border-outline-variant/30 pl-3">
+                        <span class="w-4 h-0 border-t-2 border-dashed border-error/60"></span>
                         <span id="peer-trend-avg-label">{{ $wt['avg_legend_label'] ?? 'Rata-rata' }}</span> (<span id="peer-trend-avg">{{ number_format((float) ($wt['avg_count'] ?? 0), 1) }}</span>)
-                        </span>
+                        </span> -->
                      </div>
                      <!-- <button type="button" id="peer-open-weekly-period" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-4 py-3 text-left shadow-inner transition-colors hover:bg-surface-container-high sm:w-auto sm:min-w-[14rem]">
                         <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
@@ -329,9 +345,36 @@
                         <div id="peer-chart-target-line-wrap" class="@if(($wt['max_count'] ?? 0) <= 0) hidden @endif pointer-events-none absolute left-0 right-0 z-0 h-px border-t-2 border-dashed border-error opacity-40" style="bottom: {{ min(100, max(0, $wtLinePct)) }}%"></div>
                         <div id="peer-chart-bars" class="peer-chart-bars relative z-10 flex h-full w-full items-stretch gap-1 sm:gap-2">
                            @forelse ($wtWeeks as $w)
-                           <div class="peer-chart-bar-col flex h-full min-h-0 flex-1 basis-0 min-w-[2rem] flex-col justify-end rounded-t-lg border-x border-t border-outline-variant/10 bg-[#f8fafc] group" title="{{ $w['range_short'] ?? '' }}: {{ (int) ($w['count'] ?? 0) }} kejadian">
-                              <div class="relative w-full rounded-t-md bg-primary shadow-lg transition-all group-hover:bg-primary-dim" style="height: {{ min(100, max(0, (float) ($w['bar_height_pct'] ?? 0))) }}%">
-                                 <span class="absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-on-surface">{{ (int) ($w['count'] ?? 0) }}</span>
+                           @php
+                              $barH = min(100, max(0, (float) ($w['bar_height_pct'] ?? 0)));
+                              $stackP = $w['category_stack_pct'] ?? [];
+                              $byC = $w['by_category'] ?? [];
+                              $cnt = (int) ($w['count'] ?? 0);
+                              $tipParts = [];
+                              foreach ($wtDevCats as $dc) {
+                                 $k = $dc['key'] ?? '';
+                                 $n = (int) ($byC[$k] ?? 0);
+                                 if ($n > 0) {
+                                    $tipParts[] = ($dc['label'] ?? $k).': '.$n;
+                                 }
+                              }
+                              $tip = ($w['range_short'] ?? '').' — total '.$cnt.' kejadian'.(count($tipParts) ? ' · '.implode(', ', $tipParts) : '');
+                           @endphp
+                           <div class="peer-chart-bar-col group relative flex h-full min-h-0 min-w-[2.25rem] flex-1 basis-0 flex-col justify-end rounded-t-lg border-x border-t border-outline-variant/10 bg-[#f8fafc]" title="{{ $tip }}">
+                              <div class="relative w-full" style="height: {{ $barH }}%">
+                                 <span class="absolute -top-6 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-on-surface">{{ $cnt }}</span>
+                                 <div class="absolute inset-0 flex flex-col justify-end overflow-hidden rounded-t-md shadow-inner ring-1 ring-black/10">
+                                    @foreach ($wtDevCats as $dc)
+                                       @php
+                                          $key = $dc['key'] ?? '';
+                                          $segH = (float) ($stackP[$key] ?? 0);
+                                          $col = $dc['color'] ?? '#94a3b8';
+                                       @endphp
+                                       @if($segH > 0)
+                                       <div class="min-h-[2px] w-full shrink-0 transition-opacity group-hover:opacity-95" style="height: {{ $segH }}%; background-color: {{ $col }}"></div>
+                                       @endif
+                                    @endforeach
+                                 </div>
                               </div>
                            </div>
                            @empty
@@ -360,7 +403,7 @@
                         <div class="min-w-0">
                            <h4 class="font-headline text-base font-bold text-on-surface">Ringkasan evaluasi data</h4>
                            <!-- <p id="peer-eval-scope-subtitle" class="text-[10px] font-bold uppercase tracking-wider text-primary/90">{{ ($chartPeriodMonth ?? false) ? ('Sesuai periode chart: '.($es['repeat_period_caption'] ?? '')) : 'Sesuai periode chart: seluruh data' }}</p> -->
-                           <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Repeat Violator mengikuti filter yang sama dengan chart</p>
+                           <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Repetitif pelanggaran mengikuti filter yang sama dengan chart</p>
                         </div>
                      </div>
                      <span class="shrink-0 rounded-full bg-[#f1f5f9] px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant" title="Bukan model AI eksternal">Aturan data</span>
@@ -370,9 +413,9 @@
                      <table class="w-full min-w-[520px] text-left text-[11px]">
                         <thead>
                            <tr class="border-b border-outline-variant/20 bg-[#f8fafc] text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                              <th class="w-[22%] px-2 py-2 sm:px-3">Metric</th>
+                              <th class="w-[22%] px-2 py-2 sm:px-3">Metrik</th>
                               <th class="px-2 py-2 sm:px-3">Deskripsi</th>
-                              <th class="w-[32%] px-2 py-2 text-right sm:px-3">Action threshold</th>
+                              <th class="w-[32%] px-2 py-2 text-right sm:px-3">Ambang tindakan</th>
                            </tr>
                         </thead>
                         <tbody id="peer-eval-tbody" class="divide-y divide-outline-variant/15 text-on-surface">
@@ -453,7 +496,7 @@
                   <div id="peer-eval-recency-wrap" class="mt-4 @if(!$recD) hidden @endif">
                      <div id="peer-eval-recency-inner">
                         @if($recD)
-                        <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Recency Score — data</p>
+                        <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Jarak waktu pelanggaran berulang — data</p>
                         <p class="mb-3 text-[9px] leading-relaxed text-on-surface-variant">{{ $recD['metric_explanation'] ?? '' }}</p>
                         <div class="overflow-x-auto rounded-xl border border-outline-variant/20 bg-white">
                            <table class="w-full min-w-[260px] text-left text-[10px] text-on-surface">
@@ -895,6 +938,159 @@
             <div class="mt-6 flex justify-end gap-2">
                <button type="button" id="peer-weekly-period-cancel" class="rounded-xl px-4 py-2 text-xs font-bold text-on-surface-variant hover:bg-[#f1f5f9]">Batal</button>
                <button type="button" id="peer-weekly-period-apply" class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm hover:opacity-95">Terapkan</button>
+            </div>
+         </div>
+      </div>
+      <!-- Modal statistik kategori deviasi (dari kartu KPI Total Deviasi) -->
+      <div id="peer-deviation-category-modal" class="hidden fixed inset-0 z-[206] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-deviation-category-title">
+         <div class="absolute inset-0 cursor-pointer peer-deviation-category-backdrop" aria-hidden="true"></div>
+         <div class="relative z-10 flex max-h-[min(90vh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
+            <div class="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant/20 px-5 py-4 sm:px-6">
+               <div>
+                  <h2 id="peer-deviation-category-title" class="font-headline text-lg font-bold text-on-surface">Statistik kategori deviasi</h2>
+                  <p class="mt-1 text-xs text-on-surface-variant">{{ ($chartPeriodMonth ?? false) ? 'Periode sesuai filter chart (tanggal temuan).' : 'Seluruh data kejadian.' }}</p>
+               </div>
+               <button type="button" id="peer-deviation-category-close" class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
+                  <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
+               </button>
+            </div>
+            <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+               <div class="overflow-x-auto rounded-lg border border-outline-variant/20 bg-[#fafbfc]">
+                  <table class="w-full min-w-[320px] text-left text-[13px] text-on-surface">
+                     <thead>
+                        <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                           <th class="px-3 py-2.5">Kategori deviasi</th>
+                           <th class="whitespace-nowrap px-3 py-2.5 text-right">Jumlah</th>
+                        </tr>
+                     </thead>
+                     <tbody id="peer-deviation-modal-tbody" class="divide-y divide-outline-variant/10 bg-white">
+                        @forelse ($dvPreCats as $drow)
+                        <tr class="hover:bg-[#f8fafc]">
+                           <td class="px-3 py-2.5">{{ $drow['kategori_deviasi'] ?? '—' }}</td>
+                           <td class="px-3 py-2.5 text-right tabular-nums font-semibold">{{ number_format((int) ($drow['jumlah'] ?? 0)) }}</td>
+                        </tr>
+                        @empty
+                        <tr>
+                           <td colspan="2" class="px-3 py-6 text-center text-[11px] text-on-surface-variant">Belum ada data kategori deviasi.</td>
+                        </tr>
+                        @endforelse
+                     </tbody>
+                     <tfoot>
+                        <tr class="border-t-2 border-outline-variant/25 bg-[#f1f5f9] font-headline font-bold">
+                           <td class="px-3 py-3 text-on-surface">Total</td>
+                           <td id="peer-deviation-modal-total" class="px-3 py-3 text-right tabular-nums text-primary">{{ number_format($dvPreFooterTotal) }}</td>
+                        </tr>
+                     </tfoot>
+                  </table>
+               </div>
+               <p class="mt-3 text-[10px] leading-relaxed text-on-surface-variant">Total dihitung dari penjumlahan kolom jumlah per kategori (sama dengan total kejadian pada periode yang sama).</p>
+            </div>
+         </div>
+      </div>
+      <!-- Modal detail metrik Pelaksanaan Comply -->
+      <div id="peer-compliance-detail-modal" class="hidden fixed inset-0 z-[207] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-compliance-detail-title">
+         <div class="absolute inset-0 cursor-pointer peer-compliance-detail-backdrop" aria-hidden="true"></div>
+         <div class="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
+            <div class="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant/20 px-5 py-4 sm:px-6">
+               <div>
+                  <h2 id="peer-compliance-detail-title" class="font-headline text-lg font-bold text-on-surface">Pelaksanaan Comply</h2>
+                  <p id="peer-compliance-modal-period" class="mt-1 text-xs text-on-surface-variant">{{ ($chartPeriodMonth ?? false) ? 'Periode: filter chart (tanggal temuan dalam bulan yang dipilih).' : 'Periode: seluruh data kejadian (tanpa filter bulan).' }}</p>
+               </div>
+               <button type="button" id="peer-compliance-detail-close" class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
+                  <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
+               </button>
+            </div>
+            <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+               <!-- Ringkasan singkat -->
+               <div class="rounded-xl border border-secondary/20 bg-secondary/5 p-4 sm:p-5">
+                  <p class="text-[10px] font-bold uppercase tracking-wider text-secondary">Ringkasan</p>
+                  <div class="mt-2 flex flex-wrap items-end gap-3">
+                     <p id="peer-compliance-modal-summary-pct" class="font-headline text-4xl font-extrabold text-on-surface tabular-nums">{{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}<span class="text-2xl font-bold">%</span></p>
+                     <p id="peer-compliance-modal-summary-line" class="text-sm font-medium text-on-surface">
+                        <span id="peer-compliance-modal-summary-count">{{ (int) ($kpi['peer_pressure_compliance_comply'] ?? 0) }}</span> dari <span id="peer-compliance-modal-summary-total">{{ (int) ($kpi['peer_pressure_compliance_total'] ?? 0) }}</span> kejadian terlacak memenuhi syarat <span class="font-semibold text-secondary">comply</span>.
+                     </p>
+                  </div>
+                  <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/80">
+                     <div id="peer-compliance-modal-summary-bar" class="h-full rounded-full bg-secondary transition-all" style="width: {{ max(0, min(100, (float) ($kpi['peer_pressure_compliance_pct'] ?? 0))) }}%"></div>
+                  </div>
+               </div>
+               @php
+                  $kpiComply = (int) ($kpi['peer_pressure_compliance_comply'] ?? 0);
+                  $kpiTracked = (int) ($kpi['peer_pressure_compliance_total'] ?? 0);
+                  $kpiNonComply = max(0, $kpiTracked - $kpiComply);
+               @endphp
+
+               <section class="mt-6 rounded-xl border border-outline-variant/20 bg-[#f8fafc] p-4 sm:p-5">
+                  <h3 class="font-headline text-sm font-bold text-on-surface">Ringkasan data</h3>
+                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">Jumlah kejadian pada lima kategori deviasi terlacak untuk periode yang sama dengan kartu KPI.</p>
+                  <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                     <div class="rounded-lg border border-emerald-200 bg-emerald-50/90 px-4 py-3 text-center shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-800">Comply</p>
+                        <p id="peer-compliance-brief-comply" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-emerald-950">{{ number_format($kpiComply) }}</p>
+                        <p class="text-[10px] text-emerald-800/90">kejadian</p>
+                     </div>
+                     <div class="rounded-lg border border-red-200 bg-red-50/90 px-4 py-3 text-center shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-red-800">Tidak comply</p>
+                        <p id="peer-compliance-brief-noncomply" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-red-950">{{ number_format($kpiNonComply) }}</p>
+                        <p class="text-[10px] text-red-800/90">kejadian</p>
+                     </div>
+                     <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 text-center shadow-sm">
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-600">Total terlacak</p>
+                        <p id="peer-compliance-brief-total" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-slate-900">{{ number_format($kpiTracked) }}</p>
+                        <p class="text-[10px] text-slate-500">pembilang metrik</p>
+                     </div>
+                  </div>
+                  <p id="peer-compliance-brief-narrative" class="mt-4 text-[12px] leading-relaxed text-on-surface">
+                     @if($kpiTracked === 0)
+                        Belum ada kejadian terlacak pada periode ini (hanya lima kategori deviasi tertentu yang dihitung).
+                     @else
+                        Dari {{ number_format($kpiTracked) }} kejadian terlacak: <strong class="text-emerald-800">{{ number_format($kpiComply) }} comply</strong> dan <strong class="text-red-800">{{ number_format($kpiNonComply) }} tidak comply</strong>. Persentase di atas = comply ÷ total × 100 ({{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}%).
+                     @endif
+                  </p>
+               </section>
+
+
+               <section class="mt-6">
+                  <h3 class="font-headline text-sm font-bold text-on-surface">Data per kejadian</h3>
+                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
+                     Rincian per ID (lima kategori deviasi terlacak), ditampilkan per halaman. Klik ID untuk membuka detail kejadian.
+                  </p>
+                  <div id="peer-compliance-table-loading" class="mt-3 hidden rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] font-medium text-on-surface-variant" aria-live="polite">
+                     <span class="material-symbols-outlined mb-2 inline-block animate-spin text-2xl text-secondary" style="animation-duration:1s">progress_activity</span>
+                     <span class="block">Memuat data…</span>
+                  </div>
+                  <p id="peer-compliance-table-error" class="mt-3 hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-800"></p>
+                  <div id="peer-compliance-table-wrap" class="mt-3 overflow-x-auto rounded-lg border border-outline-variant/20 bg-[#fafbfc]">
+                     <table class="w-full min-w-[880px] text-left text-[11px] text-on-surface">
+                        <thead>
+                           <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                              <th class="whitespace-nowrap px-2 py-2.5">ID</th>
+                              <th class="whitespace-nowrap px-2 py-2.5">Tgl temuan</th>
+                              <th class="min-w-[140px] px-2 py-2.5">Kategori deviasi (data)</th>
+                              <th class="min-w-[120px] px-2 py-2.5">Kelompok</th>
+                              <th class="min-w-[100px] px-2 py-2.5">Status pelaksanaan</th>
+                              <th class="whitespace-nowrap px-2 py-2.5">id BeRecord</th>
+                              <th class="whitespace-nowrap px-2 py-2.5">Hasil</th>
+                              <th class="min-w-[200px] px-2 py-2.5">Keterangan</th>
+                           </tr>
+                        </thead>
+                        <tbody id="peer-compliance-modal-tbody" class="divide-y divide-outline-variant/10 bg-white"></tbody>
+                     </table>
+                  </div>
+                  <p id="peer-compliance-table-empty" class="mt-3 hidden rounded-lg border border-dashed border-outline-variant/30 bg-white px-4 py-8 text-center text-[12px] text-on-surface-variant">
+                     Tidak ada kejadian pada periode ini yang masuk lima kategori pelacakan.
+                  </p>
+                  <div id="peer-compliance-pagination" class="mt-3 hidden flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant/15 pt-3"></div>
+               </section>
+
+               
+               <section class="mt-6" id="peer-compliance-recommendations-section">
+                  <h3 class="font-headline text-sm font-bold text-on-surface">Rekomendasi perbaikan</h3>
+                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
+                     Kejadian <span class="font-semibold text-on-surface">tidak comply</span> dijelaskan per penyebab dalam bentuk <span class="font-semibold text-on-surface">uraian deskriptif</span> (bukan tabel). Klik nomor ID untuk membuka detail kejadian.
+                  </p>
+                  <div id="peer-compliance-recommendations" class="mt-3 space-y-3"></div>
+               </section>
             </div>
          </div>
       </div>
@@ -1416,6 +1612,8 @@
           }
         }
 
+        window.peerPressureOpenKejadianDetail = openForId;
+
         document.querySelectorAll('.js-peer-kejadian-row').forEach(function (row) {
           row.addEventListener('click', function (e) {
             if (e.target.closest('a')) return;
@@ -1444,6 +1642,7 @@
       <script>
       (function () {
         const weeklyTrendUrl = @json(route('peer-pressure-edukasi.dashboard.weekly-trend'));
+        const complianceBreakdownUrl = @json(route('peer-pressure-edukasi.dashboard.compliance-breakdown'));
         const modal = document.getElementById('peer-weekly-period-modal');
         const backdrop = modal ? modal.querySelector('.peer-weekly-period-backdrop') : null;
         const openBtn = document.getElementById('peer-open-weekly-period');
@@ -1516,8 +1715,8 @@
           var compEl = document.getElementById('peer-kpi-completion');
           var deltaEl = document.getElementById('peer-kpi-completion-delta');
           var barEl = document.getElementById('peer-kpi-completion-bar');
-          var peerEl = document.getElementById('peer-kpi-avg-peer');
-          var durEl = document.getElementById('peer-kpi-avg-duration');
+          var compPctEl = document.getElementById('peer-kpi-pelaksanaan-compliance');
+          var compCountEl = document.getElementById('peer-kpi-pelaksanaan-compliance-count');
           if (totalEl) totalEl.textContent = Number(kpi.total_cases != null ? kpi.total_cases : 0).toLocaleString('id-ID');
           if (trendEl) {
             var pct = kpi.total_cases_trend_pct;
@@ -1566,14 +1765,74 @@
             w = Math.min(100, Math.max(0, w));
             barEl.style.width = w + '%';
           }
-          if (peerEl) {
-            var ap = Number(kpi.avg_peer_count != null ? kpi.avg_peer_count : 0);
-            peerEl.textContent = (isNaN(ap) ? 0 : ap).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+          if (compPctEl) {
+            var pp = Number(kpi.peer_pressure_compliance_pct != null ? kpi.peer_pressure_compliance_pct : 0);
+            var pv = (isNaN(pp) ? 0 : pp).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            compPctEl.innerHTML = pv + '<span class="text-2xl font-bold">%</span>';
           }
-          if (durEl) {
-            var ad = Number(kpi.avg_duration_minutes != null ? kpi.avg_duration_minutes : 0);
-            var v = (isNaN(ad) ? 0 : ad).toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
-            durEl.innerHTML = v + '<span class="text-2xl font-bold">m</span>';
+          if (compCountEl) {
+            var cc = Number(kpi.peer_pressure_compliance_comply != null ? kpi.peer_pressure_compliance_comply : 0);
+            var ct = Number(kpi.peer_pressure_compliance_total != null ? kpi.peer_pressure_compliance_total : 0);
+            if (isNaN(cc)) cc = 0;
+            if (isNaN(ct)) ct = 0;
+            compCountEl.textContent = cc + '/' + ct;
+          }
+          syncComplianceModalFromKpi(kpi, periodScope);
+        }
+        function syncComplianceModalFromKpi(kpi, periodScope) {
+          if (!kpi || typeof kpi !== 'object') return;
+          var periodEl = document.getElementById('peer-compliance-modal-period');
+          if (periodEl && periodScope) {
+            periodEl.textContent =
+              periodScope === 'month'
+                ? 'Periode: filter chart (tanggal temuan dalam bulan yang dipilih).'
+                : 'Periode: seluruh data kejadian (tanpa filter bulan).';
+          }
+          var pct = Number(kpi.peer_pressure_compliance_pct != null ? kpi.peer_pressure_compliance_pct : 0);
+          if (isNaN(pct)) pct = 0;
+          var cc = Number(kpi.peer_pressure_compliance_comply != null ? kpi.peer_pressure_compliance_comply : 0);
+          var ct = Number(kpi.peer_pressure_compliance_total != null ? kpi.peer_pressure_compliance_total : 0);
+          if (isNaN(cc)) cc = 0;
+          if (isNaN(ct)) ct = 0;
+          var pctStr = pct.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+          var sumPct = document.getElementById('peer-compliance-modal-summary-pct');
+          if (sumPct) {
+            sumPct.innerHTML = pctStr + '<span class="text-2xl font-bold">%</span>';
+          }
+          var sumC = document.getElementById('peer-compliance-modal-summary-count');
+          var sumT = document.getElementById('peer-compliance-modal-summary-total');
+          if (sumC) sumC.textContent = String(cc);
+          if (sumT) sumT.textContent = String(ct);
+          var bar = document.getElementById('peer-compliance-modal-summary-bar');
+          if (bar) {
+            var w = Math.min(100, Math.max(0, pct));
+            bar.style.width = w + '%';
+          }
+          var nc = Math.max(0, ct - cc);
+          var bComply = document.getElementById('peer-compliance-brief-comply');
+          var bNon = document.getElementById('peer-compliance-brief-noncomply');
+          var bTot = document.getElementById('peer-compliance-brief-total');
+          var bNar = document.getElementById('peer-compliance-brief-narrative');
+          if (bComply) bComply.textContent = cc.toLocaleString('id-ID');
+          if (bNon) bNon.textContent = nc.toLocaleString('id-ID');
+          if (bTot) bTot.textContent = ct.toLocaleString('id-ID');
+          if (bNar) {
+            if (ct === 0) {
+              bNar.textContent =
+                'Belum ada kejadian terlacak pada periode ini (hanya lima kategori deviasi tertentu yang dihitung).';
+            } else {
+              var pctFmt = pct.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+              bNar.innerHTML =
+                'Dari ' +
+                ct.toLocaleString('id-ID') +
+                ' kejadian terlacak: <strong class="text-emerald-800">' +
+                cc.toLocaleString('id-ID') +
+                ' comply</strong> dan <strong class="text-red-800">' +
+                nc.toLocaleString('id-ID') +
+                ' tidak comply</strong>. Persentase di atas = comply ÷ total × 100 (' +
+                pctFmt +
+                '%).';
+            }
           }
         }
         function renderInsightCards(ic) {
@@ -1755,6 +2014,38 @@
             '<div class="max-h-80 space-y-2.5 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">' +
             profHtml +
             '</div></div>';
+          fillDeviationCategoryModal(dev);
+        }
+        function fillDeviationCategoryModal(dev) {
+          if (!dev || typeof dev !== 'object') return;
+          var tbody = document.getElementById('peer-deviation-modal-tbody');
+          var totalFoot = document.getElementById('peer-deviation-modal-total');
+          var kpiBig = document.getElementById('peer-kpi-deviation-total');
+          var cats = dev.categories || [];
+          var apiTotal = parseInt(String(dev.total != null ? dev.total : 0), 10) || 0;
+          if (kpiBig) kpiBig.textContent = apiTotal.toLocaleString('id-ID');
+          var sum = 0;
+          var rows = cats
+            .map(function (row) {
+              var name = row.kategori_deviasi != null ? String(row.kategori_deviasi) : '—';
+              var j = parseInt(String(row.jumlah != null ? row.jumlah : 0), 10) || 0;
+              sum += j;
+              return (
+                '<tr class="hover:bg-[#f8fafc]"><td class="px-3 py-2.5">' +
+                escHtml(name) +
+                '</td><td class="px-3 py-2.5 text-right tabular-nums font-semibold">' +
+                j.toLocaleString('id-ID') +
+                '</td></tr>'
+              );
+            })
+            .join('');
+          if (!rows) {
+            rows =
+              '<tr><td colspan="2" class="px-3 py-6 text-center text-[11px] text-on-surface-variant">Belum ada data kategori deviasi.</td></tr>';
+          }
+          if (tbody) tbody.innerHTML = rows;
+          var footerVal = sum > 0 ? sum : apiTotal;
+          if (totalFoot) totalFoot.textContent = footerVal.toLocaleString('id-ID');
         }
         function escHtml(s) {
           if (s == null) return '';
@@ -1888,7 +2179,7 @@
           var lid = parseInt(String(rd.latest.kejadian_id != null ? rd.latest.kejadian_id : 0), 10) || 0;
           var pid = parseInt(String(rd.previous.kejadian_id != null ? rd.previous.kejadian_id : 0), 10) || 0;
           return (
-            '<p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Recency Score — data</p>' +
+            '<p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Jarak waktu pelanggaran berulang — data</p>' +
             '<p class="mb-3 text-[9px] leading-relaxed text-on-surface-variant">' +
             escHtml(rd.metric_explanation || '') +
             '</p>' +
@@ -2231,10 +2522,34 @@
           var lbl = document.getElementById('peer-weekly-period-label');
           var avg = document.getElementById('peer-trend-avg');
           var avgLeg = document.getElementById('peer-trend-avg-label');
+          var sub = document.getElementById('peer-trend-chart-subtitle');
           if (cap) cap.textContent = wt.period_caption || '';
           if (lbl) lbl.textContent = wt.period_caption || '—';
           if (avg) avg.textContent = (Number(wt.avg_count) || 0).toFixed(1);
           if (avgLeg && wt.avg_legend_label) avgLeg.textContent = wt.avg_legend_label;
+          if (sub) {
+            var g = wt.chart_granularity === 'week' ? 'Per minggu (dalam bulan dipilih)' : 'Per bulan';
+            sub.textContent =
+              g + ' · batang bertumpuk = kategori deviasi (peer pressure), berdasarkan tanggal temuan';
+          }
+          var legInner = document.getElementById('peer-trend-legend-cats-inner');
+          if (legInner && wt.deviation_categories && wt.deviation_categories.length) {
+            legInner.innerHTML = wt.deviation_categories
+              .map(function (dc) {
+                var col = (dc.color || '#94a3b8').replace(/[<>"']/g, '');
+                var lab = dc.label != null ? String(dc.label) : '';
+                return (
+                  '<span class="inline-flex items-center gap-1.5" title="' +
+                  escAttr(lab) +
+                  '"><span class="h-2.5 w-2.5 shrink-0 rounded-sm shadow-sm ring-1 ring-black/5" style="background-color:' +
+                  col +
+                  '"></span><span class="max-w-[10rem] truncate sm:max-w-none">' +
+                  escHtml(lab) +
+                  '</span></span>'
+                );
+              })
+              .join('');
+          }
           var lineWrap = document.getElementById('peer-chart-target-line-wrap');
           var maxC = wt.max_count || 0;
           if (lineWrap) {
@@ -2257,21 +2572,55 @@
             empty.textContent = 'Belum ada data untuk chart.';
             bars.appendChild(empty);
           } else {
+            var devCats = wt.deviation_categories || [];
             weeks.forEach(function (w) {
-              var h = Math.min(100, Math.max(0, Number(w.bar_height_pct) || 0));
+              var barH = Math.min(100, Math.max(0, Number(w.bar_height_pct) || 0));
               var cnt = parseInt(String(w.count != null ? w.count : 0), 10) || 0;
+              var by = w.by_category || {};
+              var stackP = w.category_stack_pct || {};
+              var tipParts = [];
+              devCats.forEach(function (dc) {
+                var nk = parseInt(String(by[dc.key] != null ? by[dc.key] : 0), 10) || 0;
+                if (nk > 0) tipParts.push((dc.label || dc.key) + ': ' + nk);
+              });
+              var tip =
+                (w.range_short || '') +
+                ' — total ' +
+                cnt +
+                ' kejadian' +
+                (tipParts.length ? ' · ' + tipParts.join(', ') : '');
+
               var col = document.createElement('div');
               col.className =
-                'peer-chart-bar-col flex h-full min-h-0 flex-1 basis-0 min-w-[2rem] flex-col justify-end rounded-t-lg border-x border-t border-outline-variant/10 bg-[#f8fafc] group';
-              col.title = (w.range_short || '') + ': ' + cnt + ' kejadian';
-              var inner = document.createElement('div');
-              inner.className = 'relative w-full rounded-t-md bg-primary shadow-lg transition-all group-hover:bg-primary-dim';
-              inner.style.height = h + '%';
+                'peer-chart-bar-col group relative flex h-full min-h-0 min-w-[2.25rem] flex-1 basis-0 flex-col justify-end rounded-t-lg border-x border-t border-outline-variant/10 bg-[#f8fafc]';
+              col.setAttribute('title', tip);
+
+              var wrap = document.createElement('div');
+              wrap.className = 'relative w-full';
+              wrap.style.height = barH + '%';
+
               var sp = document.createElement('span');
-              sp.className = 'absolute -top-6 left-1/2 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-on-surface';
+              sp.className =
+                'absolute -top-6 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-on-surface';
               sp.textContent = String(cnt);
-              inner.appendChild(sp);
-              col.appendChild(inner);
+              wrap.appendChild(sp);
+
+              var inner = document.createElement('div');
+              inner.className =
+                'absolute inset-0 flex flex-col justify-end overflow-hidden rounded-t-md shadow-inner ring-1 ring-black/10';
+
+              devCats.forEach(function (dc) {
+                var segH = Number(stackP[dc.key] != null ? stackP[dc.key] : 0);
+                if (!segH || segH <= 0) return;
+                var seg = document.createElement('div');
+                seg.className = 'min-h-[2px] w-full shrink-0 transition-opacity group-hover:opacity-95';
+                seg.style.height = segH + '%';
+                seg.style.backgroundColor = String(dc.color || '#94a3b8').replace(/[<>"']/g, '');
+                inner.appendChild(seg);
+              });
+
+              wrap.appendChild(inner);
+              col.appendChild(wrap);
               bars.appendChild(col);
             });
           }
@@ -2331,6 +2680,405 @@
         if (openBtn) openBtn.addEventListener('click', openWeeklyModal);
         if (backdrop) backdrop.addEventListener('click', closeWeeklyModal);
         if (cancelBtn) cancelBtn.addEventListener('click', closeWeeklyModal);
+        var devModal = document.getElementById('peer-deviation-category-modal');
+        var devCard = document.getElementById('peer-kpi-deviation-card');
+        var devClose = document.getElementById('peer-deviation-category-close');
+        var devBackdrop = devModal ? devModal.querySelector('.peer-deviation-category-backdrop') : null;
+        function openDeviationModal() {
+          if (!devModal) return;
+          devModal.classList.remove('hidden');
+          devModal.setAttribute('aria-hidden', 'false');
+          if (devCard) devCard.setAttribute('aria-expanded', 'true');
+        }
+        function closeDeviationModal() {
+          if (!devModal) return;
+          devModal.classList.add('hidden');
+          devModal.setAttribute('aria-hidden', 'true');
+          if (devCard) devCard.setAttribute('aria-expanded', 'false');
+        }
+        if (devCard) devCard.addEventListener('click', openDeviationModal);
+        if (devClose) devClose.addEventListener('click', closeDeviationModal);
+        if (devBackdrop) devBackdrop.addEventListener('click', closeDeviationModal);
+        var complianceModal = document.getElementById('peer-compliance-detail-modal');
+        var complianceCard = document.getElementById('peer-kpi-compliance-card');
+        var complianceClose = document.getElementById('peer-compliance-detail-close');
+        var complianceBackdrop = complianceModal ? complianceModal.querySelector('.peer-compliance-detail-backdrop') : null;
+        function formatTanggalDeskriptifId(iso) {
+          if (iso == null || iso === '') return 'tanggal temuan belum tercatat';
+          var s = String(iso).trim();
+          var p = s.split('-');
+          if (p.length !== 3) return s;
+          var y = parseInt(p[0], 10);
+          var mo = parseInt(p[1], 10) - 1;
+          var d = parseInt(p[2], 10);
+          var months = [
+            'Januari',
+            'Februari',
+            'Maret',
+            'April',
+            'Mei',
+            'Juni',
+            'Juli',
+            'Agustus',
+            'September',
+            'Oktober',
+            'November',
+            'Desember'
+          ];
+          if (isNaN(y) || mo < 0 || mo > 11 || isNaN(d)) return s;
+          return d + ' ' + months[mo] + ' ' + y;
+        }
+        function complianceRecIdBtn(id) {
+          return (
+            '<button type="button" class="js-peer-compliance-detail-btn font-semibold text-primary hover:underline" data-id="' +
+            escAttr(id) +
+            '">#' +
+            escHtml(id) +
+            '</button>'
+          );
+        }
+        function renderComplianceRecommendationDescriptive(rows, code) {
+          if (!rows || !rows.length) {
+            return '';
+          }
+          var blocks = rows.map(function (row) {
+            var id = row.id != null ? String(row.id) : '';
+            var tgl = formatTanggalDeskriptifId(row.tanggal_temuan);
+            var kat = row.kategori_deviasi != null ? String(row.kategori_deviasi) : 'kategori tidak tercatat';
+            var kel = row.bucket_label != null ? String(row.bucket_label) : '';
+            var kelTxt = kel ? ' Kelompok deviasi: ' + escHtml(kel) + '.' : '';
+            var base =
+              'Pada kejadian ' +
+              complianceRecIdBtn(id) +
+              ', tanggal temuan ' +
+              tgl +
+              ', dengan kategori deviasi «' +
+              escHtml(kat) +
+              '».' +
+              kelTxt;
+
+            if (code === 'be_tanpa_id_berecord') {
+              return (
+                '<p class="text-[11px] leading-relaxed text-on-surface">' +
+                base +
+                ' <strong class="font-semibold text-on-surface">Pelaksanaan edukasi sudah dinyatakan selesai</strong>, namun <strong class="font-semibold text-on-surface">kolom id BeRecord masih kosong</strong>. ' +
+                'Rekomendasi: isi id BeRecord yang sesuai dengan rekaman kasus di BeRecord agar pelacakan integrasi lengkap.' +
+                '</p>'
+              );
+            }
+            if (code === 'be_belum_selesai') {
+              return (
+                '<p class="text-[11px] leading-relaxed text-on-surface">' +
+                base +
+                ' <strong class="font-semibold text-on-surface">Status pelaksanaan edukasi belum menunjukkan selesai</strong> (belum ada CLOSED/SELESAI). ' +
+                'Rekomendasi: tutup pelaksanaan setelah edukasi benar-benar rampung, lalu verifikasi di sistem.' +
+                '</p>'
+              );
+            }
+            if (code === 'be_belum_selesai_dan_tanpa_id') {
+              return (
+                '<p class="text-[11px] leading-relaxed text-on-surface">' +
+                base +
+                ' <strong class="font-semibold text-on-surface">Pelaksanaan belum selesai dan id BeRecord juga kosong.</strong> ' +
+                'Rekomendasi: selesaikan siklus edukasi terlebih dahulu, kemudian lengkapi id BeRecord.' +
+                '</p>'
+              );
+            }
+            if (code === 'fb_belum_selesai') {
+              return (
+                '<p class="text-[11px] leading-relaxed text-on-surface">' +
+                base +
+                ' Untuk kategori Fatigue/Blindspot, BeRecord tidak dipakai; yang perlu adalah <strong class="font-semibold text-on-surface">status pelaksanaan selesai</strong> (CLOSED/SELESAI). ' +
+                'Rekomendasi: perbarui status setelah edukasi selesai dilaksanakan.' +
+                '</p>'
+              );
+            }
+            return (
+              '<p class="text-[11px] leading-relaxed text-on-surface">' +
+              base +
+              ' Tinjau detail kejadian dan sesuaikan dengan standar penutupan serta pengisian data.' +
+              '</p>'
+            );
+          });
+          return (
+            '<div class="mt-3 space-y-3 border-t border-dashed border-outline-variant/25 pt-3">' + blocks.join('') + '</div>'
+          );
+        }
+        function renderComplianceRecommendations(recs) {
+          var root = document.getElementById('peer-compliance-recommendations');
+          if (!root) return;
+          if (!recs || !recs.length) {
+            root.innerHTML =
+              '<p class="text-[11px] text-on-surface-variant">Belum ada rekomendasi (muat ulang data).</p>';
+            return;
+          }
+          root.innerHTML = recs
+            .map(function (r) {
+              var isAllOk = r.code === 'all_ok';
+              var box = isAllOk
+                ? 'border-emerald-200 bg-emerald-50/90'
+                : 'border-slate-200/90 bg-white';
+              var daftar = r.daftar_kejadian || [];
+              var n = daftar.length > 0 ? daftar.length : Number(r.jumlah != null ? r.jumlah : 0);
+              var code = r.code != null ? String(r.code) : '';
+              var sub =
+                !isAllOk && n > 0
+                  ? '<p class="mt-1 text-[10px] text-on-surface-variant">' +
+                    'Mencakup <span class="font-semibold text-on-surface">' +
+                    Number(n).toLocaleString('id-ID') +
+                    '</span> kejadian.</p>'
+                  : '';
+              var tbl = isAllOk ? '' : renderComplianceRecommendationDescriptive(daftar, code);
+              var emptyList =
+                !isAllOk && n > 0 && (!daftar || !daftar.length)
+                  ? '<p class="mt-2 text-[10px] text-on-surface-variant">Daftar kejadian tidak tersedia.</p>'
+                  : '';
+              return (
+                '<div class="rounded-xl border ' +
+                box +
+                ' p-3 sm:p-4 shadow-sm">' +
+                '<div class="flex flex-wrap items-start justify-between gap-2">' +
+                '<p class="min-w-0 flex-1 text-[12px] font-bold leading-snug text-on-surface">' +
+                escHtml(r.judul != null ? String(r.judul) : '—') +
+                '</p>' +
+                '</div>' +
+                sub +
+                '<p class="mt-2 text-[11px] leading-relaxed text-on-surface">' +
+                escHtml(r.rekomendasi != null ? String(r.rekomendasi) : '') +
+                '</p>' +
+                tbl +
+                emptyList +
+                '</div>'
+              );
+            })
+            .join('');
+        }
+        function renderCompliancePagination(p) {
+          var nav = document.getElementById('peer-compliance-pagination');
+          if (!nav) return;
+          if (!p || !p.total || p.total === 0) {
+            nav.classList.add('hidden');
+            nav.innerHTML = '';
+            return;
+          }
+          nav.classList.remove('hidden');
+          var cur = p.current_page != null ? +p.current_page : 1;
+          var last = p.last_page != null ? +p.last_page : 1;
+          var from = p.from != null ? p.from : '—';
+          var to = p.to != null ? p.to : '—';
+          var tot = p.total != null ? +p.total : 0;
+          var prevDis = cur <= 1;
+          var nextDis = cur >= last;
+          nav.innerHTML =
+            '<p class="text-[11px] text-on-surface-variant">Menampilkan ' +
+            from +
+            '–' +
+            to +
+            ' dari ' +
+            tot.toLocaleString('id-ID') +
+            ' kejadian</p>' +
+            '<div class="flex items-center gap-2">' +
+            '<button type="button" class="js-peer-compliance-page rounded-lg border border-outline-variant/30 bg-white px-3 py-1.5 text-[11px] font-bold transition-colors ' +
+            (prevDis ? 'cursor-not-allowed opacity-40' : 'hover:bg-surface-container-high') +
+            '" data-page="' +
+            (cur - 1) +
+            '"' +
+            (prevDis ? ' disabled' : '') +
+            '>Sebelumnya</button>' +
+            '<span class="text-[11px] font-semibold tabular-nums text-on-surface">' +
+            cur +
+            ' / ' +
+            last +
+            '</span>' +
+            '<button type="button" class="js-peer-compliance-page rounded-lg border border-outline-variant/30 bg-white px-3 py-1.5 text-[11px] font-bold transition-colors ' +
+            (nextDis ? 'cursor-not-allowed opacity-40' : 'hover:bg-surface-container-high') +
+            '" data-page="' +
+            (cur + 1) +
+            '"' +
+            (nextDis ? ' disabled' : '') +
+            '>Berikutnya</button>' +
+            '</div>';
+        }
+        function loadComplianceBreakdown(requestedPage) {
+          var page = requestedPage != null ? parseInt(String(requestedPage), 10) : 1;
+          if (isNaN(page) || page < 1) page = 1;
+
+          var loadingEl = document.getElementById('peer-compliance-table-loading');
+          var errEl = document.getElementById('peer-compliance-table-error');
+          var wrap = document.getElementById('peer-compliance-table-wrap');
+          var tbody = document.getElementById('peer-compliance-modal-tbody');
+          var emptyEl = document.getElementById('peer-compliance-table-empty');
+          var pagEl = document.getElementById('peer-compliance-pagination');
+          if (errEl) {
+            errEl.classList.add('hidden');
+            errEl.textContent = '';
+          }
+          if (emptyEl) emptyEl.classList.add('hidden');
+          if (tbody) tbody.innerHTML = '';
+          if (pagEl) {
+            pagEl.classList.add('hidden');
+            pagEl.innerHTML = '';
+          }
+          var recRoot = document.getElementById('peer-compliance-recommendations');
+          if (recRoot) {
+            recRoot.innerHTML =
+              '<p class="text-[11px] italic text-on-surface-variant">Memuat rekomendasi…</p>';
+          }
+          if (loadingEl) loadingEl.classList.remove('hidden');
+          if (wrap) wrap.classList.add('hidden');
+
+          var u = new URL(complianceBreakdownUrl, window.location.origin);
+          u.searchParams.set('page', String(page));
+          u.searchParams.set('per_page', '15');
+          if (!state.all) {
+            u.searchParams.set('year', String(state.year));
+            u.searchParams.set('month', String(state.month));
+          }
+          fetch(u.toString(), {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error('Gagal memuat data comply');
+              return r.json();
+            })
+            .then(function (data) {
+              if (loadingEl) loadingEl.classList.add('hidden');
+
+              var kpiLike = {
+                peer_pressure_compliance_pct: data.peer_pressure_compliance_pct,
+                peer_pressure_compliance_comply: data.peer_pressure_compliance_comply,
+                peer_pressure_compliance_total: data.peer_pressure_compliance_total
+              };
+              var scope = data.period_scope === 'month' ? 'month' : 'all';
+              syncComplianceModalFromKpi(kpiLike, scope);
+
+              var periodEl = document.getElementById('peer-compliance-modal-period');
+              if (periodEl && data.period_caption) {
+                if (data.period_scope === 'month') {
+                  periodEl.textContent = 'Periode: ' + data.period_caption + ' (filter tanggal temuan).';
+                } else {
+                  periodEl.textContent = 'Periode: seluruh data kejadian (tanpa filter bulan).';
+                }
+              }
+
+              renderComplianceRecommendations(data.recommendations || []);
+
+              var total = data.peer_pressure_compliance_total != null ? +data.peer_pressure_compliance_total : 0;
+              if (total === 0) {
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                if (wrap) wrap.classList.add('hidden');
+                renderCompliancePagination(null);
+                return;
+              }
+
+              if (emptyEl) emptyEl.classList.add('hidden');
+              if (wrap) wrap.classList.remove('hidden');
+
+              var rows = data.rows || [];
+              if (tbody) {
+                tbody.innerHTML = rows
+                  .map(function (row) {
+                    var comply = row.comply === true;
+                    var badgeClass = comply ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800';
+                    var badgeText = comply ? 'Comply' : 'Tidak comply';
+                    var id = row.id != null ? String(row.id) : '';
+                    var tgl = row.tanggal_temuan != null ? String(row.tanggal_temuan) : '—';
+                    var kat = row.kategori_deviasi != null ? String(row.kategori_deviasi) : '—';
+                    var kel = row.bucket_label != null ? String(row.bucket_label) : '—';
+                    var st = row.status_pelaksanaan_edukasi != null ? String(row.status_pelaksanaan_edukasi) : '—';
+                    var be = row.id_berecord != null ? String(row.id_berecord) : '—';
+                    var als = row.alasan != null ? String(row.alasan) : '—';
+                    return (
+                      '<tr class="align-top hover:bg-[#f8fafc]">' +
+                      '<td class="px-2 py-2 tabular-nums"><button type="button" class="js-peer-compliance-detail-btn font-semibold text-primary hover:underline" data-id="' +
+                      escAttr(id) +
+                      '">#' +
+                      escHtml(id) +
+                      '</button></td>' +
+                      '<td class="px-2 py-2 whitespace-nowrap tabular-nums">' +
+                      escHtml(tgl) +
+                      '</td>' +
+                      '<td class="px-2 py-2 max-w-[200px]" title="' +
+                      escAttr(kat) +
+                      '"><span class="line-clamp-2">' +
+                      escHtml(kat) +
+                      '</span></td>' +
+                      '<td class="px-2 py-2 text-[10px] leading-snug">' +
+                      escHtml(kel) +
+                      '</td>' +
+                      '<td class="px-2 py-2 max-w-[140px]" title="' +
+                      escAttr(st) +
+                      '"><span class="line-clamp-2">' +
+                      escHtml(st) +
+                      '</span></td>' +
+                      '<td class="px-2 py-2 font-mono text-[10px]">' +
+                      escHtml(be) +
+                      '</td>' +
+                      '<td class="px-2 py-2 whitespace-nowrap"><span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ' +
+                      badgeClass +
+                      '">' +
+                      badgeText +
+                      '</span></td>' +
+                      '<td class="px-2 py-2 text-[10px] leading-snug text-on-surface-variant">' +
+                      escHtml(als) +
+                      '</td>' +
+                      '</tr>'
+                    );
+                  })
+                  .join('');
+              }
+
+              renderCompliancePagination(data.pagination || null);
+            })
+            .catch(function (err) {
+              if (loadingEl) loadingEl.classList.add('hidden');
+              if (wrap) wrap.classList.add('hidden');
+              renderComplianceRecommendations([]);
+              renderCompliancePagination(null);
+              if (errEl) {
+                errEl.textContent = err.message || 'Gagal memuat data.';
+                errEl.classList.remove('hidden');
+              }
+            });
+        }
+        function openComplianceModal() {
+          if (!complianceModal) return;
+          complianceModal.classList.remove('hidden');
+          complianceModal.setAttribute('aria-hidden', 'false');
+          if (complianceCard) complianceCard.setAttribute('aria-expanded', 'true');
+          loadComplianceBreakdown(1);
+        }
+        function closeComplianceModal() {
+          if (!complianceModal) return;
+          complianceModal.classList.add('hidden');
+          complianceModal.setAttribute('aria-hidden', 'true');
+          if (complianceCard) complianceCard.setAttribute('aria-expanded', 'false');
+        }
+        if (complianceCard) complianceCard.addEventListener('click', openComplianceModal);
+        if (complianceClose) complianceClose.addEventListener('click', closeComplianceModal);
+        if (complianceBackdrop) complianceBackdrop.addEventListener('click', closeComplianceModal);
+        if (complianceModal) {
+          complianceModal.addEventListener('click', function (e) {
+            var pg = e.target.closest('.js-peer-compliance-page');
+            if (pg) {
+              if (pg.disabled) return;
+              e.preventDefault();
+              var pn = parseInt(pg.getAttribute('data-page'), 10);
+              if (!isNaN(pn) && pn >= 1) loadComplianceBreakdown(pn);
+              return;
+            }
+            var btn = e.target.closest('.js-peer-compliance-detail-btn');
+            if (!btn) return;
+            e.preventDefault();
+            e.stopPropagation();
+            var id = btn.getAttribute('data-id');
+            if (id && typeof window.peerPressureOpenKejadianDetail === 'function') {
+              closeComplianceModal();
+              window.peerPressureOpenKejadianDetail(id);
+            }
+          });
+        }
         if (allDataBtn) {
           allDataBtn.addEventListener('click', function () {
             tempAll = true;
@@ -2390,7 +3138,16 @@
           });
         }
         document.addEventListener('keydown', function (e) {
-          if (e.key !== 'Escape' || !modal || modal.classList.contains('hidden')) return;
+          if (e.key !== 'Escape') return;
+          if (complianceModal && !complianceModal.classList.contains('hidden')) {
+            closeComplianceModal();
+            return;
+          }
+          if (devModal && !devModal.classList.contains('hidden')) {
+            closeDeviationModal();
+            return;
+          }
+          if (!modal || modal.classList.contains('hidden')) return;
           closeWeeklyModal();
         });
         document.addEventListener('click', function (e) {

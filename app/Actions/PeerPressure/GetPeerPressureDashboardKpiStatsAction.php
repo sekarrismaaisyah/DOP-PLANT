@@ -6,7 +6,10 @@ namespace App\Actions\PeerPressure;
 
 use App\Models\PeerPressureKejadianEdukasi;
 use App\Models\PeerPressurePesertaEdukasi;
+use App\Support\PeerPressure\KategoriDeviasiBucket;
+use App\Support\PeerPressure\PelaksanaanComplianceEvaluator;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Agregasi KPI dashboard Peer Pressure dari MySQL (tanpa N+1).
@@ -26,7 +29,10 @@ final class GetPeerPressureDashboardKpiStatsAction
      *   completion_rate: float,
      *   completion_rate_delta_pp: float|null,
      *   avg_peer_count: float,
-     *   avg_duration_minutes: float
+     *   avg_duration_minutes: float,
+     *   peer_pressure_compliance_pct: float,
+     *   peer_pressure_compliance_total: int,
+     *   peer_pressure_compliance_comply: int
      * }
      */
     public function __invoke(?int $year = null, ?int $month = null): array
@@ -49,7 +55,10 @@ final class GetPeerPressureDashboardKpiStatsAction
      *   completion_rate: float,
      *   completion_rate_delta_pp: float|null,
      *   avg_peer_count: float,
-     *   avg_duration_minutes: float
+     *   avg_duration_minutes: float,
+     *   peer_pressure_compliance_pct: float,
+     *   peer_pressure_compliance_total: int,
+     *   peer_pressure_compliance_comply: int
      * }
      */
     private function forCalendarMonth(int $year, int $month): array
@@ -108,6 +117,8 @@ final class GetPeerPressureDashboardKpiStatsAction
 
         $completionDelta = $this->completionRateDeltaMonthVsPreviousMonth($start);
 
+        $compliance = $this->computePelaksanaanCompliance($base);
+
         return [
             'total_cases' => $total,
             'total_cases_trend_pct' => $trendPct,
@@ -116,6 +127,7 @@ final class GetPeerPressureDashboardKpiStatsAction
             'completion_rate_delta_pp' => $completionDelta,
             'avg_peer_count' => $avgPeerCount,
             'avg_duration_minutes' => $avgDurationMinutes,
+            ...$compliance,
         ];
     }
 
@@ -174,7 +186,10 @@ final class GetPeerPressureDashboardKpiStatsAction
      *   completion_rate: float,
      *   completion_rate_delta_pp: float|null,
      *   avg_peer_count: float,
-     *   avg_duration_minutes: float
+     *   avg_duration_minutes: float,
+     *   peer_pressure_compliance_pct: float,
+     *   peer_pressure_compliance_total: int,
+     *   peer_pressure_compliance_comply: int
      * }
      */
     private function globalStats(): array
@@ -224,6 +239,8 @@ final class GetPeerPressureDashboardKpiStatsAction
 
         $completionDelta = $this->completionRateDeltaLast30VsPrev30();
 
+        $compliance = $this->computePelaksanaanCompliance(PeerPressureKejadianEdukasi::query());
+
         return [
             'total_cases' => $total,
             'total_cases_trend_pct' => $trendPct,
@@ -232,6 +249,46 @@ final class GetPeerPressureDashboardKpiStatsAction
             'completion_rate_delta_pp' => $completionDelta,
             'avg_peer_count' => $avgPeerCount,
             'avg_duration_minutes' => $avgDurationMinutes,
+            ...$compliance,
+        ];
+    }
+
+    /**
+     * Comply per kejadian (0% / 100%): Fatigue & Blindspot = pelaksanaan selesai.
+     * PSPP, Golden Rules, Insiden = selesai dan terhubung BeRecord (id_berecord terisi).
+     * Hanya lima kategori deviasi terlacak; "Lainnya" tidak masuk pembilang.
+     */
+    private function computePelaksanaanCompliance(Builder $query): array
+    {
+        $rows = (clone $query)->get(['kategori_deviasi', 'status_pelaksanaan_edukasi', 'id_berecord']);
+
+        $tracked = array_flip(KategoriDeviasiBucket::trackedComplianceBuckets());
+        $denom = 0;
+        $comply = 0;
+
+        foreach ($rows as $r) {
+            $bucket = KategoriDeviasiBucket::bucket($r->kategori_deviasi);
+            if (! isset($tracked[$bucket])) {
+                continue;
+            }
+
+            $denom++;
+            $ev = PelaksanaanComplianceEvaluator::evaluate(
+                $bucket,
+                $r->status_pelaksanaan_edukasi,
+                $r->id_berecord
+            );
+            if ($ev['comply']) {
+                $comply++;
+            }
+        }
+
+        $pct = $denom > 0 ? round(100 * $comply / $denom, 1) : 0.0;
+
+        return [
+            'peer_pressure_compliance_pct' => $pct,
+            'peer_pressure_compliance_total' => $denom,
+            'peer_pressure_compliance_comply' => $comply,
         ];
     }
 

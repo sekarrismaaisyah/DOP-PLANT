@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Actions\PeerPressure\GetPeerPressureDashboardEvaluationSummaryAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardInsightCardsAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardKpiStatsAction;
+use App\Actions\PeerPressure\GetPeerPressureDashboardComplianceBreakdownAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardWeeklyTrendAction;
 use App\Actions\PeerPressure\GetPeerPressureKejadianDetailForDashboardAction;
 use App\Actions\PeerPressure\GetPeerPressurePelanggarProfilingDetailAction;
@@ -179,6 +180,30 @@ class PeerPressureEdukasiController extends Controller
                 'insight_cards' => $insightCards(),
             ]
         ));
+    }
+
+    /**
+     * Breakdown Pelaksanaan Comply: daftar kejadian terlacak dengan status comply per baris (JSON).
+     */
+    public function complianceBreakdownData(
+        Request $request,
+        GetPeerPressureDashboardComplianceBreakdownAction $breakdown
+    ): JsonResponse {
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = min(50, max(5, (int) $request->query('per_page', 15)));
+
+        $chartPeriodMonth = $request->filled('year') && $request->filled('month');
+
+        if ($chartPeriodMonth) {
+            $chartYear = (int) $request->get('year');
+            $chartMonth = (int) $request->get('month');
+            $chartYear = max(GetPeerPressureDashboardWeeklyTrendAction::MIN_YEAR, min(GetPeerPressureDashboardWeeklyTrendAction::MAX_YEAR, $chartYear));
+            $chartMonth = max(1, min(12, $chartMonth));
+
+            return response()->json($breakdown($chartYear, $chartMonth, $page, $perPage));
+        }
+
+        return response()->json($breakdown(null, null, $page, $perPage));
     }
 
     /**

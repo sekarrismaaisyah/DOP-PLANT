@@ -9,7 +9,7 @@ use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
- * Ringkasan evaluasi dari data aktual DB — Repeat Violator mengikuti periode chart (semua data vs bulan).
+ * Ringkasan evaluasi dari data aktual DB — metrik repetitif pelanggaran mengikuti periode chart (semua data vs bulan).
  */
 final class GetPeerPressureDashboardEvaluationSummaryAction
 {
@@ -228,8 +228,8 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
         $critical = $pelanggarCount > 0;
 
         $threshold = $critical
-            ? '🔴 Immediate Coaching · ' . $pelanggarCount . ' pelanggar memenuhi kriteria'
-            : '🟢 Tidak memenuhi ambang · 0 pelanggar (≥ ' . self::REPEAT_MIN_CASES . ' kasus dalam periode: ' . $repeatPeriodCaption . ')';
+            ? 'Coaching segera · ' . $pelanggarCount . ' pelanggar memenuhi kriteria'
+            : 'Tidak memenuhi ambang · 0 pelanggar (≥ ' . self::REPEAT_MIN_CASES . ' kasus dalam periode: ' . $repeatPeriodCaption . ')';
 
         $bullets = [];
         if ($pelanggarCount === 0) {
@@ -238,7 +238,7 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
 
         $out = [
             'key' => 'repeat_violator',
-            'metric' => 'Repeat Violator',
+            'metric' => 'Repetitif pelanggaran',
             'description' => $desc,
             'action_threshold' => $threshold,
             'status' => $critical ? 'critical' : 'ok',
@@ -265,7 +265,7 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
             ? 'Jarak antar dua pelanggaran terbaru oleh pelanggar yang sama (SID), dalam periode chart'
             : 'Jarak antar dua pelanggaran terbaru oleh pelanggar yang sama (SID), seluruh data';
 
-        $metricExplanation = 'Metrik ini mengukur seberapa "segar" atau baru sebuah pelanggaran terjadi setelah pelanggaran sebelumnya oleh orang yang sama (satu SID). Selisih hari kecil berarti pelanggaran berulang dalam waktu singkat.';
+        $metricExplanation = 'Metrik ini mengukur jarak waktu antara dua pelanggaran terbaru oleh orang yang sama (satu SID). Selisih hari kecil berarti pelanggaran berulang dalam waktu singkat (semakin rapat, semakin perlu perhatian).';
 
         $base = DB::table('peer_pressure_peserta_edukasi as p')
             ->join('peer_pressure_kejadian_edukasi as k', 'k.id', '=', 'p.kejadian_edukasi_id')
@@ -344,9 +344,9 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
 
             return [
                 'key' => 'recency',
-                'metric' => 'Recency Score',
+                'metric' => 'Jarak waktu pelanggaran berulang',
                 'description' => $scopeDesc,
-                'action_threshold' => '— Data belum cukup (perlu ≥ 2 kejadian per SID dalam periode)',
+                'action_threshold' => '— Data belum cukup (minimal dua kejadian berbeda per SID dalam periode)',
                 'status' => 'neutral',
                 'detail_bullets' => [$msg],
             ];
@@ -368,8 +368,8 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
         $gap = $pick['gap'];
         $highRisk = $gap < self::RECENCY_HIGH_RISK_DAYS;
         $threshold = $highRisk
-            ? '🔴 < 7 hari = High Risk (selisih ' . $gap . ' hari, SID ' . $pick['sid'] . ')'
-            : '🟢 ≥ 7 hari (selisih ' . $gap . ' hari — SID ' . $pick['sid'] . ')';
+            ? '< 7 hari = risiko tinggi (selisih ' . $gap . ' hari, SID ' . $pick['sid'] . ')'
+            : '≥ 7 hari (selisih ' . $gap . ' hari — SID ' . $pick['sid'] . ')';
 
         $footnote = $inMonth
             ? 'Pasangan kejadian untuk SID ini: dua temuan terbaru per pelanggar dalam ' . $repeatPeriodCaption . ' (filter sama dengan chart). Ditampilkan SID dengan selisih kalender terkecil (pola terpadat).'
@@ -377,7 +377,7 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
 
         return [
             'key' => 'recency',
-            'metric' => 'Recency Score',
+            'metric' => 'Jarak waktu pelanggaran berulang',
             'description' => $scopeDesc,
             'action_threshold' => $threshold,
             'status' => $highRisk ? 'critical' : 'ok',
@@ -424,9 +424,9 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
 
         $pattern = $n >= self::VARIETY_PATTERN_MIN;
         $threshold = $pattern
-            ? '⚠️ ≥ 3 jenis = Pattern Issue (' . $n . ' jenis berbeda)'
+            ? '⚠️ ≥ 3 jenis = pola berulang (' . $n . ' jenis berbeda)'
             : ($n > 0
-                ? '🟢 Di bawah ambang pola (' . $n . ' jenis berbeda)'
+                ? 'Di bawah ambang pola (' . $n . ' jenis berbeda)'
                 : '— Belum ada kategori_deviasi terisi');
 
         $categoryRows = [];
@@ -439,7 +439,7 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
 
         return [
             'key' => 'deviation_variety',
-            'metric' => 'Deviation Variety',
+            'metric' => 'Keragaman jenis deviasi',
             'description' => 'Jumlah jenis deviasi berbeda yang tercatat (kategori_deviasi)',
             'action_threshold' => $threshold,
             'status' => $pattern ? 'warning' : ($n > 0 ? 'ok' : 'neutral'),
@@ -491,8 +491,8 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
 
         $flag = $pasanganBerulang > 0;
         $threshold = $flag
-            ? '⚠️ Investigasi grup dynamics (' . $pasanganBerulang . ' pasangan pelanggar–peer berulang)'
-            : '🟢 Tidak ada pasangan pelanggar–peer yang muncul di >1 kejadian';
+            ? '⚠️ Selidiki dinamika kelompok (' . $pasanganBerulang . ' pasangan pelanggar–peer berulang)'
+            : '🟢 Tidak ada pasangan berulang (frekuensi ≥ 2)';
 
         $topPairRows = [];
         foreach ($topRepeated as $key => $c) {
@@ -506,7 +506,7 @@ final class GetPeerPressureDashboardEvaluationSummaryAction
 
         return [
             'key' => 'peer_correlation',
-            'metric' => 'Peer Correlation',
+            'metric' => 'Korelasi pelanggar–peer',
             'description' => 'Apakah pelanggar sering muncul dengan peer yang sama?',
             'action_threshold' => $threshold,
             'status' => $flag ? 'warning' : 'ok',
