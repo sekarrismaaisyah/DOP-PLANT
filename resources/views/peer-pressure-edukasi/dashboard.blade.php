@@ -804,103 +804,42 @@
                </div>
             </div>
          </div>
-         <!-- Performance & Reward Section -->
-         <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <!-- Company Case Breakdown -->
-            <div class="bg-white p-8 rounded-2xl anchored-card">
-               <div class="flex justify-between items-start mb-8">
-                  <div>
-                     <h3 class="font-headline font-extrabold text-2xl text-primary">PT Madhani Talatah Nusantara</h3>
-                     <p class="text-xs text-on-surface-variant font-medium mt-1">Operational site breakdown and load metrics</p>
-                  </div>
-                  <span class="px-3 py-1 bg-primary/5 border border-primary/20 rounded-full text-[10px] font-bold text-primary shadow-sm">Q3 DATA</span>
-               </div>
-               <div class="grid grid-cols-1 sm:grid-cols-2 gap-10">
-                  <div class="space-y-6">
-                     <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Department Load</p>
-                     <div class="flex items-center gap-5 p-3 hover:bg-[#f8fafc] rounded-xl transition-all cursor-pointer border border-transparent hover:border-outline-variant/20 group">
-                        <div class="w-12 h-12 rounded-xl bg-primary/10 flex items-center justify-center text-primary shadow-inner group-hover:scale-110 transition-transform">
-                           <span class="material-symbols-outlined text-2xl" data-icon="engineering">engineering</span>
-                        </div>
-                        <div>
-                           <p class="text-[11px] font-bold text-on-surface-variant uppercase">Operation</p>
-                           <p class="text-2xl font-extrabold">842 <span class="text-xs font-medium text-on-surface-variant tracking-normal">Cases</span></p>
-                        </div>
-                     </div>
-                     <div class="flex items-center gap-5 p-3 hover:bg-[#f8fafc] rounded-xl transition-all cursor-pointer border border-transparent hover:border-outline-variant/20 group">
-                        <div class="w-12 h-12 rounded-xl bg-secondary/10 flex items-center justify-center text-secondary shadow-inner group-hover:scale-110 transition-transform">
-                           <span class="material-symbols-outlined text-2xl" data-icon="architecture">architecture</span>
-                        </div>
-                        <div>
-                           <p class="text-[11px] font-bold text-on-surface-variant uppercase">Technical</p>
-                           <p class="text-2xl font-extrabold">442 <span class="text-xs font-medium text-on-surface-variant tracking-normal">Cases</span></p>
-                        </div>
-                     </div>
-                  </div>
-                  <div class="bg-[#f8fafc] rounded-2xl p-6 flex flex-col justify-between border border-outline-variant/20 shadow-inner">
-                     <div>
-                        <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-[0.2em] mb-4">Status Distribution</p>
-                        <div class="flex items-end gap-3 h-24 mb-4">
-                           <div class="bg-[#16a34a] w-full rounded-t-lg group relative shadow-lg" style="height: 90%" title="Closed">
-                              <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-bold hidden group-hover:block whitespace-nowrap bg-white px-1 rounded shadow-md border">1,155 Closed</div>
-                           </div>
-                           <div class="bg-[#d97706] w-full rounded-t-lg group relative shadow-lg" style="height: 30%" title="Open">
-                              <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-bold hidden group-hover:block whitespace-nowrap bg-white px-1 rounded shadow-md border">102 Open</div>
-                           </div>
-                           <div class="bg-error w-full rounded-t-lg group relative shadow-lg" style="height: 10%" title="Pending">
-                              <div class="absolute -top-6 left-1/2 -translate-x-1/2 text-[9px] font-bold hidden group-hover:block whitespace-nowrap bg-white px-1 rounded shadow-md border">27 Pending</div>
-                           </div>
-                        </div>
-                     </div>
-                     <div class="grid grid-cols-3 gap-1 text-[9px] font-bold uppercase tracking-tighter text-center">
-                        <div class="flex flex-col"><span class="text-[#16a34a]">90% CL</span></div>
-                        <div class="flex flex-col"><span class="text-[#d97706]">8% OP</span></div>
-                        <div class="flex flex-col"><span class="text-error">2% PE</span></div>
-                     </div>
-                  </div>
-               </div>
-            </div>
-            <!-- Reward/Punishment -->
-            <div class="bg-white p-8 rounded-2xl anchored-card flex flex-col justify-between">
+         <!-- Highlight Issue & Rekomendasi (data agregat dashboard + AI Gemini) -->
+         <section class="overflow-hidden rounded-2xl border border-outline-variant/15 bg-white anchored-card" aria-labelledby="peer-highlight-heading">
+            <div class="flex flex-col gap-3 border-b border-outline-variant/20 bg-gradient-to-r from-primary/[0.06] to-secondary/[0.04] px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
                <div>
-                  <h3 class="font-headline font-bold text-2xl mb-2">Program Accountability</h3>
-                  <p class="text-sm text-on-surface-variant mb-8 leading-relaxed">System-generated eligibility list for quarterly safety incentives based on BeRecord compliance and duration targets.</p>
+                  <h3 id="peer-highlight-heading" class="font-headline text-xl font-extrabold tracking-tight text-on-background">Highlight Issue &amp; Rekomendasi</h3>
+                  <p class="mt-1 text-[11px] text-on-surface-variant">Narasi ringkas mengikuti alur metrik di halaman ini (KPI, trend, evaluasi, insight, tabel). Sumber data = agregat aktual; teks disusun AI dari JSON tersebut.</p>
                </div>
-               <div class="space-y-4">
-                  <div class="p-4 bg-[#f0fdf4] border border-[#16a34a]/20 rounded-2xl flex items-center justify-between hover:shadow-md transition-all cursor-pointer">
-                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-[#16a34a]/10 flex items-center justify-center shadow-inner">
-                           <span class="material-symbols-outlined text-[#16a34a]" data-icon="workspace_premium">workspace_premium</span>
-                        </div>
-                        <div>
-                           <p class="text-sm font-bold text-on-surface">Shift A Night Operations</p>
-                           <p class="text-[10px] font-bold text-[#16a34a] uppercase tracking-widest mt-0.5">100% Compliance Record</p>
-                        </div>
-                     </div>
-                     <div class="text-right">
-                        <span class="text-[11px] font-bold text-[#16a34a] uppercase border border-[#16a34a]/30 px-3 py-1 rounded-full bg-white shadow-sm">Eligible</span>
-                     </div>
-                  </div>
-                  <div class="p-4 bg-[#fff1f2] border border-error/20 rounded-2xl flex items-center justify-between hover:shadow-md transition-all cursor-pointer">
-                     <div class="flex items-center gap-4">
-                        <div class="w-10 h-10 rounded-full bg-error/10 flex items-center justify-center shadow-inner">
-                           <span class="material-symbols-outlined text-error" data-icon="warning_amber">warning_amber</span>
-                        </div>
-                        <div>
-                           <p class="text-sm font-bold text-on-surface">Drill Group 4</p>
-                           <p class="text-[10px] font-bold text-error uppercase tracking-widest mt-0.5">Avg Duration &lt; 5 mins</p>
-                        </div>
-                     </div>
-                     <div class="text-right">
-                        <span class="text-[11px] font-bold text-error uppercase border border-error/30 px-3 py-1 rounded-full bg-white shadow-sm">Review Flag</span>
-                     </div>
-                  </div>
+               <div class="flex flex-wrap items-center gap-2">
+                  <span id="peer-highlight-badge" class="hidden rounded-full border border-outline-variant/25 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant"></span>
+                  <button type="button" id="peer-highlight-refresh" class="inline-flex items-center gap-1.5 rounded-xl border border-outline-variant/30 bg-white px-3 py-2 text-[11px] font-bold text-primary transition-colors hover:bg-[#f8fafc]">
+                     <span class="material-symbols-outlined text-base" data-icon="refresh">refresh</span>
+                     Muat ulang
+                  </button>
                </div>
-               <button class="w-full mt-6 py-3 border-2 border-dashed border-outline-variant/30 rounded-xl text-xs font-bold text-on-surface-variant hover:border-primary/50 hover:text-primary hover:bg-[#f8fafc] transition-all">
-               View Full Accountability Report
-               </button>
             </div>
-         </div>
+            <div id="peer-highlight-loading" class="flex items-center gap-3 px-6 py-10 sm:px-8 text-on-surface-variant">
+               <span class="material-symbols-outlined animate-spin text-2xl text-primary" style="animation-duration:1.1s" data-icon="progress_activity">progress_activity</span>
+               <span class="text-sm font-medium">Menyusun ringkasan dari data dashboard…</span>
+            </div>
+            <div id="peer-highlight-content" class="hidden">
+               <div class="overflow-x-auto">
+                  <table class="w-full border-collapse text-left">
+                     <thead>
+                        <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-extrabold uppercase tracking-[0.12em] text-on-surface-variant">
+                           <th class="w-[18%] px-4 py-3 align-top sm:px-6">Tema</th>
+                           <th class="w-[41%] border-l border-outline-variant/15 px-4 py-3 align-top sm:px-6">Issue</th>
+                           <th class="w-[41%] border-l border-outline-variant/15 px-4 py-3 align-top sm:px-6">Rekomendasi</th>
+                        </tr>
+                     </thead>
+                     <tbody id="peer-highlight-tbody" class="divide-y divide-outline-variant/10 text-[12px] leading-relaxed text-on-surface"></tbody>
+                  </table>
+               </div>
+               <p id="peer-highlight-meta" class="border-t border-outline-variant/15 px-6 py-3 text-[10px] text-on-surface-variant sm:px-8"></p>
+            </div>
+            <p id="peer-highlight-error" class="hidden px-6 py-6 text-sm font-medium text-error sm:px-8"></p>
+         </section>
          <!-- Footer -->
          <footer class="flex flex-col sm:flex-row justify-between items-center py-10 border-t border-outline-variant/30 text-on-surface-variant">
             <div class="flex flex-col items-center sm:items-start gap-1">
@@ -1642,6 +1581,7 @@
       <script>
       (function () {
         const weeklyTrendUrl = @json(route('peer-pressure-edukasi.dashboard.weekly-trend'));
+        const peerHighlightUrl = @json(route('peer-pressure-edukasi.dashboard.highlight-issue-recommendation'));
         const complianceBreakdownUrl = @json(route('peer-pressure-edukasi.dashboard.compliance-breakdown'));
         const modal = document.getElementById('peer-weekly-period-modal');
         const backdrop = modal ? modal.querySelector('.peer-weekly-period-backdrop') : null;
@@ -2053,6 +1993,89 @@
             .replace(/&/g, '&amp;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
+        }
+        function peerHighlightQueryString() {
+          var yEl = document.getElementById('peer-dashboard-year');
+          var mEl = document.getElementById('peer-dashboard-month');
+          if (yEl && mEl && !yEl.disabled && !mEl.disabled) {
+            return 'year=' + encodeURIComponent(String(yEl.value)) + '&month=' + encodeURIComponent(String(mEl.value));
+          }
+          return '';
+        }
+        function loadPeerHighlightIssueRecommendation() {
+          var loading = document.getElementById('peer-highlight-loading');
+          var content = document.getElementById('peer-highlight-content');
+          var errEl = document.getElementById('peer-highlight-error');
+          var tbody = document.getElementById('peer-highlight-tbody');
+          var meta = document.getElementById('peer-highlight-meta');
+          var badge = document.getElementById('peer-highlight-badge');
+          if (!tbody || !loading) return;
+          if (errEl) errEl.classList.add('hidden');
+          loading.classList.remove('hidden');
+          if (content) content.classList.add('hidden');
+          var qs = peerHighlightQueryString();
+          var u = peerHighlightUrl + (qs ? '?' + qs : '');
+          fetch(u, {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error('Gagal memuat ringkasan highlight');
+              return r.json();
+            })
+            .then(function (data) {
+              var rows = data.rows || [];
+              tbody.innerHTML = rows
+                .map(function (row) {
+                  return (
+                    '<tr class="align-top hover:bg-[#fafbfc]">' +
+                    '<td class="px-4 py-4 text-[11px] font-bold text-primary sm:px-6">' +
+                    escHtml(row.judul != null ? String(row.judul) : '—') +
+                    '</td>' +
+                    '<td class="border-l border-outline-variant/10 px-4 py-4 text-on-surface-variant sm:px-6">' +
+                    escHtml(row.issue != null ? String(row.issue) : '') +
+                    '</td>' +
+                    '<td class="border-l border-outline-variant/10 px-4 py-4 sm:px-6">' +
+                    escHtml(row.rekomendasi != null ? String(row.rekomendasi) : '') +
+                    '</td></tr>'
+                  );
+                })
+                .join('');
+              if (!rows.length) {
+                tbody.innerHTML =
+                  '<tr><td colspan="3" class="px-4 py-8 text-center text-[11px] text-on-surface-variant sm:px-6">Belum ada baris ringkasan.</td></tr>';
+              }
+              if (meta) {
+                var src = data.ai_used ? 'AI (Gemini)' : 'Fallback agregat';
+                meta.textContent =
+                  'Periode: ' +
+                  (data.period_label != null ? String(data.period_label) : '—') +
+                  ' · ' +
+                  (data.generated_at != null ? String(data.generated_at) : '') +
+                  ' · Sumber: ' +
+                  src;
+              }
+              if (badge) {
+                badge.textContent = data.ai_used ? 'AI' : 'Fallback';
+                badge.classList.remove('hidden');
+              }
+              loading.classList.add('hidden');
+              if (content) content.classList.remove('hidden');
+            })
+            .catch(function (e) {
+              loading.classList.add('hidden');
+              if (content) content.classList.add('hidden');
+              if (errEl) {
+                errEl.textContent = e.message || 'Gagal memuat ringkasan';
+                errEl.classList.remove('hidden');
+              }
+            });
+        }
+        var peerHighlightRefresh = document.getElementById('peer-highlight-refresh');
+        if (peerHighlightRefresh) {
+          peerHighlightRefresh.addEventListener('click', function () {
+            loadPeerHighlightIssueRecommendation();
+          });
         }
         function escAttr(s) {
           if (s == null) return '';
@@ -3125,6 +3148,7 @@
                 if (wt.evaluation_summary) renderEvaluationSummary(wt.evaluation_summary);
                 if (wt.insight_cards) renderInsightCards(wt.insight_cards);
                 updateFormHiddenAndUrl();
+                loadPeerHighlightIssueRecommendation();
               })
               .catch(function (err) {
                 alert(err.message || 'Terjadi kesalahan');
@@ -3168,6 +3192,7 @@
           e.preventDefault();
           t.click();
         });
+        loadPeerHighlightIssueRecommendation();
       })();
       </script>
       <script>

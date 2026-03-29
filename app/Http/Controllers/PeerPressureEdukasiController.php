@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers;
 
+use App\Actions\PeerPressure\GeneratePeerPressureDashboardHighlightIssueRecommendationAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardEvaluationSummaryAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardInsightCardsAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardKpiStatsAction;
@@ -185,6 +186,27 @@ class PeerPressureEdukasiController extends Controller
     /**
      * Breakdown Pelaksanaan Comply: daftar kejadian terlacak dengan status comply per baris (JSON).
      */
+    /**
+     * Ringkasan AI: Highlight Issue & Rekomendasi dari agregat dashboard (periode sama dengan filter chart).
+     */
+    public function dashboardHighlightIssueRecommendation(
+        Request $request,
+        GeneratePeerPressureDashboardHighlightIssueRecommendationAction $action
+    ): JsonResponse {
+        $chartPeriodMonth = $request->filled('year') && $request->filled('month');
+
+        if ($chartPeriodMonth) {
+            $chartYear = (int) $request->get('year');
+            $chartMonth = (int) $request->get('month');
+            $chartYear = max(GetPeerPressureDashboardWeeklyTrendAction::MIN_YEAR, min(GetPeerPressureDashboardWeeklyTrendAction::MAX_YEAR, $chartYear));
+            $chartMonth = max(1, min(12, $chartMonth));
+
+            return response()->json($action($chartYear, $chartMonth));
+        }
+
+        return response()->json($action(null, null));
+    }
+
     public function complianceBreakdownData(
         Request $request,
         GetPeerPressureDashboardComplianceBreakdownAction $breakdown
