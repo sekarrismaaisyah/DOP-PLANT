@@ -645,7 +645,7 @@
             </div>
             <div class="bg-white p-6 rounded-2xl anchored-card">
                <h3 class="font-headline font-bold text-[11px] mb-2 uppercase tracking-widest text-on-surface-variant">Profiling Analysis</h3>
-               <p class="mb-4 text-[10px] leading-snug text-on-surface-variant">Pelanggar dengan kejadian terbanyak; korelasi = porsi terhadap total insiden pada periode yang sama.</p>
+               <p class="mb-4 text-[10px] leading-snug text-on-surface-variant">Pelanggar dengan kejadian terbanyak; korelasi = porsi terhadap total insiden pada periode yang sama. Klik baris untuk modal detail, termasuk kriteria <span class="font-semibold text-on-surface">Per Orang</span> (compliance, repetition, awareness).</p>
                <div class="max-h-80 space-y-2.5 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
                   @forelse ($profilingPelanggar as $p)
                   <div class="peer-profiling-row flex items-center gap-3 rounded-xl border border-outline-variant/15 bg-[#fafbfc] p-2.5 cursor-pointer transition-colors hover:bg-[#f1f5f9] hover:border-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/30" role="button" tabindex="0" data-sid="{{ $p['sid'] ?? '' }}" data-nama="{{ $p['nama'] ?? '' }}">
@@ -3354,6 +3354,132 @@
           );
         }
 
+        function buildPoOneDetailSection(sec) {
+          var items = sec.items || [];
+          var inner;
+          if (!items.length) {
+            inner =
+              '<p class="py-2 text-[10px] italic leading-relaxed text-on-surface-variant">Belum ada data kejadian untuk bagian ini pada jendela 6 bulan.</p>';
+          } else {
+            inner =
+              '<div class="overflow-x-auto">' +
+              '<table class="w-full min-w-[280px] border-collapse text-left text-[10px]">' +
+              '<thead><tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">' +
+              '<th class="whitespace-nowrap px-2 py-1.5">ID</th>' +
+              '<th class="whitespace-nowrap px-2 py-1.5">Tanggal temuan</th>' +
+              '<th class="px-2 py-1.5">Kategori temuan</th>' +
+              '<th class="px-2 py-1.5">Lokasi</th>' +
+              '</tr></thead><tbody>' +
+              items
+                .map(function (it) {
+                  return (
+                    '<tr class="border-b border-outline-variant/10">' +
+                    '<td class="whitespace-nowrap px-2 py-1.5 font-mono font-semibold tabular-nums text-primary">#' +
+                    esc(String(it.kejadian_id != null ? it.kejadian_id : '—')) +
+                    '</td>' +
+                    '<td class="whitespace-nowrap px-2 py-1.5 tabular-nums text-on-surface">' +
+                    esc(it.tanggal || '') +
+                    '</td>' +
+                    '<td class="px-2 py-1.5 text-on-surface">' +
+                    esc(it.kategori || '') +
+                    '</td>' +
+                    '<td class="px-2 py-1.5 text-on-surface-variant">' +
+                    esc(it.lokasi || '') +
+                    '</td></tr>'
+                  );
+                })
+                .join('') +
+              '</tbody></table></div>';
+          }
+          return (
+            '<div class="rounded-lg border border-outline-variant/20 bg-white p-3 shadow-sm">' +
+            '<p class="mb-2 border-b border-outline-variant/15 pb-2 text-[10px] font-bold uppercase tracking-wide text-primary">' +
+            esc(sec.heading || '') +
+            '</p>' +
+            inner +
+            '</div>'
+          );
+        }
+
+        function buildPerOrangSection(d) {
+          var po = d.per_orang;
+          if (!po || !po.rows || !po.rows.length) {
+            return '';
+          }
+          var tableRows = po.rows
+            .map(function (r) {
+              var hit = !!r.terpenuhi;
+              var trCls = hit
+                ? 'bg-amber-50/60 border-l-2 border-amber-400/80'
+                : 'border-l-2 border-transparent';
+              var sections = r.detail_sections || [];
+              var hasDetail = sections.length > 0;
+              var rowCls =
+                trCls +
+                ' border-b border-outline-variant/10' +
+                (hasDetail ? ' peer-po-toggle cursor-pointer hover:bg-[#f0f4f8]' : '');
+              var chev = hasDetail
+                ? '<span class="material-symbols-outlined ml-1 shrink-0 text-lg text-primary peer-po-chevron" data-icon="expand_more">expand_more</span>'
+                : '';
+              var mainTr =
+                '<tr class="' +
+                rowCls +
+                '"' +
+                (hasDetail
+                  ? ' tabindex="0" role="button" title="Klik atau Enter untuk buka/tutup detail kejadian"'
+                  : '') +
+                '>' +
+                '<td class="px-3 py-2.5 text-[11px] font-bold text-primary align-top">' +
+                esc(r.kategori || '—') +
+                '</td>' +
+                '<td class="px-3 py-2.5 text-[11px] leading-snug text-on-surface-variant align-top">' +
+                esc(r.kriteria || '') +
+                '</td>' +
+                '<td class="px-3 py-2.5 align-top">' +
+                '<div class="flex items-center justify-between gap-2">' +
+                '<span class="text-[11px] font-semibold text-on-surface">' +
+                esc(r.status || '—') +
+                '</span>' +
+                chev +
+                '</div></td></tr>';
+              if (!hasDetail) {
+                return mainTr;
+              }
+              var detailBlocks = sections.map(buildPoOneDetailSection).join('');
+              var detailTr =
+                '<tr class="peer-po-detail hidden border-b border-outline-variant/10 bg-[#f8fafc]">' +
+                '<td colspan="3" class="px-3 py-3 sm:px-4">' +
+                '<p class="mb-2 text-[10px] font-bold text-on-surface-variant">Detail kejadian</p>' +
+                '<div class="space-y-3">' +
+                detailBlocks +
+                '</div></td></tr>';
+              return mainTr + detailTr;
+            })
+            .join('');
+          var issueText = po.issue_ringkas || '';
+          var peerN = po.peer_sebagai_peer_kejadian != null ? String(po.peer_sebagai_peer_kejadian) : '0';
+          return (
+            '<section class="rounded-xl border border-outline-variant/15 bg-white p-4">' +
+            sectionTitle('badge', 'Per Orang') +
+            '<p class="mb-3 text-[10px] leading-relaxed text-on-surface-variant">Klik baris yang memiliki ikon panah untuk melihat daftar kejadian sebagai <strong class="font-semibold text-on-surface">pelanggar</strong> dan sebagai <strong class="font-semibold text-on-surface">peer</strong> (Awareness / Awareness 2).</p>' +
+            '<div class="overflow-x-auto rounded-lg border border-outline-variant/15">' +
+            '<table class="w-full min-w-[320px] text-left text-[11px]">' +
+            '<thead class="bg-[#f8fafc] text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">' +
+            '<tr><th class="px-3 py-2">Kategori</th><th class="px-3 py-2">Kriteria</th><th class="px-3 py-2">Status / nilai</th></tr></thead>' +
+            '<tbody id="peer-po-tbody">' +
+            tableRows +
+            '</tbody></table></div>' +
+            '<div class="mt-4 rounded-xl border border-primary/15 bg-primary/[0.04] px-3 py-3">' +
+            '<p class="text-[9px] font-bold uppercase tracking-wider text-primary">Issue (ringkasan)</p>' +
+            '<p class="mt-1 text-[11px] leading-relaxed text-on-surface">' +
+            esc(issueText) +
+            '</p></div>' +
+            '<p class="mt-2 text-[10px] text-on-surface-variant">Kejadian sebagai peer dalam jendela yang sama: <span class="font-mono font-semibold text-on-surface">' +
+            esc(peerN) +
+            '</span> kejadian.</p></section>'
+          );
+        }
+
         function trendBlock(d) {
           var tr = d.recency_trend || 'stable';
           var icon = tr === 'worsening' ? 'trending_down' : tr === 'improving' ? 'trending_up' : 'timeline';
@@ -3452,6 +3578,7 @@
             '<div><span class="block text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">Last education</span><span class="tabular-nums text-on-surface">' +
             esc(d.last_education_label) +
             '</span></div></div></section>' +
+            buildPerOrangSection(d) +
             '<section class="rounded-xl border border-outline-variant/15 bg-white p-4">' +
             sectionTitle('table_chart', 'Riwayat pelanggaran (6 bulan terakhir)') +
             '<div class="overflow-x-auto rounded-lg border border-outline-variant/15">' +
@@ -3568,6 +3695,32 @@
             } catch (err) {}
           });
         }
+
+        function togglePeerPoRow(mainTr) {
+          var detail = mainTr.nextElementSibling;
+          if (!detail || !detail.classList.contains('peer-po-detail')) return;
+          detail.classList.toggle('hidden');
+          var open = !detail.classList.contains('hidden');
+          var ch = mainTr.querySelector('.peer-po-chevron');
+          if (ch) {
+            ch.textContent = open ? 'expand_less' : 'expand_more';
+            ch.setAttribute('data-icon', open ? 'expand_less' : 'expand_more');
+          }
+        }
+
+        document.addEventListener('click', function (e) {
+          var tr = e.target.closest('#peer-pelanggar-profiling-body tr.peer-po-toggle');
+          if (!tr) return;
+          togglePeerPoRow(tr);
+        });
+
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Enter' && e.key !== ' ') return;
+          var tr = e.target.closest('#peer-pelanggar-profiling-body tr.peer-po-toggle');
+          if (!tr || document.activeElement !== tr) return;
+          e.preventDefault();
+          togglePeerPoRow(tr);
+        });
       })();
       </script>
    </body>

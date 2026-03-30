@@ -44,7 +44,18 @@ final class GetPeerPressurePelanggarProfilingDetailAction
      *   korelasi: list<string>,
      *   rekomendasi: list<string>,
      *   kasus_count: int,
-     *   window_caption: string
+     *   window_caption: string,
+     *   per_orang: array{
+     *     rows: list<array{
+     *       kategori: string,
+     *       kriteria: string,
+     *       status: string,
+     *       terpenuhi: bool,
+     *       detail_sections: list<array{heading: string, items: list<array{kejadian_id: int, tanggal: string, kategori: string, lokasi: string}>}>
+     *     }>,
+     *     issue_ringkas: string,
+     *     peer_sebagai_peer_kejadian: int
+     *   }
      * }
      */
     public function __invoke(string $sid): array
@@ -101,6 +112,16 @@ final class GetPeerPressurePelanggarProfilingDetailAction
             : '—';
 
         $kasusCount = $byKejadian->count();
+
+        $violatorIncidentDetails = $this->violatorIncidentDetailsList($byKejadian);
+        $peerIncidentDetails = $this->peerIncidentDetailsList($sidKey, $from);
+        $peerKejadianCount = count($peerIncidentDetails);
+
+        $perOrang = $this->buildPerOrangBlock(
+            $kasusCount,
+            $violatorIncidentDetails,
+            $peerIncidentDetails,
+        );
 
         $sortedDesc = $byKejadian->sortByDesc(function ($r) {
             $d = $this->carbonDate($r->tanggal_temuan);
@@ -197,9 +218,202 @@ final class GetPeerPressurePelanggarProfilingDetailAction
             'recency_trend' => $trend,
             'recency_caption' => $recencyCaption,
             'korelasi' => $korelasi,
-            'rekomendasi' => $this->recommendations(),
+            'rekomendasi' => array_values(array_unique([...$perOrang['rekomendasi_kontekstual'], ...$this->defaultRecommendations()], SORT_REGULAR)),
             'kasus_count' => $kasusCount,
             'window_caption' => $windowCaption,
+            'per_orang' => [
+                'rows' => $perOrang['rows'],
+                'issue_ringkas' => $perOrang['issue_ringkas'],
+                'peer_sebagai_peer_kejadian' => $peerKejadianCount,
+            ],
+        ];
+    }
+
+    /**
+     * Daftar kejadian unik sebagai pelanggar (untuk detail baris Per Orang).
+     *
+     * @param  Collection<int, object>  $byKejadian
+     * @return list<array{kejadian_id: int, tanggal: string, kategori: string, lokasi: string}>
+     */
+    private function violatorIncidentDetailsList(Collection $byKejadian): array
+    {
+        $sorted = $byKejadian->sortByDesc(function ($r) {
+            $d = $this->carbonDate($r->tanggal_temuan);
+
+            return $d ? $d->timestamp : 0;
+        })->values();
+
+        $out = [];
+        foreach ($sorted as $r) {
+            $dt = $this->carbonDate($r->tanggal_temuan);
+            $out[] = [
+                'kejadian_id' => (int) $r->kejadian_id,
+                'tanggal' => $dt ? $dt->format('d/m/Y') : '—',
+                'kategori' => $this->str($r->kategori_deviasi),
+                'lokasi' => $this->str($r->lokasi_temuan),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Kejadian di mana SID ini berperan sebagai peer — kategori/lokasi = temuan yang diedukasi (bukan pelanggar sendiri).
+     *
+     * @return list<array{kejadian_id: int, tanggal: string, kategori: string, lokasi: string}>
+     */
+    private function peerIncidentDetailsList(string $sidKey, Carbon $from): array
+    {
+        $raw = DB::table('peer_pressure_peserta_edukasi as p')
+            ->join('peer_pressure_kejadian_edukasi as k', 'k.id', '=', 'p.kejadian_edukasi_id')
+            ->where('p.peran', 'peer')
+            ->whereRaw('LOWER(TRIM(p.sid)) = ?', [$sidKey])
+            ->where('k.tanggal_temuan', '>=', $from->toDateString())
+            ->orderByDesc('k.tanggal_temuan')
+            ->orderByDesc('k.id')
+            ->select([
+                'k.id as kejadian_id',
+                'k.tanggal_temuan',
+                'k.kategori_deviasi',
+                'k.lokasi_temuan',
+            ])
+            ->get();
+
+        $seen = [];
+        $out = [];
+        foreach ($raw as $r) {
+            $kid = (int) $r->kejadian_id;
+            if (isset($seen[$kid])) {
+                continue;
+            }
+            $seen[$kid] = true;
+            $dt = $this->carbonDate($r->tanggal_temuan);
+            $out[] = [
+                'kejadian_id' => $kid,
+                'tanggal' => $dt ? $dt->format('d/m/Y') : '—',
+                'kategori' => $this->str($r->kategori_deviasi),
+                'lokasi' => $this->str($r->lokasi_temuan),
+            ];
+        }
+
+        return $out;
+    }
+
+    /**
+     * Kriteria "Per Orang" + narasi issue + rekomendasi tambahan (disatukan di controller dengan default).
+     *
+     * @param  list<array{kejadian_id: int, tanggal: string, kategori: string, lokasi: string}>  $violatorIncidents
+     * @param  list<array{kejadian_id: int, tanggal: string, kategori: string, lokasi: string}>  $peerIncidents
+     * @return array{
+     *   rows: list<array<string, mixed>>,
+     *   issue_ringkas: string,
+     *   rekomendasi_kontekstual: list<string>
+     * }
+     */
+    private function buildPerOrangBlock(
+        int $kasusViolator,
+        array $violatorIncidents,
+        array $peerIncidents,
+    ): array {
+        $peerKejadianCount = count($peerIncidents);
+        $complianceCount = $kasusViolator;
+        $repetition = $kasusViolator > 1;
+        $awareness = $peerKejadianCount > 0 && $kasusViolator >= 1;
+        $awareness2 = $peerKejadianCount > 0 && $kasusViolator > 1;
+
+        $sectPelanggar = [
+            'heading' => 'Sebagai pelanggar (temuan pada diri Anda)',
+            'items' => $violatorIncidents,
+        ];
+        $sectPeer = [
+            'heading' => 'Sebagai peer (Anda mendampingi peer pressure pada temuan orang lain)',
+            'items' => $peerIncidents,
+        ];
+
+        $rows = [
+            [
+                'kategori' => 'Compliance peer pressure',
+                'kriteria' => 'Dia ada catatan pelanggaran, sudah di peer pressure berapa?',
+                'status' => sprintf('%d kali (peer pressure terhadap pelanggar ini)', $complianceCount),
+                'terpenuhi' => $complianceCount > 0,
+                'detail_sections' => $violatorIncidents !== [] ? [$sectPelanggar] : [],
+            ],
+            [
+                'kategori' => 'Repetition',
+                'kriteria' => 'Dia ada catatan pelanggaran > 1',
+                'status' => $repetition ? sprintf('Ya (%d kejadian)', $kasusViolator) : 'Tidak',
+                'terpenuhi' => $repetition,
+                'detail_sections' => ($repetition && $violatorIncidents !== []) ? [$sectPelanggar] : [],
+            ],
+            [
+                'kategori' => 'Awareness',
+                'kriteria' => 'Pernah jadi peer, tapi melanggar',
+                'status' => $awareness ? 'Ya' : 'Tidak',
+                'terpenuhi' => $awareness,
+                'detail_sections' => [
+                    $sectPelanggar,
+                    $sectPeer,
+                ],
+            ],
+            [
+                'kategori' => 'Awareness 2',
+                'kriteria' => 'Pernah jadi peer, tapi melanggar (berulang)',
+                'status' => $awareness2 ? 'Ya' : 'Tidak',
+                'terpenuhi' => $awareness2,
+                'detail_sections' => [
+                    $sectPelanggar,
+                    $sectPeer,
+                ],
+            ],
+        ];
+
+        $issueParts = [];
+        $issueParts[] = sprintf(
+            'Dalam jendela %d bulan terakhir, pelanggar ini memiliki %d catatan sebagai pelanggar (peer pressure dilaksanakan %d kali).',
+            self::WINDOW_MONTHS,
+            $kasusViolator,
+            $complianceCount
+        );
+        if ($peerKejadianCount > 0) {
+            $issueParts[] = sprintf('Sebagai peer, ikut dalam %d kejadian edukasi (peran peer).', $peerKejadianCount);
+        }
+        if ($repetition) {
+            $issueParts[] = 'Repetition terpenuhi: lebih dari satu pelanggaran.';
+        }
+        if ($awareness2) {
+            $issueParts[] = 'Awareness 2: pernah sebagai peer namun pelanggaran berulang — perlu perhatian khusus.';
+        } elseif ($awareness) {
+            $issueParts[] = 'Awareness: pernah sebagai peer namun tercatat melanggar.';
+        }
+
+        $rek = [];
+        if ($repetition || $awareness2) {
+            $rek[] = 'Prioritaskan coaching satu lawan satu dan kontrak perilaku tertulis; libatkan atasan langsung.';
+        }
+        if ($awareness || $awareness2) {
+            $rek[] = 'Manfaatkan pengalaman peran peer untuk refleksi: diskusi mengapa norma keselamatan tidak dipatuhi saat menjadi pelanggar.';
+        }
+        if ($kasusViolator >= 3) {
+            $rek[] = 'Evaluasi disiplin progresif sesuai kebijakan perusahaan karena frekuensi kasus tinggi.';
+        }
+
+        return [
+            'rows' => $rows,
+            'issue_ringkas' => implode(' ', $issueParts),
+            'rekomendasi_kontekstual' => $rek,
+        ];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function defaultRecommendations(): array
+    {
+        return [
+            'Jadwalkan coaching formal dengan HSE Manager',
+            'Evaluasi roster kerja (potensi fatigue kronis)',
+            'Review kompetensi & sertifikasi operator',
+            'Pertimbangkan rotasi posisi sementara',
         ];
     }
 
@@ -424,16 +638,4 @@ final class GetPeerPressurePelanggarProfilingDetailAction
         return $mins >= 22 * 60 || $mins < 6 * 60;
     }
 
-    /**
-     * @return list<string>
-     */
-    private function recommendations(): array
-    {
-        return [
-            'Jadwalkan coaching formal dengan HSE Manager',
-            'Evaluasi roster kerja (potensi fatigue kronis)',
-            'Review kompetensi & sertifikasi operator',
-            'Pertimbangkan rotasi posisi sementara',
-        ];
-    }
 }
