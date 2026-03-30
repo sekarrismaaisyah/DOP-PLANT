@@ -4,6 +4,7 @@ namespace App\Http\Controllers\DOPMIKK;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ImportDopmJob;
+use App\Services\ClickHouseService;
 use App\Models\Dopm;
 use App\Models\DopmAlertIntervensi;
 use App\Models\DopmAlertLog;
@@ -23,6 +24,22 @@ use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 
 class DOPMController extends Controller
 {
+    /**
+     * ClickHouse nitip — OAK (aaj_vw_car_oak_register_ytd_only) di server/kredensial terpisah dari hse_automation (lihat config database.connections.clickhouse_nitip).
+     */
+    private static function clickHouseNitipForOak(): ?ClickHouseService
+    {
+        if (! class_exists(ClickHouseService::class)) {
+            return null;
+        }
+        $ch = app(ClickHouseService::class, ['connectionName' => 'clickhouse_nitip']);
+        if (! method_exists($ch, 'query') || ! $ch->isConnected()) {
+            return null;
+        }
+
+        return $ch;
+    }
+
     /**
      * Dashboard statistik harian DOPM, IKK, OKK, OAK. Semua tampilan by tanggal terpilih.
      */
@@ -783,10 +800,10 @@ class DOPMController extends Controller
             // Batch load OAK data untuk semua pasangan lokasi (location + detail_location) sekaligus,
             // tanpa membedakan sumber DIC / BC. Yang penting ada OAK di lokasi tsb pada hari itu.
             $oakDataByLocation = [];
-            if (!empty($locationPairs) && class_exists(\App\Services\ClickHouseService::class)) {
+            if (!empty($locationPairs)) {
                 try {
-                    $clickHouse = app(\App\Services\ClickHouseService::class);
-                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                    $chNitip = self::clickHouseNitipForOak();
+                    if ($chNitip !== null) {
                         $dateEsc = addslashes($filterDate);
                         $conditions = [];
                         foreach ($locationPairs as $pair) {
@@ -801,12 +818,12 @@ class DOPMController extends Controller
                                 SELECT trim(toString(location)) as location,
                                        trim(toString(detail_location)) as detail_location,
                                        count() as cnt
-                                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                                FROM aaj_vw_car_oak_register_ytd_only
                                 WHERE toDate(submit_date) = '{$dateEsc}'
                                   AND ({$where})
                                 GROUP BY location, detail_location
                             ";
-                            $oakResultAny = $clickHouse->query($sqlOakAny);
+                            $oakResultAny = $chNitip->query($sqlOakAny);
                             foreach ($oakResultAny as $row) {
                                 $loc = trim((string) ($row['location'] ?? ''));
                                 $det = trim((string) ($row['detail_location'] ?? ''));
@@ -1034,26 +1051,24 @@ class DOPMController extends Controller
         $locationPairs = array_values($locationPairs);
         if (!empty($locationPairs)) {
             try {
-                if (class_exists(\App\Services\ClickHouseService::class)) {
-                    $clickHouse = app(\App\Services\ClickHouseService::class);
-                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                        $dateEsc = addslashes($filterDate);
-                        $conditions = [];
-                        foreach ($locationPairs as $pair) {
-                            $locEsc = addslashes($pair[0]);
-                            $detEsc = addslashes($pair[1]);
-                            $conditions[] = "(lower(trim(toString(location))) = lower('{$locEsc}') AND lower(trim(toString(detail_location))) = lower('{$detEsc}'))";
-                        }
-                        $whereLoc = implode(' OR ', $conditions);
-                        $sqlOakCount = "SELECT count() as cnt FROM hse_automation.aaj_vw_car_oak_register_ytd_only"
-                            . " WHERE toDate(submit_date) = '{$dateEsc}'"
-                            . " AND lower(trim(toString(tipe))) = 'observer'"
-                            . " AND ({$whereLoc})";
-                        $oakCountResult = $clickHouse->query($sqlOakCount);
-                        $totalOakHarian = isset($oakCountResult[0]['cnt']) ? (int) $oakCountResult[0]['cnt'] : 0;
-                        $pctDopmOak = $totalDopmHarian > 0 ? min(100.0, round($totalOakHarian / $totalDopmHarian * 100, 1)) : 0;
-                        $pctPengisianRataRata = round(($pctDopmAdaIpk + $pctDopmAdaOkk + $pctDopmOak) / 3, 1);
+                $chNitip = self::clickHouseNitipForOak();
+                if ($chNitip !== null) {
+                    $dateEsc = addslashes($filterDate);
+                    $conditions = [];
+                    foreach ($locationPairs as $pair) {
+                        $locEsc = addslashes($pair[0]);
+                        $detEsc = addslashes($pair[1]);
+                        $conditions[] = "(lower(trim(toString(location))) = lower('{$locEsc}') AND lower(trim(toString(detail_location))) = lower('{$detEsc}'))";
                     }
+                    $whereLoc = implode(' OR ', $conditions);
+                    $sqlOakCount = "SELECT count() as cnt FROM aaj_vw_car_oak_register_ytd_only"
+                        . " WHERE toDate(submit_date) = '{$dateEsc}'"
+                        . " AND lower(trim(toString(tipe))) = 'observer'"
+                        . " AND ({$whereLoc})";
+                    $oakCountResult = $chNitip->query($sqlOakCount);
+                    $totalOakHarian = isset($oakCountResult[0]['cnt']) ? (int) $oakCountResult[0]['cnt'] : 0;
+                    $pctDopmOak = $totalDopmHarian > 0 ? min(100.0, round($totalOakHarian / $totalDopmHarian * 100, 1)) : 0;
+                    $pctPengisianRataRata = round(($pctDopmAdaIpk + $pctDopmAdaOkk + $pctDopmOak) / 3, 1);
                 }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::debug('Dashboard OAK harian by IKK location: ' . $e->getMessage());
@@ -1782,10 +1797,10 @@ class DOPMController extends Controller
             // Batch load OAK data untuk semua pasangan lokasi (location + detail_location) sekaligus,
             // tanpa membedakan sumber DIC / BC. Yang penting ada OAK di lokasi tsb pada hari itu.
             $oakDataByLocation = [];
-            if (!empty($locationPairs) && class_exists(\App\Services\ClickHouseService::class)) {
+            if (!empty($locationPairs)) {
                 try {
-                    $clickHouse = app(\App\Services\ClickHouseService::class);
-                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
+                    $chNitip = self::clickHouseNitipForOak();
+                    if ($chNitip !== null) {
                         $dateEsc = addslashes($filterDate);
                         $conditions = [];
                         foreach ($locationPairs as $pair) {
@@ -1800,12 +1815,12 @@ class DOPMController extends Controller
                                 SELECT trim(toString(location)) as location,
                                        trim(toString(detail_location)) as detail_location,
                                        count() as cnt
-                                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                                FROM aaj_vw_car_oak_register_ytd_only
                                 WHERE toDate(submit_date) = '{$dateEsc}'
                                   AND ({$where})
                                 GROUP BY location, detail_location
                             ";
-                            $oakResultAny = $clickHouse->query($sqlOakAny);
+                            $oakResultAny = $chNitip->query($sqlOakAny);
                             foreach ($oakResultAny as $row) {
                                 $loc = trim((string) ($row['location'] ?? ''));
                                 $det = trim((string) ($row['detail_location'] ?? ''));
@@ -2033,26 +2048,24 @@ class DOPMController extends Controller
         $locationPairs = array_values($locationPairs);
         if (!empty($locationPairs)) {
             try {
-                if (class_exists(\App\Services\ClickHouseService::class)) {
-                    $clickHouse = app(\App\Services\ClickHouseService::class);
-                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                        $dateEsc = addslashes($filterDate);
-                        $conditions = [];
-                        foreach ($locationPairs as $pair) {
-                            $locEsc = addslashes($pair[0]);
-                            $detEsc = addslashes($pair[1]);
-                            $conditions[] = "(lower(trim(toString(location))) = lower('{$locEsc}') AND lower(trim(toString(detail_location))) = lower('{$detEsc}'))";
-                        }
-                        $whereLoc = implode(' OR ', $conditions);
-                        $sqlOakCount = "SELECT count() as cnt FROM hse_automation.aaj_vw_car_oak_register_ytd_only"
-                            . " WHERE toDate(submit_date) = '{$dateEsc}'"
-                            . " AND lower(trim(toString(tipe))) = 'observer'"
-                            . " AND ({$whereLoc})";
-                        $oakCountResult = $clickHouse->query($sqlOakCount);
-                        $totalOakHarian = isset($oakCountResult[0]['cnt']) ? (int) $oakCountResult[0]['cnt'] : 0;
-                        $pctDopmOak = $totalDopmHarian > 0 ? min(100.0, round($totalOakHarian / $totalDopmHarian * 100, 1)) : 0;
-                        $pctPengisianRataRata = round(($pctDopmAdaIpk + $pctDopmAdaOkk + $pctDopmOak) / 3, 1);
+                $chNitip = self::clickHouseNitipForOak();
+                if ($chNitip !== null) {
+                    $dateEsc = addslashes($filterDate);
+                    $conditions = [];
+                    foreach ($locationPairs as $pair) {
+                        $locEsc = addslashes($pair[0]);
+                        $detEsc = addslashes($pair[1]);
+                        $conditions[] = "(lower(trim(toString(location))) = lower('{$locEsc}') AND lower(trim(toString(detail_location))) = lower('{$detEsc}'))";
                     }
+                    $whereLoc = implode(' OR ', $conditions);
+                    $sqlOakCount = "SELECT count() as cnt FROM aaj_vw_car_oak_register_ytd_only"
+                        . " WHERE toDate(submit_date) = '{$dateEsc}'"
+                        . " AND lower(trim(toString(tipe))) = 'observer'"
+                        . " AND ({$whereLoc})";
+                    $oakCountResult = $chNitip->query($sqlOakCount);
+                    $totalOakHarian = isset($oakCountResult[0]['cnt']) ? (int) $oakCountResult[0]['cnt'] : 0;
+                    $pctDopmOak = $totalDopmHarian > 0 ? min(100.0, round($totalOakHarian / $totalDopmHarian * 100, 1)) : 0;
+                    $pctPengisianRataRata = round(($pctDopmAdaIpk + $pctDopmAdaOkk + $pctDopmOak) / 3, 1);
                 }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::debug('Dashboard Weekly OAK harian by IKK location: ' . $e->getMessage());
@@ -2574,26 +2587,25 @@ class DOPMController extends Controller
         // Ambil OAK: di tanggal filter (submit_date), yang location & detail_location sama dengan work permit
         if ($locationName !== '' && $locationDetailName !== '') {
             try {
-                if (class_exists(\App\Services\ClickHouseService::class)) {
-                    $clickHouse = app(\App\Services\ClickHouseService::class);
-                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                        $tanggalDop = $request->input('tanggal_dop', '');
-                        if ($tanggalDop === '') {
+                $chNitip = self::clickHouseNitipForOak();
+                if ($chNitip !== null) {
+                    $tanggalDop = $request->input('tanggal_dop', '');
+                    if ($tanggalDop === '') {
+                        $filterDate = date('Y-m-d');
+                    } else {
+                        try {
+                            $filterDate = \Carbon\Carbon::parse($tanggalDop)->format('Y-m-d');
+                        } catch (\Exception $e) {
                             $filterDate = date('Y-m-d');
-                        } else {
-                            try {
-                                $filterDate = \Carbon\Carbon::parse($tanggalDop)->format('Y-m-d');
-                            } catch (\Exception $e) {
-                                $filterDate = date('Y-m-d');
-                            }
                         }
+                    }
 
-                        $locationNameEscaped = addslashes($locationName);
-                        $locationDetailEscaped = addslashes($locationDetailName);
+                    $locationNameEscaped = addslashes($locationName);
+                    $locationDetailEscaped = addslashes($locationDetailName);
 
-                        // OAK di tanggal filter: lokasi + tipe observer, id unik (satu baris per id).
-                        // WHERE di subquery agar tidak ada agregat di WHERE (ILLEGAL_AGGREGATION); GROUP BY id di luar.
-                        $sqlOak = "
+                    // OAK di tanggal filter: lokasi + tipe observer, id unik (satu baris per id).
+                    // WHERE di subquery agar tidak ada agregat di WHERE (ILLEGAL_AGGREGATION); GROUP BY id di luar.
+                    $sqlOak = "
                             SELECT
                                 toString(id) as id,
                                 toString(argMax(activity, submit_date)) as activity,
@@ -2608,7 +2620,7 @@ class DOPMController extends Controller
                                 toString(argMax(detail_location, submit_date)) as detail_location
                             FROM (
                                 SELECT id, activity, sub_activity, submit_date, submit_by, kode_sid_pelapor, kode_sid_team, conclusion, site, location, detail_location
-                                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                                FROM aaj_vw_car_oak_register_ytd_only
                                 WHERE toDate(submit_date) = '{$filterDate}'
                                   AND lower(trim(toString(tipe))) = 'observer'
                                   AND lower(trim(toString(location))) = lower('{$locationNameEscaped}')
@@ -2618,19 +2630,18 @@ class DOPMController extends Controller
                             ORDER BY max(submit_date) DESC
                             LIMIT 100
                         ";
-                        \Illuminate\Support\Facades\Log::debug('OAK modal: running OAK query', [
-                            'filter_date' => $filterDate,
-                            'location_name_escaped' => $locationNameEscaped,
-                            'location_detail_escaped' => $locationDetailEscaped,
-                        ]);
-                        $oakResult = $clickHouse->query($sqlOak);
-                        $oak = is_array($oakResult) ? array_map([self::class, 'normalizeOakRow'], $oakResult) : [];
-                        \Illuminate\Support\Facades\Log::debug('OAK modal: OAK result', [
-                            'raw_count' => is_array($oakResult) ? count($oakResult) : 0,
-                            'oak_count' => count($oak),
-                            'first_raw_keys' => !empty($oakResult[0]) ? array_keys($oakResult[0]) : [],
-                        ]);
-                    }
+                    \Illuminate\Support\Facades\Log::debug('OAK modal: running OAK query', [
+                        'filter_date' => $filterDate,
+                        'location_name_escaped' => $locationNameEscaped,
+                        'location_detail_escaped' => $locationDetailEscaped,
+                    ]);
+                    $oakResult = $chNitip->query($sqlOak);
+                    $oak = is_array($oakResult) ? array_map([self::class, 'normalizeOakRow'], $oakResult) : [];
+                    \Illuminate\Support\Facades\Log::debug('OAK modal: OAK result', [
+                        'raw_count' => is_array($oakResult) ? count($oakResult) : 0,
+                        'oak_count' => count($oak),
+                        'first_raw_keys' => !empty($oakResult[0]) ? array_keys($oakResult[0]) : [],
+                    ]);
                 }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::debug('Dashboard modal OAK by location fetch: ' . $e->getMessage());
@@ -3609,40 +3620,38 @@ class DOPMController extends Controller
         if ($locationName !== null && $locationName !== '' && 
             $locationDetailName !== null && $locationDetailName !== '') {
             try {
-                if (class_exists(\App\Services\ClickHouseService::class)) {
-                    $clickHouse = app(\App\Services\ClickHouseService::class);
-                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                        $locationNameEscaped = addslashes(trim($locationName));
-                        $locationDetailEscaped = addslashes(trim($locationDetailName));
+                $chNitip = self::clickHouseNitipForOak();
+                if ($chNitip !== null) {
+                    $locationNameEscaped = addslashes(trim($locationName));
+                    $locationDetailEscaped = addslashes(trim($locationDetailName));
 
-                        // Cek OAK dari DIC mitra (tipe = 'observee')
-                        $sqlOakDicMitra = "
+                    // Cek OAK dari DIC mitra (tipe = 'observee')
+                    $sqlOakDicMitra = "
                             SELECT count() as cnt
-                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                            FROM aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) = '{$filterDate}'
                               AND trim(lower(toString(tipe))) = 'observee'
                               AND trim(toString(location)) = '{$locationNameEscaped}'
                               AND trim(toString(detail_location)) = '{$locationDetailEscaped}'
                         ";
-                        $oakResultDicMitra = $clickHouse->query($sqlOakDicMitra);
-                        $oakCountDicMitra = isset($oakResultDicMitra[0]['cnt']) ? (int) $oakResultDicMitra[0]['cnt'] : 0;
-                        $hasOakDicMitra = $oakCountDicMitra > 0;
+                    $oakResultDicMitra = $chNitip->query($sqlOakDicMitra);
+                    $oakCountDicMitra = isset($oakResultDicMitra[0]['cnt']) ? (int) $oakResultDicMitra[0]['cnt'] : 0;
+                    $hasOakDicMitra = $oakCountDicMitra > 0;
 
-                        // Cek OAK dari BC (tipe = 'observe')
-                        $sqlOakBc = "
+                    // Cek OAK dari BC (tipe = 'observe')
+                    $sqlOakBc = "
                             SELECT count() as cnt
-                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                            FROM aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) = '{$filterDate}'
                               AND trim(lower(toString(tipe))) = 'observe'
                               AND trim(toString(location)) = '{$locationNameEscaped}'
                               AND trim(toString(detail_location)) = '{$locationDetailEscaped}'
                         ";
-                        $oakResultBc = $clickHouse->query($sqlOakBc);
-                        $oakCountBc = isset($oakResultBc[0]['cnt']) ? (int) $oakResultBc[0]['cnt'] : 0;
-                        $hasOakBc = $oakCountBc > 0;
+                    $oakResultBc = $chNitip->query($sqlOakBc);
+                    $oakCountBc = isset($oakResultBc[0]['cnt']) ? (int) $oakResultBc[0]['cnt'] : 0;
+                    $hasOakBc = $oakCountBc > 0;
 
-                        $hasOak = $hasOakDicMitra || $hasOakBc;
-                    }
+                    $hasOak = $hasOakDicMitra || $hasOakBc;
                 }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::debug('Dashboard OAK check skip: ' . $e->getMessage());
@@ -3934,38 +3943,36 @@ class DOPMController extends Controller
         if ($locationName !== null && $locationName !== '' && 
             $locationDetailName !== null && $locationDetailName !== '') {
             try {
-                if (class_exists(\App\Services\ClickHouseService::class)) {
-                    $clickHouse = app(\App\Services\ClickHouseService::class);
-                    if (method_exists($clickHouse, 'query') && $clickHouse->isConnected()) {
-                        $locationNameEscaped = addslashes(trim($locationName));
-                        $locationDetailEscaped = addslashes(trim($locationDetailName));
+                $chNitip = self::clickHouseNitipForOak();
+                if ($chNitip !== null) {
+                    $locationNameEscaped = addslashes(trim($locationName));
+                    $locationDetailEscaped = addslashes(trim($locationDetailName));
 
-                        $sqlOakDicMitra = "
+                    $sqlOakDicMitra = "
                             SELECT count() as cnt
-                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                            FROM aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) = '{$filterDate}'
                               AND trim(lower(toString(tipe))) = 'observee'
                               AND trim(toString(location)) = '{$locationNameEscaped}'
                               AND trim(toString(detail_location)) = '{$locationDetailEscaped}'
                         ";
-                        $oakResultDicMitra = $clickHouse->query($sqlOakDicMitra);
-                        $oakCountDicMitra = isset($oakResultDicMitra[0]['cnt']) ? (int) $oakResultDicMitra[0]['cnt'] : 0;
-                        $hasOakDicMitra = $oakCountDicMitra > 0;
+                    $oakResultDicMitra = $chNitip->query($sqlOakDicMitra);
+                    $oakCountDicMitra = isset($oakResultDicMitra[0]['cnt']) ? (int) $oakResultDicMitra[0]['cnt'] : 0;
+                    $hasOakDicMitra = $oakCountDicMitra > 0;
 
-                        $sqlOakBc = "
+                    $sqlOakBc = "
                             SELECT count() as cnt
-                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                            FROM aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) = '{$filterDate}'
                               AND trim(lower(toString(tipe))) = 'observe'
                               AND trim(toString(location)) = '{$locationNameEscaped}'
                               AND trim(toString(detail_location)) = '{$locationDetailEscaped}'
                         ";
-                        $oakResultBc = $clickHouse->query($sqlOakBc);
-                        $oakCountBc = isset($oakResultBc[0]['cnt']) ? (int) $oakResultBc[0]['cnt'] : 0;
-                        $hasOakBc = $oakCountBc > 0;
+                    $oakResultBc = $chNitip->query($sqlOakBc);
+                    $oakCountBc = isset($oakResultBc[0]['cnt']) ? (int) $oakResultBc[0]['cnt'] : 0;
+                    $hasOakBc = $oakCountBc > 0;
 
-                        $hasOak = $hasOakDicMitra || $hasOakBc;
-                    }
+                    $hasOak = $hasOakDicMitra || $hasOakBc;
                 }
             } catch (\Throwable $e) {
                 \Illuminate\Support\Facades\Log::debug('Dashboard OAK check skip: ' . $e->getMessage());
