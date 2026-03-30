@@ -843,7 +843,7 @@
          <!-- Footer -->
          <footer class="flex flex-col sm:flex-row justify-between items-center py-10 border-t border-outline-variant/30 text-on-surface-variant">
             <div class="flex flex-col items-center sm:items-start gap-1">
-               <span class="text-xs font-bold">© 2024 Site BMO2 Safety Management System</span>
+               <span class="text-xs font-bold">© 2026 Site SMO</span>
                <span class="text-[10px] opacity-70">Empowering proactive safety through peer evaluation</span>
             </div>
             <div class="flex gap-8 mt-6 sm:mt-0">
