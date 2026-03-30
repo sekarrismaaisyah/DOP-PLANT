@@ -1313,7 +1313,7 @@ class DOPMWeeklyController extends Controller
                                 SELECT trim(toString(location)) as location,
                                        trim(toString(detail_location)) as detail_location,
                                        count() as cnt
-                                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                                FROM nitip.aaj_vw_car_oak_register_ytd_only
                                 WHERE toDate(submit_date) = '{$dateEsc}'
                                   AND ({$where})
                                 GROUP BY location, detail_location
@@ -1683,7 +1683,7 @@ class DOPMWeeklyController extends Controller
                             $conditions[] = "(lower(trim(toString(location))) = lower('{$locEsc}') AND lower(trim(toString(detail_location))) = lower('{$detEsc}'))";
                         }
                         $whereLoc = implode(' OR ', $conditions);
-                        $sqlOakCount = "SELECT count() as cnt FROM hse_automation.aaj_vw_car_oak_register_ytd_only"
+                        $sqlOakCount = "SELECT count() as cnt FROM nitip.aaj_vw_car_oak_register_ytd_only"
                             . " WHERE toDate(submit_date) = '{$dateEsc}'"
                             . " AND lower(trim(toString(tipe))) = 'observer'"
                             . " AND ({$whereLoc})";
@@ -3261,7 +3261,7 @@ class DOPMWeeklyController extends Controller
                                 toString(argMax(detail_location, submit_date)) as detail_location
                             FROM (
                                 SELECT id, activity, sub_activity, submit_date, submit_by, kode_sid_pelapor, kode_sid_team, conclusion, site, location, detail_location
-                                FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                                FROM nitip.aaj_vw_car_oak_register_ytd_only
                                 WHERE toDate(submit_date) = '{$filterDate}'
                                   AND lower(trim(toString(tipe))) = 'observer'
                                   AND lower(trim(toString(location))) = lower('{$locationNameEscaped}')
@@ -4042,7 +4042,7 @@ class DOPMWeeklyController extends Controller
                         // Cek OAK dari DIC mitra (tipe = 'observee')
                         $sqlOakDicMitra = "
                             SELECT count() as cnt
-                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                            FROM nitip.aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) = '{$filterDate}'
                               AND trim(lower(toString(tipe))) = 'observee'
                               AND trim(toString(location)) = '{$locationNameEscaped}'
@@ -4055,7 +4055,7 @@ class DOPMWeeklyController extends Controller
                         // Cek OAK dari BC (tipe = 'observe')
                         $sqlOakBc = "
                             SELECT count() as cnt
-                            FROM hse_automation.aaj_vw_car_oak_register_ytd_only
+                            FROM nitip.aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) = '{$filterDate}'
                               AND trim(lower(toString(tipe))) = 'observe'
                               AND trim(toString(location)) = '{$locationNameEscaped}'
