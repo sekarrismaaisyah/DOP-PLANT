@@ -46,6 +46,19 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
+
+            @if (session('import_header_errors') && count(session('import_header_errors')) > 0)
+                <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
+                    <strong><i class="bx bx-error-circle"></i> Upload ditolak — kolom tidak sesuai template DOP</strong>
+                    <p class="mb-2 small">Baris judul (baris 1) harus sama dengan file dari <a href="{{ route('sistem-roster.dop.template') }}" class="alert-link">Download Template</a>.</p>
+                    <ul class="mb-0 small">
+                        @foreach (session('import_header_errors') as $hErr)
+                            <li>{{ $hErr }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -199,6 +212,26 @@
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            @if(session('dop_import_template_invalid'))
+            (function() {
+                var errs = @json(session('import_header_errors', []));
+                var listHtml = '';
+                if (Array.isArray(errs) && errs.length) {
+                    listHtml = '<ul class="text-start mb-0 small mt-2">' + errs.map(function(e) {
+                        return '<li>' + String(e).replace(/</g, '&lt;') + '</li>';
+                    }).join('') + '</ul>';
+                }
+                if (typeof Swal !== 'undefined') {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Upload ditolak',
+                        html: '<p class="mb-0 text-start">Kolom Excel tidak sesuai template DOP. Gunakan file dari <strong>Download Template</strong>.</p>' + listHtml,
+                        confirmButtonText: 'Mengerti',
+                        width: '34rem'
+                    });
+                }
+            })();
+            @endif
             // Konfirmasi hapus DOP dengan SweetAlert
             document.querySelectorAll('.btn-delete-dop').forEach(function(btn) {
                 btn.addEventListener('click', function() {

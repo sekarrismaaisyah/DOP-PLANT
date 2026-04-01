@@ -160,10 +160,7 @@
                     <div class="row g-3">
                         <div class="col-lg-12">
                             <form method="GET" action="{{ route('sistem-roster.planning.index') }}" id="filterForm" class="row g-3 align-items-end">
-                                <!-- <div class="col-12">
-                                    <label for="search" class="form-label">Cari (No IKK, Aktivitas, Lokasi, Site, Perusahaan, Pengawas)</label>
-                                    <input type="text" name="search" id="search" class="form-control" value="{{ $search ?? '' }}" placeholder="Ketik untuk cari di semua kolom...">
-                                </div> -->
+                               
                                 <div class="col-md-2">
                                     <label for="start_date" class="form-label">Tanggal Mulai</label>
                                     <input type="date" name="start_date" id="start_date" class="form-control" value="{{ $filterStartDate }}">
@@ -174,19 +171,9 @@
                                 </div>
                                 <div class="col-md-2">
                                     <label for="filter_site" class="form-label">Filter Site</label>
-                                    @php
-                                        // Pastikan opsi HOTE dan MARINE selalu tersedia di dropdown filter,
-                                        // meskipun belum ada di data RosterPlanning untuk periode tersebut.
-                                        $siteFilterOptions = collect($sites ?? [])
-                                            ->push('HOTE')
-                                            ->push('MARINE')
-                                            ->unique()
-                                            ->sort()
-                                            ->values();
-                                    @endphp
                                     <select name="filter_site" id="filter_site" class="form-select">
                                         <option value="">-- Semua Site --</option>
-                                        @foreach($siteFilterOptions as $s)
+                                        @foreach($planningFilterSites ?? [] as $s)
                                             <option value="{{ $s }}" {{ ($filterSite ?? '') == $s ? 'selected' : '' }}>{{ $s }}</option>
                                         @endforeach
                                     </select>
@@ -200,14 +187,7 @@
                                         @endforeach
                                     </select>
                                 </div>
-                                <!-- <div class="col-md-2">
-                                    <label for="per_page" class="form-label">Per Halaman</label>
-                                    <select name="per_page" id="per_page" class="form-select">
-                                        @foreach([10, 25, 50, 100] as $pp)
-                                            <option value="{{ $pp }}" {{ $perPage == $pp ? 'selected' : '' }}>{{ $pp }}</option>
-                                        @endforeach
-                                    </select>
-                                </div> -->
+                                
                                 <div class="col-md-2">
                                     <div class="d-flex gap-2">
                                         <button type="submit" class="btn btn-primary">
@@ -237,27 +217,30 @@
         </div>
     </div>
 
-    <!-- Tabs per Site -->
+    <!-- Tabs per site: sama urutan dengan dropdown; klik = filter + reload (DOP + IKK + Roster acuan per site) -->
     @php
-        $siteTabs = ['Semua', 'BMO 1', 'BMO 2', 'BMO 3', 'GMO', 'SMO', 'LMO', 'HOTE', 'MARINE'];
         $currentFilterSite = $filterSite ?? '';
+        $planningSiteTabsList = $planningSiteTabs ?? [];
     @endphp
     <div class="row mb-3">
         <div class="col-12">
-            <ul class="nav nav-tabs nav-tabs-custom flex-wrap" id="siteTabs" role="tablist">
-                @foreach($siteTabs as $tab)
+           
+            <ul class="nav nav-tabs nav-tabs-custom flex-wrap" id="siteTabs" role="tablist" aria-label="Filter site planning">
+                @foreach($planningSiteTabsList as $tab)
                     @php
-                        $tabValue = $tab === 'Semua' ? '' : $tab;
-                        $tabId = $tab === 'Semua' ? 'semua' : Str::slug($tab);
+                        $tabValue = $tab['value'] ?? '';
+                        $tabLabel = $tab['label'] ?? '';
+                        $tabSlug = $tab['slug'] ?? 'tab';
                         $isActive = ($currentFilterSite === $tabValue);
                     @endphp
                     <li class="nav-item" role="presentation">
                         <button class="nav-link {{ $isActive ? 'active' : '' }} rounded-3 px-3 py-2"
                                 type="button"
                                 data-site="{{ $tabValue }}"
-                                id="tab-{{ $tabId }}"
-                                role="tab">
-                            {{ $tab }}
+                                id="tab-{{ $tabSlug }}"
+                                role="tab"
+                                aria-selected="{{ $isActive ? 'true' : 'false' }}">
+                            {{ $tabLabel }}
                         </button>
                     </li>
                 @endforeach

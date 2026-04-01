@@ -3,16 +3,19 @@
 namespace App\Http\Controllers\SistemRoster;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\SistemRoster\SistemRosterDopImportRequest;
 use App\Models\DailyOperationPlan;
 use App\Models\DopPicBerauCoal;
 use App\Models\DopPengawasMitraKerja;
 use App\Models\CctvData;
 use App\Models\MasterAktivitas;
 use App\Services\ClickHouseService;
+use App\Services\SistemRoster\DopExcelTemplateService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
@@ -25,6 +28,10 @@ use Illuminate\Support\Facades\Log;
 
 class DOPController extends Controller
 {
+    public function __construct(
+        private readonly DopExcelTemplateService $dopExcelTemplateService,
+    ) {}
+
     public function index(Request $request): View
     {
         $perPage = (int) $request->get('per_page', 25);
@@ -362,29 +369,9 @@ class DOPController extends Controller
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
         
-        $headers = [
-            'A1' => 'Tanggal',
-            'B1' => 'Pekerjaan',
-            'C1' => 'Aktivitas',
-            'D1' => 'Site',
-            'E1' => 'Unit ID',
-            'F1' => 'Lokasi',
-            'G1' => 'Latitude',
-            'H1' => 'Longitude',
-            'I1' => 'Detail Lokasi',
-            'J1' => 'Potensi Risiko',
-            'K1' => 'Pengendalian Bahaya',
-            'L1' => 'Catatan',
-            'M1' => 'CCTV IDs (pisahkan dengan koma)',
-            'N1' => 'PIC Berau Coal - Shift',
-            'O1' => 'PIC Berau Coal - Nama PIC',
-            'P1' => 'PIC Berau Coal - Layer',
-            'Q1' => 'Pengawas Mitra Kerja - Shift',
-            'R1' => 'Pengawas Mitra Kerja - Nama Pengawas',
-            'S1' => 'Pengawas Mitra Kerja - Layer',
-        ];
-
-        foreach ($headers as $cell => $value) {
+        $headers = DopExcelTemplateService::EXPECTED_HEADERS;
+        foreach ($headers as $i => $value) {
+            $cell = Coordinate::stringFromColumnIndex($i + 1) . '1';
             $sheet->setCellValue($cell, $value);
             $sheet->getStyle($cell)->applyFromArray([
                 'font' => ['bold' => true, 'color' => ['rgb' => 'FFFFFF']],
@@ -479,17 +466,22 @@ class DOPController extends Controller
         return response()->download($tempPath, $filename)->deleteFileAfterSend(true);
     }
 
-    public function import(Request $request): RedirectResponse
+    public function import(SistemRosterDopImportRequest $request): RedirectResponse
     {
-        $request->validate([
-            'excel_file' => ['required', 'file', 'mimes:xlsx,xls', 'max:10240'],
-        ]);
-
         try {
             $file = $request->file('excel_file');
             $spreadsheet = IOFactory::load($file->getRealPath());
             $worksheet = $spreadsheet->getActiveSheet();
             $rows = $worksheet->toArray();
+
+            $headerErrors = $this->dopExcelTemplateService->validateImportHeaders($rows[0] ?? null);
+            if ($headerErrors !== []) {
+                return redirect()
+                    ->back()
+                    ->with('error', 'Upload ditolak: struktur kolom Excel tidak sesuai template DOP Sistem Roster. Gunakan file dari tombol Download Template; jangan mengubah urutan atau teks judul kolom pada baris pertama.')
+                    ->with('import_header_errors', $headerErrors)
+                    ->with('dop_import_template_invalid', true);
+            }
 
             $dataRows = array_slice($rows, 1);
             
@@ -507,8 +499,14 @@ class DOPController extends Controller
                 }
 
                 try {
-                    // Template baru: A=Tanggal, B=Pekerjaan, C=Aktivitas, D=Site, E=Unit ID, F=Lokasi, ...
-                    $isNewTemplate = isset($row[4]) && isset($row[5]) && count($row) >= 19;
+                    // Template resmi (19 kolom A–S) — header sudah divalidasi di atas
+                    $isNewTemplate = true;
+                    if (! empty(array_filter($row, static fn ($c) => $c !== null && trim((string) $c) !== '')) && count($row) < DopExcelTemplateService::REQUIRED_COLUMN_COUNT) {
+                        $errors[] = "Baris {$rowNumber}: jumlah kolom kurang dari " . DopExcelTemplateService::REQUIRED_COLUMN_COUNT . ' — sesuaikan dengan template.';
+                        $rowNumber++;
+
+                        continue;
+                    }
                     $idxTanggal = 0;
                     $idxPekerjaan = 1;
                     $idxAktivitas = $isNewTemplate ? 2 : null;

@@ -13,6 +13,7 @@ use App\Models\RosterPlanningJob;
 use App\Models\RosterPlanningKaryawan;
 use App\Models\RosterReferenceExclusion;
 use App\Services\ClickHouseService;
+use App\Services\SistemRoster\PlanningSiteService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -25,6 +26,13 @@ use Illuminate\View\View;
 
 class PlanningController extends Controller
 {
+    public function __construct(
+        private readonly PlanningSiteService $planningSiteService,
+    ) {}
+
+    /** @deprecated Gunakan PlanningSiteService::FILTER_SITES */
+    public const PLANNING_FILTER_SITES = PlanningSiteService::FILTER_SITES;
+
     /** Tabel roster sebagai acuan (non area kritis). Hanya dibaca; saat Save masuk ke roster_plannings. */
     private const ROSTER_REFERENCE_TABLES = [
         'roster_bmo1' => 'BMO 1',
@@ -59,22 +67,19 @@ class PlanningController extends Controller
         $filterSite = $request->get('filter_site', '');
         $filterPerusahaan = $request->get('filter_perusahaan', '');
 
-        // Mapping khusus untuk filter site di UI tab
-        // Contoh: saat pilih HOTE, tampilkan juga data dari HO dan (Eks)plorasi
-        $siteFilterMap = [
-            // Nilai di sini adalah pola LIKE (tanpa wildcard di luar, ditambah di bawah)
-            'HOTE' => ['HOTE', 'HO', 'Eksplorasi', 'Explorasi'],
-        ];
+        $filterSite = $this->planningSiteService->normalizeFilterSite($filterSite);
 
         $query = RosterPlanning::with(['karyawans' => function ($q) {
                 $q->select('id', 'roster_planning_id', 'user_id', 'nama_karyawan', 'sid_karyawan');
             }])
             ->select([
-                'id', 'tanggal', 'source_type', 'source_id', 'site', 'no_ikk', 
-                'aktivitas', 'lokasi', 'detail_lokasi', 'shift', 
-                'perusahaan_pic', 'status', 'created_at'
+                'id', 'tanggal', 'source_type', 'source_id', 'site', 'no_ikk',
+                'aktivitas', 'lokasi', 'detail_lokasi', 'shift',
+                'perusahaan_pic', 'status', 'created_at',
             ])
             ->whereBetween('tanggal', [$filterStartDate, $filterEndDate]);
+
+        $this->planningSiteService->applyIkkDopSourceFilter($query, $filterStartDate, $filterEndDate, $filterSite);
 
         if ($search !== '') {
             $term = '%' . trim($search) . '%';
@@ -87,19 +92,6 @@ class PlanningController extends Controller
                     ->orWhere('perusahaan_pic', 'like', $term)
                     ->orWhere('pengawas_langsung', 'like', $term);
             });
-        }
-        if ($filterSite !== '') {
-            $key = trim($filterSite);
-            if (isset($siteFilterMap[$key])) {
-                $patterns = $siteFilterMap[$key];
-                $query->where(function ($q) use ($patterns) {
-                    foreach ($patterns as $pattern) {
-                        $q->orWhere('site', 'like', '%' . $pattern . '%');
-                    }
-                });
-            } else {
-                $query->where('site', 'like', '%' . $key . '%');
-            }
         }
         if ($filterPerusahaan !== '') {
             $query->where('perusahaan_pic', 'like', '%' . trim($filterPerusahaan) . '%');
@@ -115,22 +107,11 @@ class PlanningController extends Controller
             $t = $p->tanggal ? $p->tanggal->format('Y-m-d') : '';
             $s = $p->site ?? '';
             $j = $p->source_type ?? '';
+
             return $t . '|' . $s . '|' . $j;
         });
 
-        $sites = RosterPlanning::whereBetween('tanggal', [$filterStartDate, $filterEndDate])
-            ->whereNotNull('site')
-            ->where('site', '!=', '')
-            ->distinct()
-            ->orderBy('site')
-            ->pluck('site');
-
-        $perusahaanList = RosterPlanning::whereBetween('tanggal', [$filterStartDate, $filterEndDate])
-            ->whereNotNull('perusahaan_pic')
-            ->where('perusahaan_pic', '!=', '')
-            ->distinct()
-            ->orderBy('perusahaan_pic')
-            ->pluck('perusahaan_pic');
+        $perusahaanList = $this->planningSiteService->getPerusahaanListForPlanningFilter($filterStartDate, $filterEndDate, $filterSite);
 
         $latestJob = RosterPlanningJob::whereIn('status', ['pending', 'processing'])
             ->select(['id', 'job_id', 'status', 'start_date', 'end_date', 'created_at'])
@@ -168,7 +149,8 @@ class PlanningController extends Controller
             'search' => $search,
             'filterSite' => $filterSite,
             'filterPerusahaan' => $filterPerusahaan,
-            'sites' => $sites,
+            'planningFilterSites' => PlanningSiteService::FILTER_SITES,
+            'planningSiteTabs' => $this->planningSiteService->getPlanningSiteTabs(),
             'perusahaanList' => $perusahaanList,
             'users' => [],
             'latestJob' => $latestJob,
@@ -195,11 +177,7 @@ class PlanningController extends Controller
             ])
             ->whereBetween('tanggal', [$startDate, $endDate]);
 
-        // Mapping khusus untuk filter site di summary per orang
-        $siteFilterMap = [
-            // Pola LIKE (tanpa wildcard di luar)
-            'HOTE' => ['HOTE', 'HO', 'Eksplorasi', 'Explorasi'],
-        ];
+        $this->planningSiteService->applyIkkDopSourceFilter($query, $startDate, $endDate, $filterSite);
 
         if ($search !== '') {
             $term = '%' . trim($search) . '%';
@@ -211,19 +189,6 @@ class PlanningController extends Controller
                     ->orWhere('site', 'like', $term)
                     ->orWhere('perusahaan_pic', 'like', $term);
             });
-        }
-        if ($filterSite !== '') {
-            $key = trim($filterSite);
-            if (isset($siteFilterMap[$key])) {
-                $patterns = $siteFilterMap[$key];
-                $query->where(function ($q) use ($patterns) {
-                    foreach ($patterns as $pattern) {
-                        $q->orWhere('site', 'like', '%' . $pattern . '%');
-                    }
-                });
-            } else {
-                $query->where('site', 'like', '%' . $key . '%');
-            }
         }
         if ($filterPerusahaan !== '') {
             $query->where('perusahaan_pic', 'like', '%' . trim($filterPerusahaan) . '%');
@@ -339,7 +304,7 @@ class PlanningController extends Controller
         $filterSite = $filterSite ?? '';
         $groups = collect();
         foreach (self::ROSTER_REFERENCE_TABLES as $tableName => $siteLabel) {
-            if ($filterSite !== '' && stripos($siteLabel, $filterSite) === false) {
+            if (! $this->planningSiteService->rosterSiteLabelMatchesFilter($siteLabel, $filterSite ?? '')) {
                 continue;
             }
             try {

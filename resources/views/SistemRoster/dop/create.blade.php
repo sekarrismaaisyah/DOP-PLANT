@@ -51,6 +51,19 @@
                     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
                 </div>
             @endif
+
+            @if (session('import_header_errors') && count(session('import_header_errors')) > 0)
+                <div class="alert alert-danger alert-dismissible fade show rounded-4" role="alert">
+                    <strong><i class="bx bx-error-circle"></i> Upload ditolak — kolom tidak sesuai template DOP</strong>
+                    <p class="mb-2 small">Baris judul (baris 1) harus sama persis dengan file <strong>Download Template</strong>. Periksa penulisan, urutan, dan jangan menambah/menghapus kolom.</p>
+                    <ul class="mb-0 small">
+                        @foreach (session('import_header_errors') as $hErr)
+                            <li>{{ $hErr }}</li>
+                        @endforeach
+                    </ul>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+            @endif
         </div>
     </div>
 
@@ -71,7 +84,7 @@
                                 <label for="excel_file" class="form-label">Pilih File Excel <span class="text-danger">*</span></label>
                                 <input type="file" name="excel_file" id="excel_file" class="form-control" accept=".xlsx,.xls" required>
                                 <small class="text-muted d-block mt-1">
-                                    <i class="bx bx-info-circle"></i> Format: .xlsx atau .xls | Max 10MB
+                                    <i class="bx bx-info-circle"></i> Format: .xlsx atau .xls | Max 10MB — judul kolom baris 1 wajib sama dengan <a href="{{ route('sistem-roster.dop.template') }}">template DOP</a> (upload akan ditolak jika tidak sesuai).
                                 </small>
                             </form>
                         </div>
@@ -505,5 +518,28 @@
 @endsection
 
 @section('scripts')
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    @if(session('dop_import_template_invalid'))
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            var errs = @json(session('import_header_errors', []));
+            var listHtml = '';
+            if (Array.isArray(errs) && errs.length) {
+                listHtml = '<ul class="text-start mb-0 small mt-2">' + errs.map(function(e) {
+                    return '<li>' + String(e).replace(/</g, '&lt;') + '</li>';
+                }).join('') + '</ul>';
+            }
+            if (typeof Swal !== 'undefined') {
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Upload ditolak',
+                    html: '<p class="mb-0 text-start">Kolom Excel tidak sesuai template DOP Sistem Roster. Gunakan <strong>Download Template</strong> dan jangan mengubah baris judul (baris 1).</p>' + listHtml,
+                    confirmButtonText: 'Mengerti',
+                    width: '34rem'
+                });
+            }
+        });
+    </script>
+    @endif
 @endsection
