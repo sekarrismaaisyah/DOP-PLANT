@@ -1066,8 +1066,8 @@ class DashboardController extends Controller
     /**
      * Data heatmap: per (date, site) -> planned count & actual count.
      * Planned = jumlah karyawan unik yang di-assign.
-     * Actual = jumlah karyawan unik assign yang punya SAP (CAR Hazard/Inspeksi)
-     * pada lokasi + detail lokasi planning di tanggal yang sama.
+     * Actual = karyawan unik yang punya minimal satu aktivitas SAP (Inspeksi/CAR, OAK, Observasi, Coaching)
+     * yang match nama + lokasi + detail + tanggal — sama dengan agregasi di heatmapDayDetail.
      *
      * @return array<int, array{date: string, site: string, planned: int, actual: int}>
      */
@@ -1084,6 +1084,9 @@ class DashboardController extends Controller
             ->get();
 
         $carByDate = $this->getCarDataByDateRange($start, $end);
+        $oakByDate = $this->getOakDataByDateRange($start, $end);
+        $observasiByDate = $this->getObservasiDataByDateRange($start, $end);
+        $coachingByDate = $this->getCoachingDataByDateRange($start, $end);
 
         $byKey = [];
         foreach ($plannings as $p) {
@@ -1112,8 +1115,12 @@ class DashboardController extends Controller
                     $namaLower = mb_strtolower($nama);
                     $byKey[$key]['planned_names'][$namaLower] = true;
 
-                    // Actual untuk heatmap hanya SAP (CAR) yang match nama + lokasi + detail + tanggal.
-                    if (isset($carByDate[$date][$locationKey][$namaLower])) {
+                    $hasInspeksi = isset($carByDate[$date][$locationKey][$namaLower]);
+                    $hasOak = isset($oakByDate[$date][$locationKey][$namaLower]);
+                    $hasObservasi = isset($observasiByDate[$date][$locationKey][$namaLower]);
+                    $hasCoaching = isset($coachingByDate[$date][$locationKey][$namaLower]);
+
+                    if ($hasInspeksi || $hasOak || $hasObservasi || $hasCoaching) {
                         $byKey[$key]['actual_names'][$namaLower] = true;
                     }
                 }

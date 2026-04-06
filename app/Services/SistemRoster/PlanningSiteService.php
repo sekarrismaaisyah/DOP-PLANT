@@ -68,9 +68,9 @@ final class PlanningSiteService
         'EXPLORASI' => [],
     ];
 
-    public function normalizeFilterSite(string $filterSite): string
+    public function normalizeFilterSite(?string $filterSite): string
     {
-        $filterSite = trim($filterSite);
+        $filterSite = trim((string) ($filterSite ?? ''));
         if ($filterSite === '' || ! in_array($filterSite, self::FILTER_SITES, true)) {
             return '';
         }
@@ -120,12 +120,16 @@ final class PlanningSiteService
     }
 
     /**
-     * Hanya baris IKK/DOP yang source_id-nya ada di tabel sumber (daily_operation_plans / ikk_work_permit) untuk filter site.
+     * Filter daftar planning: IKK, DOP, dan baris Roster yang sudah tersimpan di roster_plannings.
+     *
+     * IKK/DOP: ID dari sumber (daily_operation_plans, ikk_work_permit) + fallback kolom site.
+     * Roster (source_type = Roster): filter lewat kolom site di roster_plannings (sama pola seperti IKK/DOP).
      */
     public function applyIkkDopSourceFilter(Builder $query, string $start, string $end, string $filterSite): void
     {
-        $query->whereIn('source_type', ['IKK', 'DOP']);
         if ($filterSite === '') {
+            $query->whereIn('source_type', ['IKK', 'DOP', 'Roster']);
+
             return;
         }
 
@@ -133,59 +137,164 @@ final class PlanningSiteService
         $ikkWpIds = $this->getFilteredIkkWpIdsFromClickHouse($start, $end, $filterSite);
         $patterns = $this->getSiteMatchPatternsForFilter($filterSite);
 
-        if ($ikkWpIds === null) {
-            $query->where(function ($q) use ($dopIdsStr, $patterns) {
-                if (! empty($dopIdsStr)) {
-                    $q->where(function ($q2) use ($dopIdsStr) {
-                        $q2->where('source_type', 'DOP')->whereIn('source_id', $dopIdsStr);
-                    });
-                }
-                if (! empty($patterns)) {
-                    $method = empty($dopIdsStr) ? 'where' : 'orWhere';
-                    $q->{$method}(function ($q2) use ($patterns) {
-                        $q2->where('source_type', 'IKK')->where(function ($q3) use ($patterns) {
-                            foreach ($patterns as $i => $pat) {
-                                if ($i === 0) {
-                                    $q3->where('site', 'like', '%' . $pat . '%');
-                                } else {
-                                    $q3->orWhere('site', 'like', '%' . $pat . '%');
-                                }
-                            }
-                        });
-                    });
-                }
-                if (empty($dopIdsStr) && empty($patterns)) {
-                    $q->whereRaw('0 = 1');
+        $query->where(function (Builder $outer) use ($dopIdsStr, $ikkWpIds, $patterns): void {
+            $outer->where(function (Builder $ikkdop) use ($dopIdsStr, $ikkWpIds, $patterns): void {
+                $ikkdop->whereIn('source_type', ['IKK', 'DOP']);
+                if ($ikkWpIds === null) {
+                    $this->applyIkkDopFilterClickHouseUnavailable($ikkdop, $dopIdsStr, $patterns);
+                } else {
+                    $ikkStr = array_map('strval', $ikkWpIds);
+                    $this->applyIkkDopFilterClickHouseAvailable($ikkdop, $dopIdsStr, $ikkStr, $patterns);
                 }
             });
 
-            return;
-        }
+            if ($patterns !== []) {
+                $outer->orWhere(function (Builder $r) use ($patterns): void {
+                    $r->where('source_type', 'Roster');
+                    $r->where(function ($sub) use ($patterns): void {
+                        $this->applySiteLikePatterns($sub, $patterns);
+                    });
+                });
+            }
+        });
+    }
 
-        $ikkStr = array_map('strval', $ikkWpIds);
-        $query->where(function ($q) use ($dopIdsStr, $ikkStr) {
-            if (empty($dopIdsStr) && empty($ikkStr)) {
+    /**
+     * ClickHouse tidak tersedia: IKK difilter lewat kolom site di roster_plannings; DOP lewat ID sumber atau site.
+     */
+    private function applyIkkDopFilterClickHouseUnavailable(Builder $query, array $dopIdsStr, array $patterns): void
+    {
+        $query->where(function ($q) use ($dopIdsStr, $patterns) {
+            if (empty($dopIdsStr) && empty($patterns)) {
                 $q->whereRaw('0 = 1');
 
                 return;
             }
-            if (! empty($dopIdsStr) && ! empty($ikkStr)) {
-                $q->where(function ($q2) use ($dopIdsStr, $ikkStr) {
-                    $q2->where(function ($q3) use ($dopIdsStr) {
-                        $q3->where('source_type', 'DOP')->whereIn('source_id', $dopIdsStr);
-                    })->orWhere(function ($q3) use ($ikkStr) {
-                        $q3->where('source_type', 'IKK')->whereIn('source_id', $ikkStr);
-                    });
+
+            $hasDopClause = ! empty($dopIdsStr) || ! empty($patterns);
+            if ($hasDopClause) {
+                $q->where(function ($q2) use ($dopIdsStr, $patterns): void {
+                    $this->applyDopRowMatch($q2, $dopIdsStr, $patterns);
                 });
+            }
+
+            if (! empty($patterns)) {
+                $method = $hasDopClause ? 'orWhere' : 'where';
+                $q->{$method}(function ($q2) use ($patterns): void {
+                    $this->applyIkkRowMatch($q2, [], $patterns);
+                });
+            }
+        });
+    }
+
+    /**
+     * Baris DOP: source_type DOP dan (source_id ∈ daftar DOP per site/periode ATAU kolom site cocok pola tab).
+     */
+    private function applyDopRowMatch(Builder $q2, array $dopIdsStr, array $patterns): void
+    {
+        $q2->where('source_type', 'DOP');
+        $q2->where(function ($sub) use ($dopIdsStr, $patterns): void {
+            $this->applyDopSourceIdOrSitePatterns($sub, $dopIdsStr, $patterns);
+        });
+    }
+
+    /**
+     * @param  list<string>  $ikkStr
+     */
+    private function applyIkkRowMatch(Builder $q2, array $ikkStr, array $patterns): void
+    {
+        $q2->where('source_type', 'IKK');
+        $q2->where(function ($sub) use ($ikkStr, $patterns): void {
+            $this->applyIkkSourceIdOrSitePatterns($sub, $ikkStr, $patterns);
+        });
+    }
+
+    private function applyDopSourceIdOrSitePatterns(Builder $sub, array $dopIdsStr, array $patterns): void
+    {
+        if (! empty($dopIdsStr) && ! empty($patterns)) {
+            $sub->whereIn('source_id', $dopIdsStr)
+                ->orWhere(function ($w) use ($patterns): void {
+                    $this->applySiteLikePatterns($w, $patterns);
+                });
+        } elseif (! empty($dopIdsStr)) {
+            $sub->whereIn('source_id', $dopIdsStr);
+        } elseif (! empty($patterns)) {
+            $sub->where(function ($w) use ($patterns): void {
+                $this->applySiteLikePatterns($w, $patterns);
+            });
+        } else {
+            $sub->whereRaw('0 = 1');
+        }
+    }
+
+    /**
+     * @param  list<string>  $ikkStr
+     */
+    private function applyIkkSourceIdOrSitePatterns(Builder $sub, array $ikkStr, array $patterns): void
+    {
+        if (! empty($ikkStr) && ! empty($patterns)) {
+            $sub->whereIn('source_id', $ikkStr)
+                ->orWhere(function ($w) use ($patterns): void {
+                    $this->applySiteLikePatterns($w, $patterns);
+                });
+        } elseif (! empty($ikkStr)) {
+            $sub->whereIn('source_id', $ikkStr);
+        } elseif (! empty($patterns)) {
+            $sub->where(function ($w) use ($patterns): void {
+                $this->applySiteLikePatterns($w, $patterns);
+            });
+        } else {
+            $sub->whereRaw('0 = 1');
+        }
+    }
+
+    /**
+     * ClickHouse tersedia: ID IKK dari CH + fallback site; DOP dari daily_operation_plans + fallback site.
+     *
+     * Penting: gabungkan DOP | IKK dengan `where(function{DOP})->orWhere(function{IKK})` pada builder yang sama
+     * (bukan `where($closureDop)->orWhere($closureIkk)`), agar SQL setara dengan jalur CH unavailable.
+     *
+     * @param  list<string>  $ikkStr
+     */
+    private function applyIkkDopFilterClickHouseAvailable(Builder $query, array $dopIdsStr, array $ikkStr, array $patterns): void
+    {
+        $query->where(function ($q) use ($dopIdsStr, $ikkStr, $patterns): void {
+            if (empty($dopIdsStr) && empty($ikkStr) && empty($patterns)) {
+                $q->whereRaw('0 = 1');
 
                 return;
             }
-            if (! empty($dopIdsStr)) {
-                $q->where('source_type', 'DOP')->whereIn('source_id', $dopIdsStr);
-            } else {
-                $q->where('source_type', 'IKK')->whereIn('source_id', $ikkStr);
+
+            $hasDop = ! empty($dopIdsStr) || ! empty($patterns);
+            $hasIkk = ! empty($ikkStr) || ! empty($patterns);
+
+            if ($hasDop && $hasIkk) {
+                $q->where(function ($q2) use ($dopIdsStr, $patterns): void {
+                    $this->applyDopRowMatch($q2, $dopIdsStr, $patterns);
+                })->orWhere(function ($q2) use ($ikkStr, $patterns): void {
+                    $this->applyIkkRowMatch($q2, $ikkStr, $patterns);
+                });
+            } elseif ($hasDop) {
+                $q->where(function ($q2) use ($dopIdsStr, $patterns): void {
+                    $this->applyDopRowMatch($q2, $dopIdsStr, $patterns);
+                });
+            } elseif ($hasIkk) {
+                $q->where(function ($q2) use ($ikkStr, $patterns): void {
+                    $this->applyIkkRowMatch($q2, $ikkStr, $patterns);
+                });
             }
         });
+    }
+
+    private function applySiteLikePatterns(Builder $q, array $patterns): void
+    {
+        foreach ($patterns as $i => $pat) {
+            if ($i === 0) {
+                $q->where('site', 'like', '%' . $pat . '%');
+            } else {
+                $q->orWhere('site', 'like', '%' . $pat . '%');
+            }
+        }
     }
 
     /**

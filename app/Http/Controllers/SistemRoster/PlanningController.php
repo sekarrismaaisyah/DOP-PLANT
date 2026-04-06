@@ -18,6 +18,7 @@ use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -97,19 +98,44 @@ class PlanningController extends Controller
             $query->where('perusahaan_pic', 'like', '%' . trim($filterPerusahaan) . '%');
         }
 
-        $plannings = $query->orderByDesc('tanggal')
+        // Ambil semua baris yang lolos filter, lalu grupkan — paginate per GRUP (bukan per baris).
+        // Jika paginate per baris, dua DOP (747 & 748) di tanggal/site sama bisa terpisah ke halaman berbeda
+        // sehingga grup terlihat "hilang" di halaman pertama.
+        $allPlannings = $query->orderByDesc('tanggal')
             ->orderBy('source_type')
             ->orderByDesc('created_at')
-            ->paginate($perPage)
-            ->withQueryString();
+            ->get();
 
-        $grouped = $plannings->getCollection()->groupBy(function ($p) {
+        $groupedFull = $allPlannings->groupBy(function ($p) {
             $t = $p->tanggal ? $p->tanggal->format('Y-m-d') : '';
-            $s = $p->site ?? '';
-            $j = $p->source_type ?? '';
+            $s = trim((string) ($p->site ?? ''));
+            $j = (string) ($p->source_type ?? '');
 
             return $t . '|' . $s . '|' . $j;
         });
+
+        $currentPage = LengthAwarePaginator::resolveCurrentPage();
+        $totalGroups = $groupedFull->count();
+        $groupKeys = $groupedFull->keys()->values();
+        $slicedKeys = $groupKeys->slice(($currentPage - 1) * $perPage, $perPage);
+
+        $grouped = collect();
+        foreach ($slicedKeys as $key) {
+            $grouped->put($key, $groupedFull->get($key));
+        }
+
+        $plannings = new LengthAwarePaginator(
+            $grouped,
+            $totalGroups,
+            $perPage,
+            $currentPage,
+            [
+                'path' => $request->url(),
+                'query' => $request->query(),
+                'pageName' => 'page',
+            ]
+        );
+        $plannings = $plannings->withQueryString();
 
         $perusahaanList = $this->planningSiteService->getPerusahaanListForPlanningFilter($filterStartDate, $filterEndDate, $filterSite);
 

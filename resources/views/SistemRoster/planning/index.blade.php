@@ -262,7 +262,7 @@
                         <h5 class="mb-0 fw-bold">
                             Daftar Planning
                             @if($plannings->isNotEmpty())
-                                <span class="text-muted fw-normal fs-6">({{ $plannings->firstItem() ?? 0 }}-{{ $plannings->lastItem() ?? 0 }} dari {{ $plannings->total() }})</span>
+                                <span class="text-muted fw-normal fs-6">({{ $plannings->firstItem() ?? 0 }}-{{ $plannings->lastItem() ?? 0 }} dari {{ $plannings->total() }} grup)</span>
                             @endif
                         </h5>
                         <small class="text-muted">Ringkas per Tanggal, Site & Jenis. Klik tombol [+] untuk melihat detail aktivitas dan assign karyawan.</small>
@@ -290,7 +290,8 @@
                                     </tr>
                                 </thead>
                                 <tbody>
-                                    @php $detailIndex = (int) $plannings->firstItem() - 1; @endphp
+                                    {{-- Nomor urut detail per halaman (pagination = per grup, bukan per baris roster) --}}
+                                    @php $detailIndex = 0; @endphp
                                     @foreach($grouped as $groupKey => $items)
                                         @php
                                             $first = $items->first();
@@ -313,11 +314,13 @@
                                             <td>{{ $tanggal->format('d M Y') }}</td>
                                             <td>{{ $site }}</td>
                                             <td>
-                                                <span class="badge bg-{{ $jenis === 'DOP' ? 'secondary' : 'info' }}">{{ $jenis }}</span>
+                                                <span class="badge bg-{{ $jenis === 'DOP' ? 'secondary' : ($jenis === 'Roster' ? 'success' : 'info') }}">{{ $jenis }}</span>
                                             </td>
                                             <td>
-                                                @if(strtoupper($jenis) === 'IKK' || strtoupper($jenis) === 'DOP')
+                                                @if(strtoupper((string) $jenis) === 'IKK' || strtoupper((string) $jenis) === 'DOP')
                                                     <span class="badge bg-warning text-dark">Highrisk/Kritis</span>
+                                                @elseif(strtoupper((string) $jenis) === 'ROSTER')
+                                                    <span class="badge bg-secondary">Non Area Kritis</span>
                                                 @else
                                                     <span class="text-muted">-</span>
                                                 @endif
@@ -360,7 +363,7 @@
                                                                         <td>{{ $detailIndex }}</td>
                                                                         <td>{{ $planning->tanggal->format('d M Y') }}</td>
                                                                         <td>
-                                                                            <span class="badge bg-{{ $planning->source_type === 'DOP' ? 'secondary' : 'info' }}">{{ $planning->source_type }}</span>
+                                                                            <span class="badge bg-{{ $planning->source_type === 'DOP' ? 'secondary' : ($planning->source_type === 'Roster' ? 'success' : 'info') }}">{{ $planning->source_type }}</span>
                                                                         </td>
                                                                         <td><small>{{ $planning->site ?? '-' }}</small></td>
                                                                         <td><small>{{ $planning->no_ikk ?? '-' }}</small></td>
@@ -563,7 +566,7 @@
                         </div>
                         <div class="d-flex justify-content-between align-items-center flex-column flex-lg-row gap-3 p-3 border-top">
                             <div class="text-muted small">
-                                Menampilkan {{ $plannings->firstItem() ?? 0 }}-{{ $plannings->lastItem() ?? 0 }} dari {{ $plannings->total() }} data planning
+                                Menampilkan grup {{ $plannings->firstItem() ?? 0 }}-{{ $plannings->lastItem() ?? 0 }} dari {{ $plannings->total() }} grup planning
                                 @if(count($groupedRoster ?? []) > 0)
                                     <span class="ms-2">| {{ count($groupedRoster) }} grup Roster (acuan)</span>
                                 @endif

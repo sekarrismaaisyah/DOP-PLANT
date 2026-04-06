@@ -2127,7 +2127,7 @@
         var tbodyEl = document.getElementById('heatmapDayDetailTbody');
 
         if (titleEl) titleEl.textContent = 'Detail Hari — ' + date + (site !== 'all' ? ' · ' + site : '');
-        if (metaEl) metaEl.textContent = 'Per karyawan unik yang di-assign: dihitung apakah sudah ada SAP (Hazard/Inspeksi) yang match lokasi + detail lokasi pada tanggal ini.';
+        if (metaEl) metaEl.textContent = 'Per karyawan unik yang di-assign: dihitung jika ada Inspeksi (CAR), OAK, Observasi, atau Coaching yang match nama + lokasi + detail lokasi pada tanggal ini (sama dengan angka Actual di heatmap).';
         loadingEl.classList.remove('d-none');
         errorEl.classList.add('d-none');
         errorEl.textContent = '';

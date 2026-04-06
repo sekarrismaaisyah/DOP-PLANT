@@ -6,6 +6,7 @@ use App\Models\DailyOperationPlan;
 use App\Models\RosterPlanning;
 use App\Models\RosterPlanningJob;
 use App\Services\ClickHouseService;
+use App\Services\SistemRoster\RosterPlanningDopSyncService;
 use Carbon\Carbon;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
@@ -50,7 +51,7 @@ class GeneratePlanningJob implements ShouldQueue
         Log::info("GeneratePlanningJob: Starting job {$this->jobId} for period {$this->startDate} - {$this->endDate}");
 
         try {
-            $dopResult = $this->generateFromDOP();
+            $dopResult = $this->generateFromDOP(app(RosterPlanningDopSyncService::class));
             
             $planningJob->update([
                 'dop_created' => $dopResult['created'],
@@ -80,7 +81,7 @@ class GeneratePlanningJob implements ShouldQueue
         }
     }
 
-    private function generateFromDOP(): array
+    private function generateFromDOP(RosterPlanningDopSyncService $dopSync): array
     {
         $created = 0;
         $updated = 0;
@@ -95,57 +96,9 @@ class GeneratePlanningJob implements ShouldQueue
             ->whereBetween('tanggal', [$start, $end])
             ->orderBy('tanggal')
             ->orderBy('id')
-            ->chunk(100, function ($dops) use (&$created, &$updated) {
+            ->chunk(100, function ($dops) use (&$created, &$updated, $dopSync) {
                 foreach ($dops as $dop) {
-                    $shift = null;
-                    if ($dop->picBerauCoal->isNotEmpty()) {
-                        $shift = $dop->picBerauCoal->first()->shift;
-                    } elseif ($dop->pengawasMitraKerja->isNotEmpty()) {
-                        $shift = $dop->pengawasMitraKerja->first()->shift;
-                    }
-
-                    $pengawasLangsung = $dop->pengawasMitraKerja->isNotEmpty()
-                        ? $dop->pengawasMitraKerja->pluck('nama_pengawas')->implode(', ')
-                        : null;
-
-                    $perusahaanPic = null;
-                    if (!empty($dop->perusahaan)) {
-                        $namaPicBc = $dop->picBerauCoal->isNotEmpty()
-                            ? $dop->picBerauCoal->pluck('nama_pic')->map(fn ($n) => trim((string) $n))->filter()->values()->all()
-                            : [];
-                        $isSameAsPic = in_array(trim((string) $dop->perusahaan), $namaPicBc, true);
-                        if (!$isSameAsPic) {
-                            $perusahaanPic = $dop->perusahaan;
-                        }
-                    }
-
-                    $aktivitasText = !empty($dop->aktivitas) ? $dop->aktivitas : $dop->pekerjaan;
-
-                    $tanggalStr = Carbon::parse($dop->tanggal)->toDateString();
-
-                    $result = RosterPlanning::updateOrCreate(
-                        [
-                            'source_type' => 'DOP',
-                            'source_id' => (string) $dop->id,
-                            'tanggal' => $tanggalStr,
-                        ],
-                        [
-                            'shift' => $shift,
-                            'site' => $dop->unit_id,
-                            'aktivitas' => $aktivitasText,
-                            'lokasi' => $dop->lokasi,
-                            'detail_lokasi' => $dop->detail_lokasi,
-                            'pengawas_langsung' => $pengawasLangsung,
-                            'perusahaan_pic' => $perusahaanPic,
-                            'kategori_area' => null,
-                            'no_ikk' => null,
-                            'id_detail_lokasi' => null,
-                            'jenis_sap' => null,
-                        ]
-                    );
-                    // Hanya set status draft untuk record baru; yang sudah ada (assigned) tetap tidak tertimpa
-                    if ($result->wasRecentlyCreated) {
-                        $result->update(['status' => 'draft']);
+                    if ($dopSync->syncFromModel($dop)) {
                         $created++;
                     } else {
                         $updated++;

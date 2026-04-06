@@ -31,6 +31,7 @@ class PlanningSiteServiceTest extends TestCase
         $s = new PlanningSiteService();
 
         $this->assertSame('', $s->normalizeFilterSite(''));
+        $this->assertSame('', $s->normalizeFilterSite(null));
         $this->assertSame('BMO 1', $s->normalizeFilterSite('BMO 1'));
         $this->assertSame('BMO 3', $s->normalizeFilterSite('BMO 3'));
         $this->assertSame('', $s->normalizeFilterSite('BMO 99'));

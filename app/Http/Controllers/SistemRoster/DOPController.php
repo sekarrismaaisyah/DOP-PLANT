@@ -5,12 +5,14 @@ namespace App\Http\Controllers\SistemRoster;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SistemRoster\SistemRosterDopImportRequest;
 use App\Models\DailyOperationPlan;
+use App\Models\RosterPlanning;
 use App\Models\DopPicBerauCoal;
 use App\Models\DopPengawasMitraKerja;
 use App\Models\CctvData;
 use App\Models\MasterAktivitas;
 use App\Services\ClickHouseService;
 use App\Services\SistemRoster\DopExcelTemplateService;
+use App\Services\SistemRoster\RosterPlanningDopSyncService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
@@ -30,6 +32,7 @@ class DOPController extends Controller
 {
     public function __construct(
         private readonly DopExcelTemplateService $dopExcelTemplateService,
+        private readonly RosterPlanningDopSyncService $rosterPlanningDopSyncService,
     ) {}
 
     public function index(Request $request): View
@@ -230,6 +233,8 @@ class DOPController extends Controller
             }
         }
 
+        $this->rosterPlanningDopSyncService->syncFromModel($dop->fresh(['picBerauCoal', 'pengawasMitraKerja']));
+
         return redirect()
             ->route('sistem-roster.dop.index')
             ->with('success', 'DOP berhasil disimpan.');
@@ -329,6 +334,8 @@ class DOPController extends Controller
             }
         }
 
+        $this->rosterPlanningDopSyncService->syncFromModel($dop->fresh(['picBerauCoal', 'pengawasMitraKerja']));
+
         return redirect()
             ->route('sistem-roster.dop.index')
             ->with('success', 'DOP berhasil diperbarui.');
@@ -344,6 +351,11 @@ class DOPController extends Controller
 
         $dop->picBerauCoal()->delete();
         $dop->pengawasMitraKerja()->delete();
+
+        RosterPlanning::where('source_type', 'DOP')
+            ->where('source_id', (string) $dop->id)
+            ->delete();
+
         $dop->delete();
 
         return redirect()
@@ -489,6 +501,8 @@ class DOPController extends Controller
             $errors = [];
             $rowNumber = 2;
             $dopCache = [];
+            /** @var list<int> */
+            $dopIdsToSync = [];
 
             DB::beginTransaction();
 
@@ -630,6 +644,8 @@ class DOPController extends Controller
                         }
                     }
 
+                    $dopIdsToSync[] = (int) $dop->id;
+
                 } catch (\Exception $e) {
                     $errors[] = "Baris {$rowNumber}: " . $e->getMessage();
                     Log::error("DOP Import Error - Row {$rowNumber}: " . $e->getMessage());
@@ -639,6 +655,17 @@ class DOPController extends Controller
             }
 
             DB::commit();
+
+            foreach (array_unique($dopIdsToSync) as $dopId) {
+                try {
+                    $dopModel = DailyOperationPlan::with(['picBerauCoal', 'pengawasMitraKerja'])->find($dopId);
+                    if ($dopModel) {
+                        $this->rosterPlanningDopSyncService->syncFromModel($dopModel);
+                    }
+                } catch (\Throwable $e) {
+                    Log::warning('DOP import: sinkron roster_plannings gagal untuk dop_id='.$dopId.' — '.$e->getMessage());
+                }
+            }
 
             $message = "Berhasil mengimpor {$imported} data DOP.";
             if (!empty($errors)) {
