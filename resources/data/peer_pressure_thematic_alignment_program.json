@@ -1,0 +1,255 @@
+{
+  "title": "Thematic Alignment Program",
+  "subtitle": "Ringkasan tematik, rekomendasi, dan indikator kinerja",
+  "rows": [
+    {
+      "week": 1,
+      "tematik": "Safety Performance 2025",
+      "recommendation": "Implementasi Fatigue Management pada Jam Kritis",
+      "program_related": "Fatigue Management",
+      "indikator": "Intervensi Alert Fatigue DMS",
+      "detail_indikator": "100% alert Fatigue DMS diintervensi saat jam kritis",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 1,
+      "tematik": "Safety Performance 2025",
+      "recommendation": "Implementasi Excel Aggregator Fatigue Management",
+      "program_related": "Fatigue Management",
+      "indikator": "Pengecekan FTW melalui input Aggregator",
+      "detail_indikator": "100% operator sudah tercover dalam pengisian Aggregator",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 1,
+      "tematik": "Safety Performance 2025",
+      "recommendation": "Rekayasa engineering pada aktivitas terkait insiden dan pelanggaran",
+      "program_related": "Technology",
+      "indikator": "Improvement Technology",
+      "detail_indikator": "% Completion Initiatives",
+      "scoring_all_site_ytd": "31%",
+      "grade_ytd": "L4",
+      "drill_down": []
+    },
+    {
+      "week": 2,
+      "tematik": "Proccess Control",
+      "recommendation": "Melakukan Ideation Teknologi yang Mengurangi People Dependency",
+      "program_related": "Technology",
+      "indikator": "Improvement Technology",
+      "detail_indikator": "% Completion Initiatives",
+      "scoring_all_site_ytd": "31%",
+      "grade_ytd": "L4",
+      "drill_down": []
+    },
+    {
+      "week": 3,
+      "tematik": "Site Initiatives Update",
+      "recommendation": "Pendetailan dan penentuan Site Initiatives Improvement Technology",
+      "program_related": "Technology",
+      "indikator": "Improvement Technology",
+      "detail_indikator": "% Completion Initiatives",
+      "scoring_all_site_ytd": "31%",
+      "grade_ytd": "L4",
+      "drill_down": []
+    },
+    {
+      "week": 4,
+      "tematik": "Fatigue Management",
+      "recommendation": "Monitoring kondisi Fit to Work operator berdasarkan dashboard monitoring FTW",
+      "program_related": "Fatigue Management",
+      "indikator": "Pengecekan FTW melalui input Aggregator",
+      "detail_indikator": "100% operator sudah tercover dalam pengisian Aggregator",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 4,
+      "tematik": "Fatigue Management",
+      "recommendation": "Review pekerja dengan status Alih Fungsi (Repetitive true alert fatigue & catatan FTW merah berulang)",
+      "program_related": "Fatigue Management",
+      "indikator": "Operator dengan repetisi Alert Fatigue",
+      "detail_indikator": "Identifikasi operator dengan gap fatigue dan tindaklanjutnya",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 5,
+      "tematik": "Safety Performance Januari 2026",
+      "recommendation": "Pemenuhan Komitmen Kompetensi Sertifikasi Pengawas Teknis",
+      "program_related": "Pemenuhan Kompetensi",
+      "indikator": "Sertifikasi Pengawas Teknis",
+      "detail_indikator": "% Sertifikasi Pengawas Teknis",
+      "scoring_all_site_ytd": "73%",
+      "grade_ytd": "L4",
+      "drill_down": []
+    },
+    {
+      "week": 5,
+      "tematik": "Safety Performance Januari 2026",
+      "recommendation": "Reward and Punishment terkait dengan Implementasi Speak Up Fatigue",
+      "program_related": "Speak Up Fatigue",
+      "indikator": "Speak Up Sebelum Alert DMS",
+      "detail_indikator": "100% Operator Speak up Sebelum Alert",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 5,
+      "tematik": "Safety Performance Januari 2026",
+      "recommendation": "Implementasi Excel Aggregator Fatigue Management baik di Kontraktor dan Subkontraktor",
+      "program_related": "Fatigue Management",
+      "indikator": "Pengecekan FTW melalui input Aggregator",
+      "detail_indikator": "100% operator sudah tercover dalam pengisian Aggregator",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 5,
+      "tematik": "Safety Performance Januari 2026",
+      "recommendation": "Pemenuhan teknologi yang menjadi komitmen ceiling untuk Mitra Kerja",
+      "program_related": "Technology",
+      "indikator": "Improvement Technology",
+      "detail_indikator": "% Completion Initiatives",
+      "scoring_all_site_ytd": "31%",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 6,
+      "tematik": "Implementasi IKK",
+      "recommendation": "Intervensi pengawas yang belum terdapat pelaporan IPK dan OKK",
+      "program_related": "IKK",
+      "indikator": "Implementasi IKK",
+      "detail_indikator": "% Kesesuaian IKK yang sudah terdapat IPK dan OKK",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 6,
+      "tematik": "Implementasi IKK",
+      "recommendation": "Monitoring pencapaian OKK oleh Layer 2 up",
+      "program_related": "IKK",
+      "indikator": "Implementasi IKK",
+      "detail_indikator": "% Pelaporan OKK oleh Layer 2 up",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 7,
+      "tematik": "Persiapan Bulan Puasa",
+      "recommendation": "Intervensi langsung operator dengan gap FTW sebelum mulai mengoperasikan unit",
+      "program_related": "Fatigue Management",
+      "indikator": "Pengecekan FTW melalui input Aggregator",
+      "detail_indikator": "Operator dengan FTW merah wajib STOP Operasi Unit",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 8,
+      "tematik": "Aktualisasi IM KTT",
+      "recommendation": "Eskalasi Teguran ke PJO apabila tidak konsisten Mengisi BeHealth Aggregator",
+      "program_related": "Fatigue Management",
+      "indikator": "Pengecekan FTW melalui input Aggregator",
+      "detail_indikator": "Perulangan Gap tidak mengisi Aggregator",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 8,
+      "tematik": "Aktualisasi IM KTT",
+      "recommendation": "Coaching terhadap Perulangan Operator Jam Tidur < 6 jam",
+      "program_related": "Fatigue Management",
+      "indikator": "Pengecekan FTW melalui input Aggregator",
+      "detail_indikator": "Perulangan Operator dengan Gap jam tidur",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 8,
+      "tematik": "Aktualisasi IM KTT",
+      "recommendation": "Perkuatan kontrol terhadap Pelaksanaan Tensi di Awal Shift Operator/Driver dengan Riwayat Hipertensi, Jantung, dan Diabetes Mellitus yang Belum Menjadi Target",
+      "program_related": "Health Management",
+      "indikator": "Pengecekan Tensi di Awal Shift",
+      "detail_indikator": "100% Pekerja dengan Penyakit Kritis dilakukan Tensi di Awal Shift",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 8,
+      "tematik": "Aktualisasi IM KTT",
+      "recommendation": "Perkuatan Kontrol terhadap Coverage Area Daily terutama pada Area Kritis",
+      "program_related": "Coverage Area",
+      "indikator": "Daily Coverage Area",
+      "detail_indikator": "100% Area Kritis tercover Daily",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 9,
+      "tematik": "Safety Performance Februari 2026",
+      "recommendation": "Pelaksanaan Mapping SPIP dan Registrasi ke BeComline",
+      "program_related": "Technology",
+      "indikator": "Improvement Technology",
+      "detail_indikator": "% Completion Initiatives",
+      "scoring_all_site_ytd": "31%",
+      "grade_ytd": "L4",
+      "drill_down": []
+    },
+    {
+      "week": 9,
+      "tematik": "Safety Performance Februari 2026",
+      "recommendation": "Monitoring Kesesuaian IKK",
+      "program_related": "IKK",
+      "indikator": "Implementasi IKK",
+      "detail_indikator": "% Kesesuaian IKK yang sudah terdapat IPK dan OKK",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 9,
+      "tematik": "Safety Performance Februari 2026",
+      "recommendation": "Identifikasi Potensi Golden Rules dan PSPP",
+      "program_related": "Blindspot GR",
+      "indikator": "Blindspot GR yang tidak ditemukan mitra",
+      "detail_indikator": "% Blindspot GR",
+      "scoring_all_site_ytd": "60%",
+      "grade_ytd": "",
+      "drill_down": [
+        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W15", "data": "0.00%" },
+        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W14", "data": "0.00%" },
+        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W13", "data": "0.00%" },
+        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W12", "data": "0.00%" },
+        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W11", "data": "0.00%" },
+        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W10", "data": "1.68%" }
+      ]
+    },
+    {
+      "week": 9,
+      "tematik": "Safety Performance Februari 2026",
+      "recommendation": "Pemenuhan Komitmen Kompetensi Sertifikasi Pengawas Teknis",
+      "program_related": "Pemenuhan Kompetensi",
+      "indikator": "Sertifikasi Pengawas Teknis",
+      "detail_indikator": "% Sertifikasi Pengawas Teknis",
+      "scoring_all_site_ytd": "73%",
+      "grade_ytd": "",
+      "drill_down": []
+    }
+  ]
+}

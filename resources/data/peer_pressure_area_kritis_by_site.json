@@ -1,0 +1,10 @@
+{
+  "parameter": "Area Kritis Need to Check",
+  "weeks": ["W12", "W13", "W14", "W15"],
+  "sites": ["PMO", "GMO", "BMO 2"],
+  "bySite": {
+    "PMO": { "W12": 1, "W13": 1, "W14": 1, "W15": 1 },
+    "GMO": { "W12": 1, "W13": 1, "W14": 1, "W15": 1 },
+    "BMO 2": { "W12": 1, "W13": 1, "W14": 1, "W15": 1 }
+  }
+}

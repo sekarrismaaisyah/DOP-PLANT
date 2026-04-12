@@ -3,7 +3,7 @@
    <head>
       <meta charset="utf-8"/>
       <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-      <title>BMO2 Safety - Peer Pressure Program Evaluation</title>
+      <title>Safety Performance Review</title>
       <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -104,6 +104,7 @@
          transform: translateY(-2px);
          box-shadow: 0 6px 0px 0px rgba(0, 0, 0, 0.05), 0 20px 32px -8px rgba(0, 0, 0, 0.2);
          }
+         /* Warna matriks: didefinisikan di peer-pressure-edukasi/partials/operational-performance-matrix.blade.php */
       </style>
    </head>
    <body class="bg-[#f0f2f5] font-body text-on-surface min-h-screen flex flex-col">
@@ -112,8 +113,8 @@
          <div class=" mx-auto px-8 py-4 flex justify-between items-center">
             <div class="flex items-center gap-10">
                <div class="flex flex-col">
-                  <h1 class="font-headline font-bold text-[#3952bc] text-xl tracking-tighter leading-tight">OHS Division</h1>
-                  <p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Safety Performance Review</p>
+                  <h1 class="font-headline font-bold text-[#3952bc] text-xl tracking-tighter leading-tight">Safety Performance Review</h1>
+                  <p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Alignment Meeting</p>
                </div>
                <div class="h-8 w-px bg-[#dfe3e6] hidden lg:block"></div>
                <nav class="hidden md:flex gap-8">
@@ -148,512 +149,170 @@
       <!-- Main Content Area -->
       <main class="flex-grow w-full  mx-auto p-8 space-y-8">
          @php
-            $wt = $weeklyTrend ?? [
-                'weeks' => [],
-                'max_count' => 0,
-                'avg_count' => 0,
-                'target_line_bottom_pct' => 0,
-                'period_caption' => 'Semua data (per bulan)',
-                'chart_year' => null,
-                'chart_month' => null,
-                'month_label' => '',
-                'period_scope' => 'all',
-                'avg_legend_label' => 'Rata-rata bulanan',
-            ];
-            $pickerYear = (int) min(max(now()->year, 2025), 2026);
-            $pickerMonth = (int) now()->month;
-            $cy = ($chartPeriodMonth ?? false) ? (int) ($chartYear ?? $pickerYear) : $pickerYear;
-            $cm = ($chartPeriodMonth ?? false) ? (int) ($chartMonth ?? $pickerMonth) : $pickerMonth;
-            $peerResetParams = [];
-            if (($q ?? '') !== '') {
-                $peerResetParams['q'] = $q;
-            }
-            if (!empty($chartPeriodMonth)) {
-                $peerResetParams['year'] = $chartYear;
-                $peerResetParams['month'] = $chartMonth;
-            }
-            $monthsShort = [1 => 'Jan', 2 => 'Peb', 3 => 'Mar', 4 => 'Apr', 5 => 'Mei', 6 => 'Jun', 7 => 'Jul', 8 => 'Agu', 9 => 'Sep', 10 => 'Okt', 11 => 'Nov', 12 => 'Des'];
-            $peerSiteFilterList = [];
-            foreach (
-                [
-                    ($peerHazardReportingBySite ?? [])['sites'] ?? [],
-                    ($peerTbcHighBySite ?? [])['sites'] ?? [],
-                    ($peerTbcBlindspotBySite ?? [])['sites'] ?? [],
-                    ($peerGoldenRulesBySite ?? [])['sites'] ?? [],
-                    ($peerAreaNonKritisBySite ?? [])['sites'] ?? [],
-                    ($peerAreaKritisBySite ?? [])['sites'] ?? [],
-                ] as $_siteArr
-            ) {
-                foreach ($_siteArr as $_s) {
-                    $_s = (string) $_s;
-                    if ($_s !== '' && ! in_array($_s, $peerSiteFilterList, true)) {
-                        $peerSiteFilterList[] = $_s;
-                    }
-                }
-            }
+            require resource_path('views/alignment/dummy_state.php');
          @endphp
+         <script>
+         window.__alignmentDummy = true;
+         window.__alignmentMocks = @json($alignmentPageMocks);
+         (function () {
+            var orig = window.fetch;
+            window.fetch = function (input, init) {
+               var url = typeof input === 'string' ? input : (input && input.url) || '';
+               if (!window.__alignmentDummy || !window.__alignmentMocks) {
+                  return orig.apply(this, arguments);
+               }
+               if (url.indexOf('peer-pressure-edukasi') === -1) {
+                  return orig.apply(this, arguments);
+               }
+               function jsonResponse(obj) {
+                  return Promise.resolve(
+                     new Response(JSON.stringify(obj), {
+                        status: 200,
+                        headers: { 'Content-Type': 'application/json' },
+                     })
+                  );
+               }
+               if (url.indexOf('/kejadian/') !== -1 && url.indexOf('dashboard') === -1) {
+                  return jsonResponse(window.__alignmentMocks.detail);
+               }
+               if (url.indexOf('weekly-trend') !== -1) {
+                  return jsonResponse(window.__alignmentMocks.weekly);
+               }
+               if (url.indexOf('highlight-issue-recommendation') !== -1) {
+                  return jsonResponse(window.__alignmentMocks.highlight);
+               }
+               if (url.indexOf('compliance-breakdown') !== -1) {
+                  return jsonResponse(window.__alignmentMocks.compliance);
+               }
+               if (url.indexOf('pelanggar-profiling') !== -1) {
+                  return jsonResponse(window.__alignmentMocks.profiling);
+               }
+               return orig.apply(this, arguments);
+            };
+         })();
+         </script>
+
          <!-- Header & Top Filters -->
          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 pb-6 border-b border-outline-variant/30">
             <div>
                <nav class="flex items-center gap-2 text-xs font-bold text-on-surface-variant uppercase mb-2">
                   <span>Dashboard</span>
                   <span class="material-symbols-outlined text-xs">chevron_right</span>
-                  <span class="text-primary">Alignment Meeting Dashboard</span>
+                  <span class="text-primary">Alignment Meeting | Review Week 15 Tahun 2026</span>
                </nav>
                <h2 class="font-headline font-extrabold text-4xl text-on-background tracking-tight">Safety Performance Review</h2>
-               <p class="text-on-surface-variant font-medium mt-1">Program performance Week 15 2026 • Updated 5 mins ago</p>
+               <p class="text-on-surface-variant font-medium mt-1">PT Berau Coal</p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-               <!-- <div class="bg-white px-4 py-2.5 rounded-xl border border-outline-variant/30 flex items-center gap-2 text-sm font-semibold text-on-surface-variant cursor-pointer hover:shadow-md transition-all">
-                  <span class="material-symbols-outlined text-lg" data-icon="calendar_today">calendar_today</span>
-                  Last 30 Days
-                  <span class="material-symbols-outlined text-lg">expand_more</span>
-               </div> -->
-                <div class="flex w-full flex-col gap-1.5 sm:w-auto sm:min-w-[16rem]">
-                     <label for="peer-hazard-site-filter" class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Filter site</label>
-                     <div class="relative">
-                        <span class="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-primary">
-                           <span class="material-symbols-outlined text-xl" data-icon="location_on">location_on</span>
+              
+                <button type="button" id="peer-open-weekly-period" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-4 py-3 text-left shadow-inner transition-colors hover:bg-surface-container-high sm:w-auto sm:min-w-[14rem]">
+                        <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
+                        <span class="flex min-w-0 flex-1 flex-col items-start">
+                           <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Periode chart</span>
+                           <span id="peer-weekly-period-label" class="truncate text-sm font-bold text-on-surface">{{ $wt['period_caption'] ?? 'Pilih bulan' }}</span>
                         </span>
-                        <select id="peer-hazard-site-filter" name="hazard_site" class="peer w-full cursor-pointer appearance-none rounded-xl border border-outline-variant/30 bg-[#f8fafc] py-3 pl-11 pr-10 text-sm font-bold text-on-surface shadow-inner transition-colors hover:bg-surface-container-high focus:outline-none focus:ring-2 focus:ring-primary/30" data-initial-site="{{ e($hazardSite ?? '__all') }}">
-                           <option value="__all" {{ ($hazardSite ?? '__all') === '__all' ? 'selected' : '' }}>Semua site</option>
-                           @if(!empty($peerSiteFilterList))
-                              @foreach($peerSiteFilterList as $siteOpt)
-                              <option value="{{ e($siteOpt) }}" {{ ($hazardSite ?? '') === $siteOpt ? 'selected' : '' }}>{{ $siteOpt }}</option>
-                              @endforeach
-                           @endif
-                        </select>
-                        <span class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-on-surface-variant">
-                           <span class="material-symbols-outlined">expand_more</span>
-                        </span>
-                     </div>
-                     <span id="peer-weekly-period-label" class="sr-only">{{ $wt['period_caption'] ?? '—' }}</span>
-                  </div>
+                        <span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+                     </button>
 
               
-               <!-- <button class="signature-gradient text-white font-bold px-6 py-2.5 rounded-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2">
-               <span class="material-symbols-outlined text-lg" data-icon="file_download">file_download</span>
-               Export Report
-               </button> -->
+            
             </div>
          </div>
          <!-- KPI Row -->
          @php
-            $kpi = $kpi ?? [];
-            $kpiTotal = (int) ($kpi['total_cases'] ?? 0);
-            $kpiCompletion = (float) ($kpi['completion_rate'] ?? 0);
-            $kpiBarW = max(0, min(100, $kpiCompletion));
-            $kpiTrendPct = $kpi['total_cases_trend_pct'] ?? null;
-            $icPre = $insightCards ?? [];
-            $dvPre = $icPre['deviation'] ?? [];
-            $dvPreCats = $dvPre['categories'] ?? [];
-            $dvPreTotal = (int) ($dvPre['total'] ?? 0);
-            $dvPreSumJumlah = (int) collect($dvPreCats)->sum(fn ($r) => (int) ($r['jumlah'] ?? 0));
-            $dvPreFooterTotal = $dvPreSumJumlah > 0 ? $dvPreSumJumlah : $dvPreTotal;
-            /** Mini bar Hazard Reporting (mingguan) — dari resources/data/peer_pressure_hazard_reporting_by_site.json jika ada */
-            $peerHrEval = $peerHrEvalFromJson
-               ?? $peerKpiHazardReportingEval
-               ?? [
-                  'weeks' => ['W10', 'W11', 'W12', 'W13'],
-                  'label' => 'Hazard Reporting',
-                  'bar' => '#DEE5EF',
-                  'values' => [20.595, 15.543, 17.861, 19.570],
-                  'decimals' => 3,
+            $heg1Grid = $hazardEvalGrid ?? ['weeks' => [], 'rows' => []];
+            $heg1Weeks = $heg1Grid['weeks'] ?? [];
+            $heg1ChartPayload = ['weeks' => $heg1Weeks, 'lineColor' => '#3952bc', 'rows' => []];
+            foreach ($heg1Grid['rows'] ?? [] as $heg1r) {
+               $heg1ChartPayload['rows'][] = [
+                  'trend' => array_values($heg1r['values'] ?? []),
+                  'lineColor' => $heg1r['bar'] ?? '#3952bc',
                ];
-            /** L4W Golden Rules — dari resources/data/peer_pressure_golden_rules_by_site.json jika ada */
-            $peerGoldenRulesL4w = $peerKpiGoldenRulesL4w ?? [
-               'weeks' => ['W11', 'W12', 'W13', 'W14'],
-               'values' => [1, 1, 3, 1],
-            ];
-            if (! empty($peerGoldenRulesEvalFromJson)) {
-                $peerGoldenRulesL4w = [
-                    'weeks' => $peerGoldenRulesEvalFromJson['weeks'],
-                    'values' => $peerGoldenRulesEvalFromJson['values'],
-                ];
-            }
-            $kpiValidGrCount = (int) ($kpi['peer_pressure_compliance_comply'] ?? 0);
-            $grL4wVals = $peerGoldenRulesL4w['values'] ?? [];
-            $grPanelTotalDisplay = ! empty($peerGoldenRulesBySite)
-                ? (int) round(array_sum($grL4wVals))
-                : $kpiTotal;
-            $grPanelValidGrDisplay = ! empty($peerGoldenRulesBySite)
-                ? (count($grL4wVals) ? (int) round($grL4wVals[count($grL4wVals) - 1]) : 0)
-                : $kpiValidGrCount;
-            /** Panel L4W kiri — Area Non Kritis Need to Check (peer_pressure_area_non_kritis_by_site.json) */
-            $peerAreaNonKritisL4w = [
-                'weeks' => ['W12', 'W13', 'W14', 'W15'],
-                'values' => [0, 0, 0, 0],
-            ];
-            if (! empty($peerAreaNonKritisEvalFromJson)) {
-                $peerAreaNonKritisL4w = [
-                    'weeks' => $peerAreaNonKritisEvalFromJson['weeks'],
-                    'values' => $peerAreaNonKritisEvalFromJson['values'],
-                ];
-            }
-            $ankL4wVals = $peerAreaNonKritisL4w['values'] ?? [];
-            $ankPanelTotalDisplay = count($ankL4wVals) ? (int) round(array_sum($ankL4wVals)) : 0;
-            $ankPanelLastDisplay = count($ankL4wVals) ? (int) round($ankL4wVals[count($ankL4wVals) - 1]) : 0;
-            $ankParamLabel = (string) (($peerAreaNonKritisBySite ?? [])['parameter'] ?? 'Area Non Kritis Need to Check');
-            /** Panel kedua — Area Kritis Need to Check (peer_pressure_area_kritis_by_site.json) */
-            $peerAreaKritisL4w = [
-                'weeks' => ['W12', 'W13', 'W14', 'W15'],
-                'values' => [0, 0, 0, 0],
-            ];
-            if (! empty($peerAreaKritisEvalFromJson)) {
-                $peerAreaKritisL4w = [
-                    'weeks' => $peerAreaKritisEvalFromJson['weeks'],
-                    'values' => $peerAreaKritisEvalFromJson['values'],
-                ];
-            }
-            $akL4wVals = $peerAreaKritisL4w['values'] ?? [];
-            $akPanelTotalDisplay = count($akL4wVals) ? (int) round(array_sum($akL4wVals)) : 0;
-            $akPanelLastDisplay = count($akL4wVals) ? (int) round($akL4wVals[count($akL4wVals) - 1]) : 0;
-            $akParamLabel = (string) (($peerAreaKritisBySite ?? [])['parameter'] ?? 'Area Kritis Need to Check');
-            /** Kartu KPI compliance (peer-kpi-compliance-card): total GR + 4 minggu dari peer_pressure_golden_rules_by_site.json */
-            $peerGrParamLabel = (string) (($peerGoldenRulesBySite ?? [])['parameter'] ?? 'Jumlah GR');
-            $peerGrKpiEval = [
-                'weeks' => $peerGoldenRulesL4w['weeks'] ?? [],
-                'values' => $peerGoldenRulesL4w['values'] ?? [],
-                'label' => $peerGrParamLabel,
-                'bar' => '#c8102e',
-                'decimals' => 0,
-            ];
-            $grValsCard = $peerGrKpiEval['values'] ?? [];
-            $grWksCard = $peerGrKpiEval['weeks'] ?? [];
-            $nGrCard = count($grValsCard);
-            $grCardTotalDisplay = $nGrCard > 0 ? (int) round(array_sum($grValsCard)) : 0;
-            $grCardWoWPct = null;
-            $grCardWkPrev = 'W13';
-            $grCardWkLast = 'W14';
-            if ($nGrCard >= 2) {
-                $grCardPrev = (float) $grValsCard[$nGrCard - 2];
-                $grCardLast = (float) $grValsCard[$nGrCard - 1];
-                $grCardWkPrev = (string) ($grWksCard[$nGrCard - 2] ?? 'W13');
-                $grCardWkLast = (string) ($grWksCard[$nGrCard - 1] ?? 'W14');
-                if ($grCardPrev > 0.0001) {
-                    $grCardWoWPct = (($grCardLast - $grCardPrev) / $grCardPrev) * 100;
-                }
-            }
-            /** TBC High — dari resources/data/peer_pressure_tbc_high_by_site.json jika ada */
-            $peerTbcHigh = $peerTbcEvalFromJson
-               ?? $peerKpiTbcHighRiskEval
-               ?? [
-                  'weeks' => ['W10', 'W11', 'W12', 'W13'],
-                  'label' => 'To Be Concerned High Risk Hazards',
-                  'bar' => '#E2E2E2',
-                  'values' => [7.600, 5.670, 5.754, 6.237],
-                  'decimals' => 3,
-               ];
-            /** Blindspot TBC — dari resources/data/peer_pressure_tbc_blindspot_by_site.json jika ada */
-            $peerTbcBlind = $peerTbcBlindEvalFromJson
-               ?? $peerKpiTbcBlindspotEval
-               ?? [
-                  'weeks' => ['W10', 'W11', 'W12', 'W13'],
-                  'label' => 'To Be Concerned High Risk Hazards Blindspot',
-                  'bar' => '#FFCC33',
-                  'values' => [42, 26, 8, 21],
-                  'decimals' => 0,
-               ];
-            /** Minggu untuk sparkline modal (sinkron dengan mini bar Hazard Reporting); override via $peerDeviationModalSparkWeeks dari controller */
-            if (! isset($peerDeviationModalSparkWeeks) || ! is_array($peerDeviationModalSparkWeeks)) {
-                $peerDeviationModalSparkWeeks = $peerHrEval['weeks'] ?? ['W11', 'W12', 'W13', 'W14'];
-            }
-            $makeDeviationWeekly = static function (int $j, string $kat, array $wks): array {
-                $n = count($wks);
-                if ($n === 0) {
-                    return [];
-                }
-                if ($j <= 0) {
-                    return array_fill(0, $n, 0);
-                }
-                $h = 2166136261;
-                $len = strlen($kat);
-                for ($i = 0; $i < $len; $i++) {
-                    $h = (($h ^ ord($kat[$i])) * 16777619) & 0xFFFFFFFF;
-                }
-                $weights = [];
-                $sumW = 0.0;
-                for ($i = 0; $i < $n; $i++) {
-                    $w = 0.12 + ((($h >> ($i * 7)) & 0xFF) / 255) * 0.88;
-                    $weights[] = $w;
-                    $sumW += $w;
-                }
-                $vals = [];
-                $acc = 0;
-                for ($i = 0; $i < $n - 1; $i++) {
-                    $vals[] = (int) max(0, (int) round($j * $weights[$i] / $sumW));
-                    $acc += $vals[$i];
-                }
-                $vals[] = max(0, $j - $acc);
-
-                return $vals;
-            };
-            $dvPreCatsSpark = [];
-            foreach ($dvPreCats as $idx => $drow) {
-                $kat = (string) ($drow['kategori_deviasi'] ?? '');
-                $j = (int) ($drow['jumlah'] ?? 0);
-                $dvPreCatsSpark[] = array_merge($drow, [
-                    'weekly_values' => $makeDeviationWeekly($j, $kat, $peerDeviationModalSparkWeeks),
-                    '_idx' => $idx,
-                ]);
             }
          @endphp
-         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            <button type="button" id="peer-kpi-deviation-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-start text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-deviation-category-modal" data-json-hazard="{{ !empty($peerHazardReportingBySite) ? '1' : '0' }}">
-               <div class="flex justify-between items-start">
-                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Hazard Reporting</span>
-                  <div class="p-2 bg-[#fef3c7] rounded-lg">
-                     <span class="material-symbols-outlined text-[#d97706]" data-icon="groups">groups</span>
-                  </div>
-               </div>
-               <div class="mt-1">
-                  @php
-                     $hrVals = $peerHrEval['values'] ?? [];
-                     $hrWks = $peerHrEval['weeks'] ?? [];
-                     $nHr = count($hrVals);
-                     $hrLast = $nHr > 0 ? (float) $hrVals[$nHr - 1] : (float) $kpiTotal;
-                     $hrWoWPct = null;
-                     $hrWkPrev = 'W14';
-                     $hrWkLast = 'W15';
-                     if ($nHr >= 2) {
-                        $hrPrev = (float) $hrVals[$nHr - 2];
-                        $hrWkPrev = (string) ($hrWks[$nHr - 2] ?? 'W14');
-                        $hrWkLast = (string) ($hrWks[$nHr - 1] ?? 'W15');
-                        if ($hrPrev > 0.0001) {
-                           $hrWoWPct = (($hrLast - $hrPrev) / $hrPrev) * 100;
-                        }
-                     }
-                  @endphp
-                  <p id="peer-kpi-hazard-total" class="font-headline font-extrabold text-4xl tabular-nums" data-json-driven="1">{{ number_format((int) round($hrLast)) }}</p>
-                  <div id="peer-kpi-hazard-trend" class="mt-1" data-json-driven="1">
-                  @if($hrWoWPct !== null)
-                  <p class="text-[11px] font-bold flex items-center gap-1 {{ $hrWoWPct <= 0 ? 'text-[#059669]' : 'text-error' }}">
-                     <span class="material-symbols-outlined text-xs" data-icon="{{ $hrWoWPct <= 0 ? 'trending_down' : 'trending_up' }}">{{ $hrWoWPct <= 0 ? 'trending_down' : 'trending_up' }}</span>
-                     WoW {{ $hrWoWPct >= 0 ? '+' : '' }}{{ number_format($hrWoWPct, 1) }}% ({{ $hrWkPrev }} → {{ $hrWkLast }})
-                  </p>
-                  @else
-                  <p class="text-on-surface-variant text-[11px] font-medium">—</p>
-                  @endif
-                  </div>
-               </div>
-               <div id="peer-kpi-hazard-mini-bar-host" class="min-w-0 w-full">
-               @include('peer-pressure-edukasi.partials.kpi-hazard-mini-bar', ['eval' => $peerHrEval, 'chartTopMargin' => 'mt-1.5'])
-               </div>
-            </button>
-            <button type="button" id="peer-kpi-tbc-high-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-tbc-general-modal" data-json-tbc="{{ !empty($peerTbcHighBySite) ? '1' : '0' }}">
-               <div class="flex justify-between items-start">
-                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">To Be Concerned High Risk Hazards</span>
-                  <div class="p-2 bg-primary/10 rounded-lg">
-                     <span class="material-symbols-outlined text-primary" data-icon="assignment_late">assignment_late</span>
-                  </div>
-                 
-               </div>
-               <div class="">
-                  @php
-                     $tbcVals = $peerTbcHigh['values'] ?? [];
-                     $tbcWks = $peerTbcHigh['weeks'] ?? [];
-                     $nTbc = count($tbcVals);
-                     $tbcLast = $nTbc > 0 ? (float) $tbcVals[$nTbc - 1] : (float) $kpiTotal;
-                     $tbcWoWPct = null;
-                     $tbcWkPrev = 'W14';
-                     $tbcWkLast = 'W15';
-                     if ($nTbc >= 2) {
-                        $tbcPrev = (float) $tbcVals[$nTbc - 2];
-                        $tbcWkPrev = (string) ($tbcWks[$nTbc - 2] ?? 'W14');
-                        $tbcWkLast = (string) ($tbcWks[$nTbc - 1] ?? 'W15');
-                        if ($tbcPrev > 0.0001) {
-                           $tbcWoWPct = (($tbcLast - $tbcPrev) / $tbcPrev) * 100;
-                        }
-                     }
-                  @endphp
-                  <p id="peer-kpi-tbc-high-total" class="peer-kpi-tbc-high-total font-headline font-extrabold text-4xl tabular-nums" data-json-driven="{{ !empty($peerTbcHighBySite) ? '1' : '0' }}">{{ number_format((int) round($tbcLast)) }}</p>
-                  <div id="peer-kpi-tbc-high-trend" class="peer-kpi-tbc-high-trend mt-1" data-json-driven="{{ !empty($peerTbcHighBySite) ? '1' : '0' }}">
-                  @if($tbcWoWPct !== null)
-                  <p class="text-[11px] font-bold flex items-center gap-1 {{ $tbcWoWPct <= 0 ? 'text-[#059669]' : 'text-error' }}">
-                     <span class="material-symbols-outlined text-xs" data-icon="{{ $tbcWoWPct <= 0 ? 'trending_down' : 'trending_up' }}">{{ $tbcWoWPct <= 0 ? 'trending_down' : 'trending_up' }}</span>
-                     WoW {{ $tbcWoWPct >= 0 ? '+' : '' }}{{ number_format($tbcWoWPct, 1) }}% ({{ $tbcWkPrev }} → {{ $tbcWkLast }})
-                  </p>
-                  @else
-                  <p class="text-on-surface-variant text-[11px] font-medium">—</p>
-                  @endif
-                  </div>
-               </div>
-
-               <div id="peer-kpi-tbc-mini-bar-host" class="min-w-0 w-full">
-               @include('peer-pressure-edukasi.partials.kpi-hazard-mini-bar', ['eval' => $peerTbcHigh])
-               </div>
-            </button>
-            <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between" data-json-blindspot="{{ !empty($peerTbcBlindspotBySite) ? '1' : '0' }}">
-               <div class="flex justify-between items-start">
-                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">To Be Concerned High Risk Hazards Blindspot</span>
-                  <div class="p-2 bg-[#dcfce7] rounded-lg">
-                     <span class="material-symbols-outlined text-[#16a34a]" data-icon="task_alt">task_alt</span>
-                  </div>
-               </div>
-               <div class="">
-                  @php
-                     $blVals = $peerTbcBlind['values'] ?? [];
-                     $blWks = $peerTbcBlind['weeks'] ?? [];
-                     $nBl = count($blVals);
-                     $blLast = $nBl > 0 ? (float) $blVals[$nBl - 1] : (float) $kpiTotal;
-                     $blWoWPct = null;
-                     $blWkPrev = 'W14';
-                     $blWkLast = 'W15';
-                     if ($nBl >= 2) {
-                        $blPrev = (float) $blVals[$nBl - 2];
-                        $blWkPrev = (string) ($blWks[$nBl - 2] ?? 'W14');
-                        $blWkLast = (string) ($blWks[$nBl - 1] ?? 'W15');
-                        if ($blPrev > 0.0001) {
-                           $blWoWPct = (($blLast - $blPrev) / $blPrev) * 100;
-                        }
-                     }
-                  @endphp
-                  <p id="peer-kpi-blindspot-total" class="font-headline font-extrabold text-4xl tabular-nums" data-json-driven="{{ !empty($peerTbcBlindspotBySite) ? '1' : '0' }}">{{ number_format((int) round($blLast)) }}</p>
-                  <div id="peer-kpi-blindspot-trend" class="mt-1" data-json-driven="{{ !empty($peerTbcBlindspotBySite) ? '1' : '0' }}">
-                  @if($blWoWPct !== null)
-                  <p class="text-[11px] font-bold flex items-center gap-1 {{ $blWoWPct <= 0 ? 'text-[#059669]' : 'text-error' }}">
-                     <span class="material-symbols-outlined text-xs" data-icon="{{ $blWoWPct <= 0 ? 'trending_down' : 'trending_up' }}">{{ $blWoWPct <= 0 ? 'trending_down' : 'trending_up' }}</span>
-                     WoW {{ $blWoWPct >= 0 ? '+' : '' }}{{ number_format($blWoWPct, 1) }}% ({{ $blWkPrev }} → {{ $blWkLast }})
-                  </p>
-                  @else
-                  <p class="text-on-surface-variant text-[11px] font-medium">—</p>
-                  @endif
-                  </div>
-               </div>
-               <div id="peer-kpi-blindspot-mini-bar-host" class="min-w-0 w-full">
-               @include('peer-pressure-edukasi.partials.kpi-hazard-mini-bar', ['eval' => $peerTbcBlind])
+         @if (count($heg1ChartPayload['rows'] ?? []))
+         <script type="application/json" id="heg1-line-charts-data">@json($heg1ChartPayload)</script>
+         @endif
+         <div class="grid grid-cols-1 items-start md:grid-cols-2 lg:grid-cols-12 gap-6">
+         <div
+            id="peer-kpi-hazard-eval-card-1"
+            class="group relative md:col-span-2 lg:col-span-3 overflow-hidden rounded-3xl border border-slate-200/80 bg-white text-left shadow-[0_1px_0_rgba(0,0,0,0.04),0_20px_50px_-24px_rgba(15,23,42,0.25)] ring-1 ring-slate-900/[0.04]">
+            <div class="pointer-events-none absolute -right-24 -top-24 h-48 w-48 rounded-full bg-gradient-to-br from-primary/[0.12] to-transparent blur-2xl transition-opacity group-hover:opacity-100"></div>
+            <div class="pointer-events-none absolute -bottom-16 -left-16 h-40 w-40 rounded-full bg-gradient-to-tr from-secondary/[0.08] to-transparent blur-2xl"></div>
+            <div class="relative flex flex-col gap-0.5 border-b border-slate-100/90 bg-gradient-to-b from-white to-slate-50/40 px-4 py-2.5 sm:px-5 sm:py-3">
+               <div class="min-w-0">
+                  <p class="font-headline text-center text-[11px] font-bold uppercase tracking-[0.18em] text-slate-500 sm:text-left">Hazards Evaluation</p>
+                  <!-- <p class="mt-0.5 text-center text-[10px] leading-snug text-slate-500 sm:text-left">Per minggu</p> -->
                </div>
             </div>
-           
-            <button type="button" id="peer-kpi-compliance-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-secondary/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-compliance-detail-modal" data-json-gr="{{ !empty($peerGoldenRulesBySite) ? '1' : '0' }}">
-               <div class="flex justify-between items-start">
-                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">{{ $peerGrParamLabel }}</span>
-                  <div class="p-2 bg-secondary/10 rounded-lg">
-                     <span class="material-symbols-outlined text-secondary" data-icon="verified">verified</span>
+            <div class="relative px-3 pb-2 pt-1.5 sm:px-4 sm:pb-3">
+               <div class="flex flex-col gap-3 sm:gap-4">
+                  @foreach ($hazardEvalGrid['rows'] as $rIdx => $row)
+                  @php
+                     $vals = $row['values'];
+                     $maxV = max($vals) > 0 ? max($vals) : 1;
+                     $dec = (int) ($row['decimals'] ?? 2);
+                     $bar = $row['bar'];
+                  @endphp
+                  <div class="border-b border-slate-100/90 pb-3 last:border-b-0 last:pb-0">
+                     <div class="mb-2 flex items-start gap-2">
+                        <span class="mt-0.5 h-2 w-2 shrink-0 rounded-full shadow-sm ring-2 ring-white" style="background-color: {{ $bar }}"></span>
+                        <p class="min-w-0 flex-1 text-[10px] font-semibold leading-snug text-slate-800 sm:text-[11px]">{{ $row['label'] }}</p>
+                     </div>
+                     <div class="peer-chart-scroll w-full overflow-x-auto">
+                        <div class="peer-chart-scroll-inner w-max min-w-full px-1 sm:px-2">
+                           <div class="relative h-32 sm:h-36">
+                              <div class="peer-chart-bars relative z-10 flex h-full w-full items-stretch gap-1 sm:gap-2">
+                                 @foreach ($vals as $vi => $val)
+                                 @php
+                                    $pct = (int) round(($val / $maxV) * 100);
+                                    $barH = min(100, max(0, (float) $pct));
+                                    $fmt = number_format((float) $val, $dec, ',', '.');
+                                    $weekLabel = $hazardEvalGrid['weeks'][$vi] ?? ('W' . ($vi + 1));
+                                    $tipHazard = ($weekLabel ?? '').' — '.$fmt;
+                                 @endphp
+                                 <div class="peer-chart-bar-col group relative flex h-full min-h-0 min-w-[2.25rem] flex-1 basis-0 flex-col justify-end rounded-t-lg border-x border-t border-outline-variant/10 bg-[#f8fafc]" title="{{ $tipHazard }}">
+                                    <div class="relative w-full" style="height: {{ $barH }}%">
+                                       <span class="absolute -top-5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[9px] font-semibold tabular-nums text-on-surface sm:text-[10px]">{{ $fmt }}</span>
+                                       <div class="absolute inset-0 flex flex-col justify-end overflow-hidden rounded-t-md shadow-inner ring-1 ring-black/10">
+                                          <div class="min-h-[2px] w-full shrink-0 transition-opacity group-hover:opacity-95" style="height: 100%; background-color: {{ $bar }}"></div>
+                                       </div>
+                                    </div>
+                                 </div>
+                                 @endforeach
+                              </div>
+                           </div>
+                           <div class="peer-chart-axis-labels mt-2 flex w-full min-w-0 gap-1 sm:gap-2 text-[9px] font-bold uppercase tracking-wider text-on-surface-variant sm:text-[10px] sm:tracking-widest">
+                              @foreach ($vals as $vi => $_)
+                              <span class="peer-chart-axis-tick min-w-[2rem] flex-1 basis-0 text-center leading-tight">{{ $hazardEvalGrid['weeks'][$vi] ?? ('W'.($vi + 1)) }}</span>
+                              @endforeach
+                           </div>
+                        </div>
+                     </div>
+                     <div class="mt-2 rounded-xl border border-slate-200/70 bg-gradient-to-b from-white to-slate-50/80 p-1 shadow-[inset_0_1px_0_rgba(255,255,255,1),0_2px_8px_-4px_rgba(15,23,42,0.1)] ring-1 ring-slate-100/90">
+                        <p class="mb-0.5 px-1 text-[9px] font-semibold uppercase tracking-wide text-slate-400">Tren (line)</p>
+                        <div class="relative h-[5.5rem] w-full min-h-[5.5rem] sm:h-28">
+                           <canvas class="heg1-chart-canvas block h-full w-full max-h-28" data-heg1-row="{{ $loop->index }}" role="img" aria-label="Grafik garis tren mingguan"></canvas>
+                        </div>
+                     </div>
                   </div>
+                  @endforeach
                </div>
-               <div class="">
-                  <p id="peer-kpi-gr-total" class="font-headline font-extrabold text-4xl tabular-nums" data-json-driven="{{ !empty($peerGoldenRulesBySite) ? '1' : '0' }}">{{ number_format($grCardTotalDisplay) }}</p>
-                  <div id="peer-kpi-gr-trend" class="mt-1" data-json-driven="{{ !empty($peerGoldenRulesBySite) ? '1' : '0' }}">
-                  @if($grCardWoWPct !== null)
-                  <p class="text-[11px] font-bold flex items-center gap-1 {{ $grCardWoWPct <= 0 ? 'text-[#059669]' : 'text-error' }}">
-                     <span class="material-symbols-outlined text-xs" data-icon="{{ $grCardWoWPct <= 0 ? 'trending_down' : 'trending_up' }}">{{ $grCardWoWPct <= 0 ? 'trending_down' : 'trending_up' }}</span>
-                     WoW {{ $grCardWoWPct >= 0 ? '+' : '' }}{{ number_format($grCardWoWPct, 1) }}% ({{ $grCardWkPrev }} → {{ $grCardWkLast }})
-                  </p>
-                  @else
-                  <p class="text-on-surface-variant text-[11px] font-medium">—</p>
-                  @endif
-                  </div>
-               </div>
-               <div id="peer-kpi-gr-compliance-mini-bar-host" class="min-w-0 w-full space-y-1">
-                  @include('peer-pressure-edukasi.partials.kpi-hazard-mini-bar', ['eval' => $peerGrKpiEval, 'compact' => true])
-               </div>
-               
-            </button>
-         </div>
-
-         <div class="grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-stretch">
-            <div id="peer-kpi-hazard-matrix-column" class="flex min-h-0 w-full flex-col gap-6 lg:col-span-3 lg:h-full">
-               <button type="button" id="peer-kpi-hazard-reporting-card" class="bg-white p-6 rounded-2xl anchored-card flex w-full flex-col justify-start text-left cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-deviation-category-modal">
-                  @include('peer-pressure-edukasi.partials.kpi-l4w-golden-rules-panel', [
-                      'total' => $ankPanelTotalDisplay,
-                      'validGr' => $ankPanelLastDisplay,
-                      'weeks' => $peerAreaNonKritisL4w['weeks'] ?? [],
-                      'values' => $peerAreaNonKritisL4w['values'] ?? [],
-                      'decimals' => 0,
-                      'grFromJson' => false,
-                      'ankFromJson' => ! empty($peerAreaNonKritisBySite),
-                      'chartTitle' => 'L4W ' . $ankParamLabel,
-                      'panelSubtitleSuffix' => 'minggu terakhir',
-                      'barColor' => '#ea580c',
-                  ])
-                  <div class="peer-kpi-hr-stack-trend hidden" aria-hidden="true">
-                     @if($kpiTrendPct !== null)
-                     <p class="text-[11px] font-bold flex items-center gap-1 {{ $kpiTrendPct <= 0 ? 'text-[#059669]' : 'text-error' }}">
-                        <span class="material-symbols-outlined text-xs" data-icon="{{ $kpiTrendPct <= 0 ? 'trending_down' : 'trending_up' }}">{{ $kpiTrendPct <= 0 ? 'trending_down' : 'trending_up' }}</span>
-                        {{ $kpi['total_cases_trend_label'] ?? '' }}
-                     </p>
-                     @else
-                     <p class="text-on-surface-variant text-[11px] font-medium">{{ $kpi['total_cases_trend_label'] ?? '—' }}</p>
-                     @endif
-                  </div>
-               </button>
-
-               <button type="button" id="peer-kpi-deviation-card-stack" class="bg-white p-6 rounded-2xl anchored-card flex w-full flex-col justify-start text-left cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-deviation-category-modal">
-                  @include('peer-pressure-edukasi.partials.kpi-l4w-golden-rules-panel', [
-                      'total' => $akPanelTotalDisplay,
-                      'validGr' => $akPanelLastDisplay,
-                      'weeks' => $peerAreaKritisL4w['weeks'] ?? [],
-                      'values' => $peerAreaKritisL4w['values'] ?? [],
-                      'decimals' => 0,
-                      'grFromJson' => false,
-                      'ankFromJson' => false,
-                      'kritisFromJson' => ! empty($peerAreaKritisBySite),
-                      'chartTitle' => 'L4W ' . $akParamLabel,
-                      'panelSubtitleSuffix' => 'minggu terakhir',
-                      'barColor' => '#dc2626',
-                  ])
-                  <div class="peer-kpi-hr-stack-trend hidden" aria-hidden="true">
-                     @if($kpiTrendPct !== null)
-                     <p class="text-[11px] font-bold flex items-center gap-1 {{ $kpiTrendPct <= 0 ? 'text-[#059669]' : 'text-error' }}">
-                        <span class="material-symbols-outlined text-xs" data-icon="{{ $kpiTrendPct <= 0 ? 'trending_down' : 'trending_up' }}">{{ $kpiTrendPct <= 0 ? 'trending_down' : 'trending_up' }}</span>
-                        {{ $kpi['total_cases_trend_label'] ?? '' }}
-                     </p>
-                     @else
-                     <p class="text-on-surface-variant text-[11px] font-medium">{{ $kpi['total_cases_trend_label'] ?? '—' }}</p>
-                     @endif
-                  </div>
-               </button>
-
-               @include('peer-pressure-edukasi.partials.peer-performance-brief-summary')
             </div>
-
-            <div class="min-w-0 lg:col-span-9">
-               @include('peer-pressure-edukasi.partials.operational-performance-matrix', ['matrixShellClass' => 'w-full min-w-0'])
+            <div class="relative flex flex-wrap items-center gap-2 border-t border-slate-100/90 bg-gradient-to-r from-slate-50/90 via-white to-slate-50/80 px-4 py-2 sm:px-5">
+               <p class="text-[10px] font-medium leading-relaxed text-slate-500">
+                  Jumlah agregat (kartu):
+                  <span class="font-bold text-slate-800">{{ number_format($dvPreTotal) }}</span>
+               </p>
             </div>
          </div>
 
+         
+         @include('peer-pressure-edukasi.partials.operational-performance-matrix', ['matrixShellClass' => 'md:col-span-2 lg:col-span-7'])
 
-
-<!-- 
-         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <div class="min-w-0 lg:col-span-12">
-               @include('peer-pressure-edukasi.partials.trend-of-accident-panel')
-            </div>
-         </div> -->
-
-
-         @php
-            $tableauEmbeddingApiSrc = 'https://idashboard.beraucoal.co.id/javascripts/api/tableau.embedding.3.latest.min.js';
-            $tableauOverviewSafetyVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/OverviewSafetyPerformance_17471016698280/OverviewSafetyPerformanceAllSites2';
-         @endphp
-         <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
-            <div class="min-w-0 lg:col-span-12">
-               <div class="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-[0_4px_0px_0px_rgba(0,0,0,0.05),0_12px_24px_-4px_rgba(0,0,0,0.15)]">
-                  <div class="border-b border-outline-variant/20 bg-gradient-to-r from-slate-50 to-white px-5 py-4 sm:px-6">
-                     <h3 class="font-headline text-base font-bold text-on-surface">Overview Safety Performance</h3>
-                     <p class="mt-0.5 text-[11px] text-on-surface-variant">Tableau Embedding API v3 — iDashboard Berau Coal</p>
-                  </div>
-                  <div class="w-full overflow-x-auto bg-slate-50/30 p-2 sm:p-4">
-                     <script type="module" src="{{ $tableauEmbeddingApiSrc }}"></script>
-                     <tableau-viz
-                        id="tableau-viz"
-                        src="{{ $tableauOverviewSafetyVizSrc }}"
-                        width="1654"
-                        height="1209"
-                        hide-tabs
-                        toolbar="bottom"
-                        class="mx-auto block max-w-full"
-                     ></tableau-viz>
-                  </div>
-               </div>
-            </div>
          </div>
 
-         @include('peer-pressure-edukasi.partials.thematic-alignment-program-table')
 
-
-       
          
 
 
@@ -664,6 +323,8 @@
 
 
 
+
+         <!-- Charts & Recommendations Grid -->
          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <!-- Trend Analysis -->
             @php
@@ -762,7 +423,7 @@
             </div>
             <!-- Priority Panels: ringkasan evaluasi (aturan + agregasi data) -->
             @php
-               $es = $evaluationSummary ?? ['generated_at' => '', 'total_kejadian' => 0, 'rows' => [], 'narrative' => '', 'repeat_period_caption' => 'Seluruh data', 'chart_period_month' => false];
+               $es = $evaluationSummary;
                $esRows = $es['rows'] ?? [];
             @endphp
             <div class="lg:col-span-4 flex flex-col gap-6">
@@ -808,7 +469,106 @@
                         </tbody>
                      </table>
                   </div>
-               
+                  <!-- @php $rvRow = collect($esRows)->firstWhere('key', 'repeat_violator'); @endphp
+                  <div id="peer-eval-repeat-block" class="mt-4 @if(!$rvRow || empty($rvRow['violators_detail'])) hidden @endif">
+                     <p id="peer-eval-repeat-title" class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Pelanggar repetitif ({{ $es['repeat_period_caption'] ?? 'Seluruh data' }})</p>
+                     <div class="max-h-48 overflow-y-auto overflow-x-auto rounded-xl border border-outline-variant/20">
+                        <table class="w-full min-w-[480px] text-left text-[10px]">
+                           <thead class="sticky top-0 z-[1] border-b border-outline-variant/20 bg-[#f1f5f9] text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
+                              <tr>
+                                 <th class="px-2 py-1.5">Nama</th>
+                                 <th class="px-2 py-1.5">SID</th>
+                                 <th class="px-2 py-1.5">Dept</th>
+                                 <th class="px-2 py-1.5 text-right">×</th>
+                              </tr>
+                           </thead>
+                           <tbody id="peer-eval-repeat-tbody" class="divide-y divide-outline-variant/10 text-on-surface">
+                              @foreach (($rvRow['violators_detail'] ?? []) as $v)
+                              <tr class="peer-rv-toggle cursor-pointer transition-colors hover:bg-[#f8fafc]" role="button" tabindex="0" aria-expanded="false">
+                                 <td class="max-w-[7rem] truncate px-2 py-1.5 font-medium" title="{{ $v['nama'] ?? '' }}">{{ $v['nama'] ?? '—' }}</td>
+                                 <td class="px-2 py-1.5 font-mono text-[9px] text-on-surface-variant">{{ $v['sid'] ?? '—' }}</td>
+                                 <td class="max-w-[6rem] truncate px-2 py-1.5 text-on-surface-variant" title="{{ $v['departemen'] ?? '' }}">{{ $v['departemen'] ?? '—' }}</td>
+                                 <td class="whitespace-nowrap px-2 py-1.5 text-right">
+                                    <span class="inline-flex max-w-full flex-nowrap items-center justify-end gap-0.5">
+                                       <span class="shrink-0 font-bold tabular-nums">{{ (int) ($v['kasus'] ?? 0) }}×</span>
+                                       <span class="material-symbols-outlined peer-rv-chevron shrink-0 text-base leading-none text-on-surface-variant" aria-hidden="true">expand_more</span>
+                                    </span>
+                                 </td>
+                              </tr>
+                              <tr class="peer-rv-expand hidden bg-[#f8fafc]/90">
+                                 <td colspan="4" class="border-t border-outline-variant/10 px-3 py-2">
+                                    <p class="mb-1.5 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant">Tanggal &amp; kategori deviasi</p>
+                                    <div class="overflow-x-auto rounded-lg border border-outline-variant/15 bg-white">
+                                       <table class="w-full min-w-[280px] border-collapse text-left text-[9px] text-on-surface">
+                                          <thead>
+                                             <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[8px] font-bold uppercase tracking-wide text-on-surface-variant">
+                                                <th class="whitespace-nowrap px-2 py-1.5">Tanggal</th>
+                                                <th class="px-2 py-1.5">Kategori deviasi</th>
+                                             </tr>
+                                          </thead>
+                                          <tbody class="divide-y divide-outline-variant/10">
+                                             @foreach (($v['kejadian_list'] ?? []) as $kj)
+                                             <tr>
+                                                <td class="whitespace-nowrap px-2 py-1 font-medium tabular-nums">{{ $kj['tanggal_label'] ?? '—' }}</td>
+                                                <td class="px-2 py-1 text-on-surface-variant">{{ $kj['kategori_deviasi'] ?? '—' }}</td>
+                                             </tr>
+                                             @endforeach
+                                          </tbody>
+                                       </table>
+                                    </div>
+                                 </td>
+                              </tr>
+                              @endforeach
+                           </tbody>
+                        </table>
+                     </div>
+                  </div>
+                  @php $recRow = collect($esRows)->firstWhere('key', 'recency'); $recD = $recRow ? ($recRow['recency_detail'] ?? null) : null; @endphp
+                  <div id="peer-eval-recency-wrap" class="mt-4 @if(!$recD) hidden @endif">
+                     <div id="peer-eval-recency-inner">
+                        @if($recD)
+                        <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Jarak waktu pelanggaran berulang — data</p>
+                        <p class="mb-3 text-[9px] leading-relaxed text-on-surface-variant">{{ $recD['metric_explanation'] ?? '' }}</p>
+                        <div class="overflow-x-auto rounded-xl border border-outline-variant/20 bg-white">
+                           <table class="w-full min-w-[260px] text-left text-[10px] text-on-surface">
+                              <tbody class="divide-y divide-outline-variant/10">
+                                 <tr>
+                                    <th class="w-[42%] whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Pelanggar</th>
+                                    <td class="px-2 py-2 font-medium">{{ $recD['pelanggar_nama'] ?? '—' }}</td>
+                                 </tr>
+                                 <tr>
+                                    <th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">SID</th>
+                                    <td class="px-2 py-2 font-mono text-[9px] text-on-surface-variant">{{ $recD['pelanggar_sid'] ?? '—' }}</td>
+                                 </tr>
+                                 <tr>
+                                    <th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan terbaru</th>
+                                    <td class="px-2 py-2 align-top">
+                                       <div class="flex flex-col gap-0.5">
+                                          <span class="font-medium">{{ $recD['latest']['tanggal_label'] ?? '—' }} <span class="font-mono text-[9px] text-on-surface-variant">#{{ (int) ($recD['latest']['kejadian_id'] ?? 0) }}</span></span>
+                                          <span class="text-[8px] leading-snug text-on-surface-variant"><span class="font-semibold">Kategori deviasi:</span> {{ $recD['latest']['kategori_deviasi'] ?? '—' }}</span>
+                                       </div>
+                                    </td>
+                                 </tr>
+                                 <tr>
+                                    <th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Temuan sebelumnya</th>
+                                    <td class="px-2 py-2 align-top">
+                                       <div class="flex flex-col gap-0.5">
+                                          <span class="font-medium">{{ $recD['previous']['tanggal_label'] ?? '—' }} <span class="font-mono text-[9px] text-on-surface-variant">#{{ (int) ($recD['previous']['kejadian_id'] ?? 0) }}</span></span>
+                                          <span class="text-[8px] leading-snug text-on-surface-variant"><span class="font-semibold">Kategori deviasi:</span> {{ $recD['previous']['kategori_deviasi'] ?? '—' }}</span>
+                                       </div>
+                                    </td>
+                                 </tr>
+                                 <tr>
+                                    <th class="whitespace-nowrap bg-[#f8fafc] px-2 py-2 align-top text-[9px] font-bold uppercase text-on-surface-variant">Selisih kalender</th>
+                                    <td class="px-2 py-2 font-semibold tabular-nums">{{ (int) ($recD['gap_days'] ?? 0) }} hari</td>
+                                 </tr>
+                              </tbody>
+                           </table>
+                        </div>
+                        <p class="mt-2 text-[9px] text-on-surface-variant">{{ $recD['footnote'] ?? '' }}</p>
+                        @endif
+                     </div>
+                  </div> -->
                   <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                      <p id="peer-eval-footer-meta" class="text-[10px] text-on-surface-variant">Diperbarui {{ $es['generated_at'] ?? '—' }} · {{ (int) ($es['total_kejadian'] ?? 0) }} kejadian</p>
                      <button type="button" id="peer-open-evaluation-modal" class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-opacity hover:opacity-95">
@@ -821,12 +581,7 @@
          </div>
          <!-- Secondary Metrics Grid -->
          @php
-            $ic = isset($insightCards) ? $insightCards : [
-                'deviation' => ['total' => 0, 'total_label' => '0', 'conic_gradient' => 'conic-gradient(rgb(241 245 249) 0% 100%)', 'categories' => []],
-                'compliance' => ['berecord_pct' => 0, 'evidence_pct' => 0, 'size_pct' => 0, 'h1_pct' => 0, 'duration_label' => '—', 'triangle_rotate_deg' => 12],
-                'locations' => [],
-                'profiling_pelanggar' => [],
-            ];
+            $ic = $insightCards;
             $dvCats = $ic['deviation']['categories'] ?? [];
             $locRows = $ic['locations'] ?? [];
             $profilingPelanggar = $ic['profiling_pelanggar'] ?? [];
@@ -948,18 +703,16 @@
                   <p class="text-xs text-on-surface-variant font-medium">Detailed log of safety incidents and peer interactions</p>
                </div>
                <div class="flex w-full flex-col gap-3 sm:flex-row sm:flex-wrap sm:items-center sm:justify-end">
-                  <form id="peer-dashboard-search-form" method="get" action="{{ route('peer-pressure-edukasi.dashboard') }}" class="flex w-full min-w-0 flex-1 flex-col gap-2 sm:max-w-md sm:flex-row sm:items-center">
+                  <form id="peer-dashboard-search-form" method="get" action="#" class="flex w-full min-w-0 flex-1 flex-col gap-2 sm:max-w-md sm:flex-row sm:items-center">
                      <input type="hidden" id="peer-dashboard-year" name="year" value="{{ (int) $cy }}" @if(empty($chartPeriodMonth)) disabled @endif>
                      <input type="hidden" id="peer-dashboard-month" name="month" value="{{ (int) $cm }}" @if(empty($chartPeriodMonth)) disabled @endif>
                      <div class="relative min-w-0 flex-1">
                         <span class="material-symbols-outlined pointer-events-none absolute left-3 top-1/2 z-0 -translate-y-1/2 text-lg text-on-surface-variant">search</span>
-                        <input type="search" name="q" value="{{ $q ?? '' }}" placeholder="Cari lokasi, kategori, dept, SID, nama, leader, status…" autocomplete="off" class="w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] py-2 pl-10 pr-3 text-sm text-on-surface outline-none transition-shadow placeholder:text-on-surface-variant/60 focus:border-primary/40 focus:ring-2 focus:ring-primary/15" aria-label="Cari data kejadian">
+                        <input type="search" name="q" value="" placeholder="Cari (demo — tidak memfilter data)" autocomplete="off" class="w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] py-2 pl-10 pr-3 text-sm text-on-surface outline-none transition-shadow placeholder:text-on-surface-variant/60 focus:border-primary/40 focus:ring-2 focus:ring-primary/15" aria-label="Cari data kejadian">
                      </div>
                      <div class="flex shrink-0 gap-2">
-                        <button type="submit" class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-outline-variant/30 bg-white px-4 py-2 text-xs font-bold shadow-sm transition-colors hover:bg-surface-container-high">Cari</button>
-                        @if(filled($q ?? null))
-                        <a href="{{ route('peer-pressure-edukasi.dashboard', $peerResetParams) }}" class="inline-flex items-center justify-center rounded-xl px-3 py-2 text-xs font-bold text-on-surface-variant hover:bg-[#f1f5f9]">Reset</a>
-                        @endif
+                        <button type="button" class="inline-flex items-center justify-center gap-1.5 rounded-xl border border-outline-variant/30 bg-white px-4 py-2 text-xs font-bold shadow-sm transition-colors hover:bg-surface-container-high">Cari</button>
+                        <button type="button" class="inline-flex items-center justify-center rounded-xl px-3 py-2 text-xs font-bold text-on-surface-variant hover:bg-[#f1f5f9]">Reset</button>
                      </div>
                   </form>
                   <div class="flex flex-wrap items-center gap-3">
@@ -989,89 +742,107 @@
                      </tr>
                   </thead>
                   <tbody class="divide-y divide-outline-variant/10">
-                     @forelse ($kejadian as $k)
-                        @php
-                           $pelanggar = $k->peserta->firstWhere('peran', 'pelanggar');
-                           $peers = $k->peserta->where('peran', 'peer')->values();
-                           $visiblePeers = $peers->take(3);
-                           $extraPeerCount = max(0, $peers->count() - 3);
-                           $avatarBgs = ['bg-secondary-fixed', 'bg-primary-fixed', 'bg-tertiary-fixed'];
-                           $catPrimary = 'mt-2 inline-block bg-primary-container/20 text-primary text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-primary/10';
-                           $catSecondary = 'mt-2 inline-block bg-secondary-container/20 text-secondary text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-secondary/10';
-                           $statusBadge = $k->dashboardStatusBadge();
-                        @endphp
-                     <tr class="hover:bg-[#f8fafc] transition-colors cursor-pointer group js-peer-kejadian-row" data-kejadian-id="{{ $k->id }}" role="button" tabindex="0">
+                     <tr class="hover:bg-[#f8fafc] transition-colors cursor-pointer group js-peer-kejadian-row" data-kejadian-id="9001" role="button" tabindex="0">
                         <td class="px-8 py-5">
-                           <div class="font-bold text-on-surface">{{ $k->formattedTemuanDatetime() }}</div>
+                           <div class="font-bold text-on-surface">10 Apr 2026 08:30</div>
                            <div class="text-[10px] text-on-surface-variant flex items-center gap-1 mt-0.5">
-                              <span class="material-symbols-outlined text-[12px]" data-icon="location_on">location_on</span> {{ $k->lokasi_temuan }}
+                              <span class="material-symbols-outlined text-[12px]" data-icon="location_on">location_on</span> Stockyard A
                            </div>
-                           <span class="{{ $loop->iteration % 2 === 1 ? $catPrimary : $catSecondary }}">{{ $k->kategori_deviasi }}</span>
+                           <span class="mt-2 inline-block bg-primary-container/20 text-primary text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-primary/10">Pelanggaran PSPP</span>
                         </td>
                         <td class="px-8 py-5">
-                           <div class="font-bold">{{ $pelanggar ? $pelanggar->sid . ' | ' . ($pelanggar->nama ?: '—') : '—' }}</div>
-                           <div class="text-xs text-on-surface-variant">{{ $k->departemen ?: '—' }} / {{ $k->aktivitas_pekerjaan ?: '—' }}</div>
+                           <div class="font-bold">S10001 | Budi Santoso</div>
+                           <div class="text-xs text-on-surface-variant">Operasi / Penggalian</div>
                         </td>
                         <td class="px-8 py-5">
                            <div class="flex -space-x-2">
-                              @foreach ($visiblePeers as $peer)
-                                 @php
-                                    $pi = $loop->index;
-                                    $sidKey = \Illuminate\Support\Str::lower(trim((string) $peer->sid));
-                                    $peerFoto = $peerFotoUrls[$sidKey] ?? null;
-                                 @endphp
-                                 <div class="relative w-8 h-8 shrink-0 rounded-full border-2 border-white shadow-md overflow-hidden bg-surface-container-high">
-                                    @if (filled($peerFoto))
-                                    <img src="{{ $peerFoto }}" alt="" class="absolute inset-0 h-full w-full object-cover" loading="lazy" width="32" height="32" decoding="async" onerror="this.classList.add('hidden'); this.nextElementSibling.classList.remove('hidden');">
-                                    <div class="hidden absolute inset-0 flex items-center justify-center text-[10px] font-bold {{ $avatarBgs[$pi] ?? 'bg-surface-container-high' }}">{{ $peer->initials() }}</div>
-                                    @else
-                                    <div class="flex h-full w-full items-center justify-center text-[10px] font-bold {{ $avatarBgs[$pi] ?? 'bg-surface-container-high' }}">{{ $peer->initials() }}</div>
-                                    @endif
-                                 </div>
-                              @endforeach
-                              @if ($extraPeerCount > 0)
-                                 <div class="w-8 h-8 rounded-full bg-surface-container-high text-[10px] flex items-center justify-center font-bold border-2 border-white shadow-md text-on-surface-variant">+{{ $extraPeerCount }}</div>
-                              @endif
+                              <div class="relative w-8 h-8 shrink-0 rounded-full border-2 border-white shadow-md overflow-hidden bg-surface-container-high">
+                                 <div class="flex h-full w-full items-center justify-center text-[10px] font-bold bg-secondary-fixed">DL</div>
+                              </div>
                            </div>
-                           <div class="text-[10px] mt-2 font-bold text-on-surface-variant">Leader: {{ $k->pemimpin_edukasi ?: '—' }}</div>
+                           <div class="text-[10px] mt-2 font-bold text-on-surface-variant">Leader: HSE Officer</div>
                         </td>
-                        <td class="px-8 py-5 font-bold text-xs text-on-surface">{{ $k->durasi_edukasi_menit }}m</td>
+                        <td class="px-8 py-5 font-bold text-xs text-on-surface">45m</td>
                         <td class="px-8 py-5">
-                           @if (filled($k->evidence_url))
-                           <a href="{{ $k->evidence_url }}" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-primary hover:underline flex items-center gap-1 text-xs font-bold transition-all relative z-10">
-                           <span class="material-symbols-outlined text-lg" data-icon="attach_file">attach_file</span> View Records
-                           </a>
-                           @else
                            <div class="text-error font-bold text-xs flex items-center gap-1">
                            <span class="material-symbols-outlined text-lg" data-icon="warning">warning</span> Missing Evidence
                            </div>
-                           @endif
                         </td>
                         <td class="px-8 py-5">
-                           <span class="{{ $statusBadge['spanClass'] }}">{{ $statusBadge['label'] }}</span>
+                           <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800">SELESAI</span>
                         </td>
                      </tr>
-                     @empty
-                     <tr>
-                        <td colspan="6" class="px-8 py-10 text-center text-sm text-on-surface-variant font-medium">@if(filled($q ?? null))Tidak ada hasil untuk pencarian ini.@else Belum ada data kejadian.@endif</td>
+                     <tr class="hover:bg-[#f8fafc] transition-colors cursor-pointer group js-peer-kejadian-row" data-kejadian-id="9002" role="button" tabindex="0">
+                        <td class="px-8 py-5">
+                           <div class="font-bold text-on-surface">08 Apr 2026 14:00</div>
+                           <div class="text-[10px] text-on-surface-variant flex items-center gap-1 mt-0.5">
+                              <span class="material-symbols-outlined text-[12px]" data-icon="location_on">location_on</span> Pit South
+                           </div>
+                           <span class="mt-2 inline-block bg-secondary-container/20 text-secondary text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-secondary/10">Golden rules</span>
+                        </td>
+                        <td class="px-8 py-5">
+                           <div class="font-bold">S10002 | Andi Wijaya</div>
+                           <div class="text-xs text-on-surface-variant">Maintenance / Mekanik</div>
+                        </td>
+                        <td class="px-8 py-5">
+                           <div class="flex -space-x-2">
+                              <div class="relative w-8 h-8 shrink-0 rounded-full border-2 border-white shadow-md overflow-hidden bg-surface-container-high">
+                                 <div class="flex h-full w-full items-center justify-center text-[10px] font-bold bg-primary-fixed">RK</div>
+                              </div>
+                              <div class="relative w-8 h-8 shrink-0 rounded-full border-2 border-white shadow-md overflow-hidden bg-surface-container-high">
+                                 <div class="flex h-full w-full items-center justify-center text-[10px] font-bold bg-tertiary-fixed">AM</div>
+                              </div>
+                           </div>
+                           <div class="text-[10px] mt-2 font-bold text-on-surface-variant">Leader: Supervisor A</div>
+                        </td>
+                        <td class="px-8 py-5 font-bold text-xs text-on-surface">30m</td>
+                        <td class="px-8 py-5">
+                           <a href="#" onclick="event.stopPropagation()" class="text-primary hover:underline flex items-center gap-1 text-xs font-bold transition-all relative z-10">
+                           <span class="material-symbols-outlined text-lg" data-icon="attach_file">attach_file</span> View Records
+                           </a>
+                        </td>
+                        <td class="px-8 py-5">
+                           <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-900">BERJALAN</span>
+                        </td>
                      </tr>
-                     @endforelse
+                     <tr class="hover:bg-[#f8fafc] transition-colors cursor-pointer group js-peer-kejadian-row" data-kejadian-id="9003" role="button" tabindex="0">
+                        <td class="px-8 py-5">
+                           <div class="font-bold text-on-surface">05 Apr 2026 09:15</div>
+                           <div class="text-[10px] text-on-surface-variant flex items-center gap-1 mt-0.5">
+                              <span class="material-symbols-outlined text-[12px]" data-icon="location_on">location_on</span> Workshop
+                           </div>
+                           <span class="mt-2 inline-block bg-primary-container/20 text-primary text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-primary/10">Insiden ringan</span>
+                        </td>
+                        <td class="px-8 py-5">
+                           <div class="font-bold">S10003 | Citra Dewi</div>
+                           <div class="text-xs text-on-surface-variant">HSE / Inspeksi</div>
+                        </td>
+                        <td class="px-8 py-5">
+                           <div class="flex -space-x-2">
+                              <div class="relative w-8 h-8 shrink-0 rounded-full border-2 border-white shadow-md overflow-hidden bg-surface-container-high">
+                                 <div class="flex h-full w-full items-center justify-center text-[10px] font-bold bg-secondary-fixed">BS</div>
+                              </div>
+                           </div>
+                           <div class="text-[10px] mt-2 font-bold text-on-surface-variant">Leader: HSE Lead</div>
+                        </td>
+                        <td class="px-8 py-5 font-bold text-xs text-on-surface">60m</td>
+                        <td class="px-8 py-5">
+                           <div class="text-error font-bold text-xs flex items-center gap-1">
+                           <span class="material-symbols-outlined text-lg" data-icon="warning">warning</span> Missing Evidence
+                           </div>
+                        </td>
+                        <td class="px-8 py-5">
+                           <span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold bg-emerald-100 text-emerald-800">CLOSED</span>
+                        </td>
+                     </tr>
                   </tbody>
                </table>
             </div>
             <div class="p-6 bg-[#f8fafc] flex justify-between items-center border-t border-outline-variant/20">
-               <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">@if ($kejadian->total() === 0)Showing 0 of 0 entries @else Showing {{ $kejadian->firstItem() }}-{{ $kejadian->lastItem() }} of {{ number_format($kejadian->total()) }} entries @endif</p>
+               <p class="text-[10px] font-bold text-on-surface-variant uppercase tracking-widest">Showing 1–3 of 3 entries (demo)</p>
                <div class="flex gap-2">
-                  @if ($kejadian->onFirstPage())
                   <button type="button" class="p-2 border border-outline-variant/30 rounded-lg opacity-40 cursor-not-allowed" disabled aria-disabled="true"><span class="material-symbols-outlined text-sm">chevron_left</span></button>
-                  @else
-                  <a href="{{ $kejadian->previousPageUrl() }}" class="p-2 border border-outline-variant/30 rounded-lg hover:bg-white hover:shadow-md transition-all inline-flex" rel="prev"><span class="material-symbols-outlined text-sm">chevron_left</span></a>
-                  @endif
-                  @if (! $kejadian->hasMorePages())
                   <button type="button" class="p-2 border border-outline-variant/30 rounded-lg opacity-40 cursor-not-allowed" disabled aria-disabled="true"><span class="material-symbols-outlined text-sm">chevron_right</span></button>
-                  @else
-                  <a href="{{ $kejadian->nextPageUrl() }}" class="p-2 border border-outline-variant/30 rounded-lg hover:bg-white hover:shadow-md transition-all inline-flex" rel="next"><span class="material-symbols-outlined text-sm">chevron_right</span></a>
-                  @endif
                </div>
             </div>
          </div>
@@ -1080,7 +851,7 @@
             <div class="flex flex-col gap-3 border-b border-outline-variant/20 bg-gradient-to-r from-primary/[0.06] to-secondary/[0.04] px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
                <div>
                   <h3 id="peer-highlight-heading" class="font-headline text-xl font-extrabold tracking-tight text-on-background">Highlight Issue &amp; Rekomendasi</h3>
-                  <p class="mt-1 text-[11px] text-on-surface-variant">Narasi ringkas mengikuti alur metrik di halaman ini (KPI, trend, evaluasi, insight, tabel). Sumber data = agregat aktual; teks disusun AI dari JSON tersebut.</p>
+                  <p class="mt-1 text-[11px] text-on-surface-variant">Narasi ringkas mengikuti alur metrik di halaman ini (KPI, trend, evaluasi, insight, tabel). <span class="font-semibold text-on-surface">Demo statis</span> — respons JSON disimulasikan di browser, tanpa agregat aktual atau AI.</p>
                </div>
                <div class="flex flex-wrap items-center gap-2">
                   <span id="peer-highlight-badge" class="hidden rounded-full border border-outline-variant/25 bg-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant"></span>
@@ -1148,71 +919,6 @@
             <div class="mt-6 flex justify-end gap-2">
                <button type="button" id="peer-weekly-period-cancel" class="rounded-xl px-4 py-2 text-xs font-bold text-on-surface-variant hover:bg-[#f1f5f9]">Batal</button>
                <button type="button" id="peer-weekly-period-apply" class="rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-sm hover:opacity-95">Terapkan</button>
-            </div>
-         </div>
-      </div>
-      <!-- Modal statistik kategori deviasi (dari kartu KPI Hazard Reporting / deviasi) -->
-      <div id="peer-deviation-category-modal" class="hidden fixed inset-0 z-[206] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-deviation-category-title">
-         <div class="absolute inset-0 cursor-pointer peer-deviation-category-backdrop" aria-hidden="true"></div>
-         <div class="relative z-10 flex max-h-[min(92vh,820px)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
-            <div class="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant/20 px-5 py-4 sm:px-6">
-               <div>
-                  <h2 id="peer-deviation-category-title" class="font-headline text-lg font-bold text-on-surface">Statistik kategori deviasi</h2>
-                  <p class="mt-1 text-xs text-on-surface-variant">{{ ($chartPeriodMonth ?? false) ? 'Periode sesuai filter chart (tanggal temuan).' : 'Seluruh data kejadian.' }}</p>
-               </div>
-               <button type="button" id="peer-deviation-category-close" class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
-                  <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
-               </button>
-            </div>
-            <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
-               <div class="space-y-4">
-                  <div class="rounded-xl border border-outline-variant/20 bg-white p-3 shadow-sm">
-                     <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{{ $peerHrEval['label'] ?? 'Hazard Reporting' }}</p>
-                     <p class="mt-0.5 text-[9px] text-on-surface-variant/90">Trend mingguan (agregat) · batang</p>
-                     <div class="relative mt-2 h-44 w-full min-h-[11rem]">
-                        <canvas
-                           id="peer-deviation-modal-hr-chart"
-                           class="peer-deviation-hr-chart max-h-full w-full"
-                           data-hr-values='@json($peerHrEval['values'] ?? [])'
-                           data-hr-weeks='@json($peerHrEval['weeks'] ?? [])'
-                           data-hr-color="{{ e($peerHrEval['bar'] ?? '#3952bc') }}"
-                        ></canvas>
-                     </div>
-                  </div>
-                  <div>
-                     <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Deviasi pelanggaran per kategori</p>
-                     <div id="peer-deviation-modal-categories" class="rounded-lg border border-outline-variant/20 bg-[#fafbfc]">
-                        @forelse ($dvPreCatsSpark as $idx => $row)
-                        <div class="flex flex-col gap-2.5 border-b border-outline-variant/10 bg-white px-3 py-3 last:border-b-0">
-                           <div class="min-w-0 w-full">
-                              <span class="inline-flex max-w-full items-start gap-1 rounded px-2 py-1.5 text-left text-[11px] font-bold leading-snug text-white shadow-sm sm:text-xs" style="background: {{ $row['color'] ?? 'hsl(215 14% 62%)' }}; text-shadow: 0 1px 2px rgba(0,0,0,.35);">
-                                 <span class="shrink-0 opacity-90">{{ (int) $idx + 1 }}.</span>
-                                 <span class="min-w-0 break-words">{{ $row['kategori_deviasi'] ?? '—' }}</span>
-                              </span>
-                              <p class="mt-1 text-[10px] font-semibold tabular-nums text-on-surface-variant sm:text-[11px]">Jumlah: {{ number_format((int) ($row['jumlah'] ?? 0)) }}</p>
-                           </div>
-                           <div class="w-full border-t border-dashed border-outline-variant/15 pt-2.5">
-                              <div class="relative h-36 w-full min-h-[9rem]">
-                                 <canvas
-                                    class="peer-deviation-cat-chart max-h-full w-full"
-                                    data-values='@json($row['weekly_values'] ?? [])'
-                                    data-weeks='@json($peerDeviationModalSparkWeeks)'
-                                    data-line-color="{{ e($row['color'] ?? '#2563eb') }}"
-                                 ></canvas>
-                              </div>
-                           </div>
-                        </div>
-                        @empty
-                        <div class="px-3 py-8 text-center text-[11px] text-on-surface-variant">Belum ada data kategori deviasi.</div>
-                        @endforelse
-                     </div>
-                     <div class="mt-2 flex items-center justify-between rounded-lg border border-outline-variant/20 bg-[#f1f5f9] px-3 py-2.5 font-headline text-sm font-bold text-on-surface">
-                        <span>Total</span>
-                        <span id="peer-deviation-modal-total" class="tabular-nums text-primary">{{ number_format($dvPreFooterTotal) }}</span>
-                     </div>
-                  </div>
-               </div>
-               <p class="mt-3 text-[10px] leading-relaxed text-on-surface-variant">Angka per minggu pada setiap baris adalah ilustrasi pembagian proporsional dari total kategori (bukan data mingguan aktual). Total dihitung dari penjumlahan jumlah per kategori (sama dengan total kejadian pada periode yang sama).</p>
             </div>
          </div>
       </div>
@@ -1524,31 +1230,6 @@
             </div>
          </div>
       </div>
-      <!-- Modal TBC GENERAL — kartu kejadian (geser horizontal) -->
-      <div id="peer-tbc-general-modal" class="hidden fixed inset-0 z-[208] flex items-center justify-center p-3 sm:p-6 bg-black/30 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-tbc-general-title">
-         <div class="absolute inset-0 cursor-pointer peer-tbc-general-backdrop" aria-hidden="true"></div>
-         <div class="relative z-10 flex max-h-[min(92vh,880px)] w-full max-w-[min(96vw,1180px)] flex-col overflow-hidden rounded-2xl border border-neutral-200/90 bg-white text-neutral-800 shadow-lg shadow-neutral-900/5">
-            <div class="shrink-0 border-b border-neutral-200 bg-white px-4 py-3 sm:px-5 sm:py-3.5">
-               <div class="flex items-start justify-between gap-3">
-                  <div>
-                     <h2 id="peer-tbc-general-title" class="font-headline text-base font-semibold tracking-tight text-neutral-900 sm:text-lg">TBC General</h2>
-                     <p id="peer-tbc-general-subtitle" class="mt-0.5 text-[10px] font-normal text-neutral-500">Data contoh (dummy). Integrasi database dapat ditambahkan kemudian.</p>
-                  </div>
-                  <button type="button" id="peer-tbc-general-close" class="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900" aria-label="Tutup">
-                     <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
-                  </button>
-               </div>
-            </div>
-            <div id="peer-tbc-general-loading" class="hidden flex flex-1 flex-col items-center justify-center gap-2 bg-white px-6 py-16" aria-live="polite">
-               <span class="material-symbols-outlined animate-spin text-3xl text-neutral-400" style="animation-duration:1s">progress_activity</span>
-               <p class="text-[11px] font-medium tracking-wide text-neutral-500">Memuat kartu…</p>
-            </div>
-            <div id="peer-tbc-general-error" class="hidden bg-white px-6 py-8 text-center text-[12px] text-red-600"></div>
-            <div id="peer-tbc-general-body" class="min-h-0 flex-1 overflow-x-auto overflow-y-auto bg-neutral-50/80 px-3 py-4 sm:px-5 sm:py-5">
-               <div id="peer-tbc-general-cards" class="flex w-max min-w-full flex-nowrap gap-4 pb-1"></div>
-            </div>
-         </div>
-      </div>
       <!-- Detail modal (data dari API peer-pressure-edukasi.kejadian.detail) -->
       <div id="peer-pressure-detail-modal" class="hidden fixed inset-0 z-[200] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-pressure-detail-title">
          <div class="absolute inset-0 peer-pressure-modal-backdrop" aria-hidden="true"></div>
@@ -1620,7 +1301,7 @@
         const contentEl = document.getElementById('peer-pressure-detail-content');
         const closeBtn = document.getElementById('peer-pressure-detail-close');
         const titleEl = document.getElementById('peer-pressure-detail-title');
-        const detailUrlBase = @json(rtrim(url('/peer-pressure-edukasi/kejadian'), '/'));
+        const detailUrlBase = '/peer-pressure-edukasi/kejadian';
 
         function escapeHtml(s) {
           if (s == null || s === '') return '';
@@ -1893,13 +1574,11 @@
         });
       })();
       </script>
-      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
-      @include('peer-pressure-edukasi.partials.trend-of-accident-panel-charts')
       <script>
       (function () {
-        const weeklyTrendUrl = @json(route('peer-pressure-edukasi.dashboard.weekly-trend'));
-        const peerHighlightUrl = @json(route('peer-pressure-edukasi.dashboard.highlight-issue-recommendation'));
-        const complianceBreakdownUrl = @json(route('peer-pressure-edukasi.dashboard.compliance-breakdown'));
+        const weeklyTrendUrl = '/peer-pressure-edukasi/dashboard/weekly-trend';
+        const peerHighlightUrl = '/peer-pressure-edukasi/dashboard/highlight-issue-recommendation';
+        const complianceBreakdownUrl = '/peer-pressure-edukasi/dashboard/compliance-breakdown';
         const modal = document.getElementById('peer-weekly-period-modal');
         const backdrop = modal ? modal.querySelector('.peer-weekly-period-backdrop') : null;
         const openBtn = document.getElementById('peer-open-weekly-period');
@@ -1915,584 +1594,6 @@
         var tempYear = state.year;
         var tempMonth = state.month;
         var tempAll = state.all;
-        var peerDeviationSparkWeeks = @json($peerDeviationModalSparkWeeks);
-        var peerHazardReportingBySite = @json($peerHazardReportingBySite ?? null);
-        var peerTbcHighBySite = @json($peerTbcHighBySite ?? null);
-        var peerTbcBlindspotBySite = @json($peerTbcBlindspotBySite ?? null);
-        var peerGoldenRulesBySite = @json($peerGoldenRulesBySite ?? null);
-        var peerAreaNonKritisBySite = @json($peerAreaNonKritisBySite ?? null);
-        var peerAreaKritisBySite = @json($peerAreaKritisBySite ?? null);
-        function peerMetricEvalFromJson(json, site, defaultBar) {
-          if (!json || !json.weeks || !json.bySite) return null;
-          var weeks = json.weeks;
-          var bySite = json.bySite;
-          var values = [];
-          var i;
-          var wk;
-          var sum;
-          var row;
-          if (site === '__all') {
-            for (i = 0; i < weeks.length; i++) {
-              wk = weeks[i];
-              sum = 0;
-              Object.keys(bySite).forEach(function (s) {
-                row = bySite[s];
-                if (row && row[wk] != null) sum += Number(row[wk]) || 0;
-              });
-              values.push(sum);
-            }
-          } else {
-            row = bySite[site] || {};
-            for (i = 0; i < weeks.length; i++) {
-              wk = weeks[i];
-              values.push(Number(row[wk]) || 0);
-            }
-          }
-          return {
-            weeks: weeks,
-            label: json.parameter || '',
-            bar: defaultBar || '#64748b',
-            values: values,
-            decimals: 0,
-          };
-        }
-        function peerHazardWowHtml(values, weeks) {
-          if (!values || values.length < 2) {
-            return '<p class="text-on-surface-variant text-[11px] font-medium">—</p>';
-          }
-          var last = Number(values[values.length - 1]) || 0;
-          var prev = Number(values[values.length - 2]) || 0;
-          var wkPrev = weeks[weeks.length - 2] || 'W14';
-          var wkLast = weeks[weeks.length - 1] || 'W15';
-          if (prev <= 0.0001) {
-            return '<p class="text-on-surface-variant text-[11px] font-medium">—</p>';
-          }
-          var pct = ((last - prev) / prev) * 100;
-          var down = pct <= 0;
-          var icon = down ? 'trending_down' : 'trending_up';
-          var color = down ? 'text-[#059669]' : 'text-error';
-          var sign = pct >= 0 ? '+' : '';
-          return (
-            '<p class="text-[11px] font-bold flex items-center gap-1 ' +
-            color +
-            '"><span class="material-symbols-outlined text-xs" data-icon="' +
-            icon +
-            '">' +
-            icon +
-            '</span> WoW ' +
-            sign +
-            pct.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) +
-            '% (' +
-            wkPrev +
-            ' → ' +
-            wkLast +
-            ')</p>'
-          );
-        }
-        function renderPeerHazardMiniBarHtml(evalObj, compact) {
-          var weeks = evalObj.weeks || [];
-          var vals = evalObj.values || [];
-          var bar = evalObj.bar || '#d97706';
-          var dec = evalObj.decimals != null ? Number(evalObj.decimals) : 0;
-          if (!vals.length) return '';
-          var maxV = Math.max.apply(
-            null,
-            vals.map(function (v) {
-              return Number(v) || 0;
-            })
-          );
-          if (maxV <= 0) maxV = 1;
-          var isCompact = !!compact;
-          var hChart = isCompact ? 'h-20 sm:h-24' : 'h-24 sm:h-28';
-          var fsVal = isCompact ? 'text-[7px] sm:text-[8px]' : 'text-[8px] sm:text-[9px]';
-          var fsAxis = isCompact ? 'text-[7px] sm:text-[8px]' : 'text-[8px] sm:text-[9px]';
-          var mtWrap = isCompact ? 'mt-2' : 'mt-1.5';
-          var barCols = [];
-          var vi;
-          for (vi = 0; vi < vals.length; vi++) {
-            var val = Number(vals[vi]) || 0;
-            var pct = Math.min(100, Math.max(0, Math.round((val / maxV) * 100)));
-            var fmt = val.toLocaleString('id-ID', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-            var wkLbl = weeks[vi] || 'W' + (vi + 1);
-            var tip = wkLbl + ' — ' + fmt;
-            barCols.push(
-              '<div class="peer-chart-bar-col group relative flex h-full min-h-0 min-w-[2.25rem] flex-1 basis-0 flex-col justify-end rounded-t-lg border-x border-t border-outline-variant/10 bg-[#f8fafc]" title="' +
-              String(tip).replace(/"/g, '&quot;') +
-              '">' +
-              '<div class="relative w-full" style="height: ' +
-              pct +
-              '%">' +
-              '<span class="absolute -top-5 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap font-semibold tabular-nums text-on-surface ' +
-              fsVal +
-              '">' +
-              fmt +
-              '</span>' +
-              '<div class="absolute inset-0 flex flex-col justify-end overflow-hidden rounded-t-md shadow-inner ring-1 ring-black/10">' +
-              '<div class="min-h-[2px] w-full shrink-0 transition-opacity group-hover:opacity-95" style="height: 100%; background-color: ' +
-              bar +
-              '"></div></div></div></div>'
-            );
-          }
-          var axis = [];
-          for (vi = 0; vi < vals.length; vi++) {
-            axis.push(
-              '<span class="peer-chart-axis-tick min-w-[2rem] flex-1 basis-0 text-center leading-tight">' +
-              (weeks[vi] || 'W' + (vi + 1)) +
-              '</span>'
-            );
-          }
-          return (
-            '<div class="' +
-            mtWrap +
-            ' w-full">' +
-            '<div class="mb-1.5 flex items-start gap-2">' +
-            '<span class="mt-0.5 h-2 w-2 shrink-0 rounded-full shadow-sm ring-2 ring-white" style="background-color: ' +
-            bar +
-            '"></span>' +
-            '<p class="min-w-0 flex-1 text-left text-[10px] font-semibold leading-snug text-slate-800">Trend Last 4 Weeks</p></div>' +
-            '<div class="peer-chart-scroll w-full overflow-x-auto">' +
-            '<div class="peer-chart-scroll-inner w-max min-w-full px-0.5">' +
-            '<div class="relative ' +
-            hChart +
-            '">' +
-            '<div class="peer-chart-bars relative z-10 flex h-full w-full items-stretch gap-1 sm:gap-2">' +
-            barCols.join('') +
-            '</div></div>' +
-            '<div class="peer-chart-axis-labels mt-1.5 flex w-full min-w-0 gap-1 sm:gap-2 font-bold uppercase tracking-wider text-on-surface-variant sm:tracking-widest ' +
-            fsAxis +
-            '">' +
-            axis.join('') +
-            '</div></div></div></div>'
-          );
-        }
-        function applyPeerHazardSiteFilter(site) {
-          if (!peerHazardReportingBySite) return;
-          var ev = peerMetricEvalFromJson(peerHazardReportingBySite, site || '__all', '#d97706');
-          if (!ev) return;
-          var host = document.getElementById('peer-kpi-hazard-mini-bar-host');
-          var totalEl = document.getElementById('peer-kpi-hazard-total');
-          var trendEl = document.getElementById('peer-kpi-hazard-trend');
-          var vals = ev.values || [];
-          var last = vals.length ? Number(vals[vals.length - 1]) : 0;
-          if (totalEl) totalEl.textContent = Math.round(last).toLocaleString('id-ID');
-          if (trendEl) trendEl.innerHTML = peerHazardWowHtml(vals, ev.weeks || []);
-          if (host) host.innerHTML = renderPeerHazardMiniBarHtml(ev);
-          try {
-            var u = new URL(window.location.href);
-            if (site && site !== '__all') u.searchParams.set('hazard_site', site);
-            else u.searchParams.delete('hazard_site');
-            window.history.replaceState({}, '', u.toString());
-          } catch (e) {}
-        }
-        function applyPeerTbcHighSiteFilter(site) {
-          if (!peerTbcHighBySite) return;
-          var ev = peerMetricEvalFromJson(peerTbcHighBySite, site || '__all', '#3952bc');
-          if (!ev) return;
-          var host = document.getElementById('peer-kpi-tbc-mini-bar-host');
-          var totalEl = document.getElementById('peer-kpi-tbc-high-total');
-          var trendEl = document.getElementById('peer-kpi-tbc-high-trend');
-          var vals = ev.values || [];
-          var last = vals.length ? Number(vals[vals.length - 1]) : 0;
-          if (totalEl) totalEl.textContent = Math.round(last).toLocaleString('id-ID');
-          if (trendEl) trendEl.innerHTML = peerHazardWowHtml(vals, ev.weeks || []);
-          if (host) host.innerHTML = renderPeerHazardMiniBarHtml(ev);
-        }
-        function applyPeerTbcBlindspotSiteFilter(site) {
-          if (!peerTbcBlindspotBySite) return;
-          var ev = peerMetricEvalFromJson(peerTbcBlindspotBySite, site || '__all', '#16a34a');
-          if (!ev) return;
-          var host = document.getElementById('peer-kpi-blindspot-mini-bar-host');
-          var totalEl = document.getElementById('peer-kpi-blindspot-total');
-          var trendEl = document.getElementById('peer-kpi-blindspot-trend');
-          var vals = ev.values || [];
-          var last = vals.length ? Number(vals[vals.length - 1]) : 0;
-          if (totalEl) totalEl.textContent = Math.round(last).toLocaleString('id-ID');
-          if (trendEl) trendEl.innerHTML = peerHazardWowHtml(vals, ev.weeks || []);
-          if (host) host.innerHTML = renderPeerHazardMiniBarHtml(ev);
-        }
-        function buildPeerGoldenRulesChartInnerHtml(weeks, vals, barColor) {
-          var chartPx = 104;
-          var barRed = barColor != null && String(barColor) !== '' ? String(barColor) : '#c8102e';
-          var maxV = Math.max(
-            1e-9,
-            Math.max.apply(
-              null,
-              vals.map(function (v) {
-                return Number(v) || 0;
-              })
-            )
-          );
-          var gridLines = '';
-          var g;
-          for (g = 0; g < 5; g++) {
-            gridLines += '<div class="h-px w-full bg-neutral-300/80"></div>';
-          }
-          var gridHtml =
-            '<div class="pointer-events-none absolute inset-x-0 bottom-0 top-6 z-0 flex flex-col justify-between opacity-[0.45]" style="height:' +
-            chartPx +
-            'px" aria-hidden="true">' +
-            gridLines +
-            '</div>';
-          var barsInner = '';
-          var vi;
-          for (vi = 0; vi < vals.length; vi++) {
-            var v = Number(vals[vi]) || 0;
-            var ratio = Math.min(1, Math.max(0, v / maxV));
-            var barPct = ratio * 100;
-            var lbl =
-              Math.abs(v - Math.round(v)) < 0.0001 ? String(Math.round(v)) : String(v);
-            barsInner +=
-              '<div class="flex h-full min-h-0 min-w-0 flex-1 flex-col items-center">' +
-              '<span class="mb-1 shrink-0 text-center text-[11px] font-semibold tabular-nums text-neutral-900">' +
-              lbl +
-              '</span>' +
-              '<div class="flex min-h-0 w-full flex-1 flex-col justify-end">' +
-              '<div class="w-full rounded-none" style="height:' +
-              barPct +
-              '%;min-height:' +
-              (v > 0 ? '2px' : '0') +
-              ';background-color:' +
-              barRed +
-              ';"></div></div></div>';
-          }
-          var barsHtml =
-            '<div class="relative z-10 flex items-end gap-1.5 sm:gap-2 pt-5" style="height:' +
-            chartPx +
-            'px">' +
-            barsInner +
-            '</div>';
-          var labInner = '';
-          for (vi = 0; vi < vals.length; vi++) {
-            var wk = weeks[vi] != null ? String(weeks[vi]) : 'W' + (11 + vi);
-            labInner +=
-              '<span class="min-w-0 flex-1 text-center text-[9px] font-semibold uppercase tracking-wide text-neutral-600">' +
-              wk +
-              '</span>';
-          }
-          var labelsHtml = '<div class="mt-2 flex w-full gap-1.5 sm:gap-2">' + labInner + '</div>';
-          return gridHtml + barsHtml + labelsHtml;
-        }
-        function applyPeerGoldenRulesSiteFilter(site) {
-          if (!peerGoldenRulesBySite) return;
-          var ev = peerMetricEvalFromJson(peerGoldenRulesBySite, site || '__all', '#c8102e');
-          if (!ev) return;
-          var vals = ev.values || [];
-          var weeks = ev.weeks || [];
-          var sum = 0;
-          vals.forEach(function (v) {
-            sum += Number(v) || 0;
-          });
-          var last = vals.length ? Number(vals[vals.length - 1]) : 0;
-          var totalStr = Math.round(sum).toLocaleString('id-ID');
-          var validStr = Math.round(last).toLocaleString('id-ID');
-          document.querySelectorAll('.peer-kpi-hr-stack-total[data-gr-json="1"]').forEach(function (el) {
-            el.textContent = totalStr;
-          });
-          document.querySelectorAll('.peer-gr-valid-gr-display[data-gr-json="1"]').forEach(function (el) {
-            el.textContent = validStr + ' Valid GR';
-          });
-          var inner = buildPeerGoldenRulesChartInnerHtml(weeks, vals, '#c8102e');
-          document.querySelectorAll('.peer-gr-l4w-chart-root').forEach(function (root) {
-            root.innerHTML = inner;
-          });
-          var grCardTotal = document.getElementById('peer-kpi-gr-total');
-          var grCardTrend = document.getElementById('peer-kpi-gr-trend');
-          var grCardMiniHost = document.getElementById('peer-kpi-gr-compliance-mini-bar-host');
-          if (grCardTotal) grCardTotal.textContent = totalStr;
-          if (grCardTrend) grCardTrend.innerHTML = peerHazardWowHtml(vals, weeks);
-          if (grCardMiniHost) grCardMiniHost.innerHTML = renderPeerHazardMiniBarHtml(ev, true);
-        }
-        function applyPeerAreaNonKritisSiteFilter(site) {
-          if (!peerAreaNonKritisBySite) return;
-          var ev = peerMetricEvalFromJson(peerAreaNonKritisBySite, site || '__all', '#ea580c');
-          if (!ev) return;
-          var vals = ev.values || [];
-          var weeks = ev.weeks || [];
-          var sum = 0;
-          vals.forEach(function (v) {
-            sum += Number(v) || 0;
-          });
-          var last = vals.length ? Number(vals[vals.length - 1]) : 0;
-          var totalStr = Math.round(sum).toLocaleString('id-ID');
-          var validStr = Math.round(last).toLocaleString('id-ID');
-          document.querySelectorAll('.peer-kpi-hr-stack-total[data-ank-json="1"]').forEach(function (el) {
-            el.textContent = totalStr;
-          });
-          document.querySelectorAll('.peer-gr-valid-gr-display[data-ank-json="1"]').forEach(function (el) {
-            el.textContent = validStr + ' minggu terakhir';
-          });
-          var innerAnk = buildPeerGoldenRulesChartInnerHtml(weeks, vals, '#ea580c');
-          document.querySelectorAll('.peer-ank-l4w-chart-root').forEach(function (root) {
-            root.innerHTML = innerAnk;
-          });
-        }
-        function applyPeerAreaKritisSiteFilter(site) {
-          if (!peerAreaKritisBySite) return;
-          var ev = peerMetricEvalFromJson(peerAreaKritisBySite, site || '__all', '#dc2626');
-          if (!ev) return;
-          var vals = ev.values || [];
-          var weeks = ev.weeks || [];
-          var sum = 0;
-          vals.forEach(function (v) {
-            sum += Number(v) || 0;
-          });
-          var last = vals.length ? Number(vals[vals.length - 1]) : 0;
-          var totalStr = Math.round(sum).toLocaleString('id-ID');
-          var validStr = Math.round(last).toLocaleString('id-ID');
-          document.querySelectorAll('.peer-kpi-hr-stack-total[data-kritis-json="1"]').forEach(function (el) {
-            el.textContent = totalStr;
-          });
-          document.querySelectorAll('.peer-gr-valid-gr-display[data-kritis-json="1"]').forEach(function (el) {
-            el.textContent = validStr + ' minggu terakhir';
-          });
-          var innerKr = buildPeerGoldenRulesChartInnerHtml(weeks, vals, '#dc2626');
-          document.querySelectorAll('.peer-kritis-l4w-chart-root').forEach(function (root) {
-            root.innerHTML = innerKr;
-          });
-        }
-        var peerHazardSiteSelect = document.getElementById('peer-hazard-site-filter');
-        if (
-          peerHazardSiteSelect &&
-          (peerHazardReportingBySite ||
-            peerTbcHighBySite ||
-            peerTbcBlindspotBySite ||
-            peerGoldenRulesBySite ||
-            peerAreaNonKritisBySite ||
-            peerAreaKritisBySite)
-        ) {
-          peerHazardSiteSelect.addEventListener('change', function () {
-            var v = peerHazardSiteSelect.value;
-            applyPeerHazardSiteFilter(v);
-            applyPeerTbcHighSiteFilter(v);
-            applyPeerTbcBlindspotSiteFilter(v);
-            applyPeerGoldenRulesSiteFilter(v);
-            applyPeerAreaNonKritisSiteFilter(v);
-            applyPeerAreaKritisSiteFilter(v);
-          });
-        }
-        var peerDeviationChartInstances = [];
-
-        function destroyPeerDeviationModalCharts() {
-          peerDeviationChartInstances.forEach(function (ch) {
-            try {
-              ch.destroy();
-            } catch (e) {}
-          });
-          peerDeviationChartInstances = [];
-        }
-        function fillColorFromLineColor(border) {
-          if (!border) return 'rgba(57, 82, 188, 0.14)';
-          var b = String(border).trim();
-          if (b.charAt(0) === '#' && b.length >= 7) {
-            var r = parseInt(b.slice(1, 3), 16);
-            var g = parseInt(b.slice(3, 5), 16);
-            var bl = parseInt(b.slice(5, 7), 16);
-            return 'rgba(' + r + ',' + g + ',' + bl + ',0.14)';
-          }
-          if (b.indexOf('hsl') === 0) return 'rgba(148, 163, 184, 0.2)';
-          return 'rgba(57, 82, 188, 0.14)';
-        }
-        function lineColorForDeviation(canvasEl, fallback) {
-          var c = canvasEl && canvasEl.getAttribute('data-line-color');
-          if (c) return c;
-          return fallback || '#2563eb';
-        }
-        function createPeerDeviationHrBarChart(canvas, labels, data, barColor) {
-          if (typeof Chart === 'undefined' || !canvas) return null;
-          var bc = barColor || '#3952bc';
-          if (bc === '#DEE5EF' || bc === '#dee5ef' || bc === '#e2e2e2') bc = '#3952bc';
-          var ctx = canvas.getContext('2d');
-          if (!ctx) return null;
-          var lbls = Array.isArray(labels) ? labels : [];
-          var pts = Array.isArray(data) ? data : [];
-          if (lbls.length !== pts.length && pts.length > 0) {
-            while (lbls.length < pts.length) lbls.push(String(lbls.length + 1));
-            lbls = lbls.slice(0, pts.length);
-          }
-          try {
-            return new Chart(ctx, {
-              type: 'bar',
-              data: {
-                labels: lbls,
-                datasets: [
-                  {
-                    label: 'Nilai',
-                    data: pts,
-                    backgroundColor: bc,
-                    borderColor: bc,
-                    borderWidth: 0,
-                    borderRadius: 6,
-                    borderSkipped: false,
-                  },
-                ],
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                layout: { padding: { top: 10, right: 6, bottom: 4, left: 6 } },
-                interaction: { intersect: false, mode: 'index' },
-                plugins: {
-                  legend: { display: false },
-                  tooltip: {
-                    callbacks: {
-                      label: function (ctx) {
-                        var v =
-                          ctx.parsed && ctx.parsed.y != null && !isNaN(ctx.parsed.y)
-                            ? ctx.parsed.y
-                            : ctx.raw;
-                        if (v == null || v === '') return '';
-                        var n = Number(v);
-                        if (isNaN(n)) return String(v);
-                        var isInt = Math.abs(n - Math.round(n)) < 1e-9;
-                        return isInt
-                          ? n.toLocaleString('id-ID')
-                          : n.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
-                      },
-                    },
-                  },
-                },
-                scales: {
-                  x: {
-                    offset: true,
-                    grid: { display: false, drawBorder: false },
-                    ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: false },
-                  },
-                  y: {
-                    beginAtZero: true,
-                    grid: { display: false, drawBorder: false, lineWidth: 0 },
-                    ticks: { display: false },
-                    border: { display: false },
-                  },
-                },
-              },
-            });
-          } catch (err) {
-            return null;
-          }
-        }
-        function createPeerDeviationLineChart(canvas, labels, data, borderColor) {
-          if (typeof Chart === 'undefined' || !canvas) return null;
-          var bc = borderColor || '#2563eb';
-          var ctx = canvas.getContext('2d');
-          if (!ctx) return null;
-          var lbls = Array.isArray(labels) ? labels : [];
-          var pts = Array.isArray(data) ? data : [];
-          if (lbls.length !== pts.length && pts.length > 0) {
-            while (lbls.length < pts.length) lbls.push(String(lbls.length + 1));
-            lbls = lbls.slice(0, pts.length);
-          }
-          try {
-            return new Chart(ctx, {
-              type: 'line',
-              data: {
-                labels: lbls,
-                datasets: [
-                  {
-                    label: 'Nilai',
-                    data: pts,
-                    borderColor: bc,
-                    backgroundColor: fillColorFromLineColor(bc),
-                    fill: true,
-                    tension: 0.42,
-                    borderWidth: 2.25,
-                    pointRadius: 4,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: bc,
-                    pointBorderWidth: 2,
-                  },
-                ],
-              },
-              options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                layout: { padding: { top: 8, right: 4, bottom: 4, left: 4 } },
-                interaction: { intersect: false, mode: 'index' },
-                plugins: {
-                  legend: { display: false },
-                  tooltip: {
-                    callbacks: {
-                      label: function (ctx) {
-                        var v =
-                          ctx.parsed && ctx.parsed.y != null && !isNaN(ctx.parsed.y)
-                            ? ctx.parsed.y
-                            : ctx.raw;
-                        if (v == null || v === '') return '';
-                        var n = Number(v);
-                        if (isNaN(n)) return String(v);
-                        var isInt = Math.abs(n - Math.round(n)) < 1e-9;
-                        return isInt
-                          ? n.toLocaleString('id-ID')
-                          : n.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
-                      },
-                    },
-                  },
-                },
-                scales: {
-                  x: {
-                    offset: true,
-                    grid: { display: false, drawBorder: false },
-                    ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: false },
-                  },
-                  y: {
-                    beginAtZero: true,
-                    grid: { display: false, drawBorder: false, lineWidth: 0 },
-                    ticks: { display: false },
-                    border: { display: false },
-                  },
-                },
-              },
-            });
-          } catch (err) {
-            return null;
-          }
-        }
-        function resizePeerDeviationModalCharts() {
-          peerDeviationChartInstances.forEach(function (ch) {
-            try {
-              if (ch && typeof ch.resize === 'function') ch.resize();
-            } catch (e) {}
-          });
-        }
-        function initPeerDeviationModalCharts() {
-          if (typeof Chart === 'undefined') return;
-          destroyPeerDeviationModalCharts();
-          var modal = document.getElementById('peer-deviation-category-modal');
-          if (!modal) return;
-          var hr = document.getElementById('peer-deviation-modal-hr-chart');
-          if (hr) {
-            var hv = [];
-            var hw = [];
-            try {
-              hv = JSON.parse(hr.getAttribute('data-hr-values') || '[]');
-              hw = JSON.parse(hr.getAttribute('data-hr-weeks') || '[]');
-            } catch (e) {
-              hv = [];
-              hw = [];
-            }
-            var hc = hr.getAttribute('data-hr-color') || '#3952bc';
-            var hch = createPeerDeviationHrBarChart(hr, hw, hv, hc);
-            if (hch) peerDeviationChartInstances.push(hch);
-          }
-          modal.querySelectorAll('canvas.peer-deviation-cat-chart').forEach(function (el) {
-            var vals = [];
-            var wks = [];
-            try {
-              vals = JSON.parse(el.getAttribute('data-values') || '[]');
-              wks = JSON.parse(el.getAttribute('data-weeks') || '[]');
-            } catch (e) {
-              vals = [];
-              wks = [];
-            }
-            var lc = lineColorForDeviation(el, '#2563eb');
-            var cch = createPeerDeviationLineChart(el, wks, vals, lc);
-            if (cch) peerDeviationChartInstances.push(cch);
-          });
-          resizePeerDeviationModalCharts();
-          requestAnimationFrame(function () {
-            resizePeerDeviationModalCharts();
-          });
-        }
 
         function selYearClass(on) {
           return on
@@ -2576,95 +1677,6 @@
                 '<p class="text-on-surface-variant text-[11px] font-medium">' +
                 label.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
                 '</p>';
-            }
-          }
-          var hrStack = document.getElementById('peer-kpi-hazard-matrix-column');
-          if (hrStack) {
-            var hrTotals = hrStack.querySelectorAll('.peer-kpi-hr-stack-total');
-            var hrTrends = hrStack.querySelectorAll('.peer-kpi-hr-stack-trend');
-            var numStr = Number(kpi.total_cases != null ? kpi.total_cases : 0).toLocaleString('id-ID');
-            for (var hi = 0; hi < hrTotals.length; hi++) {
-              if (hrTotals[hi].getAttribute('data-gr-json') === '1') continue;
-              hrTotals[hi].textContent = numStr;
-            }
-            var pctH = kpi.total_cases_trend_pct;
-            var labelH = kpi.total_cases_trend_label != null ? String(kpi.total_cases_trend_label) : '—';
-            var trendInnerH = '';
-            if (pctH !== null && pctH !== undefined && !isNaN(Number(pctH))) {
-              var nH = Number(pctH);
-              var downH = nH <= 0;
-              var iconH = downH ? 'trending_down' : 'trending_up';
-              var colorH = downH ? 'text-[#059669]' : 'text-error';
-              trendInnerH =
-                '<p class="text-[11px] font-bold flex items-center gap-1 ' +
-                colorH +
-                '"><span class="material-symbols-outlined text-xs" data-icon="' +
-                iconH +
-                '">' +
-                iconH +
-                '</span>' +
-                labelH.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
-                '</p>';
-            } else {
-              trendInnerH =
-                '<p class="text-on-surface-variant text-[11px] font-medium">' +
-                labelH.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
-                '</p>';
-            }
-            for (var hj = 0; hj < hrTrends.length; hj++) {
-              hrTrends[hj].innerHTML = trendInnerH;
-            }
-            var briefTotalEl = document.getElementById('peer-kpi-brief-total');
-            var briefGrEl = document.getElementById('peer-kpi-brief-valid-gr');
-            var briefCompEl = document.getElementById('peer-kpi-brief-completion');
-            var briefTrendEl = document.getElementById('peer-kpi-brief-trend');
-            if (briefTotalEl) briefTotalEl.textContent = numStr;
-            if (briefGrEl) {
-              briefGrEl.textContent = Number(
-                kpi.peer_pressure_compliance_comply != null ? kpi.peer_pressure_compliance_comply : 0
-              ).toLocaleString('id-ID');
-            }
-            if (briefCompEl) {
-              var crB = Number(kpi.completion_rate != null ? kpi.completion_rate : 0);
-              briefCompEl.textContent =
-                (isNaN(crB) ? 0 : crB).toLocaleString('id-ID', {
-                  minimumFractionDigits: 1,
-                  maximumFractionDigits: 1,
-                }) + '%';
-            }
-            if (briefTrendEl) briefTrendEl.innerHTML = trendInnerH;
-          }
-          var tbcCardEl = document.getElementById('peer-kpi-tbc-high-card');
-          if (tbcCardEl) {
-            var tbcTot = tbcCardEl.querySelector('.peer-kpi-tbc-high-total');
-            var tbcTrend = tbcCardEl.querySelector('.peer-kpi-tbc-high-trend');
-            if (tbcTot && tbcTot.getAttribute('data-json-driven') !== '1') {
-              tbcTot.textContent = Number(kpi.total_cases != null ? kpi.total_cases : 0).toLocaleString('id-ID');
-            }
-            if (tbcTrend && tbcTrend.getAttribute('data-json-driven') !== '1') {
-              var pct2 = kpi.total_cases_trend_pct;
-              var label2 = kpi.total_cases_trend_label != null ? String(kpi.total_cases_trend_label) : '—';
-              if (pct2 !== null && pct2 !== undefined && !isNaN(Number(pct2))) {
-                var n2 = Number(pct2);
-                var down2 = n2 <= 0;
-                var icon2 = down2 ? 'trending_down' : 'trending_up';
-                var color2 = down2 ? 'text-[#059669]' : 'text-error';
-                tbcTrend.innerHTML =
-                  '<p class="text-[11px] font-bold flex items-center gap-1 ' +
-                  color2 +
-                  '"><span class="material-symbols-outlined text-xs" data-icon="' +
-                  icon2 +
-                  '">' +
-                  icon2 +
-                  '</span>' +
-                  label2.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
-                  '</p>';
-              } else {
-                tbcTrend.innerHTML =
-                  '<p class="text-on-surface-variant text-[11px] font-medium">' +
-                  label2.replace(/</g, '&lt;').replace(/>/g, '&gt;') +
-                  '</p>';
-              }
             }
           }
           if (compEl) {
@@ -2938,104 +1950,6 @@
             '<div class="max-h-80 space-y-2.5 overflow-y-auto overflow-x-hidden pr-1 [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">' +
             profHtml +
             '</div></div>';
-          fillDeviationCategoryModal(dev);
-        }
-        function fnv1aUtf8Peer(str) {
-          var bytes = new TextEncoder().encode(str);
-          var h = 2166136261 >>> 0;
-          for (var i = 0; i < bytes.length; i++) {
-            h = Math.imul(h ^ bytes[i], 16777619) >>> 0;
-          }
-          return h >>> 0;
-        }
-        function weeklyValuesFromJumlah(jumlah, name) {
-          var wks = peerDeviationSparkWeeks && peerDeviationSparkWeeks.length ? peerDeviationSparkWeeks : ['W11', 'W12', 'W13', 'W14'];
-          var n = wks.length;
-          var out = [];
-          var i;
-          if (jumlah <= 0) {
-            for (i = 0; i < n; i++) out.push(0);
-            return out;
-          }
-          var h = fnv1aUtf8Peer(name);
-          var weights = [];
-          var sumW = 0;
-          for (i = 0; i < n; i++) {
-            var w = 0.12 + (((h >> (i * 7)) & 0xff) / 255) * 0.88;
-            weights.push(w);
-            sumW += w;
-          }
-          var acc = 0;
-          for (i = 0; i < n - 1; i++) {
-            var v = Math.max(0, Math.round((jumlah * weights[i]) / sumW));
-            out.push(v);
-            acc += v;
-          }
-          out.push(Math.max(0, jumlah - acc));
-          return out;
-        }
-        function fillDeviationCategoryModal(dev) {
-          if (!dev || typeof dev !== 'object') return;
-          destroyPeerDeviationModalCharts();
-          var catRoot = document.getElementById('peer-deviation-modal-categories');
-          var totalFoot = document.getElementById('peer-deviation-modal-total');
-          var kpiBig = document.querySelector('#peer-kpi-deviation-card .font-headline.font-extrabold.text-4xl');
-          var cats = dev.categories || [];
-          var apiTotal = parseInt(String(dev.total != null ? dev.total : 0), 10) || 0;
-          if (kpiBig && kpiBig.getAttribute('data-json-driven') !== '1') {
-            kpiBig.textContent = apiTotal.toLocaleString('id-ID');
-          }
-          var sum = 0;
-          var wks =
-            typeof peerDeviationSparkWeeks !== 'undefined' && peerDeviationSparkWeeks && peerDeviationSparkWeeks.length
-              ? peerDeviationSparkWeeks
-              : ['W11', 'W12', 'W13', 'W14'];
-          var rows = cats
-            .map(function (row, idx) {
-              var name = row.kategori_deviasi != null ? String(row.kategori_deviasi) : '—';
-              var j = parseInt(String(row.jumlah != null ? row.jumlah : 0), 10) || 0;
-              sum += j;
-              var col = row.color != null ? String(row.color) : 'hsl(215 14% 62%)';
-              col = col.replace(/[<>"']/g, '');
-              var vals = weeklyValuesFromJumlah(j, name);
-              return (
-                '<div class="flex flex-col gap-2.5 border-b border-outline-variant/10 bg-white px-3 py-3 last:border-b-0">' +
-                '<div class="min-w-0 w-full">' +
-                '<span class="inline-flex max-w-full items-start gap-1 rounded px-2 py-1.5 text-left text-[11px] font-bold leading-snug text-white shadow-sm sm:text-xs" style="background:' +
-                col +
-                ';text-shadow:0 1px 2px rgba(0,0,0,.35)">' +
-                '<span class="shrink-0 opacity-90">' +
-                (idx + 1) +
-                '.</span>' +
-                '<span class="min-w-0 break-words">' +
-                escHtml(name) +
-                '</span></span>' +
-                '<p class="mt-1 text-[10px] font-semibold tabular-nums text-on-surface-variant sm:text-[11px]">Jumlah: ' +
-                j.toLocaleString('id-ID') +
-                '</p></div>' +
-                '<div class="w-full border-t border-dashed border-outline-variant/15 pt-2.5">' +
-                '<div class="relative h-36 w-full min-h-[9rem]">' +
-                '<canvas class="peer-deviation-cat-chart max-h-full w-full" data-values=\'' +
-                JSON.stringify(vals) +
-                '\' data-weeks=\'' +
-                JSON.stringify(wks) +
-                '\' data-line-color="' +
-                escAttr(col) +
-                '"></canvas></div></div></div>'
-              );
-            })
-            .join('');
-          if (!rows) {
-            rows =
-              '<div class="px-3 py-8 text-center text-[11px] text-on-surface-variant">Belum ada data kategori deviasi.</div>';
-          }
-          if (catRoot) catRoot.innerHTML = rows;
-          var footerVal = sum > 0 ? sum : apiTotal;
-          if (totalFoot) totalFoot.textContent = footerVal.toLocaleString('id-ID');
-          setTimeout(function () {
-            initPeerDeviationModalCharts();
-            resizePeerDeviationModalCharts();
-          }, 0);
         }
         function escHtml(s) {
           if (s == null) return '';
@@ -3753,261 +2667,6 @@
         if (openBtn) openBtn.addEventListener('click', openWeeklyModal);
         if (backdrop) backdrop.addEventListener('click', closeWeeklyModal);
         if (cancelBtn) cancelBtn.addEventListener('click', closeWeeklyModal);
-        var devModal = document.getElementById('peer-deviation-category-modal');
-        var devCard = document.getElementById('peer-kpi-deviation-card');
-        var devCardStack = document.getElementById('peer-kpi-deviation-card-stack');
-        var hazardReportingCard = document.getElementById('peer-kpi-hazard-reporting-card');
-        var devClose = document.getElementById('peer-deviation-category-close');
-        var devBackdrop = devModal ? devModal.querySelector('.peer-deviation-category-backdrop') : null;
-        function openDeviationModal() {
-          if (!devModal) return;
-          devModal.classList.remove('hidden');
-          devModal.setAttribute('aria-hidden', 'false');
-          if (devCard) devCard.setAttribute('aria-expanded', 'true');
-          if (devCardStack) devCardStack.setAttribute('aria-expanded', 'true');
-          if (hazardReportingCard) hazardReportingCard.setAttribute('aria-expanded', 'true');
-          setTimeout(function () {
-            initPeerDeviationModalCharts();
-            resizePeerDeviationModalCharts();
-            requestAnimationFrame(function () {
-              resizePeerDeviationModalCharts();
-              setTimeout(resizePeerDeviationModalCharts, 80);
-            });
-          }, 120);
-        }
-        function closeDeviationModal() {
-          if (!devModal) return;
-          destroyPeerDeviationModalCharts();
-          devModal.classList.add('hidden');
-          devModal.setAttribute('aria-hidden', 'true');
-          if (devCard) devCard.setAttribute('aria-expanded', 'false');
-          if (devCardStack) devCardStack.setAttribute('aria-expanded', 'false');
-          if (hazardReportingCard) hazardReportingCard.setAttribute('aria-expanded', 'false');
-        }
-        if (devCard) devCard.addEventListener('click', openDeviationModal);
-        if (devCardStack) devCardStack.addEventListener('click', openDeviationModal);
-        if (hazardReportingCard) hazardReportingCard.addEventListener('click', openDeviationModal);
-        if (devClose) devClose.addEventListener('click', closeDeviationModal);
-        if (devBackdrop) devBackdrop.addEventListener('click', closeDeviationModal);
-        var tbcGeneralModal = document.getElementById('peer-tbc-general-modal');
-        var tbcHighCard = document.getElementById('peer-kpi-tbc-high-card');
-        var tbcGeneralClose = document.getElementById('peer-tbc-general-close');
-        var tbcGeneralBackdrop = tbcGeneralModal ? tbcGeneralModal.querySelector('.peer-tbc-general-backdrop') : null;
-        var peerTbcGeneralDummyCards = [
-          {
-            id: null,
-            title_line: 'Temuan potensi bahaya area tangki — verifikasi SOP',
-            header_color: '',
-            image_url: '',
-            date_label: '12 Mar 2026',
-            description: 'Inspeksi rutin menemukan akses terbatas tidak terkunci. Ditindaklanjuti briefing singkat ke shift.',
-            lokasi: 'Area produksi A',
-            detail_lok: 'Gates utara',
-            pelapor: 'Tim SHE',
-            metode_lapor: 'Walkthrough',
-            status: 'open',
-            status_label: 'Terbuka'
-          },
-          {
-            id: null,
-            title_line: 'Temuan potensi bahaya area tangki — verifikasi SOP',
-            header_color: '',
-            image_url: '',
-            date_label: '12 Mar 2026',
-            description: 'Inspeksi rutin menemukan akses terbatas tidak terkunci. Ditindaklanjuti briefing singkat ke shift.',
-            lokasi: 'Area produksi A',
-            detail_lok: 'Gates utara',
-            pelapor: 'Tim SHE',
-            metode_lapor: 'Walkthrough',
-            status: 'open',
-            status_label: 'Terbuka'
-          },
-          {
-            id: null,
-            title_line: 'Temuan potensi bahaya area tangki — verifikasi SOP',
-            header_color: '',
-            image_url: '',
-            date_label: '12 Mar 2026',
-            description: 'Inspeksi rutin menemukan akses terbatas tidak terkunci. Ditindaklanjuti briefing singkat ke shift.',
-            lokasi: 'Area produksi A',
-            detail_lok: 'Gates utara',
-            pelapor: 'Tim SHE',
-            metode_lapor: 'Walkthrough',
-            status: 'open',
-            status_label: 'Terbuka'
-          },
-          {
-            id: null,
-            title_line: 'Temuan potensi bahaya area tangki — verifikasi SOP',
-            header_color: '',
-            image_url: '',
-            date_label: '12 Mar 2026',
-            description: 'Inspeksi rutin menemukan akses terbatas tidak terkunci. Ditindaklanjuti briefing singkat ke shift.',
-            lokasi: 'Area produksi A',
-            detail_lok: 'Gates utara',
-            pelapor: 'Tim SHE',
-            metode_lapor: 'Walkthrough',
-            status: 'open',
-            status_label: 'Terbuka'
-          },
-          {
-            id: null,
-            title_line: 'APAR kedaluwarsa — penggantian terjadwal',
-            header_color: '',
-            image_url: '',
-            date_label: '08 Mar 2026',
-            description: 'Pengecekan bulanan; unit diganti sesuai jadwal maintenance.',
-            lokasi: 'Gudang B',
-            detail_lok: 'Rak C-02',
-            pelapor: 'Security',
-            metode_lapor: 'Checklist',
-            status: 'closed',
-            status_label: 'Selesai'
-          },
-          {
-            id: null,
-            title_line: 'Aktivitas kontraktor tanpa escort — koreksi langsung',
-            header_color: '',
-            image_url: '',
-            date_label: '03 Mar 2026',
-            description: 'Kontraktor diingatkan; escort ditugaskan untuk kunjungan berikutnya.',
-            lokasi: 'Workshop',
-            detail_lok: 'Mezanin',
-            pelapor: 'Supervisor lapangan',
-            metode_lapor: 'Lisan + WA',
-            status: 'open',
-            status_label: 'Dalam tindak'
-          }
-        ];
-        function renderTbcGeneralCard(c) {
-          var st =
-            c.status === 'closed'
-              ? 'bg-neutral-100 text-neutral-700 border-t border-neutral-200'
-              : c.status === 'open'
-                ? 'bg-white text-neutral-800 border-t border-neutral-200'
-                : 'bg-neutral-50 text-neutral-600 border-t border-neutral-200';
-          var img = c.image_url
-            ? '<img src="' +
-              escAttr(c.image_url) +
-              '" alt="" class="h-36 w-full object-cover" loading="lazy" />'
-            : '<div class="flex h-36 w-full items-center justify-center bg-neutral-100"><span class="material-symbols-outlined text-5xl text-neutral-300">image</span></div>';
-          var detailLok = c.detail_lok
-            ? '<p class="text-[9px] text-neutral-500">Detail lokasi: ' + escHtml(c.detail_lok) + '</p>'
-            : '';
-          var hdr =
-            c.header_color && String(c.header_color).trim()
-              ? ' style="background:' + escAttr(c.header_color) + '"'
-              : '';
-          var titleBarClass =
-            c.header_color && String(c.header_color).trim()
-              ? 'min-h-[3rem] px-2 py-2 text-[10px] font-semibold leading-snug text-white line-clamp-4'
-              : 'min-h-[3rem] border-b border-neutral-200 bg-neutral-50 px-2 py-2 text-[10px] font-semibold leading-snug text-neutral-800 line-clamp-4';
-          return (
-            '<article class="flex w-[260px] shrink-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">' +
-            '<div class="' +
-            titleBarClass +
-            '"' +
-            hdr +
-            '>' +
-            escHtml(c.title_line || '—') +
-            '</div>' +
-            '<div class="js-peer-tbc-open-detail border-b border-neutral-100' +
-            (c.id != null && c.id !== ''
-              ? ' cursor-pointer hover:bg-neutral-50/80'
-              : '') +
-            '" data-kejadian-id="' +
-            String(c.id != null ? c.id : '') +
-            '">' +
-            img +
-            '</div>' +
-            '<div class="flex flex-1 flex-col gap-1.5 px-2.5 py-2 text-[10px] leading-snug text-neutral-800">' +
-            '<p class="text-center font-medium tabular-nums text-neutral-700">' +
-            escHtml(c.date_label || '—') +
-            '</p>' +
-            '<p class="max-h-32 overflow-y-auto text-[9px] leading-relaxed text-neutral-600">' +
-            escHtml(c.description || '—') +
-            '</p>' +
-            '<p class="text-[9px] text-neutral-700">Lokasi: <span class="font-medium">' +
-            escHtml(c.lokasi || '—') +
-            '</span></p>' +
-            detailLok +
-            '<div class="relative mt-0.5 flex items-start justify-between gap-1">' +
-            '<p class="min-w-0 flex-1 text-[9px] text-neutral-500">Pelapor: <span class="font-medium text-neutral-800">' +
-            escHtml(c.pelapor || '—') +
-            '</span><br/><span class="text-[8px] text-neutral-400">' +
-            escHtml(c.metode_lapor || '') +
-            '</span></p>' +
-            '<span class="material-symbols-outlined shrink-0 text-lg text-neutral-400" title="Perhatian">warning</span>' +
-            '</div>' +
-            '</div>' +
-            '<div class="' +
-            st +
-            ' py-2 text-center text-[10px] font-medium tracking-wide">' +
-            escHtml(c.status_label || '—') +
-            '</div>' +
-            '</article>'
-          );
-        }
-        function loadTbcGeneralCards() {
-          var loading = document.getElementById('peer-tbc-general-loading');
-          var errEl = document.getElementById('peer-tbc-general-error');
-          var body = document.getElementById('peer-tbc-general-body');
-          var wrap = document.getElementById('peer-tbc-general-cards');
-          if (errEl) {
-            errEl.classList.add('hidden');
-            errEl.textContent = '';
-          }
-          if (loading) loading.classList.remove('hidden');
-          if (body) body.classList.add('hidden');
-          if (wrap) wrap.innerHTML = '';
-          window.setTimeout(function () {
-            if (loading) loading.classList.add('hidden');
-            if (body) body.classList.remove('hidden');
-            if (!wrap) return;
-            var cards = peerTbcGeneralDummyCards;
-            if (!cards.length) {
-              wrap.innerHTML =
-                '<p class="min-w-[280px] flex-1 px-4 py-10 text-center text-[12px] text-neutral-500">Belum ada contoh kartu.</p>';
-              return;
-            }
-            wrap.innerHTML = cards.map(renderTbcGeneralCard).join('');
-          }, 80);
-        }
-        function openTbcGeneralModal() {
-          if (!tbcGeneralModal) return;
-          tbcGeneralModal.classList.remove('hidden');
-          tbcGeneralModal.setAttribute('aria-hidden', 'false');
-          if (tbcHighCard) tbcHighCard.setAttribute('aria-expanded', 'true');
-          loadTbcGeneralCards();
-        }
-        function closeTbcGeneralModal() {
-          if (!tbcGeneralModal) return;
-          tbcGeneralModal.classList.add('hidden');
-          tbcGeneralModal.setAttribute('aria-hidden', 'true');
-          if (tbcHighCard) tbcHighCard.setAttribute('aria-expanded', 'false');
-        }
-        if (tbcHighCard) tbcHighCard.addEventListener('click', openTbcGeneralModal);
-        if (tbcGeneralClose) tbcGeneralClose.addEventListener('click', closeTbcGeneralModal);
-        if (tbcGeneralBackdrop) tbcGeneralBackdrop.addEventListener('click', closeTbcGeneralModal);
-        var tbcCardsRoot = document.getElementById('peer-tbc-general-cards');
-        if (tbcCardsRoot) {
-          tbcCardsRoot.addEventListener('click', function (e) {
-            var t = e.target.closest('.js-peer-tbc-open-detail');
-            if (!t) return;
-            var id = t.getAttribute('data-kejadian-id');
-            if (!id) return;
-            var nid = parseInt(id, 10);
-            if (isNaN(nid)) return;
-            closeTbcGeneralModal();
-            if (typeof window.peerPressureOpenKejadianDetail === 'function') {
-              window.peerPressureOpenKejadianDetail(nid);
-            }
-          });
-        }
-        document.addEventListener('keydown', function (e) {
-          if (e.key !== 'Escape') return;
-          if (tbcGeneralModal && !tbcGeneralModal.classList.contains('hidden')) closeTbcGeneralModal();
-        });
         var complianceModal = document.getElementById('peer-compliance-detail-modal');
         var complianceCard = document.getElementById('peer-kpi-compliance-card');
         var complianceClose = document.getElementById('peer-compliance-detail-close');
@@ -4508,7 +3167,7 @@
       </script>
       <script>
       (function () {
-        var profilingDetailUrl = @json(route('peer-pressure-edukasi.dashboard.pelanggar-profiling'));
+        var profilingDetailUrl = '/peer-pressure-edukasi/dashboard/pelanggar-profiling';
         var modal = document.getElementById('peer-pelanggar-profiling-modal');
         var titleEl = document.getElementById('peer-pelanggar-profiling-title');
         var subEl = document.getElementById('peer-pelanggar-profiling-subtitle');
@@ -5007,6 +3666,307 @@
           e.preventDefault();
           togglePeerPoRow(tr);
         });
+      })();
+      </script>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
+      <script>
+      (function () {
+        function helcHexToRgb(hex) {
+          var m = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex || '');
+          return m
+            ? { r: parseInt(m[1], 16), g: parseInt(m[2], 16), b: parseInt(m[3], 16) }
+            : { r: 37, g: 99, b: 235 };
+        }
+        function helcAreaGradient(ctx, height, hex) {
+          var rgb = helcHexToRgb(hex);
+          var g = ctx.createLinearGradient(0, 0, 0, height || 100);
+          g.addColorStop(0, 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.22)');
+          g.addColorStop(1, 'rgba(' + rgb.r + ',' + rgb.g + ',' + rgb.b + ',0.02)');
+          return g;
+        }
+        function initHelcLineCharts() {
+          var dataEl = document.getElementById('helc-line-charts-data');
+          var card = document.getElementById('peer-kpi-hazard-eval-card-3');
+          if (!dataEl || !card || typeof Chart === 'undefined') return;
+          var payload;
+          try {
+            payload = JSON.parse(dataEl.textContent);
+          } catch (e) {
+            return;
+          }
+          var weeks = payload.weeks || [];
+          var defaultLineColor = payload.lineColor || '#4338ca';
+          var rows = payload.rows || [];
+          if (!weeks.length || !rows.length) return;
+
+          window.__helcChartInstances = window.__helcChartInstances || [];
+          window.__helcChartInstances.forEach(function (ch) {
+            try {
+              ch.destroy();
+            } catch (err) {}
+          });
+          window.__helcChartInstances = [];
+
+          var canvases = card.querySelectorAll('canvas.helc-chart-canvas');
+          canvases.forEach(function (canvas, i) {
+            var row = rows[i];
+            if (!row || !row.trend || !row.trend.length) return;
+            var ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            var parent = canvas.parentElement;
+            var h = parent ? parent.clientHeight : 112;
+            var lineColor = row.lineColor || defaultLineColor;
+
+            var chart = new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: weeks,
+                datasets: [
+                  {
+                    label: 'Nilai',
+                    data: row.trend,
+                    borderColor: lineColor,
+                    backgroundColor: helcAreaGradient(ctx, h, lineColor),
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 4,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: lineColor,
+                    pointBorderWidth: 2,
+                    borderWidth: 2,
+                    spanGaps: false,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                  padding: { top: 20, right: 4, bottom: 2, left: 4 },
+                },
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    backgroundColor: 'rgba(15,23,42,0.92)',
+                    titleFont: { size: 11, weight: '600' },
+                    bodyFont: { size: 12 },
+                    padding: 10,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                      label: function (ctx) {
+                        var v = ctx.parsed && ctx.parsed.y != null ? ctx.parsed.y : ctx.raw;
+                        return typeof v === 'number' ? v.toLocaleString('id-ID') : String(v);
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    display: true,
+                    offset: true,
+                    grid: { display: false },
+                    border: { display: false },
+                    ticks: {
+                      font: {
+                        size: 8,
+                        weight: '600',
+                        family: "system-ui, 'Segoe UI', sans-serif",
+                      },
+                      color: '#64748b',
+                      padding: 6,
+                      maxRotation: 0,
+                      minRotation: 0,
+                      autoSkip: false,
+                    },
+                  },
+                  y: {
+                    display: false,
+                    beginAtZero: false,
+                    grid: { display: false },
+                  },
+                },
+              },
+              plugins: [
+                {
+                  id: 'helcPointValueLabels',
+                  afterDatasetsDraw: function (chart) {
+                    var c = chart.ctx;
+                    chart.data.datasets.forEach(function (dataset, di) {
+                      if (!chart.isDatasetVisible(di)) return;
+                      var meta = chart.getDatasetMeta(di);
+                      if (!meta || !meta.data) return;
+                      meta.data.forEach(function (element, index) {
+                        var raw = dataset.data[index];
+                        if (raw == null || raw === '') return;
+                        var num = typeof raw === 'number' ? raw : parseFloat(raw);
+                        var text = isNaN(num) ? String(raw) : num.toLocaleString('id-ID');
+                        var x = element.x;
+                        var y = element.y;
+                        c.save();
+                        c.font = '600 9px system-ui, "Segoe UI", sans-serif';
+                        c.fillStyle = '#0f172a';
+                        c.textAlign = 'center';
+                        c.textBaseline = 'bottom';
+                        c.fillText(text, x, y - 8);
+                        c.restore();
+                      });
+                    });
+                  },
+                },
+              ],
+            });
+            window.__helcChartInstances.push(chart);
+          });
+        }
+        function initHeg1LineCharts() {
+          var dataEl = document.getElementById('heg1-line-charts-data');
+          var card = document.getElementById('peer-kpi-hazard-eval-card-1');
+          if (!dataEl || !card || typeof Chart === 'undefined') return;
+          var payload;
+          try {
+            payload = JSON.parse(dataEl.textContent);
+          } catch (e) {
+            return;
+          }
+          var weeks = payload.weeks || [];
+          var defaultLineColor = payload.lineColor || '#3952bc';
+          var rows = payload.rows || [];
+          if (!weeks.length || !rows.length) return;
+
+          window.__heg1ChartInstances = window.__heg1ChartInstances || [];
+          window.__heg1ChartInstances.forEach(function (ch) {
+            try {
+              ch.destroy();
+            } catch (err) {}
+          });
+          window.__heg1ChartInstances = [];
+
+          var canvases = card.querySelectorAll('canvas.heg1-chart-canvas');
+          canvases.forEach(function (canvas, i) {
+            var row = rows[i];
+            if (!row || !row.trend || !row.trend.length) return;
+            var ctx = canvas.getContext('2d');
+            if (!ctx) return;
+            var parent = canvas.parentElement;
+            var h = parent ? parent.clientHeight : 88;
+            var lineColor = row.lineColor || defaultLineColor;
+
+            var chart = new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: weeks,
+                datasets: [
+                  {
+                    label: 'Nilai',
+                    data: row.trend,
+                    borderColor: lineColor,
+                    backgroundColor: helcAreaGradient(ctx, h, lineColor),
+                    fill: true,
+                    tension: 0.35,
+                    pointRadius: 3,
+                    pointHoverRadius: 4,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: lineColor,
+                    pointBorderWidth: 2,
+                    borderWidth: 2,
+                    spanGaps: false,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: {
+                  padding: { top: 16, right: 2, bottom: 0, left: 2 },
+                },
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    backgroundColor: 'rgba(15,23,42,0.92)',
+                    titleFont: { size: 10, weight: '600' },
+                    bodyFont: { size: 11 },
+                    padding: 8,
+                    cornerRadius: 8,
+                    displayColors: false,
+                    callbacks: {
+                      label: function (ctx) {
+                        var v = ctx.parsed && ctx.parsed.y != null ? ctx.parsed.y : ctx.raw;
+                        return typeof v === 'number' ? v.toLocaleString('id-ID') : String(v);
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    display: true,
+                    offset: true,
+                    grid: { display: false },
+                    border: { display: false },
+                    ticks: {
+                      font: {
+                        size: 7,
+                        weight: '600',
+                        family: "system-ui, 'Segoe UI', sans-serif",
+                      },
+                      color: '#64748b',
+                      padding: 4,
+                      maxRotation: 0,
+                      minRotation: 0,
+                      autoSkip: false,
+                    },
+                  },
+                  y: {
+                    display: false,
+                    beginAtZero: false,
+                    grid: { display: false },
+                  },
+                },
+              },
+              plugins: [
+                {
+                  id: 'heg1PointValueLabels',
+                  afterDatasetsDraw: function (chart) {
+                    var c = chart.ctx;
+                    chart.data.datasets.forEach(function (dataset, di) {
+                      if (!chart.isDatasetVisible(di)) return;
+                      var meta = chart.getDatasetMeta(di);
+                      if (!meta || !meta.data) return;
+                      meta.data.forEach(function (element, index) {
+                        var raw = dataset.data[index];
+                        if (raw == null || raw === '') return;
+                        var num = typeof raw === 'number' ? raw : parseFloat(raw);
+                        var text = isNaN(num) ? String(raw) : num.toLocaleString('id-ID');
+                        var x = element.x;
+                        var y = element.y;
+                        c.save();
+                        c.font = '600 8px system-ui, "Segoe UI", sans-serif';
+                        c.fillStyle = '#0f172a';
+                        c.textAlign = 'center';
+                        c.textBaseline = 'bottom';
+                        c.fillText(text, x, y - 5);
+                        c.restore();
+                      });
+                    });
+                  },
+                },
+              ],
+            });
+            window.__heg1ChartInstances.push(chart);
+          });
+        }
+        function runAlignmentLineCharts() {
+          initHelcLineCharts();
+          initHeg1LineCharts();
+        }
+        if (document.readyState === 'loading') {
+          document.addEventListener('DOMContentLoaded', runAlignmentLineCharts);
+        } else {
+          runAlignmentLineCharts();
+        }
       })();
       </script>
    </body>

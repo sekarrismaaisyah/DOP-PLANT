@@ -1,0 +1,74 @@
+[
+  {
+    "Year": 2026,
+    "Week": 14,
+    "Site": "BMO3",
+    "Issue Date": "",
+    "Kategori": "Safety Issue (From Evaluation)",
+    "Issue": "1 temuan driver DT tidur di unit pada area disposal",
+    "Recommendation / Project": "1. Tindak lanjut sesuai hasil investigasi",
+    "Due Date": "",
+    "Aktual Penyelesaian": "",
+    "Status": "Progress"
+  },
+  {
+    "Year": 2026,
+    "Week": 14,
+    "Site": "GMO",
+    "Issue Date": "",
+    "Kategori": "Safety Issue (From Evaluation)",
+    "Issue": "1.  1 Pelanggaran Golden rules Seatbelt\n2. Outstanding PICA Accident HIPO PC Rebah",
+    "Recommendation / Project": "1. Speed up Implementasi seatbelt connect to engine\n2. SPeed up Pemenuhan rekomendasi incident HIPO",
+    "Due Date": "11 April 2026",
+    "Aktual Penyelesaian": "",
+    "Status": "Progress"
+  },
+  {
+    "Year": 2026,
+    "Week": 14,
+    "Site": "LMO",
+    "Issue Date": "06 April 2026",
+    "Kategori": "Safety Issue (From Evaluation)",
+    "Issue": "BUMA\n1. Terdapat 7 valid PSPP (5 Overspeed type B, 1 BAK di atas unit, 1 Merokok )\n2. Ach Coverage Area <100%\n3. Ach SAP PJA <100%\n\nFAD\n1. Achievement SAP PJA belum 100% (Masih terdapat 4 pengawas yang belum achieve SAP Ach:96%);\n2. Achievment jalan sesuai standar masih rendah dan mengalami trend penurunan di W14 (50%) di dominasi terkait temuan roadwith;\n3. Masih terdapat temuan TBC Blindspot pada W14.",
+    "Recommendation / Project": "BUMA\n1. Pelaksanaan peer pressure dan pemberian sanksi\n2. Coaching pengawas tidak comply SAP oleh PJA\n3. Daily monitoring compliance coverage area oleh SHE Reps setiap section dan weekly monitoring by Evaluator\n\nFAD\n1. Coaching pengawas tidak comply oleh PJA\n2. Continue perbaikan road management based on deviasi BeGesit melalui DOP HRM dan perbaikan PA Unit Support\n3. Lakukan tindak lanjut terhadap temuan blindspot pada W14, Peer Pressure, Serta Sharing Temuan Blindspot",
+    "Due Date": "12 April 2026",
+    "Aktual Penyelesaian": "",
+    "Status": "Progress"
+  },
+  {
+    "Year": 2026,
+    "Week": 14,
+    "Site": "SMO",
+    "Issue Date": "6 Apr 2026",
+    "Kategori": "Safety Issue (From Evaluation)",
+    "Issue": "1.Tidak ada insiden di week 14 2026\n2.Seluruh area tercover secara plan mingguan dengan 203 dari 204 lokasi teregister. Rata-rata pengecekan lokasi secara daily di 95% .\n3.Pengecekan Area Kritis T4U 3x per shift sudah berjalan konsisten di week 14\n4.Utilisasi CCTV 100% di periode W14, terdapat kenaikan laporan pengawasan by CCTV di area Bwest dan C2HU\n5.Rata-rata upload aggregator fatigue di MTN SMO selama week 14 2026 di 99%, Rata-rata upload subkontraktor mitra SMO secara daily : 96% ",
+    "Recommendation / Project": "1. Identifikasi aktifitas beresiko dilakukan pengecekan, monitoring dan evaluasi\n2. Perkuatan pengawasan coverage lokasi – detail lokasi secara harian yang dibuktikan melalui pelaporan SAP → Reminder pengecekan harian untuk Lokasi dan Detail Lokasi SMO\n3.Continue melakukan monitoring daily per CCTV vs PJA serta peningkatan pelaporan pengawasan berjarak oleh layer 2, 3 dan layer 4 PJA → Penanganan khusus PJA tidak capai target → Coaching & evaluasi langsung.\n4.Target monitoring OAK harian → OAK wajib 3x per shift untuk layer 1, 1x per shift untuk layer 2\n5. Penguatan budaya “Speak Up Before Alert” melalui P5M harian.\n6. Peer pressure & coaching untuk 6 operator true alert fatigue.\n7. Monitoring upload aggregator per shift (target ≥98%).\n8.Pemeriksaan Alkohol & Drugs untuk seluruh shift (termasuk shift 2).\n9. Monitoring kesesuaian upload data Aggregator beHealth baik oleh Mine Contractor dan Sub Contraktor secara harian\n10.Jika deviasi berulang → Surat Peringatan hingga komitmen perbaikan tertulis.",
+    "Due Date": "",
+    "Aktual Penyelesaian": "Continue",
+    "Status": "Open"
+  },
+  {
+    "Year": 2026,
+    "Week": 14,
+    "Site": "BMO 1",
+    "Issue Date": "04/06/2026",
+    "Kategori": "Safety Issue (From Evaluation)",
+    "Issue": "1.        Tidak ada insiden di week 14 2026\n2.        Masih muncul kecendrungan follow up yang lambat (melebihi) due date di week 14. Proses closing baru dilakukan pasca reminder daily dan weekly \n3.        Seluruh area tercover secara plan mingguan. Rata-rata pengecekan lokasi – detail lokasi secara daily masih di 92%. Area yang tidak konsisten dilakukan pengecekan daily di W14: Area Parkir Halte HTL,Area Refulling K12 KDC,Red Zone Jalan masuk IPDK KDC",
+    "Recommendation / Project": "1. Identifikasi aktifitas beresiko dilakukan pengecekan, monitoring dan evaluasi\n2. Reminder harian closing hazard berbasis Due Date → Fokus hazard Overdue & Open/Progress\n3. Perkuatan pengawasan coverage lokasi – detail lokasi secara harian yang dibuktikan melalui pelaporan SAP → Reminder pengecekan harian untuk Lokasi dan Detail Lokasi BMO 1",
+    "Due Date": "",
+    "Aktual Penyelesaian": "",
+    "Status": "Open"
+  },
+  {
+    "Year": 2026,
+    "Week": 14,
+    "Site": "BMO 2",
+    "Issue Date": "4/6/26",
+    "Kategori": "Safety Issue (From Evaluation)",
+    "Issue": "1. 1 Pelanggaran PSPP: Operator Drilling merokok di dalam kabin\n2. Deviasi Tools Tidak Standard & SPIP: Kabel roll terkelupas, palu gagang rusak, sertifikat name plate alat angkat forklift expired\n3. Deviasi Road Management: Jalan tidak aktif tidak tertutup tanggul",
+    "Recommendation / Project": "1. Drone Inspection aktivitas operator di unit A2B oleh Inspector Safety BC & Mitra\n2. Deviasi SPIP: Terapkan tool tagging system (Layak / Tidak Layak / Repair),  melakukan inspeksi tools mingguan, membuat checklist pre-use inspection oleh mekanik dan meningkatkan fungsi tools screening gate sebelum dibawa ke lapangan \n3. Deviasi Road Management: Road audit harian oleh GL pit service pengecekan area redzone, Buffer stock material safety (line, cone, sign) di pit, Monitoring status jalan dalam DOP dan monitoring progress follow up",
+    "Due Date": "4/13/26",
+    "Aktual Penyelesaian": "",
+    "Status": "Open"
+  }
+]

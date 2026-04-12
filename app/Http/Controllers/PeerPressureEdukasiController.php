@@ -12,6 +12,7 @@ use App\Actions\PeerPressure\GetPeerPressureDashboardComplianceBreakdownAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardWeeklyTrendAction;
 use App\Actions\PeerPressure\GetPeerPressureKejadianDetailForDashboardAction;
 use App\Actions\PeerPressure\GetPeerPressurePelanggarProfilingDetailAction;
+use App\Actions\PeerPressure\GetPeerPressureTbcHighRiskCardsAction;
 use App\Actions\PeerPressure\ListPeerPressureDashboardKejadianAction;
 use App\Models\PeerPressureKejadianEdukasi;
 use App\Services\PeerPressure\PeerPressureKaryawanNitipService;
@@ -125,6 +126,84 @@ class PeerPressureEdukasiController extends Controller
         }
         $peerFotoUrls = $karyawanNitip->fotoUrlsByKodeSids($peerSids);
 
+        $peerHazardReportingBySite = $this->loadPeerHazardReportingBySite();
+        $peerTbcHighBySite = $this->loadPeerTbcHighBySite();
+        $peerTbcBlindspotBySite = $this->loadPeerTbcBlindspotBySite();
+        $hazardSiteAllowed = ['__all'];
+        if (is_array($peerHazardReportingBySite) && ! empty($peerHazardReportingBySite['sites'])) {
+            foreach ($peerHazardReportingBySite['sites'] as $siteLabel) {
+                $hazardSiteAllowed[] = (string) $siteLabel;
+            }
+        }
+        if (is_array($peerTbcHighBySite) && ! empty($peerTbcHighBySite['sites'])) {
+            foreach ($peerTbcHighBySite['sites'] as $siteLabel) {
+                $s = (string) $siteLabel;
+                if (! in_array($s, $hazardSiteAllowed, true)) {
+                    $hazardSiteAllowed[] = $s;
+                }
+            }
+        }
+        if (is_array($peerTbcBlindspotBySite) && ! empty($peerTbcBlindspotBySite['sites'])) {
+            foreach ($peerTbcBlindspotBySite['sites'] as $siteLabel) {
+                $s = (string) $siteLabel;
+                if (! in_array($s, $hazardSiteAllowed, true)) {
+                    $hazardSiteAllowed[] = $s;
+                }
+            }
+        }
+        $peerGoldenRulesBySite = $this->loadPeerGoldenRulesBySite();
+        if (is_array($peerGoldenRulesBySite) && ! empty($peerGoldenRulesBySite['sites'])) {
+            foreach ($peerGoldenRulesBySite['sites'] as $siteLabel) {
+                $s = (string) $siteLabel;
+                if (! in_array($s, $hazardSiteAllowed, true)) {
+                    $hazardSiteAllowed[] = $s;
+                }
+            }
+        }
+        $peerAreaNonKritisBySite = $this->loadPeerAreaNonKritisBySite();
+        if (is_array($peerAreaNonKritisBySite) && ! empty($peerAreaNonKritisBySite['sites'])) {
+            foreach ($peerAreaNonKritisBySite['sites'] as $siteLabel) {
+                $s = (string) $siteLabel;
+                if (! in_array($s, $hazardSiteAllowed, true)) {
+                    $hazardSiteAllowed[] = $s;
+                }
+            }
+        }
+        $peerAreaKritisBySite = $this->loadPeerAreaKritisBySite();
+        if (is_array($peerAreaKritisBySite) && ! empty($peerAreaKritisBySite['sites'])) {
+            foreach ($peerAreaKritisBySite['sites'] as $siteLabel) {
+                $s = (string) $siteLabel;
+                if (! in_array($s, $hazardSiteAllowed, true)) {
+                    $hazardSiteAllowed[] = $s;
+                }
+            }
+        }
+        $hazardSiteReq = (string) $request->query('hazard_site', '__all');
+        $hazardSite = in_array($hazardSiteReq, $hazardSiteAllowed, true) ? $hazardSiteReq : '__all';
+        $peerHrEvalFromJson = is_array($peerHazardReportingBySite)
+            ? $this->peerMetricEvalFromJson($peerHazardReportingBySite, $hazardSite, '#d97706', 0)
+            : null;
+
+        $peerTbcEvalFromJson = is_array($peerTbcHighBySite)
+            ? $this->peerMetricEvalFromJson($peerTbcHighBySite, $hazardSite, '#3952bc', 0)
+            : null;
+
+        $peerTbcBlindEvalFromJson = is_array($peerTbcBlindspotBySite)
+            ? $this->peerMetricEvalFromJson($peerTbcBlindspotBySite, $hazardSite, '#16a34a', 0)
+            : null;
+
+        $peerGoldenRulesEvalFromJson = is_array($peerGoldenRulesBySite)
+            ? $this->peerMetricEvalFromJson($peerGoldenRulesBySite, $hazardSite, '#c8102e', 0)
+            : null;
+
+        $peerAreaNonKritisEvalFromJson = is_array($peerAreaNonKritisBySite)
+            ? $this->peerMetricEvalFromJson($peerAreaNonKritisBySite, $hazardSite, '#ea580c', 0)
+            : null;
+
+        $peerAreaKritisEvalFromJson = is_array($peerAreaKritisBySite)
+            ? $this->peerMetricEvalFromJson($peerAreaKritisBySite, $hazardSite, '#dc2626', 0)
+            : null;
+
         return view('peer-pressure-edukasi.dashboard', [
             'kejadian' => $kejadian,
             'peerFotoUrls' => $peerFotoUrls,
@@ -142,7 +221,177 @@ class PeerPressureEdukasiController extends Controller
                 $chartPeriodMonth ? $chartYear : null,
                 $chartPeriodMonth ? $chartMonth : null
             ),
+            'peerHazardReportingBySite' => $peerHazardReportingBySite,
+            'hazardSite' => $hazardSite,
+            'peerHrEvalFromJson' => $peerHrEvalFromJson,
+            'peerTbcHighBySite' => $peerTbcHighBySite,
+            'peerTbcEvalFromJson' => $peerTbcEvalFromJson,
+            'peerTbcBlindspotBySite' => $peerTbcBlindspotBySite,
+            'peerTbcBlindEvalFromJson' => $peerTbcBlindEvalFromJson,
+            'peerGoldenRulesBySite' => $peerGoldenRulesBySite,
+            'peerGoldenRulesEvalFromJson' => $peerGoldenRulesEvalFromJson,
+            'peerAreaNonKritisBySite' => $peerAreaNonKritisBySite,
+            'peerAreaNonKritisEvalFromJson' => $peerAreaNonKritisEvalFromJson,
+            'peerAreaKritisBySite' => $peerAreaKritisBySite,
+            'peerAreaKritisEvalFromJson' => $peerAreaKritisEvalFromJson,
         ]);
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function loadPeerAreaKritisBySite(): ?array
+    {
+        $path = resource_path('data/peer_pressure_area_kritis_by_site.json');
+        if (! is_file($path)) {
+            return null;
+        }
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            return null;
+        }
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function loadPeerAreaNonKritisBySite(): ?array
+    {
+        $path = resource_path('data/peer_pressure_area_non_kritis_by_site.json');
+        if (! is_file($path)) {
+            return null;
+        }
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            return null;
+        }
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function loadPeerGoldenRulesBySite(): ?array
+    {
+        $path = resource_path('data/peer_pressure_golden_rules_by_site.json');
+        if (! is_file($path)) {
+            return null;
+        }
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            return null;
+        }
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function loadPeerTbcBlindspotBySite(): ?array
+    {
+        $path = resource_path('data/peer_pressure_tbc_blindspot_by_site.json');
+        if (! is_file($path)) {
+            return null;
+        }
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            return null;
+        }
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function loadPeerTbcHighBySite(): ?array
+    {
+        $path = resource_path('data/peer_pressure_tbc_high_by_site.json');
+        if (! is_file($path)) {
+            return null;
+        }
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            return null;
+        }
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * @return array<string, mixed>|null
+     */
+    private function loadPeerHazardReportingBySite(): ?array
+    {
+        $path = resource_path('data/peer_pressure_hazard_reporting_by_site.json');
+        if (! is_file($path)) {
+            return null;
+        }
+        $raw = file_get_contents($path);
+        if ($raw === false) {
+            return null;
+        }
+        $decoded = json_decode($raw, true);
+
+        return is_array($decoded) ? $decoded : null;
+    }
+
+    /**
+     * Agregasi mini-chart metrik per site dari JSON (Hazard, TBC, dll.).
+     *
+     * @param  array<string, mixed>  $json
+     * @return array{weeks: list<string>, label: string, bar: string, values: list<float|int>, decimals: int}
+     */
+    private function peerMetricEvalFromJson(array $json, string $site, string $bar, int $decimals = 0): array
+    {
+        $weeks = [];
+        if (! empty($json['weeks']) && is_array($json['weeks'])) {
+            foreach ($json['weeks'] as $w) {
+                $weeks[] = (string) $w;
+            }
+        }
+        if ($weeks === []) {
+            $weeks = ['W12', 'W13', 'W14', 'W15'];
+        }
+        $bySite = $json['bySite'] ?? [];
+        if (! is_array($bySite)) {
+            $bySite = [];
+        }
+        $values = [];
+        if ($site === '__all') {
+            foreach ($weeks as $wk) {
+                $sum = 0;
+                foreach ($bySite as $row) {
+                    if (! is_array($row)) {
+                        continue;
+                    }
+                    $sum += (int) ($row[$wk] ?? 0);
+                }
+                $values[] = (float) $sum;
+            }
+        } else {
+            $row = is_array($bySite[$site] ?? null) ? $bySite[$site] : [];
+            foreach ($weeks as $wk) {
+                $values[] = (float) ($row[$wk] ?? 0);
+            }
+        }
+
+        return [
+            'weeks' => $weeks,
+            'label' => (string) ($json['parameter'] ?? ''),
+            'bar' => $bar,
+            'values' => $values,
+            'decimals' => $decimals,
+        ];
     }
 
     /**
@@ -234,6 +483,24 @@ class PeerPressureEdukasiController extends Controller
     public function kejadianDetail(int $id, GetPeerPressureKejadianDetailForDashboardAction $detail): JsonResponse
     {
         return response()->json($detail($id));
+    }
+
+    /**
+     * Kartu horizontal TBC GENERAL untuk modal KPI (JSON).
+     */
+    public function tbcHighRiskCards(Request $request, GetPeerPressureTbcHighRiskCardsAction $action): JsonResponse
+    {
+        $chartPeriodMonth = $request->filled('year') && $request->filled('month');
+        if ($chartPeriodMonth) {
+            $chartYear = (int) $request->get('year');
+            $chartMonth = (int) $request->get('month');
+            $chartYear = max(GetPeerPressureDashboardWeeklyTrendAction::MIN_YEAR, min(GetPeerPressureDashboardWeeklyTrendAction::MAX_YEAR, $chartYear));
+            $chartMonth = max(1, min(12, $chartMonth));
+
+            return response()->json(['cards' => $action($chartYear, $chartMonth)]);
+        }
+
+        return response()->json(['cards' => $action(null, null)]);
     }
 
     /**

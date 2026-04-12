@@ -22,4 +22,12 @@ class FuelingEvaluasiController extends Controller
     {
         return view('fuelingEvaluasi.dashboard');
     }
+
+    /**
+     * Menampilkan halaman embed Tableau untuk HSE Division.
+     */
+    public function tableau(): View
+    {
+        return view('fuelingEvaluasi.tableau');
+    }
 }

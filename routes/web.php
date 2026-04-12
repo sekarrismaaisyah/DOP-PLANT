@@ -37,6 +37,7 @@ use App\Http\Controllers\InsidenLpiController;
 use App\Http\Controllers\CctvP2hChecklistController;
 use App\Http\Controllers\EvaluasiUnitTabelController;
 use App\Http\Controllers\FuelingEvaluasiController;
+use App\Http\Controllers\AlignmentController;
 use App\Http\Controllers\BecomlineController;
 use App\Http\Controllers\PeerPressureEdukasiController;
 use App\Http\Controllers\UnitMtdController;
@@ -128,12 +129,16 @@ Route::middleware(['auth'])->group(function () {
     // Fueling Evaluasi
     Route::get('/fueling-evaluasi', [FuelingEvaluasiController::class, 'index'])->name('fueling-evaluasi.index');
     Route::get('/fueling-evaluasi/dashboard', [FuelingEvaluasiController::class, 'dashboard'])->name('fueling-evaluasi.dashboard');
+    Route::get('/fueling-evaluasi/tableau', [FuelingEvaluasiController::class, 'tableau'])->name('fueling-evaluasi.tableau');
     Route::get('/fueling-evaluasi/tabel', [EvaluasiUnitTabelController::class, 'index'])->name('fueling-evaluasi.tabel');
     Route::get('/fueling-evaluasi/per-hari', [EvaluasiUnitTabelController::class, 'perHari'])->name('fueling-evaluasi.per-hari');
     Route::get('/fueling-evaluasi/per-hari/data', [EvaluasiUnitTabelController::class, 'perHariData'])->name('fueling-evaluasi.per-hari.data');
     Route::get('/fueling-evaluasi/per-hari/all-data', [EvaluasiUnitTabelController::class, 'perHariAllData'])->name('fueling-evaluasi.per-hari.all-data');
     Route::get('/fueling-evaluasi/per-hari/dashboard-stats', [EvaluasiUnitTabelController::class, 'perHariDashboardStats'])->name('fueling-evaluasi.per-hari.dashboard-stats');
     Route::get('/fueling-evaluasi/per-hari/export-excel', [EvaluasiUnitTabelController::class, 'exportPerHariExcel'])->name('fueling-evaluasi.per-hari.export-excel');
+
+    // Alignment (Peer Pressure Program Evaluation — static page)
+    Route::get('/alignment', [AlignmentController::class, 'index'])->name('alignment.index');
 
     // Becomline (CRUD + Import Excel)
     Route::get('/becomline', [BecomlineController::class, 'index'])->name('becomline.index');
@@ -154,6 +159,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/peer-pressure-edukasi/dashboard/weekly-trend', [PeerPressureEdukasiController::class, 'weeklyTrendData'])->name('peer-pressure-edukasi.dashboard.weekly-trend');
     Route::get('/peer-pressure-edukasi/dashboard/highlight-issue-recommendation', [PeerPressureEdukasiController::class, 'dashboardHighlightIssueRecommendation'])->name('peer-pressure-edukasi.dashboard.highlight-issue-recommendation');
     Route::get('/peer-pressure-edukasi/dashboard/compliance-breakdown', [PeerPressureEdukasiController::class, 'complianceBreakdownData'])->name('peer-pressure-edukasi.dashboard.compliance-breakdown');
+    Route::get('/peer-pressure-edukasi/dashboard/tbc-high-risk-cards', [PeerPressureEdukasiController::class, 'tbcHighRiskCards'])->name('peer-pressure-edukasi.dashboard.tbc-high-risk-cards');
     Route::get('/peer-pressure-edukasi/dashboard/pelanggar-profiling', [PeerPressureEdukasiController::class, 'pelanggarProfilingDetail'])->name('peer-pressure-edukasi.dashboard.pelanggar-profiling');
     Route::get('/peer-pressure-edukasi/kejadian/{id}', [PeerPressureEdukasiController::class, 'kejadianDetail'])
         ->whereNumber('id')
