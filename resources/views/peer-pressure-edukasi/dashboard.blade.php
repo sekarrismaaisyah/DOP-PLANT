@@ -1084,10 +1084,7 @@
                            <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
                         </div>
                      </div>
-                     <div class="mt-2 flex items-center justify-between rounded-lg border border-outline-variant/20 bg-[#f1f5f9] px-3 py-2.5 font-headline text-sm font-bold text-on-surface">
-                        <span>Total (Dummy)</span>
-                        <span id="peer-deviation-modal-total" class="tabular-nums text-primary">92,148</span>
-                     </div>
+                    
                   </div>
                </div>
                <p class="mt-3 text-[10px] leading-relaxed text-on-surface-variant">Angka per minggu pada setiap baris adalah ilustrasi pembagian proporsional dari total kategori (bukan data mingguan aktual). Total dihitung dari penjumlahan jumlah per kategori (sama dengan total kejadian pada periode yang sama).</p>
