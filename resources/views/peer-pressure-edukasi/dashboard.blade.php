@@ -1031,37 +1031,62 @@
                         ></canvas>
                      </div>
                   </div>
-                  <div>
-                     <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Deviasi pelanggaran per kategori</p>
-                    <div id="peer-deviation-modal-categories" class="grid grid-cols-1 gap-2.5 rounded-lg border border-outline-variant/20 bg-[#eef1f4] p-2 sm:grid-cols-2">
-                        @forelse ($dvPreCatsSpark as $idx => $row)
-                        <div class="overflow-hidden rounded border border-slate-300 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
-                           <div class="flex items-center justify-between gap-2 border-b border-slate-300 bg-slate-100 px-2.5 py-1.5">
-                              <p class="min-w-0 truncate text-[10px] font-bold text-slate-700">
-                                 {{ (int) $idx + 1 }}. {{ $row['kategori_deviasi'] ?? '—' }}
-                              </p>
-                              <span class="shrink-0 text-[10px] font-extrabold tabular-nums text-slate-700">
-                                 {{ number_format((int) ($row['jumlah'] ?? 0)) }}
-                              </span>
+   <div>
+                     <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Dashboard indikator detail lokasi (dummy)</p>
+                    <div id="peer-deviation-modal-categories" data-static-dummy="1" class="grid grid-cols-1 gap-2 rounded-lg border border-outline-variant/20 bg-[#e8ecef] p-2 sm:grid-cols-2 xl:grid-cols-3">
+                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
+                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">4. Ratio TBC/Pelapor</div>
+                           <div class="grid grid-cols-4 gap-1 px-2 pt-1 text-center text-[9px] font-bold text-slate-600">
+                              <span>1:3.04</span><span>1:2.95</span><span>1:2.81</span><span>1:2.90</span>
                            </div>
-                           <div class="bg-[#f8fbff] px-2 py-1.5">
-                              <div class="relative h-28 w-full min-h-[7rem]">
-                                 <canvas
-                                    class="peer-deviation-cat-chart max-h-full w-full"
-                                    data-values='@json($row['weekly_values'] ?? [])'
-                                    data-weeks='@json($peerDeviationModalSparkWeeks)'
-                                    data-line-color="{{ e($row['color'] ?? '#4f79a7') }}"
-                                 ></canvas>
-                              </div>
+                           <div class="grid h-24 grid-cols-4 gap-2 px-2 py-1.5">
+                              <div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div>
                            </div>
+                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
                         </div>
-                        @empty
-                        <div class="col-span-full px-3 py-8 text-center text-[11px] text-on-surface-variant">Belum ada data kategori deviasi.</div>
-                        @endforelse
+                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
+                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">5. Jumlah Pelapor (distinct)</div>
+                           <div class="grid grid-cols-4 gap-1 px-2 pt-1 text-center text-[9px] font-bold text-slate-600">
+                              <span>4,052</span><span>4,054</span><span>4,184</span><span>4,127</span>
+                           </div>
+                           <div class="grid h-24 grid-cols-4 gap-2 px-2 py-1.5">
+                              <div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div>
+                           </div>
+                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
+                        </div>
+                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
+                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">6. Jumlah SAP L1-L4</div>
+                           <div class="px-2 py-1 text-[9px] text-slate-500">Group layer · Tanggal pelaporan beDraft</div>
+                           <div class="space-y-1 px-2 pb-1.5 text-[9px]">
+                              <div class="grid grid-cols-[26px_1fr_40px] items-center gap-1"><span class="font-bold text-slate-600">L1</span><div class="h-2.5 bg-[#4f79a7]" style="width:85%"></div><span class="text-right font-bold text-slate-600">44,720</span></div>
+                              <div class="grid grid-cols-[26px_1fr_40px] items-center gap-1"><span class="font-bold text-slate-600">L2</span><div class="h-2.5 bg-[#4f79a7]" style="width:42%"></div><span class="text-right font-bold text-slate-600">14,540</span></div>
+                              <div class="grid grid-cols-[26px_1fr_40px] items-center gap-1"><span class="font-bold text-slate-600">L3</span><div class="h-2.5 bg-[#4f79a7]" style="width:31%"></div><span class="text-right font-bold text-slate-600">10,938</span></div>
+                              <div class="grid grid-cols-[26px_1fr_40px] items-center gap-1"><span class="font-bold text-slate-600">L4</span><div class="h-2.5 bg-[#4f79a7]" style="width:6%"></div><span class="text-right font-bold text-slate-600">1,899</span></div>
+                           </div>
+                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
+                        </div>
+                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
+                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">7. Ratio SAP per Detail Lokasi</div>
+                           <div class="grid grid-cols-4 gap-1 px-2 pt-1 text-center text-[9px] font-bold text-slate-600"><span>1:55.50</span><span>1:55.45</span><span>1:56.36</span><span>1:57.51</span></div>
+                           <div class="grid h-24 grid-cols-4 gap-2 px-2 py-1.5"><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div></div>
+                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
+                        </div>
+                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
+                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">8. Ratio Observasi per Detail Lokasi</div>
+                           <div class="grid grid-cols-4 gap-1 px-2 pt-1 text-center text-[9px] font-bold text-slate-600"><span>1:14.66</span><span>1:14.73</span><span>1:14.15</span><span>1:13.58</span></div>
+                           <div class="grid h-24 grid-cols-4 gap-2 px-2 py-1.5"><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div></div>
+                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
+                        </div>
+                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
+                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">9. Ratio OAK per Detail Lokasi</div>
+                           <div class="grid grid-cols-4 gap-1 px-2 pt-1 text-center text-[9px] font-bold text-slate-600"><span>1:27.72</span><span>1:27.65</span><span>1:29.18</span><span>1:30.30</span></div>
+                           <div class="grid h-24 grid-cols-4 gap-2 px-2 py-1.5"><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div></div>
+                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
+                        </div>
                      </div>
                      <div class="mt-2 flex items-center justify-between rounded-lg border border-outline-variant/20 bg-[#f1f5f9] px-3 py-2.5 font-headline text-sm font-bold text-on-surface">
-                        <span>Total</span>
-                        <span id="peer-deviation-modal-total" class="tabular-nums text-primary">{{ number_format($dvPreFooterTotal) }}</span>
+                        <span>Total (Dummy)</span>
+                        <span id="peer-deviation-modal-total" class="tabular-nums text-primary">92,148</span>
                      </div>
                   </div>
                </div>
@@ -3240,6 +3265,10 @@
           destroyPeerDeviationModalCharts();
           var catRoot = document.getElementById('peer-deviation-modal-categories');
           var totalFoot = document.getElementById('peer-deviation-modal-total');
+          if (catRoot && catRoot.getAttribute('data-static-dummy') === '1') {
+            if (totalFoot) totalFoot.textContent = '92,148';
+            return;
+          }
           var kpiBig = document.querySelector('#peer-kpi-deviation-card .font-headline.font-extrabold.text-4xl');
           var cats = dev.categories || [];
           var apiTotal = parseInt(String(dev.total != null ? dev.total : 0), 10) || 0;
