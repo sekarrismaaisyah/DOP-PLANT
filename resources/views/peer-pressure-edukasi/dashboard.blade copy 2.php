@@ -1631,7 +1631,10 @@
                <div id="peer-tbc-general-content" class="mx-auto max-w-[1280px] space-y-4">
                  
                   <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                    
+                     <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                        <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">To Be Concerned Highrisk Hazard</h3>
+                        <p class="mt-0.5 text-[10px] font-medium text-slate-600">iDashboard · Tableau Embedding API v3</p>
+                     </div>
                      <div class="w-full overflow-x-auto bg-slate-50/30 p-2 sm:p-4">
                         {{-- Tableau API dimuat sekali di blok Overview (629–644); src viz di-set saat modal dibuka (lazy) --}}
                         <tableau-viz
@@ -1672,9 +1675,65 @@
             <div id="peer-blindspot-body" class="min-h-0 flex-1 overflow-y-auto bg-[#fbfcfd] px-3 py-4 sm:px-5 sm:py-5">
                <div class="mx-auto max-w-[1360px] space-y-4">
                   <div class="grid grid-cols-1 gap-3 xl:grid-cols-12">
-                 
+                  // <div class="space-y-3 xl:col-span-6">
+                  //    <section class="rounded-lg border border-slate-200 bg-white">
+                  //       <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                  //          <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Total Laporan BEATS</h3>
+                  //       </div>
+                  //       <div class="px-3 py-3">
+                  //          <div id="peer-blindspot-summary" class="mb-2 grid grid-cols-2 gap-2"></div>
+                  //          <div class="h-44 rounded-md border border-slate-200 bg-white p-2">
+                  //             <canvas id="peer-blindspot-stack-canvas" aria-label="Grafik total blindspot per minggu"></canvas>
+                  //          </div>
+                  //       </div>
+                  //    </section>
+                  //    <section class="rounded-lg border border-slate-200 bg-white p-3">
+                  //       <p class="text-[11px] font-bold text-slate-600">Matriks Repetitive Blindspot L4W</p>
+                  //       <div class="mt-2 h-56 rounded-md border border-slate-200 bg-white p-2">
+                  //          <canvas id="peer-blindspot-scatter-canvas" aria-label="Matriks repetitive blindspot"></canvas>
+                  //       </div>
+                  //    </section>
+                  //    <section class="rounded-lg border border-slate-200 bg-white">
+                  //       <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                  //          <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Need to Check Blindspot (Top 5 Kuadran I &amp; IV)</h3>
+                  //       </div>
+                  //       <div class="hide-scrollbar overflow-x-auto px-3 py-3">
+                  //          <div id="peer-blindspot-need-check" class="min-w-[840px] rounded-md border border-slate-200 bg-white"></div>
+                  //       </div>
+                  //    </section>
+                  // </div>
+                  // <div class="space-y-3 xl:col-span-6">
+                  //    <section class="rounded-lg border border-slate-200 bg-white">
+                  //       <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                  //          <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Leaderboard by Site Blindspot</h3>
+                  //       </div>
+                  //       <div class="hide-scrollbar max-h-60 overflow-auto px-3 py-3">
+                  //          <div id="peer-blindspot-leaderboard-site" class="min-w-[620px] rounded-md border border-slate-200 bg-white"></div>
+                  //       </div>
+                  //    </section>
+                  //    <section class="rounded-lg border border-slate-200 bg-white">
+                  //       <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                  //          <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Top Leaderboard by Pelapor BC</h3>
+                  //       </div>
+                  //       <div class="hide-scrollbar max-h-56 overflow-auto px-3 py-3">
+                  //          <div id="peer-blindspot-leaderboard-bc" class="min-w-[620px] rounded-md border border-slate-200 bg-white"></div>
+                  //       </div>
+                  //    </section>
+                  //    <section class="rounded-lg border border-slate-200 bg-white">
+                  //       <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                  //          <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Top Leaderboard by Pelapor MK</h3>
+                  //       </div>
+                  //       <div class="hide-scrollbar max-h-56 overflow-auto px-3 py-3">
+                  //          <div id="peer-blindspot-leaderboard-mk" class="min-w-[620px] rounded-md border border-slate-200 bg-white"></div>
+                  //       </div>
+                  //    </section>
+                  // </div>
+                  // </div>
                   <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                    
+                     <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                        <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Dashboard Blindspot (Tableau)</h3>
+                        <p class="mt-0.5 text-[10px] font-medium text-slate-600">iDashboard · Tableau Embedding API v3</p>
+                     </div>
                      <div class="w-full overflow-x-auto bg-slate-50/30 p-2 sm:p-4">
                         <tableau-viz
                            id="tableau-viz-blindspot"
