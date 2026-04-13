@@ -1671,10 +1671,13 @@
             <div id="peer-blindspot-error" class="hidden bg-white px-6 py-8 text-center text-[12px] font-medium text-red-600"></div>
             <div id="peer-blindspot-body" class="min-h-0 flex-1 overflow-y-auto bg-[#fbfcfd] px-3 py-4 sm:px-5 sm:py-5">
                <div class="mx-auto max-w-[1360px] space-y-4">
-                  <div class="grid grid-cols-1 gap-3 xl:grid-cols-12">
+                 
                  
                   <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                    
+                     <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                        <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Dashboard Blindspot (Tableau)</h3>
+                        <p class="mt-0.5 text-[10px] font-medium text-slate-600">iDashboard · Tableau Embedding API v3</p>
+                     </div>
                      <div class="w-full overflow-x-auto bg-slate-50/30 p-2 sm:p-4">
                         <tableau-viz
                            id="tableau-viz-blindspot"
