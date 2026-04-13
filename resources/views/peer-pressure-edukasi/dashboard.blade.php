@@ -657,7 +657,16 @@
          @include('peer-pressure-edukasi.partials.thematic-alignment-program-table')
 
 
-         
+<div class="rounded-2xl border border-outline-variant/20 bg-white p-2 shadow-sm">
+  <iframe
+    src="https://chatgpt.com/canvas/shared/69dc9cd8cc888191967dd887eed477ac"
+    title="Incident Back Analysis Tool"
+    class="h-[780px] w-full rounded-xl border-0"
+    loading="lazy"
+    referrerpolicy="no-referrer-when-downgrade"
+    allowfullscreen
+  ></iframe>
+</div>
 
 
        
