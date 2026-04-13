@@ -1567,18 +1567,13 @@
                                  </div>
                               </div>
                            </section>
-                           <section class="rounded-lg border border-slate-200 bg-white">
-                              <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Valid To Be Concerned Highrisk Hazard</h3>
-                              </div>
-                              <div class="px-3 py-2.5">
-                                 <p class="text-[11px] text-slate-500">Total valid TBC dan tren mingguan.</p>
-                              </div>
-                           </section>
+                          
                            <section class="rounded-lg border border-slate-200 bg-white p-3">
                               <p class="text-[11px] font-bold text-slate-600">Matriks Repetitive Laporan L4W</p>
                               <p class="mt-1 text-[10px] text-slate-400">Sebaran risiko di kuadran perhatian.</p>
-                              <div class="mt-2 h-28 rounded-md border border-slate-200 bg-slate-50"></div>
+                              <div class="mt-2 h-60 rounded-md border border-slate-200 bg-white p-2">
+                                 <canvas id="peer-tbc-repetitive-scatter-canvas" aria-label="Grafik matriks repetitive laporan"></canvas>
+                              </div>
                            </section>
                         </div>
 
@@ -1587,7 +1582,7 @@
                               <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
                                  <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">To Be Concerned Highrisk Hazard</h3>
                               </div>
-                              <div class="overflow-x-auto px-3 py-3">
+                              <div class="hide-scrollbar overflow-x-auto px-3 py-3">
                                  <div id="peer-tbc-category-cards" class="min-w-[920px] rounded-md border border-slate-200 bg-white" aria-label="Daftar kategori TBC"></div>
                                  <p id="peer-tbc-category-empty" class="hidden px-2 py-10 text-center text-sm font-medium text-slate-500">Belum ada data tren kategori.</p>
                               </div>
@@ -1612,6 +1607,14 @@
                                        <option value="__all">Semua site (agregat)</option>
                                     </select>
                                  </div>
+                              </div>
+                           </section>
+                           <section class="rounded-lg border border-slate-200 bg-white">
+                              <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Need to Check (Top 5 Kuadran)</h3>
+                              </div>
+                              <div class="hide-scrollbar overflow-x-auto px-3 py-3">
+                                 <div id="peer-tbc-need-check-top5" class="min-w-[760px] rounded-md border border-slate-200 bg-white" aria-label="Top 5 kategori prioritas kuadran"></div>
                               </div>
                            </section>
                         </div>
@@ -4112,6 +4115,7 @@
         var tbcGeneralClose = document.getElementById('peer-tbc-general-close');
         var tbcGeneralBackdrop = tbcGeneralModal ? tbcGeneralModal.querySelector('.peer-tbc-general-backdrop') : null;
         var peerTbcGeneralBarChart = null;
+        var peerTbcRepetitiveScatterChart = null;
         var peerTbcCategoryLineCharts = [];
         function peerTbcNum(v) {
           if (v === null || v === undefined || v === '') return null;
@@ -4142,6 +4146,174 @@
           var bs = peerTbcCategoryTrend.by_site && peerTbcCategoryTrend.by_site[siteKey];
           if (bs && bs.categories && bs.categories.length) return bs.categories;
           return [];
+        }
+        function peerTbcBuildRepetitivePoints(categories, weeks) {
+          var pts = [];
+          if (!Array.isArray(categories) || !categories.length) return pts;
+          categories.forEach(function (cat, idx) {
+            var vals = Array.isArray(cat.values) ? cat.values : [];
+            vals.forEach(function (raw, wi) {
+              var x = peerTbcNum(raw);
+              if (x === null) return;
+              var baseY = Math.sqrt(Math.max(0, x)) * 1.9;
+              var jitter = ((idx % 6) - 2.5) * 0.55 + wi * 0.35;
+              var y = Math.max(0, Math.min(30, baseY + jitter));
+              pts.push({
+                x: Number(x.toFixed(2)),
+                y: Number(y.toFixed(2)),
+                category: (cat.label != null ? String(cat.label) : '—'),
+                rank: cat.rank != null ? Number(cat.rank) : idx + 1,
+                week: weeks[wi] || ('W' + (wi + 1)),
+              });
+            });
+          });
+          return pts;
+        }
+        function peerTbcRenderNeedCheckTop5(points, xMid, yMid) {
+          var root = document.getElementById('peer-tbc-need-check-top5');
+          if (!root) return;
+          if (!Array.isArray(points) || !points.length) {
+            root.innerHTML = '<p class="px-3 py-8 text-center text-sm text-slate-500">Belum ada data kuadran.</p>';
+            return;
+          }
+          var top = points
+            .filter(function (p) { return p.x >= xMid && p.y >= yMid; })
+            .map(function (p) {
+              return {
+                category: p.category,
+                week: p.week,
+                x: p.x,
+                y: p.y,
+                score: (p.x * p.y),
+              };
+            })
+            .sort(function (a, b) { return b.score - a.score; })
+            .slice(0, 5);
+          if (!top.length) {
+            root.innerHTML = '<p class="px-3 py-8 text-center text-sm text-slate-500">Belum ada item prioritas pada Kuadran I.</p>';
+            return;
+          }
+          var rows = top.map(function (it, idx) {
+            return (
+              '<tr class="' + (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70') + '">' +
+              '<td class="px-2.5 py-2 text-xs font-semibold text-slate-700">' + escHtml(it.category) + '</td>' +
+              '<td class="px-2.5 py-2 text-center text-xs font-semibold text-slate-600">' + escHtml(it.week) + '</td>' +
+              '<td class="px-2.5 py-2 text-center text-xs tabular-nums text-slate-700">' + Number(it.x).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + '</td>' +
+              '<td class="px-2.5 py-2 text-center text-xs tabular-nums text-slate-700">' + Number(it.y).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + '</td>' +
+              '<td class="px-2.5 py-2 text-center text-xs font-bold tabular-nums text-rose-600">' + Number(it.score).toLocaleString('id-ID', { maximumFractionDigits: 0 }) + '</td>' +
+              '</tr>'
+            );
+          }).join('');
+          root.innerHTML =
+            '<table class="w-full min-w-[760px] border-collapse">' +
+            '<thead><tr class="bg-[#fff8e6] text-[10px] uppercase tracking-wide text-slate-600">' +
+            '<th class="px-2.5 py-2 text-left">Kategori</th>' +
+            '<th class="px-2.5 py-2 text-center">Week</th>' +
+            '<th class="px-2.5 py-2 text-center">Jumlah Laporan</th>' +
+            '<th class="px-2.5 py-2 text-center">Repetisi Hari</th>' +
+            '<th class="px-2.5 py-2 text-center">Priority Score</th>' +
+            '</tr></thead>' +
+            '<tbody>' + rows + '</tbody></table>';
+        }
+        function peerTbcRenderRepetitiveScatter(siteKey) {
+          var canvas = document.getElementById('peer-tbc-repetitive-scatter-canvas');
+          if (!canvas || typeof Chart === 'undefined') return;
+          if (peerTbcRepetitiveScatterChart) {
+            try { peerTbcRepetitiveScatterChart.destroy(); } catch (e) {}
+            peerTbcRepetitiveScatterChart = null;
+          }
+          var weeks = (peerTbcCategoryTrend && peerTbcCategoryTrend.weeks) || ['W12', 'W13', 'W14', 'W15'];
+          var categories = peerTbcGetCategoriesForSite(siteKey && siteKey !== '' ? siteKey : '__all');
+          var points = peerTbcBuildRepetitivePoints(categories, weeks);
+          if (!points.length) {
+            peerTbcRenderNeedCheckTop5([], 0, 0);
+            return;
+          }
+          var xs = points.map(function (p) { return p.x; });
+          var ys = points.map(function (p) { return p.y; });
+          var xMax = Math.max.apply(null, xs.concat([50]));
+          var yMax = Math.max.apply(null, ys.concat([10]));
+          var xMid = Math.max(40, xMax * 0.45);
+          var yMid = Math.max(8, yMax * 0.5);
+          peerTbcRenderNeedCheckTop5(points, xMid, yMid);
+
+          var dotColors = ['#34a0a4', '#6a4c93', '#4cc9f0', '#f72585', '#e9c46a', '#90be6d', '#577590', '#f9844a'];
+          var quadPlugin = {
+            id: 'peerTbcQuadrantGuide',
+            afterDraw: function (ch) {
+              var ctx = ch.ctx;
+              var area = ch.chartArea;
+              if (!area) return;
+              var xScale = ch.scales.x;
+              var yScale = ch.scales.y;
+              var xPx = xScale.getPixelForValue(xMid);
+              var yPx = yScale.getPixelForValue(yMid);
+              ctx.save();
+              ctx.strokeStyle = 'rgba(100,116,139,0.55)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(xPx, area.top);
+              ctx.lineTo(xPx, area.bottom);
+              ctx.moveTo(area.left, yPx);
+              ctx.lineTo(area.right, yPx);
+              ctx.stroke();
+              ctx.fillStyle = 'rgba(239,68,68,0.70)';
+              ctx.font = '700 12px Poppins, system-ui, sans-serif';
+              ctx.fillText('Kuadran I', Math.min(area.right - 78, xPx + 8), Math.max(area.top + 14, yPx - 8));
+              ctx.fillStyle = 'rgba(239,68,68,0.55)';
+              ctx.fillText('Kuadran IV', Math.max(area.left + 8, xPx - 86), Math.min(area.bottom - 8, yPx + 18));
+              ctx.restore();
+            },
+          };
+          peerTbcRepetitiveScatterChart = new Chart(canvas.getContext('2d'), {
+            type: 'scatter',
+            data: {
+              datasets: [{
+                label: 'Sebaran Laporan',
+                data: points,
+                parsing: false,
+                pointRadius: 4,
+                pointHoverRadius: 5,
+                pointBackgroundColor: function (ctx) {
+                  return dotColors[ctx.dataIndex % dotColors.length];
+                },
+                pointBorderWidth: 0,
+              }],
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    label: function (ctx) {
+                      var raw = ctx.raw || {};
+                      return (raw.category || '—') + ' · ' + (raw.week || '') + ' · Laporan: ' + Number(raw.x || 0).toLocaleString('id-ID') + ' · Repetisi: ' + Number(raw.y || 0).toLocaleString('id-ID', { maximumFractionDigits: 1 });
+                    },
+                  },
+                },
+              },
+              scales: {
+                x: {
+                  min: 0,
+                  max: Math.ceil(xMax / 25) * 25,
+                  title: { display: true, text: 'Jumlah Laporan ✦', color: '#475569', font: { size: 11, weight: '600' } },
+                  ticks: { color: '#64748b', maxTicksLimit: 8 },
+                  grid: { color: 'rgba(148,163,184,0.16)', drawBorder: false },
+                },
+                y: {
+                  min: 0,
+                  max: Math.ceil((yMax + 2) / 5) * 5,
+                  title: { display: true, text: 'Repetisi Hari ✦', color: '#475569', font: { size: 11, weight: '600' } },
+                  ticks: { color: '#64748b', maxTicksLimit: 7 },
+                  grid: { color: 'rgba(148,163,184,0.16)', drawBorder: false },
+                },
+              },
+            },
+            plugins: [quadPlugin],
+          });
         }
         var peerTbcLinePalette = [
           '57, 82, 188',
@@ -4338,11 +4510,13 @@
                 var v = sel.value || '__all';
                 peerTbcRenderBarChart(v);
                 peerTbcRenderCategoryLineChart(v);
+                peerTbcRenderRepetitiveScatter(v);
               };
             }
             var v0 = sel && sel.value ? sel.value : '__all';
             peerTbcRenderBarChart(v0);
             peerTbcRenderCategoryLineChart(v0);
+            peerTbcRenderRepetitiveScatter(v0);
           }, 80);
         }
         function openTbcGeneralModal() {
@@ -4359,6 +4533,12 @@
               peerTbcGeneralBarChart.destroy();
             } catch (e) {}
             peerTbcGeneralBarChart = null;
+          }
+          if (peerTbcRepetitiveScatterChart) {
+            try {
+              peerTbcRepetitiveScatterChart.destroy();
+            } catch (e) {}
+            peerTbcRepetitiveScatterChart = null;
           }
           peerTbcDestroyCategoryCards();
           tbcGeneralModal.classList.add('hidden');
