@@ -630,6 +630,8 @@
          @php
             $tableauEmbeddingApiSrc = 'https://idashboard.beraucoal.co.id/javascripts/api/tableau.embedding.3.latest.min.js';
             $tableauOverviewSafetyVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/OverviewSafetyPerformance_17471016698280/OverviewSafetyPerformanceAllSites2';
+            $tableauTbcAllSiteVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/DashboardTBCAllsiteRev/SlideAligmnentv2toUSE';
+            $tableauBlindspotVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/DashboardTBCAllsiteRev/SlideAligmnentBlindspottoUSE';
          @endphp
          <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
             <div class="min-w-0 lg:col-span-12">
@@ -1003,91 +1005,277 @@
             </div>
          </div>
       </div>
+      @php
+         $peerSapModalStatic = [
+            'weeks' => ['W12', 'W13', 'W14', 'W15'],
+            'rowOrder' => ['COACHING', 'HAZARD', 'INSPEKSI', 'OBSERVASI', 'OBSERVASI AREA KRITIS'],
+            'all' => [
+               ['OBSERVASI AREA KRITIS', 'W15', 28477], ['OBSERVASI', 'W15', 16315], ['INSPEKSI', 'W15', 9365], ['HAZARD', 'W15', 10379], ['COACHING', 'W15', 6290],
+               ['OBSERVASI AREA KRITIS', 'W14', 28181], ['OBSERVASI', 'W14', 14958], ['INSPEKSI', 'W14', 8767], ['HAZARD', 'W14', 9732], ['COACHING', 'W14', 6077],
+               ['OBSERVASI AREA KRITIS', 'W13', 27058], ['OBSERVASI', 'W13', 13384], ['INSPEKSI', 'W13', 8242], ['HAZARD', 'W13', 9021], ['COACHING', 'W13', 6000],
+               ['OBSERVASI AREA KRITIS', 'W12', 19835], ['OBSERVASI', 'W12', 12548], ['INSPEKSI', 'W12', 6871], ['HAZARD', 'W12', 7515], ['COACHING', 'W12', 4900],
+            ],
+            'bySite' => [
+               'BMO 1' => [
+                  ['OBSERVASI AREA KRITIS', 'W15', 4472], ['OBSERVASI', 'W15', 4754], ['INSPEKSI', 'W15', 1089], ['HAZARD', 'W15', 1201], ['COACHING', 'W15', 775],
+                  ['OBSERVASI AREA KRITIS', 'W14', 4180], ['OBSERVASI', 'W14', 3882], ['INSPEKSI', 'W14', 986], ['HAZARD', 'W14', 1207], ['COACHING', 'W14', 710],
+                  ['OBSERVASI AREA KRITIS', 'W13', 3986], ['OBSERVASI', 'W13', 3177], ['INSPEKSI', 'W13', 936], ['HAZARD', 'W13', 1105], ['COACHING', 'W13', 673],
+                  ['OBSERVASI AREA KRITIS', 'W12', 3183], ['OBSERVASI', 'W12', 3443], ['INSPEKSI', 'W12', 804], ['HAZARD', 'W12', 918], ['COACHING', 'W12', 554],
+               ],
+               'BMO 2' => [
+                  ['OBSERVASI AREA KRITIS', 'W15', 3952], ['OBSERVASI', 'W15', 1522], ['INSPEKSI', 'W15', 1479], ['HAZARD', 'W15', 1541], ['COACHING', 'W15', 1652],
+                  ['OBSERVASI AREA KRITIS', 'W14', 4156], ['OBSERVASI', 'W14', 1432], ['INSPEKSI', 'W14', 1438], ['HAZARD', 'W14', 1527], ['COACHING', 'W14', 1564],
+                  ['OBSERVASI AREA KRITIS', 'W13', 4135], ['OBSERVASI', 'W13', 1291], ['INSPEKSI', 'W13', 1400], ['HAZARD', 'W13', 1441], ['COACHING', 'W13', 1517],
+                  ['OBSERVASI AREA KRITIS', 'W12', 3000], ['OBSERVASI', 'W12', 1198], ['INSPEKSI', 'W12', 1228], ['HAZARD', 'W12', 1279], ['COACHING', 'W12', 1311],
+               ],
+               'BMO 3' => [
+                  ['OBSERVASI AREA KRITIS', 'W15', 1145], ['OBSERVASI', 'W15', 346], ['INSPEKSI', 'W15', 356], ['HAZARD', 'W15', 393], ['COACHING', 'W15', 213],
+                  ['OBSERVASI AREA KRITIS', 'W14', 1223], ['OBSERVASI', 'W14', 229], ['INSPEKSI', 'W14', 314], ['HAZARD', 'W14', 368], ['COACHING', 'W14', 207],
+                  ['OBSERVASI AREA KRITIS', 'W13', 1058], ['OBSERVASI', 'W13', 246], ['INSPEKSI', 'W13', 302], ['HAZARD', 'W13', 314], ['COACHING', 'W13', 244],
+                  ['OBSERVASI AREA KRITIS', 'W12', 641], ['OBSERVASI', 'W12', 194], ['INSPEKSI', 'W12', 233], ['HAZARD', 'W12', 252], ['COACHING', 'W12', 186],
+               ],
+               'Eksplorasi' => [
+                  ['OBSERVASI AREA KRITIS', 'W15', 452], ['OBSERVASI', 'W15', 623], ['INSPEKSI', 'W15', 55], ['HAZARD', 'W15', 22], ['COACHING', 'W15', 79],
+                  ['OBSERVASI AREA KRITIS', 'W14', 435], ['OBSERVASI', 'W14', 714], ['INSPEKSI', 'W14', 54], ['HAZARD', 'W14', 17], ['COACHING', 'W14', 82],
+                  ['OBSERVASI AREA KRITIS', 'W13', 390], ['OBSERVASI', 'W13', 700], ['INSPEKSI', 'W13', 56], ['HAZARD', 'W13', 24], ['COACHING', 'W13', 82],
+                  ['OBSERVASI AREA KRITIS', 'W12', 255], ['OBSERVASI', 'W12', 479], ['INSPEKSI', 'W12', 52], ['HAZARD', 'W12', 12], ['COACHING', 'W12', 62],
+               ],
+               'GMO' => [
+                  ['OBSERVASI AREA KRITIS', 'W15', 7061], ['OBSERVASI', 'W15', 2549], ['INSPEKSI', 'W15', 2412], ['HAZARD', 'W15', 2480], ['COACHING', 'W15', 1007],
+                  ['OBSERVASI AREA KRITIS', 'W14', 6745], ['OBSERVASI', 'W14', 2367], ['INSPEKSI', 'W14', 2262], ['HAZARD', 'W14', 2373], ['COACHING', 'W14', 1051],
+                  ['OBSERVASI AREA KRITIS', 'W13', 6442], ['OBSERVASI', 'W13', 1810], ['INSPEKSI', 'W13', 2092], ['HAZARD', 'W13', 2199], ['COACHING', 'W13', 1050],
+                  ['OBSERVASI AREA KRITIS', 'W12', 4673], ['OBSERVASI', 'W12', 2272], ['INSPEKSI', 'W12', 1664], ['HAZARD', 'W12', 1725], ['COACHING', 'W12', 756],
+               ],
+               'HO' => [
+                  ['OBSERVASI AREA KRITIS', 'W15', 464], ['OBSERVASI', 'W15', 285], ['INSPEKSI', 'W15', 177], ['HAZARD', 'W15', 167], ['COACHING', 'W15', 180],
+                  ['OBSERVASI AREA KRITIS', 'W14', 431], ['OBSERVASI', 'W14', 250], ['INSPEKSI', 'W14', 137], ['HAZARD', 'W14', 137], ['COACHING', 'W14', 137],
+                  ['OBSERVASI AREA KRITIS', 'W13', 475], ['OBSERVASI', 'W13', 252], ['INSPEKSI', 'W13', 115], ['HAZARD', 'W13', 112], ['COACHING', 'W13', 123],
+                  ['OBSERVASI AREA KRITIS', 'W12', 347], ['OBSERVASI', 'W12', 207], ['INSPEKSI', 'W12', 127], ['HAZARD', 'W12', 115], ['COACHING', 'W12', 124],
+               ],
+               'LMO' => [
+                  ['OBSERVASI AREA KRITIS', 'W15', 5310], ['OBSERVASI', 'W15', 3762], ['INSPEKSI', 'W15', 2806], ['HAZARD', 'W15', 2172], ['COACHING', 'W15', 1172],
+                  ['OBSERVASI AREA KRITIS', 'W14', 5324], ['OBSERVASI', 'W14', 3633], ['INSPEKSI', 'W14', 2655], ['HAZARD', 'W14', 2010], ['COACHING', 'W14', 1247],
+                  ['OBSERVASI AREA KRITIS', 'W13', 5045], ['OBSERVASI', 'W13', 3460], ['INSPEKSI', 'W13', 2510], ['HAZARD', 'W13', 1868], ['COACHING', 'W13', 1216],
+                  ['OBSERVASI AREA KRITIS', 'W12', 3761], ['OBSERVASI', 'W12', 2781], ['INSPEKSI', 'W12', 2063], ['HAZARD', 'W12', 1601], ['COACHING', 'W12', 992],
+               ],
+               'Marine' => [
+                  ['OBSERVASI AREA KRITIS', 'W15', 367], ['OBSERVASI', 'W15', 878], ['INSPEKSI', 'W15', 431], ['HAZARD', 'W15', 1796], ['COACHING', 'W15', 299],
+                  ['OBSERVASI AREA KRITIS', 'W14', 340], ['OBSERVASI', 'W14', 862], ['INSPEKSI', 'W14', 388], ['HAZARD', 'W14', 1507], ['COACHING', 'W14', 215],
+                  ['OBSERVASI AREA KRITIS', 'W13', 321], ['OBSERVASI', 'W13', 888], ['INSPEKSI', 'W13', 313], ['HAZARD', 'W13', 1378], ['COACHING', 'W13', 220],
+                  ['OBSERVASI AREA KRITIS', 'W12', 259], ['OBSERVASI', 'W12', 667], ['INSPEKSI', 'W12', 251], ['HAZARD', 'W12', 1159], ['COACHING', 'W12', 180],
+               ],
+               'SMO' => [
+                  ['OBSERVASI AREA KRITIS', 'W15', 5254], ['OBSERVASI', 'W15', 1596], ['INSPEKSI', 'W15', 560], ['HAZARD', 'W15', 607], ['COACHING', 'W15', 913],
+                  ['OBSERVASI AREA KRITIS', 'W14', 5347], ['OBSERVASI', 'W14', 1589], ['INSPEKSI', 'W14', 533], ['HAZARD', 'W14', 586], ['COACHING', 'W14', 864],
+                  ['OBSERVASI AREA KRITIS', 'W13', 5206], ['OBSERVASI', 'W13', 1560], ['INSPEKSI', 'W13', 518], ['HAZARD', 'W13', 580], ['COACHING', 'W13', 874],
+                  ['OBSERVASI AREA KRITIS', 'W12', 3716], ['OBSERVASI', 'W12', 1307], ['INSPEKSI', 'W12', 449], ['HAZARD', 'W12', 454], ['COACHING', 'W12', 735],
+               ],
+            ],
+         ];
+         $peerPengawasanBerjarakModalStatic = [
+            'weeks' => ['W12', 'W13', 'W14', 'W15'],
+            'rowOrder' => ['Real Time', 'Post Event', 'Pengawasan Langsung'],
+            'all' => [
+               ['Real Time', 'W15', 21086], ['Post Event', 'W15', 13989], ['Pengawasan Langsung', 'W15', 35751],
+               ['Real Time', 'W14', 20666], ['Post Event', 'W14', 13485], ['Pengawasan Langsung', 'W14', 33564],
+               ['Real Time', 'W13', 18577], ['Post Event', 'W13', 12277], ['Pengawasan Langsung', 'W13', 32851],
+               ['Real Time', 'W12', 14559], ['Post Event', 'W12', 10388], ['Pengawasan Langsung', 'W12', 26722],
+            ],
+            'bySite' => [
+               'BMO 1' => [
+                  ['Real Time', 'W15', 4291], ['Post Event', 'W15', 1038], ['Pengawasan Langsung', 'W15', 6962],
+                  ['Real Time', 'W14', 4403], ['Post Event', 'W14', 1076], ['Pengawasan Langsung', 'W14', 5486],
+                  ['Real Time', 'W13', 3567], ['Post Event', 'W13', 1043], ['Pengawasan Langsung', 'W13', 5267],
+                  ['Real Time', 'W12', 3135], ['Post Event', 'W12', 904], ['Pengawasan Langsung', 'W12', 4863],
+               ],
+               'BMO 2' => [
+                  ['Real Time', 'W15', 2410], ['Post Event', 'W15', 1865], ['Pengawasan Langsung', 'W15', 5871],
+                  ['Real Time', 'W14', 2366], ['Post Event', 'W14', 1860], ['Pengawasan Langsung', 'W14', 5891],
+                  ['Real Time', 'W13', 2231], ['Post Event', 'W13', 1704], ['Pengawasan Langsung', 'W13', 5849],
+                  ['Real Time', 'W12', 1859], ['Post Event', 'W12', 1397], ['Pengawasan Langsung', 'W12', 4760],
+               ],
+               'BMO 3' => [
+                  ['Real Time', 'W15', 1734], ['Post Event', 'W15', 171], ['Pengawasan Langsung', 'W15', 548],
+                  ['Real Time', 'W14', 1622], ['Post Event', 'W14', 178], ['Pengawasan Langsung', 'W14', 541],
+                  ['Real Time', 'W13', 1510], ['Post Event', 'W13', 159], ['Pengawasan Langsung', 'W13', 495],
+                  ['Real Time', 'W12', 1043], ['Post Event', 'W12', 101], ['Pengawasan Langsung', 'W12', 362],
+               ],
+               'Eksplorasi' => [
+                  ['Real Time', 'W15', 151], ['Post Event', 'W15', 297], ['Pengawasan Langsung', 'W15', 783],
+                  ['Real Time', 'W14', 138], ['Post Event', 'W14', 287], ['Pengawasan Langsung', 'W14', 877],
+                  ['Real Time', 'W13', 59], ['Post Event', 'W13', 225], ['Pengawasan Langsung', 'W13', 968],
+                  ['Real Time', 'W12', 39], ['Post Event', 'W12', 181], ['Pengawasan Langsung', 'W12', 640],
+               ],
+               'GMO' => [
+                  ['Real Time', 'W15', 3492], ['Post Event', 'W15', 4329], ['Pengawasan Langsung', 'W15', 7688],
+                  ['Real Time', 'W14', 3357], ['Post Event', 'W14', 4068], ['Pengawasan Langsung', 'W14', 7373],
+                  ['Real Time', 'W13', 3031], ['Post Event', 'W13', 3235], ['Pengawasan Langsung', 'W13', 7327],
+                  ['Real Time', 'W12', 2103], ['Post Event', 'W12', 3402], ['Pengawasan Langsung', 'W12', 5585],
+               ],
+               'HO' => [
+                  ['Real Time', 'W15', 134], ['Post Event', 'W15', 330], ['Pengawasan Langsung', 'W15', 809],
+                  ['Real Time', 'W14', 103], ['Post Event', 'W14', 325], ['Pengawasan Langsung', 'W14', 664],
+                  ['Real Time', 'W13', 119], ['Post Event', 'W13', 306], ['Pengawasan Langsung', 'W13', 652],
+                  ['Real Time', 'W12', 91], ['Post Event', 'W12', 247], ['Pengawasan Langsung', 'W12', 582],
+               ],
+               'LMO' => [
+                  ['Real Time', 'W15', 4748], ['Post Event', 'W15', 3755], ['Pengawasan Langsung', 'W15', 6719],
+                  ['Real Time', 'W14', 4459], ['Post Event', 'W14', 3609], ['Pengawasan Langsung', 'W14', 6801],
+                  ['Real Time', 'W13', 4027], ['Post Event', 'W13', 3588], ['Pengawasan Langsung', 'W13', 6484],
+                  ['Real Time', 'W12', 3322], ['Post Event', 'W12', 2641], ['Pengawasan Langsung', 'W12', 5235],
+               ],
+               'Marine' => [
+                  ['Real Time', 'W15', 1038], ['Post Event', 'W15', 301], ['Pengawasan Langsung', 'W15', 2432],
+                  ['Real Time', 'W14', 1037], ['Post Event', 'W14', 183], ['Pengawasan Langsung', 'W14', 2092],
+                  ['Real Time', 'W13', 907], ['Post Event', 'W13', 244], ['Pengawasan Langsung', 'W13', 1969],
+                  ['Real Time', 'W12', 721], ['Post Event', 'W12', 148], ['Pengawasan Langsung', 'W12', 1647],
+               ],
+               'SMO' => [
+                  ['Real Time', 'W15', 3088], ['Post Event', 'W15', 1903], ['Pengawasan Langsung', 'W15', 3939],
+                  ['Real Time', 'W14', 3181], ['Post Event', 'W14', 1899], ['Pengawasan Langsung', 'W14', 3839],
+                  ['Real Time', 'W13', 3126], ['Post Event', 'W13', 1773], ['Pengawasan Langsung', 'W13', 3839],
+                  ['Real Time', 'W12', 2246], ['Post Event', 'W12', 1367], ['Pengawasan Langsung', 'W12', 3048],
+               ],
+            ],
+         ];
+         $peerPelaporModalStatic = [
+            'weeks' => ['W12', 'W13', 'W14', 'W15'],
+            'all' => [
+               ['W12', 3484], ['W13', 3622], ['W14', 3773], ['W15', 3904],
+            ],
+            'bySite' => [
+               'BMO 1' => [['W12', 498], ['W13', 526], ['W14', 551], ['W15', 603]],
+               'BMO 2' => [['W12', 586], ['W13', 619], ['W14', 627], ['W15', 662]],
+               'BMO 3' => [['W12', 98], ['W13', 103], ['W14', 120], ['W15', 122]],
+               'Eksplorasi' => [['W12', 68], ['W13', 76], ['W14', 78], ['W15', 80]],
+               'GMO' => [['W12', 537], ['W13', 563], ['W14', 593], ['W15', 589]],
+               'HO' => [['W12', 171], ['W13', 176], ['W14', 181], ['W15', 205]],
+               'LMO' => [['W12', 717], ['W13', 722], ['W14', 767], ['W15', 793]],
+               'Marine' => [['W12', 653], ['W13', 707], ['W14', 734], ['W15', 751]],
+               'SMO' => [['W12', 367], ['W13', 376], ['W14', 388], ['W15', 408]],
+            ],
+         ];
+      @endphp
+      <script>window.PEER_SAP_MODAL_STATIC = @json($peerSapModalStatic);</script>
+      <script>window.PEER_PENGAWASAN_BERJARAK_MODAL_STATIC = @json($peerPengawasanBerjarakModalStatic);</script>
+      <script>window.PEER_PELOPOR_MODAL_STATIC = @json($peerPelaporModalStatic);</script>
       <!-- Modal statistik kategori deviasi (dari kartu KPI Hazard Reporting / deviasi) -->
-      <div id="peer-deviation-category-modal" class="hidden fixed inset-0 z-[206] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-deviation-category-title">
+      <div id="peer-deviation-category-modal" class="hidden fixed inset-0 z-[206] flex items-center justify-center p-3 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-deviation-category-title">
          <div class="absolute inset-0 cursor-pointer peer-deviation-category-backdrop" aria-hidden="true"></div>
-         <div class="relative z-10 flex max-h-[min(92vh,820px)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
-            <div class="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant/20 px-5 py-4 sm:px-6">
-               <div>
-                  <h2 id="peer-deviation-category-title" class="font-headline text-lg font-bold text-on-surface">Statistik kategori deviasi</h2>
+         <div class="relative z-10 flex max-h-[min(94vh,960px)] w-full max-w-[min(96vw,1280px)] flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
+            <div class="flex shrink-0 flex-wrap items-start justify-between gap-3 border-b border-outline-variant/20 px-4 py-3 sm:px-6 sm:py-4">
+               <div class="min-w-0 flex-1">
+                  <h2 id="peer-deviation-category-title" class="font-headline text-lg font-bold text-on-surface sm:text-xl">Hazard Reporting, SAP, Pengawasan Berjarak &amp; Pelapor</h2>
                   <p class="mt-1 text-xs text-on-surface-variant">{{ ($chartPeriodMonth ?? false) ? 'Periode sesuai filter chart (tanggal temuan).' : 'Seluruh data kejadian.' }}</p>
+                  <p id="peer-deviation-modal-site-label" class="mt-1 text-[10px] font-semibold text-primary">Site: All Site</p>
                </div>
-               <button type="button" id="peer-deviation-category-close" class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
-                  <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
-               </button>
+               <div class="flex shrink-0 flex-wrap items-center gap-2 sm:gap-3">
+                  <div class="flex items-center gap-2">
+                     <label for="peer-deviation-site-filter" class="whitespace-nowrap text-[10px] font-semibold text-slate-600">Site</label>
+                     <select id="peer-deviation-site-filter" class="min-w-[8.5rem] rounded-lg border border-slate-300 bg-white px-2 py-1.5 text-[11px] font-semibold text-slate-800 shadow-sm">
+                        <option value="all">All Site</option>
+                        <option value="bmo-1">BMO 1</option>
+                        <option value="bmo-2">BMO 2</option>
+                        <option value="bmo-3">BMO 3</option>
+                        <option value="eksplorasi">Eksplorasi</option>
+                        <option value="gmo">GMO</option>
+                        <option value="ho">HO</option>
+                        <option value="lmo">LMO</option>
+                        <option value="marine">Marine</option>
+                        <option value="smo">SMO</option>
+                     </select>
+                  </div>
+                  <button type="button" id="peer-deviation-category-close" class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
+                     <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
+                  </button>
+               </div>
             </div>
-            <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
-               <div class="space-y-4">
+            <div class="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+               <div class="grid grid-cols-1 gap-4 xl:grid-cols-2">
                   <div class="rounded-xl border border-outline-variant/20 bg-white p-3 shadow-sm">
-                     <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{{ $peerHrEval['label'] ?? 'Hazard Reporting' }}</p>
-                     <p class="mt-0.5 text-[9px] text-on-surface-variant/90">Trend mingguan (agregat) · batang</p>
-                     <div class="relative mt-2 h-44 w-full min-h-[11rem]">
+                     <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Grafik SAP by Sumber Data</p>
+                     <p class="mt-0.5 text-[9px] text-on-surface-variant/90">Batang berkelompok per minggu: COACHING, HAZARD, INSPEKSI, OBSERVASI, OBSERVASI AREA KRITIS (sesuai filter site).</p>
+                     <div class="relative mt-2 h-56 w-full min-h-[14rem] sm:h-64">
                         <canvas
-                           id="peer-deviation-modal-hr-chart"
-                           class="peer-deviation-hr-chart max-h-full w-full"
-                           data-hr-values='@json($peerHrEval['values'] ?? [])'
-                           data-hr-weeks='@json($peerHrEval['weeks'] ?? [])'
-                           data-hr-color="{{ e($peerHrEval['bar'] ?? '#3952bc') }}"
+                           id="peer-deviation-modal-sap-chart"
+                           class="peer-deviation-sap-chart max-h-full w-full"
+                           data-sap-labels='@json($peerSapModalStatic['weeks'])'
+                           data-sap-series="[]"
                         ></canvas>
                      </div>
                   </div>
-   <div>
-                     <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Dashboard indikator detail lokasi (dummy)</p>
-                    <div id="peer-deviation-modal-categories" data-static-dummy="1" class="grid grid-cols-1 gap-2 rounded-lg border border-outline-variant/20 bg-[#e8ecef] p-2 sm:grid-cols-2 xl:grid-cols-3">
-                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
-                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">4. Ratio TBC/Pelapor</div>
-                           <div class="grid grid-cols-4 gap-1 px-2 pt-1 text-center text-[9px] font-bold text-slate-600">
-                              <span>1:3.04</span><span>1:2.95</span><span>1:2.81</span><span>1:2.90</span>
-                           </div>
-                           <div class="grid h-24 grid-cols-4 gap-2 px-2 py-1.5">
-                              <div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div>
-                           </div>
-                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
-                        </div>
-                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
-                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">5. Jumlah Pelapor (distinct)</div>
-                           <div class="grid grid-cols-4 gap-1 px-2 pt-1 text-center text-[9px] font-bold text-slate-600">
-                              <span>4,052</span><span>4,054</span><span>4,184</span><span>4,127</span>
-                           </div>
-                           <div class="grid h-24 grid-cols-4 gap-2 px-2 py-1.5">
-                              <div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div>
-                           </div>
-                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
-                        </div>
-                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
-                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">6. Jumlah SAP L1-L4</div>
-                           <div class="px-2 py-1 text-[9px] text-slate-500">Group layer · Tanggal pelaporan beDraft</div>
-                           <div class="space-y-1 px-2 pb-1.5 text-[9px]">
-                              <div class="grid grid-cols-[26px_1fr_40px] items-center gap-1"><span class="font-bold text-slate-600">L1</span><div class="h-2.5 bg-[#4f79a7]" style="width:85%"></div><span class="text-right font-bold text-slate-600">44,720</span></div>
-                              <div class="grid grid-cols-[26px_1fr_40px] items-center gap-1"><span class="font-bold text-slate-600">L2</span><div class="h-2.5 bg-[#4f79a7]" style="width:42%"></div><span class="text-right font-bold text-slate-600">14,540</span></div>
-                              <div class="grid grid-cols-[26px_1fr_40px] items-center gap-1"><span class="font-bold text-slate-600">L3</span><div class="h-2.5 bg-[#4f79a7]" style="width:31%"></div><span class="text-right font-bold text-slate-600">10,938</span></div>
-                              <div class="grid grid-cols-[26px_1fr_40px] items-center gap-1"><span class="font-bold text-slate-600">L4</span><div class="h-2.5 bg-[#4f79a7]" style="width:6%"></div><span class="text-right font-bold text-slate-600">1,899</span></div>
-                           </div>
-                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
-                        </div>
-                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
-                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">7. Ratio SAP per Detail Lokasi</div>
-                           <div class="grid grid-cols-4 gap-1 px-2 pt-1 text-center text-[9px] font-bold text-slate-600"><span>1:55.50</span><span>1:55.45</span><span>1:56.36</span><span>1:57.51</span></div>
-                           <div class="grid h-24 grid-cols-4 gap-2 px-2 py-1.5"><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div></div>
-                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
-                        </div>
-                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
-                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">8. Ratio Observasi per Detail Lokasi</div>
-                           <div class="grid grid-cols-4 gap-1 px-2 pt-1 text-center text-[9px] font-bold text-slate-600"><span>1:14.66</span><span>1:14.73</span><span>1:14.15</span><span>1:13.58</span></div>
-                           <div class="grid h-24 grid-cols-4 gap-2 px-2 py-1.5"><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div></div>
-                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
-                        </div>
-                        <div class="overflow-hidden rounded border border-slate-300 bg-white">
-                           <div class="border-b border-slate-300 bg-[#f3f4f6] px-2 py-1 text-[10px] font-bold text-slate-700">9. Ratio OAK per Detail Lokasi</div>
-                           <div class="grid grid-cols-4 gap-1 px-2 pt-1 text-center text-[9px] font-bold text-slate-600"><span>1:27.72</span><span>1:27.65</span><span>1:29.18</span><span>1:30.30</span></div>
-                           <div class="grid h-24 grid-cols-4 gap-2 px-2 py-1.5"><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div><div class="rounded-sm bg-[#4f79a7]"></div></div>
-                           <div class="grid grid-cols-4 border-t border-[#d4d9a4] bg-[#e5e6bd] px-2 py-0.5 text-center text-[9px] font-semibold text-[#6f7336]"><span>W07</span><span>W08</span><span>W09</span><span>W10</span></div>
-                        </div>
+                  <div class="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
+                     <div class="border-b border-slate-300 bg-[#cfe8d9] px-3 py-2">
+                        <p class="text-[11px] font-bold text-slate-800">1. Jumlah Laporan SAP by Sumber Data</p>
                      </div>
-                    
+                     <div class="overflow-x-auto">
+                        <table class="w-full min-w-[420px] border-collapse text-[11px] text-slate-800">
+                           <thead>
+                              <tr class="border-b border-slate-300">
+                                 <th class="bg-[#f3f4f6] px-2 py-2 text-left font-bold text-slate-700">Sumberdata Jenis Laporan</th>
+                                 @foreach ($peerSapModalStatic['weeks'] as $w)
+                                    <th class="bg-[#f5f0c4] px-2 py-2 text-center font-bold tabular-nums text-slate-800">{{ $w }}</th>
+                                 @endforeach
+                              </tr>
+                           </thead>
+                           <tbody id="peer-deviation-sap-tbody" data-static-sap="1"></tbody>
+                        </table>
+                     </div>
                   </div>
                </div>
-               <p class="mt-3 text-[10px] leading-relaxed text-on-surface-variant">Angka per minggu pada setiap baris adalah ilustrasi pembagian proporsional dari total kategori (bukan data mingguan aktual). Total dihitung dari penjumlahan jumlah per kategori (sama dengan total kejadian pada periode yang sama).</p>
+               <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-1">
+                 
+                  <div class="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
+                     <div class="border-b border-slate-300 bg-[#cfe8d9] px-3 py-2">
+                        <p class="text-[11px] font-bold text-slate-800">2. Jumlah laporan pengawasan berjarak</p>
+                     </div>
+                     <div class="overflow-x-auto">
+                        <table class="w-full min-w-[420px] border-collapse text-[11px] text-slate-800">
+                           <thead>
+                              <tr class="border-b border-slate-300">
+                                 <th class="bg-[#f3f4f6] px-2 py-2 text-left font-bold text-slate-700">Tools pengawasan (group)</th>
+                                 @foreach ($peerPengawasanBerjarakModalStatic['weeks'] as $w)
+                                    <th class="bg-[#f5f0c4] px-2 py-2 text-center font-bold tabular-nums text-slate-800">{{ $w }}</th>
+                                 @endforeach
+                              </tr>
+                           </thead>
+                           <tbody id="peer-deviation-pjb-tbody" data-static-pjb="1"></tbody>
+                        </table>
+                     </div>
+                  </div>
+               </div>
+               <div class="mt-4 grid grid-cols-1 gap-4 xl:grid-cols-2">
+                  <div class="rounded-xl border border-outline-variant/20 bg-white p-3 shadow-sm">
+                     <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Jumlah pelapor (distinct)</p>
+                     <p class="mt-0.5 text-[9px] text-on-surface-variant/90">ISO week tanggal pelaporan beDraft · distinct <span class="font-semibold">sid pelapor</span> · bar chart.</p>
+                     <div class="relative mt-2 h-48 w-full min-h-[12rem] sm:h-52">
+                        <canvas
+                           id="peer-deviation-modal-pelapor-chart"
+                           class="peer-deviation-pelapor-chart max-h-full w-full"
+                           data-static-pelapor="1"
+                           data-pelapor-weeks='@json($peerPelaporModalStatic['weeks'])'
+                           data-pelapor-values="[]"
+                        ></canvas>
+                     </div>
+                  </div>
+                  <div class="overflow-hidden rounded-xl border border-slate-300 bg-white shadow-sm">
+                     <div class="border-b border-slate-300 bg-[#cfe8d9] px-3 py-2">
+                        <p class="text-[11px] font-bold text-slate-800">3. Jumlah pelapor (distinct sid)</p>
+                     </div>
+                     <div class="overflow-x-auto">
+                        <table class="w-full min-w-[280px] border-collapse text-[11px] text-slate-800">
+                           <thead>
+                              <tr class="border-b border-slate-300">
+                                 <th class="bg-[#f3f4f6] px-2 py-2 text-left font-bold text-slate-700">ISO week (pelaporan beDraft)</th>
+                                 <th class="bg-[#f5f0c4] px-2 py-2 text-center font-bold text-slate-800">Distinct pelapor</th>
+                              </tr>
+                           </thead>
+                           <tbody id="peer-deviation-pelapor-tbody" data-static-pelapor="1"></tbody>
+                        </table>
+                     </div>
+                  </div>
+               </div>
+               <p class="mt-4 text-[10px] leading-relaxed text-on-surface-variant">Konten statik pada modal ini (SAP, pengawasan berjarak, pelapor) mengikuti set data yang Anda berikan dan berubah sesuai filter site.</p>
             </div>
          </div>
       </div>
@@ -1416,9 +1604,9 @@
          </div>
       </div>
       <!-- Modal TBC GENERAL — kartu kejadian (geser horizontal) -->
-  <div id="peer-tbc-general-modal" class="hidden fixed inset-0 z-[208] flex items-center justify-center bg-slate-900/40 p-3 backdrop-blur-[2px] sm:p-6" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-tbc-general-title">
+      <div id="peer-tbc-general-modal" class="hidden fixed inset-0 z-[208] flex items-center justify-center bg-slate-900/40 p-3 backdrop-blur-[2px] sm:p-6" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-tbc-general-title">
          <div class="absolute inset-0 cursor-pointer peer-tbc-general-backdrop" aria-hidden="true"></div>
-         <div class="relative z-10 flex max-h-[min(95vh,940px)] w-full max-w-[min(98vw,1380px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_24px_80px_-30px_rgba(15,23,42,0.38)]">
+          <div class="relative z-10 flex max-h-[min(95vh,940px)] w-full max-w-[min(98vw,1380px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_24px_80px_-30px_rgba(15,23,42,0.38)]">
             <div class="shrink-0 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
                <div class="flex items-start justify-between gap-4">
                   <div class="min-w-0">
@@ -1506,10 +1694,29 @@
                            </section>
                         </div>
                      </div>
+                  </div>
+                  <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                     <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                        <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Dashboard TBC All Site (Tableau)</h3>
+                        <p class="mt-0.5 text-[10px] font-medium text-slate-600">iDashboard · Tableau Embedding API v3</p>
+                     </div>
+                     <div class="w-full overflow-x-auto bg-slate-50/30 p-2 sm:p-4">
+                        {{-- Tableau API dimuat sekali di blok Overview (629–644); src viz di-set saat modal dibuka (lazy) --}}
+                        <tableau-viz
+                           id="tableau-viz-tbc"
+                           data-src="{{ $tableauTbcAllSiteVizSrc }}"
+                           data-tableau-lazy="1"
+                           width="1800"
+                           height="1063"
+                           hide-tabs
+                           toolbar="bottom"
+                           class="mx-auto block max-w-full"
+                        ></tableau-viz>
+                     </div>
+                  </section>
                </div>
             </div>
          </div>
-      </div>
       </div>
       <div id="peer-blindspot-modal" class="hidden fixed inset-0 z-[209] flex items-center justify-center bg-slate-900/40 p-3 backdrop-blur-[2px] sm:p-6" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-blindspot-title">
          <div class="absolute inset-0 cursor-pointer peer-blindspot-backdrop" aria-hidden="true"></div>
@@ -1531,7 +1738,8 @@
             </div>
             <div id="peer-blindspot-error" class="hidden bg-white px-6 py-8 text-center text-[12px] font-medium text-red-600"></div>
             <div id="peer-blindspot-body" class="min-h-0 flex-1 overflow-y-auto bg-[#fbfcfd] px-3 py-4 sm:px-5 sm:py-5">
-               <div class="mx-auto grid max-w-[1360px] grid-cols-1 gap-3 xl:grid-cols-12">
+               <div class="mx-auto max-w-[1360px] space-y-4">
+                  <div class="grid grid-cols-1 gap-3 xl:grid-cols-12">
                   <div class="space-y-3 xl:col-span-6">
                      <section class="rounded-lg border border-slate-200 bg-white">
                         <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
@@ -1585,6 +1793,25 @@
                         </div>
                      </section>
                   </div>
+                  </div>
+                  <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
+                     <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                        <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Dashboard Blindspot (Tableau)</h3>
+                        <p class="mt-0.5 text-[10px] font-medium text-slate-600">iDashboard · Tableau Embedding API v3</p>
+                     </div>
+                     <div class="w-full overflow-x-auto bg-slate-50/30 p-2 sm:p-4">
+                        <tableau-viz
+                           id="tableau-viz-blindspot"
+                           data-src="{{ $tableauBlindspotVizSrc }}"
+                           data-tableau-lazy="1"
+                           width="2560"
+                           height="1463"
+                           hide-tabs
+                           toolbar="bottom"
+                           class="mx-auto block max-w-full"
+                        ></tableau-viz>
+                     </div>
+                  </section>
                </div>
             </div>
          </div>
@@ -1651,6 +1878,7 @@
             </div>
          </div>
       </div>
+      
       <script>
       (function () {
         const modal = document.getElementById('peer-pressure-detail-modal');
@@ -2552,7 +2780,7 @@
                     max: yMax + pad,
                     grid: { color: 'rgba(0, 0, 0, 0.06)', drawBorder: false },
                     ticks: {
-                      display: true,
+                      display: false,
                       font: { size: 8 },
                       maxTicksLimit: 6,
                       callback: function (val) {
@@ -2730,6 +2958,100 @@
             return null;
           }
         }
+        function createPeerSapGroupedBarChart(canvas, weekLabels, series) {
+          if (typeof Chart === 'undefined' || !canvas) return null;
+          var ctx = canvas.getContext('2d');
+          if (!ctx) return null;
+          var lbls = Array.isArray(weekLabels) ? weekLabels : [];
+          var sers = Array.isArray(series) ? series : [];
+          if (!lbls.length || !sers.length) return null;
+          var n = lbls.length;
+          var datasets = sers.map(function (s) {
+            var raw = Array.isArray(s.data) ? s.data : [];
+            var data = [];
+            var i;
+            for (i = 0; i < n; i++) {
+              var nv = Number(raw[i]);
+              data.push(isNaN(nv) ? 0 : nv);
+            }
+            return {
+              label: s.label != null ? String(s.label) : '',
+              data: data,
+              backgroundColor: s.backgroundColor || 'rgba(100, 116, 139, 0.88)',
+              borderWidth: 0,
+              borderRadius: 3,
+              maxBarThickness: 16,
+            };
+          });
+          try {
+            return new Chart(ctx, {
+              type: 'bar',
+              data: { labels: lbls, datasets: datasets },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { top: 6, right: 4, bottom: 2, left: 4 } },
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                  legend: {
+                    display: true,
+                    position: 'bottom',
+                    labels: {
+                      boxWidth: 10,
+                      boxHeight: 10,
+                      padding: 6,
+                      font: { size: 8, family: 'Poppins, system-ui, sans-serif' },
+                      color: '#475569',
+                    },
+                  },
+                  tooltip: {
+                    callbacks: {
+                      label: function (ctx) {
+                        var lab = ctx.dataset.label || '';
+                        var v =
+                          ctx.parsed && ctx.parsed.y != null && !isNaN(ctx.parsed.y) ? ctx.parsed.y : ctx.raw;
+                        if (v == null || v === '') return lab;
+                        var num = Number(v);
+                        if (isNaN(num)) return lab + ': ' + String(v);
+                        var isInt = Math.abs(num - Math.round(num)) < 1e-9;
+                        return (
+                          lab +
+                          ': ' +
+                          (isInt
+                            ? num.toLocaleString('id-ID')
+                            : num.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 2 }))
+                        );
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    stacked: false,
+                    offset: true,
+                    grid: { display: false, drawBorder: false },
+                    ticks: { font: { size: 10, weight: '700' }, maxRotation: 0, autoSkip: false, color: '#475569' },
+                  },
+                  y: {
+                    beginAtZero: true,
+                    stacked: false,
+                    grid: { color: 'rgba(0, 0, 0, 0.06)', drawBorder: false },
+                    ticks: {
+                      font: { size: 8 },
+                      maxTicksLimit: 7,
+                      callback: function (val) {
+                        return Number(val).toLocaleString('id-ID');
+                      },
+                    },
+                    border: { display: false },
+                  },
+                },
+              },
+            });
+          } catch (err) {
+            return null;
+          }
+        }
         function resizePeerDeviationModalCharts() {
           peerDeviationChartInstances.forEach(function (ch) {
             try {
@@ -2742,20 +3064,47 @@
           destroyPeerDeviationModalCharts();
           var modal = document.getElementById('peer-deviation-category-modal');
           if (!modal) return;
-          var hr = document.getElementById('peer-deviation-modal-hr-chart');
-          if (hr) {
-            var hv = [];
-            var hw = [];
+          var sapEl = document.getElementById('peer-deviation-modal-sap-chart');
+          if (sapEl) {
+            var sl = [];
+            var ss = [];
             try {
-              hv = JSON.parse(hr.getAttribute('data-hr-values') || '[]');
-              hw = JSON.parse(hr.getAttribute('data-hr-weeks') || '[]');
+              sl = JSON.parse(sapEl.getAttribute('data-sap-labels') || '[]');
+              ss = JSON.parse(sapEl.getAttribute('data-sap-series') || '[]');
             } catch (e) {
-              hv = [];
-              hw = [];
+              sl = [];
+              ss = [];
             }
-            var hc = hr.getAttribute('data-hr-color') || '#3952bc';
-            var hch = createPeerDeviationHrBarChart(hr, hw, hv, hc);
-            if (hch) peerDeviationChartInstances.push(hch);
+            var sch = createPeerSapGroupedBarChart(sapEl, sl, ss);
+            if (sch) peerDeviationChartInstances.push(sch);
+          }
+          var pjbEl = document.getElementById('peer-deviation-modal-pjb-chart');
+          if (pjbEl) {
+            var pl = [];
+            var ps = [];
+            try {
+              pl = JSON.parse(pjbEl.getAttribute('data-pjb-labels') || '[]');
+              ps = JSON.parse(pjbEl.getAttribute('data-pjb-series') || '[]');
+            } catch (e) {
+              pl = [];
+              ps = [];
+            }
+            var pch = createPeerSapGroupedBarChart(pjbEl, pl, ps);
+            if (pch) peerDeviationChartInstances.push(pch);
+          }
+          var pelaporEl = document.getElementById('peer-deviation-modal-pelapor-chart');
+          if (pelaporEl) {
+            var pWeeks = [];
+            var pVals = [];
+            try {
+              pWeeks = JSON.parse(pelaporEl.getAttribute('data-pelapor-weeks') || '[]');
+              pVals = JSON.parse(pelaporEl.getAttribute('data-pelapor-values') || '[]');
+            } catch (e) {
+              pWeeks = [];
+              pVals = [];
+            }
+            var pelCh = createPeerDeviationLineChart(pelaporEl, pWeeks, pVals, '#1d4ed8');
+            if (pelCh) peerDeviationChartInstances.push(pelCh);
           }
           modal.querySelectorAll('canvas.peer-deviation-cat-chart').forEach(function (el) {
             var vals = [];
@@ -3259,13 +3608,19 @@
         }
         function fillDeviationCategoryModal(dev) {
           if (!dev || typeof dev !== 'object') return;
+          var sapTbodyEarly = document.getElementById('peer-deviation-sap-tbody');
+          var pjbTbodyEarly = document.getElementById('peer-deviation-pjb-tbody');
+          var pelaporTbodyEarly = document.getElementById('peer-deviation-pelapor-tbody');
+          if (
+            (sapTbodyEarly && sapTbodyEarly.getAttribute('data-static-sap') === '1') ||
+            (pjbTbodyEarly && pjbTbodyEarly.getAttribute('data-static-pjb') === '1') ||
+            (pelaporTbodyEarly && pelaporTbodyEarly.getAttribute('data-static-pelapor') === '1')
+          ) {
+            return;
+          }
           destroyPeerDeviationModalCharts();
           var catRoot = document.getElementById('peer-deviation-modal-categories');
           var totalFoot = document.getElementById('peer-deviation-modal-total');
-          if (catRoot && catRoot.getAttribute('data-static-dummy') === '1') {
-            if (totalFoot) totalFoot.textContent = '92,148';
-            return;
-          }
           var kpiBig = document.querySelector('#peer-kpi-deviation-card .font-headline.font-extrabold.text-4xl');
           var cats = dev.categories || [];
           var apiTotal = parseInt(String(dev.total != null ? dev.total : 0), 10) || 0;
@@ -4036,11 +4391,259 @@
         if (openBtn) openBtn.addEventListener('click', openWeeklyModal);
         if (backdrop) backdrop.addEventListener('click', closeWeeklyModal);
         if (cancelBtn) cancelBtn.addEventListener('click', closeWeeklyModal);
+        function peerSapModalCfg() {
+          return window.PEER_SAP_MODAL_STATIC || { weeks: [], rowOrder: [], all: [], bySite: {} };
+        }
+        function peerSapModalSiteTitle(siteKey) {
+          var m = {
+            all: 'All Site',
+            'bmo-1': 'BMO 1',
+            'bmo-2': 'BMO 2',
+            'bmo-3': 'BMO 3',
+            eksplorasi: 'Eksplorasi',
+            gmo: 'GMO',
+            ho: 'HO',
+            lmo: 'LMO',
+            marine: 'Marine',
+            smo: 'SMO'
+          };
+          return m[siteKey] || 'All Site';
+        }
+        function peerSapModalRowsForFilter(siteKey) {
+          var cfg = peerSapModalCfg();
+          if (!siteKey || siteKey === 'all') return cfg.all || [];
+          var label = peerSapModalSiteTitle(siteKey);
+          var map = cfg.bySite || {};
+          return map[label] || [];
+        }
+        function peerSapModalPivot(rows) {
+          var pivot = {};
+          (rows || []).forEach(function (r) {
+            var t = r[0];
+            var w = r[1];
+            var q = Number(r[2]);
+            if (!pivot[t]) pivot[t] = {};
+            pivot[t][w] = q;
+          });
+          return pivot;
+        }
+        function peerSapModalEsc(s) {
+          if (s == null) return '';
+          return String(s)
+            .replace(/&/g, '&amp;')
+            .replace(/</g, '&lt;')
+            .replace(/>/g, '&gt;');
+        }
+        function peerSapModalRenderTable(siteKey) {
+          var cfg = peerSapModalCfg();
+          var weeks = cfg.weeks || [];
+          var order = cfg.rowOrder || [];
+          var tbody = document.getElementById('peer-deviation-sap-tbody');
+          if (!tbody) return;
+          var rows = peerSapModalRowsForFilter(siteKey);
+          var pivot = peerSapModalPivot(rows);
+          tbody.innerHTML = order
+            .map(function (type, idx) {
+              var trCls = idx % 2 ? 'bg-slate-50' : 'bg-white';
+              var cells = weeks
+                .map(function (w) {
+                  var v = pivot[type] && pivot[type][w] != null ? pivot[type][w] : null;
+                  var display = v == null ? '—' : Number(v).toLocaleString('id-ID');
+                  return '<td class="border-b border-slate-200 px-2 py-2 text-center tabular-nums">' + display + '</td>';
+                })
+                .join('');
+              return (
+                '<tr class="' +
+                trCls +
+                '">' +
+                '<td class="border-b border-slate-200 px-2 py-2 text-left font-semibold text-slate-800">' +
+                peerSapModalEsc(type) +
+                '</td>' +
+                cells +
+                '</tr>'
+              );
+            })
+            .join('');
+        }
+        function peerSapModalTypeColors() {
+          return {
+            COACHING: '#0d9488',
+            HAZARD: '#dc2626',
+            INSPEKSI: '#2563eb',
+            OBSERVASI: '#7c3aed',
+            'OBSERVASI AREA KRITIS': '#ea580c',
+          };
+        }
+        function peerSapModalChartSeries(siteKey) {
+          var cfg = peerSapModalCfg();
+          var weeks = cfg.weeks || [];
+          var order = cfg.rowOrder || [];
+          var rows = peerSapModalRowsForFilter(siteKey);
+          var pivot = peerSapModalPivot(rows);
+          var cols = peerSapModalTypeColors();
+          return order.map(function (type) {
+            return {
+              label: type,
+              data: weeks.map(function (w) {
+                var v = pivot[type] && pivot[type][w];
+                return v != null ? Number(v) : 0;
+              }),
+              backgroundColor: cols[type] || '#64748b',
+            };
+          });
+        }
+        function peerPjbModalCfg() {
+          return (
+            window.PEER_PENGAWASAN_BERJARAK_MODAL_STATIC || { weeks: [], rowOrder: [], all: [], bySite: {} }
+          );
+        }
+        function peerPjbModalRowsForFilter(siteKey) {
+          var cfg = peerPjbModalCfg();
+          if (!siteKey || siteKey === 'all') return cfg.all || [];
+          var label = peerSapModalSiteTitle(siteKey);
+          var map = cfg.bySite || {};
+          return map[label] || [];
+        }
+        function peerPjbModalRenderTable(siteKey) {
+          var cfg = peerPjbModalCfg();
+          var weeks = cfg.weeks || [];
+          var order = cfg.rowOrder || [];
+          var tbody = document.getElementById('peer-deviation-pjb-tbody');
+          if (!tbody) return;
+          var rows = peerPjbModalRowsForFilter(siteKey);
+          var pivot = peerSapModalPivot(rows);
+          tbody.innerHTML = order
+            .map(function (type, idx) {
+              var trCls = idx % 2 ? 'bg-slate-50' : 'bg-white';
+              var cells = weeks
+                .map(function (w) {
+                  var v = pivot[type] && pivot[type][w] != null ? pivot[type][w] : null;
+                  var display = v == null ? '—' : Number(v).toLocaleString('id-ID');
+                  return '<td class="border-b border-slate-200 px-2 py-2 text-center tabular-nums">' + display + '</td>';
+                })
+                .join('');
+              return (
+                '<tr class="' +
+                trCls +
+                '">' +
+                '<td class="border-b border-slate-200 px-2 py-2 text-left font-semibold text-slate-800">' +
+                peerSapModalEsc(type) +
+                '</td>' +
+                cells +
+                '</tr>'
+              );
+            })
+            .join('');
+        }
+        function peerPjbModalTypeColors() {
+          return {
+            'Real Time': '#0284c7',
+            'Post Event': '#a855f7',
+            'Pengawasan Langsung': '#16a34a',
+          };
+        }
+        function peerPjbModalChartSeries(siteKey) {
+          var cfg = peerPjbModalCfg();
+          var weeks = cfg.weeks || [];
+          var order = cfg.rowOrder || [];
+          var rows = peerPjbModalRowsForFilter(siteKey);
+          var pivot = peerSapModalPivot(rows);
+          var cols = peerPjbModalTypeColors();
+          return order.map(function (type) {
+            return {
+              label: type,
+              data: weeks.map(function (w) {
+                var v = pivot[type] && pivot[type][w];
+                return v != null ? Number(v) : 0;
+              }),
+              backgroundColor: cols[type] || '#64748b',
+            };
+          });
+        }
+        function peerPelaporModalCfg() {
+          return window.PEER_PELOPOR_MODAL_STATIC || { weeks: [], all: [], bySite: {} };
+        }
+        function peerPelaporModalRowsForFilter(siteKey) {
+          var cfg = peerPelaporModalCfg();
+          if (!siteKey || siteKey === 'all') return cfg.all || [];
+          var label = peerSapModalSiteTitle(siteKey);
+          var map = cfg.bySite || {};
+          return map[label] || [];
+        }
+        function peerPelaporModalWeekValues(siteKey) {
+          var cfg = peerPelaporModalCfg();
+          var weeks = cfg.weeks || [];
+          var rows = peerPelaporModalRowsForFilter(siteKey);
+          var byW = {};
+          (rows || []).forEach(function (r) {
+            if (!r || r.length < 2) return;
+            var w = r[0];
+            var q = Number(r[1]);
+            if (!isNaN(q)) byW[w] = q;
+          });
+          return weeks.map(function (w) {
+            return byW[w] != null ? byW[w] : 0;
+          });
+        }
+        function peerPelaporModalRenderTable(siteKey) {
+          var cfg = peerPelaporModalCfg();
+          var weeks = cfg.weeks || [];
+          var tbody = document.getElementById('peer-deviation-pelapor-tbody');
+          if (!tbody) return;
+          var vals = peerPelaporModalWeekValues(siteKey);
+          tbody.innerHTML = weeks
+            .map(function (w, idx) {
+              var trCls = idx % 2 ? 'bg-slate-50' : 'bg-white';
+              var v = vals[idx] != null ? vals[idx] : null;
+              var display = v == null || v === '' ? '—' : Number(v).toLocaleString('id-ID');
+              return (
+                '<tr class="' +
+                trCls +
+                '"><td class="border-b border-slate-200 px-2 py-2 font-semibold text-slate-800">' +
+                peerSapModalEsc(w) +
+                '</td><td class="border-b border-slate-200 px-2 py-2 text-center tabular-nums font-semibold text-slate-800">' +
+                display +
+                '</td></tr>'
+              );
+            })
+            .join('');
+        }
+        function refreshPeerDeviationModalSite(siteKey) {
+          var sk = siteKey || 'all';
+          var labelEl = document.getElementById('peer-deviation-modal-site-label');
+          if (labelEl) labelEl.textContent = 'Site: ' + peerSapModalSiteTitle(sk);
+          peerSapModalRenderTable(sk);
+          peerPjbModalRenderTable(sk);
+          peerPelaporModalRenderTable(sk);
+          var sapCanvas = document.getElementById('peer-deviation-modal-sap-chart');
+          if (sapCanvas) {
+            var cfg = peerSapModalCfg();
+            sapCanvas.setAttribute('data-sap-labels', JSON.stringify(cfg.weeks || []));
+            sapCanvas.setAttribute('data-sap-series', JSON.stringify(peerSapModalChartSeries(sk)));
+          }
+          var pjbCanvas = document.getElementById('peer-deviation-modal-pjb-chart');
+          if (pjbCanvas) {
+            var pcfg = peerPjbModalCfg();
+            pjbCanvas.setAttribute('data-pjb-labels', JSON.stringify(pcfg.weeks || []));
+            pjbCanvas.setAttribute('data-pjb-series', JSON.stringify(peerPjbModalChartSeries(sk)));
+          }
+          var pelaporCanvas = document.getElementById('peer-deviation-modal-pelapor-chart');
+          if (pelaporCanvas) {
+            var lcfg = peerPelaporModalCfg();
+            pelaporCanvas.setAttribute('data-pelapor-weeks', JSON.stringify(lcfg.weeks || []));
+            pelaporCanvas.setAttribute('data-pelapor-values', JSON.stringify(peerPelaporModalWeekValues(sk)));
+          }
+          if (sapCanvas || pjbCanvas || pelaporCanvas) {
+            initPeerDeviationModalCharts();
+            resizePeerDeviationModalCharts();
+          }
+        }
         var devModal = document.getElementById('peer-deviation-category-modal');
         var devCard = document.getElementById('peer-kpi-deviation-card');
         var devCardStack = document.getElementById('peer-kpi-deviation-card-stack');
         var hazardReportingCard = document.getElementById('peer-kpi-hazard-reporting-card');
         var devClose = document.getElementById('peer-deviation-category-close');
+        var devSiteFilter = document.getElementById('peer-deviation-site-filter');
         var devBackdrop = devModal ? devModal.querySelector('.peer-deviation-category-backdrop') : null;
         function openDeviationModal() {
           if (!devModal) return;
@@ -4049,9 +4652,9 @@
           if (devCard) devCard.setAttribute('aria-expanded', 'true');
           if (devCardStack) devCardStack.setAttribute('aria-expanded', 'true');
           if (hazardReportingCard) hazardReportingCard.setAttribute('aria-expanded', 'true');
+          var initialSite = devSiteFilter ? devSiteFilter.value : 'all';
           setTimeout(function () {
-            initPeerDeviationModalCharts();
-            resizePeerDeviationModalCharts();
+            refreshPeerDeviationModalSite(initialSite);
             requestAnimationFrame(function () {
               resizePeerDeviationModalCharts();
               setTimeout(resizePeerDeviationModalCharts, 80);
@@ -4072,6 +4675,19 @@
         if (hazardReportingCard) hazardReportingCard.addEventListener('click', openDeviationModal);
         if (devClose) devClose.addEventListener('click', closeDeviationModal);
         if (devBackdrop) devBackdrop.addEventListener('click', closeDeviationModal);
+        if (devSiteFilter) {
+          devSiteFilter.addEventListener('change', function () {
+            refreshPeerDeviationModalSite(devSiteFilter.value || 'all');
+          });
+        }
+        function peerTableauLazyLoadViz(vizId) {
+          var el = document.getElementById(vizId);
+          if (!el || el.getAttribute('data-tableau-loaded') === '1') return;
+          var url = el.getAttribute('data-src');
+          if (!url) return;
+          el.setAttribute('src', url);
+          el.setAttribute('data-tableau-loaded', '1');
+        }
         var tbcGeneralModal = document.getElementById('peer-tbc-general-modal');
         var tbcHighCard = document.getElementById('peer-kpi-tbc-high-card');
         var tbcGeneralClose = document.getElementById('peer-tbc-general-close');
@@ -4528,6 +5144,7 @@
           tbcGeneralModal.classList.remove('hidden');
           tbcGeneralModal.setAttribute('aria-hidden', 'false');
           if (tbcHighCard) tbcHighCard.setAttribute('aria-expanded', 'true');
+          peerTableauLazyLoadViz('tableau-viz-tbc');
           loadTbcGeneralCards();
         }
         function closeTbcGeneralModal() {
@@ -4810,6 +5427,7 @@
           blindspotModal.classList.remove('hidden');
           blindspotModal.setAttribute('aria-hidden', 'false');
           if (blindspotCard) blindspotCard.setAttribute('aria-expanded', 'true');
+          peerTableauLazyLoadViz('tableau-viz-blindspot');
           loadBlindspotModal();
         }
         function closeBlindspotModal() {
@@ -4830,6 +5448,7 @@
           if (!modalEl) return;
           modalEl.classList.remove('hidden');
           modalEl.setAttribute('aria-hidden', 'false');
+          peerTableauLazyLoadViz('tableau-viz-blindspot');
         };
         if (blindspotCard) blindspotCard.addEventListener('click', function (e) {
           e.preventDefault();
