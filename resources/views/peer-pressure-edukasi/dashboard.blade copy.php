@@ -186,11 +186,7 @@
                <p class="text-on-surface-variant font-medium mt-1">Program performance metrics 2025 - 2026 • Updated 5 mins ago</p>
             </div>
             <div class="flex flex-wrap items-center gap-3">
-               <!-- <div class="bg-white px-4 py-2.5 rounded-xl border border-outline-variant/30 flex items-center gap-2 text-sm font-semibold text-on-surface-variant cursor-pointer hover:shadow-md transition-all">
-                  <span class="material-symbols-outlined text-lg" data-icon="calendar_today">calendar_today</span>
-                  Last 30 Days
-                  <span class="material-symbols-outlined text-lg">expand_more</span>
-               </div> -->
+              
                 <button type="button" id="peer-open-weekly-period" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-4 py-3 text-left shadow-inner transition-colors hover:bg-surface-container-high sm:w-auto sm:min-w-[14rem]">
                         <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
                         <span class="flex min-w-0 flex-1 flex-col items-start">
@@ -200,11 +196,7 @@
                         <span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
                      </button>
 
-              
-               <!-- <button class="signature-gradient text-white font-bold px-6 py-2.5 rounded-xl shadow-lg hover:opacity-90 active:scale-[0.98] transition-all flex items-center gap-2">
-               <span class="material-symbols-outlined text-lg" data-icon="file_download">file_download</span>
-               Export Report
-               </button> -->
+          
             </div>
          </div>
          <!-- KPI Row -->

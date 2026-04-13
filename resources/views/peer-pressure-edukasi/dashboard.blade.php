@@ -1529,50 +1529,93 @@
          </div>
       </div>
       <!-- Modal TBC GENERAL — kartu kejadian (geser horizontal) -->
-      <div id="peer-tbc-general-modal" class="hidden fixed inset-0 z-[208] flex items-center justify-center p-3 sm:p-6 bg-black/30 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-tbc-general-title">
+  <div id="peer-tbc-general-modal" class="hidden fixed inset-0 z-[208] flex items-center justify-center bg-slate-900/40 p-3 backdrop-blur-[2px] sm:p-6" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-tbc-general-title">
          <div class="absolute inset-0 cursor-pointer peer-tbc-general-backdrop" aria-hidden="true"></div>
-         <div class="relative z-10 flex max-h-[min(92vh,880px)] w-full max-w-[min(96vw,1180px)] flex-col overflow-hidden rounded-2xl border border-neutral-200/90 bg-white text-neutral-800 shadow-lg shadow-neutral-900/5">
-            <div class="shrink-0 border-b border-neutral-200 bg-white px-4 py-3 sm:px-5 sm:py-3.5">
-               <div class="flex items-start justify-between gap-3">
-                  <div>
-                     <h2 id="peer-tbc-general-title" class="font-headline text-base font-semibold tracking-tight text-neutral-900 sm:text-lg">TBC General — tren kategori</h2>
-                     <p id="peer-tbc-general-subtitle" class="mt-0.5 text-[10px] font-normal text-neutral-500">Grafik agregat 4 minggu (Mean/UCL/LCL) &amp; daftar kategori dengan mini tren W12–W15 (semua site / per site). Data: sumber JSON.</p>
+         <div class="relative z-10 flex max-h-[min(95vh,940px)] w-full max-w-[min(98vw,1380px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_24px_80px_-30px_rgba(15,23,42,0.38)]">
+            <div class="shrink-0 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+               <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                     <div class="inline-flex items-center gap-2 rounded-md border border-[#e9b949] bg-[#f7c948] px-2.5 py-1 text-[10px] font-bold uppercase tracking-[0.08em] text-slate-700">
+                        <span class="material-symbols-outlined text-sm">analytics</span>
+                        TBC General Dashboard
+                     </div>
+                     <h2 id="peer-tbc-general-title" class="mt-2 font-headline text-base font-semibold tracking-tight text-slate-900 sm:text-lg">TBC General - To Be Concerned Highrisk Hazard</h2>
+                     <p id="peer-tbc-general-subtitle" class="mt-1 max-w-4xl text-[10px] font-medium text-slate-500 sm:text-[11px]">Ringkasan visual 4 minggu terakhir: total laporan, valid concern, matriks hazard, dan pemetaan kategori prioritas per site.</p>
                   </div>
-                  <button type="button" id="peer-tbc-general-close" class="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900" aria-label="Tutup">
+                  <button type="button" id="peer-tbc-general-close" class="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900" aria-label="Tutup">
                      <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
                   </button>
                </div>
             </div>
             <div id="peer-tbc-general-loading" class="hidden flex flex-1 flex-col items-center justify-center gap-2 bg-white px-6 py-16" aria-live="polite">
-               <span class="material-symbols-outlined animate-spin text-3xl text-neutral-400" style="animation-duration:1s">progress_activity</span>
-               <p class="text-[11px] font-medium tracking-wide text-neutral-500">Memuat data tren TBC…</p>
+               <span class="material-symbols-outlined animate-spin text-3xl text-primary/70" style="animation-duration:1s">progress_activity</span>
+               <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Memuat data tren TBC</p>
             </div>
-            <div id="peer-tbc-general-error" class="hidden bg-white px-6 py-8 text-center text-[12px] text-red-600"></div>
-            <div id="peer-tbc-general-body" class="min-h-0 flex-1 overflow-x-auto overflow-y-auto bg-neutral-50/80 px-3 py-4 sm:px-5 sm:py-5">
-               <div id="peer-tbc-general-content" class="mx-auto max-w-6xl space-y-6">
-                  <section class="rounded-xl border border-neutral-200/90 bg-white p-4 shadow-sm sm:p-5">
-                     <h3 class="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Total TBC (agregat kategori) — 4 minggu terakhir</h3>
-                     <p class="mt-1 text-[9px] text-neutral-400">Mean, UCL (Mean+0,75×STDev), LCL (Mean−0,3×STDev) dari total per minggu.</p>
-                     <div class="relative mx-auto mt-3 h-64 w-full max-w-3xl">
-                        <canvas id="peer-tbc-general-bar-canvas" aria-label="Grafik garis total TBC per minggu dengan batas kontrol statistik"></canvas>
+            <div id="peer-tbc-general-error" class="hidden bg-white px-6 py-8 text-center text-[12px] font-medium text-red-600"></div>
+            <div id="peer-tbc-general-body" class="min-h-0 flex-1 overflow-x-auto overflow-y-auto bg-[#fbfcfd] px-3 py-4 sm:px-5 sm:py-5">
+               <div id="peer-tbc-general-content" class="mx-auto max-w-[1280px] space-y-4">
+                  <div class="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
+                     <div class="grid grid-cols-1 gap-3 xl:grid-cols-12">
+                        <div class="space-y-3 xl:col-span-3">
+                           <section class="rounded-lg border border-slate-200 bg-white">
+                              <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Valid To Be Concerned Highrisk Hazard</h3>
+                              </div>
+                              <div class="px-3 py-2.5">
+                                 <div class="relative h-36">
+                                    <canvas id="peer-tbc-general-bar-canvas" aria-label="Grafik total laporan mingguan"></canvas>
+                                 </div>
+                              </div>
+                           </section>
+                           <section class="rounded-lg border border-slate-200 bg-white">
+                              <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Valid To Be Concerned Highrisk Hazard</h3>
+                              </div>
+                              <div class="px-3 py-2.5">
+                                 <p class="text-[11px] text-slate-500">Total valid TBC dan tren mingguan.</p>
+                              </div>
+                           </section>
+                           <section class="rounded-lg border border-slate-200 bg-white p-3">
+                              <p class="text-[11px] font-bold text-slate-600">Matriks Repetitive Laporan L4W</p>
+                              <p class="mt-1 text-[10px] text-slate-400">Sebaran risiko di kuadran perhatian.</p>
+                              <div class="mt-2 h-28 rounded-md border border-slate-200 bg-slate-50"></div>
+                           </section>
+                        </div>
+
+                        <div class="space-y-3 xl:col-span-9">
+                           <section class="rounded-lg border border-slate-200 bg-white">
+                              <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">To Be Concerned Highrisk Hazard</h3>
+                              </div>
+                              <div class="overflow-x-auto px-3 py-3">
+                                 <div id="peer-tbc-category-cards" class="min-w-[920px] rounded-md border border-slate-200 bg-white" aria-label="Daftar kategori TBC"></div>
+                                 <p id="peer-tbc-category-empty" class="hidden px-2 py-10 text-center text-sm font-medium text-slate-500">Belum ada data tren kategori.</p>
+                              </div>
+                           </section>
+
+                           <section class="rounded-lg border border-slate-200 bg-white">
+                              <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Tools Pengamatan &amp; Perusahaan Pelapor</h3>
+                              </div>
+                              <div class="grid grid-cols-1 gap-3 px-3 py-3 lg:grid-cols-3">
+                                 <div class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Langsung</p>
+                                    <p class="mt-1 text-xl font-semibold text-slate-800">41%</p>
+                                 </div>
+                                 <div class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Berjarak</p>
+                                    <p class="mt-1 text-xl font-semibold text-slate-800">59%</p>
+                                 </div>
+                                 <div class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
+                                    <label class="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500" for="peer-tbc-category-site-select">Filter Site</label>
+                                    <select id="peer-tbc-category-site-select" class="w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15">
+                                       <option value="__all">Semua site (agregat)</option>
+                                    </select>
+                                 </div>
+                              </div>
+                           </section>
+                        </div>
                      </div>
-                  </section>
-                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                     <label class="text-[11px] font-bold uppercase tracking-wide text-neutral-600" for="peer-tbc-category-site-select">Tampilan data</label>
-                     <select id="peer-tbc-category-site-select" class="w-full max-w-md rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 shadow-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 sm:w-auto">
-                        <option value="__all">Semua site (agregat)</option>
-                     </select>
-                  </div>
-                  <section class="overflow-hidden rounded-xl border border-neutral-200/90 bg-white shadow-sm">
-                     <div class="border-b border-neutral-200 bg-[#f8fafc] px-4 py-3">
-                        <p class="text-[11px] font-bold uppercase tracking-wide text-neutral-500">Deviasi pelanggaran per kategori</p>
-                        <p class="mt-0.5 text-[10px] font-medium text-neutral-400">Trend kategori TBC · mingguan W12–W15</p>
-                     </div>
-                     <div class="max-h-[min(58vh,560px)] overflow-y-auto px-3 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
-                        <div id="peer-tbc-category-cards" class="rounded-lg border border-neutral-200/90 bg-[#fafbfc]" aria-label="Daftar kategori TBC"></div>
-                        <p id="peer-tbc-category-empty" class="hidden px-2 py-10 text-center text-sm text-neutral-500">Belum ada data tren kategori.</p>
-                     </div>
-                  </section>
                </div>
             </div>
          </div>
@@ -4134,7 +4177,6 @@
           var sk = siteKey && siteKey !== '' ? siteKey : '__all';
           var cardsRoot = document.getElementById('peer-tbc-category-cards');
           var emptyEl = document.getElementById('peer-tbc-category-empty');
-          if (typeof Chart === 'undefined') return;
           peerTbcDestroyCategoryCards();
           if (!cardsRoot) return;
           var weeks = (peerTbcCategoryTrend && peerTbcCategoryTrend.weeks) || ['W12', 'W13', 'W14', 'W15'];
@@ -4144,63 +4186,75 @@
             return;
           }
           if (emptyEl) emptyEl.classList.add('hidden');
+          var allNumbers = [];
+          categories.forEach(function (cat) {
+            var vals = cat.values || [];
+            vals.forEach(function (v) {
+              var nv = peerTbcNum(v);
+              if (nv !== null) allNumbers.push(nv);
+            });
+          });
+          var maxVal = allNumbers.length ? Math.max.apply(null, allNumbers) : 0;
+
+          function intensityStyle(n) {
+            if (n === null || maxVal <= 0) {
+              return 'background:#ffffff;color:#334155;';
+            }
+            var ratio = Math.max(0, Math.min(1, n / maxVal));
+            var alpha = 0.06 + ratio * 0.42;
+            var text = ratio > 0.55 ? '#7f1d1d' : '#334155';
+            return 'background:rgba(239,68,68,' + alpha.toFixed(3) + ');color:' + text + ';';
+          }
+
+          var headerWeeks = weeks
+            .map(function (w) {
+              return '<th class="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-slate-500">' + escHtml(w) + '</th>';
+            })
+            .join('');
+
           var rowsHtml = categories
             .map(function (cat, idx) {
               var vals = cat.values || [];
-              var lineRgb = peerTbcRgbFromPalette(idx);
-              var title =
-                (cat.rank != null ? String(cat.rank) + '. ' : '') + (cat.label != null ? String(cat.label) : '—');
+              var title = (cat.rank != null ? String(cat.rank) + '. ' : '') + (cat.label != null ? String(cat.label) : '—');
+              var weekCells = '';
               var sum = 0;
-              var wi;
-              for (wi = 0; wi < weeks.length; wi++) {
+              var count = 0;
+              weeks.forEach(function (_w, wi) {
                 var nv = peerTbcNum(vals[wi]);
-                if (nv !== null) sum += nv;
-              }
-              var dataArr = weeks.map(function (_w, i) {
-                var nv = peerTbcNum(vals[i]);
-                return nv === null ? null : nv;
+                if (nv !== null) {
+                  sum += nv;
+                  count += 1;
+                }
+                weekCells += '<td class="px-2 py-1.5 text-center text-[11px] font-semibold tabular-nums" style="' + intensityStyle(nv) + '">' + (nv === null ? '—' : nv.toLocaleString('id-ID')) + '</td>';
               });
+              var avg = count ? sum / count : 0;
+              var concern = avg >= maxVal * 0.6 ? 'Tinggi' : avg >= maxVal * 0.35 ? 'Sedang' : 'Rendah';
+              var concernClass = concern === 'Tinggi' ? 'bg-red-100 text-red-700' : concern === 'Sedang' ? 'bg-amber-100 text-amber-700' : 'bg-emerald-100 text-emerald-700';
               return (
-                '<div class="flex flex-col gap-2.5 border-b border-neutral-200/80 bg-white px-3 py-3 last:border-b-0">' +
-                '<div class="min-w-0 w-full">' +
-                '<span class="inline-flex max-w-full items-start gap-1 rounded-md px-2.5 py-1.5 text-left text-[11px] font-bold leading-snug text-white shadow-sm sm:text-xs" style="background:' +
-                lineRgb.replace(/[<>"']/g, '') +
-                ';text-shadow:0 1px 2px rgba(0,0,0,.35)">' +
-                '<span class="min-w-0 break-words">' +
-                escHtml(title) +
-                '</span></span>' +
-                '<p class="mt-1 text-[10px] font-semibold tabular-nums text-neutral-600 sm:text-[11px]">Jumlah: ' +
-                sum.toLocaleString('id-ID') +
-                '</p></div>' +
-                '<div class="w-full border-t border-dashed border-neutral-200/90 pt-2.5">' +
-                '<div class="relative h-36 w-full min-h-[9rem]">' +
-                '<canvas class="peer-tbc-cat-spark-chart max-h-full w-full" data-tbc-idx="' +
-                idx +
-                '"></canvas>' +
-                '</div></div></div>'
+                '<tr class="' + (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70') + '">' +
+                '<td class="sticky left-0 z-[1] border-r border-slate-200 px-2.5 py-2 text-[11px] font-semibold text-slate-700 ' + (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70') + '">' + escHtml(title) + '</td>' +
+                weekCells +
+                '<td class="px-2 py-1.5 text-center text-[11px] font-bold tabular-nums text-slate-700">' + avg.toFixed(1) + '</td>' +
+                '<td class="px-2 py-1.5 text-center"><span class="inline-flex rounded-md px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide ' + concernClass + '">' + concern + '</span></td>' +
+                '</tr>'
               );
             })
             .join('');
-          cardsRoot.innerHTML = rowsHtml;
-          cardsRoot.querySelectorAll('canvas.peer-tbc-cat-spark-chart').forEach(function (cnv, idx) {
-            var cat = categories[idx];
-            if (!cat) return;
-            var vals = cat.values || [];
-            var dataArr = weeks.map(function (_w, i) {
-              var nv = peerTbcNum(vals[i]);
-              return nv === null ? null : nv;
-            });
-            var col = peerTbcRgbFromPalette(idx);
-            var ch = createPeerTbcCategoryMiniLineChart(cnv, weeks, dataArr, col);
-            if (ch) peerTbcCategoryLineCharts.push(ch);
-          });
-          window.setTimeout(function () {
-            peerTbcCategoryLineCharts.forEach(function (ch) {
-              try {
-                if (ch && typeof ch.resize === 'function') ch.resize();
-              } catch (e) {}
-            });
-          }, 0);
+
+          cardsRoot.innerHTML =
+            '<div class="overflow-x-auto">' +
+            '<table class="min-w-[980px] w-full border-collapse">' +
+            '<thead class="sticky top-0 z-[2] bg-white">' +
+            '<tr class="border-b border-slate-200 bg-[#fff8e6]">' +
+            '<th class="sticky left-0 z-[3] border-r border-slate-200 px-2.5 py-2 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600 bg-[#fff8e6]">Deviasi Pengamatan</th>' +
+            headerWeeks +
+            '<th class="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-slate-500">Avg YTD\'26</th>' +
+            '<th class="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-slate-500">Concern</th>' +
+            '</tr>' +
+            '</thead>' +
+            '<tbody>' + rowsHtml + '</tbody>' +
+            '</table>' +
+            '</div>';
         }
         function peerTbcRenderBarChart(siteKey) {
           var sk = siteKey && siteKey !== '' ? siteKey : '__all';
@@ -4220,6 +4274,24 @@
               ? 'Jumlah TBC (agregat semua kategori)'
               : 'Jumlah TBC — ' + sk;
           peerTbcGeneralBarChart = createPeerDeviationHrBarChart(canvas, weeks, totals, '#3952bc', dsLabel);
+          if (peerTbcGeneralBarChart && peerTbcGeneralBarChart.options && peerTbcGeneralBarChart.options.scales) {
+            // Mode polos: tanpa sumbu Y dan tanpa garis background/grid.
+            if (peerTbcGeneralBarChart.options.scales.y) {
+              peerTbcGeneralBarChart.options.scales.y.display = false;
+              if (peerTbcGeneralBarChart.options.scales.y.grid) {
+                peerTbcGeneralBarChart.options.scales.y.grid.display = false;
+                peerTbcGeneralBarChart.options.scales.y.grid.drawBorder = false;
+              }
+              if (peerTbcGeneralBarChart.options.scales.y.ticks) {
+                peerTbcGeneralBarChart.options.scales.y.ticks.display = false;
+              }
+            }
+            if (peerTbcGeneralBarChart.options.scales.x && peerTbcGeneralBarChart.options.scales.x.grid) {
+              peerTbcGeneralBarChart.options.scales.x.grid.display = false;
+              peerTbcGeneralBarChart.options.scales.x.grid.drawBorder = false;
+            }
+            peerTbcGeneralBarChart.update();
+          }
         }
         function peerTbcPopulateSiteSelect() {
           var sel = document.getElementById('peer-tbc-category-site-select');
