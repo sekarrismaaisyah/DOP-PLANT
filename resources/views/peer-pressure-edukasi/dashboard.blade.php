@@ -117,11 +117,11 @@
                </div>
                <div class="h-8 w-px bg-[#dfe3e6] hidden lg:block"></div>
                <nav class="hidden md:flex gap-8">
-                  <a class="text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight" href="#">Overview</a>
-                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Site Filters</a>
-                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Department</a>
-                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Reports</a>
-                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Analytics</a>
+                  <a class="text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight" href="#">Lagging</a>
+                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Dash Performance</a>
+                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Thematic Alignment</a>
+                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Site Notic</a>
+                  <!-- <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Analytics</a> -->
                </nav>
             </div>
             <div class="flex items-center gap-6">
@@ -487,7 +487,7 @@
                @include('peer-pressure-edukasi.partials.kpi-hazard-mini-bar', ['eval' => $peerTbcHigh])
                </div>
             </button>
-            <button type="button" id="peer-kpi-blindspot-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-emerald-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-blindspot-modal" data-json-blindspot="{{ !empty($peerTbcBlindspotBySite) ? '1' : '0' }}">
+            <button type="button" id="peer-kpi-blindspot-card" onclick="window.peerOpenBlindspotModal && window.peerOpenBlindspotModal(event)" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-emerald-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-blindspot-modal" data-json-blindspot="{{ !empty($peerTbcBlindspotBySite) ? '1' : '0' }}">
                <div class="flex justify-between items-start">
                   <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">To Be Concerned High Risk Hazards Blindspot</span>
                   <div class="p-2 bg-[#dcfce7] rounded-lg">
@@ -657,6 +657,27 @@
          @include('peer-pressure-edukasi.partials.thematic-alignment-program-table')
 
 
+         <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+            <div class="min-w-0 lg:col-span-12">
+               <div class="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-[0_4px_0px_0px_rgba(0,0,0,0.05),0_12px_24px_-4px_rgba(0,0,0,0.15)]">
+                  <div class="border-b border-outline-variant/20 bg-gradient-to-r from-slate-50 to-white px-5 py-4 sm:px-6">
+                     <h3 class="font-headline text-base font-bold text-on-surface">Incident Back Analysis Tool</h3>
+                     <p class="mt-0.5 text-[11px] text-on-surface-variant">Embed halaman `reactlagih` ke dashboard utama</p>
+                  </div>
+                  <div class="bg-slate-50/30 p-2 sm:p-4">
+                     <iframe
+                        src="{{ url('/peer-pressure-edukasi/reactlagih') }}"
+                        title="Incident Back Analysis"
+                        class="w-full rounded-xl border border-outline-variant/20 bg-white"
+                        style="height: 980px;"
+                        loading="lazy"
+                     ></iframe>
+                  </div>
+               </div>
+            </div>
+         </div>
+
+
        
          
 
@@ -669,7 +690,7 @@
 
 
          <!-- Secondary Metrics Grid -->
-         @php
+         <!-- @php
             $ic = isset($insightCards) ? $insightCards : [
                 'deviation' => ['total' => 0, 'total_label' => '0', 'conic_gradient' => 'conic-gradient(rgb(241 245 249) 0% 100%)', 'categories' => []],
                 'compliance' => ['berecord_pct' => 0, 'evidence_pct' => 0, 'size_pct' => 0, 'h1_pct' => 0, 'duration_label' => '—', 'triangle_rotate_deg' => 12],
@@ -788,9 +809,9 @@
                   @endforelse
                </div>
             </div>
-         </div>
+         </div> -->
          <!-- Data Table Section -->
-         <div class="bg-white rounded-2xl anchored-card overflow-hidden">
+         <!-- <div class="bg-white rounded-2xl anchored-card overflow-hidden">
             <div class="p-6 border-b border-outline-variant/20 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
                <div>
                   <h3 class="font-headline font-bold text-xl">Data Peer Pressure</h3>
@@ -923,9 +944,9 @@
                   @endif
                </div>
             </div>
-         </div>
+         </div> -->
          <!-- Highlight Issue & Rekomendasi (data agregat dashboard + AI Gemini) -->
-         <section class="overflow-hidden rounded-2xl border border-outline-variant/15 bg-white anchored-card" aria-labelledby="peer-highlight-heading">
+         <!-- <section class="overflow-hidden rounded-2xl border border-outline-variant/15 bg-white anchored-card" aria-labelledby="peer-highlight-heading">
             <div class="flex flex-col gap-3 border-b border-outline-variant/20 bg-gradient-to-r from-primary/[0.06] to-secondary/[0.04] px-6 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-8">
                <div>
                   <h3 id="peer-highlight-heading" class="font-headline text-xl font-extrabold tracking-tight text-on-background">Highlight Issue &amp; Rekomendasi</h3>
@@ -959,7 +980,7 @@
                <p id="peer-highlight-meta" class="border-t border-outline-variant/15 px-6 py-3 text-[10px] text-on-surface-variant sm:px-8"></p>
             </div>
             <p id="peer-highlight-error" class="hidden px-6 py-6 text-sm font-medium text-error sm:px-8"></p>
-         </section>
+         </section> -->
          <!-- Footer -->
          <footer class="flex flex-col sm:flex-row justify-between items-center py-10 border-t border-outline-variant/30 text-on-surface-variant">
             <div class="flex flex-col items-center sm:items-start gap-1">
@@ -1078,97 +1099,109 @@
                   <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
                </button>
             </div>
-            <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
-               <!-- Ringkasan singkat -->
-               <div class="rounded-xl border border-secondary/20 bg-secondary/5 p-4 sm:p-5">
-                  <p class="text-[10px] font-bold uppercase tracking-wider text-secondary">Ringkasan</p>
-                  <div class="mt-2 flex flex-wrap items-end gap-3">
-                     <p id="peer-compliance-modal-summary-pct" class="font-headline text-4xl font-extrabold text-on-surface tabular-nums">{{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}<span class="text-2xl font-bold">%</span></p>
-                     <p id="peer-compliance-modal-summary-line" class="text-sm font-medium text-on-surface">
-                        <span id="peer-compliance-modal-summary-count">{{ (int) ($kpi['peer_pressure_compliance_comply'] ?? 0) }}</span> dari <span id="peer-compliance-modal-summary-total">{{ (int) ($kpi['peer_pressure_compliance_total'] ?? 0) }}</span> kejadian terlacak memenuhi syarat <span class="font-semibold text-secondary">comply</span>.
-                     </p>
+            <div class="min-h-0 flex-1 overflow-y-auto bg-[#f8fafc] px-4 py-4 sm:px-6">
+               <div class="mx-auto grid max-w-[1380px] grid-cols-1 gap-3 xl:grid-cols-12">
+                  <div class="space-y-3 xl:col-span-4">
+                     <section class="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Hazards Evaluation</h3>
+                        </div>
+                        <div class="overflow-x-auto px-3 py-3">
+                           <table class="w-full min-w-[420px] border-collapse text-[11px] text-slate-700">
+                              <tbody>
+                                 <tr class="border-b border-slate-200">
+                                    <td class="w-40 border-r border-slate-200 bg-slate-50 px-2 py-2 font-semibold">Hazard Reporting</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">20,595</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">15,543</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">17,861</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">19,570</td>
+                                 </tr>
+                                 <tr class="border-b border-slate-200">
+                                    <td class="border-r border-slate-200 bg-slate-50 px-2 py-2 font-semibold">To Be Concerned High Risk Hazards</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">7,600</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">5,670</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">5,754</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">6,237</td>
+                                 </tr>
+                                 <tr>
+                                    <td class="border-r border-slate-200 bg-slate-50 px-2 py-2 font-semibold">To Be Concerned High Risk Hazards Blindspot</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">42</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">26</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">8</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">21</td>
+                                 </tr>
+                              </tbody>
+                           </table>
+                        </div>
+                     </section>
+                     <section class="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Golden Rules Hazard</h3>
+                        </div>
+                        <div class="p-3">
+                           <div class="rounded-md border border-slate-200 bg-slate-50 p-3">
+                              <p class="text-[10px] font-bold uppercase text-slate-500">Total Laporan</p>
+                              <p class="mt-1 text-4xl font-extrabold tabular-nums text-slate-900">533</p>
+                              <p class="text-sm text-slate-600">1 Valid GR Reports</p>
+                           </div>
+                        </div>
+                     </section>
                   </div>
-                  <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/80">
-                     <div id="peer-compliance-modal-summary-bar" class="h-full rounded-full bg-secondary transition-all" style="width: {{ max(0, min(100, (float) ($kpi['peer_pressure_compliance_pct'] ?? 0))) }}%"></div>
+                  <div class="space-y-3 xl:col-span-5">
+                     <section class="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        <div class="flex items-center justify-between border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">To Be Concerned Highrisk Hazard</h3>
+                           <div class="text-[10px] font-bold text-slate-700">BC | MK</div>
+                        </div>
+                        <div class="hide-scrollbar overflow-x-auto px-3 py-3">
+                           <table class="w-full min-w-[740px] border-collapse text-[11px] text-slate-700">
+                              <tbody>
+                                 <tr class="border-b border-slate-200">
+                                    <td class="w-56 bg-slate-50 px-2 py-2 font-semibold">To Be Concerned Hazard L4W</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">7,600</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">5,670</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">5,754</td>
+                                    <td class="px-2 py-2 text-center tabular-nums">6,237</td>
+                                 </tr>
+                                 <tr class="border-b border-slate-200">
+                                    <td class="bg-slate-50 px-2 py-2 font-semibold">Avg YTD'26 : 4,566</td>
+                                    <td colspan="4" class="px-2 py-2 text-right text-[10px] text-slate-500">GMO | LMO</td>
+                                 </tr>
+                                 <tr class="border-b border-slate-200"><td class="bg-slate-50 px-2 py-2">1. Deviasi pengoperasian kendaraan/unit</td><td class="px-2 py-2 text-center tabular-nums">1,669</td><td class="px-2 py-2 text-center tabular-nums">1,210</td><td class="px-2 py-2 text-center tabular-nums">1,331</td><td class="px-2 py-2 text-center tabular-nums">1,876</td></tr>
+                                 <tr class="border-b border-slate-200"><td class="bg-slate-50 px-2 py-2">2. Deviasi penggunaan APD</td><td class="px-2 py-2 text-center tabular-nums">453</td><td class="px-2 py-2 text-center tabular-nums">303</td><td class="px-2 py-2 text-center tabular-nums">330</td><td class="px-2 py-2 text-center tabular-nums">356</td></tr>
+                                 <tr class="border-b border-slate-200"><td class="bg-slate-50 px-2 py-2">3. Posisi pekerja pada area tidak aman</td><td class="px-2 py-2 text-center tabular-nums">482</td><td class="px-2 py-2 text-center tabular-nums">293</td><td class="px-2 py-2 text-center tabular-nums">215</td><td class="px-2 py-2 text-center tabular-nums">271</td></tr>
+                                 <tr><td class="bg-slate-50 px-2 py-2">4. Deviasi loading/dumping</td><td class="px-2 py-2 text-center tabular-nums">558</td><td class="px-2 py-2 text-center tabular-nums">489</td><td class="px-2 py-2 text-center tabular-nums">512</td><td class="px-2 py-2 text-center tabular-nums">553</td></tr>
+                              </tbody>
+                           </table>
+                        </div>
+                     </section>
+                     <section class="overflow-hidden rounded-lg border border-slate-200 bg-white">
+                        <div class="grid grid-cols-3 border-b border-slate-200 text-[10px] font-bold uppercase">
+                           <div class="bg-emerald-700 px-3 py-2 text-white">Tools Pengamatan</div>
+                           <div class="bg-slate-100 px-3 py-2 text-slate-700">Perusahaan Pelapor</div>
+                           <div class="bg-blue-600 px-3 py-2 text-white">BC | MK</div>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2 p-3 text-[11px]">
+                           <div class="rounded-md border border-slate-200 bg-slate-50 p-2 text-center"><p class="font-semibold text-slate-500">Langsung</p><p class="mt-1 text-xl font-extrabold text-slate-800">49%</p></div>
+                           <div class="rounded-md border border-slate-200 bg-slate-50 p-2 text-center"><p class="font-semibold text-slate-500">Berjarak</p><p class="mt-1 text-xl font-extrabold text-slate-800">51%</p></div>
+                           <div class="rounded-md border border-slate-200 bg-slate-50 p-2 text-center"><p class="font-semibold text-slate-500">BC 14% / MK 86%</p></div>
+                        </div>
+                     </section>
+                  </div>
+                  <div class="space-y-3 xl:col-span-3">
+                     <section class="rounded-lg border border-slate-300 bg-white">
+                        <div class="space-y-0 text-[11px]">
+                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC Workshop</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">676</span></p></div>
+                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC Drill &amp; Blast</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">121</span></p></div>
+                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC Marine</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">196</span></p></div>
+                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC Eksplorasi</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">36</span></p></div>
+                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC HO - Transportasi Massal</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">64</span></p></div>
+                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC Geotechnic</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">364</span></p></div>
+                           <div class="flex items-center justify-between px-3 py-2"><p class="font-bold text-slate-800">TBC Area Project</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">379</span></p></div>
+                        </div>
+                     </section>
                   </div>
                </div>
-               @php
-                  $kpiComply = (int) ($kpi['peer_pressure_compliance_comply'] ?? 0);
-                  $kpiTracked = (int) ($kpi['peer_pressure_compliance_total'] ?? 0);
-                  $kpiNonComply = max(0, $kpiTracked - $kpiComply);
-               @endphp
-
-               <section class="mt-6 rounded-xl border border-outline-variant/20 bg-[#f8fafc] p-4 sm:p-5">
-                  <h3 class="font-headline text-sm font-bold text-on-surface">Ringkasan data</h3>
-                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">Jumlah kejadian pada lima kategori deviasi terlacak untuk periode yang sama dengan kartu KPI.</p>
-                  <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
-                     <div class="rounded-lg border border-emerald-200 bg-emerald-50/90 px-4 py-3 text-center shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-800">Comply</p>
-                        <p id="peer-compliance-brief-comply" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-emerald-950">{{ number_format($kpiComply) }}</p>
-                        <p class="text-[10px] text-emerald-800/90">kejadian</p>
-                     </div>
-                     <div class="rounded-lg border border-red-200 bg-red-50/90 px-4 py-3 text-center shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-red-800">Tidak comply</p>
-                        <p id="peer-compliance-brief-noncomply" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-red-950">{{ number_format($kpiNonComply) }}</p>
-                        <p class="text-[10px] text-red-800/90">kejadian</p>
-                     </div>
-                     <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 text-center shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-600">Total terlacak</p>
-                        <p id="peer-compliance-brief-total" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-slate-900">{{ number_format($kpiTracked) }}</p>
-                        <p class="text-[10px] text-slate-500">pembilang metrik</p>
-                     </div>
-                  </div>
-                  <p id="peer-compliance-brief-narrative" class="mt-4 text-[12px] leading-relaxed text-on-surface">
-                     @if($kpiTracked === 0)
-                        Belum ada kejadian terlacak pada periode ini (hanya lima kategori deviasi tertentu yang dihitung).
-                     @else
-                        Dari {{ number_format($kpiTracked) }} kejadian terlacak: <strong class="text-emerald-800">{{ number_format($kpiComply) }} comply</strong> dan <strong class="text-red-800">{{ number_format($kpiNonComply) }} tidak comply</strong>. Persentase di atas = comply ÷ total × 100 ({{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}%).
-                     @endif
-                  </p>
-               </section>
-
-
-               <section class="mt-6">
-                  <h3 class="font-headline text-sm font-bold text-on-surface">Data per kejadian</h3>
-                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
-                     Rincian per ID (lima kategori deviasi terlacak), ditampilkan per halaman. Klik ID untuk membuka detail kejadian.
-                  </p>
-                  <div id="peer-compliance-table-loading" class="mt-3 hidden rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] font-medium text-on-surface-variant" aria-live="polite">
-                     <span class="material-symbols-outlined mb-2 inline-block animate-spin text-2xl text-secondary" style="animation-duration:1s">progress_activity</span>
-                     <span class="block">Memuat data…</span>
-                  </div>
-                  <p id="peer-compliance-table-error" class="mt-3 hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-800"></p>
-                  <div id="peer-compliance-table-wrap" class="mt-3 overflow-x-auto rounded-lg border border-outline-variant/20 bg-[#fafbfc]">
-                     <table class="w-full min-w-[880px] text-left text-[11px] text-on-surface">
-                        <thead>
-                           <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
-                              <th class="whitespace-nowrap px-2 py-2.5">ID</th>
-                              <th class="whitespace-nowrap px-2 py-2.5">Tgl temuan</th>
-                              <th class="min-w-[140px] px-2 py-2.5">Kategori deviasi (data)</th>
-                              <th class="min-w-[120px] px-2 py-2.5">Kelompok</th>
-                              <th class="min-w-[100px] px-2 py-2.5">Status pelaksanaan</th>
-                              <th class="whitespace-nowrap px-2 py-2.5">id BeRecord</th>
-                              <th class="whitespace-nowrap px-2 py-2.5">Hasil</th>
-                              <th class="min-w-[200px] px-2 py-2.5">Keterangan</th>
-                           </tr>
-                        </thead>
-                        <tbody id="peer-compliance-modal-tbody" class="divide-y divide-outline-variant/10 bg-white"></tbody>
-                     </table>
-                  </div>
-                  <p id="peer-compliance-table-empty" class="mt-3 hidden rounded-lg border border-dashed border-outline-variant/30 bg-white px-4 py-8 text-center text-[12px] text-on-surface-variant">
-                     Tidak ada kejadian pada periode ini yang masuk lima kategori pelacakan.
-                  </p>
-                  <div id="peer-compliance-pagination" class="mt-3 hidden flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant/15 pt-3"></div>
-               </section>
-
-               
-               <section class="mt-6" id="peer-compliance-recommendations-section">
-                  <h3 class="font-headline text-sm font-bold text-on-surface">Rekomendasi perbaikan</h3>
-                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
-                     Kejadian <span class="font-semibold text-on-surface">tidak comply</span> dijelaskan per penyebab dalam bentuk <span class="font-semibold text-on-surface">uraian deskriptif</span> (bukan tabel). Klik nomor ID untuk membuka detail kejadian.
-                  </p>
-                  <div id="peer-compliance-recommendations" class="mt-3 space-y-3"></div>
-               </section>
             </div>
          </div>
       </div>
@@ -1471,6 +1504,7 @@
                </div>
             </div>
          </div>
+      </div>
       </div>
       <div id="peer-blindspot-modal" class="hidden fixed inset-0 z-[209] flex items-center justify-center bg-slate-900/40 p-3 backdrop-blur-[2px] sm:p-6" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-blindspot-title">
          <div class="absolute inset-0 cursor-pointer peer-blindspot-backdrop" aria-hidden="true"></div>
@@ -4489,6 +4523,7 @@
         }
         function openTbcGeneralModal() {
           if (!tbcGeneralModal) return;
+          if (blindspotModal && !blindspotModal.classList.contains('hidden')) closeBlindspotModal();
           tbcGeneralModal.classList.remove('hidden');
           tbcGeneralModal.setAttribute('aria-hidden', 'false');
           if (tbcHighCard) tbcHighCard.setAttribute('aria-expanded', 'true');
@@ -4769,6 +4804,8 @@
         }
         function openBlindspotModal() {
           if (!blindspotModal) return;
+          if (tbcGeneralModal && !tbcGeneralModal.classList.contains('hidden')) closeTbcGeneralModal();
+          if (complianceModal && !complianceModal.classList.contains('hidden')) closeComplianceModal();
           blindspotModal.classList.remove('hidden');
           blindspotModal.setAttribute('aria-hidden', 'false');
           if (blindspotCard) blindspotCard.setAttribute('aria-expanded', 'true');
@@ -4781,7 +4818,30 @@
           blindspotModal.setAttribute('aria-hidden', 'true');
           if (blindspotCard) blindspotCard.setAttribute('aria-expanded', 'false');
         }
-        if (blindspotCard) blindspotCard.addEventListener('click', openBlindspotModal);
+        window.peerOpenBlindspotModal = function (ev) {
+          if (ev && typeof ev.preventDefault === 'function') ev.preventDefault();
+          if (ev && typeof ev.stopPropagation === 'function') ev.stopPropagation();
+          if (typeof openBlindspotModal === 'function') {
+            openBlindspotModal();
+            return;
+          }
+          var modalEl = document.getElementById('peer-blindspot-modal');
+          if (!modalEl) return;
+          modalEl.classList.remove('hidden');
+          modalEl.setAttribute('aria-hidden', 'false');
+        };
+        if (blindspotCard) blindspotCard.addEventListener('click', function (e) {
+          e.preventDefault();
+          e.stopPropagation();
+          openBlindspotModal();
+        });
+        document.addEventListener('click', function (e) {
+          var blindspotBtn = e.target && e.target.closest ? e.target.closest('#peer-kpi-blindspot-card') : null;
+          if (!blindspotBtn) return;
+          e.preventDefault();
+          e.stopPropagation();
+          openBlindspotModal();
+        });
         if (blindspotClose) blindspotClose.addEventListener('click', closeBlindspotModal);
         if (blindspotBackdrop) blindspotBackdrop.addEventListener('click', closeBlindspotModal);
         document.addEventListener('keydown', function (e) {
@@ -5069,48 +5129,60 @@
                 tbody.innerHTML = rows
                   .map(function (row) {
                     var comply = row.comply === true;
-                    var badgeClass = comply ? 'bg-emerald-100 text-emerald-800' : 'bg-red-100 text-red-800';
-                    var badgeText = comply ? 'Comply' : 'Tidak comply';
                     var id = row.id != null ? String(row.id) : '';
-                    var tgl = row.tanggal_temuan != null ? String(row.tanggal_temuan) : '—';
-                    var kat = row.kategori_deviasi != null ? String(row.kategori_deviasi) : '—';
-                    var kel = row.bucket_label != null ? String(row.bucket_label) : '—';
-                    var st = row.status_pelaksanaan_edukasi != null ? String(row.status_pelaksanaan_edukasi) : '—';
-                    var be = row.id_berecord != null ? String(row.id_berecord) : '—';
-                    var als = row.alasan != null ? String(row.alasan) : '—';
+                    var kat = row.kategori_deviasi != null ? String(row.kategori_deviasi) : 'Deviasi tidak terdefinisi';
+                    var site =
+                      row.site_new != null
+                        ? String(row.site_new)
+                        : row.site != null
+                        ? String(row.site)
+                        : row.bucket_label != null
+                        ? String(row.bucket_label)
+                        : 'ALL';
+                    var week =
+                      row.week_label != null
+                        ? String(row.week_label)
+                        : row.week != null
+                        ? String(row.week)
+                        : row.tanggal_temuan != null
+                        ? String(row.tanggal_temuan)
+                        : '—';
+                    var jumlah =
+                      row.jumlah != null
+                        ? Number(row.jumlah)
+                        : row.value != null
+                        ? Number(row.value)
+                        : 1;
+                    if (isNaN(jumlah)) jumlah = 1;
+                    var ket =
+                      row.alasan != null && String(row.alasan).trim() !== ''
+                        ? String(row.alasan)
+                        : comply
+                        ? 'Status comply, lanjutkan konsistensi kontrol.'
+                        : 'Perlu follow-up perbaikan dan verifikasi lapangan.';
                     return (
                       '<tr class="align-top hover:bg-[#f8fafc]">' +
-                      '<td class="px-2 py-2 tabular-nums"><button type="button" class="js-peer-compliance-detail-btn font-semibold text-primary hover:underline" data-id="' +
+                      '<td class="px-2 py-2 tabular-nums text-center"><button type="button" class="js-peer-compliance-detail-btn font-semibold text-primary hover:underline" data-id="' +
                       escAttr(id) +
                       '">#' +
                       escHtml(id) +
                       '</button></td>' +
-                      '<td class="px-2 py-2 whitespace-nowrap tabular-nums">' +
-                      escHtml(tgl) +
-                      '</td>' +
-                      '<td class="px-2 py-2 max-w-[200px]" title="' +
+                      '<td class="px-2 py-2 max-w-[260px]" title="' +
                       escAttr(kat) +
-                      '"><span class="line-clamp-2">' +
+                      '"><span class="line-clamp-2 font-semibold text-slate-700">' +
                       escHtml(kat) +
                       '</span></td>' +
-                      '<td class="px-2 py-2 text-[10px] leading-snug">' +
-                      escHtml(kel) +
+                      '<td class="px-2 py-2 text-center whitespace-nowrap text-[10px] font-semibold uppercase tracking-wide text-slate-600">' +
+                      escHtml(site) +
                       '</td>' +
-                      '<td class="px-2 py-2 max-w-[140px]" title="' +
-                      escAttr(st) +
-                      '"><span class="line-clamp-2">' +
-                      escHtml(st) +
-                      '</span></td>' +
-                      '<td class="px-2 py-2 font-mono text-[10px]">' +
-                      escHtml(be) +
+                      '<td class="px-2 py-2 text-center whitespace-nowrap tabular-nums text-slate-600">' +
+                      escHtml(week) +
                       '</td>' +
-                      '<td class="px-2 py-2 whitespace-nowrap"><span class="inline-flex rounded-full px-2 py-0.5 text-[10px] font-bold ' +
-                      badgeClass +
-                      '">' +
-                      badgeText +
-                      '</span></td>' +
-                      '<td class="px-2 py-2 text-[10px] leading-snug text-on-surface-variant">' +
-                      escHtml(als) +
+                      '<td class="px-2 py-2 text-center font-bold tabular-nums text-slate-700">' +
+                      Number(jumlah).toLocaleString('id-ID') +
+                      '</td>' +
+                      '<td class="px-2 py-2 text-[10px] leading-snug text-slate-500">' +
+                      escHtml(ket) +
                       '</td>' +
                       '</tr>'
                     );
@@ -5133,10 +5205,10 @@
         }
         function openComplianceModal() {
           if (!complianceModal) return;
+          if (blindspotModal && !blindspotModal.classList.contains('hidden')) closeBlindspotModal();
           complianceModal.classList.remove('hidden');
           complianceModal.setAttribute('aria-hidden', 'false');
           if (complianceCard) complianceCard.setAttribute('aria-expanded', 'true');
-          loadComplianceBreakdown(1);
         }
         function closeComplianceModal() {
           if (!complianceModal) return;
