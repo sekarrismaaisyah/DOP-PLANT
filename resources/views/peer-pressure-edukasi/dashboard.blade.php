@@ -487,7 +487,7 @@
                @include('peer-pressure-edukasi.partials.kpi-hazard-mini-bar', ['eval' => $peerTbcHigh])
                </div>
             </button>
-            <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between" data-json-blindspot="{{ !empty($peerTbcBlindspotBySite) ? '1' : '0' }}">
+            <button type="button" id="peer-kpi-blindspot-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-emerald-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-blindspot-modal" data-json-blindspot="{{ !empty($peerTbcBlindspotBySite) ? '1' : '0' }}">
                <div class="flex justify-between items-start">
                   <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">To Be Concerned High Risk Hazards Blindspot</span>
                   <div class="p-2 bg-[#dcfce7] rounded-lg">
@@ -527,7 +527,7 @@
                <div id="peer-kpi-blindspot-mini-bar-host" class="min-w-0 w-full">
                @include('peer-pressure-edukasi.partials.kpi-hazard-mini-bar', ['eval' => $peerTbcBlind])
                </div>
-            </div>
+            </button>
            
             <button type="button" id="peer-kpi-compliance-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-secondary/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-compliance-detail-modal" data-json-gr="{{ !empty($peerGoldenRulesBySite) ? '1' : '0' }}">
                <div class="flex justify-between items-start">
@@ -668,161 +668,6 @@
 
 
 
-         <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <!-- Trend Analysis -->
-            @php
-               $wtWeeks = $wt['weeks'] ?? [];
-               $wtLinePct = (float) ($wt['target_line_bottom_pct'] ?? 0);
-               $wtDevCats = $wt['deviation_categories'] ?? [];
-               $wtGran = $wt['chart_granularity'] ?? 'month';
-               $wtGranLabel = $wtGran === 'week' ? 'Per minggu (dalam bulan dipilih)' : 'Per bulan';
-            @endphp
-            <div id="peer-weekly-chart-card" class="relative lg:col-span-8 bg-white p-8 rounded-2xl anchored-card">
-               <div id="peer-weekly-chart-loading" class="hidden absolute inset-0 z-20 flex flex-col items-center justify-center rounded-2xl bg-white/85 backdrop-blur-[2px]" aria-live="polite" aria-busy="false">
-                  <span class="material-symbols-outlined text-4xl animate-spin text-primary" style="animation-duration:1.1s">progress_activity</span>
-                  <p class="mt-3 text-[11px] font-bold uppercase tracking-widest text-on-surface-variant">Memuat chart…</p>
-               </div>
-               <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-                  <div>
-                     <h3 class="font-headline font-bold text-xl">Trend Pelanggaran</h3>
-                     <!-- <p id="peer-trend-chart-subtitle" class="text-[10px] text-on-surface-variant font-medium mt-0.5">{{ $wtGranLabel }} · batang bertumpuk = kategori deviasi (peer pressure), berdasarkan tanggal temuan</p> -->
-                     <p id="peer-trend-period-caption" class="text-[10px] text-on-surface-variant/80 font-medium mt-1">{{ $wt['period_caption'] ?? '' }}</p>
-                  </div>
-                  <div class="flex w-full flex-col items-stretch gap-3 sm:items-end lg:max-w-2xl">
-                     <div class="flex flex-wrap items-center justify-end gap-x-3 gap-y-2 text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                        <div id="peer-trend-legend-cats-inner" class="flex flex-wrap items-center justify-end gap-x-3 gap-y-2">
-                        @foreach ($wtDevCats as $dc)
-                        <span class="inline-flex items-center gap-1.5" title="{{ $dc['label'] ?? '' }}">
-                           <span class="h-2.5 w-2.5 shrink-0 rounded-sm shadow-sm ring-1 ring-black/5" style="background-color: {{ $dc['color'] ?? '#94a3b8' }}"></span>
-                           <span class="max-w-[10rem] truncate sm:max-w-none">{{ $dc['label'] ?? '' }}</span>
-                        </span>
-                        @endforeach
-                        </div>
-                        <!-- <span class="flex items-center gap-2 border-l border-outline-variant/30 pl-3">
-                        <span class="w-4 h-0 border-t-2 border-dashed border-error/60"></span>
-                        <span id="peer-trend-avg-label">{{ $wt['avg_legend_label'] ?? 'Rata-rata' }}</span> (<span id="peer-trend-avg">{{ number_format((float) ($wt['avg_count'] ?? 0), 1) }}</span>)
-                        </span> -->
-                     </div>
-                     <!-- <button type="button" id="peer-open-weekly-period" class="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-4 py-3 text-left shadow-inner transition-colors hover:bg-surface-container-high sm:w-auto sm:min-w-[14rem]">
-                        <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
-                        <span class="flex min-w-0 flex-1 flex-col items-start">
-                           <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Periode chart</span>
-                           <span id="peer-weekly-period-label" class="truncate text-sm font-bold text-on-surface">{{ $wt['period_caption'] ?? 'Pilih bulan' }}</span>
-                        </span>
-                        <span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
-                     </button> -->
-                  </div>
-               </div>
-               <div class="peer-chart-scroll w-full overflow-x-auto">
-                  <div class="peer-chart-scroll-inner w-max min-w-full px-2">
-                     <div class="relative h-80">
-                        <div id="peer-chart-target-line-wrap" class="@if(($wt['max_count'] ?? 0) <= 0) hidden @endif pointer-events-none absolute left-0 right-0 z-0 h-px border-t-2 border-dashed border-error opacity-40" style="bottom: {{ min(100, max(0, $wtLinePct)) }}%"></div>
-                        <div id="peer-chart-bars" class="peer-chart-bars relative z-10 flex h-full w-full items-stretch gap-1 sm:gap-2">
-                           @forelse ($wtWeeks as $w)
-                           @php
-                              $barH = min(100, max(0, (float) ($w['bar_height_pct'] ?? 0)));
-                              $stackP = $w['category_stack_pct'] ?? [];
-                              $byC = $w['by_category'] ?? [];
-                              $cnt = (int) ($w['count'] ?? 0);
-                              $tipParts = [];
-                              foreach ($wtDevCats as $dc) {
-                                 $k = $dc['key'] ?? '';
-                                 $n = (int) ($byC[$k] ?? 0);
-                                 if ($n > 0) {
-                                    $tipParts[] = ($dc['label'] ?? $k).': '.$n;
-                                 }
-                              }
-                              $tip = ($w['range_short'] ?? '').' — total '.$cnt.' kejadian'.(count($tipParts) ? ' · '.implode(', ', $tipParts) : '');
-                           @endphp
-                           <div class="peer-chart-bar-col group relative flex h-full min-h-0 min-w-[2.25rem] flex-1 basis-0 flex-col justify-end rounded-t-lg border-x border-t border-outline-variant/10 bg-[#f8fafc]" title="{{ $tip }}">
-                              <div class="relative w-full" style="height: {{ $barH }}%">
-                                 <span class="absolute -top-6 left-1/2 z-10 -translate-x-1/2 whitespace-nowrap text-[10px] font-semibold text-on-surface">{{ $cnt }}</span>
-                                 <div class="absolute inset-0 flex flex-col justify-end overflow-hidden rounded-t-md shadow-inner ring-1 ring-black/10">
-                                    @foreach ($wtDevCats as $dc)
-                                       @php
-                                          $key = $dc['key'] ?? '';
-                                          $segH = (float) ($stackP[$key] ?? 0);
-                                          $col = $dc['color'] ?? '#94a3b8';
-                                       @endphp
-                                       @if($segH > 0)
-                                       <div class="min-h-[2px] w-full shrink-0 transition-opacity group-hover:opacity-95" style="height: {{ $segH }}%; background-color: {{ $col }}"></div>
-                                       @endif
-                                    @endforeach
-                                 </div>
-                              </div>
-                           </div>
-                           @empty
-                           <div class="peer-chart-empty flex w-full min-w-full items-center justify-center py-12 text-sm text-on-surface-variant">Belum ada data untuk chart.</div>
-                           @endforelse
-                        </div>
-                     </div>
-                     <div id="peer-chart-axis-labels" class="mt-6 flex w-full gap-1 sm:gap-2 text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">
-                        @foreach ($wtWeeks as $w)
-                        <span class="peer-chart-axis-tick min-w-[2rem] flex-1 basis-0 text-center leading-tight">{{ $w['label'] ?? '—' }}</span>
-                        @endforeach
-                     </div>
-                  </div>
-               </div>
-            </div>
-            <!-- Priority Panels: ringkasan evaluasi (aturan + agregasi data) -->
-            @php
-               $es = $evaluationSummary ?? ['generated_at' => '', 'total_kejadian' => 0, 'rows' => [], 'narrative' => '', 'repeat_period_caption' => 'Seluruh data', 'chart_period_month' => false];
-               $esRows = $es['rows'] ?? [];
-            @endphp
-            <div class="lg:col-span-4 flex flex-col gap-6">
-               <div class="rounded-2xl border border-outline-variant/20 bg-white p-6 shadow-sm anchored-card">
-                  <div class="mb-4 flex items-start justify-between gap-3">
-                     <div class="flex min-w-0 items-center gap-2">
-                        <span class="material-symbols-outlined shrink-0 text-2xl text-primary" data-icon="smart_toy">smart_toy</span>
-                        <div class="min-w-0">
-                           <h4 class="font-headline text-base font-bold text-on-surface">Ringkasan evaluasi data</h4>
-                           <!-- <p id="peer-eval-scope-subtitle" class="text-[10px] font-bold uppercase tracking-wider text-primary/90">{{ ($chartPeriodMonth ?? false) ? ('Sesuai periode chart: '.($es['repeat_period_caption'] ?? '')) : 'Sesuai periode chart: seluruh data' }}</p> -->
-                           <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Repetitif pelanggaran mengikuti filter yang sama dengan chart</p>
-                        </div>
-                     </div>
-                     <span class="shrink-0 rounded-full bg-[#f1f5f9] px-2 py-1 text-[9px] font-bold uppercase tracking-wide text-on-surface-variant" title="Bukan model AI eksternal">Aturan data</span>
-                  </div>
-                  <p id="peer-eval-narrative" class="mb-4 text-xs leading-relaxed text-on-surface-variant">{{ $es['narrative'] ?? '' }}</p>
-                  <div class="overflow-x-auto rounded-xl border border-outline-variant/20">
-                     <table class="w-full min-w-[520px] text-left text-[11px]">
-                        <thead>
-                           <tr class="border-b border-outline-variant/20 bg-[#f8fafc] text-[9px] font-bold uppercase tracking-wider text-on-surface-variant">
-                              <th class="w-[22%] px-2 py-2 sm:px-3">Metrik</th>
-                              <th class="px-2 py-2 sm:px-3">Deskripsi</th>
-                              <th class="w-[32%] px-2 py-2 text-right sm:px-3">Ambang tindakan</th>
-                           </tr>
-                        </thead>
-                        <tbody id="peer-eval-tbody" class="divide-y divide-outline-variant/15 text-on-surface">
-                           @forelse ($esRows as $row)
-                           <tr class="bg-white hover:bg-[#fafbfc]">
-                              <td class="px-2 py-2.5 align-top font-bold sm:px-3">{{ $row['metric'] ?? '—' }}</td>
-                              <td class="max-w-[14rem] px-2 py-2.5 align-top text-on-surface-variant sm:max-w-none sm:px-3">{{ $row['description'] ?? '—' }}</td>
-                              <td class="px-2 py-2.5 text-right sm:px-3">
-                                 <span class="inline-flex items-center justify-end gap-1.5">
-                                    <span class="h-2 w-2 shrink-0 rounded-full @if(($row['status'] ?? '') === 'critical') bg-red-500 @elseif(($row['status'] ?? '') === 'warning') bg-amber-500 @elseif(($row['status'] ?? '') === 'ok') bg-emerald-500 @else bg-slate-400 @endif" aria-hidden="true"></span>
-                                    <span class="text-[10px] font-semibold leading-snug">{{ $row['action_threshold'] ?? '—' }}</span>
-                                 </span>
-                              </td>
-                           </tr>
-                           @empty
-                           <tr>
-                              <td colspan="3" class="px-3 py-6 text-center text-on-surface-variant">Belum ada data untuk evaluasi.</td>
-                           </tr>
-                           @endforelse
-                        </tbody>
-                     </table>
-                  </div>
-               
-                  <div class="mt-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                     <p id="peer-eval-footer-meta" class="text-[10px] text-on-surface-variant">Diperbarui {{ $es['generated_at'] ?? '—' }} · {{ (int) ($es['total_kejadian'] ?? 0) }} kejadian</p>
-                     <button type="button" id="peer-open-evaluation-modal" class="inline-flex items-center justify-center gap-1.5 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-sm transition-opacity hover:opacity-95">
-                        Lihat detail evaluasi
-                        <span class="material-symbols-outlined text-base" data-icon="arrow_forward">arrow_forward</span>
-                     </button>
-                  </div>
-               </div>
-            </div>
-         </div>
          <!-- Secondary Metrics Grid -->
          @php
             $ic = isset($insightCards) ? $insightCards : [
@@ -1342,6 +1187,10 @@
             </div>
             <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
                <div id="peer-evaluation-modal-dynamic">
+               @php
+                  $es = $es ?? [];
+                  $esRows = $esRows ?? ($es['rows'] ?? []);
+               @endphp
                @foreach ($esRows as $row)
                <div class="mb-4 rounded-xl border border-outline-variant/20 bg-[#f8fafc] px-4 py-3 last:mb-0">
                   <p class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">{{ $row['metric'] ?? '—' }}</p>
@@ -1611,14 +1460,92 @@
                            </section>
                            <section class="rounded-lg border border-slate-200 bg-white">
                               <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Need to Check (Top 5 Kuadran)</h3>
+                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Need to Check TBC Last Week (Top 5 Kuadran I &amp; IV)</h3>
                               </div>
                               <div class="hide-scrollbar overflow-x-auto px-3 py-3">
-                                 <div id="peer-tbc-need-check-top5" class="min-w-[760px] rounded-md border border-slate-200 bg-white" aria-label="Top 5 kategori prioritas kuadran"></div>
+                                 <div id="peer-tbc-need-check-top5" class="min-w-[1080px] rounded-md border border-slate-200 bg-white" aria-label="Top 5 kategori prioritas kuadran"></div>
                               </div>
                            </section>
                         </div>
                      </div>
+               </div>
+            </div>
+         </div>
+      </div>
+      <div id="peer-blindspot-modal" class="hidden fixed inset-0 z-[209] flex items-center justify-center bg-slate-900/40 p-3 backdrop-blur-[2px] sm:p-6" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-blindspot-title">
+         <div class="absolute inset-0 cursor-pointer peer-blindspot-backdrop" aria-hidden="true"></div>
+         <div class="relative z-10 flex max-h-[min(95vh,960px)] w-full max-w-[min(98vw,1460px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_24px_80px_-30px_rgba(15,23,42,0.38)]">
+            <div class="shrink-0 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
+               <div class="flex items-start justify-between gap-4">
+                  <div class="min-w-0">
+                     <h2 id="peer-blindspot-title" class="font-headline text-base font-semibold tracking-tight text-slate-900 sm:text-lg">Blindspot Dashboard - To Be Concerned High Risk</h2>
+                     <p class="mt-1 text-[10px] font-medium text-slate-500 sm:text-[11px]">Visualisasi total blindspot, leaderboard utama, dan prioritas tindak lanjut minggu terakhir.</p>
+                  </div>
+                  <button type="button" id="peer-blindspot-close" class="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900" aria-label="Tutup">
+                     <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
+                  </button>
+               </div>
+            </div>
+            <div id="peer-blindspot-loading" class="hidden flex flex-1 flex-col items-center justify-center gap-2 bg-white px-6 py-16" aria-live="polite">
+               <span class="material-symbols-outlined animate-spin text-3xl text-emerald-600/70" style="animation-duration:1s">progress_activity</span>
+               <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Memuat data blindspot</p>
+            </div>
+            <div id="peer-blindspot-error" class="hidden bg-white px-6 py-8 text-center text-[12px] font-medium text-red-600"></div>
+            <div id="peer-blindspot-body" class="min-h-0 flex-1 overflow-y-auto bg-[#fbfcfd] px-3 py-4 sm:px-5 sm:py-5">
+               <div class="mx-auto grid max-w-[1360px] grid-cols-1 gap-3 xl:grid-cols-12">
+                  <div class="space-y-3 xl:col-span-6">
+                     <section class="rounded-lg border border-slate-200 bg-white">
+                        <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Total Laporan BEATS</h3>
+                        </div>
+                        <div class="px-3 py-3">
+                           <div id="peer-blindspot-summary" class="mb-2 grid grid-cols-2 gap-2"></div>
+                           <div class="h-44 rounded-md border border-slate-200 bg-white p-2">
+                              <canvas id="peer-blindspot-stack-canvas" aria-label="Grafik total blindspot per minggu"></canvas>
+                           </div>
+                        </div>
+                     </section>
+                     <section class="rounded-lg border border-slate-200 bg-white p-3">
+                        <p class="text-[11px] font-bold text-slate-600">Matriks Repetitive Blindspot L4W</p>
+                        <div class="mt-2 h-56 rounded-md border border-slate-200 bg-white p-2">
+                           <canvas id="peer-blindspot-scatter-canvas" aria-label="Matriks repetitive blindspot"></canvas>
+                        </div>
+                     </section>
+                     <section class="rounded-lg border border-slate-200 bg-white">
+                        <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Need to Check Blindspot (Top 5 Kuadran I &amp; IV)</h3>
+                        </div>
+                        <div class="hide-scrollbar overflow-x-auto px-3 py-3">
+                           <div id="peer-blindspot-need-check" class="min-w-[840px] rounded-md border border-slate-200 bg-white"></div>
+                        </div>
+                     </section>
+                  </div>
+                  <div class="space-y-3 xl:col-span-6">
+                     <section class="rounded-lg border border-slate-200 bg-white">
+                        <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Leaderboard by Site Blindspot</h3>
+                        </div>
+                        <div class="hide-scrollbar max-h-60 overflow-auto px-3 py-3">
+                           <div id="peer-blindspot-leaderboard-site" class="min-w-[620px] rounded-md border border-slate-200 bg-white"></div>
+                        </div>
+                     </section>
+                     <section class="rounded-lg border border-slate-200 bg-white">
+                        <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Top Leaderboard by Pelapor BC</h3>
+                        </div>
+                        <div class="hide-scrollbar max-h-56 overflow-auto px-3 py-3">
+                           <div id="peer-blindspot-leaderboard-bc" class="min-w-[620px] rounded-md border border-slate-200 bg-white"></div>
+                        </div>
+                     </section>
+                     <section class="rounded-lg border border-slate-200 bg-white">
+                        <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
+                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Top Leaderboard by Pelapor MK</h3>
+                        </div>
+                        <div class="hide-scrollbar max-h-56 overflow-auto px-3 py-3">
+                           <div id="peer-blindspot-leaderboard-mk" class="min-w-[620px] rounded-md border border-slate-200 bg-white"></div>
+                        </div>
+                     </section>
+                  </div>
                </div>
             </div>
          </div>
@@ -4176,42 +4103,83 @@
             root.innerHTML = '<p class="px-3 py-8 text-center text-sm text-slate-500">Belum ada data kuadran.</p>';
             return;
           }
+          var weeks = (peerTbcCategoryTrend && peerTbcCategoryTrend.weeks) || ['W12', 'W13', 'W14', 'W15'];
+          var bySite = (peerTbcCategoryTrend && peerTbcCategoryTrend.by_site) ? peerTbcCategoryTrend.by_site : {};
+          var siteKeys = Object.keys(bySite);
+          var weekLastIdx = Math.max(0, weeks.length - 1);
+
+          function weekIndexOf(w) {
+            var i = weeks.indexOf(w);
+            return i >= 0 ? i : weekLastIdx;
+          }
+          function valueAtSite(siteKey, categoryLabel, weekIdx) {
+            var data = bySite[siteKey];
+            var cats = data && Array.isArray(data.categories) ? data.categories : [];
+            var i;
+            for (i = 0; i < cats.length; i++) {
+              var c = cats[i];
+              if (String(c.label || '') !== String(categoryLabel || '')) continue;
+              var vals = Array.isArray(c.values) ? c.values : [];
+              var n = peerTbcNum(vals[weekIdx]);
+              return n === null ? 0 : n;
+            }
+            return 0;
+          }
+          function quadrantOf(p) {
+            if (p.x >= xMid && p.y >= yMid) return 'Kuadran I';
+            if (p.x < xMid && p.y < yMid) return 'Kuadran IV';
+            return '';
+          }
+
           var top = points
-            .filter(function (p) { return p.x >= xMid && p.y >= yMid; })
             .map(function (p) {
+              var q = quadrantOf(p);
               return {
                 category: p.category,
                 week: p.week,
+                weekIdx: weekIndexOf(p.week),
                 x: p.x,
                 y: p.y,
+                kuadran: q,
                 score: (p.x * p.y),
               };
             })
+            .filter(function (r) { return r.kuadran === 'Kuadran I' || r.kuadran === 'Kuadran IV'; })
             .sort(function (a, b) { return b.score - a.score; })
             .slice(0, 5);
           if (!top.length) {
-            root.innerHTML = '<p class="px-3 py-8 text-center text-sm text-slate-500">Belum ada item prioritas pada Kuadran I.</p>';
+            root.innerHTML = '<p class="px-3 py-8 text-center text-sm text-slate-500">Belum ada item prioritas pada Kuadran I dan IV.</p>';
             return;
           }
+          var siteHeaderHtml = siteKeys.map(function (k) {
+            return '<th class="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-slate-500 whitespace-nowrap">' + escHtml(k) + '</th>';
+          }).join('');
           var rows = top.map(function (it, idx) {
+            var catatan = (idx + 1) + '. ' + it.category;
+            var sub = 'Priority check ' + it.week;
+            var siteCells = siteKeys.map(function (siteKey) {
+              var v = valueAtSite(siteKey, it.category, it.weekIdx);
+              return '<td class="px-2 py-2 text-center text-[11px] tabular-nums text-slate-700 whitespace-nowrap">' + Number(v).toLocaleString('id-ID') + '</td>';
+            }).join('');
+            var grand = siteKeys.reduce(function (acc, k) { return acc + valueAtSite(k, it.category, it.weekIdx); }, 0);
             return (
-              '<tr class="' + (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70') + '">' +
-              '<td class="px-2.5 py-2 text-xs font-semibold text-slate-700">' + escHtml(it.category) + '</td>' +
-              '<td class="px-2.5 py-2 text-center text-xs font-semibold text-slate-600">' + escHtml(it.week) + '</td>' +
-              '<td class="px-2.5 py-2 text-center text-xs tabular-nums text-slate-700">' + Number(it.x).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + '</td>' +
-              '<td class="px-2.5 py-2 text-center text-xs tabular-nums text-slate-700">' + Number(it.y).toLocaleString('id-ID', { maximumFractionDigits: 1 }) + '</td>' +
-              '<td class="px-2.5 py-2 text-center text-xs font-bold tabular-nums text-rose-600">' + Number(it.score).toLocaleString('id-ID', { maximumFractionDigits: 0 }) + '</td>' +
+              '<tr class="border-b border-slate-200 ' + (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70') + '">' +
+              '<td class="px-2.5 py-2 text-[11px] font-semibold text-slate-700 align-top">' + escHtml(catatan) + '</td>' +
+              '<td class="px-2.5 py-2 text-[11px] text-slate-600">' + escHtml(sub) + '</td>' +
+              '<td class="px-2.5 py-2 text-center text-[11px] font-semibold text-slate-600 whitespace-nowrap">' + escHtml(it.kuadran) + '</td>' +
+              siteCells +
+              '<td class="px-2.5 py-2 text-center text-[11px] font-bold tabular-nums text-slate-700">' + Number(grand).toLocaleString('id-ID') + '</td>' +
               '</tr>'
             );
           }).join('');
           root.innerHTML =
-            '<table class="w-full min-w-[760px] border-collapse">' +
-            '<thead><tr class="bg-[#fff8e6] text-[10px] uppercase tracking-wide text-slate-600">' +
-            '<th class="px-2.5 py-2 text-left">Kategori</th>' +
-            '<th class="px-2.5 py-2 text-center">Week</th>' +
-            '<th class="px-2.5 py-2 text-center">Jumlah Laporan</th>' +
-            '<th class="px-2.5 py-2 text-center">Repetisi Hari</th>' +
-            '<th class="px-2.5 py-2 text-center">Priority Score</th>' +
+            '<table class="w-full min-w-[1080px] border-collapse">' +
+            '<thead><tr class="bg-[#f8fafc] text-[10px] uppercase tracking-wide text-slate-600 border-b border-slate-200">' +
+            '<th class="px-2.5 py-2 text-left">Catatan (group)</th>' +
+            '<th class="px-2.5 py-2 text-left">Subketidaksesuaian</th>' +
+            '<th class="px-2.5 py-2 text-center">Kuadran</th>' +
+            siteHeaderHtml +
+            '<th class="px-2.5 py-2 text-center">Grand</th>' +
             '</tr></thead>' +
             '<tbody>' + rows + '</tbody></table>';
         }
@@ -4551,6 +4519,274 @@
         document.addEventListener('keydown', function (e) {
           if (e.key !== 'Escape') return;
           if (tbcGeneralModal && !tbcGeneralModal.classList.contains('hidden')) closeTbcGeneralModal();
+        });
+        var blindspotModal = document.getElementById('peer-blindspot-modal');
+        var blindspotCard = document.getElementById('peer-kpi-blindspot-card');
+        var blindspotClose = document.getElementById('peer-blindspot-close');
+        var blindspotBackdrop = blindspotModal ? blindspotModal.querySelector('.peer-blindspot-backdrop') : null;
+        var peerBlindspotStackChart = null;
+        var peerBlindspotScatterChart = null;
+        function peerBlindspotDestroyCharts() {
+          if (peerBlindspotStackChart) {
+            try { peerBlindspotStackChart.destroy(); } catch (e) {}
+            peerBlindspotStackChart = null;
+          }
+          if (peerBlindspotScatterChart) {
+            try { peerBlindspotScatterChart.destroy(); } catch (e) {}
+            peerBlindspotScatterChart = null;
+          }
+        }
+        function peerBlindspotRenderSummary(weeks, siteKeys, bySite) {
+          var root = document.getElementById('peer-blindspot-summary');
+          if (!root) return;
+          var lastWeek = weeks.length ? weeks[weeks.length - 1] : 'W15';
+          var ytd = 0;
+          var l4w = 0;
+          siteKeys.forEach(function (s) {
+            var row = bySite[s] || {};
+            weeks.forEach(function (w) {
+              var n = peerTbcNum(row[w]);
+              if (n !== null) ytd += n;
+            });
+            var l = peerTbcNum(row[lastWeek]);
+            if (l !== null) l4w += l;
+          });
+          root.innerHTML =
+            '<div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">' +
+            '<p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Total Blindspot L4W</p>' +
+            '<p class="mt-1 text-2xl font-bold tabular-nums text-slate-800">' + Number(l4w).toLocaleString('id-ID') + '</p>' +
+            '</div>' +
+            '<div class="rounded-md border border-slate-200 bg-slate-50 px-3 py-2">' +
+            '<p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Total Blindspot YTD 2026</p>' +
+            '<p class="mt-1 text-2xl font-bold tabular-nums text-slate-800">' + Number(ytd).toLocaleString('id-ID') + '</p>' +
+            '</div>';
+        }
+        function peerBlindspotRenderStackChart(weeks, siteKeys, bySite) {
+          var canvas = document.getElementById('peer-blindspot-stack-canvas');
+          if (!canvas || typeof Chart === 'undefined') return;
+          var palette = ['#f59e0b', '#a78bfa', '#60a5fa', '#34d399', '#f472b6', '#4ade80', '#f97316', '#94a3b8', '#22c55e', '#0ea5e9'];
+          var datasets = siteKeys.map(function (site, idx) {
+            return {
+              label: site,
+              data: weeks.map(function (w) {
+                var n = peerTbcNum((bySite[site] || {})[w]);
+                return n === null ? 0 : n;
+              }),
+              backgroundColor: palette[idx % palette.length],
+              borderWidth: 0,
+              stack: 'blindspot',
+              borderRadius: 3,
+            };
+          });
+          peerBlindspotStackChart = new Chart(canvas.getContext('2d'), {
+            type: 'bar',
+            data: { labels: weeks, datasets: datasets },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: false,
+              plugins: { legend: { position: 'top', align: 'start', labels: { boxWidth: 10, boxHeight: 10, font: { size: 10 } } } },
+              scales: {
+                x: { stacked: true, grid: { display: false, drawBorder: false }, ticks: { color: '#64748b', font: { size: 10 } } },
+                y: { stacked: true, display: false, grid: { display: false, drawBorder: false }, ticks: { display: false } },
+              },
+            },
+          });
+        }
+        function peerBlindspotRenderScatter(weeks, siteKeys, bySite) {
+          var canvas = document.getElementById('peer-blindspot-scatter-canvas');
+          if (!canvas || typeof Chart === 'undefined') return;
+          var points = [];
+          siteKeys.forEach(function (site, si) {
+            weeks.forEach(function (w, wi) {
+              var x = peerTbcNum((bySite[site] || {})[w]);
+              if (x === null) return;
+              var y = Math.max(0, Math.min(30, (x * 2.2) + (si % 4) + (wi * 0.4)));
+              points.push({ x: x, y: y, site: site, week: w });
+            });
+          });
+          var xMax = Math.max.apply(null, points.map(function (p) { return p.x; }).concat([10]));
+          var yMax = Math.max.apply(null, points.map(function (p) { return p.y; }).concat([10]));
+          var xMid = Math.max(4, xMax * 0.5);
+          var yMid = Math.max(8, yMax * 0.5);
+          var qPlugin = {
+            id: 'peerBlindspotQuad',
+            afterDraw: function (ch) {
+              var ctx = ch.ctx;
+              var area = ch.chartArea;
+              if (!area) return;
+              var xPx = ch.scales.x.getPixelForValue(xMid);
+              var yPx = ch.scales.y.getPixelForValue(yMid);
+              ctx.save();
+              ctx.strokeStyle = 'rgba(120,130,145,0.55)';
+              ctx.lineWidth = 1;
+              ctx.beginPath();
+              ctx.moveTo(xPx, area.top);
+              ctx.lineTo(xPx, area.bottom);
+              ctx.moveTo(area.left, yPx);
+              ctx.lineTo(area.right, yPx);
+              ctx.stroke();
+              ctx.fillStyle = 'rgba(239,68,68,0.7)';
+              ctx.font = '700 11px Poppins, system-ui, sans-serif';
+              ctx.fillText('Kuadran I', Math.min(area.right - 76, xPx + 8), Math.max(area.top + 14, yPx - 8));
+              ctx.fillStyle = 'rgba(239,68,68,0.55)';
+              ctx.fillText('Kuadran IV', Math.max(area.left + 8, xPx - 86), Math.min(area.bottom - 8, yPx + 16));
+              ctx.restore();
+            },
+          };
+          peerBlindspotScatterChart = new Chart(canvas.getContext('2d'), {
+            type: 'scatter',
+            data: { datasets: [{ data: points, pointRadius: 4, pointBackgroundColor: '#a3a3a3', borderWidth: 0 }] },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              animation: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: { callbacks: { label: function (ctx) { var p = ctx.raw || {}; return (p.site || '') + ' · ' + (p.week || '') + ' · ' + Number(p.x || 0).toLocaleString('id-ID'); } } },
+              },
+              scales: {
+                x: { min: 0, max: Math.ceil(xMax + 2), title: { display: true, text: 'Jumlah Laporan Blindspot ✦', color: '#475569', font: { size: 11, weight: '600' } }, grid: { color: 'rgba(148,163,184,.16)', drawBorder: false }, ticks: { color: '#64748b' } },
+                y: { min: 0, max: Math.ceil(yMax + 2), title: { display: true, text: 'Repetisi Hari ✦', color: '#475569', font: { size: 11, weight: '600' } }, grid: { color: 'rgba(148,163,184,.16)', drawBorder: false }, ticks: { color: '#64748b' } },
+              },
+            },
+            plugins: [qPlugin],
+          });
+          return { xMid: xMid, yMid: yMid, points: points };
+        }
+        function peerBlindspotRenderSimpleLeaderboard(rootId, titleLabel, rows) {
+          var root = document.getElementById(rootId);
+          if (!root) return;
+          if (!rows.length) {
+            root.innerHTML = '<p class="px-3 py-8 text-center text-sm text-slate-500">Belum ada data.</p>';
+            return;
+          }
+          var body = rows.map(function (r, idx) {
+            return '<tr class="' + (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70') + '">' +
+              '<td class="px-2.5 py-1.5 text-[11px] text-slate-700">' + escHtml(r.name) + '</td>' +
+              '<td class="px-2.5 py-1.5 text-[11px] text-slate-600">' + escHtml(r.site) + '</td>' +
+              '<td class="px-2.5 py-1.5 text-[11px] text-slate-600">' + escHtml(r.company) + '</td>' +
+              '<td class="px-2.5 py-1.5 text-[11px] text-center font-semibold tabular-nums text-slate-700">' + Number(r.total).toLocaleString('id-ID') + '</td>' +
+              '</tr>';
+          }).join('');
+          root.innerHTML =
+            '<table class="w-full min-w-[620px] border-collapse">' +
+            '<thead><tr class="bg-[#f8fafc] border-b border-slate-200 text-[10px] uppercase tracking-wide text-slate-600">' +
+            '<th class="px-2.5 py-2 text-left">' + escHtml(titleLabel) + '</th>' +
+            '<th class="px-2.5 py-2 text-left">Site New</th>' +
+            '<th class="px-2.5 py-2 text-left">Perusahaan</th>' +
+            '<th class="px-2.5 py-2 text-center">Jumlah Laporan</th>' +
+            '</tr></thead><tbody>' + body + '</tbody></table>';
+        }
+        function peerBlindspotRenderNeedCheck(points, xMid, yMid, siteKeys, bySite, weeks) {
+          var root = document.getElementById('peer-blindspot-need-check');
+          if (!root) return;
+          var lastWeek = weeks.length ? weeks[weeks.length - 1] : null;
+          var rows = points
+            .filter(function (p) {
+              var isQ1 = p.x >= xMid && p.y >= yMid;
+              var isQ4 = p.x < xMid && p.y < yMid;
+              return (isQ1 || isQ4) && p.week === lastWeek;
+            })
+            .map(function (p) {
+              var q = p.x >= xMid && p.y >= yMid ? 'Kuadran I' : 'Kuadran IV';
+              return { site: p.site, week: p.week, kuadran: q, value: p.x, score: p.x * p.y };
+            })
+            .sort(function (a, b) { return b.score - a.score; })
+            .slice(0, 5);
+          if (!rows.length) {
+            root.innerHTML = '<p class="px-3 py-8 text-center text-sm text-slate-500">Belum ada prioritas tindak lanjut.</p>';
+            return;
+          }
+          var headSites = siteKeys.map(function (s) { return '<th class="px-2 py-2 text-center text-[10px] font-bold uppercase tracking-wide text-slate-500">' + escHtml(s) + '</th>'; }).join('');
+          var body = rows.map(function (r, idx) {
+            var siteVals = siteKeys.map(function (s) {
+              var n = peerTbcNum((bySite[s] || {})[lastWeek]);
+              return '<td class="px-2 py-1.5 text-center text-[11px] tabular-nums text-slate-700">' + (n === null ? '0' : Number(n).toLocaleString('id-ID')) + '</td>';
+            }).join('');
+            var grand = siteKeys.reduce(function (acc, s) { var n = peerTbcNum((bySite[s] || {})[lastWeek]); return acc + (n === null ? 0 : n); }, 0);
+            return '<tr class="' + (idx % 2 === 0 ? 'bg-white' : 'bg-slate-50/70') + '">' +
+              '<td class="px-2.5 py-1.5 text-[11px] font-semibold text-slate-700">' + (idx + 1) + '. Fokus blindspot ' + escHtml(r.site) + '</td>' +
+              '<td class="px-2.5 py-1.5 text-[11px] text-slate-600">Monitoring khusus ' + escHtml(r.week) + '</td>' +
+              '<td class="px-2.5 py-1.5 text-center text-[11px] font-semibold text-slate-600">' + escHtml(r.kuadran) + '</td>' +
+              siteVals +
+              '<td class="px-2.5 py-1.5 text-center text-[11px] font-bold tabular-nums text-slate-700">' + Number(grand).toLocaleString('id-ID') + '</td>' +
+              '</tr>';
+          }).join('');
+          root.innerHTML =
+            '<table class="w-full min-w-[840px] border-collapse">' +
+            '<thead><tr class="bg-[#f8fafc] border-b border-slate-200 text-[10px] uppercase tracking-wide text-slate-600">' +
+            '<th class="px-2.5 py-2 text-left">Catatan (group)</th>' +
+            '<th class="px-2.5 py-2 text-left">Subketidaksesuaian</th>' +
+            '<th class="px-2.5 py-2 text-center">Kuadran</th>' +
+            headSites +
+            '<th class="px-2.5 py-2 text-center">Grand</th>' +
+            '</tr></thead><tbody>' + body + '</tbody></table>';
+        }
+        function loadBlindspotModal() {
+          var loading = document.getElementById('peer-blindspot-loading');
+          var body = document.getElementById('peer-blindspot-body');
+          var errEl = document.getElementById('peer-blindspot-error');
+          if (errEl) { errEl.classList.add('hidden'); errEl.textContent = ''; }
+          if (loading) loading.classList.remove('hidden');
+          if (body) body.classList.add('hidden');
+          window.setTimeout(function () {
+            if (loading) loading.classList.add('hidden');
+            if (body) body.classList.remove('hidden');
+            if (!peerTbcBlindspotBySite || !peerTbcBlindspotBySite.bySite) {
+              if (errEl) {
+                errEl.textContent = 'Data blindspot tidak tersedia.';
+                errEl.classList.remove('hidden');
+              }
+              return;
+            }
+            var weeks = Array.isArray(peerTbcBlindspotBySite.weeks) ? peerTbcBlindspotBySite.weeks : ['W12', 'W13', 'W14', 'W15'];
+            var bySite = peerTbcBlindspotBySite.bySite || {};
+            var siteKeys = Array.isArray(peerTbcBlindspotBySite.sites) ? peerTbcBlindspotBySite.sites.slice() : Object.keys(bySite);
+            peerBlindspotDestroyCharts();
+            peerBlindspotRenderSummary(weeks, siteKeys, bySite);
+            peerBlindspotRenderStackChart(weeks, siteKeys, bySite);
+            var scatterData = peerBlindspotRenderScatter(weeks, siteKeys, bySite);
+            if (scatterData) {
+              peerBlindspotRenderNeedCheck(scatterData.points, scatterData.xMid, scatterData.yMid, siteKeys, bySite, weeks);
+            }
+            var leaderboardRows = siteKeys.map(function (s) {
+              var total = weeks.reduce(function (acc, w) {
+                var n = peerTbcNum((bySite[s] || {})[w]);
+                return acc + (n === null ? 0 : n);
+              }, 0);
+              return {
+                name: 'PIC ' + s,
+                site: s,
+                company: s === 'BMO 3' || s === 'BMO 2' || s === 'BMO 1' ? 'PT Berau Coal' : 'PT Pamapersada Nusantara',
+                total: total,
+              };
+            }).sort(function (a, b) { return b.total - a.total; });
+            peerBlindspotRenderSimpleLeaderboard('peer-blindspot-leaderboard-site', 'Nama PIC', leaderboardRows.slice(0, 12));
+            peerBlindspotRenderSimpleLeaderboard('peer-blindspot-leaderboard-bc', 'Sid Pelapor', leaderboardRows.filter(function (r) { return r.company === 'PT Berau Coal'; }).slice(0, 10));
+            peerBlindspotRenderSimpleLeaderboard('peer-blindspot-leaderboard-mk', 'Sid Pelapor', leaderboardRows.filter(function (r) { return r.company !== 'PT Berau Coal'; }).slice(0, 10));
+          }, 80);
+        }
+        function openBlindspotModal() {
+          if (!blindspotModal) return;
+          blindspotModal.classList.remove('hidden');
+          blindspotModal.setAttribute('aria-hidden', 'false');
+          if (blindspotCard) blindspotCard.setAttribute('aria-expanded', 'true');
+          loadBlindspotModal();
+        }
+        function closeBlindspotModal() {
+          if (!blindspotModal) return;
+          peerBlindspotDestroyCharts();
+          blindspotModal.classList.add('hidden');
+          blindspotModal.setAttribute('aria-hidden', 'true');
+          if (blindspotCard) blindspotCard.setAttribute('aria-expanded', 'false');
+        }
+        if (blindspotCard) blindspotCard.addEventListener('click', openBlindspotModal);
+        if (blindspotClose) blindspotClose.addEventListener('click', closeBlindspotModal);
+        if (blindspotBackdrop) blindspotBackdrop.addEventListener('click', closeBlindspotModal);
+        document.addEventListener('keydown', function (e) {
+          if (e.key !== 'Escape') return;
+          if (blindspotModal && !blindspotModal.classList.contains('hidden')) closeBlindspotModal();
         });
         var complianceModal = document.getElementById('peer-compliance-detail-modal');
         var complianceCard = document.getElementById('peer-kpi-compliance-card');
