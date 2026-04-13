@@ -632,6 +632,7 @@
             $tableauOverviewSafetyVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/OverviewSafetyPerformance_17471016698280/OverviewSafetyPerformanceAllSites2';
             $tableauTbcAllSiteVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/DashboardTBCAllsiteRev/SlideAligmnentv2toUSE';
             $tableauBlindspotVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/DashboardTBCAllsiteRev/SlideAligmnentBlindspottoUSE';
+            $tableauComplianceGrVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/DashboardTBCAllsiteRev/DashboardGR';
          @endphp
          <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
             <div class="min-w-0 lg:col-span-12">
@@ -1282,118 +1283,30 @@
       <!-- Modal detail metrik Pelaksanaan Comply -->
       <div id="peer-compliance-detail-modal" class="hidden fixed inset-0 z-[207] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-compliance-detail-title">
          <div class="absolute inset-0 cursor-pointer peer-compliance-detail-backdrop" aria-hidden="true"></div>
-         <div class="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
+         <div class="relative z-10 flex max-h-[min(96vh,1020px)] w-full max-w-[min(98vw,760px)] flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
             <div class="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant/20 px-5 py-4 sm:px-6">
                <div>
                   <h2 id="peer-compliance-detail-title" class="font-headline text-lg font-bold text-on-surface">Pelaksanaan Comply</h2>
                   <p id="peer-compliance-modal-period" class="mt-1 text-xs text-on-surface-variant">{{ ($chartPeriodMonth ?? false) ? 'Periode: filter chart (tanggal temuan dalam bulan yang dipilih).' : 'Periode: seluruh data kejadian (tanpa filter bulan).' }}</p>
+                  <p class="mt-0.5 text-[10px] text-on-surface-variant/90">Tableau · Dashboard GR (Golden Rules)</p>
                </div>
                <button type="button" id="peer-compliance-detail-close" class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
                   <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
                </button>
             </div>
-            <div class="min-h-0 flex-1 overflow-y-auto bg-[#f8fafc] px-4 py-4 sm:px-6">
-               <div class="mx-auto grid max-w-[1380px] grid-cols-1 gap-3 xl:grid-cols-12">
-                  <div class="space-y-3 xl:col-span-4">
-                     <section class="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                        <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Hazards Evaluation</h3>
-                        </div>
-                        <div class="overflow-x-auto px-3 py-3">
-                           <table class="w-full min-w-[420px] border-collapse text-[11px] text-slate-700">
-                              <tbody>
-                                 <tr class="border-b border-slate-200">
-                                    <td class="w-40 border-r border-slate-200 bg-slate-50 px-2 py-2 font-semibold">Hazard Reporting</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">20,595</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">15,543</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">17,861</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">19,570</td>
-                                 </tr>
-                                 <tr class="border-b border-slate-200">
-                                    <td class="border-r border-slate-200 bg-slate-50 px-2 py-2 font-semibold">To Be Concerned High Risk Hazards</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">7,600</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">5,670</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">5,754</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">6,237</td>
-                                 </tr>
-                                 <tr>
-                                    <td class="border-r border-slate-200 bg-slate-50 px-2 py-2 font-semibold">To Be Concerned High Risk Hazards Blindspot</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">42</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">26</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">8</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">21</td>
-                                 </tr>
-                              </tbody>
-                           </table>
-                        </div>
-                     </section>
-                     <section class="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                        <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Golden Rules Hazard</h3>
-                        </div>
-                        <div class="p-3">
-                           <div class="rounded-md border border-slate-200 bg-slate-50 p-3">
-                              <p class="text-[10px] font-bold uppercase text-slate-500">Total Laporan</p>
-                              <p class="mt-1 text-4xl font-extrabold tabular-nums text-slate-900">533</p>
-                              <p class="text-sm text-slate-600">1 Valid GR Reports</p>
-                           </div>
-                        </div>
-                     </section>
-                  </div>
-                  <div class="space-y-3 xl:col-span-5">
-                     <section class="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                        <div class="flex items-center justify-between border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                           <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">To Be Concerned Highrisk Hazard</h3>
-                           <div class="text-[10px] font-bold text-slate-700">BC | MK</div>
-                        </div>
-                        <div class="hide-scrollbar overflow-x-auto px-3 py-3">
-                           <table class="w-full min-w-[740px] border-collapse text-[11px] text-slate-700">
-                              <tbody>
-                                 <tr class="border-b border-slate-200">
-                                    <td class="w-56 bg-slate-50 px-2 py-2 font-semibold">To Be Concerned Hazard L4W</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">7,600</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">5,670</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">5,754</td>
-                                    <td class="px-2 py-2 text-center tabular-nums">6,237</td>
-                                 </tr>
-                                 <tr class="border-b border-slate-200">
-                                    <td class="bg-slate-50 px-2 py-2 font-semibold">Avg YTD'26 : 4,566</td>
-                                    <td colspan="4" class="px-2 py-2 text-right text-[10px] text-slate-500">GMO | LMO</td>
-                                 </tr>
-                                 <tr class="border-b border-slate-200"><td class="bg-slate-50 px-2 py-2">1. Deviasi pengoperasian kendaraan/unit</td><td class="px-2 py-2 text-center tabular-nums">1,669</td><td class="px-2 py-2 text-center tabular-nums">1,210</td><td class="px-2 py-2 text-center tabular-nums">1,331</td><td class="px-2 py-2 text-center tabular-nums">1,876</td></tr>
-                                 <tr class="border-b border-slate-200"><td class="bg-slate-50 px-2 py-2">2. Deviasi penggunaan APD</td><td class="px-2 py-2 text-center tabular-nums">453</td><td class="px-2 py-2 text-center tabular-nums">303</td><td class="px-2 py-2 text-center tabular-nums">330</td><td class="px-2 py-2 text-center tabular-nums">356</td></tr>
-                                 <tr class="border-b border-slate-200"><td class="bg-slate-50 px-2 py-2">3. Posisi pekerja pada area tidak aman</td><td class="px-2 py-2 text-center tabular-nums">482</td><td class="px-2 py-2 text-center tabular-nums">293</td><td class="px-2 py-2 text-center tabular-nums">215</td><td class="px-2 py-2 text-center tabular-nums">271</td></tr>
-                                 <tr><td class="bg-slate-50 px-2 py-2">4. Deviasi loading/dumping</td><td class="px-2 py-2 text-center tabular-nums">558</td><td class="px-2 py-2 text-center tabular-nums">489</td><td class="px-2 py-2 text-center tabular-nums">512</td><td class="px-2 py-2 text-center tabular-nums">553</td></tr>
-                              </tbody>
-                           </table>
-                        </div>
-                     </section>
-                     <section class="overflow-hidden rounded-lg border border-slate-200 bg-white">
-                        <div class="grid grid-cols-3 border-b border-slate-200 text-[10px] font-bold uppercase">
-                           <div class="bg-emerald-700 px-3 py-2 text-white">Tools Pengamatan</div>
-                           <div class="bg-slate-100 px-3 py-2 text-slate-700">Perusahaan Pelapor</div>
-                           <div class="bg-blue-600 px-3 py-2 text-white">BC | MK</div>
-                        </div>
-                        <div class="grid grid-cols-3 gap-2 p-3 text-[11px]">
-                           <div class="rounded-md border border-slate-200 bg-slate-50 p-2 text-center"><p class="font-semibold text-slate-500">Langsung</p><p class="mt-1 text-xl font-extrabold text-slate-800">49%</p></div>
-                           <div class="rounded-md border border-slate-200 bg-slate-50 p-2 text-center"><p class="font-semibold text-slate-500">Berjarak</p><p class="mt-1 text-xl font-extrabold text-slate-800">51%</p></div>
-                           <div class="rounded-md border border-slate-200 bg-slate-50 p-2 text-center"><p class="font-semibold text-slate-500">BC 14% / MK 86%</p></div>
-                        </div>
-                     </section>
-                  </div>
-                  <div class="space-y-3 xl:col-span-3">
-                     <section class="rounded-lg border border-slate-300 bg-white">
-                        <div class="space-y-0 text-[11px]">
-                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC Workshop</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">676</span></p></div>
-                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC Drill &amp; Blast</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">121</span></p></div>
-                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC Marine</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">196</span></p></div>
-                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC Eksplorasi</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">36</span></p></div>
-                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC HO - Transportasi Massal</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">64</span></p></div>
-                           <div class="flex items-center justify-between border-b border-slate-200 px-3 py-2"><p class="font-bold text-slate-800">TBC Geotechnic</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">364</span></p></div>
-                           <div class="flex items-center justify-between px-3 py-2"><p class="font-bold text-slate-800">TBC Area Project</p><p class="text-slate-600">Avg YTD'26 : <span class="font-semibold">379</span></p></div>
-                        </div>
-                     </section>
-                  </div>
+            <div class="min-h-0 flex-1 overflow-y-auto bg-slate-50/30 p-3 sm:p-4">
+               {{-- API Tableau dimuat di blok Overview; embed dimuat saat modal dibuka (lazy) --}}
+               <div class="w-full overflow-x-auto">
+                  <tableau-viz
+                     id="tableau-viz-compliance"
+                     data-src="{{ $tableauComplianceGrVizSrc }}"
+                     data-tableau-lazy="1"
+                     width="700"
+                     height="963"
+                     hide-tabs
+                     toolbar="bottom"
+                     class="mx-auto block max-w-full"
+                  ></tableau-viz>
                </div>
             </div>
          </div>
@@ -1674,10 +1587,7 @@
                  
                  
                   <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                     <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                        <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Dashboard Blindspot (Tableau)</h3>
-                        <p class="mt-0.5 text-[10px] font-medium text-slate-600">iDashboard · Tableau Embedding API v3</p>
-                     </div>
+                    
                      <div class="w-full overflow-x-auto bg-slate-50/30 p-2 sm:p-4">
                         <tableau-viz
                            id="tableau-viz-blindspot"
@@ -5708,6 +5618,7 @@
           complianceModal.classList.remove('hidden');
           complianceModal.setAttribute('aria-hidden', 'false');
           if (complianceCard) complianceCard.setAttribute('aria-expanded', 'true');
+          peerTableauLazyLoadViz('tableau-viz-compliance');
         }
         function closeComplianceModal() {
           if (!complianceModal) return;
