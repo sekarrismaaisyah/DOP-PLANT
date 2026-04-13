@@ -657,25 +657,7 @@
          @include('peer-pressure-edukasi.partials.thematic-alignment-program-table')
 
 
-         <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
-            <div class="min-w-0 lg:col-span-12">
-               <div class="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-[0_4px_0px_0px_rgba(0,0,0,0.05),0_12px_24px_-4px_rgba(0,0,0,0.15)]">
-                  <div class="border-b border-outline-variant/20 bg-gradient-to-r from-slate-50 to-white px-5 py-4 sm:px-6">
-                     <h3 class="font-headline text-base font-bold text-on-surface">Incident Back Analysis Tool</h3>
-                     <p class="mt-0.5 text-[11px] text-on-surface-variant">Embed halaman `reactlagih` ke dashboard utama</p>
-                  </div>
-                  <div class="bg-slate-50/30 p-2 sm:p-4">
-                     <iframe
-                        src="{{ url('/peer-pressure-edukasi/reactlagih') }}"
-                        title="Incident Back Analysis"
-                        class="w-full rounded-xl border border-outline-variant/20 bg-white"
-                        style="height: 980px;"
-                        loading="lazy"
-                     ></iframe>
-                  </div>
-               </div>
-            </div>
-         </div>
+         
 
 
        
@@ -1051,29 +1033,30 @@
                   </div>
                   <div>
                      <p class="mb-2 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Deviasi pelanggaran per kategori</p>
-                     <div id="peer-deviation-modal-categories" class="rounded-lg border border-outline-variant/20 bg-[#fafbfc]">
+                    <div id="peer-deviation-modal-categories" class="grid grid-cols-1 gap-2.5 rounded-lg border border-outline-variant/20 bg-[#eef1f4] p-2 sm:grid-cols-2">
                         @forelse ($dvPreCatsSpark as $idx => $row)
-                        <div class="flex flex-col gap-2.5 border-b border-outline-variant/10 bg-white px-3 py-3 last:border-b-0">
-                           <div class="min-w-0 w-full">
-                              <span class="inline-flex max-w-full items-start gap-1 rounded px-2 py-1.5 text-left text-[11px] font-bold leading-snug text-white shadow-sm sm:text-xs" style="background: {{ $row['color'] ?? 'hsl(215 14% 62%)' }}; text-shadow: 0 1px 2px rgba(0,0,0,.35);">
-                                 <span class="shrink-0 opacity-90">{{ (int) $idx + 1 }}.</span>
-                                 <span class="min-w-0 break-words">{{ $row['kategori_deviasi'] ?? '—' }}</span>
+                        <div class="overflow-hidden rounded border border-slate-300 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">
+                           <div class="flex items-center justify-between gap-2 border-b border-slate-300 bg-slate-100 px-2.5 py-1.5">
+                              <p class="min-w-0 truncate text-[10px] font-bold text-slate-700">
+                                 {{ (int) $idx + 1 }}. {{ $row['kategori_deviasi'] ?? '—' }}
+                              </p>
+                              <span class="shrink-0 text-[10px] font-extrabold tabular-nums text-slate-700">
+                                 {{ number_format((int) ($row['jumlah'] ?? 0)) }}
                               </span>
-                              <p class="mt-1 text-[10px] font-semibold tabular-nums text-on-surface-variant sm:text-[11px]">Jumlah: {{ number_format((int) ($row['jumlah'] ?? 0)) }}</p>
                            </div>
-                           <div class="w-full border-t border-dashed border-outline-variant/15 pt-2.5">
-                              <div class="relative h-36 w-full min-h-[9rem]">
+                           <div class="bg-[#f8fbff] px-2 py-1.5">
+                              <div class="relative h-28 w-full min-h-[7rem]">
                                  <canvas
                                     class="peer-deviation-cat-chart max-h-full w-full"
                                     data-values='@json($row['weekly_values'] ?? [])'
                                     data-weeks='@json($peerDeviationModalSparkWeeks)'
-                                    data-line-color="{{ e($row['color'] ?? '#2563eb') }}"
+                                    data-line-color="{{ e($row['color'] ?? '#4f79a7') }}"
                                  ></canvas>
                               </div>
                            </div>
                         </div>
                         @empty
-                        <div class="px-3 py-8 text-center text-[11px] text-on-surface-variant">Belum ada data kategori deviasi.</div>
+                        <div class="col-span-full px-3 py-8 text-center text-[11px] text-on-surface-variant">Belum ada data kategori deviasi.</div>
                         @endforelse
                      </div>
                      <div class="mt-2 flex items-center justify-between rounded-lg border border-outline-variant/20 bg-[#f1f5f9] px-3 py-2.5 font-headline text-sm font-bold text-on-surface">
@@ -2577,30 +2560,26 @@
           }
           try {
             return new Chart(ctx, {
-              type: 'line',
+              type: 'bar',
               data: {
                 labels: lbls,
                 datasets: [
                   {
-                    label: 'Nilai',
+                    label: 'Jumlah',
                     data: pts,
                     borderColor: bc,
-                    backgroundColor: fillColorFromLineColor(bc),
-                    fill: true,
-                    tension: 0.42,
-                    borderWidth: 2.25,
-                    pointRadius: 4,
-                    pointHoverRadius: 5,
-                    pointBackgroundColor: '#ffffff',
-                    pointBorderColor: bc,
-                    pointBorderWidth: 2,
+                    backgroundColor: 'rgba(79, 121, 167, 0.95)',
+                    borderWidth: 0,
+                    borderRadius: 0,
+                    barThickness: 26,
+                    maxBarThickness: 30,
                   },
                 ],
               },
               options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 8, right: 4, bottom: 4, left: 4 } },
+                layout: { padding: { top: 6, right: 2, bottom: 0, left: 2 } },
                 interaction: { intersect: false, mode: 'index' },
                 plugins: {
                   legend: { display: false },
@@ -2626,7 +2605,7 @@
                   x: {
                     offset: true,
                     grid: { display: false, drawBorder: false },
-                    ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: false },
+                    ticks: { font: { size: 9, weight: '700' }, maxRotation: 0, autoSkip: false, color: '#7c8ea3' },
                   },
                   y: {
                     beginAtZero: true,
@@ -3281,22 +3260,18 @@
               col = col.replace(/[<>"']/g, '');
               var vals = weeklyValuesFromJumlah(j, name);
               return (
-                '<div class="flex flex-col gap-2.5 border-b border-outline-variant/10 bg-white px-3 py-3 last:border-b-0">' +
-                '<div class="min-w-0 w-full">' +
-                '<span class="inline-flex max-w-full items-start gap-1 rounded px-2 py-1.5 text-left text-[11px] font-bold leading-snug text-white shadow-sm sm:text-xs" style="background:' +
-                col +
-                ';text-shadow:0 1px 2px rgba(0,0,0,.35)">' +
-                '<span class="shrink-0 opacity-90">' +
+                '<div class="overflow-hidden rounded border border-slate-300 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.7)]">' +
+                '<div class="flex items-center justify-between gap-2 border-b border-slate-300 bg-slate-100 px-2.5 py-1.5">' +
+                '<p class="min-w-0 truncate text-[10px] font-bold text-slate-700">' +
                 (idx + 1) +
-                '.</span>' +
-                '<span class="min-w-0 break-words">' +
+                '. ' +
                 escHtml(name) +
-                '</span></span>' +
-                '<p class="mt-1 text-[10px] font-semibold tabular-nums text-on-surface-variant sm:text-[11px]">Jumlah: ' +
+                '</p>' +
+                '<span class="shrink-0 text-[10px] font-extrabold tabular-nums text-slate-700">' +
                 j.toLocaleString('id-ID') +
-                '</p></div>' +
-                '<div class="w-full border-t border-dashed border-outline-variant/15 pt-2.5">' +
-                '<div class="relative h-36 w-full min-h-[9rem]">' +
+                '</span></div>' +
+                '<div class="bg-[#f8fbff] px-2 py-1.5">' +
+                '<div class="relative h-28 w-full min-h-[7rem]">' +
                 '<canvas class="peer-deviation-cat-chart max-h-full w-full" data-values=\'' +
                 JSON.stringify(vals) +
                 '\' data-weeks=\'' +
@@ -3309,7 +3284,7 @@
             .join('');
           if (!rows) {
             rows =
-              '<div class="px-3 py-8 text-center text-[11px] text-on-surface-variant">Belum ada data kategori deviasi.</div>';
+              '<div class="col-span-full px-3 py-8 text-center text-[11px] text-on-surface-variant">Belum ada data kategori deviasi.</div>';
           }
           if (catRoot) catRoot.innerHTML = rows;
           var footerVal = sum > 0 ? sum : apiTotal;
