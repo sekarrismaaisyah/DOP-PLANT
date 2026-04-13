@@ -1629,75 +1629,10 @@
             <div id="peer-tbc-general-error" class="hidden bg-white px-6 py-8 text-center text-[12px] font-medium text-red-600"></div>
             <div id="peer-tbc-general-body" class="min-h-0 flex-1 overflow-x-auto overflow-y-auto bg-[#fbfcfd] px-3 py-4 sm:px-5 sm:py-5">
                <div id="peer-tbc-general-content" class="mx-auto max-w-[1280px] space-y-4">
-                  <div class="rounded-xl border border-slate-200 bg-white p-3 sm:p-4">
-                     <div class="grid grid-cols-1 gap-3 xl:grid-cols-12">
-                        <div class="space-y-3 xl:col-span-3">
-                           <section class="rounded-lg border border-slate-200 bg-white">
-                              <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Valid To Be Concerned Highrisk Hazard</h3>
-                              </div>
-                              <div class="px-3 py-2.5">
-                                 <div class="relative h-36">
-                                    <canvas id="peer-tbc-general-bar-canvas" aria-label="Grafik total laporan mingguan"></canvas>
-                                 </div>
-                              </div>
-                           </section>
-                          
-                           <section class="rounded-lg border border-slate-200 bg-white p-3">
-                              <p class="text-[11px] font-bold text-slate-600">Matriks Repetitive Laporan L4W</p>
-                              <p class="mt-1 text-[10px] text-slate-400">Sebaran risiko di kuadran perhatian.</p>
-                              <div class="mt-2 h-60 rounded-md border border-slate-200 bg-white p-2">
-                                 <canvas id="peer-tbc-repetitive-scatter-canvas" aria-label="Grafik matriks repetitive laporan"></canvas>
-                              </div>
-                           </section>
-                        </div>
-
-                        <div class="space-y-3 xl:col-span-9">
-                           <section class="rounded-lg border border-slate-200 bg-white">
-                              <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">To Be Concerned Highrisk Hazard</h3>
-                              </div>
-                              <div class="hide-scrollbar overflow-x-auto px-3 py-3">
-                                 <div id="peer-tbc-category-cards" class="min-w-[920px] rounded-md border border-slate-200 bg-white" aria-label="Daftar kategori TBC"></div>
-                                 <p id="peer-tbc-category-empty" class="hidden px-2 py-10 text-center text-sm font-medium text-slate-500">Belum ada data tren kategori.</p>
-                              </div>
-                           </section>
-
-                           <section class="rounded-lg border border-slate-200 bg-white">
-                              <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Tools Pengamatan &amp; Perusahaan Pelapor</h3>
-                              </div>
-                              <div class="grid grid-cols-1 gap-3 px-3 py-3 lg:grid-cols-3">
-                                 <div class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Langsung</p>
-                                    <p class="mt-1 text-xl font-semibold text-slate-800">41%</p>
-                                 </div>
-                                 <div class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
-                                    <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Berjarak</p>
-                                    <p class="mt-1 text-xl font-semibold text-slate-800">59%</p>
-                                 </div>
-                                 <div class="rounded-md border border-slate-200 bg-slate-50 p-3 text-sm">
-                                    <label class="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500" for="peer-tbc-category-site-select">Filter Site</label>
-                                    <select id="peer-tbc-category-site-select" class="w-full rounded-md border border-slate-200 bg-white px-2.5 py-2 text-sm font-semibold text-slate-800 outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15">
-                                       <option value="__all">Semua site (agregat)</option>
-                                    </select>
-                                 </div>
-                              </div>
-                           </section>
-                           <section class="rounded-lg border border-slate-200 bg-white">
-                              <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                                 <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Need to Check TBC Last Week (Top 5 Kuadran I &amp; IV)</h3>
-                              </div>
-                              <div class="hide-scrollbar overflow-x-auto px-3 py-3">
-                                 <div id="peer-tbc-need-check-top5" class="min-w-[1080px] rounded-md border border-slate-200 bg-white" aria-label="Top 5 kategori prioritas kuadran"></div>
-                              </div>
-                           </section>
-                        </div>
-                     </div>
-                  </div>
+                 
                   <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
                      <div class="border-b border-[#e9b949] bg-[#f7c948] px-3 py-2">
-                        <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">Dashboard TBC All Site (Tableau)</h3>
+                        <h3 class="text-[11px] font-bold uppercase tracking-wide text-slate-700">To Be Concerned Highrisk Hazard</h3>
                         <p class="mt-0.5 text-[10px] font-medium text-slate-600">iDashboard · Tableau Embedding API v3</p>
                      </div>
                      <div class="w-full overflow-x-auto bg-slate-50/30 p-2 sm:p-4">
