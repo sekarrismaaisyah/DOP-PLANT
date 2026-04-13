@@ -16,6 +16,7 @@ use App\Actions\PeerPressure\GetPeerPressureTbcHighRiskCardsAction;
 use App\Actions\PeerPressure\ListPeerPressureDashboardKejadianAction;
 use App\Models\PeerPressureKejadianEdukasi;
 use App\Services\PeerPressure\PeerPressureKaryawanNitipService;
+use App\Services\PeerPressure\PeerPressureResourcesDataAiSummaryService;
 use App\Models\PeerPressurePesertaEdukasi;
 use Carbon\Carbon;
 use Exception;
@@ -97,7 +98,8 @@ class PeerPressureEdukasiController extends Controller
         GetPeerPressureDashboardKpiStatsAction $dashboardKpiStats,
         GetPeerPressureDashboardWeeklyTrendAction $weeklyTrend,
         GetPeerPressureDashboardEvaluationSummaryAction $evaluationSummary,
-        GetPeerPressureDashboardInsightCardsAction $insightCards
+        GetPeerPressureDashboardInsightCardsAction $insightCards,
+        PeerPressureResourcesDataAiSummaryService $resourcesDataAiSummary
     ): View {
         $q = trim((string) $request->get('q', ''));
         $chartPeriodMonth = $request->filled('year') && $request->filled('month');
@@ -209,6 +211,7 @@ class PeerPressureEdukasiController extends Controller
             'peerFotoUrls' => $peerFotoUrls,
             'q' => $q,
             'kpi' => $kpiData,
+            'peerResourcesAiSummary' => $resourcesDataAiSummary->generate($kpiData),
             'weeklyTrend' => $weeklyTrendData,
             'chartYear' => $chartYear,
             'chartMonth' => $chartMonth,

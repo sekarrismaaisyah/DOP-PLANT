@@ -1,0 +1,1450 @@
+{
+  "weeks": [
+    "W12",
+    "W13",
+    "W14",
+    "W15"
+  ],
+  "all_sites": {
+    "categories": [
+      {
+        "rank": 1,
+        "label": "Deviasi pengoperasian kendaraan/unit",
+        "values": [
+          1039,
+          1160,
+          1282,
+          1154
+        ]
+      },
+      {
+        "rank": 2,
+        "label": "Deviasi penggunaan APD",
+        "values": [
+          292,
+          322,
+          365,
+          323
+        ]
+      },
+      {
+        "rank": 3,
+        "label": "Geotech & Hydrology",
+        "values": [
+          369,
+          311,
+          277,
+          337
+        ]
+      },
+      {
+        "rank": 4,
+        "label": "Posisi Pekerja pada Area Tidak aman/Tidak Sesuai Prosedur",
+        "values": [
+          133,
+          121,
+          179,
+          117
+        ]
+      },
+      {
+        "rank": 5,
+        "label": "Deviasi Loading/Dumping",
+        "values": [
+          460,
+          511,
+          540,
+          514
+        ]
+      },
+      {
+        "rank": 6,
+        "label": "Tidak terdapat pengawas/pengawas tidak memadai",
+        "values": [
+          61,
+          121,
+          118,
+          68
+        ]
+      },
+      {
+        "rank": 7,
+        "label": "LOTO",
+        "values": [
+          34,
+          39,
+          55,
+          41
+        ]
+      },
+      {
+        "rank": 8,
+        "label": "Deviasi Road Management",
+        "values": [
+          1659,
+          1771,
+          2075,
+          1854
+        ]
+      },
+      {
+        "rank": 9,
+        "label": "Kesesuaian Dokumen Kerja",
+        "values": [
+          33,
+          42,
+          45,
+          31
+        ]
+      },
+      {
+        "rank": 10,
+        "label": "Tools Tidak Standard / Penggunaan Tools Tidak Tepat",
+        "values": [
+          391,
+          385,
+          512,
+          497
+        ]
+      },
+      {
+        "rank": 11,
+        "label": "Bahaya Elektrikal",
+        "values": [
+          196,
+          187,
+          203,
+          204
+        ]
+      },
+      {
+        "rank": 12,
+        "label": "Bahaya Biologis",
+        "values": [
+          266,
+          303,
+          354,
+          262
+        ]
+      },
+      {
+        "rank": 13,
+        "label": "Aktivitas Drill and Blast",
+        "values": [
+          152,
+          125,
+          147,
+          150
+        ]
+      },
+      {
+        "rank": 14,
+        "label": "Technology",
+        "values": [
+          122,
+          166,
+          139,
+          94
+        ]
+      }
+    ]
+  },
+  "by_site": {
+    "BMO 1": {
+      "categories": [
+        {
+          "rank": 1,
+          "label": "Deviasi pengoperasian kendaraan/unit",
+          "values": [
+            108,
+            142,
+            174,
+            38
+          ]
+        },
+        {
+          "rank": 2,
+          "label": "Deviasi penggunaan APD",
+          "values": [
+            15,
+            21,
+            18,
+            9
+          ]
+        },
+        {
+          "rank": 3,
+          "label": "Geotech & Hydrology",
+          "values": [
+            22,
+            19,
+            13,
+            5
+          ]
+        },
+        {
+          "rank": 4,
+          "label": "Posisi Pekerja pada Area Tidak aman/Tidak Sesuai Prosedur",
+          "values": [
+            25,
+            21,
+            8,
+            2
+          ]
+        },
+        {
+          "rank": 5,
+          "label": "Deviasi Loading/Dumping",
+          "values": [
+            13,
+            11,
+            6,
+            6
+          ]
+        },
+        {
+          "rank": 6,
+          "label": "Tidak terdapat pengawas/pengawas tidak memadai",
+          "values": [
+            21,
+            24,
+            31,
+            10
+          ]
+        },
+        {
+          "rank": 7,
+          "label": "LOTO",
+          "values": [
+            7,
+            15,
+            32,
+            11
+          ]
+        },
+        {
+          "rank": 8,
+          "label": "Deviasi Road Management",
+          "values": [
+            74,
+            68,
+            115,
+            45
+          ]
+        },
+        {
+          "rank": 9,
+          "label": "Kesesuaian Dokumen Kerja",
+          "values": [
+            3,
+            4,
+            4,
+            2
+          ]
+        },
+        {
+          "rank": 10,
+          "label": "Tools Tidak Standard / Penggunaan Tools Tidak Tepat",
+          "values": [
+            26,
+            23,
+            46,
+            28
+          ]
+        },
+        {
+          "rank": 11,
+          "label": "Bahaya Elektrikal",
+          "values": [
+            20,
+            25,
+            8,
+            5
+          ]
+        },
+        {
+          "rank": 12,
+          "label": "Bahaya Biologis",
+          "values": [
+            53,
+            67,
+            66,
+            18
+          ]
+        },
+        {
+          "rank": 13,
+          "label": "Aktivitas Drill and Blast",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 14,
+          "label": "Technology",
+          "values": [
+            19,
+            22,
+            16,
+            4
+          ]
+        }
+      ]
+    },
+    "BMO 2": {
+      "categories": [
+        {
+          "rank": 1,
+          "label": "Deviasi pengoperasian kendaraan/unit",
+          "values": [
+            265,
+            210,
+            267,
+            277
+          ]
+        },
+        {
+          "rank": 2,
+          "label": "Deviasi penggunaan APD",
+          "values": [
+            81,
+            63,
+            82,
+            74
+          ]
+        },
+        {
+          "rank": 3,
+          "label": "Geotech & Hydrology",
+          "values": [
+            53,
+            54,
+            56,
+            64
+          ]
+        },
+        {
+          "rank": 4,
+          "label": "Posisi Pekerja pada Area Tidak aman/Tidak Sesuai Prosedur",
+          "values": [
+            15,
+            4,
+            8,
+            10
+          ]
+        },
+        {
+          "rank": 5,
+          "label": "Deviasi Loading/Dumping",
+          "values": [
+            91,
+            92,
+            95,
+            76
+          ]
+        },
+        {
+          "rank": 6,
+          "label": "Tidak terdapat pengawas/pengawas tidak memadai",
+          "values": [
+            11,
+            20,
+            9,
+            19
+          ]
+        },
+        {
+          "rank": 7,
+          "label": "LOTO",
+          "values": [
+            null,
+            1,
+            1,
+            4
+          ]
+        },
+        {
+          "rank": 8,
+          "label": "Deviasi Road Management",
+          "values": [
+            332,
+            177,
+            316,
+            260
+          ]
+        },
+        {
+          "rank": 9,
+          "label": "Kesesuaian Dokumen Kerja",
+          "values": [
+            8,
+            8,
+            11,
+            7
+          ]
+        },
+        {
+          "rank": 10,
+          "label": "Tools Tidak Standard / Penggunaan Tools Tidak Tepat",
+          "values": [
+            70,
+            56,
+            125,
+            106
+          ]
+        },
+        {
+          "rank": 11,
+          "label": "Bahaya Elektrikal",
+          "values": [
+            56,
+            46,
+            63,
+            71
+          ]
+        },
+        {
+          "rank": 12,
+          "label": "Bahaya Biologis",
+          "values": [
+            54,
+            50,
+            83,
+            67
+          ]
+        },
+        {
+          "rank": 13,
+          "label": "Aktivitas Drill and Blast",
+          "values": [
+            96,
+            93,
+            100,
+            74
+          ]
+        },
+        {
+          "rank": 14,
+          "label": "Technology",
+          "values": [
+            5,
+            2,
+            null,
+            3
+          ]
+        }
+      ]
+    },
+    "BMO 3": {
+      "categories": [
+        {
+          "rank": 1,
+          "label": "Deviasi pengoperasian kendaraan/unit",
+          "values": [
+            19,
+            21,
+            27,
+            26
+          ]
+        },
+        {
+          "rank": 2,
+          "label": "Deviasi penggunaan APD",
+          "values": [
+            2,
+            8,
+            2,
+            4
+          ]
+        },
+        {
+          "rank": 3,
+          "label": "Geotech & Hydrology",
+          "values": [
+            32,
+            17,
+            5,
+            11
+          ]
+        },
+        {
+          "rank": 4,
+          "label": "Posisi Pekerja pada Area Tidak aman/Tidak Sesuai Prosedur",
+          "values": [
+            8,
+            2,
+            13,
+            8
+          ]
+        },
+        {
+          "rank": 5,
+          "label": "Deviasi Loading/Dumping",
+          "values": [
+            33,
+            37,
+            38,
+            68
+          ]
+        },
+        {
+          "rank": 6,
+          "label": "Tidak terdapat pengawas/pengawas tidak memadai",
+          "values": [
+            1,
+            1,
+            5,
+            2
+          ]
+        },
+        {
+          "rank": 7,
+          "label": "LOTO",
+          "values": [
+            2,
+            2,
+            6,
+            2
+          ]
+        },
+        {
+          "rank": 8,
+          "label": "Deviasi Road Management",
+          "values": [
+            69,
+            100,
+            87,
+            66
+          ]
+        },
+        {
+          "rank": 9,
+          "label": "Kesesuaian Dokumen Kerja",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 10,
+          "label": "Tools Tidak Standard / Penggunaan Tools Tidak Tepat",
+          "values": [
+            32,
+            28,
+            32,
+            45
+          ]
+        },
+        {
+          "rank": 11,
+          "label": "Bahaya Elektrikal",
+          "values": [
+            4,
+            8,
+            7,
+            3
+          ]
+        },
+        {
+          "rank": 12,
+          "label": "Bahaya Biologis",
+          "values": [
+            6,
+            13,
+            12,
+            8
+          ]
+        },
+        {
+          "rank": 13,
+          "label": "Aktivitas Drill and Blast",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 14,
+          "label": "Technology",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        }
+      ]
+    },
+    "Eksplorasi": {
+      "categories": [
+        {
+          "rank": 1,
+          "label": "Deviasi pengoperasian kendaraan/unit",
+          "values": [
+            1,
+            null,
+            null,
+            1
+          ]
+        },
+        {
+          "rank": 2,
+          "label": "Deviasi penggunaan APD",
+          "values": [
+            1,
+            3,
+            1,
+            null
+          ]
+        },
+        {
+          "rank": 3,
+          "label": "Geotech & Hydrology",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 4,
+          "label": "Posisi Pekerja pada Area Tidak aman/Tidak Sesuai Prosedur",
+          "values": [
+            1,
+            1,
+            null,
+            1
+          ]
+        },
+        {
+          "rank": 5,
+          "label": "Deviasi Loading/Dumping",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 6,
+          "label": "Tidak terdapat pengawas/pengawas tidak memadai",
+          "values": [
+            null,
+            null,
+            null,
+            3
+          ]
+        },
+        {
+          "rank": 7,
+          "label": "LOTO",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 8,
+          "label": "Deviasi Road Management",
+          "values": [
+            10,
+            17,
+            16,
+            12
+          ]
+        },
+        {
+          "rank": 9,
+          "label": "Kesesuaian Dokumen Kerja",
+          "values": [
+            null,
+            1,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 10,
+          "label": "Tools Tidak Standard / Penggunaan Tools Tidak Tepat",
+          "values": [
+            10,
+            10,
+            15,
+            17
+          ]
+        },
+        {
+          "rank": 11,
+          "label": "Bahaya Elektrikal",
+          "values": [
+            null,
+            1,
+            null,
+            2
+          ]
+        },
+        {
+          "rank": 12,
+          "label": "Bahaya Biologis",
+          "values": [
+            3,
+            1,
+            3,
+            4
+          ]
+        },
+        {
+          "rank": 13,
+          "label": "Aktivitas Drill and Blast",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 14,
+          "label": "Technology",
+          "values": [
+            null,
+            null,
+            1,
+            null
+          ]
+        }
+      ]
+    },
+    "GMO": {
+      "categories": [
+        {
+          "rank": 1,
+          "label": "Deviasi pengoperasian kendaraan/unit",
+          "values": [
+            149,
+            232,
+            244,
+            278
+          ]
+        },
+        {
+          "rank": 2,
+          "label": "Deviasi penggunaan APD",
+          "values": [
+            43,
+            78,
+            119,
+            91
+          ]
+        },
+        {
+          "rank": 3,
+          "label": "Geotech & Hydrology",
+          "values": [
+            60,
+            47,
+            53,
+            70
+          ]
+        },
+        {
+          "rank": 4,
+          "label": "Posisi Pekerja pada Area Tidak aman/Tidak Sesuai Prosedur",
+          "values": [
+            16,
+            23,
+            33,
+            25
+          ]
+        },
+        {
+          "rank": 5,
+          "label": "Deviasi Loading/Dumping",
+          "values": [
+            190,
+            263,
+            303,
+            251
+          ]
+        },
+        {
+          "rank": 6,
+          "label": "Tidak terdapat pengawas/pengawas tidak memadai",
+          "values": [
+            22,
+            29,
+            26,
+            23
+          ]
+        },
+        {
+          "rank": 7,
+          "label": "LOTO",
+          "values": [
+            7,
+            11,
+            7,
+            11
+          ]
+        },
+        {
+          "rank": 8,
+          "label": "Deviasi Road Management",
+          "values": [
+            411,
+            657,
+            829,
+            752
+          ]
+        },
+        {
+          "rank": 9,
+          "label": "Kesesuaian Dokumen Kerja",
+          "values": [
+            5,
+            5,
+            10,
+            8
+          ]
+        },
+        {
+          "rank": 10,
+          "label": "Tools Tidak Standard / Penggunaan Tools Tidak Tepat",
+          "values": [
+            76,
+            88,
+            117,
+            123
+          ]
+        },
+        {
+          "rank": 11,
+          "label": "Bahaya Elektrikal",
+          "values": [
+            32,
+            32,
+            33,
+            46
+          ]
+        },
+        {
+          "rank": 12,
+          "label": "Bahaya Biologis",
+          "values": [
+            58,
+            72,
+            93,
+            67
+          ]
+        },
+        {
+          "rank": 13,
+          "label": "Aktivitas Drill and Blast",
+          "values": [
+            6,
+            2,
+            7,
+            7
+          ]
+        },
+        {
+          "rank": 14,
+          "label": "Technology",
+          "values": [
+            36,
+            57,
+            43,
+            37
+          ]
+        }
+      ]
+    },
+    "HO": {
+      "categories": [
+        {
+          "rank": 1,
+          "label": "Deviasi pengoperasian kendaraan/unit",
+          "values": [
+            30,
+            41,
+            38,
+            59
+          ]
+        },
+        {
+          "rank": 2,
+          "label": "Deviasi penggunaan APD",
+          "values": [
+            4,
+            6,
+            null,
+            6
+          ]
+        },
+        {
+          "rank": 3,
+          "label": "Geotech & Hydrology",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 4,
+          "label": "Posisi Pekerja pada Area Tidak aman/Tidak Sesuai Prosedur",
+          "values": [
+            null,
+            null,
+            1,
+            null
+          ]
+        },
+        {
+          "rank": 5,
+          "label": "Deviasi Loading/Dumping",
+          "values": [
+            null,
+            null,
+            null,
+            1
+          ]
+        },
+        {
+          "rank": 6,
+          "label": "Tidak terdapat pengawas/pengawas tidak memadai",
+          "values": [
+            null,
+            4,
+            3,
+            7
+          ]
+        },
+        {
+          "rank": 7,
+          "label": "LOTO",
+          "values": [
+            2,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 8,
+          "label": "Deviasi Road Management",
+          "values": [
+            2,
+            null,
+            1,
+            1
+          ]
+        },
+        {
+          "rank": 9,
+          "label": "Kesesuaian Dokumen Kerja",
+          "values": [
+            4,
+            4,
+            3,
+            2
+          ]
+        },
+        {
+          "rank": 10,
+          "label": "Tools Tidak Standard / Penggunaan Tools Tidak Tepat",
+          "values": [
+            8,
+            6,
+            13,
+            9
+          ]
+        },
+        {
+          "rank": 11,
+          "label": "Bahaya Elektrikal",
+          "values": [
+            4,
+            2,
+            3,
+            3
+          ]
+        },
+        {
+          "rank": 12,
+          "label": "Bahaya Biologis",
+          "values": [
+            1,
+            1,
+            3,
+            null
+          ]
+        },
+        {
+          "rank": 13,
+          "label": "Aktivitas Drill and Blast",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 14,
+          "label": "Technology",
+          "values": [
+            null,
+            null,
+            1,
+            1
+          ]
+        }
+      ]
+    },
+    "LMO": {
+      "categories": [
+        {
+          "rank": 1,
+          "label": "Deviasi pengoperasian kendaraan/unit",
+          "values": [
+            444,
+            449,
+            452,
+            447
+          ]
+        },
+        {
+          "rank": 2,
+          "label": "Deviasi penggunaan APD",
+          "values": [
+            116,
+            123,
+            121,
+            111
+          ]
+        },
+        {
+          "rank": 3,
+          "label": "Geotech & Hydrology",
+          "values": [
+            135,
+            121,
+            92,
+            107
+          ]
+        },
+        {
+          "rank": 4,
+          "label": "Posisi Pekerja pada Area Tidak aman/Tidak Sesuai Prosedur",
+          "values": [
+            19,
+            33,
+            33,
+            31
+          ]
+        },
+        {
+          "rank": 5,
+          "label": "Deviasi Loading/Dumping",
+          "values": [
+            78,
+            76,
+            67,
+            46
+          ]
+        },
+        {
+          "rank": 6,
+          "label": "Tidak terdapat pengawas/pengawas tidak memadai",
+          "values": [
+            4,
+            6,
+            2,
+            2
+          ]
+        },
+        {
+          "rank": 7,
+          "label": "LOTO",
+          "values": [
+            15,
+            10,
+            9,
+            10
+          ]
+        },
+        {
+          "rank": 8,
+          "label": "Deviasi Road Management",
+          "values": [
+            592,
+            528,
+            500,
+            523
+          ]
+        },
+        {
+          "rank": 9,
+          "label": "Kesesuaian Dokumen Kerja",
+          "values": [
+            10,
+            16,
+            16,
+            12
+          ]
+        },
+        {
+          "rank": 10,
+          "label": "Tools Tidak Standard / Penggunaan Tools Tidak Tepat",
+          "values": [
+            117,
+            113,
+            101,
+            119
+          ]
+        },
+        {
+          "rank": 11,
+          "label": "Bahaya Elektrikal",
+          "values": [
+            54,
+            55,
+            60,
+            55
+          ]
+        },
+        {
+          "rank": 12,
+          "label": "Bahaya Biologis",
+          "values": [
+            65,
+            95,
+            86,
+            69
+          ]
+        },
+        {
+          "rank": 13,
+          "label": "Aktivitas Drill and Blast",
+          "values": [
+            41,
+            24,
+            33,
+            51
+          ]
+        },
+        {
+          "rank": 14,
+          "label": "Technology",
+          "values": [
+            43,
+            65,
+            60,
+            26
+          ]
+        }
+      ]
+    },
+    "Marine": {
+      "categories": [
+        {
+          "rank": 1,
+          "label": "Deviasi pengoperasian kendaraan/unit",
+          "values": [
+            2,
+            11,
+            10,
+            7
+          ]
+        },
+        {
+          "rank": 2,
+          "label": "Deviasi penggunaan APD",
+          "values": [
+            17,
+            15,
+            21,
+            10
+          ]
+        },
+        {
+          "rank": 3,
+          "label": "Geotech & Hydrology",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 4,
+          "label": "Posisi Pekerja pada Area Tidak aman/Tidak Sesuai Prosedur",
+          "values": [
+            26,
+            18,
+            55,
+            23
+          ]
+        },
+        {
+          "rank": 5,
+          "label": "Deviasi Loading/Dumping",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 6,
+          "label": "Tidak terdapat pengawas/pengawas tidak memadai",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 7,
+          "label": "LOTO",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 8,
+          "label": "Deviasi Road Management",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 9,
+          "label": "Kesesuaian Dokumen Kerja",
+          "values": [
+            null,
+            null,
+            1,
+            null
+          ]
+        },
+        {
+          "rank": 10,
+          "label": "Tools Tidak Standard / Penggunaan Tools Tidak Tepat",
+          "values": [
+            30,
+            49,
+            57,
+            41
+          ]
+        },
+        {
+          "rank": 11,
+          "label": "Bahaya Elektrikal",
+          "values": [
+            8,
+            4,
+            13,
+            4
+          ]
+        },
+        {
+          "rank": 12,
+          "label": "Bahaya Biologis",
+          "values": [
+            null,
+            1,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 13,
+          "label": "Aktivitas Drill and Blast",
+          "values": [
+            null,
+            null,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 14,
+          "label": "Technology",
+          "values": [
+            4,
+            11,
+            8,
+            null
+          ]
+        }
+      ]
+    },
+    "SMO": {
+      "categories": [
+        {
+          "rank": 1,
+          "label": "Deviasi pengoperasian kendaraan/unit",
+          "values": [
+            21,
+            54,
+            70,
+            21
+          ]
+        },
+        {
+          "rank": 2,
+          "label": "Deviasi penggunaan APD",
+          "values": [
+            13,
+            5,
+            1,
+            18
+          ]
+        },
+        {
+          "rank": 3,
+          "label": "Geotech & Hydrology",
+          "values": [
+            67,
+            53,
+            58,
+            80
+          ]
+        },
+        {
+          "rank": 4,
+          "label": "Posisi Pekerja pada Area Tidak aman/Tidak Sesuai Prosedur",
+          "values": [
+            23,
+            19,
+            28,
+            17
+          ]
+        },
+        {
+          "rank": 5,
+          "label": "Deviasi Loading/Dumping",
+          "values": [
+            55,
+            32,
+            31,
+            66
+          ]
+        },
+        {
+          "rank": 6,
+          "label": "Tidak terdapat pengawas/pengawas tidak memadai",
+          "values": [
+            2,
+            37,
+            42,
+            2
+          ]
+        },
+        {
+          "rank": 7,
+          "label": "LOTO",
+          "values": [
+            1,
+            null,
+            null,
+            3
+          ]
+        },
+        {
+          "rank": 8,
+          "label": "Deviasi Road Management",
+          "values": [
+            169,
+            224,
+            211,
+            195
+          ]
+        },
+        {
+          "rank": 9,
+          "label": "Kesesuaian Dokumen Kerja",
+          "values": [
+            3,
+            4,
+            null,
+            null
+          ]
+        },
+        {
+          "rank": 10,
+          "label": "Tools Tidak Standard / Penggunaan Tools Tidak Tepat",
+          "values": [
+            22,
+            12,
+            6,
+            9
+          ]
+        },
+        {
+          "rank": 11,
+          "label": "Bahaya Elektrikal",
+          "values": [
+            18,
+            14,
+            16,
+            15
+          ]
+        },
+        {
+          "rank": 12,
+          "label": "Bahaya Biologis",
+          "values": [
+            26,
+            3,
+            8,
+            29
+          ]
+        },
+        {
+          "rank": 13,
+          "label": "Aktivitas Drill and Blast",
+          "values": [
+            9,
+            6,
+            7,
+            18
+          ]
+        },
+        {
+          "rank": 14,
+          "label": "Technology",
+          "values": [
+            15,
+            9,
+            10,
+            23
+          ]
+        }
+      ]
+    }
+  }
+}

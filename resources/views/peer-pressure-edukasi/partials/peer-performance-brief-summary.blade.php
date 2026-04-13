@@ -4,6 +4,9 @@
     $briefValidGr = (int) ($kpiValidGrCount ?? 0);
     $briefCompletion = (float) ($kpiCompletion ?? 0);
     $briefTrendPct = $kpiTrendPct ?? null;
+    $peerAi = $peerResourcesAiSummary ?? null;
+    $peerAiText = is_array($peerAi) ? trim((string) ($peerAi['text'] ?? '')) : '';
+    $peerAiSource = is_array($peerAi) ? ($peerAi['source'] ?? 'heuristic') : 'heuristic';
 @endphp
 <section class="anchored-card flex min-h-0 flex-1 flex-col justify-between rounded-2xl bg-white p-5" aria-label="Ringkasan singkat kinerja">
    <div class="flex items-start gap-3">
@@ -12,10 +15,25 @@
       </div>
       <div class="min-w-0 flex-1">
          <h3 class="font-headline text-sm font-bold tracking-tight text-on-surface">Brief summary</h3>
-         <p class="mt-0.5 text-[10px] font-medium leading-snug text-on-surface-variant">Cuplikan indikator utama Peer Pressure &amp; kepatuhan untuk periode yang dipilih.</p>
+         <p class="mt-0.5 text-[10px] font-medium leading-snug text-on-surface-variant">Cuplikan indikator utama Peer Pressure &amp; kepatuhan untuk periode yang dipilih, plus ringkasan dari seluruh data <code class="rounded bg-surface-container-high px-1 py-px text-[9px]">resources/data</code>.</p>
       </div>
    </div>
-   <ul class="mt-4 space-y-3 text-[11px] leading-relaxed text-on-surface">
+   @if($peerAiText !== '')
+   <div class="mt-4 rounded-xl border border-outline-variant/25 bg-surface-container-low/90 p-3.5 shadow-inner" aria-label="Ringkasan AI dari data JSON">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+         <span class="text-[10px] font-bold uppercase tracking-wider text-primary">Ringkasan AI</span>
+         @if($peerAiSource === 'openai')
+         <span class="rounded-full bg-primary/10 px-2 py-0.5 text-[9px] font-semibold text-primary">OpenAI</span>
+         @else
+         <span class="rounded-full bg-on-surface-variant/10 px-2 py-0.5 text-[9px] font-medium text-on-surface-variant" title="Tanpa OPENAI_API_KEY: narasi dibangun otomatis dari angka di JSON">Lokal</span>
+         @endif
+      </div>
+      <div class="max-h-48 overflow-y-auto text-[11px] leading-relaxed text-on-surface">
+         {!! nl2br(e($peerAiText)) !!}
+      </div>
+   </div>
+   @endif
+   <!-- <ul class="mt-4 space-y-3 text-[11px] leading-relaxed text-on-surface">
       <li class="flex gap-2">
          <span class="mt-0.5 shrink-0 text-primary" aria-hidden="true">
             <span class="material-symbols-outlined text-[16px]" data-icon="numbers">numbers</span>
@@ -55,5 +73,5 @@
             </div>
          </span>
       </li>
-   </ul>
+   </ul> -->
 </section>

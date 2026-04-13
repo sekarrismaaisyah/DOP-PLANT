@@ -191,6 +191,10 @@
                     }
                 }
             }
+            $tbcCategoryTrendPath = resource_path('data/peer_pressure_tbc_category_trend.json');
+            $tbcCategoryTrendData = is_file($tbcCategoryTrendPath)
+                ? json_decode((string) file_get_contents($tbcCategoryTrendPath), true)
+                : null;
          @endphp
          <!-- Header & Top Filters -->
          <div class="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6 pb-6 border-b border-outline-variant/30">
@@ -1531,8 +1535,8 @@
             <div class="shrink-0 border-b border-neutral-200 bg-white px-4 py-3 sm:px-5 sm:py-3.5">
                <div class="flex items-start justify-between gap-3">
                   <div>
-                     <h2 id="peer-tbc-general-title" class="font-headline text-base font-semibold tracking-tight text-neutral-900 sm:text-lg">TBC General</h2>
-                     <p id="peer-tbc-general-subtitle" class="mt-0.5 text-[10px] font-normal text-neutral-500">Data contoh (dummy). Integrasi database dapat ditambahkan kemudian.</p>
+                     <h2 id="peer-tbc-general-title" class="font-headline text-base font-semibold tracking-tight text-neutral-900 sm:text-lg">TBC General — tren kategori</h2>
+                     <p id="peer-tbc-general-subtitle" class="mt-0.5 text-[10px] font-normal text-neutral-500">Grafik agregat 4 minggu (Mean/UCL/LCL) &amp; daftar kategori dengan mini tren W12–W15 (semua site / per site). Data: sumber JSON.</p>
                   </div>
                   <button type="button" id="peer-tbc-general-close" class="rounded-lg p-2 text-neutral-500 transition-colors hover:bg-neutral-100 hover:text-neutral-900" aria-label="Tutup">
                      <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
@@ -1541,11 +1545,35 @@
             </div>
             <div id="peer-tbc-general-loading" class="hidden flex flex-1 flex-col items-center justify-center gap-2 bg-white px-6 py-16" aria-live="polite">
                <span class="material-symbols-outlined animate-spin text-3xl text-neutral-400" style="animation-duration:1s">progress_activity</span>
-               <p class="text-[11px] font-medium tracking-wide text-neutral-500">Memuat kartu…</p>
+               <p class="text-[11px] font-medium tracking-wide text-neutral-500">Memuat data tren TBC…</p>
             </div>
             <div id="peer-tbc-general-error" class="hidden bg-white px-6 py-8 text-center text-[12px] text-red-600"></div>
             <div id="peer-tbc-general-body" class="min-h-0 flex-1 overflow-x-auto overflow-y-auto bg-neutral-50/80 px-3 py-4 sm:px-5 sm:py-5">
-               <div id="peer-tbc-general-cards" class="flex w-max min-w-full flex-nowrap gap-4 pb-1"></div>
+               <div id="peer-tbc-general-content" class="mx-auto max-w-6xl space-y-6">
+                  <section class="rounded-xl border border-neutral-200/90 bg-white p-4 shadow-sm sm:p-5">
+                     <h3 class="text-[11px] font-bold uppercase tracking-wider text-neutral-500">Total TBC (agregat kategori) — 4 minggu terakhir</h3>
+                     <p class="mt-1 text-[9px] text-neutral-400">Mean, UCL (Mean+0,75×STDev), LCL (Mean−0,3×STDev) dari total per minggu.</p>
+                     <div class="relative mx-auto mt-3 h-64 w-full max-w-3xl">
+                        <canvas id="peer-tbc-general-bar-canvas" aria-label="Grafik garis total TBC per minggu dengan batas kontrol statistik"></canvas>
+                     </div>
+                  </section>
+                  <div class="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                     <label class="text-[11px] font-bold uppercase tracking-wide text-neutral-600" for="peer-tbc-category-site-select">Tampilan data</label>
+                     <select id="peer-tbc-category-site-select" class="w-full max-w-md rounded-xl border border-neutral-200 bg-white px-3 py-2.5 text-sm font-semibold text-neutral-800 shadow-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15 sm:w-auto">
+                        <option value="__all">Semua site (agregat)</option>
+                     </select>
+                  </div>
+                  <section class="overflow-hidden rounded-xl border border-neutral-200/90 bg-white shadow-sm">
+                     <div class="border-b border-neutral-200 bg-[#f8fafc] px-4 py-3">
+                        <p class="text-[11px] font-bold uppercase tracking-wide text-neutral-500">Deviasi pelanggaran per kategori</p>
+                        <p class="mt-0.5 text-[10px] font-medium text-neutral-400">Trend kategori TBC · mingguan W12–W15</p>
+                     </div>
+                     <div class="max-h-[min(58vh,560px)] overflow-y-auto px-3 pb-4 pt-3 sm:px-5 sm:pb-5 sm:pt-4">
+                        <div id="peer-tbc-category-cards" class="rounded-lg border border-neutral-200/90 bg-[#fafbfc]" aria-label="Daftar kategori TBC"></div>
+                        <p id="peer-tbc-category-empty" class="hidden px-2 py-10 text-center text-sm text-neutral-500">Belum ada data tren kategori.</p>
+                     </div>
+                  </section>
+               </div>
             </div>
          </div>
       </div>
@@ -1922,6 +1950,7 @@
         var peerGoldenRulesBySite = @json($peerGoldenRulesBySite ?? null);
         var peerAreaNonKritisBySite = @json($peerAreaNonKritisBySite ?? null);
         var peerAreaKritisBySite = @json($peerAreaKritisBySite ?? null);
+        var peerTbcCategoryTrend = @json($tbcCategoryTrendData ?? null);
         function peerMetricEvalFromJson(json, site, defaultBar) {
           if (!json || !json.weeks || !json.bySite) return null;
           var weeks = json.weeks;
@@ -2289,6 +2318,10 @@
             var bl = parseInt(b.slice(5, 7), 16);
             return 'rgba(' + r + ',' + g + ',' + bl + ',0.14)';
           }
+          var rgbM = b.match(/^rgba?\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)/i);
+          if (rgbM) {
+            return 'rgba(' + rgbM[1] + ',' + rgbM[2] + ',' + rgbM[3] + ',0.14)';
+          }
           if (b.indexOf('hsl') === 0) return 'rgba(148, 163, 184, 0.2)';
           return 'rgba(57, 82, 188, 0.14)';
         }
@@ -2297,10 +2330,28 @@
           if (c) return c;
           return fallback || '#2563eb';
         }
-        function createPeerDeviationHrBarChart(canvas, labels, data, barColor) {
+        function peerDeviationHrSampleMean(arr) {
+          if (!arr || !arr.length) return 0;
+          var s = 0;
+          for (var i = 0; i < arr.length; i++) s += arr[i];
+          return s / arr.length;
+        }
+        function peerDeviationHrSampleStdev(arr) {
+          var n = arr ? arr.length : 0;
+          if (n < 2) return 0;
+          var m = peerDeviationHrSampleMean(arr);
+          var ss = 0;
+          for (var i = 0; i < n; i++) ss += Math.pow(arr[i] - m, 2);
+          return Math.sqrt(ss / (n - 1));
+        }
+        function createPeerDeviationHrBarChart(canvas, labels, data, barColor, mainSeriesLabel) {
           if (typeof Chart === 'undefined' || !canvas) return null;
           var bc = barColor || '#3952bc';
           if (bc === '#DEE5EF' || bc === '#dee5ef' || bc === '#e2e2e2') bc = '#3952bc';
+          var mainLab =
+            mainSeriesLabel != null && String(mainSeriesLabel).trim() !== ''
+              ? String(mainSeriesLabel).trim()
+              : 'Nilai';
           var ctx = canvas.getContext('2d');
           if (!ctx) return null;
           var lbls = Array.isArray(labels) ? labels : [];
@@ -2309,33 +2360,159 @@
             while (lbls.length < pts.length) lbls.push(String(lbls.length + 1));
             lbls = lbls.slice(0, pts.length);
           }
+          if (!pts.length) {
+            return null;
+          }
+          var nums = [];
+          for (var ni = 0; ni < pts.length; ni++) {
+            var nv = Number(pts[ni]);
+            if (!isNaN(nv)) nums.push(nv);
+          }
+          var mean = peerDeviationHrSampleMean(nums);
+          var stdev = peerDeviationHrSampleStdev(nums);
+          var ucl = mean + 0.75 * stdev;
+          var lcl = mean - 0.3 * stdev;
+          var nPts = pts.length;
+          var uclArr = nPts ? lbls.map(function () { return ucl; }) : [];
+          var lclArr = nPts ? lbls.map(function () { return lcl; }) : [];
+          var meanArr = nPts ? lbls.map(function () { return mean; }) : [];
+          var yVals = nums.length ? nums.concat([ucl, lcl, mean]) : [0, 1];
+          var yMin = Math.min.apply(null, yVals);
+          var yMax = Math.max.apply(null, yVals);
+          var pad = (yMax - yMin) * 0.12 || Math.max(Math.abs(yMax) * 0.05, 1);
+          var peerHrControlCaption = {
+            id: 'peerHrControlCaption',
+            afterDraw: function (ch) {
+              var c = ch.ctx;
+              var ca = ch.chartArea;
+              if (!ca) return;
+              c.save();
+              c.fillStyle = '#64748b';
+              c.font = '600 9px Poppins, system-ui, sans-serif';
+              c.textAlign = 'right';
+              c.textBaseline = 'bottom';
+              var cap =
+                'Mean ' +
+                mean.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+                ' · UCL ' +
+                ucl.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) +
+                ' · LCL ' +
+                lcl.toLocaleString('id-ID', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+              c.fillText(cap, ca.right, ca.top - 2);
+              c.restore();
+            },
+          };
+          var peerHrPointLabels = {
+            id: 'peerHrPointLabels',
+            afterDatasetsDraw: function (ch) {
+              var dsIdx = ch.data.datasets.length - 1;
+              var meta = ch.getDatasetMeta(dsIdx);
+              if (!meta || meta.hidden) return;
+              var ds = ch.data.datasets[dsIdx];
+              var c = ch.ctx;
+              c.save();
+              c.font = '600 10px Poppins, system-ui, sans-serif';
+              c.textAlign = 'center';
+              c.textBaseline = 'bottom';
+              meta.data.forEach(function (pt, i) {
+                if (!pt || pt.skip) return;
+                var raw = ds.data[i];
+                if (raw == null || raw === '') return;
+                var v = Number(raw);
+                if (isNaN(v)) return;
+                var col = v > ucl ? '#dc2626' : v < lcl ? '#ea580c' : '#15803d';
+                c.fillStyle = col;
+                var txt = Math.abs(v - Math.round(v)) < 1e-6 ? String(Math.round(v)) : v.toFixed(1);
+                c.fillText(txt, pt.x, pt.y - 6);
+              });
+              c.restore();
+            },
+          };
           try {
             return new Chart(ctx, {
-              type: 'bar',
+              type: 'line',
               data: {
                 labels: lbls,
                 datasets: [
                   {
-                    label: 'Nilai',
+                    label: 'UCL',
+                    data: uclArr,
+                    borderColor: 'rgba(220, 38, 38, 0.95)',
+                    borderDash: [5, 5],
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0,
+                    order: 10,
+                  },
+                  {
+                    label: 'LCL',
+                    data: lclArr,
+                    borderColor: 'rgba(107, 114, 128, 0.92)',
+                    borderDash: [5, 5],
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    fill: '-1',
+                    backgroundColor: 'rgba(203, 213, 225, 0.28)',
+                    tension: 0,
+                    order: 10,
+                  },
+                  {
+                    label: 'Mean',
+                    data: meanArr,
+                    borderColor: 'rgba(22, 163, 74, 0.95)',
+                    borderDash: [4, 4],
+                    borderWidth: 1.5,
+                    pointRadius: 0,
+                    fill: false,
+                    tension: 0,
+                    order: 11,
+                  },
+                  {
+                    label: mainLab,
                     data: pts,
-                    backgroundColor: bc,
+                    borderWidth: 2.5,
+                    tension: 0.35,
+                    pointRadius: 4,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderWidth: 2,
+                    fill: false,
+                    order: 12,
+                    segment: {
+                      borderColor: function (seg) {
+                        var y = seg.p1 && seg.p1.parsed && seg.p1.parsed.y;
+                        if (y == null || isNaN(y)) return bc;
+                        if (y > ucl) return '#dc2626';
+                        if (y < lcl) return '#ea580c';
+                        return '#16a34a';
+                      },
+                    },
                     borderColor: bc,
-                    borderWidth: 0,
-                    borderRadius: 6,
-                    borderSkipped: false,
+                    pointBorderColor: function (ctx) {
+                      var y = ctx.parsed && ctx.parsed.y;
+                      if (y == null || isNaN(y)) return bc;
+                      if (y > ucl) return '#dc2626';
+                      if (y < lcl) return '#ea580c';
+                      return '#16a34a';
+                    },
                   },
                 ],
               },
               options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                layout: { padding: { top: 10, right: 6, bottom: 4, left: 6 } },
+                layout: { padding: { top: 22, right: 8, bottom: 4, left: 6 } },
                 interaction: { intersect: false, mode: 'index' },
                 plugins: {
                   legend: { display: false },
                   tooltip: {
                     callbacks: {
                       label: function (ctx) {
+                        var lab = ctx.dataset.label || '';
+                        if (lab === 'UCL') return 'UCL: ' + ucl.toLocaleString('id-ID', { maximumFractionDigits: 2 });
+                        if (lab === 'LCL') return 'LCL: ' + lcl.toLocaleString('id-ID', { maximumFractionDigits: 2 });
+                        if (lab === 'Mean') return 'Mean: ' + mean.toLocaleString('id-ID', { maximumFractionDigits: 2 });
                         var v =
                           ctx.parsed && ctx.parsed.y != null && !isNaN(ctx.parsed.y)
                             ? ctx.parsed.y
@@ -2344,9 +2521,10 @@
                         var n = Number(v);
                         if (isNaN(n)) return String(v);
                         var isInt = Math.abs(n - Math.round(n)) < 1e-9;
+                        var prefix = lab + ': ';
                         return isInt
-                          ? n.toLocaleString('id-ID')
-                          : n.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
+                          ? prefix + n.toLocaleString('id-ID')
+                          : prefix + n.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 3 });
                       },
                     },
                   },
@@ -2358,13 +2536,22 @@
                     ticks: { font: { size: 9 }, maxRotation: 0, autoSkip: false },
                   },
                   y: {
-                    beginAtZero: true,
-                    grid: { display: false, drawBorder: false, lineWidth: 0 },
-                    ticks: { display: false },
+                    min: yMin - pad,
+                    max: yMax + pad,
+                    grid: { color: 'rgba(0, 0, 0, 0.06)', drawBorder: false },
+                    ticks: {
+                      display: true,
+                      font: { size: 8 },
+                      maxTicksLimit: 6,
+                      callback: function (val) {
+                        return Number(val).toLocaleString('id-ID', { maximumFractionDigits: 1 });
+                      },
+                    },
                     border: { display: false },
                   },
                 },
               },
+              plugins: [peerHrControlCaption, peerHrPointLabels],
             });
           } catch (err) {
             return null;
@@ -2437,6 +2624,94 @@
                   y: {
                     beginAtZero: true,
                     grid: { display: false, drawBorder: false, lineWidth: 0 },
+                    ticks: { display: false },
+                    border: { display: false },
+                  },
+                },
+              },
+            });
+          } catch (err) {
+            return null;
+          }
+        }
+        /** Mini line/area chart for TBC category cards (grid + W12–W15 labels). */
+        function createPeerTbcCategoryMiniLineChart(canvas, labels, data, borderColor) {
+          if (typeof Chart === 'undefined' || !canvas) return null;
+          var bc = borderColor || '#2563eb';
+          var ctx = canvas.getContext('2d');
+          if (!ctx) return null;
+          var lbls = Array.isArray(labels) ? labels : [];
+          var pts = Array.isArray(data) ? data : [];
+          if (lbls.length !== pts.length && pts.length > 0) {
+            while (lbls.length < pts.length) lbls.push(String(lbls.length + 1));
+            lbls = lbls.slice(0, pts.length);
+          }
+          try {
+            return new Chart(ctx, {
+              type: 'line',
+              data: {
+                labels: lbls,
+                datasets: [
+                  {
+                    label: 'Nilai',
+                    data: pts,
+                    borderColor: bc,
+                    backgroundColor: fillColorFromLineColor(bc),
+                    fill: true,
+                    tension: 0.35,
+                    spanGaps: false,
+                    borderWidth: 2,
+                    pointRadius: 4,
+                    pointHoverRadius: 5,
+                    pointBackgroundColor: '#ffffff',
+                    pointBorderColor: bc,
+                    pointBorderWidth: 2,
+                  },
+                ],
+              },
+              options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                layout: { padding: { top: 10, right: 6, bottom: 2, left: 4 } },
+                interaction: { intersect: false, mode: 'index' },
+                plugins: {
+                  legend: { display: false },
+                  tooltip: {
+                    callbacks: {
+                      title: function (items) {
+                        return items && items[0] ? String(items[0].label || '') : '';
+                      },
+                      label: function (ctx) {
+                        var v =
+                          ctx.parsed && ctx.parsed.y != null && !isNaN(ctx.parsed.y)
+                            ? ctx.parsed.y
+                            : ctx.raw;
+                        if (v == null || v === '') return '—';
+                        var n = Number(v);
+                        if (isNaN(n)) return String(v);
+                        var isInt = Math.abs(n - Math.round(n)) < 1e-9;
+                        return isInt
+                          ? 'Jumlah: ' + n.toLocaleString('id-ID')
+                          : 'Jumlah: ' + n.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 2 });
+                      },
+                    },
+                  },
+                },
+                scales: {
+                  x: {
+                    offset: true,
+                    grid: { display: false, drawBorder: false },
+                    ticks: { font: { size: 9, weight: '600' }, maxRotation: 0, autoSkip: false, color: '#64748b' },
+                  },
+                  y: {
+                    beginAtZero: true,
+                    grid: {
+                      display: true,
+                      drawBorder: false,
+                      color: 'rgba(148, 163, 184, 0.45)',
+                      lineWidth: 1,
+                      borderDash: [2, 4],
+                    },
                     ticks: { display: false },
                     border: { display: false },
                   },
@@ -3793,184 +4068,209 @@
         var tbcHighCard = document.getElementById('peer-kpi-tbc-high-card');
         var tbcGeneralClose = document.getElementById('peer-tbc-general-close');
         var tbcGeneralBackdrop = tbcGeneralModal ? tbcGeneralModal.querySelector('.peer-tbc-general-backdrop') : null;
-        var peerTbcGeneralDummyCards = [
-          {
-            id: null,
-            title_line: 'Temuan potensi bahaya area tangki — verifikasi SOP',
-            header_color: '',
-            image_url: '',
-            date_label: '12 Mar 2026',
-            description: 'Inspeksi rutin menemukan akses terbatas tidak terkunci. Ditindaklanjuti briefing singkat ke shift.',
-            lokasi: 'Area produksi A',
-            detail_lok: 'Gates utara',
-            pelapor: 'Tim SHE',
-            metode_lapor: 'Walkthrough',
-            status: 'open',
-            status_label: 'Terbuka'
-          },
-          {
-            id: null,
-            title_line: 'Temuan potensi bahaya area tangki — verifikasi SOP',
-            header_color: '',
-            image_url: '',
-            date_label: '12 Mar 2026',
-            description: 'Inspeksi rutin menemukan akses terbatas tidak terkunci. Ditindaklanjuti briefing singkat ke shift.',
-            lokasi: 'Area produksi A',
-            detail_lok: 'Gates utara',
-            pelapor: 'Tim SHE',
-            metode_lapor: 'Walkthrough',
-            status: 'open',
-            status_label: 'Terbuka'
-          },
-          {
-            id: null,
-            title_line: 'Temuan potensi bahaya area tangki — verifikasi SOP',
-            header_color: '',
-            image_url: '',
-            date_label: '12 Mar 2026',
-            description: 'Inspeksi rutin menemukan akses terbatas tidak terkunci. Ditindaklanjuti briefing singkat ke shift.',
-            lokasi: 'Area produksi A',
-            detail_lok: 'Gates utara',
-            pelapor: 'Tim SHE',
-            metode_lapor: 'Walkthrough',
-            status: 'open',
-            status_label: 'Terbuka'
-          },
-          {
-            id: null,
-            title_line: 'Temuan potensi bahaya area tangki — verifikasi SOP',
-            header_color: '',
-            image_url: '',
-            date_label: '12 Mar 2026',
-            description: 'Inspeksi rutin menemukan akses terbatas tidak terkunci. Ditindaklanjuti briefing singkat ke shift.',
-            lokasi: 'Area produksi A',
-            detail_lok: 'Gates utara',
-            pelapor: 'Tim SHE',
-            metode_lapor: 'Walkthrough',
-            status: 'open',
-            status_label: 'Terbuka'
-          },
-          {
-            id: null,
-            title_line: 'APAR kedaluwarsa — penggantian terjadwal',
-            header_color: '',
-            image_url: '',
-            date_label: '08 Mar 2026',
-            description: 'Pengecekan bulanan; unit diganti sesuai jadwal maintenance.',
-            lokasi: 'Gudang B',
-            detail_lok: 'Rak C-02',
-            pelapor: 'Security',
-            metode_lapor: 'Checklist',
-            status: 'closed',
-            status_label: 'Selesai'
-          },
-          {
-            id: null,
-            title_line: 'Aktivitas kontraktor tanpa escort — koreksi langsung',
-            header_color: '',
-            image_url: '',
-            date_label: '03 Mar 2026',
-            description: 'Kontraktor diingatkan; escort ditugaskan untuk kunjungan berikutnya.',
-            lokasi: 'Workshop',
-            detail_lok: 'Mezanin',
-            pelapor: 'Supervisor lapangan',
-            metode_lapor: 'Lisan + WA',
-            status: 'open',
-            status_label: 'Dalam tindak'
+        var peerTbcGeneralBarChart = null;
+        var peerTbcCategoryLineCharts = [];
+        function peerTbcNum(v) {
+          if (v === null || v === undefined || v === '') return null;
+          var n = Number(v);
+          return isNaN(n) ? null : n;
+        }
+        function peerTbcWeekTotalsFromCategories(categories) {
+          var weeks = (peerTbcCategoryTrend && peerTbcCategoryTrend.weeks) || ['W12', 'W13', 'W14', 'W15'];
+          var n = weeks.length;
+          var totals = [];
+          var w;
+          for (w = 0; w < n; w++) totals[w] = 0;
+          if (!categories || !categories.length) return totals;
+          categories.forEach(function (cat) {
+            var vals = cat.values || [];
+            for (w = 0; w < n; w++) {
+              var nv = peerTbcNum(vals[w]);
+              if (nv !== null) totals[w] += nv;
+            }
+          });
+          return totals;
+        }
+        function peerTbcGetCategoriesForSite(siteKey) {
+          if (!peerTbcCategoryTrend || !peerTbcCategoryTrend.all_sites) return [];
+          if (!siteKey || siteKey === '__all') {
+            return peerTbcCategoryTrend.all_sites.categories || [];
           }
+          var bs = peerTbcCategoryTrend.by_site && peerTbcCategoryTrend.by_site[siteKey];
+          if (bs && bs.categories && bs.categories.length) return bs.categories;
+          return [];
+        }
+        var peerTbcLinePalette = [
+          '57, 82, 188',
+          '220, 38, 38',
+          '22, 163, 74',
+          '234, 88, 12',
+          '147, 51, 234',
+          '8, 145, 178',
+          '190, 24, 93',
+          '101, 163, 13',
+          '217, 119, 6',
+          '59, 130, 246',
+          '239, 68, 68',
+          '16, 185, 129',
+          '245, 158, 11',
+          '99, 102, 241'
         ];
-        function renderTbcGeneralCard(c) {
-          var st =
-            c.status === 'closed'
-              ? 'bg-neutral-100 text-neutral-700 border-t border-neutral-200'
-              : c.status === 'open'
-                ? 'bg-white text-neutral-800 border-t border-neutral-200'
-                : 'bg-neutral-50 text-neutral-600 border-t border-neutral-200';
-          var img = c.image_url
-            ? '<img src="' +
-              escAttr(c.image_url) +
-              '" alt="" class="h-36 w-full object-cover" loading="lazy" />'
-            : '<div class="flex h-36 w-full items-center justify-center bg-neutral-100"><span class="material-symbols-outlined text-5xl text-neutral-300">image</span></div>';
-          var detailLok = c.detail_lok
-            ? '<p class="text-[9px] text-neutral-500">Detail lokasi: ' + escHtml(c.detail_lok) + '</p>'
-            : '';
-          var hdr =
-            c.header_color && String(c.header_color).trim()
-              ? ' style="background:' + escAttr(c.header_color) + '"'
-              : '';
-          var titleBarClass =
-            c.header_color && String(c.header_color).trim()
-              ? 'min-h-[3rem] px-2 py-2 text-[10px] font-semibold leading-snug text-white line-clamp-4'
-              : 'min-h-[3rem] border-b border-neutral-200 bg-neutral-50 px-2 py-2 text-[10px] font-semibold leading-snug text-neutral-800 line-clamp-4';
-          return (
-            '<article class="flex w-[260px] shrink-0 flex-col overflow-hidden rounded-lg border border-neutral-200 bg-white shadow-sm">' +
-            '<div class="' +
-            titleBarClass +
-            '"' +
-            hdr +
-            '>' +
-            escHtml(c.title_line || '—') +
-            '</div>' +
-            '<div class="js-peer-tbc-open-detail border-b border-neutral-100' +
-            (c.id != null && c.id !== ''
-              ? ' cursor-pointer hover:bg-neutral-50/80'
-              : '') +
-            '" data-kejadian-id="' +
-            String(c.id != null ? c.id : '') +
-            '">' +
-            img +
-            '</div>' +
-            '<div class="flex flex-1 flex-col gap-1.5 px-2.5 py-2 text-[10px] leading-snug text-neutral-800">' +
-            '<p class="text-center font-medium tabular-nums text-neutral-700">' +
-            escHtml(c.date_label || '—') +
-            '</p>' +
-            '<p class="max-h-32 overflow-y-auto text-[9px] leading-relaxed text-neutral-600">' +
-            escHtml(c.description || '—') +
-            '</p>' +
-            '<p class="text-[9px] text-neutral-700">Lokasi: <span class="font-medium">' +
-            escHtml(c.lokasi || '—') +
-            '</span></p>' +
-            detailLok +
-            '<div class="relative mt-0.5 flex items-start justify-between gap-1">' +
-            '<p class="min-w-0 flex-1 text-[9px] text-neutral-500">Pelapor: <span class="font-medium text-neutral-800">' +
-            escHtml(c.pelapor || '—') +
-            '</span><br/><span class="text-[8px] text-neutral-400">' +
-            escHtml(c.metode_lapor || '') +
-            '</span></p>' +
-            '<span class="material-symbols-outlined shrink-0 text-lg text-neutral-400" title="Perhatian">warning</span>' +
-            '</div>' +
-            '</div>' +
-            '<div class="' +
-            st +
-            ' py-2 text-center text-[10px] font-medium tracking-wide">' +
-            escHtml(c.status_label || '—') +
-            '</div>' +
-            '</article>'
-          );
+        function peerTbcDestroyCategoryCards() {
+          peerTbcCategoryLineCharts.forEach(function (ch) {
+            try {
+              if (ch && typeof ch.destroy === 'function') ch.destroy();
+            } catch (e) {}
+          });
+          peerTbcCategoryLineCharts = [];
+          var root = document.getElementById('peer-tbc-category-cards');
+          if (root) root.innerHTML = '';
+        }
+        function peerTbcRgbFromPalette(idx) {
+          var rgb = peerTbcLinePalette[idx % peerTbcLinePalette.length];
+          return 'rgb(' + rgb + ')';
+        }
+        function peerTbcRenderCategoryLineChart(siteKey) {
+          var sk = siteKey && siteKey !== '' ? siteKey : '__all';
+          var cardsRoot = document.getElementById('peer-tbc-category-cards');
+          var emptyEl = document.getElementById('peer-tbc-category-empty');
+          if (typeof Chart === 'undefined') return;
+          peerTbcDestroyCategoryCards();
+          if (!cardsRoot) return;
+          var weeks = (peerTbcCategoryTrend && peerTbcCategoryTrend.weeks) || ['W12', 'W13', 'W14', 'W15'];
+          var categories = peerTbcGetCategoriesForSite(sk);
+          if (!categories.length) {
+            if (emptyEl) emptyEl.classList.remove('hidden');
+            return;
+          }
+          if (emptyEl) emptyEl.classList.add('hidden');
+          var rowsHtml = categories
+            .map(function (cat, idx) {
+              var vals = cat.values || [];
+              var lineRgb = peerTbcRgbFromPalette(idx);
+              var title =
+                (cat.rank != null ? String(cat.rank) + '. ' : '') + (cat.label != null ? String(cat.label) : '—');
+              var sum = 0;
+              var wi;
+              for (wi = 0; wi < weeks.length; wi++) {
+                var nv = peerTbcNum(vals[wi]);
+                if (nv !== null) sum += nv;
+              }
+              var dataArr = weeks.map(function (_w, i) {
+                var nv = peerTbcNum(vals[i]);
+                return nv === null ? null : nv;
+              });
+              return (
+                '<div class="flex flex-col gap-2.5 border-b border-neutral-200/80 bg-white px-3 py-3 last:border-b-0">' +
+                '<div class="min-w-0 w-full">' +
+                '<span class="inline-flex max-w-full items-start gap-1 rounded-md px-2.5 py-1.5 text-left text-[11px] font-bold leading-snug text-white shadow-sm sm:text-xs" style="background:' +
+                lineRgb.replace(/[<>"']/g, '') +
+                ';text-shadow:0 1px 2px rgba(0,0,0,.35)">' +
+                '<span class="min-w-0 break-words">' +
+                escHtml(title) +
+                '</span></span>' +
+                '<p class="mt-1 text-[10px] font-semibold tabular-nums text-neutral-600 sm:text-[11px]">Jumlah: ' +
+                sum.toLocaleString('id-ID') +
+                '</p></div>' +
+                '<div class="w-full border-t border-dashed border-neutral-200/90 pt-2.5">' +
+                '<div class="relative h-36 w-full min-h-[9rem]">' +
+                '<canvas class="peer-tbc-cat-spark-chart max-h-full w-full" data-tbc-idx="' +
+                idx +
+                '"></canvas>' +
+                '</div></div></div>'
+              );
+            })
+            .join('');
+          cardsRoot.innerHTML = rowsHtml;
+          cardsRoot.querySelectorAll('canvas.peer-tbc-cat-spark-chart').forEach(function (cnv, idx) {
+            var cat = categories[idx];
+            if (!cat) return;
+            var vals = cat.values || [];
+            var dataArr = weeks.map(function (_w, i) {
+              var nv = peerTbcNum(vals[i]);
+              return nv === null ? null : nv;
+            });
+            var col = peerTbcRgbFromPalette(idx);
+            var ch = createPeerTbcCategoryMiniLineChart(cnv, weeks, dataArr, col);
+            if (ch) peerTbcCategoryLineCharts.push(ch);
+          });
+          window.setTimeout(function () {
+            peerTbcCategoryLineCharts.forEach(function (ch) {
+              try {
+                if (ch && typeof ch.resize === 'function') ch.resize();
+              } catch (e) {}
+            });
+          }, 0);
+        }
+        function peerTbcRenderBarChart(siteKey) {
+          var sk = siteKey && siteKey !== '' ? siteKey : '__all';
+          var canvas = document.getElementById('peer-tbc-general-bar-canvas');
+          if (!canvas || typeof Chart === 'undefined') return;
+          if (peerTbcGeneralBarChart) {
+            try {
+              peerTbcGeneralBarChart.destroy();
+            } catch (e) {}
+            peerTbcGeneralBarChart = null;
+          }
+          var weeks = (peerTbcCategoryTrend && peerTbcCategoryTrend.weeks) || ['W12', 'W13', 'W14', 'W15'];
+          var cats = peerTbcGetCategoriesForSite(sk);
+          var totals = peerTbcWeekTotalsFromCategories(cats);
+          var dsLabel =
+            sk === '__all'
+              ? 'Jumlah TBC (agregat semua kategori)'
+              : 'Jumlah TBC — ' + sk;
+          peerTbcGeneralBarChart = createPeerDeviationHrBarChart(canvas, weeks, totals, '#3952bc', dsLabel);
+        }
+        function peerTbcPopulateSiteSelect() {
+          var sel = document.getElementById('peer-tbc-category-site-select');
+          if (!sel) return;
+          var keys = ['__all'];
+          if (peerTbcCategoryTrend && peerTbcCategoryTrend.by_site) {
+            Object.keys(peerTbcCategoryTrend.by_site).forEach(function (k) {
+              if (keys.indexOf(k) === -1) keys.push(k);
+            });
+          }
+          sel.innerHTML = '';
+          keys.forEach(function (k) {
+            var opt = document.createElement('option');
+            opt.value = k;
+            opt.textContent = k === '__all' ? 'Semua site (agregat)' : k;
+            sel.appendChild(opt);
+          });
         }
         function loadTbcGeneralCards() {
           var loading = document.getElementById('peer-tbc-general-loading');
           var errEl = document.getElementById('peer-tbc-general-error');
           var body = document.getElementById('peer-tbc-general-body');
-          var wrap = document.getElementById('peer-tbc-general-cards');
           if (errEl) {
             errEl.classList.add('hidden');
             errEl.textContent = '';
           }
           if (loading) loading.classList.remove('hidden');
           if (body) body.classList.add('hidden');
-          if (wrap) wrap.innerHTML = '';
           window.setTimeout(function () {
             if (loading) loading.classList.add('hidden');
             if (body) body.classList.remove('hidden');
-            if (!wrap) return;
-            var cards = peerTbcGeneralDummyCards;
-            if (!cards.length) {
-              wrap.innerHTML =
-                '<p class="min-w-[280px] flex-1 px-4 py-10 text-center text-[12px] text-neutral-500">Belum ada contoh kartu.</p>';
+            if (!peerTbcCategoryTrend || !peerTbcCategoryTrend.all_sites || !peerTbcCategoryTrend.all_sites.categories) {
+              if (errEl) {
+                errEl.textContent = 'Data tren kategori TBC tidak tersedia (periksa file JSON).';
+                errEl.classList.remove('hidden');
+              }
+              peerTbcDestroyCategoryCards();
               return;
             }
-            wrap.innerHTML = cards.map(renderTbcGeneralCard).join('');
+            peerTbcPopulateSiteSelect();
+            var sel = document.getElementById('peer-tbc-category-site-select');
+            if (sel) {
+              sel.onchange = function () {
+                var v = sel.value || '__all';
+                peerTbcRenderBarChart(v);
+                peerTbcRenderCategoryLineChart(v);
+              };
+            }
+            var v0 = sel && sel.value ? sel.value : '__all';
+            peerTbcRenderBarChart(v0);
+            peerTbcRenderCategoryLineChart(v0);
           }, 80);
         }
         function openTbcGeneralModal() {
@@ -3982,6 +4282,13 @@
         }
         function closeTbcGeneralModal() {
           if (!tbcGeneralModal) return;
+          if (peerTbcGeneralBarChart) {
+            try {
+              peerTbcGeneralBarChart.destroy();
+            } catch (e) {}
+            peerTbcGeneralBarChart = null;
+          }
+          peerTbcDestroyCategoryCards();
           tbcGeneralModal.classList.add('hidden');
           tbcGeneralModal.setAttribute('aria-hidden', 'true');
           if (tbcHighCard) tbcHighCard.setAttribute('aria-expanded', 'false');
@@ -3989,21 +4296,6 @@
         if (tbcHighCard) tbcHighCard.addEventListener('click', openTbcGeneralModal);
         if (tbcGeneralClose) tbcGeneralClose.addEventListener('click', closeTbcGeneralModal);
         if (tbcGeneralBackdrop) tbcGeneralBackdrop.addEventListener('click', closeTbcGeneralModal);
-        var tbcCardsRoot = document.getElementById('peer-tbc-general-cards');
-        if (tbcCardsRoot) {
-          tbcCardsRoot.addEventListener('click', function (e) {
-            var t = e.target.closest('.js-peer-tbc-open-detail');
-            if (!t) return;
-            var id = t.getAttribute('data-kejadian-id');
-            if (!id) return;
-            var nid = parseInt(id, 10);
-            if (isNaN(nid)) return;
-            closeTbcGeneralModal();
-            if (typeof window.peerPressureOpenKejadianDetail === 'function') {
-              window.peerPressureOpenKejadianDetail(nid);
-            }
-          });
-        }
         document.addEventListener('keydown', function (e) {
           if (e.key !== 'Escape') return;
           if (tbcGeneralModal && !tbcGeneralModal.classList.contains('hidden')) closeTbcGeneralModal();
