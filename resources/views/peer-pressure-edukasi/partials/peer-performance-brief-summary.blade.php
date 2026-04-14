@@ -14,7 +14,6 @@
     $spLastW = $spBrief['last_week'] ?? null;
     $spAttention = $spOk ? ($spBrief['attention_sites'] ?? []) : [];
     $spRepetitive = $spOk ? ($spBrief['repetitive'] ?? []) : [];
-    $spOverall = $spOk ? ($spBrief['overall_by_site_mitra'] ?? []) : [];
 @endphp
 <section class="anchored-card flex min-h-0 flex-1 flex-col justify-between rounded-2xl bg-white p-5" aria-label="Ringkasan singkat kinerja">
    <div class="flex items-start gap-3">
@@ -37,7 +36,7 @@
       <div class="max-h-40 overflow-y-auto text-[11px] leading-relaxed text-emerald-950">
          {!! nl2br(e($spNarrative)) !!}
       </div>
-      @if($spOk && (count($spAttention) > 0 || count($spRepetitive) > 0 || count($spOverall) > 0))
+      @if($spOk && (count($spAttention) > 0 || count($spRepetitive) > 0))
       <div class="mt-3 space-y-2 border-t border-emerald-700/10 pt-3 text-[10px] text-emerald-950">
          @if(count($spAttention) > 0)
          <div>
@@ -58,16 +57,6 @@
             <ul class="mt-1 list-inside list-disc space-y-0.5 text-emerald-950/95">
                @foreach(array_slice($spRepetitive, 0, 8) as $r)
                <li>{{ $r['site'] ?? '' }} / {{ $r['mitra'] ?? '' }} — {{ $r['parameter'] ?? '' }}</li>
-               @endforeach
-            </ul>
-         </div>
-         @endif
-         @if(count($spOverall) > 0)
-         <div>
-            <p class="font-bold text-emerald-900">Overall (heuristik)</p>
-            <ul class="mt-1 list-inside list-disc space-y-0.5 text-emerald-950/95">
-               @foreach(array_slice($spOverall, 0, 10, true) as $k => $lvl)
-               <li><span class="font-mono text-[9px]">{{ $k }}</span>: {{ $lvl }}</li>
                @endforeach
             </ul>
          </div>
