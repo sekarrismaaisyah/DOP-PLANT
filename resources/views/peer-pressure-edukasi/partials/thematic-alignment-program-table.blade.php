@@ -8,6 +8,65 @@
         : [];
     $thematicTitle = is_array($thematicProgram) ? (string) ($thematicProgram['title'] ?? 'Thematic Alignment Program') : 'Thematic Alignment Program';
     $thematicSubtitle = is_array($thematicProgram) ? (string) ($thematicProgram['subtitle'] ?? '') : '';
+
+    $pointPath = resource_path('data/point.json');
+    $pointPayload = is_file($pointPath)
+        ? json_decode((string) file_get_contents($pointPath), true)
+        : null;
+    $pointRows = is_array($pointPayload) && isset($pointPayload['rows']) && is_array($pointPayload['rows'])
+        ? $pointPayload['rows']
+        : [];
+
+    $peerThematicNormalizeWeek = static function ($week): ?int {
+        if ($week === null || $week === '') {
+            return null;
+        }
+        if (is_int($week)) {
+            return $week;
+        }
+        if (is_float($week)) {
+            return (int) $week;
+        }
+        $s = trim((string) $week);
+        if ($s !== '' && ctype_digit($s)) {
+            return (int) $s;
+        }
+        if (preg_match('/W\s*(\d+)/i', $s, $m)) {
+            return (int) $m[1];
+        }
+
+        return null;
+    };
+
+    foreach ($thematicRows as $idx => $tRow) {
+        $detailKey = trim((string) ($tRow['detail_indikator'] ?? ''));
+        $tw = $peerThematicNormalizeWeek($tRow['week'] ?? null);
+        $drill = [];
+        foreach ($pointRows as $p) {
+            if (trim((string) ($p['detail_indikator'] ?? '')) !== $detailKey || $detailKey === '') {
+                continue;
+            }
+            $pw = $peerThematicNormalizeWeek($p['week'] ?? null);
+            if ($tw === null || $pw === null || $tw !== $pw) {
+                continue;
+            }
+            $drill[] = [
+                'detail_indikator' => (string) ($p['detail_indikator'] ?? ''),
+                'site' => (string) ($p['site'] ?? ''),
+                'week' => (string) ($p['week'] ?? ''),
+                'data' => (string) ($p['data'] ?? ''),
+            ];
+        }
+        usort($drill, static function (array $a, array $b): int {
+            $cmp = strcmp($a['site'], $b['site']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+
+            return strcmp($a['week'], $b['week']);
+        });
+        $thematicRows[$idx]['drill_down'] = $drill;
+    }
 @endphp
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
    <div class="min-w-0 lg:col-span-12">

@@ -70,27 +70,27 @@
       <div class="iba-title mb-2">Statistical Score Trend</div>
       <div style="height:320px"><canvas id="iba-trend-chart"></canvas></div>
     </div>
-  </div>
+    </div>
   <div class="col-12 col-xl-4">
     <div class="iba-card p-3 mb-3"><div class="iba-title">Average Score</div><div id="iba-avg" class="iba-value fs-2">0</div></div>
     <div class="iba-card p-3 mb-3"><div class="iba-title">Peak Week</div><div id="iba-peak" class="iba-value fs-5">-</div></div>
     <div class="iba-card p-3"><div class="iba-title">Latest Week</div><div id="iba-latest" class="iba-value fs-5">-</div></div>
-  </div>
+        </div>
   <div class="col-12">
     <div class="iba-card p-3">
       <div class="d-flex justify-content-between align-items-center mb-2">
         <div class="iba-title">Weekly Detail</div>
         <select id="iba-site" class="form-select form-select-sm" style="max-width:220px"></select>
-      </div>
+        </div>
       <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
           <thead class="table-light"><tr><th>Week</th><th class="text-end">Hazard</th><th class="text-end">TBC</th><th class="text-end">Blindspot</th><th class="text-end">Coverage %</th><th class="text-end">Incident</th><th class="text-end">Score</th></tr></thead>
           <tbody id="iba-tbody"></tbody>
         </table>
       </div>
-    </div>
-  </div>
-</div>
+            </div>
+            </div>
+            </div>
 @endsection
 
 @section('scripts')
@@ -147,28 +147,28 @@
     <div class="iba-card p-3">
       <div class="iba-title mb-2">Statistical Score Trend</div>
       <div style="height:320px"><canvas id="iba-trend-chart"></canvas></div>
-    </div>
-  </div>
+            </div>
+              </div>
   <div class="col-12 col-xl-4">
     <div class="iba-card p-3 mb-3"><div class="iba-title">Average Score</div><div id="iba-avg" class="iba-value fs-2">0</div></div>
     <div class="iba-card p-3 mb-3"><div class="iba-title">Peak Week</div><div id="iba-peak" class="iba-value fs-5">-</div></div>
     <div class="iba-card p-3"><div class="iba-title">Latest Week</div><div id="iba-latest" class="iba-value fs-5">-</div></div>
-  </div>
+              </div>
   <div class="col-12">
     <div class="iba-card p-3">
       <div class="d-flex justify-content-between align-items-center mb-2">
         <div class="iba-title">Weekly Detail</div>
         <select id="iba-site" class="form-select form-select-sm" style="max-width:220px"></select>
-      </div>
+              </div>
       <div class="table-responsive">
         <table class="table table-sm align-middle mb-0">
           <thead class="table-light"><tr><th>Week</th><th class="text-end">Hazard</th><th class="text-end">TBC</th><th class="text-end">Blindspot</th><th class="text-end">Coverage %</th><th class="text-end">Incident</th><th class="text-end">Score</th></tr></thead>
           <tbody id="iba-tbody"></tbody>
         </table>
+            </div>
+            </div>
+            </div>
       </div>
-    </div>
-  </div>
-</div>
 @endsection
 
 @section('scripts')
@@ -231,39 +231,39 @@
           <div class="iba-title">Incident Back Analysis</div>
           <h4 class="mb-1">Statistical Monitoring Dashboard</h4>
           <p class="mb-0 text-muted small">Versi Blade HTML/CSS/JS tanpa React.</p>
-        </div>
+                  </div>
         <div class="d-flex gap-2 align-items-end">
           <div>
             <label class="form-label mb-1 small fw-semibold">Site</label>
             <select id="iba-site" class="form-select form-select-sm"></select>
-          </div>
+                    </div>
           <button id="iba-reset" class="btn btn-sm btn-outline-secondary">Reset</button>
-        </div>
-      </div>
-    </div>
+                    </div>
+                    </div>
+                  </div>
   </div>
 
   <div class="col-12 col-xl-8">
     <div class="iba-card p-3">
       <div class="iba-title mb-2">Statistical Score Trend</div>
       <div style="height:320px"><canvas id="iba-trend-chart"></canvas></div>
-    </div>
-  </div>
+                    </div>
+            </div>
 
   <div class="col-12 col-xl-4 iba-grid">
     <div class="iba-card p-3">
       <div class="iba-title">Average Score</div>
       <div id="iba-avg-score" class="iba-value fs-3">0</div>
-    </div>
+                    </div>
     <div class="iba-card p-3">
       <div class="iba-title">Peak Week</div>
       <div id="iba-peak-week" class="iba-value fs-5">-</div>
-    </div>
+                    </div>
     <div class="iba-card p-3">
       <div class="iba-title">Latest Week</div>
       <div id="iba-latest-week" class="iba-value fs-5">-</div>
-    </div>
-  </div>
+                    </div>
+                  </div>
 
   <div class="col-12">
     <div class="iba-card p-3">
@@ -283,10 +283,10 @@
           </thead>
           <tbody id="iba-tbody"></tbody>
         </table>
-      </div>
-    </div>
-  </div>
-</div>
+                          </div>
+                        </div>
+                          </div>
+                  </div>
 @endsection
 
 @section('scripts')
@@ -362,7 +362,7 @@
         <td class="text-end">${r.coverageArea.toFixed(1)}</td>
         <td class="text-end">${r.actualIncidents}</td>
         <td class="text-end fw-bold">${r.score.toFixed(1)}</td>
-      </tr>
+                      </tr>
     `).join('');
 
     const avg = rows.length ? rows.reduce((s, r) => s + r.score, 0) / rows.length : 0;

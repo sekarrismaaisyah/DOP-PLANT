@@ -63,7 +63,7 @@
       "recommendation": "Monitoring kondisi Fit to Work operator berdasarkan dashboard monitoring FTW",
       "program_related": "Fatigue Management",
       "indikator": "Pengecekan FTW melalui input Aggregator",
-      "detail_indikator": "100% operator sudah tercover dalam pengisian Aggregator",
+      "detail_indikator": "% Pengisian Aggregator BeHealth",
       "scoring_all_site_ytd": "",
       "grade_ytd": "",
       "drill_down": []
@@ -107,7 +107,7 @@
       "recommendation": "Implementasi Excel Aggregator Fatigue Management baik di Kontraktor dan Subkontraktor",
       "program_related": "Fatigue Management",
       "indikator": "Pengecekan FTW melalui input Aggregator",
-      "detail_indikator": "100% operator sudah tercover dalam pengisian Aggregator",
+      "detail_indikator": "% Pengisian Aggregator BeHealth",
       "scoring_all_site_ytd": "",
       "grade_ytd": "",
       "drill_down": []
@@ -231,14 +231,7 @@
       "detail_indikator": "% Blindspot GR",
       "scoring_all_site_ytd": "60%",
       "grade_ytd": "",
-      "drill_down": [
-        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W15", "data": "0.00%" },
-        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W14", "data": "0.00%" },
-        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W13", "data": "0.00%" },
-        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W12", "data": "0.00%" },
-        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W11", "data": "0.00%" },
-        { "detail_indikator": "% Blindspot TBC", "site": "BMO 1", "week": "W10", "data": "1.68%" }
-      ]
+      "drill_down": []
     },
     {
       "week": 9,
@@ -249,6 +242,127 @@
       "detail_indikator": "% Sertifikasi Pengawas Teknis",
       "scoring_all_site_ytd": "73%",
       "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 9,
+      "tematik": "Safety Performance Februari 2026",
+      "recommendation": "Implementasi Excel Aggregator BeHealth",
+      "program_related": "Fatigue Management",
+      "indikator": "Pengecekan FTW melalui input Aggregator",
+      "detail_indikator": "% Pengisian Aggregator BeHealth",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 9,
+      "tematik": "Safety Performance Februari 2026",
+      "recommendation": "Perkuatan pelaksanaan Post Event pada Pengamatan Pengawasan oleh DMS dan ControlRoom CCTV oleh Layer2 up",
+      "program_related": "Post Event",
+      "indikator": "Partisipasi Post Event L2 up",
+      "detail_indikator": "% Post Event L2 up",
+      "scoring_all_site_ytd": "30%",
+      "grade_ytd": "L3",
+      "drill_down": []
+    },
+    {
+      "week": 10,
+      "tematik": "Pengelolaan SPIP",
+      "recommendation": "Pemenuhan Sertifikasi Pengawas Teknis dan Tenaga Teknis sesuai komitmen mitra kerja",
+      "program_related": "Pemenuhan Kompetensi",
+      "indikator": "Sertifikasi Pengawas Teknis",
+      "detail_indikator": "% Sertifikasi Pengawas Teknis",
+      "scoring_all_site_ytd": "73%",
+      "grade_ytd": "L4",
+      "drill_down": []
+    },
+    {
+      "week": 11,
+      "tematik": "Evaluasi Pengoperasian Unit",
+      "recommendation": "Kontrol terhadap pengisian dan evaluasi terhadap data Aggregator Fatigue Management",
+      "program_related": "Fatigue Management",
+      "indikator": "Pengecekan FTW melalui input Aggregator",
+      "detail_indikator": "% Pengisian Aggregator BeHealth",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 11,
+      "tematik": "Evaluasi Pengoperasian Unit",
+      "recommendation": "Pemenuhan terkait dengan Gap Pemasangan DMS dan Improvement Seatbelt",
+      "program_related": "Technology",
+      "indikator": "Improvement Technology",
+      "detail_indikator": "% Completion Initiatives",
+      "scoring_all_site_ytd": "31%",
+      "grade_ytd": "L4",
+      "drill_down": []
+    },
+    {
+      "week": 11,
+      "tematik": "Evaluasi Pengoperasian Unit",
+      "recommendation": "Melakukan setting terhadap DMS sesuai dengan standar",
+      "program_related": "Technology",
+      "indikator": "Parameter setting alert DMS",
+      "detail_indikator": "Tidak terdapat deviasi pada setting parameter alert DMS",
+      "scoring_all_site_ytd": "",
+      "grade_ytd": "",
+      "drill_down": []
+    },
+    {
+      "week": 11,
+      "tematik": "Evaluasi Pengoperasian Unit",
+      "recommendation": "Implementasi Improvement Teknologi yang dikomitmenkan dan kajian perkuatan terhadap risiko sisa yang muncul",
+      "program_related": "Technology",
+      "indikator": "Improvement Technology",
+      "detail_indikator": "% Completion Initiatives",
+      "scoring_all_site_ytd": "31%",
+      "grade_ytd": "L4",
+      "drill_down": []
+    },
+    {
+      "week": 13,
+      "tematik": "Peer Pressure",
+      "recommendation": "Implementasi Mining Eyes / CCTV Analitik untuk Perkuatan Identifikasi Potensi Blindspot",
+      "program_related": "Blindspot",
+      "indikator": "Blindspot TBC & GR",
+      "detail_indikator": "% Blindspot TBC",
+      "scoring_all_site_ytd": "3%",
+      "grade_ytd": "L2",
+      "drill_down": []
+    },
+    {
+      "week": 13,
+      "tematik": "Peer Pressure",
+      "recommendation": "Implementasi Mining Eyes / CCTV Analitik untuk Perkuatan Identifikasi Potensi Blindspot",
+      "program_related": "Blindspot",
+      "indikator": "Blindspot TBC & GR",
+      "detail_indikator": "% Blindspot GR",
+      "scoring_all_site_ytd": "60%",
+      "grade_ytd": "L2",
+      "drill_down": []
+    },
+    {
+      "week": 14,
+      "tematik": "Safety Performance Q1 2026",
+      "recommendation": "Pemenuhan PengawasTeknis dan Tenaga Teknis IKK",
+      "program_related": "Pemenuhan Kompetensi",
+      "indikator": "Sertifikasi Pengawas & Tenaga Teknis",
+      "detail_indikator": "% Sertifikasi Pengawas Teknis",
+      "scoring_all_site_ytd": "73%",
+      "grade_ytd": "L4",
+      "drill_down": []
+    },
+    {
+      "week": 14,
+      "tematik": "Safety Performance Q1 2026",
+      "recommendation": "Pemenuhan PengawasTeknis dan Tenaga Teknis IKK",
+      "program_related": "Pemenuhan Kompetensi",
+      "indikator": "Sertifikasi Pengawas & Tenaga Teknis",
+      "detail_indikator": "% Sertifikasi Tenaga Teknis",
+      "scoring_all_site_ytd": "70%",
+      "grade_ytd": "L4",
       "drill_down": []
     }
   ]

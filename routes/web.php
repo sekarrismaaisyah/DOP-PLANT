@@ -160,6 +160,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/peer-pressure-edukasi/dashboard/highlight-issue-recommendation', [PeerPressureEdukasiController::class, 'dashboardHighlightIssueRecommendation'])->name('peer-pressure-edukasi.dashboard.highlight-issue-recommendation');
     Route::get('/peer-pressure-edukasi/dashboard/compliance-breakdown', [PeerPressureEdukasiController::class, 'complianceBreakdownData'])->name('peer-pressure-edukasi.dashboard.compliance-breakdown');
     Route::get('/peer-pressure-edukasi/dashboard/tbc-high-risk-cards', [PeerPressureEdukasiController::class, 'tbcHighRiskCards'])->name('peer-pressure-edukasi.dashboard.tbc-high-risk-cards');
+    Route::get('/peer-pressure-edukasi/dashboard/tbc-aaj-car/search', [PeerPressureEdukasiController::class, 'tbcAajCarSearch'])->name('peer-pressure-edukasi.dashboard.tbc-aaj-car.search');
+    Route::get('/peer-pressure-edukasi/dashboard/tbc-aaj-car', [PeerPressureEdukasiController::class, 'tbcAajCarShow'])->name('peer-pressure-edukasi.dashboard.tbc-aaj-car');
     Route::get('/peer-pressure-edukasi/dashboard/pelanggar-profiling', [PeerPressureEdukasiController::class, 'pelanggarProfilingDetail'])->name('peer-pressure-edukasi.dashboard.pelanggar-profiling');
     Route::get('/peer-pressure-edukasi/kejadian/{id}', [PeerPressureEdukasiController::class, 'kejadianDetail'])
         ->whereNumber('id')

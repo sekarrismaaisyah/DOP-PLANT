@@ -1516,10 +1516,16 @@
             </div>
          </div>
       </div>
-      <!-- Modal TBC GENERAL — kartu kejadian (geser horizontal) -->
-      <div id="peer-tbc-general-modal" class="hidden fixed inset-0 z-[208] flex items-center justify-center bg-slate-900/40 p-3 backdrop-blur-[2px] sm:p-6" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-tbc-general-title">
+      <!-- Modal TBC GENERAL — lebar penuh untuk Tableau; mode Highlight (slide pilih/detail) diperkecil seperti modal lama (~560px) -->
+      <style>
+         #peer-tbc-general-modal.peer-tbc-modal--compact .peer-tbc-general-modal-panel {
+            max-width: min(96vw, 560px);
+            max-height: min(96vh, 920px);
+         }
+      </style>
+      <div id="peer-tbc-general-modal" class="peer-tbc-general-modal-root hidden fixed inset-0 z-[208] flex items-center justify-center bg-slate-900/40 p-3 backdrop-blur-[2px] sm:p-6" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-tbc-general-title">
          <div class="absolute inset-0 cursor-pointer peer-tbc-general-backdrop" aria-hidden="true"></div>
-          <div class="relative z-10 flex max-h-[min(95vh,940px)] w-full max-w-[min(98vw,1380px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_24px_80px_-30px_rgba(15,23,42,0.38)]">
+          <div class="peer-tbc-general-modal-panel relative z-10 flex max-h-[min(95vh,940px)] w-full max-w-[min(98vw,1380px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_24px_80px_-30px_rgba(15,23,42,0.38)]">
             <div class="shrink-0 border-b border-slate-200 bg-white px-4 py-3 sm:px-6 sm:py-4">
                <div class="flex items-start justify-between gap-4">
                   <div class="min-w-0">
@@ -1529,10 +1535,16 @@
                      </div>
                      <h2 id="peer-tbc-general-title" class="mt-2 font-headline text-base font-semibold tracking-tight text-slate-900 sm:text-lg">TBC General - To Be Concerned Highrisk Hazard</h2>
                      <p id="peer-tbc-general-subtitle" class="mt-1 max-w-4xl text-[10px] font-medium text-slate-500 sm:text-[11px]">Ringkasan visual 4 minggu terakhir: total laporan, valid concern, matriks hazard, dan pemetaan kategori prioritas per site.</p>
+                     <p id="peer-tbc-highlight-step-banner" class="mt-2 hidden max-w-4xl rounded-md border border-emerald-200/80 bg-emerald-50/90 px-2.5 py-1.5 text-[10px] font-semibold leading-snug text-emerald-900 sm:text-[11px]"></p>
                   </div>
-                  <button type="button" id="peer-tbc-general-close" class="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900" aria-label="Tutup">
-                     <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
-                  </button>
+                  <div class="flex shrink-0 items-center gap-2">
+                     <button type="button" id="peer-tbc-highlight-open" class="rounded-lg border border-emerald-600/40 bg-emerald-50 px-3 py-2 text-[11px] font-bold text-emerald-800 shadow-sm transition-colors hover:bg-emerald-100">
+                        Highlight TBC
+                     </button>
+                     <button type="button" id="peer-tbc-general-close" class="rounded-lg border border-slate-200 bg-white p-2 text-slate-500 transition-colors hover:bg-slate-100 hover:text-slate-900" aria-label="Tutup">
+                        <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
+                     </button>
+                  </div>
                </div>
             </div>
             <div id="peer-tbc-general-loading" class="hidden flex flex-1 flex-col items-center justify-center gap-2 bg-white px-6 py-16" aria-live="polite">
@@ -1540,11 +1552,10 @@
                <p class="text-[11px] font-semibold uppercase tracking-[0.12em] text-slate-500">Memuat data tren TBC</p>
             </div>
             <div id="peer-tbc-general-error" class="hidden bg-white px-6 py-8 text-center text-[12px] font-medium text-red-600"></div>
+            {{-- Slide / view: grafik Tableau (default) --}}
             <div id="peer-tbc-general-body" class="min-h-0 flex-1 overflow-x-auto overflow-y-auto bg-[#fbfcfd] px-3 py-4 sm:px-5 sm:py-5">
                <div id="peer-tbc-general-content" class="mx-auto max-w-[1280px] space-y-4">
-                 
                   <section class="overflow-hidden rounded-xl border border-slate-200 bg-white">
-                    
                      <div class="w-full overflow-x-auto bg-slate-50/30 p-2 sm:p-4">
                         {{-- Tableau API dimuat sekali di blok Overview (629–644); src viz di-set saat modal dibuka (lazy) --}}
                         <tableau-viz
@@ -1561,8 +1572,90 @@
                   </section>
                </div>
             </div>
+            {{-- Slide 1: pilih temuan CAR (ClickHouse nitip) --}}
+            <div id="peer-tbc-general-view-highlight-pick" class="hidden flex min-h-0 flex-1 flex-col overflow-hidden bg-[#fbfcfd]">
+               <div class="min-h-0 flex-1 space-y-2 overflow-y-auto border-b border-slate-100 bg-slate-50/50 px-4 py-3 sm:px-6">
+                  <label for="peer-tbc-highlight-search-input" class="block text-[10px] font-bold uppercase tracking-wide text-slate-500">Cari ID atau kata kunci</label>
+                  <div class="flex flex-wrap gap-2">
+                     <input type="search" id="peer-tbc-highlight-search-input" autocomplete="off" placeholder="Contoh: 8414932 atau teks issue / lokasi" class="min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[12px] text-slate-800 shadow-sm placeholder:text-slate-400 focus:border-emerald-500 focus:outline-none focus:ring-1 focus:ring-emerald-500/30" />
+                     <button type="button" id="peer-tbc-highlight-search-btn" class="rounded-lg border border-emerald-600/40 bg-emerald-50 px-3 py-2 text-[11px] font-bold text-emerald-900 hover:bg-emerald-100">Cari</button>
+                  </div>
+                  <p id="peer-tbc-highlight-search-hint" class="hidden text-[10px] text-slate-500"></p>
+                  <div class="flex flex-col gap-2 sm:flex-row sm:items-end">
+                     <div class="min-w-0 flex-1">
+                        <label for="peer-tbc-highlight-search-select" class="mb-1 block text-[10px] font-bold uppercase tracking-wide text-slate-500">Hasil pencarian</label>
+                        <select id="peer-tbc-highlight-search-select" size="4" class="max-h-28 w-full rounded-lg border border-slate-200 bg-white px-2 py-1 text-[11px] text-slate-800 shadow-sm focus:border-emerald-500 focus:outline-none"></select>
+                     </div>
+                     <button type="button" id="peer-tbc-highlight-add-btn" class="shrink-0 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-800 shadow-sm hover:bg-slate-50">Tambah ke daftar</button>
+                  </div>
+                  <div>
+                     <p class="mb-1 text-[10px] font-bold uppercase tracking-wide text-slate-500">Daftar dipilih (urutan tampilan slide berikutnya)</p>
+                     <div id="peer-tbc-highlight-chips" class="flex min-h-[2rem] flex-wrap gap-1.5"></div>
+                  </div>
+               </div>
+               <div class="mt-auto shrink-0 border-t border-slate-200 bg-white px-4 py-3 sm:px-6">
+                  <div class="mx-auto flex max-w-lg flex-wrap items-center justify-between gap-2">
+                     <button type="button" id="peer-tbc-highlight-back-main" class="rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-semibold text-slate-700 shadow-sm hover:bg-slate-50">← Kembali ke grafik</button>
+                     <button type="button" id="peer-tbc-highlight-goto-detail" class="rounded-lg border border-emerald-600 bg-emerald-600 px-4 py-2 text-[11px] font-bold text-white shadow-sm hover:bg-emerald-700">Lanjut ke detail →</button>
+                  </div>
+               </div>
+            </div>
+            {{-- Slide 2…N: detail tiap temuan yang dipilih --}}
+            <div id="peer-tbc-general-view-highlight-detail" class="hidden flex min-h-0 flex-1 flex-col overflow-hidden bg-white">
+               <div class="min-h-0 flex-1 overflow-y-auto px-4 py-4 sm:px-6">
+                  <div id="peer-tbc-highlight-slide" class="mx-auto max-w-md rounded-xl border border-slate-200 bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.8)]" aria-live="polite">
+                     <div class="border-b border-slate-100 bg-slate-50/80 px-3 py-2 text-center">
+                        <p id="peer-tbc-highlight-idline" class="text-[9px] font-mono text-slate-500"></p>
+                        <p id="peer-tbc-highlight-section" class="text-[10px] font-bold uppercase tracking-wide text-emerald-800"></p>
+                     </div>
+                     <div id="peer-tbc-highlight-cat" class="border-b px-3 py-2.5 text-center text-[10px] font-bold leading-snug"></div>
+                     <div id="peer-tbc-highlight-photo-zoom" class="group relative aspect-[4/3] w-full overflow-hidden bg-slate-100 cursor-zoom-in">
+                        {{-- URL /report/photoCar/{id} adalah halaman HTML (bukan file gambar); tampilkan iframe. Gambar langsung tetap pakai <img>. --}}
+                        <iframe id="peer-tbc-highlight-photo-iframe" title="Foto temuan HSE Automation" class="hidden h-full w-full origin-center scale-100 border-0 bg-white transition-transform duration-150 ease-out will-change-transform" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+                        <img id="peer-tbc-highlight-photo" src="" alt="" class="hidden h-full w-full origin-center scale-100 object-contain bg-slate-900/[0.03] transition-transform duration-150 ease-out will-change-transform" loading="lazy" decoding="async" />
+                        <div id="peer-tbc-highlight-photo-placeholder" class="flex h-full w-full flex-col items-center justify-center gap-1 bg-gradient-to-br from-slate-200 to-slate-300 px-4 text-center">
+                           <span class="material-symbols-outlined text-3xl text-white/90" aria-hidden="true">photo_camera</span>
+                           <span class="text-[10px] font-semibold uppercase tracking-wide text-white/95">Foto / CCTV</span>
+                        </div>
+                        <a id="peer-tbc-highlight-photo-open" href="#" target="_blank" rel="noopener noreferrer" class="hidden absolute bottom-2 left-2 rounded bg-white/90 px-2 py-1 text-[9px] font-semibold text-emerald-800 shadow hover:bg-white">Buka halaman foto</a>
+                     </div>
+                     <div class="relative space-y-2 p-3 text-[11px] leading-relaxed text-slate-700">
+                        <p id="peer-tbc-highlight-date" class="font-bold text-slate-900"></p>
+                        <p id="peer-tbc-highlight-body" class="text-slate-700"></p>
+                        <p id="peer-tbc-highlight-people" class="font-semibold text-slate-800"></p>
+                        <p id="peer-tbc-highlight-lokasi" class="text-slate-600"></p>
+                        <p id="peer-tbc-highlight-pelapor" class="text-[10px] text-slate-500"></p>
+                        <span class="material-symbols-outlined pointer-events-none absolute bottom-2 right-2 text-xl text-amber-500" aria-hidden="true">warning</span>
+                     </div>
+                     <div id="peer-tbc-highlight-status" class="py-2 text-center text-[11px] font-bold uppercase tracking-wide text-white"></div>
+                  </div>
+                  <p id="peer-tbc-highlight-empty" class="hidden py-8 text-center text-[12px] leading-relaxed text-slate-500">Belum ada temuan di daftar. Kembali ke slide 1 untuk menambah dari pencarian.</p>
+               </div>
+               <div class="shrink-0 space-y-2 border-t border-slate-100 bg-slate-50/90 px-4 py-3 sm:px-6">
+                  <div class="flex flex-wrap justify-center">
+                     <button type="button" id="peer-tbc-highlight-back-pick" class="rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[11px] font-semibold text-slate-700 shadow-sm hover:bg-slate-100">← Kembali ke pilih temuan</button>
+                  </div>
+                  <div class="flex flex-wrap items-center justify-between gap-3">
+                     <button type="button" id="peer-tbc-highlight-prev" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-800 shadow-sm transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40">
+                        <span class="material-symbols-outlined text-base" aria-hidden="true">chevron_left</span>
+                        Sebelumnya
+                     </button>
+                     <p id="peer-tbc-highlight-counter" class="text-center text-[11px] font-semibold tabular-nums text-slate-600" aria-live="polite">1 / 1</p>
+                     <button type="button" id="peer-tbc-highlight-next" class="inline-flex items-center gap-1 rounded-lg border border-slate-200 bg-white px-3 py-2 text-[11px] font-bold text-slate-800 shadow-sm transition-colors hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-40">
+                        Berikutnya
+                        <span class="material-symbols-outlined text-base" aria-hidden="true">chevron_right</span>
+                     </button>
+                  </div>
+               </div>
+            </div>
          </div>
       </div>
+      <script>
+         window.PEER_TBC_HIGHLIGHT_CARDS = [];
+         window.PEER_TBC_AAJ_SEARCH_URL = @json(route('peer-pressure-edukasi.dashboard.tbc-aaj-car.search'));
+         window.PEER_TBC_AAJ_CAR_URL = @json(route('peer-pressure-edukasi.dashboard.tbc-aaj-car'));
+         window.PEER_TBC_HIGHLIGHT_LS_KEY = 'peerTbcHighlightCarIds';
+      </script>
       <div id="peer-blindspot-modal" class="hidden fixed inset-0 z-[209] flex items-center justify-center bg-slate-900/40 p-3 backdrop-blur-[2px] sm:p-6" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-blindspot-title">
          <div class="absolute inset-0 cursor-pointer peer-blindspot-backdrop" aria-hidden="true"></div>
          <div class="relative z-10 flex max-h-[min(95vh,960px)] w-full max-w-[min(98vw,1460px)] flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-slate-700 shadow-[0_24px_80px_-30px_rgba(15,23,42,0.38)]">
@@ -4927,17 +5020,509 @@
             peerTbcRenderRepetitiveScatter(v0);
           }, 80);
         }
+        var peerTbcGeneralSubtitleDefault = '';
+        function peerTbcGeneralCacheSubtitle() {
+          var sub = document.getElementById('peer-tbc-general-subtitle');
+          if (sub && !peerTbcGeneralSubtitleDefault) {
+            peerTbcGeneralSubtitleDefault = sub.textContent.trim();
+          }
+        }
+        function peerTbcGeneralSetModalCompact(compact) {
+          var root = document.getElementById('peer-tbc-general-modal');
+          if (!root) return;
+          if (compact) root.classList.add('peer-tbc-modal--compact');
+          else root.classList.remove('peer-tbc-modal--compact');
+        }
+        function peerTbcHighlightIsPhotoCarPageUrl(url) {
+          if (!url || typeof url !== 'string') return false;
+          return /\/report\/photoCar\//i.test(url) || /hseautomation\.beraucoal\.co\.id\/report\/photoCar/i.test(url);
+        }
+        function peerTbcHighlightResetZoom() {
+          var img = document.getElementById('peer-tbc-highlight-photo');
+          var iframeEl = document.getElementById('peer-tbc-highlight-photo-iframe');
+          if (img) {
+            img.style.transformOrigin = '50% 50%';
+            img.style.transform = 'scale(1)';
+          }
+          if (iframeEl) {
+            iframeEl.style.transformOrigin = '50% 50%';
+            iframeEl.style.transform = 'scale(1)';
+          }
+        }
+        function peerTbcHighlightSetupZoom() {
+          var wrap = document.getElementById('peer-tbc-highlight-photo-zoom');
+          if (!wrap || wrap.dataset.zoomBound === '1') return;
+          wrap.dataset.zoomBound = '1';
+          wrap.addEventListener('mousemove', function (e) {
+            var rect = wrap.getBoundingClientRect();
+            if (!rect.width || !rect.height) return;
+            var x = ((e.clientX - rect.left) / rect.width) * 100;
+            var y = ((e.clientY - rect.top) / rect.height) * 100;
+            var img = document.getElementById('peer-tbc-highlight-photo');
+            var iframeEl = document.getElementById('peer-tbc-highlight-photo-iframe');
+            if (img && !img.classList.contains('hidden')) {
+              img.style.transformOrigin = x + '% ' + y + '%';
+              img.style.transform = 'scale(1.9)';
+            }
+            if (iframeEl && !iframeEl.classList.contains('hidden')) {
+              iframeEl.style.transformOrigin = x + '% ' + y + '%';
+              iframeEl.style.transform = 'scale(1.9)';
+            }
+          });
+          wrap.addEventListener('mouseleave', peerTbcHighlightResetZoom);
+        }
+        function peerTbcGeneralShowMain() {
+          peerTbcGeneralSetModalCompact(false);
+          peerTbcGeneralCacheSubtitle();
+          var main = document.getElementById('peer-tbc-general-body');
+          var pick = document.getElementById('peer-tbc-general-view-highlight-pick');
+          var detail = document.getElementById('peer-tbc-general-view-highlight-detail');
+          var banner = document.getElementById('peer-tbc-highlight-step-banner');
+          var sub = document.getElementById('peer-tbc-general-subtitle');
+          var btnHi = document.getElementById('peer-tbc-highlight-open');
+          if (main) main.classList.remove('hidden');
+          if (pick) pick.classList.add('hidden');
+          if (detail) detail.classList.add('hidden');
+          if (banner) {
+            banner.classList.add('hidden');
+            banner.textContent = '';
+          }
+          if (sub) {
+            sub.classList.remove('hidden');
+            if (peerTbcGeneralSubtitleDefault) sub.textContent = peerTbcGeneralSubtitleDefault;
+          }
+          if (btnHi) btnHi.classList.remove('hidden');
+        }
+        function peerTbcHighlightUpdatePickBanner() {
+          var banner = document.getElementById('peer-tbc-highlight-step-banner');
+          var sub = document.getElementById('peer-tbc-general-subtitle');
+          var ids = peerTbcHighlightGetStoredIds();
+          var totalSlides = ids.length === 0 ? 1 : 1 + ids.length;
+          if (sub) sub.classList.add('hidden');
+          if (banner) {
+            banner.classList.remove('hidden');
+            banner.textContent =
+              'Slide 1 / ' +
+              totalSlides +
+              ' — Pilih temuan CAR (ClickHouse nitip). Slide 2–' +
+              totalSlides +
+              ' menampilkan setiap temuan yang dipilih. Daftar disimpan di browser.';
+          }
+        }
+        function peerTbcGeneralShowHighlightPick() {
+          peerTbcGeneralSetModalCompact(true);
+          peerTbcGeneralCacheSubtitle();
+          var main = document.getElementById('peer-tbc-general-body');
+          var pick = document.getElementById('peer-tbc-general-view-highlight-pick');
+          var detail = document.getElementById('peer-tbc-general-view-highlight-detail');
+          var btnHi = document.getElementById('peer-tbc-highlight-open');
+          if (main) main.classList.add('hidden');
+          if (pick) pick.classList.remove('hidden');
+          if (detail) detail.classList.add('hidden');
+          if (btnHi) btnHi.classList.add('hidden');
+          peerTbcHighlightUpdatePickBanner();
+        }
+        function peerTbcGeneralShowHighlightDetail() {
+          peerTbcGeneralSetModalCompact(true);
+          peerTbcGeneralCacheSubtitle();
+          var main = document.getElementById('peer-tbc-general-body');
+          var pick = document.getElementById('peer-tbc-general-view-highlight-pick');
+          var detail = document.getElementById('peer-tbc-general-view-highlight-detail');
+          var sub = document.getElementById('peer-tbc-general-subtitle');
+          var btnHi = document.getElementById('peer-tbc-highlight-open');
+          if (main) main.classList.add('hidden');
+          if (pick) pick.classList.add('hidden');
+          if (detail) detail.classList.remove('hidden');
+          if (sub) sub.classList.add('hidden');
+          if (btnHi) btnHi.classList.add('hidden');
+        }
+        function peerTbcHighlightGoToDetail() {
+          peerTbcHighlightHydrateFromStorage(function () {
+            var cards = window.PEER_TBC_HIGHLIGHT_CARDS || [];
+            if (!cards.length) {
+              window.alert('Tambah minimal satu temuan ke daftar di slide 1 sebelum lanjut.');
+              return;
+            }
+            peerTbcHighlightIdx = 0;
+            peerTbcGeneralShowHighlightDetail();
+            peerTbcHighlightRender();
+          });
+        }
+        function peerTbcHighlightBackToPick() {
+          peerTbcGeneralShowHighlightPick();
+        }
         function openTbcGeneralModal() {
           if (!tbcGeneralModal) return;
           if (blindspotModal && !blindspotModal.classList.contains('hidden')) closeBlindspotModal();
           tbcGeneralModal.classList.remove('hidden');
           tbcGeneralModal.setAttribute('aria-hidden', 'false');
           if (tbcHighCard) tbcHighCard.setAttribute('aria-expanded', 'true');
+          peerTbcHighlightSetupZoom();
+          peerTbcGeneralShowMain();
           peerTableauLazyLoadViz('tableau-viz-tbc');
           loadTbcGeneralCards();
         }
+        var peerTbcHighlightIdx = 0;
+        var peerTbcHighlightSearchTimer = null;
+        var peerTbcHighlightToneClass = {
+          amber: 'border-amber-200 bg-amber-50 text-amber-950',
+          cyan: 'border-cyan-200 bg-cyan-50 text-cyan-950',
+          blue: 'border-blue-200 bg-blue-50 text-blue-900',
+          lime: 'border-lime-300 bg-lime-50 text-lime-950',
+          slate: 'border-slate-300 bg-slate-100 text-slate-900',
+          violet: 'border-violet-200 bg-violet-50 text-violet-950',
+          sky: 'border-sky-200 bg-sky-50 text-sky-950',
+        };
+        function peerTbcHighlightGetStoredIds() {
+          try {
+            var key = window.PEER_TBC_HIGHLIGHT_LS_KEY || 'peerTbcHighlightCarIds';
+            var raw = localStorage.getItem(key);
+            if (!raw) return [];
+            var a = JSON.parse(raw);
+            return Array.isArray(a) ? a.map(function (x) { return String(x).replace(/\D/g, ''); }).filter(function (x) { return x.length; }) : [];
+          } catch (e) {
+            return [];
+          }
+        }
+        function peerTbcHighlightSetStoredIds(ids) {
+          var key = window.PEER_TBC_HIGHLIGHT_LS_KEY || 'peerTbcHighlightCarIds';
+          localStorage.setItem(key, JSON.stringify(ids));
+        }
+        function peerTbcHighlightRenderChips() {
+          var root = document.getElementById('peer-tbc-highlight-chips');
+          if (!root) return;
+          var ids = peerTbcHighlightGetStoredIds();
+          root.innerHTML = '';
+          ids.forEach(function (id) {
+            var span = document.createElement('span');
+            span.className = 'inline-flex items-center gap-1 rounded-md border border-slate-200 bg-white px-2 py-0.5 text-[10px] font-mono text-slate-700 shadow-sm';
+            span.appendChild(document.createTextNode(id));
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'rounded p-0.5 text-slate-400 hover:bg-slate-100 hover:text-red-600';
+            btn.setAttribute('aria-label', 'Hapus ' + id);
+            btn.innerHTML = '<span class="material-symbols-outlined text-sm leading-none">close</span>';
+            btn.addEventListener('click', function () {
+              peerTbcHighlightRemoveId(id);
+            });
+            span.appendChild(btn);
+            root.appendChild(span);
+          });
+        }
+        function peerTbcHighlightHydrateFromStorage(done) {
+          var base = window.PEER_TBC_AAJ_CAR_URL || '';
+          var ids = peerTbcHighlightGetStoredIds();
+          if (!base || !ids.length) {
+            window.PEER_TBC_HIGHLIGHT_CARDS = [];
+            if (typeof done === 'function') done();
+            return;
+          }
+          var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'ids=' + encodeURIComponent(ids.join(','));
+          fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (data) {
+              if (data && data.ok && Array.isArray(data.cards)) {
+                window.PEER_TBC_HIGHLIGHT_CARDS = data.cards;
+              } else {
+                window.PEER_TBC_HIGHLIGHT_CARDS = [];
+              }
+              if (typeof done === 'function') done();
+            })
+            .catch(function () {
+              window.PEER_TBC_HIGHLIGHT_CARDS = [];
+              if (typeof done === 'function') done();
+            });
+        }
+        function peerTbcHighlightRemoveId(id) {
+          var ids = peerTbcHighlightGetStoredIds().filter(function (x) {
+            return x !== id;
+          });
+          peerTbcHighlightSetStoredIds(ids);
+          peerTbcHighlightHydrateFromStorage(function () {
+            if (peerTbcHighlightIdx >= (window.PEER_TBC_HIGHLIGHT_CARDS || []).length) {
+              peerTbcHighlightIdx = Math.max(0, (window.PEER_TBC_HIGHLIGHT_CARDS || []).length - 1);
+            }
+            peerTbcHighlightRenderChips();
+            peerTbcHighlightRender();
+          });
+        }
+        function peerTbcHighlightRunSearch() {
+          var inp = document.getElementById('peer-tbc-highlight-search-input');
+          var sel = document.getElementById('peer-tbc-highlight-search-select');
+          var hint = document.getElementById('peer-tbc-highlight-search-hint');
+          var q = inp && inp.value ? String(inp.value).trim() : '';
+          var searchBase = window.PEER_TBC_AAJ_SEARCH_URL || '';
+          if (!searchBase || !sel) return;
+          if (!q) {
+            sel.innerHTML = '';
+            if (hint) {
+              hint.textContent = '';
+              hint.classList.add('hidden');
+            }
+            return;
+          }
+          var url = searchBase + (searchBase.indexOf('?') >= 0 ? '&' : '?') + 'q=' + encodeURIComponent(q);
+          fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (data) {
+              sel.innerHTML = '';
+              if (hint) {
+                if (!data.ok && data.message) {
+                  hint.textContent = data.message;
+                  hint.classList.remove('hidden');
+                } else {
+                  hint.textContent = '';
+                  hint.classList.add('hidden');
+                }
+              }
+              var items = (data && data.items) || [];
+              items.forEach(function (it) {
+                var opt = document.createElement('option');
+                opt.value = it.id;
+                opt.textContent = it.label || it.id;
+                sel.appendChild(opt);
+              });
+              if (!items.length && hint && data.ok) {
+                hint.textContent = 'Tidak ada hasil.';
+                hint.classList.remove('hidden');
+              }
+            })
+            .catch(function () {
+              if (hint) {
+                hint.textContent = 'Gagal mencari.';
+                hint.classList.remove('hidden');
+              }
+            });
+        }
+        function peerTbcHighlightAddSelected() {
+          var sel = document.getElementById('peer-tbc-highlight-search-select');
+          var base = window.PEER_TBC_AAJ_CAR_URL || '';
+          if (!sel || !base || !sel.value) return;
+          var id = String(sel.value).replace(/\D/g, '');
+          if (!id) return;
+          var ids = peerTbcHighlightGetStoredIds();
+          if (ids.indexOf(id) >= 0) {
+            var cards0 = window.PEER_TBC_HIGHLIGHT_CARDS || [];
+            for (var i = 0; i < cards0.length; i++) {
+              if (String(cards0[i].raw_id) === id) {
+                peerTbcHighlightIdx = i;
+                peerTbcHighlightRender();
+                break;
+              }
+            }
+            return;
+          }
+          ids.push(id);
+          peerTbcHighlightSetStoredIds(ids);
+          peerTbcHighlightRenderChips();
+          var url = base + (base.indexOf('?') >= 0 ? '&' : '?') + 'id=' + encodeURIComponent(id);
+          fetch(url, { credentials: 'same-origin', headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' } })
+            .then(function (r) {
+              return r.json();
+            })
+            .then(function (data) {
+              if (data && data.ok && data.card) {
+                window.PEER_TBC_HIGHLIGHT_CARDS = window.PEER_TBC_HIGHLIGHT_CARDS || [];
+                window.PEER_TBC_HIGHLIGHT_CARDS.push(data.card);
+                peerTbcHighlightIdx = window.PEER_TBC_HIGHLIGHT_CARDS.length - 1;
+                peerTbcHighlightRender();
+              } else {
+                peerTbcHighlightHydrateFromStorage(function () {
+                  peerTbcHighlightIdx = Math.max(0, (window.PEER_TBC_HIGHLIGHT_CARDS || []).length - 1);
+                  peerTbcHighlightRender();
+                });
+              }
+            })
+            .catch(function () {
+              peerTbcHighlightHydrateFromStorage(function () {
+                peerTbcHighlightIdx = Math.max(0, (window.PEER_TBC_HIGHLIGHT_CARDS || []).length - 1);
+                peerTbcHighlightRender();
+              });
+            });
+        }
+        function peerTbcHighlightRender() {
+          var cards = window.PEER_TBC_HIGHLIGHT_CARDS || [];
+          var slide = document.getElementById('peer-tbc-highlight-slide');
+          var empty = document.getElementById('peer-tbc-highlight-empty');
+          var prevBtn = document.getElementById('peer-tbc-highlight-prev');
+          var nextBtn = document.getElementById('peer-tbc-highlight-next');
+          var counter = document.getElementById('peer-tbc-highlight-counter');
+          var img = document.getElementById('peer-tbc-highlight-photo');
+          var ph = document.getElementById('peer-tbc-highlight-photo-placeholder');
+          var idline = document.getElementById('peer-tbc-highlight-idline');
+          if (!cards.length) {
+            if (slide) slide.classList.add('hidden');
+            if (empty) empty.classList.remove('hidden');
+            if (prevBtn) prevBtn.disabled = true;
+            if (nextBtn) nextBtn.disabled = true;
+            if (counter) counter.textContent = '—';
+            peerTbcHighlightResetZoom();
+            var iframe0 = document.getElementById('peer-tbc-highlight-photo-iframe');
+            var openL0 = document.getElementById('peer-tbc-highlight-photo-open');
+            if (iframe0) {
+              iframe0.classList.add('hidden');
+              iframe0.removeAttribute('src');
+            }
+            if (openL0) openL0.classList.add('hidden');
+            if (img) {
+              img.removeAttribute('src');
+              img.classList.add('hidden');
+            }
+            if (ph) ph.classList.remove('hidden');
+            var pickEmpty = document.getElementById('peer-tbc-general-view-highlight-pick');
+            if (pickEmpty && !pickEmpty.classList.contains('hidden')) {
+              peerTbcHighlightUpdatePickBanner();
+            }
+            return;
+          }
+          if (peerTbcHighlightIdx < 0) peerTbcHighlightIdx = 0;
+          if (peerTbcHighlightIdx >= cards.length) peerTbcHighlightIdx = cards.length - 1;
+          peerTbcHighlightResetZoom();
+          var c = cards[peerTbcHighlightIdx];
+          if (slide) slide.classList.remove('hidden');
+          if (empty) empty.classList.add('hidden');
+          if (idline) idline.textContent = c.raw_id ? 'ID: ' + c.raw_id : '';
+          var sec = document.getElementById('peer-tbc-highlight-section');
+          var cat = document.getElementById('peer-tbc-highlight-cat');
+          if (sec) sec.textContent = c.section || 'TBC';
+          if (cat) {
+            var tone = c.tone && peerTbcHighlightToneClass[c.tone] ? peerTbcHighlightToneClass[c.tone] : 'border-slate-200 bg-slate-50 text-slate-900';
+            cat.className = 'border-b px-3 py-2.5 text-center text-[10px] font-bold leading-snug ' + tone;
+            cat.textContent = c.title || '—';
+          }
+          var iframePh = document.getElementById('peer-tbc-highlight-photo-iframe');
+          var openL = document.getElementById('peer-tbc-highlight-photo-open');
+          if (img && ph) {
+            if (c.url_photo) {
+              if (peerTbcHighlightIsPhotoCarPageUrl(c.url_photo)) {
+                img.removeAttribute('src');
+                img.classList.add('hidden');
+                if (iframePh) {
+                  iframePh.classList.remove('hidden');
+                  iframePh.src = c.url_photo;
+                }
+                ph.classList.add('hidden');
+                if (openL) {
+                  openL.href = c.url_photo;
+                  openL.classList.remove('hidden');
+                }
+              } else {
+                if (iframePh) {
+                  iframePh.classList.add('hidden');
+                  iframePh.removeAttribute('src');
+                }
+                if (openL) openL.classList.add('hidden');
+                img.onload = function () {
+                  img.classList.remove('hidden');
+                  ph.classList.add('hidden');
+                };
+                img.onerror = function () {
+                  img.classList.add('hidden');
+                  ph.classList.remove('hidden');
+                };
+                img.src = c.url_photo;
+                if (img.complete && img.naturalWidth) {
+                  img.classList.remove('hidden');
+                  ph.classList.add('hidden');
+                }
+              }
+            } else {
+              if (iframePh) {
+                iframePh.classList.add('hidden');
+                iframePh.removeAttribute('src');
+              }
+              if (openL) openL.classList.add('hidden');
+              img.removeAttribute('src');
+              img.classList.add('hidden');
+              ph.classList.remove('hidden');
+            }
+          }
+          var d = document.getElementById('peer-tbc-highlight-date');
+          var b = document.getElementById('peer-tbc-highlight-body');
+          var ppl = document.getElementById('peer-tbc-highlight-people');
+          var loc = document.getElementById('peer-tbc-highlight-lokasi');
+          var pel = document.getElementById('peer-tbc-highlight-pelapor');
+          var st = document.getElementById('peer-tbc-highlight-status');
+          if (d) d.textContent = c.date || '';
+          if (b) b.textContent = c.body || '';
+          if (ppl) ppl.textContent = c.people || '';
+          if (loc) loc.textContent = c.lokasi ? 'Lokasi: ' + c.lokasi : '';
+          if (pel) pel.textContent = c.pelapor || '';
+          if (st) {
+            var raw = (c.status || 'closed').toLowerCase();
+            st.className = 'py-2 text-center text-[11px] font-bold uppercase tracking-wide text-white';
+            if (raw === 'open') {
+              st.classList.add('bg-orange-500');
+              st.textContent = 'Open';
+            } else if (raw === 'submitted') {
+              st.classList.remove('text-white');
+              st.classList.add('bg-slate-100', 'text-slate-800');
+              st.textContent = 'Submitted';
+            } else {
+              st.classList.add('bg-emerald-600');
+              st.textContent = 'Closed';
+            }
+          }
+          if (counter) {
+            counter.textContent = 'Temuan ' + (peerTbcHighlightIdx + 1) + ' / ' + cards.length;
+          }
+          if (prevBtn) prevBtn.disabled = peerTbcHighlightIdx <= 0;
+          if (nextBtn) nextBtn.disabled = peerTbcHighlightIdx >= cards.length - 1;
+          var banner = document.getElementById('peer-tbc-highlight-step-banner');
+          var detailEl = document.getElementById('peer-tbc-general-view-highlight-detail');
+          var onDetail = detailEl && !detailEl.classList.contains('hidden');
+          if (banner && onDetail && cards.length) {
+            banner.classList.remove('hidden');
+            var slideNum = 2 + peerTbcHighlightIdx;
+            var totalSlides = 1 + cards.length;
+            banner.textContent =
+              'Slide ' +
+              slideNum +
+              ' / ' +
+              totalSlides +
+              ' — Detail temuan (' +
+              (peerTbcHighlightIdx + 1) +
+              ' / ' +
+              cards.length +
+              ')';
+          }
+          var pickVis = document.getElementById('peer-tbc-general-view-highlight-pick');
+          if (pickVis && !pickVis.classList.contains('hidden')) {
+            peerTbcHighlightUpdatePickBanner();
+          }
+        }
+        function openPeerTbcHighlightModal() {
+          if (!tbcGeneralModal) return;
+          peerTbcGeneralShowHighlightPick();
+          peerTbcHighlightIdx = 0;
+          var slide = document.getElementById('peer-tbc-highlight-slide');
+          var empty = document.getElementById('peer-tbc-highlight-empty');
+          if (slide) slide.classList.add('hidden');
+          if (empty) {
+            empty.textContent = 'Memuat daftar tersimpan…';
+            empty.classList.remove('hidden');
+          }
+          peerTbcHighlightRenderChips();
+          peerTbcHighlightHydrateFromStorage(function () {
+            peerTbcHighlightIdx = 0;
+            if (empty) {
+              empty.textContent =
+                'Belum ada temuan di daftar. Gunakan pencarian di atas, pilih baris, lalu Tambah ke daftar.';
+            }
+            peerTbcHighlightRender();
+          });
+        }
+        function closePeerTbcHighlightModal() {
+          if (!tbcGeneralModal) return;
+          peerTbcGeneralShowMain();
+        }
         function closeTbcGeneralModal() {
           if (!tbcGeneralModal) return;
+          peerTbcGeneralShowMain();
           if (peerTbcGeneralBarChart) {
             try {
               peerTbcGeneralBarChart.destroy();
@@ -4958,9 +5543,60 @@
         if (tbcHighCard) tbcHighCard.addEventListener('click', openTbcGeneralModal);
         if (tbcGeneralClose) tbcGeneralClose.addEventListener('click', closeTbcGeneralModal);
         if (tbcGeneralBackdrop) tbcGeneralBackdrop.addEventListener('click', closeTbcGeneralModal);
+        var tbcHighlightOpen = document.getElementById('peer-tbc-highlight-open');
+        var tbcHighlightBackMain = document.getElementById('peer-tbc-highlight-back-main');
+        var tbcHighlightGotoDetail = document.getElementById('peer-tbc-highlight-goto-detail');
+        var tbcHighlightBackPick = document.getElementById('peer-tbc-highlight-back-pick');
+        if (tbcHighlightOpen) tbcHighlightOpen.addEventListener('click', openPeerTbcHighlightModal);
+        if (tbcHighlightBackMain) tbcHighlightBackMain.addEventListener('click', closePeerTbcHighlightModal);
+        if (tbcHighlightGotoDetail) tbcHighlightGotoDetail.addEventListener('click', peerTbcHighlightGoToDetail);
+        if (tbcHighlightBackPick) tbcHighlightBackPick.addEventListener('click', peerTbcHighlightBackToPick);
+        var tbcHighlightPrev = document.getElementById('peer-tbc-highlight-prev');
+        var tbcHighlightNext = document.getElementById('peer-tbc-highlight-next');
+        if (tbcHighlightPrev) {
+          tbcHighlightPrev.addEventListener('click', function () {
+            peerTbcHighlightIdx -= 1;
+            peerTbcHighlightRender();
+          });
+        }
+        if (tbcHighlightNext) {
+          tbcHighlightNext.addEventListener('click', function () {
+            peerTbcHighlightIdx += 1;
+            peerTbcHighlightRender();
+          });
+        }
+        var tbcHighlightSearchInp = document.getElementById('peer-tbc-highlight-search-input');
+        var tbcHighlightSearchBtn = document.getElementById('peer-tbc-highlight-search-btn');
+        var tbcHighlightAddBtn = document.getElementById('peer-tbc-highlight-add-btn');
+        if (tbcHighlightSearchInp) {
+          tbcHighlightSearchInp.addEventListener('input', function () {
+            clearTimeout(peerTbcHighlightSearchTimer);
+            peerTbcHighlightSearchTimer = setTimeout(peerTbcHighlightRunSearch, 400);
+          });
+          tbcHighlightSearchInp.addEventListener('keydown', function (e) {
+            if (e.key === 'Enter') {
+              e.preventDefault();
+              peerTbcHighlightRunSearch();
+            }
+          });
+        }
+        if (tbcHighlightSearchBtn) tbcHighlightSearchBtn.addEventListener('click', peerTbcHighlightRunSearch);
+        if (tbcHighlightAddBtn) tbcHighlightAddBtn.addEventListener('click', peerTbcHighlightAddSelected);
         document.addEventListener('keydown', function (e) {
           if (e.key !== 'Escape') return;
-          if (tbcGeneralModal && !tbcGeneralModal.classList.contains('hidden')) closeTbcGeneralModal();
+          var pickV = document.getElementById('peer-tbc-general-view-highlight-pick');
+          var detailV = document.getElementById('peer-tbc-general-view-highlight-detail');
+          if (tbcGeneralModal && !tbcGeneralModal.classList.contains('hidden')) {
+            if (detailV && !detailV.classList.contains('hidden')) {
+              peerTbcHighlightBackToPick();
+              return;
+            }
+            if (pickV && !pickV.classList.contains('hidden')) {
+              closePeerTbcHighlightModal();
+              return;
+            }
+            closeTbcGeneralModal();
+          }
         });
         var blindspotModal = document.getElementById('peer-blindspot-modal');
         var blindspotCard = document.getElementById('peer-kpi-blindspot-card');
@@ -5211,7 +5847,7 @@
         }
         function openBlindspotModal() {
           if (!blindspotModal) return;
-          if (tbcGeneralModal && !tbcGeneralModal.classList.contains('hidden')) closeTbcGeneralModal();
+          if (tbcGeneralModal) closeTbcGeneralModal();
           if (complianceModal && !complianceModal.classList.contains('hidden')) closeComplianceModal();
           blindspotModal.classList.remove('hidden');
           blindspotModal.setAttribute('aria-hidden', 'false');

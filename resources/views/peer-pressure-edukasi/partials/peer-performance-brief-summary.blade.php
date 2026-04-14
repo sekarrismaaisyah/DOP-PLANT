@@ -7,6 +7,14 @@
     $peerAi = $peerResourcesAiSummary ?? null;
     $peerAiText = is_array($peerAi) ? trim((string) ($peerAi['text'] ?? '')) : '';
     $peerAiSource = is_array($peerAi) ? ($peerAi['source'] ?? 'heuristic') : 'heuristic';
+    $spBrief = is_array($sitePerformanceBrief ?? null) ? $sitePerformanceBrief : [];
+    $spOk = !empty($spBrief['ok']);
+    $spNarrative = $spOk ? trim((string) ($spBrief['narrative'] ?? '')) : trim((string) ($spBrief['message'] ?? ''));
+    $spLastY = $spBrief['last_year'] ?? null;
+    $spLastW = $spBrief['last_week'] ?? null;
+    $spAttention = $spOk ? ($spBrief['attention_sites'] ?? []) : [];
+    $spRepetitive = $spOk ? ($spBrief['repetitive'] ?? []) : [];
+    $spOverall = $spOk ? ($spBrief['overall_by_site_mitra'] ?? []) : [];
 @endphp
 <section class="anchored-card flex min-h-0 flex-1 flex-col justify-between rounded-2xl bg-white p-5" aria-label="Ringkasan singkat kinerja">
    <div class="flex items-start gap-3">
@@ -18,6 +26,56 @@
          <p class="mt-0.5 text-[10px] font-medium leading-snug text-on-surface-variant">Cuplikan indikator utama Peer Pressure &amp; kepatuhan untuk periode yang dipilih, plus ringkasan dari seluruh data <code class="rounded bg-surface-container-high px-1 py-px text-[9px]">resources/data</code>.</p>
       </div>
    </div>
+   @if($spNarrative !== '')
+   <div class="mt-4 rounded-xl border border-emerald-700/20 bg-emerald-50/80 p-3.5 shadow-inner" aria-label="Analisis site performance dari JSON">
+      <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
+         <span class="text-[10px] font-bold uppercase tracking-wider text-emerald-900">Site performance</span>
+         @if($spOk && $spLastY !== null && $spLastW !== null)
+         <span class="rounded-full bg-white/90 px-2 py-0.5 text-[9px] font-semibold text-emerald-900 ring-1 ring-emerald-700/15" title="Minggu terakhir pada site_performance.json">Minggu terakhir: {{ $spLastY }} &mdash; W{{ $spLastW }}</span>
+         @endif
+      </div>
+      <div class="max-h-40 overflow-y-auto text-[11px] leading-relaxed text-emerald-950">
+         {!! nl2br(e($spNarrative)) !!}
+      </div>
+      @if($spOk && (count($spAttention) > 0 || count($spRepetitive) > 0 || count($spOverall) > 0))
+      <div class="mt-3 space-y-2 border-t border-emerald-700/10 pt-3 text-[10px] text-emerald-950">
+         @if(count($spAttention) > 0)
+         <div>
+            <p class="font-bold text-emerald-900">Perlu perhatian (&gt;3 gap)</p>
+            <ul class="mt-1 list-inside list-disc space-y-0.5 text-emerald-950/95">
+               @foreach(array_slice($spAttention, 0, 8) as $row)
+               <li>{{ $row['site'] ?? '' }} / {{ $row['mitra'] ?? '' }} — {{ (int) ($row['gap_count'] ?? 0) }} parameter</li>
+               @endforeach
+            </ul>
+            @if(count($spAttention) > 8)
+            <p class="mt-1 text-[9px] text-emerald-800">+{{ count($spAttention) - 8 }} lainnya…</p>
+            @endif
+         </div>
+         @endif
+         @if(count($spRepetitive) > 0)
+         <div>
+            <p class="font-bold text-emerald-900">Repetitif (3 minggu berturut)</p>
+            <ul class="mt-1 list-inside list-disc space-y-0.5 text-emerald-950/95">
+               @foreach(array_slice($spRepetitive, 0, 8) as $r)
+               <li>{{ $r['site'] ?? '' }} / {{ $r['mitra'] ?? '' }} — {{ $r['parameter'] ?? '' }}</li>
+               @endforeach
+            </ul>
+         </div>
+         @endif
+         @if(count($spOverall) > 0)
+         <div>
+            <p class="font-bold text-emerald-900">Overall (heuristik)</p>
+            <ul class="mt-1 list-inside list-disc space-y-0.5 text-emerald-950/95">
+               @foreach(array_slice($spOverall, 0, 10, true) as $k => $lvl)
+               <li><span class="font-mono text-[9px]">{{ $k }}</span>: {{ $lvl }}</li>
+               @endforeach
+            </ul>
+         </div>
+         @endif
+      </div>
+      @endif
+   </div>
+   @endif
    @if($peerAiText !== '')
    <div class="mt-4 rounded-xl border border-outline-variant/25 bg-surface-container-low/90 p-3.5 shadow-inner" aria-label="Ringkasan AI dari data JSON">
       <div class="mb-2 flex flex-wrap items-center justify-between gap-2">
@@ -33,45 +91,5 @@
       </div>
    </div>
    @endif
-   <!-- <ul class="mt-4 space-y-3 text-[11px] leading-relaxed text-on-surface">
-      <li class="flex gap-2">
-         <span class="mt-0.5 shrink-0 text-primary" aria-hidden="true">
-            <span class="material-symbols-outlined text-[16px]" data-icon="numbers">numbers</span>
-         </span>
-         <span><span class="font-semibold text-on-surface">Total kasus:</span>
-            <span id="peer-kpi-brief-total" class="tabular-nums font-bold text-on-background">{{ number_format($briefTotal) }}</span></span>
-      </li>
-      <li class="flex gap-2">
-         <span class="mt-0.5 shrink-0 text-secondary" aria-hidden="true">
-            <span class="material-symbols-outlined text-[16px]" data-icon="rule">rule</span>
-         </span>
-         <span><span class="font-semibold text-on-surface">Peer pressure comply (GR):</span>
-            <span id="peer-kpi-brief-valid-gr" class="tabular-nums font-bold text-on-background">{{ number_format($briefValidGr) }}</span></span>
-      </li>
-      <li class="flex gap-2">
-         <span class="mt-0.5 shrink-0 text-tertiary" aria-hidden="true">
-            <span class="material-symbols-outlined text-[16px]" data-icon="percent">percent</span>
-         </span>
-         <span><span class="font-semibold text-on-surface">Tingkat penyelesaian:</span>
-            <span id="peer-kpi-brief-completion" class="tabular-nums font-bold text-on-background">{{ number_format($briefCompletion, 1) }}%</span></span>
-      </li>
-      <li class="flex gap-2 border-t border-outline-variant/25 pt-3">
-         <span class="mt-0.5 shrink-0 text-on-surface-variant" aria-hidden="true">
-            <span class="material-symbols-outlined text-[16px]" data-icon="show_chart">show_chart</span>
-         </span>
-         <span class="min-w-0 flex-1">
-            <span class="font-semibold text-on-surface">Tren kasus:</span>
-            <div id="peer-kpi-brief-trend" class="mt-1">
-               @if($briefTrendPct !== null)
-               <p class="text-[11px] font-bold flex items-center gap-1 {{ $briefTrendPct <= 0 ? 'text-[#059669]' : 'text-error' }}">
-                  <span class="material-symbols-outlined text-xs" data-icon="{{ $briefTrendPct <= 0 ? 'trending_down' : 'trending_up' }}">{{ $briefTrendPct <= 0 ? 'trending_down' : 'trending_up' }}</span>
-                  {{ $kpi['total_cases_trend_label'] ?? '' }}
-               </p>
-               @else
-               <p class="text-on-surface-variant text-[11px] font-medium">{{ $kpi['total_cases_trend_label'] ?? '—' }}</p>
-               @endif
-            </div>
-         </span>
-      </li>
-   </ul> -->
+   
 </section>
