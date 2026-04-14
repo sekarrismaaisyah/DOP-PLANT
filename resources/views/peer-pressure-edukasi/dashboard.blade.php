@@ -326,6 +326,8 @@
             $grWksCard = $peerGrKpiEval['weeks'] ?? [];
             $nGrCard = count($grValsCard);
             $grCardTotalDisplay = $nGrCard > 0 ? (int) round(array_sum($grValsCard)) : 0;
+            /** Hardcode tampilan angka utama kartu Jumlah GR (bukan jumlah L4W dari JSON) */
+            $grCardTotalDisplay = 3;
             $grCardWoWPct = null;
             $grCardWkPrev = 'W13';
             $grCardWkLast = 'W14';
@@ -2349,7 +2351,7 @@
           var grCardTotal = document.getElementById('peer-kpi-gr-total');
           var grCardTrend = document.getElementById('peer-kpi-gr-trend');
           var grCardMiniHost = document.getElementById('peer-kpi-gr-compliance-mini-bar-host');
-          if (grCardTotal) grCardTotal.textContent = totalStr;
+          if (grCardTotal) grCardTotal.textContent = '3';
           if (grCardTrend) grCardTrend.innerHTML = peerHazardWowHtml(vals, weeks);
           if (grCardMiniHost) grCardMiniHost.innerHTML = renderPeerHazardMiniBarHtml(ev, true);
         }

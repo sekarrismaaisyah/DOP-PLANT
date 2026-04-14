@@ -156,6 +156,7 @@ Route::middleware(['auth'])->group(function () {
     // Peer Pressure — kejadian edukasi + import Excel
     Route::get('/peer-pressure-edukasi', [PeerPressureEdukasiController::class, 'index'])->name('peer-pressure-edukasi.index');
     Route::get('/peer-pressure-edukasi/dashboard', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.dashboard');
+    Route::get('/peer-pressure-edukasi/dashboard-peer', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.dashboard-peer');
     Route::get('/peer-pressure-edukasi/dashboard/weekly-trend', [PeerPressureEdukasiController::class, 'weeklyTrendData'])->name('peer-pressure-edukasi.dashboard.weekly-trend');
     Route::get('/peer-pressure-edukasi/dashboard/highlight-issue-recommendation', [PeerPressureEdukasiController::class, 'dashboardHighlightIssueRecommendation'])->name('peer-pressure-edukasi.dashboard.highlight-issue-recommendation');
     Route::get('/peer-pressure-edukasi/dashboard/compliance-breakdown', [PeerPressureEdukasiController::class, 'complianceBreakdownData'])->name('peer-pressure-edukasi.dashboard.compliance-breakdown');

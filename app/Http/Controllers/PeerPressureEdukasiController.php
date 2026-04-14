@@ -210,7 +210,7 @@ class PeerPressureEdukasiController extends Controller
             ? $this->peerMetricEvalFromJson($peerAreaKritisBySite, $hazardSite, '#dc2626', 0)
             : null;
 
-        return view('peer-pressure-edukasi.dashboard', [
+        return view('peer-pressure-edukasi.dashboard-peer', [
             'kejadian' => $kejadian,
             'peerFotoUrls' => $peerFotoUrls,
             'q' => $q,
