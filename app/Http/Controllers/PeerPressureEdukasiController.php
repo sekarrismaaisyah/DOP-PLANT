@@ -210,7 +210,11 @@ class PeerPressureEdukasiController extends Controller
             ? $this->peerMetricEvalFromJson($peerAreaKritisBySite, $hazardSite, '#dc2626', 0)
             : null;
 
-        return view('peer-pressure-edukasi.dashboard-peer', [
+        $dashboardView = $request->routeIs('peer-pressure-edukasi.dashboard')
+            ? 'peer-pressure-edukasi.dashboard'
+            : 'peer-pressure-edukasi.dashboard-peer';
+
+        return view($dashboardView, [
             'kejadian' => $kejadian,
             'peerFotoUrls' => $peerFotoUrls,
             'q' => $q,
