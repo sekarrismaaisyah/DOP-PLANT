@@ -112,16 +112,18 @@
          <div class=" mx-auto px-8 py-4 flex justify-between items-center">
             <div class="flex items-center gap-10">
                <div class="flex flex-col">
-                  <h1 class="font-headline font-bold text-[#3952bc] text-xl tracking-tighter leading-tight">Sambarata Mining Operation</h1>
+                  <h1 class="font-headline font-bold text-[#3952bc] text-xl tracking-tighter leading-tight">PT.Berau Coal</h1>
                   <p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Peer Pressure Program</p>
                </div>
                <div class="h-8 w-px bg-[#dfe3e6] hidden lg:block"></div>
+               @php $navActive = $navActive ?? 'overview'; @endphp
                <nav class="hidden md:flex gap-8">
-                  <a class="text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight" href="#">Overview</a>
-                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Site Filters</a>
-                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Department</a>
-                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Reports</a>
-                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Analytics</a>
+                  <a class="{{ $navActive === 'overview' ? 'text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight' : 'text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors' }}" href="{{ route('peer-pressure-edukasi.dashboard-peer') }}">Overview</a>
+                  <a class="{{ $navActive === 'data' ? 'text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight' : 'text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors' }}" href="{{ route('peer-pressure-edukasi.data.index') }}">Data Peer Pressure</a>
+                  <a class="{{ $navActive === 'berecord' ? 'text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight' : 'text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors' }}" href="{{ route('peer-pressure-edukasi.berecord.index') }}">BeRecord</a>
+                  <a class="{{ $navActive === 'validasi-tbc' ? 'text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight' : 'text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors' }}" href="{{ route('peer-pressure-edukasi.validasi-tbc.index') }}">Validasi TBC</a>
+                  <a class="{{ $navActive === 'sbs' ? 'text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight' : 'text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors' }}" href="{{ route('peer-pressure-edukasi.sbs.index') }}">Grup SBS</a>
+                  <a class="{{ $navActive === 'speak-up-fatigue' ? 'text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight' : 'text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors' }}" href="{{ route('peer-pressure-edukasi.speak-up-fatigue.index') }}">Speak Up Fatigue</a>
                </nav>
             </div>
             <div class="flex items-center gap-6">
@@ -203,6 +205,13 @@
          @php
             $kpi = $kpi ?? [];
             $kpiTotal = (int) ($kpi['total_cases'] ?? 0);
+            $kpiPelaksanaanSelesai = (int) ($kpi['pelaksanaan_selesai_count'] ?? 0);
+            $kpiPelaksanaanBelum = (int) ($kpi['pelaksanaan_belum_count'] ?? 0);
+            $kpiPctSelesai = (float) ($kpi['pelaksanaan_selesai_pct'] ?? ($kpiTotal > 0 ? round(100 * $kpiPelaksanaanSelesai / $kpiTotal, 1) : 0));
+            $kpiPctBelum = (float) ($kpi['pelaksanaan_belum_pct'] ?? ($kpiTotal > 0 ? round(100 * $kpiPelaksanaanBelum / $kpiTotal, 1) : 0));
+            $kpiStatusKosong = (int) ($kpi['pelaksanaan_status_kosong_count'] ?? 0);
+            $kpiKkRows = $kpi['pelaksanaan_kelompok_kerja_rows'] ?? [];
+            $kpiAvgDurMenit = (float) ($kpi['avg_duration_minutes'] ?? 0);
             $kpiCompletion = (float) ($kpi['completion_rate'] ?? 0);
             $kpiBarW = max(0, min(100, $kpiCompletion));
             $kpiTrendPct = $kpi['total_cases_trend_pct'] ?? null;
@@ -212,6 +221,10 @@
             $dvPreTotal = (int) ($dvPre['total'] ?? 0);
             $dvPreSumJumlah = (int) collect($dvPreCats)->sum(fn ($r) => (int) ($r['jumlah'] ?? 0));
             $dvPreFooterTotal = $dvPreSumJumlah > 0 ? $dvPreSumJumlah : $dvPreTotal;
+            $dmb = $deviationModalBreakdown ?? [];
+            $dmbBe = (int) ($dmb['berecord_pspp_gr_total'] ?? 0);
+            $dmbTbc = (int) ($dmb['validasi_tbc_blindspot_terisi_total'] ?? 0);
+            $dmbFat = (int) ($dmb['speak_up_fatigue_tidak_speak_total'] ?? 0);
          @endphp
          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
          <button type="button" id="peer-kpi-deviation-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-deviation-category-modal">
@@ -226,7 +239,7 @@
                   <p class="text-on-surface-variant text-[11px] font-medium mt-1">Jumlah kejadian menurut kategori deviasi · klik untuk detail</p>
                </div>
             </button>
-            <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
+            <button type="button" id="peer-kpi-pelaksanaan-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-primary/20 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-pelaksanaan-detail-modal">
                <div class="flex justify-between items-start">
                   <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Pelaksanaan Peer Pressure</span>
                   <div class="p-2 bg-primary/10 rounded-lg">
@@ -234,7 +247,7 @@
                   </div>
                </div>
                <div class="mt-4">
-                  <p id="peer-kpi-total" class="font-headline font-extrabold text-4xl">{{ number_format($kpiTotal) }}</p>
+                  <p id="peer-kpi-total" class="font-headline font-extrabold text-4xl tabular-nums">{{ number_format($kpiTotal) }}</p>
                   <div id="peer-kpi-total-trend" class="mt-1">
                   @if($kpiTrendPct !== null)
                   <p class="text-[11px] font-bold flex items-center gap-1 {{ $kpiTrendPct <= 0 ? 'text-[#059669]' : 'text-error' }}">
@@ -245,8 +258,26 @@
                   <p class="text-on-surface-variant text-[11px] font-medium">{{ $kpi['total_cases_trend_label'] ?? '—' }}</p>
                   @endif
                   </div>
+                  <p class="text-on-surface-variant text-[10px] font-medium mt-2">Total kejadian · klik untuk sudah vs belum dilaksanakan</p>
                </div>
-            </div>
+            </button>
+           
+           
+            <button type="button" id="peer-kpi-compliance-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-secondary/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-compliance-detail-modal">
+               <div class="flex justify-between items-start">
+                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Pelaksanaan Comply</span>
+                  <div class="p-2 bg-secondary/10 rounded-lg">
+                     <span class="material-symbols-outlined text-secondary" data-icon="verified">verified</span>
+                  </div>
+               </div>
+               <div class="mt-4">
+                  <p id="peer-kpi-pelaksanaan-compliance" class="font-headline font-extrabold text-4xl">{{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}<span class="text-2xl font-bold">%</span></p>
+                  <p class="text-on-surface-variant text-[11px] font-medium mt-1 leading-snug">
+                     <span id="peer-kpi-pelaksanaan-compliance-count">{{ (int) ($kpi['peer_pressure_compliance_comply'] ?? 0) }}/{{ (int) ($kpi['peer_pressure_compliance_total'] ?? 0) }}</span> kejadian (5 kategori). Klik untuk penjelasan detail.
+                  </p>
+               </div>
+            </button>
+
             <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
                <div class="flex justify-between items-start">
                   <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Pelaksanaan Rate</span>
@@ -269,21 +300,6 @@
                   </div>
                </div>
             </div>
-           
-            <button type="button" id="peer-kpi-compliance-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-secondary/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-secondary/40" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-compliance-detail-modal">
-               <div class="flex justify-between items-start">
-                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Pelaksanaan Comply</span>
-                  <div class="p-2 bg-secondary/10 rounded-lg">
-                     <span class="material-symbols-outlined text-secondary" data-icon="verified">verified</span>
-                  </div>
-               </div>
-               <div class="mt-4">
-                  <p id="peer-kpi-pelaksanaan-compliance" class="font-headline font-extrabold text-4xl">{{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}<span class="text-2xl font-bold">%</span></p>
-                  <p class="text-on-surface-variant text-[11px] font-medium mt-1 leading-snug">
-                     <span id="peer-kpi-pelaksanaan-compliance-count">{{ (int) ($kpi['peer_pressure_compliance_comply'] ?? 0) }}/{{ (int) ($kpi['peer_pressure_compliance_total'] ?? 0) }}</span> kejadian (5 kategori). Klik untuk penjelasan detail.
-                  </p>
-               </div>
-            </button>
          </div>
          <!-- Charts & Recommendations Grid -->
          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -875,46 +891,110 @@
       <!-- Modal statistik kategori deviasi (dari kartu KPI Total Deviasi) -->
       <div id="peer-deviation-category-modal" class="hidden fixed inset-0 z-[206] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-deviation-category-title">
          <div class="absolute inset-0 cursor-pointer peer-deviation-category-backdrop" aria-hidden="true"></div>
-         <div class="relative z-10 flex max-h-[min(90vh,720px)] w-full max-w-lg flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
+         <div class="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-5xl flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
             <div class="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant/20 px-5 py-4 sm:px-6">
                <div>
                   <h2 id="peer-deviation-category-title" class="font-headline text-lg font-bold text-on-surface">Statistik kategori deviasi</h2>
-                  <p class="mt-1 text-xs text-on-surface-variant">{{ ($chartPeriodMonth ?? false) ? 'Periode sesuai filter chart (tanggal temuan).' : 'Seluruh data kejadian.' }}</p>
+                  <p class="mt-1 text-xs text-on-surface-variant">{{ ($chartPeriodMonth ?? false) ? 'Periode sesuai filter chart (tanggal temuan kejadian / entri tabel terkait).' : 'Seluruh data kejadian & entri terkait.' }}</p>
                </div>
                <button type="button" id="peer-deviation-category-close" class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
                   <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
                </button>
             </div>
             <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
-               <div class="overflow-x-auto rounded-lg border border-outline-variant/20 bg-[#fafbfc]">
-                  <table class="w-full min-w-[320px] text-left text-[13px] text-on-surface">
-                     <thead>
-                        <tr class="border-b border-outline-variant/20 bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
-                           <th class="px-3 py-2.5">Kategori deviasi</th>
-                           <th class="whitespace-nowrap px-3 py-2.5 text-right">Jumlah</th>
-                        </tr>
-                     </thead>
-                     <tbody id="peer-deviation-modal-tbody" class="divide-y divide-outline-variant/10 bg-white">
-                        @forelse ($dvPreCats as $drow)
-                        <tr class="hover:bg-[#f8fafc]">
-                           <td class="px-3 py-2.5">{{ $drow['kategori_deviasi'] ?? '—' }}</td>
-                           <td class="px-3 py-2.5 text-right tabular-nums font-semibold">{{ number_format((int) ($drow['jumlah'] ?? 0)) }}</td>
-                        </tr>
-                        @empty
-                        <tr>
-                           <td colspan="2" class="px-3 py-6 text-center text-[11px] text-on-surface-variant">Belum ada data kategori deviasi.</td>
-                        </tr>
-                        @endforelse
-                     </tbody>
-                     <tfoot>
-                        <tr class="border-t-2 border-outline-variant/25 bg-[#f1f5f9] font-headline font-bold">
-                           <td class="px-3 py-3 text-on-surface">Total</td>
-                           <td id="peer-deviation-modal-total" class="px-3 py-3 text-right tabular-nums text-primary">{{ number_format($dvPreFooterTotal) }}</td>
-                        </tr>
-                     </tfoot>
-                  </table>
+               <div class="grid grid-cols-1 gap-3 sm:grid-cols-3 mb-5" role="tablist" aria-label="Kategori deviasi">
+                  <button type="button" role="tab" id="peer-deviation-tab-berecord" class="peer-deviation-tab rounded-xl border p-4 shadow-sm transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/40" data-deviation-tab="berecord" aria-selected="true" aria-controls="peer-deviation-panel-berecord" tabindex="0">
+                     <p class="text-[10px] font-bold uppercase tracking-wide text-primary">BeRecord</p>
+                     <p id="peer-deviation-card-berecord-value" class="mt-2 font-headline text-3xl font-extrabold tabular-nums text-on-surface">{{ number_format($dmbBe) }}</p>
+                     <p class="mt-2 text-[10px] leading-snug text-on-surface-variant">Pelanggaran PSPP atau Golden Rules</p>
+                  </button>
+                  <button type="button" role="tab" id="peer-deviation-tab-validasi_blindspot" class="peer-deviation-tab rounded-xl border p-4 shadow-sm transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-secondary/40" data-deviation-tab="validasi_blindspot" aria-selected="false" aria-controls="peer-deviation-panel-validasi_blindspot" tabindex="-1">
+                     <p class="text-[10px] font-bold uppercase tracking-wide text-secondary">Validasi Blindspot</p>
+                     <p id="peer-deviation-card-tbc-value" class="mt-2 font-headline text-3xl font-extrabold tabular-nums text-on-surface">{{ number_format($dmbTbc) }}</p>
+                     <p class="mt-2 text-[10px] leading-snug text-on-surface-variant">Blindspot terlapor BC berisi</p>
+                  </button>
+                  <button type="button" role="tab" id="peer-deviation-tab-speak_up_fatigue" class="peer-deviation-tab rounded-xl border p-4 shadow-sm transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40" data-deviation-tab="speak_up_fatigue" aria-selected="false" aria-controls="peer-deviation-panel-speak_up_fatigue" tabindex="-1">
+                     <p class="text-[10px] font-bold uppercase tracking-wide text-amber-900">Tidak Speak Up Fatigue</p>
+                     <p id="peer-deviation-card-fatigue-value" class="mt-2 font-headline text-3xl font-extrabold tabular-nums text-amber-950">{{ number_format($dmbFat) }}</p>
+                     <p class="mt-2 text-[10px] leading-snug text-amber-900/90">Tidak speak up fatigue</p>
+                  </button>
                </div>
-               <p class="mt-3 text-[10px] leading-relaxed text-on-surface-variant">Total dihitung dari penjumlahan kolom jumlah per kategori (sama dengan total kejadian pada periode yang sama).</p>
+
+               <div id="peer-deviation-panel-berecord" role="tabpanel" aria-labelledby="peer-deviation-tab-berecord" class="peer-deviation-detail-panel">
+                  <p class="text-[11px] font-medium text-on-surface mb-2">Kejadian dengan kategori deviasi mengandung PSPP atau Golden Rules.</p>
+                  <div id="peer-deviation-berecord-loading" class="rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] font-medium text-on-surface-variant" aria-live="polite">
+                     <span class="material-symbols-outlined mb-2 inline-block animate-spin text-2xl text-primary" style="animation-duration:1s">progress_activity</span>
+                     <span class="block">Memuat data…</span>
+                  </div>
+                  <div id="peer-deviation-berecord-error" class="hidden mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-800"></div>
+                  <div id="peer-deviation-berecord-empty" class="hidden mt-3 rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] text-on-surface-variant">Tidak ada baris untuk filter ini.</div>
+                  <div id="peer-deviation-berecord-wrap" class="hidden mt-2 overflow-x-auto rounded-xl border border-outline-variant/15">
+                     <table class="min-w-full border-collapse text-left text-[11px] text-on-surface">
+                        <thead class="bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                           <tr>
+                              <th class="px-3 py-2">Tanggal temuan</th>
+                              <th class="px-3 py-2">Lokasi</th>
+                              <th class="px-3 py-2">Kategori</th>
+                              <th class="px-3 py-2">Dept.</th>
+                              <th class="px-3 py-2">Status edukasi</th>
+                              <th class="px-3 py-2">ID BeRecord</th>
+                           </tr>
+                        </thead>
+                        <tbody id="peer-deviation-berecord-tbody" class="divide-y divide-outline-variant/10"></tbody>
+                     </table>
+                  </div>
+                  <div id="peer-deviation-berecord-pagination" class="hidden mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"></div>
+               </div>
+
+               <div id="peer-deviation-panel-validasi_blindspot" role="tabpanel" aria-labelledby="peer-deviation-tab-validasi_blindspot" class="peer-deviation-detail-panel hidden" hidden>
+                  <p class="text-[11px] font-medium text-on-surface mb-2">Baris validasi dengan kolom blindspot terlapor BC terisi.</p>
+                  <div id="peer-deviation-validasi_blindspot-loading" class="hidden rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] font-medium text-on-surface-variant" aria-live="polite">
+                     <span class="material-symbols-outlined mb-2 inline-block animate-spin text-2xl text-secondary" style="animation-duration:1s">progress_activity</span>
+                     <span class="block">Memuat data…</span>
+                  </div>
+                  <div id="peer-deviation-validasi_blindspot-error" class="hidden mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-800"></div>
+                  <div id="peer-deviation-validasi_blindspot-empty" class="hidden mt-3 rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] text-on-surface-variant">Tidak ada baris untuk filter ini.</div>
+                  <div id="peer-deviation-validasi_blindspot-wrap" class="hidden mt-2 overflow-x-auto rounded-xl border border-outline-variant/15">
+                     <table class="min-w-full border-collapse text-left text-[11px] text-on-surface">
+                        <thead class="bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                           <tr>
+                              <th class="px-3 py-2">Validator</th>
+                              <th class="px-3 py-2">GR / PSPP</th>
+                              <th class="px-3 py-2">Blindspot BC</th>
+                              <th class="px-3 py-2 whitespace-nowrap">Dibuat</th>
+                           </tr>
+                        </thead>
+                        <tbody id="peer-deviation-validasi_blindspot-tbody" class="divide-y divide-outline-variant/10"></tbody>
+                     </table>
+                  </div>
+                  <div id="peer-deviation-validasi_blindspot-pagination" class="hidden mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"></div>
+               </div>
+
+               <div id="peer-deviation-panel-speak_up_fatigue" role="tabpanel" aria-labelledby="peer-deviation-tab-speak_up_fatigue" class="peer-deviation-detail-panel hidden" hidden>
+                  <p class="text-[11px] font-medium text-on-surface mb-2">Entri tidak speak up fatigue (satu baris = satu kasus).</p>
+                  <div id="peer-deviation-speak_up_fatigue-loading" class="hidden rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] font-medium text-on-surface-variant" aria-live="polite">
+                     <span class="material-symbols-outlined mb-2 inline-block animate-spin text-2xl text-amber-700" style="animation-duration:1s">progress_activity</span>
+                     <span class="block">Memuat data…</span>
+                  </div>
+                  <div id="peer-deviation-speak_up_fatigue-error" class="hidden mt-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-[12px] text-red-800"></div>
+                  <div id="peer-deviation-speak_up_fatigue-empty" class="hidden mt-3 rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] text-on-surface-variant">Tidak ada baris untuk filter ini.</div>
+                  <div id="peer-deviation-speak_up_fatigue-wrap" class="hidden mt-2 overflow-x-auto rounded-xl border border-outline-variant/15">
+                     <table class="min-w-full border-collapse text-left text-[11px] text-on-surface">
+                        <thead class="bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
+                           <tr>
+                              <th class="px-3 py-2">Site</th>
+                              <th class="px-3 py-2">Perusahaan</th>
+                              <th class="px-3 py-2">SID</th>
+                              <th class="px-3 py-2">Nama</th>
+                              <th class="px-3 py-2 whitespace-nowrap">Tanggal</th>
+                              <th class="px-3 py-2">Waktu</th>
+                           </tr>
+                        </thead>
+                        <tbody id="peer-deviation-speak_up_fatigue-tbody" class="divide-y divide-outline-variant/10"></tbody>
+                     </table>
+                  </div>
+                  <div id="peer-deviation-speak_up_fatigue-pagination" class="hidden mt-4 flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"></div>
+               </div>
             </div>
          </div>
       </div>
@@ -1022,6 +1102,145 @@
                   </p>
                   <div id="peer-compliance-recommendations" class="mt-3 space-y-3"></div>
                </section>
+            </div>
+         </div>
+      </div>
+      <!-- Modal detail Pelaksanaan Peer Pressure (persentase + tabel kejadian selesai) -->
+      <div id="peer-pelaksanaan-detail-modal" class="hidden fixed inset-0 z-[208] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-pelaksanaan-detail-title">
+         <div class="absolute inset-0 cursor-pointer peer-pelaksanaan-detail-backdrop" aria-hidden="true"></div>
+         <div class="relative z-10 flex max-h-[min(92vh,900px)] w-full max-w-6xl flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
+            <div class="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant/20 px-5 py-4 sm:px-6">
+               <div>
+                  <h2 id="peer-pelaksanaan-detail-title" class="font-headline text-lg font-bold text-on-surface">Pelaksanaan Peer Pressure</h2>
+                  <p id="peer-pelaksanaan-modal-period" class="mt-1 text-xs text-on-surface-variant">{{ ($chartPeriodMonth ?? false) ? 'Periode: filter chart (tanggal temuan dalam bulan yang dipilih).' : 'Periode: seluruh data kejadian (tanpa filter bulan).' }}</p>
+               </div>
+               <button type="button" id="peer-pelaksanaan-detail-close" class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
+                  <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
+               </button>
+            </div>
+            <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+               <p class="text-[11px] leading-snug text-on-surface-variant">Proporsi mengikuti kartu <span class="font-semibold text-on-surface">Pelaksanaan Rate</span>. Kejadian dianggap <span class="font-semibold text-on-surface">sudah dilaksanakan</span> bila status pelaksanaan edukasi mengandung <span class="font-mono text-[10px]">CLOSED</span> atau <span class="font-mono text-[10px]">SELESAI</span>. Pilih tab di bawah untuk melihat tabel kejadian <span class="font-semibold text-on-surface">sudah selesai</span> atau <span class="font-semibold text-on-surface">belum selesai</span> (belum menunjukkan CLOSED/SELESAI).</p>
+               <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2" role="tablist" aria-label="Pelaksanaan peer pressure">
+                  <button type="button" role="tab" id="peer-pelaksanaan-tab-selesai" class="peer-pelaksanaan-tab rounded-xl border px-4 py-4 text-center shadow-sm transition-all outline-none w-full ring-2 ring-emerald-400/50 border-emerald-300 bg-emerald-50/90 focus-visible:ring-2 focus-visible:ring-emerald-500/40" data-pelaksanaan-tab="selesai" aria-selected="true" aria-controls="peer-pelaksanaan-panel-selesai" tabindex="0">
+                     <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-800">Sudah peer pressure</p>
+                     <p id="peer-pelaksanaan-modal-pct-sudah" class="mt-2 font-headline text-4xl font-extrabold tabular-nums text-emerald-950">{{ number_format($kpiPctSelesai, 1) }}<span class="text-2xl font-bold">%</span></p>
+                  </button>
+                  <button type="button" role="tab" id="peer-pelaksanaan-tab-belum" class="peer-pelaksanaan-tab rounded-xl border px-4 py-4 text-center shadow-sm transition-all outline-none w-full border-amber-200/60 bg-white hover:bg-amber-50/50 focus-visible:ring-2 focus-visible:ring-amber-500/30" data-pelaksanaan-tab="belum" aria-selected="false" aria-controls="peer-pelaksanaan-panel-belum" tabindex="-1">
+                     <p class="text-[10px] font-bold uppercase tracking-wide text-amber-900">Belum peer pressure</p>
+                     <p id="peer-pelaksanaan-modal-pct-belum" class="mt-2 font-headline text-4xl font-extrabold tabular-nums text-amber-950">{{ number_format($kpiPctBelum, 1) }}<span class="text-2xl font-bold">%</span></p>
+                  </button>
+               </div>
+               <p id="peer-pelaksanaan-modal-total-caption" class="mt-3 text-center text-[10px] text-on-surface-variant">Dasar perhitungan: {{ number_format($kpiTotal) }} kejadian pada periode ini</p>
+
+               <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
+                  <div class="rounded-xl border border-emerald-200/80 bg-emerald-50/50 px-4 py-3 shadow-sm">
+                     <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-900">Sudah selesai <span class="font-normal text-emerald-800/90">(CLOSED/SELESAI)</span></p>
+                     <p id="peer-pelaksanaan-modal-count-selesai" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-emerald-950">{{ number_format($kpiPelaksanaanSelesai) }}</p>
+                     <p class="mt-0.5 text-[10px] text-emerald-900/80">kejadian</p>
+                  </div>
+                  <div class="rounded-xl border border-amber-200/80 bg-amber-50/50 px-4 py-3 shadow-sm">
+                     <p class="text-[10px] font-bold uppercase tracking-wide text-amber-950">Belum / belum selesai</p>
+                     <p id="peer-pelaksanaan-modal-count-belum" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-amber-950">{{ number_format($kpiPelaksanaanBelum) }}</p>
+                     <p class="mt-0.5 text-[10px] text-amber-900/85">bukan CLOSED/SELESAI</p>
+                  </div>
+                  <div class="rounded-xl border border-slate-200 bg-slate-50/90 px-4 py-3 shadow-sm">
+                     <p class="text-[10px] font-bold uppercase tracking-wide text-slate-700">Status pelaksanaan kosong</p>
+                     <p id="peer-pelaksanaan-modal-count-status-kosong" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-slate-900">{{ number_format($kpiStatusKosong) }}</p>
+                     <p class="mt-0.5 text-[10px] text-slate-600">belum diisi di data kejadian</p>
+                  </div>
+               </div>
+
+               <div class="mt-4 rounded-xl border border-sky-200/80 bg-sky-50/70 px-4 py-3">
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-sky-900">SLA / waktu edukasi</p>
+                  <p id="peer-pelaksanaan-modal-sla-line" class="mt-1.5 text-[12px] leading-snug text-on-surface">
+                     Rata-rata durasi edukasi: <span id="peer-pelaksanaan-modal-avg-duration" class="font-bold tabular-nums">{{ number_format($kpiAvgDurMenit, 1) }}</span> menit (dari kolom durasi per kejadian). Detail per baris ada di kolom <span class="font-semibold">Duration</span> pada tabel di bawah.
+                  </p>
+               </div>
+
+               <div class="mt-5">
+                  <h4 class="font-headline text-xs font-bold text-on-surface">Kelompok kerja — yang sudah vs belum</h4>
+                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">Agregasi per <span class="font-medium text-on-surface">jenis kelompok kerja</span> pada kejadian di periode yang sama (maks. 15 kelompok terbanyak).</p>
+                  <div id="peer-pelaksanaan-kk-wrap" class="mt-2 overflow-x-auto rounded-xl border border-outline-variant/20 bg-white">
+                     <table class="w-full min-w-[520px] text-left text-sm">
+                        <thead class="bg-[#f8fafc] text-[10px] font-bold uppercase tracking-[0.12em] text-on-surface-variant border-b border-outline-variant/20">
+                           <tr>
+                              <th class="px-4 py-3">Kelompok kerja</th>
+                              <th class="px-4 py-3 text-right tabular-nums">Selesai</th>
+                              <th class="px-4 py-3 text-right tabular-nums">Belum</th>
+                              <th class="px-4 py-3 text-right tabular-nums">% selesai</th>
+                           </tr>
+                        </thead>
+                        <tbody id="peer-pelaksanaan-kk-tbody" class="divide-y divide-outline-variant/10">
+                           @forelse ($kpiKkRows as $kkr)
+                           <tr class="hover:bg-[#f8fafc]">
+                              <td class="px-4 py-2.5 text-[12px] text-on-surface">{{ $kkr['kelompok'] ?? '—' }}</td>
+                              <td class="px-4 py-2.5 text-right text-[12px] font-semibold tabular-nums text-emerald-900">{{ number_format((int) ($kkr['selesai'] ?? 0)) }}</td>
+                              <td class="px-4 py-2.5 text-right text-[12px] font-semibold tabular-nums text-amber-900">{{ number_format((int) ($kkr['belum'] ?? 0)) }}</td>
+                              <td class="px-4 py-2.5 text-right text-[12px] tabular-nums text-on-surface">{{ number_format((float) ($kkr['pct_selesai'] ?? 0), 1) }}%</td>
+                           </tr>
+                           @empty
+                           <tr>
+                              <td colspan="4" class="px-4 py-6 text-center text-[12px] text-on-surface-variant">Belum ada data kelompok kerja pada periode ini.</td>
+                           </tr>
+                           @endforelse
+                        </tbody>
+                     </table>
+                  </div>
+               </div>
+
+               <div id="peer-pelaksanaan-panel-selesai" role="tabpanel" aria-labelledby="peer-pelaksanaan-tab-selesai" class="mt-6 border-t border-outline-variant/15 pt-5">
+                  <h3 class="font-headline text-sm font-bold text-on-surface">Kejadian sudah dilaksanakan</h3>
+                  <p class="mt-1 text-[11px] text-on-surface-variant">Kategori deviasi dan status pelaksanaan per baris (struktur sama dengan tabel Data Peer Pressure).</p>
+                  <div id="peer-pelaksanaan-table-loading" class="mt-3 hidden rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] font-medium text-on-surface-variant" aria-live="polite">
+                     <span class="material-symbols-outlined mb-2 inline-block animate-spin text-2xl text-primary" style="animation-duration:1s">progress_activity</span>
+                     <span class="block">Memuat data…</span>
+                  </div>
+                  <p id="peer-pelaksanaan-table-error" class="mt-3 hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-800"></p>
+                  <div id="peer-pelaksanaan-table-wrap" class="mt-3 overflow-x-auto rounded-xl border border-outline-variant/20 bg-white">
+                     <table class="w-full min-w-[880px] text-sm text-left">
+                        <thead class="bg-[#f8fafc] text-on-surface-variant font-bold text-[10px] uppercase tracking-[0.15em] border-b border-outline-variant/20">
+                           <tr>
+                              <th class="px-6 py-4">Incident Detail</th>
+                              <th class="px-6 py-4">Violator &amp; Dept</th>
+                              <th class="px-6 py-4">Peer Group</th>
+                              <th class="px-6 py-4">Duration</th>
+                              <th class="px-6 py-4">Evidence</th>
+                              <th class="px-6 py-4">Status</th>
+                           </tr>
+                        </thead>
+                        <tbody id="peer-pelaksanaan-modal-tbody" class="divide-y divide-outline-variant/10"></tbody>
+                     </table>
+                  </div>
+                  <p id="peer-pelaksanaan-table-empty" class="mt-3 hidden rounded-lg border border-dashed border-outline-variant/30 bg-[#f8fafc] px-4 py-8 text-center text-[12px] text-on-surface-variant">Tidak ada kejadian selesai pada periode ini.</p>
+                  <div id="peer-pelaksanaan-pagination" class="mt-3 hidden flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant/15 pt-3"></div>
+               </div>
+
+               <div id="peer-pelaksanaan-panel-belum" role="tabpanel" aria-labelledby="peer-pelaksanaan-tab-belum" class="mt-6 border-t border-outline-variant/15 pt-5 hidden" hidden>
+                  <h3 class="font-headline text-sm font-bold text-on-surface">Kejadian belum dilaksanakan</h3>
+                  <p class="mt-1 text-[11px] text-on-surface-variant">Kejadian yang status pelaksanaan edukasinya belum menunjukkan selesai (bukan CLOSED/SELESAI).</p>
+                  <div id="peer-pelaksanaan-belum-table-loading" class="mt-3 hidden rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] font-medium text-on-surface-variant" aria-live="polite">
+                     <span class="material-symbols-outlined mb-2 inline-block animate-spin text-2xl text-amber-600" style="animation-duration:1s">progress_activity</span>
+                     <span class="block">Memuat data…</span>
+                  </div>
+                  <p id="peer-pelaksanaan-belum-table-error" class="mt-3 hidden rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-[12px] text-red-800"></p>
+                  <div id="peer-pelaksanaan-belum-table-wrap" class="mt-3 overflow-x-auto rounded-xl border border-outline-variant/20 bg-white">
+                     <table class="w-full min-w-[880px] text-sm text-left">
+                        <thead class="bg-[#f8fafc] text-on-surface-variant font-bold text-[10px] uppercase tracking-[0.15em] border-b border-outline-variant/20">
+                           <tr>
+                              <th class="px-6 py-4">Incident Detail</th>
+                              <th class="px-6 py-4">Violator &amp; Dept</th>
+                              <th class="px-6 py-4">Peer Group</th>
+                              <th class="px-6 py-4">Duration</th>
+                              <th class="px-6 py-4">Evidence</th>
+                              <th class="px-6 py-4">Status</th>
+                           </tr>
+                        </thead>
+                        <tbody id="peer-pelaksanaan-belum-modal-tbody" class="divide-y divide-outline-variant/10"></tbody>
+                     </table>
+                  </div>
+                  <p id="peer-pelaksanaan-belum-table-empty" class="mt-3 hidden rounded-lg border border-dashed border-outline-variant/30 bg-[#f8fafc] px-4 py-8 text-center text-[12px] text-on-surface-variant">Tidak ada kejadian &quot;belum&quot; pada periode ini.</p>
+                  <div id="peer-pelaksanaan-belum-pagination" class="mt-3 hidden flex flex-wrap items-center justify-between gap-3 border-t border-outline-variant/15 pt-3"></div>
+               </div>
             </div>
          </div>
       </div>
@@ -1575,6 +1794,9 @@
         const weeklyTrendUrl = @json(route('peer-pressure-edukasi.dashboard.weekly-trend'));
         const peerHighlightUrl = @json(route('peer-pressure-edukasi.dashboard.highlight-issue-recommendation'));
         const complianceBreakdownUrl = @json(route('peer-pressure-edukasi.dashboard.compliance-breakdown'));
+        const pelaksanaanSelesaiUrl = @json(route('peer-pressure-edukasi.dashboard.pelaksanaan-selesai'));
+        const pelaksanaanBelumUrl = @json(route('peer-pressure-edukasi.dashboard.pelaksanaan-belum'));
+        const deviationModalDetailUrl = @json(route('peer-pressure-edukasi.dashboard.deviation-modal-detail'));
         const modal = document.getElementById('peer-weekly-period-modal');
         const backdrop = modal ? modal.querySelector('.peer-weekly-period-backdrop') : null;
         const openBtn = document.getElementById('peer-open-weekly-period');
@@ -1587,6 +1809,8 @@
           year: {{ (int) $cy }},
           month: {{ (int) $cm }}
         };
+        /** Tab aktif di modal Pelaksanaan: selesai | belum */
+        var pelaksanaanActiveTab = 'selesai';
         var tempYear = state.year;
         var tempMonth = state.month;
         var tempAll = state.all;
@@ -1710,6 +1934,110 @@
             compCountEl.textContent = cc + '/' + ct;
           }
           syncComplianceModalFromKpi(kpi, periodScope);
+          syncPelaksanaanModalFromKpi(kpi, periodScope);
+        }
+        function renderPelaksanaanKkTbodyFromKpi(rows) {
+          var tbody = document.getElementById('peer-pelaksanaan-kk-tbody');
+          if (!tbody) return;
+          var list = Array.isArray(rows) ? rows : [];
+          if (!list.length) {
+            tbody.innerHTML =
+              '<tr><td colspan="4" class="px-4 py-6 text-center text-[12px] text-on-surface-variant">Belum ada data kelompok kerja pada periode ini.</td></tr>';
+            return;
+          }
+          tbody.innerHTML = list
+            .map(function (r) {
+              var k = r.kelompok != null ? String(r.kelompok) : '—';
+              var s = Number(r.selesai != null ? r.selesai : 0) || 0;
+              var b = Number(r.belum != null ? r.belum : 0) || 0;
+              var p = Number(r.pct_selesai != null ? r.pct_selesai : 0) || 0;
+              return (
+                '<tr class="hover:bg-[#f8fafc]">' +
+                '<td class="px-4 py-2.5 text-[12px] text-on-surface">' +
+                escHtml(k) +
+                '</td>' +
+                '<td class="px-4 py-2.5 text-right text-[12px] font-semibold tabular-nums text-emerald-900">' +
+                s.toLocaleString('id-ID') +
+                '</td>' +
+                '<td class="px-4 py-2.5 text-right text-[12px] font-semibold tabular-nums text-amber-900">' +
+                b.toLocaleString('id-ID') +
+                '</td>' +
+                '<td class="px-4 py-2.5 text-right text-[12px] tabular-nums text-on-surface">' +
+                p.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) +
+                '%</td>' +
+                '</tr>'
+              );
+            })
+            .join('');
+        }
+        function syncPelaksanaanModalFromKpi(kpi, periodScope) {
+          if (!kpi || typeof kpi !== 'object') return;
+          var periodEl = document.getElementById('peer-pelaksanaan-modal-period');
+          if (periodEl && periodScope) {
+            periodEl.textContent =
+              periodScope === 'month'
+                ? 'Periode: filter chart (tanggal temuan dalam bulan yang dipilih).'
+                : 'Periode: seluruh data kejadian (tanpa filter bulan).';
+          }
+          var tc = Number(kpi.total_cases != null ? kpi.total_cases : 0);
+          var selesai = Number(kpi.pelaksanaan_selesai_count != null ? kpi.pelaksanaan_selesai_count : 0);
+          var belum = Number(kpi.pelaksanaan_belum_count != null ? kpi.pelaksanaan_belum_count : 0);
+          var statusKosong = Number(
+            kpi.pelaksanaan_status_kosong_count != null ? kpi.pelaksanaan_status_kosong_count : 0
+          );
+          var avgDur = Number(kpi.avg_duration_minutes != null ? kpi.avg_duration_minutes : 0);
+          if (isNaN(tc)) tc = 0;
+          if (isNaN(selesai)) selesai = 0;
+          if (isNaN(belum)) belum = 0;
+          if (isNaN(statusKosong)) statusKosong = 0;
+          if (isNaN(avgDur)) avgDur = 0;
+          var ps = Number(kpi.pelaksanaan_selesai_pct != null ? kpi.pelaksanaan_selesai_pct : NaN);
+          var pb = Number(kpi.pelaksanaan_belum_pct != null ? kpi.pelaksanaan_belum_pct : NaN);
+          if (isNaN(ps) || isNaN(pb)) {
+            if (tc > 0) {
+              ps = (100 * selesai) / tc;
+              pb = (100 * belum) / tc;
+            } else {
+              ps = 0;
+              pb = 0;
+            }
+          }
+          var elPctS = document.getElementById('peer-pelaksanaan-modal-pct-sudah');
+          var elPctB = document.getElementById('peer-pelaksanaan-modal-pct-belum');
+          var cap = document.getElementById('peer-pelaksanaan-modal-total-caption');
+          var elCntS = document.getElementById('peer-pelaksanaan-modal-count-selesai');
+          var elCntB = document.getElementById('peer-pelaksanaan-modal-count-belum');
+          var elCntSk = document.getElementById('peer-pelaksanaan-modal-count-status-kosong');
+          var elAvgDur = document.getElementById('peer-pelaksanaan-modal-avg-duration');
+          if (elPctS) {
+            var psStr = ps.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            elPctS.innerHTML = psStr + '<span class="text-2xl font-bold">%</span>';
+          }
+          if (elPctB) {
+            var pbStr = pb.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
+            elPctB.innerHTML = pbStr + '<span class="text-2xl font-bold">%</span>';
+          }
+          if (cap) {
+            cap.textContent = 'Dasar perhitungan: ' + tc.toLocaleString('id-ID') + ' kejadian pada periode ini';
+          }
+          if (elCntS) elCntS.textContent = selesai.toLocaleString('id-ID');
+          if (elCntB) elCntB.textContent = belum.toLocaleString('id-ID');
+          if (elCntSk) elCntSk.textContent = statusKosong.toLocaleString('id-ID');
+          if (elAvgDur) {
+            elAvgDur.textContent = avgDur.toLocaleString('id-ID', {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1
+            });
+          }
+          renderPelaksanaanKkTbodyFromKpi(kpi.pelaksanaan_kelompok_kerja_rows || []);
+          var pm = document.getElementById('peer-pelaksanaan-detail-modal');
+          if (pm && !pm.classList.contains('hidden')) {
+            if (pelaksanaanActiveTab === 'belum') {
+              loadPelaksanaanBelum(1);
+            } else {
+              loadPelaksanaanSelesai(1);
+            }
+          }
         }
         function syncComplianceModalFromKpi(kpi, periodScope) {
           if (!kpi || typeof kpi !== 'object') return;
@@ -1948,6 +2276,271 @@
             '</div></div>';
           fillDeviationCategoryModal(dev);
         }
+        function fillDeviationModalBreakdownCards(b) {
+          if (!b || typeof b !== 'object') return;
+          function n(x) {
+            var v = Number(x != null ? x : 0);
+            return isNaN(v) ? 0 : v;
+          }
+          var elBe = document.getElementById('peer-deviation-card-berecord-value');
+          var elTbc = document.getElementById('peer-deviation-card-tbc-value');
+          var elFat = document.getElementById('peer-deviation-card-fatigue-value');
+          if (elBe) elBe.textContent = n(b.berecord_pspp_gr_total).toLocaleString('id-ID');
+          if (elTbc) elTbc.textContent = n(b.validasi_tbc_blindspot_terisi_total).toLocaleString('id-ID');
+          if (elFat) elFat.textContent = n(b.speak_up_fatigue_tidak_speak_total).toLocaleString('id-ID');
+        }
+        var DEVIATION_TAB_TYPES = ['berecord', 'validasi_blindspot', 'speak_up_fatigue'];
+        var deviationActiveType = 'berecord';
+        var deviationLoadSeq = 0;
+        var DEVIATION_TAB_BASE =
+          'peer-deviation-tab rounded-xl border p-4 shadow-sm transition-all text-left outline-none ';
+        function syncDeviationTabUi(active) {
+          DEVIATION_TAB_TYPES.forEach(function (t) {
+            var btn = document.querySelector('.peer-deviation-tab[data-deviation-tab="' + t + '"]');
+            var panel = document.getElementById('peer-deviation-panel-' + t);
+            var on = t === active;
+            if (btn) {
+              btn.setAttribute('aria-selected', on ? 'true' : 'false');
+              btn.tabIndex = on ? 0 : -1;
+              if (t === 'berecord') {
+                btn.className = on
+                  ? DEVIATION_TAB_BASE +
+                    'ring-2 ring-primary/30 border-primary/40 bg-primary/5 focus-visible:ring-2 focus-visible:ring-primary/40'
+                  : DEVIATION_TAB_BASE +
+                    'border-outline-variant/20 bg-white hover:bg-surface-container-high focus-visible:ring-2 focus-visible:ring-primary/40';
+              } else if (t === 'validasi_blindspot') {
+                btn.className = on
+                  ? DEVIATION_TAB_BASE +
+                    'ring-2 ring-secondary/30 border-secondary/40 bg-secondary/5 focus-visible:ring-2 focus-visible:ring-secondary/40'
+                  : DEVIATION_TAB_BASE +
+                    'border-outline-variant/20 bg-white hover:bg-surface-container-high focus-visible:ring-2 focus-visible:ring-secondary/40';
+              } else {
+                btn.className = on
+                  ? DEVIATION_TAB_BASE +
+                    'ring-2 ring-amber-400/35 border-amber-300 bg-amber-50/90 focus-visible:ring-2 focus-visible:ring-amber-500/40'
+                  : DEVIATION_TAB_BASE +
+                    'border-outline-variant/20 bg-white hover:bg-surface-container-high focus-visible:ring-2 focus-visible:ring-amber-500/40';
+              }
+            }
+            if (panel) {
+              if (on) {
+                panel.classList.remove('hidden');
+                panel.removeAttribute('hidden');
+              } else {
+                panel.classList.add('hidden');
+                panel.setAttribute('hidden', '');
+              }
+            }
+          });
+        }
+        function renderDeviationPagination(type, p, labelEntri) {
+          var nav = document.getElementById('peer-deviation-' + type + '-pagination');
+          if (!nav) return;
+          if (!p || !p.total || p.total === 0) {
+            nav.classList.add('hidden');
+            nav.innerHTML = '';
+            return;
+          }
+          nav.classList.remove('hidden');
+          var cur = p.current_page != null ? +p.current_page : 1;
+          var last = p.last_page != null ? +p.last_page : 1;
+          var from = p.from != null ? p.from : '—';
+          var to = p.to != null ? p.to : '—';
+          var tot = p.total != null ? +p.total : 0;
+          var prevDis = cur <= 1;
+          var nextDis = cur >= last;
+          nav.innerHTML =
+            '<p class="text-[11px] text-on-surface-variant">Menampilkan ' +
+            from +
+            '–' +
+            to +
+            ' dari ' +
+            tot.toLocaleString('id-ID') +
+            ' ' +
+            labelEntri +
+            '</p>' +
+            '<div class="flex items-center gap-2">' +
+            '<button type="button" class="js-peer-deviation-page rounded-lg border border-outline-variant/30 bg-white px-3 py-1.5 text-[11px] font-bold transition-colors ' +
+            (prevDis ? 'cursor-not-allowed opacity-40' : 'hover:bg-surface-container-high') +
+            '" data-page="' +
+            (cur - 1) +
+            '"' +
+            (prevDis ? ' disabled' : '') +
+            '>Sebelumnya</button>' +
+            '<span class="text-[11px] font-semibold tabular-nums text-on-surface">' +
+            cur +
+            ' / ' +
+            last +
+            '</span>' +
+            '<button type="button" class="js-peer-deviation-page rounded-lg border border-outline-variant/30 bg-white px-3 py-1.5 text-[11px] font-bold transition-colors ' +
+            (nextDis ? 'cursor-not-allowed opacity-40' : 'hover:bg-surface-container-high') +
+            '" data-page="' +
+            (cur + 1) +
+            '"' +
+            (nextDis ? ' disabled' : '') +
+            '>Berikutnya</button>' +
+            '</div>';
+        }
+        function buildDeviationRowsHtml(type, rows) {
+          if (type === 'berecord') {
+            return (rows || []).map(function (row) {
+              var id = row.id != null ? String(row.id) : '';
+              return (
+                '<tr class="cursor-pointer hover:bg-[#f8fafc] js-peer-deviation-kejadian-row" data-kejadian-id="' +
+                escHtml(id) +
+                '">' +
+                '<td class="px-3 py-2 whitespace-nowrap tabular-nums">' +
+                escHtml(row.tanggal_temuan != null ? String(row.tanggal_temuan) : '—') +
+                '</td>' +
+                '<td class="px-3 py-2 max-w-[200px]">' +
+                escHtml(row.lokasi_temuan != null ? String(row.lokasi_temuan) : '—') +
+                '</td>' +
+                '<td class="px-3 py-2 max-w-[220px]">' +
+                escHtml(row.kategori_deviasi != null ? String(row.kategori_deviasi) : '—') +
+                '</td>' +
+                '<td class="px-3 py-2">' +
+                escHtml(row.departemen != null ? String(row.departemen) : '—') +
+                '</td>' +
+                '<td class="px-3 py-2">' +
+                escHtml(row.status_pelaksanaan_edukasi != null ? String(row.status_pelaksanaan_edukasi) : '—') +
+                '</td>' +
+                '<td class="px-3 py-2 tabular-nums">' +
+                escHtml(row.id_berecord != null ? String(row.id_berecord) : '—') +
+                '</td>' +
+                '</tr>'
+              );
+            }).join('');
+          }
+          if (type === 'validasi_blindspot') {
+            return (rows || []).map(function (row) {
+              var bc = row.blindspot_terlapor_bc_short != null ? String(row.blindspot_terlapor_bc_short) : row.blindspot_terlapor_bc != null ? String(row.blindspot_terlapor_bc) : '—';
+              return (
+                '<tr>' +
+                '<td class="px-3 py-2">' +
+                escHtml(row.validator != null ? String(row.validator) : '—') +
+                '</td>' +
+                '<td class="px-3 py-2 max-w-[160px]">' +
+                escHtml(row.gr_pspp != null ? String(row.gr_pspp) : '—') +
+                '</td>' +
+                '<td class="px-3 py-2 max-w-md whitespace-pre-wrap break-words">' +
+                escHtml(bc) +
+                '</td>' +
+                '<td class="px-3 py-2 whitespace-nowrap tabular-nums">' +
+                escHtml(row.created_at != null ? String(row.created_at) : '—') +
+                '</td>' +
+                '</tr>'
+              );
+            }).join('');
+          }
+          return (rows || []).map(function (row) {
+            return (
+              '<tr>' +
+              '<td class="px-3 py-2">' +
+              escHtml(row.site != null ? String(row.site) : '—') +
+              '</td>' +
+              '<td class="px-3 py-2">' +
+              escHtml(row.perusahaan != null ? String(row.perusahaan) : '—') +
+              '</td>' +
+              '<td class="px-3 py-2 tabular-nums">' +
+              escHtml(row.sid != null ? String(row.sid) : '—') +
+              '</td>' +
+              '<td class="px-3 py-2">' +
+              escHtml(row.nama != null ? String(row.nama) : '—') +
+              '</td>' +
+              '<td class="px-3 py-2 whitespace-nowrap tabular-nums">' +
+              escHtml(row.tanggal != null ? String(row.tanggal) : '—') +
+              '</td>' +
+              '<td class="px-3 py-2">' +
+              escHtml(row.waktu != null ? String(row.waktu) : '—') +
+              '</td>' +
+              '</tr>'
+            );
+          }).join('');
+        }
+        function loadDeviationDetail(requestedPage) {
+          var type = deviationActiveType;
+          var page = requestedPage != null ? parseInt(String(requestedPage), 10) : 1;
+          if (isNaN(page) || page < 1) page = 1;
+          var seq = ++deviationLoadSeq;
+          var loadingEl = document.getElementById('peer-deviation-' + type + '-loading');
+          var errEl = document.getElementById('peer-deviation-' + type + '-error');
+          var wrap = document.getElementById('peer-deviation-' + type + '-wrap');
+          var tbody = document.getElementById('peer-deviation-' + type + '-tbody');
+          var emptyEl = document.getElementById('peer-deviation-' + type + '-empty');
+          var pagEl = document.getElementById('peer-deviation-' + type + '-pagination');
+          if (errEl) {
+            errEl.classList.add('hidden');
+            errEl.textContent = '';
+          }
+          if (emptyEl) emptyEl.classList.add('hidden');
+          if (tbody) tbody.innerHTML = '';
+          if (pagEl) {
+            pagEl.classList.add('hidden');
+            pagEl.innerHTML = '';
+          }
+          if (loadingEl) loadingEl.classList.remove('hidden');
+          if (wrap) wrap.classList.add('hidden');
+
+          var u = new URL(deviationModalDetailUrl, window.location.origin);
+          u.searchParams.set('type', type);
+          u.searchParams.set('page', String(page));
+          u.searchParams.set('per_page', '10');
+          if (!state.all) {
+            u.searchParams.set('year', String(state.year));
+            u.searchParams.set('month', String(state.month));
+          }
+          fetch(u.toString(), {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+          })
+            .then(function (r) {
+              if (r.status === 422) {
+                return r.json().then(function (j) {
+                  throw new Error((j && j.message) || 'Permintaan tidak valid');
+                });
+              }
+              if (!r.ok) throw new Error('Gagal memuat detail deviasi');
+              return r.json();
+            })
+            .then(function (data) {
+              if (seq !== deviationLoadSeq) return;
+              if (!data || data.type !== type) return;
+              if (loadingEl) loadingEl.classList.add('hidden');
+              var rows = data.rows || [];
+              var labelEntri =
+                type === 'berecord'
+                  ? 'kejadian'
+                  : type === 'validasi_blindspot'
+                    ? 'baris validasi'
+                    : 'baris';
+              if (!rows.length) {
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                if (wrap) wrap.classList.add('hidden');
+                renderDeviationPagination(type, null, labelEntri);
+                return;
+              }
+              if (emptyEl) emptyEl.classList.add('hidden');
+              if (wrap) wrap.classList.remove('hidden');
+              if (tbody) tbody.innerHTML = buildDeviationRowsHtml(type, rows);
+              renderDeviationPagination(type, data.pagination || null, labelEntri);
+            })
+            .catch(function (err) {
+              if (seq !== deviationLoadSeq) return;
+              if (loadingEl) loadingEl.classList.add('hidden');
+              if (wrap) wrap.classList.add('hidden');
+              renderDeviationPagination(type, null, 'baris');
+              if (errEl) {
+                errEl.textContent = err.message || 'Gagal memuat data.';
+                errEl.classList.remove('hidden');
+              }
+            });
+        }
+        function setDeviationTab(type) {
+          if (DEVIATION_TAB_TYPES.indexOf(type) === -1) return;
+          deviationActiveType = type;
+          syncDeviationTabUi(type);
+          loadDeviationDetail(1);
+        }
         function fillDeviationCategoryModal(dev) {
           if (!dev || typeof dev !== 'object') return;
           var tbody = document.getElementById('peer-deviation-modal-tbody');
@@ -2076,6 +2669,397 @@
             .replace(/"/g, '&quot;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
+        }
+        function renderPelaksanaanPagination(p) {
+          var nav = document.getElementById('peer-pelaksanaan-pagination');
+          if (!nav) return;
+          if (!p || !p.total || p.total === 0) {
+            nav.classList.add('hidden');
+            nav.innerHTML = '';
+            return;
+          }
+          nav.classList.remove('hidden');
+          var cur = p.current_page != null ? +p.current_page : 1;
+          var last = p.last_page != null ? +p.last_page : 1;
+          var from = p.from != null ? p.from : '—';
+          var to = p.to != null ? p.to : '—';
+          var tot = p.total != null ? +p.total : 0;
+          var prevDis = cur <= 1;
+          var nextDis = cur >= last;
+          nav.innerHTML =
+            '<p class="text-[11px] text-on-surface-variant">Menampilkan ' +
+            from +
+            '–' +
+            to +
+            ' dari ' +
+            tot.toLocaleString('id-ID') +
+            ' kejadian selesai</p>' +
+            '<div class="flex items-center gap-2">' +
+            '<button type="button" class="js-peer-pelaksanaan-page rounded-lg border border-outline-variant/30 bg-white px-3 py-1.5 text-[11px] font-bold transition-colors ' +
+            (prevDis ? 'cursor-not-allowed opacity-40' : 'hover:bg-surface-container-high') +
+            '" data-page="' +
+            (cur - 1) +
+            '"' +
+            (prevDis ? ' disabled' : '') +
+            '>Sebelumnya</button>' +
+            '<span class="text-[11px] font-semibold tabular-nums text-on-surface">' +
+            cur +
+            ' / ' +
+            last +
+            '</span>' +
+            '<button type="button" class="js-peer-pelaksanaan-page rounded-lg border border-outline-variant/30 bg-white px-3 py-1.5 text-[11px] font-bold transition-colors ' +
+            (nextDis ? 'cursor-not-allowed opacity-40' : 'hover:bg-surface-container-high') +
+            '" data-page="' +
+            (cur + 1) +
+            '"' +
+            (nextDis ? ' disabled' : '') +
+            '>Berikutnya</button>' +
+            '</div>';
+        }
+        function renderPelaksanaanBelumPagination(p) {
+          var nav = document.getElementById('peer-pelaksanaan-belum-pagination');
+          if (!nav) return;
+          if (!p || !p.total || p.total === 0) {
+            nav.classList.add('hidden');
+            nav.innerHTML = '';
+            return;
+          }
+          nav.classList.remove('hidden');
+          var cur = p.current_page != null ? +p.current_page : 1;
+          var last = p.last_page != null ? +p.last_page : 1;
+          var from = p.from != null ? p.from : '—';
+          var to = p.to != null ? p.to : '—';
+          var tot = p.total != null ? +p.total : 0;
+          var prevDis = cur <= 1;
+          var nextDis = cur >= last;
+          nav.innerHTML =
+            '<p class="text-[11px] text-on-surface-variant">Menampilkan ' +
+            from +
+            '–' +
+            to +
+            ' dari ' +
+            tot.toLocaleString('id-ID') +
+            ' kejadian belum selesai</p>' +
+            '<div class="flex items-center gap-2">' +
+            '<button type="button" class="js-peer-pelaksanaan-belum-page rounded-lg border border-outline-variant/30 bg-white px-3 py-1.5 text-[11px] font-bold transition-colors ' +
+            (prevDis ? 'cursor-not-allowed opacity-40' : 'hover:bg-surface-container-high') +
+            '" data-page="' +
+            (cur - 1) +
+            '"' +
+            (prevDis ? ' disabled' : '') +
+            '>Sebelumnya</button>' +
+            '<span class="text-[11px] font-semibold tabular-nums text-on-surface">' +
+            cur +
+            ' / ' +
+            last +
+            '</span>' +
+            '<button type="button" class="js-peer-pelaksanaan-belum-page rounded-lg border border-outline-variant/30 bg-white px-3 py-1.5 text-[11px] font-bold transition-colors ' +
+            (nextDis ? 'cursor-not-allowed opacity-40' : 'hover:bg-surface-container-high') +
+            '" data-page="' +
+            (cur + 1) +
+            '"' +
+            (nextDis ? ' disabled' : '') +
+            '>Berikutnya</button>' +
+            '</div>';
+        }
+        function buildPelaksanaanModalRowHtml(row, trRowClass) {
+          var catPrimary =
+            'mt-2 inline-block bg-primary-container/20 text-primary text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-primary/10';
+          var catSecondary =
+            'mt-2 inline-block bg-secondary-container/20 text-secondary text-[9px] px-2.5 py-0.5 rounded-full font-bold uppercase tracking-wider border border-secondary/10';
+          var avatarBgs = ['bg-secondary-fixed', 'bg-primary-fixed', 'bg-tertiary-fixed'];
+          var id = row.id != null ? String(row.id) : '';
+          var ri = row.row_index != null ? +row.row_index : 0;
+          var catClass = ri % 2 === 0 ? catPrimary : catSecondary;
+          var dt = row.formatted_temuan_datetime != null ? String(row.formatted_temuan_datetime) : '—';
+          var loc = row.lokasi_temuan != null ? String(row.lokasi_temuan) : '—';
+          var kat = row.kategori_deviasi != null ? String(row.kategori_deviasi) : '—';
+          var pl = row.pelanggar_line != null ? String(row.pelanggar_line) : '—';
+          var dept = row.dept_line != null ? String(row.dept_line) : '—';
+          var initials = row.peer_initials || [];
+          var extra = row.peer_extra != null ? +row.peer_extra : 0;
+          var peerHtml = '<div class="flex -space-x-2">';
+          for (var pi = 0; pi < initials.length; pi++) {
+            var ini = initials[pi] != null ? String(initials[pi]) : '';
+            peerHtml +=
+              '<div class="relative w-8 h-8 shrink-0 rounded-full border-2 border-white shadow-md overflow-hidden bg-surface-container-high flex items-center justify-center text-[10px] font-bold ' +
+              (avatarBgs[pi % 3] || 'bg-surface-container-high') +
+              '">' +
+              escHtml(ini) +
+              '</div>';
+          }
+          if (extra > 0) {
+            peerHtml +=
+              '<div class="w-8 h-8 rounded-full bg-surface-container-high text-[10px] flex items-center justify-center font-bold border-2 border-white shadow-md text-on-surface-variant">+' +
+              extra +
+              '</div>';
+          }
+          peerHtml += '</div>';
+          var leader = row.leader != null ? String(row.leader) : '—';
+          var dm = row.durasi_edukasi_menit != null ? String(row.durasi_edukasi_menit) : '—';
+          var evUrl = row.evidence_url != null ? String(row.evidence_url) : '';
+          var evBlock = evUrl
+            ? '<a href="' +
+              escAttr(evUrl) +
+              '" target="_blank" rel="noopener noreferrer" onclick="event.stopPropagation()" class="text-primary hover:underline flex items-center gap-1 text-xs font-bold transition-all relative z-10"><span class="material-symbols-outlined text-lg">attach_file</span> View Records</a>'
+            : '<div class="text-error font-bold text-xs flex items-center gap-1"><span class="material-symbols-outlined text-lg">warning</span> Missing Evidence</div>';
+          var badge = row.status_badge || {};
+          var spanClass = badge.spanClass != null ? String(badge.spanClass) : '';
+          var badgeLabel = badge.label != null ? String(badge.label) : '—';
+          var stPel = row.status_pelaksanaan_edukasi != null ? String(row.status_pelaksanaan_edukasi) : '—';
+          return (
+            '<tr class="hover:bg-[#f8fafc] transition-colors cursor-pointer group ' +
+            trRowClass +
+            ' align-top" data-kejadian-id="' +
+            escAttr(id) +
+            '" role="button" tabindex="0">' +
+            '<td class="px-6 py-5">' +
+            '<div class="font-bold text-on-surface">' +
+            escHtml(dt) +
+            '</div>' +
+            '<div class="text-[10px] text-on-surface-variant flex items-center gap-1 mt-0.5"><span class="material-symbols-outlined text-[12px]">location_on</span> ' +
+            escHtml(loc) +
+            '</div>' +
+            '<span class="' +
+            catClass +
+            '">' +
+            escHtml(kat) +
+            '</span>' +
+            '</td>' +
+            '<td class="px-6 py-5">' +
+            '<div class="font-bold">' +
+            escHtml(pl) +
+            '</div>' +
+            '<div class="text-xs text-on-surface-variant">' +
+            escHtml(dept) +
+            '</div>' +
+            '</td>' +
+            '<td class="px-6 py-5">' +
+            peerHtml +
+            '<div class="text-[10px] mt-2 font-bold text-on-surface-variant">Leader: ' +
+            escHtml(leader) +
+            '</div>' +
+            '</td>' +
+            '<td class="px-6 py-5 font-bold text-xs text-on-surface whitespace-nowrap">' +
+            escHtml(dm) +
+            'm</td>' +
+            '<td class="px-6 py-5">' +
+            evBlock +
+            '</td>' +
+            '<td class="px-6 py-5">' +
+            '<span class="' +
+            spanClass +
+            '">' +
+            escHtml(badgeLabel) +
+            '</span>' +
+            '<div class="mt-1 text-[10px] text-on-surface-variant leading-snug">' +
+            escHtml(stPel) +
+            '</div>' +
+            '</td>' +
+            '</tr>'
+          );
+        }
+        function loadPelaksanaanSelesai(requestedPage) {
+          var page = requestedPage != null ? parseInt(String(requestedPage), 10) : 1;
+          if (isNaN(page) || page < 1) page = 1;
+          var loadingEl = document.getElementById('peer-pelaksanaan-table-loading');
+          var errEl = document.getElementById('peer-pelaksanaan-table-error');
+          var wrap = document.getElementById('peer-pelaksanaan-table-wrap');
+          var tbody = document.getElementById('peer-pelaksanaan-modal-tbody');
+          var emptyEl = document.getElementById('peer-pelaksanaan-table-empty');
+          var pagEl = document.getElementById('peer-pelaksanaan-pagination');
+          if (errEl) {
+            errEl.classList.add('hidden');
+            errEl.textContent = '';
+          }
+          if (emptyEl) emptyEl.classList.add('hidden');
+          if (tbody) tbody.innerHTML = '';
+          if (pagEl) {
+            pagEl.classList.add('hidden');
+            pagEl.innerHTML = '';
+          }
+          if (loadingEl) loadingEl.classList.remove('hidden');
+          if (wrap) wrap.classList.add('hidden');
+
+          var u = new URL(pelaksanaanSelesaiUrl, window.location.origin);
+          u.searchParams.set('page', String(page));
+          u.searchParams.set('per_page', '10');
+          if (!state.all) {
+            u.searchParams.set('year', String(state.year));
+            u.searchParams.set('month', String(state.month));
+          }
+          fetch(u.toString(), {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error('Gagal memuat tabel pelaksanaan');
+              return r.json();
+            })
+            .then(function (data) {
+              if (loadingEl) loadingEl.classList.add('hidden');
+              var periodEl = document.getElementById('peer-pelaksanaan-modal-period');
+              if (periodEl && data.period_caption) {
+                if (data.period_scope === 'month') {
+                  periodEl.textContent = 'Periode: ' + data.period_caption + ' (filter tanggal temuan).';
+                } else {
+                  periodEl.textContent = 'Periode: seluruh data kejadian (tanpa filter bulan).';
+                }
+              }
+              var rows = data.rows || [];
+              if (!rows.length) {
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                if (wrap) wrap.classList.add('hidden');
+                renderPelaksanaanPagination(null);
+                return;
+              }
+              if (emptyEl) emptyEl.classList.add('hidden');
+              if (wrap) wrap.classList.remove('hidden');
+              if (tbody) {
+                tbody.innerHTML = rows.map(function (row) {
+                  return buildPelaksanaanModalRowHtml(row, 'js-peer-pelaksanaan-row');
+                }).join('');
+              }
+              renderPelaksanaanPagination(data.pagination || null);
+            })
+            .catch(function (err) {
+              if (loadingEl) loadingEl.classList.add('hidden');
+              if (wrap) wrap.classList.add('hidden');
+              renderPelaksanaanPagination(null);
+              if (errEl) {
+                errEl.textContent = err.message || 'Gagal memuat data.';
+                errEl.classList.remove('hidden');
+              }
+            });
+        }
+        function loadPelaksanaanBelum(requestedPage) {
+          var page = requestedPage != null ? parseInt(String(requestedPage), 10) : 1;
+          if (isNaN(page) || page < 1) page = 1;
+          var loadingEl = document.getElementById('peer-pelaksanaan-belum-table-loading');
+          var errEl = document.getElementById('peer-pelaksanaan-belum-table-error');
+          var wrap = document.getElementById('peer-pelaksanaan-belum-table-wrap');
+          var tbody = document.getElementById('peer-pelaksanaan-belum-modal-tbody');
+          var emptyEl = document.getElementById('peer-pelaksanaan-belum-table-empty');
+          var pagEl = document.getElementById('peer-pelaksanaan-belum-pagination');
+          if (errEl) {
+            errEl.classList.add('hidden');
+            errEl.textContent = '';
+          }
+          if (emptyEl) emptyEl.classList.add('hidden');
+          if (tbody) tbody.innerHTML = '';
+          if (pagEl) {
+            pagEl.classList.add('hidden');
+            pagEl.innerHTML = '';
+          }
+          if (loadingEl) loadingEl.classList.remove('hidden');
+          if (wrap) wrap.classList.add('hidden');
+
+          var u = new URL(pelaksanaanBelumUrl, window.location.origin);
+          u.searchParams.set('page', String(page));
+          u.searchParams.set('per_page', '10');
+          if (!state.all) {
+            u.searchParams.set('year', String(state.year));
+            u.searchParams.set('month', String(state.month));
+          }
+          fetch(u.toString(), {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error('Gagal memuat tabel kejadian belum selesai');
+              return r.json();
+            })
+            .then(function (data) {
+              if (loadingEl) loadingEl.classList.add('hidden');
+              var periodEl = document.getElementById('peer-pelaksanaan-modal-period');
+              if (periodEl && data.period_caption) {
+                if (data.period_scope === 'month') {
+                  periodEl.textContent = 'Periode: ' + data.period_caption + ' (filter tanggal temuan).';
+                } else {
+                  periodEl.textContent = 'Periode: seluruh data kejadian (tanpa filter bulan).';
+                }
+              }
+              var rows = data.rows || [];
+              if (!rows.length) {
+                if (emptyEl) emptyEl.classList.remove('hidden');
+                if (wrap) wrap.classList.add('hidden');
+                renderPelaksanaanBelumPagination(null);
+                return;
+              }
+              if (emptyEl) emptyEl.classList.add('hidden');
+              if (wrap) wrap.classList.remove('hidden');
+              if (tbody) {
+                tbody.innerHTML = rows.map(function (row) {
+                  return buildPelaksanaanModalRowHtml(row, 'js-peer-pelaksanaan-belum-row');
+                }).join('');
+              }
+              renderPelaksanaanBelumPagination(data.pagination || null);
+            })
+            .catch(function (err) {
+              if (loadingEl) loadingEl.classList.add('hidden');
+              if (wrap) wrap.classList.add('hidden');
+              renderPelaksanaanBelumPagination(null);
+              if (errEl) {
+                errEl.textContent = err.message || 'Gagal memuat data.';
+                errEl.classList.remove('hidden');
+              }
+            });
+        }
+        var PELAKSANAAN_TAB_BASE =
+          'peer-pelaksanaan-tab rounded-xl border px-4 py-4 text-center shadow-sm transition-all outline-none w-full ';
+        function syncPelaksanaanTabUi(active) {
+          var btnS = document.getElementById('peer-pelaksanaan-tab-selesai');
+          var btnB = document.getElementById('peer-pelaksanaan-tab-belum');
+          var panS = document.getElementById('peer-pelaksanaan-panel-selesai');
+          var panB = document.getElementById('peer-pelaksanaan-panel-belum');
+          var onS = active === 'selesai';
+          if (btnS) {
+            btnS.setAttribute('aria-selected', onS ? 'true' : 'false');
+            btnS.tabIndex = onS ? 0 : -1;
+            btnS.className = onS
+              ? PELAKSANAAN_TAB_BASE +
+                'ring-2 ring-emerald-400/50 border-emerald-300 bg-emerald-50/90 focus-visible:ring-2 focus-visible:ring-emerald-500/40'
+              : PELAKSANAAN_TAB_BASE +
+                'border-emerald-200/60 bg-white hover:bg-emerald-50/50 focus-visible:ring-2 focus-visible:ring-emerald-500/30';
+          }
+          if (btnB) {
+            btnB.setAttribute('aria-selected', onS ? 'false' : 'true');
+            btnB.tabIndex = onS ? -1 : 0;
+            btnB.className = !onS
+              ? PELAKSANAAN_TAB_BASE +
+                'ring-2 ring-amber-400/50 border-amber-300 bg-amber-50/90 focus-visible:ring-2 focus-visible:ring-amber-500/40'
+              : PELAKSANAAN_TAB_BASE +
+                'border-amber-200/60 bg-white hover:bg-amber-50/50 focus-visible:ring-2 focus-visible:ring-amber-500/30';
+          }
+          if (panS) {
+            if (onS) {
+              panS.classList.remove('hidden');
+              panS.removeAttribute('hidden');
+            } else {
+              panS.classList.add('hidden');
+              panS.setAttribute('hidden', '');
+            }
+          }
+          if (panB) {
+            if (!onS) {
+              panB.classList.remove('hidden');
+              panB.removeAttribute('hidden');
+            } else {
+              panB.classList.add('hidden');
+              panB.setAttribute('hidden', '');
+            }
+          }
+        }
+        function setPelaksanaanTab(tab) {
+          if (tab !== 'selesai' && tab !== 'belum') return;
+          if (tab === pelaksanaanActiveTab) return;
+          pelaksanaanActiveTab = tab;
+          syncPelaksanaanTabUi(tab);
+          if (tab === 'selesai') {
+            loadPelaksanaanSelesai(1);
+          } else {
+            loadPelaksanaanBelum(1);
+          }
         }
         function evalStatusDotClass(st) {
           if (st === 'critical') return 'bg-red-500';
@@ -2701,9 +3685,12 @@
         var devBackdrop = devModal ? devModal.querySelector('.peer-deviation-category-backdrop') : null;
         function openDeviationModal() {
           if (!devModal) return;
+          deviationActiveType = 'berecord';
+          syncDeviationTabUi('berecord');
           devModal.classList.remove('hidden');
           devModal.setAttribute('aria-hidden', 'false');
           if (devCard) devCard.setAttribute('aria-expanded', 'true');
+          loadDeviationDetail(1);
         }
         function closeDeviationModal() {
           if (!devModal) return;
@@ -2714,6 +3701,95 @@
         if (devCard) devCard.addEventListener('click', openDeviationModal);
         if (devClose) devClose.addEventListener('click', closeDeviationModal);
         if (devBackdrop) devBackdrop.addEventListener('click', closeDeviationModal);
+        if (devModal) {
+          devModal.addEventListener('click', function (e) {
+            var tabBtn = e.target.closest('.peer-deviation-tab');
+            if (tabBtn && devModal.contains(tabBtn)) {
+              var t = tabBtn.getAttribute('data-deviation-tab');
+              if (t && t !== deviationActiveType) {
+                setDeviationTab(t);
+              }
+              return;
+            }
+            var pg = e.target.closest('.js-peer-deviation-page');
+            if (pg && devModal.contains(pg)) {
+              if (pg.disabled) return;
+              e.preventDefault();
+              var pn = parseInt(pg.getAttribute('data-page'), 10);
+              if (!isNaN(pn) && pn >= 1) loadDeviationDetail(pn);
+              return;
+            }
+            var row = e.target.closest('tr.js-peer-deviation-kejadian-row');
+            if (row && devModal.contains(row)) {
+              if (e.target.closest('a[href]')) return;
+              var kid = row.getAttribute('data-kejadian-id');
+              if (kid && typeof window.peerPressureOpenKejadianDetail === 'function') {
+                closeDeviationModal();
+                window.peerPressureOpenKejadianDetail(kid);
+              }
+            }
+          });
+        }
+        var pelaksanaanModal = document.getElementById('peer-pelaksanaan-detail-modal');
+        var pelaksanaanCard = document.getElementById('peer-kpi-pelaksanaan-card');
+        var pelaksanaanClose = document.getElementById('peer-pelaksanaan-detail-close');
+        var pelaksanaanBackdrop = pelaksanaanModal ? pelaksanaanModal.querySelector('.peer-pelaksanaan-detail-backdrop') : null;
+        function openPelaksanaanModal() {
+          if (!pelaksanaanModal) return;
+          pelaksanaanActiveTab = 'selesai';
+          syncPelaksanaanTabUi('selesai');
+          pelaksanaanModal.classList.remove('hidden');
+          pelaksanaanModal.setAttribute('aria-hidden', 'false');
+          if (pelaksanaanCard) pelaksanaanCard.setAttribute('aria-expanded', 'true');
+          loadPelaksanaanSelesai(1);
+        }
+        function closePelaksanaanModal() {
+          if (!pelaksanaanModal) return;
+          pelaksanaanModal.classList.add('hidden');
+          pelaksanaanModal.setAttribute('aria-hidden', 'true');
+          if (pelaksanaanCard) pelaksanaanCard.setAttribute('aria-expanded', 'false');
+        }
+        if (pelaksanaanCard) pelaksanaanCard.addEventListener('click', openPelaksanaanModal);
+        if (pelaksanaanClose) pelaksanaanClose.addEventListener('click', closePelaksanaanModal);
+        if (pelaksanaanBackdrop) pelaksanaanBackdrop.addEventListener('click', closePelaksanaanModal);
+        if (pelaksanaanModal) {
+          pelaksanaanModal.addEventListener('click', function (e) {
+            var tabBtn = e.target.closest('.peer-pelaksanaan-tab');
+            if (tabBtn && pelaksanaanModal.contains(tabBtn)) {
+              var t = tabBtn.getAttribute('data-pelaksanaan-tab');
+              if (t === 'selesai' || t === 'belum') {
+                setPelaksanaanTab(t);
+              }
+              return;
+            }
+            var pg = e.target.closest('.js-peer-pelaksanaan-page');
+            if (pg) {
+              if (pg.disabled) return;
+              e.preventDefault();
+              var pn = parseInt(pg.getAttribute('data-page'), 10);
+              if (!isNaN(pn) && pn >= 1) loadPelaksanaanSelesai(pn);
+              return;
+            }
+            var pgB = e.target.closest('.js-peer-pelaksanaan-belum-page');
+            if (pgB) {
+              if (pgB.disabled) return;
+              e.preventDefault();
+              var pnB = parseInt(pgB.getAttribute('data-page'), 10);
+              if (!isNaN(pnB) && pnB >= 1) loadPelaksanaanBelum(pnB);
+              return;
+            }
+            var row = e.target.closest('tr.js-peer-pelaksanaan-row');
+            var rowB = e.target.closest('tr.js-peer-pelaksanaan-belum-row');
+            var hit = row || rowB;
+            if (!hit) return;
+            if (e.target.closest('a[href]')) return;
+            var kid = hit.getAttribute('data-kejadian-id');
+            if (kid && typeof window.peerPressureOpenKejadianDetail === 'function') {
+              closePelaksanaanModal();
+              window.peerPressureOpenKejadianDetail(kid);
+            }
+          });
+        }
         var complianceModal = document.getElementById('peer-compliance-detail-modal');
         var complianceCard = document.getElementById('peer-kpi-compliance-card');
         var complianceClose = document.getElementById('peer-compliance-detail-close');
@@ -3139,6 +4215,10 @@
                 if (wt.kpi) renderKpi(wt.kpi, wt.period_scope);
                 if (wt.evaluation_summary) renderEvaluationSummary(wt.evaluation_summary);
                 if (wt.insight_cards) renderInsightCards(wt.insight_cards);
+                if (wt.deviation_modal_breakdown) fillDeviationModalBreakdownCards(wt.deviation_modal_breakdown);
+                if (devModal && !devModal.classList.contains('hidden')) {
+                  loadDeviationDetail(1);
+                }
                 updateFormHiddenAndUrl();
                 loadPeerHighlightIssueRecommendation();
               })
@@ -3155,6 +4235,10 @@
         }
         document.addEventListener('keydown', function (e) {
           if (e.key !== 'Escape') return;
+          if (pelaksanaanModal && !pelaksanaanModal.classList.contains('hidden')) {
+            closePelaksanaanModal();
+            return;
+          }
           if (complianceModal && !complianceModal.classList.contains('hidden')) {
             closeComplianceModal();
             return;

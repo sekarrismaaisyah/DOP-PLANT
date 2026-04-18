@@ -13,6 +13,149 @@ use Throwable;
  */
 final class PeerPressureBerecordNitipService
 {
+    /** Kolom SELECT untuk tabel baca-saja (urutan tampilan). */
+    private const VIEW_COLUMNS = [
+        'id',
+        'nama',
+        'BeRecord',
+        'kode_sid',
+        'diskripsi',
+        'perusahaan',
+        'j_strutural',
+        'work_permit',
+        'golden_rules',
+        'j_fungsional',
+        'pic_approval',
+        'status_permit',
+        'tipe_berecord',
+        'pic_verifikasi',
+        'alamat_province',
+        'status_berecord',
+        'kategori_berecord',
+        'end_date_be_record',
+        'id_status_karyawan',
+        'kategori_kecelakaan',
+        'start_date_be_record',
+        'status_proses_berecord',
+    ];
+
+    /**
+     * Daftar kolom untuk header Blade (label singkat opsional).
+     *
+     * @return array<string, string> key = nama kolom CH, value = label UI
+     */
+    public static function columnLabels(): array
+    {
+        return [
+            'id' => 'id',
+            'nama' => 'nama',
+            'BeRecord' => 'BeRecord',
+            'kode_sid' => 'kode_sid',
+            'diskripsi' => 'diskripsi',
+            'perusahaan' => 'perusahaan',
+            'j_strutural' => 'j_strutural',
+            'work_permit' => 'work_permit',
+            'golden_rules' => 'golden_rules',
+            'j_fungsional' => 'j_fungsional',
+            'pic_approval' => 'pic_approval',
+            'status_permit' => 'status_permit',
+            'tipe_berecord' => 'tipe_berecord',
+            'pic_verifikasi' => 'pic_verifikasi',
+            'alamat_province' => 'alamat_province',
+            'status_berecord' => 'status_berecord',
+            'kategori_berecord' => 'kategori_berecord',
+            'end_date_be_record' => 'end_date_be_record',
+            'id_status_karyawan' => 'id_status_karyawan',
+            'kategori_kecelakaan' => 'kategori_kecelakaan',
+            'start_date_be_record' => 'start_date_be_record',
+            'status_proses_berecord' => 'status_proses_berecord',
+        ];
+    }
+
+    /**
+     * Paginasi baris dari bep_vw_berecord (pencarian substring pada beberapa kolom teks).
+     *
+     * @return array{rows: list<array<string, string|null>>, total: int, connected: bool}
+     */
+    public function paginateView(int $page, int $perPage, string $q): array
+    {
+        $ch = new ClickHouseService('clickhouse_nitip');
+        if (! $ch->isConnected()) {
+            return ['rows' => [], 'total' => 0, 'connected' => false];
+        }
+
+        $page = max(1, $page);
+        $perPage = min(max(1, $perPage), 100);
+        $offset = ($page - 1) * $perPage;
+
+        $selectList = $this->buildSelectListSql();
+        $whereSql = '';
+        $params = [];
+        $qTrim = trim($q);
+        if ($qTrim !== '') {
+            $whereSql = 'WHERE ' . $this->buildSearchPredicate();
+            $params[] = $qTrim;
+        }
+
+        try {
+            $countSql = 'SELECT count() AS c FROM bep_vw_berecord ' . $whereSql;
+            $countRows = $ch->query($countSql, $params);
+            $total = 0;
+            if (is_array($countRows) && isset($countRows[0]) && is_array($countRows[0])) {
+                $c = $countRows[0]['c'] ?? $countRows[0]['C'] ?? null;
+                $total = is_numeric($c) ? (int) $c : 0;
+            }
+
+            $dataSql = 'SELECT ' . $selectList . ' FROM bep_vw_berecord ' . $whereSql
+                . ' ORDER BY `_airbyte_extracted_at` DESC LIMIT ' . (int) $perPage . ' OFFSET ' . (int) $offset;
+
+            $dataRows = $ch->query($dataSql, $params);
+            $rows = [];
+            if (is_array($dataRows)) {
+                foreach ($dataRows as $row) {
+                    if (is_array($row)) {
+                        $rows[] = $this->normalizeRow($row);
+                    }
+                }
+            }
+
+            return ['rows' => $rows, 'total' => $total, 'connected' => true];
+        } catch (Throwable $e) {
+            Log::warning('PeerPressureBerecordNitipService: paginateView gagal', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return ['rows' => [], 'total' => 0, 'connected' => true, 'error' => $e->getMessage()];
+        }
+    }
+
+    private function buildSelectListSql(): string
+    {
+        $parts = [];
+        foreach (self::VIEW_COLUMNS as $col) {
+            $escaped = '`' . str_replace('`', '', $col) . '`';
+            $parts[] = 'toString(' . $escaped . ') AS ' . $escaped;
+        }
+
+        return implode(', ', $parts);
+    }
+
+    private function buildSearchPredicate(): string
+    {
+        $cols = [
+            'nama', 'kode_sid', 'diskripsi', 'perusahaan', 'work_permit', 'golden_rules',
+            'j_strutural', 'j_fungsional', 'pic_approval', 'status_permit', 'tipe_berecord',
+            'pic_verifikasi', 'alamat_province', 'status_berecord', 'kategori_berecord',
+            'status_proses_berecord', 'kategori_kecelakaan',
+        ];
+        $args = [];
+        foreach ($cols as $c) {
+            $args[] = "toString(ifNull(`{$c}`, ''))";
+        }
+
+        return 'lowerUTF8(toString(concat_ws(\' \', ' . implode(', ', $args) . '))) LIKE concat(\'%\', lowerUTF8(?), \'%\')';
+    }
+
     /**
      * Satu baris terbaru berdasarkan kode_sid (dipetakan ke SID pelanggar di MySQL).
      *

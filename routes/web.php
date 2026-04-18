@@ -40,6 +40,11 @@ use App\Http\Controllers\FuelingEvaluasiController;
 use App\Http\Controllers\AlignmentController;
 use App\Http\Controllers\BecomlineController;
 use App\Http\Controllers\PeerPressureEdukasiController;
+use App\Http\Controllers\PeerPressureEdukasiDataController;
+use App\Http\Controllers\PeerPressureSbsKelompokController;
+use App\Http\Controllers\PeerPressureSpeakUpFatigueController;
+use App\Http\Controllers\PeerPressureValidasiTbcController;
+use App\Http\Controllers\PeerPressureBerecordTableController;
 use App\Http\Controllers\UnitMtdController;
 
 /*
@@ -154,12 +159,54 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/becomline/import/template', [BecomlineController::class, 'downloadTemplate'])->name('becomline.download-template');
 
     // Peer Pressure — kejadian edukasi + import Excel
+    Route::get('/peer-pressure-edukasi/berecord', [PeerPressureBerecordTableController::class, 'index'])->name('peer-pressure-edukasi.berecord.index');
+
+    Route::get('/peer-pressure-edukasi/data', [PeerPressureEdukasiDataController::class, 'index'])->name('peer-pressure-edukasi.data.index');
+    Route::get('/peer-pressure-edukasi/data/create', [PeerPressureEdukasiDataController::class, 'create'])->name('peer-pressure-edukasi.data.create');
+    Route::post('/peer-pressure-edukasi/data', [PeerPressureEdukasiDataController::class, 'store'])->name('peer-pressure-edukasi.data.store');
+    Route::get('/peer-pressure-edukasi/data/{id}/edit', [PeerPressureEdukasiDataController::class, 'edit'])->whereNumber('id')->name('peer-pressure-edukasi.data.edit');
+    Route::put('/peer-pressure-edukasi/data/{id}', [PeerPressureEdukasiDataController::class, 'update'])->whereNumber('id')->name('peer-pressure-edukasi.data.update');
+    Route::delete('/peer-pressure-edukasi/data/{id}', [PeerPressureEdukasiDataController::class, 'destroy'])->whereNumber('id')->name('peer-pressure-edukasi.data.destroy');
+
+    // Peer Pressure — grup SBS (kelompok + anggota)
+    Route::get('/peer-pressure-edukasi/sbs', [PeerPressureSbsKelompokController::class, 'index'])->name('peer-pressure-edukasi.sbs.index');
+    Route::post('/peer-pressure-edukasi/sbs/import', [PeerPressureSbsKelompokController::class, 'import'])->name('peer-pressure-edukasi.sbs.import');
+    Route::get('/peer-pressure-edukasi/sbs/template', [PeerPressureSbsKelompokController::class, 'downloadTemplate'])->name('peer-pressure-edukasi.sbs.template');
+    Route::get('/peer-pressure-edukasi/sbs/create', [PeerPressureSbsKelompokController::class, 'create'])->name('peer-pressure-edukasi.sbs.create');
+    Route::post('/peer-pressure-edukasi/sbs', [PeerPressureSbsKelompokController::class, 'store'])->name('peer-pressure-edukasi.sbs.store');
+    Route::get('/peer-pressure-edukasi/sbs/{id}/edit', [PeerPressureSbsKelompokController::class, 'edit'])->whereNumber('id')->name('peer-pressure-edukasi.sbs.edit');
+    Route::put('/peer-pressure-edukasi/sbs/{id}', [PeerPressureSbsKelompokController::class, 'update'])->whereNumber('id')->name('peer-pressure-edukasi.sbs.update');
+    Route::delete('/peer-pressure-edukasi/sbs/{id}', [PeerPressureSbsKelompokController::class, 'destroy'])->whereNumber('id')->name('peer-pressure-edukasi.sbs.destroy');
+
+    // Peer Pressure — Speak Up Fatigue
+    Route::get('/peer-pressure-edukasi/speak-up-fatigue', [PeerPressureSpeakUpFatigueController::class, 'index'])->name('peer-pressure-edukasi.speak-up-fatigue.index');
+    Route::post('/peer-pressure-edukasi/speak-up-fatigue/import', [PeerPressureSpeakUpFatigueController::class, 'import'])->name('peer-pressure-edukasi.speak-up-fatigue.import');
+    Route::get('/peer-pressure-edukasi/speak-up-fatigue/template', [PeerPressureSpeakUpFatigueController::class, 'downloadTemplate'])->name('peer-pressure-edukasi.speak-up-fatigue.template');
+    Route::get('/peer-pressure-edukasi/speak-up-fatigue/create', [PeerPressureSpeakUpFatigueController::class, 'create'])->name('peer-pressure-edukasi.speak-up-fatigue.create');
+    Route::post('/peer-pressure-edukasi/speak-up-fatigue', [PeerPressureSpeakUpFatigueController::class, 'store'])->name('peer-pressure-edukasi.speak-up-fatigue.store');
+    Route::get('/peer-pressure-edukasi/speak-up-fatigue/{id}/edit', [PeerPressureSpeakUpFatigueController::class, 'edit'])->whereNumber('id')->name('peer-pressure-edukasi.speak-up-fatigue.edit');
+    Route::put('/peer-pressure-edukasi/speak-up-fatigue/{id}', [PeerPressureSpeakUpFatigueController::class, 'update'])->whereNumber('id')->name('peer-pressure-edukasi.speak-up-fatigue.update');
+    Route::delete('/peer-pressure-edukasi/speak-up-fatigue/{id}', [PeerPressureSpeakUpFatigueController::class, 'destroy'])->whereNumber('id')->name('peer-pressure-edukasi.speak-up-fatigue.destroy');
+
+    // Peer Pressure — Validasi TBC
+    Route::get('/peer-pressure-edukasi/validasi-tbc', [PeerPressureValidasiTbcController::class, 'index'])->name('peer-pressure-edukasi.validasi-tbc.index');
+    Route::post('/peer-pressure-edukasi/validasi-tbc/import', [PeerPressureValidasiTbcController::class, 'import'])->name('peer-pressure-edukasi.validasi-tbc.import');
+    Route::get('/peer-pressure-edukasi/validasi-tbc/template', [PeerPressureValidasiTbcController::class, 'downloadTemplate'])->name('peer-pressure-edukasi.validasi-tbc.template');
+    Route::get('/peer-pressure-edukasi/validasi-tbc/create', [PeerPressureValidasiTbcController::class, 'create'])->name('peer-pressure-edukasi.validasi-tbc.create');
+    Route::post('/peer-pressure-edukasi/validasi-tbc', [PeerPressureValidasiTbcController::class, 'store'])->name('peer-pressure-edukasi.validasi-tbc.store');
+    Route::get('/peer-pressure-edukasi/validasi-tbc/{id}/edit', [PeerPressureValidasiTbcController::class, 'edit'])->whereNumber('id')->name('peer-pressure-edukasi.validasi-tbc.edit');
+    Route::put('/peer-pressure-edukasi/validasi-tbc/{id}', [PeerPressureValidasiTbcController::class, 'update'])->whereNumber('id')->name('peer-pressure-edukasi.validasi-tbc.update');
+    Route::delete('/peer-pressure-edukasi/validasi-tbc/{id}', [PeerPressureValidasiTbcController::class, 'destroy'])->whereNumber('id')->name('peer-pressure-edukasi.validasi-tbc.destroy');
+
     Route::get('/peer-pressure-edukasi', [PeerPressureEdukasiController::class, 'index'])->name('peer-pressure-edukasi.index');
     Route::get('/peer-pressure-edukasi/dashboard', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.dashboard');
     Route::get('/peer-pressure-edukasi/dashboard-peer', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.dashboard-peer');
     Route::get('/peer-pressure-edukasi/dashboard/weekly-trend', [PeerPressureEdukasiController::class, 'weeklyTrendData'])->name('peer-pressure-edukasi.dashboard.weekly-trend');
     Route::get('/peer-pressure-edukasi/dashboard/highlight-issue-recommendation', [PeerPressureEdukasiController::class, 'dashboardHighlightIssueRecommendation'])->name('peer-pressure-edukasi.dashboard.highlight-issue-recommendation');
     Route::get('/peer-pressure-edukasi/dashboard/compliance-breakdown', [PeerPressureEdukasiController::class, 'complianceBreakdownData'])->name('peer-pressure-edukasi.dashboard.compliance-breakdown');
+    Route::get('/peer-pressure-edukasi/dashboard/pelaksanaan-selesai', [PeerPressureEdukasiController::class, 'pelaksanaanSelesaiData'])->name('peer-pressure-edukasi.dashboard.pelaksanaan-selesai');
+    Route::get('/peer-pressure-edukasi/dashboard/pelaksanaan-belum', [PeerPressureEdukasiController::class, 'pelaksanaanBelumData'])->name('peer-pressure-edukasi.dashboard.pelaksanaan-belum');
+    Route::get('/peer-pressure-edukasi/dashboard/deviation-modal-detail', [PeerPressureEdukasiController::class, 'deviationModalDetailData'])->name('peer-pressure-edukasi.dashboard.deviation-modal-detail');
     Route::get('/peer-pressure-edukasi/dashboard/tbc-high-risk-cards', [PeerPressureEdukasiController::class, 'tbcHighRiskCards'])->name('peer-pressure-edukasi.dashboard.tbc-high-risk-cards');
     Route::get('/peer-pressure-edukasi/dashboard/tbc-aaj-car/search', [PeerPressureEdukasiController::class, 'tbcAajCarSearch'])->name('peer-pressure-edukasi.dashboard.tbc-aaj-car.search');
     Route::get('/peer-pressure-edukasi/dashboard/tbc-aaj-car', [PeerPressureEdukasiController::class, 'tbcAajCarShow'])->name('peer-pressure-edukasi.dashboard.tbc-aaj-car');

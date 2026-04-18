@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Actions\PeerPressure\GeneratePeerPressureDashboardHighlightIssueRecommendationAction;
+use App\Actions\PeerPressure\GetPeerPressureDeviationModalBreakdownAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardEvaluationSummaryAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardInsightCardsAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardKpiStatsAction;
@@ -14,6 +15,9 @@ use App\Actions\PeerPressure\GetPeerPressureKejadianDetailForDashboardAction;
 use App\Actions\PeerPressure\GetPeerPressurePelanggarProfilingDetailAction;
 use App\Actions\PeerPressure\GetPeerPressureTbcHighRiskCardsAction;
 use App\Actions\PeerPressure\ListPeerPressureDashboardKejadianAction;
+use App\Actions\PeerPressure\ListPeerPressureDeviationModalDetailAction;
+use App\Actions\PeerPressure\ListPeerPressurePelaksanaanBelumKejadianAction;
+use App\Actions\PeerPressure\ListPeerPressurePelaksanaanSelesaiKejadianAction;
 use App\Models\PeerPressureKejadianEdukasi;
 use App\Services\PeerPressure\PeerPressureKaryawanNitipService;
 use App\Services\PeerPressure\PeerPressureResourcesDataAiSummaryService;
@@ -102,6 +106,7 @@ class PeerPressureEdukasiController extends Controller
         GetPeerPressureDashboardWeeklyTrendAction $weeklyTrend,
         GetPeerPressureDashboardEvaluationSummaryAction $evaluationSummary,
         GetPeerPressureDashboardInsightCardsAction $insightCards,
+        GetPeerPressureDeviationModalBreakdownAction $deviationModalBreakdown,
         PeerPressureResourcesDataAiSummaryService $resourcesDataAiSummary,
         SitePerformanceBriefAnalysisService $sitePerformanceBriefAnalysis
     ): View {
@@ -214,7 +219,13 @@ class PeerPressureEdukasiController extends Controller
             ? 'peer-pressure-edukasi.dashboard'
             : 'peer-pressure-edukasi.dashboard-peer';
 
+        $deviationModalBreakdownData = $deviationModalBreakdown(
+            $chartPeriodMonth ? $chartYear : null,
+            $chartPeriodMonth ? $chartMonth : null
+        );
+
         return view($dashboardView, [
+            'navActive' => 'overview',
             'kejadian' => $kejadian,
             'peerFotoUrls' => $peerFotoUrls,
             'q' => $q,
@@ -233,6 +244,7 @@ class PeerPressureEdukasiController extends Controller
                 $chartPeriodMonth ? $chartYear : null,
                 $chartPeriodMonth ? $chartMonth : null
             ),
+            'deviationModalBreakdown' => $deviationModalBreakdownData,
             'peerHazardReportingBySite' => $peerHazardReportingBySite,
             'hazardSite' => $hazardSite,
             'peerHrEvalFromJson' => $peerHrEvalFromJson,
@@ -414,7 +426,8 @@ class PeerPressureEdukasiController extends Controller
         GetPeerPressureDashboardWeeklyTrendAction $weeklyTrend,
         GetPeerPressureDashboardKpiStatsAction $dashboardKpiStats,
         GetPeerPressureDashboardEvaluationSummaryAction $evaluationSummary,
-        GetPeerPressureDashboardInsightCardsAction $insightCards
+        GetPeerPressureDashboardInsightCardsAction $insightCards,
+        GetPeerPressureDeviationModalBreakdownAction $deviationModalBreakdown
     ): JsonResponse {
         $chartPeriodMonth = $request->filled('year') && $request->filled('month');
 
@@ -430,6 +443,7 @@ class PeerPressureEdukasiController extends Controller
                     'kpi' => $dashboardKpiStats($chartYear, $chartMonth),
                     'evaluation_summary' => $evaluationSummary($chartYear, $chartMonth),
                     'insight_cards' => $insightCards($chartYear, $chartMonth),
+                    'deviation_modal_breakdown' => $deviationModalBreakdown($chartYear, $chartMonth),
                 ]
             ));
         }
@@ -440,6 +454,7 @@ class PeerPressureEdukasiController extends Controller
                 'kpi' => $dashboardKpiStats(),
                 'evaluation_summary' => $evaluationSummary(),
                 'insight_cards' => $insightCards(),
+                'deviation_modal_breakdown' => $deviationModalBreakdown(),
             ]
         ));
     }
@@ -487,6 +502,83 @@ class PeerPressureEdukasiController extends Controller
         }
 
         return response()->json($breakdown(null, null, $page, $perPage));
+    }
+
+    /**
+     * Tabel kejadian pelaksanaan selesai (CLOSED/SELESAI) untuk modal dashboard Peer Pressure.
+     */
+    public function pelaksanaanSelesaiData(
+        Request $request,
+        ListPeerPressurePelaksanaanSelesaiKejadianAction $action
+    ): JsonResponse {
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = min(50, max(5, (int) $request->query('per_page', 10)));
+
+        $chartPeriodMonth = $request->filled('year') && $request->filled('month');
+
+        if ($chartPeriodMonth) {
+            $chartYear = (int) $request->get('year');
+            $chartMonth = (int) $request->get('month');
+            $chartYear = max(GetPeerPressureDashboardWeeklyTrendAction::MIN_YEAR, min(GetPeerPressureDashboardWeeklyTrendAction::MAX_YEAR, $chartYear));
+            $chartMonth = max(1, min(12, $chartMonth));
+
+            return response()->json($action($chartYear, $chartMonth, $page, $perPage));
+        }
+
+        return response()->json($action(null, null, $page, $perPage));
+    }
+
+    /**
+     * Detail terpaginasi per tab pada modal statistik deviasi (BeRecord / Validasi blindspot / Speak Up Fatigue).
+     */
+    public function deviationModalDetailData(
+        Request $request,
+        ListPeerPressureDeviationModalDetailAction $action
+    ): JsonResponse {
+        $type = (string) $request->query('type', ListPeerPressureDeviationModalDetailAction::TYPE_BERECORD);
+        if (! in_array($type, ListPeerPressureDeviationModalDetailAction::allowedTypes(), true)) {
+            return response()->json(['message' => 'Parameter type tidak valid.'], 422);
+        }
+
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = min(50, max(5, (int) $request->query('per_page', 10)));
+
+        $chartPeriodMonth = $request->filled('year') && $request->filled('month');
+
+        if ($chartPeriodMonth) {
+            $chartYear = (int) $request->get('year');
+            $chartMonth = (int) $request->get('month');
+            $chartYear = max(GetPeerPressureDashboardWeeklyTrendAction::MIN_YEAR, min(GetPeerPressureDashboardWeeklyTrendAction::MAX_YEAR, $chartYear));
+            $chartMonth = max(1, min(12, $chartMonth));
+
+            return response()->json($action($type, $chartYear, $chartMonth, $page, $perPage));
+        }
+
+        return response()->json($action($type, null, null, $page, $perPage));
+    }
+
+    /**
+     * Tabel kejadian pelaksanaan belum selesai (bukan CLOSED/SELESAI) untuk modal dashboard Peer Pressure.
+     */
+    public function pelaksanaanBelumData(
+        Request $request,
+        ListPeerPressurePelaksanaanBelumKejadianAction $action
+    ): JsonResponse {
+        $page = max(1, (int) $request->query('page', 1));
+        $perPage = min(50, max(5, (int) $request->query('per_page', 10)));
+
+        $chartPeriodMonth = $request->filled('year') && $request->filled('month');
+
+        if ($chartPeriodMonth) {
+            $chartYear = (int) $request->get('year');
+            $chartMonth = (int) $request->get('month');
+            $chartYear = max(GetPeerPressureDashboardWeeklyTrendAction::MIN_YEAR, min(GetPeerPressureDashboardWeeklyTrendAction::MAX_YEAR, $chartYear));
+            $chartMonth = max(1, min(12, $chartMonth));
+
+            return response()->json($action($chartYear, $chartMonth, $page, $perPage));
+        }
+
+        return response()->json($action(null, null, $page, $perPage));
     }
 
     /**
