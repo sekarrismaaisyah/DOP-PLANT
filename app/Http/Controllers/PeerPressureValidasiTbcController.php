@@ -12,6 +12,7 @@ use App\Services\PeerPressure\ValidasiTbcImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
@@ -163,12 +164,14 @@ class PeerPressureValidasiTbcController extends Controller
         ]);
     }
 
-    public function import(Request $request): RedirectResponse
+    public function import(Request $request, ValidasiTbcImportService $importService): RedirectResponse
     {
         $validator = Validator::make($request->all(), [
             'excel_file' => ['required', 'file', 'mimes:xlsx,xls', 'max:51200'],
         ], [
             'excel_file.required' => 'File Excel wajib diunggah.',
+            'excel_file.file' => 'File tidak terkirim dengan benar. Pastikan ukuran maks. 50 MB, format .xlsx/.xls, serta batas PHP upload_max_filesize dan post_max_size (setelah mengubah php.ini, restart Apache/nginx).',
+            'excel_file.uploaded' => 'Unggah gagal (sering karena file terlalu besar melebihi batas server). Perkecil file atau naikkan upload_max_filesize dan post_max_size di php.ini.',
             'excel_file.mimes' => 'File harus berformat .xlsx atau .xls.',
             'excel_file.max' => 'Ukuran file maksimal 50 MB.',
         ]);
@@ -193,6 +196,17 @@ class PeerPressureValidasiTbcController extends Controller
                 return redirect()
                     ->route('peer-pressure-edukasi.validasi-tbc.index', ['modal' => 'import'])
                     ->with('notify_error', 'Gagal menyimpan file sementara.');
+            }
+
+            $fullPath = storage_path('app/' . $relativePath);
+            try {
+                $importService->validateHeaderOnly($fullPath);
+            } catch (\InvalidArgumentException $e) {
+                Storage::disk('local')->delete($relativePath);
+
+                return redirect()
+                    ->route('peer-pressure-edukasi.validasi-tbc.index', ['modal' => 'import'])
+                    ->with('notify_error', $e->getMessage());
             }
 
             $log = ValidasiTbcImportLog::query()->create([

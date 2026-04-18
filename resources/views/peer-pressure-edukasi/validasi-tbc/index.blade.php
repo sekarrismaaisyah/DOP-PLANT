@@ -255,8 +255,10 @@ document.addEventListener('DOMContentLoaded', function () {
   @if (session('notify_error'))
   Swal.fire({
     icon: 'error',
-    title: 'Gagal',
+    title: 'Import tidak bisa dilanjutkan',
     text: @json(session('notify_error')),
+    width: '560px',
+    confirmButtonText: 'Mengerti',
     confirmButtonColor: '#3952bc'
   });
   @endif

@@ -5,7 +5,9 @@ declare(strict_types=1);
 namespace App\Services\PeerPressure;
 
 use Illuminate\Support\Facades\DB;
+use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
 use PhpOffice\PhpSpreadsheet\IOFactory;
+use PhpOffice\PhpSpreadsheet\Reader\IReadFilter;
 use Throwable;
 
 /**
@@ -34,6 +36,37 @@ final class ValidasiTbcImportService
     ];
 
     private const BATCH_INSERT_SIZE = 250;
+
+    /**
+     * Hanya memvalidasi baris pertama (header) — hemat memori untuk file besar.
+     *
+     * @throws \InvalidArgumentException header tidak sama dengan template
+     */
+    public function validateHeaderOnly(string $absolutePath): void
+    {
+        if (! is_readable($absolutePath)) {
+            throw new \InvalidArgumentException('File tidak dapat dibaca.');
+        }
+
+        $reader = IOFactory::createReaderForFile($absolutePath);
+        $reader->setReadDataOnly(true);
+        $reader->setReadFilter(new class implements IReadFilter {
+            public function readCell(string $columnAddress, int $row, string $worksheetName = ''): bool
+            {
+                return $row === 1;
+            }
+        });
+
+        $spreadsheet = $reader->load($absolutePath);
+        try {
+            $rows = $spreadsheet->getActiveSheet()->toArray();
+            $header = $rows[0] ?? [];
+            $this->assertHeaderMatches($header, self::HEADER_IMPORT, 'baris 1 sheet pertama');
+        } finally {
+            $spreadsheet->disconnectWorksheets();
+            unset($spreadsheet);
+        }
+    }
 
     /**
      * Membaca file .xlsx/.xls dari path absolut dan menyisipkan baris ke DB (batch).
@@ -157,8 +190,13 @@ final class ValidasiTbcImportService
         foreach ($expected as $i => $label) {
             $actual = isset($row[$i]) ? trim((string) $row[$i]) : '';
             if ($actual !== $label) {
+                $colLetter = Coordinate::stringFromColumnIndex($i + 1);
+                $actualDisplay = $actual === '' ? '(kosong)' : $actual;
                 throw new \InvalidArgumentException(
-                    'Template tidak sesuai (' . $context . '): kolom ' . ($i + 1) . ' harus "' . $label . '" (terbaca: "' . ($actual === '' ? '(kosong)' : $actual) . '"). Unduh template resmi.'
+                    'Format Excel tidak sesuai template — ' . $context . '. ' .
+                    'Kolom ' . $colLetter . ' (urutan ke-' . ($i + 1) . ') wajib berisi teks persis: "' . $label . '". ' .
+                    'Nilai di file Anda: "' . $actualDisplay . '". ' .
+                    'Jangan mengubah teks header baris pertama; gunakan tombol Unduh template lalu isi data mulai baris ke-2.'
                 );
             }
         }
