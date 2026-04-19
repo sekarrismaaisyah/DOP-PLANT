@@ -145,27 +145,18 @@
             </div>
          </div>
       </header>
-      <!-- Slide-over kanan: Tools Analisis (isi = halaman tools-analisis.blade.php via iframe) -->
+      <!-- Tools Analisis: tertutup = panel hilang sepenuhnya; hanya strip panah di tepi kanan -->
       <div
-         id="peer-tools-sidebar-shell"
-         class="fixed top-16 right-0 z-[38] flex h-[calc(100vh-4rem)] w-[min(452px,100vw)] max-w-full translate-x-[calc(100%-2.25rem)] transform transition-transform duration-300 ease-out"
-         data-peer-tools-sidebar="collapsed"
-         role="complementary"
-         aria-label="Tools analisis"
+         class="pointer-events-none fixed top-16 bottom-0 right-0 z-[38] w-0 overflow-visible"
+         aria-hidden="false"
       >
-         <div class="flex w-9 shrink-0 flex-col justify-center rounded-l-xl border border-r-0 border-outline-variant/30 bg-white shadow-lg">
-            <button
-               type="button"
-               id="peer-tools-sidebar-toggle"
-               class="flex min-h-[5rem] w-full items-center justify-center text-primary transition-colors hover:bg-[#f1f5f9]"
-               aria-expanded="false"
-               aria-controls="peer-tools-sidebar-panel"
-               title="Buka atau tutup panel Tools Analisis"
-            >
-               <span class="material-symbols-outlined text-2xl peer-tools-sidebar-chevron" data-icon="chevron_left">chevron_left</span>
-            </button>
-         </div>
-         <div id="peer-tools-sidebar-panel" class="flex min-w-0 flex-1 flex-col overflow-hidden border-l border-outline-variant/25 bg-white shadow-2xl">
+         <aside
+            id="peer-tools-sidebar-panel"
+            class="pointer-events-auto absolute top-0 right-11 bottom-0 flex w-[min(800px,calc(100vw-3rem))] max-w-[min(800px,calc(100vw-3rem))] translate-x-full flex-col overflow-hidden border-l border-outline-variant/25 bg-white shadow-2xl transition-transform duration-300 ease-out will-change-transform"
+            data-peer-tools-sidebar="collapsed"
+            role="complementary"
+            aria-label="Panel Tools Analisis"
+         >
             <div class="shrink-0 border-b border-outline-variant/20 bg-gradient-to-r from-slate-50 to-white px-4 py-3">
                <p class="font-headline text-sm font-bold text-on-surface">Tools Analisis</p>
                <p class="text-[10px] text-on-surface-variant">Incident Back Analysis (embed)</p>
@@ -177,28 +168,36 @@
                title="Tools analisis insiden"
                loading="lazy"
             ></iframe>
-         </div>
+         </aside>
+         <button
+            type="button"
+            id="peer-tools-sidebar-toggle"
+            class="pointer-events-auto absolute right-0 top-1/2 z-[39] flex h-36 w-11 -translate-y-1/2 flex-col items-center justify-center rounded-l-xl border border-r-0 border-outline-variant/30 bg-white text-primary shadow-lg transition-colors hover:bg-[#f1f5f9]"
+            aria-expanded="false"
+            aria-controls="peer-tools-sidebar-panel"
+            title="Buka atau tutup Tools Analisis"
+         >
+            <span class="material-symbols-outlined text-2xl peer-tools-sidebar-chevron" data-icon="chevron_left">chevron_left</span>
+         </button>
       </div>
       <script>
       (function () {
-        var shell = document.getElementById('peer-tools-sidebar-shell');
+        var panel = document.getElementById('peer-tools-sidebar-panel');
         var btn = document.getElementById('peer-tools-sidebar-toggle');
-        if (!shell || !btn) return;
+        if (!panel || !btn) return;
         var chev = btn.querySelector('.peer-tools-sidebar-chevron');
         function setOpen(open) {
           if (open) {
-            shell.classList.remove('translate-x-[calc(100%-2.25rem)]');
-            shell.classList.add('translate-x-0');
-            shell.setAttribute('data-peer-tools-sidebar', 'open');
+            panel.classList.remove('translate-x-full');
+            panel.setAttribute('data-peer-tools-sidebar', 'open');
             btn.setAttribute('aria-expanded', 'true');
             if (chev) {
               chev.textContent = 'chevron_right';
               chev.setAttribute('data-icon', 'chevron_right');
             }
           } else {
-            shell.classList.add('translate-x-[calc(100%-2.25rem)]');
-            shell.classList.remove('translate-x-0');
-            shell.setAttribute('data-peer-tools-sidebar', 'collapsed');
+            panel.classList.add('translate-x-full');
+            panel.setAttribute('data-peer-tools-sidebar', 'collapsed');
             btn.setAttribute('aria-expanded', 'false');
             if (chev) {
               chev.textContent = 'chevron_left';
@@ -207,7 +206,7 @@
           }
         }
         btn.addEventListener('click', function () {
-          var isOpen = shell.getAttribute('data-peer-tools-sidebar') === 'open';
+          var isOpen = panel.getAttribute('data-peer-tools-sidebar') === 'open';
           setOpen(!isOpen);
         });
       })();
