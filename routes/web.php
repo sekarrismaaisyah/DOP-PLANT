@@ -200,7 +200,12 @@ Route::middleware(['auth'])->group(function () {
 
     Route::get('/peer-pressure-edukasi', [PeerPressureEdukasiController::class, 'index'])->name('peer-pressure-edukasi.index');
     Route::get('/peer-pressure-edukasi/dashboard', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.dashboard');
+    Route::get('/peer-pressure-edukasi/dashboard-performance', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.dashboard-performance');
+    Route::get('/peer-pressure-edukasi/tematic', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.tematic');
     Route::get('/peer-pressure-edukasi/dashboard-peer', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.dashboard-peer');
+    Route::get('/peer-pressure-edukasi/tools-analisis', function () {
+        return view('peer-pressure-edukasi.tools-analisis');
+    })->name('peer-pressure-edukasi.tools-analisis');
     Route::get('/peer-pressure-edukasi/dashboard/weekly-trend', [PeerPressureEdukasiController::class, 'weeklyTrendData'])->name('peer-pressure-edukasi.dashboard.weekly-trend');
     Route::get('/peer-pressure-edukasi/dashboard/gap-matrix', [PeerPressureEdukasiController::class, 'gapMatrixData'])->name('peer-pressure-edukasi.dashboard.gap-matrix');
     Route::get('/peer-pressure-edukasi/dashboard/perusahaan-pelaksanaan-heatmap', [PeerPressureEdukasiController::class, 'perusahaanPelaksanaanHeatmapData'])->name('peer-pressure-edukasi.dashboard.perusahaan-pelaksanaan-heatmap');

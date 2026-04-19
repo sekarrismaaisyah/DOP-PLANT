@@ -67,6 +67,39 @@
         });
         $thematicRows[$idx]['drill_down'] = $drill;
     }
+
+    /** Baris berturut dengan week + tematik sama: kolom Week & Tematik digabung (rowspan). */
+    $thematicRowMergeMeta = [];
+    $nThematic = count($thematicRows);
+    for ($i = 0; $i < $nThematic; $i++) {
+        $w = trim((string) ($thematicRows[$i]['week'] ?? ''));
+        $tm = trim((string) ($thematicRows[$i]['tematik'] ?? ''));
+        if ($i > 0) {
+            $pw = trim((string) ($thematicRows[$i - 1]['week'] ?? ''));
+            $ptm = trim((string) ($thematicRows[$i - 1]['tematik'] ?? ''));
+            if ($w === $pw && $tm === $ptm) {
+                $thematicRowMergeMeta[$i] = [
+                    'show_week_tematik' => false,
+                ];
+
+                continue;
+            }
+        }
+        $span = 1;
+        for ($j = $i + 1; $j < $nThematic; $j++) {
+            $w2 = trim((string) ($thematicRows[$j]['week'] ?? ''));
+            $tm2 = trim((string) ($thematicRows[$j]['tematik'] ?? ''));
+            if ($w2 === $w && $tm2 === $tm) {
+                $span++;
+            } else {
+                break;
+            }
+        }
+        $thematicRowMergeMeta[$i] = [
+            'show_week_tematik' => true,
+            'rowspan' => $span,
+        ];
+    }
 @endphp
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
    <div class="min-w-0 lg:col-span-12">
@@ -96,14 +129,20 @@
                </thead>
                <tbody class="divide-y divide-outline-variant/10">
                   @foreach ($thematicRows as $idx => $row)
+                  @php
+                     $merge = $thematicRowMergeMeta[$idx] ?? ['show_week_tematik' => true, 'rowspan' => 1];
+                     $rs = (int) ($merge['rowspan'] ?? 1);
+                  @endphp
                   <tr
                      class="js-thematic-alignment-row cursor-pointer transition-colors hover:bg-[#f8fafc] focus-within:bg-[#f8fafc]"
                      data-thematic-index="{{ $idx }}"
                      role="button"
                      tabindex="0"
                   >
-                     <td class="whitespace-nowrap px-6 py-4 align-top font-bold text-on-surface lg:px-8">{{ $row['week'] ?? '—' }}</td>
-                     <td class="px-6 py-4 align-top text-xs font-semibold leading-snug text-on-surface lg:px-8">{{ $row['tematik'] ?? '—' }}</td>
+                     @if (! empty($merge['show_week_tematik']))
+                     <td class="whitespace-nowrap px-6 py-4 align-middle text-center font-bold text-on-surface lg:px-8" @if ($rs > 1) rowspan="{{ $rs }}" @endif>{{ ($row['week'] ?? '') !== '' ? $row['week'] : '—' }}</td>
+                     <td class="px-6 py-4 align-middle text-center text-xs font-semibold leading-snug text-on-surface lg:px-8" @if ($rs > 1) rowspan="{{ $rs }}" @endif>{{ ($row['tematik'] ?? '') !== '' ? $row['tematik'] : '—' }}</td>
+                     @endif
                      <td class="px-6 py-4 align-top text-xs leading-relaxed text-on-surface lg:px-8">{{ $row['recommendation'] ?? '—' }}</td>
                      <td class="px-6 py-4 align-top text-xs text-on-surface-variant lg:px-8">{{ $row['program_related'] ?? '—' }}</td>
                      <td class="px-6 py-4 align-top text-xs font-medium text-on-surface lg:px-8">{{ $row['indikator'] ?? '—' }}</td>

@@ -217,9 +217,12 @@ class PeerPressureEdukasiController extends Controller
             ? $this->peerMetricEvalFromJson($peerAreaKritisBySite, $hazardSite, '#dc2626', 0)
             : null;
 
-        $dashboardView = $request->routeIs('peer-pressure-edukasi.dashboard')
-            ? 'peer-pressure-edukasi.dashboard'
-            : 'peer-pressure-edukasi.dashboard-peer';
+        $dashboardView = match (true) {
+            $request->routeIs('peer-pressure-edukasi.dashboard') => 'peer-pressure-edukasi.dashboard',
+            $request->routeIs('peer-pressure-edukasi.dashboard-performance') => 'peer-pressure-edukasi.DashPerformance',
+            $request->routeIs('peer-pressure-edukasi.tematic') => 'peer-pressure-edukasi.tematic',
+            default => 'peer-pressure-edukasi.dashboard-peer',
+        };
 
         $deviationModalBreakdownData = $deviationModalBreakdown(
             $chartPeriodMonth ? $chartYear : null,

@@ -145,73 +145,6 @@
             </div>
          </div>
       </header>
-      <!-- Slide-over kanan: Tools Analisis (isi = halaman tools-analisis.blade.php via iframe) -->
-      <div
-         id="peer-tools-sidebar-shell"
-         class="fixed top-16 right-0 z-[38] flex h-[calc(100vh-4rem)] w-[min(452px,100vw)] max-w-full translate-x-[calc(100%-2.25rem)] transform transition-transform duration-300 ease-out"
-         data-peer-tools-sidebar="collapsed"
-         role="complementary"
-         aria-label="Tools analisis"
-      >
-         <div class="flex w-9 shrink-0 flex-col justify-center rounded-l-xl border border-r-0 border-outline-variant/30 bg-white shadow-lg">
-            <button
-               type="button"
-               id="peer-tools-sidebar-toggle"
-               class="flex min-h-[5rem] w-full items-center justify-center text-primary transition-colors hover:bg-[#f1f5f9]"
-               aria-expanded="false"
-               aria-controls="peer-tools-sidebar-panel"
-               title="Buka atau tutup panel Tools Analisis"
-            >
-               <span class="material-symbols-outlined text-2xl peer-tools-sidebar-chevron" data-icon="chevron_left">chevron_left</span>
-            </button>
-         </div>
-         <div id="peer-tools-sidebar-panel" class="flex min-w-0 flex-1 flex-col overflow-hidden border-l border-outline-variant/25 bg-white shadow-2xl">
-            <div class="shrink-0 border-b border-outline-variant/20 bg-gradient-to-r from-slate-50 to-white px-4 py-3">
-               <p class="font-headline text-sm font-bold text-on-surface">Tools Analisis</p>
-               <p class="text-[10px] text-on-surface-variant">Incident Back Analysis (embed)</p>
-            </div>
-            <iframe
-               id="peer-tools-analisis-iframe"
-               class="min-h-0 w-full flex-1 border-0 bg-slate-50"
-               src="{{ route('peer-pressure-edukasi.tools-analisis') }}"
-               title="Tools analisis insiden"
-               loading="lazy"
-            ></iframe>
-         </div>
-      </div>
-      <script>
-      (function () {
-        var shell = document.getElementById('peer-tools-sidebar-shell');
-        var btn = document.getElementById('peer-tools-sidebar-toggle');
-        if (!shell || !btn) return;
-        var chev = btn.querySelector('.peer-tools-sidebar-chevron');
-        function setOpen(open) {
-          if (open) {
-            shell.classList.remove('translate-x-[calc(100%-2.25rem)]');
-            shell.classList.add('translate-x-0');
-            shell.setAttribute('data-peer-tools-sidebar', 'open');
-            btn.setAttribute('aria-expanded', 'true');
-            if (chev) {
-              chev.textContent = 'chevron_right';
-              chev.setAttribute('data-icon', 'chevron_right');
-            }
-          } else {
-            shell.classList.add('translate-x-[calc(100%-2.25rem)]');
-            shell.classList.remove('translate-x-0');
-            shell.setAttribute('data-peer-tools-sidebar', 'collapsed');
-            btn.setAttribute('aria-expanded', 'false');
-            if (chev) {
-              chev.textContent = 'chevron_left';
-              chev.setAttribute('data-icon', 'chevron_left');
-            }
-          }
-        }
-        btn.addEventListener('click', function () {
-          var isOpen = shell.getAttribute('data-peer-tools-sidebar') === 'open';
-          setOpen(!isOpen);
-        });
-      })();
-      </script>
       <!-- Main Content Area -->
       <main class="flex-grow w-full  mx-auto p-8 space-y-8">
          @php
@@ -304,7 +237,6 @@
 
 
 
-         
          @php
             $tableauEmbeddingApiSrc = 'https://idashboard.beraucoal.co.id/javascripts/api/tableau.embedding.3.latest.min.js';
             $tableauOverviewSafetyVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/OverviewSafetyPerformance_17471016698280/OverviewSafetyPerformanceAllSites2';
@@ -312,36 +244,15 @@
             $tableauBlindspotVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/DashboardTBCAllsiteRev/SlideAligmnentBlindspottoUSE';
             $tableauComplianceGrVizSrc = 'https://idashboard.beraucoal.co.id/t/hsedivision/views/DashboardTBCAllsiteRev/DashboardGR';
          @endphp
-         <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
-            <div class="min-w-0 lg:col-span-12">
-               <div class="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-[0_4px_0px_0px_rgba(0,0,0,0.05),0_12px_24px_-4px_rgba(0,0,0,0.15)]">
-                  <div class="border-b border-outline-variant/20 bg-gradient-to-r from-slate-50 to-white px-5 py-4 sm:px-6">
-                     <h3 class="font-headline text-base font-bold text-on-surface">Overview Safety Performance</h3>
-                     <p class="mt-0.5 text-[11px] text-on-surface-variant">Tableau Embedding API v3 — iDashboard Berau Coal</p>
-                  </div>
-                  <div class="w-full overflow-x-auto bg-slate-50/30 p-2 sm:p-4">
-                     <script type="module" src="{{ $tableauEmbeddingApiSrc }}"></script>
-                     <tableau-viz
-                        id="tableau-viz"
-                        src="{{ $tableauOverviewSafetyVizSrc }}"
-                        width="1654"
-                        height="1209"
-                        hide-tabs
-                        toolbar="bottom"
-                        class="mx-auto block max-w-full"
-                     ></tableau-viz>
-                  </div>
-               </div>
-            </div>
-         </div>
-         
-         @include('peer-pressure-edukasi.partials.peer-dashboard-wizard-nav', ['wizardStep' => 1])
+         {{-- Wajib dimuat sekali: custom element <tableau-viz> di modal (lazy) tidak akan render jika skrip ini hanya ada di dalam komentar HTML. --}}
+         <script type="module" src="{{ $tableauEmbeddingApiSrc }}"></script>
+         {{-- Kartu Overview Safety (Tableau) di halaman ini dinonaktifkan untuk mengurangi beban; aktifkan kembali blok grid + tableau-viz overview jika diperlukan (gunakan $tableauOverviewSafetyVizSrc). --}}
         
 
 
 
 
-<!-- 
+
          @php
             $kpi = $kpi ?? [];
             $kpiTotal = (int) ($kpi['total_cases'] ?? 0);
@@ -717,7 +628,10 @@
             <div class="min-w-0 lg:col-span-9">
                @include('peer-pressure-edukasi.partials.operational-performance-matrix', ['matrixShellClass' => 'w-full min-w-0'])
             </div>
-         </div> -->
+         </div>
+
+         @include('peer-pressure-edukasi.partials.peer-dashboard-wizard-nav', ['wizardStep' => 2])
+
 
 
 
