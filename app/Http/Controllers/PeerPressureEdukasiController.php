@@ -7,6 +7,7 @@ namespace App\Http\Controllers;
 use App\Actions\PeerPressure\GeneratePeerPressureDashboardHighlightIssueRecommendationAction;
 use App\Actions\PeerPressure\GetPeerPressureDeviationModalBreakdownAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardGapMatrixAction;
+use App\Actions\PeerPressure\GetPeerPressurePerusahaanPelaksanaanHeatmapAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardEvaluationSummaryAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardInsightCardsAction;
 use App\Actions\PeerPressure\GetPeerPressureDashboardKpiStatsAction;
@@ -477,6 +478,27 @@ class PeerPressureEdukasiController extends Controller
         }
 
         return response()->json($gapMatrix());
+    }
+
+    /**
+     * Heatmap % pelaksanaan selesai per perusahaan × tanggal temuan (JSON).
+     */
+    public function perusahaanPelaksanaanHeatmapData(
+        Request $request,
+        GetPeerPressurePerusahaanPelaksanaanHeatmapAction $heatmap
+    ): JsonResponse {
+        $chartPeriodMonth = $request->filled('year') && $request->filled('month');
+
+        if ($chartPeriodMonth) {
+            $chartYear = (int) $request->get('year');
+            $chartMonth = (int) $request->get('month');
+            $chartYear = max(GetPeerPressureDashboardWeeklyTrendAction::MIN_YEAR, min(GetPeerPressureDashboardWeeklyTrendAction::MAX_YEAR, $chartYear));
+            $chartMonth = max(1, min(12, $chartMonth));
+
+            return response()->json($heatmap($chartYear, $chartMonth));
+        }
+
+        return response()->json($heatmap());
     }
 
     /**

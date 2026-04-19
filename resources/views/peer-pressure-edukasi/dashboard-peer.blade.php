@@ -1220,6 +1220,25 @@
                   </p>
                </div>
 
+               <div class="mt-5 rounded-xl border border-teal-200/80 bg-teal-50/50 px-4 py-3">
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per perusahaan (heatmap)</p>
+                  <p id="peer-perusahaan-heatmap-period" class="mt-1 text-[11px] leading-snug text-on-surface-variant"></p>
+                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
+                     Persentase kejadian dengan status <span class="font-mono text-[10px] font-semibold">CLOSED</span>/<span class="font-mono text-[10px] font-semibold">SELESAI</span> dibagi total kejadian <span class="font-medium text-on-surface">per tanggal temuan</span> dan <span class="font-medium text-on-surface">per perusahaan</span> (maks. 30 perusahaan terbanyak). Sel kosong = tidak ada kejadian hari itu.
+                  </p>
+                  <p id="peer-perusahaan-heatmap-loading" class="mt-3 hidden text-center text-[12px] text-on-surface-variant" aria-live="polite">
+                     <span class="material-symbols-outlined mb-1 inline-block animate-spin text-teal-700 text-xl" style="animation-duration:1s">progress_activity</span>
+                     <span class="block">Memuat heatmap…</span>
+                  </p>
+                  <p id="peer-perusahaan-heatmap-empty" class="mt-3 hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
+                  <div id="peer-perusahaan-heatmap-wrap" class="mt-3 hidden overflow-x-auto rounded-xl border border-teal-100/90 bg-white shadow-inner">
+                     <table class="w-full min-w-[640px] border-collapse text-center text-[11px] sm:text-xs" id="peer-perusahaan-heatmap-table">
+                        <thead id="peer-perusahaan-heatmap-thead" class="bg-[#f0fdfa] text-[10px] font-bold uppercase tracking-wider text-teal-950"></thead>
+                        <tbody id="peer-perusahaan-heatmap-tbody" class="divide-y divide-outline-variant/10"></tbody>
+                     </table>
+                  </div>
+               </div>
+
                <div id="peer-pelaksanaan-panel-selesai" role="tabpanel" aria-labelledby="peer-pelaksanaan-tab-selesai" class="mt-6 border-t border-outline-variant/15 pt-5">
                   <h3 class="font-headline text-sm font-bold text-on-surface">Kejadian sudah dilaksanakan</h3>
                   <p class="mt-1 text-[11px] text-on-surface-variant">Kategori deviasi dan status pelaksanaan per baris (struktur sama dengan tabel Data Peer Pressure).</p>
@@ -1826,6 +1845,7 @@
       (function () {
         const weeklyTrendUrl = @json(route('peer-pressure-edukasi.dashboard.weekly-trend'));
         const gapMatrixUrl = @json(route('peer-pressure-edukasi.dashboard.gap-matrix'));
+        const perusahaanHeatmapUrl = @json(route('peer-pressure-edukasi.dashboard.perusahaan-pelaksanaan-heatmap'));
         const peerKpiSlaBootstrap = @json($kpi['sla_temuan_ke_pelaksanaan'] ?? null);
         /**
          * Data contoh untuk grafik SLA (struktur sama dengan kpi.sla_temuan_ke_pelaksanaan).
@@ -2106,6 +2126,7 @@
               loadPelaksanaanSelesai(1);
             }
             loadGapMatrixChart();
+            loadPerusahaanHeatmap();
           }
         }
         function syncComplianceModalFromKpi(kpi, periodScope) {
@@ -3004,6 +3025,159 @@
               if (loadingEl) loadingEl.classList.add('hidden');
               if (emptyEl) {
                 emptyEl.textContent = e.message || 'Gagal memuat matriks.';
+                emptyEl.classList.remove('hidden');
+              }
+            });
+        }
+        function peerPerusahaanHeatmapCellClass(pct) {
+          if (pct == null || pct === '' || isNaN(Number(pct))) {
+            return 'bg-slate-50 text-on-surface-variant';
+          }
+          var p = Number(pct);
+          if (p >= 95) return 'bg-emerald-700 text-white font-semibold';
+          if (p >= 85) return 'bg-emerald-600 text-white font-semibold';
+          if (p >= 75) return 'bg-emerald-400 text-emerald-950 font-semibold';
+          if (p >= 65) return 'bg-emerald-200 text-emerald-950';
+          if (p >= 55) return 'bg-amber-100 text-amber-950';
+          if (p >= 45) return 'bg-orange-200 text-orange-950';
+          return 'bg-red-300 text-red-950 font-semibold';
+        }
+        function renderPerusahaanHeatmapFromPayload(data) {
+          var loadingEl = document.getElementById('peer-perusahaan-heatmap-loading');
+          var emptyEl = document.getElementById('peer-perusahaan-heatmap-empty');
+          var wrapEl = document.getElementById('peer-perusahaan-heatmap-wrap');
+          var periodEl = document.getElementById('peer-perusahaan-heatmap-period');
+          var thead = document.getElementById('peer-perusahaan-heatmap-thead');
+          var tbody = document.getElementById('peer-perusahaan-heatmap-tbody');
+          if (loadingEl) loadingEl.classList.add('hidden');
+          if (!thead || !tbody || !wrapEl || !emptyEl) return;
+          thead.innerHTML = '';
+          tbody.innerHTML = '';
+          if (periodEl && data && data.period_label) {
+            periodEl.textContent = 'Periode: ' + String(data.period_label);
+          }
+          var days = data && Array.isArray(data.days) ? data.days : [];
+          var companies = data && Array.isArray(data.companies) ? data.companies : [];
+          var cells = data && data.cells && typeof data.cells === 'object' ? data.cells : {};
+          var grandRow = data && data.grand_row && typeof data.grand_row === 'object' ? data.grand_row : {};
+          if (!companies.length || !days.length) {
+            emptyEl.textContent =
+              'Belum ada data perusahaan untuk heatmap pada rentang ini.';
+            emptyEl.classList.remove('hidden');
+            wrapEl.classList.add('hidden');
+            return;
+          }
+          emptyEl.classList.add('hidden');
+          wrapEl.classList.remove('hidden');
+          var trh = document.createElement('tr');
+          var th0 = document.createElement('th');
+          th0.className =
+            'sticky left-0 z-10 min-w-[10rem] border border-teal-100 bg-[#ecfdf5] px-2 py-2 text-left text-[10px] font-bold uppercase text-teal-950 sm:min-w-[12rem]';
+          th0.textContent = 'Nama perusahaan / tim';
+          trh.appendChild(th0);
+          days.forEach(function (d) {
+            var th = document.createElement('th');
+            th.className = 'min-w-[3rem] border border-teal-100 px-1 py-2 text-[9px] font-bold text-teal-900 sm:min-w-[3.25rem]';
+            th.textContent = d.label != null ? String(d.label) : '';
+            th.setAttribute('title', d.key != null ? String(d.key) : '');
+            trh.appendChild(th);
+          });
+          var thG = document.createElement('th');
+          thG.className =
+            'min-w-[4rem] border border-teal-100 bg-teal-100/80 px-2 py-2 text-[9px] font-bold text-teal-950';
+          thG.textContent = 'Grand %';
+          thG.setAttribute('title', 'Rata-rata tertimbang seluruh hari (total selesai ÷ total kejadian)');
+          trh.appendChild(thG);
+          thead.appendChild(trh);
+          companies.forEach(function (co) {
+            var tr = document.createElement('tr');
+            var tdName = document.createElement('td');
+            tdName.className =
+              'sticky left-0 z-10 border border-outline-variant/10 bg-white px-2 py-1.5 text-left text-[11px] font-medium text-on-surface shadow-[2px_0_0_0_rgba(255,255,255,1)] sm:text-xs';
+            tdName.textContent = co;
+            tr.appendChild(tdName);
+            var rowCells = cells[co] || {};
+            days.forEach(function (d) {
+              var dk = d.key;
+              var cell = rowCells[dk];
+              var td = document.createElement('td');
+              td.className =
+                'border border-outline-variant/10 px-1 py-1.5 tabular-nums ' +
+                peerPerusahaanHeatmapCellClass(cell != null && cell.pct != null ? cell.pct : null);
+              if (cell != null && cell.pct != null) {
+                td.textContent =
+                  Number(cell.pct).toLocaleString('id-ID', {
+                    minimumFractionDigits: 1,
+                    maximumFractionDigits: 1
+                  }) + '%';
+                td.setAttribute(
+                  'title',
+                  (cell.selesai != null ? cell.selesai : '0') +
+                    '/' +
+                    (cell.total != null ? cell.total : '0') +
+                    ' selesai'
+                );
+              } else {
+                td.innerHTML = '&nbsp;';
+              }
+              tr.appendChild(td);
+            });
+            var g = grandRow[co];
+            var tdG = document.createElement('td');
+            tdG.className =
+              'border border-teal-200/80 px-1 py-1.5 tabular-nums font-semibold ' +
+              peerPerusahaanHeatmapCellClass(g != null && g.pct != null ? g.pct : null);
+            if (g != null && g.pct != null) {
+              tdG.textContent =
+                Number(g.pct).toLocaleString('id-ID', {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1
+                }) + '%';
+              tdG.setAttribute(
+                'title',
+                'Agregat: ' +
+                  (g.selesai != null ? g.selesai : '0') +
+                  '/' +
+                  (g.total != null ? g.total : '0') +
+                  ' selesai (seluruh hari)'
+              );
+            } else {
+              tdG.textContent = '—';
+            }
+            tr.appendChild(tdG);
+            tbody.appendChild(tr);
+          });
+        }
+        function loadPerusahaanHeatmap() {
+          var loadingEl = document.getElementById('peer-perusahaan-heatmap-loading');
+          var emptyEl = document.getElementById('peer-perusahaan-heatmap-empty');
+          var wrapEl = document.getElementById('peer-perusahaan-heatmap-wrap');
+          if (loadingEl) loadingEl.classList.remove('hidden');
+          if (emptyEl) {
+            emptyEl.classList.add('hidden');
+            emptyEl.textContent = '';
+          }
+          if (wrapEl) wrapEl.classList.add('hidden');
+          var u = new URL(perusahaanHeatmapUrl, window.location.origin);
+          if (!state.all) {
+            u.searchParams.set('year', String(state.year));
+            u.searchParams.set('month', String(state.month));
+          }
+          fetch(u.toString(), {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error('Gagal memuat heatmap perusahaan');
+              return r.json();
+            })
+            .then(function (data) {
+              renderPerusahaanHeatmapFromPayload(data);
+            })
+            .catch(function (e) {
+              if (loadingEl) loadingEl.classList.add('hidden');
+              if (emptyEl) {
+                emptyEl.textContent = e.message || 'Gagal memuat heatmap.';
                 emptyEl.classList.remove('hidden');
               }
             });
@@ -4261,6 +4435,7 @@
             } catch (e) {}
           }, 150);
           loadGapMatrixChart();
+          loadPerusahaanHeatmap();
         }
         function closePelaksanaanModal() {
           if (!pelaksanaanModal) return;
