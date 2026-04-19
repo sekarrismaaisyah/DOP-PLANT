@@ -1222,19 +1222,25 @@
 
                <div class="mt-5 rounded-xl border border-teal-200/80 bg-teal-50/50 px-4 py-3">
                   <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per perusahaan (ringkasan periode)</p>
-                  <p id="peer-perusahaan-heatmap-period" class="mt-1 text-[11px] leading-snug text-on-surface-variant"></p>
+                  <p id="peer-pp-summary-period" class="mt-1 text-[11px] leading-snug text-on-surface-variant"></p>
                   <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
                      Satu baris per perusahaan (maks. 30 terbanyak volume di periode). <span class="font-medium text-on-surface">Terlaksana</span> = % kejadian <span class="font-mono text-[10px] font-semibold">CLOSED</span>/<span class="font-mono text-[10px] font-semibold">SELESAI</span>; <span class="font-medium text-on-surface">Tidak terlaksana</span> = sisanya — dihitung untuk seluruh rentang periode di atas.
                   </p>
-                  <p id="peer-perusahaan-heatmap-loading" class="mt-3 hidden text-center text-[12px] text-on-surface-variant" aria-live="polite">
+                  <p id="peer-pp-summary-loading" class="mt-3 hidden text-center text-[12px] text-on-surface-variant" aria-live="polite">
                      <span class="material-symbols-outlined mb-1 inline-block animate-spin text-teal-700 text-xl" style="animation-duration:1s">progress_activity</span>
                      <span class="block">Memuat ringkasan…</span>
                   </p>
-                  <p id="peer-perusahaan-heatmap-empty" class="mt-3 hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
-                  <div id="peer-perusahaan-heatmap-wrap" class="mt-3 hidden overflow-x-auto rounded-xl border border-teal-100/90 bg-white shadow-inner">
-                     <table class="w-full min-w-[280px] border-collapse text-center text-[11px] sm:text-xs" id="peer-perusahaan-heatmap-table">
-                        <thead id="peer-perusahaan-heatmap-thead" class="bg-[#f0fdfa] text-[10px] font-bold uppercase tracking-wider text-teal-950"></thead>
-                        <tbody id="peer-perusahaan-heatmap-tbody" class="divide-y divide-outline-variant/10"></tbody>
+                  <p id="peer-pp-summary-empty" class="mt-3 hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
+                  <div id="peer-pp-summary-wrap" class="mt-3 hidden overflow-x-auto rounded-xl border border-teal-100/90 bg-white shadow-inner">
+                     <table class="w-full min-w-[280px] border-collapse text-center text-[11px] sm:text-xs" id="peer-pp-summary-table" data-peer-pp-summary-layout="2-metric-cols">
+                        <thead class="bg-[#f0fdfa] text-[10px] font-bold uppercase tracking-wider text-teal-950">
+                           <tr>
+                              <th class="sticky left-0 z-10 min-w-[10rem] border border-teal-100 bg-[#ecfdf5] px-2 py-2 text-left text-teal-950 sm:min-w-[12rem]">Nama perusahaan / tim</th>
+                              <th class="min-w-[5rem] border border-teal-100 bg-emerald-50/90 px-2 py-2.5 text-teal-900 sm:text-xs" title="% kejadian CLOSED/SELESAI dalam periode">Terlaksana</th>
+                              <th class="min-w-[5rem] border border-teal-100 bg-amber-50/90 px-2 py-2.5 text-teal-900 sm:text-xs" title="% kejadian belum CLOSED/SELESAI dalam periode">Tidak terlaksana</th>
+                           </tr>
+                        </thead>
+                        <tbody id="peer-pp-summary-tbody" class="divide-y divide-outline-variant/10"></tbody>
                      </table>
                   </div>
                </div>
@@ -3057,15 +3063,13 @@
           return 'bg-red-300 text-red-950 font-semibold';
         }
         function renderPerusahaanHeatmapFromPayload(data) {
-          var loadingEl = document.getElementById('peer-perusahaan-heatmap-loading');
-          var emptyEl = document.getElementById('peer-perusahaan-heatmap-empty');
-          var wrapEl = document.getElementById('peer-perusahaan-heatmap-wrap');
-          var periodEl = document.getElementById('peer-perusahaan-heatmap-period');
-          var thead = document.getElementById('peer-perusahaan-heatmap-thead');
-          var tbody = document.getElementById('peer-perusahaan-heatmap-tbody');
+          var loadingEl = document.getElementById('peer-pp-summary-loading');
+          var emptyEl = document.getElementById('peer-pp-summary-empty');
+          var wrapEl = document.getElementById('peer-pp-summary-wrap');
+          var periodEl = document.getElementById('peer-pp-summary-period');
+          var tbody = document.getElementById('peer-pp-summary-tbody');
           if (loadingEl) loadingEl.classList.add('hidden');
-          if (!thead || !tbody || !wrapEl || !emptyEl) return;
-          thead.innerHTML = '';
+          if (!tbody || !wrapEl || !emptyEl) return;
           tbody.innerHTML = '';
           if (periodEl && data && data.period_label) {
             periodEl.textContent = 'Periode: ' + String(data.period_label);
@@ -3081,25 +3085,6 @@
           }
           emptyEl.classList.add('hidden');
           wrapEl.classList.remove('hidden');
-          var subHdr =
-            'min-w-[5rem] border border-teal-100 px-2 py-2.5 text-[10px] font-bold text-teal-900 sm:text-xs';
-          var trHead = document.createElement('tr');
-          var thCorner = document.createElement('th');
-          thCorner.className =
-            'sticky left-0 z-10 min-w-[10rem] border border-teal-100 bg-[#ecfdf5] px-2 py-2 text-left text-[10px] font-bold uppercase text-teal-950 sm:min-w-[12rem]';
-          thCorner.textContent = 'Nama perusahaan / tim';
-          trHead.appendChild(thCorner);
-          var thT = document.createElement('th');
-          thT.className = subHdr + ' bg-emerald-50/90';
-          thT.textContent = 'Terlaksana';
-          thT.setAttribute('title', '% kejadian CLOSED/SELESAI dalam periode');
-          trHead.appendChild(thT);
-          var thB = document.createElement('th');
-          thB.className = subHdr + ' bg-amber-50/90';
-          thB.textContent = 'Tidak terlaksana';
-          thB.setAttribute('title', '% kejadian belum CLOSED/SELESAI dalam periode');
-          trHead.appendChild(thB);
-          thead.appendChild(trHead);
           companies.forEach(function (co) {
             var tr = document.createElement('tr');
             var tdName = document.createElement('td');
@@ -3150,9 +3135,9 @@
           });
         }
         function loadPerusahaanHeatmap() {
-          var loadingEl = document.getElementById('peer-perusahaan-heatmap-loading');
-          var emptyEl = document.getElementById('peer-perusahaan-heatmap-empty');
-          var wrapEl = document.getElementById('peer-perusahaan-heatmap-wrap');
+          var loadingEl = document.getElementById('peer-pp-summary-loading');
+          var emptyEl = document.getElementById('peer-pp-summary-empty');
+          var wrapEl = document.getElementById('peer-pp-summary-wrap');
           if (loadingEl) loadingEl.classList.remove('hidden');
           if (emptyEl) {
             emptyEl.classList.add('hidden');
@@ -3164,6 +3149,7 @@
             u.searchParams.set('year', String(state.year));
             u.searchParams.set('month', String(state.month));
           }
+          u.searchParams.set('_', String(Date.now()));
           fetch(u.toString(), {
             headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
             credentials: 'same-origin'
