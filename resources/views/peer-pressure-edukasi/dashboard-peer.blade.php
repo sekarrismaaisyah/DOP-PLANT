@@ -1187,13 +1187,7 @@
                <div class="mt-5 rounded-xl border border-teal-200/80 bg-teal-50/50 px-4 py-3">
                   <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per perusahaan (ringkasan periode)</p>
                   <p id="peer-pp-summary-period" class="mt-1 text-[11px] leading-snug text-on-surface-variant"></p>
-                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
-                     Satu baris per perusahaan (maks. 30 terbanyak volume di periode). <span class="font-medium text-on-surface">Terlaksana</span> = % kejadian <span class="font-mono text-[10px] font-semibold">CLOSED</span>/<span class="font-mono text-[10px] font-semibold">SELESAI</span>; <span class="font-medium text-on-surface">Tidak terlaksana</span> = sisanya — dihitung untuk seluruh rentang periode di atas.
-                  </p>
-                  <p id="peer-pp-summary-loading" class="mt-3 hidden text-center text-[12px] text-on-surface-variant" aria-live="polite">
-                     <span class="material-symbols-outlined mb-1 inline-block animate-spin text-teal-700 text-xl" style="animation-duration:1s">progress_activity</span>
-                     <span class="block">Memuat ringkasan…</span>
-                  </p>
+                 
                   <p id="peer-pp-summary-empty" class="mt-3 hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
                   <div id="peer-pp-summary-wrap" class="mt-3 hidden overflow-x-auto rounded-xl border border-teal-100/90 bg-white shadow-inner">
                      <table class="w-full min-w-[280px] border-collapse text-center text-[11px] sm:text-xs" id="peer-pp-summary-table" data-peer-pp-summary-layout="2-metric-cols">
