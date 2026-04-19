@@ -209,12 +209,19 @@ class PeerPressureValidasiTbcController extends Controller
                     ->with('notify_error', $e->getMessage());
             }
 
+            if (! Storage::disk('local')->exists($relativePath)) {
+                return redirect()
+                    ->route('peer-pressure-edukasi.validasi-tbc.index', ['modal' => 'import'])
+                    ->with('notify_error', 'File tidak ditemukan di penyimpanan setelah unggah. Coba lagi atau cek izin folder storage/app.');
+            }
+
             $log = ValidasiTbcImportLog::query()->create([
                 'uuid' => (string) Str::uuid(),
                 'status' => 'pending',
             ]);
 
-            ImportValidasiTbcJob::dispatch($relativePath, $log->id);
+            /** Setelah response HTTP selesai — hindari race dengan worker / proses lain saat file baru ditulis. */
+            ImportValidasiTbcJob::dispatchAfterResponse($relativePath, $log->id);
 
             $msg =
                 'File berhasil diunggah. Import diproses di latar belakang — lihat tabel «Riwayat impor Excel» di halaman ini untuk status berhasil/gagal dan jumlah baris.';

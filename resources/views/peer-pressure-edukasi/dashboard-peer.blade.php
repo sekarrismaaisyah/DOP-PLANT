@@ -211,7 +211,6 @@
             $kpiPctBelum = (float) ($kpi['pelaksanaan_belum_pct'] ?? ($kpiTotal > 0 ? round(100 * $kpiPelaksanaanBelum / $kpiTotal, 1) : 0));
             $kpiStatusKosong = (int) ($kpi['pelaksanaan_status_kosong_count'] ?? 0);
             $kpiKkRows = $kpi['pelaksanaan_kelompok_kerja_rows'] ?? [];
-            $kpiAvgDurMenit = (float) ($kpi['avg_duration_minutes'] ?? 0);
             $kpiCompletion = (float) ($kpi['completion_rate'] ?? 0);
             $kpiBarW = max(0, min(100, $kpiCompletion));
             $kpiTrendPct = $kpi['total_cases_trend_pct'] ?? null;
@@ -235,7 +234,7 @@
                   </div>
                </div>
                <div class="mt-4">
-                  <p id="peer-kpi-deviation-total" class="font-headline font-extrabold text-4xl tabular-nums">{{ number_format($dvPreTotal) }}</p>
+                  <p id="peer-kpi-deviation-total" class="font-headline font-extrabold text-4xl tabular-nums">{{ number_format($dmbBe + $dmbTbc + $dmbFat) }}</p>
                   <p class="text-on-surface-variant text-[11px] font-medium mt-1">Jumlah kejadian menurut kategori deviasi · klik untuk detail</p>
                </div>
             </button>
@@ -278,9 +277,9 @@
                </div>
             </button>
 
-            <div class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between">
+            <button type="button" id="peer-kpi-kk-eval-card" class="bg-white p-6 rounded-2xl anchored-card flex flex-col justify-between text-left w-full cursor-pointer transition-all hover:shadow-md hover:ring-2 hover:ring-[#16a34a]/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#16a34a]/35" aria-haspopup="dialog" aria-expanded="false" aria-controls="peer-kk-eval-modal">
                <div class="flex justify-between items-start">
-                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Pelaksanaan Rate</span>
+                  <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Evaluasi Kelompok Kerja</span>
                   <div class="p-2 bg-[#dcfce7] rounded-lg">
                      <span class="material-symbols-outlined text-[#16a34a]" data-icon="task_alt">task_alt</span>
                   </div>
@@ -298,8 +297,9 @@
                   <div class="w-full bg-[#f1f5f9] h-2 rounded-full mt-3 overflow-hidden border border-outline-variant/10">
                      <div id="peer-kpi-completion-bar" class="bg-[#16a34a] h-full rounded-full transition-all" style="width: {{ $kpiBarW }}%"></div>
                   </div>
+                  <!-- <p class="text-on-surface-variant text-[10px] font-medium mt-2">Klik untuk daftar kelompok kerja yang jalan vs tidak jalan</p> -->
                </div>
-            </div>
+            </button>
          </div>
          <!-- Charts & Recommendations Grid -->
          <div class="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -1105,6 +1105,40 @@
             </div>
          </div>
       </div>
+      <!-- Modal Evaluasi Kelompok Kerja (jalan vs tidak jalan) -->
+      <div id="peer-kk-eval-modal" class="hidden fixed inset-0 z-[209] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-kk-eval-title">
+         <div class="absolute inset-0 cursor-pointer peer-kk-eval-backdrop" aria-hidden="true"></div>
+         <div class="relative z-10 flex max-h-[min(90vh,820px)] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-outline-variant/20 bg-white text-on-surface shadow-xl">
+            <div class="flex shrink-0 items-start justify-between gap-3 border-b border-outline-variant/20 px-5 py-4 sm:px-6">
+               <div>
+                  <h2 id="peer-kk-eval-title" class="font-headline text-lg font-bold text-on-surface">Evaluasi Kelompok Kerja</h2>
+                  <p id="peer-kk-eval-modal-period" class="mt-1 text-xs text-on-surface-variant">{{ ($chartPeriodMonth ?? false) ? 'Periode: filter chart (tanggal temuan dalam bulan yang dipilih).' : 'Periode: seluruh data kejadian (tanpa filter bulan).' }}</p>
+               </div>
+               <button type="button" id="peer-kk-eval-close" class="rounded-lg p-2 text-on-surface-variant transition-colors hover:bg-surface-container-high hover:text-on-surface" aria-label="Tutup">
+                  <span class="material-symbols-outlined text-2xl" data-icon="close">close</span>
+               </button>
+            </div>
+            <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
+               <p class="text-[11px] leading-snug text-on-surface-variant">
+                  <span class="font-medium text-on-surface">Kelompok kerja “jalan”</span> jika minimal setengah kejadian di kelompok tersebut berstatus selesai (CLOSED/SELESAI). Sisanya masuk <span class="font-medium text-on-surface">tidak jalan</span>. Persentase di atas = proporsi kelompok (dari maks. 15 terbanyak) yang “jalan”.
+               </p>
+               <div class="mt-4 rounded-xl border border-emerald-200/80 bg-emerald-50/60 px-4 py-4 text-center shadow-sm">
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-900">Kelompok kerja yang jalan? (%)</p>
+                  <p id="peer-kk-eval-group-pct" class="mt-2 font-headline text-4xl font-extrabold tabular-nums text-emerald-950">—</p>
+               </div>
+               <div class="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-2">
+                  <div class="rounded-xl border border-emerald-200/70 bg-white px-4 py-3 shadow-sm">
+                     <h3 class="font-headline text-xs font-bold text-emerald-900">Kelompok kerja yang jalan? <span id="peer-kk-eval-badge-jalan" class="font-normal tabular-nums text-emerald-800/90">(0)</span></h3>
+                     <ul id="peer-kk-eval-list-jalan" class="mt-2 max-h-[min(40vh,280px)] list-none space-y-0 overflow-y-auto rounded-lg border border-emerald-100/80 bg-emerald-50/30 p-2 text-left"></ul>
+                  </div>
+                  <div class="rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                     <h3 class="font-headline text-xs font-bold text-slate-800">Kelompok kerja yang tidak jalan? <span id="peer-kk-eval-badge-tidak" class="font-normal tabular-nums text-slate-600">(0)</span></h3>
+                     <ul id="peer-kk-eval-list-tidak" class="mt-2 max-h-[min(40vh,280px)] list-none space-y-0 overflow-y-auto rounded-lg border border-slate-100 bg-slate-50/50 p-2 text-left"></ul>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </div>
       <!-- Modal detail Pelaksanaan Peer Pressure (persentase + tabel kejadian selesai) -->
       <div id="peer-pelaksanaan-detail-modal" class="hidden fixed inset-0 z-[208] flex items-center justify-center p-4 sm:p-6 bg-black/40 backdrop-blur-sm" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="peer-pelaksanaan-detail-title">
          <div class="absolute inset-0 cursor-pointer peer-pelaksanaan-detail-backdrop" aria-hidden="true"></div>
@@ -1151,41 +1185,39 @@
                </div>
 
                <div class="mt-4 rounded-xl border border-sky-200/80 bg-sky-50/70 px-4 py-3">
-                  <p class="text-[10px] font-bold uppercase tracking-wide text-sky-900">SLA / waktu edukasi</p>
-                  <p id="peer-pelaksanaan-modal-sla-line" class="mt-1.5 text-[12px] leading-snug text-on-surface">
-                     Rata-rata durasi edukasi: <span id="peer-pelaksanaan-modal-avg-duration" class="font-bold tabular-nums">{{ number_format($kpiAvgDurMenit, 1) }}</span> menit (dari kolom durasi per kejadian). Detail per baris ada di kolom <span class="font-semibold">Duration</span> pada tabel di bawah.
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-sky-900">SLA temuan → pelaksanaan peer pressure</p>
+                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
+                     Selisih hari antara <span class="font-medium text-on-surface">tanggal temuan</span> (alur BeRecord / blindspot / tidak speak up fatigue lewat kategori deviasi) dan <span class="font-medium text-on-surface">tanggal pelaksanaan</span> peer pressure pada baris kejadian yang sama. Hanya baris dengan kedua tanggal terisi.
                   </p>
+                  <div id="peer-pelaksanaan-sla-chart-root" class="mt-3">
+                     <p id="peer-pelaksanaan-sla-empty" class="hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
+                     <div id="peer-pelaksanaan-sla-chart-panel" class="hidden">
+                        <div id="peer-pelaksanaan-sla-summary" class="text-[11px] leading-snug text-on-surface"></div>
+                        <div class="peer-pelaksanaan-sla-canvas-outer relative mt-3 h-[220px] w-full min-w-0 sm:h-[280px]">
+                           <canvas id="peer-pelaksanaan-sla-chart-canvas"></canvas>
+                        </div>
+                        <p id="peer-pelaksanaan-sla-footnote" class="mt-2 text-[10px] leading-snug text-on-surface-variant"></p>
+                     </div>
+                  </div>
                </div>
 
-               <div class="mt-5">
-                  <h4 class="font-headline text-xs font-bold text-on-surface">Kelompok kerja — yang sudah vs belum</h4>
-                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">Agregasi per <span class="font-medium text-on-surface">jenis kelompok kerja</span> pada kejadian di periode yang sama (maks. 15 kelompok terbanyak).</p>
-                  <div id="peer-pelaksanaan-kk-wrap" class="mt-2 overflow-x-auto rounded-xl border border-outline-variant/20 bg-white">
-                     <table class="w-full min-w-[520px] text-left text-sm">
-                        <thead class="bg-[#f8fafc] text-[10px] font-bold uppercase tracking-[0.12em] text-on-surface-variant border-b border-outline-variant/20">
-                           <tr>
-                              <th class="px-4 py-3">Kelompok kerja</th>
-                              <th class="px-4 py-3 text-right tabular-nums">Selesai</th>
-                              <th class="px-4 py-3 text-right tabular-nums">Belum</th>
-                              <th class="px-4 py-3 text-right tabular-nums">% selesai</th>
-                           </tr>
-                        </thead>
-                        <tbody id="peer-pelaksanaan-kk-tbody" class="divide-y divide-outline-variant/10">
-                           @forelse ($kpiKkRows as $kkr)
-                           <tr class="hover:bg-[#f8fafc]">
-                              <td class="px-4 py-2.5 text-[12px] text-on-surface">{{ $kkr['kelompok'] ?? '—' }}</td>
-                              <td class="px-4 py-2.5 text-right text-[12px] font-semibold tabular-nums text-emerald-900">{{ number_format((int) ($kkr['selesai'] ?? 0)) }}</td>
-                              <td class="px-4 py-2.5 text-right text-[12px] font-semibold tabular-nums text-amber-900">{{ number_format((int) ($kkr['belum'] ?? 0)) }}</td>
-                              <td class="px-4 py-2.5 text-right text-[12px] tabular-nums text-on-surface">{{ number_format((float) ($kkr['pct_selesai'] ?? 0), 1) }}%</td>
-                           </tr>
-                           @empty
-                           <tr>
-                              <td colspan="4" class="px-4 py-6 text-center text-[12px] text-on-surface-variant">Belum ada data kelompok kerja pada periode ini.</td>
-                           </tr>
-                           @endforelse
-                        </tbody>
-                     </table>
+               <div class="mt-5 rounded-xl border border-violet-200/80 bg-violet-50/60 px-4 py-3">
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-violet-900">Matriks gap pelaksanaan vs kepatuhan</p>
+                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
+                     Membandingkan <span class="font-medium text-on-surface">volume pelaksanaan</span> (% kejadian selesai CLOSED/SELESAI) dengan <span class="font-medium text-on-surface">kepatuhan</span> (% comply pada kategori terlacak) per <span class="font-medium text-on-surface">jenis kelompok kerja</span> (maks. 15 kelompok terbanyak). Sumbu X/Y 0–100%; garis putus-putus = ambang 50%.
+                  </p>
+                  <div id="peer-gap-matrix-legend" class="mt-3 flex flex-wrap gap-x-4 gap-y-2 text-[10px] text-on-surface-variant"></div>
+                  <p id="peer-gap-matrix-loading" class="mt-3 hidden text-center text-[12px] text-on-surface-variant" aria-live="polite">
+                     <span class="material-symbols-outlined mb-1 inline-block animate-spin text-violet-600 text-xl" style="animation-duration:1s">progress_activity</span>
+                     <span class="block">Memuat matriks…</span>
+                  </p>
+                  <p id="peer-gap-matrix-empty" class="mt-3 hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
+                  <div id="peer-gap-matrix-chart-wrap" class="relative mt-3 hidden h-[300px] w-full min-w-0 sm:h-[340px]">
+                     <canvas id="peer-pelaksanaan-gap-matrix-canvas"></canvas>
                   </div>
+                  <p class="mt-2 text-[10px] leading-snug text-on-surface-variant">
+                     <span class="font-semibold text-on-surface">Manfaat:</span> melihat apakah gap compliance lebih karena kurang eksekusi, SOP/pemahaman, atau volume rendah. Ukuran gelembung ~ jumlah kejadian di kelompok tersebut.
+                  </p>
                </div>
 
                <div id="peer-pelaksanaan-panel-selesai" role="tabpanel" aria-labelledby="peer-pelaksanaan-tab-selesai" class="mt-6 border-t border-outline-variant/15 pt-5">
@@ -1789,9 +1821,47 @@
         });
       })();
       </script>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
       <script>
       (function () {
         const weeklyTrendUrl = @json(route('peer-pressure-edukasi.dashboard.weekly-trend'));
+        const gapMatrixUrl = @json(route('peer-pressure-edukasi.dashboard.gap-matrix'));
+        const peerKpiSlaBootstrap = @json($kpi['sla_temuan_ke_pelaksanaan'] ?? null);
+        /**
+         * Data contoh untuk grafik SLA (struktur sama dengan kpi.sla_temuan_ke_pelaksanaan).
+         * Set PEER_SLA_USE_DUMMY ke false agar memakai data KPI aktual bila tersedia.
+         */
+        var PEER_SLA_USE_DUMMY = true;
+        var peerKpiSlaDummy = {
+          __is_dummy: true,
+          buckets: [
+            { key: 'd0_3', label: '0–3 hari', berecord: 14, blindspot: 6, speakup_fatigue: 4 },
+            { key: 'd4_7', label: '4–7 hari', berecord: 22, blindspot: 9, speakup_fatigue: 5 },
+            { key: 'd8_14', label: '8–14 hari', berecord: 18, blindspot: 7, speakup_fatigue: 3 },
+            { key: 'd15_30', label: '15–30 hari', berecord: 11, blindspot: 4, speakup_fatigue: 2 },
+            { key: 'd31p', label: '31+ hari', berecord: 5, blindspot: 2, speakup_fatigue: 1 }
+          ],
+          sources: [
+            { key: 'berecord', label: 'BeRecord (PSPP / Golden rules / insiden)', color: '#0369a1' },
+            { key: 'blindspot', label: 'Validasi blindspot', color: '#7c3aed' },
+            { key: 'speakup_fatigue', label: 'Tidak speak up fatigue', color: '#c2410c' }
+          ],
+          summary: {
+            berecord: { avg_days: 12.4, count: 70 },
+            blindspot: { avg_days: 10.1, count: 28 },
+            speakup_fatigue: { avg_days: 8.6, count: 15 }
+          },
+          total_classified: 113,
+          max_bar: 22
+        };
+        function peerSlaChartPayload(sla) {
+          if (PEER_SLA_USE_DUMMY) return peerKpiSlaDummy;
+          if (sla && typeof sla === 'object') {
+            var t = Number(sla.total_classified != null ? sla.total_classified : 0);
+            if (!isNaN(t) && t > 0) return sla;
+          }
+          return peerKpiSlaDummy;
+        }
         const peerHighlightUrl = @json(route('peer-pressure-edukasi.dashboard.highlight-issue-recommendation'));
         const complianceBreakdownUrl = @json(route('peer-pressure-edukasi.dashboard.compliance-breakdown'));
         const pelaksanaanSelesaiUrl = @json(route('peer-pressure-edukasi.dashboard.pelaksanaan-selesai'));
@@ -1811,6 +1881,11 @@
         };
         /** Tab aktif di modal Pelaksanaan: selesai | belum */
         var pelaksanaanActiveTab = 'selesai';
+        /** Chart.js instance untuk grafik SLA di modal pelaksanaan */
+        var peerPelaksanaanSlaChartInstance = null;
+        /** Chart.js bubble matriks gap pelaksanaan vs kepatuhan */
+        var peerGapMatrixChartInstance = null;
+        var lastGapMatrixPoints = [];
         var tempYear = state.year;
         var tempMonth = state.month;
         var tempAll = state.all;
@@ -1935,6 +2010,7 @@
           }
           syncComplianceModalFromKpi(kpi, periodScope);
           syncPelaksanaanModalFromKpi(kpi, periodScope);
+          syncKkEvalModalFromKpi(kpi, periodScope);
         }
         function renderPelaksanaanKkTbodyFromKpi(rows) {
           var tbody = document.getElementById('peer-pelaksanaan-kk-tbody');
@@ -1985,12 +2061,10 @@
           var statusKosong = Number(
             kpi.pelaksanaan_status_kosong_count != null ? kpi.pelaksanaan_status_kosong_count : 0
           );
-          var avgDur = Number(kpi.avg_duration_minutes != null ? kpi.avg_duration_minutes : 0);
           if (isNaN(tc)) tc = 0;
           if (isNaN(selesai)) selesai = 0;
           if (isNaN(belum)) belum = 0;
           if (isNaN(statusKosong)) statusKosong = 0;
-          if (isNaN(avgDur)) avgDur = 0;
           var ps = Number(kpi.pelaksanaan_selesai_pct != null ? kpi.pelaksanaan_selesai_pct : NaN);
           var pb = Number(kpi.pelaksanaan_belum_pct != null ? kpi.pelaksanaan_belum_pct : NaN);
           if (isNaN(ps) || isNaN(pb)) {
@@ -2008,7 +2082,6 @@
           var elCntS = document.getElementById('peer-pelaksanaan-modal-count-selesai');
           var elCntB = document.getElementById('peer-pelaksanaan-modal-count-belum');
           var elCntSk = document.getElementById('peer-pelaksanaan-modal-count-status-kosong');
-          var elAvgDur = document.getElementById('peer-pelaksanaan-modal-avg-duration');
           if (elPctS) {
             var psStr = ps.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
             elPctS.innerHTML = psStr + '<span class="text-2xl font-bold">%</span>';
@@ -2023,12 +2096,7 @@
           if (elCntS) elCntS.textContent = selesai.toLocaleString('id-ID');
           if (elCntB) elCntB.textContent = belum.toLocaleString('id-ID');
           if (elCntSk) elCntSk.textContent = statusKosong.toLocaleString('id-ID');
-          if (elAvgDur) {
-            elAvgDur.textContent = avgDur.toLocaleString('id-ID', {
-              minimumFractionDigits: 1,
-              maximumFractionDigits: 1
-            });
-          }
+          renderPelaksanaanSlaChart(peerSlaChartPayload(kpi.sla_temuan_ke_pelaksanaan));
           renderPelaksanaanKkTbodyFromKpi(kpi.pelaksanaan_kelompok_kerja_rows || []);
           var pm = document.getElementById('peer-pelaksanaan-detail-modal');
           if (pm && !pm.classList.contains('hidden')) {
@@ -2037,6 +2105,7 @@
             } else {
               loadPelaksanaanSelesai(1);
             }
+            loadGapMatrixChart();
           }
         }
         function syncComplianceModalFromKpi(kpi, periodScope) {
@@ -2285,9 +2354,12 @@
           var elBe = document.getElementById('peer-deviation-card-berecord-value');
           var elTbc = document.getElementById('peer-deviation-card-tbc-value');
           var elFat = document.getElementById('peer-deviation-card-fatigue-value');
+          var kpiBig = document.getElementById('peer-kpi-deviation-total');
+          var total = n(b.berecord_pspp_gr_total) + n(b.validasi_tbc_blindspot_terisi_total) + n(b.speak_up_fatigue_tidak_speak_total);
           if (elBe) elBe.textContent = n(b.berecord_pspp_gr_total).toLocaleString('id-ID');
           if (elTbc) elTbc.textContent = n(b.validasi_tbc_blindspot_terisi_total).toLocaleString('id-ID');
           if (elFat) elFat.textContent = n(b.speak_up_fatigue_tidak_speak_total).toLocaleString('id-ID');
+          if (kpiBig) kpiBig.textContent = total.toLocaleString('id-ID');
         }
         var DEVIATION_TAB_TYPES = ['berecord', 'validasi_blindspot', 'speak_up_fatigue'];
         var deviationActiveType = 'berecord';
@@ -2548,7 +2620,6 @@
           var kpiBig = document.getElementById('peer-kpi-deviation-total');
           var cats = dev.categories || [];
           var apiTotal = parseInt(String(dev.total != null ? dev.total : 0), 10) || 0;
-          if (kpiBig) kpiBig.textContent = apiTotal.toLocaleString('id-ID');
           var sum = 0;
           var rows = cats
             .map(function (row) {
@@ -2669,6 +2740,443 @@
             .replace(/"/g, '&quot;')
             .replace(/</g, '&lt;')
             .replace(/>/g, '&gt;');
+        }
+        function splitKkRowsForEval(rows) {
+          var jalan = [];
+          var tidak = [];
+          if (!rows || !rows.length) {
+            return { jalan: jalan, tidak: tidak, groupPct: 0 };
+          }
+          rows.forEach(function (r) {
+            var total = Number(r.total != null ? r.total : 0);
+            var pct = Number(r.pct_selesai != null ? r.pct_selesai : 0);
+            if (isNaN(total)) total = 0;
+            if (isNaN(pct)) pct = 0;
+            if (total <= 0) return;
+            if (pct >= 50) jalan.push(r);
+            else tidak.push(r);
+          });
+          var n = rows.length;
+          var groupPct = n > 0 ? Math.round((100 * jalan.length) / n * 10) / 10 : 0;
+          return { jalan: jalan, tidak: tidak, groupPct: groupPct };
+        }
+        function syncKkEvalModalFromKpi(kpi, periodScope) {
+          if (!kpi || typeof kpi !== 'object') return;
+          var rows = kpi.pelaksanaan_kelompok_kerja_rows || [];
+          var sp = splitKkRowsForEval(rows);
+          var pctEl = document.getElementById('peer-kk-eval-group-pct');
+          var listJ = document.getElementById('peer-kk-eval-list-jalan');
+          var listT = document.getElementById('peer-kk-eval-list-tidak');
+          var badgeJ = document.getElementById('peer-kk-eval-badge-jalan');
+          var badgeT = document.getElementById('peer-kk-eval-badge-tidak');
+          var periodEl = document.getElementById('peer-kk-eval-modal-period');
+          if (pctEl) {
+            pctEl.textContent =
+              sp.groupPct.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + '%';
+          }
+          if (badgeJ) badgeJ.textContent = '(' + sp.jalan.length.toLocaleString('id-ID') + ')';
+          if (badgeT) badgeT.textContent = '(' + sp.tidak.length.toLocaleString('id-ID') + ')';
+          if (periodEl && periodScope) {
+            periodEl.textContent =
+              periodScope === 'month'
+                ? 'Periode: filter chart (tanggal temuan dalam bulan yang dipilih).'
+                : 'Periode: seluruh data kejadian (tanpa filter bulan).';
+          }
+          function liHtml(r) {
+            var name = r.kelompok != null ? String(r.kelompok) : '—';
+            var p = Number(r.pct_selesai != null ? r.pct_selesai : 0);
+            if (isNaN(p)) p = 0;
+            var se = Number(r.selesai != null ? r.selesai : 0);
+            var bl = Number(r.belum != null ? r.belum : 0);
+            if (isNaN(se)) se = 0;
+            if (isNaN(bl)) bl = 0;
+            return (
+              '<li class="flex justify-between gap-2 border-b border-outline-variant/10 py-2 text-[12px] last:border-0">' +
+              '<span class="min-w-0 font-medium text-on-surface">' +
+              escHtml(name) +
+              '</span>' +
+              '<span class="shrink-0 text-right text-[11px] tabular-nums text-on-surface-variant">' +
+              p.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) +
+              '% <span class="text-on-surface-variant/80">(' +
+              se.toLocaleString('id-ID') +
+              '/' +
+              (se + bl).toLocaleString('id-ID') +
+              ')</span></span></li>'
+            );
+          }
+          var emptyLi =
+            '<li class="py-4 text-center text-[12px] text-on-surface-variant">Tidak ada data</li>';
+          if (listJ) listJ.innerHTML = sp.jalan.length ? sp.jalan.map(liHtml).join('') : emptyLi;
+          if (listT) listT.innerHTML = sp.tidak.length ? sp.tidak.map(liHtml).join('') : emptyLi;
+        }
+        var gapMatrixQuadrantLinePlugin = {
+          id: 'gapMatrixQuadrantLines',
+          afterDraw: function (chart) {
+            var xScale = chart.scales.x;
+            var yScale = chart.scales.y;
+            if (!xScale || !yScale || !chart.chartArea) return;
+            var midX = xScale.getPixelForValue(50);
+            var midY = yScale.getPixelForValue(50);
+            var top = chart.chartArea.top;
+            var bottom = chart.chartArea.bottom;
+            var left = chart.chartArea.left;
+            var right = chart.chartArea.right;
+            if (midX < left || midX > right || midY < top || midY > bottom) return;
+            var ctx = chart.ctx;
+            ctx.save();
+            ctx.strokeStyle = 'rgba(15, 23, 42, 0.22)';
+            ctx.lineWidth = 1;
+            ctx.setLineDash([5, 5]);
+            ctx.beginPath();
+            ctx.moveTo(midX, top);
+            ctx.lineTo(midX, bottom);
+            ctx.moveTo(left, midY);
+            ctx.lineTo(right, midY);
+            ctx.stroke();
+            ctx.restore();
+          }
+        };
+        function renderGapMatrixFromPayload(data) {
+          var loadingEl = document.getElementById('peer-gap-matrix-loading');
+          var emptyEl = document.getElementById('peer-gap-matrix-empty');
+          var wrapEl = document.getElementById('peer-gap-matrix-chart-wrap');
+          var legEl = document.getElementById('peer-gap-matrix-legend');
+          var canvas = document.getElementById('peer-pelaksanaan-gap-matrix-canvas');
+          if (loadingEl) loadingEl.classList.add('hidden');
+          if (!canvas || !wrapEl || !emptyEl) return;
+          if (peerGapMatrixChartInstance) {
+            try {
+              peerGapMatrixChartInstance.destroy();
+            } catch (e) {}
+            peerGapMatrixChartInstance = null;
+          }
+          lastGapMatrixPoints = [];
+          var points = data && Array.isArray(data.points) ? data.points : [];
+          if (legEl && data && Array.isArray(data.quadrants)) {
+            legEl.innerHTML = data.quadrants
+              .map(function (q) {
+                var em = q.emoji != null ? q.emoji : '';
+                var lab = q.label != null ? String(q.label) : '';
+                var hint = q.hint != null ? String(q.hint) : '';
+                return (
+                  '<span class="inline-flex max-w-[240px] items-start gap-1.5 sm:max-w-[280px]">' +
+                  '<span class="shrink-0">' +
+                  em +
+                  '</span><span><span class="font-medium text-on-surface">' +
+                  escHtml(lab) +
+                  '</span><span class="mt-0.5 block text-[9px] leading-snug text-on-surface-variant">' +
+                  escHtml(hint) +
+                  '</span></span></span>'
+                );
+              })
+              .join('');
+          }
+          if (!points.length) {
+            emptyEl.textContent =
+              'Belum ada data kelompok kerja untuk matriks pada periode ini.';
+            emptyEl.classList.remove('hidden');
+            wrapEl.classList.add('hidden');
+            return;
+          }
+          if (typeof Chart === 'undefined') {
+            emptyEl.textContent = 'Chart.js tidak tersedia. Muat ulang halaman.';
+            emptyEl.classList.remove('hidden');
+            wrapEl.classList.add('hidden');
+            return;
+          }
+          emptyEl.classList.add('hidden');
+          wrapEl.classList.remove('hidden');
+          lastGapMatrixPoints = points;
+          var ctx = canvas.getContext('2d');
+          var ds = points.map(function (p) {
+            var tot = Number(p.total != null ? p.total : 0) || 0;
+            var r = Math.min(24, 4 + Math.sqrt(tot) * 1.15);
+            return { x: Number(p.x), y: Number(p.y), r: r };
+          });
+          var bg = points.map(function (p) {
+            var c = String(p.color || '#64748b').replace(/[<>"']/g, '');
+            return c.length === 7 ? c + 'B3' : c;
+          });
+          var border = points.map(function (p) {
+            return String(p.color || '#64748b').replace(/[<>"']/g, '');
+          });
+          peerGapMatrixChartInstance = new Chart(ctx, {
+            type: 'bubble',
+            plugins: [gapMatrixQuadrantLinePlugin],
+            data: {
+              datasets: [
+                {
+                  label: 'Kelompok kerja',
+                  data: ds,
+                  backgroundColor: bg,
+                  borderColor: border,
+                  borderWidth: 1
+                }
+              ]
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              plugins: {
+                legend: { display: false },
+                tooltip: {
+                  callbacks: {
+                    title: function () {
+                      return '';
+                    },
+                    label: function (ctx) {
+                      var p = lastGapMatrixPoints[ctx.dataIndex];
+                      if (!p) return '';
+                      var k = p.kelompok != null ? String(p.kelompok) : '—';
+                      var xn = Number(p.x != null ? p.x : 0);
+                      var yn = Number(p.y != null ? p.y : 0);
+                      return [
+                        k,
+                        'Pelaksanaan (selesai): ' +
+                          xn.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) +
+                          '%',
+                        'Kepatuhan (comply): ' +
+                          yn.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) +
+                          '% (' +
+                          (p.comply != null ? p.comply : '0') +
+                          '/' +
+                          (p.tracked_total != null ? p.tracked_total : '0') +
+                          ' terlacak)',
+                        'Total kejadian: ' + (p.total != null ? p.total : '0'),
+                        p.quadrant_label != null ? String(p.quadrant_label) : ''
+                      ];
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  min: 0,
+                  max: 100,
+                  title: {
+                    display: true,
+                    text: '% Pelaksanaan selesai (CLOSED / SELESAI)',
+                    font: { size: 11, weight: '600' }
+                  },
+                  ticks: { font: { size: 10 } }
+                },
+                y: {
+                  min: 0,
+                  max: 100,
+                  title: {
+                    display: true,
+                    text: '% Kepatuhan (comply, kategori terlacak)',
+                    font: { size: 11, weight: '600' }
+                  },
+                  ticks: { font: { size: 10 } }
+                }
+              }
+            }
+          });
+        }
+        function loadGapMatrixChart() {
+          var loadingEl = document.getElementById('peer-gap-matrix-loading');
+          var emptyEl = document.getElementById('peer-gap-matrix-empty');
+          var wrapEl = document.getElementById('peer-gap-matrix-chart-wrap');
+          if (loadingEl) loadingEl.classList.remove('hidden');
+          if (emptyEl) {
+            emptyEl.classList.add('hidden');
+            emptyEl.textContent = '';
+          }
+          if (wrapEl) wrapEl.classList.add('hidden');
+          var u = new URL(gapMatrixUrl, window.location.origin);
+          if (!state.all) {
+            u.searchParams.set('year', String(state.year));
+            u.searchParams.set('month', String(state.month));
+          }
+          fetch(u.toString(), {
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+          })
+            .then(function (r) {
+              if (!r.ok) throw new Error('Gagal memuat matriks gap');
+              return r.json();
+            })
+            .then(function (data) {
+              renderGapMatrixFromPayload(data);
+            })
+            .catch(function (e) {
+              if (loadingEl) loadingEl.classList.add('hidden');
+              if (emptyEl) {
+                emptyEl.textContent = e.message || 'Gagal memuat matriks.';
+                emptyEl.classList.remove('hidden');
+              }
+            });
+        }
+        function peerSlaDatasetLabel(s) {
+          var k = s && s.key != null ? String(s.key) : '';
+          if (k === 'berecord') return 'BeRecord';
+          if (k === 'blindspot') return 'Blindspot';
+          if (k === 'speakup_fatigue') return 'Tidak speak up';
+          return s && s.label != null ? String(s.label) : k || '—';
+        }
+        function renderPelaksanaanSlaChart(sla) {
+          var emptyEl = document.getElementById('peer-pelaksanaan-sla-empty');
+          var panelEl = document.getElementById('peer-pelaksanaan-sla-chart-panel');
+          var summaryEl = document.getElementById('peer-pelaksanaan-sla-summary');
+          var footEl = document.getElementById('peer-pelaksanaan-sla-footnote');
+          var canvas = document.getElementById('peer-pelaksanaan-sla-chart-canvas');
+          if (!emptyEl || !panelEl || !summaryEl || !footEl || !canvas) return;
+
+          if (peerPelaksanaanSlaChartInstance) {
+            try {
+              peerPelaksanaanSlaChartInstance.destroy();
+            } catch (e) {}
+            peerPelaksanaanSlaChartInstance = null;
+          }
+
+          if (!sla || typeof sla !== 'object') {
+            emptyEl.textContent = 'Data SLA belum tersedia untuk periode ini.';
+            emptyEl.classList.remove('hidden');
+            panelEl.classList.add('hidden');
+            return;
+          }
+
+          var buckets = Array.isArray(sla.buckets) ? sla.buckets : [];
+          var sources = Array.isArray(sla.sources) ? sla.sources : [];
+          var summary = sla.summary && typeof sla.summary === 'object' ? sla.summary : {};
+          var maxBar = Number(sla.max_bar != null ? sla.max_bar : 1);
+          if (isNaN(maxBar) || maxBar < 1) maxBar = 1;
+          var total = Number(sla.total_classified != null ? sla.total_classified : 0);
+          if (isNaN(total)) total = 0;
+
+          if (total === 0) {
+            emptyEl.textContent =
+              'Belum ada kejadian yang memenuhi syarat (tanggal temuan dan tanggal pelaksanaan terisi, pada kelompok BeRecord / blindspot / tidak speak up fatigue).';
+            emptyEl.classList.remove('hidden');
+            panelEl.classList.add('hidden');
+            return;
+          }
+
+          if (typeof Chart === 'undefined') {
+            emptyEl.textContent = 'Gagal memuat Chart.js. Periksa koneksi atau muat ulang halaman.';
+            emptyEl.classList.remove('hidden');
+            panelEl.classList.add('hidden');
+            return;
+          }
+
+          emptyEl.classList.add('hidden');
+          panelEl.classList.remove('hidden');
+
+          var sumLine = sources
+            .map(function (s) {
+              var sk = s.key;
+              var su = summary[sk];
+              if (!su || !su.count) return '';
+              var avg = Number(su.avg_days != null ? su.avg_days : 0);
+              if (isNaN(avg)) avg = 0;
+              var lab = s.label != null ? String(s.label) : String(sk);
+              return (
+                '<span class="font-medium text-on-surface">' +
+                escHtml(lab) +
+                '</span>: rata-rata ' +
+                avg.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) +
+                ' hari (' +
+                Number(su.count).toLocaleString('id-ID') +
+                ' kejadian)'
+              );
+            })
+            .filter(Boolean)
+            .join('<span class="text-on-surface-variant"> · </span>');
+          var dummyNote =
+            sla.__is_dummy === true
+              ? ''
+              : '';
+          summaryEl.innerHTML =
+            (dummyNote ? dummyNote + ' ' : '') +
+            (sumLine ||
+              '<span class="text-on-surface-variant">Ringkasan rata-rata tidak tersedia; lihat distribusi pada grafik.</span>');
+
+          var footBase =
+            'Batang dikelompokkan per rentang hari (temuan → pelaksanaan). Sumbu Y = jumlah kejadian. Warna = sumber temuan (BeRecord / blindspot / tidak speak up). Skala referensi sel terbanyak: ' +
+            maxBar.toLocaleString('id-ID') +
+            ' kejadian.';
+          footEl.textContent =
+            (sla.__is_dummy === true ? '[Contoh — ubah PEER_SLA_USE_DUMMY ke false untuk data aktual] ' : '') + footBase;
+
+          var labels = buckets.map(function (b) {
+            return b.label != null ? String(b.label) : '';
+          });
+          var datasets = sources.map(function (s) {
+            var col = String(s.color || '#64748b').replace(/[<>"']/g, '');
+            return {
+              label: peerSlaDatasetLabel(s),
+              data: buckets.map(function (b) {
+                return parseInt(String(b[s.key] != null ? b[s.key] : 0), 10) || 0;
+              }),
+              backgroundColor: col,
+              borderColor: col,
+              borderWidth: 1,
+              borderRadius: 4,
+              maxBarThickness: 32
+            };
+          });
+
+          var ctx = canvas.getContext('2d');
+          peerPelaksanaanSlaChartInstance = new Chart(ctx, {
+            type: 'bar',
+            data: {
+              labels: labels,
+              datasets: datasets
+            },
+            options: {
+              responsive: true,
+              maintainAspectRatio: false,
+              interaction: { mode: 'index', intersect: false },
+              plugins: {
+                legend: {
+                  position: 'bottom',
+                  labels: {
+                    boxWidth: 12,
+                    padding: 14,
+                    font: { size: 11, family: 'Poppins, system-ui, sans-serif' },
+                    color: '#2c2f31'
+                  }
+                },
+                tooltip: {
+                  callbacks: {
+                    label: function (ctx) {
+                      var v = ctx.parsed && ctx.parsed.y != null ? ctx.parsed.y : 0;
+                      var lab = ctx.dataset && ctx.dataset.label ? ctx.dataset.label : '';
+                      return lab + ': ' + Number(v).toLocaleString('id-ID') + ' kejadian';
+                    }
+                  }
+                }
+              },
+              scales: {
+                x: {
+                  stacked: false,
+                  grid: { display: false },
+                  ticks: {
+                    font: { size: 10, family: 'Poppins, system-ui, sans-serif' },
+                    color: '#595c5e',
+                    maxRotation: 45,
+                    minRotation: 0
+                  }
+                },
+                y: {
+                  stacked: false,
+                  beginAtZero: true,
+                  ticks: {
+                    font: { size: 10, family: 'Poppins, system-ui, sans-serif' },
+                    color: '#595c5e'
+                  },
+                  title: {
+                    display: true,
+                    text: 'Jumlah kejadian',
+                    font: { size: 11, weight: '600', family: 'Poppins, system-ui, sans-serif' },
+                    color: '#595c5e',
+                    padding: { bottom: 4 }
+                  }
+                }
+              }
+            }
+          });
         }
         function renderPelaksanaanPagination(p) {
           var nav = document.getElementById('peer-pelaksanaan-pagination');
@@ -3742,6 +4250,17 @@
           pelaksanaanModal.setAttribute('aria-hidden', 'false');
           if (pelaksanaanCard) pelaksanaanCard.setAttribute('aria-expanded', 'true');
           loadPelaksanaanSelesai(1);
+          requestAnimationFrame(function () {
+            try {
+              if (peerPelaksanaanSlaChartInstance) peerPelaksanaanSlaChartInstance.resize();
+            } catch (e) {}
+          });
+          setTimeout(function () {
+            try {
+              if (peerPelaksanaanSlaChartInstance) peerPelaksanaanSlaChartInstance.resize();
+            } catch (e) {}
+          }, 150);
+          loadGapMatrixChart();
         }
         function closePelaksanaanModal() {
           if (!pelaksanaanModal) return;
@@ -3752,6 +4271,25 @@
         if (pelaksanaanCard) pelaksanaanCard.addEventListener('click', openPelaksanaanModal);
         if (pelaksanaanClose) pelaksanaanClose.addEventListener('click', closePelaksanaanModal);
         if (pelaksanaanBackdrop) pelaksanaanBackdrop.addEventListener('click', closePelaksanaanModal);
+        var kkEvalModal = document.getElementById('peer-kk-eval-modal');
+        var kkEvalCard = document.getElementById('peer-kpi-kk-eval-card');
+        var kkEvalClose = document.getElementById('peer-kk-eval-close');
+        var kkEvalBackdrop = kkEvalModal ? kkEvalModal.querySelector('.peer-kk-eval-backdrop') : null;
+        function openKkEvalModal() {
+          if (!kkEvalModal) return;
+          kkEvalModal.classList.remove('hidden');
+          kkEvalModal.setAttribute('aria-hidden', 'false');
+          if (kkEvalCard) kkEvalCard.setAttribute('aria-expanded', 'true');
+        }
+        function closeKkEvalModal() {
+          if (!kkEvalModal) return;
+          kkEvalModal.classList.add('hidden');
+          kkEvalModal.setAttribute('aria-hidden', 'true');
+          if (kkEvalCard) kkEvalCard.setAttribute('aria-expanded', 'false');
+        }
+        if (kkEvalCard) kkEvalCard.addEventListener('click', openKkEvalModal);
+        if (kkEvalClose) kkEvalClose.addEventListener('click', closeKkEvalModal);
+        if (kkEvalBackdrop) kkEvalBackdrop.addEventListener('click', closeKkEvalModal);
         if (pelaksanaanModal) {
           pelaksanaanModal.addEventListener('click', function (e) {
             var tabBtn = e.target.closest('.peer-pelaksanaan-tab');
@@ -4235,6 +4773,10 @@
         }
         document.addEventListener('keydown', function (e) {
           if (e.key !== 'Escape') return;
+          if (kkEvalModal && !kkEvalModal.classList.contains('hidden')) {
+            closeKkEvalModal();
+            return;
+          }
           if (pelaksanaanModal && !pelaksanaanModal.classList.contains('hidden')) {
             closePelaksanaanModal();
             return;
@@ -4269,6 +4811,11 @@
           t.click();
         });
         loadPeerHighlightIssueRecommendation();
+        renderPelaksanaanSlaChart(peerSlaChartPayload(peerKpiSlaBootstrap));
+        syncKkEvalModalFromKpi(
+          @json($kpi ?? []),
+          @json(($chartPeriodMonth ?? false) ? 'month' : 'all')
+        );
       })();
       </script>
       <script>

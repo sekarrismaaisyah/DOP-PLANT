@@ -12,6 +12,7 @@ use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Throwable;
 
@@ -36,18 +37,35 @@ class ImportValidasiTbcJob implements ShouldQueue
     {
         $log = ValidasiTbcImportLog::query()->find($this->importLogId);
 
-        if (! Str::startsWith($this->relativePath, 'imports/validasi-tbc/')) {
+        $disk = Storage::disk('local');
+        $relative = str_replace('\\', '/', $this->relativePath);
+
+        if (! Str::startsWith($relative, 'imports/validasi-tbc/')) {
             Log::warning('ImportValidasiTbcJob: rejected path', ['path' => $this->relativePath]);
             $this->markLogFailed($log, 'Path file tidak valid.');
 
             return;
         }
 
-        $fullPath = storage_path('app/' . $this->relativePath);
+        if (! $disk->exists($relative)) {
+            Log::warning('ImportValidasiTbcJob: file not found on disk', [
+                'relative' => $relative,
+                'resolved' => $disk->path($relative),
+                'import_log_id' => $this->importLogId,
+            ]);
+            $this->markLogFailed(
+                $log,
+                'File impor tidak ditemukan di server. Penyebab umum: (1) worker antrian jalan di folder/PC lain tanpa akses ke storage yang sama — jalankan queue:work di mesin yang sama dengan aplikasi web; (2) job lama di tabel jobs — jalankan php artisan queue:flush lalu unggah ulang; (3) file belum tertulis — coba unggah lagi.'
+            );
+
+            return;
+        }
+
+        $fullPath = $disk->path($relative);
 
         if (! is_file($fullPath)) {
-            Log::warning('ImportValidasiTbcJob: file not found', ['path' => $fullPath]);
-            $this->markLogFailed($log, 'File sementara tidak ditemukan (mungkin sudah diproses atau kedaluwarsa).');
+            Log::warning('ImportValidasiTbcJob: path exists but not a file', ['path' => $fullPath]);
+            $this->markLogFailed($log, 'Path unggahan tidak valid (bukan file).');
 
             return;
         }
@@ -69,16 +87,16 @@ class ImportValidasiTbcJob implements ShouldQueue
         } catch (\InvalidArgumentException $e) {
             $this->markLogFailed($log, $e->getMessage());
             Log::warning('ImportValidasiTbcJob: data/template tidak valid — ' . $e->getMessage());
-            @unlink($fullPath);
+            $disk->delete($relative);
             throw $e;
         } catch (Throwable $e) {
             $this->markLogFailed($log, $e->getMessage());
             Log::error('ImportValidasiTbcJob gagal: ' . $e->getMessage(), ['trace' => $e->getTraceAsString()]);
-            @unlink($fullPath);
+            $disk->delete($relative);
             throw $e;
         }
 
-        @unlink($fullPath);
+        $disk->delete($relative);
     }
 
     public function failed(?Throwable $exception): void
@@ -98,9 +116,10 @@ class ImportValidasiTbcJob implements ShouldQueue
             ]);
         }
 
-        $fullPath = storage_path('app/' . $this->relativePath);
-        if (is_file($fullPath)) {
-            @unlink($fullPath);
+        $disk = Storage::disk('local');
+        $relative = str_replace('\\', '/', $this->relativePath);
+        if ($disk->exists($relative)) {
+            $disk->delete($relative);
         }
     }
 

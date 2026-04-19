@@ -134,6 +134,7 @@ final class GetPeerPressureDashboardKpiStatsAction
         $compliance = $this->computePelaksanaanCompliance($base);
         $statusKosong = $this->countPelaksanaanStatusKosong($base);
         $kkRows = $this->pelaksanaanKelompokKerjaBreakdown($base);
+        $slaChart = $this->buildSlaTemuanKePelaksanaan($base);
 
         return [
             'total_cases' => $total,
@@ -149,6 +150,7 @@ final class GetPeerPressureDashboardKpiStatsAction
             'pelaksanaan_belum_pct' => $pctBelum,
             'pelaksanaan_status_kosong_count' => $statusKosong,
             'pelaksanaan_kelompok_kerja_rows' => $kkRows,
+            'sla_temuan_ke_pelaksanaan' => $slaChart,
             ...$compliance,
         ];
     }
@@ -272,6 +274,7 @@ final class GetPeerPressureDashboardKpiStatsAction
         $compliance = $this->computePelaksanaanCompliance($baseGlobal);
         $statusKosong = $this->countPelaksanaanStatusKosong($baseGlobal);
         $kkRows = $this->pelaksanaanKelompokKerjaBreakdown($baseGlobal);
+        $slaChart = $this->buildSlaTemuanKePelaksanaan($baseGlobal);
 
         return [
             'total_cases' => $total,
@@ -287,7 +290,142 @@ final class GetPeerPressureDashboardKpiStatsAction
             'pelaksanaan_belum_pct' => $pctBelum,
             'pelaksanaan_status_kosong_count' => $statusKosong,
             'pelaksanaan_kelompok_kerja_rows' => $kkRows,
+            'sla_temuan_ke_pelaksanaan' => $slaChart,
             ...$compliance,
+        ];
+    }
+
+    /**
+     * SLA: hari dari tanggal temuan ke tanggal pelaksanaan peer pressure (kolom tanggal_edukasi),
+     * per jenis sumber temuan (BeRecord / blindspot / tidak speak up) dari kategori deviasi + id_berecord.
+     *
+     * @return array{
+     *   buckets: list<array{key: string, label: string, berecord: int, blindspot: int, speakup_fatigue: int}>,
+     *   sources: list<array{key: string, label: string, color: string}>,
+     *   summary: array<string, array{avg_days: float, count: int}>,
+     *   total_classified: int,
+     *   max_bar: int
+     * }
+     */
+    private function buildSlaTemuanKePelaksanaan(Builder $base): array
+    {
+        $lagBucketDefs = [
+            ['key' => 'd0_3', 'label' => '0–3 hari', 'min' => 0, 'max' => 3],
+            ['key' => 'd4_7', 'label' => '4–7 hari', 'min' => 4, 'max' => 7],
+            ['key' => 'd8_14', 'label' => '8–14 hari', 'min' => 8, 'max' => 14],
+            ['key' => 'd15_30', 'label' => '15–30 hari', 'min' => 15, 'max' => 30],
+            ['key' => 'd31p', 'label' => '31+ hari', 'min' => 31, 'max' => null],
+        ];
+
+        $counts = [];
+        foreach ($lagBucketDefs as $def) {
+            $counts[$def['key']] = [
+                'berecord' => 0,
+                'blindspot' => 0,
+                'speakup_fatigue' => 0,
+            ];
+        }
+
+        $lagsBySource = [
+            'berecord' => [],
+            'blindspot' => [],
+            'speakup_fatigue' => [],
+        ];
+
+        $rows = (clone $base)
+            ->whereNotNull('tanggal_temuan')
+            ->whereNotNull('tanggal_edukasi')
+            ->get(['tanggal_temuan', 'tanggal_edukasi', 'kategori_deviasi', 'id_berecord']);
+
+        foreach ($rows as $r) {
+            $catBucket = KategoriDeviasiBucket::bucket($r->kategori_deviasi);
+            $sourceKey = null;
+            if ($catBucket === 'tidak_speak_up_fatigue') {
+                $sourceKey = 'speakup_fatigue';
+            } elseif ($catBucket === 'blindspot_to_be_concerned') {
+                $sourceKey = 'blindspot';
+            } elseif ($r->id_berecord !== null || KategoriDeviasiBucket::isBerecordPolicyBucket($catBucket)) {
+                $sourceKey = 'berecord';
+            }
+
+            if ($sourceKey === null) {
+                continue;
+            }
+
+            $temuan = $r->tanggal_temuan;
+            $edukasi = $r->tanggal_edukasi;
+            if (! $temuan instanceof \DateTimeInterface || ! $edukasi instanceof \DateTimeInterface) {
+                continue;
+            }
+
+            $t0 = Carbon::parse($temuan);
+            $t1 = Carbon::parse($edukasi);
+            $lagSigned = (int) $t0->diffInDays($t1, false);
+            $lag = max(0, $lagSigned);
+
+            $lagKey = 'd31p';
+            foreach ($lagBucketDefs as $def) {
+                if ($def['max'] === null) {
+                    if ($lag >= $def['min']) {
+                        $lagKey = $def['key'];
+                    }
+                    break;
+                }
+                if ($lag >= $def['min'] && $lag <= $def['max']) {
+                    $lagKey = $def['key'];
+                    break;
+                }
+            }
+
+            $counts[$lagKey][$sourceKey]++;
+            $lagsBySource[$sourceKey][] = $lag;
+        }
+
+        $summary = [];
+        foreach (['berecord', 'blindspot', 'speakup_fatigue'] as $sk) {
+            $list = $lagsBySource[$sk];
+            $n = count($list);
+            $summary[$sk] = [
+                'avg_days' => $n > 0 ? round(array_sum($list) / $n, 1) : 0.0,
+                'count' => $n,
+            ];
+        }
+
+        $totalClassified = $summary['berecord']['count'] + $summary['blindspot']['count'] + $summary['speakup_fatigue']['count'];
+
+        $maxBar = 0;
+        foreach ($counts as $bySource) {
+            foreach ($bySource as $c) {
+                $maxBar = max($maxBar, $c);
+            }
+        }
+        if ($maxBar === 0) {
+            $maxBar = 1;
+        }
+
+        $bucketsOut = [];
+        foreach ($lagBucketDefs as $def) {
+            $k = $def['key'];
+            $row = $counts[$k];
+            $bucketsOut[] = [
+                'key' => $k,
+                'label' => $def['label'],
+                'berecord' => $row['berecord'],
+                'blindspot' => $row['blindspot'],
+                'speakup_fatigue' => $row['speakup_fatigue'],
+            ];
+        }
+
+        return [
+            'buckets' => $bucketsOut,
+            'sources' => [
+                ['key' => 'berecord', 'label' => 'BeRecord (PSPP / Golden rules / insiden)', 'color' => '#0369a1'],
+                ['key' => 'blindspot', 'label' => 'Validasi blindspot', 'color' => '#7c3aed'],
+                ['key' => 'speakup_fatigue', 'label' => 'Tidak speak up fatigue', 'color' => '#c2410c'],
+            ],
+            'summary' => $summary,
+            'total_classified' => $totalClassified,
+            'max_bar' => $maxBar,
         ];
     }
 
