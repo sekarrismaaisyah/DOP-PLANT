@@ -1221,18 +1221,18 @@
                </div>
 
                <div class="mt-5 rounded-xl border border-teal-200/80 bg-teal-50/50 px-4 py-3">
-                  <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per perusahaan (heatmap)</p>
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per perusahaan (ringkasan periode)</p>
                   <p id="peer-perusahaan-heatmap-period" class="mt-1 text-[11px] leading-snug text-on-surface-variant"></p>
                   <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
-                     Per hari (urutan kronologis) dan per perusahaan (maks. 30 terbanyak): <span class="font-medium text-on-surface">Terlaksana</span> = % kejadian <span class="font-mono text-[10px] font-semibold">CLOSED</span>/<span class="font-mono text-[10px] font-semibold">SELESAI</span>; <span class="font-medium text-on-surface">Tidak terlaksana</span> = sisanya. Arahkan kursor ke header kolom untuk melihat tanggal. Kolom terakhir = agregat seluruh periode. Sel kosong = tidak ada kejadian pada hari tersebut.
+                     Satu baris per perusahaan (maks. 30 terbanyak volume di periode). <span class="font-medium text-on-surface">Terlaksana</span> = % kejadian <span class="font-mono text-[10px] font-semibold">CLOSED</span>/<span class="font-mono text-[10px] font-semibold">SELESAI</span>; <span class="font-medium text-on-surface">Tidak terlaksana</span> = sisanya — dihitung untuk seluruh rentang periode di atas.
                   </p>
                   <p id="peer-perusahaan-heatmap-loading" class="mt-3 hidden text-center text-[12px] text-on-surface-variant" aria-live="polite">
                      <span class="material-symbols-outlined mb-1 inline-block animate-spin text-teal-700 text-xl" style="animation-duration:1s">progress_activity</span>
-                     <span class="block">Memuat heatmap…</span>
+                     <span class="block">Memuat ringkasan…</span>
                   </p>
                   <p id="peer-perusahaan-heatmap-empty" class="mt-3 hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
                   <div id="peer-perusahaan-heatmap-wrap" class="mt-3 hidden overflow-x-auto rounded-xl border border-teal-100/90 bg-white shadow-inner">
-                     <table class="w-full min-w-[640px] border-collapse text-center text-[11px] sm:text-xs" id="peer-perusahaan-heatmap-table">
+                     <table class="w-full min-w-[280px] border-collapse text-center text-[11px] sm:text-xs" id="peer-perusahaan-heatmap-table">
                         <thead id="peer-perusahaan-heatmap-thead" class="bg-[#f0fdfa] text-[10px] font-bold uppercase tracking-wider text-teal-950"></thead>
                         <tbody id="peer-perusahaan-heatmap-tbody" class="divide-y divide-outline-variant/10"></tbody>
                      </table>
@@ -3070,13 +3070,11 @@
           if (periodEl && data && data.period_label) {
             periodEl.textContent = 'Periode: ' + String(data.period_label);
           }
-          var days = data && Array.isArray(data.days) ? data.days : [];
           var companies = data && Array.isArray(data.companies) ? data.companies : [];
-          var cells = data && data.cells && typeof data.cells === 'object' ? data.cells : {};
           var grandRow = data && data.grand_row && typeof data.grand_row === 'object' ? data.grand_row : {};
-          if (!companies.length || !days.length) {
+          if (!companies.length) {
             emptyEl.textContent =
-              'Belum ada data perusahaan untuk heatmap pada rentang ini.';
+              'Belum ada data perusahaan untuk ringkasan pada rentang ini.';
             emptyEl.classList.remove('hidden');
             wrapEl.classList.add('hidden');
             return;
@@ -3084,40 +3082,23 @@
           emptyEl.classList.add('hidden');
           wrapEl.classList.remove('hidden');
           var subHdr =
-            'min-w-[3.25rem] max-w-[5rem] border border-teal-100 px-0.5 py-2 text-[8px] font-bold leading-tight text-teal-900 sm:min-w-[3.5rem] sm:text-[9px]';
+            'min-w-[5rem] border border-teal-100 px-2 py-2.5 text-[10px] font-bold text-teal-900 sm:text-xs';
           var trHead = document.createElement('tr');
           var thCorner = document.createElement('th');
           thCorner.className =
             'sticky left-0 z-10 min-w-[10rem] border border-teal-100 bg-[#ecfdf5] px-2 py-2 text-left text-[10px] font-bold uppercase text-teal-950 sm:min-w-[12rem]';
           thCorner.textContent = 'Nama perusahaan / tim';
           trHead.appendChild(thCorner);
-          days.forEach(function (d) {
-            var dk = d.key != null ? String(d.key) : '';
-            var dl = d.label != null ? String(d.label) : '';
-            var thT = document.createElement('th');
-            thT.className = subHdr + ' bg-emerald-50/90';
-            thT.textContent = 'Terlaksana';
-            thT.setAttribute('title', dk ? 'Tanggal temuan ' + dk + (dl ? ' (' + dl + ')' : '') : 'Terlaksana');
-            trHead.appendChild(thT);
-            var thB = document.createElement('th');
-            thB.className = subHdr + ' bg-amber-50/90';
-            thB.textContent = 'Tidak terlaksana';
-            thB.setAttribute('title', dk ? 'Tanggal temuan ' + dk + (dl ? ' (' + dl + ')' : '') : 'Tidak terlaksana');
-            trHead.appendChild(thB);
-          });
-          var thGT = document.createElement('th');
-          thGT.className = subHdr + ' bg-teal-100/90';
-          thGT.textContent = 'Terlaksana';
-          thGT.setAttribute(
-            'title',
-            'Agregat seluruh periode — % kejadian CLOSED/SELESAI'
-          );
-          trHead.appendChild(thGT);
-          var thGB = document.createElement('th');
-          thGB.className = subHdr + ' bg-teal-100/90';
-          thGB.textContent = 'Tidak terlaksana';
-          thGB.setAttribute('title', 'Agregat seluruh periode — % belum CLOSED/SELESAI');
-          trHead.appendChild(thGB);
+          var thT = document.createElement('th');
+          thT.className = subHdr + ' bg-emerald-50/90';
+          thT.textContent = 'Terlaksana';
+          thT.setAttribute('title', '% kejadian CLOSED/SELESAI dalam periode');
+          trHead.appendChild(thT);
+          var thB = document.createElement('th');
+          thB.className = subHdr + ' bg-amber-50/90';
+          thB.textContent = 'Tidak terlaksana';
+          thB.setAttribute('title', '% kejadian belum CLOSED/SELESAI dalam periode');
+          trHead.appendChild(thB);
           thead.appendChild(trHead);
           companies.forEach(function (co) {
             var tr = document.createElement('tr');
@@ -3126,59 +3107,14 @@
               'sticky left-0 z-10 border border-outline-variant/10 bg-white px-2 py-1.5 text-left text-[11px] font-medium text-on-surface shadow-[2px_0_0_0_rgba(255,255,255,1)] sm:text-xs';
             tdName.textContent = co;
             tr.appendChild(tdName);
-            var rowCells = cells[co] || {};
-            days.forEach(function (d) {
-              var dk = d.key;
-              var cell = rowCells[dk];
-              var tdT = document.createElement('td');
-              tdT.className =
-                'border border-outline-variant/10 px-0.5 py-1.5 tabular-nums text-[10px] sm:text-[11px] ' +
-                peerPerusahaanHeatmapCellClass(cell != null && cell.pct != null ? cell.pct : null);
-              var tdB = document.createElement('td');
-              tdB.className =
-                'border border-outline-variant/10 px-0.5 py-1.5 tabular-nums text-[10px] sm:text-[11px] ' +
-                peerPerusahaanHeatmapBelumCellClass(
-                  cell != null && cell.pct_belum != null ? cell.pct_belum : null
-                );
-              if (cell != null && cell.pct != null && cell.pct_belum != null) {
-                tdT.textContent =
-                  Number(cell.pct).toLocaleString('id-ID', {
-                    minimumFractionDigits: 1,
-                    maximumFractionDigits: 1
-                  }) + '%';
-                tdT.setAttribute(
-                  'title',
-                  'Terlaksana: ' +
-                    (cell.selesai != null ? cell.selesai : '0') +
-                    '/' +
-                    (cell.total != null ? cell.total : '0') +
-                    ' kejadian'
-                );
-                tdB.textContent =
-                  Number(cell.pct_belum).toLocaleString('id-ID', {
-                    minimumFractionDigits: 1,
-                    maximumFractionDigits: 1
-                  }) + '%';
-                var bel = (cell.total != null ? cell.total : 0) - (cell.selesai != null ? cell.selesai : 0);
-                tdB.setAttribute(
-                  'title',
-                  'Tidak terlaksana: ' + bel + '/' + (cell.total != null ? cell.total : '0') + ' kejadian'
-                );
-              } else {
-                tdT.innerHTML = '&nbsp;';
-                tdB.innerHTML = '&nbsp;';
-              }
-              tr.appendChild(tdT);
-              tr.appendChild(tdB);
-            });
             var g = grandRow[co];
             var tdGT = document.createElement('td');
             tdGT.className =
-              'border border-teal-200/80 px-0.5 py-1.5 tabular-nums text-[10px] font-semibold sm:text-[11px] ' +
+              'border border-outline-variant/10 px-2 py-1.5 tabular-nums text-[10px] sm:text-[11px] ' +
               peerPerusahaanHeatmapCellClass(g != null && g.pct != null ? g.pct : null);
             var tdGB = document.createElement('td');
             tdGB.className =
-              'border border-teal-200/80 px-0.5 py-1.5 tabular-nums text-[10px] font-semibold sm:text-[11px] ' +
+              'border border-outline-variant/10 px-2 py-1.5 tabular-nums text-[10px] sm:text-[11px] ' +
               peerPerusahaanHeatmapBelumCellClass(g != null && g.pct_belum != null ? g.pct_belum : null);
             if (g != null && g.pct != null && g.pct_belum != null) {
               tdGT.textContent =
@@ -3188,7 +3124,7 @@
                 }) + '%';
               tdGT.setAttribute(
                 'title',
-                'Terlaksana agregat: ' +
+                'Terlaksana: ' +
                   (g.selesai != null ? g.selesai : '0') +
                   '/' +
                   (g.total != null ? g.total : '0') +
@@ -3202,7 +3138,7 @@
               var gBel = (g.total != null ? g.total : 0) - (g.selesai != null ? g.selesai : 0);
               tdGB.setAttribute(
                 'title',
-                'Tidak terlaksana (agregat): ' + gBel + '/' + (g.total != null ? g.total : '0') + ' kejadian'
+                'Tidak terlaksana: ' + gBel + '/' + (g.total != null ? g.total : '0') + ' kejadian'
               );
             } else {
               tdGT.textContent = '—';
@@ -3233,7 +3169,7 @@
             credentials: 'same-origin'
           })
             .then(function (r) {
-              if (!r.ok) throw new Error('Gagal memuat heatmap perusahaan');
+              if (!r.ok) throw new Error('Gagal memuat ringkasan perusahaan');
               return r.json();
             })
             .then(function (data) {
@@ -3242,7 +3178,7 @@
             .catch(function (e) {
               if (loadingEl) loadingEl.classList.add('hidden');
               if (emptyEl) {
-                emptyEl.textContent = e.message || 'Gagal memuat heatmap.';
+                emptyEl.textContent = e.message || 'Gagal memuat ringkasan.';
                 emptyEl.classList.remove('hidden');
               }
             });
