@@ -29,8 +29,8 @@ final class GetPeerPressurePerusahaanPelaksanaanHeatmapAction
      *   period_label: string,
      *   days: list<array{key: string, label: string, d: int, m: int, y: int}>,
      *   companies: list<string>,
-     *   cells: array<string, array<string, array{pct: float|null, total: int, selesai: int}|null>> ,
-     *   grand_row: array<string, array{pct: float|null, total: int, selesai: int}>
+     *   cells: array<string, array<string, array{pct: float, pct_belum: float, total: int, selesai: int}|null>> ,
+     *   grand_row: array<string, array{pct: float, pct_belum: float, total: int, selesai: int}|null>
      * }
      */
     public function __invoke(?int $year = null, ?int $month = null): array
@@ -143,9 +143,12 @@ final class GetPeerPressurePerusahaanPelaksanaanHeatmapAction
                 $selesai = $cell['selesai'];
                 $sumT += $total;
                 $sumS += $selesai;
+                $belum = $total - $selesai;
                 $pct = round(100 * $selesai / $total, 1);
+                $pctBelum = round(100 * $belum / $total, 1);
                 $cells[$company][$ds] = [
                     'pct' => $pct,
+                    'pct_belum' => $pctBelum,
                     'total' => $total,
                     'selesai' => $selesai,
                 ];
@@ -153,6 +156,7 @@ final class GetPeerPressurePerusahaanPelaksanaanHeatmapAction
             $grandRow[$company] = $sumT > 0
                 ? [
                     'pct' => round(100 * $sumS / $sumT, 1),
+                    'pct_belum' => round(100 * ($sumT - $sumS) / $sumT, 1),
                     'total' => $sumT,
                     'selesai' => $sumS,
                 ]

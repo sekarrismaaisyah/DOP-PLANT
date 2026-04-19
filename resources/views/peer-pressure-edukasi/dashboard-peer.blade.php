@@ -1224,7 +1224,7 @@
                   <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per perusahaan (heatmap)</p>
                   <p id="peer-perusahaan-heatmap-period" class="mt-1 text-[11px] leading-snug text-on-surface-variant"></p>
                   <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
-                     Persentase kejadian dengan status <span class="font-mono text-[10px] font-semibold">CLOSED</span>/<span class="font-mono text-[10px] font-semibold">SELESAI</span> dibagi total kejadian <span class="font-medium text-on-surface">per tanggal temuan</span> dan <span class="font-medium text-on-surface">per perusahaan</span> (maks. 30 perusahaan terbanyak). Sel kosong = tidak ada kejadian hari itu.
+                     Per hari (urutan kronologis) dan per perusahaan (maks. 30 terbanyak): <span class="font-medium text-on-surface">Terlaksana</span> = % kejadian <span class="font-mono text-[10px] font-semibold">CLOSED</span>/<span class="font-mono text-[10px] font-semibold">SELESAI</span>; <span class="font-medium text-on-surface">Tidak terlaksana</span> = sisanya. Arahkan kursor ke header kolom untuk melihat tanggal. Kolom terakhir = agregat seluruh periode. Sel kosong = tidak ada kejadian pada hari tersebut.
                   </p>
                   <p id="peer-perusahaan-heatmap-loading" class="mt-3 hidden text-center text-[12px] text-on-surface-variant" aria-live="polite">
                      <span class="material-symbols-outlined mb-1 inline-block animate-spin text-teal-700 text-xl" style="animation-duration:1s">progress_activity</span>
@@ -3042,6 +3042,20 @@
           if (p >= 45) return 'bg-orange-200 text-orange-950';
           return 'bg-red-300 text-red-950 font-semibold';
         }
+        /** % belum tinggi = buruk → semakin merah */
+        function peerPerusahaanHeatmapBelumCellClass(pct) {
+          if (pct == null || pct === '' || isNaN(Number(pct))) {
+            return 'bg-slate-50 text-on-surface-variant';
+          }
+          var p = Number(pct);
+          if (p <= 5) return 'bg-emerald-700 text-white font-semibold';
+          if (p <= 15) return 'bg-emerald-600 text-white font-semibold';
+          if (p <= 25) return 'bg-emerald-400 text-emerald-950 font-semibold';
+          if (p <= 35) return 'bg-emerald-200 text-emerald-950';
+          if (p <= 45) return 'bg-amber-100 text-amber-950';
+          if (p <= 55) return 'bg-orange-200 text-orange-950';
+          return 'bg-red-300 text-red-950 font-semibold';
+        }
         function renderPerusahaanHeatmapFromPayload(data) {
           var loadingEl = document.getElementById('peer-perusahaan-heatmap-loading');
           var emptyEl = document.getElementById('peer-perusahaan-heatmap-empty');
@@ -3069,26 +3083,42 @@
           }
           emptyEl.classList.add('hidden');
           wrapEl.classList.remove('hidden');
-          var trh = document.createElement('tr');
-          var th0 = document.createElement('th');
-          th0.className =
+          var subHdr =
+            'min-w-[3.25rem] max-w-[5rem] border border-teal-100 px-0.5 py-2 text-[8px] font-bold leading-tight text-teal-900 sm:min-w-[3.5rem] sm:text-[9px]';
+          var trHead = document.createElement('tr');
+          var thCorner = document.createElement('th');
+          thCorner.className =
             'sticky left-0 z-10 min-w-[10rem] border border-teal-100 bg-[#ecfdf5] px-2 py-2 text-left text-[10px] font-bold uppercase text-teal-950 sm:min-w-[12rem]';
-          th0.textContent = 'Nama perusahaan / tim';
-          trh.appendChild(th0);
+          thCorner.textContent = 'Nama perusahaan / tim';
+          trHead.appendChild(thCorner);
           days.forEach(function (d) {
-            var th = document.createElement('th');
-            th.className = 'min-w-[3rem] border border-teal-100 px-1 py-2 text-[9px] font-bold text-teal-900 sm:min-w-[3.25rem]';
-            th.textContent = d.label != null ? String(d.label) : '';
-            th.setAttribute('title', d.key != null ? String(d.key) : '');
-            trh.appendChild(th);
+            var dk = d.key != null ? String(d.key) : '';
+            var dl = d.label != null ? String(d.label) : '';
+            var thT = document.createElement('th');
+            thT.className = subHdr + ' bg-emerald-50/90';
+            thT.textContent = 'Terlaksana';
+            thT.setAttribute('title', dk ? 'Tanggal temuan ' + dk + (dl ? ' (' + dl + ')' : '') : 'Terlaksana');
+            trHead.appendChild(thT);
+            var thB = document.createElement('th');
+            thB.className = subHdr + ' bg-amber-50/90';
+            thB.textContent = 'Tidak terlaksana';
+            thB.setAttribute('title', dk ? 'Tanggal temuan ' + dk + (dl ? ' (' + dl + ')' : '') : 'Tidak terlaksana');
+            trHead.appendChild(thB);
           });
-          var thG = document.createElement('th');
-          thG.className =
-            'min-w-[4rem] border border-teal-100 bg-teal-100/80 px-2 py-2 text-[9px] font-bold text-teal-950';
-          thG.textContent = 'Grand %';
-          thG.setAttribute('title', 'Rata-rata tertimbang seluruh hari (total selesai ÷ total kejadian)');
-          trh.appendChild(thG);
-          thead.appendChild(trh);
+          var thGT = document.createElement('th');
+          thGT.className = subHdr + ' bg-teal-100/90';
+          thGT.textContent = 'Terlaksana';
+          thGT.setAttribute(
+            'title',
+            'Agregat seluruh periode — % kejadian CLOSED/SELESAI'
+          );
+          trHead.appendChild(thGT);
+          var thGB = document.createElement('th');
+          thGB.className = subHdr + ' bg-teal-100/90';
+          thGB.textContent = 'Tidak terlaksana';
+          thGB.setAttribute('title', 'Agregat seluruh periode — % belum CLOSED/SELESAI');
+          trHead.appendChild(thGB);
+          thead.appendChild(trHead);
           companies.forEach(function (co) {
             var tr = document.createElement('tr');
             var tdName = document.createElement('td');
@@ -3100,51 +3130,86 @@
             days.forEach(function (d) {
               var dk = d.key;
               var cell = rowCells[dk];
-              var td = document.createElement('td');
-              td.className =
-                'border border-outline-variant/10 px-1 py-1.5 tabular-nums ' +
+              var tdT = document.createElement('td');
+              tdT.className =
+                'border border-outline-variant/10 px-0.5 py-1.5 tabular-nums text-[10px] sm:text-[11px] ' +
                 peerPerusahaanHeatmapCellClass(cell != null && cell.pct != null ? cell.pct : null);
-              if (cell != null && cell.pct != null) {
-                td.textContent =
+              var tdB = document.createElement('td');
+              tdB.className =
+                'border border-outline-variant/10 px-0.5 py-1.5 tabular-nums text-[10px] sm:text-[11px] ' +
+                peerPerusahaanHeatmapBelumCellClass(
+                  cell != null && cell.pct_belum != null ? cell.pct_belum : null
+                );
+              if (cell != null && cell.pct != null && cell.pct_belum != null) {
+                tdT.textContent =
                   Number(cell.pct).toLocaleString('id-ID', {
                     minimumFractionDigits: 1,
                     maximumFractionDigits: 1
                   }) + '%';
-                td.setAttribute(
+                tdT.setAttribute(
                   'title',
-                  (cell.selesai != null ? cell.selesai : '0') +
+                  'Terlaksana: ' +
+                    (cell.selesai != null ? cell.selesai : '0') +
                     '/' +
                     (cell.total != null ? cell.total : '0') +
-                    ' selesai'
+                    ' kejadian'
+                );
+                tdB.textContent =
+                  Number(cell.pct_belum).toLocaleString('id-ID', {
+                    minimumFractionDigits: 1,
+                    maximumFractionDigits: 1
+                  }) + '%';
+                var bel = (cell.total != null ? cell.total : 0) - (cell.selesai != null ? cell.selesai : 0);
+                tdB.setAttribute(
+                  'title',
+                  'Tidak terlaksana: ' + bel + '/' + (cell.total != null ? cell.total : '0') + ' kejadian'
                 );
               } else {
-                td.innerHTML = '&nbsp;';
+                tdT.innerHTML = '&nbsp;';
+                tdB.innerHTML = '&nbsp;';
               }
-              tr.appendChild(td);
+              tr.appendChild(tdT);
+              tr.appendChild(tdB);
             });
             var g = grandRow[co];
-            var tdG = document.createElement('td');
-            tdG.className =
-              'border border-teal-200/80 px-1 py-1.5 tabular-nums font-semibold ' +
+            var tdGT = document.createElement('td');
+            tdGT.className =
+              'border border-teal-200/80 px-0.5 py-1.5 tabular-nums text-[10px] font-semibold sm:text-[11px] ' +
               peerPerusahaanHeatmapCellClass(g != null && g.pct != null ? g.pct : null);
-            if (g != null && g.pct != null) {
-              tdG.textContent =
+            var tdGB = document.createElement('td');
+            tdGB.className =
+              'border border-teal-200/80 px-0.5 py-1.5 tabular-nums text-[10px] font-semibold sm:text-[11px] ' +
+              peerPerusahaanHeatmapBelumCellClass(g != null && g.pct_belum != null ? g.pct_belum : null);
+            if (g != null && g.pct != null && g.pct_belum != null) {
+              tdGT.textContent =
                 Number(g.pct).toLocaleString('id-ID', {
                   minimumFractionDigits: 1,
                   maximumFractionDigits: 1
                 }) + '%';
-              tdG.setAttribute(
+              tdGT.setAttribute(
                 'title',
-                'Agregat: ' +
+                'Terlaksana agregat: ' +
                   (g.selesai != null ? g.selesai : '0') +
                   '/' +
                   (g.total != null ? g.total : '0') +
-                  ' selesai (seluruh hari)'
+                  ' kejadian'
+              );
+              tdGB.textContent =
+                Number(g.pct_belum).toLocaleString('id-ID', {
+                  minimumFractionDigits: 1,
+                  maximumFractionDigits: 1
+                }) + '%';
+              var gBel = (g.total != null ? g.total : 0) - (g.selesai != null ? g.selesai : 0);
+              tdGB.setAttribute(
+                'title',
+                'Tidak terlaksana (agregat): ' + gBel + '/' + (g.total != null ? g.total : '0') + ' kejadian'
               );
             } else {
-              tdG.textContent = '—';
+              tdGT.textContent = '—';
+              tdGB.textContent = '—';
             }
-            tr.appendChild(tdG);
+            tr.appendChild(tdGT);
+            tr.appendChild(tdGB);
             tbody.appendChild(tr);
           });
         }
