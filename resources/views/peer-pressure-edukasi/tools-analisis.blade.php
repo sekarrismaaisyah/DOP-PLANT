@@ -100,7 +100,7 @@
       </style>
       <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
    </head>
-   <body class="bg-[#f0f2f5] font-body text-on-surface min-h-screen flex flex-col">
+   <body class="bg-[#f0f2f5] font-body text-on-surface min-h-screen min-w-0 overflow-x-hidden flex flex-col">
       <!-- <header class="w-full sticky top-0 bg-[#ffffff] border-b border-[#dfe3e6] z-50 shadow-sm">
          <div class="mx-auto flex items-center justify-between px-8 py-4">
             <div class="flex items-center gap-10">
@@ -137,8 +137,8 @@
             </div>
          </div>
       </header> -->
-      <main class="mx-auto w-full max-w-[1600px] flex-grow space-y-8 px-6 py-8 sm:px-8">
-         <div id="app" class="space-y-8"></div>
+      <main class="mx-auto w-full min-w-0 max-w-[1600px] flex-grow space-y-8 px-4 py-6 sm:px-8 sm:py-8">
+         <div id="app" class="min-w-0 space-y-8"></div>
       </main>
 
 <script>
@@ -1000,21 +1000,21 @@ function renderHeader(data) {
         <span class="text-primary">Tools Analisis</span>
       </nav>
       <div class="text-sm font-medium uppercase tracking-[0.2em] text-on-surface-variant">Incident Back Analysis</div>
-      <h1 class="font-headline mt-2 text-3xl font-extrabold tracking-tight text-on-background">Fully Statistical Back Analysis Tool</h1>
+      <h1 class="font-headline mt-2 text-2xl font-extrabold tracking-tight text-on-background sm:text-3xl">Fully Statistical Back Analysis Tool</h1>
       <p class="mt-2 max-w-3xl text-sm font-medium text-on-surface-variant">
         Baseline dihitung dari rolling historical window, bobot berasal dari koefisien ridge regression terstandarisasi, dan overall score berasal dari predicted incident risk yang dinormalisasi dari model site.
       </p>
     </div>
     <div class="flex flex-col items-start gap-3 md:items-end">
-      <div class="inline-flex rounded-xl border border-outline-variant/25 bg-[#f8fafc] p-1">
-        <button data-action="page" data-page="dashboard" class="rounded-lg px-4 py-2 text-sm font-bold transition ${appState.page === 'dashboard' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-white/80'}">Analysis Dashboard</button>
-        <button data-action="page" data-page="accuracy" class="rounded-lg px-4 py-2 text-sm font-bold transition ${appState.page === 'accuracy' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-white/80'}">Accuracy Check</button>
+      <div class="flex flex-wrap gap-1 rounded-xl border border-outline-variant/25 bg-[#f8fafc] p-1">
+        <button data-action="page" data-page="dashboard" class="rounded-lg px-3 py-2 text-sm font-bold transition sm:px-4 ${appState.page === 'dashboard' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-white/80'}">Analysis Dashboard</button>
+        <button data-action="page" data-page="accuracy" class="rounded-lg px-3 py-2 text-sm font-bold transition sm:px-4 ${appState.page === 'accuracy' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-white/80'}">Accuracy Check</button>
       </div>
       <button data-action="reset" type="button" class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-sm transition hover:bg-primary-dim">Reset demo</button>
     </div>
   </div>
 
-  <div class="grid gap-4 md:grid-cols-6">
+  <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6">
     ${card(`<div class="p-5">
       <div class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Site</div>
       <div class="mt-3">
@@ -1076,10 +1076,10 @@ function renderTopDrivers(analysis) {
 function renderDashboard(data) {
   const actualRow = data.actualRow || {};
   return `
-    <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.15fr_0.85fr]">
       ${card(cardTitle('Statistical score trend per week') + `<div class="space-y-6 px-6 pb-6">
-        <div class="h-[340px] w-full rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><canvas id="dashboardTrendChart"></canvas></div>
-        <div class="grid gap-4 md:grid-cols-3">
+        <div class="h-[260px] w-full min-h-0 rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20 sm:h-[320px] lg:h-[340px]"><canvas id="dashboardTrendChart"></canvas></div>
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           ${statBox('Predicted incident', fmt(data.analysis.predictedIncidents,2), 'Fitted from standardized ridge model')}
           ${statBox('Score', fmt(data.analysis.score,1), 'Normalized from model prediction')}
           <div class="rounded-2xl bg-white p-5 border border-outline-variant/20">
@@ -1092,9 +1092,9 @@ function renderDashboard(data) {
       ${card(cardTitle('Top statistical drivers') + `<div class="space-y-3 px-6 pb-6">${renderTopDrivers(data.analysis)}</div>`)}
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-[1.1fr_0.9fr]">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.1fr_0.9fr]">
       ${card(cardTitle('Selected week and rolling reference') + `<div class="space-y-6 px-6 pb-6">
-        <div class="grid gap-4 md:grid-cols-3">
+        <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 md:grid-cols-3">
           <div class="space-y-2">
             <label class="text-sm font-medium text-on-surface">Week</label>
             <select data-control="selectedWeek" class="${inputClass()}">
@@ -1111,9 +1111,9 @@ function renderDashboard(data) {
           </div>
         </div>
 
-        <div class="grid gap-6 md:grid-cols-2">
+        <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
           ${card(`<div class="px-6 pt-6 pb-4"><h4 class="text-base font-semibold text-on-surface">Actual values</h4></div>
-            <div class="grid gap-4 px-6 pb-6">
+            <div class="grid grid-cols-1 gap-4 px-6 pb-6 sm:grid-cols-2">
               ${[
                 ['hazard', 'Pelaporan Hazard'],
                 ['rfidSupervisor', 'RFID Pengawas'],
@@ -1189,7 +1189,7 @@ function renderDashboard(data) {
       </table>
     </div>`)}
 
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       ${card(cardTitle('Statistical methodology') + `<div class="space-y-4 px-6 pb-6 text-sm text-on-surface-variant">
         <div class="rounded-2xl bg-[#f8fafc] p-5 border border-outline-variant/20">
           <div class="font-medium text-on-surface">Baseline / reference</div>
@@ -1224,7 +1224,7 @@ function renderDashboard(data) {
 
 function metricCardSet(metrics) {
   return `
-    <div class="grid gap-4 md:grid-cols-3">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
       <div class="rounded-2xl bg-primary p-5 text-on-primary">
         <div class="text-xs uppercase tracking-[0.2em] text-on-primary/80">Pearson</div>
         <div class="mt-2 text-3xl font-semibold">${fmt(metrics.pearson, 2)}</div>
@@ -1238,7 +1238,7 @@ function metricCardSet(metrics) {
         <div class="mt-2 text-3xl font-semibold text-on-surface">${fmt(metrics.auc, 2)}</div>
       </div>
     </div>
-    <div class="grid gap-4 md:grid-cols-4">
+    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
       <div class="rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><div class="text-xs text-on-surface-variant">Accuracy</div><div class="mt-2 text-2xl font-semibold text-on-surface">${fmt(metrics.accuracy * 100, 1)}%</div></div>
       <div class="rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><div class="text-xs text-on-surface-variant">Precision</div><div class="mt-2 text-2xl font-semibold text-on-surface">${fmt(metrics.precision * 100, 1)}%</div></div>
       <div class="rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><div class="text-xs text-on-surface-variant">Recall</div><div class="mt-2 text-2xl font-semibold text-on-surface">${fmt(metrics.recall * 100, 1)}%</div></div>
@@ -1250,9 +1250,9 @@ function metricCardSet(metrics) {
 function renderAccuracy(data) {
   return `
   <div class="space-y-6">
-    <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-[1.15fr_0.85fr]">
       ${card(cardTitle('Overlay score statistik vs insiden aktual') + `<div class="space-y-6 px-6 pb-6">
-        <div class="h-[360px] w-full rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><canvas id="accuracyChart"></canvas></div>
+        <div class="h-[280px] w-full min-h-0 rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20 sm:h-[360px]"><canvas id="accuracyChart"></canvas></div>
         <div class="rounded-2xl bg-[#f8fafc] p-5 text-sm text-on-surface border border-outline-variant/20">
           Same-week menilai seberapa baik score statistik menjelaskan minggu yang sedang berjalan. Next-week menilai seberapa baik score itu bekerja sebagai early warning satu minggu ke depan.
         </div>
@@ -1285,7 +1285,7 @@ function renderAccuracy(data) {
       </div>`)}
     </div>
 
-    <div class="grid gap-6 lg:grid-cols-2">
+    <div class="grid grid-cols-1 gap-6 lg:grid-cols-2">
       ${card(cardTitle('Accuracy check — same week') + `<div class="space-y-5 px-6 pb-6">${metricCardSet(data.validationMetrics.sameWeek)}</div>`)}
       ${card(cardTitle('Accuracy check — next week') + `<div class="space-y-5 px-6 pb-6">
         ${metricCardSet(data.validationMetrics.nextWeek)}

@@ -163,7 +163,7 @@
             </div>
             <iframe
                id="peer-tools-analisis-iframe"
-               class="min-h-0 w-full flex-1 border-0 bg-slate-50"
+               class="min-h-0 min-w-0 w-full flex-1 border-0 bg-slate-50"
                src="{{ route('peer-pressure-edukasi.tools-analisis') }}"
                title="Tools analisis insiden"
                loading="lazy"
