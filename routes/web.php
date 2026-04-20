@@ -39,6 +39,8 @@ use App\Http\Controllers\EvaluasiUnitTabelController;
 use App\Http\Controllers\FuelingEvaluasiController;
 use App\Http\Controllers\AlignmentController;
 use App\Http\Controllers\BecomlineController;
+use App\Http\Controllers\PilotProjectValidationController;
+use App\Http\Controllers\PilotProjectValidationProjectController;
 use App\Http\Controllers\PeerPressureEdukasiController;
 use App\Http\Controllers\PeerPressureEdukasiDataController;
 use App\Http\Controllers\PeerPressureSbsKelompokController;
@@ -144,6 +146,15 @@ Route::middleware(['auth'])->group(function () {
 
     // Alignment (Peer Pressure Program Evaluation — static page)
     Route::get('/alignment', [AlignmentController::class, 'index'])->name('alignment.index');
+
+    // Pilot Project Validation (Gate Go / No Go — portfolio + project CRUD)
+    Route::prefix('pilot-project-validation')->name('pilot-project-validation.')->group(function () {
+        Route::get('/', [PilotProjectValidationController::class, 'index'])->name('index');
+        Route::get('/portfolio', [PilotProjectValidationController::class, 'portfolio'])->name('portfolio.show');
+        Route::post('/portfolio', [PilotProjectValidationController::class, 'storePortfolio'])->name('portfolio.store');
+        Route::post('/portfolio/import-excel', [PilotProjectValidationController::class, 'importExcel'])->name('portfolio.import-excel');
+        Route::resource('projects', PilotProjectValidationProjectController::class)->except(['show']);
+    });
 
     // Becomline (CRUD + Import Excel)
     Route::get('/becomline', [BecomlineController::class, 'index'])->name('becomline.index');
