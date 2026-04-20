@@ -133,28 +133,55 @@ class PilotProjectValidationController extends Controller
             'mea' => ['mea', 'mining eyes'],
             'mgc' => ['mgc', 'mgd'],
         ];
+        $preferredNames = [
+            'arcas' => ['ARCAS.pdf', 'arcas.pdf'],
+            'mea' => ['MEA.pdf', 'mea.pdf'],
+            'mgc' => ['MGC.pdf', 'mgc.pdf', 'MGD.pdf', 'mgd.pdf'],
+        ];
         if (! array_key_exists($key, $keywordMap)) {
             abort(404);
         }
 
         $disk = Storage::disk('local');
-        $allFiles = File::files($disk->path(''));
+        $allFiles = File::allFiles($disk->path(''));
         $resolvedPath = null;
+
+        // 1) Coba cocokkan nama file yang diharapkan terlebih dahulu.
         foreach ($allFiles as $splFile) {
-            $filename = strtolower($splFile->getFilename());
-            if (! str_ends_with($filename, '.pdf')) {
-                continue;
-            }
-            foreach ($keywordMap[$key] as $keyword) {
-                if (str_contains($filename, strtolower($keyword))) {
+            $filename = $splFile->getFilename();
+            foreach ($preferredNames[$key] as $preferred) {
+                if (strcasecmp($filename, $preferred) === 0) {
                     $resolvedPath = $splFile->getPathname();
                     break 2;
                 }
             }
         }
 
+        // 2) Fallback: cocokkan keyword di nama file.
         if ($resolvedPath === null) {
-            abort(404, 'File PDF tidak ditemukan di storage/app.');
+            foreach ($allFiles as $splFile) {
+                $filename = strtolower($splFile->getFilename());
+                if (! str_ends_with($filename, '.pdf')) {
+                    continue;
+                }
+                foreach ($keywordMap[$key] as $keyword) {
+                    if (str_contains($filename, strtolower($keyword))) {
+                        $resolvedPath = $splFile->getPathname();
+                        break 2;
+                    }
+                }
+            }
+        }
+
+        if ($resolvedPath === null) {
+            $available = [];
+            foreach ($allFiles as $splFile) {
+                if (str_ends_with(strtolower($splFile->getFilename()), '.pdf')) {
+                    $available[] = $splFile->getFilename();
+                }
+            }
+            $hint = $available === [] ? 'Tidak ada file PDF di storage/app.' : ('PDF tersedia: ' . implode(', ', $available));
+            abort(404, 'File PDF untuk key "' . $key . '" tidak ditemukan. ' . $hint);
         }
 
         return response()->file($resolvedPath, [
