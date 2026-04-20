@@ -11,6 +11,7 @@
       portfolioSaveUrl: @json(route('pilot-project-validation.portfolio.store')),
       importExcelUrl: @json(route('pilot-project-validation.portfolio.import-excel')),
       projectsAdminUrl: @json(route('pilot-project-validation.projects.index')),
+      projectPdfUrlTemplate: @json(route('pilot-project-validation.project-pdf.show', ['key' => '__KEY__'])),
     };
   </script>
   <style>
@@ -2283,6 +2284,7 @@
         root.innerHTML = projects.map(function (project, pIdx) {
           const overall = overallDecision(project);
           const isOpen = expandedDashboardProjects.has(pIdx);
+          const pdfUrl = getProjectPdfUrl(project);
           const gateHtml = project.gates.map(function (gate, gIdx) {
             const gateResult = overall.gateResults[gIdx];
             const metricItems = gate.metrics.map(function (metric, idx) {
@@ -2302,7 +2304,9 @@
             + '<div class="mini-card"><div class="label">Overall Progress</div><div class="mini-value">' + project.progress + '%</div></div>'
             + '<div class="mini-card"><div class="label">Overall Decision</div><div class="decision-badge ' + decisionClass(overall.status) + '">' + escapeHtml(overall.status) + '</div></div>'
             + '</div>'
-            + '<div class="dashboard-collapse-actions"><button class="btn-secondary collapse-toggle" type="button" data-action="toggle-dashboard-project" data-project="' + pIdx + '">' + (isOpen ? 'Ciutkan' : 'Bentang') + '</button><div class="collapse-chevron">⌄</div></div>'
+            + '<div class="dashboard-collapse-actions">'
+            + (pdfUrl ? '<button class="btn-secondary collapse-toggle" type="button" data-action="open-project-pdf" data-project="' + pIdx + '" title="Lihat PDF proyek">👁</button>' : '')
+            + '<button class="btn-secondary collapse-toggle" type="button" data-action="toggle-dashboard-project" data-project="' + pIdx + '">' + (isOpen ? 'Ciutkan' : 'Bentang') + '</button><div class="collapse-chevron">⌄</div></div>'
             + '</div>'
             + (isOpen ? '<div class="dashboard-body">'
               + '<section class="panel"><div class="panel-head"><div class="panel-title">Progress &amp; status gate</div><div class="panel-subtitle">Hanya tampilan monitoring.</div></div><div class="panel-inner">'
@@ -2329,6 +2333,46 @@
             + '<div class="curve-value">' + escapeHtml(support || 'Tidak ada need support') + '</div>'
             + '</div>';
         }).join('');
+      }
+
+      function getProjectPdfKey(projectName) {
+        const name = String(projectName || '').toLowerCase();
+        if (!name) return '';
+        if (name.indexOf('arcas') >= 0) return 'arcas';
+        if (name.indexOf('mining eyes') >= 0 || name.indexOf('mea') >= 0) return 'mea';
+        if (name.indexOf('mgd') >= 0 || name.indexOf('mgc') >= 0) return 'mgc';
+
+        return '';
+      }
+
+      function getProjectPdfUrl(project) {
+        const cfg = window.PilotProjectValidation || {};
+        const template = String(cfg.projectPdfUrlTemplate || '');
+        if (!template) return '';
+        const key = getProjectPdfKey(project && project.name);
+        if (!key) return '';
+
+        return template.replace('__KEY__', encodeURIComponent(key));
+      }
+
+      function openProjectPdfModal(projectIdx) {
+        const project = projects[projectIdx];
+        if (!project) return;
+        const pdfUrl = getProjectPdfUrl(project);
+        if (!pdfUrl) {
+          setImportStatus('PDF belum tersedia', 'Belum ada file PDF yang dipetakan untuk proyek ini.', 'notice-card notice-warning');
+          return;
+        }
+        activeModal = { projectIdx: projectIdx, gateIdx: null, mode: 'pdf' };
+        document.getElementById('modalContent').innerHTML = '<section class="modal-hero">'
+          + '<div class="premium-label">' + escapeHtml(project.name) + '</div>'
+          + '<h2>Dokumen <span>Project PDF</span></h2>'
+          + '<p>Pratinjau dokumen PDF proyek.</p>'
+          + '</section>'
+          + '<section class="modal-section"><div class="modal-section-inner" style="padding-top:16px;">'
+          + '<iframe src="' + attr(pdfUrl) + '" title="PDF ' + attr(project.name) + '" style="width:100%;height:70vh;border:1px solid #d9e3ec;border-radius:10px;background:#fff;"></iframe>'
+          + '</div></section>';
+        document.getElementById('modalOverlay').classList.add('active');
       }
 
       function renderProjectMasterTable(project, pIdx) {
@@ -3199,6 +3243,9 @@
             case 'toggle-dashboard-project':
               if (expandedDashboardProjects.has(p)) expandedDashboardProjects.delete(p); else expandedDashboardProjects.add(p);
               renderAll();
+              break;
+            case 'open-project-pdf':
+              openProjectPdfModal(p);
               break;
             case 'toggle-project':
               if (expandedProjects.has(p)) expandedProjects.delete(p); else expandedProjects.add(p);

@@ -11,8 +11,10 @@ use App\Services\PilotProjectValidation\PilotProjectValidationPortfolioService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\BinaryFileResponse;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
@@ -120,6 +122,29 @@ class PilotProjectValidationController extends Controller
             (new Xlsx($spreadsheet))->save('php://output');
         }, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function projectPdf(string $key): BinaryFileResponse
+    {
+        $map = [
+            'arcas' => 'arcas.pdf',
+            'mea' => 'mea.pdf',
+            'mgc' => 'mgc.pdf',
+        ];
+        if (! array_key_exists($key, $map)) {
+            abort(404);
+        }
+
+        $file = $map[$key];
+        $disk = Storage::disk('local');
+        if (! $disk->exists($file)) {
+            abort(404, 'File PDF tidak ditemukan.');
+        }
+
+        return response()->file($disk->path($file), [
+            'Content-Type' => 'application/pdf',
+            'Content-Disposition' => 'inline; filename="' . $file . '"',
         ]);
     }
 }
