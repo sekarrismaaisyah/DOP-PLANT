@@ -5,34 +5,13 @@
     {
       "week": 1,
       "tematik": "Safety Performance 2025",
-      "recommendation": "Implementasi Fatigue Management pada Jam Kritis",
-      "program_related": "Fatigue Management",
-      "indikator": "Intervensi Alert Fatigue DMS",
-      "detail_indikator": "100% alert Fatigue DMS diintervensi saat jam kritis",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
-      "drill_down": []
-    },
-    {
-      "week": 1,
-      "tematik": "Safety Performance 2025",
-      "recommendation": "Implementasi Excel Aggregator Fatigue Management",
-      "program_related": "Fatigue Management",
-      "indikator": "Pengecekan FTW melalui input Aggregator",
-      "detail_indikator": "100% operator sudah tercover dalam pengisian Aggregator",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
-      "drill_down": []
-    },
-    {
-      "week": 1,
-      "tematik": "Safety Performance 2025",
       "recommendation": "Rekayasa engineering pada aktivitas terkait insiden dan pelanggaran",
       "program_related": "Technology",
       "indikator": "Improvement Technology",
       "detail_indikator": "% Completion Initiatives",
       "scoring_all_site_ytd": "31%",
       "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -44,6 +23,7 @@
       "detail_indikator": "% Completion Initiatives",
       "scoring_all_site_ytd": "31%",
       "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -55,6 +35,7 @@
       "detail_indikator": "% Completion Initiatives",
       "scoring_all_site_ytd": "31%",
       "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -64,8 +45,9 @@
       "program_related": "Fatigue Management",
       "indikator": "Pengecekan FTW melalui input Aggregator",
       "detail_indikator": "% Pengisian Aggregator BeHealth",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
+      "scoring_all_site_ytd": "90.09%",
+      "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -74,9 +56,10 @@
       "recommendation": "Review pekerja dengan status Alih Fungsi (Repetitive true alert fatigue & catatan FTW merah berulang)",
       "program_related": "Fatigue Management",
       "indikator": "Operator dengan repetisi Alert Fatigue",
-      "detail_indikator": "Identifikasi operator dengan gap fatigue dan tindaklanjutnya",
-      "scoring_all_site_ytd": "",
+      "detail_indikator": "Operator dengan Jam Tidur Kurang",
+      "scoring_all_site_ytd": "2.32",
       "grade_ytd": "",
+      "kategori" : "Semakin kecil semakin bagus",
       "drill_down": []
     },
     {
@@ -88,6 +71,7 @@
       "detail_indikator": "% Sertifikasi Pengawas Teknis",
       "scoring_all_site_ytd": "73%",
       "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -96,9 +80,10 @@
       "recommendation": "Reward and Punishment terkait dengan Implementasi Speak Up Fatigue",
       "program_related": "Speak Up Fatigue",
       "indikator": "Speak Up Sebelum Alert DMS",
-      "detail_indikator": "100% Operator Speak up Sebelum Alert",
-      "scoring_all_site_ytd": "",
+      "detail_indikator": "% Operator Fatigue Sebelum Alert",
+      "scoring_all_site_ytd": "26.12%",
       "grade_ytd": "",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -108,8 +93,9 @@
       "program_related": "Fatigue Management",
       "indikator": "Pengecekan FTW melalui input Aggregator",
       "detail_indikator": "% Pengisian Aggregator BeHealth",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
+      "scoring_all_site_ytd": "90.09%",
+      "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -120,84 +106,37 @@
       "indikator": "Improvement Technology",
       "detail_indikator": "% Completion Initiatives",
       "scoring_all_site_ytd": "31%",
-      "grade_ytd": "",
+      "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
-    {
-      "week": 6,
-      "tematik": "Implementasi IKK",
-      "recommendation": "Intervensi pengawas yang belum terdapat pelaporan IPK dan OKK",
-      "program_related": "IKK",
-      "indikator": "Implementasi IKK",
-      "detail_indikator": "% Kesesuaian IKK yang sudah terdapat IPK dan OKK",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
-      "drill_down": []
-    },
-    {
-      "week": 6,
-      "tematik": "Implementasi IKK",
-      "recommendation": "Monitoring pencapaian OKK oleh Layer 2 up",
-      "program_related": "IKK",
-      "indikator": "Implementasi IKK",
-      "detail_indikator": "% Pelaporan OKK oleh Layer 2 up",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
-      "drill_down": []
-    },
+   
+   
     {
       "week": 7,
       "tematik": "Persiapan Bulan Puasa",
       "recommendation": "Intervensi langsung operator dengan gap FTW sebelum mulai mengoperasikan unit",
       "program_related": "Fatigue Management",
       "indikator": "Pengecekan FTW melalui input Aggregator",
-      "detail_indikator": "Operator dengan FTW merah wajib STOP Operasi Unit",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
+      "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+      "scoring_all_site_ytd": "0.35%",
+      "grade_ytd": "L4",
+      "kategori" :"Semakin kecil semakin bagus",
       "drill_down": []
     },
-    {
-      "week": 8,
-      "tematik": "Aktualisasi IM KTT",
-      "recommendation": "Eskalasi Teguran ke PJO apabila tidak konsisten Mengisi BeHealth Aggregator",
-      "program_related": "Fatigue Management",
-      "indikator": "Pengecekan FTW melalui input Aggregator",
-      "detail_indikator": "Perulangan Gap tidak mengisi Aggregator",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
-      "drill_down": []
-    },
-    {
-      "week": 8,
-      "tematik": "Aktualisasi IM KTT",
-      "recommendation": "Coaching terhadap Perulangan Operator Jam Tidur < 6 jam",
-      "program_related": "Fatigue Management",
-      "indikator": "Pengecekan FTW melalui input Aggregator",
-      "detail_indikator": "Perulangan Operator dengan Gap jam tidur",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
-      "drill_down": []
-    },
-    {
-      "week": 8,
-      "tematik": "Aktualisasi IM KTT",
-      "recommendation": "Perkuatan kontrol terhadap Pelaksanaan Tensi di Awal Shift Operator/Driver dengan Riwayat Hipertensi, Jantung, dan Diabetes Mellitus yang Belum Menjadi Target",
-      "program_related": "Health Management",
-      "indikator": "Pengecekan Tensi di Awal Shift",
-      "detail_indikator": "100% Pekerja dengan Penyakit Kritis dilakukan Tensi di Awal Shift",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
-      "drill_down": []
-    },
+   
+   
+    
     {
       "week": 8,
       "tematik": "Aktualisasi IM KTT",
       "recommendation": "Perkuatan Kontrol terhadap Coverage Area Daily terutama pada Area Kritis",
       "program_related": "Coverage Area",
       "indikator": "Daily Coverage Area",
-      "detail_indikator": "100% Area Kritis tercover Daily",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
+      "detail_indikator": "% Daily Coverage Area Kritis",
+      "scoring_all_site_ytd": "76%",
+      "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -209,19 +148,10 @@
       "detail_indikator": "% Completion Initiatives",
       "scoring_all_site_ytd": "31%",
       "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
-    {
-      "week": 9,
-      "tematik": "Safety Performance Februari 2026",
-      "recommendation": "Monitoring Kesesuaian IKK",
-      "program_related": "IKK",
-      "indikator": "Implementasi IKK",
-      "detail_indikator": "% Kesesuaian IKK yang sudah terdapat IPK dan OKK",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
-      "drill_down": []
-    },
+   
     {
       "week": 9,
       "tematik": "Safety Performance Februari 2026",
@@ -229,8 +159,9 @@
       "program_related": "Blindspot GR",
       "indikator": "Blindspot GR yang tidak ditemukan mitra",
       "detail_indikator": "% Blindspot GR",
-      "scoring_all_site_ytd": "60%",
-      "grade_ytd": "",
+      "scoring_all_site_ytd": "32%",
+      "kategori" : "Semakin kecil semakin bagus",
+      "grade_ytd": "L2",
       "drill_down": []
     },
     {
@@ -242,6 +173,7 @@
       "detail_indikator": "% Sertifikasi Pengawas Teknis",
       "scoring_all_site_ytd": "73%",
       "grade_ytd": "",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -251,8 +183,9 @@
       "program_related": "Fatigue Management",
       "indikator": "Pengecekan FTW melalui input Aggregator",
       "detail_indikator": "% Pengisian Aggregator BeHealth",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
+      "scoring_all_site_ytd": "90%",
+      "kategori" : "Semakin tinggi semakin bagus",
+      "grade_ytd": "L4",
       "drill_down": []
     },
     {
@@ -264,6 +197,7 @@
       "detail_indikator": "% Post Event L2 up",
       "scoring_all_site_ytd": "30%",
       "grade_ytd": "L3",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -275,6 +209,7 @@
       "detail_indikator": "% Sertifikasi Pengawas Teknis",
       "scoring_all_site_ytd": "73%",
       "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -284,8 +219,9 @@
       "program_related": "Fatigue Management",
       "indikator": "Pengecekan FTW melalui input Aggregator",
       "detail_indikator": "% Pengisian Aggregator BeHealth",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
+      "scoring_all_site_ytd": "90.09%",
+      "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -297,6 +233,7 @@
       "detail_indikator": "% Completion Initiatives",
       "scoring_all_site_ytd": "31%",
       "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -305,9 +242,10 @@
       "recommendation": "Melakukan setting terhadap DMS sesuai dengan standar",
       "program_related": "Technology",
       "indikator": "Parameter setting alert DMS",
-      "detail_indikator": "Tidak terdapat deviasi pada setting parameter alert DMS",
-      "scoring_all_site_ytd": "",
-      "grade_ytd": "",
+      "detail_indikator": "Kesesuaian Setting Parameter AI Alert Fatigue DMS",
+      "scoring_all_site_ytd": "72%",
+      "grade_ytd": "L3",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -319,6 +257,7 @@
       "detail_indikator": "% Completion Initiatives",
       "scoring_all_site_ytd": "31%",
       "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -330,6 +269,7 @@
       "detail_indikator": "% Blindspot TBC",
       "scoring_all_site_ytd": "3%",
       "grade_ytd": "L2",
+      "kategori" : "Semakin kecil semakin bagus",
       "drill_down": []
     },
     {
@@ -339,8 +279,9 @@
       "program_related": "Blindspot",
       "indikator": "Blindspot TBC & GR",
       "detail_indikator": "% Blindspot GR",
-      "scoring_all_site_ytd": "60%",
+      "scoring_all_site_ytd": "32%",
       "grade_ytd": "L2",
+      "kategori" :"Semakin kecil semakin bagus",
       "drill_down": []
     },
     {
@@ -352,6 +293,7 @@
       "detail_indikator": "% Sertifikasi Pengawas Teknis",
       "scoring_all_site_ytd": "73%",
       "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     },
     {
@@ -363,6 +305,7 @@
       "detail_indikator": "% Sertifikasi Tenaga Teknis",
       "scoring_all_site_ytd": "70%",
       "grade_ytd": "L4",
+      "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
     }
   ]

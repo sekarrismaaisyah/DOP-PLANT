@@ -1,0 +1,1398 @@
+{
+    "title": "Sertifikasi Tenaga Teknis",
+    "subtitle": "Sertifikasi Tenaga Teknis",
+    "rows": [
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Information & Technology",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PSCM",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Human Resources & General Affairs",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Operation",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "PSCM",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "GENERAL SERVICES",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PRODUCTION",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PRODUCTION",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PSCM",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bukit Makmur Mandiri Utama",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PSCM",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "BMO 3",
+        "main_kon": "PT Berau Coal",
+        "departement": "Engineering",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "BMO 3",
+        "main_kon": "PT Berau Coal",
+        "departement": "Engineering",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "BMO 3",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "BMO 3",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "BMO 3",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "BMO 3",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "BMO 3",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "BMO 3",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "BMO 3",
+        "main_kon": "PT Berau Coal",
+        "departement": "Produksi",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Engineering",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Bumi Artlantis Raya",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "LOGISTIC DEPT",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "LOGISTIC DEPT",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT DEPT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT DEPT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT DEPT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT DEPT",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT DEPT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT DEPT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT DEPT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT DEPT",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PRODUKSI",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Fajar Anugerah Dinamika",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PRODUKSI",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "ENGINEERING",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "HUMAN CAPITAL GENERAL SERVICE (HCGS)",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "HUMAN CAPITAL GENERAL SERVICE (HCGS)",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "HUMAN CAPITAL GENERAL SERVICE (HCGS)",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "HUMAN CAPITAL GENERAL SERVICE (HCGS)",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "HUMAN CAPITAL GENERAL SERVICE (HCGS)",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PRODUKSI",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PRODUKSI",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PRODUKSI",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PRODUKSI",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "ENGINEERING",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Kaltim Diamond Coal",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PRODUKSI",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "CONSTRUCTION",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "CONSTRUCTION",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "IT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - TOWER",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "OPERATION",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "OPERATION",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "OPERATION DEPARTMENT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "OPERATION DEPARTMENT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Madhani Talatah Nusantara",
+        "site": "SMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "PLANT",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant & Maintenance",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant & Maintenance",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant & Maintenance",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant & Maintenance",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant & Maintenance",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant & Maintenance",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant & Maintenance",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant & Maintenance",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Road & Infrastructure Maintenance",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Road & Infrastructure Maintenance",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Road & Infrastructure Maintenance",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "BMO 1",
+        "main_kon": "PT Berau Coal",
+        "departement": "Road & Infrastructure Maintenance",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant & Maintenance",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Plant & Maintenance",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Road & Infrastructure Maintenance",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Mutiara Tanjung Lestari",
+        "site": "LMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Road & Infrastructure Maintenance",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Coal Mining & Hauling",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site General Services",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site General Services",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site General Services",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site General Services",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Information System",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Information System",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Operational Training",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Operational Training",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Pit Service",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Pit Service",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Pit Service",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 2",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 2",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 2",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 2",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 2",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 2",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 2",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 2",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 2",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Supply Management",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Tyre",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Tyre",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Tyre",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "BMO 2",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Tyre",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site General Services",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Human Capital & General Services",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Information System",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Pit Service",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant",
+        "work_permit": "PENGAWAS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI DEKAT AIR AREA TAMBANG",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - BANGUNAN UMUM/REPAIR & MAINTENANCE DI WORKSHOP/PIT",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI KETINGGIAN - PERANCAH",
+        "jumlah_sid": "Tidak Cukup (1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant",
+        "work_permit": "TENAGA TEKNIS - IKK - PENGANGKATAN DAN PENGANGKUTAN MATERIAL (IPPM)",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DENGAN PANAS",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "PENGAWAS - IKK - BEKERJA DILUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "Site Plant 1",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Cukup (>1)"
+      },
+      {
+        "nama_perusahaan": "PT Pamapersada Nusantara",
+        "site": "GMO",
+        "main_kon": "PT Berau Coal",
+        "departement": "TYRE",
+        "work_permit": "TENAGA TEKNIS - IKK - BEKERJA DI LUAR WORKSHOP",
+        "jumlah_sid": "Tidak Cukup (1)"
+      }
+    ]
+  }

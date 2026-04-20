@@ -1,0 +1,405 @@
+{
+    "title": "Pengisian Aggregator BeHealth",
+    "subtitle": "Pengisian Aggregator BeHealth",
+    "rows": [
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "LMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 94
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "LMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 97
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "LMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 51
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "LMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 24
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "LMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Aktual Posisi Kerja Stand By",
+        "percent_of_total_distinct_count_of_sid_date": 61
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "SMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 99
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "SMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 100
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "SMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 40
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "BMO 1",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 93
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "BMO 1",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 99
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "BMO 1",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 61
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "BMO 1",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 35
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "BMO 2",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 97
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "BMO 2",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 100
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "BMO 2",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 32
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 98
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 99
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 18
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 24
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "BMO 3",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 100
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "BMO 3",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 100
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "EKSPLORASI",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 100
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "HO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 91
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "HO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 85
+      },
+      {
+        "iso_week_of_tanggal_date": "W15",
+        "site_dedicated": "MARINE",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 100
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "LMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 95
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "LMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 97
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "LMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 46
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "LMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 26
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "LMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Aktual Posisi Kerja Stand By",
+        "percent_of_total_distinct_count_of_sid_date": 27
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "SMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 99
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "SMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 100
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "SMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 71
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 1",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 93
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 1",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 99
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 1",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 62
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 1",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 80
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 2",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 99
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 2",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 98
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 2",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 50
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 2",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 12
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "SHIFT 2",
+        "percent_of_total_distinct_count_of_sid_date": 42
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 98
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 99
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 18
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 63
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Aktual Posisi Kerja Stand By",
+        "percent_of_total_distinct_count_of_sid_date": 42
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "GMO",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Aktual Posisi Kerja Stand By",
+        "percent_of_total_distinct_count_of_sid_date": 39
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 3",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 64
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 3",
+        "nama_perusahaan_group": "Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 100
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "BMO 3",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 35
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "EKSPLORASI",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 96
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "EKSPLORASI",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 34
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "HO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 84
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "HO",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 15
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "MARINE",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Terkonfirmasi",
+        "percent_of_total_distinct_count_of_sid_date": 17
+      },
+      {
+        "iso_week_of_tanggal_date": "W16",
+        "site_dedicated": "MARINE",
+        "nama_perusahaan_group": "Non Minecont",
+        "pengisian": "Data Belum Diisi",
+        "percent_of_total_distinct_count_of_sid_date": 82
+      }
+    ]
+  }

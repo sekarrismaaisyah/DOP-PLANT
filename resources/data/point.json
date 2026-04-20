@@ -1,7 +1,8 @@
 {
     "title": "Indicator Detail Data",
     "subtitle": "Konversi dari tabel indikator ke format JSON",
-    "rows": [
+    "rows": 
+    [
       {
         "detail_indikator": "% Blindspot TBC",
         "site": "BMO 1",
@@ -869,73 +870,73 @@
       {
         "detail_indikator": "% Sertifikasi Pengawas Teknis",
         "site": "LMO",
-        "week": "W14",
+        "week": "W16",
         "data": "82.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Pengawas Teknis",
         "site": "SMO",
-        "week": "W14",
+        "week": "W16",
         "data": "71.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Pengawas Teknis",
         "site": "BMO 1",
-        "week": "W14",
+        "week": "W16",
         "data": "76.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Pengawas Teknis",
         "site": "BMO 2",
-        "week": "W14",
+        "week": "W16",
         "data": "75.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Pengawas Teknis",
         "site": "GMO",
-        "week": "W14",
+        "week": "W16",
         "data": "75.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Pengawas Teknis",
         "site": "BMO 3",
-        "week": "W14",
+        "week": "W16",
         "data": "59.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Tenaga Teknis",
         "site": "LMO",
-        "week": "W14",
+        "week": "W16",
         "data": "69.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Tenaga Teknis",
         "site": "SMO",
-        "week": "W14",
+        "week": "W16",
         "data": "76.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Tenaga Teknis",
         "site": "BMO 1",
-        "week": "W14",
+        "week": "W16",
         "data": "64.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Tenaga Teknis",
         "site": "BMO 2",
-        "week": "W14",
+        "week": "W16",
         "data": "79.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Tenaga Teknis",
         "site": "GMO",
-        "week": "W14",
+        "week": "W16",
         "data": "66.00%"
       },
       {
         "detail_indikator": "% Sertifikasi Tenaga Teknis",
         "site": "BMO 3",
-        "week": "W14",
+        "week": "W16",
         "data": "68.00%"
       },
       {
@@ -1031,12 +1032,6 @@
       {
         "detail_indikator": "% Post Event L2 up",
         "site": "BMO 2",
-        "week": "W16",
-        "data": "50.00%"
-      },
-      {
-        "detail_indikator": "% Post Event L2 up",
-        "site": "BMO 2",
         "week": "W15",
         "data": "24.87%"
       },
@@ -1123,12 +1118,6 @@
         "site": "BMO 2",
         "week": "W01",
         "data": "24.57%"
-      },
-      {
-        "detail_indikator": "% Post Event L2 up",
-        "site": "BMO 3",
-        "week": "W16",
-        "data": "0.00%"
       },
       {
         "detail_indikator": "% Post Event L2 up",
@@ -1489,12 +1478,6 @@
         "site": "HO",
         "week": "W01",
         "data": "35.10%"
-      },
-      {
-        "detail_indikator": "% Post Event L2 up",
-        "site": "LMO",
-        "week": "W16",
-        "data": "0.00%"
       },
       {
         "detail_indikator": "% Post Event L2 up",
@@ -2536,12 +2519,6 @@
       },
       {
         "detail_indikator": "% Pengisian Aggregator BeHealth",
-        "site": "MARINE",
-        "week": "W14",
-        "data": "6.25%"
-      },
-      {
-        "detail_indikator": "% Pengisian Aggregator BeHealth",
         "site": "LMO",
         "week": "W15",
         "data": "90.41%"
@@ -2587,6 +2564,2100 @@
         "site": "HO",
         "week": "W15",
         "data": "71.83%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W01",
+        "data": "69.39%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W02",
+        "data": "68.98%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W03",
+        "data": "80.95%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W04",
+        "data": "97.14%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W05",
+        "data": "91.43%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W06",
+        "data": "84.29%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W07",
+        "data": "89.29%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W08",
+        "data": "92.86%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W09",
+        "data": "89.29%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W10",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W11",
+        "data": "89.29%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W12",
+        "data": "57.14%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W13",
+        "data": "75.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W14",
+        "data": "92.86%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W15",
+        "data": "85.71%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W01",
+        "data": "44.66%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W02",
+        "data": "64.60%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W03",
+        "data": "65.66%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W04",
+        "data": "66.67%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W05",
+        "data": "79.56%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W06",
+        "data": "77.30%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W07",
+        "data": "76.83%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W08",
+        "data": "82.79%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W09",
+        "data": "79.05%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W10",
+        "data": "87.97%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W11",
+        "data": "80.95%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W12",
+        "data": "71.03%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W13",
+        "data": "87.39%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W14",
+        "data": "87.73%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W15",
+        "data": "92.21%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W01",
+        "data": "42.86%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W02",
+        "data": "71.43%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W03",
+        "data": "61.90%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W04",
+        "data": "57.14%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W05",
+        "data": "57.14%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W06",
+        "data": "76.19%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W07",
+        "data": "57.14%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W08",
+        "data": "95.24%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W09",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W10",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W11",
+        "data": "95.24%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W12",
+        "data": "71.43%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W13",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W14",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W15",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W01",
+        "data": "57.94%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W02",
+        "data": "74.60%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W03",
+        "data": "80.95%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W04",
+        "data": "74.60%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W05",
+        "data": "74.60%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W06",
+        "data": "65.87%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W07",
+        "data": "73.02%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W08",
+        "data": "73.81%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W09",
+        "data": "80.16%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W10",
+        "data": "80.32%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W11",
+        "data": "73.57%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W12",
+        "data": "73.57%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W13",
+        "data": "98.57%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W14",
+        "data": "91.43%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "EKSPLORASI",
+        "week": "W15",
+        "data": "94.59%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W01",
+        "data": "49.84%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W02",
+        "data": "63.49%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W03",
+        "data": "59.26%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W04",
+        "data": "56.62%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W05",
+        "data": "56.23%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W06",
+        "data": "54.06%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W07",
+        "data": "57.26%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W08",
+        "data": "61.16%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W09",
+        "data": "56.70%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W10",
+        "data": "61.68%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W11",
+        "data": "57.14%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W12",
+        "data": "37.26%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W13",
+        "data": "47.62%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W14",
+        "data": "64.22%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W15",
+        "data": "76.79%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W06",
+        "data": "8.10%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W07",
+        "data": "45.83%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W08",
+        "data": "55.36%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W09",
+        "data": "51.79%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W10",
+        "data": "67.09%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W11",
+        "data": "69.39%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W12",
+        "data": "42.86%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W13",
+        "data": "61.90%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W14",
+        "data": "82.54%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W15",
+        "data": "84.13%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W01",
+        "data": "79.39%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W02",
+        "data": "94.64%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W03",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W04",
+        "data": "88.57%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W05",
+        "data": "89.22%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W06",
+        "data": "95.97%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W07",
+        "data": "97.14%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W08",
+        "data": "97.14%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W09",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W10",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W11",
+        "data": "98.57%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W12",
+        "data": "77.92%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W13",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W14",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W15",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W15",
+        "data": "0.40%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W15",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W15",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W15",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W15",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W15",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W15",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W14",
+        "data": "0.40%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W14",
+        "data": "0.21%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W14",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W14",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W14",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W14",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W14",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W13",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W13",
+        "data": "0.21%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W13",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W13",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W13",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W13",
+        "data": "0.14%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W13",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W12",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W12",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W12",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W12",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W12",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W12",
+        "data": "0.16%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W12",
+        "data": "0.72%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W11",
+        "data": "1.65%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W11",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W11",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W11",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W11",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W11",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W11",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W10",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W10",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W10",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W10",
+        "data": "0.19%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W10",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W10",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W10",
+        "data": "2.96%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W09",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W09",
+        "data": "0.20%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W09",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W09",
+        "data": "0.16%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W09",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W09",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W09",
+        "data": "1.50%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W08",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W08",
+        "data": "0.22%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W08",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W08",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W08",
+        "data": "3.80%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W08",
+        "data": "0.14%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W08",
+        "data": "2.02%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W07",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W07",
+        "data": "0.38%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W07",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W07",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W07",
+        "data": "10.98%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W07",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W07",
+        "data": "2.24%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W06",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W06",
+        "data": "0.42%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W06",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W06",
+        "data": "0.23%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W06",
+        "data": "8.62%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W06",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W06",
+        "data": "0.44%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W05",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W05",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W05",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W05",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W05",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W05",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W05",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W04",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W04",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W04",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W04",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W04",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W04",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W04",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W03",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W03",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W03",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W03",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W03",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W03",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W02",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W02",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "HOTE",
+        "week": "W02",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W02",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W02",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W02",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W02",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W01",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W01",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W01",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W01",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W01",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W01",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W01",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W02",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W03",
+        "data": "50.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W04",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W05",
+        "data": "75.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W06",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W07",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W08",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W09",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W10",
+        "data": "37.50%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W11",
+        "data": "40.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W12",
+        "data": "25.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W13",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W14",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W01",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W02",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W03",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W04",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W05",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W06",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W07",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W08",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W09",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W10",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W11",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W12",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W13",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W14",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W01",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W02",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W03",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W04",
+        "data": "5.26%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W05",
+        "data": "1.35%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W06",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W07",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W08",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W09",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W10",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W11",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W12",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W13",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W14",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W01",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W02",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W03",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W04",
+        "data": "90.91%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W05",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W06",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W07",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W08",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W09",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W10",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W11",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W12",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W13",
+        "data": "100.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W14",
+        "data": "87.50%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W01",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W02",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W03",
+        "data": "36.36%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W04",
+        "data": "9.09%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W05",
+        "data": "27.27%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W06",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W07",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W08",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W09",
+        "data": "33.33%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W10",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W11",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W12",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W13",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W14",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "Kesesuaian Setting Parameter AI Alert Fatigue DMS",
+        "site": "BMO 1",
+        "week": "W04",
+        "data": "92%"
+      },
+      {
+        "detail_indikator": "Kesesuaian Setting Parameter AI Alert Fatigue DMS",
+        "site": "BMO 2",
+        "week": "W04",
+        "data": "0%"
+      },
+      {
+        "detail_indikator": "Kesesuaian Setting Parameter AI Alert Fatigue DMS",
+        "site": "BMO 3",
+        "week": "W04",
+        "data": "50%"
+      },
+      {
+        "detail_indikator": "Kesesuaian Setting Parameter AI Alert Fatigue DMS",
+        "site": "GMO",
+        "week": "W04",
+        "data": "100%"
+      },
+      {
+        "detail_indikator": "Kesesuaian Setting Parameter AI Alert Fatigue DMS",
+        "site": "LMO",
+        "week": "W04",
+        "data": "88%"
+      },
+      {
+        "detail_indikator": "Kesesuaian Setting Parameter AI Alert Fatigue DMS",
+        "site": "SMO",
+        "week": "W04",
+        "data": "100%"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W16",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W11",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W10",
+        "data": "6"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W09",
+        "data": "3"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W08",
+        "data": "4"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W07",
+        "data": "5"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 1",
+        "week": "W06",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W13",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W12",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 2",
+        "week": "W08",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W08",
+        "data": "3"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W07",
+        "data": "9"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "BMO 3",
+        "week": "W06",
+        "data": "5"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W10",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W09",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "GMO",
+        "week": "W06",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W14",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W13",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W09",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W08",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W07",
+        "data": "2"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "LMO",
+        "week": "W06",
+        "data": "2"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W15",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W14",
+        "data": "1"
+      },
+      {
+        "detail_indikator": "Operator dengan Jam Tidur Kurang",
+        "site": "SMO",
+        "week": "W11",
+        "data": "4"
+      },
+      {
+        "detail_indikator": "% Blindspot TBC",
+        "site": "SMO",
+        "week": "W16",
+        "data": "4.66%"
+      },
+      {
+        "detail_indikator": "% Blindspot TBC",
+        "site": "MARINE",
+        "week": "W16",
+        "data": "1.47%"
+      },
+      {
+        "detail_indikator": "% Blindspot TBC",
+        "site": "LMO",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot TBC",
+        "site": "HO",
+        "week": "W16",
+        "data": "1.59%"
+      },
+      {
+        "detail_indikator": "% Blindspot TBC",
+        "site": "GMO",
+        "week": "W16",
+        "data": "0.73%"
+      },
+      {
+        "detail_indikator": "% Blindspot TBC",
+        "site": "EKSPLORASI",
+        "week": "W16",
+        "data": "12.50%"
+      },
+      {
+        "detail_indikator": "% Blindspot TBC",
+        "site": "BMO 3",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot TBC",
+        "site": "BMO 2",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot TBC",
+        "site": "BMO 1",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot GR",
+        "site": "SMO",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot GR",
+        "site": "MARINE",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot GR",
+        "site": "LMO",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot GR",
+        "site": "HO",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot GR",
+        "site": "GMO",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot GR",
+        "site": "EKSPLORASI",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot GR",
+        "site": "BMO 3",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot GR",
+        "site": "BMO 2",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Blindspot GR",
+        "site": "BMO 1",
+        "week": "W16",
+        "data": "0.00%"
+      },
+      {
+        "detail_indikator": "% Pengisian Aggregator BeHealth",
+        "site": "MARINE",
+        "week": "W16",
+        "data": "53.13%"
+      },
+      {
+        "detail_indikator": "% Pengisian Aggregator BeHealth",
+        "site": "HO",
+        "week": "W16",
+        "data": "82.76%"
+      },
+      {
+        "detail_indikator": "% Pengisian Aggregator BeHealth",
+        "site": "EKSPLORASI",
+        "week": "W16",
+        "data": "96.58%"
+      },
+      {
+        "detail_indikator": "% Pengisian Aggregator BeHealth",
+        "site": "BMO 3",
+        "week": "W16",
+        "data": "99.63%"
+      },
+      {
+        "detail_indikator": "% Pengisian Aggregator BeHealth",
+        "site": "GMO",
+        "week": "W16",
+        "data": "98.33%"
+      },
+      {
+        "detail_indikator": "% Pengisian Aggregator BeHealth",
+        "site": "BMO 2",
+        "week": "W16",
+        "data": "93.01%"
+      },
+      {
+        "detail_indikator": "% Pengisian Aggregator BeHealth",
+        "site": "BMO 1",
+        "week": "W16",
+        "data": "97.05%"
+      },
+      {
+        "detail_indikator": "% Pengisian Aggregator BeHealth",
+        "site": "SMO",
+        "week": "W16",
+        "data": "99.58%"
+      },
+      {
+        "detail_indikator": "% Pengisian Aggregator BeHealth",
+        "site": "LMO",
+        "week": "W16",
+        "data": "96.69%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 3",
+        "week": "W16",
+        "data": "100%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "GMO",
+        "week": "W16",
+        "data": "100%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 2",
+        "week": "W16",
+        "data": "100%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "BMO 1",
+        "week": "W16",
+        "data": "66.67%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "SMO",
+        "week": "W16",
+        "data": "0%"
+      },
+      {
+        "detail_indikator": "% Operator Fatigue Sebelum Alert",
+        "site": "LMO",
+        "week": "W16",
+        "data": "100%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 3",
+        "week": "W16",
+        "data": "90.48%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "GMO",
+        "week": "W16",
+        "data": "79.76%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 2",
+        "week": "W16",
+        "data": "91.45%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "BMO 1",
+        "week": "W16",
+        "data": "85.71%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "SMO",
+        "week": "W16",
+        "data": "88.81%"
+      },
+      {
+        "detail_indikator": "% Daily Coverage Area Kritis",
+        "site": "LMO",
+        "week": "W16",
+        "data": "76.62%"
       }
     ]
   }

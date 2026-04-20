@@ -1,0 +1,132 @@
+{
+    "title": "Blindspot GR",
+    "subtitle": "Blindspot GR",
+    "rows": [
+      {
+        "site": "BMO 1",
+        "perusahaan_pic": "PT Serasi Autoraya",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "BMO 1",
+        "perusahaan_pic": "PT Mutiara Tanjung Lestari",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "BMO 2",
+        "perusahaan_pic": "PT Pamapersada Nusantara",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": 0
+      },
+      {
+        "site": "BMO 3",
+        "perusahaan_pic": "PT Bumi Artlantis Raya",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": 1
+      },
+      {
+        "site": "BMO 3",
+        "perusahaan_pic": "PT Bumi Artlantis Raya",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "BMO 3",
+        "perusahaan_pic": "PT Bumi Artlantis Raya",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": 1
+      },
+      {
+        "site": "BMO 3",
+        "perusahaan_pic": "PT Bumi Artlantis Raya",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": 0
+      },
+      {
+        "site": "GMO",
+        "perusahaan_pic": "PT Majau Inti Jaya",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "GMO",
+        "perusahaan_pic": "PT Pamapersada Nusantara",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "GMO",
+        "perusahaan_pic": "PT Bandang Mining Coal",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "GMO",
+        "perusahaan_pic": "PT Bagong Dekaka Makmur",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "GMO",
+        "perusahaan_pic": "PT Bumi Artlantis Raya",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": 1
+      },
+      {
+        "site": "GMO",
+        "perusahaan_pic": "PT Bumi Artlantis Raya",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": 1
+      },
+      {
+        "site": "GMO",
+        "perusahaan_pic": "PT Pamapersada Nusantara",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "HO",
+        "perusahaan_pic": "PT Bukit Makmur Mandiri Utama",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "HO",
+        "perusahaan_pic": "PT Berau Coal",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": 0
+      },
+      {
+        "site": "LMO",
+        "perusahaan_pic": "PT Bukit Makmur Mandiri Utama",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": 0
+      },
+      {
+        "site": "LMO",
+        "perusahaan_pic": "PT Trakindo Utama",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "LMO",
+        "perusahaan_pic": "PT Bukit Makmur Mandiri Utama",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      },
+      {
+        "site": "SMO",
+        "perusahaan_pic": "PT Puncak Makmur Jaya",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": 1
+      },
+      {
+        "site": "SMO",
+        "perusahaan_pic": "PT Madhani Talatah Nusantara",
+        "year_of_date_for_join": 2026,
+        "blindspot_tbc_dari_bc": null
+      }
+    ]
+  }
