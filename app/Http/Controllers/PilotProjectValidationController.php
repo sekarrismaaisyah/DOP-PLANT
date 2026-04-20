@@ -10,6 +10,7 @@ use App\Services\PilotProjectValidation\PilotProjectValidationExcelTemplateServi
 use App\Services\PilotProjectValidation\PilotProjectValidationPortfolioService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\View\View;
@@ -127,39 +128,38 @@ class PilotProjectValidationController extends Controller
 
     public function projectPdf(string $key): BinaryFileResponse
     {
-        $map = [
-            'arcas' => 'ARCAS.pdf',
-            'mea' => 'MEA.pdf',
-            'mgc' => 'MGC.pdf',
+        $keywordMap = [
+            'arcas' => ['arcas'],
+            'mea' => ['mea', 'mining eyes'],
+            'mgc' => ['mgc', 'mgd'],
         ];
-        if (! array_key_exists($key, $map)) {
+        if (! array_key_exists($key, $keywordMap)) {
             abort(404);
         }
 
-        $file = $map[$key];
         $disk = Storage::disk('local');
-        if (! $disk->exists($file)) {
-            $fallbackCandidates = [
-                strtolower($file),
-                strtoupper($file),
-                ucfirst(strtolower($file)),
-            ];
-            $resolved = null;
-            foreach ($fallbackCandidates as $candidate) {
-                if ($disk->exists($candidate)) {
-                    $resolved = $candidate;
-                    break;
+        $allFiles = File::files($disk->path(''));
+        $resolvedPath = null;
+        foreach ($allFiles as $splFile) {
+            $filename = strtolower($splFile->getFilename());
+            if (! str_ends_with($filename, '.pdf')) {
+                continue;
+            }
+            foreach ($keywordMap[$key] as $keyword) {
+                if (str_contains($filename, strtolower($keyword))) {
+                    $resolvedPath = $splFile->getPathname();
+                    break 2;
                 }
             }
-            if ($resolved === null) {
-                abort(404, 'File PDF tidak ditemukan.');
-            }
-            $file = $resolved;
         }
 
-        return response()->file($disk->path($file), [
+        if ($resolvedPath === null) {
+            abort(404, 'File PDF tidak ditemukan di storage/app.');
+        }
+
+        return response()->file($resolvedPath, [
             'Content-Type' => 'application/pdf',
-            'Content-Disposition' => 'inline; filename="' . $file . '"',
+            'Content-Disposition' => 'inline',
         ]);
     }
 }
