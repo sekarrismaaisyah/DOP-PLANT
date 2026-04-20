@@ -128,9 +128,9 @@ class PilotProjectValidationController extends Controller
     public function projectPdf(string $key): BinaryFileResponse
     {
         $map = [
-            'arcas' => 'arcas.pdf',
-            'mea' => 'mea.pdf',
-            'mgc' => 'mgc.pdf',
+            'arcas' => 'ARCAS.pdf',
+            'mea' => 'MEA.pdf',
+            'mgc' => 'MGC.pdf',
         ];
         if (! array_key_exists($key, $map)) {
             abort(404);
