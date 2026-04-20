@@ -167,6 +167,58 @@ const SITE_ROWS = {
     { week: 'W50', actualIncidents: 1, hazard: 22600, rfidNonSupervisor: 13480, rfidSupervisor: 3875, tbc: 8190, goldenRules: 1, blindspotTbc: 42, coverageArea: 67.8 },
     { week: 'W51', actualIncidents: 0, hazard: 23540, rfidNonSupervisor: 13295, rfidSupervisor: 4048, tbc: 8595, goldenRules: 2, blindspotTbc: 29, coverageArea: 71.3 },
   ],
+
+  
+  BMO1: [
+    { week: 'W40', actualIncidents: 0, hazard: 7210, rfidNonSupervisor: 3850, rfidSupervisor: 1228, tbc: 2520, goldenRules: 2, blindspotTbc: 9, coverageArea: 75.0 },
+    { week: 'W41', actualIncidents: 1, hazard: 7050, rfidNonSupervisor: 3890, rfidSupervisor: 1200, tbc: 2440, goldenRules: 2, blindspotTbc: 11, coverageArea: 73.9 },
+    { week: 'W42', actualIncidents: 0, hazard: 6970, rfidNonSupervisor: 3925, rfidSupervisor: 1188, tbc: 2400, goldenRules: 2, blindspotTbc: 12, coverageArea: 73.0 },
+    { week: 'W43', actualIncidents: 1, hazard: 6900, rfidNonSupervisor: 3960, rfidSupervisor: 1168, tbc: 2370, goldenRules: 1, blindspotTbc: 14, coverageArea: 72.2 },
+    { week: 'W44', actualIncidents: 1, hazard: 6840, rfidNonSupervisor: 3995, rfidSupervisor: 1149, tbc: 2345, goldenRules: 1, blindspotTbc: 16, coverageArea: 71.6 },
+    { week: 'W45', actualIncidents: 2, hazard: 6760, rfidNonSupervisor: 4035, rfidSupervisor: 1128, tbc: 2310, goldenRules: 1, blindspotTbc: 17, coverageArea: 70.7 },
+    { week: 'W46', actualIncidents: 2, hazard: 6715, rfidNonSupervisor: 4060, rfidSupervisor: 1110, tbc: 2295, goldenRules: 1, blindspotTbc: 18, coverageArea: 69.8 },
+    { week: 'W47', actualIncidents: 1, hazard: 6860, rfidNonSupervisor: 4010, rfidSupervisor: 1150, tbc: 2350, goldenRules: 2, blindspotTbc: 15, coverageArea: 71.2 },
+    { week: 'W48', actualIncidents: 0, hazard: 6965, rfidNonSupervisor: 3970, rfidSupervisor: 1174, tbc: 2395, goldenRules: 2, blindspotTbc: 13, coverageArea: 72.6 },
+    { week: 'W49', actualIncidents: 0, hazard: 7055, rfidNonSupervisor: 3920, rfidSupervisor: 1191, tbc: 2425, goldenRules: 2, blindspotTbc: 11, coverageArea: 73.4 },
+    { week: 'W50', actualIncidents: 1, hazard: 6795, rfidNonSupervisor: 4050, rfidSupervisor: 1122, tbc: 2305, goldenRules: 1, blindspotTbc: 17, coverageArea: 70.1 },
+    { week: 'W51', actualIncidents: 0, hazard: 7140, rfidNonSupervisor: 3895, rfidSupervisor: 1210, tbc: 2475, goldenRules: 2, blindspotTbc: 10, coverageArea: 74.0 },
+  ],
+
+
+  
+  BMO2: [
+    { week: 'W40', actualIncidents: 0, hazard: 7210, rfidNonSupervisor: 3850, rfidSupervisor: 1228, tbc: 2520, goldenRules: 2, blindspotTbc: 9, coverageArea: 75.0 },
+    { week: 'W41', actualIncidents: 1, hazard: 7050, rfidNonSupervisor: 3890, rfidSupervisor: 1200, tbc: 2440, goldenRules: 2, blindspotTbc: 11, coverageArea: 73.9 },
+    { week: 'W42', actualIncidents: 0, hazard: 6970, rfidNonSupervisor: 3925, rfidSupervisor: 1188, tbc: 2400, goldenRules: 2, blindspotTbc: 12, coverageArea: 73.0 },
+    { week: 'W43', actualIncidents: 1, hazard: 6900, rfidNonSupervisor: 3960, rfidSupervisor: 1168, tbc: 2370, goldenRules: 1, blindspotTbc: 14, coverageArea: 72.2 },
+    { week: 'W44', actualIncidents: 1, hazard: 6840, rfidNonSupervisor: 3995, rfidSupervisor: 1149, tbc: 2345, goldenRules: 1, blindspotTbc: 16, coverageArea: 71.6 },
+    { week: 'W45', actualIncidents: 2, hazard: 6760, rfidNonSupervisor: 4035, rfidSupervisor: 1128, tbc: 2310, goldenRules: 1, blindspotTbc: 17, coverageArea: 70.7 },
+    { week: 'W46', actualIncidents: 2, hazard: 6715, rfidNonSupervisor: 4060, rfidSupervisor: 1110, tbc: 2295, goldenRules: 1, blindspotTbc: 18, coverageArea: 69.8 },
+    { week: 'W47', actualIncidents: 1, hazard: 6860, rfidNonSupervisor: 4010, rfidSupervisor: 1150, tbc: 2350, goldenRules: 2, blindspotTbc: 15, coverageArea: 71.2 },
+    { week: 'W48', actualIncidents: 0, hazard: 6965, rfidNonSupervisor: 3970, rfidSupervisor: 1174, tbc: 2395, goldenRules: 2, blindspotTbc: 13, coverageArea: 72.6 },
+    { week: 'W49', actualIncidents: 0, hazard: 7055, rfidNonSupervisor: 3920, rfidSupervisor: 1191, tbc: 2425, goldenRules: 2, blindspotTbc: 11, coverageArea: 73.4 },
+    { week: 'W50', actualIncidents: 1, hazard: 6795, rfidNonSupervisor: 4050, rfidSupervisor: 1122, tbc: 2305, goldenRules: 1, blindspotTbc: 17, coverageArea: 70.1 },
+    { week: 'W51', actualIncidents: 0, hazard: 7140, rfidNonSupervisor: 3895, rfidSupervisor: 1210, tbc: 2475, goldenRules: 2, blindspotTbc: 10, coverageArea: 74.0 },
+  ],
+
+
+  BMO3: [
+    { week: 'W40', actualIncidents: 0, hazard: 7210, rfidNonSupervisor: 3850, rfidSupervisor: 1228, tbc: 2520, goldenRules: 2, blindspotTbc: 9, coverageArea: 75.0 },
+    { week: 'W41', actualIncidents: 1, hazard: 7050, rfidNonSupervisor: 3890, rfidSupervisor: 1200, tbc: 2440, goldenRules: 2, blindspotTbc: 11, coverageArea: 73.9 },
+    { week: 'W42', actualIncidents: 0, hazard: 6970, rfidNonSupervisor: 3925, rfidSupervisor: 1188, tbc: 2400, goldenRules: 2, blindspotTbc: 12, coverageArea: 73.0 },
+    { week: 'W43', actualIncidents: 1, hazard: 6900, rfidNonSupervisor: 3960, rfidSupervisor: 1168, tbc: 2370, goldenRules: 1, blindspotTbc: 14, coverageArea: 72.2 },
+    { week: 'W44', actualIncidents: 1, hazard: 6840, rfidNonSupervisor: 3995, rfidSupervisor: 1149, tbc: 2345, goldenRules: 1, blindspotTbc: 16, coverageArea: 71.6 },
+    { week: 'W45', actualIncidents: 2, hazard: 6760, rfidNonSupervisor: 4035, rfidSupervisor: 1128, tbc: 2310, goldenRules: 1, blindspotTbc: 17, coverageArea: 70.7 },
+    { week: 'W46', actualIncidents: 2, hazard: 6715, rfidNonSupervisor: 4060, rfidSupervisor: 1110, tbc: 2295, goldenRules: 1, blindspotTbc: 18, coverageArea: 69.8 },
+    { week: 'W47', actualIncidents: 1, hazard: 6860, rfidNonSupervisor: 4010, rfidSupervisor: 1150, tbc: 2350, goldenRules: 2, blindspotTbc: 15, coverageArea: 71.2 },
+    { week: 'W48', actualIncidents: 0, hazard: 6965, rfidNonSupervisor: 3970, rfidSupervisor: 1174, tbc: 2395, goldenRules: 2, blindspotTbc: 13, coverageArea: 72.6 },
+    { week: 'W49', actualIncidents: 0, hazard: 7055, rfidNonSupervisor: 3920, rfidSupervisor: 1191, tbc: 2425, goldenRules: 2, blindspotTbc: 11, coverageArea: 73.4 },
+    { week: 'W50', actualIncidents: 1, hazard: 6795, rfidNonSupervisor: 4050, rfidSupervisor: 1122, tbc: 2305, goldenRules: 1, blindspotTbc: 17, coverageArea: 70.1 },
+    { week: 'W51', actualIncidents: 0, hazard: 7140, rfidNonSupervisor: 3895, rfidSupervisor: 1210, tbc: 2475, goldenRules: 2, blindspotTbc: 10, coverageArea: 74.0 },
+  ],
+
+
+
   LMO: [
     { week: 'W40', actualIncidents: 0, hazard: 7210, rfidNonSupervisor: 3850, rfidSupervisor: 1228, tbc: 2520, goldenRules: 2, blindspotTbc: 9, coverageArea: 75.0 },
     { week: 'W41', actualIncidents: 1, hazard: 7050, rfidNonSupervisor: 3890, rfidSupervisor: 1200, tbc: 2440, goldenRules: 2, blindspotTbc: 11, coverageArea: 73.9 },
@@ -181,6 +233,9 @@ const SITE_ROWS = {
     { week: 'W50', actualIncidents: 1, hazard: 6795, rfidNonSupervisor: 4050, rfidSupervisor: 1122, tbc: 2305, goldenRules: 1, blindspotTbc: 17, coverageArea: 70.1 },
     { week: 'W51', actualIncidents: 0, hazard: 7140, rfidNonSupervisor: 3895, rfidSupervisor: 1210, tbc: 2475, goldenRules: 2, blindspotTbc: 10, coverageArea: 74.0 },
   ],
+
+
+
   SMO: [
     { week: 'W40', actualIncidents: 0, hazard: 7945, rfidNonSupervisor: 4290, rfidSupervisor: 1335, tbc: 2790, goldenRules: 3, blindspotTbc: 8, coverageArea: 73.6 },
     { week: 'W41', actualIncidents: 0, hazard: 7890, rfidNonSupervisor: 4325, rfidSupervisor: 1318, tbc: 2765, goldenRules: 2, blindspotTbc: 9, coverageArea: 73.0 },
@@ -195,6 +250,8 @@ const SITE_ROWS = {
     { week: 'W50', actualIncidents: 1, hazard: 7460, rfidNonSupervisor: 4515, rfidSupervisor: 1216, tbc: 2585, goldenRules: 1, blindspotTbc: 16, coverageArea: 68.9 },
     { week: 'W51', actualIncidents: 0, hazard: 7830, rfidNonSupervisor: 4335, rfidSupervisor: 1310, tbc: 2750, goldenRules: 2, blindspotTbc: 9, coverageArea: 72.5 },
   ],
+
+
   GMO: [
     { week: 'W40', actualIncidents: 0, hazard: 7130, rfidNonSupervisor: 3890, rfidSupervisor: 1260, tbc: 2520, goldenRules: 2, blindspotTbc: 7, coverageArea: 71.5 },
     { week: 'W41', actualIncidents: 1, hazard: 7010, rfidNonSupervisor: 3920, rfidSupervisor: 1248, tbc: 2485, goldenRules: 2, blindspotTbc: 8, coverageArea: 70.8 },
@@ -1001,16 +1058,14 @@ function renderHeader(data) {
       </nav>
       <div class="text-sm font-medium uppercase tracking-[0.2em] text-on-surface-variant">Incident Back Analysis</div>
       <h1 class="font-headline mt-2 text-2xl font-extrabold tracking-tight text-on-background sm:text-3xl">Fully Statistical Back Analysis Tool</h1>
-      <p class="mt-2 max-w-3xl text-sm font-medium text-on-surface-variant">
-        Baseline dihitung dari rolling historical window, bobot berasal dari koefisien ridge regression terstandarisasi, dan overall score berasal dari predicted incident risk yang dinormalisasi dari model site.
-      </p>
+     
     </div>
     <div class="flex flex-col items-start gap-3 md:items-end">
       <div class="flex flex-wrap gap-1 rounded-xl border border-outline-variant/25 bg-[#f8fafc] p-1">
         <button data-action="page" data-page="dashboard" class="rounded-lg px-3 py-2 text-sm font-bold transition sm:px-4 ${appState.page === 'dashboard' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-white/80'}">Analysis Dashboard</button>
         <button data-action="page" data-page="accuracy" class="rounded-lg px-3 py-2 text-sm font-bold transition sm:px-4 ${appState.page === 'accuracy' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-white/80'}">Accuracy Check</button>
       </div>
-      <button data-action="reset" type="button" class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-sm transition hover:bg-primary-dim">Reset demo</button>
+      <button data-action="reset" type="button" class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-sm transition hover:bg-primary-dim">Reset Filter</button>
     </div>
   </div>
 
