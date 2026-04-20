@@ -152,6 +152,11 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/', [PilotProjectValidationController::class, 'index'])->name('index');
         Route::get('/portfolio', [PilotProjectValidationController::class, 'portfolio'])->name('portfolio.show');
         Route::post('/portfolio', [PilotProjectValidationController::class, 'storePortfolio'])->name('portfolio.store');
+        Route::get('/portfolio/import-excel', function () {
+            return redirect()
+                ->route('pilot-project-validation.index')
+                ->with('warning', 'Endpoint impor Excel hanya menerima metode POST. Silakan upload dari halaman Pilot Project Validation.');
+        })->name('portfolio.import-excel.get');
         Route::post('/portfolio/import-excel', [PilotProjectValidationController::class, 'importExcel'])->name('portfolio.import-excel');
         Route::get('/template-excel', [PilotProjectValidationController::class, 'downloadTemplate'])->name('template-excel');
         Route::resource('projects', PilotProjectValidationProjectController::class)->except(['show']);

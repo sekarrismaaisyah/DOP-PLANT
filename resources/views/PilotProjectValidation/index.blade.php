@@ -903,11 +903,7 @@
   <div class="page">
     <section class="hero">
       <h1>Key Pilot Projects &amp; Technical Validation</h1>
-      <p>
-        <strong>Dashboard</strong> menampilkan ringkasan dan kurva (baca saja).
-        <strong>Input &amp; impor</strong> untuk mengisi data: manual di tabel, impor file Excel, lalu opsional simpan ke database server.
-        Data di layar awalnya hanya di <em>browser</em> sampai Anda klik <strong>Simpan ke server</strong>.
-      </p>
+      
       <div class="toolbar">
         <div class="pill">Bobot gate: G1 25% · G2 30% · G3 25% · G4 20%</div>
         <div class="pill">Gate 1 &amp; Gate 3 = hard gate</div>
@@ -943,7 +939,7 @@
           <div class="curve-svg-wrap" id="curveChartWrap"></div>
         </div>
         <div class="legend-card">
-          <div class="legend-label">Logika kurva</div>
+          <div class="legend-label">List Support</div>
           <h4>Cara kurva S per periode dibentuk</h4>
           <div class="notice-copy" style="margin-top:8px;">Grafik atas memadukan semua proyek per periode. Kartu proyek di bawah memakai logika serupa untuk kurva per proyek.</div>
           <div class="curve-box" style="margin-top:14px;">
