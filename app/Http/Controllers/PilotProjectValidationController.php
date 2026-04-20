@@ -139,7 +139,22 @@ class PilotProjectValidationController extends Controller
         $file = $map[$key];
         $disk = Storage::disk('local');
         if (! $disk->exists($file)) {
-            abort(404, 'File PDF tidak ditemukan.');
+            $fallbackCandidates = [
+                strtolower($file),
+                strtoupper($file),
+                ucfirst(strtolower($file)),
+            ];
+            $resolved = null;
+            foreach ($fallbackCandidates as $candidate) {
+                if ($disk->exists($candidate)) {
+                    $resolved = $candidate;
+                    break;
+                }
+            }
+            if ($resolved === null) {
+                abort(404, 'File PDF tidak ditemukan.');
+            }
+            $file = $resolved;
         }
 
         return response()->file($disk->path($file), [
