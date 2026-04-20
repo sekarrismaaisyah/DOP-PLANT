@@ -939,17 +939,9 @@
           <div class="curve-svg-wrap" id="curveChartWrap"></div>
         </div>
         <div class="legend-card">
-          <div class="legend-label">List Support</div>
-          <h4>Cara kurva S per periode dibentuk</h4>
-          <div class="notice-copy" style="margin-top:8px;">Grafik atas memadukan semua proyek per periode. Kartu proyek di bawah memakai logika serupa untuk kurva per proyek.</div>
-          <div class="curve-box" style="margin-top:14px;">
-            <div class="legend-label">Pemetaan skor keputusan</div>
-            <div class="curve-value">GO = 100 · CONDITIONAL GO = 70 · NO-GO = 35</div>
-          </div>
-          <div class="curve-box" style="margin-top:12px;">
-            <div class="legend-label">Kurva berbasis waktu</div>
-            <div class="curve-value">Gunakan sheet HISTORY pada Excel untuk kurva riwayat yang mengikuti tanggal nyata.</div>
-          </div>
+          <div class="legend-label">List Need Support</div>
+          <div class="notice-copy" style="margin-top:8px;">Daftar kebutuhan support per proyek. Nilainya diambil dari kolom <strong>Need Support (PIC)</strong> pada data proyek.</div>
+          <div id="needSupportList" style="margin-top:12px;"></div>
         </div>
       </section>
       <section class="dashboard-grid" id="dashboardGrid"></section>
@@ -2323,6 +2315,22 @@
         }).join('');
       }
 
+      function renderNeedSupportList() {
+        const root = document.getElementById('needSupportList');
+        if (!root) return;
+        if (!projects.length) {
+          root.innerHTML = '<div class="curve-value">Belum ada proyek.</div>';
+          return;
+        }
+        root.innerHTML = projects.map(function (project) {
+          const support = String(project.needSupportPic || '').trim();
+          return '<div class="curve-box" style="margin-top:10px;">'
+            + '<div class="legend-label">' + escapeHtml(project.name || 'Tanpa nama proyek') + '</div>'
+            + '<div class="curve-value">' + escapeHtml(support || 'Tidak ada need support') + '</div>'
+            + '</div>';
+        }).join('');
+      }
+
       function renderProjectMasterTable(project, pIdx) {
         return '<div class="table-wrap"><table class="clean-table"><thead><tr>'
           + '<th>Name</th><th>Subtitle</th><th>Pilot Area</th><th>Support</th><th>Current Phase</th><th>Current Period</th><th>Next Milestone</th><th>Progress</th><th>Actions</th>'
@@ -2995,6 +3003,7 @@
         renderOverview();
         renderCurveChart();
         renderDashboard();
+        renderNeedSupportList();
         renderInput();
         applyPageState();
       }
