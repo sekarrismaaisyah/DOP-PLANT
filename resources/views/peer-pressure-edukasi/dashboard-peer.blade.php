@@ -1185,17 +1185,18 @@
                </div>
 
                <div class="mt-5 rounded-xl border border-teal-200/80 bg-teal-50/50 px-4 py-3">
-                  <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per perusahaan (ringkasan periode)</p>
-                  <p id="peer-pp-summary-period" class="mt-1 text-[11px] leading-snug text-on-surface-variant"></p>
-                 
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per perusahaan (seluruh data)</p>
+                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
+                     Persentase dihitung dari <span class="font-medium text-on-surface">semua kejadian</span> yang tercatat, tanpa filter bulan atau tahun.
+                  </p>
                   <p id="peer-pp-summary-empty" class="mt-3 hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
                   <div id="peer-pp-summary-wrap" class="mt-3 hidden overflow-x-auto rounded-xl border border-teal-100/90 bg-white shadow-inner">
                      <table class="w-full min-w-[280px] border-collapse text-center text-[11px] sm:text-xs" id="peer-pp-summary-table" data-peer-pp-summary-layout="2-metric-cols">
                         <thead class="bg-[#f0fdfa] text-[10px] font-bold uppercase tracking-wider text-teal-950">
                            <tr>
                               <th class="sticky left-0 z-10 min-w-[10rem] border border-teal-100 bg-[#ecfdf5] px-2 py-2 text-left text-teal-950 sm:min-w-[12rem]">Nama perusahaan / tim</th>
-                              <th class="min-w-[5rem] border border-teal-100 bg-emerald-50/90 px-2 py-2.5 text-teal-900 sm:text-xs" title="% kejadian CLOSED/SELESAI dalam periode">Terlaksana</th>
-                              <th class="min-w-[5rem] border border-teal-100 bg-amber-50/90 px-2 py-2.5 text-teal-900 sm:text-xs" title="% kejadian belum CLOSED/SELESAI dalam periode">Tidak terlaksana</th>
+                              <th class="min-w-[5rem] border border-teal-100 bg-emerald-50/90 px-2 py-2.5 text-teal-900 sm:text-xs" title="% kejadian CLOSED/SELESAI (seluruh data)">Terlaksana</th>
+                              <th class="min-w-[5rem] border border-teal-100 bg-amber-50/90 px-2 py-2.5 text-teal-900 sm:text-xs" title="% kejadian belum CLOSED/SELESAI (seluruh data)">Tidak terlaksana</th>
                            </tr>
                         </thead>
                         <tbody id="peer-pp-summary-tbody" class="divide-y divide-outline-variant/10"></tbody>
@@ -3062,19 +3063,15 @@
           var loadingEl = document.getElementById('peer-pp-summary-loading');
           var emptyEl = document.getElementById('peer-pp-summary-empty');
           var wrapEl = document.getElementById('peer-pp-summary-wrap');
-          var periodEl = document.getElementById('peer-pp-summary-period');
           var tbody = document.getElementById('peer-pp-summary-tbody');
           if (loadingEl) loadingEl.classList.add('hidden');
           if (!tbody || !wrapEl || !emptyEl) return;
           tbody.innerHTML = '';
-          if (periodEl && data && data.period_label) {
-            periodEl.textContent = 'Periode: ' + String(data.period_label);
-          }
           var companies = data && Array.isArray(data.companies) ? data.companies : [];
           var grandRow = data && data.grand_row && typeof data.grand_row === 'object' ? data.grand_row : {};
           if (!companies.length) {
             emptyEl.textContent =
-              'Belum ada data perusahaan untuk ringkasan pada rentang ini.';
+              'Belum ada data perusahaan untuk ringkasan.';
             emptyEl.classList.remove('hidden');
             wrapEl.classList.add('hidden');
             return;
@@ -3141,10 +3138,6 @@
           }
           if (wrapEl) wrapEl.classList.add('hidden');
           var u = new URL(perusahaanHeatmapUrl, window.location.origin);
-          if (!state.all) {
-            u.searchParams.set('year', String(state.year));
-            u.searchParams.set('month', String(state.month));
-          }
           u.searchParams.set('_', String(Date.now()));
           fetch(u.toString(), {
             headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },

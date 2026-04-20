@@ -9,7 +9,7 @@ use App\Support\PeerPressure\PelaksanaanComplianceEvaluator;
 use Carbon\Carbon;
 
 /**
- * Agregat % pelaksanaan selesai (CLOSED/SELESAI) vs tidak, per perusahaan untuk satu periode.
+ * Agregat % pelaksanaan selesai (CLOSED/SELESAI) vs tidak, per perusahaan (per bulan atau seluruh data).
  */
 final class GetPeerPressurePerusahaanPelaksanaanHeatmapAction
 {
@@ -19,9 +19,6 @@ final class GetPeerPressurePerusahaanPelaksanaanHeatmapAction
 
     /** Maks baris perusahaan (diurutkan volume). */
     private const MAX_COMPANIES = 30;
-
-    /** Mode "seluruh data": rentang tanggal temuan ke belakang. */
-    private const ALL_MODE_DAYS = 31;
 
     /**
      * @return array{
@@ -40,7 +37,7 @@ final class GetPeerPressurePerusahaanPelaksanaanHeatmapAction
             return $this->forMonth($y, $m);
         }
 
-        return $this->forRollingWindow();
+        return $this->forAllData();
     }
 
     /**
@@ -55,19 +52,16 @@ final class GetPeerPressurePerusahaanPelaksanaanHeatmapAction
     }
 
     /**
+     * Seluruh baris kejadian (tanpa filter tanggal temuan).
+     *
      * @return array<string, mixed>
      */
-    private function forRollingWindow(): array
+    private function forAllData(): array
     {
-        $end = Carbon::now()->startOfDay();
-        $start = $end->copy()->subDays(self::ALL_MODE_DAYS - 1);
+        $rows = PeerPressureKejadianEdukasi::query()
+            ->get(['perusahaan', 'status_pelaksanaan_edukasi']);
 
-        return $this->buildForPeriod(
-            $start,
-            $end,
-            'all',
-            sprintf('%s – %s (rolling %d hari)', $start->format('d/m/Y'), $end->format('d/m/Y'), self::ALL_MODE_DAYS)
-        );
+        return $this->aggregateRows($rows, 'all', 'Semua data');
     }
 
     /**
@@ -83,6 +77,16 @@ final class GetPeerPressurePerusahaanPelaksanaanHeatmapAction
             ->where('tanggal_temuan', '<=', $endS)
             ->get(['perusahaan', 'status_pelaksanaan_edukasi']);
 
+        return $this->aggregateRows($rows, $periodScope, $periodLabel);
+    }
+
+    /**
+     * @param \Illuminate\Support\Collection<int, PeerPressureKejadianEdukasi> $rows
+     *
+     * @return array<string, mixed>
+     */
+    private function aggregateRows($rows, string $periodScope, string $periodLabel): array
+    {
         /** @var array<string, array{total: int, selesai: int}> $acc */
         $acc = [];
 
