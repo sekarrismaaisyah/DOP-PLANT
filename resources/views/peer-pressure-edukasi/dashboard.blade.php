@@ -145,14 +145,14 @@
             </div>
          </div>
       </header>
-      <!-- Tools Analisis: tertutup = panel hilang sepenuhnya; hanya strip panah di tepi kanan -->
+      <!-- Tools Analisis: panel pakai right-11 — translate-x-full saja masih meninggalkan ~2.75rem terlihat; pakai calc(100%+2.75rem) agar benar-benar off-screen -->
       <div
-         class="pointer-events-none fixed top-16 bottom-0 right-0 z-[38] w-0 overflow-visible"
+         class="pointer-events-none fixed top-28 bottom-0 right-0 z-[38] w-0 overflow-visible"
          aria-hidden="false"
       >
          <aside
             id="peer-tools-sidebar-panel"
-            class="pointer-events-auto absolute top-0 right-11 bottom-0 flex w-[min(800px,calc(100vw-3rem))] max-w-[min(800px,calc(100vw-3rem))] translate-x-full flex-col overflow-hidden border-l border-outline-variant/25 bg-white shadow-2xl transition-transform duration-300 ease-out will-change-transform"
+            class="pointer-events-auto absolute top-0 right-11 bottom-0 flex w-[min(800px,calc(100vw-3rem))] max-w-[min(800px,calc(100vw-3rem))] translate-x-[calc(100%+2.75rem+1px)] flex-col overflow-hidden border-l border-outline-variant/25 bg-white shadow-2xl transition-transform duration-300 ease-out will-change-transform"
             data-peer-tools-sidebar="collapsed"
             role="complementary"
             aria-label="Panel Tools Analisis"
@@ -186,9 +186,11 @@
         var btn = document.getElementById('peer-tools-sidebar-toggle');
         if (!panel || !btn) return;
         var chev = btn.querySelector('.peer-tools-sidebar-chevron');
+        var hiddenX = 'translate-x-[calc(100%+2.75rem+1px)]';
         function setOpen(open) {
           if (open) {
-            panel.classList.remove('translate-x-full');
+            panel.classList.remove(hiddenX);
+            panel.classList.add('translate-x-0');
             panel.setAttribute('data-peer-tools-sidebar', 'open');
             btn.setAttribute('aria-expanded', 'true');
             if (chev) {
@@ -196,7 +198,8 @@
               chev.setAttribute('data-icon', 'chevron_right');
             }
           } else {
-            panel.classList.add('translate-x-full');
+            panel.classList.remove('translate-x-0');
+            panel.classList.add(hiddenX);
             panel.setAttribute('data-peer-tools-sidebar', 'collapsed');
             btn.setAttribute('aria-expanded', 'false');
             if (chev) {

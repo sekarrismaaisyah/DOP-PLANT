@@ -1,20 +1,145 @@
 <!DOCTYPE html>
-<html lang="id">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Incident Back Analysis Tool</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-  <style>
-    body { background:#f8fafc; }
-    input[type=number]::-webkit-outer-spin-button,
-    input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type=number] { -moz-appearance: textfield; }
-  </style>
-</head>
-<body class="min-h-screen bg-slate-50 text-slate-900">
-  <div id="app" class="mx-auto max-w-7xl space-y-6 p-6"></div>
+<html class="light" lang="id">
+   <head>
+      <meta charset="utf-8"/>
+      <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+      <title>BMO2 Safety — Tools Analisis</title>
+      <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+      <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+      <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+      <script id="tailwind-config">
+         tailwind.config = {
+           darkMode: "class",
+           theme: {
+             extend: {
+               colors: {
+                 "outline": "#747779",
+                 "primary-container": "#859aff",
+                 "on-error-container": "#510017",
+                 "on-error": "#ffefef",
+                 "secondary-fixed": "#e4c6ff",
+                 "on-tertiary-fixed-variant": "#00377b",
+                 "primary-fixed-dim": "#748cf9",
+                 "surface-container-low": "#eef1f3",
+                 "secondary-dim": "#653b91",
+                 "secondary-fixed-dim": "#dab4ff",
+                 "on-primary-container": "#001867",
+                 "error": "#b41340",
+                 "error-dim": "#a70138",
+                 "on-tertiary-fixed": "#00163b",
+                 "secondary": "#72479e",
+                 "error-container": "#f74b6d",
+                 "surface-container-high": "#dfe3e6",
+                 "on-secondary-fixed": "#481c73",
+                 "surface-tint": "#3952bc",
+                 "on-secondary-container": "#5d3288",
+                 "surface-container": "#e5e9eb",
+                 "inverse-primary": "#7991ff",
+                 "on-background": "#2c2f31",
+                 "surface": "#f5f7f9",
+                 "surface-container-lowest": "#ffffff",
+                 "on-primary-fixed-variant": "#00207e",
+                 "inverse-on-surface": "#9a9d9f",
+                 "on-secondary": "#fbefff",
+                 "tertiary-fixed": "#8ab0ff",
+                 "tertiary-fixed-dim": "#73a2ff",
+                 "surface-container-highest": "#d9dde0",
+                 "surface-variant": "#d9dde0",
+                 "tertiary": "#0057bd",
+                 "on-primary-fixed": "#000000",
+                 "primary": "#3952bc",
+                 "background": "#f5f7f9",
+                 "on-surface": "#2c2f31",
+                 "surface-bright": "#f5f7f9",
+                 "secondary-container": "#e4c6ff",
+                 "on-tertiary-container": "#002e6a",
+                 "on-secondary-fixed-variant": "#663c92",
+                 "inverse-surface": "#0b0f10",
+                 "surface-dim": "#d0d5d8",
+                 "outline-variant": "#abadaf",
+                 "on-tertiary": "#f0f2ff",
+                 "primary-dim": "#2b45af",
+                 "tertiary-dim": "#004ca6",
+                 "primary-fixed": "#859aff",
+                 "tertiary-container": "#8ab0ff",
+                 "on-primary": "#f2f1ff",
+                 "on-surface-variant": "#595c5e"
+               },
+               fontFamily: {
+                 "headline": ["Poppins"],
+                 "body": ["Poppins"],
+                 "label": ["Poppins"]
+               },
+               borderRadius: {"DEFAULT": "0.25rem", "lg": "0.5rem", "xl": "0.75rem", "2xl": "1rem", "full": "9999px"},
+               boxShadow: {
+                 'card': '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+                 'card-heavy': '0 10px 15px -3px rgba(0, 0, 0, 0.15), 0 4px 6px -2px rgba(0, 0, 0, 0.1)',
+                 'card-sharp': '0 8px 0px -2px rgba(0, 0, 0, 0.05), 0 15px 30px -5px rgba(0, 0, 0, 0.12)',
+               }
+             },
+           },
+         }
+      </script>
+      <style>
+         .material-symbols-outlined {
+         font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+         vertical-align: middle;
+         }
+         .anchored-card {
+         box-shadow: 0 4px 0px 0px rgba(0, 0, 0, 0.05), 0 12px 24px -4px rgba(0, 0, 0, 0.15);
+         border: 1px solid rgba(0, 0, 0, 0.08);
+         transition: transform 0.2s ease, box-shadow 0.2s ease;
+         }
+         .anchored-card:hover {
+         transform: translateY(-2px);
+         box-shadow: 0 6px 0px 0px rgba(0, 0, 0, 0.05), 0 20px 32px -8px rgba(0, 0, 0, 0.2);
+         }
+         input[type=number]::-webkit-outer-spin-button,
+         input[type=number]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+         input[type=number] { -moz-appearance: textfield; }
+      </style>
+      <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+   </head>
+   <body class="bg-[#f0f2f5] font-body text-on-surface min-h-screen flex flex-col">
+      <!-- <header class="w-full sticky top-0 bg-[#ffffff] border-b border-[#dfe3e6] z-50 shadow-sm">
+         <div class="mx-auto flex items-center justify-between px-8 py-4">
+            <div class="flex items-center gap-10">
+               <div class="flex flex-col">
+                  <h1 class="font-headline text-xl font-bold leading-tight tracking-tighter text-[#3952bc]">OHS Division</h1>
+                  <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Safety Performance Review</p>
+               </div>
+               <div class="hidden h-8 w-px bg-[#dfe3e6] lg:block"></div>
+               <nav class="hidden gap-8 md:flex">
+                  <a class="text-sm font-semibold tracking-tight text-[#595c5e] transition-colors hover:text-[#3952bc]" href="{{ route('peer-pressure-edukasi.dashboard') }}">Lagging</a>
+                  <a class="text-sm font-semibold tracking-tight text-[#595c5e] transition-colors hover:text-[#3952bc]" href="{{ route('peer-pressure-edukasi.dashboard-performance') }}">Dash Performance</a>
+                  <a class="text-sm font-semibold tracking-tight text-[#595c5e] transition-colors hover:text-[#3952bc]" href="{{ route('peer-pressure-edukasi.tematic') }}">Thematic Alignment</a>
+                  <a class="border-b-2 border-[#3952bc] pb-1 text-sm font-bold tracking-tight text-[#3952bc]" href="{{ route('peer-pressure-edukasi.tools-analisis') }}">Tools Analisis</a>
+               </nav>
+            </div>
+            <div class="flex items-center gap-6">
+               <div class="relative hidden group xl:block">
+                  <input class="w-80 rounded-full border-none bg-[#f5f7f9] px-4 py-2 text-sm shadow-inner transition-all focus:ring-2 focus:ring-primary" placeholder="Search safety records..." type="text" readonly tabindex="-1"/>
+                  <span class="material-symbols-outlined absolute right-3 top-2 text-on-surface-variant" data-icon="search">search</span>
+               </div>
+               <div class="flex items-center gap-3">
+                  <span class="relative inline-flex rounded-full p-2 text-on-surface-variant">
+                     <span class="material-symbols-outlined" data-icon="notifications">notifications</span>
+                     <span class="absolute right-1 top-1 h-2.5 w-2.5 rounded-full border-2 border-white bg-error"></span>
+                  </span>
+                  <div class="flex items-center gap-2 rounded-full border border-outline-variant/30 bg-white p-1.5 pr-4 shadow-sm">
+                     <span class="material-symbols-outlined text-3xl text-primary" data-icon="account_circle">account_circle</span>
+                     <div class="text-left">
+                        <p class="text-[10px] font-bold uppercase leading-none text-primary">Safety Admin</p>
+                        <p class="text-[9px] font-medium text-on-surface-variant">Site Manager</p>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </header> -->
+      <main class="mx-auto w-full max-w-[1600px] flex-grow space-y-8 px-6 py-8 sm:px-8">
+         <div id="app" class="space-y-8"></div>
+      </main>
 
 <script>
 const FEATURE_META = [
@@ -480,15 +605,15 @@ function escapeHtml(value) {
 }
 
 function inputClass(extra = '') {
-  return `flex h-10 w-full rounded-2xl border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-slate-300 focus:ring-2 focus:ring-slate-200 ${extra}`;
+  return `flex h-10 w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2 text-sm text-on-surface shadow-inner outline-none transition placeholder:text-on-surface-variant focus:border-primary/40 focus:ring-2 focus:ring-primary/20 ${extra}`;
 }
 
 function card(content, extra = '') {
-  return `<div class="rounded-3xl bg-white shadow-sm ring-1 ring-slate-200 ${extra}">${content}</div>`;
+  return `<div class="anchored-card rounded-2xl bg-white ${extra}">${content}</div>`;
 }
 
 function cardTitle(title, extra = '') {
-  return `<div class="px-6 pt-6 pb-4"><h3 class="text-xl font-semibold text-slate-900 ${extra}">${title}</h3></div>`;
+  return `<div class="px-6 pt-6 pb-4"><h3 class="font-headline text-xl font-bold text-on-surface ${extra}">${title}</h3></div>`;
 }
 
 function badge(status) {
@@ -858,35 +983,40 @@ function deriveData() {
 }
 
 function statBox(label, value, sub, dark = false) {
-  return `<div class="rounded-3xl p-5 ${dark ? 'bg-slate-900 text-white' : 'bg-white text-slate-900 ring-1 ring-slate-200'}">
-    <div class="text-xs uppercase tracking-[0.2em] ${dark ? 'text-slate-300' : 'text-slate-500'}">${escapeHtml(label)}</div>
-    <div class="mt-2 text-3xl font-semibold">${value}</div>
-    <div class="mt-1 text-sm ${dark ? 'text-slate-300' : 'text-slate-500'}">${escapeHtml(sub)}</div>
+  return `<div class="rounded-2xl p-5 ${dark ? 'bg-primary text-on-primary' : 'anchored-card bg-white text-on-surface'}">
+    <div class="text-xs uppercase tracking-[0.2em] ${dark ? 'text-on-primary/80' : 'text-on-surface-variant'}">${escapeHtml(label)}</div>
+    <div class="mt-2 font-headline text-3xl font-bold">${value}</div>
+    <div class="mt-1 text-sm ${dark ? 'text-on-primary/85' : 'text-on-surface-variant'}">${escapeHtml(sub)}</div>
   </div>`;
 }
 
 function renderHeader(data) {
   return `
-  <div class="flex flex-col gap-4 rounded-3xl bg-white p-6 shadow-sm ring-1 ring-slate-200 md:flex-row md:items-end md:justify-between">
+  <div class="anchored-card flex flex-col gap-4 rounded-2xl bg-white p-6 md:flex-row md:items-end md:justify-between">
     <div>
-      <div class="text-sm font-medium uppercase tracking-[0.2em] text-slate-500">Incident Back Analysis</div>
-      <h1 class="mt-2 text-3xl font-semibold text-slate-900">Fully Statistical Back Analysis Tool</h1>
-      <p class="mt-2 max-w-3xl text-sm text-slate-600">
+      <nav class="mb-2 flex items-center gap-2 text-xs font-bold uppercase tracking-wide text-on-surface-variant">
+        <span>Dashboard</span>
+        <span class="material-symbols-outlined text-xs">chevron_right</span>
+        <span class="text-primary">Tools Analisis</span>
+      </nav>
+      <div class="text-sm font-medium uppercase tracking-[0.2em] text-on-surface-variant">Incident Back Analysis</div>
+      <h1 class="font-headline mt-2 text-3xl font-extrabold tracking-tight text-on-background">Fully Statistical Back Analysis Tool</h1>
+      <p class="mt-2 max-w-3xl text-sm font-medium text-on-surface-variant">
         Baseline dihitung dari rolling historical window, bobot berasal dari koefisien ridge regression terstandarisasi, dan overall score berasal dari predicted incident risk yang dinormalisasi dari model site.
       </p>
     </div>
     <div class="flex flex-col items-start gap-3 md:items-end">
-      <div class="inline-flex rounded-2xl bg-slate-100 p-1 ring-1 ring-slate-200">
-        <button data-action="page" data-page="dashboard" class="rounded-xl px-4 py-2 text-sm font-medium transition ${appState.page === 'dashboard' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:bg-white/60'}">Analysis Dashboard</button>
-        <button data-action="page" data-page="accuracy" class="rounded-xl px-4 py-2 text-sm font-medium transition ${appState.page === 'accuracy' ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-500 hover:bg-white/60'}">Accuracy Check</button>
+      <div class="inline-flex rounded-xl border border-outline-variant/25 bg-[#f8fafc] p-1">
+        <button data-action="page" data-page="dashboard" class="rounded-lg px-4 py-2 text-sm font-bold transition ${appState.page === 'dashboard' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-white/80'}">Analysis Dashboard</button>
+        <button data-action="page" data-page="accuracy" class="rounded-lg px-4 py-2 text-sm font-bold transition ${appState.page === 'accuracy' ? 'bg-white text-primary shadow-sm' : 'text-on-surface-variant hover:bg-white/80'}">Accuracy Check</button>
       </div>
-      <button data-action="reset" class="rounded-2xl bg-slate-900 px-4 py-2 text-sm font-medium text-white transition hover:bg-slate-800">Reset demo</button>
+      <button data-action="reset" type="button" class="rounded-xl bg-primary px-4 py-2 text-sm font-bold text-on-primary shadow-sm transition hover:bg-primary-dim">Reset demo</button>
     </div>
   </div>
 
   <div class="grid gap-4 md:grid-cols-6">
     ${card(`<div class="p-5">
-      <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Site</div>
+      <div class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Site</div>
       <div class="mt-3">
         <select data-control="site" class="${inputClass()}">
           ${data.sites.map((site) => `<option value="${escapeHtml(site)}" ${site === appState.site ? 'selected' : ''}>${escapeHtml(site)}</option>`).join('')}
@@ -894,50 +1024,50 @@ function renderHeader(data) {
       </div>
     </div>`)}
     ${card(`<div class="p-5">
-      <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Lookback baseline</div>
+      <div class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Lookback baseline</div>
       <div class="mt-3">
         <input data-control="lookback" type="number" min="2" max="10" value="${appState.lookback}" class="${inputClass()}">
       </div>
-      <div class="mt-2 text-xs text-slate-500">Jumlah minggu historis untuk rolling reference.</div>
+      <div class="mt-2 text-xs text-on-surface-variant">Jumlah minggu historis untuk rolling reference.</div>
     </div>`)}
     ${card(`<div class="p-5">
-      <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Alert threshold</div>
+      <div class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Alert threshold</div>
       <div class="mt-3">
         <input data-control="alertThreshold" type="number" min="0" max="100" value="${appState.alertThreshold}" class="${inputClass()}">
       </div>
-      <div class="mt-2 text-xs text-slate-500">Dipakai hanya untuk klasifikasi di accuracy check.</div>
+      <div class="mt-2 text-xs text-on-surface-variant">Dipakai hanya untuk klasifikasi di accuracy check.</div>
     </div>`)}
     ${card(`<div class="p-5">
-      <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Average score</div>
-      <div class="mt-2 text-3xl font-semibold text-slate-900">${fmt(data.summaryTrend.avg,1)}</div>
-      <div class="mt-1 text-sm text-slate-500">Mean statistical risk score</div>
+      <div class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Average score</div>
+      <div class="mt-2 text-3xl font-semibold text-on-surface">${fmt(data.summaryTrend.avg,1)}</div>
+      <div class="mt-1 text-sm text-on-surface-variant">Mean statistical risk score</div>
     </div>`)}
     ${card(`<div class="p-5">
-      <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Peak week</div>
-      <div class="mt-2 text-3xl font-semibold text-slate-900">${escapeHtml(data.summaryTrend.peak.week)}</div>
-      <div class="mt-1 text-sm text-slate-500">Score ${fmt(data.summaryTrend.peak.score,1)} · ${escapeHtml(data.summaryTrend.peak.status)}</div>
+      <div class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Peak week</div>
+      <div class="mt-2 text-3xl font-semibold text-on-surface">${escapeHtml(data.summaryTrend.peak.week)}</div>
+      <div class="mt-1 text-sm text-on-surface-variant">Score ${fmt(data.summaryTrend.peak.score,1)} · ${escapeHtml(data.summaryTrend.peak.status)}</div>
     </div>`)}
     ${card(`<div class="p-5">
-      <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Latest week</div>
-      <div class="mt-2 text-3xl font-semibold text-slate-900">${escapeHtml(data.summaryTrend.latest.week)}</div>
-      <div class="mt-1 text-sm text-slate-500">Score ${fmt(data.summaryTrend.latest.score,1)} · ${escapeHtml(data.summaryTrend.latest.status)}</div>
+      <div class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Latest week</div>
+      <div class="mt-2 text-3xl font-semibold text-on-surface">${escapeHtml(data.summaryTrend.latest.week)}</div>
+      <div class="mt-1 text-sm text-on-surface-variant">Score ${fmt(data.summaryTrend.latest.score,1)} · ${escapeHtml(data.summaryTrend.latest.status)}</div>
     </div>`)}
   </div>`;
 }
 
 function renderTopDrivers(analysis) {
   if (!analysis.topDrivers.length) {
-    return `<div class="rounded-3xl bg-emerald-50 p-5 text-sm text-emerald-700 ring-1 ring-emerald-200">
+    return `<div class="rounded-2xl bg-emerald-50 p-5 text-sm text-emerald-700 ring-1 ring-emerald-200">
       Tidak ada kontribusi positif besar pada minggu ini. Indikator utama cenderung netral atau protektif terhadap predicted risk.
     </div>`;
   }
   return analysis.topDrivers.map((item) => `
-    <div class="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-      <div class="rounded-2xl bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">${escapeHtml(item.label.slice(0,2).toUpperCase())}</div>
+    <div class="flex items-start gap-3 rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20">
+      <div class="rounded-2xl bg-white px-3 py-2 text-xs font-semibold text-on-surface border border-outline-variant/20">${escapeHtml(item.label.slice(0,2).toUpperCase())}</div>
       <div>
-        <div class="font-medium text-slate-900">${escapeHtml(item.label)}</div>
-        <div class="mt-1 text-sm text-slate-500">β = ${fmt(item.beta,2)} · z = ${fmt(item.zScore,2)} · contribution = ${fmt(item.contribution,2)}</div>
-        <div class="mt-1 text-sm text-slate-500">${escapeHtml(item.description)}</div>
+        <div class="font-medium text-on-surface">${escapeHtml(item.label)}</div>
+        <div class="mt-1 text-sm text-on-surface-variant">β = ${fmt(item.beta,2)} · z = ${fmt(item.zScore,2)} · contribution = ${fmt(item.contribution,2)}</div>
+        <div class="mt-1 text-sm text-on-surface-variant">${escapeHtml(item.description)}</div>
       </div>
     </div>
   `).join('');
@@ -948,14 +1078,14 @@ function renderDashboard(data) {
   return `
     <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
       ${card(cardTitle('Statistical score trend per week') + `<div class="space-y-6 px-6 pb-6">
-        <div class="h-[340px] w-full rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200"><canvas id="dashboardTrendChart"></canvas></div>
+        <div class="h-[340px] w-full rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><canvas id="dashboardTrendChart"></canvas></div>
         <div class="grid gap-4 md:grid-cols-3">
           ${statBox('Predicted incident', fmt(data.analysis.predictedIncidents,2), 'Fitted from standardized ridge model')}
           ${statBox('Score', fmt(data.analysis.score,1), 'Normalized from model prediction')}
-          <div class="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
-            <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Status</div>
+          <div class="rounded-2xl bg-white p-5 border border-outline-variant/20">
+            <div class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Status</div>
             <div class="mt-3">${badge(data.analysis.status)}</div>
-            <div class="mt-3 text-sm text-slate-500">Derived from site-specific score quantiles</div>
+            <div class="mt-3 text-sm text-on-surface-variant">Derived from site-specific score quantiles</div>
           </div>
         </div>
       </div>`)}
@@ -966,23 +1096,23 @@ function renderDashboard(data) {
       ${card(cardTitle('Selected week and rolling reference') + `<div class="space-y-6 px-6 pb-6">
         <div class="grid gap-4 md:grid-cols-3">
           <div class="space-y-2">
-            <label class="text-sm font-medium text-slate-700">Week</label>
+            <label class="text-sm font-medium text-on-surface">Week</label>
             <select data-control="selectedWeek" class="${inputClass()}">
               ${(SITE_ROWS[appState.site] || []).map((row) => `<option value="${escapeHtml(row.week)}" ${row.week === appState.selectedWeek ? 'selected' : ''}>${escapeHtml(row.week)}</option>`).join('')}
             </select>
           </div>
           <div class="space-y-2">
-            <label class="text-sm font-medium text-slate-700">Site</label>
-            <input value="${escapeHtml(appState.site)}" readonly class="${inputClass('bg-slate-50')}" />
+            <label class="text-sm font-medium text-on-surface">Site</label>
+            <input value="${escapeHtml(appState.site)}" readonly class="${inputClass('bg-[#f8fafc]')}" />
           </div>
           <div class="space-y-2">
-            <label class="text-sm font-medium text-slate-700">Actual Incidents</label>
+            <label class="text-sm font-medium text-on-surface">Actual Incidents</label>
             <input data-field="actualIncidents" type="number" value="${actualRow.actualIncidents ?? 0}" class="${inputClass()}" />
           </div>
         </div>
 
         <div class="grid gap-6 md:grid-cols-2">
-          ${card(`<div class="px-6 pt-6 pb-4"><h4 class="text-base font-semibold text-slate-900">Actual values</h4></div>
+          ${card(`<div class="px-6 pt-6 pb-4"><h4 class="text-base font-semibold text-on-surface">Actual values</h4></div>
             <div class="grid gap-4 px-6 pb-6">
               ${[
                 ['hazard', 'Pelaporan Hazard'],
@@ -994,32 +1124,32 @@ function renderDashboard(data) {
                 ['rfidNonSupervisor', 'RFID Non Pengawas'],
               ].map(([field, label]) => `
                 <div class="space-y-2">
-                  <label class="text-sm font-medium text-slate-700">${escapeHtml(label)}</label>
+                  <label class="text-sm font-medium text-on-surface">${escapeHtml(label)}</label>
                   <input data-field="${field}" type="number" value="${actualRow[field] ?? 0}" class="${inputClass()}">
                 </div>
               `).join('')}
-            </div>`, 'bg-slate-50')}
-          ${card(`<div class="px-6 pt-6 pb-4"><h4 class="text-base font-semibold text-slate-900">Rolling baseline reference</h4></div>
+            </div>`, 'bg-[#f8fafc]')}
+          ${card(`<div class="px-6 pt-6 pb-4"><h4 class="text-base font-semibold text-on-surface">Rolling baseline reference</h4></div>
             <div class="space-y-3 px-6 pb-6">
-              <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-                <div class="text-sm font-medium text-slate-900">Window used</div>
-                <div class="mt-1 text-sm text-slate-500">${data.baselineStats.baselineRows.length} minggu historis sebelum ${escapeHtml(appState.selectedWeek)}</div>
+              <div class="rounded-2xl bg-white p-4 border border-outline-variant/20">
+                <div class="text-sm font-medium text-on-surface">Window used</div>
+                <div class="mt-1 text-sm text-on-surface-variant">${data.baselineStats.baselineRows.length} minggu historis sebelum ${escapeHtml(appState.selectedWeek)}</div>
               </div>
               ${FEATURE_META.map((feature) => `
-                <div class="rounded-2xl bg-white p-4 ring-1 ring-slate-200">
-                  <div class="font-medium text-slate-900">${escapeHtml(feature.label)}</div>
-                  <div class="mt-1 text-sm text-slate-500">Mean ${fmt(data.baselineStats.byFeature[feature.key].mean,2)} · Median ${fmt(data.baselineStats.byFeature[feature.key].median,2)} · Std ${fmt(data.baselineStats.byFeature[feature.key].std,2)}</div>
+                <div class="rounded-2xl bg-white p-4 border border-outline-variant/20">
+                  <div class="font-medium text-on-surface">${escapeHtml(feature.label)}</div>
+                  <div class="mt-1 text-sm text-on-surface-variant">Mean ${fmt(data.baselineStats.byFeature[feature.key].mean,2)} · Median ${fmt(data.baselineStats.byFeature[feature.key].median,2)} · Std ${fmt(data.baselineStats.byFeature[feature.key].std,2)}</div>
                 </div>
               `).join('')}
-            </div>`, 'bg-slate-50')}
+            </div>`, 'bg-[#f8fafc]')}
         </div>
       </div>`)}
 
       <div class="space-y-6">
-        ${card(cardTitle('Narrative insight') + `<div class="px-6 pb-6"><textarea readonly class="min-h-[260px] w-full rounded-3xl border border-slate-200 bg-slate-50 px-4 py-3 text-sm leading-6 text-slate-700 shadow-sm">${escapeHtml(data.analysis.narrative)}</textarea></div>`)}
+        ${card(cardTitle('Narrative insight') + `<div class="px-6 pb-6"><textarea readonly class="min-h-[260px] w-full rounded-2xl border border-outline-variant/30 bg-[#f8fafc] px-4 py-3 text-sm leading-6 text-on-surface shadow-sm">${escapeHtml(data.analysis.narrative)}</textarea></div>`)}
         ${card(cardTitle('Priority actions') + `<div class="space-y-3 px-6 pb-6">
-          ${data.analysis.actionPriority.length ? data.analysis.actionPriority.map((line) => `<div class="rounded-3xl bg-slate-50 p-4 text-sm text-slate-700 ring-1 ring-slate-200">${escapeHtml(line)}</div>`).join('') : `
-            <div class="rounded-3xl bg-emerald-50 p-5 text-sm text-emerald-700 ring-1 ring-emerald-200">
+          ${data.analysis.actionPriority.length ? data.analysis.actionPriority.map((line) => `<div class="rounded-2xl bg-[#f8fafc] p-4 text-sm text-on-surface border border-outline-variant/20">${escapeHtml(line)}</div>`).join('') : `
+            <div class="rounded-2xl bg-emerald-50 p-5 text-sm text-emerald-700 ring-1 ring-emerald-200">
               Tidak ada kontribusi risiko yang menonjol pada minggu ini. Pertahankan konsistensi kontrol dan monitoring historis.
             </div>`}
         </div>`)}
@@ -1028,7 +1158,7 @@ function renderDashboard(data) {
 
     ${card(cardTitle('Indicator contribution table') + `<div class="overflow-x-auto px-6 pb-6">
       <table class="min-w-full text-left text-sm">
-        <thead class="border-b border-slate-200 text-slate-500">
+        <thead class="border-b border-outline-variant/30 text-on-surface-variant">
           <tr>
             <th class="px-4 py-3">Priority</th>
             <th class="px-4 py-3">Indicator</th>
@@ -1043,15 +1173,15 @@ function renderDashboard(data) {
         </thead>
         <tbody>
           ${data.analysis.indicators.map((item, index) => `
-            <tr class="border-b border-slate-100">
-              <td class="px-4 py-4 font-medium text-slate-900">${index + 1}</td>
-              <td class="px-4 py-4 font-medium text-slate-900">${escapeHtml(item.label)}</td>
-              <td class="px-4 py-4 text-slate-900">${fmt(item.actual, 2)}</td>
-              <td class="px-4 py-4 text-slate-900">${fmt(item.baselineMean, 2)}</td>
-              <td class="px-4 py-4 font-medium ${item.zScore >= 0 ? 'text-slate-900' : 'text-slate-500'}">${fmt(item.zScore, 2)}</td>
+            <tr class="border-b border-outline-variant/15">
+              <td class="px-4 py-4 font-medium text-on-surface">${index + 1}</td>
+              <td class="px-4 py-4 font-medium text-on-surface">${escapeHtml(item.label)}</td>
+              <td class="px-4 py-4 text-on-surface">${fmt(item.actual, 2)}</td>
+              <td class="px-4 py-4 text-on-surface">${fmt(item.baselineMean, 2)}</td>
+              <td class="px-4 py-4 font-medium ${item.zScore >= 0 ? 'text-on-surface' : 'text-on-surface-variant'}">${fmt(item.zScore, 2)}</td>
               <td class="px-4 py-4 font-medium ${item.beta >= 0 ? 'text-red-600' : 'text-emerald-600'}">${fmt(item.beta, 2)}</td>
               <td class="px-4 py-4 font-medium ${item.contribution >= 0 ? 'text-red-600' : 'text-emerald-600'}">${fmt(item.contribution, 2)}</td>
-              <td class="px-4 py-4 text-slate-600">${escapeHtml(item.direction)}</td>
+              <td class="px-4 py-4 text-on-surface-variant">${escapeHtml(item.direction)}</td>
               <td class="px-4 py-4">${badge(item.status)}</td>
             </tr>
           `).join('')}
@@ -1060,30 +1190,30 @@ function renderDashboard(data) {
     </div>`)}
 
     <div class="grid gap-6 lg:grid-cols-2">
-      ${card(cardTitle('Statistical methodology') + `<div class="space-y-4 px-6 pb-6 text-sm text-slate-600">
-        <div class="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-200">
-          <div class="font-medium text-slate-900">Baseline / reference</div>
+      ${card(cardTitle('Statistical methodology') + `<div class="space-y-4 px-6 pb-6 text-sm text-on-surface-variant">
+        <div class="rounded-2xl bg-[#f8fafc] p-5 border border-outline-variant/20">
+          <div class="font-medium text-on-surface">Baseline / reference</div>
           <div class="mt-2">Rolling baseline dihitung dari ${appState.lookback} minggu historis sebelumnya pada site yang sama. Untuk tiap indikator digunakan mean, median, dan standard deviation.</div>
         </div>
-        <div class="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-200">
-          <div class="font-medium text-slate-900">Weight / coefficient</div>
+        <div class="rounded-2xl bg-[#f8fafc] p-5 border border-outline-variant/20">
+          <div class="font-medium text-on-surface">Weight / coefficient</div>
           <div class="mt-2">Bobot indikator berasal dari standardized coefficient ridge regression yang di-fit pada histori site. Tidak ada expert weight manual pada versi ini.</div>
         </div>
-        <div class="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-200">
-          <div class="font-medium text-slate-900">Overall score</div>
+        <div class="rounded-2xl bg-[#f8fafc] p-5 border border-outline-variant/20">
+          <div class="font-medium text-on-surface">Overall score</div>
           <div class="mt-2">Score mingguan berasal dari predicted incident level model lalu dinormalisasi ke 0–100 pada distribusi fitted prediction site yang sama.</div>
         </div>
       </div>`)}
       ${card(cardTitle('Model coefficient ranking') + `<div class="space-y-3 px-6 pb-6">
         ${data.analysis.coefficientTable.map((item) => `
-          <div class="flex items-start gap-3 rounded-2xl bg-slate-50 p-4 ring-1 ring-slate-200">
-            <div class="rounded-2xl bg-white px-3 py-2 text-xs font-semibold text-slate-700 ring-1 ring-slate-200">${escapeHtml(item.label.slice(0,2).toUpperCase())}</div>
+          <div class="flex items-start gap-3 rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20">
+            <div class="rounded-2xl bg-white px-3 py-2 text-xs font-semibold text-on-surface border border-outline-variant/20">${escapeHtml(item.label.slice(0,2).toUpperCase())}</div>
             <div class="flex-1">
               <div class="flex items-center justify-between gap-3">
-                <div class="font-medium text-slate-900">${escapeHtml(item.label)}</div>
+                <div class="font-medium text-on-surface">${escapeHtml(item.label)}</div>
                 <div class="text-sm font-semibold ${item.beta >= 0 ? 'text-red-600' : 'text-emerald-600'}">β = ${fmt(item.beta, 2)}</div>
               </div>
-              <div class="mt-1 text-sm text-slate-500">${escapeHtml(item.description)}</div>
+              <div class="mt-1 text-sm text-on-surface-variant">${escapeHtml(item.description)}</div>
             </div>
           </div>
         `).join('')}
@@ -1095,24 +1225,24 @@ function renderDashboard(data) {
 function metricCardSet(metrics) {
   return `
     <div class="grid gap-4 md:grid-cols-3">
-      <div class="rounded-3xl bg-slate-900 p-5 text-white">
-        <div class="text-xs uppercase tracking-[0.2em] text-slate-300">Pearson</div>
+      <div class="rounded-2xl bg-primary p-5 text-on-primary">
+        <div class="text-xs uppercase tracking-[0.2em] text-on-primary/80">Pearson</div>
         <div class="mt-2 text-3xl font-semibold">${fmt(metrics.pearson, 2)}</div>
       </div>
-      <div class="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
-        <div class="text-xs uppercase tracking-[0.2em] text-slate-500">Spearman</div>
-        <div class="mt-2 text-3xl font-semibold text-slate-900">${fmt(metrics.spearman, 2)}</div>
+      <div class="rounded-2xl bg-white p-5 border border-outline-variant/20">
+        <div class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">Spearman</div>
+        <div class="mt-2 text-3xl font-semibold text-on-surface">${fmt(metrics.spearman, 2)}</div>
       </div>
-      <div class="rounded-3xl bg-white p-5 ring-1 ring-slate-200">
-        <div class="text-xs uppercase tracking-[0.2em] text-slate-500">AUC</div>
-        <div class="mt-2 text-3xl font-semibold text-slate-900">${fmt(metrics.auc, 2)}</div>
+      <div class="rounded-2xl bg-white p-5 border border-outline-variant/20">
+        <div class="text-xs uppercase tracking-[0.2em] text-on-surface-variant">AUC</div>
+        <div class="mt-2 text-3xl font-semibold text-on-surface">${fmt(metrics.auc, 2)}</div>
       </div>
     </div>
     <div class="grid gap-4 md:grid-cols-4">
-      <div class="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200"><div class="text-xs text-slate-500">Accuracy</div><div class="mt-2 text-2xl font-semibold text-slate-900">${fmt(metrics.accuracy * 100, 1)}%</div></div>
-      <div class="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200"><div class="text-xs text-slate-500">Precision</div><div class="mt-2 text-2xl font-semibold text-slate-900">${fmt(metrics.precision * 100, 1)}%</div></div>
-      <div class="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200"><div class="text-xs text-slate-500">Recall</div><div class="mt-2 text-2xl font-semibold text-slate-900">${fmt(metrics.recall * 100, 1)}%</div></div>
-      <div class="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200"><div class="text-xs text-slate-500">Specificity</div><div class="mt-2 text-2xl font-semibold text-slate-900">${fmt(metrics.specificity * 100, 1)}%</div></div>
+      <div class="rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><div class="text-xs text-on-surface-variant">Accuracy</div><div class="mt-2 text-2xl font-semibold text-on-surface">${fmt(metrics.accuracy * 100, 1)}%</div></div>
+      <div class="rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><div class="text-xs text-on-surface-variant">Precision</div><div class="mt-2 text-2xl font-semibold text-on-surface">${fmt(metrics.precision * 100, 1)}%</div></div>
+      <div class="rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><div class="text-xs text-on-surface-variant">Recall</div><div class="mt-2 text-2xl font-semibold text-on-surface">${fmt(metrics.recall * 100, 1)}%</div></div>
+      <div class="rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><div class="text-xs text-on-surface-variant">Specificity</div><div class="mt-2 text-2xl font-semibold text-on-surface">${fmt(metrics.specificity * 100, 1)}%</div></div>
     </div>
   `;
 }
@@ -1122,14 +1252,14 @@ function renderAccuracy(data) {
   <div class="space-y-6">
     <div class="grid gap-6 lg:grid-cols-[1.15fr_0.85fr]">
       ${card(cardTitle('Overlay score statistik vs insiden aktual') + `<div class="space-y-6 px-6 pb-6">
-        <div class="h-[360px] w-full rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200"><canvas id="accuracyChart"></canvas></div>
-        <div class="rounded-3xl bg-slate-50 p-5 text-sm text-slate-700 ring-1 ring-slate-200">
+        <div class="h-[360px] w-full rounded-2xl bg-[#f8fafc] p-4 border border-outline-variant/20"><canvas id="accuracyChart"></canvas></div>
+        <div class="rounded-2xl bg-[#f8fafc] p-5 text-sm text-on-surface border border-outline-variant/20">
           Same-week menilai seberapa baik score statistik menjelaskan minggu yang sedang berjalan. Next-week menilai seberapa baik score itu bekerja sebagai early warning satu minggu ke depan.
         </div>
       </div>`)}
       ${card(cardTitle('Tabel alert vs aktual') + `<div class="overflow-x-auto px-6 pb-6">
         <table class="min-w-full text-left text-sm">
-          <thead class="border-b border-slate-200 text-slate-500">
+          <thead class="border-b border-outline-variant/30 text-on-surface-variant">
             <tr>
               <th class="px-4 py-3">Week</th>
               <th class="px-4 py-3">Score</th>
@@ -1141,12 +1271,12 @@ function renderAccuracy(data) {
           </thead>
           <tbody>
             ${data.weeklySeries.map((row) => `
-              <tr class="border-b border-slate-100">
-                <td class="px-4 py-4 font-medium text-slate-900">${escapeHtml(row.week)}</td>
-                <td class="px-4 py-4 text-slate-900">${fmt(row.score, 1)}</td>
-                <td class="px-4 py-4 text-slate-900">${fmt(row.predictedIncidents, 2)}</td>
-                <td class="px-4 py-4 text-slate-900">${fmt(row.actualIncidents, 0)}</td>
-                <td class="px-4 py-4 text-slate-900">${row.score >= appState.alertThreshold ? 'Alert' : 'No Alert'}</td>
+              <tr class="border-b border-outline-variant/15">
+                <td class="px-4 py-4 font-medium text-on-surface">${escapeHtml(row.week)}</td>
+                <td class="px-4 py-4 text-on-surface">${fmt(row.score, 1)}</td>
+                <td class="px-4 py-4 text-on-surface">${fmt(row.predictedIncidents, 2)}</td>
+                <td class="px-4 py-4 text-on-surface">${fmt(row.actualIncidents, 0)}</td>
+                <td class="px-4 py-4 text-on-surface">${row.score >= appState.alertThreshold ? 'Alert' : 'No Alert'}</td>
                 <td class="px-4 py-4">${badge(row.status)}</td>
               </tr>
             `).join('')}
@@ -1159,7 +1289,7 @@ function renderAccuracy(data) {
       ${card(cardTitle('Accuracy check — same week') + `<div class="space-y-5 px-6 pb-6">${metricCardSet(data.validationMetrics.sameWeek)}</div>`)}
       ${card(cardTitle('Accuracy check — next week') + `<div class="space-y-5 px-6 pb-6">
         ${metricCardSet(data.validationMetrics.nextWeek)}
-        <div class="rounded-3xl bg-amber-50 p-5 text-sm text-amber-800 ring-1 ring-amber-200">
+        <div class="rounded-2xl bg-amber-50 p-5 text-sm text-amber-800 ring-1 ring-amber-200">
           Bila same-week jauh lebih tinggi daripada next-week, maka model ini lebih kuat untuk back analysis daripada early warning murni.
         </div>
       </div>`)}
@@ -1272,8 +1402,8 @@ function renderCharts(data) {
           {
             label: 'Score',
             data: data.weeklySeries.map((row) => row.score),
-            borderColor: '#0f172a',
-            backgroundColor: 'rgba(15,23,42,0.08)',
+            borderColor: '#3952bc',
+            backgroundColor: 'rgba(57,82,188,0.08)',
             borderWidth: 3,
             tension: 0.35,
             pointRadius: 4,
@@ -1324,12 +1454,12 @@ function renderCharts(data) {
           y: {
             min: 0,
             max: 100,
-            grid: { color: '#e2e8f0' },
-            ticks: { color: '#64748b' }
+            grid: { color: '#dfe3e6' },
+            ticks: { color: '#595c5e' }
           },
           x: {
-            grid: { color: '#f1f5f9' },
-            ticks: { color: '#64748b' }
+            grid: { color: '#eef1f3' },
+            ticks: { color: '#595c5e' }
           }
         }
       }
@@ -1346,8 +1476,8 @@ function renderCharts(data) {
           {
             label: 'Score',
             data: data.weeklySeries.map((row) => row.score),
-            borderColor: '#0f172a',
-            backgroundColor: 'rgba(15,23,42,0.08)',
+            borderColor: '#3952bc',
+            backgroundColor: 'rgba(57,82,188,0.08)',
             borderWidth: 3,
             tension: 0.35,
             pointRadius: 4,
@@ -1399,18 +1529,18 @@ function renderCharts(data) {
             position: 'left',
             min: 0,
             max: 100,
-            grid: { color: '#e2e8f0' },
-            ticks: { color: '#64748b' }
+            grid: { color: '#dfe3e6' },
+            ticks: { color: '#595c5e' }
           },
           y1: {
             position: 'right',
             beginAtZero: true,
             grid: { drawOnChartArea: false },
-            ticks: { color: '#64748b', precision: 0 }
+            ticks: { color: '#595c5e', precision: 0 }
           },
           x: {
-            grid: { color: '#f1f5f9' },
-            ticks: { color: '#64748b' }
+            grid: { color: '#eef1f3' },
+            ticks: { color: '#595c5e' }
           }
         }
       }
