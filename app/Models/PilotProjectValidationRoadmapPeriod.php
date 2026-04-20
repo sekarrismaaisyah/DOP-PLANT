@@ -15,15 +15,26 @@ class PilotProjectValidationRoadmapPeriod extends Model
     protected $fillable = [
         'project_id',
         'sort_order',
+        'display_current_period',
         'period',
         'phase',
         'status',
+        'period_explanation',
+        'planned_objective_outcome',
+        'pic_update_summary',
+        'pic_risks_dependencies',
+        'pic_owner',
+        'target_date',
+        'reviewer_status',
+        'period_progress_percent',
     ];
 
     protected function casts(): array
     {
         return [
             'sort_order' => 'integer',
+            'target_date' => 'date',
+            'period_progress_percent' => 'decimal:2',
         ];
     }
 

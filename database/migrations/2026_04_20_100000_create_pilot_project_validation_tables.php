@@ -6,6 +6,14 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
+/**
+ * Skema diselaraskan dengan template spreadsheet:
+ * - Project Summary (master proyek + PIC dukungan + progress % desimal)
+ * - Timeline Periods → roadmap_periods
+ * - Timeline Tasks → timeline_tasks (PIC, evidence, normalisasi %)
+ * - Gate Definitions → gates
+ * - Gate Metrics → metrics
+ */
 return new class extends Migration
 {
     public function up(): void
@@ -17,12 +25,14 @@ return new class extends Migration
             $table->string('pilot_area', 512)->nullable();
             $table->text('support')->nullable();
             $table->string('current_phase', 255)->nullable();
-            $table->unsignedTinyInteger('progress')->default(0);
+            $table->decimal('progress', 5, 2)->default(0);
             $table->string('current_period', 255)->nullable();
             $table->text('next_milestone')->nullable();
+            $table->string('need_support_pic', 255)->nullable();
             $table->timestamps();
 
             $table->unique('project_name', 'uq_ppv_projects_project_name');
+            $table->index('progress', 'idx_ppv_projects_progress');
         });
 
         Schema::create('pilot_project_validation_roadmap_periods', function (Blueprint $table) {
@@ -31,12 +41,22 @@ return new class extends Migration
                 ->constrained('pilot_project_validation_projects')
                 ->cascadeOnDelete();
             $table->unsignedInteger('sort_order')->default(0);
+            $table->string('display_current_period', 255)->nullable();
             $table->string('period', 255);
             $table->string('phase', 255)->nullable();
             $table->string('status', 32)->default('plan');
+            $table->text('period_explanation')->nullable();
+            $table->text('planned_objective_outcome')->nullable();
+            $table->text('pic_update_summary')->nullable();
+            $table->text('pic_risks_dependencies')->nullable();
+            $table->string('pic_owner', 255)->nullable();
+            $table->date('target_date')->nullable();
+            $table->string('reviewer_status', 128)->nullable();
+            $table->decimal('period_progress_percent', 5, 2)->nullable();
             $table->timestamps();
 
             $table->index(['project_id', 'sort_order'], 'idx_ppv_roadmap_project_sort');
+            $table->index(['project_id', 'target_date'], 'idx_ppv_roadmap_project_target_date');
         });
 
         Schema::create('pilot_project_validation_timeline_tasks', function (Blueprint $table) {
@@ -48,6 +68,16 @@ return new class extends Migration
             $table->text('task_text');
             $table->string('task_owner', 255)->nullable();
             $table->string('task_status', 32)->default('plan');
+            $table->string('original_owner', 255)->nullable();
+            $table->string('original_status', 32)->nullable();
+            $table->string('pic_actual_owner', 255)->nullable();
+            $table->date('pic_start_date')->nullable();
+            $table->decimal('pic_actual_percent', 5, 2)->nullable();
+            $table->text('pic_progress_note')->nullable();
+            $table->text('evidence_link')->nullable();
+            $table->date('target_date')->nullable();
+            $table->text('dependency_blocker')->nullable();
+            $table->decimal('task_progress_percent_normalized', 5, 2)->nullable();
             $table->timestamps();
 
             $table->index(['roadmap_period_id', 'sort_order'], 'idx_ppv_tasks_period_sort');
@@ -63,9 +93,20 @@ return new class extends Migration
             $table->string('gate_title', 255)->nullable();
             $table->text('gate_caption')->nullable();
             $table->boolean('hard_gate')->default(false);
+            $table->text('gate_definition')->nullable();
+            $table->text('project_specific_explanation')->nullable();
+            $table->text('what_gate_confirms')->nullable();
+            $table->text('what_pic_needs_to_fill')->nullable();
+            $table->string('pic_status', 128)->nullable();
+            $table->text('pic_notes_key_findings')->nullable();
+            $table->text('evidence_link_folder')->nullable();
+            $table->string('pic_owner', 255)->nullable();
+            $table->date('target_close_date')->nullable();
+            $table->string('reviewer_status', 128)->nullable();
             $table->timestamps();
 
             $table->index(['project_id', 'sort_order'], 'idx_ppv_gates_project_sort');
+            $table->index(['project_id', 'target_close_date'], 'idx_ppv_gates_project_target_close');
         });
 
         Schema::create('pilot_project_validation_metrics', function (Blueprint $table) {
@@ -86,6 +127,10 @@ return new class extends Migration
             $table->decimal('step_value', 14, 4)->nullable();
             $table->decimal('pass_threshold', 14, 4)->nullable();
             $table->decimal('conditional_threshold', 14, 4)->nullable();
+            $table->text('pic_current_finding')->nullable();
+            $table->text('pic_evidence_source')->nullable();
+            $table->text('pic_comment')->nullable();
+            $table->string('metric_status', 64)->nullable();
             $table->timestamps();
 
             $table->index(['gate_id', 'sort_order'], 'idx_ppv_metrics_gate_sort');
@@ -98,7 +143,7 @@ return new class extends Migration
                 ->cascadeOnDelete();
             $table->unsignedInteger('sort_order')->default(0);
             $table->string('snapshot_date', 128);
-            $table->unsignedTinyInteger('progress')->default(0);
+            $table->decimal('progress', 5, 2)->default(0);
             $table->unsignedSmallInteger('decision_score')->default(0);
             $table->timestamps();
 

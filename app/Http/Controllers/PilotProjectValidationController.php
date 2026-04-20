@@ -6,18 +6,22 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\PilotProjectValidation\PilotProjectValidationPortfolioSaveRequest;
 use App\Services\PilotProjectValidation\PilotProjectValidationExcelImportService;
+use App\Services\PilotProjectValidation\PilotProjectValidationExcelTemplateService;
 use App\Services\PilotProjectValidation\PilotProjectValidationPortfolioService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
 use Illuminate\View\View;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 use Throwable;
 
 class PilotProjectValidationController extends Controller
 {
     public function __construct(
         private readonly PilotProjectValidationPortfolioService $portfolioService,
-        private readonly PilotProjectValidationExcelImportService $excelImportService
+        private readonly PilotProjectValidationExcelImportService $excelImportService,
+        private readonly PilotProjectValidationExcelTemplateService $excelTemplateService
     ) {}
 
     public function index(): View
@@ -102,5 +106,20 @@ class PilotProjectValidationController extends Controller
                 'message' => $e->getMessage(),
             ], 422);
         }
+    }
+
+    /**
+     * Unduh file Excel contoh (satu workbook, sheet PROJECTS / TIMELINE / GATES / METRICS / HISTORY).
+     */
+    public function downloadTemplate(): StreamedResponse
+    {
+        $spreadsheet = $this->excelTemplateService->createSpreadsheet();
+        $filename = 'template-pilot-project-validation.xlsx';
+
+        return response()->streamDownload(function () use ($spreadsheet): void {
+            (new Xlsx($spreadsheet))->save('php://output');
+        }, $filename, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
 }

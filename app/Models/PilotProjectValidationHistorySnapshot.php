@@ -23,7 +23,7 @@ class PilotProjectValidationHistorySnapshot extends Model
     {
         return [
             'sort_order' => 'integer',
-            'progress' => 'integer',
+            'progress' => 'decimal:2',
             'decision_score' => 'integer',
         ];
     }

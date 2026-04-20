@@ -19,6 +19,16 @@ class PilotProjectValidationGate extends Model
         'gate_title',
         'gate_caption',
         'hard_gate',
+        'gate_definition',
+        'project_specific_explanation',
+        'what_gate_confirms',
+        'what_pic_needs_to_fill',
+        'pic_status',
+        'pic_notes_key_findings',
+        'evidence_link_folder',
+        'pic_owner',
+        'target_close_date',
+        'reviewer_status',
     ];
 
     protected function casts(): array
@@ -26,6 +36,7 @@ class PilotProjectValidationGate extends Model
         return [
             'sort_order' => 'integer',
             'hard_gate' => 'boolean',
+            'target_close_date' => 'date',
         ];
     }
 

@@ -153,6 +153,7 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/portfolio', [PilotProjectValidationController::class, 'portfolio'])->name('portfolio.show');
         Route::post('/portfolio', [PilotProjectValidationController::class, 'storePortfolio'])->name('portfolio.store');
         Route::post('/portfolio/import-excel', [PilotProjectValidationController::class, 'importExcel'])->name('portfolio.import-excel');
+        Route::get('/template-excel', [PilotProjectValidationController::class, 'downloadTemplate'])->name('template-excel');
         Route::resource('projects', PilotProjectValidationProjectController::class)->except(['show']);
     });
 

@@ -25,9 +25,10 @@ class PilotProjectValidationProjectStoreRequest extends FormRequest
             'pilot_area' => ['nullable', 'string', 'max:512'],
             'support' => ['nullable', 'string'],
             'current_phase' => ['nullable', 'string', 'max:255'],
-            'progress' => ['nullable', 'integer', 'min:0', 'max:100'],
+            'progress' => ['nullable', 'numeric', 'min:0', 'max:100'],
             'current_period' => ['nullable', 'string', 'max:255'],
             'next_milestone' => ['nullable', 'string'],
+            'need_support_pic' => ['nullable', 'string', 'max:255'],
         ];
     }
 }

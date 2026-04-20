@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\PilotProjectValidation;
 
+use Carbon\Carbon;
 use App\Models\PilotProjectValidationGate;
 use App\Models\PilotProjectValidationHistorySnapshot;
 use App\Models\PilotProjectValidationMetric;
@@ -39,7 +40,7 @@ class PilotProjectValidationPortfolioService
                 return [
                     'date' => $row->snapshot_date,
                     'projectName' => $row->project?->project_name ?? '',
-                    'progress' => $row->progress,
+                    'progress' => $row->progress !== null ? (float) $row->progress : 0.0,
                     'decisionScore' => $row->decision_score,
                 ];
             })
@@ -86,9 +87,10 @@ class PilotProjectValidationPortfolioService
                     'pilot_area' => $this->truncateString((string) ($raw['pilotArea'] ?? ''), 512),
                     'support' => $this->truncateString((string) ($raw['support'] ?? ''), 16000),
                     'current_phase' => $this->truncateString((string) ($raw['currentPhase'] ?? ''), 255),
-                    'progress' => $this->clampInt($raw['progress'] ?? 0, 0, 100),
+                    'progress' => $this->clampProgress($raw['progress'] ?? 0),
                     'current_period' => $this->truncateString((string) ($raw['currentPeriod'] ?? ''), 255),
                     'next_milestone' => $this->truncateString((string) ($raw['nextMilestone'] ?? ''), 16000),
+                    'need_support_pic' => $this->truncateString((string) ($raw['needSupportPic'] ?? $raw['need_support_pic'] ?? ''), 255),
                 ]);
 
                 $roadmap = $raw['roadmap'] ?? [];
@@ -100,9 +102,18 @@ class PilotProjectValidationPortfolioService
                         $period = PilotProjectValidationRoadmapPeriod::query()->create([
                             'project_id' => $project->id,
                             'sort_order' => $rIndex,
-                            'period' => $this->truncateString((string) ($periodRow['period'] ?? 'New Period'), 255),
+                            'display_current_period' => $this->truncateString((string) ($periodRow['displayCurrentPeriod'] ?? $periodRow['currentPeriod'] ?? ''), 255),
+                            'period' => $this->truncateString((string) ($periodRow['period'] ?? $periodRow['roadmapPeriod'] ?? 'New Period'), 255),
                             'phase' => $this->truncateString((string) ($periodRow['phase'] ?? ''), 255),
-                            'status' => $this->normalizePeriodStatus($periodRow['status'] ?? 'plan'),
+                            'status' => $this->normalizePeriodStatus($periodRow['status'] ?? $periodRow['periodStatus'] ?? 'plan'),
+                            'period_explanation' => $this->truncateString((string) ($periodRow['periodExplanation'] ?? ''), 16000),
+                            'planned_objective_outcome' => $this->truncateString((string) ($periodRow['plannedObjectiveOutcome'] ?? ''), 16000),
+                            'pic_update_summary' => $this->truncateString((string) ($periodRow['picUpdateSummary'] ?? ''), 16000),
+                            'pic_risks_dependencies' => $this->truncateString((string) ($periodRow['picRisksDependencies'] ?? ''), 16000),
+                            'pic_owner' => $this->truncateString((string) ($periodRow['picOwner'] ?? ''), 255),
+                            'target_date' => $this->parseOptionalDate($periodRow['targetDate'] ?? null),
+                            'reviewer_status' => $this->truncateString((string) ($periodRow['reviewerStatus'] ?? ''), 128),
+                            'period_progress_percent' => $this->nullableProgressPercent($periodRow['periodProgressPercent'] ?? null),
                         ]);
 
                         $tasks = $periodRow['tasks'] ?? [];
@@ -111,12 +122,24 @@ class PilotProjectValidationPortfolioService
                                 if (! is_array($taskRow)) {
                                     continue;
                                 }
+                                $owner = $this->truncateString((string) ($taskRow['owner'] ?? ''), 255);
+                                $status = $this->normalizeTaskStatus($taskRow['status'] ?? 'plan');
                                 PilotProjectValidationTimelineTask::query()->create([
                                     'roadmap_period_id' => $period->id,
                                     'sort_order' => $tIndex,
-                                    'task_text' => $this->truncateString((string) ($taskRow['text'] ?? ''), 16000),
-                                    'task_owner' => $this->truncateString((string) ($taskRow['owner'] ?? ''), 255),
-                                    'task_status' => $this->normalizeTaskStatus($taskRow['status'] ?? 'plan'),
+                                    'task_text' => $this->truncateString((string) ($taskRow['text'] ?? $taskRow['task'] ?? ''), 16000),
+                                    'task_owner' => $owner,
+                                    'task_status' => $status,
+                                    'original_owner' => $this->truncateString((string) ($taskRow['originalOwner'] ?? $owner), 255),
+                                    'original_status' => $this->truncateString((string) ($taskRow['originalStatus'] ?? $status), 32),
+                                    'pic_actual_owner' => $this->truncateString((string) ($taskRow['picActualOwner'] ?? ''), 255),
+                                    'pic_start_date' => $this->parseOptionalDate($taskRow['picStartDate'] ?? null),
+                                    'pic_actual_percent' => $this->nullableProgressPercent($taskRow['picActualPercent'] ?? null),
+                                    'pic_progress_note' => $this->truncateString((string) ($taskRow['picProgressNote'] ?? ''), 16000),
+                                    'evidence_link' => $this->truncateString((string) ($taskRow['evidenceLink'] ?? ''), 16000),
+                                    'target_date' => $this->parseOptionalDate($taskRow['targetDate'] ?? null),
+                                    'dependency_blocker' => $this->truncateString((string) ($taskRow['dependencyBlocker'] ?? ''), 16000),
+                                    'task_progress_percent_normalized' => $this->nullableProgressPercent($taskRow['taskProgressPercentNormalized'] ?? null),
                                 ]);
                             }
                         }
@@ -132,10 +155,20 @@ class PilotProjectValidationPortfolioService
                         $gate = PilotProjectValidationGate::query()->create([
                             'project_id' => $project->id,
                             'sort_order' => $gIndex,
-                            'gate_label' => $this->truncateString((string) ($gateRow['gate'] ?? 'Gate ' . ($gIndex + 1)), 128),
-                            'gate_title' => $this->truncateString((string) ($gateRow['title'] ?? ''), 255),
-                            'gate_caption' => $this->truncateString((string) ($gateRow['caption'] ?? ''), 16000),
-                            'hard_gate' => (bool) ($gateRow['hardGate'] ?? false),
+                            'gate_label' => $this->truncateString((string) ($gateRow['gate'] ?? $gateRow['gateLabel'] ?? 'Gate ' . ($gIndex + 1)), 128),
+                            'gate_title' => $this->truncateString((string) ($gateRow['title'] ?? $gateRow['gateTitle'] ?? ''), 255),
+                            'gate_caption' => $this->truncateString((string) ($gateRow['caption'] ?? $gateRow['originalCaption'] ?? ''), 16000),
+                            'hard_gate' => $this->parseHardGate($gateRow['hardGate'] ?? $gateRow['hard_gate'] ?? false),
+                            'gate_definition' => $this->truncateString((string) ($gateRow['gateDefinition'] ?? ''), 16000),
+                            'project_specific_explanation' => $this->truncateString((string) ($gateRow['projectSpecificExplanation'] ?? ''), 16000),
+                            'what_gate_confirms' => $this->truncateString((string) ($gateRow['whatGateConfirms'] ?? ''), 16000),
+                            'what_pic_needs_to_fill' => $this->truncateString((string) ($gateRow['whatPicNeedsToFill'] ?? ''), 16000),
+                            'pic_status' => $this->truncateString((string) ($gateRow['picStatus'] ?? ''), 128),
+                            'pic_notes_key_findings' => $this->truncateString((string) ($gateRow['picNotesKeyFindings'] ?? ''), 16000),
+                            'evidence_link_folder' => $this->truncateString((string) ($gateRow['evidenceLinkFolder'] ?? ''), 16000),
+                            'pic_owner' => $this->truncateString((string) ($gateRow['picOwner'] ?? ''), 255),
+                            'target_close_date' => $this->parseOptionalDate($gateRow['targetCloseDate'] ?? null),
+                            'reviewer_status' => $this->truncateString((string) ($gateRow['reviewerStatus'] ?? ''), 128),
                         ]);
 
                         $metrics = $gateRow['metrics'] ?? [];
@@ -164,13 +197,17 @@ class PilotProjectValidationPortfolioService
                                 if ($type === 'select') {
                                     $metricData['metric_value'] = $this->truncateString($this->normalizeSelectValue($metricRow['value'] ?? 'conditional'), 64);
                                 } else {
-                                    $metricData['metric_value'] = $this->truncateString($this->numericValueToString($metricRow['value'] ?? 0), 64);
+                                    $metricData['metric_value'] = $this->truncateString($this->numericValueToString($metricRow['value'] ?? $metricRow['currentValue'] ?? 0), 64);
                                     $metricData['min_value'] = $this->nullableFloat($metricRow['min'] ?? null);
                                     $metricData['max_value'] = $this->nullableFloat($metricRow['max'] ?? null);
                                     $metricData['step_value'] = $this->nullableFloat($metricRow['step'] ?? null);
-                                    $metricData['pass_threshold'] = $this->nullableFloat($metricRow['pass'] ?? null);
-                                    $metricData['conditional_threshold'] = $this->nullableFloat($metricRow['conditional'] ?? null);
+                                    $metricData['pass_threshold'] = $this->nullableFloat($metricRow['pass'] ?? $metricRow['passThreshold'] ?? null);
+                                    $metricData['conditional_threshold'] = $this->nullableFloat($metricRow['conditional'] ?? $metricRow['conditionalThreshold'] ?? null);
                                 }
+                                $metricData['pic_current_finding'] = $this->truncateString((string) ($metricRow['picCurrentFinding'] ?? ''), 16000);
+                                $metricData['pic_evidence_source'] = $this->truncateString((string) ($metricRow['picEvidenceSource'] ?? ''), 16000);
+                                $metricData['pic_comment'] = $this->truncateString((string) ($metricRow['picComment'] ?? ''), 16000);
+                                $metricData['metric_status'] = $this->truncateString((string) ($metricRow['metricStatus'] ?? ''), 64);
                                 PilotProjectValidationMetric::query()->create($metricData);
                             }
                         }
@@ -200,7 +237,7 @@ class PilotProjectValidationPortfolioService
                     'project_id' => $pid,
                     'sort_order' => $hIndex,
                     'snapshot_date' => $this->truncateString((string) ($histRow['date'] ?? ''), 128),
-                    'progress' => $this->clampInt($histRow['progress'] ?? 0, 0, 100),
+                    'progress' => $this->clampProgress($histRow['progress'] ?? 0),
                     'decision_score' => $decisionScore,
                 ]);
             }
@@ -219,9 +256,10 @@ class PilotProjectValidationPortfolioService
                 'pilot_area' => (string) ($header['pilot_area'] ?? 'Pilot Area'),
                 'support' => (string) ($header['support'] ?? 'Support requirement'),
                 'current_phase' => (string) ($header['current_phase'] ?? 'New phase'),
-                'progress' => $this->clampInt($header['progress'] ?? 0, 0, 100),
+                'progress' => $this->clampProgress($header['progress'] ?? 0),
                 'current_period' => (string) ($header['current_period'] ?? 'Current period'),
                 'next_milestone' => (string) ($header['next_milestone'] ?? 'Next milestone'),
+                'need_support_pic' => $this->truncateString((string) ($header['need_support_pic'] ?? ''), 255),
             ]);
 
             for ($g = 0; $g < 4; $g++) {
@@ -281,19 +319,39 @@ class PilotProjectValidationPortfolioService
             'pilotArea' => $p->pilot_area ?? '',
             'support' => $p->support ?? '',
             'currentPhase' => $p->current_phase ?? '',
-            'progress' => $p->progress,
+            'progress' => $p->progress !== null ? (float) $p->progress : 0.0,
             'currentPeriod' => $p->current_period ?? '',
             'nextMilestone' => $p->next_milestone ?? '',
+            'needSupportPic' => $p->need_support_pic ?? '',
             'roadmap' => $p->roadmapPeriods->map(function (PilotProjectValidationRoadmapPeriod $period) {
                 return [
+                    'displayCurrentPeriod' => $period->display_current_period ?? '',
                     'period' => $period->period,
                     'phase' => $period->phase ?? '',
                     'status' => $period->status ?? 'plan',
+                    'periodExplanation' => $period->period_explanation ?? '',
+                    'plannedObjectiveOutcome' => $period->planned_objective_outcome ?? '',
+                    'picUpdateSummary' => $period->pic_update_summary ?? '',
+                    'picRisksDependencies' => $period->pic_risks_dependencies ?? '',
+                    'picOwner' => $period->pic_owner ?? '',
+                    'targetDate' => $period->target_date?->format('Y-m-d') ?? '',
+                    'reviewerStatus' => $period->reviewer_status ?? '',
+                    'periodProgressPercent' => $period->period_progress_percent !== null ? (float) $period->period_progress_percent : null,
                     'tasks' => $period->tasks->map(function (PilotProjectValidationTimelineTask $t) {
                         return [
                             'text' => $t->task_text,
                             'owner' => $t->task_owner ?? '',
                             'status' => $t->task_status ?? 'plan',
+                            'originalOwner' => $t->original_owner ?? $t->task_owner ?? '',
+                            'originalStatus' => $t->original_status ?? $t->task_status ?? 'plan',
+                            'picActualOwner' => $t->pic_actual_owner ?? '',
+                            'picStartDate' => $t->pic_start_date?->format('Y-m-d') ?? '',
+                            'picActualPercent' => $t->pic_actual_percent !== null ? (float) $t->pic_actual_percent : null,
+                            'picProgressNote' => $t->pic_progress_note ?? '',
+                            'evidenceLink' => $t->evidence_link ?? '',
+                            'targetDate' => $t->target_date?->format('Y-m-d') ?? '',
+                            'dependencyBlocker' => $t->dependency_blocker ?? '',
+                            'taskProgressPercentNormalized' => $t->task_progress_percent_normalized !== null ? (float) $t->task_progress_percent_normalized : null,
                         ];
                     })->values()->all(),
                 ];
@@ -304,12 +362,26 @@ class PilotProjectValidationPortfolioService
                     'title' => $g->gate_title ?? '',
                     'caption' => $g->gate_caption ?? '',
                     'hardGate' => (bool) $g->hard_gate,
+                    'gateDefinition' => $g->gate_definition ?? '',
+                    'projectSpecificExplanation' => $g->project_specific_explanation ?? '',
+                    'whatGateConfirms' => $g->what_gate_confirms ?? '',
+                    'whatPicNeedsToFill' => $g->what_pic_needs_to_fill ?? '',
+                    'picStatus' => $g->pic_status ?? '',
+                    'picNotesKeyFindings' => $g->pic_notes_key_findings ?? '',
+                    'evidenceLinkFolder' => $g->evidence_link_folder ?? '',
+                    'picOwner' => $g->pic_owner ?? '',
+                    'targetCloseDate' => $g->target_close_date?->format('Y-m-d') ?? '',
+                    'reviewerStatus' => $g->reviewer_status ?? '',
                     'metrics' => $g->metrics->map(function (PilotProjectValidationMetric $m) {
                         $base = [
                             'name' => $m->metric_name,
                             'desc' => $m->metric_desc ?? '',
                             'type' => $m->metric_type === 'select' ? 'select' : 'range',
                             'critical' => (bool) $m->critical,
+                            'picCurrentFinding' => $m->pic_current_finding ?? '',
+                            'picEvidenceSource' => $m->pic_evidence_source ?? '',
+                            'picComment' => $m->pic_comment ?? '',
+                            'metricStatus' => $m->metric_status ?? '',
                         ];
                         if ($m->metric_type === 'select') {
                             $base['value'] = $this->normalizeSelectValue($m->metric_value ?? 'conditional');
@@ -373,15 +445,89 @@ class PilotProjectValidationPortfolioService
 
     private function nullableFloat(mixed $value): ?float
     {
+        $normalized = $this->normalizeLocaleNumber($value);
+        if ($normalized === null) {
+            return null;
+        }
+        $f = (float) $normalized;
+
+        return is_finite($f) ? $f : null;
+    }
+
+    /**
+     * Angka desimal seperti "62,5" atau "90,1 %" (locale ID).
+     */
+    private function normalizeLocaleNumber(mixed $value): float|int|string|null
+    {
         if ($value === null || $value === '') {
             return null;
         }
-        if (! is_numeric($value)) {
+        if (is_bool($value)) {
             return null;
         }
-        $f = (float) $value;
+        if (is_numeric($value)) {
+            return $value;
+        }
+        $s = trim((string) $value);
+        $s = str_replace(["\u{00A0}", '%'], '', $s);
+        $s = trim($s);
+        if ($s === '') {
+            return null;
+        }
+        if (str_contains($s, ',') && ! str_contains($s, '.')) {
+            $s = str_replace(',', '.', $s);
+        } elseif (str_contains($s, ',') && str_contains($s, '.')) {
+            $s = str_replace(',', '', $s);
+        }
 
-        return is_finite($f) ? $f : null;
+        return is_numeric($s) ? $s : null;
+    }
+
+    private function clampProgress(mixed $value): float
+    {
+        $n = $this->normalizeLocaleNumber($value);
+        if ($n === null) {
+            return 0.0;
+        }
+        $f = (float) $n;
+        if (! is_finite($f)) {
+            return 0.0;
+        }
+
+        return max(0.0, min(100.0, round($f, 2)));
+    }
+
+    private function nullableProgressPercent(mixed $value): ?float
+    {
+        $f = $this->nullableFloat($value);
+        if ($f === null) {
+            return null;
+        }
+
+        return max(0.0, min(100.0, round($f, 2)));
+    }
+
+    private function parseOptionalDate(mixed $value): ?string
+    {
+        $s = trim((string) ($value ?? ''));
+        if ($s === '') {
+            return null;
+        }
+        try {
+            return Carbon::parse($s)->toDateString();
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    private function parseHardGate(mixed $value): bool
+    {
+        if (is_bool($value)) {
+            return $value;
+        }
+        $v = strtolower(trim((string) $value));
+
+        return in_array($v, ['true', '1', 'yes', 'y', 'hard'], true);
     }
 
     private function truncateString(string $value, int $maxBytes): string

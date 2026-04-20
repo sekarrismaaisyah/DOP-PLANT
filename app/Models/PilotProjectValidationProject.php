@@ -20,12 +20,13 @@ class PilotProjectValidationProject extends Model
         'progress',
         'current_period',
         'next_milestone',
+        'need_support_pic',
     ];
 
     protected function casts(): array
     {
         return [
-            'progress' => 'integer',
+            'progress' => 'decimal:2',
         ];
     }
 

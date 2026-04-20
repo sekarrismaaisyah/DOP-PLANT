@@ -26,6 +26,10 @@ class PilotProjectValidationMetric extends Model
         'step_value',
         'pass_threshold',
         'conditional_threshold',
+        'pic_current_finding',
+        'pic_evidence_source',
+        'pic_comment',
+        'metric_status',
     ];
 
     protected function casts(): array

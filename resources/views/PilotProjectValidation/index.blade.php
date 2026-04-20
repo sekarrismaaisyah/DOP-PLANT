@@ -977,7 +977,7 @@
         </div>
         <div class="flow-item">
           <strong><span class="flow-num">2</span> Impor Excel (opsional)</strong>
-          File .xlsx/.xls dengan sheet wajib <span class="sheet-names">PROJECTS</span>, <span class="sheet-names">TIMELINE</span>, <span class="sheet-names">GATES</span>, <span class="sheet-names">METRICS</span> mengganti seluruh isi portofolio di layar.
+          File .xlsx/.xls dengan sheet wajib <span class="sheet-names">PROJECTS</span>, <span class="sheet-names">GATES</span>, <span class="sheet-names">METRICS</span>, serta timeline: <span class="sheet-names">TIMELINE_PERIODS</span> / <span class="sheet-names">TIMELINE_TASKS</span> (disarankan) atau <span class="sheet-names">TIMELINE</span> (format lama).
         </div>
         <div class="flow-item">
           <strong><span class="flow-num">3</span> Simpan ke server</strong>
@@ -988,7 +988,7 @@
       <section class="panel import-panel" id="excelImportSection">
         <div class="panel-head">
           <div class="panel-title">Impor dari file Excel</div>
-          <div class="panel-subtitle">Ganti seluruh portofolio di layar dengan isi workbook. Sheet wajib persis bernama PROJECTS, TIMELINE, GATES, METRICS (huruf besar). Sheet HISTORY opsional untuk kurva riwayat.</div>
+          <div class="panel-subtitle">Ganti seluruh portofolio di layar dengan isi workbook. Sheet wajib: PROJECTS, GATES, METRICS. Timeline: TIMELINE_PERIODS dan TIMELINE_TASKS (template baru) atau satu sheet TIMELINE (lama). HISTORY opsional.</div>
         </div>
         <div class="panel-inner">
           <div class="notice-card" id="importStatusCard" style="margin-bottom:16px;">
@@ -1007,7 +1007,7 @@
             <p class="subpanel-title">Upload workbook (.xlsx atau .xls)</p>
             <ol class="upload-steps">
               <li>Klik <strong>Pilih file</strong> dan pilih satu workbook dari komputer Anda.</li>
-              <li>Pastikan workbook memiliki sheet bernama <span class="sheet-names">PROJECTS</span>, <span class="sheet-names">TIMELINE</span>, <span class="sheet-names">GATES</span>, <span class="sheet-names">METRICS</span> (minimal satu baris data per sheet yang wajib).</li>
+              <li>Pastikan ada <span class="sheet-names">PROJECTS</span>, <span class="sheet-names">GATES</span>, <span class="sheet-names">METRICS</span>, dan salah satu rangkaian timeline: <span class="sheet-names">TIMELINE_PERIODS</span> / <span class="sheet-names">TIMELINE_TASKS</span> atau <span class="sheet-names">TIMELINE</span>.</li>
               <li>Klik <strong>Impor workbook</strong>. Data akan dimuat ke halaman ini; Dashboard ikut memperbarui.</li>
               <li>Jika ingin menyimpan ke database, klik <strong>Simpan ke server</strong> di banner atas.</li>
             </ol>
@@ -1022,6 +1022,17 @@
           </div>
 
           <div class="notice-card" style="margin-bottom:16px;">
+            <div class="legend-label">Unduh template Excel (contoh)</div>
+            <p class="subpanel-title">Satu file .xlsx siap impor</p>
+            <p class="table-note" style="margin-bottom:10px;">
+              Berisi <strong>PROJECTS</strong>, <strong>TIMELINE_PERIODS</strong>, <strong>TIMELINE_TASKS</strong>, <strong>TIMELINE</strong> (header saja, opsional), <strong>GATES</strong>, <strong>METRICS</strong>, <strong>HISTORY</strong> — contoh <strong>Arcas HD</strong>. Nama sheet harus sama persis.
+            </p>
+            <div class="upload-row">
+              <a class="btn-primary" href="{{ route('pilot-project-validation.template-excel') }}" style="text-decoration:none;">Unduh template-pilot-project-validation.xlsx</a>
+            </div>
+          </div>
+
+          <div class="notice-card" style="margin-bottom:16px;">
             <div class="legend-label">Unduh contoh (CSV)</div>
             <p class="subpanel-title">Template per sheet (bukan file Excel tunggal)</p>
             <p class="table-note" style="margin-bottom:10px;">
@@ -1032,6 +1043,8 @@
             </div>
             <div class="template-tags" style="margin-top:12px;">
               <span class="template-tag">PROJECTS</span>
+              <span class="template-tag">TIMELINE_PERIODS</span>
+              <span class="template-tag">TIMELINE_TASKS</span>
               <span class="template-tag">TIMELINE</span>
               <span class="template-tag">GATES</span>
               <span class="template-tag">METRICS</span>
@@ -1046,9 +1059,9 @@
 
           <div class="format-grid">
             <div class="format-card">
-              <div class="legend-label">Sheet 1</div>
+              <div class="legend-label">Sheet</div>
               <h4>PROJECTS</h4>
-              <div class="table-note">Satu baris per proyek.</div>
+              <div class="table-note">Tabel <code>pilot_project_validation_projects</code> — satu baris per proyek.</div>
               <div class="table-wrap" style="margin-top:10px;">
                 <table class="clean-table" style="min-width:760px;">
                   <thead>
@@ -1061,18 +1074,20 @@
                       <th>progress</th>
                       <th>current_period</th>
                       <th>next_milestone</th>
+                      <th>need_support_pic</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>Arcas HD</td>
-                      <td>Heavy automation use case</td>
-                      <td>PAMA BMO2</td>
-                      <td>5G, ROC</td>
-                      <td>Pilot proving</td>
-                      <td>68</td>
+                      <td>…</td>
+                      <td>…</td>
+                      <td>…</td>
+                      <td>…</td>
+                      <td>62.5</td>
                       <td>Apr–Jun 2026</td>
-                      <td>Safety drill closeout</td>
+                      <td>…</td>
+                      <td></td>
                     </tr>
                   </tbody>
                 </table>
@@ -1080,9 +1095,39 @@
             </div>
 
             <div class="format-card">
-              <div class="legend-label">Sheet 2</div>
-              <h4>TIMELINE</h4>
-              <div class="table-note">Satu baris per tugas (task).</div>
+              <div class="legend-label">Sheet</div>
+              <h4>TIMELINE_PERIODS</h4>
+              <div class="table-note"><code>pilot_project_validation_roadmap_periods</code> + <code>project_name</code>. Kolom <code>period</code> = periode roadmap (bukan label tampilan).</div>
+              <div class="table-wrap" style="margin-top:10px;">
+                <table class="clean-table" style="min-width:920px;">
+                  <thead>
+                    <tr>
+                      <th>project_name</th>
+                      <th>display_current_period</th>
+                      <th>period</th>
+                      <th>phase</th>
+                      <th>status</th>
+                      <th>period_progress_percent</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Arcas HD</td>
+                      <td>Apr - Jun 2026</td>
+                      <td>Jan - Mar 2026</td>
+                      <td>Infrastructure …</td>
+                      <td>done</td>
+                      <td>100</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="format-card">
+              <div class="legend-label">Sheet</div>
+              <h4>TIMELINE_TASKS</h4>
+              <div class="table-note"><code>pilot_project_validation_timeline_tasks</code> + <code>project_name</code>, <code>period</code>, <code>phase</code> harus cocok dengan TIMELINE_PERIODS.</div>
               <div class="table-wrap" style="margin-top:10px;">
                 <table class="clean-table" style="min-width:760px;">
                   <thead>
@@ -1090,21 +1135,21 @@
                       <th>project_name</th>
                       <th>period</th>
                       <th>phase</th>
-                      <th>period_status</th>
                       <th>task_text</th>
                       <th>task_owner</th>
                       <th>task_status</th>
+                      <th>pic_actual_percent</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
                       <td>Arcas HD</td>
-                      <td>Apr–Jun 2026</td>
-                      <td>Pilot operation</td>
-                      <td>progress</td>
-                      <td>Run supervised multi-shift pilot scenario</td>
-                      <td>Ops</td>
-                      <td>progress</td>
+                      <td>Jan - Mar 2026</td>
+                      <td>Infrastructure …</td>
+                      <td>Validate network…</td>
+                      <td>IT / Automation</td>
+                      <td>done</td>
+                      <td>1</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1112,9 +1157,9 @@
             </div>
 
             <div class="format-card">
-              <div class="legend-label">Sheet 3</div>
+              <div class="legend-label">Sheet</div>
               <h4>GATES</h4>
-              <div class="table-note">Satu baris per gate.</div>
+              <div class="table-note"><code>pilot_project_validation_gates</code> — lihat template .xlsx untuk kolom lengkap (<code>gate_definition</code>, <code>what_gate_confirms</code>, …).</div>
               <div class="table-wrap" style="margin-top:10px;">
                 <table class="clean-table" style="min-width:760px;">
                   <thead>
@@ -1131,8 +1176,8 @@
                       <td>Arcas HD</td>
                       <td>Gate 1</td>
                       <td>Technical Feasibility</td>
-                      <td>Network readiness and integration</td>
-                      <td>true</td>
+                      <td></td>
+                      <td>yes</td>
                     </tr>
                   </tbody>
                 </table>
@@ -1140,9 +1185,9 @@
             </div>
 
             <div class="format-card">
-              <div class="legend-label">Sheet 4</div>
+              <div class="legend-label">Sheet</div>
               <h4>METRICS</h4>
-              <div class="table-note">Satu baris per metrik. Metrik tipe <strong>select</strong>: isi <code>current_value</code> dengan pass, conditional, atau fail.</div>
+              <div class="table-note"><code>pilot_project_validation_metrics</code>. Tipe <strong>range</strong>: isi <code>metric_value</code>, <code>min_value</code>, <code>max_value</code>, <code>step_value</code>, ambang batas. Tipe <strong>select</strong>: <code>metric_value</code> = pass / conditional / fail. Alias <code>current_value</code>, <code>min</code>, … tetap didukung.</div>
               <div class="table-wrap" style="margin-top:10px;">
                 <table class="clean-table" style="min-width:1020px;">
                   <thead>
@@ -1155,12 +1200,12 @@
                       <th>direction</th>
                       <th>unit</th>
                       <th>critical</th>
-                      <th>current_value</th>
-                      <th>min</th>
-                      <th>max</th>
-                      <th>step</th>
+                      <th>metric_value</th>
                       <th>pass_threshold</th>
                       <th>conditional_threshold</th>
+                      <th>min_value</th>
+                      <th>max_value</th>
+                      <th>step_value</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1172,13 +1217,39 @@
                       <td>Live network support</td>
                       <td>high</td>
                       <td>%</td>
-                      <td>false</td>
-                      <td>99.1</td>
+                      <td>no</td>
+                      <td>90.1</td>
+                      <td>98</td>
+                      <td>96</td>
                       <td>90</td>
                       <td>100</td>
                       <td>0.1</td>
-                      <td>98</td>
-                      <td>96</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div class="format-card">
+              <div class="legend-label">Sheet</div>
+              <h4>HISTORY</h4>
+              <div class="table-note"><code>pilot_project_validation_history_snapshots</code> — <code>snapshot_date</code>, <code>progress</code>, <code>decision_score</code> (opsional), atau <code>decision_status</code> untuk skor tersirat.</div>
+              <div class="table-wrap" style="margin-top:10px;">
+                <table class="clean-table" style="min-width:520px;">
+                  <thead>
+                    <tr>
+                      <th>project_name</th>
+                      <th>snapshot_date</th>
+                      <th>progress</th>
+                      <th>decision_score</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td>Arcas HD</td>
+                      <td>2026-04-01</td>
+                      <td>52</td>
+                      <td></td>
                     </tr>
                   </tbody>
                 </table>
@@ -1223,6 +1294,7 @@
           progress: 68,
           currentPeriod: 'Apr–Jun 2026',
           nextMilestone: 'Safety drill closeout & scale recommendation',
+          needSupportPic: '',
           roadmap: [
             {
               period: 'Jan–Mar 2026',
@@ -1677,19 +1749,80 @@
       const projects = JSON.parse(JSON.stringify(seedProjects));
 
       function newTask() {
-        return { text: 'New task item', owner: 'Owner', status: 'plan' };
+        return {
+          text: 'New task item',
+          owner: 'Owner',
+          status: 'plan',
+          originalOwner: 'Owner',
+          originalStatus: 'plan',
+          picActualOwner: '',
+          picStartDate: '',
+          picActualPercent: null,
+          picProgressNote: '',
+          evidenceLink: '',
+          targetDate: '',
+          dependencyBlocker: '',
+          taskProgressPercentNormalized: null
+        };
       }
 
       function newPeriod() {
-        return { period: 'New Period', phase: 'New phase', status: 'plan', tasks: [newTask()] };
+        return {
+          displayCurrentPeriod: '',
+          period: 'New Period',
+          phase: 'New phase',
+          status: 'plan',
+          periodExplanation: '',
+          plannedObjectiveOutcome: '',
+          picUpdateSummary: '',
+          picRisksDependencies: '',
+          picOwner: '',
+          targetDate: '',
+          reviewerStatus: '',
+          periodProgressPercent: null,
+          tasks: [newTask()]
+        };
       }
 
       function newMetric() {
-        return { name: 'New metric', desc: 'Describe the metric logic', type: 'range', direction: 'high', unit: '%', min: 0, max: 100, step: 1, value: 50, pass: 80, conditional: 60, critical: false };
+        return {
+          name: 'New metric',
+          desc: 'Describe the metric logic',
+          type: 'range',
+          direction: 'high',
+          unit: '%',
+          min: 0,
+          max: 100,
+          step: 1,
+          value: 50,
+          pass: 80,
+          conditional: 60,
+          critical: false,
+          picCurrentFinding: '',
+          picEvidenceSource: '',
+          picComment: '',
+          metricStatus: ''
+        };
       }
 
       function newGate(idx) {
-        return { gate: 'Gate ' + (idx + 1), title: 'New Gate', caption: 'Describe the purpose of this gate.', hardGate: false, metrics: [newMetric()] };
+        return {
+          gate: 'Gate ' + (idx + 1),
+          title: 'New Gate',
+          caption: 'Describe the purpose of this gate.',
+          hardGate: false,
+          gateDefinition: '',
+          projectSpecificExplanation: '',
+          whatGateConfirms: '',
+          whatPicNeedsToFill: '',
+          picStatus: '',
+          picNotesKeyFindings: '',
+          evidenceLinkFolder: '',
+          picOwner: '',
+          targetCloseDate: '',
+          reviewerStatus: '',
+          metrics: [newMetric()]
+        };
       }
 
       function newProject(idx) {
@@ -1702,6 +1835,7 @@
           progress: 0,
           currentPeriod: 'Current period',
           nextMilestone: 'Next milestone',
+          needSupportPic: '',
           roadmap: [newPeriod()],
           gates: [newGate(0), newGate(1), newGate(2), newGate(3)]
         };
@@ -1740,13 +1874,45 @@
         return v === 'true' || v === '1' || v === 'yes' || v === 'y';
       }
 
+      function parseLocaleNumber(value) {
+        if (value === '' || value == null) return NaN;
+        if (typeof value === 'number' && Number.isFinite(value)) return value;
+        var s = String(value).replace(/\u00A0/g, '').replace(/%/g, '').trim();
+        if (!s) return NaN;
+        if (s.indexOf(',') !== -1 && s.indexOf('.') === -1) s = s.replace(',', '.');
+        else if (s.indexOf(',') !== -1 && s.indexOf('.') !== -1) s = s.replace(/,/g, '');
+        var n = Number(s);
+        return Number.isFinite(n) ? n : NaN;
+      }
+
       function parseNumber(value, fallback) {
-        const num = Number(value);
-        return Number.isFinite(num) ? num : fallback;
+        var n = parseLocaleNumber(value);
+        return Number.isFinite(n) ? n : fallback;
+      }
+
+      function nullableProgressPercent(value) {
+        var n = parseLocaleNumber(value);
+        if (!Number.isFinite(n)) return null;
+        return Math.max(0, Math.min(100, Math.round(n * 100) / 100));
+      }
+
+      function parseOptionalDateStr(value) {
+        var s = String(value || '').trim();
+        if (!s) return '';
+        var d = Date.parse(s);
+        if (!Number.isFinite(d)) return '';
+        try {
+          var dt = new Date(d);
+          return dt.toISOString().slice(0, 10);
+        } catch (e) { return ''; }
       }
 
       function normalizeHeader(key) {
-        return String(key || '').trim().toLowerCase().replace(/\s+/g, '_');
+        var k = String(key || '').trim().toLowerCase();
+        k = k.replace(/%/g, '').replace(/[()]/g, '');
+        k = k.replace(/[\s\-\/]+/g, '_');
+        k = k.replace(/_+/g, '_').replace(/^_|_$/g, '');
+        return k;
       }
 
       function normalizeRow(row) {
@@ -2453,12 +2619,38 @@
 
       function buildProjectsFromWorkbook(workbook) {
         const projectRows = maybeReadSheetRows(workbook, 'PROJECTS');
+        const periodRows = maybeReadSheetRows(workbook, 'TIMELINE_PERIODS');
+        const taskRows = maybeReadSheetRows(workbook, 'TIMELINE_TASKS');
         const timelineRows = maybeReadSheetRows(workbook, 'TIMELINE');
         const gateRows = maybeReadSheetRows(workbook, 'GATES');
         const metricRows = maybeReadSheetRows(workbook, 'METRICS');
         const historyRows = maybeReadSheetRows(workbook, 'HISTORY');
-        if (!projectRows.length || !timelineRows.length || !gateRows.length || !metricRows.length) {
-          throw new Error('Workbook harus memiliki sheet PROJECTS, TIMELINE, GATES, dan METRICS — masing-masing minimal satu baris data (baris header + data).');
+
+        const hasSplit = periodRows.length > 0 || taskRows.length > 0;
+        const hasLegacy = timelineRows.length > 0;
+        if (!projectRows.length || !gateRows.length || !metricRows.length) {
+          throw new Error('Workbook harus memiliki sheet PROJECTS, GATES, dan METRICS — masing-masing minimal satu baris data (baris header + data).');
+        }
+        if (!hasSplit && !hasLegacy) {
+          throw new Error('Isi sheet TIMELINE (format lama) atau setidaknya salah satu TIMELINE_PERIODS / TIMELINE_TASKS (format template spreadsheet).');
+        }
+
+        function emptyImportPeriod(rp, ph) {
+          return {
+            displayCurrentPeriod: '',
+            period: rp,
+            phase: ph,
+            status: 'plan',
+            periodExplanation: '',
+            plannedObjectiveOutcome: '',
+            picUpdateSummary: '',
+            picRisksDependencies: '',
+            picOwner: '',
+            targetDate: '',
+            reviewerStatus: '',
+            periodProgressPercent: null,
+            tasks: []
+          };
         }
 
         const projectMap = new Map();
@@ -2468,55 +2660,216 @@
           const projectName = String(name || '').trim();
           if (!projectName) return null;
           if (!projectMap.has(projectName)) {
-            projectMap.set(projectName, { name: projectName, subtitle: '', pilotArea: '', support: '', currentPhase: '', progress: 0, currentPeriod: '', nextMilestone: '', roadmap: [], gates: [], _periodMap: new Map(), _gateMap: new Map() });
+            projectMap.set(projectName, {
+              name: projectName,
+              subtitle: '',
+              pilotArea: '',
+              support: '',
+              currentPhase: '',
+              progress: 0,
+              currentPeriod: '',
+              nextMilestone: '',
+              needSupportPic: '',
+              roadmap: [],
+              gates: [],
+              _periodMap: new Map(),
+              _gateMap: new Map()
+            });
             order.push(projectName);
           }
           return projectMap.get(projectName);
         }
 
+        function ensurePeriod(project, rp, ph) {
+          const period = String(rp || '').trim() || 'New Period';
+          const phase = String(ph || '').trim() || 'New phase';
+          const periodKey = period + '|||' + phase;
+          if (!project._periodMap.has(periodKey)) {
+            const t = emptyImportPeriod(period, phase);
+            project._periodMap.set(periodKey, t);
+            project.roadmap.push(t);
+          }
+          return project._periodMap.get(periodKey);
+        }
+
+        function gateFromRow(gateLabel, row) {
+          return {
+            gate: gateLabel,
+            title: String(row.gate_title || row.title || 'New Gate').trim() || 'New Gate',
+            caption: String(row.gate_caption || row.caption || row.original_caption || '').trim(),
+            hardGate: parseBool(row.hard_gate),
+            gateDefinition: String(row.gate_definition || '').trim(),
+            projectSpecificExplanation: String(row.project_specific_explanation || '').trim(),
+            whatGateConfirms: String(row.what_this_gate_confirms || row.what_gate_confirms || '').trim(),
+            whatPicNeedsToFill: String(row.what_pic_needs_to_fill || '').trim(),
+            picStatus: String(row.pic_status || '').trim(),
+            picNotesKeyFindings: String(row.pic_notes_key_findings || '').trim(),
+            evidenceLinkFolder: String(row.evidence_link_folder || '').trim(),
+            picOwner: String(row.pic_owner || '').trim(),
+            targetCloseDate: parseOptionalDateStr(row.target_close_date),
+            reviewerStatus: String(row.reviewer_status || '').trim(),
+            metrics: []
+          };
+        }
+
+        function mergeGateRow(gate, row) {
+          gate.title = String(row.gate_title || row.title || gate.title || 'New Gate').trim() || gate.title;
+          const cap = String(row.gate_caption || row.caption || row.original_caption || '').trim();
+          if (cap) gate.caption = cap;
+          if (row.hard_gate !== undefined && row.hard_gate !== null && String(row.hard_gate).trim() !== '') {
+            gate.hardGate = parseBool(row.hard_gate);
+          }
+          const keys = [
+            ['gateDefinition', 'gate_definition'],
+            ['projectSpecificExplanation', 'project_specific_explanation'],
+            ['whatGateConfirms', 'what_this_gate_confirms', 'what_gate_confirms'],
+            ['whatPicNeedsToFill', 'what_pic_needs_to_fill'],
+            ['picStatus', 'pic_status'],
+            ['picNotesKeyFindings', 'pic_notes_key_findings'],
+            ['evidenceLinkFolder', 'evidence_link_folder'],
+            ['picOwner', 'pic_owner'],
+            ['reviewerStatus', 'reviewer_status']
+          ];
+          keys.forEach(function (spec) {
+            const prop = spec[0];
+            for (let i = 1; i < spec.length; i++) {
+              const v = String(row[spec[i]] || '').trim();
+              if (v) { gate[prop] = v; break; }
+            }
+          });
+          const tcd = parseOptionalDateStr(row.target_close_date);
+          if (tcd) gate.targetCloseDate = tcd;
+        }
+
+        function defaultGateShell(gateLabel) {
+          const g = newGate(0);
+          g.gate = gateLabel;
+          g.title = gateLabel;
+          g.metrics = [];
+          return g;
+        }
+
         projectRows.forEach(function (row) {
           const project = ensureImportedProject(row.project_name || row.project || row.name);
           if (!project) return;
-          project.subtitle = String(row.subtitle || project.subtitle || '');
+          project.subtitle = String(row.subtitle || row.subtitle_context || project.subtitle || '');
           project.pilotArea = String(row.pilot_area || row.pilotarea || project.pilotArea || '');
-          project.support = String(row.support || project.support || '');
+          project.support = String(row.support || row.support_needed || project.support || '');
           project.currentPhase = String(row.current_phase || row.currentphase || project.currentPhase || '');
-          project.progress = Math.max(0, Math.min(100, parseNumber(row.progress, project.progress)));
+          project.progress = Math.max(0, Math.min(100, Math.round(parseNumber(row.progress, project.progress) * 100) / 100));
           project.currentPeriod = String(row.current_period || row.currentperiod || project.currentPeriod || '');
           project.nextMilestone = String(row.next_milestone || row.nextmilestone || project.nextMilestone || '');
+          project.needSupportPic = String(row.need_support_pic || project.needSupportPic || '');
         });
 
-        timelineRows.forEach(function (row) {
-          const project = ensureImportedProject(row.project_name || row.project || row.name);
-          if (!project) return;
-          const period = String(row.period || 'New Period').trim() || 'New Period';
-          const phase = String(row.phase || 'New phase').trim() || 'New phase';
-          const periodStatus = normalizeTaskStatus(row.period_status || row.status);
-          const periodKey = period + '|||' + phase;
-          if (!project._periodMap.has(periodKey)) {
-            const newTimeline = { period: period, phase: phase, status: periodStatus, tasks: [] };
-            project._periodMap.set(periodKey, newTimeline);
-            project.roadmap.push(newTimeline);
-          }
-          const timeline = project._periodMap.get(periodKey);
-          timeline.status = normalizeTaskStatus(row.period_status || timeline.status);
-          const taskText = String(row.task_text || row.task || '').trim();
-          if (taskText) timeline.tasks.push({ text: taskText, owner: String(row.task_owner || row.owner || 'Owner').trim() || 'Owner', status: normalizeTaskStatus(row.task_status || row.taskstate || 'plan') });
-        });
+        if (hasSplit) {
+          periodRows.forEach(function (row) {
+            const project = ensureImportedProject(row.project_name || row.project || row.name);
+            if (!project) return;
+            const rp = String(row.roadmap_period || row.period || '').trim() || 'New Period';
+            const ph = String(row.phase || '').trim() || 'New phase';
+            const timeline = ensurePeriod(project, rp, ph);
+            const cur = String(row.display_current_period || row.current_period || '').trim();
+            if (cur) timeline.displayCurrentPeriod = cur;
+            timeline.status = normalizeTaskStatus(row.period_status || row.status || timeline.status);
+            if (row.period_explanation != null && row.period_explanation !== '') timeline.periodExplanation = String(row.period_explanation);
+            if (row.planned_objective_outcome != null && row.planned_objective_outcome !== '') timeline.plannedObjectiveOutcome = String(row.planned_objective_outcome);
+            if (row.pic_update_summary != null && row.pic_update_summary !== '') timeline.picUpdateSummary = String(row.pic_update_summary);
+            if (row.pic_risks_dependencies != null && row.pic_risks_dependencies !== '') timeline.picRisksDependencies = String(row.pic_risks_dependencies);
+            if (row.pic_owner != null && row.pic_owner !== '') timeline.picOwner = String(row.pic_owner);
+            const td = parseOptionalDateStr(row.target_date);
+            if (td) timeline.targetDate = td;
+            if (row.reviewer_status != null && row.reviewer_status !== '') timeline.reviewerStatus = String(row.reviewer_status);
+            const pp = nullableProgressPercent(row.period_progress_percent || row.period_progress);
+            if (pp != null) timeline.periodProgressPercent = pp;
+          });
+
+          taskRows.forEach(function (row) {
+            const project = ensureImportedProject(row.project_name || row.project || row.name);
+            if (!project) return;
+            const rp = String(row.roadmap_period || row.period || '').trim() || 'New Period';
+            const ph = String(row.phase || '').trim() || 'New phase';
+            const timeline = ensurePeriod(project, rp, ph);
+            const taskText = String(row.task || row.task_text || '').trim();
+            if (!taskText) return;
+            const origOwn = String(row.original_owner || '').trim();
+            const picOwn = String(row.pic_actual_owner || '').trim();
+            const fallbackOwner = String(row.task_owner || row.owner || 'Owner').trim() || 'Owner';
+            const owner = picOwn || (origOwn || fallbackOwner);
+            const origSt = normalizeTaskStatus(row.original_status || 'plan');
+            const status = normalizeTaskStatus(row.task_status || row.status || origSt);
+            timeline.tasks.push({
+              text: taskText,
+              owner: owner,
+              status: status,
+              originalOwner: origOwn || owner,
+              originalStatus: origSt,
+              picActualOwner: picOwn,
+              picStartDate: parseOptionalDateStr(row.pic_start_date),
+              picActualPercent: nullableProgressPercent(row.pic_actual_input || row.pic_actual_percent),
+              picProgressNote: String(row.pic_progress_note || '').trim(),
+              evidenceLink: String(row.evidence_link || '').trim(),
+              targetDate: parseOptionalDateStr(row.target_date),
+              dependencyBlocker: String(row.dependency_blocker || '').trim(),
+              taskProgressPercentNormalized: nullableProgressPercent(row.task_progress_percent_normalized || row.task_progress_normalized)
+            });
+          });
+        } else {
+          timelineRows.forEach(function (row) {
+            const project = ensureImportedProject(row.project_name || row.project || row.name);
+            if (!project) return;
+            const period = String(row.period || 'New Period').trim() || 'New Period';
+            const phase = String(row.phase || 'New phase').trim() || 'New phase';
+            const timeline = ensurePeriod(project, period, phase);
+            const cur = String(row.display_current_period || row.current_period || '').trim();
+            if (cur) timeline.displayCurrentPeriod = cur;
+            timeline.status = normalizeTaskStatus(row.period_status || row.status || timeline.status);
+            if (row.period_explanation != null && row.period_explanation !== '') timeline.periodExplanation = String(row.period_explanation);
+            if (row.planned_objective_outcome != null && row.planned_objective_outcome !== '') timeline.plannedObjectiveOutcome = String(row.planned_objective_outcome);
+            if (row.pic_update_summary != null && row.pic_update_summary !== '') timeline.picUpdateSummary = String(row.pic_update_summary);
+            if (row.pic_risks_dependencies != null && row.pic_risks_dependencies !== '') timeline.picRisksDependencies = String(row.pic_risks_dependencies);
+            if (row.pic_owner != null && row.pic_owner !== '') timeline.picOwner = String(row.pic_owner);
+            const td = parseOptionalDateStr(row.target_date);
+            if (td) timeline.targetDate = td;
+            if (row.reviewer_status != null && row.reviewer_status !== '') timeline.reviewerStatus = String(row.reviewer_status);
+            const pp = nullableProgressPercent(row.period_progress_percent);
+            if (pp != null) timeline.periodProgressPercent = pp;
+            const taskText = String(row.task_text || row.task || '').trim();
+            if (!taskText) return;
+            const origOwn = String(row.original_owner || '').trim();
+            const picOwn = String(row.pic_actual_owner || '').trim();
+            const fallbackOwner = String(row.task_owner || row.owner || 'Owner').trim() || 'Owner';
+            const owner = picOwn || (origOwn || fallbackOwner);
+            const origSt = normalizeTaskStatus(row.original_status || 'plan');
+            const status = normalizeTaskStatus(row.task_status || row.taskstate || origSt);
+            timeline.tasks.push({
+              text: taskText,
+              owner: owner,
+              status: status,
+              originalOwner: origOwn || owner,
+              originalStatus: origSt,
+              picActualOwner: picOwn,
+              picStartDate: parseOptionalDateStr(row.pic_start_date),
+              picActualPercent: nullableProgressPercent(row.pic_actual_percent),
+              picProgressNote: String(row.pic_progress_note || '').trim(),
+              evidenceLink: String(row.evidence_link || '').trim(),
+              targetDate: parseOptionalDateStr(row.target_date),
+              dependencyBlocker: String(row.dependency_blocker || '').trim(),
+              taskProgressPercentNormalized: nullableProgressPercent(row.task_progress_percent_normalized)
+            });
+          });
+        }
 
         gateRows.forEach(function (row) {
           const project = ensureImportedProject(row.project_name || row.project || row.name);
           if (!project) return;
           const gateLabel = String(row.gate_label || row.gate || 'Gate 1').trim() || 'Gate 1';
           if (!project._gateMap.has(gateLabel)) {
-            const gate = { gate: gateLabel, title: String(row.gate_title || row.title || 'New Gate').trim() || 'New Gate', caption: String(row.gate_caption || row.caption || '').trim(), hardGate: parseBool(row.hard_gate), metrics: [] };
+            const gate = gateFromRow(gateLabel, row);
             project._gateMap.set(gateLabel, gate);
             project.gates.push(gate);
           } else {
-            const gate = project._gateMap.get(gateLabel);
-            gate.title = String(row.gate_title || gate.title || 'New Gate').trim() || 'New Gate';
-            gate.caption = String(row.gate_caption || gate.caption || '').trim();
-            gate.hardGate = parseBool(row.hard_gate);
+            mergeGateRow(project._gateMap.get(gateLabel), row);
           }
         });
 
@@ -2525,7 +2878,7 @@
           if (!project) return;
           const gateLabel = String(row.gate_label || row.gate || 'Gate 1').trim() || 'Gate 1';
           if (!project._gateMap.has(gateLabel)) {
-            const gate = { gate: gateLabel, title: gateLabel, caption: '', hardGate: false, metrics: [] };
+            const gate = defaultGateShell(gateLabel);
             project._gateMap.set(gateLabel, gate);
             project.gates.push(gate);
           }
@@ -2533,19 +2886,23 @@
           const metricType = normalizeMetricType(row.metric_type || row.type);
           const metric = {
             name: String(row.metric_name || row.name || 'New metric').trim() || 'New metric',
-            desc: String(row.metric_desc || row.description || '').trim(),
+            desc: String(row.metric_desc || row.metric_description || row.description || '').trim(),
             type: metricType,
             direction: String(row.direction || 'high').trim().toLowerCase() === 'low' ? 'low' : 'high',
             unit: String(row.unit || '%').trim() || '%',
-            critical: parseBool(row.critical)
+            critical: parseBool(row.critical),
+            picCurrentFinding: String(row.pic_current_finding || '').trim(),
+            picEvidenceSource: String(row.pic_evidence_source || '').trim(),
+            picComment: String(row.pic_comment || '').trim(),
+            metricStatus: String(row.metric_status || '').trim()
           };
           if (metricType === 'select') {
-            metric.value = normalizeGateDecisionValue(row.current_value || row.value);
+            metric.value = normalizeGateDecisionValue(row.metric_value || row.current_value || row.value);
           } else {
-            metric.min = parseNumber(row.min, 0);
-            metric.max = parseNumber(row.max, 100);
-            metric.step = parseNumber(row.step, 1);
-            metric.value = parseNumber(row.current_value || row.value, 50);
+            metric.min = parseNumber(row.min_value || row.min, 0);
+            metric.max = parseNumber(row.max_value || row.max, 100);
+            metric.step = parseNumber(row.step_value || row.step, 1);
+            metric.value = parseNumber(row.metric_value || row.current_value || row.value, 50);
             metric.pass = parseNumber(row.pass_threshold || row.pass, 80);
             metric.conditional = parseNumber(row.conditional_threshold || row.conditional, 60);
           }
@@ -2564,13 +2921,13 @@
         });
 
         const importedHistory = historyRows.map(function (row) {
-          const date = String(row.date || row.period || '').trim();
+          const date = String(row.snapshot_date || row.date || row.period || '').trim();
           if (!date) return null;
           const score = row.decision_score !== '' && row.decision_score !== undefined ? parseNumber(row.decision_score, 70) : decisionStrengthFromStatus(row.decision_status || row.decision || row.status);
           return {
             date: date,
             projectName: String(row.project_name || row.project || '').trim(),
-            progress: Math.max(0, Math.min(100, parseNumber(row.progress, 0))),
+            progress: Math.max(0, Math.min(100, Math.round(parseNumber(row.progress, 0) * 100) / 100)),
             decisionScore: Math.max(0, Math.min(100, score))
           };
         }).filter(Boolean);
@@ -2605,7 +2962,7 @@
             msg += ' Data ini di memori browser — klik Simpan ke server agar masuk database.';
             setImportStatus('Impor berhasil', msg, 'notice-card notice-success');
           } catch (error) {
-            setImportStatus('Impor gagal', error && error.message ? error.message : 'Format workbook tidak valid. Periksa nama sheet (PROJECTS, TIMELINE, GATES, METRICS) dan isi minimal satu baris di sheet wajib.', 'notice-card notice-error');
+            setImportStatus('Impor gagal', error && error.message ? error.message : 'Format workbook tidak valid. Periksa nama sheet (PROJECTS, GATES, METRICS, timeline TIMELINE atau TIMELINE_PERIODS/TIMELINE_TASKS).', 'notice-card notice-error');
           }
         };
         reader.onerror = function () {
@@ -2615,14 +2972,14 @@
       }
 
       function downloadTemplateWorkbook() {
-        const projectsCsv = buildCsv([{ project_name: 'Arcas HD', subtitle: 'Heavy automation use case', pilot_area: 'PAMA BMO2', support: '5G, ROC', current_phase: 'Pilot proving', progress: 68, current_period: 'Apr–Jun 2026', next_milestone: 'Safety drill closeout' }]);
-        const timelineCsv = buildCsv([{ project_name: 'Arcas HD', period: 'Apr–Jun 2026', phase: 'Pilot operation', period_status: 'progress', task_text: 'Run supervised multi-shift pilot scenario', task_owner: 'Ops', task_status: 'progress' }]);
-        const gatesCsv = buildCsv([{ project_name: 'Arcas HD', gate_label: 'Gate 1', gate_title: 'Technical Feasibility', gate_caption: 'Network readiness and integration', hard_gate: true }]);
+        const projectsCsv = buildCsv([{ project_name: 'Arcas HD', subtitle: 'Heavy automation use case', pilot_area: 'PAMA BMO2', support: '5G, ROC', current_phase: 'Pilot proving', progress: 68, current_period: 'Apr–Jun 2026', next_milestone: 'Safety drill closeout', need_support_pic: '' }]);
+        const timelineCsv = buildCsv([{ project_name: 'Arcas HD', display_current_period: '', period: 'Apr–Jun 2026', phase: 'Pilot operation', status: 'progress', task_text: 'Run supervised multi-shift pilot scenario', task_owner: 'Ops', task_status: 'progress' }]);
+        const gatesCsv = buildCsv([{ project_name: 'Arcas HD', gate_label: 'Gate 1', gate_title: 'Technical Feasibility', gate_caption: 'Network readiness and integration', hard_gate: 'yes' }]);
         const metricsCsv = buildCsv([
-          { project_name: 'Arcas HD', gate_label: 'Gate 1', metric_name: 'Network uptime', metric_type: 'range', metric_desc: 'Live network support', direction: 'high', unit: '%', critical: false, current_value: 99.1, min: 90, max: 100, step: 0.1, pass_threshold: 98, conditional_threshold: 96 },
-          { project_name: 'Arcas HD', gate_label: 'Gate 3', metric_name: 'SOP readiness', metric_type: 'select', metric_desc: 'Procedure readiness', direction: '', unit: '', critical: true, current_value: 'pass', min: '', max: '', step: '', pass_threshold: '', conditional_threshold: '' }
+          { project_name: 'Arcas HD', gate_label: 'Gate 1', metric_name: 'Network uptime', metric_type: 'range', metric_desc: 'Live network support', direction: 'high', unit: '%', critical: 'no', metric_value: 99.1, min_value: 90, max_value: 100, step_value: 0.1, pass_threshold: 98, conditional_threshold: 96 },
+          { project_name: 'Arcas HD', gate_label: 'Gate 3', metric_name: 'SOP readiness', metric_type: 'select', metric_desc: 'Procedure readiness', direction: '', unit: '', critical: 'yes', metric_value: 'pass', min_value: '', max_value: '', step_value: '', pass_threshold: '', conditional_threshold: '' }
         ]);
-        const historyCsv = buildCsv([{ date: '2026-04-01', project_name: 'Arcas HD', progress: 52, decision_status: 'conditional go', decision_score: '' }, { date: '2026-05-01', project_name: 'Arcas HD', progress: 68, decision_status: 'go', decision_score: '' }]);
+        const historyCsv = buildCsv([{ project_name: 'Arcas HD', snapshot_date: '2026-04-01', progress: 52, decision_status: 'conditional go', decision_score: '' }, { project_name: 'Arcas HD', snapshot_date: '2026-05-01', progress: 68, decision_status: 'go', decision_score: '' }]);
         downloadText('PROJECTS.csv', projectsCsv);
         setTimeout(function () { downloadText('TIMELINE.csv', timelineCsv); }, 50);
         setTimeout(function () { downloadText('GATES.csv', gatesCsv); }, 100);

@@ -30,8 +30,12 @@
                         </div>
                         <div class="col-md-6 mb-3">
                             <label class="form-label">Progress (%)</label>
-                            <input type="number" name="progress" class="form-control" value="{{ old('progress', $project->progress) }}" min="0" max="100" />
+                            <input type="number" name="progress" class="form-control" value="{{ old('progress', $project->progress) }}" min="0" max="100" step="0.01" />
                         </div>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Perlu dukungan (PIC)</label>
+                        <input type="text" name="need_support_pic" class="form-control" value="{{ old('need_support_pic', $project->need_support_pic) }}" maxlength="255" />
                     </div>
                     <div class="mb-3">
                         <label class="form-label">Support</label>
