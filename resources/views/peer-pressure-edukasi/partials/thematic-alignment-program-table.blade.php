@@ -1,1077 +1,790 @@
 @php
-    $pointPath = resource_path('data/point.json');
-    $pointPayload = is_file($pointPath) ? json_decode((string) file_get_contents($pointPath), true) : [];
-
-    // Requirement: decode JSON string into $jsonData.
-    $jsonString = is_array($pointPayload) ? json_encode($pointPayload['rows'] ?? []) : '[]';
-    $jsonData = json_decode((string) $jsonString, true) ?? [];
-
-    $programPath = resource_path('data/peer_pressure_thematic_alignment_program.json');
-    $programPayload = is_file($programPath) ? json_decode((string) file_get_contents($programPath), true) : [];
-    $programRows = is_array($programPayload['rows'] ?? null) ? $programPayload['rows'] : [];
-    $sertifikatTeknisPath = resource_path('data/SertifikatTeknis.json');
-    $sertifikatTeknisPayload = is_file($sertifikatTeknisPath) ? json_decode((string) file_get_contents($sertifikatTeknisPath), true) : [];
-    $sertifikatTeknisRows = is_array($sertifikatTeknisPayload['rows'] ?? null) ? $sertifikatTeknisPayload['rows'] : [];
-    $blindspotGrPath = resource_path('data/blindspotGR.json');
-    $blindspotGrPayload = is_file($blindspotGrPath) ? json_decode((string) file_get_contents($blindspotGrPath), true) : [];
-    $blindspotGrRows = is_array($blindspotGrPayload['rows'] ?? null) ? $blindspotGrPayload['rows'] : [];
-
-    $dataBlindspotGrPath = resource_path('data/dataBlindspotGR.json');
-    $dataBlindspotGrRaw = is_file($dataBlindspotGrPath)
-        ? json_decode((string) file_get_contents($dataBlindspotGrPath), true)
+    $thematicProgramPath = resource_path('data/peer_pressure_thematic_alignment_program.json');
+    $thematicProgram = is_file($thematicProgramPath)
+        ? json_decode((string) file_get_contents($thematicProgramPath), true)
         : null;
-    if (! is_array($dataBlindspotGrRaw)) {
-        $dataBlindspotGrRaw = [];
-    }
-    $parseIsoWeekNum = static function (string $label): int {
-        if (preg_match('/W?(\d+)/i', $label, $m)) {
-            return (int) $m[1];
-        }
+    $thematicRows = is_array($thematicProgram) && isset($thematicProgram['rows']) && is_array($thematicProgram['rows'])
+        ? $thematicProgram['rows']
+        : [];
+    $thematicTitle = is_array($thematicProgram) ? (string) ($thematicProgram['title'] ?? 'Thematic Alignment Program') : 'Thematic Alignment Program';
+    $thematicSubtitle = is_array($thematicProgram) ? (string) ($thematicProgram['subtitle'] ?? '') : '';
 
-        return 0;
-    };
-    $cellBuckets = [];
-    $weeksPivotSet = [];
-    foreach ($dataBlindspotGrRaw as $row) {
-        if (! is_array($row)) {
-            continue;
-        }
-        $pSite = trim((string) ($row['site'] ?? ''));
-        $pPic = trim((string) ($row['perusahaan_pic'] ?? ''));
-        $pWeek = trim((string) ($row['iso_week_of_date_for_join'] ?? ''));
-        if ($pSite === '' || $pPic === '' || $pWeek === '') {
-            continue;
-        }
-        $weeksPivotSet[$pWeek] = true;
-        $bucketKey = $pSite . "\x1e" . $pPic . "\x1e" . $pWeek;
-        if (! isset($cellBuckets[$bucketKey])) {
-            $cellBuckets[$bucketKey] = ['sum' => 0.0, 'n' => 0];
-        }
-        $pctRaw = $row['blindspot_tbc_bc_percent'] ?? null;
-        if ($pctRaw !== null && $pctRaw !== '') {
-            $cellBuckets[$bucketKey]['sum'] += (float) $pctRaw;
-            $cellBuckets[$bucketKey]['n']++;
-        }
-    }
-    $weeksPivot = array_keys($weeksPivotSet);
-    usort($weeksPivot, static fn (string $a, string $b): int => $parseIsoWeekNum($a) <=> $parseIsoWeekNum($b));
-    $nestedPivot = [];
-    foreach ($cellBuckets as $bucketKey => $bucket) {
-        [$pSite, $pPic, $pWeek] = explode("\x1e", $bucketKey, 3);
-        if (! isset($nestedPivot[$pSite])) {
-            $nestedPivot[$pSite] = [];
-        }
-        if (! isset($nestedPivot[$pSite][$pPic])) {
-            $nestedPivot[$pSite][$pPic] = [];
-        }
-        if ($bucket['n'] > 0) {
-            $avg = $bucket['sum'] / $bucket['n'];
-            $nestedPivot[$pSite][$pPic][$pWeek] = number_format($avg, 1, '.', '') . '%';
-        } else {
-            $nestedPivot[$pSite][$pPic][$pWeek] = null;
-        }
-    }
-    ksort($nestedPivot);
-    $blindspotGrPivotSiteGroups = [];
-    foreach ($nestedPivot as $siteName => $pics) {
-        ksort($pics);
-        $companies = [];
-        foreach ($pics as $picName => $weekMap) {
-            $cells = [];
-            foreach ($weeksPivot as $wLabel) {
-                $cells[] = array_key_exists($wLabel, $weekMap) ? $weekMap[$wLabel] : null;
-            }
-            $companies[] = [
-                'perusahaan_pic' => $picName,
-                'cells' => $cells,
-            ];
-        }
-        $blindspotGrPivotSiteGroups[] = [
-            'site' => $siteName,
-            'companies' => $companies,
-        ];
-    }
-    $pivotYear = 2026;
-    foreach ($blindspotGrRows as $r) {
-        if (! is_array($r)) {
-            continue;
-        }
-        $y = (int) ($r['year_of_date_for_join'] ?? 0);
-        if ($y >= 2000 && $y <= 2100) {
-            $pivotYear = $y;
-            break;
-        }
-    }
-    $blindspotGrPivot = [
-        'year' => $pivotYear,
-        'weeks' => $weeksPivot,
-        'siteGroups' => $blindspotGrPivotSiteGroups,
-    ];
+    $pointPath = resource_path('data/point.json');
+    $pointPayload = is_file($pointPath)
+        ? json_decode((string) file_get_contents($pointPath), true)
+        : null;
+    $pointRows = is_array($pointPayload) && isset($pointPayload['rows']) && is_array($pointPayload['rows'])
+        ? $pointPayload['rows']
+        : [];
 
-    $parseWeek = static function ($week): ?int {
+    $peerThematicNormalizeWeek = static function ($week): ?int {
         if ($week === null || $week === '') {
             return null;
         }
-        if (is_numeric($week)) {
+        if (is_int($week)) {
+            return $week;
+        }
+        if (is_float($week)) {
             return (int) $week;
         }
-        if (preg_match('/(\d+)/', (string) $week, $m)) {
+        $s = trim((string) $week);
+        if ($s !== '' && ctype_digit($s)) {
+            return (int) $s;
+        }
+        if (preg_match('/W\s*(\d+)/i', $s, $m)) {
             return (int) $m[1];
         }
 
         return null;
     };
 
-    $weeks = [];
-    $sites = [];
-    $indicators = [];
-    foreach ($jsonData as $row) {
-        $w = $parseWeek($row['week'] ?? null);
-        if ($w !== null) {
-            $weeks[] = $w;
+    foreach ($thematicRows as $idx => $tRow) {
+        $detailKey = trim((string) ($tRow['detail_indikator'] ?? ''));
+        $drill = [];
+        foreach ($pointRows as $p) {
+            if (trim((string) ($p['detail_indikator'] ?? '')) !== $detailKey || $detailKey === '') {
+                continue;
+            }
+            $drill[] = [
+                'detail_indikator' => (string) ($p['detail_indikator'] ?? ''),
+                'site' => (string) ($p['site'] ?? ''),
+                'week' => (string) ($p['week'] ?? ''),
+                'data' => (string) ($p['data'] ?? ''),
+            ];
         }
-        $site = trim((string) ($row['site'] ?? ''));
-        if ($site !== '') {
-            $sites[] = $site;
-        }
-        $indicator = trim((string) ($row['detail_indikator'] ?? ''));
-        if ($indicator !== '') {
-            $indicators[] = $indicator;
-        }
-    }
-    $weeks = array_values(array_unique($weeks));
-    sort($weeks);
-    $sites = array_values(array_unique($sites));
-    sort($sites);
-    $indicators = array_values(array_unique($indicators));
-    sort($indicators);
+        usort($drill, static function (array $a, array $b) use ($peerThematicNormalizeWeek): int {
+            $cmp = strcmp($a['site'], $b['site']);
+            if ($cmp !== 0) {
+                return $cmp;
+            }
+            $wa = $peerThematicNormalizeWeek($a['week'] ?? null);
+            $wb = $peerThematicNormalizeWeek($b['week'] ?? null);
+            $wa = $wa ?? -1;
+            $wb = $wb ?? -1;
+            if ($wa !== $wb) {
+                return $wa <=> $wb;
+            }
 
-    $thematics = [];
-    $indicatorCategoryMap = [];
-    foreach ($programRows as $row) {
-        $tematik = trim((string) ($row['tematik'] ?? ''));
-        if ($tematik !== '') {
-            $thematics[] = $tematik;
-        }
-        $detailIndikator = trim((string) ($row['detail_indikator'] ?? ''));
-        $kategori = trim((string) ($row['kategori'] ?? ''));
-        if ($detailIndikator !== '' && $kategori !== '' && !isset($indicatorCategoryMap[$detailIndikator])) {
-            $indicatorCategoryMap[$detailIndikator] = $kategori;
-        }
-    }
-    $thematics = array_values(array_unique($thematics));
-    sort($thematics);
-
-    $lastWeek = empty($weeks) ? 16 : (int) max($weeks);
-    $lastFourWeeks = array_slice($weeks, -4);
-    if (count($lastFourWeeks) < 4) {
-        $start = max(1, $lastWeek - 3);
-        $lastFourWeeks = range($start, $lastWeek);
+            return strcmp((string) ($a['week'] ?? ''), (string) ($b['week'] ?? ''));
+        });
+        $thematicRows[$idx]['drill_down'] = $drill;
     }
 
-    $defaultIndicator = in_array('% Blindspot TBC', $indicators, true) ? '% Blindspot TBC' : ($indicators[0] ?? '% Blindspot TBC');
+    $peerThematicParsePercent = static function ($raw): ?float {
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+        $s = trim((string) $raw);
+        if ($s === '') {
+            return null;
+        }
+        if (preg_match('/(\d+(?:\.\d+)?)\s*%/', $s, $m)) {
+            return (float) $m[1];
+        }
+        if (preg_match('/^\d+(?:\.\d+)?$/', $s)) {
+            return (float) $s;
+        }
 
-    $alpinePayload = [
-        'rawData' => $jsonData,
-        'thematicRows' => $programRows,
-        'weeks' => $weeks,
-        'sites' => $sites,
-        'thematics' => $thematics,
-        'indicators' => $indicators,
-        'defaultIndicator' => $defaultIndicator,
-        'defaultWeek' => $lastWeek,
-        'defaultSites' => array_slice($sites, 0, 5),
-        'defaultLast4Weeks' => $lastFourWeeks,
-        'indicatorCategoryMap' => $indicatorCategoryMap,
-        'sertifikatTeknisRows' => $sertifikatTeknisRows,
-        'blindspotGrRows' => $blindspotGrRows,
-        'blindspotGrPivot' => $blindspotGrPivot,
-    ];
+        return null;
+    };
+
+    /** Warna sel heatmap / batang: sama dengan logika modal (50% / 80%). */
+    $peerThematicBarFillForValue = static function (float $v, bool $lowerIsBetter): string {
+        if ($lowerIsBetter) {
+            if ($v > 80.0) {
+                return '#d84f4b';
+            }
+            if ($v >= 50.0) {
+                return '#e4cc4a';
+            }
+
+            return '#4e9f63';
+        }
+        if ($v > 80.0) {
+            return '#4e9f63';
+        }
+        if ($v >= 50.0) {
+            return '#e4cc4a';
+        }
+
+        return '#d84f4b';
+    };
+
+    /**
+     * Grafik batang trend all site: rata-rata nilai semua site per minggu (urut W), dari drill_down.
+     * Warna batang mengikuti kategori indikator (peer_pressure_thematic_alignment_program.json).
+     */
+    $peerThematicBuildAllSiteBarChart = static function (array $drill, string $kategori) use ($peerThematicNormalizeWeek, $peerThematicParsePercent, $peerThematicBarFillForValue): array {
+        $lowerIsBetter = stripos($kategori, 'kecil') !== false && stripos($kategori, 'tinggi') === false;
+        $byWeek = [];
+        foreach ($drill as $d) {
+            $w = $peerThematicNormalizeWeek($d['week'] ?? null);
+            if ($w === null) {
+                continue;
+            }
+            $v = $peerThematicParsePercent($d['data'] ?? '');
+            if ($v === null) {
+                continue;
+            }
+            if (! isset($byWeek[$w])) {
+                $byWeek[$w] = [];
+            }
+            $byWeek[$w][] = $v;
+        }
+        ksort($byWeek, SORT_NUMERIC);
+        $weeks = array_keys($byWeek);
+        $avgs = [];
+        foreach ($weeks as $wk) {
+            $avgs[] = array_sum($byWeek[$wk]) / count($byWeek[$wk]);
+        }
+        $n = count($avgs);
+        if ($n < 1) {
+            return [
+                'svg' => '<span class="inline-block min-h-[2.25rem] text-[11px] leading-9 text-on-surface-variant/80">—</span>',
+                'title' => 'Belum ada data drill-down untuk grafik all site.',
+            ];
+        }
+
+        $svgW = 140;
+        $svgH = 42;
+        $padL = 4.0;
+        $padR = 4.0;
+        $padT = 4.0;
+        $padB = 12.0;
+        $chartW = $svgW - $padL - $padR;
+        $chartH = $svgH - $padT - $padB;
+
+        $min = min($avgs);
+        $max = max($avgs);
+        if (abs($max - $min) < 1e-9) {
+            $min -= 0.5;
+            $max += 0.5;
+        }
+        $span = $max - $min;
+
+        $gap = $n > 8 ? 1.0 : ($n > 5 ? 2.0 : 2.5);
+        $barW = max(3.0, ($chartW - ($n - 1) * $gap) / $n);
+        $labelFs = $n > 10 ? 5.5 : ($n > 7 ? 6.5 : 7);
+
+        $parts = [];
+        foreach ($weeks as $i => $wk) {
+            $parts[] = 'W'.$wk.': '.number_format($avgs[$i], 2, '.', '').'%';
+        }
+        $title = 'All site (rata-rata per minggu): '.implode(' · ', $parts).'. '.$kategori.'.';
+        $escTitle = htmlspecialchars($title, ENT_QUOTES, 'UTF-8');
+
+        $svg = '<svg xmlns="http://www.w3.org/2000/svg" width="'.$svgW.'" height="'.$svgH.'" viewBox="0 0 '.$svgW.' '.$svgH.'" class="max-h-[2.75rem] w-full max-w-[9rem]" role="img" aria-label="'.$escTitle.'">';
+        $svg .= '<line x1="'.$padL.'" y1="'.($padT + $chartH).'" x2="'.($svgW - $padR).'" y2="'.($padT + $chartH).'" stroke="#cbd5e1" stroke-width="1"/>';
+
+        for ($i = 0; $i < $n; $i++) {
+            $x = $padL + $i * ($barW + $gap);
+            $h = (($avgs[$i] - $min) / $span) * $chartH;
+            $h = max(1.0, $h);
+            $y = $padT + $chartH - $h;
+            $fill = $peerThematicBarFillForValue($avgs[$i], $lowerIsBetter);
+            $svg .= '<rect x="'.round($x, 2).'" y="'.round($y, 2).'" width="'.round($barW, 2).'" height="'.round($h, 2).'" rx="1.5" fill="'.$fill.'" fill-opacity="0.92"/>';
+            $label = 'W'.$weeks[$i];
+            $lx = $x + $barW / 2;
+            if ($barW >= 10 || $n <= 8) {
+                $svg .= '<text x="'.round($lx, 2).'" y="'.($svgH - 2).'" text-anchor="middle" font-size="'.$labelFs.'" font-weight="600" fill="#64748b">'.$label.'</text>';
+            }
+        }
+        $svg .= '</svg>';
+
+        return [
+            'svg' => $svg,
+            'title' => $title,
+        ];
+    };
+
+    foreach ($thematicRows as $idx => $tRow) {
+        $drill = $thematicRows[$idx]['drill_down'] ?? [];
+        $katRow = trim((string) ($tRow['kategori'] ?? ''));
+        if ($katRow === '') {
+            $katRow = 'Semakin tinggi semakin bagus';
+        }
+        $thematicRows[$idx]['trend_all_site_chart'] = $peerThematicBuildAllSiteBarChart(
+            is_array($drill) ? $drill : [],
+            $katRow
+        );
+    }
+
+    $allSitesFromPoint = [];
+    foreach ($pointRows as $p) {
+        $s = trim((string) ($p['site'] ?? ''));
+        if ($s !== '') {
+            $allSitesFromPoint[$s] = true;
+        }
+    }
+    $allSitesFromPoint = array_keys($allSitesFromPoint);
+    sort($allSitesFromPoint);
+
+    $thematicRowsForJs = [];
+    foreach ($thematicRows as $r) {
+        $kat = trim((string) ($r['kategori'] ?? ''));
+        if ($kat === '') {
+            $kat = 'Semakin tinggi semakin bagus';
+        }
+        $thematicRowsForJs[] = [
+            'tematik' => $r['tematik'] ?? null,
+            'week' => $r['week'] ?? null,
+            'detail_indikator' => $r['detail_indikator'] ?? '',
+            'kategori' => $kat,
+            'drill_down' => $r['drill_down'] ?? [],
+        ];
+    }
+
+    /** Baris berturut dengan week + tematik sama: kolom Week & Tematik digabung (rowspan). */
+    $thematicRowMergeMeta = [];
+    $nThematic = count($thematicRows);
+    for ($i = 0; $i < $nThematic; $i++) {
+        $w = trim((string) ($thematicRows[$i]['week'] ?? ''));
+        $tm = trim((string) ($thematicRows[$i]['tematik'] ?? ''));
+        if ($i > 0) {
+            $pw = trim((string) ($thematicRows[$i - 1]['week'] ?? ''));
+            $ptm = trim((string) ($thematicRows[$i - 1]['tematik'] ?? ''));
+            if ($w === $pw && $tm === $ptm) {
+                $thematicRowMergeMeta[$i] = [
+                    'show_week_tematik' => false,
+                ];
+
+                continue;
+            }
+        }
+        $span = 1;
+        for ($j = $i + 1; $j < $nThematic; $j++) {
+            $w2 = trim((string) ($thematicRows[$j]['week'] ?? ''));
+            $tm2 = trim((string) ($thematicRows[$j]['tematik'] ?? ''));
+            if ($w2 === $w && $tm2 === $tm) {
+                $span++;
+            } else {
+                break;
+            }
+        }
+        $thematicRowMergeMeta[$i] = [
+            'show_week_tematik' => true,
+            'rowspan' => $span,
+        ];
+    }
 @endphp
+<div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
+   <div class="min-w-0 lg:col-span-12">
+      <div class="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white anchored-card">
+         <div class="flex flex-col gap-4 border-b border-outline-variant/20 p-6 lg:flex-row lg:items-start lg:justify-between">
+            <div>
+               <h3 class="font-headline text-xl font-bold text-on-surface">{{ $thematicTitle }}</h3>
+               @if($thematicSubtitle !== '')
+               <p class="mt-0.5 text-xs font-medium text-on-surface-variant">{{ $thematicSubtitle }}</p>
+               @endif
+               <p class="mt-1 text-[11px] text-on-surface-variant/80">Klik baris untuk melihat detail per site &amp; minggu (jika tersedia).</p>
+            </div>
+         </div>
+         <div class="overflow-x-auto">
+            <table class="w-full min-w-[1220px] text-left text-sm">
+               <thead class="border-b border-outline-variant/20 bg-[#f8fafc] text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">
+                  <tr>
+                     <th class="whitespace-nowrap px-6 py-5 lg:px-8">Week</th>
+                     <th class="min-w-[10rem] px-6 py-5 lg:px-8">Tematik</th>
+                     <th class="min-w-[14rem] px-6 py-5 lg:px-8">Recommendation</th>
+                     <th class="min-w-[8rem] px-6 py-5 lg:px-8">Program Related</th>
+                     <th class="min-w-[8rem] px-6 py-5 lg:px-8">Indikator</th>
+                     <th class="min-w-[12rem] px-6 py-5 lg:px-8">Detail Indikator</th>
+                     <th class="whitespace-nowrap px-6 py-5 lg:px-8">Scoring All Site YTD</th>
+                     <th class="min-w-[9rem] px-6 py-5 lg:px-8" title="Grafik batang: rata-rata semua site per minggu (dari data drill-down)">Trend (All Site)</th>
+                     <th class="whitespace-nowrap px-6 py-5 lg:px-8">Grade YTD</th>
+                  </tr>
+               </thead>
+               <tbody class="divide-y divide-outline-variant/10">
+                  @foreach ($thematicRows as $idx => $row)
+                  @php
+                     $merge = $thematicRowMergeMeta[$idx] ?? ['show_week_tematik' => true, 'rowspan' => 1];
+                     $rs = (int) ($merge['rowspan'] ?? 1);
+                     $trendChart = $row['trend_all_site_chart'] ?? ['svg' => '<span class="text-[11px] text-on-surface-variant/80">—</span>', 'title' => ''];
+                  @endphp
+                  <tr
+                     class="js-thematic-alignment-row cursor-pointer transition-colors hover:bg-[#f8fafc] focus-within:bg-[#f8fafc]"
+                     data-thematic-index="{{ $idx }}"
+                     role="button"
+                     tabindex="0"
+                  >
+                     @if (! empty($merge['show_week_tematik']))
+                     <td class="whitespace-nowrap px-6 py-4 align-middle text-center font-bold text-on-surface lg:px-8" @if ($rs > 1) rowspan="{{ $rs }}" @endif>{{ ($row['week'] ?? '') !== '' ? $row['week'] : '—' }}</td>
+                     <td class="px-6 py-4 align-middle text-center text-xs font-semibold leading-snug text-on-surface lg:px-8" @if ($rs > 1) rowspan="{{ $rs }}" @endif>{{ ($row['tematik'] ?? '') !== '' ? $row['tematik'] : '—' }}</td>
+                     @endif
+                     <td class="px-6 py-4 align-top text-xs leading-relaxed text-on-surface lg:px-8">{{ $row['recommendation'] ?? '—' }}</td>
+                     <td class="px-6 py-4 align-top text-xs text-on-surface-variant lg:px-8">{{ $row['program_related'] ?? '—' }}</td>
+                     <td class="px-6 py-4 align-top text-xs font-medium text-on-surface lg:px-8">{{ $row['indikator'] ?? '—' }}</td>
+                     <td class="px-6 py-4 align-top text-xs leading-relaxed text-on-surface lg:px-8">{{ $row['detail_indikator'] ?? '—' }}</td>
+                     <td class="whitespace-nowrap px-6 py-4 align-top text-xs font-bold tabular-nums text-on-surface lg:px-8">{{ ($row['scoring_all_site_ytd'] ?? '') !== '' ? $row['scoring_all_site_ytd'] : '—' }}</td>
+                     <td class="px-4 py-3 align-middle lg:px-6" title="{{ e($trendChart['title'] ?? '') }}">
+                        <div class="pointer-events-none flex items-center justify-start text-primary">
+                           {!! $trendChart['svg'] ?? '—' !!}
+                        </div>
+                     </td>
+                     <td class="whitespace-nowrap px-6 py-4 align-top text-xs font-bold text-on-surface lg:px-8">{{ ($row['grade_ytd'] ?? '') !== '' ? $row['grade_ytd'] : '—' }}</td>
+                  </tr>
+                  @endforeach
+               </tbody>
+            </table>
+         </div>
+         <div class="flex items-center justify-between border-t border-outline-variant/20 bg-[#f8fafc] px-6 py-4 lg:px-8">
+            <p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">{{ count($thematicRows) }} baris program</p>
+         </div>
+      </div>
+   </div>
+</div>
 
 @once
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/alpinejs@3.x.x/dist/cdn.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
-    <script type="module" src="https://idashboard.beraucoal.co.id/javascripts/api/tableau.embedding.3.latest.min.js"></script>
-    <style>
-        .blindspot-pivot-wrap tbody tr:nth-child(even) .blindspot-pivot-pin { background-color: #f8fafc; }
-        .blindspot-pivot-wrap tbody tr:nth-child(odd) .blindspot-pivot-pin { background-color: #ffffff; }
-    </style>
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.min.js" crossorigin="anonymous"></script>
 @endonce
 
-<section class="bg-white p-4 font-['Inter'] sm:p-6 lg:p-8"
-    x-data='thematicAlignmentDashboard(@json($alpinePayload))' x-init="init()">
-    <header class="mb-5 rounded-2xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
-        <div class="flex flex-col gap-3">
-            <p class="text-[11px] text-slate-500">Pilih <span class="font-medium text-slate-700">indikator</span>, lalu <span class="font-medium text-slate-700">minggu</span> — daftar minggu hanya yang punya data untuk indikator itu.</p>
-            <div class="grid w-full gap-3 sm:grid-cols-2 xl:grid-cols-4">
-                <div class="flex flex-col gap-1">
-                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Indikator</label>
-                    <select
-                        class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm"
-                        x-model="indicator"
-                        @change="onIndicatorFilterChange()"
-                    >
-                        <template x-for="item in indicatorChoices" :key="'hdr-ind-' + item">
-                            <option :value="item" x-text="item"></option>
-                        </template>
-                    </select>
-                </div>
-                <div class="relative flex flex-col gap-1" @click.outside="dropdownWeek = false">
-                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Minggu <span class="font-normal normal-case text-slate-400">(ada datanya)</span></label>
-                    <button type="button" @click="dropdownWeek = !dropdownWeek" class="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-left text-sm shadow-sm">
-                        <span><span class="font-semibold" x-text="'W' + selectedWeek"></span><span class="ml-1 text-xs text-slate-500" x-show="(indicatorWeekChoices || []).length" x-text="'· ' + (indicatorWeekChoices || []).length + ' pilihan'"></span></span>
-                        <span class="text-slate-400">▾</span>
-                    </button>
-                    <div x-show="dropdownWeek" x-cloak class="absolute left-0 right-0 top-full z-30 mt-1 max-h-56 overflow-auto rounded-xl border border-slate-200 bg-white p-1 shadow-lg">
-                        <template x-for="week in indicatorWeekChoices" :key="'w-ind-' + week">
-                            <button type="button" class="block w-full rounded-lg px-3 py-2 text-left text-sm hover:bg-slate-100" @click="selectedWeek = week; dropdownWeek = false; refreshAll()"><span x-text="'W' + week"></span></button>
-                        </template>
-                    </div>
-                </div>
-                <div class="relative flex flex-col gap-1" @click.outside="dropdownSite = false">
-                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Site</label>
-                    <button type="button" @click="dropdownSite = !dropdownSite" class="flex w-full items-center justify-between rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm">
-                        <span class="font-semibold" x-text="selectedSites.length ? selectedSites.length + ' dipilih' : 'Semua site'"></span>
-                        <span class="text-slate-400">▾</span>
-                    </button>
-                    <div x-show="dropdownSite" x-cloak class="absolute left-0 right-0 top-full z-30 mt-1 max-h-64 overflow-auto rounded-xl border border-slate-200 bg-white p-2 shadow-lg">
-                        <template x-for="site in siteChoices" :key="'s-' + site">
-                            <label class="flex items-center gap-2 rounded-lg px-2 py-1.5 text-sm hover:bg-slate-100">
-                                <input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600" :checked="selectedSites.includes(site)" @change="toggleSite(site)">
-                                <span x-text="site"></span>
-                            </label>
-                        </template>
-                    </div>
-                </div>
-                <div class="flex flex-col gap-1">
-                    <label class="text-[10px] font-semibold uppercase tracking-wide text-slate-500">Tematik</label>
-                    <select class="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm shadow-sm" x-model="selectedThematic" @change="refreshAll()">
-                        <option value="All">Semua tematik</option>
-                        <template x-for="item in thematicChoices" :key="'th-' + item">
-                            <option :value="item" x-text="item"></option>
-                        </template>
-                    </select>
-                </div>
+<div id="peer-thematic-drill-modal" class="fixed inset-0 z-[120] hidden" role="dialog" aria-modal="true" aria-labelledby="peer-thematic-drill-title">
+   <div class="absolute inset-0 bg-slate-900/50 backdrop-blur-[2px] transition-opacity peer-thematic-drill-backdrop" data-peer-thematic-drill-close></div>
+   <div class="relative mx-auto flex min-h-full max-w-6xl items-start justify-center px-3 py-8 sm:px-6 sm:py-10">
+      <div class="w-full overflow-hidden rounded-2xl border border-outline-variant/30 bg-white shadow-2xl">
+         <div class="flex items-start justify-between gap-3 border-b border-outline-variant/20 bg-gradient-to-r from-slate-50 to-white px-5 py-4 sm:px-6">
+            <div class="min-w-0">
+               <h3 id="peer-thematic-drill-title" class="font-headline text-lg font-bold text-on-surface">Detail indikator per site</h3>
+               <p id="peer-thematic-drill-sub" class="mt-0.5 text-[11px] text-on-surface-variant"></p>
             </div>
-        </div>
-    </header>
-
-    <div class="mb-5 grid gap-4 md:grid-cols-2">
-        <article class="rounded-2xl border border-indigo-100 p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-wide text-indigo-600">Scoring All Site YTD</p>
-            <p class="mt-3 text-3xl font-bold text-slate-900" x-text="indicatorKpiScoring"></p>
-            <div class="mt-3 h-2.5 rounded-full bg-indigo-100" x-show="indicatorKpiScoringBarPct !== null">
-                <div class="h-2.5 rounded-full bg-indigo-500" :style="'width: ' + indicatorKpiScoringBarPct + '%'"></div>
-            </div>
-            <p class="mt-1 text-xs text-slate-500">Dari program tematik (baris minggu terbaru untuk indikator ini)</p>
-        </article>
-        <article class="rounded-2xl border border-emerald-100 p-5 shadow-sm">
-            <p class="text-xs font-semibold uppercase tracking-wide text-emerald-600">Grade YTD</p>
-            <p class="mt-3 text-3xl font-bold text-slate-900">
-                <span
-                    class="inline-flex rounded-full px-3 py-1 text-2xl font-bold leading-none"
-                    :class="gradeClass(indicatorKpiGrade)"
-                    x-text="indicatorKpiGrade"
-                ></span>
-            </p>
-            <p class="mt-1 text-xs text-slate-500">Grade YTD dari program tematik</p>
-        </article>
-    </div>
-
-    <div class="grid gap-4 xl:grid-cols-2 mb-5 ">
-        <article class="rounded-2xl border border-slate-200  p-4 shadow-sm">
-            <div class="flex flex-col gap-3 border-b border-slate-200 pb-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h3 class="text-sm font-semibold text-slate-800">Heatmap Site vs Last 4 Weeks</h3>
-                    <p class="mt-1 text-[11px] text-slate-600">Menampilkan seluruh site untuk indikator terpilih.</p>
-                </div>
-                <div class="flex flex-wrap items-center gap-2 text-[10px] text-slate-700">
-                    <span class="inline-flex items-center gap-1.5 rounded-md bg-white/80 px-2 py-1"><span class="h-2.5 w-2.5 bg-[#4e9f63]"></span><span x-text="isLowerBetter() ? '&lt; 50%' : '&gt; 80%'"></span></span>
-                    <span class="inline-flex items-center gap-1.5 rounded-md bg-white/80 px-2 py-1"><span class="h-2.5 w-2.5 bg-[#e4cc4a]"></span>50-79%</span>
-                    <span class="inline-flex items-center gap-1.5 rounded-md bg-white/80 px-2 py-1"><span class="h-2.5 w-2.5 bg-[#d84f4b]"></span><span x-text="isLowerBetter() ? '&gt; 80%' : '&lt; 50%'"></span></span>
-                </div>
-            </div>
-            <div class="mt-3 overflow-x-auto rounded-lg border border-slate-300 ">
-                <table class="w-full min-w-[620px] border-separate border-spacing-0 text-sm">
-                    <thead class="text-[13px] font-semibold text-slate-700">
-                        <tr>
-                            <th class="sticky left-0 z-10  px-3 py-2 text-left"></th>
-                            <template x-for="w in last4Weeks" :key="'hmw-' + w">
-                                <th class="px-4 py-2 text-center" x-text="'W' + w"></th>
-                            </template>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template x-if="!heatmapRows.length">
-                            <tr>
-                                <td class="px-3 py-6 text-center text-xs text-slate-500" :colspan="last4Weeks.length + 1">Belum ada data heatmap untuk indikator ini.</td>
-                            </tr>
-                        </template>
-                        <template x-for="row in heatmapRows" :key="'hm-' + row.site">
-                            <tr>
-                                <td class="sticky left-0 z-[1] whitespace-nowrap px-3 py-2 text-[14px] font-semibold text-slate-700" x-text="row.site"></td>
-                                <template x-for="cell in row.values" :key="'hmc-' + row.site + '-' + cell.week">
-                                    <td class="h-10 min-w-20 px-3 py-2 text-center text-[11px] font-semibold tabular-nums" :class="heatClass(cell.value)" x-text="cell.display"></td>
-                                </template>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-        </article>
-        <article class="flex h-full flex-col rounded-2xl border border-slate-200 p-5 shadow-sm">
-            <div>
-                <h3 class="text-sm font-semibold text-slate-700">Tren Pemenuhan 4 Minggu Terakhir</h3>
-                <p class="mt-1 text-[11px] text-slate-500" x-text="'Indikator (dari filter atas): ' + indicator"></p>
-            </div>
-            <div
-                class="mt-4 min-h-[420px] flex-1"
-                :style="`height:${Math.max(420, (heatmapRows.length * 40) + 110)}px`"
-            >
-                <canvas id="thematicTrendChart" x-ref="trendChart"></canvas>
-            </div>
-        </article>
-    </div>
-
-    <div class="grid gap-4 mb-5 ">
-        <article class="min-w-0 max-w-full rounded-2xl border border-slate-200 p-4 shadow-sm sm:p-5">
-            <h3 class="text-sm font-semibold text-slate-700">Detail Data</h3>
-
-            <div x-show="detailMode === 'blindspot_gr'" x-cloak class="mt-4 min-w-0 max-w-full">
-                <p class="mb-2 text-xs text-slate-500 sm:mb-3">Tabel pivot: persentase blindspot TBC dari BC per site, perusahaan PIC, dan minggu Date for Join (mengikuti filter site).</p>
-                <p class="mb-2 flex items-center gap-1.5 text-[11px] text-slate-500 sm:hidden">
-                    <span class="inline-block shrink-0 rounded border border-slate-200 bg-slate-50 px-1.5 py-0.5 font-medium text-slate-600">← →</span>
-                    <span>Geser horizontal untuk melihat kolom minggu.</span>
-                </p>
-                <div
-                    class="blindspot-pivot-wrap -mx-1 max-w-full overflow-x-auto overscroll-x-contain rounded-xl border border-slate-200 bg-white shadow-sm [scrollbar-gutter:stable] sm:mx-0"
-                    style="-webkit-overflow-scrolling: touch"
-                >
-                    <table class="min-w-max w-full max-w-none border-collapse text-xs sm:text-sm">
-                        <thead>
-                            <tr>
-                                <th
-                                    colspan="2"
-                                    rowspan="2"
-                                    class="sticky left-0 z-30 min-w-[13.5rem] border border-slate-200 bg-slate-50 px-2 py-2 sm:min-w-[19rem]"
-                                ></th>
-                                <th
-                                    class="border border-slate-200 bg-slate-50 px-2 py-2 text-center text-[10px] font-semibold tracking-wide text-slate-700 sm:px-3 sm:text-xs"
-                                    :colspan="Math.max(1, (blindspotGrPivot.weeks || []).length)"
-                                >Date for Join</th>
-                            </tr>
-                            <tr>
-                                <th
-                                    class="border border-slate-200 bg-slate-50 px-2 py-2 text-center text-[10px] font-semibold text-slate-600 sm:px-3 sm:text-xs"
-                                    :colspan="Math.max(1, (blindspotGrPivot.weeks || []).length)"
-                                    x-text="blindspotGrPivot.year"
-                                ></th>
-                            </tr>
-                            <tr>
-                                <th
-                                    class="sticky left-0 z-20 w-20 min-w-[5rem] border border-slate-200 border-r-slate-300 bg-slate-50 px-2 py-2 text-left text-[10px] font-semibold uppercase tracking-wide text-slate-600 shadow-[4px_0_8px_-4px_rgba(15,23,42,0.12)] sm:w-28 sm:min-w-[7rem] sm:px-3 sm:text-xs"
-                                >site</th>
-                                <th
-                                    class="sticky left-20 z-20 min-w-[8.5rem] max-w-[11rem] border border-slate-200 border-r-slate-300 bg-slate-50 px-2 py-2 text-left text-[10px] font-semibold text-slate-600 shadow-[4px_0_8px_-4px_rgba(15,23,42,0.12)] sm:left-28 sm:min-w-[12rem] sm:max-w-[14rem] sm:px-3 sm:text-xs"
-                                >perusahaan pic</th>
-                                <template x-for="w in (blindspotGrPivot.weeks || [])" :key="'bh-' + w">
-                                    <th
-                                        class="min-w-[2.75rem] whitespace-nowrap border border-slate-200 bg-slate-50 px-1.5 py-2 text-center text-[10px] font-semibold text-slate-600 sm:min-w-[3.25rem] sm:px-2 sm:text-xs"
-                                        x-text="w"
-                                    ></th>
-                                </template>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="grp in blindspotGrPivotSiteGroups" :key="'bgp-' + grp.site">
-                                <template x-for="(co, ci) in grp.companies" :key="'bgp-' + grp.site + '-' + ci">
-                                    <tr class="border-b border-slate-100 bg-white even:bg-slate-50">
-                                        <template x-if="ci === 0">
-                                            <td
-                                                class="blindspot-pivot-pin sticky left-0 z-10 w-20 min-w-[5rem] border border-slate-200 border-r-slate-300 px-2 py-2 align-top text-left text-xs font-semibold text-slate-900 shadow-[4px_0_8px_-4px_rgba(15,23,42,0.1)] sm:w-28 sm:min-w-[7rem] sm:px-3 sm:text-sm"
-                                                :rowspan="grp.companies.length"
-                                                x-text="grp.site"
-                                            ></td>
-                                        </template>
-                                        <td
-                                            class="blindspot-pivot-pin sticky left-20 z-10 min-w-[8.5rem] max-w-[11rem] border border-slate-200 border-r-slate-300 px-2 py-2 text-left text-[11px] leading-snug text-slate-800 shadow-[4px_0_8px_-4px_rgba(15,23,42,0.1)] sm:left-28 sm:min-w-[12rem] sm:max-w-[14rem] sm:px-3 sm:text-sm"
-                                            x-text="co.perusahaan_pic"
-                                        ></td>
-                                        <template x-for="(cell, wi) in co.cells" :key="'bc-' + grp.site + '-' + ci + '-' + wi">
-                                            <td
-                                                class="min-w-[2.75rem] border border-slate-200 px-1.5 py-2 text-center text-[11px] tabular-nums text-slate-700 sm:min-w-[3.25rem] sm:px-2 sm:text-sm"
-                                                x-text="cell != null && cell !== '' ? cell : ''"
-                                            ></td>
-                                        </template>
-                                    </tr>
-                                </template>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
-                <p class="mt-2 text-xs text-slate-500" x-show="(blindspotGrPivotSiteGroups || []).length === 0">Tidak ada baris untuk filter site yang dipilih.</p>
-            </div>
-
-            <div x-show="detailMode === 'aggregator_behealth'" x-cloak class="mt-4 min-w-0 max-w-full">
-                <p class="mb-3 text-xs text-slate-500">Dashboard Tableau: Excel Aggregator Fatigue Management (embed).</p>
-                <div class="overflow-hidden rounded-xl border border-slate-200 bg-slate-100 shadow-sm">
-                    <div class="relative w-full overflow-auto" style="min-height: min(85vh, 1209px);">
-                        <tableau-viz
-                            id="tableau-viz-aggregator-behealth"
-                            src="https://idashboard.beraucoal.co.id/t/hsedivision/views/ExcelAggregatorFatigueManagement/AggregatorFatigueTest"
-                            width="1654"
-                            height="1209"
-                            hide-tabs
-                            toolbar="bottom"
-                            class="mx-auto block max-w-full"
-                        ></tableau-viz>
-                    </div>
-                </div>
-            </div>
-
-            <div x-show="detailMode === 'sertifikasi_pengawas_teknis'" x-cloak class="mt-4 space-y-6">
-                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                    <div class="rounded-xl border border-slate-200 bg-gradient-to-br from-indigo-50/50 to-white p-4 shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-500">Total baris</p>
-                        <p class="mt-1 text-2xl font-bold text-slate-900" x-text="sertifikatTeknisTotals.total"></p>
-                        <p class="mt-0.5 text-[10px] text-slate-500">Work permit / entri</p>
-                    </div>
-                    <div class="rounded-xl border border-emerald-100 bg-emerald-50/60 p-4 shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-700">Cukup</p>
-                        <p class="mt-1 text-2xl font-bold text-emerald-800" x-text="sertifikatTeknisTotals.cukup"></p>
-                        <p class="mt-0.5 text-[10px] text-emerald-700/80">Memenuhi SID</p>
-                    </div>
-                    <div class="rounded-xl border border-rose-100 bg-rose-50/60 p-4 shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-rose-700">Tidak cukup</p>
-                        <p class="mt-1 text-2xl font-bold text-rose-800" x-text="sertifikatTeknisTotals.tidakCukup"></p>
-                        <p class="mt-0.5 text-[10px] text-rose-700/80">Perlu tindak lanjut</p>
-                    </div>
-                    <div class="rounded-xl border border-slate-200 bg-slate-100/80 p-4 shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-600">Site ter-cover</p>
-                        <p class="mt-1 text-2xl font-bold text-slate-800" x-text="sertifikatTeknisTotals.siteCount"></p>
-                        <p class="mt-0.5 text-[10px] text-slate-600">Setelah filter site</p>
-                    </div>
-                </div>
-
-                <div class="grid gap-6 lg:grid-cols-5">
-                    <div class="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:col-span-2">
-                        <p class="text-xs font-semibold text-slate-700">Distribusi status Jumlah SID</p>
-                        <p class="mt-0.5 text-[11px] text-slate-500">Cukup vs tidak cukup (filter site aktif)</p>
-                        <div class="relative mx-auto mt-2 h-56 max-w-[280px]">
-                            <canvas x-ref="sertifikatTeknisDonut"></canvas>
+            <button type="button" class="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-slate-200 bg-white text-slate-500 transition hover:bg-slate-50 hover:text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary/30" data-peer-thematic-drill-close aria-label="Tutup">
+               <span class="material-symbols-outlined text-[22px]">close</span>
+            </button>
+         </div>
+         <div class="max-h-[min(88vh,940px)] overflow-y-auto p-4 sm:p-6">
+            <p id="peer-thematic-drill-empty" class="hidden py-10 text-center text-sm text-slate-500">Belum ada data detail untuk baris ini.</p>
+            <div id="peer-thematic-drill-panel" class="hidden">
+               <div class="mb-5 grid gap-4 ">
+                  <article class="rounded-2xl border border-slate-200 p-4 shadow-sm">
+                     <div class="flex flex-col gap-3 border-b border-slate-200 pb-3 sm:flex-row sm:items-center sm:justify-between">
+                        <div>
+                           <h4 class="text-sm font-semibold text-slate-800">Heatmap Site vs Last 4 Weeks</h4>
+                           <p class="mt-1 text-[11px] text-slate-600">Menampilkan seluruh site untuk indikator terpilih.</p>
                         </div>
-                        <div class="mt-3 flex flex-wrap justify-center gap-3 text-[10px] text-slate-600">
-                            <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-emerald-500"></span>Cukup</span>
-                            <span class="inline-flex items-center gap-1"><span class="h-2 w-2 rounded-full bg-rose-500"></span>Tidak cukup</span>
-                        </div>
-                    </div>
-                    <div class="space-y-3 lg:col-span-3">
-                        <p class="text-xs font-semibold text-slate-700">Proporsi per site</p>
-                        <div class="max-h-[420px] space-y-3 overflow-y-auto pr-1">
-                            <template x-for="block in sertifikatTeknisBySite" :key="'st-' + block.site">
-                                <div class="rounded-xl border border-slate-100 bg-slate-50/50 p-3 shadow-sm">
-                                    <div class="flex items-center justify-between gap-2">
-                                        <span class="text-sm font-bold text-slate-800" x-text="block.site"></span>
-                                        <span class="text-[11px] font-medium text-slate-500"><span x-text="block.total"></span> baris</span>
-                                    </div>
-                                    <div class="mt-2 flex h-2.5 overflow-hidden rounded-full bg-slate-200">
-                                        <div class="bg-emerald-500 transition-all" :style="'width:' + sertifikatTeknisBarPct(block.cukup, block) + '%'"></div>
-                                        <div class="bg-rose-500 transition-all" :style="'width:' + sertifikatTeknisBarPct(block.tidakCukup, block) + '%'"></div>
-                                    </div>
-                                    <div class="mt-2 flex flex-wrap gap-1.5">
-                                        <template x-for="(e, ei) in block.entries.slice(0, 6)" :key="'st-e-' + block.site + '-' + ei">
-                                            <span
-                                                class="inline-flex max-w-[220px] truncate rounded-lg border px-2 py-0.5 text-[10px] font-medium"
-                                                :class="normalizeText(e.jumlah_sid).includes('tidak cukup') ? 'border-rose-200 bg-rose-50 text-rose-900' : 'border-emerald-200 bg-emerald-50 text-emerald-900'"
-                                                :title="e.work_permit"
-                                                x-text="e.nama_perusahaan"
-                                            ></span>
-                                        </template>
-                                        <span x-show="block.entries.length > 6" class="text-[10px] text-slate-500" x-text="'+' + (block.entries.length - 6) + ' lainnya'"></span>
-                                    </div>
-                                </div>
-                            </template>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="overflow-x-auto rounded-xl border border-slate-200 bg-slate-50/30">
-                    <p class="border-b border-slate-200 px-4 py-2 text-xs font-semibold text-slate-700">Detail data lengkap</p>
-                    <table class="w-full min-w-[900px] text-sm">
-                        <thead class="border-b border-slate-200 bg-white text-xs uppercase text-slate-500">
-                            <tr>
-                                <th class="px-3 py-2 text-left">Site</th>
-                                <th class="px-3 py-2 text-left">Nama Perusahaan</th>
-                                <th class="px-3 py-2 text-left">Main Kon</th>
-                                <th class="px-3 py-2 text-left">Departement</th>
-                                <th class="px-3 py-2 text-left">Work Permit</th>
-                                <th class="px-3 py-2 text-left">Jumlah SID</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            <template x-for="row in detailedRows" :key="'d-sertif-' + (row.site ?? '') + '-' + (row.departement ?? '') + '-' + (row.work_permit ?? '')">
-                                <tr class="border-b border-slate-100 bg-white">
-                                    <td class="px-3 py-2" x-text="row.site"></td>
-                                    <td class="px-3 py-2" x-text="row.nama_perusahaan"></td>
-                                    <td class="px-3 py-2" x-text="row.main_kon"></td>
-                                    <td class="px-3 py-2" x-text="row.departement"></td>
-                                    <td class="px-3 py-2 text-xs leading-relaxed" x-text="row.work_permit"></td>
-                                    <td class="px-3 py-2">
-                                        <span class="rounded-full px-2 py-1 text-xs font-semibold" :class="sidClass(row.jumlah_sid)" x-text="row.jumlah_sid"></span>
-                                    </td>
-                                </tr>
-                            </template>
-                        </tbody>
-                    </table>
-                </div>
+                        <div id="peer-thematic-drill-legend" class="flex flex-wrap items-center gap-2 text-[10px] text-slate-700"></div>
+                     </div>
+                     <div class="mt-3 overflow-x-auto rounded-lg border border-slate-300">
+                        <div id="peer-thematic-drill-heatmap-root"></div>
+                     </div>
+                  </article>
+                  <article class="flex h-full min-h-0 flex-col rounded-2xl border border-slate-200 p-5 shadow-sm">
+                     <div>
+                        <h4 class="text-sm font-semibold text-slate-700">Tren Pemenuhan 4 Minggu Terakhir</h4>
+                        <p id="peer-thematic-drill-chart-sub" class="mt-1 text-[11px] text-slate-500"></p>
+                     </div>
+                     <div id="peer-thematic-drill-chart-wrap" class="mt-4 min-h-[420px] flex-1">
+                        <canvas id="peer-thematic-drill-trend-canvas"></canvas>
+                     </div>
+                  </article>
+               </div>
             </div>
-
-            <div x-show="detailMode === 'default'" class="mt-4 overflow-x-auto">
-                <table class="w-full min-w-[900px] text-sm">
-                    <thead class="border-b border-slate-200 text-xs uppercase text-slate-500">
-                        <tr>
-                            <th class="px-3 py-2 text-left">Week</th><th class="px-3 py-2 text-left">Site</th><th class="px-3 py-2 text-left">Thematic</th><th class="px-3 py-2 text-left">Indikator</th><th class="px-3 py-2 text-left">Nilai</th><th class="px-3 py-2 text-left">Grade</th><th class="px-3 py-2 text-left">Status</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <template x-for="row in detailedRows" :key="'d-default-' + (row.site ?? '') + '-' + (row.week ?? '') + '-' + (row.indikator ?? '')">
-                            <tr class="border-b border-slate-100">
-                                <td class="px-3 py-2" x-text="'W' + row.week"></td>
-                                <td class="px-3 py-2" x-text="row.site"></td>
-                                <td class="px-3 py-2" x-text="row.thematic"></td>
-                                <td class="px-3 py-2" x-text="row.indikator"></td>
-                                <td class="px-3 py-2 font-medium" x-text="row.nilai"></td>
-                                <td class="px-3 py-2"><span class="rounded-full px-2 py-1 text-xs font-semibold" :class="gradeClass(row.grade)" x-text="row.grade"></span></td>
-                                <td class="px-3 py-2"><span class="rounded-full px-2 py-1 text-xs font-semibold" :class="row.status === 'On Track' ? 'bg-emerald-100 text-emerald-700' : 'bg-rose-100 text-rose-700'" x-text="row.status"></span></td>
-                            </tr>
-                        </template>
-                    </tbody>
-                </table>
-            </div>
-        </article>
-       
-    </div>
-</section>
+         </div>
+      </div>
+   </div>
+</div>
 
 <script>
-    function thematicAlignmentDashboard(config) {
-        let chartInstance = null;
-        let sertifikatTeknisChartInstance = null;
+(function () {
+   var rows = @json($thematicRowsForJs);
+   var allSitesMaster = @json($allSitesFromPoint);
+   var modal = document.getElementById('peer-thematic-drill-modal');
+   var emptyEl = document.getElementById('peer-thematic-drill-empty');
+   var panelEl = document.getElementById('peer-thematic-drill-panel');
+   var subEl = document.getElementById('peer-thematic-drill-sub');
+   var legendEl = document.getElementById('peer-thematic-drill-legend');
+   var heatmapRoot = document.getElementById('peer-thematic-drill-heatmap-root');
+   var chartSubEl = document.getElementById('peer-thematic-drill-chart-sub');
+   var chartWrap = document.getElementById('peer-thematic-drill-chart-wrap');
+   var trendCanvas = document.getElementById('peer-thematic-drill-trend-canvas');
+   var trendChartInstance = null;
 
-        return {
-            dropdownWeek: false,
-            dropdownSite: false,
-            weekChoices: config.weeks?.length ? config.weeks : Array.from({ length: 16 }, (_, i) => i + 1),
-            indicatorWeekChoices: [],
-            siteChoices: config.sites ?? [],
-            thematicChoices: config.thematics ?? [],
-            indicatorChoices: config.indicators ?? [],
-            indicatorCategoryMap: config.indicatorCategoryMap ?? {},
-            selectedWeek: config.defaultWeek ?? 16,
-            selectedSites: config.defaultSites ?? [],
-            selectedThematic: 'All',
-            indicator: config.defaultIndicator ?? '% Blindspot TBC',
-            rawData: config.rawData ?? [],
-            thematicRows: config.thematicRows ?? [],
-            sertifikatTeknisRows: config.sertifikatTeknisRows ?? [],
-            blindspotGrRows: config.blindspotGrRows ?? [],
-            blindspotGrPivot: config.blindspotGrPivot ?? { year: 2026, weeks: [], siteGroups: [] },
-            blindspotGrPivotSiteGroups: [],
-            blindspotGrTotals: { n0: 0, n1: 0, nNull: 0, total: 0 },
-            blindspotGrBySite: [],
-            sertifikatTeknisTotals: { cukup: 0, tidakCukup: 0, total: 0, siteCount: 0 },
-            sertifikatTeknisBySite: [],
-            last4Weeks: config.defaultLast4Weeks ?? [13, 14, 15, 16],
-            heatmapRows: [],
-            detailedRows: [],
-            detailMode: 'default',
-            leaderboard: [],
-            colors: ['#6366F1', '#0EA5E9', '#10B981', '#F59E0B', '#EF4444'],
-            indicatorKpiScoring: '—',
-            indicatorKpiGrade: '—',
-            indicatorKpiScoringBarPct: null,
-            init() { this.refreshAll(); },
-            rebuildIndicatorWeekChoices() {
-                const set = new Set();
-                (this.rawData || []).forEach((row) => {
-                    if (!this.indicatorMatches(row.detail_indikator ?? '')) return;
-                    const w = this.parseWeek(row.week);
-                    if (w !== null) set.add(w);
-                });
-                let arr = [...set].sort((a, b) => a - b);
-                if (!arr.length) {
-                    arr = [...(this.weekChoices?.length ? this.weekChoices : Array.from({ length: 16 }, (_, i) => i + 1))];
-                }
-                this.indicatorWeekChoices = arr;
-                const sw = Number(this.selectedWeek);
-                if (!arr.includes(sw)) {
-                    this.selectedWeek = arr[arr.length - 1] ?? arr[0] ?? this.selectedWeek;
-                }
-            },
-            onIndicatorFilterChange() {
-                this.refreshAll();
-            },
-            updateIndicatorKpiFromProgram() {
-                this.indicatorKpiScoring = '—';
-                this.indicatorKpiGrade = '—';
-                this.indicatorKpiScoringBarPct = null;
-                const rows = (this.thematicRows || []).filter((row) => this.indicatorMatches(row.detail_indikator ?? ''));
-                if (!rows.length) {
-                    return;
-                }
-                let maxWeek = -Infinity;
-                rows.forEach((row) => {
-                    const w = Number(row.week);
-                    if (Number.isFinite(w)) {
-                        maxWeek = Math.max(maxWeek, w);
-                    }
-                });
-                if (!Number.isFinite(maxWeek) || maxWeek === -Infinity) {
-                    return;
-                }
-                const latest = rows.filter((row) => Number(row.week) === maxWeek);
-                const pick = latest[0];
-                if (!pick) {
-                    return;
-                }
-                const scoringRaw = pick.scoring_all_site_ytd;
-                const gradeRaw = pick.grade_ytd;
-                if (scoringRaw !== null && scoringRaw !== undefined && String(scoringRaw).trim() !== '') {
-                    this.indicatorKpiScoring = String(scoringRaw).trim();
-                }
-                if (gradeRaw !== null && gradeRaw !== undefined && String(gradeRaw).trim() !== '') {
-                    this.indicatorKpiGrade = String(gradeRaw).trim();
-                }
-                const s = this.indicatorKpiScoring;
-                if (s !== '—' && s.includes('%')) {
-                    const n = this.parseNumber(s);
-                    if (n !== null && Number.isFinite(n)) {
-                        this.indicatorKpiScoringBarPct = Math.max(0, Math.min(100, n));
-                    }
-                }
-            },
-            parseWeek(value) {
-                const hit = String(value ?? '').match(/(\d+)/);
-                return hit ? Number(hit[1]) : null;
-            },
-            parseNumber(value) {
-                const hit = String(value ?? '').match(/(\d+(?:\.\d+)?)/);
-                return hit ? Number(hit[1]) : null;
-            },
-            normalizeText(value) {
-                return String(value ?? '').trim().toLowerCase();
-            },
-            indicatorMatches(value) {
-                return this.normalizeText(value) === this.normalizeText(this.indicator);
-            },
-            isAggregatorBehealthIndicator() {
-                const i = this.normalizeText(this.indicator);
-                return i === 'pengisian aggregator behealth' || i === '% pengisian aggregator behealth';
-            },
-            toggleSite(site) {
-                if (this.selectedSites.includes(site)) this.selectedSites = this.selectedSites.filter((s) => s !== site);
-                else this.selectedSites.push(site);
-                this.refreshAll();
-            },
-            gradeFromValue(val) {
-                if (val >= 80) return 'L4';
-                if (val >= 50) return 'L3';
-                return 'L2';
-            },
-            gradeClass(grade) {
-                const g = String(grade ?? '').trim();
-                if (g === '—' || g === '-' || g === 'N/A' || g === 'n/a') {
-                    return 'bg-slate-100 text-slate-600';
-                }
-                if (g === 'L4') return 'bg-emerald-100 text-emerald-700';
-                if (g === 'L3' || g === 'L3.5') return 'bg-amber-100 text-amber-700';
-                if (!g) return 'bg-slate-100 text-slate-600';
-                return 'bg-rose-100 text-rose-700';
-            },
-            sidClass(jumlahSid) {
-                const value = this.normalizeText(jumlahSid);
-                if (value.includes('tidak cukup')) return 'bg-rose-100 text-rose-700';
-                return 'bg-emerald-100 text-emerald-700';
-            },
-            sertifikatTeknisBarPct(part, block) {
-                const t = block.cukup + block.tidakCukup;
-                return t ? Math.round((100 * part) / t) : 0;
-            },
-            buildSertifikatTeknisChart() {
-                if (sertifikatTeknisChartInstance) {
-                    try {
-                        sertifikatTeknisChartInstance.destroy();
-                    } catch (e) {
-                        /* ignore */
-                    }
-                    sertifikatTeknisChartInstance = null;
-                }
-                if (!this.indicatorMatches('% Sertifikasi Pengawas Teknis')) return;
-                const canvas = this.$refs.sertifikatTeknisDonut;
-                if (!canvas || !window.Chart) return;
-                const ctx = canvas.getContext('2d');
-                if (!ctx) return;
-                const t = this.sertifikatTeknisTotals;
-                if (!t.total) return;
-                sertifikatTeknisChartInstance = new Chart(ctx, {
-                    type: 'doughnut',
-                    data: {
-                        labels: ['Cukup', 'Tidak cukup'],
-                        datasets: [{
-                            data: [t.cukup, t.tidakCukup],
-                            backgroundColor: ['#22c55e', '#f43f5e'],
-                            borderWidth: 0,
-                            hoverOffset: 6,
-                        }],
-                    },
-                    options: {
-                        responsive: true,
-                        maintainAspectRatio: false,
-                        cutout: '64%',
-                        plugins: {
-                            legend: { display: false },
+   if (!modal || !emptyEl || !panelEl || !heatmapRoot) return;
+
+   function esc(s) {
+      if (s == null) return '';
+      return String(s)
+         .replace(/&/g, '&amp;')
+         .replace(/</g, '&lt;')
+         .replace(/>/g, '&gt;')
+         .replace(/"/g, '&quot;');
+   }
+
+   function normalizeWeek(week) {
+      if (week == null) return null;
+      var raw = String(week).trim();
+      if (raw === '') return null;
+      var digit = raw.match(/(\d+)/);
+      if (!digit) return null;
+      return parseInt(digit[1], 10);
+   }
+
+   function weekLabel(week) {
+      var n = normalizeWeek(week);
+      if (n == null || isNaN(n)) return String(week || '—');
+      return 'W' + n;
+   }
+
+   function parseNumber(raw) {
+      if (raw == null) return null;
+      var s = String(raw).trim();
+      if (s === '') return null;
+      var withPercent = s.match(/(\d+(?:\.\d+)?)\s*%/);
+      if (withPercent) return parseFloat(withPercent[1]);
+      var numeric = s.match(/^\d+(?:\.\d+)?$/);
+      if (numeric) return parseFloat(numeric[0]);
+      return null;
+   }
+
+   function normalizeText(v) {
+      return String(v ?? '').trim().toLowerCase();
+   }
+
+   function isLowerBetterFromKategori(kategori) {
+      var t = normalizeText(kategori);
+      return t.indexOf('kecil') !== -1 && t.indexOf('tinggi') === -1;
+   }
+
+   function heatClass(value, lowerBetter) {
+      var v = parseNumber(value);
+      if (v === null || isNaN(v)) {
+         return 'bg-[#cfd8dc] text-slate-600 border border-white/70';
+      }
+      if (lowerBetter) {
+         if (v > 80) return 'bg-[#d84f4b] text-white border border-white/70';
+         if (v >= 50) return 'bg-[#e4cc4a] text-slate-800 border border-white/70';
+         return 'bg-[#4e9f63] text-white border border-white/70';
+      }
+      if (v > 80) return 'bg-[#4e9f63] text-white border border-white/70';
+      if (v >= 50) return 'bg-[#e4cc4a] text-slate-800 border border-white/70';
+      return 'bg-[#d84f4b] text-white border border-white/70';
+   }
+
+   function renderLegend(lowerBetter) {
+      if (!legendEl) return;
+      var good = lowerBetter ? '&lt; 50%' : '&gt; 80%';
+      var bad = lowerBetter ? '&gt; 80%' : '&lt; 50%';
+      legendEl.innerHTML =
+         '<span class="inline-flex items-center gap-1.5 rounded-md bg-white/80 px-2 py-1"><span class="h-2.5 w-2.5 bg-[#4e9f63]"></span><span>' +
+         good +
+         '</span></span>' +
+         '<span class="inline-flex items-center gap-1.5 rounded-md bg-white/80 px-2 py-1"><span class="h-2.5 w-2.5 bg-[#e4cc4a]"></span>50-79%</span>' +
+         '<span class="inline-flex items-center gap-1.5 rounded-md bg-white/80 px-2 py-1"><span class="h-2.5 w-2.5 bg-[#d84f4b]"></span><span>' +
+         bad +
+         '</span></span>';
+   }
+
+   function collectWeeksAndBySite(drill) {
+      var weeks = [];
+      drill.forEach(function (d) {
+         var n = normalizeWeek(d.week);
+         if (n != null && !isNaN(n) && weeks.indexOf(n) === -1) weeks.push(n);
+      });
+      weeks.sort(function (a, b) {
+         return a - b;
+      });
+      var last4Weeks = weeks.slice(-4);
+      var bySite = {};
+      drill.forEach(function (d) {
+         var site = String(d.site || '').trim() || 'Unknown Site';
+         var n = normalizeWeek(d.week);
+         if (n == null || isNaN(n) || last4Weeks.indexOf(n) === -1) return;
+         if (!bySite[site]) bySite[site] = {};
+         bySite[site][n] = d.data;
+      });
+      return { last4Weeks: last4Weeks, bySite: bySite };
+   }
+
+   function mergeSiteList(bySite) {
+      var set = {};
+      (allSitesMaster || []).forEach(function (s) {
+         if (s) set[s] = true;
+      });
+      Object.keys(bySite || {}).forEach(function (s) {
+         if (s) set[s] = true;
+      });
+      return Object.keys(set).sort(function (a, b) {
+         return a.localeCompare(b);
+      });
+   }
+
+   function renderHeatmap(drill, lowerBetter) {
+      var pack = collectWeeksAndBySite(drill);
+      var last4Weeks = pack.last4Weeks;
+      var bySite = pack.bySite;
+      var sites = mergeSiteList(bySite);
+
+      if (!last4Weeks.length || !sites.length) {
+         heatmapRoot.innerHTML =
+            '<table class="w-full min-w-[620px] border-separate border-spacing-0 text-sm"><tbody><tr><td class="px-3 py-6 text-center text-xs text-slate-500" colspan="' +
+            (last4Weeks.length + 1) +
+            '">Belum ada data heatmap untuk indikator ini.</td></tr></tbody></table>';
+         return pack;
+      }
+
+      var theadHtml =
+         '<table class="w-full min-w-[620px] border-separate border-spacing-0 text-sm">' +
+         '<thead class="text-[13px] font-semibold text-slate-700"><tr>' +
+         '<th class="sticky left-0 z-10 bg-[#f8fafc] px-3 py-2 text-left shadow-[2px_0_0_0_rgba(226,232,240,0.9)]"></th>';
+      last4Weeks.forEach(function (w) {
+         theadHtml += '<th class="px-4 py-2 text-center">' + esc(weekLabel(w)) + '</th>';
+      });
+      theadHtml += '</tr></thead><tbody>';
+
+      var bodyHtml = '';
+      sites.forEach(function (site) {
+         bodyHtml += '<tr>';
+         bodyHtml +=
+            '<td class="sticky left-0 z-[1] whitespace-nowrap border-b border-slate-100 bg-white px-3 py-2 text-[14px] font-semibold text-slate-700 shadow-[2px_0_0_0_rgba(226,232,240,0.85)]">' +
+            esc(site) +
+            '</td>';
+         last4Weeks.forEach(function (w) {
+            var raw = bySite[site] ? bySite[site][w] : null;
+            var display = raw != null && raw !== '' ? String(raw) : '-';
+            bodyHtml +=
+               '<td class="h-10 min-w-[5rem] border-b border-slate-100 px-3 py-2 text-center text-[11px] font-semibold tabular-nums ' +
+               heatClass(raw, lowerBetter) +
+               '">' +
+               esc(display) +
+               '</td>';
+         });
+         bodyHtml += '</tr>';
+      });
+      theadHtml += bodyHtml + '</tbody></table>';
+      heatmapRoot.innerHTML = theadHtml;
+      return pack;
+   }
+
+   function lineColor(index, total) {
+      var hue = Math.round((index * (360 / Math.max(total, 1))) % 360);
+      return 'hsl(' + hue + ' 70% 45%)';
+   }
+
+   function computeYMax(datasets) {
+      var maxV = 0;
+      var has = false;
+      datasets.forEach(function (ds) {
+         (ds.data || []).forEach(function (v) {
+            if (v != null && !isNaN(v)) {
+               has = true;
+               maxV = Math.max(maxV, v);
+            }
+         });
+      });
+      if (!has) return 100;
+      if (maxV > 100) return Math.ceil(maxV * 1.1);
+      if (maxV <= 15) return Math.max(5, Math.ceil(maxV * 1.25));
+      return 100;
+   }
+
+   function destroyTrendChart() {
+      if (trendChartInstance) {
+         try {
+            trendChartInstance.destroy();
+         } catch (e) {
+            /* ignore */
+         }
+         trendChartInstance = null;
+      }
+   }
+
+   function buildTrendChart(drill, last4Weeks, indicatorLabel, siteCount) {
+      destroyTrendChart();
+      if (!trendCanvas || !window.Chart) return;
+      if (!last4Weeks || !last4Weeks.length) return;
+
+      var chartWeeks = last4Weeks.slice();
+      var drillRows = drill.filter(function (d) {
+         var week = normalizeWeek(d.week);
+         return week != null && chartWeeks.indexOf(week) !== -1;
+      });
+      var siteAgg = {};
+      drillRows.forEach(function (d) {
+         var site = d.site || 'Unknown';
+         var week = normalizeWeek(d.week);
+         var value = parseNumber(d.data);
+         if (week === null || value === null) return;
+         if (!siteAgg[site]) siteAgg[site] = {};
+         siteAgg[site][week] = value;
+      });
+
+      var allSites = Object.keys(siteAgg)
+         .map(function (site) {
+            var vals = chartWeeks.map(function (w) {
+               return siteAgg[site][w];
+            }).filter(function (v) {
+               return typeof v === 'number';
+            });
+            var avg = vals.length ? vals.reduce(function (a, b) {
+               return a + b;
+            }, 0) / vals.length : 0;
+            return { site: site, avg: avg };
+         })
+         .sort(function (a, b) {
+            return b.avg - a.avg;
+         });
+
+      var datasets = allSites.map(function (item, index) {
+         return {
+            label: item.site,
+            data: chartWeeks.map(function (week) {
+               return siteAgg[item.site][week] != null ? siteAgg[item.site][week] : null;
+            }),
+            borderColor: lineColor(index, allSites.length),
+            backgroundColor: lineColor(index, allSites.length),
+            tension: 0.35,
+            borderWidth: 2.2,
+            pointRadius: 2,
+            pointHoverRadius: 4,
+            pointHitRadius: 10,
+            spanGaps: true,
+         };
+      });
+
+      var labels = chartWeeks.map(function (w) {
+         return 'W' + w;
+      });
+      var safeDatasets = datasets.length
+         ? datasets
+         : [
+              {
+                 label: (indicatorLabel || 'No Data') + ' (no data)',
+                 data: labels.map(function () {
+                    return null;
+                 }),
+                 borderColor: '#94A3B8',
+                 backgroundColor: '#94A3B8',
+                 tension: 0.4,
+                 borderWidth: 2,
+                 pointRadius: 3,
+              },
+           ];
+
+      var yMax = computeYMax(safeDatasets);
+      var ctx = trendCanvas.getContext('2d');
+      if (!ctx) return;
+
+      try {
+         trendChartInstance = new Chart(ctx, {
+            type: 'line',
+            data: { labels: labels, datasets: safeDatasets },
+            options: {
+               responsive: true,
+               maintainAspectRatio: false,
+               interaction: { mode: 'nearest', intersect: false },
+               plugins: {
+                  legend: {
+                     display: true,
+                     position: 'bottom',
+                     labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle' },
+                  },
+                  title: { display: true, text: indicatorLabel || '' },
+               },
+               scales: {
+                  x: {
+                     grid: { display: false, drawBorder: false },
+                     border: { display: false },
+                  },
+                  y: {
+                     min: 0,
+                     max: yMax,
+                     ticks: {
+                        callback: function (v) {
+                           return yMax <= 20 ? String(v) : v + '%';
                         },
-                    },
-                });
+                     },
+                     grid: { display: false, drawBorder: false },
+                     border: { display: false },
+                  },
+               },
             },
-            isLowerBetter() {
-                const selected = this.normalizeText(this.indicator);
-                const matchedKey = Object.keys(this.indicatorCategoryMap ?? {})
-                    .find((key) => this.normalizeText(key) === selected);
-                const category = this.normalizeText(matchedKey ? this.indicatorCategoryMap[matchedKey] : '');
-                return category.includes('kecil');
-            },
-            heatClass(value) {
-                const v = this.parseNumber(value);
-                if (v === null) return 'bg-[#cfd8dc] text-slate-600 border border-white/70';
-                if (this.isLowerBetter()) {
-                    if (v > 80) return 'bg-[#d84f4b] text-white border border-white/70';
-                    if (v >= 50) return 'bg-[#e4cc4a] text-slate-800 border border-white/70';
-                    return 'bg-[#4e9f63] text-white border border-white/70';
-                }
-                if (v > 80) return 'bg-[#4e9f63] text-white border border-white/70';
-                if (v >= 50) return 'bg-[#e4cc4a] text-slate-800 border border-white/70';
-                return 'bg-[#d84f4b] text-white border border-white/70';
-            },
-            getSiteFilteredRows() {
-                const sites = this.selectedSites.length ? this.selectedSites : this.siteChoices;
-                return this.rawData.filter((row) => {
-                    const week = this.parseWeek(row.week);
-                    if (week === null || !this.last4Weeks.includes(week)) return false;
-                    if (!sites.includes(row.site)) return false;
-                    if (this.indicator && !this.indicatorMatches(row.detail_indikator)) return false;
-                    return true;
-                });
-            },
-            buildHeatmap() {
-                // Heatmap selalu tampilkan seluruh site untuk indikator aktif.
-                const rows = this.rawData.filter((row) => {
-                    const week = this.parseWeek(row.week);
-                    if (week === null || !this.last4Weeks.includes(week)) return false;
-                    if (this.indicator && !this.indicatorMatches(row.detail_indikator)) return false;
-                    return true;
-                });
-                const bySite = {};
-                rows.forEach((row) => {
-                    bySite[row.site] = bySite[row.site] || {};
-                    bySite[row.site][this.parseWeek(row.week)] = row.data;
-                });
-                const sites = [...this.siteChoices].sort((a, b) => a.localeCompare(b));
-                this.heatmapRows = sites.map((site) => ({
-                    site,
-                    values: this.last4Weeks.map((week) => ({
-                        week,
-                        value: bySite[site]?.[week] ?? null,
-                        display: bySite[site]?.[week] ?? '-',
-                    })),
-                }));
-            },
-            buildDetailsAndLeaderboard() {
-                if (this.indicatorMatches('% Blindspot GR')) {
-                    this.detailMode = 'blindspot_gr';
-                    const siteFilters = this.selectedSites.length ? this.selectedSites : this.siteChoices;
-                    const filtered = this.blindspotGrRows.filter((row) => siteFilters.includes(String(row.site ?? '').trim()));
-                    let n0 = 0;
-                    let n1 = 0;
-                    let nNull = 0;
-                    const bySite = {};
-                    filtered.forEach((row) => {
-                        const site = String(row.site ?? '').trim() || '-';
-                        if (!bySite[site]) {
-                            bySite[site] = { site, n0: 0, n1: 0, nNull: 0, total: 0, entries: [] };
-                        }
-                        const block = bySite[site];
-                        const v = row.blindspot_tbc_dari_bc;
-                        if (v === 0 || v === '0') {
-                            block.n0++;
-                            n0++;
-                        } else if (v === 1 || v === '1') {
-                            block.n1++;
-                            n1++;
-                        } else {
-                            block.nNull++;
-                            nNull++;
-                        }
-                        block.total++;
-                        block.entries.push({
-                            perusahaan_pic: row.perusahaan_pic ?? '-',
-                            blindspot_tbc_dari_bc: v,
-                            year_of_date_for_join: row.year_of_date_for_join ?? null,
-                        });
-                    });
-                    this.blindspotGrTotals = { n0, n1, nNull, total: filtered.length };
-                    this.blindspotGrBySite = Object.values(bySite).sort((a, b) => a.site.localeCompare(b.site));
-                    const pivotGroups = this.blindspotGrPivot.siteGroups || [];
-                    this.blindspotGrPivotSiteGroups = pivotGroups.filter((g) => siteFilters.includes(String(g.site ?? '').trim()));
-                    this.detailedRows = [];
-                    this.leaderboard = this.blindspotGrBySite
-                        .map((b) => ({
-                            site: b.site,
-                            score: b.total ? Math.round(100 * (1 - b.n1 / b.total)) : 0,
-                        }))
-                        .sort((a, b) => b.score - a.score)
-                        .slice(0, 3);
-                    return;
-                }
+         });
+      } catch (err) {
+         /* ignore */
+      }
 
-                if (this.isAggregatorBehealthIndicator()) {
-                    this.detailMode = 'aggregator_behealth';
-                    this.detailedRows = [];
-                    const rankMap = {};
-                    this.getSiteFilteredRows().forEach((row) => {
-                        const score = this.parseNumber(row.data) ?? 0;
-                        rankMap[row.site] = rankMap[row.site] || { site: row.site, score: 0, count: 0 };
-                        rankMap[row.site].score += score;
-                        rankMap[row.site].count += 1;
-                    });
-                    this.leaderboard = Object.values(rankMap)
-                        .map((it) => ({ site: it.site, score: Math.round(it.score / Math.max(it.count, 1)) }))
-                        .sort((a, b) => b.score - a.score)
-                        .slice(0, 3);
-                    return;
-                }
+      if (chartWrap && typeof siteCount === 'number') {
+         chartWrap.style.height = Math.max(420, siteCount * 40 + 110) + 'px';
+      }
+   }
 
-                if (this.indicatorMatches('% Sertifikasi Pengawas Teknis')) {
-                    this.detailMode = 'sertifikasi_pengawas_teknis';
-                    const siteFilters = this.selectedSites.length ? this.selectedSites : this.siteChoices;
-                    const filtered = this.sertifikatTeknisRows.filter((row) => siteFilters.includes(String(row.site ?? '').trim()));
-                    let cukup = 0;
-                    let tidakCukup = 0;
-                    const bySite = {};
-                    filtered.forEach((row) => {
-                        const site = String(row.site ?? '').trim() || '-';
-                        const isTidak = this.normalizeText(row.jumlah_sid ?? '').includes('tidak cukup');
-                        if (!bySite[site]) {
-                            bySite[site] = { site, cukup: 0, tidakCukup: 0, total: 0, entries: [] };
-                        }
-                        const block = bySite[site];
-                        if (isTidak) {
-                            block.tidakCukup++;
-                            tidakCukup++;
-                        } else {
-                            block.cukup++;
-                            cukup++;
-                        }
-                        block.total++;
-                        block.entries.push({
-                            nama_perusahaan: row.nama_perusahaan ?? '-',
-                            work_permit: row.work_permit ?? '-',
-                            jumlah_sid: row.jumlah_sid ?? '-',
-                        });
-                    });
-                    this.sertifikatTeknisTotals = {
-                        cukup,
-                        tidakCukup,
-                        total: filtered.length,
-                        siteCount: Object.keys(bySite).length,
-                    };
-                    this.sertifikatTeknisBySite = Object.values(bySite).sort((a, b) => a.site.localeCompare(b.site));
-                    this.detailedRows = filtered.map((row) => ({
-                        nama_perusahaan: row.nama_perusahaan ?? '-',
-                        site: row.site ?? '-',
-                        main_kon: row.main_kon ?? '-',
-                        departement: row.departement ?? '-',
-                        work_permit: row.work_permit ?? '-',
-                        jumlah_sid: row.jumlah_sid ?? '-',
-                    }));
+   function openDrill(index) {
+      var row = rows[index];
+      if (!row) return;
+      var drill = row.drill_down;
+      if (!Array.isArray(drill)) drill = [];
+      var kategori = row.kategori || 'Semakin tinggi semakin bagus';
+      var lowerBetter = isLowerBetterFromKategori(kategori);
 
-                    const scoreMap = {};
-                    this.detailedRows.forEach((row) => {
-                        const site = row.site ?? '-';
-                        scoreMap[site] = scoreMap[site] || { site, score: 0, count: 0 };
-                        scoreMap[site].score += this.normalizeText(row.jumlah_sid).includes('tidak cukup') ? 0 : 100;
-                        scoreMap[site].count += 1;
-                    });
-                    this.leaderboard = Object.values(scoreMap)
-                        .map((row) => ({
-                            site: row.site,
-                            score: Math.round(row.score / Math.max(row.count, 1)),
-                        }))
-                        .sort((a, b) => b.score - a.score)
-                        .slice(0, 3);
-                    return;
-                }
+      destroyTrendChart();
+      heatmapRoot.innerHTML = '';
 
-                this.detailMode = 'default';
-                const thematicMap = {};
-                this.thematicRows.forEach((row) => {
-                    if (row.detail_indikator && !thematicMap[row.detail_indikator]) thematicMap[row.detail_indikator] = row.tematik ?? '-';
-                });
+      if (drill.length === 0) {
+         emptyEl.classList.remove('hidden');
+         panelEl.classList.add('hidden');
+         if (subEl) {
+            subEl.textContent =
+               (row.tematik || '') + (row.detail_indikator ? ' · ' + row.detail_indikator : '');
+         }
+      } else {
+         emptyEl.classList.add('hidden');
+         panelEl.classList.remove('hidden');
+         if (subEl) {
+            subEl.textContent =
+               (row.tematik || '') +
+               (row.week != null ? ' · Week ' + row.week : '') +
+               (row.detail_indikator ? ' · ' + row.detail_indikator : '');
+         }
+         renderLegend(lowerBetter);
+         var pack = renderHeatmap(drill, lowerBetter);
+         var sites = mergeSiteList(pack.bySite);
+         if (chartSubEl) {
+            chartSubEl.textContent = 'Indikator: ' + (row.detail_indikator || '—');
+         }
+         var indLabel = row.detail_indikator || '';
 
-                const details = this.getSiteFilteredRows().map((row) => {
-                    const nilai = this.parseNumber(row.data) ?? 0;
-                    const grade = this.gradeFromValue(nilai);
-                    return {
-                        week: this.parseWeek(row.week) ?? '-',
-                        site: row.site ?? '-',
-                        thematic: this.selectedThematic === 'All' ? (thematicMap[row.detail_indikator] ?? '-') : this.selectedThematic,
-                        indikator: row.detail_indikator ?? '-',
-                        nilai: row.data ?? '-',
-                        grade,
-                        status: nilai >= 50 ? 'On Track' : 'Alert',
-                    };
-                });
+         modal.classList.remove('hidden');
+         modal.setAttribute('aria-hidden', 'false');
+         document.body.classList.add('overflow-hidden');
 
-                this.detailedRows = this.selectedThematic === 'All'
-                    ? details
-                    : details.filter((row) => row.thematic === this.selectedThematic);
+         requestAnimationFrame(function () {
+            requestAnimationFrame(function () {
+               buildTrendChart(drill, pack.last4Weeks, indLabel, sites.length);
+            });
+         });
+         return;
+      }
 
-                const rankMap = {};
-                this.detailedRows.forEach((row) => {
-                    const score = this.parseNumber(row.nilai) ?? 0;
-                    rankMap[row.site] = rankMap[row.site] || { site: row.site, score: 0, count: 0 };
-                    rankMap[row.site].score += score;
-                    rankMap[row.site].count += 1;
-                });
-                this.leaderboard = Object.values(rankMap)
-                    .map((it) => ({ site: it.site, score: Math.round(it.score / Math.max(it.count, 1)) }))
-                    .sort((a, b) => b.score - a.score)
-                    .slice(0, 3);
-            },
-            buildTrendChart() {
-                let chartWeeks = [...this.last4Weeks];
-                // Strict: indikator terpilih + last 4 week aktif (tanpa fallback minggu lain).
-                const rows = this.rawData.filter((row) => {
-                    const week = this.parseWeek(row.week);
-                    if (week === null || !chartWeeks.includes(week)) return false;
-                    if (this.indicator && !this.indicatorMatches(row.detail_indikator)) return false;
-                    return true;
-                });
+      modal.classList.remove('hidden');
+      modal.setAttribute('aria-hidden', 'false');
+      document.body.classList.add('overflow-hidden');
+   }
 
-                const siteAgg = {};
-                rows.forEach((row) => {
-                    const site = row.site ?? 'Unknown';
-                    const week = this.parseWeek(row.week);
-                    const value = this.parseNumber(row.data);
-                    if (week === null || value === null) return;
-                    siteAgg[site] = siteAgg[site] || {};
-                    siteAgg[site][week] = value;
-                });
+   function closeDrill() {
+      destroyTrendChart();
+      modal.classList.add('hidden');
+      modal.setAttribute('aria-hidden', 'true');
+      document.body.classList.remove('overflow-hidden');
+   }
 
-                const allSites = Object.keys(siteAgg)
-                    .map((site) => {
-                        const vals = chartWeeks.map((w) => siteAgg[site][w]).filter((v) => typeof v === 'number');
-                        const avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
-                        return { site, avg };
-                    })
-                    .sort((a, b) => b.avg - a.avg);
+   document.querySelectorAll('.js-thematic-alignment-row').forEach(function (tr) {
+      tr.addEventListener('click', function () {
+         var i = parseInt(tr.getAttribute('data-thematic-index'), 10);
+         if (!isNaN(i)) openDrill(i);
+      });
+      tr.addEventListener('keydown', function (e) {
+         if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            var i = parseInt(tr.getAttribute('data-thematic-index'), 10);
+            if (!isNaN(i)) openDrill(i);
+         }
+      });
+   });
 
-                const lineColor = (index, total) => {
-                    const hue = Math.round((index * (360 / Math.max(total, 1))) % 360);
-                    return `hsl(${hue} 70% 45%)`;
-                };
-
-                const datasets = allSites.map((item, index) => ({
-                    label: item.site,
-                    data: chartWeeks.map((week) => siteAgg[item.site][week] ?? null),
-                    borderColor: lineColor(index, allSites.length),
-                    backgroundColor: lineColor(index, allSites.length),
-                    tension: 0.35,
-                    borderWidth: 2.2,
-                    pointRadius: 2,
-                    pointHoverRadius: 4,
-                    pointHitRadius: 10,
-                    spanGaps: true,
-                }));
-
-                const canvas = this.$refs.trendChart;
-                if (!canvas || !window.Chart) return;
-
-                const ctx = canvas.getContext('2d');
-                if (!ctx) return;
-
-                const labels = chartWeeks.map((w) => `W${w}`);
-                const safeDatasets = datasets.length
-                    ? datasets
-                    : [{
-                        label: `${this.indicator || 'No Data'} (no data)`,
-                        data: labels.map(() => null),
-                        borderColor: '#94A3B8',
-                        backgroundColor: '#94A3B8',
-                        tension: 0.4,
-                        borderWidth: 2,
-                        pointRadius: 3,
-                    }];
-
-                if (chartInstance) {
-                    try {
-                        chartInstance.destroy();
-                        chartInstance = null;
-                    } catch (error) {
-                        chartInstance = null;
-                    }
-                }
-
-                try {
-                    chartInstance = new Chart(ctx, {
-                        type: 'line',
-                        data: { labels, datasets: safeDatasets },
-                        options: {
-                            responsive: true,
-                            maintainAspectRatio: false,
-                            interaction: { mode: 'nearest', intersect: false },
-                            plugins: {
-                                legend: {
-                                    display: true,
-                                    position: 'bottom',
-                                    labels: { boxWidth: 10, boxHeight: 10, usePointStyle: true, pointStyle: 'circle' },
-                                },
-                                title: { display: true, text: this.indicator },
-                            },
-                            scales: {
-                                x: {
-                                    grid: { display: false, drawBorder: false },
-                                    border: { display: false },
-                                },
-                                y: {
-                                    min: 0,
-                                    max: 100,
-                                    ticks: { callback: (v) => `${v}%` },
-                                    grid: { display: false, drawBorder: false },
-                                    border: { display: false },
-                                },
-                            },
-                        },
-                    });
-                } catch (error) {
-                    throw error;
-                }
-            },
-            refreshAll() {
-                this.rebuildIndicatorWeekChoices();
-                this.updateIndicatorKpiFromProgram();
-                const week = Number(this.selectedWeek);
-                this.last4Weeks = [week - 3, week - 2, week - 1, week].filter((v) => v > 0);
-                this.buildHeatmap();
-                this.buildDetailsAndLeaderboard();
-                this.buildTrendChart();
-                queueMicrotask(() => this.buildSertifikatTeknisChart());
-            },
-        };
-    }
+   modal.querySelectorAll('[data-peer-thematic-drill-close]').forEach(function (el) {
+      el.addEventListener('click', closeDrill);
+   });
+   document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) closeDrill();
+   });
+})();
 </script>

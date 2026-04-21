@@ -338,7 +338,7 @@
             $nGrCard = count($grValsCard);
             $grCardTotalDisplay = $nGrCard > 0 ? (int) round(array_sum($grValsCard)) : 0;
             /** Hardcode tampilan angka utama kartu Jumlah GR (bukan jumlah L4W dari JSON) */
-            $grCardTotalDisplay = 3;
+            $grCardTotalDisplay = 1;
             $grCardWoWPct = null;
             $grCardWkPrev = 'W13';
             $grCardWkLast = 'W14';
@@ -1761,6 +1761,21 @@
         var peerAreaNonKritisBySite = @json($peerAreaNonKritisBySite ?? null);
         var peerAreaKritisBySite = @json($peerAreaKritisBySite ?? null);
         var peerTbcCategoryTrend = @json($tbcCategoryTrendData ?? null);
+        /** Nilai per minggu dari baris bySite; key bisa beda kapitalisasi (W14 vs w14). */
+        function peerWeekValueFromRow(row, wk) {
+          if (!row || typeof row !== 'object') return 0;
+          if (Object.prototype.hasOwnProperty.call(row, wk)) {
+            return Number(row[wk]) || 0;
+          }
+          var wkLc = String(wk).toLowerCase();
+          var k;
+          for (k in row) {
+            if (Object.prototype.hasOwnProperty.call(row, k) && String(k).toLowerCase() === wkLc) {
+              return Number(row[k]) || 0;
+            }
+          }
+          return 0;
+        }
         function peerMetricEvalFromJson(json, site, defaultBar) {
           if (!json || !json.weeks || !json.bySite) return null;
           var weeks = json.weeks;
@@ -1776,7 +1791,7 @@
               sum = 0;
               Object.keys(bySite).forEach(function (s) {
                 row = bySite[s];
-                if (row && row[wk] != null) sum += Number(row[wk]) || 0;
+                sum += peerWeekValueFromRow(row, wk);
               });
               values.push(sum);
             }
@@ -1784,7 +1799,7 @@
             row = bySite[site] || {};
             for (i = 0; i < weeks.length; i++) {
               wk = weeks[i];
-              values.push(Number(row[wk]) || 0);
+              values.push(peerWeekValueFromRow(row, wk));
             }
           }
           return {
@@ -2037,7 +2052,7 @@
           var grCardTotal = document.getElementById('peer-kpi-gr-total');
           var grCardTrend = document.getElementById('peer-kpi-gr-trend');
           var grCardMiniHost = document.getElementById('peer-kpi-gr-compliance-mini-bar-host');
-          if (grCardTotal) grCardTotal.textContent = '3';
+          if (grCardTotal) grCardTotal.textContent = '1';
           if (grCardTrend) grCardTrend.innerHTML = peerHazardWowHtml(vals, weeks);
           if (grCardMiniHost) grCardMiniHost.innerHTML = renderPeerHazardMiniBarHtml(ev, true);
         }

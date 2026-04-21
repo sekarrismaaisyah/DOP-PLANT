@@ -375,6 +375,25 @@ class PeerPressureEdukasiController extends Controller
     }
 
     /**
+     * Ambil nilai minggu dari baris bySite; key minggu di JSON bisa beda huruf besar/kecil (W14 vs w14).
+     *
+     * @param  array<string, mixed>  $row
+     */
+    private function peerMetricWeekValueFromRow(array $row, string $wk): float
+    {
+        if (array_key_exists($wk, $row)) {
+            return (float) $row[$wk];
+        }
+        foreach ($row as $k => $v) {
+            if (is_string($k) && strcasecmp($k, $wk) === 0) {
+                return (float) $v;
+            }
+        }
+
+        return 0.0;
+    }
+
+    /**
      * Agregasi mini-chart metrik per site dari JSON (Hazard, TBC, dll.).
      *
      * @param  array<string, mixed>  $json
@@ -403,14 +422,14 @@ class PeerPressureEdukasiController extends Controller
                     if (! is_array($row)) {
                         continue;
                     }
-                    $sum += (int) ($row[$wk] ?? 0);
+                    $sum += (int) round($this->peerMetricWeekValueFromRow($row, $wk));
                 }
                 $values[] = (float) $sum;
             }
         } else {
             $row = is_array($bySite[$site] ?? null) ? $bySite[$site] : [];
             foreach ($weeks as $wk) {
-                $values[] = (float) ($row[$wk] ?? 0);
+                $values[] = $this->peerMetricWeekValueFromRow($row, $wk);
             }
         }
 
