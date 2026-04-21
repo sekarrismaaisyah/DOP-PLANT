@@ -219,6 +219,16 @@
     $allSitesFromPoint = array_keys($allSitesFromPoint);
     sort($allSitesFromPoint);
 
+    /** Tidak ditampilkan di ringkasan gap / heatmap modal (nama site sesuai point.json). */
+    $peerThematicExcludedSitesFromSummary = [
+        'HO' => true,
+        'EKSPLORASI' => true,
+        'MARINE' => true,
+    ];
+    $allSitesFromPoint = array_values(array_filter($allSitesFromPoint, static function (string $site) use ($peerThematicExcludedSitesFromSummary): bool {
+        return ! isset($peerThematicExcludedSitesFromSummary[$site]);
+    }));
+
     $thematicRowsForJs = [];
     foreach ($thematicRows as $r) {
         $kat = trim((string) ($r['kategori'] ?? ''));
@@ -266,9 +276,196 @@
             'rowspan' => $span,
         ];
     }
+
+    /** Nilai numerik per detail_indikator + site + minggu (rata-rata jika duplikat). */
+    $peerThematicValueGrid = [];
+    foreach ($pointRows as $p) {
+        $d = trim((string) ($p['detail_indikator'] ?? ''));
+        $s = trim((string) ($p['site'] ?? ''));
+        $w = $peerThematicNormalizeWeek($p['week'] ?? null);
+        $v = $peerThematicParsePercent($p['data'] ?? '');
+        if ($d === '' || $s === '' || $w === null || $v === null) {
+            continue;
+        }
+        if (! isset($peerThematicValueGrid[$d][$s][$w])) {
+            $peerThematicValueGrid[$d][$s][$w] = [];
+        }
+        $peerThematicValueGrid[$d][$s][$w][] = $v;
+    }
+    foreach ($peerThematicValueGrid as $d => $bySite) {
+        foreach ($bySite as $s => $byW) {
+            foreach ($byW as $w => $vals) {
+                $peerThematicValueGrid[$d][$s][$w] = array_sum($vals) / count($vals);
+            }
+        }
+    }
+
+    $peerThematicBaselineIndicators = [
+        '% Daily Coverage Area Kritis' => true,
+        '% Post Event L2 up' => true,
+    ];
+
+    /** Semakin tinggi: default gap jika W16 &lt; 80%; indikator ini gap jika W16 &lt; 100% (target penuh). */
+    $peerThematicFullTargetHigherIndicators = [
+        '% Pengisian Aggregator BeHealth' => true,
+    ];
+
+    /** Tidak dimasukkan ringkasan gap. */
+    $peerThematicGapExcludedIndicators = [
+        '% Sertifikasi Pengawas Teknis' => true,
+        'Kesesuaian Setting Parameter AI Alert Fatigue DMS' => true,
+        '% Sertifikasi Tenaga Teknis' => true,
+    ];
+
+    /** Aman jika W16 = 0%; gap jika &gt; 0 (label untuk tooltip). */
+    $peerThematicZeroIsSafeIndicators = [
+        '% Blindspot TBC' => 'blindspot TBC',
+        '% Blindspot GR' => 'blindspot GR',
+        '% Operator dengan Jam Tidur Kurang' => 'operator dengan jam tidur kurang',
+        'Operator dengan Jam Tidur Kurang' => 'operator dengan jam tidur kurang',
+    ];
+
+    $fnPeerThematicLowerBetter = static function (string $kategori): bool {
+        $k = strtolower($kategori);
+
+        return strpos($k, 'kecil') !== false && strpos($k, 'tinggi') === false;
+    };
+
+    /** Satu kategori per detail_indikator: baris terakhir di JSON menang (override). */
+    $uniqueProgramIndicators = [];
+    foreach ($thematicRows as $tr) {
+        $d = trim((string) ($tr['detail_indikator'] ?? ''));
+        if ($d === '') {
+            continue;
+        }
+        $kat = trim((string) ($tr['kategori'] ?? ''));
+        $uniqueProgramIndicators[$d] = $kat === '' ? 'Semakin tinggi semakin bagus' : $kat;
+    }
+
+    $peerThematicSiteGapSummary = [];
+    foreach ($allSitesFromPoint as $site) {
+        $gaps = [];
+        foreach ($uniqueProgramIndicators as $detail => $kategori) {
+            if (isset($peerThematicGapExcludedIndicators[$detail])) {
+                continue;
+            }
+
+            $lower = $fnPeerThematicLowerBetter($kategori);
+            $useBaseline = isset($peerThematicBaselineIndicators[$detail]);
+
+            if ($useBaseline) {
+                $sumB = 0.0;
+                $nB = 0;
+                for ($wk = 1; $wk <= 16; $wk++) {
+                    if (isset($peerThematicValueGrid[$detail][$site][$wk])) {
+                        $sumB += $peerThematicValueGrid[$detail][$site][$wk];
+                        $nB++;
+                    }
+                }
+                if ($nB === 0) {
+                    continue;
+                }
+                $baseline = $sumB / $nB;
+                $w16 = $peerThematicValueGrid[$detail][$site][16] ?? null;
+                if ($w16 === null) {
+                    continue;
+                }
+                if ($w16 <= $baseline) {
+                    $gaps[] = [
+                        'detail' => $detail,
+                        'reason' => 'W16 '.number_format($w16, 1, '.', '').'% ≤ baseline '.number_format($baseline, 1, '.', '').'% (rata-rata skor per minggu yang tersedia W1–W16).',
+                    ];
+                }
+
+                continue;
+            }
+
+            if (isset($peerThematicZeroIsSafeIndicators[$detail])) {
+                $v0 = $peerThematicValueGrid[$detail][$site][16] ?? null;
+                if ($v0 !== null && $v0 > 1e-6) {
+                    $gaps[] = [
+                        'detail' => $detail,
+                        'reason' => 'W16 '.number_format($v0, 2, '.', '').'% ('.$peerThematicZeroIsSafeIndicators[$detail].'; 0% = aman).',
+                    ];
+                }
+
+                continue;
+            }
+
+            $v16 = $peerThematicValueGrid[$detail][$site][16] ?? null;
+            if ($v16 === null) {
+                continue;
+            }
+            if ($lower) {
+                if ($v16 > 50.0) {
+                    $gaps[] = [
+                        'detail' => $detail,
+                        'reason' => 'W16 '.number_format($v16, 1, '.', '').'% (semakin kecil semakin bagus — di atas ambang aman).',
+                    ];
+                }
+            } elseif (isset($peerThematicFullTargetHigherIndicators[$detail])) {
+                if ($v16 < 100.0 - 1e-6) {
+                    $gaps[] = [
+                        'detail' => $detail,
+                        'reason' => 'W16 '.number_format($v16, 2, '.', '').'% (target pengisian penuh 100%).',
+                    ];
+                }
+            } elseif ($v16 < 80.0) {
+                $gaps[] = [
+                    'detail' => $detail,
+                    'reason' => 'W16 '.number_format($v16, 1, '.', '').'% (semakin tinggi semakin bagus — belum pada zona hijau).',
+                ];
+            }
+        }
+        $peerThematicSiteGapSummary[] = [
+            'site' => $site,
+            'gap_count' => count($gaps),
+            'gaps' => $gaps,
+        ];
+    }
+    usort($peerThematicSiteGapSummary, static function (array $a, array $b): int {
+        if ($a['gap_count'] !== $b['gap_count']) {
+            return $b['gap_count'] <=> $a['gap_count'];
+        }
+
+        return strcmp((string) $a['site'], (string) $b['site']);
+    });
 @endphp
 <div class="grid grid-cols-1 gap-6 lg:grid-cols-12">
    <div class="min-w-0 lg:col-span-12">
+      <div class="mb-6 overflow-hidden rounded-2xl border border-outline-variant/30 bg-white p-5 shadow-sm anchored-card sm:p-6">
+         <div class="flex flex-col gap-2 border-b border-outline-variant/15 pb-4 sm:flex-row sm:items-start sm:justify-between">
+            <div>
+               <h3 class="font-headline text-lg font-bold text-on-surface">Ringkasan gap per site</h3>
+            </div>
+         </div>
+         <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+            @foreach ($peerThematicSiteGapSummary as $sumRow)
+            <div class="rounded-xl border border-outline-variant/25 bg-[#fafbfc] p-4">
+               <div class="flex items-start justify-between gap-2">
+                  <span class="text-sm font-bold text-on-surface">{{ $sumRow['site'] }}</span>
+                  @if (($sumRow['gap_count'] ?? 0) > 0)
+                  <span class="shrink-0 rounded-full bg-rose-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-rose-800">{{ $sumRow['gap_count'] }} gap</span>
+                  @else
+                  <span class="shrink-0 rounded-full bg-emerald-100 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wide text-emerald-800">0 gap</span>
+                  @endif
+               </div>
+               @if (! empty($sumRow['gaps']))
+               <ul class="mt-3 max-h-40 list-inside list-disc space-y-1 overflow-y-auto text-[11px] text-on-surface-variant">
+                  @foreach ($sumRow['gaps'] as $g)
+                  <li class="pl-0.5" title="{{ e($g['reason'] ?? '') }}">
+                     <span class="font-semibold text-on-surface">{{ $g['detail'] ?? '' }}</span>
+                  </li>
+                  @endforeach
+               </ul>
+               <p class="mt-2 text-[10px] text-on-surface-variant/90">Arahkan kursor ke item untuk melihat alasan.</p>
+               @else
+               <p class="mt-3 text-[11px] text-emerald-800/90">Tidak ada indikator dalam status gap untuk pemeriksaan ini.</p>
+               @endif
+            </div>
+            @endforeach
+         </div>
+      </div>
       <div class="overflow-hidden rounded-2xl border border-outline-variant/30 bg-white anchored-card">
          <div class="flex flex-col gap-4 border-b border-outline-variant/20 p-6 lg:flex-row lg:items-start lg:justify-between">
             <div>
