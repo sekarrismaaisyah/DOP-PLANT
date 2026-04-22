@@ -41,6 +41,11 @@ use App\Http\Controllers\AlignmentController;
 use App\Http\Controllers\BecomlineController;
 use App\Http\Controllers\PilotProjectValidationController;
 use App\Http\Controllers\PilotProjectValidationProjectController;
+use App\Http\Controllers\PilotProjectValidationRoadmapPeriodController;
+use App\Http\Controllers\PilotProjectValidationTimelineTaskController;
+use App\Http\Controllers\PilotProjectValidationGateController;
+use App\Http\Controllers\PilotProjectValidationMetricController;
+use App\Http\Controllers\PilotProjectValidationHistorySnapshotController;
 use App\Http\Controllers\PeerPressureEdukasiController;
 use App\Http\Controllers\PeerPressureEdukasiDataController;
 use App\Http\Controllers\PeerPressureSbsKelompokController;
@@ -163,6 +168,17 @@ Route::middleware(['auth'])->group(function () {
             ->where('key', 'arcas|mea|mgc')
             ->name('project-pdf.show');
         Route::resource('projects', PilotProjectValidationProjectController::class)->except(['show']);
+        Route::resource('roadmap-periods', PilotProjectValidationRoadmapPeriodController::class)->except(['show']);
+        Route::get('/roadmap-periods/template-excel', [PilotProjectValidationRoadmapPeriodController::class, 'downloadTemplateExcel'])->name('roadmap-periods.template-excel');
+        Route::post('/roadmap-periods/import-excel', [PilotProjectValidationRoadmapPeriodController::class, 'importExcel'])->name('roadmap-periods.import-excel');
+        Route::resource('timeline-tasks', PilotProjectValidationTimelineTaskController::class)->except(['show']);
+        Route::get('/timeline-tasks/template-excel', [PilotProjectValidationTimelineTaskController::class, 'downloadTemplateExcel'])->name('timeline-tasks.template-excel');
+        Route::post('/timeline-tasks/import-excel', [PilotProjectValidationTimelineTaskController::class, 'importExcel'])->name('timeline-tasks.import-excel');
+        Route::resource('gates', PilotProjectValidationGateController::class)->except(['show']);
+        Route::get('/gates/template-excel', [PilotProjectValidationGateController::class, 'downloadTemplateExcel'])->name('gates.template-excel');
+        Route::post('/gates/import-excel', [PilotProjectValidationGateController::class, 'importExcel'])->name('gates.import-excel');
+        Route::resource('metrics', PilotProjectValidationMetricController::class)->except(['show']);
+        Route::resource('history-snapshots', PilotProjectValidationHistorySnapshotController::class)->except(['show']);
     });
 
     // Becomline (CRUD + Import Excel)

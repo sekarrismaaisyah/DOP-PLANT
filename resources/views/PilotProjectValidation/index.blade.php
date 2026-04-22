@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <meta name="csrf-token" content="{{ csrf_token() }}" />
   <title>Gate Go No Go Cards</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
   <script>
     window.PilotProjectValidation = {
       portfolioUrl: @json(route('pilot-project-validation.portfolio.show')),
@@ -16,24 +19,25 @@
   </script>
   <style>
     :root {
-      --bg: #f4f7fa;
+      --bg: #f0f2f5;
       --surface: #ffffff;
-      --surface-soft: #f8fbfd;
-      --line: #d9e3ec;
-      --line-strong: #c7d4df;
-      --text: #17324d;
-      --muted: #64788b;
-      --blue: #2e6f99;
-      --blue-2: #5f86a4;
-      --green: #20b26b;
-      --green-soft: #e9f8f0;
-      --amber: #d89410;
-      --amber-soft: #fff4de;
-      --red: #d9534f;
-      --red-soft: #fdeceb;
-      --slate: #6b7f93;
-      --slate-soft: #eef3f7;
-      --shadow: 0 10px 28px rgba(21, 50, 74, 0.08);
+      --surface-soft: #f8fafc;
+      --line: #dfe3e6;
+      --line-strong: #abadaf;
+      --text: #2c2f31;
+      --muted: #595c5e;
+      --blue: #3952bc;
+      --blue-2: #748cf9;
+      --green: #2b8a57;
+      --green-soft: #e8f6ee;
+      --amber: #a2741b;
+      --amber-soft: #f9f1dc;
+      --red: #b42348;
+      --red-soft: #fbe7ec;
+      --slate: #5d6368;
+      --slate-soft: #edf1f3;
+      --shadow: 0 4px 0 rgba(0, 0, 0, 0.04), 0 12px 24px -6px rgba(0, 0, 0, 0.14);
+      --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.08);
       --radius-xl: 22px;
       --radius-lg: 16px;
       --radius-md: 12px;
@@ -43,32 +47,34 @@
 
     body {
       margin: 0;
-      font-family: Inter, Segoe UI, Roboto, Arial, sans-serif;
+      font-family: "Poppins", "Inter", "Segoe UI", Roboto, Arial, sans-serif;
       color: var(--text);
-      background: linear-gradient(180deg, #f4f7fa 0%, #edf3f7 100%);
+      background: var(--bg);
     }
 
     a { color: inherit; }
 
     .page {
-      max-width: 1500px;
+      max-width: 1560px;
       margin: 0 auto;
-      padding: 24px;
+      padding: 28px;
     }
 
     .hero {
-      background: linear-gradient(135deg, #557999, #7090ab);
-      color: #fff;
+      background: #fff;
+      color: var(--text);
       border-radius: 22px;
-      padding: 22px 24px;
+      padding: 24px 26px;
       box-shadow: var(--shadow);
+      border: 1px solid rgba(171, 173, 175, 0.35);
     }
 
     .hero h1 {
       margin: 0 0 8px;
-      font-size: 30px;
+      font-size: 28px;
       line-height: 1.1;
       letter-spacing: -0.03em;
+      color: var(--blue);
     }
 
     .hero p {
@@ -76,7 +82,7 @@
       max-width: 1080px;
       font-size: 14px;
       line-height: 1.6;
-      color: rgba(255,255,255,0.94);
+      color: var(--muted);
     }
 
     .toolbar,
@@ -93,7 +99,14 @@
     }
 
     .toolbar { margin-top: 14px; }
-    .nav-shell { margin-top: 18px; }
+    .nav-shell {
+      margin-top: 18px;
+      background: #fff;
+      border: 1px solid rgba(171, 173, 175, 0.35);
+      border-radius: 14px;
+      padding: 8px;
+      box-shadow: var(--shadow-soft);
+    }
     .toolbar .btn-ghost { margin-left: auto; }
 
     .pill,
@@ -119,9 +132,9 @@
     .pill,
     .file-name {
       padding: 8px 12px;
-      background: rgba(255,255,255,0.14);
-      border-color: rgba(255,255,255,0.18);
-      color: #fff;
+      background: #f5f7f9;
+      border-color: rgba(171, 173, 175, 0.35);
+      color: var(--muted);
     }
 
     .file-name {
@@ -136,26 +149,54 @@
     .btn-mini {
       padding: 9px 12px;
       background: #fff;
-      border-color: var(--line-strong);
+      border-color: rgba(171, 173, 175, 0.45);
       color: var(--text);
       cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .nav-btn {
+      background: transparent;
+      border: none;
+      border-bottom: 2px solid transparent;
+      border-radius: 0;
+      padding: 8px 14px;
+      font-weight: 700;
+      color: var(--muted);
     }
 
     .nav-btn.active,
     .btn-primary {
       padding: 9px 12px;
-      background: linear-gradient(135deg, var(--blue), var(--blue-2));
+      background: linear-gradient(135deg, var(--blue), #4c67d8);
       color: #fff;
-      box-shadow: 0 8px 18px rgba(46,111,153,0.18);
+      box-shadow: 0 8px 18px rgba(57, 82, 188, 0.22);
       cursor: pointer;
+    }
+
+    .nav-btn.active {
+      background: transparent;
+      box-shadow: none;
+      border-bottom-color: var(--blue);
+      color: var(--blue);
+      padding: 8px 14px;
     }
 
     .btn-danger {
       padding: 9px 12px;
-      background: linear-gradient(135deg, #d9534f, #ef7d79);
+      background: linear-gradient(135deg, #b42348, #db4f72);
       color: #fff;
-      box-shadow: 0 8px 18px rgba(217,83,79,0.15);
+      box-shadow: 0 8px 18px rgba(180, 35, 72, 0.2);
       cursor: pointer;
+    }
+
+    .nav-btn:hover,
+    .btn-secondary:hover,
+    .btn-ghost:hover,
+    .btn-mini:hover {
+      border-color: rgba(57, 82, 188, 0.45);
+      color: var(--blue);
+      transform: translateY(-1px);
     }
 
     .btn-mini {
@@ -182,6 +223,7 @@
       margin: 0;
       font-size: 22px;
       letter-spacing: -0.02em;
+      color: var(--blue);
     }
 
     .section-title p,
@@ -215,7 +257,7 @@
       background: var(--surface);
       border: 1px solid var(--line);
       border-radius: var(--radius-xl);
-      box-shadow: var(--shadow);
+      box-shadow: var(--shadow-soft);
     }
 
     .overview-card,
@@ -261,8 +303,32 @@
     .project-card,
     .input-card { overflow: hidden; }
 
+    .project-card,
+    .input-card,
+    .overview-card,
+    .curve-card,
+    .legend-card,
+    .notice-card,
+    .format-card {
+      box-shadow: var(--shadow);
+    }
+
+    .project-card .panel,
+    .input-card .panel,
+    .modal-section,
+    .project-card .mini-card,
+    .input-card .mini-card,
+    .project-card .status-box,
+    .input-card .status-box,
+    .project-card .curve-box,
+    .input-card .curve-box {
+      box-shadow: none;
+      background: #f8fafd;
+      border-color: rgba(201, 214, 227, 0.75);
+    }
+
     .decision-box {
-      background: var(--surface);
+      background: var(--surface-soft);
       border: 1px solid var(--line);
       border-radius: var(--radius-lg);
       padding: 14px 16px;
@@ -298,18 +364,18 @@
     .dashboard-body {
       display: grid;
       grid-template-columns: 1.05fr 1fr;
-      gap: 16px;
-      padding: 18px 20px 20px;
+      gap: 24px;
+      padding: 22px 24px 24px;
     }
 
     .panel,
     .modal-section { overflow: hidden; }
 
     .panel-head,
-    .modal-section-head { padding: 14px 16px 0; }
+    .modal-section-head { padding: 16px 18px 0; }
 
     .panel-inner,
-    .modal-section-inner { padding: 14px 16px 16px; }
+    .modal-section-inner { padding: 16px 18px 18px; }
 
     .panel-title {
       font-size: 12px;
@@ -328,10 +394,10 @@
 
     .progress-band {
       display: grid;
-      grid-template-columns: 1fr 180px 180px;
-      gap: 12px;
+      grid-template-columns: 1fr minmax(190px, 220px) minmax(190px, 220px);
+      gap: 14px;
       align-items: center;
-      margin-bottom: 12px;
+      margin-bottom: 14px;
     }
 
     .progress-info h4,
@@ -389,7 +455,7 @@
     .status-grid,
     .dashboard-meta-stack {
       display: grid;
-      gap: 10px;
+      gap: 14px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
@@ -397,9 +463,9 @@
     .mini-card,
     .curve-box {
       background: var(--surface-soft);
-      border: 1px solid var(--line);
+      border: 1px solid rgba(201, 214, 227, 0.7);
       border-radius: var(--radius-lg);
-      padding: 12px 14px;
+      padding: 14px 16px;
     }
 
     .mini-value,
@@ -428,8 +494,8 @@
       color: var(--muted);
       padding: 8px 10px;
       border-radius: 12px;
-      background: var(--surface-soft);
-      border: 1px solid var(--line);
+      background: #f9fbfd;
+      border: 1px solid rgba(201, 214, 227, 0.7);
     }
 
     .status-mini-item { grid-template-columns: 1fr auto; }
@@ -455,11 +521,11 @@
     .dashboard-collapse-head {
       display: grid;
       grid-template-columns: 1.2fr 260px auto;
-      gap: 14px;
+      gap: 18px;
       align-items: start;
-      padding: 18px 20px;
+      padding: 20px 24px;
       border-bottom: 1px solid var(--line);
-      background: linear-gradient(180deg, #f9fbfc 0%, #f2f6f9 100%);
+      background: #f8fbfd;
     }
 
     .dashboard-collapse-actions,
@@ -474,11 +540,11 @@
     .collapse-head {
       display: grid;
       grid-template-columns: 1.15fr 280px;
-      gap: 14px;
+      gap: 18px;
       align-items: start;
-      padding: 18px 20px;
+      padding: 20px 24px;
       border-bottom: 1px solid var(--line);
-      background: linear-gradient(180deg, #f9fbfc 0%, #f2f6f9 100%);
+      background: #f8fbfd;
     }
 
     .collapse-main {
@@ -538,7 +604,7 @@
     .table-wrap {
       overflow: auto;
       border: 1px solid var(--line);
-      border-radius: 16px;
+      border-radius: 14px;
       background: #fff;
     }
 
@@ -561,16 +627,16 @@
       position: sticky;
       top: 0;
       z-index: 1;
-      background: #f4f8fb;
+      background: #f8fafc;
       color: var(--muted);
       font-size: 10px;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.15em;
       font-weight: 900;
     }
 
     .clean-table tr:last-child td { border-bottom: none; }
-    .clean-table tbody tr:hover td { background: #fbfdff; }
+    .clean-table tbody tr:hover td { background: #f8fafc; }
 
     .table-input,
     .table-select,
@@ -642,7 +708,7 @@
       overflow: auto;
       border: 1px solid var(--line);
       border-radius: 18px;
-      background: linear-gradient(180deg, #fbfdff 0%, #f4f8fb 100%);
+      background: #fbfdff;
       padding: 8px;
     }
 
@@ -904,6 +970,7 @@
   <div class="page">
     <section class="hero">
       <h1>Key Pilot Projects &amp; Technical Validation</h1>
+      <!-- <p>Konsep tampilan mengikuti gaya Peer Pressure Edukasi: clean, fokus data, dan konsisten untuk monitoring harian serta validasi keputusan GO/NO-GO.</p> -->
       
       <div class="toolbar">
         <div class="pill">Bobot gate: G1 25% · G2 30% · G3 25% · G4 20%</div>
@@ -919,6 +986,7 @@
     <div class="nav-shell">
       <button class="nav-btn active" id="dashboardTab" type="button">Dashboard</button>
       <button class="nav-btn" id="inputTab" type="button">Input &amp; impor Excel</button>
+      <a href="/pilot-project-validation/projects" class="nav-btn" id="" type="button">Database Input</a>
     </div>
 
     <section class="page-view active" id="dashboardPage">
@@ -945,7 +1013,7 @@
           <div id="needSupportList" style="margin-top:12px;"></div>
         </div>
       </section>
-      <section class="dashboard-grid" id="dashboardGrid"></section>
+      <!--<section class="dashboard-grid" id="dashboardGrid"></section> -->
     </section>
 
     <section class="page-view" id="inputPage">
@@ -1044,6 +1112,74 @@
           <div class="section-title" style="margin-bottom:10px;">
             <h3 style="margin:0 0 6px;font-size:16px;letter-spacing:-0.02em;">Referensi nama kolom (header baris pertama di Excel)</h3>
             <p class="muted-copy" style="margin:0;">Sesuaikan nama sheet dan kolom dengan tabel berikut agar impor berhasil.</p>
+          </div>
+
+          <div class="format-card" style="margin-bottom:16px;">
+            <div class="legend-label">Skema tabel & relasi</div>
+            <h4>Struktur database Pilot Project Validation</h4>
+            <div class="table-note" style="margin-top:8px;">
+              Tabel yang digunakan: <code>pilot_project_validation_projects</code>, <code>pilot_project_validation_roadmap_periods</code>, <code>pilot_project_validation_timeline_tasks</code>, <code>pilot_project_validation_gates</code>, <code>pilot_project_validation_metrics</code>, <code>pilot_project_validation_history_snapshots</code>.
+            </div>
+            <div class="table-wrap" style="margin-top:10px;">
+              <table class="clean-table" style="min-width:980px;">
+                <thead>
+                  <tr>
+                    <th>Tabel</th>
+                    <th>Primary Key</th>
+                    <th>Foreign Key</th>
+                    <th>Relasi</th>
+                    <th>Keterangan</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td><code>pilot_project_validation_projects</code></td>
+                    <td><code>id</code></td>
+                    <td>-</td>
+                    <td>Parent utama</td>
+                    <td>Satu proyek punya banyak periode roadmap, gate, dan history.</td>
+                  </tr>
+                  <tr>
+                    <td><code>pilot_project_validation_roadmap_periods</code></td>
+                    <td><code>id</code></td>
+                    <td><code>project_id</code> -&gt; <code>projects.id</code></td>
+                    <td>projects 1:N roadmap_periods</td>
+                    <td>Satu baris periode roadmap untuk satu proyek.</td>
+                  </tr>
+                  <tr>
+                    <td><code>pilot_project_validation_timeline_tasks</code></td>
+                    <td><code>id</code></td>
+                    <td><code>roadmap_period_id</code> -&gt; <code>roadmap_periods.id</code></td>
+                    <td>roadmap_periods 1:N timeline_tasks</td>
+                    <td>Task detail per periode roadmap.</td>
+                  </tr>
+                  <tr>
+                    <td><code>pilot_project_validation_gates</code></td>
+                    <td><code>id</code></td>
+                    <td><code>project_id</code> -&gt; <code>projects.id</code></td>
+                    <td>projects 1:N gates</td>
+                    <td>Definisi gate per proyek.</td>
+                  </tr>
+                  <tr>
+                    <td><code>pilot_project_validation_metrics</code></td>
+                    <td><code>id</code></td>
+                    <td><code>gate_id</code> -&gt; <code>gates.id</code></td>
+                    <td>gates 1:N metrics</td>
+                    <td>Metrik penilaian pada setiap gate.</td>
+                  </tr>
+                  <tr>
+                    <td><code>pilot_project_validation_history_snapshots</code></td>
+                    <td><code>id</code></td>
+                    <td><code>project_id</code> -&gt; <code>projects.id</code></td>
+                    <td>projects 1:N history_snapshots</td>
+                    <td>Snapshot historis progress dan decision score.</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="table-note" style="margin-top:10px;">
+              Semua relasi FK di atas menggunakan <strong>cascadeOnDelete</strong>: jika proyek dihapus, data turunan (periode, task, gate, metrik, history) ikut terhapus.
+            </p>
           </div>
 
           <div class="format-grid">
