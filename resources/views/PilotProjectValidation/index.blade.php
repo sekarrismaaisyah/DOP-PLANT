@@ -1076,8 +1076,17 @@
         </div>
         <div class="legend-card">
           <div class="legend-label">List Need Support</div>
-          <div class="notice-copy" style="margin-top:8px;">Daftar kebutuhan support per proyek. Nilainya diambil dari kolom <strong>Need Support (PIC)</strong> pada data proyek.</div>
-          <div id="needSupportList" style="margin-top:12px;"></div>
+          <div class="notice-copy" style="margin-top:8px;">Daftar kebutuhan support per proyek. Nilainya diambil dari kolom <strong>Support</strong> pada data proyek.</div>
+          <div id="needSupportList" style="margin-top:12px;">
+            @forelse(($needSupportProjects ?? []) as $supportRow)
+              <div class="curve-box" style="margin-top:10px;">
+                <div class="legend-label">{{ $supportRow->project_name }}</div>
+                <div class="curve-value">{{ trim((string) $supportRow->support) !== '' ? $supportRow->support : 'Tidak ada need support' }}</div>
+              </div>
+            @empty
+              <div class="curve-value">Belum ada proyek.</div>
+            @endforelse
+          </div>
         </div>
       </section>
       <section class="dashboard-grid" id="dashboardGrid"></section>
@@ -2542,7 +2551,7 @@
           return;
         }
         root.innerHTML = projects.map(function (project) {
-          const support = String(project.needSupportPic || '').trim();
+          const support = String(project.support || '').trim();
           return '<div class="curve-box" style="margin-top:10px;">'
             + '<div class="legend-label">' + escapeHtml(project.name || 'Tanpa nama proyek') + '</div>'
             + '<div class="curve-value">' + escapeHtml(support || 'Tidak ada need support') + '</div>'

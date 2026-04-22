@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PilotProjectValidation\PilotProjectValidationPortfolioSaveRequest;
+use App\Models\PilotProjectValidationProject;
 use App\Services\PilotProjectValidation\PilotProjectValidationExcelImportService;
 use App\Services\PilotProjectValidation\PilotProjectValidationExcelTemplateService;
 use App\Services\PilotProjectValidation\PilotProjectValidationPortfolioService;
@@ -29,7 +30,11 @@ class PilotProjectValidationController extends Controller
 
     public function index(): View
     {
-        return view('PilotProjectValidation.index');
+        $needSupportProjects = PilotProjectValidationProject::query()
+            ->orderBy('project_name')
+            ->get(['project_name', 'support']);
+
+        return view('PilotProjectValidation.index', compact('needSupportProjects'));
     }
 
     public function portfolio(): JsonResponse
