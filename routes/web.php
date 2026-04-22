@@ -178,6 +178,8 @@ Route::middleware(['auth'])->group(function () {
         Route::get('/gates/template-excel', [PilotProjectValidationGateController::class, 'downloadTemplateExcel'])->name('gates.template-excel');
         Route::post('/gates/import-excel', [PilotProjectValidationGateController::class, 'importExcel'])->name('gates.import-excel');
         Route::resource('metrics', PilotProjectValidationMetricController::class)->except(['show']);
+        Route::get('/metrics/template-excel', [PilotProjectValidationMetricController::class, 'downloadTemplateExcel'])->name('metrics.template-excel');
+        Route::post('/metrics/import-excel', [PilotProjectValidationMetricController::class, 'importExcel'])->name('metrics.import-excel');
         Route::resource('history-snapshots', PilotProjectValidationHistorySnapshotController::class)->except(['show']);
     });
 

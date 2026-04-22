@@ -297,11 +297,41 @@
       gap: 16px;
     }
 
+    .dashboard-grid {
+      grid-template-columns: 1fr;
+      gap: 18px;
+      align-items: start;
+    }
+
     .curve-layout { grid-template-columns: 1.4fr 320px; margin-bottom: 16px; }
     .format-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
     .project-card,
     .input-card { overflow: hidden; }
+
+    .dashboard-grid .project-card {
+      position: relative;
+      border-radius: 24px;
+      border: 1px solid rgba(146, 165, 193, 0.34);
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+      box-shadow: 0 10px 28px -16px rgba(47, 84, 124, 0.45), 0 2px 8px rgba(31, 55, 89, 0.08);
+      transition: transform 0.18s ease, box-shadow 0.18s ease;
+    }
+
+    .dashboard-grid .project-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 14px 34px -18px rgba(47, 84, 124, 0.52), 0 8px 18px -12px rgba(31, 55, 89, 0.28);
+    }
+
+    .dashboard-grid .project-card::before {
+      content: '';
+      position: absolute;
+      inset: 0 0 auto 0;
+      height: 4px;
+      background: linear-gradient(90deg, #3952bc 0%, #6289ff 45%, #3aa0d9 100%);
+      opacity: 0.88;
+      pointer-events: none;
+    }
 
     .project-card,
     .input-card,
@@ -371,8 +401,18 @@
     .panel,
     .modal-section { overflow: hidden; }
 
+    .dashboard-body .panel {
+      border-color: rgba(169, 187, 214, 0.55);
+      background: linear-gradient(180deg, #fcfdff 0%, #f4f8ff 100%);
+    }
+
     .panel-head,
     .modal-section-head { padding: 16px 18px 0; }
+
+    .dashboard-body .panel-head {
+      border-bottom: 1px solid rgba(169, 187, 214, 0.42);
+      padding-bottom: 12px;
+    }
 
     .panel-inner,
     .modal-section-inner { padding: 16px 18px 18px; }
@@ -468,6 +508,11 @@
       padding: 14px 16px;
     }
 
+    .status-box {
+      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
+      border-color: rgba(162, 183, 212, 0.55);
+    }
+
     .mini-value,
     .curve-value {
       font-size: 14px;
@@ -525,7 +570,18 @@
       align-items: start;
       padding: 20px 24px;
       border-bottom: 1px solid var(--line);
-      background: #f8fbfd;
+      background: linear-gradient(135deg, #f6f9ff 0%, #edf4ff 54%, #f6fbff 100%);
+    }
+
+    .dashboard-summary h3 {
+      color: #244274;
+      font-size: 24px;
+      margin-bottom: 4px;
+    }
+
+    .dashboard-meta-stack .mini-card {
+      background: #ffffff;
+      border-color: rgba(169, 187, 214, 0.7);
     }
 
     .dashboard-collapse-actions,
@@ -600,6 +656,17 @@
 
     .project-collapsible.is-open .collapse-chevron,
     .dashboard-collapsible.is-open .collapse-chevron { transform: rotate(180deg); }
+
+    .dashboard-empty {
+      border-radius: 22px;
+      border: 1px dashed rgba(116, 140, 171, 0.52);
+      background: linear-gradient(180deg, #f9fbff 0%, #edf4ff 100%);
+      padding: 28px 24px;
+      text-align: center;
+      color: #365375;
+      font-size: 13px;
+      font-weight: 600;
+    }
 
     .table-wrap {
       overflow: auto;
@@ -1013,7 +1080,7 @@
           <div id="needSupportList" style="margin-top:12px;"></div>
         </div>
       </section>
-      <!--<section class="dashboard-grid" id="dashboardGrid"></section> -->
+      <section class="dashboard-grid" id="dashboardGrid"></section>
     </section>
 
     <section class="page-view" id="inputPage">
@@ -1871,7 +1938,15 @@
         }
       ];
 
-      const projects = JSON.parse(JSON.stringify(seedProjects));
+      const projects = [];
+
+      function restoreSeedProjects() {
+        projects.length = 0;
+        JSON.parse(JSON.stringify(seedProjects)).forEach(function (project) { projects.push(project); });
+        historySnapshots = [];
+        expandedProjects = new Set([0]);
+        expandedDashboardProjects = new Set([0]);
+      }
 
       function newTask() {
         return {
@@ -2417,6 +2492,10 @@
 
       function renderDashboard() {
         const root = document.getElementById('dashboardGrid');
+        if (!projects.length) {
+          root.innerHTML = '<div class="dashboard-empty">Belum ada data proyek. Tambahkan proyek baru atau impor data dari Excel/Database untuk menampilkan dashboard.</div>';
+          return;
+        }
         root.innerHTML = projects.map(function (project, pIdx) {
           const overall = overallDecision(project);
           const isOpen = expandedDashboardProjects.has(pIdx);
@@ -3238,10 +3317,14 @@
               closeModal();
               setImportStatus('Berhasil dimuat', data.projects.length + ' proyek dimuat dari database ke halaman ini.', 'notice-card notice-success');
             } else {
-              setImportStatus('Database kosong', 'Belum ada data tersimpan. Lanjutkan dengan contoh default, impor Excel, atau input manual lalu klik Simpan ke server.', 'notice-card notice-warning');
+              restoreSeedProjects();
+              renderAll();
+              setImportStatus('Database kosong', 'Belum ada data tersimpan. Ditampilkan contoh default. Anda bisa input/impor lalu Simpan ke server.', 'notice-card notice-warning');
             }
           })
           .catch(function (err) {
+            restoreSeedProjects();
+            renderAll();
             setImportStatus('Gagal memuat', err && err.message ? err.message : 'Tidak dapat menghubungi server.', 'notice-card notice-error');
           });
       }
@@ -3348,14 +3431,10 @@
         document.getElementById('importExcelSaveDbBtn').onclick = function () { importExcelToDatabase(); };
         document.getElementById('downloadTemplateBtn').onclick = function () { downloadTemplateWorkbook(); };
         document.getElementById('resetBtn').onclick = function () {
-          projects.length = 0;
-          JSON.parse(JSON.stringify(seedProjects)).forEach(function (project) { projects.push(project); });
-          historySnapshots = [];
+          restoreSeedProjects();
           selectedWorkbookFile = null;
           document.getElementById('excelFileInput').value = '';
           document.getElementById('selectedFileName').textContent = 'Belum ada file';
-          expandedProjects = new Set([0]);
-          expandedDashboardProjects = new Set([0]);
           renderAll();
           closeModal();
           setImportStatus('Siap', 'Data dikembalikan ke contoh default di browser. Belum mengubah database — gunakan Simpan ke server jika perlu.', 'notice-card');
@@ -3420,8 +3499,8 @@
       }
 
       bindGlobalEvents();
-      renderAll();
-      setImportStatus('Siap', 'Pilih file Excel lalu Impor workbook, atau edit manual di bawah. Gunakan Simpan ke server untuk menyimpan ke database.', 'notice-card');
+      setImportStatus('Memuat…', 'Mengambil data dashboard dari database.', 'notice-card');
+      loadPortfolioFromServer();
     })();
   </script>
 </body>
