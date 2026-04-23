@@ -138,6 +138,30 @@
       line-height: 1.64;
     }
 
+    .hero-kicker {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(51, 73, 184, 0.2);
+      background: rgba(51, 73, 184, 0.08);
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+    }
+
+    .hero-brand {
+      margin-top: 6px;
+      font-size: clamp(15px, 1.4vw, 18px);
+      font-weight: 600;
+      color: var(--text-secondary);
+      letter-spacing: 0.01em;
+    }
+
     .toolbar,
     .nav-shell,
     .inline-actions,
@@ -1219,9 +1243,10 @@
 <body>
   <div class="page">
     <section class="hero">
+      <div class="hero-kicker">Pilot Project Validation</div>
       <h1>Mining Automation Key Pilot Projects &amp; Technical Validation</h1>
-      <h1>Berau Coal</h1>
-      <!-- <p>Konsep tampilan mengikuti gaya Peer Pressure Edukasi: clean, fokus data, dan konsisten untuk monitoring harian serta validasi keputusan GO/NO-GO.</p> -->
+      <div class="hero-brand">Berau Coal</div>
+      <p>Monitoring kemajuan proyek otomasi, evaluasi gate GO/NO-GO, dan validasi teknis dalam satu dashboard yang ringkas.</p>
       
       <!-- <div class="toolbar">
         <div class="pill"></div>
