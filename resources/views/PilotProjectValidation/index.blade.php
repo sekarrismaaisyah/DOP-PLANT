@@ -935,6 +935,19 @@
       outline: 2px solid rgba(57, 82, 188, 0.45);
       outline-offset: 3px;
     }
+    .task-card--click {
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .task-card--click:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+      border-color: rgba(90, 120, 180, 0.4);
+    }
+    .task-card--click:focus {
+      outline: 2px solid rgba(57, 82, 188, 0.45);
+      outline-offset: 3px;
+    }
 
     .gate-detail-summary {
       display: grid;
@@ -2619,10 +2632,17 @@
         const innerWidth = width - left - right;
         const innerHeight = height - top - bottom;
         const maxIndex = Math.max(points.length - 1, 1);
+        const today = new Date();
+        const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+        const activeIndexes = points.map(function (point, index) {
+          return parsePeriodDate(point.label) <= currentMonthStart ? index : -1;
+        }).filter(function (index) { return index >= 0; });
+        const lastActiveIndex = activeIndexes.length ? Math.max.apply(null, activeIndexes) : -1;
         function xPos(index) { return left + innerWidth * index / maxIndex; }
         function yPos(value) { return top + innerHeight - Math.max(0, Math.min(100, value)) / 100 * innerHeight; }
-        function buildPath(key) {
-          return points.map(function (point, index) {
+        function buildPath(key, untilIndex) {
+          if (untilIndex < 0) return '';
+          return points.slice(0, untilIndex + 1).map(function (point, index) {
             return (index === 0 ? 'M' : 'L') + ' ' + xPos(index).toFixed(2) + ' ' + yPos(point[key]).toFixed(2);
           }).join(' ');
         }
@@ -2643,8 +2663,8 @@
           + gridLines
           + '<line x1="' + left + '" y1="' + top + '" x2="' + left + '" y2="' + (height - bottom) + '" stroke="#b8c7d4" stroke-width="1.4"></line>'
           + '<line x1="' + left + '" y1="' + (height - bottom) + '" x2="' + (width - right) + '" y2="' + (height - bottom) + '" stroke="#b8c7d4" stroke-width="1.4"></line>'
-          + '<path d="' + buildPath('progress') + '" fill="none" stroke="#2e6f99" stroke-width="' + (compact ? 3 : 3.5) + '" stroke-linecap="round" stroke-linejoin="round"></path>'
-          + '<path d="' + buildPath('decision') + '" fill="none" stroke="#d89410" stroke-width="' + (compact ? 3 : 3.5) + '" stroke-linecap="round" stroke-linejoin="round"></path>'
+          + (lastActiveIndex >= 0 ? '<path d="' + buildPath('progress', lastActiveIndex) + '" fill="none" stroke="#2e6f99" stroke-width="' + (compact ? 3 : 3.5) + '" stroke-linecap="round" stroke-linejoin="round"></path>' : '')
+          + (lastActiveIndex >= 0 ? '<path d="' + buildPath('decision', lastActiveIndex) + '" fill="none" stroke="#d89410" stroke-width="' + (compact ? 3 : 3.5) + '" stroke-linecap="round" stroke-linejoin="round"></path>' : '')
           + progressDots + decisionDots + xLabels
           + '<text x="' + left + '" y="' + (top - 6) + '" fill="#64788b" font-size="' + (compact ? 10 : 11) + '">0–100%</text>'
           + '</svg>';
@@ -2694,8 +2714,8 @@
         ].join('');
       }
 
-      function renderTaskBlock(period) {
-        return '<div class="mini-card">'
+      function renderTaskBlock(period, projectIdx, periodIdx) {
+        return '<div class="mini-card task-card--click" role="button" tabindex="0" data-action="view-period-detail" data-project="' + projectIdx + '" data-period="' + periodIdx + '" title="Klik untuk detail periode dan task">'
           + '<div class="table-actions" style="justify-content:space-between; margin-bottom:8px;">'
           + '<div><div class="label">' + escapeHtml(period.period) + '</div><div class="helper-text">' + escapeHtml(period.phase) + '</div></div>'
           + '<div class="task-status ' + taskStatusClass(period.status) + '">' + escapeHtml(period.status.toUpperCase()) + '</div>'
@@ -2749,7 +2769,7 @@
               + '<div class="progress-band"><div class="progress-info"><h4>Project Completion</h4><p>Current progress based on the latest values from Input Page.</p></div><div class="mini-card"><div class="label">Progress</div><div class="mini-value">' + project.progress + '%</div></div><div class="mini-card"><div class="label">Program Window</div><div class="mini-value">' + escapeHtml(project.currentPeriod) + '</div></div></div>'
               + '<div class="bar-head"><span>Progress Bar</span><span>' + project.progress + '%</span></div><div class="bar-track"><div class="bar-fill" style="width:' + project.progress + '%">' + project.progress + '%</div></div>'
               + '<div class="status-grid" style="margin-top:14px;">' + gateHtml + '</div></div></section>'
-              + '<section class="panel"><div class="panel-head"><div class="panel-title">Kurva periode &amp; timeline</div><div class="panel-subtitle">Kurva proyek dan daftar tugas per periode.</div></div><div class="panel-inner"><div class="project-curve-stack">' + renderProjectCurvePanel(project) + '<div class="task-list" style="gap:12px;">' + project.roadmap.map(renderTaskBlock).join('') + '</div></div></div></section>'
+              + '<section class="panel"><div class="panel-head"><div class="panel-title">Kurva periode &amp; timeline</div><div class="panel-subtitle">Kurva proyek dan daftar tugas per periode.</div></div><div class="panel-inner"><div class="project-curve-stack">' + renderProjectCurvePanel(project) + '<div class="task-list" style="gap:12px;">' + project.roadmap.map(function (period, periodIdx) { return renderTaskBlock(period, pIdx, periodIdx); }).join('') + '</div></div></div></section>'
               + '</div>' : '')
             + '</article>';
         }).join('');
@@ -3014,6 +3034,49 @@
         if (!projects[projectIdx] || !projects[projectIdx].gates[gateIdx]) return;
         activeModal = { projectIdx: projectIdx, gateIdx: gateIdx, mode: 'detail' };
         document.getElementById('modalContent').innerHTML = renderGateDetailModal(projectIdx, gateIdx);
+        document.getElementById('modalOverlay').classList.add('active');
+      }
+
+      function renderPeriodDetailModal(projectIdx, periodIdx) {
+        const project = projects[projectIdx];
+        if (!project || !project.roadmap || !project.roadmap[periodIdx]) return '';
+        const period = project.roadmap[periodIdx];
+        const tasks = (period.tasks || []);
+        const doneCount = tasks.filter(function (t) { return t.status === 'done'; }).length;
+        const progressCount = tasks.filter(function (t) { return t.status === 'progress'; }).length;
+        const planCount = tasks.filter(function (t) { return t.status === 'plan'; }).length;
+        const riskCount = tasks.filter(function (t) { return t.status === 'risk'; }).length;
+        const taskRows = tasks.map(function (task, taskIdx) {
+          return '<tr>'
+            + '<td>' + (taskIdx + 1) + '</td>'
+            + '<td>' + escapeHtml(task.text || 'Tanpa deskripsi tugas') + '</td>'
+            + '<td>' + escapeHtml(task.owner || '-') + '</td>'
+            + '<td><span class="task-status ' + taskStatusClass(task.status) + '">' + escapeHtml(String(task.status || 'plan').toUpperCase()) + '</span></td>'
+            + '</tr>';
+        }).join('');
+        return '<section class="modal-hero">'
+          + '<div class="premium-label">' + escapeHtml(project.name || 'Tanpa nama proyek') + '</div>'
+          + '<h2>' + escapeHtml(period.period || 'Periode') + ' <span>Detail Timeline</span></h2>'
+          + '<p>Detail aktivitas pada periode ini. Klik tab Input untuk melakukan perubahan data.</p>'
+          + '<div class="modal-flags"><div class="modal-flag">Phase: ' + escapeHtml(period.phase || '-') + '</div><div class="modal-flag">Status periode: ' + escapeHtml(String(period.status || 'plan').toUpperCase()) + '</div><div class="modal-flag">Jumlah tugas: ' + tasks.length + '</div></div>'
+          + '</section>'
+          + '<section class="modal-section"><div class="modal-section-head"><div class="panel-title">Ringkasan status task</div><div class="panel-subtitle">Komposisi task dalam periode ini.</div></div><div class="modal-section-inner">'
+          + '<div class="gate-detail-summary">'
+          + '<div class="mini-card"><div class="label">Done</div><div class="modal-value" style="font-size:clamp(18px,2.5vw,24px)">' + doneCount + '</div></div>'
+          + '<div class="mini-card"><div class="label">Progress</div><div class="modal-value" style="font-size:clamp(18px,2.5vw,24px)">' + progressCount + '</div></div>'
+          + '<div class="mini-card"><div class="label">Plan</div><div class="modal-value" style="font-size:clamp(18px,2.5vw,24px)">' + planCount + '</div></div>'
+          + '<div class="mini-card"><div class="label">Risk</div><div class="modal-value" style="font-size:clamp(18px,2.5vw,24px)">' + riskCount + '</div></div>'
+          + '</div></div></section>'
+          + '<section class="modal-section"><div class="modal-section-head"><div class="panel-title">Detail task</div><div class="panel-subtitle">Daftar lengkap task, PIC, dan status.</div></div><div class="modal-section-inner">'
+          + '<div class="table-wrap"><table class="clean-table" style="min-width:720px;"><thead><tr><th>#</th><th>Task</th><th>Owner</th><th>Status</th></tr></thead><tbody>' + (taskRows || '<tr><td colspan="4">Belum ada task.</td></tr>') + '</tbody></table></div>'
+          + '<div class="gate-detail-actions"><button type="button" class="btn-secondary" data-action="go-input-tab" data-project="' + projectIdx + '">Buka tab Input (edit)</button></div>'
+          + '</div></section>';
+      }
+
+      function openPeriodDetailModal(projectIdx, periodIdx) {
+        if (!projects[projectIdx] || !projects[projectIdx].roadmap || !projects[projectIdx].roadmap[periodIdx]) return;
+        activeModal = { projectIdx: projectIdx, periodIdx: periodIdx, mode: 'period-detail' };
+        document.getElementById('modalContent').innerHTML = renderPeriodDetailModal(projectIdx, periodIdx);
         document.getElementById('modalOverlay').classList.add('active');
       }
 
@@ -3771,6 +3834,15 @@
           const gi = Number(box.getAttribute('data-gate'));
           if (!Number.isNaN(pi) && !Number.isNaN(gi)) openGateDetailModal(pi, gi);
         });
+        document.addEventListener('keydown', function (event) {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          const box = event.target && event.target.closest ? event.target.closest('.task-card--click[data-action="view-period-detail"]') : null;
+          if (!box) return;
+          event.preventDefault();
+          const pi = Number(box.getAttribute('data-project'));
+          const pr = Number(box.getAttribute('data-period'));
+          if (!Number.isNaN(pi) && !Number.isNaN(pr)) openPeriodDetailModal(pi, pr);
+        });
         document.addEventListener('click', function (event) {
           const btn = event.target.closest('[data-action]');
           if (!btn) return;
@@ -3802,6 +3874,7 @@
             case 'remove-gate': removeGate(p, gate); break;
             case 'open-gate': openGateModal(p, gate); break;
             case 'view-gate-detail': openGateDetailModal(p, gate); break;
+            case 'view-period-detail': openPeriodDetailModal(p, period); break;
             case 'go-input-tab':
               currentPage = 'input';
               expandedProjects.add(p);
