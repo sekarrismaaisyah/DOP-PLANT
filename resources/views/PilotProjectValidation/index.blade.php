@@ -1222,15 +1222,15 @@
       <h1>Key Pilot Projects &amp; Technical Validation</h1>
       <!-- <p>Konsep tampilan mengikuti gaya Peer Pressure Edukasi: clean, fokus data, dan konsisten untuk monitoring harian serta validasi keputusan GO/NO-GO.</p> -->
       
-      <div class="toolbar">
-        <div class="pill">Bobot gate: G1 25% · G2 30% · G3 25% · G4 20%</div>
-        <div class="pill">Gate 1 &amp; Gate 3 = hard gate</div>
-        <div class="pill">Impor Excel = isi ulang di browser</div>
-        <button class="btn-ghost" id="resetBtn" type="button" title="Kembalikan contoh data bawaan di browser">Reset ke contoh default</button>
-        <button class="btn-ghost" id="loadFromServerBtn" type="button" title="Ambil portfolio tersimpan dari database">Muat dari server</button>
-        <button class="btn-primary" id="saveToServerBtn" type="button" title="Simpan portfolio saat ini ke database">Simpan ke server</button>
+      <!-- <div class="toolbar">
+        <div class="pill"></div>
+        <div class="pill"></div>
+        <div class="pill"></div>
+        <button class="btn-ghost" id="resetBtn" type="button" title="Kembalikan contoh data bawaan di browser"></button>
+        <button class="btn-ghost" id="loadFromServerBtn" type="button" title="Ambil portfolio tersimpan dari database"></button>
+        <button class="btn-primary" id="saveToServerBtn" type="button" title="Simpan portfolio saat ini ke database"></button>
         <a class="btn-ghost" id="ppvAdminLink" href="{{ route('pilot-project-validation.projects.index') }}" style="text-decoration:none;">Kelola daftar proyek</a>
-      </div>
+      </div> -->
     </section>
 
     <div class="nav-shell">
