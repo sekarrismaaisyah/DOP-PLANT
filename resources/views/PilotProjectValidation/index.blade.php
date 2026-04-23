@@ -1219,7 +1219,7 @@
 <body>
   <div class="page">
     <section class="hero">
-      <h1>Mining automation <br> Key Pilot Projects &amp; Technical Validation</h1>
+      <h1>Mining automation Key Pilot Projects &amp; Technical Validation</h1>
       <!-- <p>Konsep tampilan mengikuti gaya Peer Pressure Edukasi: clean, fokus data, dan konsisten untuk monitoring harian serta validasi keputusan GO/NO-GO.</p> -->
       
       <!-- <div class="toolbar">
