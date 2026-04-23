@@ -3798,39 +3798,53 @@
       }
 
       function bindGlobalEvents() {
-        document.getElementById('dashboardTab').onclick = function () {
+        const dashboardTab = document.getElementById('dashboardTab');
+        const inputTab = document.getElementById('inputTab');
+        const loadFromServerBtn = document.getElementById('loadFromServerBtn');
+        const saveToServerBtn = document.getElementById('saveToServerBtn');
+        const chooseFileBtn = document.getElementById('chooseFileBtn');
+        const excelFileInput = document.getElementById('excelFileInput');
+        const selectedFileName = document.getElementById('selectedFileName');
+        const importExcelBtn = document.getElementById('importExcelBtn');
+        const importExcelSaveDbBtn = document.getElementById('importExcelSaveDbBtn');
+        const downloadTemplateBtn = document.getElementById('downloadTemplateBtn');
+        const resetBtn = document.getElementById('resetBtn');
+        const modalClose = document.getElementById('modalClose');
+        const modalOverlay = document.getElementById('modalOverlay');
+
+        if (dashboardTab) dashboardTab.onclick = function () {
           currentPage = 'dashboard';
           applyPageState();
           var el = document.getElementById('dashboardPage');
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
-        document.getElementById('inputTab').onclick = function () {
+        if (inputTab) inputTab.onclick = function () {
           currentPage = 'input';
           applyPageState();
           var el = document.getElementById('inputPage');
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
-        document.getElementById('loadFromServerBtn').onclick = function () { loadPortfolioFromServer(); };
-        document.getElementById('saveToServerBtn').onclick = function () { savePortfolioToServer(); };
-        document.getElementById('chooseFileBtn').onclick = function () { document.getElementById('excelFileInput').click(); };
-        document.getElementById('excelFileInput').addEventListener('change', function (event) {
+        if (loadFromServerBtn) loadFromServerBtn.onclick = function () { loadPortfolioFromServer(); };
+        if (saveToServerBtn) saveToServerBtn.onclick = function () { savePortfolioToServer(); };
+        if (chooseFileBtn && excelFileInput) chooseFileBtn.onclick = function () { excelFileInput.click(); };
+        if (excelFileInput) excelFileInput.addEventListener('change', function (event) {
           selectedWorkbookFile = event.target.files && event.target.files[0] ? event.target.files[0] : null;
-          document.getElementById('selectedFileName').textContent = selectedWorkbookFile ? selectedWorkbookFile.name : 'Belum ada file';
+          if (selectedFileName) selectedFileName.textContent = selectedWorkbookFile ? selectedWorkbookFile.name : 'Belum ada file';
         });
-        document.getElementById('importExcelBtn').onclick = function () { importWorkbookFromFile(selectedWorkbookFile); };
-        document.getElementById('importExcelSaveDbBtn').onclick = function () { importExcelToDatabase(); };
-        document.getElementById('downloadTemplateBtn').onclick = function () { downloadTemplateWorkbook(); };
-        document.getElementById('resetBtn').onclick = function () {
+        if (importExcelBtn) importExcelBtn.onclick = function () { importWorkbookFromFile(selectedWorkbookFile); };
+        if (importExcelSaveDbBtn) importExcelSaveDbBtn.onclick = function () { importExcelToDatabase(); };
+        if (downloadTemplateBtn) downloadTemplateBtn.onclick = function () { downloadTemplateWorkbook(); };
+        if (resetBtn) resetBtn.onclick = function () {
           restoreSeedProjects();
           selectedWorkbookFile = null;
-          document.getElementById('excelFileInput').value = '';
-          document.getElementById('selectedFileName').textContent = 'Belum ada file';
+          if (excelFileInput) excelFileInput.value = '';
+          if (selectedFileName) selectedFileName.textContent = 'Belum ada file';
           renderAll();
           closeModal();
           setImportStatus('Siap', 'Data dikembalikan ke contoh default di browser. Belum mengubah database — gunakan Simpan ke server jika perlu.', 'notice-card');
         };
-        document.getElementById('modalClose').onclick = closeModal;
-        document.getElementById('modalOverlay').onclick = function (event) {
+        if (modalClose) modalClose.onclick = closeModal;
+        if (modalOverlay) modalOverlay.onclick = function (event) {
           if (event.target.id === 'modalOverlay') closeModal();
         };
         document.addEventListener('keydown', function (event) {
