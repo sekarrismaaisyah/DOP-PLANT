@@ -922,6 +922,96 @@
 
     .modal-overlay.active { display: flex; }
 
+    .status-box--click {
+      cursor: pointer;
+      transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+    }
+    .status-box--click:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-sm);
+      border-color: rgba(90, 120, 180, 0.4);
+    }
+    .status-box--click:focus {
+      outline: 2px solid rgba(57, 82, 188, 0.45);
+      outline-offset: 3px;
+    }
+
+    .gate-detail-summary {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-top: 8px;
+    }
+    .gate-detail-metrics { margin-top: 6px; }
+    .gate-detail-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 12px;
+    }
+    @media (min-width: 720px) {
+      .gate-detail-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+    .gate-metric-card {
+      background: linear-gradient(180deg, #fff 0%, #f8fbff 100%);
+      border: 1px solid rgba(210, 218, 230, 0.95);
+      border-radius: 14px;
+      padding: 14px 16px 16px;
+      box-shadow: var(--shadow-xs);
+    }
+    .gate-metric-card-head {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+    .gate-metric-card h5 {
+      margin: 0;
+      font-size: 14px;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      color: var(--text);
+      line-height: 1.3;
+    }
+    .gate-metric-desc {
+      font-size: 12.5px;
+      line-height: 1.58;
+      color: var(--text-secondary);
+      font-weight: 500;
+      margin: 0 0 10px;
+      white-space: pre-wrap;
+    }
+    .gate-metric-facts {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+      font-size: 12px;
+      line-height: 1.5;
+      color: var(--muted);
+      font-weight: 500;
+    }
+    .gate-metric-facts strong { color: var(--text); font-weight: 700; }
+    .gate-detail-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      padding-top: 12px;
+      border-top: 1px solid var(--line);
+    }
+    .metric-pill {
+      display: inline-flex;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #eef2f7;
+      font-size: 10.5px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: var(--muted);
+    }
+
     .modal-shell {
       width: min(1320px, 100%);
       max-height: 94vh;
@@ -2636,7 +2726,7 @@
             const metricItems = gate.metrics.map(function (metric, idx) {
               return '<li class="status-mini-item"><span>' + escapeHtml(metric.name) + '</span><span class="metric-status ' + statusClass(gateResult.metricResults[idx].status).replace('status', 'metric') + '">' + escapeHtml(gateResult.metricResults[idx].status.toUpperCase()) + '</span></li>';
             }).join('');
-            return '<div class="status-box">'
+            return '<div class="status-box status-box--click" role="button" tabindex="0" data-action="view-gate-detail" data-project="' + pIdx + '" data-gate="' + gIdx + '" title="Klik untuk detail metrik gate">'
               + '<div><div class="label">' + escapeHtml(gate.gate) + '</div><h4>' + escapeHtml(gate.title) + '</h4></div>'
               + '<div class="status-chip ' + statusClass(gateResult.status) + '">' + escapeHtml(gateResult.status.toUpperCase()) + '</div>'
               + '<div class="mini-card"><div class="label">Gate Score</div><div class="mini-value">' + gateResult.score + '/100</div></div>'
@@ -2844,6 +2934,87 @@
         return '<div class="table-wrap"><table class="clean-table"><thead><tr><th>Name</th><th>Type</th><th>Description</th><th>Current</th><th>Direction</th><th>Unit</th><th>Min</th><th>Max</th><th>Step</th><th>PASS</th><th>Conditional</th><th>Critical</th><th>Status</th><th>Actions</th></tr></thead><tbody>' + rows + '</tbody></table></div>';
       }
 
+      function formatMetricValueDisplay(metric) {
+        ensureMetricShape(metric);
+        if (metric.type === 'select') return String(metric.value || '—').toUpperCase();
+        const u = metric.unit != null && String(metric.unit).trim() !== '' ? ' ' + metric.unit : '';
+        return String(metric.value) + u;
+      }
+
+      function formatMetricRulesText(metric) {
+        ensureMetricShape(metric);
+        if (metric.type === 'select') {
+          return 'Tipe SELECT — status metrik mengikuti pilihan PASS / CONDITIONAL / FAIL.';
+        }
+        const hi = metric.direction === 'high';
+        return 'Tipe RANGE · rentang ' + metric.min + '–' + metric.max + ' — arah ' + (hi ? 'lebih tinggi lebih baik' : 'lebih rendah lebih baik')
+          + ' — ambang pass ' + (hi ? '≥' : '≤') + ' ' + metric.pass
+          + ', conditional ' + (hi ? '≥' : '≤') + ' ' + metric.conditional + '.';
+      }
+
+      function renderGateDetailModal(projectIdx, gateIdx) {
+        const project = projects[projectIdx];
+        const gate = project.gates[gateIdx];
+        const overall = overallDecision(project);
+        const gateResult = overall.gateResults[gateIdx];
+        const caption = String(gate.caption || '').trim();
+        const captionBlock = caption
+          ? '<p style="margin:10px 0 0;max-width:860px;font-size:13px;line-height:1.65;color:rgba(255,255,255,0.9);">' + escapeHtml(caption) + '</p>'
+          : '';
+        const metricCards = gate.metrics.map(function (metric, mIdx) {
+          const mr = gateResult.metricResults[mIdx] || { status: 'conditional' };
+          const hasDesc = String(metric.desc || '').trim();
+          const descHtml = hasDesc
+            ? '<div class="gate-metric-desc">' + escapeHtml(metric.desc) + '</div>'
+            : '<div class="gate-metric-desc" style="opacity:0.78;font-style:italic">Belum ada deskripsi untuk metrik ini.</div>';
+          const crit = metric.critical
+            ? '<div><span class="metric-pill" style="background:#fbe7ec;border:1px solid rgba(180,35,72,0.2);color:var(--red);">Critical</span></div>'
+            : '';
+          return '<article class="gate-metric-card">'
+            + '<div class="gate-metric-card-head">'
+            + '<h5>' + escapeHtml(metric.name) + '</h5>'
+            + '<span class="metric-status ' + statusClass(mr.status).replace('status', 'metric') + '">' + escapeHtml(mr.status.toUpperCase()) + '</span>'
+            + '</div>'
+            + descHtml
+            + '<div class="gate-metric-facts">'
+            + '<div><strong>Nilai / pilihan saat ini</strong> — ' + escapeHtml(formatMetricValueDisplay(metric)) + '</div>'
+            + '<div><strong>Aturan penilaian</strong> — ' + escapeHtml(formatMetricRulesText(metric)) + '</div>'
+            + crit
+            + '</div>'
+            + '</article>';
+        }).join('');
+        return '<section class="modal-hero">'
+          + '<div class="premium-label">' + escapeHtml(project.name) + '</div>'
+          + '<h2>' + escapeHtml(gate.gate) + ' · ' + escapeHtml(gate.title) + '</h2>'
+          + '<p>Detail metrik penilaian: nama, deskripsi, nilai, dan aturan. Sunting data lewat <strong>Input</strong> atau kalkulator gate.</p>'
+          + captionBlock
+          + '<div class="modal-flags"><div class="modal-flag">Skor gate ' + gateResult.score + '/100</div>'
+          + '<div class="modal-flag">Status ' + escapeHtml(gateResult.status.toUpperCase()) + '</div>'
+          + '<div class="modal-flag">' + (gate.hardGate ? 'Hard gate' : 'Soft gate') + '</div>'
+          + '<div class="modal-flag">Proyek ' + escapeHtml(overall.status) + ' · ' + overall.score + '/100</div></div>'
+          + '</section>'
+          + '<section class="modal-section" style="margin-top:4px;"><div class="modal-section-head"><div class="panel-title">Ringkasan</div><div class="panel-subtitle">Agregat dari evaluasi metrik.</div></div><div class="modal-section-inner">'
+          + '<div class="gate-detail-summary">'
+          + '<div class="mini-card"><div class="label">Status gate</div><div class="modal-value" style="font-size:clamp(18px,2.5vw,24px)">' + escapeHtml(gateResult.status.toUpperCase()) + '</div></div>'
+          + '<div class="mini-card"><div class="label">Skor</div><div class="modal-value" style="font-size:clamp(18px,2.5vw,24px)">' + gateResult.score + '/100</div></div>'
+          + '<div class="mini-card"><div class="label">Jumlah metrik</div><div class="modal-value" style="font-size:clamp(18px,2.5vw,24px)">' + gate.metrics.length + '</div></div>'
+          + '</div></div></section>'
+          + '<section class="modal-section"><div class="modal-section-head"><div class="panel-title">Matriks &amp; metrik</div><div class="panel-subtitle">Setiap baris: deskripsi tugas, nilai, dan hasil (pass / conditional / fail).</div></div><div class="modal-section-inner gate-detail-metrics">'
+          + '<div class="gate-detail-grid">' + metricCards + '</div>'
+          + '<div class="gate-detail-actions">'
+          + '<button type="button" class="btn-primary" data-action="open-gate" data-project="' + projectIdx + '" data-gate="' + gateIdx + '">Buka kalkulator (edit)</button>'
+          + '<button type="button" class="btn-secondary" data-action="go-input-tab" data-project="' + projectIdx + '">Buka tab Input</button>'
+          + '</div>'
+          + '</div></section>';
+      }
+
+      function openGateDetailModal(projectIdx, gateIdx) {
+        if (!projects[projectIdx] || !projects[projectIdx].gates[gateIdx]) return;
+        activeModal = { projectIdx: projectIdx, gateIdx: gateIdx, mode: 'detail' };
+        document.getElementById('modalContent').innerHTML = renderGateDetailModal(projectIdx, gateIdx);
+        document.getElementById('modalOverlay').classList.add('active');
+      }
+
       function renderGateModal(projectIdx, gateIdx, customTitle) {
         const project = projects[projectIdx];
         const gate = project.gates[gateIdx];
@@ -2878,7 +3049,7 @@
       }
 
       function openGateModal(projectIdx, gateIdx) {
-        activeModal = { projectIdx: projectIdx, gateIdx: gateIdx };
+        activeModal = { projectIdx: projectIdx, gateIdx: gateIdx, mode: 'edit' };
         const project = projects[projectIdx];
         const header = project.name === 'Remote Dozer' && gateIdx === 3 ? 'Economical Pass' : 'Calculator';
         document.getElementById('modalContent').innerHTML = renderGateModal(projectIdx, gateIdx, header);
@@ -2914,7 +3085,10 @@
       function updateGateField(projectIdx, gateIdx, field, value) {
         projects[projectIdx].gates[gateIdx][field] = parseFieldValue(field, value);
         renderAll();
-        if (activeModal && activeModal.projectIdx === projectIdx && activeModal.gateIdx === gateIdx) openGateModal(projectIdx, gateIdx);
+        if (activeModal && activeModal.projectIdx === projectIdx && activeModal.gateIdx === gateIdx) {
+          if (activeModal.mode === 'edit') openGateModal(projectIdx, gateIdx);
+          else if (activeModal.mode === 'detail') openGateDetailModal(projectIdx, gateIdx);
+        }
       }
 
       function updateMetricField(projectIdx, gateIdx, metricIdx, field, value) {
@@ -2935,7 +3109,10 @@
           }
         }
         renderAll();
-        if (activeModal && activeModal.projectIdx === projectIdx && activeModal.gateIdx === gateIdx) openGateModal(projectIdx, gateIdx);
+        if (activeModal && activeModal.projectIdx === projectIdx && activeModal.gateIdx === gateIdx) {
+          if (activeModal.mode === 'edit') openGateModal(projectIdx, gateIdx);
+          else if (activeModal.mode === 'detail') openGateDetailModal(projectIdx, gateIdx);
+        }
       }
 
       function addProject() {
@@ -3001,14 +3178,20 @@
       function addMetric(projectIdx, gateIdx) {
         projects[projectIdx].gates[gateIdx].metrics.push(newMetric());
         renderAll();
-        if (activeModal && activeModal.projectIdx === projectIdx && activeModal.gateIdx === gateIdx) openGateModal(projectIdx, gateIdx);
+        if (activeModal && activeModal.projectIdx === projectIdx && activeModal.gateIdx === gateIdx) {
+          if (activeModal.mode === 'edit') openGateModal(projectIdx, gateIdx);
+          else if (activeModal.mode === 'detail') openGateDetailModal(projectIdx, gateIdx);
+        }
       }
 
       function removeMetric(projectIdx, gateIdx, metricIdx) {
         projects[projectIdx].gates[gateIdx].metrics.splice(metricIdx, 1);
         if (!projects[projectIdx].gates[gateIdx].metrics.length) projects[projectIdx].gates[gateIdx].metrics.push(newMetric());
         renderAll();
-        if (activeModal && activeModal.projectIdx === projectIdx && activeModal.gateIdx === gateIdx) openGateModal(projectIdx, gateIdx);
+        if (activeModal && activeModal.projectIdx === projectIdx && activeModal.gateIdx === gateIdx) {
+          if (activeModal.mode === 'edit') openGateModal(projectIdx, gateIdx);
+          else if (activeModal.mode === 'detail') openGateDetailModal(projectIdx, gateIdx);
+        }
       }
 
       function buildProjectsFromWorkbook(workbook) {
@@ -3577,6 +3760,15 @@
         document.addEventListener('keydown', function (event) {
           if (event.key === 'Escape') closeModal();
         });
+        document.addEventListener('keydown', function (event) {
+          if (event.key !== 'Enter' && event.key !== ' ') return;
+          const box = event.target && event.target.closest ? event.target.closest('.status-box--click[data-action="view-gate-detail"]') : null;
+          if (!box) return;
+          event.preventDefault();
+          const pi = Number(box.getAttribute('data-project'));
+          const gi = Number(box.getAttribute('data-gate'));
+          if (!Number.isNaN(pi) && !Number.isNaN(gi)) openGateDetailModal(pi, gi);
+        });
         document.addEventListener('click', function (event) {
           const btn = event.target.closest('[data-action]');
           if (!btn) return;
@@ -3607,6 +3799,17 @@
             case 'add-gate': addGate(p); break;
             case 'remove-gate': removeGate(p, gate); break;
             case 'open-gate': openGateModal(p, gate); break;
+            case 'view-gate-detail': openGateDetailModal(p, gate); break;
+            case 'go-input-tab':
+              currentPage = 'input';
+              expandedProjects.add(p);
+              closeModal();
+              renderAll();
+              setTimeout(function () {
+                var el = document.getElementById('input-project-' + p);
+                if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+              }, 60);
+              break;
             case 'add-metric': addMetric(p, gate); break;
             case 'remove-metric': removeMetric(p, gate, metric); break;
           }
