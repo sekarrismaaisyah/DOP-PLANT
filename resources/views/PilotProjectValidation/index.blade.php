@@ -7,7 +7,7 @@
   <title>Gate Go No Go Cards</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Poppins:wght@500;600;700;800&display=swap" rel="stylesheet">
   <script>
     window.PilotProjectValidation = {
       portfolioUrl: @json(route('pilot-project-validation.portfolio.show')),
@@ -19,70 +19,123 @@
   </script>
   <style>
     :root {
-      --bg: #f0f2f5;
+      --font-body: "Inter", system-ui, "Segoe UI", Roboto, Arial, sans-serif;
+      --font-display: "Poppins", var(--font-body);
+      --bg: #e8ecf2;
+      --bg-page: linear-gradient(165deg, #e4e9f1 0%, #eef1f6 40%, #f0f3f8 100%);
       --surface: #ffffff;
-      --surface-soft: #f8fafc;
-      --line: #dfe3e6;
-      --line-strong: #abadaf;
-      --text: #2c2f31;
-      --muted: #595c5e;
-      --blue: #3952bc;
-      --blue-2: #748cf9;
-      --green: #2b8a57;
-      --green-soft: #e8f6ee;
-      --amber: #a2741b;
-      --amber-soft: #f9f1dc;
-      --red: #b42348;
-      --red-soft: #fbe7ec;
-      --slate: #5d6368;
-      --slate-soft: #edf1f3;
-      --shadow: 0 4px 0 rgba(0, 0, 0, 0.04), 0 12px 24px -6px rgba(0, 0, 0, 0.14);
-      --shadow-soft: 0 2px 8px rgba(0, 0, 0, 0.08);
-      --radius-xl: 22px;
-      --radius-lg: 16px;
-      --radius-md: 12px;
+      --surface-soft: #f5f7fb;
+      --line: #dde2ea;
+      --line-strong: #b4bac6;
+      --text: #161a20;
+      --text-secondary: #2b3038;
+      --muted: #4f5866;
+      --muted-softer: #7a8494;
+      --blue: #3349b8;
+      --blue-2: #5f6fe8;
+      --green: #1f7a4a;
+      --green-soft: #e4f4ec;
+      --amber: #8f5c12;
+      --amber-soft: #f7edd8;
+      --red: #a61e42;
+      --red-soft: #fcecf1;
+      --slate: #4a5159;
+      --slate-soft: #e8ecf0;
+      --shadow-xs: 0 1px 2px rgba(12, 18, 32, 0.05);
+      --shadow-sm: 0 2px 8px rgba(12, 18, 32, 0.06), 0 1px 2px rgba(12, 18, 32, 0.04);
+      --shadow-md: 0 8px 28px -6px rgba(20, 28, 45, 0.12), 0 2px 10px -2px rgba(20, 28, 45, 0.06);
+      --shadow-lg: 0 22px 48px -12px rgba(20, 28, 50, 0.16), 0 8px 16px -4px rgba(20, 28, 45, 0.1);
+      --shadow: var(--shadow-md);
+      --shadow-soft: var(--shadow-sm);
+      --radius-xl: 20px;
+      --radius-lg: 14px;
+      --radius-md: 10px;
+      --content-max: 1560px;
     }
 
     * { box-sizing: border-box; }
 
+    html {
+      scroll-behavior: smooth;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
     body {
       margin: 0;
-      font-family: "Poppins", "Inter", "Segoe UI", Roboto, Arial, sans-serif;
+      font-family: var(--font-body);
+      font-size: 15px;
+      font-weight: 400;
+      line-height: 1.58;
+      letter-spacing: -0.01em;
       color: var(--text);
-      background: var(--bg);
+      background: var(--bg-page);
+      text-rendering: optimizeLegibility;
+    }
+
+    h1, h2, h3, h4, h5, h6,
+    .section-title h2, .panel-title, .label, .overview-label, .legend-label, .premium-label,
+    .nav-btn, .file-name, .template-tag, .hero h1, .format-card h4, .legend-card h4, .notice-card h4, .curve-card h4, .status-box h4, .status-chip, .decision-badge, .task-status, .metric-status, .collapse-pill, .flow-item strong, .modal-flag, .flow-num,
+    .btn-primary, .btn-secondary, .btn-ghost, .btn-danger, .btn-mini, .clean-table th,
+    .overview-value, .decision-score, .modal-value, .big-value, .mini-value, .curve-value, .overview-card .overview-value,
+    .task-text, .bar-head, .dashboard-empty {
+      font-family: var(--font-display);
+    }
+
+    .hero h1, .format-card h4, .legend-card h4, .notice-card h4, .curve-card h4, .status-box h4, .modal-hero h2 { font-weight: 700; }
+    .section-title h2 { font-weight: 800; }
+    .label, .overview-label, .legend-label, .premium-label, .clean-table th, .flow-item strong { font-weight: 800; }
+    .helper-text, .muted-copy, .table-note, .curve-note, .notice-copy, .panel-subtitle, .hero p, .dashboard-summary p, .collapse-summary p,
+    .section-title p, .input-body p, .modal-content p, .flow-item, .clean-table td {
+      font-family: var(--font-body);
+      font-weight: 500;
+    }
+    .helper-text, .muted-copy, .table-note, .curve-note, .notice-copy, .hero p, .dashboard-summary p, .collapse-summary p, .section-title p {
+      color: var(--muted);
+    }
+    .panel-subtitle, .input-body p, .modal-content p, .flow-item { color: var(--text-secondary); }
+    .section-title p, .helper-text, .panel-subtitle, .input-body p, .modal-content p, .flow-item, .table-note, .curve-note, .notice-copy {
+      font-size: 13px;
+      line-height: 1.65;
+    }
+    .clean-table td {
+      font-family: var(--font-body);
+      font-size: 13px;
+      font-weight: 400;
+      line-height: 1.5;
+      color: var(--text);
     }
 
     a { color: inherit; }
 
     .page {
-      max-width: 1560px;
+      max-width: var(--content-max);
       margin: 0 auto;
-      padding: 28px;
+      padding: clamp(16px, 3vw, 32px);
     }
 
     .hero {
-      background: #fff;
+      background: linear-gradient(180deg, #ffffff 0%, #f9fbfe 100%);
       color: var(--text);
-      border-radius: 22px;
-      padding: 24px 26px;
-      box-shadow: var(--shadow);
-      border: 1px solid rgba(171, 173, 175, 0.35);
+      border-radius: var(--radius-xl);
+      padding: clamp(20px, 2.8vw, 30px) clamp(20px, 3vw, 32px);
+      box-shadow: var(--shadow-md);
+      border: 1px solid rgba(255, 255, 255, 0.7);
     }
 
     .hero h1 {
       margin: 0 0 8px;
-      font-size: 28px;
-      line-height: 1.1;
-      letter-spacing: -0.03em;
+      font-size: clamp(22px, 2.2vw, 32px);
+      line-height: 1.12;
+      letter-spacing: -0.035em;
       color: var(--blue);
     }
 
     .hero p {
       margin: 0;
       max-width: 1080px;
-      font-size: 14px;
-      line-height: 1.6;
-      color: var(--muted);
+      font-size: clamp(14px, 1.2vw, 16px);
+      line-height: 1.64;
     }
 
     .toolbar,
@@ -102,10 +155,10 @@
     .nav-shell {
       margin-top: 18px;
       background: #fff;
-      border: 1px solid rgba(171, 173, 175, 0.35);
+      border: 1px solid rgba(215, 221, 232, 0.85);
       border-radius: 14px;
-      padding: 8px;
-      box-shadow: var(--shadow-soft);
+      padding: 8px 10px;
+      box-shadow: var(--shadow-sm);
     }
     .toolbar .btn-ghost { margin-left: auto; }
 
@@ -221,7 +274,7 @@
 
     .section-title h2 {
       margin: 0;
-      font-size: 22px;
+      font-size: clamp(18px, 1.4vw, 24px);
       letter-spacing: -0.02em;
       color: var(--blue);
     }
@@ -233,9 +286,6 @@
     .curve-note,
     .notice-copy {
       margin: 6px 0 0;
-      font-size: 12px;
-      color: var(--muted);
-      line-height: 1.55;
     }
 
     .overview-shell {
@@ -255,9 +305,9 @@
     .legend-card,
     .notice-card {
       background: var(--surface);
-      border: 1px solid var(--line);
+      border: 1px solid rgba(215, 221, 232, 0.9);
       border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-soft);
+      box-shadow: var(--shadow-sm);
     }
 
     .overview-card,
@@ -271,11 +321,11 @@
     .overview-label,
     .premium-label,
     .legend-label {
-      font-size: 10px;
+      font-size: 10.5px;
       text-transform: uppercase;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.1em;
       color: var(--muted);
-      font-weight: 900;
+      font-weight: 800;
       margin-bottom: 6px;
     }
 
@@ -283,10 +333,11 @@
     .decision-score,
     .modal-value,
     .big-value {
-      font-size: 26px;
-      font-weight: 900;
-      line-height: 1;
-      letter-spacing: -0.03em;
+      font-size: clamp(22px, 2.5vw, 30px);
+      font-weight: 800;
+      line-height: 1.05;
+      letter-spacing: -0.04em;
+      color: var(--text);
     }
 
     .dashboard-grid,
@@ -311,16 +362,17 @@
 
     .dashboard-grid .project-card {
       position: relative;
-      border-radius: 24px;
-      border: 1px solid rgba(146, 165, 193, 0.34);
-      background: linear-gradient(180deg, #ffffff 0%, #f7fbff 100%);
-      box-shadow: 0 10px 28px -16px rgba(47, 84, 124, 0.45), 0 2px 8px rgba(31, 55, 89, 0.08);
-      transition: transform 0.18s ease, box-shadow 0.18s ease;
+      border-radius: calc(var(--radius-xl) + 4px);
+      border: 1px solid rgba(155, 175, 210, 0.38);
+      background: linear-gradient(180deg, #ffffff 0%, #f4f8ff 100%);
+      box-shadow: var(--shadow-md);
+      transition: transform 0.22s ease, box-shadow 0.22s ease, border-color 0.22s ease;
     }
 
     .dashboard-grid .project-card:hover {
       transform: translateY(-2px);
-      box-shadow: 0 14px 34px -18px rgba(47, 84, 124, 0.52), 0 8px 18px -12px rgba(31, 55, 89, 0.28);
+      box-shadow: var(--shadow-lg);
+      border-color: rgba(90, 116, 168, 0.28);
     }
 
     .dashboard-grid .project-card::before {
@@ -377,14 +429,14 @@
       padding: 7px 10px;
       border-radius: 999px;
       font-size: 11px;
-      font-weight: 900;
+      font-weight: 800;
       letter-spacing: 0.05em;
       text-transform: uppercase;
       width: fit-content;
       white-space: nowrap;
     }
 
-    .decision-badge { font-size: 12px; padding: 8px 11px; }
+    .decision-badge { font-size: 12px; padding: 8px 12px; }
 
     .decision-go, .status-pass, .task-done, .metric-pass { background: var(--green-soft); color: var(--green); border: 1px solid rgba(32,178,107,0.22); }
     .decision-conditional, .status-conditional, .task-progress, .metric-conditional { background: var(--amber-soft); color: var(--amber); border: 1px solid rgba(224,161,27,0.22); }
@@ -418,17 +470,14 @@
     .modal-section-inner { padding: 16px 18px 18px; }
 
     .panel-title {
-      font-size: 12px;
+      font-size: 11.5px;
       text-transform: uppercase;
-      letter-spacing: 0.1em;
-      color: var(--muted);
-      font-weight: 900;
+      letter-spacing: 0.12em;
+      color: var(--muted-softer);
+      font-weight: 800;
     }
 
     .panel-subtitle {
-      color: var(--muted);
-      font-size: 12px;
-      line-height: 1.55;
       margin-top: 6px;
     }
 
@@ -497,6 +546,7 @@
       display: grid;
       gap: 14px;
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      min-width: 0;
     }
 
     .status-box,
@@ -516,8 +566,9 @@
     .mini-value,
     .curve-value {
       font-size: 14px;
-      font-weight: 700;
+      font-weight: 600;
       line-height: 1.45;
+      color: var(--text);
     }
 
     .status-mini-list,
@@ -565,10 +616,10 @@
 
     .dashboard-collapse-head {
       display: grid;
-      grid-template-columns: 1.2fr 260px auto;
+      grid-template-columns: minmax(0, 1.2fr) minmax(0, 280px) auto;
       gap: 18px;
       align-items: start;
-      padding: 20px 24px;
+      padding: clamp(16px, 2.5vw, 22px) clamp(16px, 2.5vw, 24px);
       border-bottom: 1px solid var(--line);
       background: linear-gradient(135deg, #f6f9ff 0%, #edf4ff 54%, #f6fbff 100%);
     }
@@ -582,6 +633,31 @@
     .dashboard-meta-stack .mini-card {
       background: #ffffff;
       border-color: rgba(169, 187, 214, 0.7);
+      min-width: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: stretch;
+      gap: 8px;
+    }
+
+    .dashboard-meta-stack .mini-card .label {
+      flex: 0 0 auto;
+    }
+
+    .dashboard-meta-stack .decision-badge {
+      align-self: center;
+      max-width: 100%;
+      min-width: 0;
+      width: auto;
+      box-sizing: border-box;
+      white-space: normal;
+      text-align: center;
+      line-height: 1.25;
+      letter-spacing: 0.04em;
+      padding: 8px 10px;
+      word-break: break-word;
+      hyphens: manual;
+      transition: font-size 0.15s ease, padding 0.15s ease;
     }
 
     .dashboard-collapse-actions,
@@ -595,12 +671,12 @@
 
     .collapse-head {
       display: grid;
-      grid-template-columns: 1.15fr 280px;
+      grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr);
       gap: 18px;
       align-items: start;
-      padding: 20px 24px;
+      padding: clamp(16px, 2.5vw, 22px) clamp(16px, 2.5vw, 24px);
       border-bottom: 1px solid var(--line);
-      background: #f8fbfd;
+      background: linear-gradient(180deg, #fbfcff 0%, #f1f5fa 100%);
     }
 
     .collapse-main {
@@ -670,9 +746,10 @@
 
     .table-wrap {
       overflow: auto;
-      border: 1px solid var(--line);
+      border: 1px solid rgba(215, 221, 232, 0.9);
       border-radius: 14px;
       background: #fff;
+      box-shadow: var(--shadow-xs);
     }
 
     table.clean-table {
@@ -694,12 +771,12 @@
       position: sticky;
       top: 0;
       z-index: 1;
-      background: #f8fafc;
+      background: linear-gradient(180deg, #f5f8fc 0%, #eef2f7 100%);
       color: var(--muted);
-      font-size: 10px;
+      font-size: 10.5px;
       text-transform: uppercase;
-      letter-spacing: 0.15em;
-      font-weight: 900;
+      letter-spacing: 0.12em;
+      font-weight: 800;
     }
 
     .clean-table tr:last-child td { border-bottom: none; }
@@ -758,16 +835,17 @@
     .notice-card h4,
     .curve-card h4 {
       margin: 0;
-      font-size: 18px;
+      font-size: clamp(16px, 1.1vw, 19px);
       letter-spacing: -0.02em;
+      color: var(--text);
     }
 
     .curve-card {
-      background: var(--surface);
-      border: 1px solid var(--line);
+      background: linear-gradient(180deg, #ffffff 0%, #f8fbff 100%);
+      border: 1px solid rgba(215, 221, 232, 0.9);
       border-radius: var(--radius-xl);
-      box-shadow: var(--shadow);
-      padding: 16px;
+      box-shadow: var(--shadow-md);
+      padding: clamp(14px, 2vw, 20px);
     }
 
     .curve-svg-wrap {
@@ -941,9 +1019,11 @@
     }
 
     @media (max-width: 860px) {
-      .page { padding: 16px; }
+      .page { padding: 14px; }
       .hero h1,
       .modal-hero h2 { font-size: 24px; }
+      .section-title h2 { font-size: 20px; }
+      .overview-value, .decision-score, .modal-value, .big-value { font-size: 24px; }
       .overview-shell,
       .status-grid,
       .dashboard-meta-stack,
@@ -2272,12 +2352,51 @@
         return escapeHtml(value);
       }
 
+      function toEnglishPeriodLower(text) {
+        let t = String(text || '').trim().toLowerCase();
+        if (!t) return '';
+        t = t.replace(/[–—]/g, '-');
+        t = t.replace(/([a-z0-9])-([a-z0-9])/g, function (_, a, b) { return a + ' - ' + b; });
+        t = t.replace(/\s+/g, ' ').replace(/\s*-\s*/g, ' - ');
+        t = t.replace(/\bseptember\b/g, 'sep');
+        t = t.replace(/\bsept\.?\b/g, 'sep');
+        t = t.replace(/\bpeb\.?\b/g, 'feb');
+        t = t.replace(/\bmei\b/g, 'may');
+        t = t.replace(/\bagustus\b/g, 'aug');
+        t = t.replace(/\bagu\b/g, 'aug');
+        t = t.replace(/\bokt\b/g, 'oct');
+        t = t.replace(/\boktober\b/g, 'oct');
+        t = t.replace(/\bdes\b/g, 'dec');
+        t = t.replace(/\s+/g, ' ').replace(/\s*-\s*/g, ' - ').trim();
+        return t;
+      }
+
+      function normalizePeriodLabel(value) {
+        const text = String(value == null ? '' : value).trim();
+        if (!text) return text;
+        if (!Number.isNaN(new Date(text).getTime()) && /[0-9]{4}[-/][0-9]{1,2}[-/][0-9]{1,2}|[0-9]{1,2}\/[0-9]{1,2}/.test(text)) {
+          return text;
+        }
+        const en = toEnglishPeriodLower(text);
+        if (!en) return text;
+        const withTitle = en.replace(/\b(jan|feb|mar|apr|may|jun|jul|aug|sep|oct|nov|dec)\b/g, function (m) {
+          return m.charAt(0).toUpperCase() + m.slice(1);
+        });
+        return withTitle.replace(/\s+/g, ' ').trim();
+      }
+
       function parsePeriodDate(label) {
         const text = String(label || '').trim();
         if (!text) return new Date('2100-01-01T00:00:00');
         const direct = new Date(text);
-        if (!Number.isNaN(direct.getTime())) return direct;
-        const normalized = text.toLowerCase().replace('–', '-').replace('—', '-');
+        if (!Number.isNaN(direct.getTime()) && /[0-9]{4}[-/][0-9]{1,2}[-/][0-9]{1,2}/.test(text)) {
+          return direct;
+        }
+        if (!Number.isNaN(direct.getTime()) && (/\d{1,2}\/\d{1,2}\/\d{4}/.test(text) || /^\d{1,2}\s+[a-z]{3,9}\s+\d{4}/i.test(text))) {
+          return direct;
+        }
+        if (!Number.isNaN(direct.getTime()) && /^\d{4}-\d{1,2}-\d{1,2}/.test(text)) return direct;
+        const normalized = toEnglishPeriodLower(text);
         const months = ['jan', 'feb', 'mar', 'apr', 'may', 'jun', 'jul', 'aug', 'sep', 'oct', 'nov', 'dec'];
         let monthIndex = -1;
         months.forEach(function (month, index) {
@@ -2290,6 +2409,7 @@
           const parts = yearMonthMatch[0].replace('/', '-').split('-');
           return new Date(Number(parts[0]), Math.max(0, Number(parts[1]) - 1), 1);
         }
+        if (!Number.isNaN(direct.getTime())) return direct;
         return new Date('2100-01-01T00:00:00');
       }
 
@@ -2306,8 +2426,9 @@
       function aggregateSeriesPoints(rows) {
         const grouped = new Map();
         rows.forEach(function (row) {
-          if (!grouped.has(row.label)) grouped.set(row.label, { label: row.label, progressSum: 0, decisionSum: 0, count: 0 });
-          const bucket = grouped.get(row.label);
+          const key = normalizePeriodLabel(row.label) || String(row.label || '');
+          if (!grouped.has(key)) grouped.set(key, { label: key, progressSum: 0, decisionSum: 0, count: 0 });
+          const bucket = grouped.get(key);
           bucket.progressSum += row.progress;
           bucket.decisionSum += row.decision;
           bucket.count += 1;
@@ -2331,8 +2452,9 @@
         const count = Math.max(periods.length, 1);
         return periods.map(function (period, index) {
           const ratio = (index + 1) / count;
+          const rawLabel = period.period || ('Period ' + (index + 1));
           return {
-            label: period.period || ('Period ' + (index + 1)),
+            label: normalizePeriodLabel(rawLabel) || rawLabel,
             progress: Math.round(project.progress * ratio),
             decision: Math.round(currentDecision * ratio)
           };
@@ -2343,7 +2465,7 @@
         const projectHistory = historySnapshots.filter(function (item) {
           return normalizeProjectName(item.projectName) === normalizeProjectName(project.name);
         }).map(function (item) {
-          return { label: item.date, progress: item.progress, decision: item.decisionScore };
+          return { label: normalizePeriodLabel(item.date) || String(item.date || ''), progress: item.progress, decision: item.decisionScore };
         });
         const points = projectHistory.length ? aggregateSeriesPoints(projectHistory) : buildDerivedProjectCurve(project);
         return {
