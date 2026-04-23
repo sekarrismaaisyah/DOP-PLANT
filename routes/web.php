@@ -165,7 +165,7 @@ Route::middleware(['auth'])->group(function () {
         Route::post('/portfolio/import-excel', [PilotProjectValidationController::class, 'importExcel'])->name('portfolio.import-excel');
         Route::get('/template-excel', [PilotProjectValidationController::class, 'downloadTemplate'])->name('template-excel');
         Route::get('/project-pdf/{key}', [PilotProjectValidationController::class, 'projectPdf'])
-            ->where('key', 'arcas|mea|mgc')
+            ->where('key', 'arcas|mea|mgc|dozer|minepump')
             ->name('project-pdf.show');
         Route::resource('projects', PilotProjectValidationProjectController::class)->except(['show']);
         Route::resource('roadmap-periods', PilotProjectValidationRoadmapPeriodController::class)->except(['show']);

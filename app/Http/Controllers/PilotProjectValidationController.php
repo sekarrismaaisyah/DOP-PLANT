@@ -137,11 +137,15 @@ class PilotProjectValidationController extends Controller
             'arcas' => ['arcas'],
             'mea' => ['mea', 'mining eyes'],
             'mgc' => ['mgc', 'mgd'],
+            'dozer' => ['dozer', 'remote dozer'],
+            'minepump' => ['minepump', 'mine pump', 'remote pump'],
         ];
         $preferredNames = [
             'arcas' => ['ARCAS.pdf', 'arcas.pdf'],
             'mea' => ['MEA.pdf', 'mea.pdf'],
             'mgc' => ['MGC.pdf', 'mgc.pdf', 'MGD.pdf', 'mgd.pdf'],
+            'dozer' => ['Dozer.pdf', 'dozer.pdf'],
+            'minepump' => ['MinePump.pdf', 'minepump.pdf', 'mine-pump.pdf'],
         ];
         if (! array_key_exists($key, $keywordMap)) {
             abort(404);

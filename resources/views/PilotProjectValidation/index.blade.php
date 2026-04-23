@@ -2777,6 +2777,8 @@
         if (name.indexOf('arcas') >= 0) return 'arcas';
         if (name.indexOf('mining eyes') >= 0 || name.indexOf('mea') >= 0) return 'mea';
         if (name.indexOf('mgd') >= 0 || name.indexOf('mgc') >= 0) return 'mgc';
+        if (name.indexOf('remote dozer') >= 0 || name.indexOf('dozer') >= 0) return 'dozer';
+        if (name.indexOf('remote pump') >= 0 || name.indexOf('mine pump') >= 0 || name.indexOf('minepump') >= 0) return 'minepump';
 
         return '';
       }
