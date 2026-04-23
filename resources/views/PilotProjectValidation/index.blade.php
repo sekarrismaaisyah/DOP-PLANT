@@ -2654,10 +2654,26 @@
           return '<text x="' + xPos(index) + '" y="' + (height - (compact ? 12 : 18)) + '" fill="#64788b" font-size="' + (compact ? 10 : 11) + '" text-anchor="middle">' + escapeHtml(point.label) + '</text>';
         }).join('');
         const progressDots = points.map(function (point, index) {
+          if (index > lastActiveIndex) return '';
           return '<circle cx="' + xPos(index) + '" cy="' + yPos(point.progress) + '" r="' + (compact ? 3.8 : 4.5) + '" fill="#2e6f99"></circle>';
         }).join('');
         const decisionDots = points.map(function (point, index) {
+          if (index > lastActiveIndex) return '';
           return '<circle cx="' + xPos(index) + '" cy="' + yPos(point.decision) + '" r="' + (compact ? 3.8 : 4.5) + '" fill="#d89410"></circle>';
+        }).join('');
+        const futureProgressStrips = points.map(function (point, index) {
+          if (index <= lastActiveIndex) return '';
+          const x = xPos(index);
+          const y = yPos(point.progress);
+          const half = compact ? 6 : 7;
+          return '<line x1="' + (x - half) + '" y1="' + y + '" x2="' + (x + half) + '" y2="' + y + '" stroke="#2e6f99" stroke-width="' + (compact ? 2.1 : 2.6) + '" stroke-linecap="round" opacity="0.92"></line>';
+        }).join('');
+        const futureDecisionStrips = points.map(function (point, index) {
+          if (index <= lastActiveIndex) return '';
+          const x = xPos(index);
+          const y = yPos(point.decision);
+          const half = compact ? 6 : 7;
+          return '<line x1="' + (x - half) + '" y1="' + y + '" x2="' + (x + half) + '" y2="' + y + '" stroke="#d89410" stroke-width="' + (compact ? 2.1 : 2.6) + '" stroke-linecap="round" opacity="0.92"></line>';
         }).join('');
         return '<svg viewBox="0 0 ' + width + ' ' + height + '" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Progress and decision curve">'
           + gridLines
@@ -2665,7 +2681,7 @@
           + '<line x1="' + left + '" y1="' + (height - bottom) + '" x2="' + (width - right) + '" y2="' + (height - bottom) + '" stroke="#b8c7d4" stroke-width="1.4"></line>'
           + (lastActiveIndex >= 0 ? '<path d="' + buildPath('progress', lastActiveIndex) + '" fill="none" stroke="#2e6f99" stroke-width="' + (compact ? 3 : 3.5) + '" stroke-linecap="round" stroke-linejoin="round"></path>' : '')
           + (lastActiveIndex >= 0 ? '<path d="' + buildPath('decision', lastActiveIndex) + '" fill="none" stroke="#d89410" stroke-width="' + (compact ? 3 : 3.5) + '" stroke-linecap="round" stroke-linejoin="round"></path>' : '')
-          + progressDots + decisionDots + xLabels
+          + progressDots + decisionDots + futureProgressStrips + futureDecisionStrips + xLabels
           + '<text x="' + left + '" y="' + (top - 6) + '" fill="#64788b" font-size="' + (compact ? 10 : 11) + '">0–100%</text>'
           + '</svg>';
       }
