@@ -1246,7 +1246,7 @@
       <div class="hero-kicker">Pilot Project Validation</div>
       <h1>Mining Automation Key Pilot Projects &amp; Technical Validation</h1>
       <div class="hero-brand">Berau Coal</div>
-      <p>Monitoring kemajuan proyek otomasi, evaluasi gate GO/NO-GO, dan validasi teknis dalam satu dashboard yang ringkas.</p>
+      <!-- <p>Monitoring kemajuan proyek otomasi, evaluasi gate GO/NO-GO, dan validasi teknis dalam satu dashboard yang ringkas.</p> -->
       
       <!-- <div class="toolbar">
         <div class="pill"></div>
