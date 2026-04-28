@@ -4947,7 +4947,7 @@ class DOPMWeeklyController extends Controller
 
     /**
      * Export gabungan dopm_weekly_imports + OAK (tipe observer).
-     * Join by tanggal yang sama + aktivitas (activity OAK ~= nama_pekerjaan DOPM weekly).
+     * Join wajib: tanggal sama + location sama + location_detail sama.
      * Jika OAK lebih dari satu per baris, kolom OAK akan ditambah ke kanan.
      */
     public function exportWeeklyJoinedWithOakExcel(Request $request, string $week): void
@@ -4971,7 +4971,7 @@ class DOPMWeeklyController extends Controller
 
         $imports = $query->get();
 
-        $oakMap = [];
+        $oakMapComposite = [];
         if ($imports->isNotEmpty()) {
             try {
                 $chNitip = self::clickHouseNitipForOak();
@@ -4986,13 +4986,13 @@ class DOPMWeeklyController extends Controller
                     $sqlOak = "
                         SELECT
                             toDate(submit_date) AS submit_day,
-                            toString(activity) AS activity,
                             toString(kode_sid_pelapor) AS kode_sid_pelapor,
                             toString(company_submit_by) AS company_submit_by,
+                            toString(location) AS location,
                             toString(detail_location) AS detail_location
                         FROM aaj_vw_car_oak_register_ytd_only
                         WHERE toDate(submit_date) BETWEEN toDate('{$weekStart}') AND toDate('{$weekEnd}')
-                          AND lower(trim(toString(tipe))) = 'observer'
+                          AND lower(trim(toString(tipe))) IN ('observer', 'pengawas langsung')
                           {$siteClause}
                         ORDER BY submit_date ASC
                     ";
@@ -5000,22 +5000,25 @@ class DOPMWeeklyController extends Controller
                     $oakRows = $chNitip->query($sqlOak);
                     foreach ($oakRows as $oakRow) {
                         $dayRaw = self::getClickHouseRowValue($oakRow, 'submit_day');
-                        $activityRaw = self::getClickHouseRowValue($oakRow, 'activity');
                         $day = trim((string) $dayRaw);
-                        $activityKey = self::normalizeJoinKey((string) $activityRaw);
-                        if ($day === '' || $activityKey === '') {
+                        if ($day === '') {
                             continue;
                         }
 
-                        $groupKey = $day . '|' . $activityKey;
-                        if (! isset($oakMap[$groupKey])) {
-                            $oakMap[$groupKey] = [];
+                        $locationKey = self::normalizeJoinKey((string) self::getClickHouseRowValue($oakRow, 'location'));
+                        $detailLocationKey = self::normalizeJoinKey((string) self::getClickHouseRowValue($oakRow, 'detail_location'));
+
+                        $groupKeyComposite = $day . '|' . $locationKey . '|' . $detailLocationKey;
+                        if (! isset($oakMapComposite[$groupKeyComposite])) {
+                            $oakMapComposite[$groupKeyComposite] = [];
                         }
-                        $oakMap[$groupKey][] = [
+                        $oakPayload = [
                             'sid' => trim((string) self::getClickHouseRowValue($oakRow, 'kode_sid_pelapor')),
                             'perusahaan_pelapor' => trim((string) self::getClickHouseRowValue($oakRow, 'company_submit_by')),
                             'detail_oak' => trim((string) self::getClickHouseRowValue($oakRow, 'detail_location')),
                         ];
+                        $oakMapComposite[$groupKeyComposite][] = $oakPayload;
+
                     }
                 }
             } catch (\Throwable $e) {
@@ -5027,9 +5030,10 @@ class DOPMWeeklyController extends Controller
         $rowsForExport = [];
         foreach ($imports as $item) {
             $tanggal = $item->tanggal?->format('Y-m-d') ?? '';
-            $activityKey = self::normalizeJoinKey((string) ($item->nama_pekerjaan ?? ''));
-            $groupKey = $tanggal . '|' . $activityKey;
-            $matchedOaks = $oakMap[$groupKey] ?? [];
+            $locationKey = self::normalizeJoinKey((string) ($item->location ?? ''));
+            $detailLocationKey = self::normalizeJoinKey((string) ($item->location_detail ?? ''));
+            $groupKey = $tanggal . '|' . $locationKey . '|' . $detailLocationKey;
+            $matchedOaks = $oakMapComposite[$groupKey] ?? [];
             $maxOakCount = max($maxOakCount, count($matchedOaks));
 
             $rowsForExport[] = [
@@ -5177,7 +5181,7 @@ class DOPMWeeklyController extends Controller
 
         $imports = $query->get();
 
-        $oakMap = [];
+        $oakMapComposite = [];
         if ($imports->isNotEmpty()) {
             $minDate = $imports->min('tanggal');
             $maxDate = $imports->max('tanggal');
@@ -5195,13 +5199,13 @@ class DOPMWeeklyController extends Controller
                         $sqlOak = "
                             SELECT
                                 toDate(submit_date) AS submit_day,
-                                toString(activity) AS activity,
                                 toString(kode_sid_pelapor) AS kode_sid_pelapor,
                                 toString(company_submit_by) AS company_submit_by,
+                                toString(location) AS location,
                                 toString(detail_location) AS detail_location
                             FROM aaj_vw_car_oak_register_ytd_only
                             WHERE toDate(submit_date) BETWEEN toDate('{$startDate}') AND toDate('{$endDate}')
-                              AND lower(trim(toString(tipe))) = 'observer'
+                              AND lower(trim(toString(tipe))) IN ('observer', 'pengawas langsung')
                               {$siteClause}
                             ORDER BY submit_date ASC
                         ";
@@ -5209,22 +5213,25 @@ class DOPMWeeklyController extends Controller
                         $oakRows = $chNitip->query($sqlOak);
                         foreach ($oakRows as $oakRow) {
                             $dayRaw = self::getClickHouseRowValue($oakRow, 'submit_day');
-                            $activityRaw = self::getClickHouseRowValue($oakRow, 'activity');
                             $day = trim((string) $dayRaw);
-                            $activityKey = self::normalizeJoinKey((string) $activityRaw);
-                            if ($day === '' || $activityKey === '') {
+                            if ($day === '') {
                                 continue;
                             }
 
-                            $groupKey = $day . '|' . $activityKey;
-                            if (! isset($oakMap[$groupKey])) {
-                                $oakMap[$groupKey] = [];
+                            $locationKey = self::normalizeJoinKey((string) self::getClickHouseRowValue($oakRow, 'location'));
+                            $detailLocationKey = self::normalizeJoinKey((string) self::getClickHouseRowValue($oakRow, 'detail_location'));
+
+                            $groupKeyComposite = $day . '|' . $locationKey . '|' . $detailLocationKey;
+                            if (! isset($oakMapComposite[$groupKeyComposite])) {
+                                $oakMapComposite[$groupKeyComposite] = [];
                             }
-                            $oakMap[$groupKey][] = [
+                            $oakPayload = [
                                 'sid' => trim((string) self::getClickHouseRowValue($oakRow, 'kode_sid_pelapor')),
                                 'perusahaan_pelapor' => trim((string) self::getClickHouseRowValue($oakRow, 'company_submit_by')),
                                 'detail_oak' => trim((string) self::getClickHouseRowValue($oakRow, 'detail_location')),
                             ];
+                            $oakMapComposite[$groupKeyComposite][] = $oakPayload;
+
                         }
                     }
                 } catch (\Throwable $e) {
@@ -5237,9 +5244,10 @@ class DOPMWeeklyController extends Controller
         $rowsForExport = [];
         foreach ($imports as $item) {
             $tanggal = $item->tanggal?->format('Y-m-d') ?? '';
-            $activityKey = self::normalizeJoinKey((string) ($item->nama_pekerjaan ?? ''));
-            $groupKey = $tanggal . '|' . $activityKey;
-            $matchedOaks = $oakMap[$groupKey] ?? [];
+            $locationKey = self::normalizeJoinKey((string) ($item->location ?? ''));
+            $detailLocationKey = self::normalizeJoinKey((string) ($item->location_detail ?? ''));
+            $groupKey = $tanggal . '|' . $locationKey . '|' . $detailLocationKey;
+            $matchedOaks = $oakMapComposite[$groupKey] ?? [];
             $maxOakCount = max($maxOakCount, count($matchedOaks));
 
             $rowsForExport[] = [
@@ -5375,6 +5383,7 @@ class DOPMWeeklyController extends Controller
     private static function normalizeJoinKey(string $value): string
     {
         $value = strtolower(trim($value));
+        $value = preg_replace('/[^a-z0-9]+/i', ' ', $value);
         $value = preg_replace('/\s+/', ' ', $value);
         return trim((string) $value);
     }
