@@ -5213,11 +5213,13 @@ class DOPMWeeklyController extends Controller
                 $conditions = [];
                 foreach ($tupleChunk as $tuple) {
                     $tanggalEsc = addslashes((string) $tuple['tanggal']);
-                    $locationEsc = addslashes((string) $tuple['location']);
-                    $detailEsc = addslashes((string) $tuple['detail']);
+                    $locationNorm = self::normalizeLocationJoinKey((string) $tuple['location']);
+                    $detailNorm = self::normalizeLocationJoinKey((string) $tuple['detail']);
+                    $locationEsc = addslashes($locationNorm);
+                    $detailEsc = addslashes($detailNorm);
                     $conditions[] = "(toDate(submit_date) = toDate('{$tanggalEsc}')"
-                        . " AND lower(trim(toString(location))) = lower('{$locationEsc}')"
-                        . " AND lower(trim(toString(detail_location))) = lower('{$detailEsc}'))";
+                        . " AND lower(trim(replaceRegexpAll(toString(location), '\\\\s+', ' '))) = '{$locationEsc}'"
+                        . " AND lower(trim(replaceRegexpAll(toString(detail_location), '\\\\s+', ' '))) = '{$detailEsc}')";
                 }
 
                 if (empty($conditions)) {
