@@ -5183,6 +5183,23 @@ class DOPMWeeklyController extends Controller
 
         $maxOakCount = 0;
         $rowsForExport = [];
+        $oakByKey = [];
+        $joinTuples = [];
+        foreach ($imports as $item) {
+            $tanggal = $item->tanggal?->format('Y-m-d') ?? '';
+            $locationName = trim((string) ($item->location ?? ''));
+            $locationDetailName = trim((string) ($item->location_detail ?? ''));
+            if ($tanggal === '' || $locationName === '' || $locationDetailName === '') {
+                continue;
+            }
+            $tupleKey = $tanggal . '|' . self::normalizeLocationJoinKey($locationName) . '|' . self::normalizeLocationJoinKey($locationDetailName);
+            $joinTuples[$tupleKey] = [
+                'tanggal' => $tanggal,
+                'location' => $locationName,
+                'detail' => $locationDetailName,
+            ];
+        }
+
         $chNitip = null;
         try {
             $chNitip = self::clickHouseNitipForOak();
@@ -5190,63 +5207,80 @@ class DOPMWeeklyController extends Controller
             $chNitip = null;
         }
 
-        foreach ($imports as $item) {
-            $matchedOaks = [];
-            $tanggal = $item->tanggal?->format('Y-m-d') ?? '';
-            $locationName = trim((string) ($item->location ?? ''));
-            $locationDetailName = trim((string) ($item->location_detail ?? ''));
+        if ($chNitip !== null && !empty($joinTuples)) {
+            $tupleValues = array_values($joinTuples);
+            foreach (array_chunk($tupleValues, 80) as $tupleChunk) {
+                $conditions = [];
+                foreach ($tupleChunk as $tuple) {
+                    $tanggalEsc = addslashes((string) $tuple['tanggal']);
+                    $locationEsc = addslashes((string) $tuple['location']);
+                    $detailEsc = addslashes((string) $tuple['detail']);
+                    $conditions[] = "(toDate(submit_date) = toDate('{$tanggalEsc}')"
+                        . " AND lower(trim(toString(location))) = lower('{$locationEsc}')"
+                        . " AND lower(trim(toString(detail_location))) = lower('{$detailEsc}'))";
+                }
 
-            // Ikuti metode modal di Dashboard: filter OAK by tanggal submit + location + detail_location + tipe observer.
-            if ($chNitip !== null && $tanggal !== '' && $locationName !== '' && $locationDetailName !== '') {
+                if (empty($conditions)) {
+                    continue;
+                }
+
+                $sqlOakBatch = "
+                    SELECT
+                        toString(id) as id,
+                        toString(argMax(activity, submit_date)) as activity,
+                        toString(argMax(sub_activity, submit_date)) as sub_activity,
+                        toString(argMax(submit_date, submit_date)) as submit_date_str,
+                        toString(argMax(submit_by, submit_date)) as submit_by,
+                        toString(argMax(kode_sid_pelapor, submit_date)) as kode_sid_pelapor,
+                        toString(argMax(conclusion, submit_date)) as conclusion,
+                        toString(argMax(site, submit_date)) as site,
+                        toString(argMax(location, submit_date)) as location,
+                        toString(argMax(detail_location, submit_date)) as detail_location,
+                        toString(argMax(company_submit_by, submit_date)) as company_submit_by,
+                        toString(toDate(max(submit_date))) as submit_day
+                    FROM aaj_vw_car_oak_register_ytd_only
+                    WHERE lower(trim(toString(tipe))) = 'observer'
+                      AND (" . implode(' OR ', $conditions) . ")
+                    GROUP BY id
+                    ORDER BY max(submit_date) DESC
+                    LIMIT 5000
+                ";
+
                 try {
-                    $tanggalEsc = addslashes($tanggal);
-                    $locationEsc = addslashes($locationName);
-                    $detailEsc = addslashes($locationDetailName);
-                    $sqlOakPerRow = "
-                        SELECT
-                            toString(id) as id,
-                            toString(argMax(activity, submit_date)) as activity,
-                            toString(argMax(sub_activity, submit_date)) as sub_activity,
-                            toString(argMax(submit_date, submit_date)) as submit_date_str,
-                            toString(argMax(submit_by, submit_date)) as submit_by,
-                            toString(argMax(kode_sid_pelapor, submit_date)) as kode_sid_pelapor,
-                            toString(argMax(conclusion, submit_date)) as conclusion,
-                            toString(argMax(site, submit_date)) as site,
-                            toString(argMax(location, submit_date)) as location,
-                            toString(argMax(detail_location, submit_date)) as detail_location,
-                            toString(argMax(company_submit_by, submit_date)) as company_submit_by
-                        FROM (
-                            SELECT id, activity, sub_activity, submit_date, submit_by, kode_sid_pelapor, conclusion, site, location, detail_location, company_submit_by
-                            FROM aaj_vw_car_oak_register_ytd_only
-                            WHERE toDate(submit_date) = '{$tanggalEsc}'
-                              AND lower(trim(toString(tipe))) = 'observer'
-                              AND lower(trim(toString(location))) = lower('{$locationEsc}')
-                              AND lower(trim(toString(detail_location))) = lower('{$detailEsc}')
-                        ) AS filtered
-                        GROUP BY id
-                        ORDER BY max(submit_date) DESC
-                        LIMIT 200
-                    ";
-
-                    $oakRows = $chNitip->query($sqlOakPerRow);
+                    $oakRows = $chNitip->query($sqlOakBatch);
                     foreach ($oakRows ?? [] as $oakRow) {
-                        $matchedOaks[] = [
+                        $submitDay = trim((string) self::getClickHouseRowValue($oakRow, 'submit_day'));
+                        $locKey = self::normalizeLocationJoinKey((string) self::getClickHouseRowValue($oakRow, 'location'));
+                        $detKey = self::normalizeLocationJoinKey((string) self::getClickHouseRowValue($oakRow, 'detail_location'));
+                        if ($submitDay === '' || $locKey === '' || $detKey === '') {
+                            continue;
+                        }
+
+                        $key = $submitDay . '|' . $locKey . '|' . $detKey;
+                        if (!isset($oakByKey[$key])) {
+                            $oakByKey[$key] = [];
+                        }
+                        $oakByKey[$key][] = [
                             'sid' => trim((string) self::getClickHouseRowValue($oakRow, 'kode_sid_pelapor')),
                             'perusahaan_pelapor' => trim((string) self::getClickHouseRowValue($oakRow, 'company_submit_by')),
                             'detail_oak' => trim((string) self::getClickHouseRowValue($oakRow, 'detail_location')),
                         ];
                     }
                 } catch (\Throwable $e) {
-                    \Illuminate\Support\Facades\Log::warning('Export all join OAK per-row gagal.', [
-                        'kode_ikk' => $item->kode_ikk,
-                        'tanggal' => $tanggal,
-                        'location' => $locationName,
-                        'location_detail' => $locationDetailName,
+                    \Illuminate\Support\Facades\Log::warning('Export all join OAK batch gagal.', [
+                        'chunk_size' => count($tupleChunk),
                         'message' => $e->getMessage(),
                     ]);
                 }
             }
+        }
 
+        foreach ($imports as $item) {
+            $tanggal = $item->tanggal?->format('Y-m-d') ?? '';
+            $locKey = self::normalizeLocationJoinKey((string) ($item->location ?? ''));
+            $detKey = self::normalizeLocationJoinKey((string) ($item->location_detail ?? ''));
+            $key = $tanggal . '|' . $locKey . '|' . $detKey;
+            $matchedOaks = $oakByKey[$key] ?? [];
             $maxOakCount = max($maxOakCount, count($matchedOaks));
             $rowsForExport[] = ['import' => $item, 'oaks' => $matchedOaks];
         }
