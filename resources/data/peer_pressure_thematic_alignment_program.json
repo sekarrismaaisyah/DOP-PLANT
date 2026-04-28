@@ -307,6 +307,42 @@
       "grade_ytd": "L4",
       "kategori" : "Semakin tinggi semakin bagus",
       "drill_down": []
+    }    ,
+    {
+      "week": 16,
+      "tematik": "Evaluasi Kualitas SAP",
+      "recommendation": "Verifikasi Fit to work pekerja",
+      "program_related": "Fatigue Management",
+      "indikator": "Pengecekan FTW melalui input Aggregator",
+      "detail_indikator": "% Pengisian Aggregator BeHealth",
+      "scoring_all_site_ytd": "90.09%",
+      "grade_ytd": "L4",
+      "kategori": "Semakin tinggi semakin bagus",
+      "drill_down": []
+    },
+    {
+      "week": 16,
+      "tematik": "Evaluasi Kualitas SAP",
+      "recommendation": "Mandiri Identifikasi Golden Rules",
+      "program_related": "Blindspot GR",
+      "indikator": "Blindspot GR yang tidak ditemukan mitra",
+      "detail_indikator": "% Blindspot GR",
+      "scoring_all_site_ytd": "32%",
+      "grade_ytd": "L2",
+      "kategori": "Semakin kecil semakin bagus",
+      "drill_down": []
+    },
+    {
+      "week": 16,
+      "tematik": "Evaluasi Kualitas SAP",
+      "recommendation": "Inspeksi area harian untuk area prioritas",
+      "program_related": "Coverage Area",
+      "indikator": "Daily Coverage Area",
+      "detail_indikator": "% Daily Coverage Area Kritis",
+      "scoring_all_site_ytd": "74.82%",
+      "grade_ytd": "L4",
+      "kategori": "Semakin tinggi semakin bagus",
+      "drill_down": []
     }
   ]
 }
