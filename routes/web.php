@@ -636,6 +636,7 @@ Route::middleware(['auth'])->group(function () {
                 ->name('dashboard-weekly.export-ikk-excel');
             Route::get('/dashboard-weekly/api/compliance-by-month', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'getComplianceByMonth'])->name('dashboard-weekly.api.compliance-by-month');
             Route::get('/dashboard-weekly/api/ikk-daily-details', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'getIkkDailyDetails'])->name('dashboard-weekly.api.ikk-daily-details');
+            Route::post('/dashboard-weekly/import-excel', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'importWeeklyExcel'])->name('dashboard-weekly.import-excel');
             Route::get('/dashboard-weekly/{week}', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'dashboard'])
                 ->where('week', '^\d{4}-W\d{2}$')
                 ->name('dashboard-weekly');

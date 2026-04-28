@@ -1459,6 +1459,12 @@
 <div class="hazard-detection-header">
     <h1 class="hazard-detection-title">DOPM & IKK - Dashboard Weekly</h1>
     <p class="hazard-detection-subtitle">Statistik harian DOPM, IPK-IKK, OKK, dan OAK (Observasi Area Kerja)</p>
+    @if (session('success'))
+        <div class="alert alert-success rounded-4 mt-3 mb-0">{{ session('success') }}</div>
+    @endif
+    @if (session('error'))
+        <div class="alert alert-danger rounded-4 mt-3 mb-0">{{ session('error') }}</div>
+    @endif
 
     {{-- Filter Week Calendar --}}
     <div class="card rounded-4 mb-3 w-100">
@@ -1509,6 +1515,29 @@
                     <button type="submit" class="btn btn-primary rounded-3 px-4" id="dashboardFilterBtn">
                         <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">search</i> 
                         Filter
+                    </button>
+                </div>
+            </div>
+        </form>
+        <hr class="my-3">
+        <form method="POST" action="{{ route('dopmikk.dopm.dashboard-weekly.import-excel') }}" enctype="multipart/form-data">
+            @csrf
+            <input type="hidden" name="week" value="{{ $filterWeek ?? '' }}">
+            <input type="hidden" name="site" value="{{ $filterSite ?? '' }}">
+            <input type="hidden" name="date" value="{{ $filterDate ?? now()->toDateString() }}">
+            <div class="row g-3 align-items-end">
+                <div class="col-12 col-md-8">
+                    <label for="weeklyExcelFile" class="form-label mb-2 small fw-semibold text-muted">
+                        <i class="material-icons-outlined me-1" style="font-size: 16px; vertical-align: middle;">upload_file</i>
+                        Upload Excel Weekly (Background Processing)
+                    </label>
+                    <input type="file" name="excel_file" id="weeklyExcelFile" class="form-control rounded-3" accept=".xlsx,.xls,.csv" required>
+                    <small class="text-muted">Kolom Excel mengikuti format data yang Anda contohkan (Kode IKK, Layer 1-4, IPK/OKK, lokasi, dll).</small>
+                </div>
+                <div class="col-12 col-md-4 d-grid">
+                    <button type="submit" class="btn btn-success rounded-3">
+                        <i class="material-icons-outlined me-1" style="font-size: 18px; vertical-align: middle;">cloud_upload</i>
+                        Upload & Proses Background
                     </button>
                 </div>
             </div>

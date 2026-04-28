@@ -4,6 +4,7 @@ namespace App\Http\Controllers\DOPMIKK;
 
 use App\Http\Controllers\Controller;
 use App\Jobs\ImportDopmJob;
+use App\Jobs\ImportDopmWeeklyJob;
 use App\Services\ClickHouseService;
 use App\Models\Dopm;
 use App\Models\IpkIkk;
@@ -2044,6 +2045,50 @@ class DOPMWeeklyController extends Controller
         }
 
         return view('dopmikk.dopm.dashboard-weekly', $viewData);
+    }
+
+    /**
+     * Upload Excel untuk data weekly DOPM (diproses async via queue/job).
+     */
+    public function importWeeklyExcel(Request $request): RedirectResponse
+    {
+        $validated = $request->validate([
+            'excel_file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:20480'],
+            'week' => ['nullable', 'string'],
+            'site' => ['nullable', 'string'],
+            'date' => ['nullable', 'date'],
+        ]);
+
+        $file = $request->file('excel_file');
+        if (! $file || ! $file->isValid()) {
+            return redirect()->back()->with('error', 'File tidak valid atau gagal diunggah.');
+        }
+
+        $uniqueName = uniqid('dopm_weekly_', true) . '.' . $file->getClientOriginalExtension();
+        $storedPath = $file->storeAs('dopm-weekly-imports', $uniqueName);
+
+        if (! $storedPath) {
+            return redirect()->back()->with('error', 'Gagal menyimpan file upload.');
+        }
+
+        ImportDopmWeeklyJob::dispatch($storedPath)->onQueue('default');
+
+        $week = (string) ($validated['week'] ?? now()->format('o-\WW'));
+        if (! preg_match('/^\d{4}-W\d{2}$/', $week)) {
+            $week = now()->format('o-\WW');
+        }
+
+        $query = [];
+        if (! empty($validated['site'])) {
+            $query['site'] = $validated['site'];
+        }
+        if (! empty($validated['date'])) {
+            $query['date'] = Carbon::parse($validated['date'])->format('Y-m-d');
+        }
+
+        return redirect()
+            ->route('dopmikk.dopm.dashboard-weekly', ['week' => $week] + $query)
+            ->with('success', 'File Excel berhasil diupload dan sedang diproses di background.');
     }
 
     /**
