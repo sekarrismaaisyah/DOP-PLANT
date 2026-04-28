@@ -7,6 +7,7 @@ use App\Jobs\ImportDopmJob;
 use App\Jobs\ImportDopmWeeklyJob;
 use App\Services\ClickHouseService;
 use App\Models\Dopm;
+use App\Models\DopmWeeklyImport;
 use App\Models\IpkIkk;
 use App\Models\Okk;
 use Carbon\Carbon;
@@ -4942,5 +4943,439 @@ class DOPMWeeklyController extends Controller
             }
         }
         return $out;
+    }
+
+    /**
+     * Export gabungan dopm_weekly_imports + OAK (tipe observer).
+     * Join by tanggal yang sama + aktivitas (activity OAK ~= nama_pekerjaan DOPM weekly).
+     * Jika OAK lebih dari satu per baris, kolom OAK akan ditambah ke kanan.
+     */
+    public function exportWeeklyJoinedWithOakExcel(Request $request, string $week): void
+    {
+        $filterWeek = preg_match('/^\d{4}-W\d{2}$/', $week) ? $week : now()->format('o-\WW');
+        preg_match('/^(\d{4})-W(\d{2})$/', $filterWeek, $m);
+        $weekYear = (int) ($m[1] ?? now()->year);
+        $weekNumber = (int) ($m[2] ?? now()->weekOfYear);
+
+        $weekStartDate = Carbon::now()->setISODate($weekYear, $weekNumber, 1)->startOfDay();
+        $weekEndDate = $weekStartDate->copy()->addDays(6)->endOfDay();
+
+        $filterSite = trim((string) $request->query('site', ''));
+        $query = DopmWeeklyImport::query()
+            ->whereBetween('tanggal', [$weekStartDate->toDateString(), $weekEndDate->toDateString()])
+            ->orderBy('tanggal')
+            ->orderBy('kode_ikk');
+        if ($filterSite !== '') {
+            $query->where('site', $filterSite);
+        }
+
+        $imports = $query->get();
+
+        $oakMap = [];
+        if ($imports->isNotEmpty()) {
+            try {
+                $chNitip = self::clickHouseNitipForOak();
+                if ($chNitip !== null) {
+                    $weekStart = $weekStartDate->toDateString();
+                    $weekEnd = $weekEndDate->toDateString();
+                    $siteClause = '';
+                    if ($filterSite !== '') {
+                        $siteClause = " AND lower(trim(toString(site))) = lower('" . addslashes($filterSite) . "') ";
+                    }
+
+                    $sqlOak = "
+                        SELECT
+                            toDate(submit_date) AS submit_day,
+                            toString(activity) AS activity,
+                            toString(kode_sid_pelapor) AS kode_sid_pelapor,
+                            toString(company_submit_by) AS company_submit_by,
+                            toString(detail_location) AS detail_location
+                        FROM aaj_vw_car_oak_register_ytd_only
+                        WHERE toDate(submit_date) BETWEEN toDate('{$weekStart}') AND toDate('{$weekEnd}')
+                          AND lower(trim(toString(tipe))) = 'observer'
+                          {$siteClause}
+                        ORDER BY submit_date ASC
+                    ";
+
+                    $oakRows = $chNitip->query($sqlOak);
+                    foreach ($oakRows as $oakRow) {
+                        $dayRaw = self::getClickHouseRowValue($oakRow, 'submit_day');
+                        $activityRaw = self::getClickHouseRowValue($oakRow, 'activity');
+                        $day = trim((string) $dayRaw);
+                        $activityKey = self::normalizeJoinKey((string) $activityRaw);
+                        if ($day === '' || $activityKey === '') {
+                            continue;
+                        }
+
+                        $groupKey = $day . '|' . $activityKey;
+                        if (! isset($oakMap[$groupKey])) {
+                            $oakMap[$groupKey] = [];
+                        }
+                        $oakMap[$groupKey][] = [
+                            'sid' => trim((string) self::getClickHouseRowValue($oakRow, 'kode_sid_pelapor')),
+                            'perusahaan_pelapor' => trim((string) self::getClickHouseRowValue($oakRow, 'company_submit_by')),
+                            'detail_oak' => trim((string) self::getClickHouseRowValue($oakRow, 'detail_location')),
+                        ];
+                    }
+                }
+            } catch (\Throwable $e) {
+                \Illuminate\Support\Facades\Log::warning('Export weekly join OAK: gagal ambil data OAK - ' . $e->getMessage());
+            }
+        }
+
+        $maxOakCount = 0;
+        $rowsForExport = [];
+        foreach ($imports as $item) {
+            $tanggal = $item->tanggal?->format('Y-m-d') ?? '';
+            $activityKey = self::normalizeJoinKey((string) ($item->nama_pekerjaan ?? ''));
+            $groupKey = $tanggal . '|' . $activityKey;
+            $matchedOaks = $oakMap[$groupKey] ?? [];
+            $maxOakCount = max($maxOakCount, count($matchedOaks));
+
+            $rowsForExport[] = [
+                'import' => $item,
+                'oaks' => $matchedOaks,
+            ];
+        }
+
+        $headers = [
+            'No',
+            'Kode IKK',
+            'Tanggal',
+            'Site',
+            'Jenis Ijin Kerja Khusus',
+            'Nama Pekerjaan',
+            'Perusahaan',
+            'Status WP',
+            'PIC Approver',
+            'Nama Layer 1',
+            'SID Layer 1',
+            'Nama Layer 2',
+            'SID Layer 2',
+            'Nama Layer 3',
+            'SID Layer 3',
+            'Nama Layer 4',
+            'SID Layer 4',
+            'Start Date',
+            'End Date',
+            'Location',
+            'Location Detail',
+            'Ada IPK',
+            'Kode IPK',
+            'Detail IPK',
+            'Ada OKK',
+            'Kode OKK',
+            'Detail OKK',
+            'ADA OAK',
+            'SID',
+            'Perusahaan Pelapor',
+            'Detail OAK',
+        ];
+
+        for ($i = 2; $i <= $maxOakCount; $i++) {
+            $headers[] = 'SID ' . $i;
+            $headers[] = 'Perusahaan Pelapor ' . $i;
+            $headers[] = 'Detail OAK ' . $i;
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('DOPM Weekly + OAK');
+
+        $col = 1;
+        foreach ($headers as $header) {
+            $sheet->setCellValue(Coordinate::stringFromColumnIndex($col) . '1', $header);
+            $col++;
+        }
+
+        $rowNumber = 2;
+        foreach ($rowsForExport as $row) {
+            /** @var DopmWeeklyImport $item */
+            $item = $row['import'];
+            $oaks = $row['oaks'];
+            $hasOak = count($oaks) > 0;
+            $firstOak = $oaks[0] ?? ['sid' => '-', 'perusahaan_pelapor' => '-', 'detail_oak' => '-'];
+
+            $line = [
+                $item->row_no ?? ($rowNumber - 1),
+                $item->kode_ikk ?? '-',
+                $item->tanggal?->format('d/m/Y') ?? '-',
+                $item->site ?? '-',
+                $item->jenis_ijin_kerja_khusus ?? '-',
+                $item->nama_pekerjaan ?? '-',
+                $item->perusahaan ?? '-',
+                $item->status_wp ?? '-',
+                $item->pic_approver ?? '-',
+                $item->nama_layer_1 ?? '-',
+                $item->sid_layer_1 ?? '-',
+                $item->nama_layer_2 ?? '-',
+                $item->sid_layer_2 ?? '-',
+                $item->nama_layer_3 ?? '-',
+                $item->sid_layer_3 ?? '-',
+                $item->nama_layer_4 ?? '-',
+                $item->sid_layer_4 ?? '-',
+                $item->start_date?->format('d/m/Y') ?? '-',
+                $item->end_date?->format('d/m/Y') ?? '-',
+                $item->location ?? '-',
+                $item->location_detail ?? '-',
+                $item->ada_ipk ? 'Ya' : 'Tidak',
+                $item->kode_ipk ?? '-',
+                $item->detail_ipk ?? '-',
+                $item->ada_okk ? 'Ya' : 'Tidak',
+                $item->kode_okk ?? '-',
+                $item->detail_okk ?? '-',
+                $hasOak ? 'Ya' : 'Tidak',
+                $firstOak['sid'] !== '' ? $firstOak['sid'] : '-',
+                $firstOak['perusahaan_pelapor'] !== '' ? $firstOak['perusahaan_pelapor'] : '-',
+                $firstOak['detail_oak'] !== '' ? $firstOak['detail_oak'] : '-',
+            ];
+
+            for ($i = 2; $i <= $maxOakCount; $i++) {
+                $oak = $oaks[$i - 1] ?? ['sid' => '-', 'perusahaan_pelapor' => '-', 'detail_oak' => '-'];
+                $line[] = $oak['sid'] !== '' ? $oak['sid'] : '-';
+                $line[] = $oak['perusahaan_pelapor'] !== '' ? $oak['perusahaan_pelapor'] : '-';
+                $line[] = $oak['detail_oak'] !== '' ? $oak['detail_oak'] : '-';
+            }
+
+            $sheet->fromArray($line, null, 'A' . $rowNumber);
+            $rowNumber++;
+        }
+
+        $lastCol = Coordinate::stringFromColumnIndex(count($headers));
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:' . $lastCol . '1')
+            ->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()
+            ->setARGB('FFD9EAD3');
+
+        for ($i = 1; $i <= count($headers); $i++) {
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setAutoSize(true);
+        }
+
+        $filename = 'dopm_weekly_join_oak_' . $filterWeek . '.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+        exit;
+    }
+
+    /**
+     * Export ALL data gabungan dopm_weekly_imports + OAK (tipe observer), tanpa filter week.
+     */
+    public function exportAllJoinedWithOakExcel(Request $request): void
+    {
+        $filterSite = trim((string) $request->query('site', ''));
+        $query = DopmWeeklyImport::query()
+            ->orderBy('tanggal')
+            ->orderBy('kode_ikk');
+        if ($filterSite !== '') {
+            $query->where('site', $filterSite);
+        }
+
+        $imports = $query->get();
+
+        $oakMap = [];
+        if ($imports->isNotEmpty()) {
+            $minDate = $imports->min('tanggal');
+            $maxDate = $imports->max('tanggal');
+            if ($minDate !== null && $maxDate !== null) {
+                try {
+                    $chNitip = self::clickHouseNitipForOak();
+                    if ($chNitip !== null) {
+                        $startDate = Carbon::parse($minDate)->toDateString();
+                        $endDate = Carbon::parse($maxDate)->toDateString();
+                        $siteClause = '';
+                        if ($filterSite !== '') {
+                            $siteClause = " AND lower(trim(toString(site))) = lower('" . addslashes($filterSite) . "') ";
+                        }
+
+                        $sqlOak = "
+                            SELECT
+                                toDate(submit_date) AS submit_day,
+                                toString(activity) AS activity,
+                                toString(kode_sid_pelapor) AS kode_sid_pelapor,
+                                toString(company_submit_by) AS company_submit_by,
+                                toString(detail_location) AS detail_location
+                            FROM aaj_vw_car_oak_register_ytd_only
+                            WHERE toDate(submit_date) BETWEEN toDate('{$startDate}') AND toDate('{$endDate}')
+                              AND lower(trim(toString(tipe))) = 'observer'
+                              {$siteClause}
+                            ORDER BY submit_date ASC
+                        ";
+
+                        $oakRows = $chNitip->query($sqlOak);
+                        foreach ($oakRows as $oakRow) {
+                            $dayRaw = self::getClickHouseRowValue($oakRow, 'submit_day');
+                            $activityRaw = self::getClickHouseRowValue($oakRow, 'activity');
+                            $day = trim((string) $dayRaw);
+                            $activityKey = self::normalizeJoinKey((string) $activityRaw);
+                            if ($day === '' || $activityKey === '') {
+                                continue;
+                            }
+
+                            $groupKey = $day . '|' . $activityKey;
+                            if (! isset($oakMap[$groupKey])) {
+                                $oakMap[$groupKey] = [];
+                            }
+                            $oakMap[$groupKey][] = [
+                                'sid' => trim((string) self::getClickHouseRowValue($oakRow, 'kode_sid_pelapor')),
+                                'perusahaan_pelapor' => trim((string) self::getClickHouseRowValue($oakRow, 'company_submit_by')),
+                                'detail_oak' => trim((string) self::getClickHouseRowValue($oakRow, 'detail_location')),
+                            ];
+                        }
+                    }
+                } catch (\Throwable $e) {
+                    \Illuminate\Support\Facades\Log::warning('Export all join OAK: gagal ambil data OAK - ' . $e->getMessage());
+                }
+            }
+        }
+
+        $maxOakCount = 0;
+        $rowsForExport = [];
+        foreach ($imports as $item) {
+            $tanggal = $item->tanggal?->format('Y-m-d') ?? '';
+            $activityKey = self::normalizeJoinKey((string) ($item->nama_pekerjaan ?? ''));
+            $groupKey = $tanggal . '|' . $activityKey;
+            $matchedOaks = $oakMap[$groupKey] ?? [];
+            $maxOakCount = max($maxOakCount, count($matchedOaks));
+
+            $rowsForExport[] = [
+                'import' => $item,
+                'oaks' => $matchedOaks,
+            ];
+        }
+
+        $headers = [
+            'No',
+            'Kode IKK',
+            'Tanggal',
+            'Site',
+            'Jenis Ijin Kerja Khusus',
+            'Nama Pekerjaan',
+            'Perusahaan',
+            'Status WP',
+            'PIC Approver',
+            'Nama Layer 1',
+            'SID Layer 1',
+            'Nama Layer 2',
+            'SID Layer 2',
+            'Nama Layer 3',
+            'SID Layer 3',
+            'Nama Layer 4',
+            'SID Layer 4',
+            'Start Date',
+            'End Date',
+            'Location',
+            'Location Detail',
+            'Ada IPK',
+            'Kode IPK',
+            'Detail IPK',
+            'Ada OKK',
+            'Kode OKK',
+            'Detail OKK',
+            'ADA OAK',
+            'SID',
+            'Perusahaan Pelapor',
+            'Detail OAK',
+        ];
+
+        for ($i = 2; $i <= $maxOakCount; $i++) {
+            $headers[] = 'SID ' . $i;
+            $headers[] = 'Perusahaan Pelapor ' . $i;
+            $headers[] = 'Detail OAK ' . $i;
+        }
+
+        $spreadsheet = new Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('ALL DOPM Weekly + OAK');
+
+        $col = 1;
+        foreach ($headers as $header) {
+            $sheet->setCellValue(Coordinate::stringFromColumnIndex($col) . '1', $header);
+            $col++;
+        }
+
+        $rowNumber = 2;
+        foreach ($rowsForExport as $row) {
+            /** @var DopmWeeklyImport $item */
+            $item = $row['import'];
+            $oaks = $row['oaks'];
+            $hasOak = count($oaks) > 0;
+            $firstOak = $oaks[0] ?? ['sid' => '-', 'perusahaan_pelapor' => '-', 'detail_oak' => '-'];
+
+            $line = [
+                $item->row_no ?? ($rowNumber - 1),
+                $item->kode_ikk ?? '-',
+                $item->tanggal?->format('d/m/Y') ?? '-',
+                $item->site ?? '-',
+                $item->jenis_ijin_kerja_khusus ?? '-',
+                $item->nama_pekerjaan ?? '-',
+                $item->perusahaan ?? '-',
+                $item->status_wp ?? '-',
+                $item->pic_approver ?? '-',
+                $item->nama_layer_1 ?? '-',
+                $item->sid_layer_1 ?? '-',
+                $item->nama_layer_2 ?? '-',
+                $item->sid_layer_2 ?? '-',
+                $item->nama_layer_3 ?? '-',
+                $item->sid_layer_3 ?? '-',
+                $item->nama_layer_4 ?? '-',
+                $item->sid_layer_4 ?? '-',
+                $item->start_date?->format('d/m/Y') ?? '-',
+                $item->end_date?->format('d/m/Y') ?? '-',
+                $item->location ?? '-',
+                $item->location_detail ?? '-',
+                $item->ada_ipk ? 'Ya' : 'Tidak',
+                $item->kode_ipk ?? '-',
+                $item->detail_ipk ?? '-',
+                $item->ada_okk ? 'Ya' : 'Tidak',
+                $item->kode_okk ?? '-',
+                $item->detail_okk ?? '-',
+                $hasOak ? 'Ya' : 'Tidak',
+                $firstOak['sid'] !== '' ? $firstOak['sid'] : '-',
+                $firstOak['perusahaan_pelapor'] !== '' ? $firstOak['perusahaan_pelapor'] : '-',
+                $firstOak['detail_oak'] !== '' ? $firstOak['detail_oak'] : '-',
+            ];
+
+            for ($i = 2; $i <= $maxOakCount; $i++) {
+                $oak = $oaks[$i - 1] ?? ['sid' => '-', 'perusahaan_pelapor' => '-', 'detail_oak' => '-'];
+                $line[] = $oak['sid'] !== '' ? $oak['sid'] : '-';
+                $line[] = $oak['perusahaan_pelapor'] !== '' ? $oak['perusahaan_pelapor'] : '-';
+                $line[] = $oak['detail_oak'] !== '' ? $oak['detail_oak'] : '-';
+            }
+
+            $sheet->fromArray($line, null, 'A' . $rowNumber);
+            $rowNumber++;
+        }
+
+        $lastCol = Coordinate::stringFromColumnIndex(count($headers));
+        $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
+        $sheet->getStyle('A1:' . $lastCol . '1')
+            ->getFill()
+            ->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)
+            ->getStartColor()
+            ->setARGB('FFCFE2F3');
+
+        for ($i = 1; $i <= count($headers); $i++) {
+            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($i))->setAutoSize(true);
+        }
+
+        $filename = 'dopm_weekly_join_oak_all_data.xlsx';
+        $writer = new Xlsx($spreadsheet);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $filename . '"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+        exit;
+    }
+
+    private static function normalizeJoinKey(string $value): string
+    {
+        $value = strtolower(trim($value));
+        $value = preg_replace('/\s+/', ' ', $value);
+        return trim((string) $value);
     }
 }

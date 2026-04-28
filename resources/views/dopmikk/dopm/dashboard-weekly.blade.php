@@ -2691,6 +2691,18 @@
                                     <i class="material-icons-outlined" style="font-size: 18px;">download</i>
                                     <span>Download Excel</span>
                                 </a>
+                                <a href="{{ route('dopmikk.dopm.dashboard-weekly.export-joined-oak-excel', array_filter(['week' => $filterWeek ?? now()->format('o-\\WW'), 'site' => request('site')], fn ($v) => $v !== null && $v !== '')) }}"
+                                   class="btn btn-primary btn-sm d-flex align-items-center gap-1"
+                                   title="Download Join DOPM Weekly + OAK">
+                                    <i class="material-icons-outlined" style="font-size: 18px;">file_download</i>
+                                    <span>Download Join OAK</span>
+                                </a>
+                                <a href="{{ route('dopmikk.dopm.dashboard-weekly.export-joined-oak-excel-all', array_filter(['site' => request('site')], fn ($v) => $v !== null && $v !== '')) }}"
+                                   class="btn btn-dark btn-sm d-flex align-items-center gap-1"
+                                   title="Download ALL data hasil join OAK">
+                                    <i class="material-icons-outlined" style="font-size: 18px;">archive</i>
+                                    <span>Download All Join OAK</span>
+                                </a>
                             @endif
                         </div>
                     </div>

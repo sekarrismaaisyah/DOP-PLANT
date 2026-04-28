@@ -634,6 +634,11 @@ Route::middleware(['auth'])->group(function () {
             Route::get('/dashboard-weekly/{week}/export-ikk-excel', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'exportIkkExcel'])
                 ->where('week', '^\d{4}-W\d{2}$')
                 ->name('dashboard-weekly.export-ikk-excel');
+            Route::get('/dashboard-weekly/{week}/export-joined-oak-excel', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'exportWeeklyJoinedWithOakExcel'])
+                ->where('week', '^\d{4}-W\d{2}$')
+                ->name('dashboard-weekly.export-joined-oak-excel');
+            Route::get('/dashboard-weekly/export-joined-oak-excel-all', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'exportAllJoinedWithOakExcel'])
+                ->name('dashboard-weekly.export-joined-oak-excel-all');
             Route::get('/dashboard-weekly/api/compliance-by-month', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'getComplianceByMonth'])->name('dashboard-weekly.api.compliance-by-month');
             Route::get('/dashboard-weekly/api/ikk-daily-details', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'getIkkDailyDetails'])->name('dashboard-weekly.api.ikk-daily-details');
             Route::post('/dashboard-weekly/import-excel', [\App\Http\Controllers\DOPMIKK\DOPMWeeklyController::class, 'importWeeklyExcel'])->name('dashboard-weekly.import-excel');
