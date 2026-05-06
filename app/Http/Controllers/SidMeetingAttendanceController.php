@@ -78,16 +78,41 @@ class SidMeetingAttendanceController extends Controller
 
     public function submit(Request $request, string $qrToken, SidMeetingWpKaryawanNitipService $nitip): RedirectResponse
     {
-        $request->validate(['kode_sid' => 'required|string|max:128']);
+        $request->validate([
+            'kode_sid' => 'nullable|string|max:128',
+            'no_sid' => 'nullable|boolean',
+            'manual_nama' => 'nullable|string|max:255',
+            'manual_perusahaan' => 'nullable|string|max:255',
+            'manual_divisi' => 'nullable|string|max:255',
+            'manual_departemen' => 'nullable|string|max:255',
+            'manual_jabatan' => 'nullable|string|max:255',
+        ]);
         $event = Event::query()->where('qr_token', $qrToken)->firstOrFail();
 
         if (!$event->isOpenForAttendance()) {
             return back()->with('error', 'Absensi sudah ditutup.');
         }
 
-        $employee = $this->resolveEmployeeForAttendance($request->input('kode_sid'), $nitip);
+        $hasNoSid = $request->boolean('no_sid');
+        $employee = null;
+
+        if (! $hasNoSid) {
+            $kodeSid = trim((string) $request->input('kode_sid', ''));
+            if ($kodeSid === '') {
+                return back()->withInput()->with('error', 'Kode SID wajib diisi atau pilih opsi "Tidak mempunyai SID".');
+            }
+
+            $employee = $this->resolveEmployeeForAttendance($kodeSid, $nitip);
+        }
+
         if (! $employee) {
-            return back()->with('error', 'SID tidak ditemukan pada master employee maupun data WP Karyawan (Nitip).');
+            $employee = $this->createManualEmployeeFromRequest($request);
+        }
+
+        if (! $employee) {
+            return back()
+                ->withInput()
+                ->with('error', 'SID tidak ditemukan. Lengkapi form manual untuk melanjutkan absensi.');
         }
 
         $exists = Attendance::query()->where('event_id', $event->id)->where('employee_id', $employee->id)->exists();
@@ -108,6 +133,52 @@ class SidMeetingAttendanceController extends Controller
         ]);
 
         return back()->with('success', 'Absensi berhasil. Terima kasih.');
+    }
+
+    private function createManualEmployeeFromRequest(Request $request): ?Employee
+    {
+        $nama = trim((string) $request->input('manual_nama', ''));
+        $perusahaan = trim((string) $request->input('manual_perusahaan', ''));
+        $divisi = trim((string) $request->input('manual_divisi', ''));
+        $departemen = trim((string) $request->input('manual_departemen', ''));
+        $jabatan = trim((string) $request->input('manual_jabatan', ''));
+        $kodeSid = trim((string) $request->input('kode_sid', ''));
+        $hasNoSid = $request->boolean('no_sid');
+
+        if ($nama === '' || $perusahaan === '' || $jabatan === '') {
+            return null;
+        }
+
+        if ($kodeSid === '') {
+            if (! $hasNoSid) {
+                return null;
+            }
+
+            do {
+                $kodeSid = 'MANUAL-' . Str::upper(Str::random(8));
+            } while (Employee::query()->where('kode_sid', $kodeSid)->exists());
+        }
+
+        $company = Company::query()->firstOrCreate(
+            ['name' => $perusahaan],
+            ['is_active' => true]
+        );
+
+        $jabatanStruktural = collect([
+            $divisi !== '' ? 'Divisi: ' . $divisi : null,
+            $departemen !== '' ? 'Departemen: ' . $departemen : null,
+        ])->filter()->implode(' | ');
+
+        return Employee::query()->updateOrCreate(
+            ['kode_sid' => $kodeSid],
+            [
+                'nama' => $nama,
+                'company_id' => $company->id,
+                'jabatan_struktural' => $jabatanStruktural !== '' ? $jabatanStruktural : null,
+                'jabatan_fungsional' => $jabatan,
+                'is_active' => true,
+            ]
+        )->load('company');
     }
 
     private function resolveEmployeeForAttendance(string $inputKodeSid, SidMeetingWpKaryawanNitipService $nitip): ?Employee

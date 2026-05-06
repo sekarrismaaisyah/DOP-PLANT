@@ -64,8 +64,46 @@
                         Cek SID
                     </button>
                 </div>
+                <label class="mt-1 inline-flex items-center gap-2 text-xs font-medium text-slate-700">
+                    <input
+                        id="no_sid_toggle"
+                        name="no_sid"
+                        type="checkbox"
+                        value="1"
+                        @checked(old('no_sid'))
+                        class="h-4 w-4 rounded border-slate-300 text-[#673ab7] focus:ring-[#673ab7]"
+                    >
+                    Saya tidak mempunyai SID
+                </label>
                 <p id="lookup_status" class="mt-1 min-h-[1.25rem] text-xs font-medium"></p>
                 <!-- <p class="text-xs text-slate-500">Data diisi otomatis dari <strong>ClickHouse Nitip</strong> (view <code class="rounded bg-slate-100 px-1">bep_vw_wp_karyawan</code>) berdasarkan <code class="rounded bg-slate-100 px-1">kode_sid</code>.</p> -->
+            </div>
+
+            <div id="manual_panel" class="mt-5 hidden space-y-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">Input manual (SID tidak ditemukan)</p>
+                <div class="grid gap-3 sm:grid-cols-2">
+                    <div class="sm:col-span-2">
+                        <label for="manual_nama" class="mb-1 block text-xs font-semibold text-slate-700">Nama <span class="text-red-500">*</span></label>
+                        <input id="manual_nama" name="manual_nama" value="{{ old('manual_nama') }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]" placeholder="Nama lengkap">
+                    </div>
+                    <div>
+                        <label for="manual_perusahaan" class="mb-1 block text-xs font-semibold text-slate-700">Perusahaan <span class="text-red-500">*</span></label>
+                        <input id="manual_perusahaan" name="manual_perusahaan" value="{{ old('manual_perusahaan') }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]" placeholder="Nama perusahaan">
+                    </div>
+                    <div>
+                        <label for="manual_jabatan" class="mb-1 block text-xs font-semibold text-slate-700">Jabatan <span class="text-red-500">*</span></label>
+                        <input id="manual_jabatan" name="manual_jabatan" value="{{ old('manual_jabatan') }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]" placeholder="Jabatan">
+                    </div>
+                    <div>
+                        <label for="manual_divisi" class="mb-1 block text-xs font-semibold text-slate-700">Divisi</label>
+                        <input id="manual_divisi" name="manual_divisi" value="{{ old('manual_divisi') }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]" placeholder="Divisi">
+                    </div>
+                    <div>
+                        <label for="manual_departemen" class="mb-1 block text-xs font-semibold text-slate-700">Departemen</label>
+                        <input id="manual_departemen" name="manual_departemen" value="{{ old('manual_departemen') }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]" placeholder="Departemen">
+                    </div>
+                </div>
+                <p class="text-xs text-amber-800">Jika SID tidak ada di sistem, isi data manual lalu klik Kirim Absensi.</p>
             </div>
 
             <div id="preview_panel" class="mt-5 hidden space-y-3 rounded-xl border border-[#d1c4e9] bg-[#faf8ff] px-4 py-4">
@@ -105,8 +143,11 @@
             var lookupPath = @json(route('sid-meeting.attendance.lookup', ['qrToken' => $event->qr_token], false));
             var kodeInput = document.getElementById('kode_sid');
             var btn = document.getElementById('btn_cek_sid');
+            var noSidToggle = document.getElementById('no_sid_toggle');
             var statusEl = document.getElementById('lookup_status');
             var panel = document.getElementById('preview_panel');
+            var manualPanel = document.getElementById('manual_panel');
+            var manualRequiredIds = ['manual_nama', 'manual_perusahaan', 'manual_jabatan'];
 
             function setStatus(msg, cls) {
                 if (!statusEl) return;
@@ -146,6 +187,36 @@
                 setDd('pv_lvl', d.level_jabatan);
                 setDd('pv_status', d.status_karyawan);
                 if (panel) panel.classList.remove('hidden');
+            }
+
+            function setManualPanel(visible) {
+                if (!manualPanel) return;
+                manualPanel.classList.toggle('hidden', !visible);
+                manualRequiredIds.forEach(function (id) {
+                    var el = document.getElementById(id);
+                    if (!el) return;
+                    el.required = !!visible;
+                });
+            }
+
+            function setNoSidMode(enabled) {
+                if (!kodeInput || !btn) return;
+                kodeInput.required = !enabled;
+                kodeInput.readOnly = !!enabled;
+                if (enabled) {
+                    kodeInput.value = '';
+                    btn.disabled = true;
+                    btn.classList.add('opacity-60', 'cursor-not-allowed');
+                    if (panel) panel.classList.add('hidden');
+                    setManualPanel(true);
+                    setStatus('Mode manual aktif. Silakan isi data tanpa SID.', 'text-amber-700');
+                    return;
+                }
+
+                btn.disabled = false;
+                btn.classList.remove('opacity-60', 'cursor-not-allowed');
+                setManualPanel(false);
+                setStatus('', '');
             }
 
             function runLookup() {
@@ -193,6 +264,7 @@
                                 kodeInput.value = res.body.data.kode_sid;
                             }
                             fillPreview(res.body.data);
+                            setManualPanel(false);
                             setStatus('Data ditemukan. Lanjutkan dengan Kirim Absensi.', 'text-emerald-700');
                             return;
                         }
@@ -213,10 +285,24 @@
 
             if (btn) btn.addEventListener('click', runLookup);
             if (kodeInput) kodeInput.addEventListener('blur', function () {
+                if (noSidToggle && noSidToggle.checked) return;
                 if ((kodeInput.value || '').trim().length >= 3) {
                     runLookup();
                 }
             });
+
+            if (noSidToggle) {
+                noSidToggle.addEventListener('change', function () {
+                    setNoSidMode(!!noSidToggle.checked);
+                });
+            }
+
+            @if(old('no_sid'))
+                setManualPanel(true);
+                setNoSidMode(true);
+            @elseif(old('manual_nama') || old('manual_perusahaan') || old('manual_jabatan') || old('manual_divisi') || old('manual_departemen'))
+                setManualPanel(true);
+            @endif
         })();
     </script>
 </body>

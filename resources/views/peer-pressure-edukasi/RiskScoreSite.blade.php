@@ -15,7 +15,9 @@
             page: "#f0f2f5",
             ink: "#2c2f31",
             muted: "#595c5e",
-            line: "#dfe3e6"
+            line: "#dfe3e6",
+            primary: "#3952bc",
+            error: "#dc2626"
           },
           boxShadow: {
             soft: "0 6px 16px -6px rgba(15, 23, 42, 0.16)",
@@ -58,11 +60,7 @@
       * { @apply box-border; }
 
       body {
-        @apply m-0 min-h-screen text-ink font-body;
-        background:
-          radial-gradient(circle at top left, rgba(77, 178, 92, 0.16), transparent 28rem),
-          radial-gradient(circle at top right, rgba(245, 189, 36, 0.14), transparent 24rem),
-          var(--bg);
+        @apply m-0 min-h-screen bg-[#f4f6f8] text-ink font-body antialiased;
       }
 
       button,
@@ -70,13 +68,13 @@
 
       button,
       select {
-        @apply cursor-pointer rounded-full border border-line bg-white px-3.5 py-2.5 text-[13px] font-semibold text-ink shadow-[0_8px_18px_rgba(15,23,42,0.07)] transition duration-200 ease-in-out;
+        @apply cursor-pointer rounded-lg border border-slate-200 bg-white px-3.5 py-2 text-[13px] font-medium text-ink shadow-sm transition-colors duration-150;
       }
 
       button:hover,
-      select:hover { @apply -translate-y-px shadow-[0_12px_28px_rgba(31,60,42,0.10)]; }
+      select:hover { @apply border-slate-300 bg-slate-50; }
 
-      button.active { @apply border-ink bg-ink text-white; }
+      button.active { @apply border-[#3952bc] bg-[#3952bc] text-white shadow-sm; }
 
       table { @apply w-full min-w-[860px] border-collapse; }
       th, td { @apply border-b border-[#edf1f5] px-3.5 py-3 text-left align-middle text-[13px]; }
@@ -87,49 +85,56 @@
     }
 
     @layer components {
-      .app-shell { width: min(1120px, calc(100% - 28px)); @apply mx-auto pt-6 pb-[60px]; }
+      .layout-shell { @apply w-full px-4 sm:px-6 lg:px-8 xl:px-10 2xl:px-12; }
 
-      .hero { @apply relative overflow-hidden rounded-2xl p-7 text-white shadow-soft border border-[#1b3f87]/20; background: linear-gradient(140deg, #243d8f 0%, #3952bc 52%, #5d75d8 100%); }
-      .hero-content { @apply relative z-[2] grid grid-cols-[1.4fr_.9fr] items-end gap-6; }
-      .hero::before, .hero::after { content: ""; @apply absolute rounded-full bg-white/15; }
-      .hero::before { @apply -right-[110px] -top-[130px] h-[330px] w-[330px]; }
-      .hero::after { content: ""; @apply -bottom-[180px] right-40 h-[260px] w-[260px] rounded-full bg-[#ffd652]/20; }
+      .page-hero {
+        @apply rounded-xl border border-slate-200/90 bg-white p-6 sm:p-8 shadow-sm;
+      }
+      .page-hero-inner {
+        @apply grid gap-8 lg:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] lg:items-start;
+      }
+      .page-hero-label {
+        @apply mb-2 text-[11px] font-semibold uppercase tracking-wider text-[#3952bc];
+      }
+      .page-hero h1 {
+        @apply m-0 text-[clamp(1.375rem,2.5vw,2rem)] font-bold leading-snug tracking-tight text-[#1f2937];
+      }
+      .page-hero .subtitle {
+        @apply mt-3 max-w-none text-[14px] leading-relaxed text-muted font-normal;
+      }
 
-      .eyebrow { @apply mb-3.5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3 py-2 text-[11px] font-bold uppercase tracking-[.1em] backdrop-blur; }
-      .dot { @apply h-2 w-2 rounded-full bg-[#ffd85c] shadow-[0_0_0_5px_rgba(255,216,92,0.15)]; }
-      .hero h1 { @apply m-0 text-[clamp(28px,4vw,44px)] font-extrabold leading-[1.06] tracking-[-.03em]; }
-      .subtitle { @apply mt-3 max-w-[760px] text-[14px] leading-[1.6] text-white/85 font-medium; }
+      .hero-kpis { @apply grid grid-cols-1 gap-3 sm:grid-cols-2; }
+      .hero-kpi {
+        @apply rounded-lg border border-slate-100 bg-[#f8fafc] p-4;
+      }
+      .hero-kpi .label { @apply mb-1.5 text-[11px] font-medium uppercase tracking-wide text-[#64748b]; }
+      .hero-kpi .value { @apply text-lg font-semibold tracking-tight text-[#1e293b]; }
+      .hero-kpi .note { @apply mt-1.5 text-[12px] leading-snug text-muted; }
 
-      .hero-kpis { @apply grid grid-cols-2 gap-3; }
-      .hero-kpi { @apply rounded-2xl border border-white/20 bg-white/10 p-4 backdrop-blur-md; }
-      .hero-kpi .label { @apply mb-2 text-[11px] text-white/75 font-semibold; }
-      .hero-kpi .value { @apply text-[25px] font-extrabold tracking-[-.02em]; }
-      .hero-kpi .note { @apply mt-1 text-[11px] text-white/80; }
-
-      .toolbar { @apply my-5 flex flex-wrap items-center justify-between gap-3; }
+      .toolbar {
+        @apply flex flex-wrap items-center justify-between gap-3 rounded-lg border border-slate-200/90 bg-white px-3 py-3 shadow-sm;
+      }
       .tabs, .filters { @apply flex flex-wrap items-center gap-2.5; }
 
       .page-intro { @apply mb-[18px] grid grid-cols-[1fr_auto] items-center gap-4; }
-      .page-intro h2 { @apply m-0 mb-1.5 text-[24px] tracking-[-.02em] font-extrabold text-[#1f2937]; }
+      .page-intro h2 { @apply m-0 mb-1.5 text-xl font-bold tracking-tight text-[#1f2937] sm:text-2xl; }
       .page-intro p { @apply m-0 text-[13px] leading-[1.55] text-muted; }
       .page-counter { @apply inline-flex min-w-[72px] items-center justify-center whitespace-nowrap rounded-full bg-[#e9f2ff] px-3 py-2.5 text-xs font-black text-[#1559a8]; }
 
       .grid { @apply gap-[18px]; }
-      .grid-4 { @apply grid-cols-4; }
+      .grid-site-cards { @apply grid-cols-1 sm:grid-cols-2 lg:grid-cols-3; }
       .grid-2 { @apply grid-cols-2; }
       .card {
-        @apply rounded-card border border-slate-200 bg-white p-5;
-        box-shadow: 0 4px 0px 0px rgba(15, 23, 42, 0.04), 0 14px 24px -10px rgba(15, 23, 42, 0.2);
-        transition: transform .2s ease, box-shadow .2s ease;
+        @apply rounded-xl border border-slate-200/90 bg-white p-5 sm:p-6 shadow-sm;
+        transition: box-shadow .15s ease, border-color .15s ease;
       }
       .card:hover {
-        transform: translateY(-2px);
-        box-shadow: 0 6px 0px 0px rgba(15, 23, 42, 0.04), 0 18px 34px -12px rgba(15, 23, 42, 0.26);
+        @apply border-slate-300/90 shadow-md;
       }
       .card-title { @apply mb-3.5 flex items-start justify-between gap-3; }
       .card-title h2, .card-title h3 { @apply m-0 leading-[1.12] tracking-[-.03em]; }
-      .card-title h2 { @apply text-[22px] font-extrabold text-[#1f2937]; }
-      .card-title h3 { @apply text-lg font-bold text-[#1f2937]; }
+      .card-title h2 { @apply text-lg font-bold text-[#1f2937] sm:text-xl; }
+      .card-title h3 { @apply text-base font-semibold text-[#1f2937] sm:text-lg; }
 
       .muted { @apply text-muted; }
       .small { @apply text-xs; }
@@ -143,13 +148,12 @@
       .badge.blue { @apply bg-[#e9f2ff] text-[#1559a8]; }
 
       .cards-wrap { @apply relative; }
-      .score-card { @apply relative min-h-[186px] cursor-pointer overflow-hidden transition duration-200 ease-in-out border border-slate-200; }
-      .score-card:hover { @apply -translate-y-[3px]; }
-      .score-card.selected { outline: 2px solid rgba(57,82,188,.28); }
-      .score-card::after { content: ""; @apply absolute -bottom-[75px] -right-[50px] h-[170px] w-[170px] rounded-full bg-[#3952bc]/10; }
+      .score-card { @apply relative min-h-[186px] cursor-pointer overflow-hidden rounded-xl border border-slate-200/90 bg-white shadow-sm transition duration-150 ease-out; }
+      .score-card:hover { @apply border-slate-300 shadow-md; }
+      .score-card.selected { @apply ring-2 ring-[#3952bc]/25 ring-offset-2; outline: none; }
       .score-top { @apply relative z-[2] flex items-start justify-between gap-2.5; }
-      .site-name { @apply m-0 text-[25px] font-extrabold tracking-[-.03em] text-[#1f2937]; }
-      .risk-score { @apply mt-[18px] text-[34px] font-extrabold tracking-[-.04em] text-[#111827]; }
+      .site-name { @apply m-0 text-xl font-semibold tracking-tight text-[#1f2937] sm:text-2xl; }
+      .risk-score { @apply mt-4 text-3xl font-bold tracking-tight text-[#111827] sm:text-[2rem]; }
 
       .mini-bars, .driver-list, .summary-list, .action-card, .driver-detail-list { @apply grid gap-2.5; }
       .mini-bars { @apply relative z-[2] mt-4; }
@@ -178,7 +182,7 @@
       .legend-item { @apply inline-flex items-center gap-[7px] text-xs font-semibold text-muted; }
       .swatch { @apply h-3 w-3 rounded; }
 
-      .scatter-box { @apply relative min-h-[420px] overflow-hidden rounded-[22px] border border-line; background: linear-gradient(90deg, rgba(51,168,82,.10) 0 50%, rgba(217,40,40,.10) 50% 100%), linear-gradient(0deg, rgba(51,168,82,.08) 0 50%, rgba(239,138,33,.08) 50% 100%), #fff; }
+      .scatter-box { @apply relative min-h-[420px] overflow-hidden rounded-xl border border-slate-200 bg-white; background-image: linear-gradient(90deg, rgba(51,168,82,.06) 0 50%, rgba(217,40,40,.06) 50% 100%), linear-gradient(0deg, rgba(51,168,82,.05) 0 50%, rgba(239,138,33,.05) 50% 100%); }
       .scatter-axis-x, .scatter-axis-y { @apply absolute z-[1] bg-[rgba(23,37,29,0.25)]; }
       .scatter-axis-x { @apply left-[8%] right-[6%] top-1/2 h-px; }
       .scatter-axis-y { @apply bottom-[10%] left-1/2 top-[8%] w-px; }
@@ -232,8 +236,6 @@
     }
 
     @media (max-width: 980px) {
-      .hero-content,
-      .grid-4,
       .grid-2,
       .popup-grid { @apply grid-cols-1; }
 
@@ -247,8 +249,7 @@
     @media (max-width: 620px) {
       .page-intro { @apply grid-cols-1; }
       .page-counter { @apply justify-self-start; }
-      .app-shell { width: min(100% - 18px, 1120px); @apply pt-2.5; }
-      .hero { @apply rounded-[22px] p-5; }
+      .page-hero { @apply p-5; }
       .hero-kpis { @apply grid-cols-1; }
       .card { @apply rounded-[20px] p-4; }
       .toolbar { @apply items-stretch; }
@@ -261,16 +262,16 @@
     }
   </style>
 </head>
-<body class="bg-[#f0f2f5] font-body text-on-surface min-h-screen flex flex-col">
-  <header class="w-full sticky top-0 bg-[#ffffff] border-b border-[#dfe3e6] z-50 shadow-sm">
-    <div class="mx-auto px-8 py-4 flex justify-between items-center">
+<body class="bg-[#f4f6f8] font-body text-[#2c2f31] min-h-screen flex flex-col">
+  <header class="w-full sticky top-0 z-50 border-b border-[#e2e8f0] bg-white/95 shadow-sm backdrop-blur-sm">
+    <div class="layout-shell flex flex-col gap-4 py-3.5 sm:flex-row sm:items-center sm:justify-between sm:py-4">
       <div class="flex items-center gap-10">
         <div class="flex flex-col">
           <h1 class="font-headline font-bold text-[#3952bc] text-xl tracking-tighter leading-tight">OHS Division</h1>
-          <p class="text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Safety Performance Review</p>
+          <p class="text-[#64748b] text-[10px] font-semibold uppercase tracking-widest">Safety Performance Review</p>
         </div>
         <div class="h-8 w-px bg-[#dfe3e6] hidden lg:block"></div>
-        <nav class="hidden md:flex gap-8">
+        <nav class="hidden flex-wrap gap-x-6 gap-y-2 md:flex lg:gap-8">
           <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="{{ route('peer-pressure-edukasi.dashboard', request()->only(['year', 'month', 'q', 'hazard_site'])) }}">Lagging</a>
           <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="{{ route('peer-pressure-edukasi.dashboard-performance', request()->only(['year', 'month', 'q', 'hazard_site'])) }}">Dash Performance</a>
           <a class="text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight" href="{{ route('peer-pressure-edukasi.dashboard-risk-score', request()->only(['year', 'month', 'q', 'hazard_site'])) }}">Risk Score Site</a>
@@ -281,18 +282,18 @@
       <div class="flex items-center gap-6">
         <div class="relative group hidden xl:block">
           <input class="bg-[#f5f7f9] border-none rounded-full px-4 py-2 text-sm focus:ring-2 focus:ring-primary w-80 transition-all shadow-inner" placeholder="Search safety records..." type="text"/>
-          <span class="material-symbols-outlined absolute right-3 top-2 text-on-surface-variant">search</span>
+          <span class="material-symbols-outlined absolute right-3 top-2 text-[#64748b]">search</span>
         </div>
         <div class="flex items-center gap-3">
           <button type="button" class="p-2 hover:bg-[#dfe3e6] rounded-full transition-colors relative">
             <span class="material-symbols-outlined">notifications</span>
             <span class="absolute top-1 right-1 w-2.5 h-2.5 bg-error border-2 border-white rounded-full"></span>
           </button>
-          <button type="button" class="flex items-center gap-2 p-1.5 pr-4 bg-white hover:bg-[#dfe3e6] rounded-full transition-colors border border-outline-variant/30 shadow-sm">
+          <button type="button" class="flex items-center gap-2 rounded-full border border-slate-200/80 bg-white p-1.5 pr-4 shadow-sm transition-colors hover:bg-slate-50">
             <span class="material-symbols-outlined text-3xl text-primary">account_circle</span>
             <div class="text-left">
               <p class="text-[10px] font-bold text-primary uppercase leading-none">Safety Admin</p>
-              <p class="text-[9px] text-on-surface-variant font-medium">Site Manager</p>
+              <p class="text-[9px] font-medium text-[#64748b]">Site Manager</p>
             </div>
           </button>
         </div>
@@ -300,14 +301,14 @@
     </div>
   </header>
 
-  <main class="flex-grow w-full mx-auto p-8 space-y-8">
-    <div class="app-shell">
-    <section class="hero">
-      <div class="hero-content">
+  <main class="flex w-full flex-grow flex-col pb-12 pt-6 sm:pt-8">
+    <div class="layout-shell flex flex-col space-y-6 sm:space-y-8">
+    <section class="page-hero">
+      <div class="page-hero-inner">
         <div>
-          <div class="eyebrow"><span class="dot"></span> Risk Driver Correlation</div>
-          <h1>Overview Risk Site & Korelasi Driver Kontraktor</h1>
-          <p class="subtitle">Week 18 Tahun 2026 · Menghubungkan risk score site dengan empat driver utama: Safety Accountability, Coverage Quality, Exposure/RFID, dan Fatigue Management.</p>
+          <p class="page-hero-label">Risk driver correlation</p>
+          <h1>Overview risk site &amp; korelasi driver kontraktor</h1>
+          <p class="subtitle">Week 18 tahun 2026 — risk score site dihubungkan dengan empat driver: Safety Accountability, Coverage Quality, Exposure/RFID, dan Fatigue Management.</p>
         </div>
         <div class="hero-kpis">
           <div class="hero-kpi">
@@ -354,7 +355,7 @@
     <section class="card page-intro" id="pageIntro"></section>
 
     <div class="cards-wrap" data-page-only="overview">
-      <section class="grid grid-4" id="siteCards"></section>
+      <section class="grid grid-site-cards" id="siteCards"></section>
       <div id="sitePopup" class="site-popup" aria-live="polite"></div>
     </div>
 
@@ -535,7 +536,7 @@
             <h2>Narasi Eksekutif</h2>
             <div class="muted small">Ringkasan siap pakai untuk BOD/management.</div>
           </div>
-          <span class="badge green">AI Generated</span>
+          <span class="badge green">Ringkasan manajemen</span>
         </div>
         <p class="muted leading-[1.7] mt-0">Risk Score Site Week 18 menunjukkan LMO sebagai benchmark dengan profil risiko terendah dan paling stabil, sedangkan BMO 1 menjadi prioritas utama karena mengalami lonjakan risk score tertinggi. Jika dikorelasikan dengan dashboard level kontraktor, peningkatan risiko terutama dipengaruhi oleh kombinasi Safety Accountability, Blindspot TBC, Blindspot GR, penurunan Ratio Pengawas dengan TBC, Coverage Daily yang belum optimal, serta tekanan Fatigue Management. Dengan demikian, dashboard kontraktor berfungsi sebagai early driver diagnostic untuk menjelaskan penyebab risk score site, bukan hanya sebagai pelaporan indikator terpisah.</p>
         <div class="summary-list" id="bridgeSummary"></div>

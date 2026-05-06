@@ -696,7 +696,7 @@
     </section>
   </main>
 
-  <div id="eventRecapModal" class="fixed inset-0 z-40 hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
+  <div id="eventRecapModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm">
     <div class="modal-shell w-full max-w-6xl rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-white/20">
       <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
         <div>
