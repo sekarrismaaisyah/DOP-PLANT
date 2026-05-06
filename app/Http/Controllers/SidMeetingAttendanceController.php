@@ -10,6 +10,8 @@ use App\Services\SidMeeting\SidMeetingWpKaryawanNitipService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Str;
 use Illuminate\View\View;
 
@@ -76,11 +78,61 @@ class SidMeetingAttendanceController extends Controller
         }
     }
 
+    public function photoProxy(Request $request, string $qrToken): Response
+    {
+        try {
+            $request->validate([
+                'foto' => 'required|string|max:2048',
+            ]);
+
+            Event::query()->where('qr_token', $qrToken)->firstOrFail();
+
+            $fotoUrl = trim((string) $request->query('foto', ''));
+            $normalizedFotoUrl = str_replace(' ', '%20', $fotoUrl);
+            if ($normalizedFotoUrl === '' || ! filter_var($normalizedFotoUrl, FILTER_VALIDATE_URL)) {
+                return response('URL foto tidak valid.', 422, ['Content-Type' => 'text/plain; charset=UTF-8']);
+            }
+
+            $scheme = strtolower((string) parse_url($normalizedFotoUrl, PHP_URL_SCHEME));
+            if (! in_array($scheme, ['http', 'https'], true)) {
+                return response('Skema URL foto tidak didukung.', 422, ['Content-Type' => 'text/plain; charset=UTF-8']);
+            }
+
+            $remote = Http::timeout(12)->retry(1, 150)->get($normalizedFotoUrl);
+            if (! $remote->successful()) {
+                return response('Foto referensi tidak dapat diakses.', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
+            }
+
+            $contentType = (string) $remote->header('Content-Type', 'application/octet-stream');
+            if ($remote->body() === '') {
+                return response('Foto referensi kosong.', 422, ['Content-Type' => 'text/plain; charset=UTF-8']);
+            }
+            if (stripos($contentType, 'image/') !== 0) {
+                $contentType = 'image/jpeg';
+            }
+
+            return response($remote->body(), 200, [
+                'Content-Type' => $contentType,
+                'Cache-Control' => 'public, max-age=600',
+            ]);
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException) {
+            return response('Event tidak ditemukan.', 404, ['Content-Type' => 'text/plain; charset=UTF-8']);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            throw $e;
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response('Gagal memuat foto referensi.', 500, ['Content-Type' => 'text/plain; charset=UTF-8']);
+        }
+    }
+
     public function submit(Request $request, string $qrToken, SidMeetingWpKaryawanNitipService $nitip): RedirectResponse
     {
         $request->validate([
             'kode_sid' => 'nullable|string|max:128',
             'no_sid' => 'nullable|boolean',
+            'face_verified' => 'nullable|boolean',
+            'face_distance' => 'nullable|numeric|min:0|max:2',
             'manual_nama' => 'nullable|string|max:255',
             'manual_perusahaan' => 'nullable|string|max:255',
             'manual_divisi' => 'nullable|string|max:255',
@@ -100,6 +152,10 @@ class SidMeetingAttendanceController extends Controller
             $kodeSid = trim((string) $request->input('kode_sid', ''));
             if ($kodeSid === '') {
                 return back()->withInput()->with('error', 'Kode SID wajib diisi atau pilih opsi "Tidak mempunyai SID".');
+            }
+
+            if (! $request->boolean('face_verified')) {
+                return back()->withInput()->with('error', 'Verifikasi wajah wajib dilakukan sebelum absensi.');
             }
 
             $employee = $this->resolveEmployeeForAttendance($kodeSid, $nitip);
