@@ -204,7 +204,7 @@
             <div class="mt-4 flex flex-wrap justify-end gap-2">
                 <button id="btn_start_camera" type="button" class="rounded-xl border border-slate-300 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">Aktifkan Kamera</button>
                 <button id="btn_verify_face" type="button" class="rounded-xl border border-[#673ab7] bg-[#ede7f6] px-4 py-2 text-xs font-semibold text-[#4527a0] hover:bg-[#e1d5f4]">Verifikasi & Kirim</button>
-                <button id="btn_confirm_submit" type="button" disabled class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">Kirim Absensi Sekarang</button>
+                <button id="btn_confirm_submit" type="button"  class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-50">Kirim Absensi Sekarang</button>
             </div>
         </div>
     </div>
