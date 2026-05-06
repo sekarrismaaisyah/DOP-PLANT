@@ -66,6 +66,8 @@ use App\Http\Controllers\UnitMtdController;
 */
 
 
+require __DIR__ . '/sid_meeting.php';
+
 Auth::routes();
 
 // Route khusus screenshot dashboard (tanpa middleware auth, pakai token)
@@ -241,6 +243,9 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/peer-pressure-edukasi/dashboard-performance', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.dashboard-performance');
     Route::get('/peer-pressure-edukasi/tematic', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.tematic');
     Route::get('/peer-pressure-edukasi/dashboard-peer', [PeerPressureEdukasiController::class, 'dashboard'])->name('peer-pressure-edukasi.dashboard-peer');
+    Route::get('/peer-pressure-edukasi/dashboard-risk-score', function () {
+        return view('peer-pressure-edukasi.RiskScoreSite');
+    })->name('peer-pressure-edukasi.dashboard-risk-score');
     Route::get('/peer-pressure-edukasi/tools-analisis', function () {
         return view('peer-pressure-edukasi.tools-analisis');
     })->name('peer-pressure-edukasi.tools-analisis');
@@ -853,5 +858,6 @@ Route::middleware(['auth'])->group(function () {
 
     // Define a GET route with dynamic placeholders for route parameters
     // HARUS di akhir agar tidak menangkap route spesifik di atas
-    Route::get('{routeName}/{name?}', [HomeController::class, 'pageView']);
+    Route::get('{routeName}/{name?}', [HomeController::class, 'pageView'])
+        ->where('routeName', '^(?!sid-meeting$|attendance$).+');
 });

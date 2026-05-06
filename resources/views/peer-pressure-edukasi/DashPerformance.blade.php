@@ -3,7 +3,7 @@
    <head>
       <meta charset="utf-8"/>
       <meta content="width=device-width, initial-scale=1.0" name="viewport"/>
-      <title>BMO2 Safety - Peer Pressure Program Evaluation</title>
+      <title>OHS Division - Peer Pressure Program Evaluation</title>
       <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
       <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
       <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
@@ -117,11 +117,11 @@
                </div>
                <div class="h-8 w-px bg-[#dfe3e6] hidden lg:block"></div>
                <nav class="hidden md:flex gap-8">
-                  <a class="text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight" href="#">Lagging</a>
-                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Dash Performance</a>
-                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Thematic Alignment</a>
+                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="{{ route('peer-pressure-edukasi.dashboard', request()->only(['year', 'month', 'q', 'hazard_site'])) }}">Lagging</a>
+                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="{{ route('peer-pressure-edukasi.dashboard-performance', request()->only(['year', 'month', 'q', 'hazard_site'])) }}">Dash Performance</a>
+                  <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="{{ route('peer-pressure-edukasi.dashboard-performance', request()->only(['year', 'month', 'q', 'hazard_site'])) }}">Risk Score Site</a>
+                  <a class="text-[#3952bc] border-b-2 border-[#3952bc] pb-1 font-bold text-sm tracking-tight" href="{{ route('peer-pressure-edukasi.tematic', request()->only(['year', 'month', 'q', 'hazard_site'])) }}">Thematic Alignment</a>
                   <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Site Notic</a>
-                  <!-- <a class="text-[#595c5e] hover:text-[#3952bc] font-semibold text-sm tracking-tight transition-colors" href="#">Analytics</a> -->
                </nav>
             </div>
             <div class="flex items-center gap-6">
