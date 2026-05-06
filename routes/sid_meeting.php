@@ -7,6 +7,9 @@ use Illuminate\Support\Facades\Route;
 Route::get('/attendance/{qrToken}/lookup', [SidMeetingAttendanceController::class, 'lookup'])
     ->middleware('throttle:60,1')
     ->name('sid-meeting.attendance.lookup');
+Route::get('/attendance/{qrToken}/photo-proxy', [SidMeetingAttendanceController::class, 'photoProxy'])
+    ->middleware('throttle:60,1')
+    ->name('sid-meeting.attendance.photo-proxy');
 Route::get('/attendance/{qrToken}', [SidMeetingAttendanceController::class, 'form'])->name('sid-meeting.attendance.form');
 Route::post('/attendance/{qrToken}', [SidMeetingAttendanceController::class, 'submit'])->name('sid-meeting.attendance.submit');
 
