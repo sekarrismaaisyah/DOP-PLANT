@@ -237,7 +237,6 @@
             var btnStartCamera = document.getElementById('btn_start_camera');
             var btnVerifyFace = document.getElementById('btn_verify_face');
             var btnConfirmSubmit = document.getElementById('btn_confirm_submit');
-            var submitBtn = document.getElementById('btn_submit_attendance');
             var faceModelsReady = false;
             var faceModelLoadPromise = null;
             var cameraStream = null;
@@ -246,6 +245,9 @@
             var faceThreshold = 0.50;
             var tinyDetectorOptions = null;
             var allowDirectSubmit = false;
+            /** Hanya true setelah "Verifikasi & Kirim" benar-benar match (boleh dipercaya untuk kirim form). */
+            var lastFaceMatchOk = false;
+            var formEl = document.querySelector('form[method="post"]');
             var faceBoxLoopHandle = null;
 
             function makeProxyPhotoUrl(rawUrl) {
@@ -293,6 +295,7 @@
             }
 
             function resetFaceVerification() {
+                lastFaceMatchOk = false;
                 setFaceVerified(false);
                 setFaceStatus('', 'text-slate-700');
                 if (faceIdentityOk) {
@@ -524,6 +527,7 @@
                 setFaceVerified(matched, distance);
 
                 if (matched) {
+                    lastFaceMatchOk = true;
                     setFaceStatus('Verifikasi berhasil (jarak: ' + distance.toFixed(4) + ').', 'text-emerald-700');
                     if (faceIdentityOk) {
                         var nama = document.getElementById('pv_nama');
@@ -544,6 +548,7 @@
                     if (faceScanLine) faceScanLine.classList.add('hidden');
                     detectFaceBoxFromElement(faceVideo).then(function (det) { drawFaceBox(det, true); }).catch(function () {});
                 } else {
+                    lastFaceMatchOk = false;
                     setFaceStatus('Verifikasi gagal (jarak: ' + distance.toFixed(4) + '). Coba ulangi.', 'text-red-700');
                     if (faceFailBadge) faceFailBadge.classList.remove('hidden');
                     if (faceIdentityLive) {
@@ -730,6 +735,7 @@
             if (btnVerifyFace) {
                 btnVerifyFace.addEventListener('click', function () {
                     verifyCurrentFace().catch(function (e) {
+                        lastFaceMatchOk = false;
                         setFaceStatus((e && e.message) ? e.message : 'Terjadi kesalahan verifikasi wajah.', 'text-red-700');
                         setFaceVerified(false);
                         if (faceFailBadge) faceFailBadge.classList.remove('hidden');
@@ -746,8 +752,21 @@
             }
             if (btnConfirmSubmit) {
                 btnConfirmSubmit.addEventListener('click', function () {
-                    if (!faceVerifiedInput || faceVerifiedInput.value !== '1') {
-                        setFaceStatus('Verifikasi wajah belum valid.', 'text-red-700');
+                    var fvEl = document.getElementById('face_verified');
+                    var fdEl = document.getElementById('face_distance');
+                    if (!lastFaceMatchOk || !fvEl || fvEl.value !== '1') {
+                        setFaceStatus('Verifikasi wajah belum valid. Klik "Verifikasi & Kirim" sampai status berhasil.', 'text-red-700');
+                        return;
+                    }
+                    if (!fdEl || fdEl.value === '' || fdEl.value === null) {
+                        setFaceStatus('Data verifikasi tidak lengkap. Ulangi verifikasi wajah.', 'text-red-700');
+                        return;
+                    }
+                    var distNum = parseFloat(fdEl.value);
+                    if (!isFinite(distNum) || distNum > faceThreshold + 0.02) {
+                        setFaceStatus('Skor verifikasi tidak sah. Ulangi verifikasi wajah.', 'text-red-700');
+                        lastFaceMatchOk = false;
+                        if (fvEl) fvEl.value = '0';
                         return;
                     }
                     allowDirectSubmit = true;
@@ -762,7 +781,6 @@
                 }
             });
 
-            var formEl = document.querySelector('form[method="post"]');
             if (formEl) {
                 formEl.addEventListener('submit', function (evt) {
                     if (allowDirectSubmit) {
@@ -775,24 +793,22 @@
                         setFaceStatus('Foto referensi belum tersedia. Cek SID terlebih dahulu.', 'text-red-700');
                         return;
                     }
-                    if (!faceVerifiedInput || faceVerifiedInput.value !== '1') {
+                    var fvEl = document.getElementById('face_verified');
+                    var fdEl = document.getElementById('face_distance');
+                    var distParsed = fdEl && fdEl.value !== '' ? parseFloat(fdEl.value) : NaN;
+                    var distOk = isFinite(distParsed) && distParsed <= faceThreshold + 0.02;
+                    if (!lastFaceMatchOk || !fvEl || fvEl.value !== '1' || !distOk) {
                         evt.preventDefault();
                         resetFaceVerification();
                         openFaceModal();
                         startCamera()
                             .then(function () {
-                                setFaceStatus('Kamera aktif. Klik "Verifikasi & Kirim".', 'text-slate-700');
+                                setFaceStatus('Kamera aktif. Klik "Verifikasi & Kirim" hingga berhasil, lalu "Kirim Absensi Sekarang".', 'text-slate-700');
                             })
                             .catch(function (e) {
                                 setFaceStatus((e && e.message) ? e.message : 'Tidak bisa mengaktifkan kamera.', 'text-red-700');
                             });
                     }
-                });
-            }
-
-            if (submitBtn) {
-                submitBtn.addEventListener('click', function () {
-                    resetFaceVerification();
                 });
             }
             if (faceModalClose) {

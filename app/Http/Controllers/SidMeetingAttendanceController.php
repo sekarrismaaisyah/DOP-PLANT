@@ -131,7 +131,7 @@ class SidMeetingAttendanceController extends Controller
         $request->validate([
             'kode_sid' => 'nullable|string|max:128',
             'no_sid' => 'nullable|boolean',
-            'face_verified' => 'nullable|boolean',
+            'face_verified' => 'nullable|string|max:8',
             'face_distance' => 'nullable|numeric|min:0|max:2',
             'manual_nama' => 'nullable|string|max:255',
             'manual_perusahaan' => 'nullable|string|max:255',
@@ -154,8 +154,17 @@ class SidMeetingAttendanceController extends Controller
                 return back()->withInput()->with('error', 'Kode SID wajib diisi atau pilih opsi "Tidak mempunyai SID".');
             }
 
-            if (! $request->boolean('face_verified')) {
+            if ($request->input('face_verified') !== '1') {
                 return back()->withInput()->with('error', 'Verifikasi wajah wajib dilakukan sebelum absensi.');
+            }
+
+            $faceDistance = $request->input('face_distance');
+            if ($faceDistance === null || $faceDistance === '' || ! is_numeric($faceDistance)) {
+                return back()->withInput()->with('error', 'Data verifikasi wajah tidak valid. Ulangi verifikasi.');
+            }
+
+            if ((float) $faceDistance > 0.52) {
+                return back()->withInput()->with('error', 'Verifikasi wajah tidak memenuhi syarat. Ulangi dari awal.');
             }
 
             $employee = $this->resolveEmployeeForAttendance($kodeSid, $nitip);
