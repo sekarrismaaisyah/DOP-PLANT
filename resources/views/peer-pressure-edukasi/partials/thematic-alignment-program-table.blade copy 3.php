@@ -16,181 +16,6 @@
     $pointRows = is_array($pointPayload) && isset($pointPayload['rows']) && is_array($pointPayload['rows'])
         ? $pointPayload['rows']
         : [];
-    $dailyCoverageDetailIndicator = '% Daily Coverage Area Kritis';
-    $dailyCoverageDrillRows = [];
-    try {
-        $yearFilter = trim((string) request()->query('year', date('Y')));
-        $dailyCoverageQuery = \Illuminate\Support\Facades\DB::table('scr_coverage_area_kritis_daily')
-            ->select(['iso_week_of_date', 'site', 'avg_coverage_area_kritis_daily', 'year_of_date'])
-            ->orderBy('site')
-            ->orderBy('iso_week_of_date');
-        if ($yearFilter !== '' && ctype_digit($yearFilter)) {
-            $dailyCoverageQuery->where('year_of_date', $yearFilter);
-        }
-        $dailyCoverageRows = $dailyCoverageQuery->get();
-        foreach ($dailyCoverageRows as $dbRow) {
-            $raw = str_replace(',', '.', trim((string) ($dbRow->avg_coverage_area_kritis_daily ?? '')));
-            if ($raw === '' || ! is_numeric($raw)) {
-                continue;
-            }
-            $percent = (float) $raw * 100;
-            $dailyCoverageDrillRows[] = [
-                'detail_indikator' => $dailyCoverageDetailIndicator,
-                'site' => trim((string) ($dbRow->site ?? '')),
-                'week' => trim((string) ($dbRow->iso_week_of_date ?? '')),
-                'data' => number_format($percent, 2, '.', '').'%',
-            ];
-        }
-    } catch (\Throwable $e) {
-        $dailyCoverageDrillRows = [];
-    }
-    $blindspotGrDetailIndicator = '% Blindspot GR';
-    $blindspotGrDrillRows = [];
-    try {
-        $yearFilter = trim((string) request()->query('year', date('Y')));
-        $blindspotGrQuery = \Illuminate\Support\Facades\DB::table('scr_blindspot_gr')
-            ->select(['iso_week_of_date_for_join', 'site', 'blindspot_gr_dari_bc', 'year_of_date_for_join'])
-            ->orderBy('site')
-            ->orderBy('iso_week_of_date_for_join');
-        if ($yearFilter !== '' && ctype_digit($yearFilter)) {
-            $blindspotGrQuery->where('year_of_date_for_join', $yearFilter);
-        }
-        $blindspotGrRows = $blindspotGrQuery->get();
-        foreach ($blindspotGrRows as $dbRow) {
-            $raw = str_replace(',', '.', trim((string) ($dbRow->blindspot_gr_dari_bc ?? '')));
-            if ($raw === '' || ! is_numeric($raw)) {
-                continue;
-            }
-            $percent = (float) $raw * 100;
-            $blindspotGrDrillRows[] = [
-                'detail_indikator' => $blindspotGrDetailIndicator,
-                'site' => trim((string) ($dbRow->site ?? '')),
-                'week' => trim((string) ($dbRow->iso_week_of_date_for_join ?? '')),
-                'data' => number_format($percent, 2, '.', '').'%',
-            ];
-        }
-    } catch (\Throwable $e) {
-        $blindspotGrDrillRows = [];
-    }
-    $postEventL2UpDetailIndicator = '% Post Event L2 up';
-    $postEventL2UpDrillRows = [];
-    try {
-        $yearFilter = trim((string) request()->query('year', date('Y')));
-        $postEventQuery = \Illuminate\Support\Facades\DB::table('scr_laporan_post_event')
-            ->select(['iso_week_of_date_for_join', 'site', 'year_of_date_for_join', 'perusahaan_pelapor_all_karyawan', 'pct_post_event'])
-            ->orderBy('site')
-            ->orderBy('iso_week_of_date_for_join')
-            ->orderBy('perusahaan_pelapor_all_karyawan');
-        if ($yearFilter !== '' && ctype_digit($yearFilter)) {
-            $postEventQuery->where('year_of_date_for_join', $yearFilter);
-        }
-        $postEventRows = $postEventQuery->get();
-        $postEventGrouped = [];
-        foreach ($postEventRows as $dbRow) {
-            $raw = str_replace(',', '.', trim((string) ($dbRow->pct_post_event ?? '')));
-            if ($raw === '' || ! is_numeric($raw)) {
-                continue;
-            }
-            $percent = (float) $raw * 100;
-            $site = trim((string) ($dbRow->site ?? ''));
-            $week = trim((string) ($dbRow->iso_week_of_date_for_join ?? ''));
-            $company = trim((string) ($dbRow->perusahaan_pelapor_all_karyawan ?? ''));
-            $groupKey = $site.'|'.$week;
-            if (! isset($postEventGrouped[$groupKey])) {
-                $postEventGrouped[$groupKey] = [
-                    'detail_indikator' => $postEventL2UpDetailIndicator,
-                    'site' => $site,
-                    'week' => $week,
-                'year' => trim((string) ($dbRow->year_of_date_for_join ?? '')),
-                    'sum_percent' => 0.0,
-                    'count_percent' => 0,
-                    'companies' => [],
-                ];
-            }
-            $postEventGrouped[$groupKey]['sum_percent'] += $percent;
-            $postEventGrouped[$groupKey]['count_percent']++;
-            $postEventGrouped[$groupKey]['companies'][] = [
-                'company' => $company !== '' ? $company : 'Unknown Company',
-                'data' => number_format($percent, 2, '.', '').'%',
-            ];
-        }
-        foreach ($postEventGrouped as $group) {
-            $avgPercent = ($group['count_percent'] ?? 0) > 0
-                ? ($group['sum_percent'] / $group['count_percent'])
-                : 0.0;
-            $postEventL2UpDrillRows[] = [
-                'detail_indikator' => $group['detail_indikator'],
-                'site' => $group['site'],
-                'week' => $group['week'],
-                'year' => $group['year'] ?? '',
-                'data' => number_format($avgPercent, 2, '.', '').'%',
-                'companies' => $group['companies'],
-            ];
-        }
-    } catch (\Throwable $e) {
-        $postEventL2UpDrillRows = [];
-    }
-    $operatorSleepLessIndicators = [
-        'Operator dengan Jam Tidur Kurang',
-        '% Operator dengan Jam Tidur Kurang',
-    ];
-    $operatorSleepLessDrillRows = [];
-    try {
-        $yearFilter = trim((string) request()->query('year', date('Y')));
-        $sleepLessQuery = \Illuminate\Support\Facades\DB::table('scr_operator_jam_tidur_kurang')
-            ->select([
-                'iso_week_of_tanggal_date',
-                'site_dedicated',
-                'year_of_tanggal_date',
-                'nama_perusahaan',
-                'distinct_count_of_kode_sid',
-                'kecukupan_jam_tidur',
-            ])
-            ->whereRaw('LOWER(TRIM(kecukupan_jam_tidur)) = ?', ['tidak cukup'])
-            ->orderBy('site_dedicated')
-            ->orderBy('iso_week_of_tanggal_date')
-            ->orderBy('nama_perusahaan');
-        if ($yearFilter !== '' && ctype_digit($yearFilter)) {
-            $sleepLessQuery->where('year_of_tanggal_date', $yearFilter);
-        }
-        $sleepLessRows = $sleepLessQuery->get();
-        $sleepLessGrouped = [];
-        foreach ($sleepLessRows as $dbRow) {
-            $site = trim((string) ($dbRow->site_dedicated ?? ''));
-            $week = trim((string) ($dbRow->iso_week_of_tanggal_date ?? ''));
-            $year = trim((string) ($dbRow->year_of_tanggal_date ?? ''));
-            $company = trim((string) ($dbRow->nama_perusahaan ?? ''));
-            $rawCount = trim((string) ($dbRow->distinct_count_of_kode_sid ?? ''));
-            $count = ctype_digit($rawCount) ? (int) $rawCount : (is_numeric($rawCount) ? (int) round((float) $rawCount) : 0);
-            $groupKey = $site.'|'.$week;
-            if (! isset($sleepLessGrouped[$groupKey])) {
-                $sleepLessGrouped[$groupKey] = [
-                    'site' => $site,
-                    'week' => $week,
-                    'year' => $year,
-                    'sum_count' => 0,
-                    'companies' => [],
-                ];
-            }
-            $sleepLessGrouped[$groupKey]['sum_count'] += $count;
-            $sleepLessGrouped[$groupKey]['companies'][] = [
-                'company' => $company !== '' ? $company : 'Unknown Company',
-                'data' => (string) $count,
-            ];
-        }
-        foreach ($sleepLessGrouped as $group) {
-            $operatorSleepLessDrillRows[] = [
-                'detail_indikator' => 'Operator dengan Jam Tidur Kurang',
-                'site' => $group['site'],
-                'week' => $group['week'],
-                'year' => $group['year'] ?? '',
-                'data' => (string) ($group['sum_count'] ?? 0),
-                'companies' => $group['companies'],
-            ];
-        }
-    } catch (\Throwable $e) {
-        $operatorSleepLessDrillRows = [];
-    }
 
     $peerThematicNormalizeWeek = static function ($week): ?int {
         if ($week === null || $week === '') {
@@ -216,26 +41,16 @@
     foreach ($thematicRows as $idx => $tRow) {
         $detailKey = trim((string) ($tRow['detail_indikator'] ?? ''));
         $drill = [];
-        if ($detailKey === $dailyCoverageDetailIndicator) {
-            $drill = $dailyCoverageDrillRows;
-        } elseif ($detailKey === $blindspotGrDetailIndicator) {
-            $drill = $blindspotGrDrillRows;
-        } elseif ($detailKey === $postEventL2UpDetailIndicator) {
-            $drill = $postEventL2UpDrillRows;
-        } elseif (in_array($detailKey, $operatorSleepLessIndicators, true)) {
-            $drill = $operatorSleepLessDrillRows;
-        } else {
-            foreach ($pointRows as $p) {
-                if (trim((string) ($p['detail_indikator'] ?? '')) !== $detailKey || $detailKey === '') {
-                    continue;
-                }
-                $drill[] = [
-                    'detail_indikator' => (string) ($p['detail_indikator'] ?? ''),
-                    'site' => (string) ($p['site'] ?? ''),
-                    'week' => (string) ($p['week'] ?? ''),
-                    'data' => (string) ($p['data'] ?? ''),
-                ];
+        foreach ($pointRows as $p) {
+            if (trim((string) ($p['detail_indikator'] ?? '')) !== $detailKey || $detailKey === '') {
+                continue;
             }
+            $drill[] = [
+                'detail_indikator' => (string) ($p['detail_indikator'] ?? ''),
+                'site' => (string) ($p['site'] ?? ''),
+                'week' => (string) ($p['week'] ?? ''),
+                'data' => (string) ($p['data'] ?? ''),
+            ];
         }
         usort($drill, static function (array $a, array $b) use ($peerThematicNormalizeWeek): int {
             $cmp = strcmp($a['site'], $b['site']);
@@ -758,13 +573,6 @@
                         <canvas id="peer-thematic-drill-trend-canvas"></canvas>
                      </div>
                   </article>
-                  <article id="peer-thematic-company-breakdown-wrap" class="hidden rounded-2xl border border-slate-200 p-4 shadow-sm">
-                     <div class="border-b border-slate-200 pb-3">
-                        <h4 class="text-sm font-semibold text-slate-800">Detail Perusahaan per Site &amp; Week</h4>
-                        <p class="mt-1 text-[11px] text-slate-600">Tampilan tabel per tahun, minggu, site, dan perusahaan.</p>
-                     </div>
-                     <div id="peer-thematic-company-breakdown-root" class="mt-3 space-y-2"></div>
-                  </article>
                </div>
             </div>
          </div>
@@ -785,8 +593,6 @@
    var chartSubEl = document.getElementById('peer-thematic-drill-chart-sub');
    var chartWrap = document.getElementById('peer-thematic-drill-chart-wrap');
    var trendCanvas = document.getElementById('peer-thematic-drill-trend-canvas');
-   var companyBreakdownWrap = document.getElementById('peer-thematic-company-breakdown-wrap');
-   var companyBreakdownRoot = document.getElementById('peer-thematic-company-breakdown-root');
    var trendChartInstance = null;
 
    if (!modal || !emptyEl || !panelEl || !heatmapRoot) return;
@@ -1098,62 +904,6 @@
       }
    }
 
-   function renderCompanyBreakdown(row, drill) {
-      if (!companyBreakdownWrap || !companyBreakdownRoot) return;
-      var indicator = String((row && row.detail_indikator) || '').trim();
-      var isPostEvent = indicator === '% Post Event L2 up';
-      var isSleepLess = indicator === 'Operator dengan Jam Tidur Kurang' || indicator === '% Operator dengan Jam Tidur Kurang';
-      if (!isPostEvent && !isSleepLess) {
-         companyBreakdownWrap.classList.add('hidden');
-         companyBreakdownRoot.innerHTML = '';
-         return;
-      }
-      var groups = drill.filter(function (d) {
-         return Array.isArray(d.companies) && d.companies.length > 0;
-      });
-      if (!groups.length) {
-         companyBreakdownWrap.classList.add('hidden');
-         companyBreakdownRoot.innerHTML = '';
-         return;
-      }
-      companyBreakdownWrap.classList.remove('hidden');
-      var valueHeader = isPostEvent ? '% Post Event' : 'Jumlah Operator';
-      var tableHtml = '' +
-         '<div class="overflow-x-auto rounded-lg border border-slate-300">' +
-            '<table class="w-full min-w-[860px] border-separate border-spacing-0 text-xs">' +
-               '<thead class="bg-[#f8fafc] text-[11px] font-bold uppercase tracking-wide text-slate-700">' +
-                  '<tr>' +
-                     '<th class="whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left">Year</th>' +
-                     '<th class="whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left">ISO Week</th>' +
-                     '<th class="whitespace-nowrap border-b border-slate-200 px-3 py-2 text-left">Site</th>' +
-                     '<th class="border-b border-slate-200 px-3 py-2 text-left">Perusahaan pelapor</th>' +
-                     '<th class="whitespace-nowrap border-b border-slate-200 px-3 py-2 text-right">' + esc(valueHeader) + '</th>' +
-                  '</tr>' +
-               '</thead>' +
-               '<tbody>';
-      groups.forEach(function (g) {
-         var companies = Array.isArray(g.companies) ? g.companies : [];
-         if (!companies.length) return;
-         companies.forEach(function (c, idx) {
-            tableHtml += '<tr class="bg-white">';
-            if (idx === 0) {
-               tableHtml += '<td rowspan="' + companies.length + '" class="align-top border-b border-slate-100 px-3 py-2 font-semibold text-slate-700">' + esc(g.year || '-') + '</td>';
-               tableHtml += '<td rowspan="' + companies.length + '" class="align-top border-b border-slate-100 px-3 py-2 font-semibold text-slate-700">' + esc(weekLabel(g.week || '-')) + '</td>';
-               tableHtml += '<td rowspan="' + companies.length + '" class="align-top border-b border-slate-100 px-3 py-2 font-semibold text-slate-800">' + esc(g.site || 'Unknown Site') + '</td>';
-            }
-            tableHtml += '<td class="border-b border-slate-100 px-3 py-2 text-slate-700">' + esc(c.company || 'Unknown Company') + '</td>';
-            tableHtml += '<td class="border-b border-slate-100 px-3 py-2 text-right font-semibold tabular-nums text-slate-900">' + esc(c.data || '-') + '</td>';
-            tableHtml += '</tr>';
-         });
-         tableHtml += '<tr class="bg-slate-50/80">' +
-            '<td colspan="4" class="border-b border-slate-200 px-3 py-2 text-right text-[11px] font-semibold text-slate-600">Rata-rata site/week</td>' +
-            '<td class="border-b border-slate-200 px-3 py-2 text-right text-[11px] font-bold tabular-nums text-primary">' + esc(g.data || '-') + '</td>' +
-         '</tr>';
-      });
-      tableHtml += '</tbody></table></div>';
-      companyBreakdownRoot.innerHTML = tableHtml;
-   }
-
    function openDrill(index) {
       var row = rows[index];
       if (!row) return;
@@ -1164,8 +914,6 @@
 
       destroyTrendChart();
       heatmapRoot.innerHTML = '';
-      if (companyBreakdownWrap) companyBreakdownWrap.classList.add('hidden');
-      if (companyBreakdownRoot) companyBreakdownRoot.innerHTML = '';
 
       if (drill.length === 0) {
          emptyEl.classList.remove('hidden');
@@ -1185,7 +933,6 @@
          }
          renderLegend(lowerBetter);
          var pack = renderHeatmap(drill, lowerBetter);
-         renderCompanyBreakdown(row, drill);
          var sites = mergeSiteList(pack.bySite);
          if (chartSubEl) {
             chartSubEl.textContent = 'Indikator: ' + (row.detail_indikator || '—');

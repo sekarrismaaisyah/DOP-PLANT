@@ -6,6 +6,44 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
+        :root {
+            --brand-1: #1f7a5f;
+            --brand-2: #2a9d74;
+            --ink-soft: #5f6f69;
+        }
+        .app-shell {
+            border: 1px solid rgba(31, 122, 95, 0.12);
+            background: linear-gradient(180deg, #f3f8f4 0%, #edf4ef 100%);
+            box-shadow: 0 20px 50px rgba(16, 34, 28, 0.12);
+        }
+        .glass-card {
+            border: 1px solid rgba(31, 122, 95, 0.14);
+            background: #ffffff;
+            box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+            backdrop-filter: blur(4px);
+        }
+        .hero-band {
+            background: linear-gradient(135deg, #d9efe3 0%, #cce7da 45%, #b6dfcd 100%);
+        }
+        .input-modern {
+            border: 1px solid #d7e4dd;
+            border-radius: 12px;
+            background: #fafdfb;
+            transition: border-color .2s ease, box-shadow .2s ease;
+        }
+        .input-modern:focus {
+            outline: none;
+            border-color: #2a9d74;
+            box-shadow: 0 0 0 4px rgba(42, 157, 116, 0.16);
+        }
+        .btn-primary {
+            border-radius: 12px;
+            background: linear-gradient(90deg, var(--brand-1), var(--brand-2));
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 10px 22px rgba(79, 70, 229, 0.28);
+        }
+        .btn-primary:hover { filter: brightness(0.97); }
         .face-scan-line {
             animation: face-scan-move 2.4s linear infinite;
         }
@@ -26,26 +64,26 @@
     </style>
     <title>Form Absensi Event</title>
 </head>
-<body class="min-h-screen bg-[#f0ebf8] py-10 px-4 text-slate-800">
-    <div class="mx-auto max-w-3xl space-y-4">
-        <div class="rounded-2xl border border-[#d9cffa] bg-white shadow-sm overflow-hidden">
-            <div class="h-3 w-full bg-[#673ab7]"></div>
-            <div class="px-6 py-6 md:px-8">
-                <h1 class="text-2xl font-semibold text-slate-900">Form Absensi Meeting</h1>
-                <p class="mt-2 text-sm text-slate-600">
+<body class="min-h-screen bg-[#e8efe9] py-6 px-3 text-slate-800">
+    <div class="mx-auto max-w-xl space-y-4 rounded-[28px] p-3 app-shell">
+        <div class="overflow-hidden rounded-3xl glass-card">
+            <div class="hero-band px-5 py-5 md:px-6">
+                <p class="text-xs font-semibold uppercase tracking-widest text-[#2f5f4d]">Absensi Digital</p>
+                <h1 class="mt-1 text-2xl font-semibold tracking-tight text-[#1f3b31]">Form Absensi Meeting</h1>
+                <p class="mt-1 text-sm text-[#3f5f53]">
                     Silakan isi data berikut untuk melakukan absensi event.
                 </p>
             </div>
         </div>
 
-        <div class="rounded-2xl border border-slate-200 bg-white px-6 py-5 md:px-8">
+        <div class="rounded-3xl glass-card px-5 py-4 md:px-6">
             <h2 class="text-base font-semibold text-slate-900">Informasi Event</h2>
-            <div class="mt-3 grid gap-2 text-sm text-slate-700">
-                <p><span class="font-semibold">Kode Event:</span> {{ $event->event_code }}</p>
-                <p><span class="font-semibold">Site:</span> {{ $event->site->name }}</p>
-                <p><span class="font-semibold">Jenis Meeting:</span> {{ $event->meetingType->name }}</p>
-                <p><span class="font-semibold">Tanggal:</span> {{ optional($event->meeting_date)->format('Y-m-d') }}</p>
-                <p><span class="font-semibold">Waktu:</span> {{ substr((string) $event->start_time, 0, 5) }} - {{ substr((string) $event->end_time, 0, 5) }} WITA</p>
+            <div class="mt-4 grid gap-3 text-sm sm:grid-cols-2">
+                <p class="rounded-xl bg-[#f3f8f4] px-3 py-2"><span class="font-semibold">Kode Event:</span> {{ $event->event_code }}</p>
+                <p class="rounded-xl bg-[#f3f8f4] px-3 py-2"><span class="font-semibold">Site:</span> {{ $event->site->name }}</p>
+                <p class="rounded-xl bg-[#f3f8f4] px-3 py-2"><span class="font-semibold">Jenis Meeting:</span> {{ $event->meetingType->name }}</p>
+                <p class="rounded-xl bg-[#f3f8f4] px-3 py-2"><span class="font-semibold">Tanggal:</span> {{ optional($event->meeting_date)->format('Y-m-d') }}</p>
+                <p class="rounded-xl bg-[#f3f8f4] px-3 py-2 sm:col-span-2"><span class="font-semibold">Waktu:</span> {{ substr((string) $event->start_time, 0, 5) }} - {{ substr((string) $event->end_time, 0, 5) }} WITA</p>
             </div>
         </div>
 
@@ -60,7 +98,7 @@
             </div>
         @endif
 
-        <form method="post" class="rounded-2xl border border-slate-200 bg-white px-6 py-6 md:px-8">
+        <form method="post" class="rounded-3xl glass-card px-5 py-5 md:px-6">
             @csrf
             <div class="space-y-2">
                 <label for="kode_sid" class="block text-sm font-semibold text-slate-900">
@@ -71,7 +109,7 @@
                         id="kode_sid"
                         name="kode_sid"
                         value="{{ old('kode_sid') }}"
-                        class="w-full flex-1 rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]"
+                        class="input-modern w-full flex-1 px-4 py-3 text-sm"
                         placeholder="Contoh: 532TM"
                         autocomplete="off"
                         required
@@ -79,7 +117,7 @@
                     <button
                         type="button"
                         id="btn_cek_sid"
-                        class="shrink-0 rounded-xl border border-[#673ab7] bg-[#ede7f6] px-4 py-3 text-sm font-semibold text-[#4527a0] hover:bg-[#e1d5f4]"
+                        class="shrink-0 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-semibold text-emerald-700 hover:bg-emerald-100"
                     >
                         Cek SID
                     </button>
@@ -99,35 +137,35 @@
                 <!-- <p class="text-xs text-slate-500">Data diisi otomatis dari <strong>ClickHouse Nitip</strong> (view <code class="rounded bg-slate-100 px-1">bep_vw_wp_karyawan</code>) berdasarkan <code class="rounded bg-slate-100 px-1">kode_sid</code>.</p> -->
             </div>
 
-            <div id="manual_panel" class="mt-5 hidden space-y-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-4">
+            <div id="manual_panel" class="mt-5 hidden space-y-3 rounded-2xl border border-amber-200 bg-gradient-to-br from-amber-50 to-orange-50 px-4 py-4">
                 <p class="text-xs font-semibold uppercase tracking-wide text-amber-700">Input manual (SID tidak ditemukan)</p>
                 <div class="grid gap-3 sm:grid-cols-2">
                     <div class="sm:col-span-2">
                         <label for="manual_nama" class="mb-1 block text-xs font-semibold text-slate-700">Nama <span class="text-red-500">*</span></label>
-                        <input id="manual_nama" name="manual_nama" value="{{ old('manual_nama') }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]" placeholder="Nama lengkap">
+                        <input id="manual_nama" name="manual_nama" value="{{ old('manual_nama') }}" class="input-modern w-full px-4 py-3 text-sm" placeholder="Nama lengkap">
                     </div>
                     <div>
                         <label for="manual_perusahaan" class="mb-1 block text-xs font-semibold text-slate-700">Perusahaan <span class="text-red-500">*</span></label>
-                        <input id="manual_perusahaan" name="manual_perusahaan" value="{{ old('manual_perusahaan') }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]" placeholder="Nama perusahaan">
+                        <input id="manual_perusahaan" name="manual_perusahaan" value="{{ old('manual_perusahaan') }}" class="input-modern w-full px-4 py-3 text-sm" placeholder="Nama perusahaan">
                     </div>
                     <div>
                         <label for="manual_jabatan" class="mb-1 block text-xs font-semibold text-slate-700">Jabatan <span class="text-red-500">*</span></label>
-                        <input id="manual_jabatan" name="manual_jabatan" value="{{ old('manual_jabatan') }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]" placeholder="Jabatan">
+                        <input id="manual_jabatan" name="manual_jabatan" value="{{ old('manual_jabatan') }}" class="input-modern w-full px-4 py-3 text-sm" placeholder="Jabatan">
                     </div>
                     <div>
                         <label for="manual_divisi" class="mb-1 block text-xs font-semibold text-slate-700">Divisi</label>
-                        <input id="manual_divisi" name="manual_divisi" value="{{ old('manual_divisi') }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]" placeholder="Divisi">
+                        <input id="manual_divisi" name="manual_divisi" value="{{ old('manual_divisi') }}" class="input-modern w-full px-4 py-3 text-sm" placeholder="Divisi">
                     </div>
                     <div>
                         <label for="manual_departemen" class="mb-1 block text-xs font-semibold text-slate-700">Departemen</label>
-                        <input id="manual_departemen" name="manual_departemen" value="{{ old('manual_departemen') }}" class="w-full rounded-xl border border-slate-300 px-4 py-3 text-sm outline-none focus:border-[#673ab7] focus:ring-4 focus:ring-[#ede7f6]" placeholder="Departemen">
+                        <input id="manual_departemen" name="manual_departemen" value="{{ old('manual_departemen') }}" class="input-modern w-full px-4 py-3 text-sm" placeholder="Departemen">
                     </div>
                 </div>
                 <p class="text-xs text-amber-800">Jika SID tidak ada di sistem, isi data manual lalu klik Kirim Absensi.</p>
             </div>
 
-            <div id="preview_panel" class="mt-5 hidden space-y-3 rounded-xl border border-[#d1c4e9] bg-[#faf8ff] px-4 py-4">
-                <p class="text-xs font-semibold uppercase tracking-wide text-[#5e35b1]">Data terdeteksi</p>
+            <div id="preview_panel" class="mt-5 hidden space-y-3 rounded-2xl border border-emerald-100 bg-gradient-to-br from-emerald-50/80 to-teal-50/80 px-4 py-4">
+                <p class="text-xs font-semibold uppercase tracking-wide text-emerald-700">Data terdeteksi</p>
                 <div id="pv_foto_wrap" class="hidden sm:col-span-2">
                     <p class="text-xs text-slate-500 mb-1">Foto</p>
                     <img id="pv_foto" src="" alt="" class="h-24 w-24 rounded-lg border border-slate-200 object-cover bg-white">
@@ -153,18 +191,18 @@
             <input type="hidden" name="face_distance" id="face_distance" value="">
             <input type="hidden" name="face_bypass" id="face_bypass" value="0">
 
-            <div class="mt-6 flex items-center justify-between gap-3">
+            <div class="mt-6 flex items-center justify-between gap-3 border-t border-slate-200 pt-5">
                 <p class="text-xs text-slate-500">Form ini tidak memerlukan login akun.</p>
-                <button id="btn_submit_attendance" class="rounded-xl bg-[#673ab7] px-6 py-3 text-sm font-semibold text-white hover:bg-[#5e35b1]">
+                <button id="btn_submit_attendance" class="btn-primary px-6 py-3 text-sm">
                     Kirim Absensi
                 </button>
             </div>
         </form>
     </div>
 
-    <div id="face_modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/75 px-4 backdrop-blur-[2px]">
-        <div class="w-full max-w-4xl rounded-3xl border border-slate-200 bg-gradient-to-b from-white to-slate-50 p-5 shadow-2xl">
-            <div class="mb-4 flex items-start justify-between gap-3">
+    <div id="face_modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
+        <div class="w-full max-w-4xl rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl">
+            <div class="mb-4 flex items-start justify-between gap-3 border-b border-slate-200 pb-3">
                 <div>
                     <h3 class="text-lg font-semibold text-slate-900">Verifikasi Wajah</h3>
                     <p class="text-sm text-slate-600">Pastikan wajah berada di area frame sebelum lanjut kirim absensi.</p>
@@ -179,7 +217,7 @@
                 </div>
                 <div>
                     <p class="mb-1 text-xs text-slate-500">Live Camera</p>
-                    <div id="face_camera_wrap" class="relative h-64 overflow-hidden rounded-2xl border border-slate-300 bg-slate-950 shadow-lg">
+                    <div id="face_camera_wrap" class="relative h-64 overflow-hidden rounded-2xl border border-slate-300 bg-slate-950 shadow-xl">
                         <video id="face_live_video" class="h-full w-full object-cover" autoplay playsinline muted></video>
                         <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-transparent to-purple-500/10"></div>
                         <div id="face_scan_line" class="face-scan-line pointer-events-none absolute inset-x-4 top-1/2 h-[2px] bg-gradient-to-r from-transparent via-cyan-300 to-transparent opacity-80"></div>
@@ -199,12 +237,12 @@
             </div>
 
             <div id="face_identity_ok" class="mt-4 hidden rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"></div>
-            <p id="face_verify_status" class="mt-3 min-h-[1.25rem] text-xs font-medium text-slate-700"></p>
+            <p id="face_verify_status" class="mt-3 min-h-[1.25rem] rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700"></p>
             <canvas id="face_capture_canvas" width="360" height="360" class="hidden"></canvas>
 
             <div class="mt-4 flex flex-wrap justify-end gap-2">
-                <button id="btn_start_camera" type="button" class="rounded-xl border border-slate-300 bg-slate-50 px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">Aktifkan Kamera</button>
-                <button id="btn_verify_face" type="button" class="rounded-xl border border-[#673ab7] bg-[#ede7f6] px-4 py-2 text-xs font-semibold text-[#4527a0] hover:bg-[#e1d5f4]">Verifikasi & Kirim</button>
+                <button id="btn_start_camera" type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">Aktifkan Kamera</button>
+                <button id="btn_verify_face" type="button" class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Verifikasi & Kirim</button>
                 <button id="btn_confirm_submit" type="button" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700">Kirim Absensi Sekarang</button>
             </div>
             <div class="mt-5 border-t border-slate-200 pt-4">

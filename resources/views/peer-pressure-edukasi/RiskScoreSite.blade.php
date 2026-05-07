@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Risk Driver Correlation Dashboard | Week 18 2026</title>
   <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+  <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
   <script>
@@ -216,6 +217,37 @@
       .action-head { @apply mb-2.5 flex items-center justify-between gap-2.5; }
       .action-title { @apply font-extrabold text-[#1f2937]; }
       .checklist { @apply m-0 pl-[18px] text-[13px] leading-[1.55] text-muted; }
+      .risk-profile-board {
+        @apply relative mt-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-[#f8fafc] p-4 shadow-sm sm:p-5;
+        background-image: radial-gradient(circle at 4% 8%, rgba(59,130,246,.14), transparent 36%), radial-gradient(circle at 96% 0%, rgba(236,72,153,.14), transparent 28%), linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,1) 100%);
+      }
+      .risk-profile-main {
+        @apply relative rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_16px_36px_-24px_rgba(15,23,42,0.45)] sm:p-4;
+      }
+      .risk-profile-main::after {
+        content: "";
+        position: absolute;
+        inset: 0;
+        border-radius: 1rem;
+        pointer-events: none;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
+      }
+      .risk-profile-mini-grid { @apply mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3; }
+      .risk-profile-mini {
+        @apply rounded-xl border border-slate-200 p-2.5 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.5)] transition-transform duration-200 sm:p-3;
+      }
+      .risk-profile-mini:hover { transform: translateY(-2px); }
+      .risk-profile-head { @apply mb-2 flex items-center justify-between gap-2; }
+      .risk-profile-site { @apply text-sm font-bold tracking-tight text-[#1f2937]; }
+      .risk-profile-chip-wrap { @apply flex items-center gap-1.5; }
+      .risk-chip { @apply rounded-md border border-slate-200 bg-[#f8fafc] px-2 py-0.5 text-[10px] font-semibold text-[#475569]; }
+      .risk-profile-status { @apply inline-flex items-center rounded-full border px-2 py-[3px] text-[10px] font-black; }
+      .risk-profile-score { @apply text-[11px] font-semibold text-[#334155]; }
+      .risk-profile-mini-chart { @apply h-[118px] w-full; }
+      .risk-profile-legend { @apply mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-semibold text-[#556172]; }
+      .legend-line { @apply inline-flex items-center gap-1.5; }
+      .legend-line i { @apply inline-block h-[3px] w-5 rounded-full; }
+      .risk-profile-footer { @apply mt-2 text-[11px] text-[#6b7280]; }
 
       .stat-tile { @apply rounded-[18px] border border-line bg-white p-3.5; }
       .stat-tile .num { @apply mt-1.5 text-[26px] font-extrabold tracking-[-.03em] text-[#111827]; }
@@ -353,6 +385,29 @@
     </div>
 
     <section class="card page-intro" id="pageIntro"></section>
+    <section class="risk-profile-board" data-page-only="overview">
+      <div class="risk-profile-main">
+        <div class="card-title !mb-2.5">
+          <div>
+            <h3>Risk Score Profiling</h3>
+            <div class="muted small">Profil risiko mingguan dan simulasi skenario kontrol per site.</div>
+          </div>
+          <span class="badge blue">Data Weekly W01-W18 2026</span>
+        </div>
+        <div id="riskProfileMainChart" class="rounded-xl border border-slate-100 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-2"></div>
+      </div>
+      <div class="risk-profile-mini-grid" id="riskProfileMiniGrid"></div>
+      <div class="risk-profile-legend">
+        <span class="legend-line"><i style="background:#9ca3af"></i>Moving Average 4 Week</span>
+        <span class="legend-line"><i style="background:#e879f9"></i>Observed Risk Profile</span>
+        <span class="legend-line"><i style="background:#22c55e"></i>Controlled Recovery Scenario</span>
+        <span class="legend-line"><i style="background:#eab308"></i>BAU Scenario</span>
+        <span class="legend-line"><i style="background:#be123c"></i>Worst Scenario</span>
+        <span class="legend-line"><i style="background:#0ea5e9"></i>Proposed Scenario</span>
+        <span class="legend-line"><i style="background:#ef4444; width:10px; height:10px; border-radius:999px;"></i>Breakout Point</span>
+      </div>
+      <div class="risk-profile-footer">Shading warna menunjukkan klasifikasi umum: hijau (Best Observed Risk Profile), kuning (Unstable Observed Risk Profile), merah muda (High Risk Profile).</div>
+    </section>
 
     <div class="cards-wrap" data-page-only="overview">
       <section class="grid grid-site-cards" id="siteCards"></section>
@@ -796,6 +851,8 @@
 
     let selectedSite = "BMO 1";
     let activeView = "overview";
+    let riskProfileMainChartInstance = null;
+    let riskProfileMiniChartInstances = [];
 
     const riskFilter = document.getElementById("riskFilter");
     const siteCards = document.getElementById("siteCards");
@@ -1228,6 +1285,261 @@
       `;
     }
 
+    function movingAverage(values, window = 4) {
+      return values.map((_, index) => {
+        const start = Math.max(0, index - window + 1);
+        const slice = values.slice(start, index + 1);
+        return slice.reduce((sum, num) => sum + num, 0) / slice.length;
+      });
+    }
+
+    function smoothScenario(start, end, points = 8, curve = 1.85) {
+      return Array.from({ length: points }, (_, index) => {
+        const t = index / Math.max(points - 1, 1);
+        return start + (end - start) * (1 - Math.exp(-curve * t));
+      });
+    }
+
+    function polylinePoints(values, width, height, minY = 0, maxY = 70, startIndex = 0, totalPoints = values.length) {
+      const xStep = width / Math.max(totalPoints - 1, 1);
+      return values.map((value, index) => {
+        const x = (startIndex + index) * xStep;
+        const bounded = Math.max(minY, Math.min(maxY, value));
+        const y = height - ((bounded - minY) / (maxY - minY)) * height;
+        return `${x.toFixed(2)},${y.toFixed(2)}`;
+      }).join(" ");
+    }
+
+    function buildProfileData(siteData, seed = 0) {
+      const observedLength = 18;
+      const base = siteData.score + (siteData.status === "High Risk" ? 6 : siteData.status === "Unstable" ? 2 : -2);
+      const volatility = siteData.status === "High Risk" ? 8 : siteData.status === "Unstable" ? 6 : 4;
+      const observed = Array.from({ length: observedLength }, (_, index) => {
+        const wave = Math.sin((index + 1 + seed) * 0.75) * volatility;
+        const drift = (index - observedLength / 2) * 0.15;
+        const noise = Math.cos((index + seed) * 1.12) * 2.4;
+        return Math.max(8, Math.min(55, base + wave + drift + noise));
+      });
+      const moving = movingAverage(observed);
+      const breakout = observed.length - 1;
+      const breakoutValue = observed[breakout];
+      const proposed = smoothScenario(breakoutValue, Math.max(4, siteData.score * 0.24), 9, 2.1);
+      const controlled = smoothScenario(breakoutValue, Math.max(10, siteData.score * 0.5), 9, 1.8);
+      const bau = smoothScenario(breakoutValue, Math.max(20, siteData.score * 0.9), 9, 1.45);
+      const worst = smoothScenario(breakoutValue, Math.min(66, siteData.score + 36), 9, 2.35);
+      return { observed, moving, proposed, controlled, bau, worst, breakout };
+    }
+
+    function profileSvg(data, width = 860, height = 230) {
+      const totalPoints = data.observed.length + data.proposed.length - 1;
+      const scenarioOffset = data.observed.length - 1;
+      const observedPath = polylinePoints(data.observed, width, height, 0, 70, 0, totalPoints);
+      const movingPath = polylinePoints(data.moving, width, height, 0, 70, 0, totalPoints);
+      const proposedPath = polylinePoints(data.proposed, width, height, 0, 70, scenarioOffset, totalPoints);
+      const controlledPath = polylinePoints(data.controlled, width, height, 0, 70, scenarioOffset, totalPoints);
+      const bauPath = polylinePoints(data.bau, width, height, 0, 70, scenarioOffset, totalPoints);
+      const worstPath = polylinePoints(data.worst, width, height, 0, 70, scenarioOffset, totalPoints);
+      const breakX = (data.breakout / Math.max(totalPoints - 1, 1)) * width;
+      const breakY = height - ((data.observed[data.breakout] / 70) * height);
+      const observedArea = `${observedPath} ${width.toFixed(2)},${height.toFixed(2)} 0,${height.toFixed(2)}`;
+      const gridY = [0, 10, 20, 30, 40, 50, 60, 70].map(value => {
+        const y = height - (value / 70) * height;
+        return `<line x1="0" y1="${y.toFixed(2)}" x2="${width}" y2="${y.toFixed(2)}" stroke="#e5e7eb" stroke-width="${value % 20 === 0 ? 1.1 : 0.8}" stroke-dasharray="${value % 20 === 0 ? "0" : "3 4"}"/>`;
+      }).join("");
+      const gridX = [0, 4, 8, 12, 16, totalPoints - 1].map(index => {
+        const x = (index / Math.max(totalPoints - 1, 1)) * width;
+        return `<line x1="${x.toFixed(2)}" y1="0" x2="${x.toFixed(2)}" y2="${height}" stroke="#eef2f7" stroke-width="1"/>`;
+      }).join("");
+      const yLabels = [70, 50, 30, 10].map(value => {
+        const y = height - (value / 70) * height - 3;
+        return `<text x="6" y="${Math.max(10, y).toFixed(2)}" fill="#94a3b8" font-size="10" font-weight="700">${value}</text>`;
+      }).join("");
+      return `
+        <svg viewBox="0 0 ${width} ${height}" class="w-full h-[220px] sm:h-[250px]" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="riskObservedFill-${width}-${height}" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#e879f9" stop-opacity=".28"/>
+              <stop offset="100%" stop-color="#e879f9" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          ${gridX}
+          ${gridY}
+          <polygon points="${observedArea}" fill="url(#riskObservedFill-${width}-${height})"/>
+          <polyline points="${movingPath}" fill="none" stroke="#9ca3af" stroke-width="2" stroke-linecap="round" stroke-dasharray="4 4"/>
+          <polyline points="${observedPath}" fill="none" stroke="#e879f9" stroke-width="2.7" stroke-linecap="round" stroke-linejoin="round"/>
+          <polyline points="${controlledPath}" fill="none" stroke="#22c55e" stroke-width="2.4" stroke-linecap="round"/>
+          <polyline points="${bauPath}" fill="none" stroke="#eab308" stroke-width="2.4" stroke-linecap="round"/>
+          <polyline points="${worstPath}" fill="none" stroke="#be123c" stroke-width="2.6" stroke-linecap="round"/>
+          <polyline points="${proposedPath}" fill="none" stroke="#0ea5e9" stroke-width="2.4" stroke-linecap="round"/>
+          <line x1="${breakX.toFixed(2)}" y1="0" x2="${breakX.toFixed(2)}" y2="${height}" stroke="#ef4444" stroke-width="1.2" stroke-dasharray="4 4"/>
+          <circle cx="${breakX.toFixed(2)}" cy="${breakY.toFixed(2)}" r="4.5" fill="#ef4444"/>
+          <text x="${Math.min(width - 92, breakX + 8).toFixed(2)}" y="${Math.max(14, breakY - 10).toFixed(2)}" fill="#ef4444" font-size="10" font-weight="700">Breakout point</text>
+          ${yLabels}
+        </svg>
+      `;
+    }
+
+    function buildRiskProfileAxis(data) {
+      const observedLabels = Array.from({ length: data.observed.length }, (_, index) => `W${String(index + 1).padStart(2, "0")}`);
+      const scenarioLabels = Array.from({ length: data.proposed.length - 1 }, (_, index) => `P${index + 1}`);
+      return observedLabels.concat(scenarioLabels);
+    }
+
+    function toSeriesAxisData(data, key) {
+      const axis = buildRiskProfileAxis(data);
+      const offset = data.observed.length - 1;
+      return axis.map((_, index) => {
+        if (index <= data.observed.length - 1) {
+          if (key === "moving") return Number(data.moving[index].toFixed(2));
+          if (key === "observed") return Number(data.observed[index].toFixed(2));
+          if (index === offset) return Number(data.observed[index].toFixed(2));
+          return null;
+        }
+        const scenarioIndex = index - offset;
+        return Number(data[key][scenarioIndex].toFixed(2));
+      });
+    }
+
+    function renderRiskProfiling() {
+      const mainEl = document.getElementById("riskProfileMainChart");
+      const miniEl = document.getElementById("riskProfileMiniGrid");
+      if (!mainEl || !miniEl || typeof echarts === "undefined") return;
+      riskProfileMiniChartInstances.forEach(chart => chart.dispose());
+      riskProfileMiniChartInstances = [];
+      if (riskProfileMainChartInstance) riskProfileMainChartInstance.dispose();
+
+      const aggregate = buildProfileData({
+        score: Math.round(sites.reduce((sum, site) => sum + site.score, 0) / sites.length),
+        status: "Unstable"
+      }, 2);
+      const axis = buildRiskProfileAxis(aggregate);
+      const breakoutLabel = axis[aggregate.breakout];
+      const movingData = toSeriesAxisData(aggregate, "moving");
+      const observedData = toSeriesAxisData(aggregate, "observed");
+      const controlledData = toSeriesAxisData(aggregate, "controlled");
+      const bauData = toSeriesAxisData(aggregate, "bau");
+      const worstData = toSeriesAxisData(aggregate, "worst");
+      const proposedData = toSeriesAxisData(aggregate, "proposed");
+      riskProfileMainChartInstance = echarts.init(mainEl);
+      riskProfileMainChartInstance.setOption({
+        animationDuration: 900,
+        grid: { left: 38, right: 20, top: 16, bottom: 26 },
+        tooltip: { trigger: "axis", axisPointer: { type: "line" } },
+        xAxis: {
+          type: "category",
+          data: axis,
+          axisTick: { show: false },
+          axisLine: { lineStyle: { color: "#d6dbe3" } },
+          axisLabel: {
+            color: "#7c8798",
+            fontSize: 10,
+            interval: (index, value) => {
+              const label = String(value ?? axis[index] ?? "");
+              if (label.startsWith("P")) return 0;
+              const week = Number(label.replace(/[^\d]/g, ""));
+              if (!Number.isFinite(week)) return 1;
+              return week % 3 === 1 ? 0 : 1;
+            }
+          }
+        },
+        yAxis: {
+          type: "value",
+          min: 0,
+          max: 70,
+          splitLine: { lineStyle: { color: "#e5e7eb", type: "dashed" } },
+          axisLabel: { color: "#7c8798", fontSize: 10 }
+        },
+        series: [
+          { name: "Moving Average 4 Week", type: "line", data: movingData, smooth: 0.25, symbol: "none", lineStyle: { color: "#9ca3af", width: 2, type: "dashed" } },
+          {
+            name: "Observed Risk Profile",
+            type: "line",
+            data: observedData,
+            smooth: 0.3,
+            symbol: "none",
+            lineStyle: { width: 3, color: "#e879f9" },
+            areaStyle: {
+              color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                { offset: 0, color: "rgba(232,121,249,0.35)" },
+                { offset: 1, color: "rgba(232,121,249,0.02)" }
+              ])
+            },
+            markPoint: { symbol: "circle", symbolSize: 10, itemStyle: { color: "#ef4444" }, data: [{ coord: [breakoutLabel, observedData[aggregate.breakout]] }] },
+            markLine: { symbol: "none", label: { formatter: "Breakout", color: "#ef4444" }, lineStyle: { color: "#ef4444", type: "dashed" }, data: [{ xAxis: breakoutLabel }] }
+          },
+          { name: "Controlled Recovery Scenario", type: "line", data: controlledData, smooth: 0.38, symbol: "none", lineStyle: { color: "#22c55e", width: 2.2 } },
+          { name: "BAU Scenario", type: "line", data: bauData, smooth: 0.38, symbol: "none", lineStyle: { color: "#eab308", width: 2.2 } },
+          { name: "Worst Scenario", type: "line", data: worstData, smooth: 0.38, symbol: "none", lineStyle: { color: "#be123c", width: 2.3 } },
+          { name: "Proposed Scenario", type: "line", data: proposedData, smooth: 0.38, symbol: "none", lineStyle: { color: "#0ea5e9", width: 2.2 } }
+        ]
+      });
+
+      miniEl.innerHTML = sites.map((siteData, index) => `
+        <article class="risk-profile-mini" style="background:${siteData.status === "Best Profile" ? "#ecfdf5" : siteData.status === "Unstable" ? "#fefce8" : "#fdf2f8"}">
+          <div class="risk-profile-head">
+            <div>
+              <div class="risk-profile-site">${escapeHtml(siteData.site)}</div>
+              <div class="risk-profile-score">Risk W18: ${siteData.score.toFixed(2)}%</div>
+            </div>
+            <div class="risk-profile-chip-wrap">
+              <span class="risk-profile-status" style="background:var(--${siteData.color}-soft); color:var(--${siteData.color}); border-color:var(--line);">${escapeHtml(siteData.status)}</span>
+            </div>
+          </div>
+          <div class="risk-profile-mini-chart" data-mini-risk-chart="${index}"></div>
+        </article>
+      `).join("");
+
+      sites.forEach((siteData, index) => {
+        const el = miniEl.querySelector(`[data-mini-risk-chart="${index}"]`);
+        if (!el) return;
+        const profile = buildProfileData(siteData, index + 1);
+        const miniAxis = buildRiskProfileAxis(profile);
+        const miniObserved = toSeriesAxisData(profile, "observed");
+        const miniProposed = toSeriesAxisData(profile, "proposed");
+        const miniWorst = toSeriesAxisData(profile, "worst");
+        const miniChart = echarts.init(el);
+        miniChart.setOption({
+          animationDuration: 500,
+          grid: { left: 8, right: 8, top: 6, bottom: 6 },
+          xAxis: { type: "category", data: miniAxis, show: false },
+          yAxis: { type: "value", min: 0, max: 70, show: false },
+          tooltip: { trigger: "axis", axisPointer: { type: "none" } },
+          series: [
+            {
+              type: "line",
+              name: "Observed",
+              data: miniObserved,
+              smooth: 0.3,
+              symbol: "none",
+              lineStyle: { width: 2, color: "#e879f9" },
+              areaStyle: {
+                color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+                  { offset: 0, color: "rgba(232,121,249,0.24)" },
+                  { offset: 1, color: "rgba(232,121,249,0.01)" }
+                ])
+              }
+            },
+            { type: "line", name: "Worst", data: miniWorst, smooth: 0.33, symbol: "none", lineStyle: { width: 1.8, color: "#be123c" } },
+            {
+              type: "line",
+              name: "Proposed",
+              data: miniProposed,
+              smooth: 0.33,
+              symbol: "none",
+              lineStyle: {
+                width: 1.8,
+                color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                  { offset: 0, color: "#38bdf8" },
+                  { offset: 1, color: "#2563eb" }
+                ])
+              }
+            }
+          ]
+        });
+        riskProfileMiniChartInstances.push(miniChart);
+      });
+    }
+
     function syncPageOnlyContent(view) {
       document.querySelectorAll("[data-page-only]").forEach(element => {
         element.hidden = element.dataset.pageOnly !== view;
@@ -1256,6 +1568,7 @@
 
     function renderAll() {
       renderCards();
+      renderRiskProfiling();
       renderDriverDictionary();
       renderRanking();
       renderScatter();
@@ -1303,6 +1616,8 @@
 
     window.addEventListener("resize", () => {
       if (sitePopup.classList.contains("show")) renderSitePopup();
+      if (riskProfileMainChartInstance) riskProfileMainChartInstance.resize();
+      riskProfileMiniChartInstances.forEach(chart => chart.resize());
     });
 
     renderAll();

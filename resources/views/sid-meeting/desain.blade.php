@@ -25,6 +25,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
   <style>
     :root {
       --bc-blue: #2563eb;
@@ -855,7 +856,7 @@
         <div class="rounded-3xl bg-white p-5 ring-1 ring-slate-200 shadow-sm">
           <div class="mb-3 flex flex-col gap-2 md:flex-row md:items-center md:justify-between">
             <h4 class="font-black text-slate-950">Daftar Hadir</h4>
-            <button id="eventRecapExportBtn" onclick="exportSelectedEventCSV()" class="no-print rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white">Export Event CSV</button>
+            <button id="eventRecapExportBtn" onclick="exportSelectedEventExcel()" class="no-print rounded-xl bg-slate-900 px-3 py-2 text-xs font-black text-white">Export Event Excel</button>
           </div>
           <div class="table-wrap rounded-2xl border border-slate-200 bg-white">
             <table class="min-w-full text-left text-sm">
@@ -2824,6 +2825,56 @@
     const rows = db.attendance.filter(a => a.eventId === selectedRecapEventId).map(a => ({ jenis_meeting: ev.meetingType || '', site: ev.site || '', tanggal_meeting: ev.date || '', week: ev.week || '', kode_sid: a.sid, nama: a.name, perusahaan: a.company, jabatan_struktural: a.structuralPosition, jabatan_fungsional: a.functionalPosition, timestamp: a.timestamp }));
     const safeName = String(ev.meetingType || 'event').split(' ').join('_');
     downloadCSV(rows, 'rekap_' + safeName + '_' + (ev.week || '') + '.csv');
+  }
+
+  function exportSelectedEventExcel() {
+    if (!selectedRecapEventId) return toast('Belum ada event yang dipilih');
+    if (typeof XLSX === 'undefined') return toast('Library Excel belum siap. Refresh halaman lalu coba lagi.');
+
+    const ev = db.events.find(x => x.id === selectedRecapEventId) || {};
+    const safeName = String(ev.meetingType || 'event').split(' ').join('_');
+    const filename = 'rekap_' + safeName + '_' + (ev.week || '') + '.xlsx';
+
+    const logs = db.attendance
+      .filter(a => a.eventId === selectedRecapEventId)
+      .slice()
+      .sort((a, b) => String(a.timestamp || '').localeCompare(String(b.timestamp || '')));
+
+    if (!logs.length) return toast('Tidak ada data untuk diexport');
+
+    const rows = logs.map((a, idx) => ({
+      No: idx + 1,
+      Timestamp: a.timestamp || '',
+      'Kode Event': ev.code || '',
+      'Jenis Meeting': ev.meetingType || '',
+      Site: ev.site || '',
+      'Tanggal Meeting': ev.date || '',
+      Week: ev.week || '',
+      SID: a.sid || '',
+      Nama: a.name || '',
+      Perusahaan: a.company || '',
+      'Jabatan Struktural': a.structuralPosition || '',
+      'Jabatan Fungsional': a.functionalPosition || ''
+    }));
+
+    const header = Object.keys(rows[0]);
+    const ws = XLSX.utils.json_to_sheet(rows, { header });
+    ws['!autofilter'] = { ref: XLSX.utils.encode_range(XLSX.utils.decode_range(ws['!ref'])) };
+    ws['!freeze'] = { xSplit: 0, ySplit: 1, topLeftCell: 'A2', activePane: 'bottomLeft', state: 'frozen' };
+
+    const colWidths = header.map(h => {
+      const maxLen = Math.max(
+        String(h).length,
+        ...rows.map(r => String(r[h] ?? '').length)
+      );
+      return { wch: Math.min(60, Math.max(10, maxLen + 2)) };
+    });
+    ws['!cols'] = colWidths;
+
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Daftar Hadir');
+    XLSX.writeFile(wb, filename, { compression: true });
+    toast('Excel berhasil dibuat');
   }
   function exportAllCSV() {
     exportFilteredReportCSV();
