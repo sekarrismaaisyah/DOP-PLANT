@@ -184,14 +184,16 @@ class SidMeetingController extends Controller
             'status' => 'nullable|string',
         ]);
 
-        Event::query()->create([
-            ...$payload,
-            'week' => Carbon::parse($payload['meeting_date'])->format('o-\WW'),
-            'event_code' => $this->generateEventCode($payload['meeting_date']),
-            'qr_token' => (string) Str::uuid(),
-            'status' => $payload['status'] ?? 'draft',
-            'created_by' => auth()->id(),
-        ]);
+        $event = $this->createEventWithUniqueCode(function (string $eventCode) use ($payload): Event {
+            return Event::query()->create([
+                ...$payload,
+                'week' => Carbon::parse($payload['meeting_date'])->format('o-\WW'),
+                'event_code' => $eventCode,
+                'qr_token' => (string) Str::uuid(),
+                'status' => $payload['status'] ?? 'draft',
+                'created_by' => auth()->id(),
+            ]);
+        }, $payload['meeting_date']);
 
         return back()->with('success', 'Event berhasil dibuat.');
     }
@@ -494,18 +496,20 @@ class SidMeetingController extends Controller
         $meetingType = MeetingType::query()->firstOrCreate(['name' => $payload['meeting_type']], ['is_active' => true]);
         $site = Site::query()->firstOrCreate(['name' => $payload['site']], ['is_active' => true]);
 
-        $event = Event::query()->create([
-            'event_code' => $this->generateEventCode($payload['meeting_date']),
-            'qr_token' => (string) Str::uuid(),
-            'meeting_type_id' => $meetingType->id,
-            'site_id' => $site->id,
-            'meeting_date' => $payload['meeting_date'],
-            'week' => $payload['week'],
-            'start_time' => $payload['start_time'],
-            'end_time' => $payload['end_time'],
-            'status' => 'draft',
-            'created_by' => auth()->id(),
-        ]);
+        $event = $this->createEventWithUniqueCode(function (string $eventCode) use ($payload, $meetingType, $site): Event {
+            return Event::query()->create([
+                'event_code' => $eventCode,
+                'qr_token' => (string) Str::uuid(),
+                'meeting_type_id' => $meetingType->id,
+                'site_id' => $site->id,
+                'meeting_date' => $payload['meeting_date'],
+                'week' => $payload['week'],
+                'start_time' => $payload['start_time'],
+                'end_time' => $payload['end_time'],
+                'status' => 'draft',
+                'created_by' => auth()->id(),
+            ]);
+        }, $payload['meeting_date']);
 
         return response()->json(['ok' => true, 'id' => $event->id]);
     }
@@ -822,8 +826,54 @@ class SidMeetingController extends Controller
     private function generateEventCode(string $meetingDate): string
     {
         $date = Carbon::parse($meetingDate)->format('Ymd');
-        $countToday = Event::query()->whereDate('meeting_date', Carbon::parse($meetingDate)->toDateString())->count() + 1;
-        return sprintf('EV-%s-%04d', $date, $countToday);
+        $prefix = "EV-{$date}-";
+        $meetingDateOnly = Carbon::parse($meetingDate)->toDateString();
+
+        return DB::transaction(function () use ($prefix, $date, $meetingDateOnly): string {
+            $lastCode = Event::query()
+                ->whereDate('meeting_date', $meetingDateOnly)
+                ->where('event_code', 'like', $prefix . '%')
+                ->lockForUpdate()
+                ->orderByDesc('event_code')
+                ->value('event_code');
+
+            $next = 1;
+            if (is_string($lastCode) && str_starts_with($lastCode, $prefix)) {
+                $suffix = (int) substr($lastCode, -4);
+                $next = max(1, $suffix + 1);
+            }
+
+            return sprintf('EV-%s-%04d', $date, $next);
+        }, 3);
+    }
+
+    /**
+     * Buat event dengan event_code unik walaupun ada concurrent insert.
+     */
+    private function createEventWithUniqueCode(callable $creator, string $meetingDate): Event
+    {
+        $attempts = 6;
+        for ($i = 0; $i < $attempts; $i++) {
+            $eventCode = $this->generateEventCode($meetingDate);
+            try {
+                /** @var Event $event */
+                $event = $creator($eventCode);
+                return $event;
+            } catch (\Illuminate\Database\QueryException $e) {
+                $message = (string) $e->getMessage();
+                $isDuplicate = $e->getCode() === '23000'
+                    && str_contains($message, 'Duplicate entry')
+                    && str_contains($message, 'events_event_code_unique');
+                if ($isDuplicate && $i < $attempts - 1) {
+                    usleep(40_000); // beri jeda kecil agar hitungan berikutnya bergeser
+                    continue;
+                }
+                throw $e;
+            }
+        }
+
+        // Seharusnya tidak pernah sampai sini.
+        throw new \RuntimeException('Gagal membuat event_code unik setelah beberapa percobaan.');
     }
 
     private function companyPerformanceRows()
