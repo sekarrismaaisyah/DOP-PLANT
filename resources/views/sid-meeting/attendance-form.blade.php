@@ -151,6 +151,7 @@
 
             <input type="hidden" name="face_verified" id="face_verified" value="0">
             <input type="hidden" name="face_distance" id="face_distance" value="">
+            <input type="hidden" name="face_bypass" id="face_bypass" value="0">
 
             <div class="mt-6 flex items-center justify-between gap-3">
                 <p class="text-xs text-slate-500">Form ini tidak memerlukan login akun.</p>
@@ -206,6 +207,10 @@
                 <button id="btn_verify_face" type="button" class="rounded-xl border border-[#673ab7] bg-[#ede7f6] px-4 py-2 text-xs font-semibold text-[#4527a0] hover:bg-[#e1d5f4]">Verifikasi & Kirim</button>
                 <button id="btn_confirm_submit" type="button" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700">Kirim Absensi Sekarang</button>
             </div>
+            <div class="mt-5 border-t border-slate-200 pt-4">
+                <p class="mb-2 text-xs text-slate-500">Jika kamera atau AI tidak bisa mendeteksi wajah, Anda tetap dapat mengirim absensi lewat opsi di bawah (tanpa verifikasi wajah).</p>
+                <button id="btn_bypass_submit" type="button" class="w-full rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 sm:w-auto">Kirim absensi tanpa verifikasi wajah</button>
+            </div>
         </div>
     </div>
     <script>
@@ -227,6 +232,7 @@
             var faceBoxCanvas = document.getElementById('face_box_canvas');
             var faceVerifiedInput = document.getElementById('face_verified');
             var faceDistanceInput = document.getElementById('face_distance');
+            var faceBypassInput = document.getElementById('face_bypass');
             var faceModal = document.getElementById('face_modal');
             var faceModalClose = document.getElementById('face_modal_close');
             var faceIdentityOk = document.getElementById('face_identity_ok');
@@ -237,6 +243,7 @@
             var btnStartCamera = document.getElementById('btn_start_camera');
             var btnVerifyFace = document.getElementById('btn_verify_face');
             var btnConfirmSubmit = document.getElementById('btn_confirm_submit');
+            var btnBypassSubmit = document.getElementById('btn_bypass_submit');
             var faceModelsReady = false;
             var faceModelLoadPromise = null;
             var cameraStream = null;
@@ -296,6 +303,7 @@
 
             function resetFaceVerification() {
                 lastFaceMatchOk = false;
+                if (faceBypassInput) faceBypassInput.value = '0';
                 setFaceVerified(false);
                 setFaceStatus('', 'text-slate-700');
                 if (faceIdentityOk) {
@@ -528,6 +536,7 @@
 
                 if (matched) {
                     lastFaceMatchOk = true;
+                    if (faceBypassInput) faceBypassInput.value = '0';
                     setFaceStatus('Verifikasi berhasil (jarak: ' + distance.toFixed(4) + ').', 'text-emerald-700');
                     if (faceIdentityOk) {
                         var nama = document.getElementById('pv_nama');
@@ -769,6 +778,26 @@
                         if (fvEl) fvEl.value = '0';
                         return;
                     }
+                    if (faceBypassInput) faceBypassInput.value = '0';
+                    allowDirectSubmit = true;
+                    closeFaceModal();
+                    if (formEl) formEl.submit();
+                });
+            }
+            if (btnBypassSubmit) {
+                btnBypassSubmit.addEventListener('click', function () {
+                    if (noSidToggle && noSidToggle.checked) {
+                        setFaceStatus('Opsi ini hanya untuk peserta dengan SID.', 'text-amber-700');
+                        return;
+                    }
+                    if (!kodeInput || (kodeInput.value || '').trim() === '') {
+                        setFaceStatus('Isi dan cek Kode SID terlebih dahulu.', 'text-amber-700');
+                        return;
+                    }
+                    lastFaceMatchOk = false;
+                    setFaceVerified(false);
+                    if (faceBypassInput) faceBypassInput.value = '1';
+                    setFaceStatus('Mengirim absensi tanpa verifikasi wajah…', 'text-amber-800');
                     allowDirectSubmit = true;
                     closeFaceModal();
                     if (formEl) formEl.submit();
@@ -788,7 +817,18 @@
                         return;
                     }
                     if (noSidToggle && noSidToggle.checked) return;
+                    var bypassEl = document.getElementById('face_bypass');
+                    if (bypassEl && bypassEl.value === '1') {
+                        return;
+                    }
                     if (!latestPhotoUrl) {
+                        var sidNow = kodeInput ? (kodeInput.value || '').trim() : '';
+                        if (sidNow !== '') {
+                            evt.preventDefault();
+                            openFaceModal();
+                            setFaceStatus('Tidak ada foto referensi atau verifikasi gagal? Gunakan tombol oranye di bawah untuk kirim tanpa verifikasi wajah.', 'text-amber-800');
+                            return;
+                        }
                         evt.preventDefault();
                         setFaceStatus('Foto referensi belum tersedia. Cek SID terlebih dahulu.', 'text-red-700');
                         return;
