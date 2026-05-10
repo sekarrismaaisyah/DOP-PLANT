@@ -6,6 +6,7 @@ namespace App\Actions\PeerPressure;
 
 use App\Models\PeerPressureKejadianEdukasi;
 use App\Models\PeerPressurePesertaEdukasi;
+use App\Services\PeerPressure\PeerPressurePelaksanaanBaselineService;
 use App\Support\PeerPressure\KategoriDeviasiBucket;
 use App\Support\PeerPressure\PelaksanaanComplianceEvaluator;
 use Carbon\Carbon;
@@ -22,6 +23,10 @@ final class GetPeerPressureDashboardKpiStatsAction
 
     private const MAX_YEAR = 2026;
 
+    public function __construct(
+        private readonly PeerPressurePelaksanaanBaselineService $pelaksanaanBaseline,
+    ) {}
+
     /**
      * @return array{
      *   total_cases: int,
@@ -34,6 +39,7 @@ final class GetPeerPressureDashboardKpiStatsAction
      *   peer_pressure_compliance_pct: float,
      *   peer_pressure_compliance_total: int,
      *   peer_pressure_compliance_comply: int,
+     *   pelaksanaan_baseline_total: int,
      *   pelaksanaan_selesai_count: int,
      *   pelaksanaan_belum_count: int,
      *   pelaksanaan_selesai_pct: float,
@@ -66,6 +72,7 @@ final class GetPeerPressureDashboardKpiStatsAction
      *   peer_pressure_compliance_pct: float,
      *   peer_pressure_compliance_total: int,
      *   peer_pressure_compliance_comply: int,
+     *   pelaksanaan_baseline_total: int,
      *   pelaksanaan_selesai_count: int,
      *   pelaksanaan_belum_count: int,
      *   pelaksanaan_selesai_pct: float,
@@ -91,9 +98,8 @@ final class GetPeerPressureDashboardKpiStatsAction
         })->count();
 
         $completionRate = $total > 0 ? round(($closedTotal / $total) * 100, 1) : 0.0;
-        $belumPelaksanaan = max(0, $total - $closedTotal);
-        $pctSelesai = $total > 0 ? round(100 * $closedTotal / $total, 1) : 0.0;
-        $pctBelum = $total > 0 ? round(100 * $belumPelaksanaan / $total, 1) : 0.0;
+
+        $pelBase = $this->pelaksanaanBaseline->compute($year, $month);
 
         $peerRows = PeerPressurePesertaEdukasi::query()
             ->where('peran', 'peer')
@@ -144,10 +150,11 @@ final class GetPeerPressureDashboardKpiStatsAction
             'completion_rate_delta_pp' => $completionDelta,
             'avg_peer_count' => $avgPeerCount,
             'avg_duration_minutes' => $avgDurationMinutes,
-            'pelaksanaan_selesai_count' => $closedTotal,
-            'pelaksanaan_belum_count' => $belumPelaksanaan,
-            'pelaksanaan_selesai_pct' => $pctSelesai,
-            'pelaksanaan_belum_pct' => $pctBelum,
+            'pelaksanaan_baseline_total' => $pelBase['baseline_total'],
+            'pelaksanaan_selesai_count' => $pelBase['selesai'],
+            'pelaksanaan_belum_count' => $pelBase['belum'],
+            'pelaksanaan_selesai_pct' => $pelBase['pct_selesai'],
+            'pelaksanaan_belum_pct' => $pelBase['pct_belum'],
             'pelaksanaan_status_kosong_count' => $statusKosong,
             'pelaksanaan_kelompok_kerja_rows' => $kkRows,
             'sla_temuan_ke_pelaksanaan' => $slaChart,
@@ -214,6 +221,7 @@ final class GetPeerPressureDashboardKpiStatsAction
      *   peer_pressure_compliance_pct: float,
      *   peer_pressure_compliance_total: int,
      *   peer_pressure_compliance_comply: int,
+     *   pelaksanaan_baseline_total: int,
      *   pelaksanaan_selesai_count: int,
      *   pelaksanaan_belum_count: int,
      *   pelaksanaan_selesai_pct: float,
@@ -232,9 +240,8 @@ final class GetPeerPressureDashboardKpiStatsAction
             ->count();
 
         $completionRate = $total > 0 ? round(($closedTotal / $total) * 100, 1) : 0.0;
-        $belumPelaksanaan = max(0, $total - $closedTotal);
-        $pctSelesai = $total > 0 ? round(100 * $closedTotal / $total, 1) : 0.0;
-        $pctBelum = $total > 0 ? round(100 * $belumPelaksanaan / $total, 1) : 0.0;
+
+        $pelBase = $this->pelaksanaanBaseline->compute(null, null);
 
         $peerRows = PeerPressurePesertaEdukasi::query()->where('peran', 'peer')->count();
         $avgPeerCount = $total > 0 ? round($peerRows / $total, 1) : 0.0;
@@ -284,10 +291,11 @@ final class GetPeerPressureDashboardKpiStatsAction
             'completion_rate_delta_pp' => $completionDelta,
             'avg_peer_count' => $avgPeerCount,
             'avg_duration_minutes' => $avgDurationMinutes,
-            'pelaksanaan_selesai_count' => $closedTotal,
-            'pelaksanaan_belum_count' => $belumPelaksanaan,
-            'pelaksanaan_selesai_pct' => $pctSelesai,
-            'pelaksanaan_belum_pct' => $pctBelum,
+            'pelaksanaan_baseline_total' => $pelBase['baseline_total'],
+            'pelaksanaan_selesai_count' => $pelBase['selesai'],
+            'pelaksanaan_belum_count' => $pelBase['belum'],
+            'pelaksanaan_selesai_pct' => $pelBase['pct_selesai'],
+            'pelaksanaan_belum_pct' => $pelBase['pct_belum'],
             'pelaksanaan_status_kosong_count' => $statusKosong,
             'pelaksanaan_kelompok_kerja_rows' => $kkRows,
             'sla_temuan_ke_pelaksanaan' => $slaChart,

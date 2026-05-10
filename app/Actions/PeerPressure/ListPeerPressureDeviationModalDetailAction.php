@@ -4,14 +4,14 @@ declare(strict_types=1);
 
 namespace App\Actions\PeerPressure;
 
-use App\Models\PeerPressureKejadianEdukasi;
 use App\Models\SpeakUpFatigue;
 use App\Models\ValidasiTbc;
+use App\Services\PeerPressure\PeerPressureBerecordNitipService;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
- * Detail terpaginasi untuk tab modal deviasi: BeRecord (PSPP/GR), Validasi TBC (tasklist terisi), Speak Up Fatigue.
+ * Detail terpaginasi untuk tab modal deviasi: BeRecord (ClickHouse bep_vw_berecord), Validasi TBC (tasklist terisi), Speak Up Fatigue.
  */
 final class ListPeerPressureDeviationModalDetailAction
 {
@@ -24,6 +24,10 @@ final class ListPeerPressureDeviationModalDetailAction
     public const TYPE_VALIDASI_BLINDSPOT = 'validasi_blindspot';
 
     public const TYPE_SPEAK_UP_FATIGUE = 'speak_up_fatigue';
+
+    public function __construct(
+        private readonly PeerPressureBerecordNitipService $berecordNitip,
+    ) {}
 
     /** @return list<string> */
     public static function allowedTypes(): array
@@ -60,51 +64,25 @@ final class ListPeerPressureDeviationModalDetailAction
      */
     private function berecordRows(?int $year, ?int $month, int $page, int $perPage): array
     {
-        $q = PeerPressureKejadianEdukasi::query()
-            ->where(function ($sub): void {
-                $sub->whereRaw('LOWER(COALESCE(kategori_deviasi, \'\')) LIKE ?', ['%pspp%'])
-                    ->orWhereRaw('LOWER(COALESCE(kategori_deviasi, \'\')) LIKE ?', ['%golden%']);
-            });
-
-        if ($year !== null && $month !== null) {
-            $y = max(self::MIN_YEAR, min(self::MAX_YEAR, $year));
-            $m = max(1, min(12, $month));
-            $start = Carbon::create($y, $m, 1)->startOfDay();
-            $end = $start->copy()->endOfMonth();
-            $q->where('tanggal_temuan', '>=', $start->toDateString())
-                ->where('tanggal_temuan', '<=', $end->toDateString());
-        }
-
-        /** @var LengthAwarePaginator<int, PeerPressureKejadianEdukasi> $paginator */
-        $paginator = $q->orderByDesc('tanggal_temuan')
-            ->orderByDesc('id')
-            ->paginate($perPage, [
-                'id',
-                'tanggal_temuan',
-                'lokasi_temuan',
-                'kategori_deviasi',
-                'departemen',
-                'status_pelaksanaan_edukasi',
-                'id_berecord',
-            ], 'page', $page);
+        $result = $this->berecordNitip->paginateDeviationModal($year, $month, $page, $perPage);
 
         $rows = [];
-        foreach ($paginator->items() as $k) {
-            if (! $k instanceof PeerPressureKejadianEdukasi) {
-                continue;
-            }
+        foreach ($result['rows'] as $r) {
+            $gr = (string) ($r['golden_rules'] ?? '');
             $rows[] = [
-                'id' => $k->id,
-                'tanggal_temuan' => $k->tanggal_temuan?->format('Y-m-d'),
-                'lokasi_temuan' => $k->lokasi_temuan,
-                'kategori_deviasi' => $k->kategori_deviasi,
-                'departemen' => $k->departemen,
-                'status_pelaksanaan_edukasi' => $k->status_pelaksanaan_edukasi,
-                'id_berecord' => $k->id_berecord,
+                'id' => $r['id'] ?? null,
+                'start_date_be_record' => $r['start_date_be_record'] ?? null,
+                'nama' => $r['nama'] ?? null,
+                'kode_sid' => $r['kode_sid'] ?? null,
+                'perusahaan' => $r['perusahaan'] ?? null,
+                'kategori_berecord' => $r['kategori_berecord'] ?? null,
+                'golden_rules' => $r['golden_rules'] ?? null,
+                'golden_rules_short' => $gr !== '' && mb_strlen($gr) > 80 ? mb_substr($gr, 0, 80).'…' : ($gr !== '' ? $gr : null),
+                'be_record' => $r['BeRecord'] ?? null,
             ];
         }
 
-        return $this->paginationPayload($paginator, $rows);
+        return $this->paginationPayloadManual($page, $perPage, (int) ($result['total'] ?? 0), $rows);
     }
 
     /**
@@ -198,6 +176,29 @@ final class ListPeerPressureDeviationModalDetailAction
                 'last_page' => $paginator->lastPage(),
                 'from' => $paginator->firstItem(),
                 'to' => $paginator->lastItem(),
+            ],
+            'rows' => $rows,
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return array{pagination: array<string, mixed>, rows: list<array<string, mixed>>}
+     */
+    private function paginationPayloadManual(int $page, int $perPage, int $total, array $rows): array
+    {
+        $lastPage = max(1, (int) ceil($total > 0 ? $total / max(1, $perPage) : 1));
+        $from = $total > 0 ? (($page - 1) * $perPage) + 1 : null;
+        $to = $total > 0 ? min($page * $perPage, $total) : null;
+
+        return [
+            'pagination' => [
+                'current_page' => $page,
+                'per_page' => $perPage,
+                'total' => $total,
+                'last_page' => $lastPage,
+                'from' => $from,
+                'to' => $to,
             ],
             'rows' => $rows,
         ];

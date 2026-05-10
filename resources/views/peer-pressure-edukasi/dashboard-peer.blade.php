@@ -205,10 +205,11 @@
          @php
             $kpi = $kpi ?? [];
             $kpiTotal = (int) ($kpi['total_cases'] ?? 0);
+            $kpiPelaksanaanBaseline = (int) ($kpi['pelaksanaan_baseline_total'] ?? 0);
             $kpiPelaksanaanSelesai = (int) ($kpi['pelaksanaan_selesai_count'] ?? 0);
             $kpiPelaksanaanBelum = (int) ($kpi['pelaksanaan_belum_count'] ?? 0);
-            $kpiPctSelesai = (float) ($kpi['pelaksanaan_selesai_pct'] ?? ($kpiTotal > 0 ? round(100 * $kpiPelaksanaanSelesai / $kpiTotal, 1) : 0));
-            $kpiPctBelum = (float) ($kpi['pelaksanaan_belum_pct'] ?? ($kpiTotal > 0 ? round(100 * $kpiPelaksanaanBelum / $kpiTotal, 1) : 0));
+            $kpiPctSelesai = (float) ($kpi['pelaksanaan_selesai_pct'] ?? ($kpiPelaksanaanBaseline > 0 ? round(100 * $kpiPelaksanaanSelesai / $kpiPelaksanaanBaseline, 1) : 0));
+            $kpiPctBelum = (float) ($kpi['pelaksanaan_belum_pct'] ?? ($kpiPelaksanaanBaseline > 0 ? round(100 * $kpiPelaksanaanBelum / $kpiPelaksanaanBaseline, 1) : 0));
             $kpiStatusKosong = (int) ($kpi['pelaksanaan_status_kosong_count'] ?? 0);
             $kpiKkRows = $kpi['pelaksanaan_kelompok_kerja_rows'] ?? [];
             $kpiCompletion = (float) ($kpi['completion_rate'] ?? 0);
@@ -921,7 +922,7 @@
                </div>
 
                <div id="peer-deviation-panel-berecord" role="tabpanel" aria-labelledby="peer-deviation-tab-berecord" class="peer-deviation-detail-panel">
-                  <p class="text-[11px] font-medium text-on-surface mb-2">Kejadian dengan kategori deviasi mengandung PSPP atau Golden Rules.</p>
+                  <p class="text-[11px] font-medium text-on-surface mb-2">Data BeRecord</p>
                   <div id="peer-deviation-berecord-loading" class="rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] font-medium text-on-surface-variant" aria-live="polite">
                      <span class="material-symbols-outlined mb-2 inline-block animate-spin text-2xl text-primary" style="animation-duration:1s">progress_activity</span>
                      <span class="block">Memuat data…</span>
@@ -932,12 +933,12 @@
                      <table class="min-w-full border-collapse text-left text-[11px] text-on-surface">
                         <thead class="bg-[#f1f5f9] text-[10px] font-bold uppercase tracking-wide text-on-surface-variant">
                            <tr>
-                              <th class="px-3 py-2">Tanggal temuan</th>
-                              <th class="px-3 py-2">Lokasi</th>
+                              <th class="px-3 py-2 whitespace-nowrap">Mulai</th>
+                              <th class="px-3 py-2">Perusahaan</th>
+                              <th class="px-3 py-2">SID</th>
                               <th class="px-3 py-2">Kategori</th>
-                              <th class="px-3 py-2">Dept.</th>
-                              <th class="px-3 py-2">Status edukasi</th>
-                              <th class="px-3 py-2">ID BeRecord</th>
+                              <th class="px-3 py-2">Golden rules</th>
+                              <th class="px-3 py-2 whitespace-nowrap">No. BeRecord</th>
                            </tr>
                         </thead>
                         <tbody id="peer-deviation-berecord-tbody" class="divide-y divide-outline-variant/10"></tbody>
@@ -1153,7 +1154,7 @@
                </button>
             </div>
             <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
-               <p class="text-[11px] leading-snug text-on-surface-variant">Proporsi mengikuti kartu <span class="font-semibold text-on-surface">Pelaksanaan Rate</span>. Kejadian dianggap <span class="font-semibold text-on-surface">sudah dilaksanakan</span> bila status pelaksanaan edukasi mengandung <span class="font-mono text-[10px]">CLOSED</span> atau <span class="font-mono text-[10px]">SELESAI</span>. Pilih tab di bawah untuk melihat tabel kejadian <span class="font-semibold text-on-surface">sudah selesai</span> atau <span class="font-semibold text-on-surface">belum selesai</span> (belum menunjukkan CLOSED/SELESAI).</p>
+               <p class="text-[11px] leading-snug text-on-surface-variant">Proporsi mengikuti kartu <span class="font-semibold text-on-surface">Pelaksanaan Rate</span> dan <span class="font-semibold text-on-surface">hanya menghitung baseline untuk tujuh kontraktor terpilih</span> (Bukit Makmur, Kaltim Diamond Coal, Mutiara Tanjung Lestari, Pamapersada, Bumi Artlantis, Fajar Anugerah Dinamika, Madhani Talatah). Kejadian dianggap <span class="font-semibold text-on-surface">sudah dilaksanakan</span> bila status pelaksanaan edukasi mengandung <span class="font-mono text-[10px]">CLOSED</span> atau <span class="font-mono text-[10px]">SELESAI</span>. Pilih tab di bawah untuk melihat tabel kejadian <span class="font-semibold text-on-surface">sudah selesai</span> atau <span class="font-semibold text-on-surface">belum selesai</span>.</p>
                <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-2" role="tablist" aria-label="Pelaksanaan peer pressure">
                   <button type="button" role="tab" id="peer-pelaksanaan-tab-selesai" class="peer-pelaksanaan-tab rounded-xl border px-4 py-4 text-center shadow-sm transition-all outline-none w-full ring-2 ring-emerald-400/50 border-emerald-300 bg-emerald-50/90 focus-visible:ring-2 focus-visible:ring-emerald-500/40" data-pelaksanaan-tab="selesai" aria-selected="true" aria-controls="peer-pelaksanaan-panel-selesai" tabindex="0">
                      <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-800">Sudah peer pressure</p>
@@ -1164,7 +1165,7 @@
                      <p id="peer-pelaksanaan-modal-pct-belum" class="mt-2 font-headline text-4xl font-extrabold tabular-nums text-amber-950">{{ number_format($kpiPctBelum, 1) }}<span class="text-2xl font-bold">%</span></p>
                   </button>
                </div>
-               <p id="peer-pelaksanaan-modal-total-caption" class="mt-3 text-center text-[10px] text-on-surface-variant">Dasar perhitungan: {{ number_format($kpiTotal) }} kejadian pada periode ini</p>
+               <p id="peer-pelaksanaan-modal-total-caption" class="mt-3 text-center text-[10px] text-on-surface-variant">Dasar perhitungan tab di atas: {{ number_format($kpiPelaksanaanBaseline) }} item baseline (BeRecord CH + validasi TBC + fatigue) untuk tujuh kontraktor terpilih @if($chartPeriodMonth ?? false)pada periode filter chart.@else pada seluruh periode data.@endif</p>
 
                <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
                   <div class="rounded-xl border border-emerald-200/80 bg-emerald-50/50 px-4 py-3 shadow-sm">
@@ -1185,18 +1186,19 @@
                </div>
 
                <div class="mt-5 rounded-xl border border-teal-200/80 bg-teal-50/50 px-4 py-3">
-                  <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per perusahaan (seluruh data)</p>
+                  <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per site (tujuh kontraktor)</p>
                   <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
-                     Persentase dihitung dari <span class="font-medium text-on-surface">semua kejadian</span> yang tercatat, tanpa filter bulan atau tahun.
+                     Ringkasan <span class="font-medium text-on-surface">per site</span> dari item baseline yang sama; baris site dapat dibuka untuk melihat <span class="font-medium text-on-surface">per perusahaan</span> di bawahnya. Hanya kontraktor terpilih; mengikuti filter periode chart.
                   </p>
+                  <p id="peer-pp-summary-loading" class="mt-3 hidden text-[12px] leading-snug text-teal-900/90" role="status">Memuat ringkasan site…</p>
                   <p id="peer-pp-summary-empty" class="mt-3 hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
                   <div id="peer-pp-summary-wrap" class="mt-3 hidden overflow-x-auto rounded-xl border border-teal-100/90 bg-white shadow-inner">
-                     <table class="w-full min-w-[280px] border-collapse text-center text-[11px] sm:text-xs" id="peer-pp-summary-table" data-peer-pp-summary-layout="2-metric-cols">
+                     <table class="w-full min-w-[280px] border-collapse text-center text-[11px] sm:text-xs" id="peer-pp-summary-table" data-peer-pp-summary-layout="site-collapsible">
                         <thead class="bg-[#f0fdfa] text-[10px] font-bold uppercase tracking-wider text-teal-950">
                            <tr>
-                              <th class="sticky left-0 z-10 min-w-[10rem] border border-teal-100 bg-[#ecfdf5] px-2 py-2 text-left text-teal-950 sm:min-w-[12rem]">Nama perusahaan / tim</th>
-                              <th class="min-w-[5rem] border border-teal-100 bg-emerald-50/90 px-2 py-2.5 text-teal-900 sm:text-xs" title="% kejadian CLOSED/SELESAI (seluruh data)">Terlaksana</th>
-                              <th class="min-w-[5rem] border border-teal-100 bg-amber-50/90 px-2 py-2.5 text-teal-900 sm:text-xs" title="% kejadian belum CLOSED/SELESAI (seluruh data)">Tidak terlaksana</th>
+                              <th class="sticky left-0 z-10 min-w-[10rem] border border-teal-100 bg-[#ecfdf5] px-2 py-2 text-left text-teal-950 sm:min-w-[12rem]">Site</th>
+                              <th class="min-w-[5rem] border border-teal-100 bg-emerald-50/90 px-2 py-2.5 text-teal-900 sm:text-xs" title="% item baseline terlaksana (CLOSED/SELESAI)">Terlaksana</th>
+                              <th class="min-w-[5rem] border border-teal-100 bg-amber-50/90 px-2 py-2.5 text-teal-900 sm:text-xs" title="% item baseline belum terlaksana">Tidak terlaksana</th>
                            </tr>
                         </thead>
                         <tbody id="peer-pp-summary-tbody" class="divide-y divide-outline-variant/10"></tbody>
@@ -2080,6 +2082,8 @@
                 : 'Periode: seluruh data kejadian (tanpa filter bulan).';
           }
           var tc = Number(kpi.total_cases != null ? kpi.total_cases : 0);
+          var baseLine = Number(kpi.pelaksanaan_baseline_total != null ? kpi.pelaksanaan_baseline_total : NaN);
+          if (isNaN(baseLine)) baseLine = tc;
           var selesai = Number(kpi.pelaksanaan_selesai_count != null ? kpi.pelaksanaan_selesai_count : 0);
           var belum = Number(kpi.pelaksanaan_belum_count != null ? kpi.pelaksanaan_belum_count : 0);
           var statusKosong = Number(
@@ -2092,9 +2096,9 @@
           var ps = Number(kpi.pelaksanaan_selesai_pct != null ? kpi.pelaksanaan_selesai_pct : NaN);
           var pb = Number(kpi.pelaksanaan_belum_pct != null ? kpi.pelaksanaan_belum_pct : NaN);
           if (isNaN(ps) || isNaN(pb)) {
-            if (tc > 0) {
-              ps = (100 * selesai) / tc;
-              pb = (100 * belum) / tc;
+            if (baseLine > 0) {
+              ps = (100 * selesai) / baseLine;
+              pb = (100 * belum) / baseLine;
             } else {
               ps = 0;
               pb = 0;
@@ -2115,7 +2119,11 @@
             elPctB.innerHTML = pbStr + '<span class="text-2xl font-bold">%</span>';
           }
           if (cap) {
-            cap.textContent = 'Dasar perhitungan: ' + tc.toLocaleString('id-ID') + ' kejadian pada periode ini';
+            cap.textContent =
+              'Dasar perhitungan tab di atas: ' +
+              baseLine.toLocaleString('id-ID') +
+              ' item baseline (BeRecord CH + validasi TBC + fatigue) untuk tujuh kontraktor terpilih ' +
+              (periodScope === 'month' ? 'pada periode filter chart.' : 'pada seluruh periode data.');
           }
           if (elCntS) elCntS.textContent = selesai.toLocaleString('id-ID');
           if (elCntB) elCntB.textContent = belum.toLocaleString('id-ID');
@@ -2481,28 +2489,31 @@
         function buildDeviationRowsHtml(type, rows) {
           if (type === 'berecord') {
             return (rows || []).map(function (row) {
-              var id = row.id != null ? String(row.id) : '';
+              var gr =
+                row.golden_rules_short != null
+                  ? String(row.golden_rules_short)
+                  : row.golden_rules != null
+                    ? String(row.golden_rules)
+                    : '—';
               return (
-                '<tr class="cursor-pointer hover:bg-[#f8fafc] js-peer-deviation-kejadian-row" data-kejadian-id="' +
-                escHtml(id) +
-                '">' +
+                '<tr class="hover:bg-[#f8fafc]">' +
                 '<td class="px-3 py-2 whitespace-nowrap tabular-nums">' +
-                escHtml(row.tanggal_temuan != null ? String(row.tanggal_temuan) : '—') +
+                escHtml(row.start_date_be_record != null ? String(row.start_date_be_record) : '—') +
                 '</td>' +
-                '<td class="px-3 py-2 max-w-[200px]">' +
-                escHtml(row.lokasi_temuan != null ? String(row.lokasi_temuan) : '—') +
-                '</td>' +
-                '<td class="px-3 py-2 max-w-[220px]">' +
-                escHtml(row.kategori_deviasi != null ? String(row.kategori_deviasi) : '—') +
-                '</td>' +
-                '<td class="px-3 py-2">' +
-                escHtml(row.departemen != null ? String(row.departemen) : '—') +
-                '</td>' +
-                '<td class="px-3 py-2">' +
-                escHtml(row.status_pelaksanaan_edukasi != null ? String(row.status_pelaksanaan_edukasi) : '—') +
+                '<td class="px-3 py-2 max-w-[180px]">' +
+                escHtml(row.perusahaan != null ? String(row.perusahaan) : '—') +
                 '</td>' +
                 '<td class="px-3 py-2 tabular-nums">' +
-                escHtml(row.id_berecord != null ? String(row.id_berecord) : '—') +
+                escHtml(row.kode_sid != null ? String(row.kode_sid) : '—') +
+                '</td>' +
+                '<td class="px-3 py-2 max-w-[160px]">' +
+                escHtml(row.kategori_berecord != null ? String(row.kategori_berecord) : '—') +
+                '</td>' +
+                '<td class="px-3 py-2 max-w-[200px] whitespace-pre-wrap break-words">' +
+                escHtml(gr) +
+                '</td>' +
+                '<td class="px-3 py-2 tabular-nums">' +
+                escHtml(row.be_record != null ? String(row.be_record) : '—') +
                 '</td>' +
                 '</tr>'
               );
@@ -2606,7 +2617,7 @@
               var rows = data.rows || [];
               var labelEntri =
                 type === 'berecord'
-                  ? 'kejadian'
+                  ? 'baris BeRecord'
                   : type === 'validasi_blindspot'
                     ? 'baris validasi'
                     : 'baris';
@@ -3068,56 +3079,49 @@
           if (loadingEl) loadingEl.classList.add('hidden');
           if (!tbody || !wrapEl || !emptyEl) return;
           tbody.innerHTML = '';
-          var companies = data && Array.isArray(data.companies) ? data.companies : [];
-          var grandRow = data && data.grand_row && typeof data.grand_row === 'object' ? data.grand_row : {};
-          if (!companies.length) {
+          var sites = data && Array.isArray(data.sites) ? data.sites : [];
+          if (!sites.length) {
             emptyEl.textContent =
-              'Belum ada data perusahaan untuk ringkasan.';
+              'Belum ada data site untuk ringkasan baseline (kontraktor terpilih) pada periode ini.';
             emptyEl.classList.remove('hidden');
             wrapEl.classList.add('hidden');
             return;
           }
           emptyEl.classList.add('hidden');
           wrapEl.classList.remove('hidden');
-          companies.forEach(function (co) {
-            var tr = document.createElement('tr');
-            var tdName = document.createElement('td');
-            tdName.className =
-              'sticky left-0 z-10 border border-outline-variant/10 bg-white px-2 py-1.5 text-left text-[11px] font-medium text-on-surface shadow-[2px_0_0_0_rgba(255,255,255,1)] sm:text-xs';
-            tdName.textContent = co;
-            tr.appendChild(tdName);
-            var g = grandRow[co];
+          function fmtPct(v) {
+            return (
+              Number(v).toLocaleString('id-ID', {
+                minimumFractionDigits: 1,
+                maximumFractionDigits: 1
+              }) + '%'
+            );
+          }
+          function appendMetricCells(tr, row, isSite) {
             var tdGT = document.createElement('td');
             tdGT.className =
               'border border-outline-variant/10 px-2 py-1.5 tabular-nums text-[10px] sm:text-[11px] ' +
-              peerPerusahaanHeatmapCellClass(g != null && g.pct != null ? g.pct : null);
+              peerPerusahaanHeatmapCellClass(row.pct != null ? row.pct : null);
             var tdGB = document.createElement('td');
             tdGB.className =
               'border border-outline-variant/10 px-2 py-1.5 tabular-nums text-[10px] sm:text-[11px] ' +
-              peerPerusahaanHeatmapBelumCellClass(g != null && g.pct_belum != null ? g.pct_belum : null);
-            if (g != null && g.pct != null && g.pct_belum != null) {
-              tdGT.textContent =
-                Number(g.pct).toLocaleString('id-ID', {
-                  minimumFractionDigits: 1,
-                  maximumFractionDigits: 1
-                }) + '%';
+              peerPerusahaanHeatmapBelumCellClass(row.pct_belum != null ? row.pct_belum : null);
+            if (row.pct != null && row.pct_belum != null) {
+              tdGT.textContent = fmtPct(row.pct);
               tdGT.setAttribute(
                 'title',
                 'Terlaksana: ' +
-                  (g.selesai != null ? g.selesai : '0') +
+                  (row.selesai != null ? row.selesai : '0') +
                   '/' +
-                  (g.total != null ? g.total : '0') +
-                  ' kejadian'
+                  (row.total != null ? row.total : '0') +
+                  ' item baseline' +
+                  (isSite ? ' (agregat site)' : '')
               );
-              tdGB.textContent =
-                Number(g.pct_belum).toLocaleString('id-ID', {
-                  minimumFractionDigits: 1,
-                  maximumFractionDigits: 1
-                }) + '%';
-              var gBel = (g.total != null ? g.total : 0) - (g.selesai != null ? g.selesai : 0);
+              tdGB.textContent = fmtPct(row.pct_belum);
+              var bel = (row.total != null ? row.total : 0) - (row.selesai != null ? row.selesai : 0);
               tdGB.setAttribute(
                 'title',
-                'Tidak terlaksana: ' + gBel + '/' + (g.total != null ? g.total : '0') + ' kejadian'
+                'Tidak terlaksana: ' + bel + '/' + (row.total != null ? row.total : '0') + ' item baseline'
               );
             } else {
               tdGT.textContent = '—';
@@ -3125,7 +3129,62 @@
             }
             tr.appendChild(tdGT);
             tr.appendChild(tdGB);
-            tbody.appendChild(tr);
+          }
+          sites.forEach(function (site) {
+            var siteKey = site.site_key != null ? String(site.site_key) : '';
+            var trSite = document.createElement('tr');
+            trSite.className = 'bg-teal-50/35';
+            trSite.setAttribute('data-peer-pp-site-row', siteKey);
+            var tdSite = document.createElement('td');
+            tdSite.className =
+              'sticky left-0 z-10 border border-outline-variant/10 bg-[#ecfdf5]/95 px-2 py-1.5 text-left text-[11px] font-semibold text-teal-950 shadow-[2px_0_0_0_rgba(236,253,245,1)] sm:text-xs';
+            var btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className =
+              'peer-pp-site-toggle inline-flex w-full max-w-full items-center gap-1 rounded-md px-0.5 py-0.5 text-left outline-none hover:bg-teal-100/60 focus-visible:ring-2 focus-visible:ring-teal-500/40';
+            btn.setAttribute('data-peer-pp-site-toggle', siteKey);
+            btn.setAttribute('aria-expanded', 'false');
+            btn.setAttribute(
+              'aria-label',
+              'Buka atau tutup daftar perusahaan untuk site ' + (site.site != null ? String(site.site) : '')
+            );
+            var icon = document.createElement('span');
+            icon.className =
+              'material-symbols-outlined shrink-0 text-lg text-teal-800 transition-transform duration-200';
+            icon.setAttribute('aria-hidden', 'true');
+            icon.textContent = 'chevron_right';
+            var lab = document.createElement('span');
+            lab.className = 'min-w-0 flex-1 font-semibold';
+            lab.textContent = site.site != null ? String(site.site) : '—';
+            btn.appendChild(icon);
+            btn.appendChild(lab);
+            tdSite.appendChild(btn);
+            trSite.appendChild(tdSite);
+            appendMetricCells(trSite, site, true);
+            tbody.appendChild(trSite);
+            btn.addEventListener('click', function () {
+              var expanded = btn.getAttribute('aria-expanded') === 'true';
+              var next = !expanded;
+              btn.setAttribute('aria-expanded', next ? 'true' : 'false');
+              icon.style.transform = next ? 'rotate(90deg)' : '';
+              tbody.querySelectorAll('tr[data-peer-pp-under-site]').forEach(function (r) {
+                if (r.getAttribute('data-peer-pp-under-site') !== siteKey) return;
+                r.classList.toggle('hidden', !next);
+              });
+            });
+            var companies = Array.isArray(site.companies) ? site.companies : [];
+            companies.forEach(function (co) {
+              var trCo = document.createElement('tr');
+              trCo.className = 'hidden bg-white';
+              trCo.setAttribute('data-peer-pp-under-site', siteKey);
+              var tdCo = document.createElement('td');
+              tdCo.className =
+                'sticky left-0 z-10 border border-outline-variant/10 bg-white px-2 py-1.5 pl-9 text-left text-[10px] font-medium text-on-surface shadow-[2px_0_0_0_rgba(255,255,255,1)] sm:text-[11px]';
+              tdCo.textContent = co.company != null ? String(co.company) : '—';
+              trCo.appendChild(tdCo);
+              appendMetricCells(trCo, co, false);
+              tbody.appendChild(trCo);
+            });
           });
         }
         function loadPerusahaanHeatmap() {
@@ -3139,6 +3198,10 @@
           }
           if (wrapEl) wrapEl.classList.add('hidden');
           var u = new URL(perusahaanHeatmapUrl, window.location.origin);
+          if (!state.all) {
+            u.searchParams.set('year', String(state.year));
+            u.searchParams.set('month', String(state.month));
+          }
           u.searchParams.set('_', String(Date.now()));
           fetch(u.toString(), {
             headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },

@@ -78,11 +78,6 @@ final class PeerPressureBerecordNitipService
     }
 
     /**
-     * Paginasi baris dari bep_vw_berecord (pencarian substring pada beberapa kolom teks).
-     *
-     * @return array{rows: list<array<string, string|null>>, total: int, connected: bool}
-     */
-    /**
      * Jumlah nilai unik kolom `id` pada view ClickHouse `bep_vw_berecord`.
      * Jika tahun & bulan diisi, dibatasi ke baris yang `start_date_be_record` jatuh di bulan tersebut (tanggal yang bisa di-parse).
      */
@@ -93,17 +88,7 @@ final class PeerPressureBerecordNitipService
             return 0;
         }
 
-        $whereSql = '';
-        $params = [];
-        if ($year !== null && $month !== null) {
-            $y = max(self::MIN_YEAR, min(self::MAX_YEAR, $year));
-            $m = max(1, min(12, $month));
-            $start = Carbon::create($y, $m, 1)->startOfDay();
-            $end = $start->copy()->endOfMonth();
-            $whereSql = 'WHERE toDateOrNull(toString(`start_date_be_record`)) >= toDate(?) AND toDateOrNull(toString(`start_date_be_record`)) <= toDate(?)';
-            $params[] = $start->toDateString();
-            $params[] = $end->toDateString();
-        }
+        [$whereSql, $params] = $this->periodWhereAndParams($year, $month);
 
         try {
             $sql = 'SELECT uniqExact(`id`) AS c FROM bep_vw_berecord ' . $whereSql;
@@ -127,6 +112,212 @@ final class PeerPressureBerecordNitipService
         }
     }
 
+    /**
+     * Paginasi baris `bep_vw_berecord` untuk modal deviasi (filter bulan sama seperti {@see countDistinctIds} bila periode dipilih).
+     *
+     * @return array{rows: list<array<string, string|null>>, total: int, connected: bool, error?: string}
+     */
+    public function paginateDeviationModal(?int $year = null, ?int $month = null, int $page = 1, int $perPage = 10): array
+    {
+        $ch = new ClickHouseService('clickhouse_nitip');
+        if (! $ch->isConnected()) {
+            return ['rows' => [], 'total' => 0, 'connected' => false];
+        }
+
+        $page = max(1, $page);
+        $perPage = min(max(1, $perPage), 50);
+        $offset = ($page - 1) * $perPage;
+        [$whereSql, $params] = $this->periodWhereAndParams($year, $month);
+        $selectList = $this->buildSelectListSql();
+
+        try {
+            $countSql = 'SELECT count() AS c FROM bep_vw_berecord '.$whereSql;
+            $countRows = $ch->query($countSql, $params);
+            $total = 0;
+            if (is_array($countRows) && isset($countRows[0]) && is_array($countRows[0])) {
+                $c = $countRows[0]['c'] ?? $countRows[0]['C'] ?? null;
+                $total = is_numeric($c) ? (int) $c : 0;
+            }
+
+            $dataSql = 'SELECT '.$selectList.' FROM bep_vw_berecord '.$whereSql
+                .' ORDER BY toDateOrNull(toString(`start_date_be_record`)) DESC, `id` DESC'
+                .' LIMIT '.(int) $perPage.' OFFSET '.(int) $offset;
+
+            $dataRows = $ch->query($dataSql, $params);
+            $rows = [];
+            if (is_array($dataRows)) {
+                foreach ($dataRows as $row) {
+                    if (is_array($row)) {
+                        $rows[] = $this->normalizeRow($row);
+                    }
+                }
+            }
+
+            return ['rows' => $rows, 'total' => $total, 'connected' => true];
+        } catch (Throwable $e) {
+            Log::warning('PeerPressureBerecordNitipService: paginateDeviationModal gagal', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return ['rows' => [], 'total' => 0, 'connected' => true, 'error' => $e->getMessage()];
+        }
+    }
+
+    /**
+     * @return array{0: string, 1: list<string>}
+     */
+    private function periodWhereAndParams(?int $year, ?int $month): array
+    {
+        if ($year === null || $month === null) {
+            return ['', []];
+        }
+
+        $y = max(self::MIN_YEAR, min(self::MAX_YEAR, $year));
+        $m = max(1, min(12, $month));
+        $start = Carbon::create($y, $m, 1)->startOfDay();
+        $end = $start->copy()->endOfMonth();
+
+        return [
+            'WHERE toDateOrNull(toString(`start_date_be_record`)) >= toDate(?) AND toDateOrNull(toString(`start_date_be_record`)) <= toDate(?)',
+            [$start->toDateString(), $end->toDateString()],
+        ];
+    }
+
+    /**
+     * Baseline BeRecord: nilai unik ter-normalisasi (lower+trim) kolom `BeRecord` non-kosong, filter periode sama seperti KPI lain.
+     *
+     * @return list<string>
+     */
+    public function distinctNormalizedBeRecordValues(?int $year = null, ?int $month = null): array
+    {
+        $ch = new ClickHouseService('clickhouse_nitip');
+        if (! $ch->isConnected()) {
+            return [];
+        }
+
+        [$wherePeriod, $params] = $this->periodWhereAndParams($year, $month);
+        $where = 'WHERE length(trim(toString(`BeRecord`))) > 0';
+        if ($wherePeriod !== '') {
+            $where .= ' AND '.substr($wherePeriod, strlen('WHERE '));
+        }
+
+        try {
+            $sql = 'SELECT DISTINCT lowerUTF8(trim(toString(`BeRecord`))) AS b FROM bep_vw_berecord '.$where.' ORDER BY b';
+            $rows = $ch->query($sql, $params);
+            if (! is_array($rows)) {
+                return [];
+            }
+            $out = [];
+            foreach ($rows as $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                $b = $row['b'] ?? $row['B'] ?? null;
+                if ($b === null || trim((string) $b) === '') {
+                    continue;
+                }
+                $out[] = strtolower(trim((string) $b));
+            }
+
+            return array_values(array_unique($out));
+        } catch (Throwable $e) {
+            Log::warning('PeerPressureBerecordNitipService: distinctNormalizedBeRecordValues gagal', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    public function countDistinctNormalizedBeRecord(?int $year = null, ?int $month = null): int
+    {
+        $ch = new ClickHouseService('clickhouse_nitip');
+        if (! $ch->isConnected()) {
+            return 0;
+        }
+
+        [$wherePeriod, $params] = $this->periodWhereAndParams($year, $month);
+        $where = 'WHERE length(trim(toString(`BeRecord`))) > 0';
+        if ($wherePeriod !== '') {
+            $where .= ' AND '.substr($wherePeriod, strlen('WHERE '));
+        }
+
+        try {
+            $sql = 'SELECT uniqExact(lowerUTF8(trim(toString(`BeRecord`)))) AS c FROM bep_vw_berecord '.$where;
+            $rows = $ch->query($sql, $params);
+            if (! is_array($rows) || $rows === []) {
+                return 0;
+            }
+            $first = $rows[0];
+            if (! is_array($first)) {
+                return 0;
+            }
+            $c = $first['c'] ?? $first['C'] ?? null;
+
+            return is_numeric($c) ? (int) $c : 0;
+        } catch (Throwable $e) {
+            Log::warning('PeerPressureBerecordNitipService: countDistinctNormalizedBeRecord gagal', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return 0;
+        }
+    }
+
+    /**
+     * Pemetaan BeRecord ter-normalisasi → label perusahaan (kolom `perusahaan` di CH; satu nilai per grup).
+     *
+     * @return array<string, string>
+     */
+    public function mapNormalizedBeRecordToCompany(?int $year = null, ?int $month = null): array
+    {
+        $ch = new ClickHouseService('clickhouse_nitip');
+        if (! $ch->isConnected()) {
+            return [];
+        }
+
+        [$wherePeriod, $params] = $this->periodWhereAndParams($year, $month);
+        $where = 'WHERE length(trim(toString(`BeRecord`))) > 0';
+        if ($wherePeriod !== '') {
+            $where .= ' AND '.substr($wherePeriod, strlen('WHERE '));
+        }
+
+        try {
+            $sql = 'SELECT lowerUTF8(trim(toString(`BeRecord`))) AS b, any(trim(toString(ifNull(`perusahaan`, \'\')))) AS co'
+                .' FROM bep_vw_berecord '.$where.' GROUP BY b ORDER BY b';
+            $rows = $ch->query($sql, $params);
+            if (! is_array($rows)) {
+                return [];
+            }
+            $out = [];
+            foreach ($rows as $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                $b = $row['b'] ?? $row['B'] ?? null;
+                if ($b === null || trim((string) $b) === '') {
+                    continue;
+                }
+                $key = strtolower(trim((string) $b));
+                $co = $row['co'] ?? $row['CO'] ?? '';
+                $out[$key] = trim((string) $co);
+            }
+
+            return $out;
+        } catch (Throwable $e) {
+            Log::warning('PeerPressureBerecordNitipService: mapNormalizedBeRecordToCompany gagal', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    /**
+     * Paginasi baris dari bep_vw_berecord (pencarian substring pada beberapa kolom teks).
+     *
+     * @return array{rows: list<array<string, string|null>>, total: int, connected: bool}
+     */
     public function paginateView(int $page, int $perPage, string $q): array
     {
         $ch = new ClickHouseService('clickhouse_nitip');
