@@ -49,10 +49,11 @@ final class PeerPressurePelaksanaanBaselineService
         $beCoMapFull = $this->berecordNitip->mapNormalizedBeRecordToCompany($year, $month);
         $beCoMap = [];
         foreach ($beCoMapFull as $k => $coRaw) {
-            if ($k === '' || ! PeerPressureDashboardRestrictedContractors::isAllowedCompanyLabel($this->companyLabel($coRaw))) {
+            $kn = $this->normalizeKey((string) $k);
+            if ($kn === '' || ! PeerPressureDashboardRestrictedContractors::isAllowedCompanyLabel($this->companyLabel($coRaw))) {
                 continue;
             }
-            $beCoMap[$k] = $coRaw;
+            $beCoMap[$kn] = $coRaw;
         }
         $beBaseline = count($beCoMap);
         $completedBe = $this->completedNormalizedIdBerecordSetRestricted($bounds);
@@ -157,14 +158,16 @@ final class PeerPressurePelaksanaanBaselineService
         $beCoMapFull = $this->berecordNitip->mapNormalizedBeRecordToCompany($year, $month);
         $completedBe = $this->completedNormalizedIdBerecordSetRestricted($bounds);
         $beSiteMap = $this->beRecordKeyToSiteFromKejadianRestricted($bounds);
+        $companyPreferredSite = $this->companyPreferredSiteFromKejadian($bounds);
 
         foreach ($beCoMapFull as $beKey => $coRaw) {
-            if ($beKey === '' || ! PeerPressureDashboardRestrictedContractors::isAllowedCompanyLabel($this->companyLabel($coRaw))) {
+            $beNorm = $this->normalizeKey((string) $beKey);
+            if ($beNorm === '' || ! PeerPressureDashboardRestrictedContractors::isAllowedCompanyLabel($this->companyLabel($coRaw))) {
                 continue;
             }
-            $site = $beSiteMap[$beKey] ?? '(Site tidak diketahui)';
             $co = $this->companyLabel($coRaw);
-            $done = isset($completedBe[$beKey]);
+            $site = $this->resolveBeRecordSiteForAggregation($beSiteMap, $beNorm, $co, $companyPreferredSite);
+            $done = isset($completedBe[$beNorm]);
             $this->accSiteCompany($tree, $site, $co, $done);
         }
 
@@ -235,23 +238,25 @@ final class PeerPressurePelaksanaanBaselineService
         $beCoMapFull = $this->berecordNitip->mapNormalizedBeRecordToCompany($year, $month);
         $completedBe = $this->completedNormalizedIdBerecordSetRestricted($bounds);
         $beSiteMap = $this->beRecordKeyToSiteFromKejadianRestricted($bounds);
+        $companyPreferredSite = $this->companyPreferredSiteFromKejadian($bounds);
         $beSnap = $this->berecordDisplayByNormalizedKey($bounds);
 
         foreach ($beCoMapFull as $beKey => $coRaw) {
-            if ($beKey === '' || ! PeerPressureDashboardRestrictedContractors::isAllowedCompanyLabel($this->companyLabel($coRaw))) {
+            $beNorm = $this->normalizeKey((string) $beKey);
+            if ($beNorm === '' || ! PeerPressureDashboardRestrictedContractors::isAllowedCompanyLabel($this->companyLabel($coRaw))) {
                 continue;
             }
-            $site = $beSiteMap[$beKey] ?? '(Site tidak diketahui)';
             $co = $this->companyLabel($coRaw);
-            $done = isset($completedBe[$beKey]);
+            $site = $this->resolveBeRecordSiteForAggregation($beSiteMap, $beNorm, $co, $companyPreferredSite);
+            $done = isset($completedBe[$beNorm]);
             if ($done !== $terlaksana || ! $this->baselineDetailMatchesScope($site, $co, $scopeSite, $scopeCompany)) {
                 continue;
             }
-            $snap = $beSnap[$beKey] ?? null;
+            $snap = $beSnap[$beNorm] ?? null;
             $rows[] = [
                 'jenis' => 'berecord',
                 'jenis_label' => 'BeRecord',
-                'referensi' => $snap['id_berecord'] ?? $beKey,
+                'referensi' => $snap['id_berecord'] ?? $beNorm,
                 'perusahaan' => $co,
                 'site' => $site,
                 'tanggal_temuan' => $this->formatDateOptional($snap['tanggal_temuan'] ?? null),
@@ -480,6 +485,65 @@ final class PeerPressurePelaksanaanBaselineService
         $s = trim((string) $site);
 
         return $s === '' ? '(Site tidak diisi)' : $s;
+    }
+
+    /**
+     * Site yang paling sering muncul per perusahaan (kontraktor terbatas) pada kejadian dalam periode,
+     * hanya dari baris dengan kolom site terisi — dipakai fallback agar BeRecord tanpa pemetaan id tidak menggumpal di "(Site tidak diketahui)".
+     *
+     * @param  array{0: ?string, 1: ?string}  $tanggalBounds
+     * @return array<string, string> label perusahaan => label site
+     */
+    private function companyPreferredSiteFromKejadian(array $tanggalBounds): array
+    {
+        /** @var array<string, array<string, int>> $counts */
+        $counts = [];
+        foreach ($this->scopedKejadian($tanggalBounds)->cursor(['perusahaan', 'site']) as $row) {
+            if (! PeerPressureDashboardRestrictedContractors::isAllowedCompanyLabel($row->perusahaan ?? null)) {
+                continue;
+            }
+            $site = $this->siteLabel($row->site ?? null);
+            if ($site === '(Site tidak diisi)') {
+                continue;
+            }
+            $co = $this->companyLabel($row->perusahaan ?? null);
+            if (! isset($counts[$co])) {
+                $counts[$co] = [];
+            }
+            $counts[$co][$site] = ($counts[$co][$site] ?? 0) + 1;
+        }
+
+        $out = [];
+        foreach ($counts as $co => $bySite) {
+            if ($bySite === []) {
+                continue;
+            }
+            $bestN = max($bySite);
+            $candidates = array_keys(array_filter($bySite, static fn (int $n): bool => $n === $bestN));
+            sort($candidates, SORT_STRING);
+
+            $out[$co] = $candidates[0];
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  array<string, string>  $beSiteMap  normalized BeRecord key => site dari kejadian
+     * @param  array<string, string>  $companyPreferredSite  perusahaan => site dominan
+     */
+    private function resolveBeRecordSiteForAggregation(
+        array $beSiteMap,
+        string $beKey,
+        string $company,
+        array $companyPreferredSite,
+    ): string {
+        $fromId = $beSiteMap[$beKey] ?? null;
+        if ($fromId !== null && $fromId !== '(Site tidak diisi)') {
+            return $fromId;
+        }
+
+        return $companyPreferredSite[$company] ?? '(Site tidak diketahui)';
     }
 
     /**

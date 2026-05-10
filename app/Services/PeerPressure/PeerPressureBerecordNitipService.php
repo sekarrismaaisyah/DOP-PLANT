@@ -18,6 +18,9 @@ final class PeerPressureBerecordNitipService
 
     private const MAX_YEAR = 2026;
 
+    /** Baris dengan nilai ini dianggap tidak masuk baseline pelaksanaan (tidak ada pelanggaran GR). */
+    private const GOLDEN_RULES_NO_VIOLATION = 'Tidak Melanggar Golden Rules';
+
     /** Kolom SELECT untuk tabel baca-saja (urutan tampilan). */
     private const VIEW_COLUMNS = [
         'id',
@@ -78,6 +81,53 @@ final class PeerPressureBerecordNitipService
     }
 
     /**
+     * WHERE untuk kartu/tab deviasi BeRecord: periode (jika ada) + filter {@see baselineBeRecordWhereAndAppendParam} pada `golden_rules`.
+     *
+     * @return array{0: string, 1: list<string>}
+     */
+    private function deviationModalBeRecordWhere(?int $year = null, ?int $month = null): array
+    {
+        [$wherePeriod, $params] = $this->periodWhereAndParams($year, $month);
+        $where = $wherePeriod !== '' ? $wherePeriod : 'WHERE 1=1';
+
+        return $this->baselineBeRecordWhereAndAppendParam($where, $params);
+    }
+
+    /**
+     * Jumlah `id` unik untuk kartu deviasi BeRecord (sama filter golden_rules dengan baseline pelaksanaan).
+     */
+    public function countDistinctIdsGoldenRulesBaseline(?int $year = null, ?int $month = null): int
+    {
+        $ch = new ClickHouseService('clickhouse_nitip');
+        if (! $ch->isConnected()) {
+            return 0;
+        }
+
+        [$where, $params] = $this->deviationModalBeRecordWhere($year, $month);
+
+        try {
+            $sql = 'SELECT uniqExact(`id`) AS c FROM bep_vw_berecord '.$where;
+            $rows = $ch->query($sql, $params);
+            if (! is_array($rows) || $rows === []) {
+                return 0;
+            }
+            $first = $rows[0];
+            if (! is_array($first)) {
+                return 0;
+            }
+            $c = $first['c'] ?? $first['C'] ?? null;
+
+            return is_numeric($c) ? (int) $c : 0;
+        } catch (Throwable $e) {
+            Log::warning('PeerPressureBerecordNitipService: countDistinctIdsGoldenRulesBaseline gagal', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return 0;
+        }
+    }
+
+    /**
      * Jumlah nilai unik kolom `id` pada view ClickHouse `bep_vw_berecord`.
      * Jika tahun & bulan diisi, dibatasi ke baris yang `start_date_be_record` jatuh di bulan tersebut (tanggal yang bisa di-parse).
      */
@@ -113,7 +163,7 @@ final class PeerPressureBerecordNitipService
     }
 
     /**
-     * Paginasi baris `bep_vw_berecord` untuk modal deviasi (filter bulan sama seperti {@see countDistinctIds} bila periode dipilih).
+     * Paginasi baris `bep_vw_berecord` untuk modal deviasi: periode + filter `golden_rules` sama {@see countDistinctIdsGoldenRulesBaseline}.
      *
      * @return array{rows: list<array<string, string|null>>, total: int, connected: bool, error?: string}
      */
@@ -127,7 +177,7 @@ final class PeerPressureBerecordNitipService
         $page = max(1, $page);
         $perPage = min(max(1, $perPage), 50);
         $offset = ($page - 1) * $perPage;
-        [$whereSql, $params] = $this->periodWhereAndParams($year, $month);
+        [$whereSql, $params] = $this->deviationModalBeRecordWhere($year, $month);
         $selectList = $this->buildSelectListSql();
 
         try {
@@ -184,6 +234,22 @@ final class PeerPressureBerecordNitipService
     }
 
     /**
+     * Baseline BeRecord memakai kolom `golden_rules`: terisi (bukan null/kosong) dan bukan {@see GOLDEN_RULES_NO_VIOLATION}.
+     *
+     * @param  list<string>  $params  parameter query (akan ditambah satu nilai untuk perbandingan teks)
+     * @return array{0: string, 1: list<string>}
+     */
+    private function baselineBeRecordWhereAndAppendParam(string $where, array $params): array
+    {
+        $where .= ' AND isNotNull(`golden_rules`)'
+            .' AND length(trim(toString(`golden_rules`))) > 0'
+            .' AND lowerUTF8(trim(toString(`golden_rules`))) != lowerUTF8(?)';
+        $params[] = self::GOLDEN_RULES_NO_VIOLATION;
+
+        return [$where, $params];
+    }
+
+    /**
      * Baseline BeRecord: nilai unik ter-normalisasi (lower+trim) kolom `BeRecord` non-kosong, filter periode sama seperti KPI lain.
      *
      * @return list<string>
@@ -200,6 +266,7 @@ final class PeerPressureBerecordNitipService
         if ($wherePeriod !== '') {
             $where .= ' AND '.substr($wherePeriod, strlen('WHERE '));
         }
+        [$where, $params] = $this->baselineBeRecordWhereAndAppendParam($where, $params);
 
         try {
             $sql = 'SELECT DISTINCT lowerUTF8(trim(toString(`BeRecord`))) AS b FROM bep_vw_berecord '.$where.' ORDER BY b';
@@ -241,6 +308,7 @@ final class PeerPressureBerecordNitipService
         if ($wherePeriod !== '') {
             $where .= ' AND '.substr($wherePeriod, strlen('WHERE '));
         }
+        [$where, $params] = $this->baselineBeRecordWhereAndAppendParam($where, $params);
 
         try {
             $sql = 'SELECT uniqExact(lowerUTF8(trim(toString(`BeRecord`)))) AS c FROM bep_vw_berecord '.$where;
@@ -266,6 +334,7 @@ final class PeerPressureBerecordNitipService
 
     /**
      * Pemetaan BeRecord ter-normalisasi → label perusahaan (kolom `perusahaan` di CH; satu nilai per grup).
+     * Hanya baris baseline: {@see baselineBeRecordWhereAndAppendParam} (`golden_rules` terisi dan bukan “Tidak Melanggar Golden Rules”).
      *
      * @return array<string, string>
      */
@@ -281,6 +350,7 @@ final class PeerPressureBerecordNitipService
         if ($wherePeriod !== '') {
             $where .= ' AND '.substr($wherePeriod, strlen('WHERE '));
         }
+        [$where, $params] = $this->baselineBeRecordWhereAndAppendParam($where, $params);
 
         try {
             $sql = 'SELECT lowerUTF8(trim(toString(`BeRecord`))) AS b, any(trim(toString(ifNull(`perusahaan`, \'\')))) AS co'

@@ -12,7 +12,8 @@ use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Ringkasan tiga kartu pada modal "Total Deviasi Pelanggaran":
- * BeRecord (uniq id · view ClickHouse bep_vw_berecord), Validasi TBC (tasklist terisi), Speak Up Fatigue (kategori deviasi pada kejadian).
+ * BeRecord (uniq id · bep_vw_berecord, filter golden_rules: terisi & bukan “Tidak Melanggar Golden Rules”),
+ * Validasi TBC (tasklist terisi), Speak Up Fatigue (kategori deviasi pada kejadian).
  */
 final class GetPeerPressureDeviationModalBreakdownAction
 {
@@ -35,7 +36,7 @@ final class GetPeerPressureDeviationModalBreakdownAction
     {
         $base = $this->scopedKejadianQuery($year, $month);
 
-        $berecordTotal = $this->berecordNitip->countDistinctIds($year, $month);
+        $berecordTotal = $this->berecordNitip->countDistinctIdsGoldenRulesBaseline($year, $month);
 
         $tbcQuery = ValidasiTbc::query()
             ->whereRaw('LENGTH(TRIM(COALESCE(tasklist, \'\'))) > 0');

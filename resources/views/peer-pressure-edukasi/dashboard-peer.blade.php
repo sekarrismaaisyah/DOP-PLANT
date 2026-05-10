@@ -907,7 +907,7 @@
                   <button type="button" role="tab" id="peer-deviation-tab-berecord" class="peer-deviation-tab rounded-xl border p-4 shadow-sm transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-primary/40" data-deviation-tab="berecord" aria-selected="true" aria-controls="peer-deviation-panel-berecord" tabindex="0">
                      <p class="text-[10px] font-bold uppercase tracking-wide text-primary">BeRecord</p>
                      <p id="peer-deviation-card-berecord-value" class="mt-2 font-headline text-3xl font-extrabold tabular-nums text-on-surface">{{ number_format($dmbBe) }}</p>
-                     <p class="mt-2 text-[10px] leading-snug text-on-surface-variant">Jumlah BeRecord</p>
+                     <p class="mt-2 text-[10px] leading-snug text-on-surface-variant">Jumlah data BeRecord</p>
                   </button>
                   <button type="button" role="tab" id="peer-deviation-tab-validasi_blindspot" class="peer-deviation-tab rounded-xl border p-4 shadow-sm transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-secondary/40" data-deviation-tab="validasi_blindspot" aria-selected="false" aria-controls="peer-deviation-panel-validasi_blindspot" tabindex="-1">
                      <p class="text-[10px] font-bold uppercase tracking-wide text-secondary">Validasi Blindspot</p>
