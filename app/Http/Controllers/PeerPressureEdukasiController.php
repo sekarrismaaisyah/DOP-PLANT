@@ -22,6 +22,7 @@ use App\Actions\PeerPressure\ListPeerPressurePelaksanaanBelumKejadianAction;
 use App\Actions\PeerPressure\ListPeerPressurePelaksanaanSelesaiKejadianAction;
 use App\Models\PeerPressureKejadianEdukasi;
 use App\Services\PeerPressure\PeerPressureKaryawanNitipService;
+use App\Services\PeerPressure\PeerPressurePelaksanaanBaselineService;
 use App\Services\PeerPressure\PeerPressureResourcesDataAiSummaryService;
 use App\Services\PeerPressure\SitePerformanceBriefAnalysisService;
 use App\Models\PeerPressurePesertaEdukasi;
@@ -524,6 +525,41 @@ class PeerPressureEdukasiController extends Controller
         }
 
         return response()->json($heatmap());
+    }
+
+    /**
+     * Rincian item baseline (sudah / belum peer pressure) untuk sel ringkasan site × kontraktor.
+     */
+    public function pelaksanaanBaselineDetailData(
+        Request $request,
+        PeerPressurePelaksanaanBaselineService $baseline,
+    ): JsonResponse {
+        $site = trim((string) $request->query('site', ''));
+        if ($site === '') {
+            return response()->json(['message' => 'Parameter site wajib diisi.'], 422);
+        }
+
+        $companyRaw = $request->query('company');
+        $company = ($companyRaw !== null && $companyRaw !== '') ? trim((string) $companyRaw) : null;
+
+        $tRaw = $request->query('terlaksana', '1');
+        $terlaksana = ! in_array((string) $tRaw, ['0', 'false', 'no'], true);
+
+        $chartPeriodMonth = $request->filled('year') && $request->filled('month');
+        if ($chartPeriodMonth) {
+            $chartYear = (int) $request->get('year');
+            $chartMonth = (int) $request->get('month');
+            $chartYear = max(GetPeerPressureDashboardWeeklyTrendAction::MIN_YEAR, min(GetPeerPressureDashboardWeeklyTrendAction::MAX_YEAR, $chartYear));
+            $chartMonth = max(1, min(12, $chartMonth));
+
+            return response()->json(
+                $baseline->pelaksanaanBaselineDetailRows($site, $company, $terlaksana, $chartYear, $chartMonth)
+            );
+        }
+
+        return response()->json(
+            $baseline->pelaksanaanBaselineDetailRows($site, $company, $terlaksana, null, null)
+        );
     }
 
     /**

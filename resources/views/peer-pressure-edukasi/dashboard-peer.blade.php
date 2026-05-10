@@ -1188,7 +1188,7 @@
                <div class="mt-5 rounded-xl border border-teal-200/80 bg-teal-50/50 px-4 py-3">
                   <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per site (tujuh kontraktor)</p>
                   <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
-                     Ringkasan <span class="font-medium text-on-surface">per site</span> dari item baseline yang sama; baris site dapat dibuka untuk melihat <span class="font-medium text-on-surface">per perusahaan</span> di bawahnya. Hanya kontraktor terpilih; mengikuti filter periode chart.
+                     Ringkasan <span class="font-medium text-on-surface">per site</span> dari item baseline yang sama; baris site dapat dibuka untuk melihat <span class="font-medium text-on-surface">per perusahaan</span> di bawahnya. Arahkan mouse ke kolom <span class="font-medium text-on-surface">Terlaksana</span> atau <span class="font-medium text-on-surface">Tidak terlaksana</span> untuk melihat tabel rincian item baseline. Hanya kontraktor terpilih; mengikuti filter periode chart.
                   </p>
                   <p id="peer-pp-summary-loading" class="mt-3 hidden text-[12px] leading-snug text-teal-900/90" role="status">Memuat ringkasan site…</p>
                   <p id="peer-pp-summary-empty" class="mt-3 hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
@@ -1203,6 +1203,20 @@
                         </thead>
                         <tbody id="peer-pp-summary-tbody" class="divide-y divide-outline-variant/10"></tbody>
                      </table>
+                  </div>
+                  <div
+                     id="peer-pp-baseline-detail-popover"
+                     class="fixed z-[320] hidden w-[min(28rem,calc(100vw-1.5rem))] max-h-[min(24rem,60vh)] overflow-hidden rounded-xl border border-teal-200/90 bg-white shadow-2xl ring-1 ring-black/10"
+                     role="tooltip"
+                     aria-hidden="true"
+                  >
+                     <div class="border-b border-teal-100 bg-[#f0fdfa] px-3 py-2">
+                        <p id="peer-pp-baseline-detail-popover-title" class="text-[11px] font-bold leading-snug text-teal-950"></p>
+                     </div>
+                     <div
+                        id="peer-pp-baseline-detail-popover-body"
+                        class="max-h-[min(19rem,52vh)] overflow-auto p-2 text-left text-[10px] text-on-surface sm:text-[11px]"
+                     ></div>
                   </div>
                </div>
 
@@ -1852,6 +1866,7 @@
         const weeklyTrendUrl = @json(route('peer-pressure-edukasi.dashboard.weekly-trend'));
         const gapMatrixUrl = @json(route('peer-pressure-edukasi.dashboard.gap-matrix'));
         const perusahaanHeatmapUrl = @json(route('peer-pressure-edukasi.dashboard.perusahaan-pelaksanaan-heatmap'));
+        const baselineDetailUrl = @json(route('peer-pressure-edukasi.dashboard.pelaksanaan-baseline-detail'));
         const peerKpiSlaBootstrap = @json($kpi['sla_temuan_ke_pelaksanaan'] ?? null);
         /**
          * Data contoh untuk grafik SLA (struktur sama dengan kpi.sla_temuan_ke_pelaksanaan).
@@ -1912,6 +1927,213 @@
         /** Chart.js bubble matriks gap pelaksanaan vs kepatuhan */
         var peerGapMatrixChartInstance = null;
         var lastGapMatrixPoints = [];
+        var peerPpBaselineDetailShowTimer = null;
+        var peerPpBaselineDetailHideTimer = null;
+        var peerPpBaselineDetailAbort = null;
+        var peerPpBaselineDetailAnchorTd = null;
+        function hidePeerPpBaselineDetailPopover() {
+          var pop = document.getElementById('peer-pp-baseline-detail-popover');
+          if (pop) {
+            pop.classList.add('hidden');
+            pop.setAttribute('aria-hidden', 'true');
+          }
+          if (peerPpBaselineDetailAbort) {
+            try {
+              peerPpBaselineDetailAbort.abort();
+            } catch (e) {}
+            peerPpBaselineDetailAbort = null;
+          }
+          peerPpBaselineDetailAnchorTd = null;
+        }
+        function positionPeerPpBaselineDetailPopover(anchorTd) {
+          var pop = document.getElementById('peer-pp-baseline-detail-popover');
+          if (!pop || !anchorTd) return;
+          pop.classList.remove('hidden');
+          var r = anchorTd.getBoundingClientRect();
+          var w = pop.offsetWidth || 400;
+          var h = pop.offsetHeight || 240;
+          var left = r.left + r.width / 2 - w / 2;
+          left = Math.max(8, Math.min(left, window.innerWidth - w - 8));
+          var top = r.bottom + 8;
+          if (top + h > window.innerHeight - 8) {
+            top = Math.max(8, r.top - h - 8);
+          }
+          pop.style.left = left + 'px';
+          pop.style.top = top + 'px';
+        }
+        function renderPeerPpBaselineDetailTable(data, title) {
+          var body = document.getElementById('peer-pp-baseline-detail-popover-body');
+          var titleEl = document.getElementById('peer-pp-baseline-detail-popover-title');
+          if (titleEl) titleEl.textContent = title || '';
+          if (!body) return;
+          body.innerHTML = '';
+          var rows = data && Array.isArray(data.rows) ? data.rows : [];
+          if (!rows.length) {
+            var empty = document.createElement('p');
+            empty.className = 'px-1 py-2 text-on-surface-variant';
+            empty.textContent = 'Tidak ada data untuk sel ini.';
+            body.appendChild(empty);
+            return;
+          }
+          var tbl = document.createElement('table');
+          tbl.className = 'w-full border-collapse text-left';
+          var thead = document.createElement('thead');
+          var trh = document.createElement('tr');
+          trh.className =
+            'border-b border-teal-100 bg-teal-50/80 text-[9px] font-bold uppercase tracking-wide text-teal-900';
+          ['Jenis', 'Referensi', 'Perusahaan', 'Tanggal', 'Status pelaksanaan'].forEach(function (lab) {
+            var th = document.createElement('th');
+            th.className = 'px-1.5 py-1.5 align-top';
+            th.textContent = lab;
+            trh.appendChild(th);
+          });
+          thead.appendChild(trh);
+          tbl.appendChild(thead);
+          var tb = document.createElement('tbody');
+          rows.forEach(function (r) {
+            var tr = document.createElement('tr');
+            tr.className = 'border-b border-outline-variant/10';
+            [
+              r.jenis_label || r.jenis || '—',
+              r.referensi != null ? String(r.referensi) : '—',
+              r.perusahaan != null ? String(r.perusahaan) : '—',
+              r.tanggal_temuan != null ? String(r.tanggal_temuan) : '—',
+              r.status_pelaksanaan_edukasi != null ? String(r.status_pelaksanaan_edukasi) : '—'
+            ].forEach(function (cell) {
+              var td = document.createElement('td');
+              td.className = 'px-1.5 py-1.5 align-top tabular-nums';
+              td.textContent = cell;
+              tr.appendChild(td);
+            });
+            tb.appendChild(tr);
+          });
+          tbl.appendChild(tb);
+          body.appendChild(tbl);
+          if (data.truncated) {
+            var note = document.createElement('p');
+            note.className = 'mt-2 border-t border-amber-100 bg-amber-50/80 px-2 py-1.5 text-[10px] text-amber-950';
+            var cap = data.cap != null ? data.cap : '';
+            note.textContent =
+              'Menampilkan ' + cap + ' baris pertama. Persempit filter periode atau site bila perlu.';
+            body.appendChild(note);
+          }
+        }
+        function loadPeerPpBaselineDetailIntoPopover(anchorTd, kind, siteName, companyName) {
+          var pop = document.getElementById('peer-pp-baseline-detail-popover');
+          var body = document.getElementById('peer-pp-baseline-detail-popover-body');
+          var titleEl = document.getElementById('peer-pp-baseline-detail-popover-title');
+          if (!pop || !body) return;
+          peerPpBaselineDetailAnchorTd = anchorTd;
+          if (titleEl) {
+            titleEl.textContent =
+              kind === 'terlaksana'
+                ? 'Sudah peer pressure (baseline terlaksana)'
+                : 'Belum peer pressure (baseline belum terlaksana)';
+          }
+          body.innerHTML = '';
+          var loadP = document.createElement('p');
+          loadP.className = 'px-2 py-3 text-on-surface-variant';
+          loadP.textContent = 'Memuat…';
+          body.appendChild(loadP);
+          pop.classList.remove('hidden');
+          pop.setAttribute('aria-hidden', 'false');
+          positionPeerPpBaselineDetailPopover(anchorTd);
+          if (peerPpBaselineDetailAbort) {
+            try {
+              peerPpBaselineDetailAbort.abort();
+            } catch (e) {}
+          }
+          peerPpBaselineDetailAbort = typeof AbortController !== 'undefined' ? new AbortController() : null;
+          var u = new URL(baselineDetailUrl, window.location.origin);
+          u.searchParams.set('site', siteName);
+          if (companyName) u.searchParams.set('company', companyName);
+          u.searchParams.set('terlaksana', kind === 'terlaksana' ? '1' : '0');
+          if (!state.all) {
+            u.searchParams.set('year', String(state.year));
+            u.searchParams.set('month', String(state.month));
+          }
+          u.searchParams.set('_', String(Date.now()));
+          fetch(u.toString(), {
+            signal: peerPpBaselineDetailAbort ? peerPpBaselineDetailAbort.signal : undefined,
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+            credentials: 'same-origin'
+          })
+            .then(function (res) {
+              if (!res.ok) throw new Error('Gagal memuat rincian');
+              return res.json();
+            })
+            .then(function (data) {
+              if (peerPpBaselineDetailAnchorTd !== anchorTd) return;
+              var sub =
+                (siteName || '') + (companyName ? ' · ' + companyName : ' · semua kontraktor di site');
+              renderPeerPpBaselineDetailTable(data, (titleEl ? titleEl.textContent : '') + ' — ' + sub);
+              positionPeerPpBaselineDetailPopover(anchorTd);
+            })
+            .catch(function (err) {
+              if (err && err.name === 'AbortError') return;
+              if (peerPpBaselineDetailAnchorTd !== anchorTd) return;
+              body.innerHTML = '';
+              var errP = document.createElement('p');
+              errP.className = 'px-2 py-2 text-error text-[11px]';
+              errP.textContent = err && err.message ? err.message : 'Gagal memuat.';
+              body.appendChild(errP);
+              positionPeerPpBaselineDetailPopover(anchorTd);
+            });
+        }
+        function attachPeerPpBaselineDetailHover(td, kind, siteName, companyName) {
+          if (!td || !siteName) return;
+          td.classList.add('peer-pp-baseline-detail-cell', 'cursor-help');
+          td.setAttribute('data-peer-pp-baseline-kind', kind);
+          function onEnter() {
+            if (peerPpBaselineDetailHideTimer) {
+              clearTimeout(peerPpBaselineDetailHideTimer);
+              peerPpBaselineDetailHideTimer = null;
+            }
+            if (peerPpBaselineDetailShowTimer) clearTimeout(peerPpBaselineDetailShowTimer);
+            peerPpBaselineDetailShowTimer = setTimeout(function () {
+              loadPeerPpBaselineDetailIntoPopover(td, kind, siteName, companyName || '');
+            }, 220);
+          }
+          function onLeave() {
+            if (peerPpBaselineDetailShowTimer) {
+              clearTimeout(peerPpBaselineDetailShowTimer);
+              peerPpBaselineDetailShowTimer = null;
+            }
+            peerPpBaselineDetailHideTimer = setTimeout(function () {
+              var pop = document.getElementById('peer-pp-baseline-detail-popover');
+              if (pop && pop.matches(':hover')) return;
+              hidePeerPpBaselineDetailPopover();
+            }, 200);
+          }
+          td.addEventListener('mouseenter', onEnter);
+          td.addEventListener('mouseleave', onLeave);
+        }
+        (function bindPeerPpBaselinePopoverLeave() {
+          var pop = document.getElementById('peer-pp-baseline-detail-popover');
+          if (!pop || pop.dataset.peerPpLeaveBound) return;
+          pop.dataset.peerPpLeaveBound = '1';
+          pop.addEventListener('mouseenter', function () {
+            if (peerPpBaselineDetailHideTimer) {
+              clearTimeout(peerPpBaselineDetailHideTimer);
+              peerPpBaselineDetailHideTimer = null;
+            }
+          });
+          pop.addEventListener('mouseleave', function () {
+            peerPpBaselineDetailHideTimer = setTimeout(function () {
+              hidePeerPpBaselineDetailPopover();
+            }, 200);
+          });
+        })();
+        window.addEventListener(
+          'scroll',
+          function () {
+            var popScroll = document.getElementById('peer-pp-baseline-detail-popover');
+            if (peerPpBaselineDetailAnchorTd && popScroll && !popScroll.classList.contains('hidden')) {
+              positionPeerPpBaselineDetailPopover(peerPpBaselineDetailAnchorTd);
+            }
+          },
+          true
+        );
         var tempYear = state.year;
         var tempMonth = state.month;
         var tempAll = state.all;
@@ -3097,7 +3319,7 @@
               }) + '%'
             );
           }
-          function appendMetricCells(tr, row, isSite) {
+          function appendMetricCells(tr, row, isSite, siteDisplayName, companyDisplayName) {
             var tdGT = document.createElement('td');
             tdGT.className =
               'border border-outline-variant/10 px-2 py-1.5 tabular-nums text-[10px] sm:text-[11px] ' +
@@ -3115,14 +3337,17 @@
                   '/' +
                   (row.total != null ? row.total : '0') +
                   ' item baseline' +
-                  (isSite ? ' (agregat site)' : '')
+                  (isSite ? ' (agregat site)' : '') +
+                  ' · arahkan mouse untuk tabel rincian'
               );
               tdGB.textContent = fmtPct(row.pct_belum);
               var bel = (row.total != null ? row.total : 0) - (row.selesai != null ? row.selesai : 0);
               tdGB.setAttribute(
                 'title',
-                'Tidak terlaksana: ' + bel + '/' + (row.total != null ? row.total : '0') + ' item baseline'
+                'Tidak terlaksana: ' + bel + '/' + (row.total != null ? row.total : '0') + ' item baseline · arahkan mouse untuk tabel rincian'
               );
+              attachPeerPpBaselineDetailHover(tdGT, 'terlaksana', siteDisplayName, isSite ? '' : companyDisplayName);
+              attachPeerPpBaselineDetailHover(tdGB, 'tidak_terlaksana', siteDisplayName, isSite ? '' : companyDisplayName);
             } else {
               tdGT.textContent = '—';
               tdGB.textContent = '—';
@@ -3160,7 +3385,8 @@
             btn.appendChild(lab);
             tdSite.appendChild(btn);
             trSite.appendChild(tdSite);
-            appendMetricCells(trSite, site, true);
+            var siteDisp = site.site != null ? String(site.site) : '';
+            appendMetricCells(trSite, site, true, siteDisp, '');
             tbody.appendChild(trSite);
             btn.addEventListener('click', function () {
               var expanded = btn.getAttribute('aria-expanded') === 'true';
@@ -3182,7 +3408,8 @@
                 'sticky left-0 z-10 border border-outline-variant/10 bg-white px-2 py-1.5 pl-9 text-left text-[10px] font-medium text-on-surface shadow-[2px_0_0_0_rgba(255,255,255,1)] sm:text-[11px]';
               tdCo.textContent = co.company != null ? String(co.company) : '—';
               trCo.appendChild(tdCo);
-              appendMetricCells(trCo, co, false);
+              var coDisp = co.company != null ? String(co.company) : '';
+              appendMetricCells(trCo, co, false, siteDisp, coDisp);
               tbody.appendChild(trCo);
             });
           });
@@ -4479,6 +4706,7 @@
         }
         function closePelaksanaanModal() {
           if (!pelaksanaanModal) return;
+          hidePeerPpBaselineDetailPopover();
           pelaksanaanModal.classList.add('hidden');
           pelaksanaanModal.setAttribute('aria-hidden', 'true');
           if (pelaksanaanCard) pelaksanaanCard.setAttribute('aria-expanded', 'false');

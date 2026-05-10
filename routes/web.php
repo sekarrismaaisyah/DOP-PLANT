@@ -252,6 +252,7 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/peer-pressure-edukasi/dashboard/weekly-trend', [PeerPressureEdukasiController::class, 'weeklyTrendData'])->name('peer-pressure-edukasi.dashboard.weekly-trend');
     Route::get('/peer-pressure-edukasi/dashboard/gap-matrix', [PeerPressureEdukasiController::class, 'gapMatrixData'])->name('peer-pressure-edukasi.dashboard.gap-matrix');
     Route::get('/peer-pressure-edukasi/dashboard/perusahaan-pelaksanaan-heatmap', [PeerPressureEdukasiController::class, 'perusahaanPelaksanaanHeatmapData'])->name('peer-pressure-edukasi.dashboard.perusahaan-pelaksanaan-heatmap');
+    Route::get('/peer-pressure-edukasi/dashboard/pelaksanaan-baseline-detail', [PeerPressureEdukasiController::class, 'pelaksanaanBaselineDetailData'])->name('peer-pressure-edukasi.dashboard.pelaksanaan-baseline-detail');
     Route::get('/peer-pressure-edukasi/dashboard/highlight-issue-recommendation', [PeerPressureEdukasiController::class, 'dashboardHighlightIssueRecommendation'])->name('peer-pressure-edukasi.dashboard.highlight-issue-recommendation');
     Route::get('/peer-pressure-edukasi/dashboard/compliance-breakdown', [PeerPressureEdukasiController::class, 'complianceBreakdownData'])->name('peer-pressure-edukasi.dashboard.compliance-breakdown');
     Route::get('/peer-pressure-edukasi/dashboard/pelaksanaan-selesai', [PeerPressureEdukasiController::class, 'pelaksanaanSelesaiData'])->name('peer-pressure-edukasi.dashboard.pelaksanaan-selesai');

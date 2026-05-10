@@ -215,6 +215,194 @@ final class PeerPressurePelaksanaanBaselineService
         return $this->finalizeSiteTreePayload($tree, 'all', 'Semua data (baseline · kontraktor terpilih)');
     }
 
+    private const BASELINE_DETAIL_ROW_CAP = 300;
+
+    /**
+     * Daftar item baseline (BeRecord / TBC / fatigue) untuk sel tertentu pada ringkasan site × kontraktor.
+     *
+     * @return array{rows: list<array<string, mixed>>, truncated: bool, cap: int}
+     */
+    public function pelaksanaanBaselineDetailRows(
+        string $scopeSite,
+        ?string $scopeCompany,
+        bool $terlaksana,
+        ?int $year = null,
+        ?int $month = null,
+    ): array {
+        $bounds = $this->kejadianTanggalTemuanBounds($year, $month);
+        $rows = [];
+
+        $beCoMapFull = $this->berecordNitip->mapNormalizedBeRecordToCompany($year, $month);
+        $completedBe = $this->completedNormalizedIdBerecordSetRestricted($bounds);
+        $beSiteMap = $this->beRecordKeyToSiteFromKejadianRestricted($bounds);
+        $beSnap = $this->berecordDisplayByNormalizedKey($bounds);
+
+        foreach ($beCoMapFull as $beKey => $coRaw) {
+            if ($beKey === '' || ! PeerPressureDashboardRestrictedContractors::isAllowedCompanyLabel($this->companyLabel($coRaw))) {
+                continue;
+            }
+            $site = $beSiteMap[$beKey] ?? '(Site tidak diketahui)';
+            $co = $this->companyLabel($coRaw);
+            $done = isset($completedBe[$beKey]);
+            if ($done !== $terlaksana || ! $this->baselineDetailMatchesScope($site, $co, $scopeSite, $scopeCompany)) {
+                continue;
+            }
+            $snap = $beSnap[$beKey] ?? null;
+            $rows[] = [
+                'jenis' => 'berecord',
+                'jenis_label' => 'BeRecord',
+                'referensi' => $snap['id_berecord'] ?? $beKey,
+                'perusahaan' => $co,
+                'site' => $site,
+                'tanggal_temuan' => $this->formatDateOptional($snap['tanggal_temuan'] ?? null),
+                'status_pelaksanaan_edukasi' => $snap['status_pelaksanaan_edukasi'] ?? null,
+                'sudah_peer_pressure' => $done,
+                'kejadian_edukasi_id' => isset($snap['kejadian_edukasi_id']) ? (int) $snap['kejadian_edukasi_id'] : null,
+            ];
+        }
+
+        $fatigueQ = $this->scopedKejadian($bounds)
+            ->whereRaw('LOWER(TRIM(COALESCE(kategori_deviasi, \'\'))) = ?', ['tidak speak up fatigue']);
+        foreach ($fatigueQ->cursor(['id', 'perusahaan', 'status_pelaksanaan_edukasi', 'site', 'tanggal_temuan']) as $row) {
+            if (! PeerPressureDashboardRestrictedContractors::isAllowedCompanyLabel($row->perusahaan ?? null)) {
+                continue;
+            }
+            $site = $this->siteLabel($row->site ?? null);
+            $co = $this->companyLabel($row->perusahaan ?? null);
+            $done = PelaksanaanComplianceEvaluator::isPelaksanaanClosed($row->status_pelaksanaan_edukasi ?? null);
+            if ($done !== $terlaksana || ! $this->baselineDetailMatchesScope($site, $co, $scopeSite, $scopeCompany)) {
+                continue;
+            }
+            $rows[] = [
+                'jenis' => 'fatigue',
+                'jenis_label' => 'Fatigue (tidak speak up)',
+                'referensi' => 'Kejadian #'.(string) ($row->id ?? ''),
+                'perusahaan' => $co,
+                'site' => $site,
+                'tanggal_temuan' => $this->formatDateOptional($row->tanggal_temuan ?? null),
+                'status_pelaksanaan_edukasi' => $row->status_pelaksanaan_edukasi ?? null,
+                'sudah_peer_pressure' => $done,
+                'kejadian_edukasi_id' => isset($row->id) ? (int) $row->id : null,
+            ];
+        }
+
+        $tbcQuery = ValidasiTbc::query()
+            ->whereRaw('LENGTH(TRIM(COALESCE(tasklist, \'\'))) > 0');
+        if ($year !== null && $month !== null) {
+            $y = max(self::MIN_YEAR, min(self::MAX_YEAR, $year));
+            $m = max(1, min(12, $month));
+            $start = Carbon::create($y, $m, 1)->startOfDay();
+            $end = $start->copy()->endOfMonth();
+            $tbcQuery->where('created_at', '>=', $start)->where('created_at', '<=', $end);
+        }
+
+        $blindspotFull = $this->blindspotKejadianGroupsByTasklist($bounds);
+        foreach ((clone $tbcQuery)->cursor(['id', 'tasklist', 'created_at']) as $row) {
+            $tl = $this->normalizeKey((string) ($row->tasklist ?? ''));
+            if ($tl === '') {
+                continue;
+            }
+            $resolved = $this->resolveTbcRestricted($tl, $blindspotFull);
+            if ($resolved === null) {
+                continue;
+            }
+            $done = $resolved['done'];
+            if ($done !== $terlaksana || ! $this->baselineDetailMatchesScope($resolved['site'], $resolved['company'], $scopeSite, $scopeCompany)) {
+                continue;
+            }
+            $taskRaw = trim((string) ($row->tasklist ?? ''));
+            $rows[] = [
+                'jenis' => 'tbc',
+                'jenis_label' => 'Validasi TBC (tasklist)',
+                'referensi' => $taskRaw !== '' ? $taskRaw : $tl,
+                'perusahaan' => $resolved['company'],
+                'site' => $resolved['site'],
+                'tanggal_temuan' => $this->formatDateOptional($row->created_at ?? null),
+                'status_pelaksanaan_edukasi' => $done ? 'CLOSED/SELESAI (melalui blindspot)' : null,
+                'sudah_peer_pressure' => $done,
+                'validasi_tbc_id' => isset($row->id) ? (int) $row->id : null,
+                'kejadian_edukasi_id' => null,
+            ];
+        }
+
+        usort($rows, function (array $a, array $b): int {
+            $ja = (string) ($a['jenis'] ?? '');
+            $jb = (string) ($b['jenis'] ?? '');
+            if ($ja !== $jb) {
+                return $ja <=> $jb;
+            }
+
+            return strcmp((string) ($a['referensi'] ?? ''), (string) ($b['referensi'] ?? ''));
+        });
+
+        $truncated = count($rows) > self::BASELINE_DETAIL_ROW_CAP;
+        if ($truncated) {
+            $rows = array_slice($rows, 0, self::BASELINE_DETAIL_ROW_CAP);
+        }
+
+        return [
+            'rows' => $rows,
+            'truncated' => $truncated,
+            'cap' => self::BASELINE_DETAIL_ROW_CAP,
+        ];
+    }
+
+    private function baselineDetailMatchesScope(string $site, string $company, string $scopeSite, ?string $scopeCompany): bool
+    {
+        if ($site !== $scopeSite) {
+            return false;
+        }
+        if ($scopeCompany !== null && $scopeCompany !== '') {
+            return $company === $scopeCompany;
+        }
+
+        return true;
+    }
+
+    /**
+     * @param  array{0: ?string, 1: ?string}  $tanggalBounds
+     * @return array<string, array{id_berecord: string, tanggal_temuan: mixed, status_pelaksanaan_edukasi: mixed, kejadian_edukasi_id: int}>
+     */
+    private function berecordDisplayByNormalizedKey(array $tanggalBounds): array
+    {
+        $q = $this->scopedKejadian($tanggalBounds)
+            ->whereRaw('LENGTH(TRIM(COALESCE(id_berecord, \'\'))) > 0');
+
+        $out = [];
+        foreach ($q->cursor(['id', 'id_berecord', 'tanggal_temuan', 'status_pelaksanaan_edukasi', 'perusahaan']) as $row) {
+            if (! PeerPressureDashboardRestrictedContractors::isAllowedCompanyLabel($row->perusahaan ?? null)) {
+                continue;
+            }
+            $nk = $this->normalizeKey((string) ($row->id_berecord ?? ''));
+            if ($nk === '') {
+                continue;
+            }
+            if (! isset($out[$nk])) {
+                $out[$nk] = [
+                    'id_berecord' => trim((string) ($row->id_berecord)),
+                    'tanggal_temuan' => $row->tanggal_temuan ?? null,
+                    'status_pelaksanaan_edukasi' => $row->status_pelaksanaan_edukasi ?? null,
+                    'kejadian_edukasi_id' => (int) $row->id,
+                ];
+            }
+        }
+
+        return $out;
+    }
+
+    private function formatDateOptional(mixed $d): ?string
+    {
+        if ($d === null) {
+            return null;
+        }
+        if ($d instanceof \DateTimeInterface) {
+            return Carbon::instance($d)->toDateString();
+        }
+        $s = trim((string) $d);
+
+        return $s === '' ? null : $s;
+    }
+
     /**
      * @param  array<string, array{companies: array<string, array{total: int, selesai: int}>}>  $tree
      * @return array{period_scope: string, period_label: string, baseline_scope: true, contractor_scope: list<string>, sites: list<array<string, mixed>>}
