@@ -159,6 +159,7 @@ final class PeerPressurePelaksanaanBaselineService
         $completedBe = $this->completedNormalizedIdBerecordSetRestricted($bounds);
         $beSiteMap = $this->beRecordKeyToSiteFromKejadianRestricted($bounds);
         $companyPreferredSite = $this->companyPreferredSiteFromKejadian($bounds);
+        $beKeyToSiteWp = $this->beRecordKeyToSiteFromWpKaryawan($year, $month);
 
         foreach ($beCoMapFull as $beKey => $coRaw) {
             $beNorm = $this->normalizeKey((string) $beKey);
@@ -166,7 +167,7 @@ final class PeerPressurePelaksanaanBaselineService
                 continue;
             }
             $co = $this->companyLabel($coRaw);
-            $site = $this->resolveBeRecordSiteForAggregation($beSiteMap, $beNorm, $co, $companyPreferredSite);
+            $site = $this->resolveBeRecordSiteForAggregation($beSiteMap, $beNorm, $co, $companyPreferredSite, $beKeyToSiteWp);
             $done = isset($completedBe[$beNorm]);
             $this->accSiteCompany($tree, $site, $co, $done);
         }
@@ -239,6 +240,7 @@ final class PeerPressurePelaksanaanBaselineService
         $completedBe = $this->completedNormalizedIdBerecordSetRestricted($bounds);
         $beSiteMap = $this->beRecordKeyToSiteFromKejadianRestricted($bounds);
         $companyPreferredSite = $this->companyPreferredSiteFromKejadian($bounds);
+        $beKeyToSiteWp = $this->beRecordKeyToSiteFromWpKaryawan($year, $month);
         $beSnap = $this->berecordDisplayByNormalizedKey($bounds);
 
         foreach ($beCoMapFull as $beKey => $coRaw) {
@@ -247,7 +249,7 @@ final class PeerPressurePelaksanaanBaselineService
                 continue;
             }
             $co = $this->companyLabel($coRaw);
-            $site = $this->resolveBeRecordSiteForAggregation($beSiteMap, $beNorm, $co, $companyPreferredSite);
+            $site = $this->resolveBeRecordSiteForAggregation($beSiteMap, $beNorm, $co, $companyPreferredSite, $beKeyToSiteWp);
             $done = isset($completedBe[$beNorm]);
             if ($done !== $terlaksana || ! $this->baselineDetailMatchesScope($site, $co, $scopeSite, $scopeCompany)) {
                 continue;
@@ -489,7 +491,7 @@ final class PeerPressurePelaksanaanBaselineService
 
     /**
      * Site yang paling sering muncul per perusahaan (kontraktor terbatas) pada kejadian dalam periode,
-     * hanya dari baris dengan kolom site terisi — dipakai fallback agar BeRecord tanpa pemetaan id tidak menggumpal di "(Site tidak diketahui)".
+     * hanya dari baris dengan kolom site terisi — dipakai fallback setelah site dari kejadian dan site dari bep_vw_wp_karyawan (kode_sid).
      *
      * @param  array{0: ?string, 1: ?string}  $tanggalBounds
      * @return array<string, string> label perusahaan => label site
@@ -529,18 +531,64 @@ final class PeerPressurePelaksanaanBaselineService
     }
 
     /**
+     * Site per kunci BeRecord dari nitip: kode_sid di bep_vw_berecord → site di bep_vw_wp_karyawan (baris terbaru per sid).
+     *
+     * @return array<string, string> normalized BeRecord key => site (hanya jika site WP terisi)
+     */
+    private function beRecordKeyToSiteFromWpKaryawan(?int $year, ?int $month): array
+    {
+        $beToSid = $this->berecordNitip->mapNormalizedBeRecordToKodeSid($year, $month);
+        $lowerSids = [];
+        foreach ($beToSid as $sidRaw) {
+            $s = strtolower(trim((string) $sidRaw));
+            if ($s !== '') {
+                $lowerSids[$s] = true;
+            }
+        }
+        if ($lowerSids === []) {
+            return [];
+        }
+
+        $sidToSite = $this->berecordNitip->mapKodeSidLowerToSiteFromWpKaryawan(array_keys($lowerSids));
+        $out = [];
+        foreach ($beToSid as $beK => $sidRaw) {
+            $beNorm = $this->normalizeKey((string) $beK);
+            if ($beNorm === '') {
+                continue;
+            }
+            $s = strtolower(trim((string) $sidRaw));
+            if ($s === '') {
+                continue;
+            }
+            $site = trim((string) ($sidToSite[$s] ?? ''));
+            if ($site !== '') {
+                $out[$beNorm] = $site;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * @param  array<string, string>  $beSiteMap  normalized BeRecord key => site dari kejadian
      * @param  array<string, string>  $companyPreferredSite  perusahaan => site dominan
+     * @param  array<string, string>  $beKeyToSiteFromWp  normalized BeRecord key => site dari bep_vw_wp_karyawan
      */
     private function resolveBeRecordSiteForAggregation(
         array $beSiteMap,
         string $beKey,
         string $company,
         array $companyPreferredSite,
+        array $beKeyToSiteFromWp = [],
     ): string {
         $fromId = $beSiteMap[$beKey] ?? null;
         if ($fromId !== null && $fromId !== '(Site tidak diisi)') {
             return $fromId;
+        }
+
+        $fromWp = trim((string) ($beKeyToSiteFromWp[$beKey] ?? ''));
+        if ($fromWp !== '') {
+            return $fromWp;
         }
 
         return $companyPreferredSite[$company] ?? '(Site tidak diketahui)';

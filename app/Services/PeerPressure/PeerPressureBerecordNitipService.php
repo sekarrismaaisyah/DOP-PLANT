@@ -384,6 +384,120 @@ final class PeerPressureBerecordNitipService
     }
 
     /**
+     * Pemetaan BeRecord ter-normalisasi → kode_sid (kolom `kode_sid` di CH; satu nilai per grup, sama seperti {@see mapNormalizedBeRecordToCompany}).
+     *
+     * @return array<string, string>
+     */
+    public function mapNormalizedBeRecordToKodeSid(?int $year = null, ?int $month = null): array
+    {
+        $ch = new ClickHouseService('clickhouse_nitip');
+        if (! $ch->isConnected()) {
+            return [];
+        }
+
+        [$wherePeriod, $params] = $this->periodWhereAndParams($year, $month);
+        $where = 'WHERE length(trim(toString(`BeRecord`))) > 0';
+        if ($wherePeriod !== '') {
+            $where .= ' AND '.substr($wherePeriod, strlen('WHERE '));
+        }
+        [$where, $params] = $this->baselineBeRecordWhereAndAppendParam($where, $params);
+
+        try {
+            $sql = 'SELECT lowerUTF8(trim(toString(`BeRecord`))) AS b, any(trim(toString(ifNull(`kode_sid`, \'\')))) AS ks'
+                .' FROM bep_vw_berecord '.$where.' GROUP BY b ORDER BY b';
+            $rows = $ch->query($sql, $params);
+            if (! is_array($rows)) {
+                return [];
+            }
+            $out = [];
+            foreach ($rows as $row) {
+                if (! is_array($row)) {
+                    continue;
+                }
+                $b = $row['b'] ?? $row['B'] ?? null;
+                if ($b === null || trim((string) $b) === '') {
+                    continue;
+                }
+                $key = strtolower(trim((string) $b));
+                $ks = $row['ks'] ?? $row['KS'] ?? '';
+                $out[$key] = trim((string) $ks);
+            }
+
+            return $out;
+        } catch (Throwable $e) {
+            Log::warning('PeerPressureBerecordNitipService: mapNormalizedBeRecordToKodeSid gagal', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return [];
+        }
+    }
+
+    /**
+     * Site terbaru (berdasarkan _airbyte_extracted_at) per kode_sid dari nitip.bep_vw_wp_karyawan.
+     *
+     * @param  list<string>  $lowerTrimmedKodeSids
+     * @return array<string, string> lower kode_sid => site (non-kosong)
+     */
+    public function mapKodeSidLowerToSiteFromWpKaryawan(array $lowerTrimmedKodeSids): array
+    {
+        $ch = new ClickHouseService('clickhouse_nitip');
+        if (! $ch->isConnected()) {
+            return [];
+        }
+
+        $unique = [];
+        foreach ($lowerTrimmedKodeSids as $s) {
+            $t = strtolower(trim((string) $s));
+            if ($t !== '') {
+                $unique[$t] = true;
+            }
+        }
+        $keys = array_keys($unique);
+        if ($keys === []) {
+            return [];
+        }
+
+        $out = [];
+        foreach (array_chunk($keys, 400) as $chunk) {
+            $placeholders = implode(',', array_fill(0, count($chunk), '?'));
+            $sql = 'SELECT lowerUTF8(trim(toString(kode_sid))) AS ks, argMax(trim(toString(ifNull(site, \'\'))), _airbyte_extracted_at) AS site'
+                .' FROM bep_vw_wp_karyawan'
+                .' WHERE length(trim(toString(kode_sid))) > 0'
+                .' AND lowerUTF8(trim(toString(kode_sid))) IN ('.$placeholders.')'
+                .' GROUP BY ks';
+
+            try {
+                $rows = $ch->query($sql, $chunk);
+                if (! is_array($rows)) {
+                    continue;
+                }
+                foreach ($rows as $row) {
+                    if (! is_array($row)) {
+                        continue;
+                    }
+                    $ks = $row['ks'] ?? $row['KS'] ?? null;
+                    $site = $row['site'] ?? $row['SITE'] ?? null;
+                    if ($ks === null) {
+                        continue;
+                    }
+                    $ksK = strtolower(trim((string) $ks));
+                    $siteT = trim((string) ($site ?? ''));
+                    if ($ksK !== '' && $siteT !== '') {
+                        $out[$ksK] = $siteT;
+                    }
+                }
+            } catch (Throwable $e) {
+                Log::warning('PeerPressureBerecordNitipService: mapKodeSidLowerToSiteFromWpKaryawan gagal', [
+                    'message' => $e->getMessage(),
+                ]);
+            }
+        }
+
+        return $out;
+    }
+
+    /**
      * Paginasi baris dari bep_vw_berecord (pencarian substring pada beberapa kolom teks).
      *
      * @return array{rows: list<array<string, string|null>>, total: int, connected: bool}

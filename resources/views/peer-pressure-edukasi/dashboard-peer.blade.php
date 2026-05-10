@@ -273,7 +273,7 @@
                <div class="mt-4">
                   <p id="peer-kpi-pelaksanaan-compliance" class="font-headline font-extrabold text-4xl">{{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}<span class="text-2xl font-bold">%</span></p>
                   <p class="text-on-surface-variant text-[11px] font-medium mt-1 leading-snug">
-                     <span id="peer-kpi-pelaksanaan-compliance-count">{{ (int) ($kpi['peer_pressure_compliance_comply'] ?? 0) }}/{{ (int) ($kpi['peer_pressure_compliance_total'] ?? 0) }}</span> kejadian (5 kategori). Klik untuk penjelasan detail.
+                     <span id="peer-kpi-pelaksanaan-compliance-count">{{ (int) ($kpi['peer_pressure_compliance_comply'] ?? 0) }}/{{ (int) ($kpi['peer_pressure_compliance_total'] ?? 0) }}</span> item baseline (7 kontraktor · sama kartu pelaksanaan). Klik untuk penjelasan detail.
                   </p>
                </div>
             </button>
@@ -1019,7 +1019,7 @@
                   <div class="mt-2 flex flex-wrap items-end gap-3">
                      <p id="peer-compliance-modal-summary-pct" class="font-headline text-4xl font-extrabold text-on-surface tabular-nums">{{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}<span class="text-2xl font-bold">%</span></p>
                      <p id="peer-compliance-modal-summary-line" class="text-sm font-medium text-on-surface">
-                        <span id="peer-compliance-modal-summary-count">{{ (int) ($kpi['peer_pressure_compliance_comply'] ?? 0) }}</span> dari <span id="peer-compliance-modal-summary-total">{{ (int) ($kpi['peer_pressure_compliance_total'] ?? 0) }}</span> kejadian terlacak memenuhi syarat <span class="font-semibold text-secondary">comply</span>.
+                        <span id="peer-compliance-modal-summary-count">{{ (int) ($kpi['peer_pressure_compliance_comply'] ?? 0) }}</span> dari <span id="peer-compliance-modal-summary-total">{{ (int) ($kpi['peer_pressure_compliance_total'] ?? 0) }}</span> item baseline (7 kontraktor) memenuhi syarat <span class="font-semibold text-secondary">comply</span> — selaras pelaksanaan selesai.
                      </p>
                   </div>
                   <div class="mt-3 h-2 w-full overflow-hidden rounded-full bg-white/80">
@@ -1034,29 +1034,29 @@
 
                <section class="mt-6 rounded-xl border border-outline-variant/20 bg-[#f8fafc] p-4 sm:p-5">
                   <h3 class="font-headline text-sm font-bold text-on-surface">Ringkasan data</h3>
-                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">Jumlah kejadian pada lima kategori deviasi terlacak untuk periode yang sama dengan kartu KPI.</p>
+                  <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">Angka ringkas mengikuti baseline pelaksanaan (BeRecord CH + TBC + fatigue, tujuh kontraktor) untuk periode yang sama dengan kartu KPI. Tabel di bawah tetap per kejadian (lima kategori terlacak).</p>
                   <div class="mt-4 grid grid-cols-1 gap-3 sm:grid-cols-3">
                      <div class="rounded-lg border border-emerald-200 bg-emerald-50/90 px-4 py-3 text-center shadow-sm">
                         <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-800">Comply</p>
                         <p id="peer-compliance-brief-comply" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-emerald-950">{{ number_format($kpiComply) }}</p>
-                        <p class="text-[10px] text-emerald-800/90">kejadian</p>
+                        <p class="text-[10px] text-emerald-800/90">item baseline</p>
                      </div>
                      <div class="rounded-lg border border-red-200 bg-red-50/90 px-4 py-3 text-center shadow-sm">
                         <p class="text-[10px] font-bold uppercase tracking-wide text-red-800">Tidak comply</p>
                         <p id="peer-compliance-brief-noncomply" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-red-950">{{ number_format($kpiNonComply) }}</p>
-                        <p class="text-[10px] text-red-800/90">kejadian</p>
+                        <p class="text-[10px] text-red-800/90">item baseline</p>
                      </div>
                      <div class="rounded-lg border border-slate-200 bg-white px-4 py-3 text-center shadow-sm">
-                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-600">Total terlacak</p>
+                        <p class="text-[10px] font-bold uppercase tracking-wide text-slate-600">Total baseline</p>
                         <p id="peer-compliance-brief-total" class="mt-1 font-headline text-2xl font-extrabold tabular-nums text-slate-900">{{ number_format($kpiTracked) }}</p>
                         <p class="text-[10px] text-slate-500">pembilang metrik</p>
                      </div>
                   </div>
                   <p id="peer-compliance-brief-narrative" class="mt-4 text-[12px] leading-relaxed text-on-surface">
                      @if($kpiTracked === 0)
-                        Belum ada kejadian terlacak pada periode ini (hanya lima kategori deviasi tertentu yang dihitung).
+                        Belum ada item baseline pada periode ini untuk tujuh kontraktor terpilih.
                      @else
-                        Dari {{ number_format($kpiTracked) }} kejadian terlacak: <strong class="text-emerald-800">{{ number_format($kpiComply) }} comply</strong> dan <strong class="text-red-800">{{ number_format($kpiNonComply) }} tidak comply</strong>. Persentase di atas = comply ÷ total × 100 ({{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}%).
+                        Dari {{ number_format($kpiTracked) }} item baseline: <strong class="text-emerald-800">{{ number_format($kpiComply) }} comply</strong> dan <strong class="text-red-800">{{ number_format($kpiNonComply) }} belum comply</strong>. Persentase di atas = comply ÷ total × 100 ({{ number_format((float) ($kpi['peer_pressure_compliance_pct'] ?? 0), 1) }}%).
                      @endif
                   </p>
                </section>
@@ -1122,6 +1122,7 @@
             <div class="min-h-0 flex-1 overflow-y-auto px-5 py-4 sm:px-6">
                <p class="text-[11px] leading-snug text-on-surface-variant">
                   <span class="font-medium text-on-surface">Kelompok kerja “jalan”</span> jika minimal setengah kejadian di kelompok tersebut berstatus selesai (CLOSED/SELESAI). Sisanya masuk <span class="font-medium text-on-surface">tidak jalan</span>. Persentase di atas = proporsi kelompok (dari maks. 15 terbanyak) yang “jalan”.
+                  <span class="mt-1 block">Di bawah: <span class="font-medium text-on-surface">orang yang pernah tercatat sebagai peer</span>, lalu <span class="font-medium text-on-surface">lebih belakangan</span> tercatat sebagai pelanggar (urut tanggal temuan kejadian, dalam periode yang sama dengan filter chart).</span>
                </p>
                <div class="mt-4 rounded-xl border border-emerald-200/80 bg-emerald-50/60 px-4 py-4 text-center shadow-sm">
                   <p class="text-[10px] font-bold uppercase tracking-wide text-emerald-900">Kelompok kerja yang jalan? (%)</p>
@@ -1136,6 +1137,11 @@
                      <h3 class="font-headline text-xs font-bold text-slate-800">Kelompok kerja yang tidak jalan? <span id="peer-kk-eval-badge-tidak" class="font-normal tabular-nums text-slate-600">(0)</span></h3>
                      <ul id="peer-kk-eval-list-tidak" class="mt-2 max-h-[min(40vh,280px)] list-none space-y-0 overflow-y-auto rounded-lg border border-slate-100 bg-slate-50/50 p-2 text-left"></ul>
                   </div>
+               </div>
+               <div class="mt-4 rounded-xl border border-amber-200/80 bg-amber-50/35 px-4 py-3 shadow-sm">
+                  <h3 class="font-headline text-xs font-bold text-amber-950">Pernah peer, lalu sebagai pelanggar <span id="peer-kk-eval-peer-viol-badge" class="font-normal tabular-nums text-amber-900/90">(0)</span></h3>
+                  <p id="peer-kk-eval-peer-viol-footnote" class="mt-1 text-[10px] leading-snug text-amber-900/75"></p>
+                  <ul id="peer-kk-eval-peer-viol-list" class="mt-2 max-h-[min(42vh,320px)] list-none space-y-0 overflow-y-auto rounded-lg border border-amber-100/90 bg-white/70 p-2 text-left"></ul>
                </div>
             </div>
          </div>
@@ -1188,7 +1194,7 @@
                <div class="mt-5 rounded-xl border border-teal-200/80 bg-teal-50/50 px-4 py-3">
                   <p class="text-[10px] font-bold uppercase tracking-wide text-teal-900">Pelaksanaan per site (tujuh kontraktor)</p>
                   <p class="mt-1 text-[11px] leading-snug text-on-surface-variant">
-                     Ringkasan <span class="font-medium text-on-surface">per site</span> dari item baseline yang sama; baris site dapat dibuka untuk melihat <span class="font-medium text-on-surface">per perusahaan</span> di bawahnya. Arahkan mouse ke kolom <span class="font-medium text-on-surface">Terlaksana</span> atau <span class="font-medium text-on-surface">Tidak terlaksana</span> untuk melihat tabel rincian item baseline. Hanya kontraktor terpilih; mengikuti filter periode chart.
+                     Ringkasan <span class="font-medium text-on-surface">per site</span> dari item baseline yang sama; baris site dapat dibuka untuk melihat <span class="font-medium text-on-surface">per perusahaan</span> di bawahnya. Arahkan mouse ke kolom <span class="font-medium text-on-surface">Terlaksana</span> atau <span class="font-medium text-on-surface">Tidak terlaksana</span> untuk melihat tabel rincian item baseline. Hanya kontraktor terpilih; mengikuti filter periode chart. Untuk BeRecord, jika site belum terbaca dari kejadian, digunakan <span class="font-medium text-on-surface">site dari Nitip · bep_vw_wp_karyawan</span> (cocokkan <span class="font-medium text-on-surface">kode_sid</span> dengan BeRecord) bila kolom site terisi.
                   </p>
                   <p id="peer-pp-summary-loading" class="mt-3 hidden text-[12px] leading-snug text-teal-900/90" role="status">Memuat ringkasan site…</p>
                   <p id="peer-pp-summary-empty" class="mt-3 hidden text-[12px] leading-snug text-on-surface-variant" role="status"></p>
@@ -2403,17 +2409,17 @@
           if (bNar) {
             if (ct === 0) {
               bNar.textContent =
-                'Belum ada kejadian terlacak pada periode ini (hanya lima kategori deviasi tertentu yang dihitung).';
+                'Belum ada item baseline pada periode ini untuk tujuh kontraktor terpilih.';
             } else {
               var pctFmt = pct.toLocaleString('id-ID', { minimumFractionDigits: 1, maximumFractionDigits: 1 });
               bNar.innerHTML =
                 'Dari ' +
                 ct.toLocaleString('id-ID') +
-                ' kejadian terlacak: <strong class="text-emerald-800">' +
+                ' item baseline: <strong class="text-emerald-800">' +
                 cc.toLocaleString('id-ID') +
                 ' comply</strong> dan <strong class="text-red-800">' +
                 nc.toLocaleString('id-ID') +
-                ' tidak comply</strong>. Persentase di atas = comply ÷ total × 100 (' +
+                ' belum comply</strong>. Persentase di atas = comply ÷ total × 100 (' +
                 pctFmt +
                 '%).';
             }
@@ -3018,6 +3024,16 @@
           var groupPct = n > 0 ? Math.round((100 * jalan.length) / n * 10) / 10 : 0;
           return { jalan: jalan, tidak: tidak, groupPct: groupPct };
         }
+        function kkEvalFmtDateId(iso) {
+          if (!iso || String(iso).length < 10) return '—';
+          var p = String(iso).slice(0, 10).split('-');
+          if (p.length !== 3) return String(iso);
+          var d = parseInt(p[2], 10);
+          var m = parseInt(p[1], 10);
+          var y = p[0];
+          if (isNaN(d) || isNaN(m)) return String(iso).slice(0, 10);
+          return d + '/' + m + '/' + y;
+        }
         function syncKkEvalModalFromKpi(kpi, periodScope) {
           if (!kpi || typeof kpi !== 'object') return;
           var rows = kpi.pelaksanaan_kelompok_kerja_rows || [];
@@ -3027,6 +3043,9 @@
           var listT = document.getElementById('peer-kk-eval-list-tidak');
           var badgeJ = document.getElementById('peer-kk-eval-badge-jalan');
           var badgeT = document.getElementById('peer-kk-eval-badge-tidak');
+          var violBadge = document.getElementById('peer-kk-eval-peer-viol-badge');
+          var violList = document.getElementById('peer-kk-eval-peer-viol-list');
+          var violNote = document.getElementById('peer-kk-eval-peer-viol-footnote');
           var periodEl = document.getElementById('peer-kk-eval-modal-period');
           if (pctEl) {
             pctEl.textContent =
@@ -3066,6 +3085,56 @@
             '<li class="py-4 text-center text-[12px] text-on-surface-variant">Tidak ada data</li>';
           if (listJ) listJ.innerHTML = sp.jalan.length ? sp.jalan.map(liHtml).join('') : emptyLi;
           if (listT) listT.innerHTML = sp.tidak.length ? sp.tidak.map(liHtml).join('') : emptyLi;
+
+          var vRows = Array.isArray(kpi.peer_lalu_pelanggar_eval_rows)
+            ? kpi.peer_lalu_pelanggar_eval_rows
+            : [];
+          var vCount = Number(
+            kpi.peer_lalu_pelanggar_eval_count != null ? kpi.peer_lalu_pelanggar_eval_count : vRows.length
+          );
+          if (isNaN(vCount)) vCount = vRows.length;
+          if (violBadge) {
+            violBadge.textContent = '(' + vCount.toLocaleString('id-ID') + ')';
+          }
+          if (violNote) {
+            if (vCount > vRows.length && vRows.length > 0) {
+              violNote.textContent =
+                'Menampilkan ' +
+                vRows.length.toLocaleString('id-ID') +
+                ' orang dari ' +
+                vCount.toLocaleString('id-ID') +
+                ' yang memenuhi kriteria.';
+            } else {
+              violNote.textContent = '';
+            }
+          }
+          function peerViolLi(r) {
+            var sid = r.sid != null ? String(r.sid) : '—';
+            var nama =
+              r.nama != null && String(r.nama).trim() !== '' ? String(r.nama) : '—';
+            var dp =
+              r.tanggal_pertama_sebagai_peer != null ? String(r.tanggal_pertama_sebagai_peer) : '';
+            var dv =
+              r.tanggal_pertama_sebagai_pelanggar != null
+                ? String(r.tanggal_pertama_sebagai_pelanggar)
+                : '';
+            return (
+              '<li class="flex flex-col gap-0.5 border-b border-amber-900/10 py-2 text-[12px] last:border-0 sm:flex-row sm:items-center sm:justify-between sm:gap-3">' +
+              '<span class="min-w-0 font-medium text-on-surface"><span class="tabular-nums text-on-surface-variant">' +
+              escHtml(sid) +
+              '</span> · ' +
+              escHtml(nama) +
+              '</span>' +
+              '<span class="shrink-0 text-[11px] tabular-nums text-amber-900/85 sm:text-right">Peer ' +
+              escHtml(kkEvalFmtDateId(dp)) +
+              ' → pelanggar ' +
+              escHtml(kkEvalFmtDateId(dv)) +
+              '</span></li>'
+            );
+          }
+          var violEmpty =
+            '<li class="py-4 text-center text-[12px] text-amber-900/70">Tidak ada orang yang memenuhi pola ini pada periode ini.</li>';
+          if (violList) violList.innerHTML = vRows.length ? vRows.map(peerViolLi).join('') : violEmpty;
         }
         var gapMatrixQuadrantLinePlugin = {
           id: 'gapMatrixQuadrantLines',

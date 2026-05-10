@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Actions\PeerPressure;
 
 use App\Models\PeerPressureKejadianEdukasi;
+use App\Services\PeerPressure\PeerPressurePelaksanaanBaselineService;
 use App\Support\PeerPressure\KategoriDeviasiBucket;
 use App\Support\PeerPressure\PelaksanaanComplianceEvaluator;
 use Carbon\Carbon;
@@ -13,12 +14,17 @@ use Illuminate\Database\Eloquent\Builder;
 /**
  * Daftar kejadian peer pressure yang masuk metrik Pelaksanaan Comply, dengan status comply per baris (paginasi).
  * Menyertakan agregat penyebab tidak comply untuk rekomendasi perbaikan.
+ * Ringkasan peer_pressure_compliance_* diselaraskan dengan baseline pelaksanaan (sama {@see GetPeerPressureDashboardKpiStatsAction}).
  */
 final class GetPeerPressureDashboardComplianceBreakdownAction
 {
     private const MIN_YEAR = 2025;
 
     private const MAX_YEAR = 2026;
+
+    public function __construct(
+        private readonly PeerPressurePelaksanaanBaselineService $pelaksanaanBaseline,
+    ) {}
 
     /** @var array<int, string> */
     private const MONTHS_ID = [
@@ -57,14 +63,14 @@ final class GetPeerPressureDashboardComplianceBreakdownAction
             return [
                 'period_scope' => 'month',
                 'period_caption' => (self::MONTHS_ID[$m] ?? (string) $m).' '.$y,
-                ...$this->buildPaginated($base, $page, $perPage),
+                ...$this->buildPaginated($base, $page, $perPage, $y, $m),
             ];
         }
 
         return [
             'period_scope' => 'all',
             'period_caption' => 'Seluruh data',
-            ...$this->buildPaginated(PeerPressureKejadianEdukasi::query(), $page, $perPage),
+            ...$this->buildPaginated(PeerPressureKejadianEdukasi::query(), $page, $perPage, null, null),
         ];
     }
 
@@ -78,7 +84,7 @@ final class GetPeerPressureDashboardComplianceBreakdownAction
      *   rows: list<array<string, mixed>>
      * }
      */
-    private function buildPaginated(Builder $query, int $page, int $perPage): array
+    private function buildPaginated(Builder $query, int $page, int $perPage, ?int $year = null, ?int $month = null): array
     {
         $tracked = array_flip(KategoriDeviasiBucket::trackedComplianceBuckets());
 
@@ -157,8 +163,6 @@ final class GetPeerPressureDashboardComplianceBreakdownAction
             $out[] = $row;
         }
 
-        $pct = $total > 0 ? round(100 * $comply / $total, 1) : 0.0;
-
         $lastPage = $total > 0 ? (int) ceil($total / $perPage) : 1;
         if ($page > $lastPage) {
             $page = $lastPage;
@@ -168,10 +172,12 @@ final class GetPeerPressureDashboardComplianceBreakdownAction
         $from = $total === 0 ? null : $offset + 1;
         $to = $total === 0 ? null : min($offset + count($slice), $total);
 
+        $pel = $this->pelaksanaanBaseline->compute($year, $month);
+
         return [
-            'peer_pressure_compliance_pct' => $pct,
-            'peer_pressure_compliance_total' => $total,
-            'peer_pressure_compliance_comply' => $comply,
+            'peer_pressure_compliance_pct' => $pel['pct_selesai'],
+            'peer_pressure_compliance_total' => $pel['baseline_total'],
+            'peer_pressure_compliance_comply' => $pel['selesai'],
             'recommendations' => self::buildRecommendations($nonComplyByCode, $total - $comply, $nonComplyRowsByCode),
             'pagination' => [
                 'current_page' => $page,

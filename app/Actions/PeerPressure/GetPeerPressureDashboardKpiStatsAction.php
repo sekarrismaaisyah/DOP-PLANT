@@ -8,7 +8,6 @@ use App\Models\PeerPressureKejadianEdukasi;
 use App\Models\PeerPressurePesertaEdukasi;
 use App\Services\PeerPressure\PeerPressurePelaksanaanBaselineService;
 use App\Support\PeerPressure\KategoriDeviasiBucket;
-use App\Support\PeerPressure\PelaksanaanComplianceEvaluator;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
@@ -45,7 +44,9 @@ final class GetPeerPressureDashboardKpiStatsAction
      *   pelaksanaan_selesai_pct: float,
      *   pelaksanaan_belum_pct: float,
      *   pelaksanaan_status_kosong_count: int,
-     *   pelaksanaan_kelompok_kerja_rows: list<array{kelompok: string, selesai: int, belum: int, total: int, pct_selesai: float}>
+     *   pelaksanaan_kelompok_kerja_rows: list<array{kelompok: string, selesai: int, belum: int, total: int, pct_selesai: float}>,
+     *   peer_lalu_pelanggar_eval_count: int,
+     *   peer_lalu_pelanggar_eval_rows: list<array{sid: string, nama: string, tanggal_pertama_sebagai_peer: string, tanggal_pertama_sebagai_pelanggar: string}>
      * }
      */
     public function __invoke(?int $year = null, ?int $month = null): array
@@ -137,10 +138,11 @@ final class GetPeerPressureDashboardKpiStatsAction
 
         $completionDelta = $this->completionRateDeltaMonthVsPreviousMonth($start);
 
-        $compliance = $this->computePelaksanaanCompliance($base);
+        $compliance = $this->complianceFromPelaksanaanBaseline($year, $month);
         $statusKosong = $this->countPelaksanaanStatusKosong($base);
         $kkRows = $this->pelaksanaanKelompokKerjaBreakdown($base);
         $slaChart = $this->buildSlaTemuanKePelaksanaan($base);
+        $peerLaluPelanggar = $this->peerLaluPelanggarEval($startS, $endS);
 
         return [
             'total_cases' => $total,
@@ -158,6 +160,7 @@ final class GetPeerPressureDashboardKpiStatsAction
             'pelaksanaan_status_kosong_count' => $statusKosong,
             'pelaksanaan_kelompok_kerja_rows' => $kkRows,
             'sla_temuan_ke_pelaksanaan' => $slaChart,
+            ...$peerLaluPelanggar,
             ...$compliance,
         ];
     }
@@ -278,10 +281,11 @@ final class GetPeerPressureDashboardKpiStatsAction
         $completionDelta = $this->completionRateDeltaLast30VsPrev30();
 
         $baseGlobal = PeerPressureKejadianEdukasi::query();
-        $compliance = $this->computePelaksanaanCompliance($baseGlobal);
+        $compliance = $this->complianceFromPelaksanaanBaseline(null, null);
         $statusKosong = $this->countPelaksanaanStatusKosong($baseGlobal);
         $kkRows = $this->pelaksanaanKelompokKerjaBreakdown($baseGlobal);
         $slaChart = $this->buildSlaTemuanKePelaksanaan($baseGlobal);
+        $peerLaluPelanggar = $this->peerLaluPelanggarEval(null, null);
 
         return [
             'total_cases' => $total,
@@ -299,7 +303,93 @@ final class GetPeerPressureDashboardKpiStatsAction
             'pelaksanaan_status_kosong_count' => $statusKosong,
             'pelaksanaan_kelompok_kerja_rows' => $kkRows,
             'sla_temuan_ke_pelaksanaan' => $slaChart,
+            ...$peerLaluPelanggar,
             ...$compliance,
+        ];
+    }
+
+    /**
+     * Evaluasi individu: pernah tercatat sebagai peer, lalu (lebih belakangan) tercatat sebagai pelanggar.
+     * Periode mengikuti filter tanggal temuan (satu bulan atau seluruh data). Perbandingan urutan memakai
+     * tanggal temuan lalu id kejadian. SID dikelompokkan case-insensitive setelah trim.
+     *
+     * @return array{
+     *   peer_lalu_pelanggar_eval_count: int,
+     *   peer_lalu_pelanggar_eval_rows: list<array{sid: string, nama: string, tanggal_pertama_sebagai_peer: string, tanggal_pertama_sebagai_pelanggar: string}>
+     * }
+     */
+    private function peerLaluPelanggarEval(?string $startS, ?string $endS): array
+    {
+        $dateSql = '';
+        $bind = [];
+        if ($startS !== null && $endS !== null) {
+            $dateSql = 'AND k.tanggal_temuan >= ? AND k.tanggal_temuan <= ?';
+            $bind = [$startS, $endS];
+        }
+
+        $cte = <<<SQL
+WITH base AS (
+  SELECT
+    LOWER(TRIM(p.sid)) AS sid_key,
+    TRIM(p.sid) AS sid_raw,
+    NULLIF(TRIM(p.nama), '') AS nama,
+    p.peran,
+    k.tanggal_temuan,
+    k.id AS kejadian_id
+  FROM peer_pressure_peserta_edukasi p
+  INNER JOIN peer_pressure_kejadian_edukasi k ON k.id = p.kejadian_edukasi_id
+  WHERE TRIM(COALESCE(p.sid, '')) <> ''
+  AND p.peran IN ('peer', 'pelanggar')
+  {$dateSql}
+),
+peer_first AS (
+  SELECT sid_key, MIN(CONCAT(DATE_FORMAT(tanggal_temuan, '%Y-%m-%d'), ':', LPAD(kejadian_id, 12, '0'))) AS ord
+  FROM base
+  WHERE peran = 'peer'
+  GROUP BY sid_key
+),
+viol_first AS (
+  SELECT sid_key, MIN(CONCAT(DATE_FORMAT(tanggal_temuan, '%Y-%m-%d'), ':', LPAD(kejadian_id, 12, '0'))) AS ord
+  FROM base
+  WHERE peran = 'pelanggar'
+  GROUP BY sid_key
+)
+SQL;
+
+        $countSql = $cte.'SELECT COUNT(*) AS c FROM peer_first pf INNER JOIN viol_first vf ON pf.sid_key = vf.sid_key AND pf.ord < vf.ord';
+        $countRow = DB::selectOne($countSql, $bind);
+        $total = (int) ($countRow->c ?? 0);
+
+        $listSql = $cte.<<<'SQL'
+SELECT
+  SUBSTRING(pf.ord, 1, 10) AS tanggal_pertama_peer,
+  SUBSTRING(vf.ord, 1, 10) AS tanggal_pertama_pelanggar,
+  (
+    SELECT MAX(b.sid_raw) FROM base b WHERE b.sid_key = pf.sid_key
+  ) AS sid,
+  (
+    SELECT MAX(b.nama) FROM base b WHERE b.sid_key = pf.sid_key AND b.nama IS NOT NULL AND TRIM(b.nama) <> ''
+  ) AS nama
+FROM peer_first pf
+INNER JOIN viol_first vf ON pf.sid_key = vf.sid_key AND pf.ord < vf.ord
+ORDER BY tanggal_pertama_pelanggar DESC, pf.sid_key ASC
+LIMIT 100
+SQL;
+
+        $rawList = DB::select($listSql, $bind);
+        $rows = [];
+        foreach ($rawList as $r) {
+            $rows[] = [
+                'sid' => (string) ($r->sid ?? ''),
+                'nama' => (string) ($r->nama ?? ''),
+                'tanggal_pertama_sebagai_peer' => (string) ($r->tanggal_pertama_peer ?? ''),
+                'tanggal_pertama_sebagai_pelanggar' => (string) ($r->tanggal_pertama_pelanggar ?? ''),
+            ];
+        }
+
+        return [
+            'peer_lalu_pelanggar_eval_count' => $total,
+            'peer_lalu_pelanggar_eval_rows' => $rows,
         ];
     }
 
@@ -445,7 +535,30 @@ final class GetPeerPressureDashboardKpiStatsAction
     }
 
     /**
+     * Label tampilan agregat: beberapa nilai DB digabung menjadi satu kelompok.
+     */
+    private function canonicalKelompokKerjaLabel(string $kelompok): string
+    {
+        $trim = trim($kelompok);
+        if ($trim === '') {
+            return '(Tidak diisi)';
+        }
+        $n = mb_strtolower(preg_replace('/\s+/u', ' ', $trim), 'UTF-8');
+
+        if ($n === 'grup sbs coaching' || $n === 'grup sbs') {
+            return 'Grup SBS';
+        }
+
+        if ($n === 'fleet' || $n === 'grup kerja (under 1 gl)') {
+            return 'Fleet';
+        }
+
+        return $trim;
+    }
+
+    /**
      * Agregasi per jenis kelompok kerja: selesai (CLOSED/SELESAI) vs belum, untuk modal pelaksanaan.
+     * Variasi label (mis. GRUP SBS COACHING + Grup SBS, Grup Kerja (Under 1 GL) + Fleet) dilebur per {@see canonicalKelompokKerjaLabel}.
      *
      * @return list<array{kelompok: string, selesai: int, belum: int, total: int, pct_selesai: float}>
      */
@@ -460,17 +573,29 @@ final class GetPeerPressureDashboardKpiStatsAction
             ->selectRaw('SUM(CASE WHEN '.$selesaiWhen.' THEN 1 ELSE 0 END) as selesai')
             ->groupBy(DB::raw($labelExpr))
             ->orderByDesc('total')
-            ->limit(15)
+            ->limit(80)
             ->get();
 
-        $out = [];
+        /** @var array<string, array{selesai: int, total: int}> $merged */
+        $merged = [];
         foreach ($rows as $r) {
-            $total = (int) $r->total;
-            $selesai = (int) $r->selesai;
+            $rawLabel = (string) $r->kelompok;
+            $key = $this->canonicalKelompokKerjaLabel($rawLabel);
+            if (! isset($merged[$key])) {
+                $merged[$key] = ['selesai' => 0, 'total' => 0];
+            }
+            $merged[$key]['total'] += (int) $r->total;
+            $merged[$key]['selesai'] += (int) $r->selesai;
+        }
+
+        $out = [];
+        foreach ($merged as $label => $cell) {
+            $total = $cell['total'];
+            $selesai = $cell['selesai'];
             $belum = max(0, $total - $selesai);
             $pct = $total > 0 ? round(100 * $selesai / $total, 1) : 0.0;
             $out[] = [
-                'kelompok' => (string) $r->kelompok,
+                'kelompok' => $label,
                 'selesai' => $selesai,
                 'belum' => $belum,
                 'total' => $total,
@@ -478,45 +603,30 @@ final class GetPeerPressureDashboardKpiStatsAction
             ];
         }
 
-        return $out;
+        usort($out, static fn (array $a, array $b): int => ($b['total'] ?? 0) <=> ($a['total'] ?? 0));
+
+        return array_slice($out, 0, 15);
     }
 
     /**
-     * Comply per kejadian (0% / 100%): Fatigue & Blindspot = pelaksanaan selesai.
-     * PSPP, Golden Rules, Insiden = selesai dan terhubung BeRecord (id_berecord terisi).
-     * Hanya lima kategori deviasi terlacak; "Lainnya" tidak masuk pembilang.
+     * Metrik "Pelaksanaan Comply" pada KPI diselaraskan dengan baseline pelaksanaan:
+     * tujuh kontraktor terpilih, BeRecord (CH + golden_rules) + validasi TBC + fatigue.
+     * Total = item baseline; comply = yang sudah memenuhi pelaksanaan selesai (sama {@see PeerPressurePelaksanaanBaselineService::compute}).
+     *
+     * @return array{
+     *   peer_pressure_compliance_pct: float,
+     *   peer_pressure_compliance_total: int,
+     *   peer_pressure_compliance_comply: int
+     * }
      */
-    private function computePelaksanaanCompliance(Builder $query): array
+    private function complianceFromPelaksanaanBaseline(?int $year, ?int $month): array
     {
-        $rows = (clone $query)->get(['kategori_deviasi', 'status_pelaksanaan_edukasi', 'id_berecord']);
-
-        $tracked = array_flip(KategoriDeviasiBucket::trackedComplianceBuckets());
-        $denom = 0;
-        $comply = 0;
-
-        foreach ($rows as $r) {
-            $bucket = KategoriDeviasiBucket::bucket($r->kategori_deviasi);
-            if (! isset($tracked[$bucket])) {
-                continue;
-            }
-
-            $denom++;
-            $ev = PelaksanaanComplianceEvaluator::evaluate(
-                $bucket,
-                $r->status_pelaksanaan_edukasi,
-                $r->id_berecord
-            );
-            if ($ev['comply']) {
-                $comply++;
-            }
-        }
-
-        $pct = $denom > 0 ? round(100 * $comply / $denom, 1) : 0.0;
+        $p = $this->pelaksanaanBaseline->compute($year, $month);
 
         return [
-            'peer_pressure_compliance_pct' => $pct,
-            'peer_pressure_compliance_total' => $denom,
-            'peer_pressure_compliance_comply' => $comply,
+            'peer_pressure_compliance_pct' => $p['pct_selesai'],
+            'peer_pressure_compliance_total' => $p['baseline_total'],
+            'peer_pressure_compliance_comply' => $p['selesai'],
         ];
     }
 
