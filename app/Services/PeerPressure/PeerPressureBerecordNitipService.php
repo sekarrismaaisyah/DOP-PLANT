@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\PeerPressure;
 
 use App\Services\ClickHouseService;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\Log;
 use Throwable;
 
@@ -13,6 +14,10 @@ use Throwable;
  */
 final class PeerPressureBerecordNitipService
 {
+    private const MIN_YEAR = 2025;
+
+    private const MAX_YEAR = 2026;
+
     /** Kolom SELECT untuk tabel baca-saja (urutan tampilan). */
     private const VIEW_COLUMNS = [
         'id',
@@ -77,6 +82,51 @@ final class PeerPressureBerecordNitipService
      *
      * @return array{rows: list<array<string, string|null>>, total: int, connected: bool}
      */
+    /**
+     * Jumlah nilai unik kolom `id` pada view ClickHouse `bep_vw_berecord`.
+     * Jika tahun & bulan diisi, dibatasi ke baris yang `start_date_be_record` jatuh di bulan tersebut (tanggal yang bisa di-parse).
+     */
+    public function countDistinctIds(?int $year = null, ?int $month = null): int
+    {
+        $ch = new ClickHouseService('clickhouse_nitip');
+        if (! $ch->isConnected()) {
+            return 0;
+        }
+
+        $whereSql = '';
+        $params = [];
+        if ($year !== null && $month !== null) {
+            $y = max(self::MIN_YEAR, min(self::MAX_YEAR, $year));
+            $m = max(1, min(12, $month));
+            $start = Carbon::create($y, $m, 1)->startOfDay();
+            $end = $start->copy()->endOfMonth();
+            $whereSql = 'WHERE toDateOrNull(toString(`start_date_be_record`)) >= toDate(?) AND toDateOrNull(toString(`start_date_be_record`)) <= toDate(?)';
+            $params[] = $start->toDateString();
+            $params[] = $end->toDateString();
+        }
+
+        try {
+            $sql = 'SELECT uniqExact(`id`) AS c FROM bep_vw_berecord ' . $whereSql;
+            $rows = $ch->query($sql, $params);
+            if (! is_array($rows) || $rows === []) {
+                return 0;
+            }
+            $first = $rows[0];
+            if (! is_array($first)) {
+                return 0;
+            }
+            $c = $first['c'] ?? $first['C'] ?? null;
+
+            return is_numeric($c) ? (int) $c : 0;
+        } catch (Throwable $e) {
+            Log::warning('PeerPressureBerecordNitipService: countDistinctIds gagal', [
+                'message' => $e->getMessage(),
+            ]);
+
+            return 0;
+        }
+    }
+
     public function paginateView(int $page, int $perPage, string $q): array
     {
         $ch = new ClickHouseService('clickhouse_nitip');

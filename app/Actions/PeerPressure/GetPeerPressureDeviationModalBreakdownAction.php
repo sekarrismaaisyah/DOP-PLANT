@@ -6,18 +6,23 @@ namespace App\Actions\PeerPressure;
 
 use App\Models\PeerPressureKejadianEdukasi;
 use App\Models\ValidasiTbc;
+use App\Services\PeerPressure\PeerPressureBerecordNitipService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Ringkasan tiga kartu pada modal "Total Deviasi Pelanggaran":
- * BeRecord (PSPP + Golden Rules dari kejadian), Validasi TBC (tasklist terisi), Speak Up Fatigue (kategori deviasi pada kejadian).
+ * BeRecord (uniq id · view ClickHouse bep_vw_berecord), Validasi TBC (tasklist terisi), Speak Up Fatigue (kategori deviasi pada kejadian).
  */
 final class GetPeerPressureDeviationModalBreakdownAction
 {
     private const MIN_YEAR = 2025;
 
     private const MAX_YEAR = 2026;
+
+    public function __construct(
+        private readonly PeerPressureBerecordNitipService $berecordNitip,
+    ) {}
 
     /**
      * @return array{
@@ -30,10 +35,7 @@ final class GetPeerPressureDeviationModalBreakdownAction
     {
         $base = $this->scopedKejadianQuery($year, $month);
 
-        $berecordTotal = (clone $base)->where(function ($q): void {
-            $q->whereRaw('LOWER(COALESCE(kategori_deviasi, \'\')) LIKE ?', ['%pspp%'])
-                ->orWhereRaw('LOWER(COALESCE(kategori_deviasi, \'\')) LIKE ?', ['%golden%']);
-        })->count();
+        $berecordTotal = $this->berecordNitip->countDistinctIds($year, $month);
 
         $tbcQuery = ValidasiTbc::query()
             ->whereRaw('LENGTH(TRIM(COALESCE(tasklist, \'\'))) > 0');
