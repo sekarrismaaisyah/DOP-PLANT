@@ -5,14 +5,13 @@ declare(strict_types=1);
 namespace App\Actions\PeerPressure;
 
 use App\Models\PeerPressureKejadianEdukasi;
-use App\Models\SpeakUpFatigue;
 use App\Models\ValidasiTbc;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Ringkasan tiga kartu pada modal "Total Deviasi Pelanggaran":
- * BeRecord (PSPP + Golden Rules dari kejadian), Validasi TBC (blindspot BC terisi), Speak Up Fatigue (baris = tidak speak up).
+ * BeRecord (PSPP + Golden Rules dari kejadian), Validasi TBC (tasklist terisi), Speak Up Fatigue (kategori deviasi pada kejadian).
  */
 final class GetPeerPressureDeviationModalBreakdownAction
 {
@@ -23,7 +22,7 @@ final class GetPeerPressureDeviationModalBreakdownAction
     /**
      * @return array{
      *   berecord_pspp_gr_total: int,
-     *   validasi_tbc_blindspot_terisi_total: int,
+     *   validasi_tbc_tasklist_terisi_total: int,
      *   speak_up_fatigue_tidak_speak_total: int
      * }
      */
@@ -37,7 +36,7 @@ final class GetPeerPressureDeviationModalBreakdownAction
         })->count();
 
         $tbcQuery = ValidasiTbc::query()
-            ->whereRaw('LENGTH(TRIM(COALESCE(blindspot_terlapor_bc, \'\'))) > 0');
+            ->whereRaw('LENGTH(TRIM(COALESCE(tasklist, \'\'))) > 0');
 
         if ($year !== null && $month !== null) {
             $y = max(self::MIN_YEAR, min(self::MAX_YEAR, $year));
@@ -49,21 +48,13 @@ final class GetPeerPressureDeviationModalBreakdownAction
 
         $tbcTotal = $tbcQuery->count();
 
-        $fatigueQuery = SpeakUpFatigue::query();
-        if ($year !== null && $month !== null) {
-            $y = max(self::MIN_YEAR, min(self::MAX_YEAR, $year));
-            $m = max(1, min(12, $month));
-            $start = Carbon::create($y, $m, 1)->startOfDay();
-            $end = $start->copy()->endOfMonth();
-            $fatigueQuery->where('tanggal', '>=', $start->toDateString())
-                ->where('tanggal', '<=', $end->toDateString());
-        }
-
-        $fatigueTotal = $fatigueQuery->count();
+        $fatigueTotal = (clone $base)
+            ->whereRaw('LOWER(TRIM(COALESCE(kategori_deviasi, \'\'))) = ?', ['tidak speak up fatigue'])
+            ->count();
 
         return [
             'berecord_pspp_gr_total' => $berecordTotal,
-            'validasi_tbc_blindspot_terisi_total' => $tbcTotal,
+            'validasi_tbc_tasklist_terisi_total' => $tbcTotal,
             'speak_up_fatigue_tidak_speak_total' => $fatigueTotal,
         ];
     }

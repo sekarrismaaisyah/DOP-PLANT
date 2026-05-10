@@ -11,7 +11,7 @@ use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 /**
- * Detail terpaginasi untuk tab modal deviasi: BeRecord (PSPP/GR), Validasi blindspot BC, Speak Up Fatigue.
+ * Detail terpaginasi untuk tab modal deviasi: BeRecord (PSPP/GR), Validasi TBC (tasklist terisi), Speak Up Fatigue.
  */
 final class ListPeerPressureDeviationModalDetailAction
 {
@@ -113,7 +113,7 @@ final class ListPeerPressureDeviationModalDetailAction
     private function validasiBlindspotRows(?int $year, ?int $month, int $page, int $perPage): array
     {
         $q = ValidasiTbc::query()
-            ->whereRaw('LENGTH(TRIM(COALESCE(blindspot_terlapor_bc, \'\'))) > 0');
+            ->whereRaw('LENGTH(TRIM(COALESCE(tasklist, \'\'))) > 0');
 
         if ($year !== null && $month !== null) {
             $y = max(self::MIN_YEAR, min(self::MAX_YEAR, $year));
@@ -131,13 +131,13 @@ final class ListPeerPressureDeviationModalDetailAction
             if (! $r instanceof ValidasiTbc) {
                 continue;
             }
-            $bc = (string) ($r->blindspot_terlapor_bc ?? '');
+            $tl = (string) ($r->tasklist ?? '');
             $rows[] = [
                 'id' => $r->id,
                 'validator' => $r->validator,
                 'gr_pspp' => $r->gr_pspp,
-                'blindspot_terlapor_bc' => $bc,
-                'blindspot_terlapor_bc_short' => mb_strlen($bc) > 160 ? mb_substr($bc, 0, 160).'…' : $bc,
+                'tasklist' => $tl,
+                'tasklist_short' => mb_strlen($tl) > 160 ? mb_substr($tl, 0, 160).'…' : $tl,
                 'created_at' => $r->created_at?->format('Y-m-d H:i'),
             ];
         }

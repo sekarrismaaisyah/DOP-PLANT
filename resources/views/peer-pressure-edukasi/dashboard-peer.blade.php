@@ -222,7 +222,7 @@
             $dvPreFooterTotal = $dvPreSumJumlah > 0 ? $dvPreSumJumlah : $dvPreTotal;
             $dmb = $deviationModalBreakdown ?? [];
             $dmbBe = (int) ($dmb['berecord_pspp_gr_total'] ?? 0);
-            $dmbTbc = (int) ($dmb['validasi_tbc_blindspot_terisi_total'] ?? 0);
+            $dmbTbc = (int) ($dmb['validasi_tbc_tasklist_terisi_total'] ?? 0);
             $dmbFat = (int) ($dmb['speak_up_fatigue_tidak_speak_total'] ?? 0);
          @endphp
          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -911,7 +911,7 @@
                   <button type="button" role="tab" id="peer-deviation-tab-validasi_blindspot" class="peer-deviation-tab rounded-xl border p-4 shadow-sm transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-secondary/40" data-deviation-tab="validasi_blindspot" aria-selected="false" aria-controls="peer-deviation-panel-validasi_blindspot" tabindex="-1">
                      <p class="text-[10px] font-bold uppercase tracking-wide text-secondary">Validasi Blindspot</p>
                      <p id="peer-deviation-card-tbc-value" class="mt-2 font-headline text-3xl font-extrabold tabular-nums text-on-surface">{{ number_format($dmbTbc) }}</p>
-                     <p class="mt-2 text-[10px] leading-snug text-on-surface-variant">Blindspot terlapor BC berisi</p>
+                     <p class="mt-2 text-[10px] leading-snug text-on-surface-variant">Validasi Blindspot TBC</p>
                   </button>
                   <button type="button" role="tab" id="peer-deviation-tab-speak_up_fatigue" class="peer-deviation-tab rounded-xl border p-4 shadow-sm transition-all text-left outline-none focus-visible:ring-2 focus-visible:ring-amber-500/40" data-deviation-tab="speak_up_fatigue" aria-selected="false" aria-controls="peer-deviation-panel-speak_up_fatigue" tabindex="-1">
                      <p class="text-[10px] font-bold uppercase tracking-wide text-amber-900">Tidak Speak Up Fatigue</p>
@@ -947,7 +947,7 @@
                </div>
 
                <div id="peer-deviation-panel-validasi_blindspot" role="tabpanel" aria-labelledby="peer-deviation-tab-validasi_blindspot" class="peer-deviation-detail-panel hidden" hidden>
-                  <p class="text-[11px] font-medium text-on-surface mb-2">Baris validasi dengan kolom blindspot terlapor BC terisi.</p>
+                  <p class="text-[11px] font-medium text-on-surface mb-2">Baris validasi TBC dengan kolom tasklist terisi.</p>
                   <div id="peer-deviation-validasi_blindspot-loading" class="hidden rounded-lg border border-outline-variant/20 bg-[#f8fafc] px-4 py-8 text-center text-[12px] font-medium text-on-surface-variant" aria-live="polite">
                      <span class="material-symbols-outlined mb-2 inline-block animate-spin text-2xl text-secondary" style="animation-duration:1s">progress_activity</span>
                      <span class="block">Memuat data…</span>
@@ -960,7 +960,7 @@
                            <tr>
                               <th class="px-3 py-2">Validator</th>
                               <th class="px-3 py-2">GR / PSPP</th>
-                              <th class="px-3 py-2">Blindspot BC</th>
+                              <th class="px-3 py-2">Tasklist</th>
                               <th class="px-3 py-2 whitespace-nowrap">Dibuat</th>
                            </tr>
                         </thead>
@@ -2380,9 +2380,9 @@
           var elTbc = document.getElementById('peer-deviation-card-tbc-value');
           var elFat = document.getElementById('peer-deviation-card-fatigue-value');
           var kpiBig = document.getElementById('peer-kpi-deviation-total');
-          var total = n(b.berecord_pspp_gr_total) + n(b.validasi_tbc_blindspot_terisi_total) + n(b.speak_up_fatigue_tidak_speak_total);
+          var total = n(b.berecord_pspp_gr_total) + n(b.validasi_tbc_tasklist_terisi_total) + n(b.speak_up_fatigue_tidak_speak_total);
           if (elBe) elBe.textContent = n(b.berecord_pspp_gr_total).toLocaleString('id-ID');
-          if (elTbc) elTbc.textContent = n(b.validasi_tbc_blindspot_terisi_total).toLocaleString('id-ID');
+          if (elTbc) elTbc.textContent = n(b.validasi_tbc_tasklist_terisi_total).toLocaleString('id-ID');
           if (elFat) elFat.textContent = n(b.speak_up_fatigue_tidak_speak_total).toLocaleString('id-ID');
           if (kpiBig) kpiBig.textContent = total.toLocaleString('id-ID');
         }
@@ -2510,7 +2510,7 @@
           }
           if (type === 'validasi_blindspot') {
             return (rows || []).map(function (row) {
-              var bc = row.blindspot_terlapor_bc_short != null ? String(row.blindspot_terlapor_bc_short) : row.blindspot_terlapor_bc != null ? String(row.blindspot_terlapor_bc) : '—';
+              var tl = row.tasklist_short != null ? String(row.tasklist_short) : row.tasklist != null ? String(row.tasklist) : '—';
               return (
                 '<tr>' +
                 '<td class="px-3 py-2">' +
@@ -2520,7 +2520,7 @@
                 escHtml(row.gr_pspp != null ? String(row.gr_pspp) : '—') +
                 '</td>' +
                 '<td class="px-3 py-2 max-w-md whitespace-pre-wrap break-words">' +
-                escHtml(bc) +
+                escHtml(tl) +
                 '</td>' +
                 '<td class="px-3 py-2 whitespace-nowrap tabular-nums">' +
                 escHtml(row.created_at != null ? String(row.created_at) : '—') +
