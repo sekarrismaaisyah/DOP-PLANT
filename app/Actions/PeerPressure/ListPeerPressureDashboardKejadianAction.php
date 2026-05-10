@@ -20,6 +20,7 @@ final class ListPeerPressureDashboardKejadianAction
                 'tanggal_temuan',
                 'jam_temuan',
                 'lokasi_temuan',
+                'site',
                 'kategori_deviasi',
                 'departemen',
                 'aktivitas_pekerjaan',
@@ -45,6 +46,7 @@ final class ListPeerPressureDashboardKejadianAction
                     ->orWhere('pemimpin_edukasi', 'like', '%' . $q . '%')
                     ->orWhere('status_pelaksanaan_edukasi', 'like', '%' . $q . '%')
                     ->orWhere('perusahaan', 'like', '%' . $q . '%')
+                    ->orWhere('site', 'like', '%' . $q . '%')
                     ->orWhere('kronologi_temuan', 'like', '%' . $q . '%')
                     ->orWhereHas('peserta', function ($p) use ($q): void {
                         $p->where('sid', 'like', '%' . $q . '%')

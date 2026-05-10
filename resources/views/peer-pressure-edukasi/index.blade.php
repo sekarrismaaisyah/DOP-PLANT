@@ -73,7 +73,8 @@
                                     $jamT = is_string($jt) ? substr($jt, 0, 5) : '';
                                 @endphp
                                 {{ $jamT }}
-                                · <span class="text-primary">{{ $k->perusahaan }}</span>
+                                · <span class="text-primary">{{ $k->perusahaan }}</span>@if(filled($k->site))
+                                · <span class="text-muted">{{ $k->site }}</span>@endif
                             </div>
                             <div class="small text-muted text-md-end">
                                 {{ $k->lokasi_temuan }} · {{ $k->kategori_deviasi }} ·

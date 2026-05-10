@@ -69,6 +69,8 @@ class PeerPressureEdukasiController extends Controller
         'evidence' => 22,
         'durasi_menit' => 23,
         'status' => 24,
+        /** Kolom terakhir: file Excel lama (tanpa Site) tetap valid — indeks 0–24 tidak berubah. */
+        'site' => 25,
     ];
 
     public function index(Request $request): View
@@ -79,6 +81,7 @@ class PeerPressureEdukasiController extends Controller
         if ($q !== '') {
             $query->where(function ($sub) use ($q) {
                 $sub->where('perusahaan', 'like', '%' . $q . '%')
+                    ->orWhere('site', 'like', '%' . $q . '%')
                     ->orWhere('lokasi_temuan', 'like', '%' . $q . '%')
                     ->orWhere('kronologi_temuan', 'like', '%' . $q . '%')
                     ->orWhere('pemimpin_edukasi', 'like', '%' . $q . '%')
@@ -1186,6 +1189,7 @@ class PeerPressureEdukasiController extends Controller
             'tanggal_edukasi' => $tanggalEdukasi,
             'jam_edukasi' => $jamEdukasi,
             'perusahaan' => $this->cell($row, self::COL['perusahaan']) ?: '-',
+            'site' => $this->nullableString($row, self::COL['site']),
             'tasklist_temuan' => $this->nullableString($row, self::COL['tasklist_temuan']),
             'kronologi_temuan' => $kronologi,
             'kategori_deviasi' => $this->cell($row, self::COL['kategori_deviasi']) ?: '-',
@@ -1328,6 +1332,7 @@ class PeerPressureEdukasiController extends Controller
     {
         $updates = [];
         $map = [
+            self::COL['site'] => 'site',
             self::COL['jenis_kelompok_kerja'] => 'jenis_kelompok_kerja',
             self::COL['kelompok_aktivitas_pekerjaan'] => 'kelompok_aktivitas_pekerjaan',
             self::COL['aktivitas_pekerjaan'] => 'aktivitas_pekerjaan',
@@ -1373,6 +1378,7 @@ class PeerPressureEdukasiController extends Controller
             'Evidence',
             'Durasi Edukasi (Menit)',
             'Status Pelaksanaan Edukasi',
+            'Site',
         ];
 
         $spreadsheet = new Spreadsheet();

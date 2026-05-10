@@ -26,6 +26,7 @@ class PeerPressureEdukasiDataController extends Controller
         if ($q !== '') {
             $query->where(function ($sub) use ($q) {
                 $sub->where('perusahaan', 'like', '%' . $q . '%')
+                    ->orWhere('site', 'like', '%' . $q . '%')
                     ->orWhere('lokasi_temuan', 'like', '%' . $q . '%')
                     ->orWhere('lokasi_edukasi', 'like', '%' . $q . '%')
                     ->orWhere('kronologi_temuan', 'like', '%' . $q . '%')

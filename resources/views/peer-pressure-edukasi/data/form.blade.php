@@ -122,6 +122,10 @@
                   <input type="text" name="perusahaan" value="{{ old('perusahaan', $kejadian->perusahaan) }}" required maxlength="255" class="w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15">
                </div>
                <div class="md:col-span-2">
+                  <label class="block text-xs font-bold text-on-surface-variant mb-1">Site</label>
+                  <input type="text" name="site" value="{{ old('site', $kejadian->site) }}" maxlength="255" placeholder="opsional" class="w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15">
+               </div>
+               <div class="md:col-span-2">
                   <label class="block text-xs font-bold text-on-surface-variant mb-1">Fasilitas temuan (jika ada)</label>
                   <input type="text" name="tasklist_temuan" value="{{ old('tasklist_temuan', $kejadian->tasklist_temuan) }}" maxlength="255" class="w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15">
                </div>

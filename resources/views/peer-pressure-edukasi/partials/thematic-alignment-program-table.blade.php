@@ -56,21 +56,80 @@
             $blindspotGrQuery->where('year_of_date_for_join', $yearFilter);
         }
         $blindspotGrRows = $blindspotGrQuery->get();
+        $blindspotGrGrouped = [];
         foreach ($blindspotGrRows as $dbRow) {
             $raw = str_replace(',', '.', trim((string) ($dbRow->blindspot_gr_dari_bc ?? '')));
             if ($raw === '' || ! is_numeric($raw)) {
                 continue;
             }
-            $percent = (float) $raw * 100;
+            $countValue = (int) round((float) $raw);
+            $site = trim((string) ($dbRow->site ?? ''));
+            $week = trim((string) ($dbRow->iso_week_of_date_for_join ?? ''));
+            $groupKey = $site.'|'.$week;
+            if (! isset($blindspotGrGrouped[$groupKey])) {
+                $blindspotGrGrouped[$groupKey] = [
+                    'site' => $site,
+                    'week' => $week,
+                    'sum_count' => 0,
+                ];
+            }
+            $blindspotGrGrouped[$groupKey]['sum_count'] += $countValue;
+        }
+        foreach ($blindspotGrGrouped as $group) {
             $blindspotGrDrillRows[] = [
                 'detail_indikator' => $blindspotGrDetailIndicator,
-                'site' => trim((string) ($dbRow->site ?? '')),
-                'week' => trim((string) ($dbRow->iso_week_of_date_for_join ?? '')),
-                'data' => number_format($percent, 2, '.', '').'%',
+                'site' => $group['site'],
+                'week' => $group['week'],
+                'data' => (string) ($group['sum_count'] ?? 0),
             ];
         }
     } catch (\Throwable $e) {
         $blindspotGrDrillRows = [];
+    }
+    $blindspotTbcIndicators = [
+        '% Blindspot TBC',
+        'Blindspot TBC',
+    ];
+    $blindspotTbcDrillRows = [];
+    try {
+        $yearFilter = trim((string) request()->query('year', date('Y')));
+        $blindspotTbcQuery = \Illuminate\Support\Facades\DB::table('scr_blindspot_tbc')
+            ->select(['iso_week_of_date_for_join', 'site', 'blindspot_tbc_dari_bc', 'year_of_date_for_join'])
+            ->orderBy('site')
+            ->orderBy('iso_week_of_date_for_join');
+        if ($yearFilter !== '' && ctype_digit($yearFilter)) {
+            $blindspotTbcQuery->where('year_of_date_for_join', $yearFilter);
+        }
+        $blindspotTbcRows = $blindspotTbcQuery->get();
+        $blindspotTbcGrouped = [];
+        foreach ($blindspotTbcRows as $dbRow) {
+            $raw = str_replace(',', '.', trim((string) ($dbRow->blindspot_tbc_dari_bc ?? '')));
+            if ($raw === '' || ! is_numeric($raw)) {
+                continue;
+            }
+            $countValue = (int) round((float) $raw);
+            $site = trim((string) ($dbRow->site ?? ''));
+            $week = trim((string) ($dbRow->iso_week_of_date_for_join ?? ''));
+            $groupKey = $site.'|'.$week;
+            if (! isset($blindspotTbcGrouped[$groupKey])) {
+                $blindspotTbcGrouped[$groupKey] = [
+                    'site' => $site,
+                    'week' => $week,
+                    'sum_count' => 0,
+                ];
+            }
+            $blindspotTbcGrouped[$groupKey]['sum_count'] += $countValue;
+        }
+        foreach ($blindspotTbcGrouped as $group) {
+            $blindspotTbcDrillRows[] = [
+                'detail_indikator' => '% Blindspot TBC',
+                'site' => $group['site'],
+                'week' => $group['week'],
+                'data' => (string) ($group['sum_count'] ?? 0),
+            ];
+        }
+    } catch (\Throwable $e) {
+        $blindspotTbcDrillRows = [];
     }
     $postEventL2UpDetailIndicator = '% Post Event L2 up';
     $postEventL2UpDrillRows = [];
@@ -220,6 +279,8 @@
             $drill = $dailyCoverageDrillRows;
         } elseif ($detailKey === $blindspotGrDetailIndicator) {
             $drill = $blindspotGrDrillRows;
+        } elseif (in_array($detailKey, $blindspotTbcIndicators, true)) {
+            $drill = $blindspotTbcDrillRows;
         } elseif ($detailKey === $postEventL2UpDetailIndicator) {
             $drill = $postEventL2UpDrillRows;
         } elseif (in_array($detailKey, $operatorSleepLessIndicators, true)) {

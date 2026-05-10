@@ -67,6 +67,7 @@ final class GetPeerPressureKejadianDetailForDashboardAction
             'kelompok_lokasi_edukasi' => $k->kelompok_lokasi_edukasi,
             'lokasi_edukasi' => $k->lokasi_edukasi,
             'perusahaan' => $k->perusahaan,
+            'site' => $k->site,
             'tasklist_temuan' => $k->tasklist_temuan,
             'kronologi_temuan' => $k->kronologi_temuan,
             'kategori_deviasi' => $k->kategori_deviasi,

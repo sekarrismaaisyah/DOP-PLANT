@@ -218,11 +218,10 @@
       .action-title { @apply font-extrabold text-[#1f2937]; }
       .checklist { @apply m-0 pl-[18px] text-[13px] leading-[1.55] text-muted; }
       .risk-profile-board {
-        @apply relative mt-1 overflow-hidden rounded-2xl border border-slate-200/90 bg-[#f8fafc] p-4 shadow-sm sm:p-5;
-        background-image: radial-gradient(circle at 4% 8%, rgba(59,130,246,.14), transparent 36%), radial-gradient(circle at 96% 0%, rgba(236,72,153,.14), transparent 28%), linear-gradient(180deg, rgba(255,255,255,0.98) 0%, rgba(248,250,252,1) 100%);
+        @apply relative mt-1 overflow-hidden rounded-2xl border border-slate-300/90 bg-white p-3 shadow-sm sm:p-4;
       }
       .risk-profile-main {
-        @apply relative rounded-2xl border border-slate-200 bg-white p-3 shadow-[0_16px_36px_-24px_rgba(15,23,42,0.45)] sm:p-4;
+        @apply relative rounded-xl border border-slate-300 bg-white p-2 sm:p-2.5;
       }
       .risk-profile-main::after {
         content: "";
@@ -232,22 +231,64 @@
         pointer-events: none;
         box-shadow: inset 0 1px 0 rgba(255,255,255,.9);
       }
-      .risk-profile-mini-grid { @apply mt-3 grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3; }
-      .risk-profile-mini {
-        @apply rounded-xl border border-slate-200 p-2.5 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.5)] transition-transform duration-200 sm:p-3;
+      .risk-profile-main-chart { @apply h-[260px] w-full rounded-md border border-slate-300 bg-white; }
+      .risk-profile-toolbar { @apply mb-2 flex flex-wrap items-center justify-between gap-2; }
+      .risk-profile-site-filter {
+        @apply rounded-md border border-slate-300 bg-white px-2 py-1 text-[11px] font-semibold text-[#334155];
       }
+      .risk-profile-mini-grid { @apply mt-3 grid grid-cols-1 gap-2.5 md:grid-cols-2 xl:grid-cols-3; }
+      .risk-profile-mini {
+        @apply rounded-lg border border-slate-300 p-2 shadow-[0_10px_24px_-20px_rgba(15,23,42,0.5)] transition-transform duration-200 sm:p-2.5;
+      }
+      .risk-profile-mini.selected { @apply border-[#0ea5e9] ring-2 ring-[#bae6fd]; }
       .risk-profile-mini:hover { transform: translateY(-2px); }
       .risk-profile-head { @apply mb-2 flex items-center justify-between gap-2; }
-      .risk-profile-site { @apply text-sm font-bold tracking-tight text-[#1f2937]; }
+      .risk-profile-site { @apply border-l-[3px] border-[#dc2626] pl-1.5 text-sm font-black tracking-tight text-[#111827]; }
       .risk-profile-chip-wrap { @apply flex items-center gap-1.5; }
-      .risk-chip { @apply rounded-md border border-slate-200 bg-[#f8fafc] px-2 py-0.5 text-[10px] font-semibold text-[#475569]; }
+      .risk-chip { @apply rounded border border-slate-300 bg-[#ececec] px-1.5 py-0.5 text-[9px] font-semibold text-[#334155]; }
       .risk-profile-status { @apply inline-flex items-center rounded-full border px-2 py-[3px] text-[10px] font-black; }
       .risk-profile-score { @apply text-[11px] font-semibold text-[#334155]; }
       .risk-profile-mini-chart { @apply h-[118px] w-full; }
-      .risk-profile-legend { @apply mt-3 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] font-semibold text-[#556172]; }
+      .risk-profile-legend { @apply mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 text-[11px] text-[#374151]; }
       .legend-line { @apply inline-flex items-center gap-1.5; }
       .legend-line i { @apply inline-block h-[3px] w-5 rounded-full; }
-      .risk-profile-footer { @apply mt-2 text-[11px] text-[#6b7280]; }
+      .risk-profile-footer { @apply mt-2 flex flex-wrap items-center gap-3 text-[11px] italic text-[#4b5563]; }
+      .risk-profile-band { @apply inline-flex items-center gap-1.5; }
+      .risk-profile-band i { @apply inline-block h-4 w-10 rounded-sm; }
+      .site-performance-card { @apply mt-3 rounded-lg border border-[#ddd8cb] bg-white p-2; }
+      .site-performance-table-wrap { @apply overflow-x-auto rounded-sm border border-[#dbd6ca] bg-white; }
+      .site-performance-table { @apply min-w-[1120px] border-collapse text-[9px] text-[#1f2937]; }
+      .site-performance-table th,
+      .site-performance-table td { @apply border border-[#d8d4c8] px-1.5 py-1 text-center align-middle; }
+      .site-performance-table th:first-child,
+      .site-performance-table td:first-child,
+      .site-performance-table th:nth-child(2),
+      .site-performance-table td:nth-child(2) { @apply text-left; }
+      .site-performance-table thead th { @apply bg-[#e7e3d7] text-[9px] font-black uppercase tracking-[.02em]; }
+      .site-performance-table .head-site { @apply bg-[#e7e3d7] align-bottom pb-0.5; }
+      .site-performance-table .head-contractor { @apply bg-[#f0ece2] pt-0 pb-1 text-[8px] font-bold text-[#6b7280]; }
+      .site-performance-table .group-head { @apply bg-[#efe7cc] font-bold text-[#475569] align-top; }
+      .site-performance-table .group-head.people { @apply bg-[#deefe8]; }
+      .site-performance-table .group-head.process { @apply bg-[#ebf3d2]; }
+      .site-performance-table .group-head.technology { @apply bg-[#e6f0db]; }
+      .site-performance-table .metric-head { @apply bg-[#f2efe6] font-semibold text-[#64748b]; }
+      .site-performance-table .site-sub { @apply block text-[8px] font-semibold text-[#6b7280]; }
+      .site-performance-table .marker {
+        @apply mr-1 inline-flex h-3 w-3 items-center justify-center rounded-full text-[8px] font-black text-[#8b5e00];
+        background: #ffd561;
+      }
+      .site-performance-table .sub-metric { @apply pl-3 text-[#7c8798]; }
+      .site-performance-table .cell-watch { @apply bg-[#f8d2f6] font-bold text-[#6b2175]; }
+      .site-performance-table .cell-danger { @apply border-2 border-[#ef4444] bg-[#fee2e2] font-black text-[#991b1b]; }
+      .site-performance-table .cell-muted { @apply text-[#6b7280]; }
+      .site-performance-correlation { @apply mt-2.5 grid grid-cols-1 gap-2 md:grid-cols-2 xl:grid-cols-3; }
+      .site-correlation-item { @apply rounded-sm border-l-[3px] border-[#eab308] bg-white px-2 py-1.5; }
+      .site-correlation-item.best { @apply border-[#16a34a]; }
+      .site-correlation-item h4 { @apply m-0 text-[11px] font-black text-[#111827]; }
+      .site-correlation-item p { @apply mt-1 text-[10px] leading-[1.35] text-[#374151]; }
+      .site-correlation-note { @apply mt-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[9px] text-[#4b5563]; }
+      .site-correlation-note span { @apply inline-flex items-center gap-1; }
+      .site-correlation-note i { @apply inline-block h-2.5 w-2.5 rounded-sm; }
 
       .stat-tile { @apply rounded-[18px] border border-line bg-white p-3.5; }
       .stat-tile .num { @apply mt-1.5 text-[26px] font-extrabold tracking-[-.03em] text-[#111827]; }
@@ -387,14 +428,18 @@
     <section class="card page-intro" id="pageIntro"></section>
     <section class="risk-profile-board" data-page-only="overview">
       <div class="risk-profile-main">
-        <div class="card-title !mb-2.5">
+        <div class="card-title !mb-1">
           <div>
             <h3>Risk Score Profiling</h3>
             <div class="muted small">Profil risiko mingguan dan simulasi skenario kontrol per site.</div>
           </div>
           <span class="badge blue">Data Weekly W01-W18 2026</span>
         </div>
-        <div id="riskProfileMainChart" class="rounded-xl border border-slate-100 bg-[linear-gradient(180deg,#ffffff_0%,#f8fbff_100%)] p-2"></div>
+        <div class="risk-profile-toolbar">
+          <span class="badge green" id="riskProfileSiteLabel">All Site</span>
+          <select id="riskProfileSiteFilter" class="risk-profile-site-filter" aria-label="Pilih site risk profiling"></select>
+        </div>
+        <div id="riskProfileMainChart" class="risk-profile-main-chart"></div>
       </div>
       <div class="risk-profile-mini-grid" id="riskProfileMiniGrid"></div>
       <div class="risk-profile-legend">
@@ -406,7 +451,32 @@
         <span class="legend-line"><i style="background:#0ea5e9"></i>Proposed Scenario</span>
         <span class="legend-line"><i style="background:#ef4444; width:10px; height:10px; border-radius:999px;"></i>Breakout Point</span>
       </div>
-      <div class="risk-profile-footer">Shading warna menunjukkan klasifikasi umum: hijau (Best Observed Risk Profile), kuning (Unstable Observed Risk Profile), merah muda (High Risk Profile).</div>
+      <div class="risk-profile-footer">
+        <span class="risk-profile-band"><i style="background:#dcfce7"></i>Best Observed Risk Profile</span>
+        <span class="risk-profile-band"><i style="background:#fef9c3"></i>Unstable Observed Risk Profile</span>
+        <span class="risk-profile-band"><i style="background:#fce7f3"></i>High Risk Profile</span>
+      </div>
+    </section>
+
+    <section class="site-performance-card" data-page-only="overview">
+      <div class="card-title !mb-2">
+        <div>
+          <h3>Site Performance <span class="muted" style="font-style:italic; font-size:12px;">(vs Avg YTD 2026)</span></h3>
+          <div class="muted small">Ringkasan indikator incident, leadership, people, process, dan technology per site.</div>
+        </div>
+      </div>
+      <div class="site-performance-table-wrap">
+        <table class="site-performance-table">
+          <thead id="sitePerformanceHead"></thead>
+          <tbody id="sitePerformanceBody"></tbody>
+        </table>
+      </div>
+      <div class="site-performance-correlation" id="sitePerformanceCorrelation"></div>
+      <div class="site-correlation-note">
+        <span><i style="background:#fecaca"></i>Gap berulang dalam 2 minggu berturut-turut</span>
+        <span><i style="background:#f8d2f6"></i>Parameter Caution</span>
+        <span><i style="background:#dcfce7"></i>Parameter Stability</span>
+      </div>
     </section>
 
     <div class="cards-wrap" data-page-only="overview">
@@ -850,11 +920,14 @@
     };
 
     let selectedSite = "BMO 1";
+    let selectedRiskProfileSite = "ALL";
     let activeView = "overview";
     let riskProfileMainChartInstance = null;
     let riskProfileMiniChartInstances = [];
 
     const riskFilter = document.getElementById("riskFilter");
+    const riskProfileSiteFilter = document.getElementById("riskProfileSiteFilter");
+    const riskProfileSiteLabel = document.getElementById("riskProfileSiteLabel");
     const siteCards = document.getElementById("siteCards");
     const sitePopup = document.getElementById("sitePopup");
 
@@ -866,6 +939,15 @@
         "\"": "&quot;",
         "'": "&#039;"
       }[char]));
+    }
+
+    function setupRiskProfileSiteFilter() {
+      if (!riskProfileSiteFilter) return;
+      riskProfileSiteFilter.innerHTML = `
+        <option value="ALL">All Site</option>
+        ${sites.map(siteData => `<option value="${escapeHtml(siteData.site)}">${escapeHtml(siteData.site)}</option>`).join("")}
+      `;
+      riskProfileSiteFilter.value = selectedRiskProfileSite;
     }
 
     function cssClass(value) {
@@ -1207,6 +1289,99 @@
       `).join("");
     }
 
+    function renderSitePerformance() {
+      const headEl = document.getElementById("sitePerformanceHead");
+      const bodyEl = document.getElementById("sitePerformanceBody");
+      const correlationEl = document.getElementById("sitePerformanceCorrelation");
+      if (!headEl || !bodyEl || !correlationEl) return;
+
+      const siteColumns = [
+        { site: "BMO 1", partners: ["BUMA", "KDC", "MTL"] },
+        { site: "BMO 2", partners: ["PAMA"] },
+        { site: "BMO 3", partners: ["BAR"] },
+        { site: "GMO", partners: ["PAMA"] },
+        { site: "LMO", partners: ["FAD", "BUMA"] },
+        { site: "SMO", partners: ["MTN"] }
+      ];
+      const columnMap = siteColumns.flatMap(group => group.partners.map((partner, partnerIndex) => ({
+        site: group.site,
+        partner,
+        partnerIndex
+      })));
+
+      headEl.innerHTML = `
+        <tr>
+          <th colspan="2" rowspan="2"></th>
+          ${siteColumns.map(group => `<th class="head-site" colspan="${group.partners.length}">${escapeHtml(group.site)}</th>`).join("")}
+        </tr>
+        <tr>
+          ${columnMap.map(column => `<th class="head-contractor">${escapeHtml(column.partner)}</th>`).join("")}
+        </tr>
+      `;
+
+      const rows = [
+        { group: "Lagging Indicator", marker: "L", metric: "Incident", value: site => site.sourceMetrics.gr, format: value => `${Math.round(value)}` },
+        { group: "Lagging Indicator", marker: "L", metric: "Accident", value: () => 0, format: value => `${Math.round(value)}`, sub: true },
+        { group: "Lagging Indicator", marker: "L", metric: "IFR", value: site => site.sourceMetrics.ratioSAP, format: value => `${value.toFixed(2)} (0)` },
+        { group: "Lagging Indicator", marker: "L", metric: "AFR", value: site => site.sourceMetrics.ratioTBC, format: value => `${value.toFixed(2)} (0)` },
+        { group: "Leadership", marker: "C", metric: "PJA BC", value: site => site.sourceMetrics.coverageWeekly, format: value => `${value.toFixed(1)}%` },
+        { group: "Leadership", marker: "C", metric: "PJA MK", value: site => Math.max(95, site.sourceMetrics.coverageWeekly - 0.8), format: value => `${value.toFixed(1)}%`, sub: true },
+        { group: "Leadership", marker: "C", metric: "All Area", value: site => site.sourceMetrics.coverageDaily, format: value => `${value.toFixed(1)}%` },
+        { group: "Leadership", marker: "C", metric: "Area Kritis", value: site => Math.max(96, site.sourceMetrics.coverageDaily - 1.2), format: value => `${value.toFixed(1)}%`, sub: true },
+        { group: "Leadership", marker: "S", metric: "Ratio Pelaporan TBC", value: site => site.sourceMetrics.ratioTBC, format: value => `${value.toFixed(2)}` },
+        { group: "Leadership", marker: "C", metric: "Blindspot TBC", value: site => site.sourceMetrics.blindspot, format: value => `${Math.round(value)}` },
+        { group: "Leadership", marker: "C", metric: "Overdue Hazard", value: site => site.sourceMetrics.blindspotGR, format: value => `${Math.round(value)}` },
+        { group: "People", marker: "L", metric: "GR", value: site => site.sourceMetrics.gr, format: value => `${Math.round(value)}` },
+        { group: "People", marker: "L", metric: "PSPP", value: site => site.sourceMetrics.blindspotGR, format: value => `${Math.round(value)}`, sub: true },
+        { group: "Process", marker: "S", metric: "Road Management", value: site => site.exposure, format: value => `${Math.round(value)}%` },
+        { group: "Process", marker: "S", metric: "Fatigue", value: site => site.sourceMetrics.fatigueAlert, format: value => `${Math.round(value)}` },
+        { group: "Technology", marker: "S", metric: "Pengawasan Berjarak", value: site => site.sourceMetrics.rfidNonPengawas / Math.max(site.sourceMetrics.rfidPengawas, 1), format: value => `${value.toFixed(2)}x` }
+      ];
+
+      bodyEl.innerHTML = rows.map((row, rowIndex) => {
+        const showGroup = rowIndex === 0 || rows[rowIndex - 1].group !== row.group;
+        const groupRowSpan = rows.filter(item => item.group === row.group).length;
+        const groupClass = cssClass(row.group);
+        return `
+          <tr>
+            ${showGroup ? `<td class="group-head ${groupClass}" rowspan="${groupRowSpan}">${escapeHtml(row.group)}</td>` : ""}
+            <td class="metric-head ${row.sub ? "sub-metric" : ""}">${row.sub ? "" : `<span class="marker">${escapeHtml(row.marker)}</span>`}${escapeHtml(row.metric)}</td>
+            ${columnMap.map(column => {
+              const site = getSite(column.site);
+              const raw = row.value(site);
+              const value = Number.isFinite(raw) ? raw : 0;
+              const variance = Math.round((column.partnerIndex - 1) * 2);
+              const adjustedValue = row.metric === "Incident" || row.metric === "Accident"
+                ? Math.max(0, Math.round(value + (column.partnerIndex === 1 ? 0 : column.partnerIndex === 0 ? -1 : 1)))
+                : Math.max(0, value + variance * 0.01 * (row.metric.includes("%") || row.metric.includes("Area") ? 100 : 1));
+              const isDanger = (
+                (row.metric === "Ratio Pelaporan TBC" && adjustedValue < 2.5) ||
+                (row.metric === "Blindspot TBC" && adjustedValue >= 2) ||
+                (row.metric === "Fatigue" && adjustedValue >= 10) ||
+                (row.metric === "Pengawasan Berjarak" && adjustedValue >= 4) ||
+                (row.metric === "All Area" && adjustedValue < 80)
+              );
+              const isWatch = (
+                (row.metric === "PJA BC" && adjustedValue < 98) ||
+                (row.metric === "Road Management" && adjustedValue >= 55 && adjustedValue < 70) ||
+                (row.metric === "GR" && adjustedValue >= 1) ||
+                (row.metric === "PJA MK" && adjustedValue < 99)
+              );
+              const className = isDanger ? "cell-danger" : isWatch ? "cell-watch" : adjustedValue === 0 ? "cell-muted" : "";
+              return `<td class="${className}">${row.format(adjustedValue)}</td>`;
+            }).join("")}
+          </tr>
+        `;
+      }).join("");
+
+      correlationEl.innerHTML = sites.map(site => `
+        <article class="site-correlation-item ${site.status === "Best Profile" ? "best" : ""}">
+          <h4>${escapeHtml(site.site)} · ${escapeHtml(site.status)}</h4>
+          <p>${escapeHtml(site.actions.slice(0, 2).map((item, index) => `${index + 1}) ${item}`).join(" · "))}</p>
+        </article>
+      `).join("");
+    }
+
     function renderAction() {
       const priorityWeight = { "High Risk": 3, "Unstable": 2, "Best Profile": 1 };
       const priority = [...sites].sort((a, b) => (priorityWeight[b.status] * 100 + b.driverIndex) - (priorityWeight[a.status] * 100 + a.driverIndex));
@@ -1408,18 +1583,27 @@
       riskProfileMiniChartInstances = [];
       if (riskProfileMainChartInstance) riskProfileMainChartInstance.dispose();
 
-      const aggregate = buildProfileData({
-        score: Math.round(sites.reduce((sum, site) => sum + site.score, 0) / sites.length),
-        status: "Unstable"
-      }, 2);
-      const axis = buildRiskProfileAxis(aggregate);
-      const breakoutLabel = axis[aggregate.breakout];
-      const movingData = toSeriesAxisData(aggregate, "moving");
-      const observedData = toSeriesAxisData(aggregate, "observed");
-      const controlledData = toSeriesAxisData(aggregate, "controlled");
-      const bauData = toSeriesAxisData(aggregate, "bau");
-      const worstData = toSeriesAxisData(aggregate, "worst");
-      const proposedData = toSeriesAxisData(aggregate, "proposed");
+      const isAllSite = selectedRiskProfileSite === "ALL";
+      const activeSite = isAllSite ? null : getSite(selectedRiskProfileSite);
+      const profileSource = isAllSite
+        ? { score: Math.round(sites.reduce((sum, site) => sum + site.score, 0) / sites.length), status: "Unstable" }
+        : { score: activeSite.score, status: activeSite.status };
+      const seed = isAllSite ? 2 : Math.max(1, sites.findIndex(item => item.site === activeSite.site) + 1);
+      const profileData = buildProfileData(profileSource, seed);
+      const axis = buildRiskProfileAxis(profileData);
+      const breakoutLabel = axis[profileData.breakout];
+      const movingData = toSeriesAxisData(profileData, "moving");
+      const observedData = toSeriesAxisData(profileData, "observed");
+      const controlledData = toSeriesAxisData(profileData, "controlled");
+      const bauData = toSeriesAxisData(profileData, "bau");
+      const worstData = toSeriesAxisData(profileData, "worst");
+      const proposedData = toSeriesAxisData(profileData, "proposed");
+      if (riskProfileSiteLabel) {
+        riskProfileSiteLabel.textContent = isAllSite ? "All Site" : activeSite.site;
+      }
+      if (riskProfileSiteFilter && riskProfileSiteFilter.value !== selectedRiskProfileSite) {
+        riskProfileSiteFilter.value = selectedRiskProfileSite;
+      }
       riskProfileMainChartInstance = echarts.init(mainEl);
       riskProfileMainChartInstance.setOption({
         animationDuration: 900,
@@ -1464,7 +1648,7 @@
                 { offset: 1, color: "rgba(232,121,249,0.02)" }
               ])
             },
-            markPoint: { symbol: "circle", symbolSize: 10, itemStyle: { color: "#ef4444" }, data: [{ coord: [breakoutLabel, observedData[aggregate.breakout]] }] },
+            markPoint: { symbol: "circle", symbolSize: 10, itemStyle: { color: "#ef4444" }, data: [{ coord: [breakoutLabel, observedData[profileData.breakout]] }] },
             markLine: { symbol: "none", label: { formatter: "Breakout", color: "#ef4444" }, lineStyle: { color: "#ef4444", type: "dashed" }, data: [{ xAxis: breakoutLabel }] }
           },
           { name: "Controlled Recovery Scenario", type: "line", data: controlledData, smooth: 0.38, symbol: "none", lineStyle: { color: "#22c55e", width: 2.2 } },
@@ -1475,14 +1659,14 @@
       });
 
       miniEl.innerHTML = sites.map((siteData, index) => `
-        <article class="risk-profile-mini" style="background:${siteData.status === "Best Profile" ? "#ecfdf5" : siteData.status === "Unstable" ? "#fefce8" : "#fdf2f8"}">
+        <article class="risk-profile-mini ${selectedRiskProfileSite === siteData.site ? "selected" : ""}" data-site="${escapeHtml(siteData.site)}" style="background:${siteData.status === "Best Profile" ? "#ecfdf5" : siteData.status === "Unstable" ? "#fefce8" : "#fdf2f8"}">
           <div class="risk-profile-head">
             <div>
               <div class="risk-profile-site">${escapeHtml(siteData.site)}</div>
-              <div class="risk-profile-score">Risk W18: ${siteData.score.toFixed(2)}%</div>
             </div>
             <div class="risk-profile-chip-wrap">
-              <span class="risk-profile-status" style="background:var(--${siteData.color}-soft); color:var(--${siteData.color}); border-color:var(--line);">${escapeHtml(siteData.status)}</span>
+              <span class="risk-chip">Leading</span>
+              <span class="risk-chip">Leadership</span>
             </div>
           </div>
           <div class="risk-profile-mini-chart" data-mini-risk-chart="${index}"></div>
@@ -1569,6 +1753,7 @@
     function renderAll() {
       renderCards();
       renderRiskProfiling();
+      renderSitePerformance();
       renderDriverDictionary();
       renderRanking();
       renderScatter();
@@ -1603,6 +1788,18 @@
       renderCards();
       closeSitePopup();
     });
+    if (riskProfileSiteFilter) {
+      riskProfileSiteFilter.addEventListener("change", () => {
+        selectedRiskProfileSite = riskProfileSiteFilter.value || "ALL";
+        renderRiskProfiling();
+      });
+    }
+    document.getElementById("riskProfileMiniGrid").addEventListener("click", event => {
+      const miniCard = event.target.closest(".risk-profile-mini[data-site]");
+      if (!miniCard) return;
+      selectedRiskProfileSite = miniCard.dataset.site || "ALL";
+      renderRiskProfiling();
+    });
 
     document.addEventListener("click", event => {
       if (event.target.closest("[data-close-popup='true']")) {
@@ -1620,6 +1817,7 @@
       riskProfileMiniChartInstances.forEach(chart => chart.resize());
     });
 
+    setupRiskProfileSiteFilter();
     renderAll();
   </script>
 </body>

@@ -23,6 +23,7 @@ class PeerPressureKejadianEdukasi extends Model
         'tanggal_edukasi',
         'jam_edukasi',
         'perusahaan',
+        'site',
         'tasklist_temuan',
         'kronologi_temuan',
         'kategori_deviasi',
