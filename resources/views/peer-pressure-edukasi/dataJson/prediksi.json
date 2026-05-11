@@ -1,0 +1,2936 @@
+{
+    "BMO1": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 52.36735224,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 53.61339772,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 54.22310431,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 51.85894676,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 51.73126714,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 54.24998735,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 55.45228451,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 50.63068442,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 51.08649481,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 54.87540475,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 56.71993979,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 49.57977416,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 50.32926355,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 55.50680986,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 57.98918363,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 48.48566664,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 49.76577016,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 56.15181587,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 59.26396156,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 47.23886573,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 49.16753635,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 56.80290411,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 60.55399013,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 46.25053319,
+          "risk_category": "Watch"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 48.40296351,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 57.46842815,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 61.85971207,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 45.07149904,
+          "risk_category": "Watch"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 47.77560183,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 58.1013484,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 63.17018945,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 44.08379935,
+          "risk_category": "Watch"
+        }
+      ]
+    },
+    "BMO2": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.95822077,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.16913008,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 45.71668747,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 43.18298917,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.08089069,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.73935315,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 46.81512205,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 42.32690911,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.59052117,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.30446933,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 47.89049779,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 41.37347326,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.05638304,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.86115462,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 48.90068495,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 40.53194085,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.50644171,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.40148891,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 49.99522781,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.70775123,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.02644704,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.96054727,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 51.13562499,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 38.87008151,
+          "risk_category": "Watch"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.53967557,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.48446428,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 52.31237056,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 38.08679486,
+          "risk_category": "Watch"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.07200433,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.99527041,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 53.49508586,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 37.30521796,
+          "risk_category": "Watch"
+        }
+      ]
+    },
+    "BMO3": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 38.9130041,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 39.98727831,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 40.51556291,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 38.55493257,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 38.43594672,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 40.53564996,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 41.57390332,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 37.68193328,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 37.94540609,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 41.06373769,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 42.66864004,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 36.8150055,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 37.44708302,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 41.61478228,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 43.77401303,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 35.95120739,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 36.97077496,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 42.16697963,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 44.89880733,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 35.12675146,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 36.46487397,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 42.73105151,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 46.03864599,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 34.31962259,
+          "risk_category": "Controlled"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 35.97855134,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 43.30465817,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 47.18261316,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 33.5569361,
+          "risk_category": "Controlled"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 35.49325661,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 43.85868231,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 48.34079652,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 32.60519913,
+          "risk_category": "Controlled"
+        }
+      ]
+    },
+    "EKSPLORASI": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 39.58436863,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 40.58920657,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 41.08066922,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.22117784,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 39.10737596,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 41.10103643,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 42.06112919,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 38.43641321,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 38.65175597,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 41.5862823,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 43.07554631,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 37.67613707,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 38.21220269,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 42.10248723,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 44.09907915,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 36.90581418,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 37.77736685,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 42.61773042,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 45.1386689,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 36.15622321,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 37.32394325,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 43.13855296,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 46.19653374,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 35.39162005,
+          "risk_category": "Watch"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 36.89529171,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 43.66349124,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 47.25949337,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 34.63307651,
+          "risk_category": "Controlled"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 36.46392168,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 44.18437718,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 48.33465549,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 33.99988045,
+          "risk_category": "Controlled"
+        }
+      ]
+    },
+    "GMO": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.16844091,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 44.51231571,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 45.03918019,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 42.70481823,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.52068542,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.06150997,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 46.14574734,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 41.57569092,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.82490292,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.62040807,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 47.28175106,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 40.50160452,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.21472898,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.19112173,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 48.42660704,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.31430016,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.58083131,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.75981133,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 49.5944939,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 37.62036426,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 39.86549344,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.35091013,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 50.74053458,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 36.70408961,
+          "risk_category": "Watch"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 39.25064858,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.93903919,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 51.88317754,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 35.74685646,
+          "risk_category": "Watch"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 37.98041283,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.52027553,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 53.11041798,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 34.53663464,
+          "risk_category": "Controlled"
+        }
+      ]
+    },
+    "HO": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 45.39519682,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.46154335,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 46.99077649,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 45.02044432,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 44.89380342,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.01407385,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 48.11153941,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 44.14197109,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 44.39887959,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.59739934,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 49.23553955,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 43.27451315,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.90522304,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.15884672,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 50.38453584,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 42.44478681,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.4040413,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.73574307,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 51.60254069,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 41.6330928,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.93027266,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 49.30755643,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 52.77159122,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 40.85077963,
+          "risk_category": "Watch"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.46830976,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 49.89328313,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 53.92692849,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 40.09413558,
+          "risk_category": "Watch"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.00604845,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 50.48199142,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 55.08785065,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.38986742,
+          "risk_category": "Watch"
+        }
+      ]
+    },
+    "HOTE": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.45910045,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 44.48009389,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 44.9933474,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 43.10301378,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.98652829,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.01565446,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 46.0504939,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 42.27820435,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.51635966,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.55421471,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 47.11897251,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 41.46227928,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.04726864,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.09577462,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 48.19878322,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 40.65389306,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.58256892,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.64033422,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 49.29655328,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.85314475,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.11892664,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.18789348,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 50.39908223,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.06210643,
+          "risk_category": "Watch"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.65837765,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.73845242,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 51.51572312,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 38.30911222,
+          "risk_category": "Watch"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.20015751,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.29201104,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 52.64093858,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 37.62741645,
+          "risk_category": "Watch"
+        }
+      ]
+    },
+    "JAKARTA": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 44.05634602,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.05951165,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 45.57153205,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 43.70144815,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.58718313,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.59412577,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 46.62641123,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 42.88247338,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.12037692,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.13170797,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 47.69250316,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 42.07094131,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.65592741,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.67225824,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 48.76980783,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 41.26685194,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.19383459,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.2157766,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 49.85832524,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 40.47020527,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.73409846,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.76226303,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 50.9580554,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.68659803,
+          "risk_category": "Watch"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.27671902,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.31171755,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 52.06899831,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 38.92885489,
+          "risk_category": "Watch"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.82169628,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.86414014,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 53.19115396,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 38.25001028,
+          "risk_category": "Watch"
+        }
+      ]
+    },
+    "LMO": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.94973454,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.19433309,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 45.81829086,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 43.54474039,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.40353088,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.84100691,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 47.03797706,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 42.60807107,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.89699151,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.43906483,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 48.24898648,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 41.62523596,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.3232252,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.08422875,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 49.46803887,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 40.78035034,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.76810388,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.68099847,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 50.74251969,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.86224603,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.22480676,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.31956033,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 51.90823926,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 38.93539377,
+          "risk_category": "Watch"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.77853323,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.92998285,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 53.03785463,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 38.03671748,
+          "risk_category": "Watch"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.24657439,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 49.56372173,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 54.2630971,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 37.22248782,
+          "risk_category": "Watch"
+        }
+      ],
+      "46": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 39.73256041,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 50.21122485,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 55.52109935,
+          "risk_category": "Moderate Risk"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 36.43830152,
+          "risk_category": "Watch"
+        }
+      ]
+    },
+    "MARINE": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 36.15475537,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 37.14152766,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 37.59506051,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 35.80599353,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 35.69502119,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 37.61369961,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 38.60614786,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 35.09945131,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 35.29661266,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 38.1174083,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 39.65021753,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 34.38830817,
+          "risk_category": "Controlled"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 34.89507136,
+          "risk_category": "Controlled"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 38.64410868,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 40.68838027,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 33.66329341,
+          "risk_category": "Controlled"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 34.47893569,
+          "risk_category": "Controlled"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 39.19302622,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 41.70656624,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 32.99585852,
+          "risk_category": "Controlled"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 34.04176274,
+          "risk_category": "Controlled"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 39.70821395,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 42.77479911,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 32.33165819,
+          "risk_category": "Controlled"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 33.65280579,
+          "risk_category": "Controlled"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 40.217745,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 43.82255861,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 31.65235622,
+          "risk_category": "Controlled"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 33.26954029,
+          "risk_category": "Controlled"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 40.7670812,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 44.85796798,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 31.08208728,
+          "risk_category": "Controlled"
+        }
+      ]
+    },
+    "PMO": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 44.00301644,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.20302504,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 45.75447407,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 43.58046437,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 43.43772348,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.77715849,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 46.87038075,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 42.63385115,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.89926188,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.36182116,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 48.02760609,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 41.69255117,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 42.34840189,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.91646765,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 49.16905655,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 40.7293877,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.80942291,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 47.49292818,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 50.30172162,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.870565,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.2388568,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.09785612,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 51.46168991,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.01380255,
+          "risk_category": "Watch"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.75607646,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 48.67036083,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 52.62782147,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 37.44672488,
+          "risk_category": "Watch"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.24511709,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 49.26416111,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 53.79938785,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 36.64509305,
+          "risk_category": "Watch"
+        }
+      ]
+    },
+    "SMO": {
+      "20": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 41.06040408,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 42.07293679,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 42.69386167,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 40.6620471,
+          "risk_category": "Watch"
+        }
+      ],
+      "21": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.56240645,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 42.71502868,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 43.9126147,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.80552056,
+          "risk_category": "Watch"
+        }
+      ],
+      "22": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 40.06859692,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 43.35932248,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 45.0890635,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 39.10886217,
+          "risk_category": "Watch"
+        }
+      ],
+      "23": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 39.64686374,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 43.95579328,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 46.27695101,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 38.38953315,
+          "risk_category": "Watch"
+        }
+      ],
+      "24": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 39.24560788,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 44.55558588,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 47.51253515,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 37.67916649,
+          "risk_category": "Watch"
+        }
+      ],
+      "25": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 38.85895757,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.15501533,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 49.21255437,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 36.95722474,
+          "risk_category": "Watch"
+        }
+      ],
+      "26": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 38.45034855,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 45.77073956,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 50.57920964,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 36.24914979,
+          "risk_category": "Watch"
+        }
+      ],
+      "27": [
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Controlled Recovery",
+          "projected_risk": 38.05250738,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "BAU",
+          "projected_risk": 46.36646156,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Worst",
+          "projected_risk": 51.84957744,
+          "risk_category": "Watch"
+        },
+        {
+          "tahun": 2026,
+          "year_week": 2026,
+          "scenario": "Proposed",
+          "projected_risk": 35.54350475,
+          "risk_category": "Watch"
+        }
+      ]
+    }
+  }

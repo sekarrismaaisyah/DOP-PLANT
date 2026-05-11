@@ -263,14 +263,17 @@
       .site-performance-table th:first-child,
       .site-performance-table td:first-child,
       .site-performance-table th:nth-child(2),
-      .site-performance-table td:nth-child(2) { @apply text-left; }
+      .site-performance-table td:nth-child(2),
+      .site-performance-table th:nth-child(3),
+      .site-performance-table td:nth-child(3) { @apply text-left; }
       .site-performance-table thead th { @apply bg-[#e7e3d7] text-[9px] font-black uppercase tracking-[.02em]; }
-      .site-performance-table .head-site { @apply bg-[#e7e3d7] align-bottom pb-0.5; }
+      .site-performance-table .head-site { @apply bg-[#e7e3d7] text-center align-bottom pb-0.5; }
       .site-performance-table .head-contractor { @apply bg-[#f0ece2] pt-0 pb-1 text-[8px] font-bold text-[#6b7280]; }
       .site-performance-table .group-head { @apply bg-[#efe7cc] font-bold text-[#475569] align-top; }
       .site-performance-table .group-head.people { @apply bg-[#deefe8]; }
       .site-performance-table .group-head.process { @apply bg-[#ebf3d2]; }
       .site-performance-table .group-head.technology { @apply bg-[#e6f0db]; }
+      .site-performance-table .parameter-head { @apply bg-[#f2efe6] font-bold text-[#475569]; }
       .site-performance-table .metric-head { @apply bg-[#f2efe6] font-semibold text-[#64748b]; }
       .site-performance-table .site-sub { @apply block text-[8px] font-semibold text-[#6b7280]; }
       .site-performance-table .marker {
@@ -433,7 +436,7 @@
             <h3>Risk Score Profiling</h3>
             <div class="muted small">Profil risiko mingguan dan simulasi skenario kontrol per site.</div>
           </div>
-          <span class="badge blue">Data Weekly W01-W18 2026</span>
+          <span class="badge blue">Data Weekly W01-W19 2026</span>
         </div>
         <div class="risk-profile-toolbar">
           <span class="badge green" id="riskProfileSiteLabel">All Site</span>
@@ -728,7 +731,167 @@
     </div>
   </main>
 
+  @php
+    $historicalRiskProfilePath = resource_path('views/peer-pressure-edukasi/dataJson/historical.json');
+    $historicalRiskProfile = file_exists($historicalRiskProfilePath)
+      ? collect(json_decode(file_get_contents($historicalRiskProfilePath), true) ?: [])
+          ->filter(fn ($row) => (int) ($row['Tahun'] ?? 0) === 2026 && (int) ($row['Minggu'] ?? 0) >= 1 && (int) ($row['Minggu'] ?? 0) <= 19)
+          ->values()
+          ->all()
+      : [];
+    $predictionRiskProfilePath = resource_path('views/peer-pressure-edukasi/dataJson/prediksi.json');
+    $predictionRiskProfile = file_exists($predictionRiskProfilePath)
+      ? (json_decode(file_get_contents($predictionRiskProfilePath), true) ?: [])
+      : [];
+
+    $scrIncidentWeek = strtoupper((string) request()->query('incident_week', 'W' . str_pad((string) now()->subWeek()->isoWeek(), 2, '0', STR_PAD_LEFT)));
+    $scrIncidentYear = (string) request()->query('incident_year', now()->subWeek()->isoWeekYear());
+    $scrIncidentRows = [];
+    $roadStandardWeek = '19';
+    $roadStandardRows = [];
+    $coverageAreaKritisWeek = 'W19';
+    $coverageAreaKritisRows = [];
+    $blindspotTbcWeek = 'W19';
+    $blindspotTbcRows = [];
+
+    try {
+      $scrIncidentTable = \Illuminate\Support\Facades\Schema::hasTable('scr_incident') ? 'scr_incident' : 'scr_insiden';
+      $scrIncidentQuery = fn () => \Illuminate\Support\Facades\DB::table($scrIncidentTable)
+        ->select(['Site', 'Perusahaan', 'Kategori_Incident', 'HIPO_NonHipo', 'Kronologi_Incident', 'Count_of_2025', 'ISO_Week_of_DATE', 'ISO_Year_of_DATE']);
+
+      $rawScrIncidentRows = $scrIncidentQuery()
+        ->whereRaw('TRIM(CAST(ISO_Year_of_DATE AS CHAR)) = ?', [$scrIncidentYear])
+        ->whereRaw('UPPER(TRIM(CAST(ISO_Week_of_DATE AS CHAR))) = ?', [$scrIncidentWeek])
+        ->get();
+
+      if ($rawScrIncidentRows->isEmpty()) {
+        $latestScrIncident = $scrIncidentQuery()
+          ->whereNotNull('ISO_Year_of_DATE')
+          ->whereNotNull('ISO_Week_of_DATE')
+          ->orderByDesc('scraped_at')
+          ->orderByDesc('id')
+          ->first();
+
+        if ($latestScrIncident) {
+          $scrIncidentWeek = strtoupper(trim((string) $latestScrIncident->ISO_Week_of_DATE));
+          $scrIncidentYear = trim((string) $latestScrIncident->ISO_Year_of_DATE);
+          $rawScrIncidentRows = $scrIncidentQuery()
+            ->whereRaw('TRIM(CAST(ISO_Year_of_DATE AS CHAR)) = ?', [$scrIncidentYear])
+            ->whereRaw('UPPER(TRIM(CAST(ISO_Week_of_DATE AS CHAR))) = ?', [$scrIncidentWeek])
+            ->get();
+        }
+      }
+
+      $scrIncidentRows = $rawScrIncidentRows
+        ->map(function ($row) {
+          $count = is_numeric($row->Count_of_2025 ?? null) ? (int) $row->Count_of_2025 : 1;
+
+          return [
+            'site' => trim((string) ($row->Site ?? '')),
+            'perusahaan' => trim((string) ($row->Perusahaan ?? '')),
+            'kategori' => trim((string) ($row->Kategori_Incident ?? '')),
+            'hipo' => trim((string) ($row->HIPO_NonHipo ?? '')),
+            'kronologi' => trim((string) ($row->Kronologi_Incident ?? '')),
+            'total' => max(1, $count),
+          ];
+        })
+        ->values()
+        ->all();
+    } catch (\Throwable $exception) {
+      $scrIncidentRows = [];
+    }
+
+    try {
+      if (\Illuminate\Support\Facades\Schema::hasTable('scr_road_standard')) {
+        $roadStandardRows = \Illuminate\Support\Facades\DB::table('scr_road_standard')
+          ->select(['Site', 'Mitra_Kerja', 'Nilai_Numerik', 'Sub_sub_kategori', 'Week'])
+          ->whereRaw('CAST(TRIM(CAST(Week AS CHAR)) AS UNSIGNED) BETWEEN 1 AND ?', [(int) $roadStandardWeek])
+          ->where('Sub_sub_kategori', '% Road Standard')
+          ->get()
+          ->map(function ($row) {
+            $rawValue = trim((string) ($row->Nilai_Numerik ?? ''));
+            $normalizedValue = str_replace(',', '.', $rawValue);
+
+            return [
+              'site' => trim((string) ($row->Site ?? '')),
+              'mitra' => trim((string) ($row->Mitra_Kerja ?? '')),
+              'week' => (int) ($row->Week ?? 0),
+              'value' => is_numeric($normalizedValue) ? (float) $normalizedValue : null,
+              'raw' => $rawValue,
+            ];
+          })
+          ->values()
+          ->all();
+      }
+    } catch (\Throwable $exception) {
+      $roadStandardRows = [];
+    }
+
+    try {
+      if (\Illuminate\Support\Facades\Schema::hasTable('scr_coverage_area_kritis_daily')) {
+        $coverageAreaKritisRows = \Illuminate\Support\Facades\DB::table('scr_coverage_area_kritis_daily')
+          ->select(['ISO_Week_of_Date', 'Site', 'Year_of_Date', 'Avg_Coverage_Area_Kritis_Daily'])
+          ->whereRaw('UPPER(TRIM(CAST(ISO_Week_of_Date AS CHAR))) = ?', [$coverageAreaKritisWeek])
+          ->whereRaw('TRIM(CAST(Year_of_Date AS CHAR)) = ?', ['2026'])
+          ->get()
+          ->map(function ($row) {
+            $rawValue = trim((string) ($row->Avg_Coverage_Area_Kritis_Daily ?? ''));
+            $normalizedValue = str_replace(',', '.', $rawValue);
+
+            return [
+              'site' => trim((string) ($row->Site ?? '')),
+              'week' => strtoupper(trim((string) ($row->ISO_Week_of_Date ?? ''))),
+              'year' => trim((string) ($row->Year_of_Date ?? '')),
+              'value' => is_numeric($normalizedValue) ? (float) $normalizedValue : null,
+              'raw' => $rawValue,
+            ];
+          })
+          ->values()
+          ->all();
+      }
+    } catch (\Throwable $exception) {
+      $coverageAreaKritisRows = [];
+    }
+
+    try {
+      if (\Illuminate\Support\Facades\Schema::hasTable('scr_blindspot_tbc')) {
+        $blindspotTbcRows = \Illuminate\Support\Facades\DB::table('scr_blindspot_tbc')
+          ->select(['ISO_Week_of_Date_for_Join', 'perusahaan_pic', 'site', 'Year_of_Date_for_Join', 'Blindspot_TBC_dari_BC'])
+          ->whereRaw("REPLACE(UPPER(TRIM(CAST(ISO_Week_of_Date_for_Join AS CHAR))), 'W', '') = ?", ['19'])
+          ->whereRaw('TRIM(CAST(Year_of_Date_for_Join AS CHAR)) = ?', ['2026'])
+          ->get()
+          ->map(function ($row) {
+            $rawValue = trim((string) ($row->Blindspot_TBC_dari_BC ?? ''));
+            $normalizedValue = str_replace(',', '.', $rawValue);
+
+            return [
+              'site' => trim((string) ($row->site ?? '')),
+              'perusahaanPic' => trim((string) ($row->perusahaan_pic ?? '')),
+              'week' => strtoupper(trim((string) ($row->ISO_Week_of_Date_for_Join ?? ''))),
+              'year' => trim((string) ($row->Year_of_Date_for_Join ?? '')),
+              'value' => is_numeric($normalizedValue) ? (float) $normalizedValue : null,
+              'raw' => $rawValue,
+            ];
+          })
+          ->values()
+          ->all();
+      }
+    } catch (\Throwable $exception) {
+      $blindspotTbcRows = [];
+    }
+  @endphp
   <script>
+    const historicalRiskProfileData = @json($historicalRiskProfile);
+    const predictionRiskProfileData = @json($predictionRiskProfile);
+    const scrIncidentWeek = @json($scrIncidentWeek);
+    const scrIncidentYear = @json($scrIncidentYear);
+    const scrIncidentRows = @json($scrIncidentRows);
+    const roadStandardWeek = @json($roadStandardWeek);
+    const roadStandardRows = @json($roadStandardRows);
+    const coverageAreaKritisWeek = @json($coverageAreaKritisWeek);
+    const coverageAreaKritisRows = @json($coverageAreaKritisRows);
+    const blindspotTbcWeek = @json($blindspotTbcWeek);
+    const blindspotTbcRows = @json($blindspotTbcRows);
     const sites = [
       {
         site: "BMO 1",
@@ -918,6 +1081,49 @@
         components: ["True Alert Fatigue", "FTW Jam Tidur Kurang", "Speak Up Sebelum Alert", "Spike alert", "Alert berulang", "Pola shift dan jam kerja", "Exposure fatigue per kontraktor"]
       }
     };
+
+    const historicalWeekLimit = 19;
+    const historicalTooltipFields = [
+      "Site",
+      "Tahun",
+      "Minggu",
+      "Incident",
+      "Pelanggaran GR",
+      "Pelanggaran PSPP",
+      "Pemenuhan SAP All Pengawas",
+      "Ratio SAP Pengawas Layer 3 up",
+      "Average Daily Coverage All Area",
+      "Average Daily Coverage Area Kritis",
+      "True Alert Fatigue",
+      "Ratio Pelaporan TBC oleh Pengawas",
+      "% Laporan Pengawasan Berjarak Real Time (All Layer)",
+      "% Laporan Pengawasan Berjarak Post Event (L2 up)",
+      "% Alert Intervented",
+      "% Alert Intervented on Time",
+      "% Road Standard",
+      "Avg Time to Repair",
+      "% Pencapaian Improvement Teknologi YTD",
+      "% Kesesuaian IPK OKK",
+      "Golden Time",
+      "Ratio Pelaporan CCV",
+      "% Closing Rekomendasi Investigasi On Time",
+      "Jumlah Blindspot TBC",
+      "Jumlah Blindspot GR",
+      "Jumlah Overdue Hazard",
+      "Jumlah Speak Up Setelah Alert",
+      "Pekerja dengan Jam Tidur Kurang",
+      "Ratio Kelayakan Kerja hasil MCU",
+      "Persentase Pekerja Baru",
+      "Pattern Similarity",
+      "Jumlah Detail Lokasi Area Kritis",
+      "Jumlah IKK",
+      "Jumlah Pengawas masuk",
+      "Jumlah Non Pengawas masuk",
+      "Jumlah Unit beroperasi based on DMS",
+      "Rekomendasi Rekayasa Engineering",
+      "% Emergency Equipment Availability",
+      "% Investigasi kurang dari 5 hari"
+    ];
 
     let selectedSite = "BMO 1";
     let selectedRiskProfileSite = "ALL";
@@ -1200,6 +1406,14 @@
       return `<span class="tooltip-wrap" data-tooltip="${escapeHtml(text)}">${content}<span class="help-dot">i</span></span>`;
     }
 
+    function withCellTooltip(content, text) {
+      return `<span class="tooltip-wrap" data-tooltip="${escapeHtml(text)}">${content}</span>`;
+    }
+
+    function withCellHtmlTooltip(content, html) {
+      return `<span class="tooltip-wrap" data-tooltip-html="${escapeHtml(html)}">${content}</span>`;
+    }
+
     function dominantDetails(siteData) {
       return driverNames
         .map(([label, key]) => ({ label, key, value: siteData[key] }))
@@ -1234,6 +1448,154 @@
       if (!driver) return "Penjelasan belum tersedia.";
       if (key === "exposure") return `${driver.label} (${driver.weight}): ${driver.note} Komponen: ${driver.components.join(", ")}. Sumber dashboard: ${sourceMetricText(siteData, key)}. ${exposureFormulaText(siteData)} Level: ${scoreLevel(siteData[key])}.`;
       return `${driver.label} (${driver.weight}): ${driver.note} Komponen: ${driver.components.join(", ")}. Sumber dashboard: ${sourceMetricText(siteData, key)}. Nilai ${siteData.site}: ${siteData[key]} (${scoreLevel(siteData[key])}).`;
+    }
+
+    function getScrIncidentRows(site, partner) {
+      const targetSite = normalizeSiteCode(site);
+      const targetPartner = normalizeSiteCode(partner);
+      return scrIncidentRows.filter(row => normalizeSiteCode(row.site) === targetSite && normalizeSiteCode(row.perusahaan) === targetPartner);
+    }
+
+    function getScrIncidentCount(site, partner) {
+      return getScrIncidentRows(site, partner).reduce((sum, row) => sum + (Number(row.total) || 0), 0);
+    }
+
+    function getScrIncidentTooltip(site, partner) {
+      const incidents = getScrIncidentRows(site, partner);
+      if (!incidents.length) return `Tidak ada incident ${scrIncidentWeek} ${scrIncidentYear} untuk ${site} - ${partner}.`;
+      return incidents.map((incident, index) => {
+        const title = `${index + 1}. ${incident.kategori || "Incident"} · ${incident.hipo || "-"}`;
+        const chronology = incident.kronologi ? `\n${incident.kronologi}` : "";
+        return `${title}\nCount: ${incident.total}${chronology}`;
+      }).join("\n\n");
+    }
+
+    const partnerCompanyPicNames = {
+      BUMA: "PT Bukit Makmur Mandiri Utama",
+      PAMA: "PT Pamapersada Nusantara",
+      KDC: "PT Kaltim Diamond Coal",
+      MTL: "PT Mutiara Tanjung Lestari",
+      MTN: "PT Madhani Talatah Nusantara",
+      BAR: "PT Bumi Artlantis Raya",
+      FAD: "PT Fajar Anugerah Dinamika"
+    };
+
+    function getPartnerCompanyPicName(partner) {
+      return partnerCompanyPicNames[normalizeSiteCode(partner)] || partner;
+    }
+
+    function getBlindspotTbcRecords(site, partner) {
+      const targetSite = normalizeSiteCode(site);
+      const targetCompany = normalizeSiteCode(getPartnerCompanyPicName(partner));
+      return blindspotTbcRows.filter(row => normalizeSiteCode(row.site) === targetSite && normalizeSiteCode(row.perusahaanPic) === targetCompany);
+    }
+
+    function getBlindspotTbcValue(site, partner) {
+      const records = getBlindspotTbcRecords(site, partner);
+      if (!records.length) return null;
+      return records.reduce((sum, row) => sum + (Number.isFinite(row.value) ? row.value : 0), 0);
+    }
+
+    function blindspotTbcTooltip(site, partner) {
+      const companyName = getPartnerCompanyPicName(partner);
+      const records = getBlindspotTbcRecords(site, partner);
+      if (!records.length) return `Tidak ada data Blindspot TBC ${blindspotTbcWeek} untuk ${site} - ${companyName}.`;
+      const total = records.reduce((sum, row) => sum + (Number.isFinite(row.value) ? row.value : 0), 0);
+      const details = records.map((row, index) => `${index + 1}. ${row.site} · ${row.perusahaanPic} · ${Number.isFinite(row.value) ? row.value : "-"}`).join("\n");
+      return `Blindspot TBC ${blindspotTbcWeek}\nSite: ${site}\nPerusahaan PIC: ${companyName}\nTotal: ${total}\n\n${details}`;
+    }
+
+    function getRoadStandardHistory(site, partner) {
+      const targetSite = normalizeSiteCode(site);
+      const targetPartner = normalizeSiteCode(partner);
+      return roadStandardRows
+        .filter(row => normalizeSiteCode(row.site) === targetSite && normalizeSiteCode(row.mitra) === targetPartner)
+        .sort((a, b) => Number(a.week) - Number(b.week));
+    }
+
+    function getRoadStandardRecord(site, partner, week = roadStandardWeek) {
+      const targetWeek = Number(week);
+      return getRoadStandardHistory(site, partner).find(row => Number(row.week) === targetWeek) || null;
+    }
+
+    function getRoadStandardValue(site, partner) {
+      const record = getRoadStandardRecord(site, partner);
+      return Number.isFinite(record?.value) ? record.value * 100 : null;
+    }
+
+    function getRoadStandardWeekValue(site, partner, week) {
+      const record = getRoadStandardRecord(site, partner, week);
+      return Number.isFinite(record?.value) ? record.value * 100 : null;
+    }
+
+    function isRoadStandardDeclining(site, partner) {
+      const w16 = getRoadStandardWeekValue(site, partner, 16);
+      const w17 = getRoadStandardWeekValue(site, partner, 17);
+      const w18 = getRoadStandardWeekValue(site, partner, 18);
+      const w19 = getRoadStandardWeekValue(site, partner, 19);
+      const hasLastTwo = Number.isFinite(w18) && Number.isFinite(w19);
+      if (!hasLastTwo) return false;
+
+      const consecutiveDrop = Number.isFinite(w17) && w18 < w17 && w19 < w18;
+      const previousTwo = [w16, w17].filter(Number.isFinite);
+      const lastTwoAverage = (w18 + w19) / 2;
+      const previousTwoAverage = previousTwo.length ? previousTwo.reduce((sum, value) => sum + value, 0) / previousTwo.length : null;
+      return consecutiveDrop || (Number.isFinite(previousTwoAverage) && lastTwoAverage < previousTwoAverage);
+    }
+
+    function roadStandardTooltipHtml(site, partner) {
+      const history = getRoadStandardHistory(site, partner);
+      if (!history.length) return `Tidak ada data Road Standard Week 1-19 untuk ${site} - ${partner}.`;
+      const historyMap = new Map(history.map(record => [Number(record.week), record]));
+      const weekHeaders = Array.from({ length: Number(roadStandardWeek) }, (_, index) => {
+        const week = index + 1;
+        return `<th style="padding:6px 8px; border:1px solid #e5e7eb; background:#f8fafc; color:#475569; text-align:center; white-space:nowrap;">W${String(week).padStart(2, "0")}</th>`;
+      }).join("");
+      const valueCells = Array.from({ length: Number(roadStandardWeek) }, (_, index) => {
+        const week = index + 1;
+        const record = historyMap.get(week);
+        const value = record && Number.isFinite(record.value) ? `${(record.value * 100).toFixed(2)}%` : "-";
+        const cellStyle = Number.isFinite(record?.value) && record.value * 100 < 80
+          ? "background:#fee2e2; color:#991b1b; font-weight:800;"
+          : "background:#ffffff; color:#111827; font-weight:700;";
+        return `<td style="padding:7px 8px; border:1px solid #e5e7eb; text-align:center; white-space:nowrap; ${cellStyle}">${escapeHtml(value)}</td>`;
+      }).join("");
+      const declining = isRoadStandardDeclining(site, partner);
+      const status = declining ? "Menurun dalam 2 minggu terakhir" : "Tidak menurun 2 minggu berturut-turut";
+      return `
+        <div style="min-width:720px; max-width:min(920px, calc(100vw - 48px)); color:#111827;">
+          <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:16px; margin-bottom:10px;">
+            <div>
+              <div style="font-weight:900; font-size:13px; color:#0f172a;">Road Standard Week 1-19</div>
+              <div style="margin-top:2px; color:#475569; font-size:11px;">${escapeHtml(site)} · ${escapeHtml(partner)}</div>
+            </div>
+            <div style="border-radius:999px; padding:5px 9px; font-size:10px; font-weight:800; white-space:nowrap; background:${declining ? "#fee2e2" : "#dcfce7"}; color:${declining ? "#991b1b" : "#166534"};">${escapeHtml(status)}</div>
+          </div>
+          <div style="overflow-x:auto; padding-bottom:2px;">
+            <table style="width:max-content; min-width:100%; border-collapse:collapse; border:1px solid #e5e7eb; border-radius:10px; overflow:hidden; font-size:11px;">
+              <thead><tr>${weekHeaders}</tr></thead>
+              <tbody><tr>${valueCells}</tr></tbody>
+            </table>
+          </div>
+        </div>
+      `;
+    }
+
+    function getCoverageAreaKritisRecord(site) {
+      const targetSite = normalizeSiteCode(site);
+      return coverageAreaKritisRows.find(row => normalizeSiteCode(row.site) === targetSite) || null;
+    }
+
+    function getCoverageAreaKritisValue(site) {
+      const record = getCoverageAreaKritisRecord(site);
+      return Number.isFinite(record?.value) ? record.value * 100 : null;
+    }
+
+    function coverageAreaKritisTooltip(site) {
+      const record = getCoverageAreaKritisRecord(site);
+      if (!record) return `Tidak ada data Area Kritis ${coverageAreaKritisWeek} untuk ${site}.`;
+      const value = Number.isFinite(record.value) ? `${(record.value * 100).toFixed(2)}%` : "-";
+      return `Area Kritis ${coverageAreaKritisWeek}\nSite: ${record.site}\nNilai: ${value}`;
     }
 
     function renderHeatmap() {
@@ -1296,7 +1658,7 @@
       if (!headEl || !bodyEl || !correlationEl) return;
 
       const siteColumns = [
-        { site: "BMO 1", partners: ["BUMA", "KDC", "MTL"] },
+        { site: "BMO 1", partners: ["BUMA", "KDC", "MTL", "MTN"] },
         { site: "BMO 2", partners: ["PAMA"] },
         { site: "BMO 3", partners: ["BAR"] },
         { site: "GMO", partners: ["PAMA"] },
@@ -1311,7 +1673,7 @@
 
       headEl.innerHTML = `
         <tr>
-          <th colspan="2" rowspan="2"></th>
+          <th colspan="3" rowspan="2"></th>
           ${siteColumns.map(group => `<th class="head-site" colspan="${group.partners.length}">${escapeHtml(group.site)}</th>`).join("")}
         </tr>
         <tr>
@@ -1320,59 +1682,89 @@
       `;
 
       const rows = [
-        { group: "Lagging Indicator", marker: "L", metric: "Incident", value: site => site.sourceMetrics.gr, format: value => `${Math.round(value)}` },
-        { group: "Lagging Indicator", marker: "L", metric: "Accident", value: () => 0, format: value => `${Math.round(value)}`, sub: true },
-        { group: "Lagging Indicator", marker: "L", metric: "IFR", value: site => site.sourceMetrics.ratioSAP, format: value => `${value.toFixed(2)} (0)` },
-        { group: "Lagging Indicator", marker: "L", metric: "AFR", value: site => site.sourceMetrics.ratioTBC, format: value => `${value.toFixed(2)} (0)` },
-        { group: "Leadership", marker: "C", metric: "PJA BC", value: site => site.sourceMetrics.coverageWeekly, format: value => `${value.toFixed(1)}%` },
-        { group: "Leadership", marker: "C", metric: "PJA MK", value: site => Math.max(95, site.sourceMetrics.coverageWeekly - 0.8), format: value => `${value.toFixed(1)}%`, sub: true },
-        { group: "Leadership", marker: "C", metric: "All Area", value: site => site.sourceMetrics.coverageDaily, format: value => `${value.toFixed(1)}%` },
-        { group: "Leadership", marker: "C", metric: "Area Kritis", value: site => Math.max(96, site.sourceMetrics.coverageDaily - 1.2), format: value => `${value.toFixed(1)}%`, sub: true },
-        { group: "Leadership", marker: "S", metric: "Ratio Pelaporan TBC", value: site => site.sourceMetrics.ratioTBC, format: value => `${value.toFixed(2)}` },
-        { group: "Leadership", marker: "C", metric: "Blindspot TBC", value: site => site.sourceMetrics.blindspot, format: value => `${Math.round(value)}` },
-        { group: "Leadership", marker: "C", metric: "Overdue Hazard", value: site => site.sourceMetrics.blindspotGR, format: value => `${Math.round(value)}` },
-        { group: "People", marker: "L", metric: "GR", value: site => site.sourceMetrics.gr, format: value => `${Math.round(value)}` },
-        { group: "People", marker: "L", metric: "PSPP", value: site => site.sourceMetrics.blindspotGR, format: value => `${Math.round(value)}`, sub: true },
-        { group: "Process", marker: "S", metric: "Road Management", value: site => site.exposure, format: value => `${Math.round(value)}%` },
-        { group: "Process", marker: "S", metric: "Fatigue", value: site => site.sourceMetrics.fatigueAlert, format: value => `${Math.round(value)}` },
-        { group: "Technology", marker: "S", metric: "Pengawasan Berjarak", value: site => site.sourceMetrics.rfidNonPengawas / Math.max(site.sourceMetrics.rfidPengawas, 1), format: value => `${value.toFixed(2)}x` }
+        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "Incident", value: (_site, column) => getScrIncidentCount(column.site, column.partner), format: value => `${Math.round(value)}`, fromScrIncident: true },
+        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "Accident", value: () => 0, format: value => `${Math.round(value)}`, forceZero: true, sub: true },
+        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "IFR", value: site => site.sourceMetrics.ratioSAP, format: value => `${value.toFixed(2)} (0)` },
+        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "AFR", value: site => site.sourceMetrics.ratioTBC, format: value => `${value.toFixed(2)} (0)`, sub: true },
+        { group: "Leadership", marker: "C", parameter: "PJA Performance", metric: "PJA BC", value: site => site.sourceMetrics.coverageWeekly, format: value => `${value.toFixed(1)}%` },
+        { group: "Leadership", marker: "C", parameter: "PJA Performance", metric: "PJA MK", value: site => Math.max(95, site.sourceMetrics.coverageWeekly - 0.8), format: value => `${value.toFixed(1)}%`, sub: true },
+        { group: "Leadership", marker: "C", parameter: "Coverage Area", metric: "All Area", value: site => site.sourceMetrics.coverageDaily, format: value => `${value.toFixed(1)}%` },
+        { group: "Leadership", marker: "C", parameter: "Coverage Area", metric: "Area Kritis", value: (_site, column) => getCoverageAreaKritisValue(column.site), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromCoverageAreaKritis: true, sub: true },
+        { group: "Leadership", marker: "S", parameter: "Ratio Pelaporan", metric: "Ratio Pelaporan TBC", value: site => site.sourceMetrics.ratioTBC, format: value => `${value.toFixed(2)}` },
+        { group: "Leadership", marker: "C", parameter: "Blindspot TBC", metric: "Blindspot TBC", value: (_site, column) => getBlindspotTbcValue(column.site, column.partner), format: value => Number.isFinite(value) ? `${Math.round(value)}` : "-", fromBlindspotTbc: true },
+        { group: "Leadership", marker: "C", parameter: "Overdue Hazard", metric: "Overdue Hazard", value: site => site.sourceMetrics.blindspotGR, format: value => `${Math.round(value)}` },
+        { group: "Leadership", marker: "C", parameter: "Partisipasi Pelaporan", metric: "Pelaporan SAP L1- L2 MK", value: site => site.sourceMetrics.ratioSAP, format: value => `${value.toFixed(2)}` },
+        { group: "People", marker: "L", parameter: "Valid GR & PSPP", metric: "GR", value: site => site.sourceMetrics.gr, format: value => `${Math.round(value)}` },
+        { group: "People", marker: "L", parameter: "Valid GR & PSPP", metric: "PSPP", value: site => site.sourceMetrics.blindspotGR, format: value => `${Math.round(value)}`, sub: true },
+        { group: "Process", marker: "S", parameter: "Road Management", metric: "% Road Standard", value: (_site, column) => getRoadStandardValue(column.site, column.partner), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromRoadStandard: true },
+        { group: "Process", marker: "S", parameter: "Road Management", metric: "Hazard Road Safety", value: () => 0, format: value => `${Math.round(value)}` },
+        { group: "Process", marker: "S", parameter: "Road Management", metric: "Hazard Road Teknis", value: () => 0, format: value => `${Math.round(value)}`, sub: true },
+        { group: "Process", marker: "S", parameter: "Fatigue", metric: "True Alert Fatigue", value: site => site.sourceMetrics.fatigueAlert, format: value => `${Math.round(value)}` },
+        { group: "Process", marker: "C", parameter: "Fatigue", metric: "Speak Up Sebelum Alert", value: () => 0, format: value => `${Math.round(value)}` },
+        { group: "Technology", marker: "S", parameter: "Pengawasan Berjarak", metric: "Real Time", value: site => site.sourceMetrics.rfidNonPengawas / Math.max(site.sourceMetrics.rfidPengawas, 1), format: value => `${value.toFixed(2)}x` },
+        { group: "Technology", marker: "S", parameter: "Pengawasan Berjarak", metric: "Post Event", value: site => Math.max(0, site.sourceMetrics.rfidNonPengawas / Math.max(site.sourceMetrics.rfidPengawas, 1) - 0.2), format: value => `${value.toFixed(2)}x`, sub: true }
       ];
 
       bodyEl.innerHTML = rows.map((row, rowIndex) => {
         const showGroup = rowIndex === 0 || rows[rowIndex - 1].group !== row.group;
         const groupRowSpan = rows.filter(item => item.group === row.group).length;
+        const showParameter = rowIndex === 0 || rows[rowIndex - 1].group !== row.group || rows[rowIndex - 1].parameter !== row.parameter;
+        const parameterRowSpan = rows.filter(item => item.group === row.group && item.parameter === row.parameter).length;
         const groupClass = cssClass(row.group);
         return `
           <tr>
             ${showGroup ? `<td class="group-head ${groupClass}" rowspan="${groupRowSpan}">${escapeHtml(row.group)}</td>` : ""}
-            <td class="metric-head ${row.sub ? "sub-metric" : ""}">${row.sub ? "" : `<span class="marker">${escapeHtml(row.marker)}</span>`}${escapeHtml(row.metric)}</td>
+            ${showParameter ? `<td class="parameter-head" rowspan="${parameterRowSpan}"><span class="marker">${escapeHtml(row.marker)}</span>${escapeHtml(row.parameter)}</td>` : ""}
+            <td class="metric-head ${row.sub ? "sub-metric" : ""}">${escapeHtml(row.metric)}</td>
             ${columnMap.map(column => {
               const site = getSite(column.site);
-              const raw = row.value(site);
-              const value = Number.isFinite(raw) ? raw : 0;
+              const raw = row.value(site, column);
+              const hasRawValue = Number.isFinite(raw);
+              const value = hasRawValue ? raw : 0;
               const variance = Math.round((column.partnerIndex - 1) * 2);
-              const adjustedValue = row.metric === "Incident" || row.metric === "Accident"
-                ? Math.max(0, Math.round(value + (column.partnerIndex === 1 ? 0 : column.partnerIndex === 0 ? -1 : 1)))
+              const adjustedValue = row.fromScrIncident
+                ? value
+                : row.fromRoadStandard
+                ? (hasRawValue ? value : null)
+                : row.fromCoverageAreaKritis
+                ? (hasRawValue ? value : null)
+                : row.fromBlindspotTbc
+                ? (hasRawValue ? value : null)
+                : row.forceZero
+                ? 0
                 : Math.max(0, value + variance * 0.01 * (row.metric.includes("%") || row.metric.includes("Area") ? 100 : 1));
               const isDanger = (
+                (row.fromScrIncident && adjustedValue >= 1) ||
+                (row.fromRoadStandard && isRoadStandardDeclining(column.site, column.partner)) ||
                 (row.metric === "Ratio Pelaporan TBC" && adjustedValue < 2.5) ||
-                (row.metric === "Blindspot TBC" && adjustedValue >= 2) ||
-                (row.metric === "Fatigue" && adjustedValue >= 10) ||
-                (row.metric === "Pengawasan Berjarak" && adjustedValue >= 4) ||
-                (row.metric === "All Area" && adjustedValue < 80)
+                (row.metric === "Blindspot TBC" && adjustedValue >= 1) ||
+                (row.parameter === "Fatigue" && adjustedValue >= 10) ||
+                (row.parameter === "Pengawasan Berjarak" && adjustedValue >= 4) ||
+                ((row.metric === "All Area" || row.metric === "Area Kritis") && adjustedValue < 80)
               );
               const isWatch = (
                 (row.metric === "PJA BC" && adjustedValue < 98) ||
-                (row.metric === "Road Management" && adjustedValue >= 55 && adjustedValue < 70) ||
+                (row.parameter === "Road Management" && adjustedValue >= 55 && adjustedValue < 70) ||
                 (row.metric === "GR" && adjustedValue >= 1) ||
                 (row.metric === "PJA MK" && adjustedValue < 99)
               );
-              const className = isDanger ? "cell-danger" : isWatch ? "cell-watch" : adjustedValue === 0 ? "cell-muted" : "";
-              return `<td class="${className}">${row.format(adjustedValue)}</td>`;
+              const className = isDanger ? "cell-danger" : isWatch ? "cell-watch" : adjustedValue === 0 || adjustedValue === null ? "cell-muted" : "";
+              const content = row.format(adjustedValue);
+              const cellContent = row.fromScrIncident
+                ? withCellTooltip(content, getScrIncidentTooltip(column.site, column.partner))
+                : row.fromRoadStandard
+                ? withCellHtmlTooltip(content, roadStandardTooltipHtml(column.site, column.partner))
+                : row.fromCoverageAreaKritis
+                ? withCellTooltip(content, coverageAreaKritisTooltip(column.site))
+                : row.fromBlindspotTbc
+                ? withCellTooltip(content, blindspotTbcTooltip(column.site, column.partner))
+                : content;
+              return `<td class="${className}">${cellContent}</td>`;
             }).join("")}
           </tr>
         `;
       }).join("");
+      bindTooltips();
 
       correlationEl.innerHTML = sites.map(site => `
         <article class="site-correlation-item ${site.status === "Best Profile" ? "best" : ""}">
@@ -1414,7 +1806,17 @@
 
     function showTooltip(element, event) {
       const tooltip = getFloatingTooltip();
-      tooltip.textContent = element.dataset.tooltip || "";
+      if (element.dataset.tooltipHtml) {
+        tooltip.innerHTML = element.dataset.tooltipHtml;
+        tooltip.style.background = "#ffffff";
+        tooltip.style.color = "#111827";
+        tooltip.style.maxWidth = "min(940px, calc(100vw - 28px))";
+      } else {
+        tooltip.textContent = element.dataset.tooltip || "";
+        tooltip.style.background = "";
+        tooltip.style.color = "";
+        tooltip.style.maxWidth = "";
+      }
       tooltip.classList.add("show");
       const rect = tooltip.getBoundingClientRect();
       const sourceRect = element.getBoundingClientRect();
@@ -1460,11 +1862,49 @@
       `;
     }
 
+    function normalizeSiteCode(siteName) {
+      return String(siteName || "").replace(/\s+/g, "").toUpperCase();
+    }
+
+    function numericValue(value) {
+      const number = Number(value);
+      return Number.isFinite(number) ? number : null;
+    }
+
+    function shouldDisplayAsPercent(field, number) {
+      const fieldName = String(field || "");
+      const percentLikeField = /^%/.test(fieldName) || /(coverage|ratio|availability|kesesuaian|kelayakan|golden time|road standard|alert intervented|improvement|investigasi|closing|laporan)/i.test(fieldName);
+      return (number > 0 && number < 1) || (percentLikeField && (number === 0 || number === 1));
+    }
+
+    function formatTooltipValue(value, field = "") {
+      if (value === null || value === undefined || value === "") return "-";
+      const number = Number(value);
+      if (!Number.isFinite(number)) return escapeHtml(value);
+      if (shouldDisplayAsPercent(field, number)) return escapeHtml(`${(number * 100).toFixed(2)}%`);
+      return escapeHtml(Number.isInteger(number) ? number : number.toFixed(3));
+    }
+
+    function getHistoricalRecords(siteName) {
+      const targetSite = normalizeSiteCode(siteName);
+      return historicalRiskProfileData
+        .filter(row => normalizeSiteCode(row.Site) === targetSite && Number(row.Minggu) >= 1 && Number(row.Minggu) <= historicalWeekLimit)
+        .sort((a, b) => Number(a.Minggu) - Number(b.Minggu));
+    }
+
+    function getHistoricalRecordByWeek(siteName, week) {
+      return getHistoricalRecords(siteName).find(row => Number(row.Minggu) === Number(week)) || null;
+    }
+
+    function getHistoricalObservedValue(record) {
+      return numericValue(record?.["Observed Risk"] ?? record?.Risk_Engine_Base ?? record?.Weighted_Score);
+    }
+
     function movingAverage(values, window = 4) {
       return values.map((_, index) => {
         const start = Math.max(0, index - window + 1);
-        const slice = values.slice(start, index + 1);
-        return slice.reduce((sum, num) => sum + num, 0) / slice.length;
+        const slice = values.slice(start, index + 1).filter(value => Number.isFinite(value));
+        return slice.length ? slice.reduce((sum, num) => sum + num, 0) / slice.length : null;
       });
     }
 
@@ -1485,24 +1925,102 @@
       }).join(" ");
     }
 
+    function buildObservedFromHistorical(siteData) {
+      if (siteData.site === "ALL") {
+        return Array.from({ length: historicalWeekLimit }, (_, index) => {
+          const week = index + 1;
+          const weekValues = historicalRiskProfileData
+            .filter(row => Number(row.Minggu) === week)
+            .map(getHistoricalObservedValue)
+            .filter(value => Number.isFinite(value));
+          return weekValues.length ? weekValues.reduce((sum, value) => sum + value, 0) / weekValues.length : null;
+        });
+      }
+
+      const records = getHistoricalRecords(siteData.site);
+      return Array.from({ length: historicalWeekLimit }, (_, index) => {
+        const record = records.find(row => Number(row.Minggu) === index + 1);
+        return getHistoricalObservedValue(record);
+      });
+    }
+
+    const predictionScenarioNames = {
+      controlled: "Controlled Recovery",
+      bau: "BAU",
+      worst: "Worst",
+      proposed: "Proposed"
+    };
+
+    function getPredictionSiteKey(siteName) {
+      return normalizeSiteCode(siteName);
+    }
+
+    function getPredictionWeeks(siteData) {
+      if (siteData.site === "ALL") {
+        const weeks = new Set();
+        Object.values(predictionRiskProfileData || {}).forEach(sitePrediction => {
+          Object.keys(sitePrediction || {}).forEach(week => weeks.add(Number(week)));
+        });
+        return Array.from(weeks).filter(Number.isFinite).sort((a, b) => a - b);
+      }
+
+      const sitePrediction = predictionRiskProfileData?.[getPredictionSiteKey(siteData.site)] || {};
+      return Object.keys(sitePrediction).map(Number).filter(Number.isFinite).sort((a, b) => a - b);
+    }
+
+    function getPredictionScenarioValue(siteData, scenarioKey, week) {
+      const scenarioName = predictionScenarioNames[scenarioKey];
+      if (!scenarioName) return null;
+
+      if (siteData.site === "ALL") {
+        const values = Object.values(predictionRiskProfileData || {})
+          .map(sitePrediction => sitePrediction?.[String(week)] || [])
+          .flat()
+          .filter(item => item.scenario === scenarioName)
+          .map(item => Number(item.projected_risk))
+          .filter(Number.isFinite);
+        return values.length ? values.reduce((sum, value) => sum + value, 0) / values.length : null;
+      }
+
+      const weekItems = predictionRiskProfileData?.[getPredictionSiteKey(siteData.site)]?.[String(week)] || [];
+      const item = weekItems.find(row => row.scenario === scenarioName);
+      const value = Number(item?.projected_risk);
+      return Number.isFinite(value) ? value : null;
+    }
+
+    function buildPredictionScenario(siteData, scenarioKey, breakoutValue) {
+      const predictionWeeks = getPredictionWeeks(siteData);
+      const values = predictionWeeks.map(week => getPredictionScenarioValue(siteData, scenarioKey, week));
+      if (!values.some(Number.isFinite)) return null;
+      const firstPrediction = values.find(Number.isFinite) ?? breakoutValue;
+      return { weeks: predictionWeeks, values: [firstPrediction, ...values] };
+    }
+
     function buildProfileData(siteData, seed = 0) {
-      const observedLength = 18;
+      const historicalObserved = buildObservedFromHistorical(siteData);
+      const hasHistoricalObserved = historicalObserved.some(value => Number.isFinite(value));
+      const observedLength = historicalWeekLimit;
       const base = siteData.score + (siteData.status === "High Risk" ? 6 : siteData.status === "Unstable" ? 2 : -2);
       const volatility = siteData.status === "High Risk" ? 8 : siteData.status === "Unstable" ? 6 : 4;
-      const observed = Array.from({ length: observedLength }, (_, index) => {
+      const observed = hasHistoricalObserved ? historicalObserved : Array.from({ length: observedLength }, (_, index) => {
         const wave = Math.sin((index + 1 + seed) * 0.75) * volatility;
         const drift = (index - observedLength / 2) * 0.15;
         const noise = Math.cos((index + seed) * 1.12) * 2.4;
         return Math.max(8, Math.min(55, base + wave + drift + noise));
       });
       const moving = movingAverage(observed);
-      const breakout = observed.length - 1;
-      const breakoutValue = observed[breakout];
-      const proposed = smoothScenario(breakoutValue, Math.max(4, siteData.score * 0.24), 9, 2.1);
-      const controlled = smoothScenario(breakoutValue, Math.max(10, siteData.score * 0.5), 9, 1.8);
-      const bau = smoothScenario(breakoutValue, Math.max(20, siteData.score * 0.9), 9, 1.45);
-      const worst = smoothScenario(breakoutValue, Math.min(66, siteData.score + 36), 9, 2.35);
-      return { observed, moving, proposed, controlled, bau, worst, breakout };
+      const breakout = observed.reduce((lastIndex, value, index) => Number.isFinite(value) ? index : lastIndex, 0);
+      const breakoutValue = Number.isFinite(observed[breakout]) ? observed[breakout] : siteData.score;
+      const predictionWeeks = getPredictionWeeks(siteData);
+      const controlledPrediction = buildPredictionScenario(siteData, "controlled", breakoutValue);
+      const bauPrediction = buildPredictionScenario(siteData, "bau", breakoutValue);
+      const worstPrediction = buildPredictionScenario(siteData, "worst", breakoutValue);
+      const proposedPrediction = buildPredictionScenario(siteData, "proposed", breakoutValue);
+      const proposed = proposedPrediction?.values || smoothScenario(breakoutValue, Math.max(4, siteData.score * 0.24), 9, 2.1);
+      const controlled = controlledPrediction?.values || smoothScenario(breakoutValue, Math.max(10, siteData.score * 0.5), 9, 1.8);
+      const bau = bauPrediction?.values || smoothScenario(breakoutValue, Math.max(20, siteData.score * 0.9), 9, 1.45);
+      const worst = worstPrediction?.values || smoothScenario(breakoutValue, Math.min(66, siteData.score + 36), 9, 2.35);
+      return { observed, moving, proposed, controlled, bau, worst, breakout, predictionWeeks };
     }
 
     function profileSvg(data, width = 860, height = 230) {
@@ -1556,7 +2074,9 @@
 
     function buildRiskProfileAxis(data) {
       const observedLabels = Array.from({ length: data.observed.length }, (_, index) => `W${String(index + 1).padStart(2, "0")}`);
-      const scenarioLabels = Array.from({ length: data.proposed.length - 1 }, (_, index) => `P${index + 1}`);
+      const scenarioLabels = data.predictionWeeks?.length
+        ? data.predictionWeeks.map(week => `W${String(week).padStart(2, "0")}`)
+        : Array.from({ length: data.proposed.length - 1 }, (_, index) => `P${index + 1}`);
       return observedLabels.concat(scenarioLabels);
     }
 
@@ -1565,14 +2085,84 @@
       const offset = data.observed.length - 1;
       return axis.map((_, index) => {
         if (index <= data.observed.length - 1) {
-          if (key === "moving") return Number(data.moving[index].toFixed(2));
-          if (key === "observed") return Number(data.observed[index].toFixed(2));
-          if (index === offset) return Number(data.observed[index].toFixed(2));
+          if (key === "moving") return Number.isFinite(data.moving[index]) ? Number(data.moving[index].toFixed(2)) : null;
+          if (key === "observed") return Number.isFinite(data.observed[index]) ? Number(data.observed[index].toFixed(2)) : null;
+          if (index === offset) return Number.isFinite(data[key]?.[0]) ? Number(data[key][0].toFixed(2)) : null;
           return null;
         }
         const scenarioIndex = index - offset;
-        return Number(data[key][scenarioIndex].toFixed(2));
+        return Number.isFinite(data[key][scenarioIndex]) ? Number(data[key][scenarioIndex].toFixed(2)) : null;
       });
+    }
+
+    function formatRiskProfileTooltip(params, siteName) {
+      const items = Array.isArray(params) ? params : [params];
+      const axisLabel = String(items[0]?.axisValueLabel || items[0]?.axisValue || "");
+      const week = axisLabel.startsWith("W") ? Number(axisLabel.replace(/[^\d]/g, "")) : null;
+      const seriesRows = items
+        .filter(item => item.value !== null && item.value !== undefined && item.value !== "-")
+        .map(item => `
+          <div style="display:flex; justify-content:space-between; gap:14px; margin-top:4px;">
+            <span>${item.marker || ""}${escapeHtml(item.seriesName)}</span>
+            <b>${formatTooltipValue(item.value)}</b>
+          </div>
+        `).join("");
+
+      let historicalRows = "";
+      if (week && siteName) {
+        const record = getHistoricalRecordByWeek(siteName, week);
+        if (record) {
+          historicalRows = historicalTooltipFields
+            .filter(field => Object.prototype.hasOwnProperty.call(record, field))
+            .map(field => `
+              <div style="display:grid; grid-template-columns:minmax(150px,1fr) auto; gap:12px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,.08);">
+                <span>${escapeHtml(field)}</span>
+                <b>${formatTooltipValue(record[field], field)}</b>
+              </div>
+            `).join("");
+        }
+      } else if (week) {
+        const weekValues = historicalRiskProfileData
+          .filter(row => Number(row.Minggu) === week)
+          .map(getHistoricalObservedValue)
+          .filter(value => Number.isFinite(value));
+        if (weekValues.length) {
+          const average = weekValues.reduce((sum, value) => sum + value, 0) / weekValues.length;
+          historicalRows = `
+            <div style="display:grid; grid-template-columns:minmax(150px,1fr) auto; gap:12px; padding:3px 0; border-bottom:1px solid rgba(255,255,255,.08);">
+              <span>Site Count</span>
+              <b>${weekValues.length}</b>
+            </div>
+            <div style="display:grid; grid-template-columns:minmax(150px,1fr) auto; gap:12px; padding:3px 0;">
+              <span>Avg Observed Risk</span>
+              <b>${formatTooltipValue(average)}</b>
+            </div>
+          `;
+        }
+      }
+
+      return `
+        <div style="min-width:280px; max-width:460px;">
+          <div style="font-weight:800; margin-bottom:8px;">${escapeHtml(siteName || "All Site")} · ${escapeHtml(axisLabel)}</div>
+          ${seriesRows}
+          ${historicalRows ? `
+            <div style="margin-top:10px; padding-top:8px; border-top:1px solid rgba(255,255,255,.22); font-weight:800;">Historical Data</div>
+            <div style="margin-top:4px; max-height:320px; overflow:auto; padding-right:4px;">${historicalRows}</div>
+          ` : ""}
+        </div>
+      `;
+    }
+
+    function getRiskProfileYAxisBounds(seriesList) {
+      const values = seriesList.flat().filter(Number.isFinite);
+      if (!values.length) return { min: 0, max: 70 };
+      const min = Math.min(...values);
+      const max = Math.max(...values);
+      const padding = Math.max(3, (max - min) * 0.18);
+      return {
+        min: Math.max(0, Math.floor(min - padding)),
+        max: Math.ceil(max + padding)
+      };
     }
 
     function renderRiskProfiling() {
@@ -1586,8 +2176,8 @@
       const isAllSite = selectedRiskProfileSite === "ALL";
       const activeSite = isAllSite ? null : getSite(selectedRiskProfileSite);
       const profileSource = isAllSite
-        ? { score: Math.round(sites.reduce((sum, site) => sum + site.score, 0) / sites.length), status: "Unstable" }
-        : { score: activeSite.score, status: activeSite.status };
+        ? { site: "ALL", score: Math.round(sites.reduce((sum, site) => sum + site.score, 0) / sites.length), status: "Unstable" }
+        : { site: activeSite.site, score: activeSite.score, status: activeSite.status };
       const seed = isAllSite ? 2 : Math.max(1, sites.findIndex(item => item.site === activeSite.site) + 1);
       const profileData = buildProfileData(profileSource, seed);
       const axis = buildRiskProfileAxis(profileData);
@@ -1598,6 +2188,7 @@
       const bauData = toSeriesAxisData(profileData, "bau");
       const worstData = toSeriesAxisData(profileData, "worst");
       const proposedData = toSeriesAxisData(profileData, "proposed");
+      const yBounds = getRiskProfileYAxisBounds([movingData, observedData, controlledData, bauData, worstData, proposedData]);
       if (riskProfileSiteLabel) {
         riskProfileSiteLabel.textContent = isAllSite ? "All Site" : activeSite.site;
       }
@@ -1607,8 +2198,17 @@
       riskProfileMainChartInstance = echarts.init(mainEl);
       riskProfileMainChartInstance.setOption({
         animationDuration: 900,
-        grid: { left: 38, right: 20, top: 16, bottom: 26 },
-        tooltip: { trigger: "axis", axisPointer: { type: "line" } },
+        grid: { left: 38, right: 20, top: 16, bottom: 34 },
+        tooltip: {
+          trigger: "axis",
+          axisPointer: { type: "line" },
+          confine: true,
+          appendToBody: true,
+          enterable: true,
+          hideDelay: 500,
+          extraCssText: "max-width:480px; white-space:normal;",
+          formatter: params => formatRiskProfileTooltip(params, isAllSite ? null : activeSite.site)
+        },
         xAxis: {
           type: "category",
           data: axis,
@@ -1616,20 +2216,15 @@
           axisLine: { lineStyle: { color: "#d6dbe3" } },
           axisLabel: {
             color: "#7c8798",
-            fontSize: 10,
-            interval: (index, value) => {
-              const label = String(value ?? axis[index] ?? "");
-              if (label.startsWith("P")) return 0;
-              const week = Number(label.replace(/[^\d]/g, ""));
-              if (!Number.isFinite(week)) return 1;
-              return week % 3 === 1 ? 0 : 1;
-            }
+            fontSize: 9,
+            interval: 0,
+            hideOverlap: false
           }
         },
         yAxis: {
           type: "value",
-          min: 0,
-          max: 70,
+          min: yBounds.min,
+          max: yBounds.max,
           splitLine: { lineStyle: { color: "#e5e7eb", type: "dashed" } },
           axisLabel: { color: "#7c8798", fontSize: 10 }
         },
@@ -1651,10 +2246,10 @@
             markPoint: { symbol: "circle", symbolSize: 10, itemStyle: { color: "#ef4444" }, data: [{ coord: [breakoutLabel, observedData[profileData.breakout]] }] },
             markLine: { symbol: "none", label: { formatter: "Breakout", color: "#ef4444" }, lineStyle: { color: "#ef4444", type: "dashed" }, data: [{ xAxis: breakoutLabel }] }
           },
-          { name: "Controlled Recovery Scenario", type: "line", data: controlledData, smooth: 0.38, symbol: "none", lineStyle: { color: "#22c55e", width: 2.2 } },
-          { name: "BAU Scenario", type: "line", data: bauData, smooth: 0.38, symbol: "none", lineStyle: { color: "#eab308", width: 2.2 } },
-          { name: "Worst Scenario", type: "line", data: worstData, smooth: 0.38, symbol: "none", lineStyle: { color: "#be123c", width: 2.3 } },
-          { name: "Proposed Scenario", type: "line", data: proposedData, smooth: 0.38, symbol: "none", lineStyle: { color: "#0ea5e9", width: 2.2 } }
+          { name: "Controlled Recovery Scenario", type: "line", data: controlledData, smooth: 0.62, smoothMonotone: "x", symbol: "circle", symbolSize: 3, showSymbol: false, lineStyle: { color: "#22c55e", width: 2.2 } },
+          { name: "BAU Scenario", type: "line", data: bauData, smooth: 0.62, smoothMonotone: "x", symbol: "circle", symbolSize: 3, showSymbol: false, lineStyle: { color: "#eab308", width: 2.2 } },
+          { name: "Worst Scenario", type: "line", data: worstData, smooth: 0.62, smoothMonotone: "x", symbol: "circle", symbolSize: 3, showSymbol: false, lineStyle: { color: "#be123c", width: 2.3 } },
+          { name: "Proposed Scenario", type: "line", data: proposedData, smooth: 0.62, smoothMonotone: "x", symbol: "circle", symbolSize: 3, showSymbol: false, lineStyle: { color: "#0ea5e9", width: 2.2 } }
         ]
       });
 
@@ -1679,15 +2274,27 @@
         const profile = buildProfileData(siteData, index + 1);
         const miniAxis = buildRiskProfileAxis(profile);
         const miniObserved = toSeriesAxisData(profile, "observed");
+        const miniControlled = toSeriesAxisData(profile, "controlled");
+        const miniBau = toSeriesAxisData(profile, "bau");
         const miniProposed = toSeriesAxisData(profile, "proposed");
         const miniWorst = toSeriesAxisData(profile, "worst");
+        const miniYBounds = getRiskProfileYAxisBounds([miniObserved, miniControlled, miniBau, miniWorst, miniProposed]);
         const miniChart = echarts.init(el);
         miniChart.setOption({
           animationDuration: 500,
           grid: { left: 8, right: 8, top: 6, bottom: 6 },
           xAxis: { type: "category", data: miniAxis, show: false },
-          yAxis: { type: "value", min: 0, max: 70, show: false },
-          tooltip: { trigger: "axis", axisPointer: { type: "none" } },
+          yAxis: { type: "value", min: miniYBounds.min, max: miniYBounds.max, show: false },
+          tooltip: {
+            trigger: "axis",
+            axisPointer: { type: "none" },
+            confine: true,
+            appendToBody: true,
+            enterable: true,
+            hideDelay: 500,
+            extraCssText: "max-width:480px; white-space:normal;",
+            formatter: params => formatRiskProfileTooltip(params, siteData.site)
+          },
           series: [
             {
               type: "line",
@@ -1703,13 +2310,18 @@
                 ])
               }
             },
-            { type: "line", name: "Worst", data: miniWorst, smooth: 0.33, symbol: "none", lineStyle: { width: 1.8, color: "#be123c" } },
+            { type: "line", name: "Controlled Recovery", data: miniControlled, smooth: 0.62, smoothMonotone: "x", symbol: "circle", symbolSize: 2, showSymbol: false, lineStyle: { width: 1.7, color: "#22c55e" } },
+            { type: "line", name: "BAU", data: miniBau, smooth: 0.62, smoothMonotone: "x", symbol: "circle", symbolSize: 2, showSymbol: false, lineStyle: { width: 1.7, color: "#eab308" } },
+            { type: "line", name: "Worst", data: miniWorst, smooth: 0.62, smoothMonotone: "x", symbol: "circle", symbolSize: 2, showSymbol: false, lineStyle: { width: 1.8, color: "#be123c" } },
             {
               type: "line",
               name: "Proposed",
               data: miniProposed,
-              smooth: 0.33,
-              symbol: "none",
+              smooth: 0.62,
+              smoothMonotone: "x",
+              symbol: "circle",
+              symbolSize: 2,
+              showSymbol: false,
               lineStyle: {
                 width: 1.8,
                 color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
