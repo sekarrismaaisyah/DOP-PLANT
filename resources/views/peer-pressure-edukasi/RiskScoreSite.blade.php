@@ -743,6 +743,13 @@
     $predictionRiskProfile = file_exists($predictionRiskProfilePath)
       ? (json_decode(file_get_contents($predictionRiskProfilePath), true) ?: [])
       : [];
+    $sitePerformancePath = resource_path('views/peer-pressure-edukasi/dataJson/siteperformance.json');
+    $sitePerformanceRows = file_exists($sitePerformancePath)
+      ? collect(json_decode(file_get_contents($sitePerformancePath), true) ?: [])
+          ->filter(fn ($row) => (int) ($row['Year'] ?? 0) === 2026 && (int) ($row['Week'] ?? 0) === 19)
+          ->values()
+          ->all()
+      : [];
 
     $scrIncidentWeek = strtoupper((string) request()->query('incident_week', 'W' . str_pad((string) now()->subWeek()->isoWeek(), 2, '0', STR_PAD_LEFT)));
     $scrIncidentYear = (string) request()->query('incident_year', now()->subWeek()->isoWeekYear());
@@ -883,6 +890,7 @@
   <script>
     const historicalRiskProfileData = @json($historicalRiskProfile);
     const predictionRiskProfileData = @json($predictionRiskProfile);
+    const sitePerformanceRows = @json($sitePerformanceRows);
     const scrIncidentWeek = @json($scrIncidentWeek);
     const scrIncidentYear = @json($scrIncidentYear);
     const scrIncidentRows = @json($scrIncidentRows);
@@ -1414,6 +1422,44 @@
       return `<span class="tooltip-wrap" data-tooltip-html="${escapeHtml(html)}">${content}</span>`;
     }
 
+    function parseSitePerformanceNumber(value) {
+      if (value === null || value === undefined || value === "" || value === "N/A") return null;
+      const number = Number(String(value).replace(",", "."));
+      return Number.isFinite(number) ? number : null;
+    }
+
+    function getSitePerformanceRecord(site, partner) {
+      const targetSite = normalizeSiteCode(site);
+      const targetPartner = normalizeSiteCode(partner);
+      return sitePerformanceRows.find(row => normalizeSiteCode(row.Site) === targetSite && normalizeSiteCode(row["Mitra Kerja"]) === targetPartner) || null;
+    }
+
+    function getSitePerformanceValue(site, partner, field) {
+      const record = getSitePerformanceRecord(site, partner);
+      return parseSitePerformanceNumber(record?.[field]);
+    }
+
+    function getSitePerformancePercentValue(site, partner, field) {
+      const value = getSitePerformanceValue(site, partner, field);
+      return Number.isFinite(value) ? value * 100 : null;
+    }
+
+    function formatSitePerformancePercent(value, digits = 1) {
+      return Number.isFinite(value) ? `${(value * 100).toFixed(digits)}%` : "-";
+    }
+
+    function formatSitePerformanceNumber(value, digits = 2) {
+      if (!Number.isFinite(value)) return "-";
+      return Number.isInteger(value) ? `${value}` : value.toFixed(digits);
+    }
+
+    function sitePerformanceTooltip(site, partner, field, label = field) {
+      const record = getSitePerformanceRecord(site, partner);
+      if (!record) return `Tidak ada data Site Performance W19 untuk ${site} - ${partner}.`;
+      const value = record[field] ?? "-";
+      return `${label} W19\nSite: ${record.Site}\nMitra Kerja: ${record["Mitra Kerja"]}\nNilai: ${value}`;
+    }
+
     function dominantDetails(siteData) {
       return driverNames
         .map(([label, key]) => ({ label, key, value: siteData[key] }))
@@ -1682,27 +1728,27 @@
       `;
 
       const rows = [
-        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "Incident", value: (_site, column) => getScrIncidentCount(column.site, column.partner), format: value => `${Math.round(value)}`, fromScrIncident: true },
-        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "Accident", value: () => 0, format: value => `${Math.round(value)}`, forceZero: true, sub: true },
-        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "IFR", value: site => site.sourceMetrics.ratioSAP, format: value => `${value.toFixed(2)} (0)` },
-        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "AFR", value: site => site.sourceMetrics.ratioTBC, format: value => `${value.toFixed(2)} (0)`, sub: true },
-        { group: "Leadership", marker: "C", parameter: "PJA Performance", metric: "PJA BC", value: site => site.sourceMetrics.coverageWeekly, format: value => `${value.toFixed(1)}%` },
-        { group: "Leadership", marker: "C", parameter: "PJA Performance", metric: "PJA MK", value: site => Math.max(95, site.sourceMetrics.coverageWeekly - 0.8), format: value => `${value.toFixed(1)}%`, sub: true },
-        { group: "Leadership", marker: "C", parameter: "Coverage Area", metric: "All Area", value: site => site.sourceMetrics.coverageDaily, format: value => `${value.toFixed(1)}%` },
-        { group: "Leadership", marker: "C", parameter: "Coverage Area", metric: "Area Kritis", value: (_site, column) => getCoverageAreaKritisValue(column.site), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromCoverageAreaKritis: true, sub: true },
-        { group: "Leadership", marker: "S", parameter: "Ratio Pelaporan", metric: "Ratio Pelaporan TBC", value: site => site.sourceMetrics.ratioTBC, format: value => `${value.toFixed(2)}` },
-        { group: "Leadership", marker: "C", parameter: "Blindspot TBC", metric: "Blindspot TBC", value: (_site, column) => getBlindspotTbcValue(column.site, column.partner), format: value => Number.isFinite(value) ? `${Math.round(value)}` : "-", fromBlindspotTbc: true },
-        { group: "Leadership", marker: "C", parameter: "Overdue Hazard", metric: "Overdue Hazard", value: site => site.sourceMetrics.blindspotGR, format: value => `${Math.round(value)}` },
-        { group: "Leadership", marker: "C", parameter: "Partisipasi Pelaporan", metric: "Pelaporan SAP L1- L2 MK", value: site => site.sourceMetrics.ratioSAP, format: value => `${value.toFixed(2)}` },
-        { group: "People", marker: "L", parameter: "Valid GR & PSPP", metric: "GR", value: site => site.sourceMetrics.gr, format: value => `${Math.round(value)}` },
-        { group: "People", marker: "L", parameter: "Valid GR & PSPP", metric: "PSPP", value: site => site.sourceMetrics.blindspotGR, format: value => `${Math.round(value)}`, sub: true },
-        { group: "Process", marker: "S", parameter: "Road Management", metric: "% Road Standard", value: (_site, column) => getRoadStandardValue(column.site, column.partner), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromRoadStandard: true },
-        { group: "Process", marker: "S", parameter: "Road Management", metric: "Hazard Road Safety", value: () => 0, format: value => `${Math.round(value)}` },
-        { group: "Process", marker: "S", parameter: "Road Management", metric: "Hazard Road Teknis", value: () => 0, format: value => `${Math.round(value)}`, sub: true },
-        { group: "Process", marker: "S", parameter: "Fatigue", metric: "True Alert Fatigue", value: site => site.sourceMetrics.fatigueAlert, format: value => `${Math.round(value)}` },
-        { group: "Process", marker: "C", parameter: "Fatigue", metric: "Speak Up Sebelum Alert", value: () => 0, format: value => `${Math.round(value)}` },
-        { group: "Technology", marker: "S", parameter: "Pengawasan Berjarak", metric: "Real Time", value: site => site.sourceMetrics.rfidNonPengawas / Math.max(site.sourceMetrics.rfidPengawas, 1), format: value => `${value.toFixed(2)}x` },
-        { group: "Technology", marker: "S", parameter: "Pengawasan Berjarak", metric: "Post Event", value: site => Math.max(0, site.sourceMetrics.rfidNonPengawas / Math.max(site.sourceMetrics.rfidPengawas, 1) - 0.2), format: value => `${value.toFixed(2)}x`, sub: true }
+        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "Incident", field: "Incident", value: (_site, column) => getSitePerformanceValue(column.site, column.partner, "Incident"), format: value => formatSitePerformanceNumber(value, 0), fromSitePerformance: true },
+        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "Accident", field: "Accident", value: (_site, column) => getSitePerformanceValue(column.site, column.partner, "Accident"), format: value => formatSitePerformanceNumber(value, 0), fromSitePerformance: true, sub: true },
+        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "IFR", field: "IFR", value: (_site, column) => getSitePerformanceValue(column.site, column.partner, "IFR"), format: value => formatSitePerformanceNumber(value, 2), fromSitePerformance: true },
+        { group: "Lagging Indikator", marker: "L", parameter: "Lagging Indikator", metric: "AFR", field: "AFR", value: (_site, column) => getSitePerformanceValue(column.site, column.partner, "AFR"), format: value => formatSitePerformanceNumber(value, 2), fromSitePerformance: true, sub: true },
+        { group: "Leadership", marker: "C", parameter: "PJA Performance", metric: "PJA BC", field: "PJA BC", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "PJA BC"), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromSitePerformance: true },
+        { group: "Leadership", marker: "C", parameter: "PJA Performance", metric: "PJA MK", field: "PJA MK", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "PJA MK"), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromSitePerformance: true, sub: true },
+        { group: "Leadership", marker: "C", parameter: "Coverage Area", metric: "All Area", field: "Coverage Area All", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "Coverage Area All"), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromSitePerformance: true },
+        { group: "Leadership", marker: "C", parameter: "Coverage Area", metric: "Area Kritis", field: "Coverage Area Kritis", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "Coverage Area Kritis"), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromSitePerformance: true, sub: true },
+        { group: "Leadership", marker: "S", parameter: "Ratio Pelaporan", metric: "Ratio Pelaporan TBC", field: "Ratio Pelaporan TBC (TBC/person)", value: (_site, column) => getSitePerformanceValue(column.site, column.partner, "Ratio Pelaporan TBC (TBC/person)"), format: value => formatSitePerformanceNumber(value, 2), fromSitePerformance: true },
+        { group: "Leadership", marker: "C", parameter: "Blindspot TBC", metric: "Blindspot TBC", field: "Blindspot TBC", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "Blindspot TBC"), format: value => Number.isFinite(value) ? `${value.toFixed(2)}%` : "-", fromSitePerformance: true },
+        { group: "Leadership", marker: "C", parameter: "Overdue Hazard", metric: "Overdue Hazard", field: "Overdue Hazard", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "Overdue Hazard"), format: value => Number.isFinite(value) ? `${value.toFixed(2)}%` : "-", fromSitePerformance: true },
+        { group: "Leadership", marker: "C", parameter: "Partisipasi Pelaporan", metric: "Pelaporan SAP L1- L2 MK", field: "Partisipasi Pelaporan SAP L1- L2 MK", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "Partisipasi Pelaporan SAP L1- L2 MK"), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromSitePerformance: true },
+        { group: "People", marker: "L", parameter: "Valid GR & PSPP", metric: "GR", field: "GR", value: (_site, column) => getSitePerformanceValue(column.site, column.partner, "GR"), format: value => formatSitePerformanceNumber(value, 0), fromSitePerformance: true },
+        { group: "People", marker: "L", parameter: "Valid GR & PSPP", metric: "PSPP", field: "PSPP", value: (_site, column) => getSitePerformanceValue(column.site, column.partner, "PSPP"), format: value => formatSitePerformanceNumber(value, 0), fromSitePerformance: true, sub: true },
+        { group: "Process", marker: "S", parameter: "Road Management", metric: "% Road Standard", field: "% Achivement Road Standard", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "% Achivement Road Standard"), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromSitePerformance: true },
+        { group: "Process", marker: "S", parameter: "Road Management", metric: "Hazard Road Safety", field: "Hazard Road Safety", value: (_site, column) => getSitePerformanceValue(column.site, column.partner, "Hazard Road Safety"), format: value => formatSitePerformanceNumber(value, 0), fromSitePerformance: true },
+        { group: "Process", marker: "S", parameter: "Road Management", metric: "Hazard Road Teknis", field: "Hazard Road Teknis", value: (_site, column) => getSitePerformanceValue(column.site, column.partner, "Hazard Road Teknis"), format: value => formatSitePerformanceNumber(value, 0), fromSitePerformance: true, sub: true },
+        { group: "Process", marker: "S", parameter: "Fatigue", metric: "True Alert Fatigue", field: "True Alert Fatigue", value: (_site, column) => getSitePerformanceValue(column.site, column.partner, "True Alert Fatigue"), format: value => formatSitePerformanceNumber(value, 0), fromSitePerformance: true },
+        { group: "Process", marker: "C", parameter: "Fatigue", metric: "Speak Up Sebelum Alert", field: "Speak Up Sebelum Alert", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "Speak Up Sebelum Alert"), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromSitePerformance: true },
+        { group: "Technology", marker: "S", parameter: "Pengawasan Berjarak", metric: "Real Time", field: "Real Time", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "Real Time"), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromSitePerformance: true },
+        { group: "Technology", marker: "S", parameter: "Pengawasan Berjarak", metric: "Post Event", field: "Post Event", value: (_site, column) => getSitePerformancePercentValue(column.site, column.partner, "Post Event"), format: value => Number.isFinite(value) ? `${value.toFixed(1)}%` : "-", fromSitePerformance: true, sub: true }
       ];
 
       bodyEl.innerHTML = rows.map((row, rowIndex) => {
@@ -1724,6 +1770,8 @@
               const variance = Math.round((column.partnerIndex - 1) * 2);
               const adjustedValue = row.fromScrIncident
                 ? value
+                : row.fromSitePerformance
+                ? (hasRawValue ? value : null)
                 : row.fromRoadStandard
                 ? (hasRawValue ? value : null)
                 : row.fromCoverageAreaKritis
@@ -1737,7 +1785,7 @@
                 (row.fromScrIncident && adjustedValue >= 1) ||
                 (row.fromRoadStandard && isRoadStandardDeclining(column.site, column.partner)) ||
                 (row.metric === "Ratio Pelaporan TBC" && adjustedValue < 2.5) ||
-                (row.metric === "Blindspot TBC" && adjustedValue >= 1) ||
+                (row.metric === "Blindspot TBC" && adjustedValue > 0) ||
                 (row.parameter === "Fatigue" && adjustedValue >= 10) ||
                 (row.parameter === "Pengawasan Berjarak" && adjustedValue >= 4) ||
                 ((row.metric === "All Area" || row.metric === "Area Kritis") && adjustedValue < 80)
@@ -1758,6 +1806,8 @@
                 ? withCellTooltip(content, coverageAreaKritisTooltip(column.site))
                 : row.fromBlindspotTbc
                 ? withCellTooltip(content, blindspotTbcTooltip(column.site, column.partner))
+                : row.fromSitePerformance
+                ? withCellTooltip(content, sitePerformanceTooltip(column.site, column.partner, row.field, row.metric))
                 : content;
               return `<td class="${className}">${cellContent}</td>`;
             }).join("")}
