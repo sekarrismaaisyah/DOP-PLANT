@@ -482,12 +482,12 @@
       </div>
     </section>
 
-    <div class="cards-wrap" data-page-only="overview">
+    {{-- <div class="cards-wrap" data-page-only="overview">
       <section class="grid grid-site-cards" id="siteCards"></section>
       <div id="sitePopup" class="site-popup" aria-live="polite"></div>
-    </div>
+    </div> --}}
 
-    <section class="section grid grid-2" data-section="overview">
+    {{-- <section class="section grid grid-2" data-section="overview">
       <div class="card">
         <div class="card-title">
           <div>
@@ -524,9 +524,9 @@
         <div class="driver-list" id="driverContribution"></div>
         <div class="footer-note">Pembobotan rekomendasi: Safety Accountability 35% mencakup Golden Rules, TBC, Blindspot, Ratio Pelaporan, dan Overdue Hazard; Coverage Quality 25% mencakup coverage weekly/daily dan area kritis; Exposure/RFID 20% adalah skor komposit berbasis RFID pengawas, RFID non-pengawas, rasio non-pengawas terhadap pengawas, dan perubahan exposure mingguan; Fatigue Management 20% mencakup true alert fatigue, FTW jam tidur kurang, dan speak up sebelum alert.</div>
       </div>
-    </section>
+    </section> --}}
 
-    <section class="section grid grid-2" data-section="overview">
+    {{-- <section class="section grid grid-2" data-section="overview">
       <div class="card">
         <div class="card-title">
           <div>
@@ -561,9 +561,9 @@
         </div>
         <div class="summary-list" id="driverDictionary"></div>
       </div>
-    </section>
+    </section> --}}
 
-    <section class="section card" data-section="driver" hidden>
+    {{-- <section class="section card" data-section="driver" hidden>
       <div class="card-title">
         <div>
           <h2>Contractor Driver Heatmap</h2>
@@ -595,9 +595,9 @@
         <div class="legend-item"><span class="swatch border border-[#f3b46f] bg-[#fff0df]"></span>High</div>
         <div class="legend-item"><span class="swatch border border-[#ed8b8b] bg-[#fde9e9]"></span>Critical</div>
       </div>
-    </section>
+    </section> --}}
 
-    <section class="section grid grid-2" data-section="driver" hidden>
+    {{-- <section class="section grid grid-2" data-section="driver" hidden>
       <div class="card">
         <div class="card-title">
           <div>
@@ -628,9 +628,9 @@
         </div>
         <div class="formula-box">Contractor Driver Risk Index =<br>&nbsp;&nbsp;35% Safety Accountability<br>+ 25% Coverage Quality<br>+ 20% Exposure / RFID<br>+ 20% Fatigue Management<br><br>Safety Accountability = GR + TBC + Blindspot + Ratio Pelaporan + Overdue Hazard<br>Coverage Quality = Coverage Weekly + Coverage Daily + Coverage Area Kritis<br>Exposure/RFID = RFID Pengawas + RFID Non Pengawas + Rasio Non Pengawas : Pengawas + perubahan exposure mingguan<br>Fatigue Management = True Alert Fatigue + FTW Jam Tidur Kurang + Speak Up Sebelum Alert</div>
       </div>
-    </section>
+    </section> --}}
 
-    <section class="section grid grid-2" data-section="correlation" hidden>
+    {{-- <section class="section grid grid-2" data-section="correlation" hidden>
       <div class="card">
         <div class="card-title">
           <div>
@@ -669,9 +669,9 @@
         <p class="muted leading-[1.7] mt-0">Risk Score Site Week 18 menunjukkan LMO sebagai benchmark dengan profil risiko terendah dan paling stabil, sedangkan BMO 1 menjadi prioritas utama karena mengalami lonjakan risk score tertinggi. Jika dikorelasikan dengan dashboard level kontraktor, peningkatan risiko terutama dipengaruhi oleh kombinasi Safety Accountability, Blindspot TBC, Blindspot GR, penurunan Ratio Pengawas dengan TBC, Coverage Daily yang belum optimal, serta tekanan Fatigue Management. Dengan demikian, dashboard kontraktor berfungsi sebagai early driver diagnostic untuk menjelaskan penyebab risk score site, bukan hanya sebagai pelaporan indikator terpisah.</p>
         <div class="summary-list" id="bridgeSummary"></div>
       </div>
-    </section>
+    </section> --}}
 
-    <section class="section grid grid-2" data-section="action" hidden>
+    {{-- <section class="section grid grid-2" data-section="action" hidden>
       <div class="card">
         <div class="card-title">
           <div>
@@ -724,11 +724,11 @@
           </div>
         </div>
       </div>
-    </section>
+    </section> --}}
 
-    <div class="footer-note">Catatan: angka dashboard ini disusun dari interpretasi visual risk profiling Week 18 dan dashboard kontraktor yang diberikan. Untuk implementasi final, hubungkan dengan data asli per kontraktor/site agar skor, tren, dan korelasi dapat dihitung otomatis.</div>
+    {{-- <div class="footer-note">Catatan: angka dashboard ini disusun dari interpretasi visual risk profiling Week 18 dan dashboard kontraktor yang diberikan. Untuk implementasi final, hubungkan dengan data asli per kontraktor/site agar skor, tren, dan korelasi dapat dihitung otomatis.</div>
     @include('peer-pressure-edukasi.partials.peer-dashboard-wizard-nav', ['wizardStep' => 2])
-    </div>
+    </div> --}}
   </main>
 
   @php
