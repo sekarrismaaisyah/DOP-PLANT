@@ -3,7 +3,11 @@
 @section('title', 'Data Peer Pressure')
 
 @section('content')
-@php $peerFotoUrls = $peerFotoUrls ?? []; @endphp
+@php
+   $peerFotoUrls = $peerFotoUrls ?? [];
+   $openImportModal = request('modal') === 'import' || filled(session('import_errors')) || $errors->any();
+   $importErrors = session('import_errors', []);
+@endphp
 <div class="bg-white rounded-2xl anchored-card overflow-hidden">
    <div class="p-6 border-b border-outline-variant/20 flex flex-col gap-4 lg:flex-row lg:items-start lg:justify-between">
       <div>
@@ -27,9 +31,9 @@
             <a href="{{ route('peer-pressure-edukasi.data.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-md transition-transform active:scale-95">
                <span class="material-symbols-outlined text-base">add</span> Tambah data
             </a>
-            <a href="{{ route('peer-pressure-edukasi.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-outline-variant/30 bg-white px-4 py-2 text-xs font-bold shadow-sm hover:bg-surface-container-high">
+            <button type="button" id="pp-data-open-import-modal" class="inline-flex items-center gap-2 rounded-xl border border-outline-variant/30 bg-white px-4 py-2 text-xs font-bold shadow-sm hover:bg-surface-container-high">
                <span class="material-symbols-outlined text-base">upload_file</span> Import Excel
-            </a>
+            </button>
          </div>
       </div>
    </div>
@@ -183,4 +187,64 @@
       </div>
    </div>
 </div>
+
+{{-- Modal Import Excel — Data Peer Pressure --}}
+<div id="pp-data-import-modal" class="fixed inset-0 z-[100] {{ $openImportModal ? 'flex' : 'hidden' }} items-center justify-center bg-black/40 p-4" aria-modal="true" role="dialog" aria-labelledby="pp-data-import-modal-title" aria-hidden="{{ $openImportModal ? 'false' : 'true' }}">
+   <div class="relative w-full max-w-lg rounded-2xl border border-outline-variant/20 bg-white shadow-2xl">
+      <div class="border-b border-outline-variant/15 px-5 py-4">
+         <h3 id="pp-data-import-modal-title" class="font-headline text-lg font-bold text-on-surface">Import Excel — Data Peer Pressure</h3>
+         <p class="mt-1 text-[11px] leading-relaxed text-on-surface-variant">Sheet pertama. Header baris 1 harus sama persis dengan template unduhan. Tanggal isi sebagai <strong>DD/MM/YYYY</strong> atau tanggal Excel; jam <strong>HH:MM</strong> (24 jam).</p>
+      </div>
+      <div class="max-h-[min(70vh,520px)] overflow-y-auto px-5 py-4 space-y-4">
+         <div class="flex flex-wrap gap-2">
+            <a href="{{ route('peer-pressure-edukasi.data.template') }}" class="inline-flex items-center gap-1.5 rounded-xl border border-outline-variant/30 bg-white px-3 py-2 text-[11px] font-bold shadow-sm hover:bg-surface-container-high">
+               <span class="material-symbols-outlined text-base">download</span> Unduh template
+            </a>
+         </div>
+         @if ($importErrors !== [])
+            <div class="rounded-xl border border-red-200 bg-red-50 px-3 py-2 text-[11px] font-medium text-red-900">
+               <p class="font-bold mb-1">Perbaiki isi file:</p>
+               <ul class="list-disc space-y-1 pl-4 max-h-40 overflow-y-auto">
+                  @foreach ($importErrors as $err)
+                     <li>{{ $err }}</li>
+                  @endforeach
+               </ul>
+            </div>
+         @endif
+         <form method="post" action="{{ route('peer-pressure-edukasi.data.import') }}" enctype="multipart/form-data" class="space-y-3">
+            @csrf
+            <div>
+               <label for="pp-data-excel-file" class="mb-1.5 block text-[11px] font-bold text-on-surface-variant">File Excel (.xlsx / .xls, maks. 15 MB)</label>
+               <input id="pp-data-excel-file" type="file" name="excel_file" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" required class="@error('excel_file') border-red-400 @enderror block w-full text-xs text-on-surface file:mr-3 file:rounded-lg file:border-0 file:bg-primary/10 file:px-3 file:py-2 file:font-bold file:text-primary">
+               @error('excel_file')
+                  <p class="mt-1 text-[11px] font-semibold text-error">{{ $message }}</p>
+               @enderror
+            </div>
+            <div class="flex flex-wrap justify-end gap-2 pt-1">
+               <button type="button" id="pp-data-close-import-modal" class="rounded-xl border border-outline-variant/30 bg-white px-4 py-2 text-xs font-bold text-on-surface shadow-sm hover:bg-surface-container-high">Batal</button>
+               <button type="submit" class="inline-flex items-center gap-1.5 rounded-xl bg-primary px-4 py-2 text-xs font-bold text-white shadow-md hover:opacity-95">
+                  <span class="material-symbols-outlined text-base">upload_file</span> Unggah &amp; validasi
+               </button>
+            </div>
+         </form>
+      </div>
+   </div>
+</div>
+
+<script>
+(function () {
+   var modal = document.getElementById('pp-data-import-modal');
+   var openBtn = document.getElementById('pp-data-open-import-modal');
+   var closeBtn = document.getElementById('pp-data-close-import-modal');
+   if (!modal || !openBtn) return;
+   function openM() { modal.classList.remove('hidden'); modal.classList.add('flex'); modal.setAttribute('aria-hidden', 'false'); }
+   function closeM() { modal.classList.add('hidden'); modal.classList.remove('flex'); modal.setAttribute('aria-hidden', 'true'); }
+   openBtn.addEventListener('click', openM);
+   if (closeBtn) closeBtn.addEventListener('click', closeM);
+   modal.addEventListener('click', function (e) { if (e.target === modal) closeM(); });
+   @if ($openImportModal)
+   openM();
+   @endif
+})();
+</script>
 @endsection

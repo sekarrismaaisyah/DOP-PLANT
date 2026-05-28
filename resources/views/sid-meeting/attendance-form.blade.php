@@ -244,10 +244,12 @@
                 <button id="btn_start_camera" type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">Aktifkan Kamera</button>
                 <button id="btn_verify_face" type="button" class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Verifikasi & Kirim</button>
                 <button id="btn_confirm_submit" type="button" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700">Kirim Absensi Sekarang</button>
+                <button id="btn_bypass_submit" type="button" class="w-full rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 sm:w-auto">Kirim absensi tanpa verifikasi wajah</button>
+
             </div>
             <div class="mt-5 border-t border-slate-200 pt-4">
                 <p class="mb-2 text-xs text-slate-500">Jika kamera atau AI tidak bisa mendeteksi wajah, Anda tetap dapat mengirim absensi lewat opsi di bawah (tanpa verifikasi wajah).</p>
-                <button id="btn_bypass_submit" type="button" class="w-full rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 sm:w-auto">Kirim absensi tanpa verifikasi wajah</button>
+                <!-- <button id="btn_bypass_submit" type="button" class="w-full rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 sm:w-auto">Kirim absensi tanpa verifikasi wajah</button> -->
             </div>
         </div>
     </div>

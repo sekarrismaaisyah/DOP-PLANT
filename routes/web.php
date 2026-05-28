@@ -202,6 +202,8 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/peer-pressure-edukasi/berecord', [PeerPressureBerecordTableController::class, 'index'])->name('peer-pressure-edukasi.berecord.index');
 
     Route::get('/peer-pressure-edukasi/data', [PeerPressureEdukasiDataController::class, 'index'])->name('peer-pressure-edukasi.data.index');
+    Route::post('/peer-pressure-edukasi/data/import', [PeerPressureEdukasiDataController::class, 'import'])->name('peer-pressure-edukasi.data.import');
+    Route::get('/peer-pressure-edukasi/data/template', [PeerPressureEdukasiDataController::class, 'downloadTemplate'])->name('peer-pressure-edukasi.data.template');
     Route::get('/peer-pressure-edukasi/data/create', [PeerPressureEdukasiDataController::class, 'create'])->name('peer-pressure-edukasi.data.create');
     Route::post('/peer-pressure-edukasi/data', [PeerPressureEdukasiDataController::class, 'store'])->name('peer-pressure-edukasi.data.store');
     Route::get('/peer-pressure-edukasi/data/{id}/edit', [PeerPressureEdukasiDataController::class, 'edit'])->whereNumber('id')->name('peer-pressure-edukasi.data.edit');
@@ -267,6 +269,7 @@ Route::middleware(['auth'])->group(function () {
         ->name('peer-pressure-edukasi.kejadian.detail');
     Route::post('/peer-pressure-edukasi/import', [PeerPressureEdukasiController::class, 'import'])->name('peer-pressure-edukasi.import');
     Route::get('/peer-pressure-edukasi/template', [PeerPressureEdukasiController::class, 'downloadTemplate'])->name('peer-pressure-edukasi.download-template');
+
 
     // Unit MTD (CRUD + Import Excel) - Site, Perusahaan, Kategori, No Unit, MTD, AVG per Day
     Route::get('/unit-mtd', [UnitMtdController::class, 'index'])->name('unit-mtd.index');
@@ -856,6 +859,11 @@ Route::middleware(['auth'])->group(function () {
             Route::delete('/{id}', [\App\Http\Controllers\SistemRoster\PlanningController::class, 'destroy'])->name('destroy');
         });
     });
+
+
+
+    require __DIR__ . '/HiraImprovement/hira.php';
+
 
     // Define a GET route with dynamic placeholders for route parameters
     // HARUS di akhir agar tidak menangkap route spesifik di atas

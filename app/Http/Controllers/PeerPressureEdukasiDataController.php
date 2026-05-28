@@ -8,10 +8,13 @@ use App\Http\Requests\PeerPressureEdukasiDataRequest;
 use App\Models\PeerPressureKejadianEdukasi;
 use App\Models\PeerPressurePesertaEdukasi;
 use App\Services\PeerPressure\PeerPressureKaryawanNitipService;
+use App\Services\PeerPressure\PeerPressureKejadianEdukasiExcelImportService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Validator;
 use Illuminate\View\View;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class PeerPressureEdukasiDataController extends Controller
 {
@@ -56,6 +59,40 @@ class PeerPressureEdukasiDataController extends Controller
             'navActive' => 'data',
             'peerFotoUrls' => $peerFotoUrls,
         ]);
+    }
+
+    public function import(Request $request, PeerPressureKejadianEdukasiExcelImportService $excelImport): RedirectResponse
+    {
+        $validator = Validator::make($request->all(), [
+            'excel_file' => 'required|file|mimes:xlsx,xls|max:15360',
+        ], [
+            'excel_file.required' => 'File Excel wajib diupload.',
+        ]);
+
+        if ($validator->fails()) {
+            return redirect()
+                ->route('peer-pressure-edukasi.data.index', ['modal' => 'import'])
+                ->withErrors($validator)
+                ->withInput();
+        }
+
+        $result = $excelImport->importFromUpload($request->file('excel_file'));
+
+        if (! $result->success) {
+            return redirect()
+                ->route('peer-pressure-edukasi.data.index', ['modal' => 'import'])
+                ->with('error', $result->message)
+                ->with('import_errors', $result->errors);
+        }
+
+        return redirect()
+            ->route('peer-pressure-edukasi.data.index')
+            ->with('success', $result->message);
+    }
+
+    public function downloadTemplate(PeerPressureKejadianEdukasiExcelImportService $excelImport): StreamedResponse
+    {
+        return $excelImport->streamTemplateDownload();
     }
 
     public function create(): View

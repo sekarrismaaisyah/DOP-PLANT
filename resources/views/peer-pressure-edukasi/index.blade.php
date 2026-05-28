@@ -16,6 +16,17 @@
     <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
 </div>
 @endif
+@if(session('import_errors') && is_array(session('import_errors')))
+<div class="alert alert-warning alert-dismissible fade show rounded-4" role="alert">
+    <div class="fw-bold mb-2">Detail validasi import</div>
+    <ul class="mb-0 small">
+        @foreach(session('import_errors') as $err)
+            <li>{{ $err }}</li>
+        @endforeach
+    </ul>
+    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+</div>
+@endif
 
 <div class="row mb-3">
     <div class="col-12">
