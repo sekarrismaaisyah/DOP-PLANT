@@ -739,6 +739,255 @@ class SidMeetingController extends Controller
         ]);
     }
 
+    public function apiReportFilters(): JsonResponse
+    {
+        $sites = Site::query()->where('is_active', true)->orderBy('name')->pluck('name')->values();
+        $weeks = Event::query()->whereNotNull('week')->distinct()->orderByDesc('week')->pluck('week')->filter()->values();
+
+        return response()->json([
+            'sites' => $sites,
+            'weeks' => $weeks,
+        ]);
+    }
+
+    public function apiReportAttendanceData(Request $request): JsonResponse
+    {
+        $draw = (int) $request->input('draw', 0);
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 25);
+        if ($length < 1 || $length > 100) {
+            $length = 25;
+        }
+
+        $site = (string) $request->input('site', 'ALL');
+        $week = (string) $request->input('week', 'ALL');
+        $search = trim((string) ($request->input('search.value') ?? $request->input('q', '')));
+        $orderColIndex = (int) $request->input('order.0.column', 10);
+        $orderDir = strtolower($request->input('order.0.dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $orderColumns = [
+            0 => 'events.meeting_date',
+            1 => 'events.week',
+            2 => 'sites.name',
+            3 => 'meeting_types.name',
+            4 => 'events.event_code',
+            5 => 'attendances.kode_sid',
+            6 => 'attendances.nama_snapshot',
+            7 => 'attendances.perusahaan_snapshot',
+            8 => 'attendances.jabatan_struktural_snapshot',
+            9 => 'attendances.jabatan_fungsional_snapshot',
+            10 => 'attendances.attended_at',
+        ];
+        $orderBy = $orderColumns[$orderColIndex] ?? 'attendances.attended_at';
+
+        $baseQuery = Attendance::query()
+            ->join('events', 'events.id', '=', 'attendances.event_id')
+            ->leftJoin('sites', 'sites.id', '=', 'events.site_id')
+            ->leftJoin('meeting_types', 'meeting_types.id', '=', 'events.meeting_type_id');
+
+        if ($site !== '' && $site !== 'ALL') {
+            $baseQuery->where('sites.name', $site);
+        }
+        if ($week !== '' && $week !== 'ALL') {
+            $baseQuery->where('events.week', $week);
+        }
+
+        $recordsTotal = Attendance::query()->count();
+
+        $filteredQuery = clone $baseQuery;
+        if ($search !== '') {
+            $filteredQuery->where(function ($q) use ($search): void {
+                $q->where('attendances.kode_sid', 'like', '%' . $search . '%')
+                    ->orWhere('attendances.nama_snapshot', 'like', '%' . $search . '%')
+                    ->orWhere('attendances.perusahaan_snapshot', 'like', '%' . $search . '%')
+                    ->orWhere('attendances.jabatan_struktural_snapshot', 'like', '%' . $search . '%')
+                    ->orWhere('attendances.jabatan_fungsional_snapshot', 'like', '%' . $search . '%')
+                    ->orWhere('events.event_code', 'like', '%' . $search . '%')
+                    ->orWhere('sites.name', 'like', '%' . $search . '%')
+                    ->orWhere('meeting_types.name', 'like', '%' . $search . '%')
+                    ->orWhere('events.week', 'like', '%' . $search . '%');
+            });
+        }
+
+        $recordsFiltered = (clone $filteredQuery)->count('attendances.id');
+        $items = (clone $filteredQuery)
+            ->select([
+                'attendances.*',
+                'events.id as event_id',
+                'events.event_code',
+                'events.meeting_date',
+                'events.week',
+                'sites.name as site_name',
+                'meeting_types.name as meeting_type_name',
+            ])
+            ->orderBy($orderBy, $orderDir)
+            ->skip($start)
+            ->take($length)
+            ->get();
+
+        $data = $items->map(function ($row): array {
+            $eventId = (string) $row->event_id;
+            $meetingDate = $row->meeting_date instanceof Carbon
+                ? $row->meeting_date->format('Y-m-d')
+                : (string) $row->meeting_date;
+            $attendedAt = $row->attended_at instanceof Carbon
+                ? $row->attended_at->format('Y-m-d H:i:s')
+                : (string) $row->attended_at;
+
+            return [
+                'event_id' => $eventId,
+                'tanggal_meeting' => $meetingDate,
+                'week' => $row->week ?? '-',
+                'site' => $row->site_name ?? '-',
+                'jenis_meeting' => $row->meeting_type_name ?? '-',
+                'kode_event' => $row->event_code ?? '-',
+                'kode_sid' => $row->kode_sid ?? '-',
+                'nama' => $row->nama_snapshot ?? '-',
+                'perusahaan' => $row->perusahaan_snapshot ?? '-',
+                'jabatan_struktural' => $row->jabatan_struktural_snapshot ?? '-',
+                'jabatan_fungsional' => $row->jabatan_fungsional_snapshot ?? '-',
+                'timestamp' => $attendedAt,
+            ];
+        })->values()->all();
+
+        return response()->json([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]);
+    }
+
+    public function apiReportMinutesData(Request $request): JsonResponse
+    {
+        $draw = (int) $request->input('draw', 0);
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 25);
+        if ($length < 1 || $length > 100) {
+            $length = 25;
+        }
+
+        $site = (string) $request->input('site', 'ALL');
+        $week = (string) $request->input('week', 'ALL');
+        $search = trim((string) ($request->input('search.value') ?? $request->input('q', '')));
+        $orderColIndex = (int) $request->input('order.0.column', 16);
+        $orderDir = strtolower($request->input('order.0.dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $orderColumns = [
+            0 => 'events.meeting_date',
+            1 => 'events.week',
+            2 => 'sites.name',
+            3 => 'meeting_types.name',
+            4 => 'events.event_code',
+            5 => 'event_minutes.title',
+            6 => 'event_minutes.notulis',
+            7 => 'event_minutes.location',
+            8 => 'minute_issues.section',
+            9 => 'minute_issues.nomor',
+            10 => 'minute_issues.catatan_meeting',
+            11 => 'minute_issues.issued_by',
+            12 => 'minute_issues.pic',
+            13 => 'minute_issues.due_date',
+            14 => 'minute_issues.status',
+            15 => 'minute_issues.keterangan',
+            16 => 'minute_issues.updated_at',
+        ];
+        $orderBy = $orderColumns[$orderColIndex] ?? 'minute_issues.updated_at';
+
+        $baseQuery = MinuteIssue::query()
+            ->join('event_minutes', 'event_minutes.id', '=', 'minute_issues.event_minute_id')
+            ->join('events', 'events.id', '=', 'event_minutes.event_id')
+            ->leftJoin('sites', 'sites.id', '=', 'events.site_id')
+            ->leftJoin('meeting_types', 'meeting_types.id', '=', 'events.meeting_type_id');
+
+        if ($site !== '' && $site !== 'ALL') {
+            $baseQuery->where('sites.name', $site);
+        }
+        if ($week !== '' && $week !== 'ALL') {
+            $baseQuery->where('events.week', $week);
+        }
+
+        $recordsTotal = MinuteIssue::query()->count();
+
+        $filteredQuery = clone $baseQuery;
+        if ($search !== '') {
+            $filteredQuery->where(function ($q) use ($search): void {
+                $q->where('minute_issues.catatan_meeting', 'like', '%' . $search . '%')
+                    ->orWhere('minute_issues.issued_by', 'like', '%' . $search . '%')
+                    ->orWhere('minute_issues.pic', 'like', '%' . $search . '%')
+                    ->orWhere('minute_issues.keterangan', 'like', '%' . $search . '%')
+                    ->orWhere('event_minutes.title', 'like', '%' . $search . '%')
+                    ->orWhere('event_minutes.notulis', 'like', '%' . $search . '%')
+                    ->orWhere('events.event_code', 'like', '%' . $search . '%')
+                    ->orWhere('sites.name', 'like', '%' . $search . '%')
+                    ->orWhere('meeting_types.name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $recordsFiltered = (clone $filteredQuery)->count('minute_issues.id');
+        $items = (clone $filteredQuery)
+            ->select([
+                'minute_issues.*',
+                'events.id as event_id',
+                'events.event_code',
+                'events.meeting_date',
+                'events.week',
+                'sites.name as site_name',
+                'meeting_types.name as meeting_type_name',
+                'event_minutes.title as minute_title',
+                'event_minutes.notulis as minute_notulis',
+                'event_minutes.location as minute_location',
+                'event_minutes.updated_at as minute_updated_at',
+            ])
+            ->orderBy($orderBy, $orderDir)
+            ->skip($start)
+            ->take($length)
+            ->get();
+
+        $data = $items->map(function ($row): array {
+            $sectionLabel = match ($row->section) {
+                'enviro' => 'Enviro Issue',
+                'safety' => 'Safety Issue',
+                'general' => 'General Issue',
+                default => ucfirst((string) $row->section),
+            };
+            $meetingDate = $row->meeting_date instanceof Carbon
+                ? $row->meeting_date->format('Y-m-d')
+                : (string) $row->meeting_date;
+            $updatedAt = $row->updated_at instanceof Carbon
+                ? $row->updated_at->format('Y-m-d H:i:s')
+                : (string) ($row->minute_updated_at ?? '');
+
+            return [
+                'event_id' => (string) $row->event_id,
+                'tanggal_meeting' => $meetingDate,
+                'week' => $row->week ?? '-',
+                'site' => $row->site_name ?? '-',
+                'jenis_meeting' => $row->meeting_type_name ?? '-',
+                'kode_event' => $row->event_code ?? '-',
+                'judul_notulen' => $row->minute_title ?? '-',
+                'notulis' => $row->minute_notulis ?? '-',
+                'lokasi' => $row->minute_location ?? '-',
+                'section' => $sectionLabel,
+                'no' => (int) $row->nomor,
+                'catatan_meeting' => $row->catatan_meeting ?? '-',
+                'issued_by' => $row->issued_by ?? '-',
+                'pic' => $row->pic ?? '-',
+                'batas_waktu' => $row->due_date instanceof Carbon ? $row->due_date->format('Y-m-d') : ($row->due_date ?? ''),
+                'status_catatan' => $row->status ?? 'Open',
+                'keterangan' => $row->keterangan ?? '-',
+                'updated_at' => $updatedAt,
+            ];
+        })->values()->all();
+
+        return response()->json([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]);
+    }
+
     public function apiBootstrap(): JsonResponse
     {
         $events = Event::query()

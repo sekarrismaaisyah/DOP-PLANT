@@ -22,6 +22,9 @@ Route::middleware(['auth'])->prefix('sid-meeting')->name('sid-meeting.')->group(
     Route::get('/api/events/{event}', [SidMeetingController::class, 'apiEventDetail'])->name('api.events.show');
     Route::get('/api/companies/options', [SidMeetingController::class, 'apiCompaniesOptions'])->name('api.companies.options');
     Route::get('/api/companies/data', [SidMeetingController::class, 'apiCompaniesData'])->name('api.companies.data');
+    Route::get('/api/reports/filters', [SidMeetingController::class, 'apiReportFilters'])->name('api.reports.filters');
+    Route::get('/api/reports/attendance-data', [SidMeetingController::class, 'apiReportAttendanceData'])->name('api.reports.attendance-data');
+    Route::get('/api/reports/minutes-data', [SidMeetingController::class, 'apiReportMinutesData'])->name('api.reports.minutes-data');
     Route::post('/api/companies/{company}/sites', [SidMeetingController::class, 'apiToggleCompanySite'])->name('api.companies.sites.toggle');
     Route::post('/api/events', [SidMeetingController::class, 'apiStoreEvent'])->name('api.events.store');
     Route::post('/api/companies', [SidMeetingController::class, 'apiStoreCompany'])->name('api.companies.store');

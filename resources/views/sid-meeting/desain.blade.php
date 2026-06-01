@@ -810,6 +810,10 @@
     </section>
 
     <section id="tab-report" class="tab-panel fade-in hidden">
+      <div id="reportTabLoading" class="hidden mb-4 flex items-center gap-3 rounded-2xl bg-blue-50 px-4 py-3 text-sm font-bold text-blue-800 ring-1 ring-blue-100">
+        <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></span>
+        Memuat data rekap...
+      </div>
       <div class="glass soft-card rounded-3xl p-5">
         <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
@@ -826,19 +830,19 @@
         <div class="no-print mb-4 grid gap-3 md:grid-cols-3">
           <div>
             <label class="text-sm font-bold text-slate-700">Filter Site</label>
-            <select id="reportFilterSite" onchange="renderReport()" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100">
+            <select id="reportFilterSite" onchange="scheduleReportReload()" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100">
               <option value="ALL">Semua Site</option>
             </select>
           </div>
           <div>
             <label class="text-sm font-bold text-slate-700">Filter Week</label>
-            <select id="reportFilterWeek" onchange="renderReport()" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100">
+            <select id="reportFilterWeek" onchange="scheduleReportReload()" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100">
               <option value="ALL">Semua Week</option>
             </select>
           </div>
           <div>
             <label class="text-sm font-bold text-slate-700">Search</label>
-            <input id="reportSearch" oninput="renderReport()" placeholder="Cari SID / nama / perusahaan / meeting..." class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
+            <input id="reportSearch" type="search" oninput="scheduleReportReload()" placeholder="Cari SID / nama / perusahaan / meeting..." class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
           </div>
         </div>
 
@@ -854,7 +858,7 @@
           </div>
 
           <div class="table-wrap rounded-2xl border border-slate-200 bg-white">
-            <table class="min-w-full text-left text-sm">
+            <table id="reportAttendanceDataTable" class="min-w-full w-full text-left text-sm">
               <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
                 <tr>
                   <th class="px-4 py-3">Tanggal</th>
@@ -870,7 +874,7 @@
                   <th class="px-4 py-3">Timestamp</th>
                 </tr>
               </thead>
-              <tbody id="overallDataTable"></tbody>
+              <tbody></tbody>
             </table>
           </div>
         </div>
@@ -882,7 +886,7 @@
           </div>
 
           <div class="table-wrap rounded-2xl border border-slate-200 bg-white">
-            <table class="min-w-full text-left text-sm">
+            <table id="reportMinutesDataTable" class="min-w-full w-full text-left text-sm">
               <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
                 <tr>
                   <th class="px-4 py-3">Tanggal</th>
@@ -904,7 +908,7 @@
                   <th class="px-4 py-3">Updated</th>
                 </tr>
               </thead>
-              <tbody id="minutesReportTable"></tbody>
+              <tbody></tbody>
             </table>
           </div>
         </div>
@@ -1188,6 +1192,10 @@
   let companiesPromise = null;
   let companyDataTable = null;
   let companySiteColumns = [];
+  let reportAttendanceTable = null;
+  let reportMinutesTable = null;
+  let reportTabInitialized = false;
+  let reportReloadTimer = null;
   const eventCache = {};
   const DATATABLES_LANG = {
     processing: 'Memuat...',
@@ -1607,7 +1615,7 @@
   }
 
   async function ensureFullDataLoaded() {
-    if (!fullDataLoaded) await hydrateFromDatabase(true);
+    if (!fullDataLoaded) await hydrateFromDatabase(false);
   }
 
   function buildSyncPayload() {
@@ -1781,9 +1789,12 @@
       renderEvents();
     } else if (tab === 'companymaster') {
       setTimeout(() => initCompanyDataTable(), 0);
-    } else if (['report', 'siteperformance', 'semanticeval'].includes(tab)) {
-      ensureFullDataLoaded().then(() => refreshHeavyViews());
-      if (tab === 'semanticeval') renderSemanticEvaluation(true);
+    } else if (tab === 'report') {
+      initReportTab();
+    } else if (tab === 'siteperformance') {
+      initSitePerformanceTabLazy();
+    } else if (tab === 'semanticeval') {
+      initSemanticTabLazy();
     }
   }
 
@@ -3055,9 +3066,221 @@
     return 'bg-emerald-50 text-emerald-700 ring-emerald-100';
   }
 
+  function getReportFilterParams() {
+    return {
+      site: document.getElementById('reportFilterSite')?.value || 'ALL',
+      week: document.getElementById('reportFilterWeek')?.value || 'ALL',
+      q: (document.getElementById('reportSearch')?.value || '').trim()
+    };
+  }
+
+  function scheduleReportReload() {
+    if (!reportTabInitialized) return;
+    clearTimeout(reportReloadTimer);
+    reportReloadTimer = setTimeout(() => reloadReportTables(), 400);
+  }
+
+  function setReportLoading(visible) {
+    const el = document.getElementById('reportTabLoading');
+    if (el) el.classList.toggle('hidden', !visible);
+  }
+
+  async function loadReportFilters() {
+    const payload = await apiFetch(`${SID_MEETING_API_BASE}/reports/filters`);
+    const siteSelect = document.getElementById('reportFilterSite');
+    const weekSelect = document.getElementById('reportFilterWeek');
+    if (!siteSelect || !weekSelect) return;
+
+    const currentSite = siteSelect.value || 'ALL';
+    const currentWeek = weekSelect.value || 'ALL';
+    const sites = payload.sites || [];
+    const weeks = payload.weeks || [];
+
+    siteSelect.innerHTML = '<option value="ALL">Semua Site</option>'
+      + sites.map(site => `<option value="${escapeHTML(site)}">${escapeHTML(site)}</option>`).join('');
+    weekSelect.innerHTML = '<option value="ALL">Semua Week</option>'
+      + weeks.map(week => `<option value="${escapeHTML(week)}">${escapeHTML(week)}</option>`).join('');
+
+    siteSelect.value = sites.includes(currentSite) ? currentSite : 'ALL';
+    weekSelect.value = weeks.includes(currentWeek) ? currentWeek : 'ALL';
+  }
+
+  function updateReportAttendanceInfo(json) {
+    const info = document.getElementById('reportTableInfo');
+    if (!info || !json) return;
+    const filtered = Number(json.recordsFiltered ?? 0);
+    const total = Number(json.recordsTotal ?? 0);
+    info.textContent = `${filtered} data ditampilkan dari ${total} total absensi`;
+  }
+
+  function updateReportMinutesInfo(json) {
+    const info = document.getElementById('minutesReportInfo');
+    if (!info || !json) return;
+    const filtered = Number(json.recordsFiltered ?? 0);
+    const total = Number(json.recordsTotal ?? 0);
+    info.textContent = `${filtered} baris notulen ditampilkan dari ${total} total issue`;
+  }
+
+  function reportAjaxData(d) {
+    const filters = getReportFilterParams();
+    d.site = filters.site;
+    d.week = filters.week;
+    d.q = filters.q;
+    return d;
+  }
+
+  function initReportAttendanceTable() {
+    if (!window.jQuery || !$.fn.DataTable || reportAttendanceTable) return;
+    const $table = $('#reportAttendanceDataTable');
+    if (!$table.length) return;
+
+    reportAttendanceTable = $table.DataTable({
+      processing: true,
+      serverSide: true,
+      deferRender: true,
+      pageLength: 25,
+      lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+      order: [[10, 'desc']],
+      language: DATATABLES_LANG,
+      dom: '<"company-dt-toolbar flex flex-col gap-3 mb-3 sm:flex-row sm:items-center sm:justify-between"lf>rt<"company-dt-footer flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"ip>',
+      ajax: {
+        url: `${SID_MEETING_API_BASE}/reports/attendance-data`,
+        data: reportAjaxData,
+        dataSrc: json => {
+          updateReportAttendanceInfo(json);
+          return json.data || [];
+        }
+      },
+      columns: [
+        { data: 'tanggal_meeting', render: d => escapeHTML(d || '-') },
+        { data: 'week', render: d => `<span class="font-black">${escapeHTML(d || '-')}</span>` },
+        { data: 'site', render: d => escapeHTML(d || '-') },
+        { data: 'jenis_meeting', render: d => escapeHTML(d || '-') },
+        { data: 'kode_event', render: d => escapeHTML(d || '-') },
+        { data: 'kode_sid', render: d => `<span class="font-black">${escapeHTML(d || '-')}</span>` },
+        { data: 'nama', render: d => `<b>${escapeHTML(d || '-')}</b>` },
+        { data: 'perusahaan', render: d => escapeHTML(d || '-') },
+        { data: 'jabatan_struktural', render: d => escapeHTML(d || '-') },
+        { data: 'jabatan_fungsional', render: d => escapeHTML(d || '-') },
+        { data: 'timestamp', render: d => escapeHTML(d || '-') }
+      ],
+      createdRow: (row, data) => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => openEventRecapModal(data.event_id));
+      },
+      initComplete: function() {
+        $('#reportAttendanceDataTable_wrapper').addClass('company-dt-wrapper');
+      }
+    });
+  }
+
+  function initReportMinutesTable() {
+    if (!window.jQuery || !$.fn.DataTable || reportMinutesTable) return;
+    const $table = $('#reportMinutesDataTable');
+    if (!$table.length) return;
+
+    reportMinutesTable = $table.DataTable({
+      processing: true,
+      serverSide: true,
+      deferRender: true,
+      pageLength: 25,
+      lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+      order: [[16, 'desc']],
+      language: DATATABLES_LANG,
+      dom: '<"company-dt-toolbar flex flex-col gap-3 mb-3 sm:flex-row sm:items-center sm:justify-between"lf>rt<"company-dt-footer flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"ip>',
+      ajax: {
+        url: `${SID_MEETING_API_BASE}/reports/minutes-data`,
+        data: reportAjaxData,
+        dataSrc: json => {
+          updateReportMinutesInfo(json);
+          return json.data || [];
+        }
+      },
+      columns: [
+        { data: 'tanggal_meeting', render: d => escapeHTML(d || '-') },
+        { data: 'week', render: d => `<span class="font-black">${escapeHTML(d || '-')}</span>` },
+        { data: 'site', render: d => escapeHTML(d || '-') },
+        { data: 'jenis_meeting', render: d => escapeHTML(d || '-') },
+        { data: 'kode_event', render: d => escapeHTML(d || '-') },
+        { data: 'judul_notulen', render: d => `<b>${escapeHTML(d || '-')}</b>` },
+        { data: 'notulis', render: d => escapeHTML(d || '-') },
+        { data: 'lokasi', render: d => escapeHTML(d || '-') },
+        { data: 'section', render: d => escapeHTML(d || '-') },
+        { data: 'no', render: d => escapeHTML(String(d ?? '-')) },
+        { data: 'catatan_meeting', className: 'min-w-[200px]', render: d => escapeHTML(d || '-') },
+        { data: 'issued_by', render: d => escapeHTML(d || '-') },
+        { data: 'pic', render: d => escapeHTML(d || '-') },
+        { data: 'batas_waktu', render: d => escapeHTML(d || '-') },
+        { data: 'status_catatan', orderable: false, render: d => `<span class="rounded-full px-3 py-1 text-xs font-black ring-1 ${getMinutesStatusClass(d)}">${escapeHTML(d || 'Open')}</span>` },
+        { data: 'keterangan', render: d => escapeHTML(d || '-') },
+        { data: 'updated_at', render: d => escapeHTML(d || '-') }
+      ],
+      createdRow: (row, data) => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', () => {
+          openEventRecapModal(data.event_id);
+          openEventMinutesForm();
+        });
+      },
+      initComplete: function() {
+        $('#reportMinutesDataTable_wrapper').addClass('company-dt-wrapper');
+      }
+    });
+  }
+
+  function reloadReportTables() {
+    if (reportAttendanceTable) reportAttendanceTable.ajax.reload(null, false);
+    if (reportMinutesTable) reportMinutesTable.ajax.reload(null, false);
+  }
+
+  async function initReportTab() {
+    renderReportViewState();
+    setReportLoading(true);
+    try {
+      if (!reportTabInitialized) {
+        await loadReportFilters();
+        initReportAttendanceTable();
+        initReportMinutesTable();
+        reportTabInitialized = true;
+      } else {
+        reloadReportTables();
+      }
+    } catch (err) {
+      toast(err.message || 'Gagal memuat tab rekap');
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  async function initSitePerformanceTabLazy() {
+    setReportLoading(true);
+    try {
+      if (!fullDataLoaded) await hydrateFromDatabase(false);
+      populateSiteTrendFilters();
+      setTimeout(() => renderSitePerformance(), 0);
+    } catch (err) {
+      toast('Gagal memuat site performance');
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
+  async function initSemanticTabLazy() {
+    setReportLoading(true);
+    try {
+      if (!fullDataLoaded) await hydrateFromDatabase(false);
+      setTimeout(() => renderSemanticEvaluation(true), 0);
+    } catch (err) {
+      toast('Gagal memuat semantic evaluation');
+    } finally {
+      setReportLoading(false);
+    }
+  }
+
   function setReportView(view) {
     reportView = view === 'minutes' ? 'minutes' : 'attendance';
-    renderReport();
+    renderReportViewState();
+    if (reportTabInitialized) reloadReportTables();
   }
 
   function renderReportViewState() {
@@ -3075,57 +3298,8 @@
   }
 
   function renderReport() {
-    populateReportFilters();
-    renderReportViewState();
-
-    const rows = getReportRows();
-    const tbody = document.getElementById('overallDataTable');
-    const info = document.getElementById('reportTableInfo');
-    if (info) info.textContent = `${rows.length} data ditampilkan dari ${db.attendance.length} total absensi`;
-    if (tbody) {
-      tbody.innerHTML = rows.length ? rows.map(row => `
-        <tr onclick="openEventRecapModal('${row.eventId}')" class="cursor-pointer border-t border-slate-100 hover:bg-blue-50/50">
-          <td class="px-4 py-3">${formatDate(row.tanggal_meeting)}</td>
-          <td class="px-4 py-3 font-black">${escapeHTML(row.week || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.site || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.jenis_meeting || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.kode_event || '-')}</td>
-          <td class="px-4 py-3 font-black">${escapeHTML(row.kode_sid || '-')}</td>
-          <td class="px-4 py-3"><b>${escapeHTML(row.nama || '-')}</b></td>
-          <td class="px-4 py-3">${escapeHTML(row.perusahaan || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.jabatan_struktural || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.jabatan_fungsional || '-')}</td>
-          <td class="px-4 py-3">${formatDateTime(row.timestamp)}</td>
-        </tr>`).join('') : `<tr><td colspan="11" class="px-4 py-8 text-center text-sm font-semibold text-slate-500">Tidak ada data sesuai filter.</td></tr>`;
-    }
-
-    const minuteRows = getMinutesReportRows();
-    const minutesTbody = document.getElementById('minutesReportTable');
-    const minutesInfo = document.getElementById('minutesReportInfo');
-    const totalMinutesEvents = db.events.filter(ev => ev.minutes?.updatedAt).length;
-    if (minutesInfo) minutesInfo.textContent = `${minuteRows.length} baris notulen ditampilkan dari ${totalMinutesEvents} event dengan notulen.`;
-    if (minutesTbody) {
-      minutesTbody.innerHTML = minuteRows.length ? minuteRows.map(row => `
-        <tr onclick="openEventRecapModal('${row.eventId}'); openEventMinutesForm();" class="cursor-pointer border-t border-slate-100 hover:bg-blue-50/50">
-          <td class="px-4 py-3">${formatDate(row.tanggal_meeting)}</td>
-          <td class="px-4 py-3 font-black">${escapeHTML(row.week || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.site || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.jenis_meeting || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.kode_event || '-')}</td>
-          <td class="px-4 py-3"><b>${escapeHTML(row.judul_notulen || '-')}</b></td>
-          <td class="px-4 py-3">${escapeHTML(row.notulis || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.lokasi || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.section || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.no || '-')}</td>
-          <td class="px-4 py-3 min-w-[260px]">${escapeHTML(row.catatan_meeting || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.issued_by || '-')}</td>
-          <td class="px-4 py-3">${escapeHTML(row.pic || '-')}</td>
-          <td class="px-4 py-3">${row.batas_waktu ? formatDate(row.batas_waktu) : '-'}</td>
-          <td class="px-4 py-3"><span class="rounded-full px-3 py-1 text-xs font-black ring-1 ${getMinutesStatusClass(row.status_catatan)}">${escapeHTML(row.status_catatan || 'Open')}</span></td>
-          <td class="px-4 py-3">${escapeHTML(row.keterangan || '-')}</td>
-          <td class="px-4 py-3">${formatDateTime(row.updated_at)}</td>
-        </tr>`).join('') : `<tr><td colspan="17" class="px-4 py-8 text-center text-sm font-semibold text-slate-500">Tidak ada notulen sesuai filter.</td></tr>`;
-    }
+    if (reportTabInitialized) reloadReportTables();
+    else initReportTab();
   }
 
   function resetReportFilters() {
@@ -3135,7 +3309,7 @@
     if (site) site.value = 'ALL';
     if (week) week.value = 'ALL';
     if (search) search.value = '';
-    renderReport();
+    scheduleReportReload();
   }
 
   function populateSiteTrendFilters() {
@@ -3386,8 +3560,11 @@
     renderOptions();
     renderCompanyMaster();
     renderActiveAttendanceEvent();
-    renderReport();
-    renderSitePerformance();
+    if (reportTabInitialized) reloadReportTables();
+    if (!document.getElementById('tab-siteperformance')?.classList.contains('hidden')) {
+      populateSiteTrendFilters();
+      renderSitePerformance();
+    }
     renderStats();
   }
 
@@ -3670,7 +3847,7 @@
     deleteMeetingTypeByIndex(0);
     assert('Delete jenis meeting by index berjalan', getMeetingTypes().length === 1 && getMeetingTypes()[0] === 'Meeting Test B');
     db.meetingTypes = beforeMeetingTypeTest;
-    assert('Overall report table tersedia', !!document.getElementById('overallDataTable'));
+    assert('Overall report table tersedia', !!document.getElementById('reportAttendanceDataTable'));
     assert('Report view Data Absensi tersedia', !!document.getElementById('reportViewAttendanceBtn'));
     assert('Report view List Notulen tersedia', !!document.getElementById('reportViewMinutesBtn'));
     assert('Minutes report table tersedia', !!document.getElementById('minutesReportTable'));
