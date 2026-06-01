@@ -205,6 +205,212 @@
     tbody td { vertical-align: top; }
     tbody tr { transition: background-color .14s ease; }
 
+    .company-master-scroll {
+      overflow: auto;
+      max-height: min(72vh, 760px);
+      border-radius: 14px;
+    }
+    .company-dt-wrapper { font-family: inherit; }
+    .company-dt-wrapper .dataTables_length,
+    .company-dt-wrapper .dataTables_filter {
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      color: #64748b;
+    }
+    .company-dt-wrapper .dataTables_length select,
+    .company-dt-wrapper .dataTables_filter input {
+      margin: 0 0.35rem;
+      border-radius: 0.75rem;
+      border: 1px solid #e2e8f0;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.875rem;
+      outline: none;
+    }
+    .company-dt-wrapper .dataTables_filter input:focus {
+      border-color: #60a5fa;
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
+    }
+    .company-dt-wrapper .dataTables_info {
+      font-size: 0.8125rem;
+      color: #64748b;
+      padding-top: 0.75rem;
+    }
+    .company-dt-wrapper .dataTables_paginate {
+      padding-top: 0.75rem;
+    }
+    .company-dt-wrapper .dataTables_paginate .paginate_button {
+      border-radius: 0.65rem !important;
+      border: 1px solid #e2e8f0 !important;
+      margin-left: 0.25rem;
+      padding: 0.35rem 0.7rem !important;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .company-dt-wrapper .dataTables_paginate .paginate_button.current {
+      background: #3952bc !important;
+      border-color: #3952bc !important;
+      color: #fff !important;
+    }
+    #companyDataTable { min-width: 960px; }
+    #companyDataTable thead th {
+      position: sticky;
+      top: 0;
+      z-index: 4;
+      background: #f1f5f9;
+      padding: 0.65rem 0.5rem;
+      font-size: 0.65rem;
+      line-height: 1.2;
+    }
+    #companyDataTable thead th.company-col-sticky {
+      left: 0;
+      z-index: 6;
+      min-width: 240px;
+      padding-left: 1rem;
+      box-shadow: 4px 0 10px -6px rgba(15, 23, 42, 0.12);
+    }
+    #companyDataTable thead th.action-col-sticky {
+      right: 0;
+      z-index: 6;
+      min-width: 120px;
+      box-shadow: -4px 0 10px -6px rgba(15, 23, 42, 0.12);
+    }
+    #companyDataTable thead th.company-site-col {
+      min-width: 3.25rem;
+      max-width: 3.25rem;
+      text-align: center;
+      vertical-align: bottom;
+    }
+    #companyDataTable thead th.company-site-col span {
+      display: inline-block;
+      max-width: 3rem;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    #companyDataTable tbody td.company-col-sticky {
+      position: sticky;
+      left: 0;
+      z-index: 2;
+      background: #fff;
+      min-width: 240px;
+      padding: 0.85rem 1rem;
+      box-shadow: 4px 0 10px -6px rgba(15, 23, 42, 0.08);
+    }
+    #companyDataTable tbody tr:hover td.company-col-sticky {
+      background: #fafbfc;
+    }
+    #companyDataTable tbody td.action-col-sticky {
+      position: sticky;
+      right: 0;
+      z-index: 2;
+      background: #fff;
+      padding: 0.65rem 0.75rem;
+      box-shadow: -4px 0 10px -6px rgba(15, 23, 42, 0.08);
+    }
+    #companyDataTable tbody tr:hover td.action-col-sticky {
+      background: #fafbfc;
+    }
+    #companyDataTable tbody td.company-site-col {
+      text-align: center;
+      vertical-align: middle;
+      padding: 0.5rem 0.25rem;
+    }
+    .company-row-name {
+      font-weight: 800;
+      color: #0f172a;
+      font-size: 0.875rem;
+      line-height: 1.35;
+    }
+    .company-row-meta {
+      margin-top: 0.25rem;
+      font-size: 0.6875rem;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .company-site-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 0.65rem;
+      border: 2px solid #e2e8f0;
+      background: #fff;
+      cursor: pointer;
+      transition: border-color 0.15s ease, background-color 0.15s ease, transform 0.15s ease;
+    }
+    .company-site-toggle:hover {
+      border-color: #93c5fd;
+      transform: translateY(-1px);
+    }
+    .company-site-toggle.is-checked {
+      border-color: #2563eb;
+      background: #eff6ff;
+    }
+    .company-site-toggle input {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+    .company-site-toggle-ui {
+      width: 0.55rem;
+      height: 0.55rem;
+      border-radius: 999px;
+      background: transparent;
+      transition: background-color 0.15s ease, transform 0.15s ease;
+    }
+    .company-site-toggle.is-checked .company-site-toggle-ui {
+      background: #2563eb;
+      transform: scale(1.15);
+    }
+    .company-action-btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 4.5rem;
+      border-radius: 0.65rem;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.6875rem;
+      font-weight: 800;
+      line-height: 1;
+      transition: background-color 0.15s ease, transform 0.15s ease;
+    }
+    .company-action-btn:hover { transform: translateY(-1px); }
+    .company-action-btn-edit {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+    .company-action-btn-edit:hover { background: #dbeafe; }
+    .company-action-btn-delete {
+      background: #fef2f2;
+      color: #b91c1c;
+      border: 1px solid #fecaca;
+    }
+    .company-action-btn-delete:hover { background: #fee2e2; }
+    .company-stat-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      border-radius: 999px;
+      padding: 0.35rem 0.75rem;
+      font-size: 0.75rem;
+      font-weight: 800;
+      line-height: 1;
+    }
+    .company-stat-pill-total {
+      background: #eff6ff;
+      color: #1d4ed8;
+      border: 1px solid #bfdbfe;
+    }
+    .company-stat-pill-shown {
+      background: #f8fafc;
+      color: #475569;
+      border: 1px solid #e2e8f0;
+    }
+
     .section-surface {
       background: linear-gradient(180deg, rgba(255,255,255,.98), rgba(248,250,252,.92));
       border: 1px solid #e2e8f0;
@@ -466,18 +672,24 @@
           </div>
 
           <div class="rounded-3xl bg-white p-5 ring-1 ring-slate-200 shadow-sm">
-            <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-              <div>
+            <div class="mb-4 flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+              <div class="min-w-0">
                 <h3 class="font-black text-slate-950">Checklist Perusahaan per Site</h3>
-                <p id="companyMasterInfo" class="text-sm text-slate-500">0 perusahaan</p>
+                <p class="mt-1 text-sm text-slate-500">Centang site di mana perusahaan eligible mengikuti event meeting.</p>
+                <div class="mt-3 flex flex-wrap items-center gap-2">
+                  <span id="companyMasterTotal" class="company-stat-pill company-stat-pill-total">Total: —</span>
+                  <span id="companyMasterFiltered" class="company-stat-pill company-stat-pill-shown">Ditampilkan: —</span>
+                  <span id="companyMasterInfo" class="text-xs font-semibold text-slate-400"></span>
+                </div>
               </div>
+              <p class="shrink-0 text-xs font-bold uppercase tracking-wider text-slate-400">Geser → untuk semua site</p>
             </div>
-            <div class="table-wrap rounded-2xl border border-slate-200 bg-white">
-              <table id="companyDataTable" class="min-w-full text-left text-sm nowrap w-full">
-                <thead id="companyMasterTableHead" class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+            <div class="company-master-scroll table-wrap border border-slate-200 bg-white">
+              <table id="companyDataTable" class="w-full text-left text-sm">
+                <thead id="companyMasterTableHead">
                   <tr>
-                    <th>Perusahaan</th>
-                    <th class="text-center">Aksi</th>
+                    <th class="company-col-sticky">Perusahaan</th>
+                    <th class="action-col-sticky text-center no-print">Aksi</th>
                   </tr>
                 </thead>
                 <tbody></tbody>
@@ -1227,28 +1439,43 @@
     renderEvents();
   }
 
+  function updateCompanyMasterStats(json) {
+    const total = Number(json?.recordsTotal ?? 0);
+    const filtered = Number(json?.recordsFiltered ?? 0);
+    const totalEl = document.getElementById('companyMasterTotal');
+    const filteredEl = document.getElementById('companyMasterFiltered');
+    const infoEl = document.getElementById('companyMasterInfo');
+    if (totalEl) totalEl.textContent = `Total: ${total}`;
+    if (filteredEl) filteredEl.textContent = `Ditampilkan: ${filtered}`;
+    if (infoEl) {
+      infoEl.textContent = filtered === total
+        ? 'Semua perusahaan ditampilkan'
+        : `Hasil filter dari ${total} perusahaan`;
+    }
+  }
+
   function buildCompanyTableColumns(siteNames) {
     return [
-      { data: 'name', name: 'name' },
+      { data: 'name', name: 'name', className: 'company-col-sticky' },
       ...siteNames.map((site, index) => ({
         data: null,
         name: `site_${site}`,
         orderable: false,
         searchable: false,
-        className: 'text-center',
+        className: 'company-site-col',
         defaultContent: '',
         render: (_data, _type, row) => (row.site_cells && row.site_cells[index]) ? row.site_cells[index] : ''
       })),
-      { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center no-print' }
+      { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'action-col-sticky text-center no-print' }
     ];
   }
 
   function renderCompanyTableHead(siteNames) {
     const headRow = document.querySelector('#companyMasterTableHead tr');
     if (!headRow || !siteNames.length) return;
-    headRow.innerHTML = '<th class="px-4 py-3">Perusahaan</th>'
-      + siteNames.map(site => `<th class="px-3 py-3 text-center">${escapeHTML(site)}</th>`).join('')
-      + '<th class="px-4 py-3 text-center no-print">Action</th>';
+    headRow.innerHTML = '<th class="company-col-sticky">Perusahaan</th>'
+      + siteNames.map(site => `<th class="company-site-col" title="${escapeHTML(site)}"><span>${escapeHTML(site)}</span></th>`).join('')
+      + '<th class="action-col-sticky text-center no-print">Aksi</th>';
   }
 
   async function initCompanyDataTable() {
@@ -1293,11 +1520,19 @@
       lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
       order: [[0, 'asc']],
       language: DATATABLES_LANG,
+      dom: '<"company-dt-toolbar flex flex-col gap-3 mb-4 sm:flex-row sm:items-center sm:justify-between"lf>rt<"company-dt-footer flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"ip>',
+      autoWidth: false,
       ajax: {
         url: `${SID_MEETING_API_BASE}/companies/data`,
-        dataSrc: 'data'
+        dataSrc: json => {
+          updateCompanyMasterStats(json);
+          return json.data || [];
+        }
       },
-      columns: buildCompanyTableColumns(siteNames)
+      columns: buildCompanyTableColumns(siteNames),
+      initComplete: function() {
+        $('#companyDataTable_wrapper').addClass('company-dt-wrapper');
+      }
     });
   }
 

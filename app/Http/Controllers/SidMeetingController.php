@@ -705,20 +705,27 @@ class SidMeetingController extends Controller
 
         $data = $items->map(function (Company $company) use ($siteNames): array {
             $companySites = $company->sites->pluck('name')->all();
+            $siteCount = count($companySites);
 
             return [
                 'id' => $company->id,
-                'name' => '<b>' . e($company->name) . '</b><div class="mt-1 text-xs text-slate-500">' . count($companySites) . ' site eligible</div>',
+                'name' => '<div class="company-row-name">' . e($company->name) . '</div>'
+                    . '<div class="company-row-meta">' . $siteCount . ' site eligible</div>',
                 'site_cells' => collect($siteNames)->map(function (string $site) use ($company, $companySites): string {
-                    $checked = in_array($site, $companySites, true) ? 'checked' : '';
+                    $isChecked = in_array($site, $companySites, true);
+                    $checked = $isChecked ? 'checked' : '';
+                    $activeClass = $isChecked ? ' is-checked' : '';
                     $siteJson = htmlspecialchars(json_encode($site), ENT_QUOTES, 'UTF-8');
 
-                    return '<input type="checkbox" ' . $checked . ' onchange="toggleCompanySiteDb(' . (int) $company->id . ', ' . $siteJson . ', this.checked)" class="h-4 w-4 rounded border-slate-300 text-blue-600" />';
+                    return '<label class="company-site-toggle' . $activeClass . '" title="' . e($site) . '">'
+                        . '<input type="checkbox" ' . $checked . ' onchange="toggleCompanySiteDb(' . (int) $company->id . ', ' . $siteJson . ', this.checked); this.closest(\'.company-site-toggle\')?.classList.toggle(\'is-checked\', this.checked)" />'
+                        . '<span class="company-site-toggle-ui" aria-hidden="true"></span>'
+                        . '</label>';
                 })->all(),
                 'sites_list' => implode(', ', $companySites),
-                'actions' => '<div class="flex justify-center gap-2">'
-                    . '<button type="button" onclick="editCompanyDb(' . (int) $company->id . ', ' . htmlspecialchars(json_encode($company->name), ENT_QUOTES, 'UTF-8') . ')" class="rounded-lg bg-blue-50 px-3 py-2 text-xs font-black text-blue-700">Edit</button>'
-                    . '<button type="button" onclick="deleteCompanyDb(' . (int) $company->id . ')" class="rounded-lg bg-red-50 px-3 py-2 text-xs font-black text-red-700">Hapus</button>'
+                'actions' => '<div class="flex flex-col items-stretch justify-center gap-1.5 sm:flex-row sm:items-center">'
+                    . '<button type="button" onclick="editCompanyDb(' . (int) $company->id . ', ' . htmlspecialchars(json_encode($company->name), ENT_QUOTES, 'UTF-8') . ')" class="company-action-btn company-action-btn-edit">Edit</button>'
+                    . '<button type="button" onclick="deleteCompanyDb(' . (int) $company->id . ')" class="company-action-btn company-action-btn-delete">Hapus</button>'
                     . '</div>',
             ];
         })->values()->all();
