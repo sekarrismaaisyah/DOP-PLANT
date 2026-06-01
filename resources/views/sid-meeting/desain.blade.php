@@ -417,25 +417,11 @@
               <button id="eventListInactiveBtn" type="button" onclick="setEventListMode('inactive')" class="module-tab px-4 py-3 text-sm font-black">Sudah Tidak Aktif</button>
             </div>
             <button onclick="toggleCreateEventContainer(true)" class="fab-action">+ Create Event</button>
+            <input id="eventSearch" type="search" placeholder="Cari jenis meeting / site / week..." class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
           </div>
         </div>
-        <div class="table-wrap rounded-2xl border border-slate-200 bg-white">
-          <table id="eventsDataTable" class="min-w-full text-left text-sm display nowrap" style="width:100%">
-            <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-              <tr>
-                <th>Kode</th>
-                <th>Site</th>
-                <th>Jenis Meeting</th>
-                <th>Tanggal</th>
-                <th>Week</th>
-                <th>Status</th>
-                <th>Absensi</th>
-                <th class="no-print">Aksi</th>
-              </tr>
-            </thead>
-            <tbody></tbody>
-          </table>
-        </div>
+        <div id="eventList" class="grid gap-3"></div>
+        <div id="eventListPagination" class="no-print mt-4 flex flex-wrap items-center justify-between gap-3 text-sm text-slate-600"></div>
       </div>
     </section>
 
@@ -734,7 +720,7 @@
         </div>
         <button onclick="closeEventRecapModal()" class="no-print rounded-xl bg-slate-100 px-3 py-2 text-sm font-black text-slate-700">✕</button>
       </div>
-      <div id="eventRecapSummary" class="mt-5 grid gap-4 md:grid-cols-4"></div>
+      <div id="eventRecapSummary" class="mt-5 grid gap-4 sm:grid-cols-2 lg:grid-cols-5"></div>
       <div class="mt-6 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
 
       <div class="mt-6 rounded-3xl bg-white p-5 ring-1 ring-slate-200 shadow-sm">
@@ -985,6 +971,10 @@
   let formOptionsPromise = null;
   let fullDataLoaded = false;
   let eventsDataTable = null;
+  let eventsListPage = 1;
+  let eventsListMeta = { current_page: 1, last_page: 1, total: 0 };
+  let companiesLoaded = false;
+  let companiesPromise = null;
   let companyDataTable = null;
   let companySiteColumns = [];
   const eventCache = {};
@@ -1095,6 +1085,26 @@
     return db.events.find(x => String(x.id) === key);
   }
 
+  function getAttendanceLogsForEvent(eventId) {
+    const key = String(eventId || '');
+    return db.attendance.filter(a => String(a.eventId) === key);
+  }
+
+  async function ensureCompaniesLoaded() {
+    if (companiesLoaded) return;
+    if (companiesPromise) return companiesPromise;
+    companiesPromise = apiFetch(`${SID_MEETING_API_BASE}/companies/options`)
+      .then(payload => {
+        if (Array.isArray(payload.companies) && payload.companies.length) {
+          db.companies = migrateDB({ companies: payload.companies }).companies;
+        }
+        companiesLoaded = true;
+      })
+      .catch(err => console.warn('Companies options gagal:', err))
+      .finally(() => { companiesPromise = null; });
+    return companiesPromise;
+  }
+
   function cacheEvent(ev) {
     if (!ev?.id) return;
     eventCache[String(ev.id)] = ev;
@@ -1186,8 +1196,71 @@
   }
 
   function reloadEventsTable() {
-    if (eventsDataTable) eventsDataTable.ajax.reload(null, false);
-    else initEventsDataTable();
+    renderEvents();
+  }
+
+  let eventsSearchTimer = null;
+  function scheduleEventsSearch() {
+    clearTimeout(eventsSearchTimer);
+    eventsSearchTimer = setTimeout(() => {
+      eventsListPage = 1;
+      renderEvents();
+    }, 350);
+  }
+
+  async function renderEvents() {
+    const target = document.getElementById('eventList');
+    if (!target) return;
+    const q = (document.getElementById('eventSearch')?.value || '').trim();
+    target.innerHTML = '<div class="rounded-3xl bg-white p-6 text-center text-sm text-slate-500 ring-1 ring-slate-200">Memuat daftar event...</div>';
+    try {
+      const params = new URLSearchParams({
+        list_mode: eventListMode,
+        page: String(eventsListPage),
+        per_page: '20',
+        q
+      });
+      const payload = await apiFetch(`${SID_MEETING_API_BASE}/events/list?${params.toString()}`);
+      const rows = payload.data || [];
+      eventsListMeta = payload.meta || eventsListMeta;
+      if (!rows.length) {
+        target.innerHTML = '<div class="rounded-3xl bg-white p-6 text-center text-sm font-semibold text-slate-500 ring-1 ring-slate-200">Belum ada event. Buat event pertama dari form Create Event.</div>';
+        renderEventsPagination();
+        return;
+      }
+      rows.forEach(ev => cacheEvent(ev));
+      target.innerHTML = rows.map(ev => {
+        const status = getEventStatus(ev);
+        const total = Number(ev.attendanceCount ?? 0);
+        const qrLink = buildQRLink(ev.id);
+        return `<article onclick="openEventRecapModal('${escapeJS(ev.id)}')" class="cursor-pointer rounded-3xl bg-white p-5 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg"><div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"><div class="min-w-0"><div class="mb-2 flex flex-wrap items-center gap-2">${statusBadge(status)}<span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">${escapeHTML(ev.code)}</span><span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">${escapeHTML(ev.week)}</span></div><h3 class="text-lg font-black text-slate-950">${escapeHTML(ev.meetingType)}</h3><p class="mt-1 text-sm text-slate-500">${escapeHTML(ev.site)} · ${formatDate(ev.date)} · ${ev.startTime} - ${ev.endTime}</p><p class="mt-2 break-all text-xs text-slate-400">${escapeHTML(qrLink)}</p><p class="mt-2 text-xs font-bold text-blue-600">Klik kartu untuk melihat rekap event</p></div><div class="min-w-44 rounded-2xl bg-slate-50 p-4 text-sm ring-1 ring-slate-200"><div class="flex justify-between gap-4"><span>Absensi</span><b>${total}</b></div><div class="mt-1 flex justify-between gap-4"><span>Status</span><b>${status}</b></div><div class="mt-1 flex justify-between gap-4"><span>Waktu</span><b class="font-mono">${formatDuration(getElapsedMs(ev))}</b></div>${ev.closedAt ? `<div class="mt-1 text-xs text-slate-500">Closed: ${formatDateTime(ev.closedAt)}</div>` : ''}</div></div><div class="no-print mt-4 flex flex-wrap gap-2"><button onclick="event.stopPropagation(); openQRModal('${escapeJS(ev.id)}')" class="rounded-xl bg-cyan-50 px-3 py-2 text-xs font-black text-cyan-700 hover:bg-cyan-100">Lihat QR</button><button onclick="event.stopPropagation(); openAttendanceFromEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 hover:bg-emerald-100">Absen Manual</button>${status !== 'Closed' ? `<button onclick="event.stopPropagation(); askCloseMeeting('${escapeJS(ev.id)}', true)" class="rounded-xl bg-orange-50 px-3 py-2 text-xs font-black text-orange-700 hover:bg-orange-100">Tutup Meeting</button>` : ''}<button onclick="event.stopPropagation(); copyText('${escapeJS(qrLink)}', this)" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 hover:bg-slate-200">Copy Link Absensi</button><button onclick="event.stopPropagation(); editEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100">Edit</button><button onclick="event.stopPropagation(); deleteEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-100">Hapus</button></div></article>`;
+      }).join('');
+      renderEventsPagination();
+    } catch (err) {
+      target.innerHTML = `<div class="rounded-3xl bg-red-50 p-6 text-center text-sm text-red-700 ring-1 ring-red-100">${escapeHTML(err.message || 'Gagal memuat daftar event')}</div>`;
+    }
+  }
+
+  function renderEventsPagination() {
+    const box = document.getElementById('eventListPagination');
+    if (!box) return;
+    const { current_page, last_page, total } = eventsListMeta;
+    if (!total) {
+      box.innerHTML = '';
+      return;
+    }
+    box.innerHTML = `
+      <span>Menampilkan halaman ${current_page} dari ${last_page} (${total} event)</span>
+      <div class="flex gap-2">
+        <button type="button" ${current_page <= 1 ? 'disabled' : ''} onclick="changeEventsPage(${current_page - 1})" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 disabled:opacity-40">Sebelumnya</button>
+        <button type="button" ${current_page >= last_page ? 'disabled' : ''} onclick="changeEventsPage(${current_page + 1})" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 disabled:opacity-40">Berikutnya</button>
+      </div>`;
+  }
+
+  function changeEventsPage(page) {
+    if (page < 1 || page > eventsListMeta.last_page) return;
+    eventsListPage = page;
+    renderEvents();
   }
 
   function initCompanyDataTable() {
@@ -1495,7 +1568,7 @@
     if (tab === 'events') {
       loadFormOptions();
       loadStats();
-      reloadEventsTable();
+      renderEvents();
     } else if (tab === 'companymaster') {
       initCompanyDataTable();
     } else if (['report', 'siteperformance', 'semanticeval'].includes(tab)) {
@@ -1564,10 +1637,7 @@
     eventListMode = mode === 'inactive' ? 'inactive' : 'active';
     document.getElementById('eventListActiveBtn')?.classList.toggle('tab-active', eventListMode === 'active');
     document.getElementById('eventListInactiveBtn')?.classList.toggle('tab-active', eventListMode === 'inactive');
-    reloadEventsTable();
-  }
-
-  function renderEvents() {
+    eventsListPage = 1;
     reloadEventsTable();
   }
 
@@ -1593,11 +1663,13 @@
     selectedRecapEventId = String(eventId);
     scannedEventId = String(eventId);
     try {
-      const payload = await apiFetch(`${SID_MEETING_API_BASE}/events/${eventId}`);
+      await ensureCompaniesLoaded();
+      const payload = await apiFetch(`${SID_MEETING_API_BASE}/events/${encodeURIComponent(eventId)}`);
       cacheEvent(payload.event);
+      window.recapEligibleCompanies = Array.isArray(payload.eligibleCompanies) ? payload.eligibleCompanies : null;
       db.attendance = db.attendance.filter(a => String(a.eventId) !== String(eventId));
       (payload.attendance || []).forEach(row => db.attendance.push(row));
-      renderEventRecapModal(eventId);
+      renderEventRecapModal(eventId, payload.attendance || []);
       renderActiveAttendanceEvent();
       document.getElementById('eventRecapModal').classList.remove('hidden');
       document.getElementById('eventRecapModal').classList.add('flex');
@@ -1663,6 +1735,9 @@
   }
 
   function getEligibleCompaniesForSite(site) {
+    if (Array.isArray(window.recapEligibleCompanies) && window.recapEligibleCompanies.length) {
+      return [...window.recapEligibleCompanies];
+    }
     const targetSite = String(site || '').trim();
     const companies = getCompanyMaster();
     if (!targetSite) return companies.map(company => company.name);
@@ -1692,17 +1767,18 @@
     }));
   }
 
-  function renderEventRecapModal(eventId) {
+  function renderEventRecapModal(eventId, logs = null) {
     const ev = getEventById(eventId);
     if (!ev) return;
-    const logs = db.attendance.filter(a => a.eventId === eventId);
-    const companyRows = getCompanyStatusRows(logs, ev.site);
+    const attendanceLogs = Array.isArray(logs) ? logs : getAttendanceLogsForEvent(eventId);
+    const companyRows = getCompanyStatusRows(attendanceLogs, ev.site);
     const companyPresent = companyRows.filter(x => x.status === 'HADIR').length;
     const companyAbsent = companyRows.filter(x => x.status === 'TIDAK HADIR').length;
     const companyRate = companyRows.length ? Math.round((companyPresent / companyRows.length) * 100) : 0;
 
     document.getElementById('eventRecapTitle').textContent = `${ev.meetingType} · ${ev.site} · ${formatDate(ev.date)} · ${ev.week}`;
     document.getElementById('eventRecapSummary').innerHTML = [
+      ['Total Absensi', attendanceLogs.length],
       ['Perusahaan Hadir', companyPresent],
       ['Attendance Rate', companyRate + '%'],
       ['Waktu Berjalan', formatDuration(getElapsedMs(ev))],
@@ -1727,7 +1803,7 @@
         </table>
       </div>`;
 
-    document.getElementById('eventRecapAttendees').innerHTML = logs.length ? logs.map(a => `<tr class="border-t border-slate-100"><td class="px-4 py-3">${formatDateTime(a.timestamp)}</td><td class="px-4 py-3 font-black">${escapeHTML(a.sid)}</td><td class="px-4 py-3"><b>${escapeHTML(a.name)}</b></td><td class="px-4 py-3">${escapeHTML(a.company || '-')}</td><td class="px-4 py-3"><div>${escapeHTML(a.structuralPosition || '-')}</div><div class="text-xs text-slate-500">${escapeHTML(a.functionalPosition || '-')}</div></td></tr>`).join('') : `<tr><td colspan="5" class="px-4 py-8 text-center text-sm font-semibold text-slate-500">Belum ada daftar hadir.</td></tr>`;
+    document.getElementById('eventRecapAttendees').innerHTML = attendanceLogs.length ? attendanceLogs.map(a => `<tr class="border-t border-slate-100"><td class="px-4 py-3">${formatDateTime(a.timestamp)}</td><td class="px-4 py-3 font-black">${escapeHTML(a.sid)}</td><td class="px-4 py-3"><b>${escapeHTML(a.name)}</b></td><td class="px-4 py-3">${escapeHTML(a.company || '-')}</td><td class="px-4 py-3"><div>${escapeHTML(a.structuralPosition || '-')}</div><div class="text-xs text-slate-500">${escapeHTML(a.functionalPosition || '-')}</div></td></tr>`).join('') : `<tr><td colspan="5" class="px-4 py-8 text-center text-sm font-semibold text-slate-500">Belum ada daftar hadir.</td></tr>`;
   }
 
   function buildIssueTable(containerId, prefix, rows = 4, data = []) {
@@ -1860,8 +1936,12 @@
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      const detail = await apiFetch(`${SID_MEETING_API_BASE}/events/${selectedRecapEventId}`);
+      const detail = await apiFetch(`${SID_MEETING_API_BASE}/events/${encodeURIComponent(selectedRecapEventId)}`);
       cacheEvent(detail.event);
+      window.recapEligibleCompanies = Array.isArray(detail.eligibleCompanies) ? detail.eligibleCompanies : null;
+      db.attendance = db.attendance.filter(a => String(a.eventId) !== String(selectedRecapEventId));
+      (detail.attendance || []).forEach(row => db.attendance.push(row));
+      renderEventRecapModal(selectedRecapEventId, detail.attendance || []);
       renderEventMinutesForm(detail.event);
       toast('Notulensi event berhasil disimpan ke database');
     } catch (err) {
@@ -1980,7 +2060,7 @@
   }
 
   function renderActiveAttendanceEvent() {
-    const ev = db.events.find(x => x.id === scannedEventId);
+    const ev = getEventById(scannedEventId);
     const notice = document.getElementById('scanNotice');
     const info = document.getElementById('activeEventInfo');
     const eventInput = document.getElementById('attendanceEventId');
@@ -2028,7 +2108,7 @@
       cacheEvent(detail.event);
       db.attendance = db.attendance.filter(a => String(a.eventId) !== String(eventId));
       (detail.attendance || []).forEach(row => db.attendance.push(row));
-      renderEventRecapModal(eventId);
+      renderEventRecapModal(eventId, detail.attendance || []);
       loadStats();
       reloadEventsTable();
       clearAttendanceForm();
@@ -3466,7 +3546,8 @@
   clearAttendanceForm();
   loadFormOptions();
   loadStats();
-  initEventsDataTable();
+  document.getElementById('eventSearch')?.addEventListener('input', scheduleEventsSearch);
+  renderEvents();
   if (scannedEventId) openEventRecapModal(scannedEventId);
   refreshTimer = setInterval(tickLiveClock, 1000);
 </script>

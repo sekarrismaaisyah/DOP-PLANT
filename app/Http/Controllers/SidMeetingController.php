@@ -465,6 +465,77 @@ class SidMeetingController extends Controller
         return response()->json(['ok' => true]);
     }
 
+    public function apiEventsList(Request $request): JsonResponse
+    {
+        $page = max(1, (int) $request->input('page', 1));
+        $perPage = (int) $request->input('per_page', 20);
+        if ($perPage < 1 || $perPage > 50) {
+            $perPage = 20;
+        }
+
+        $search = trim((string) $request->input('q', ''));
+        $listMode = $request->input('list_mode', 'active') === 'inactive' ? 'inactive' : 'active';
+
+        $query = Event::query()
+            ->with(['site:id,name', 'meetingType:id,name'])
+            ->withCount('attendances');
+
+        if ($listMode === 'active') {
+            $query->runtimeActive();
+        } else {
+            $query->runtimeInactive();
+        }
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search): void {
+                $q->where('event_code', 'like', '%' . $search . '%')
+                    ->orWhere('week', 'like', '%' . $search . '%')
+                    ->orWhereHas('site', fn ($sq) => $sq->where('name', 'like', '%' . $search . '%'))
+                    ->orWhereHas('meetingType', fn ($sq) => $sq->where('name', 'like', '%' . $search . '%'));
+            });
+        }
+
+        $paginator = $query->orderByDesc('meeting_date')->paginate($perPage, ['*'], 'page', $page);
+
+        $data = $paginator->getCollection()->map(function (Event $event): array {
+            $legacy = $this->mapEventToLegacy($event, false);
+
+            return array_merge($legacy, [
+                'attendanceCount' => (int) $event->attendances_count,
+            ]);
+        })->values()->all();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
+    }
+
+    public function apiCompaniesOptions(): JsonResponse
+    {
+        $companies = Company::query()
+            ->with('sites:id,name')
+            ->orderBy('name')
+            ->get()
+            ->map(function (Company $company): array {
+                return [
+                    'id' => 'COMP-' . $company->id,
+                    'name' => $company->name,
+                    'sites' => $company->sites->pluck('name')->values()->all(),
+                    'createdAt' => optional($company->created_at)->toIso8601String(),
+                    'updatedAt' => optional($company->updated_at)->toIso8601String(),
+                ];
+            })
+            ->values();
+
+        return response()->json(['companies' => $companies]);
+    }
+
     public function apiEventsData(Request $request): JsonResponse
     {
         $draw = (int) $request->input('draw', 0);
@@ -486,16 +557,16 @@ class SidMeetingController extends Controller
             3 => 'events.meeting_date',
             4 => 'events.week',
             5 => 'events.status',
-            6 => 'attendance_count',
+            6 => 'attendances_count',
         ];
         $orderBy = $orderColumns[$orderColIndex] ?? 'events.meeting_date';
 
         $baseQuery = Event::query()
-            ->select('events.*')
-            ->selectRaw('(SELECT COUNT(*) FROM attendances WHERE attendances.event_id = events.id) as attendance_count')
             ->with(['site:id,name', 'meetingType:id,name'])
+            ->withCount('attendances')
             ->leftJoin('sites', 'sites.id', '=', 'events.site_id')
-            ->leftJoin('meeting_types', 'meeting_types.id', '=', 'events.meeting_type_id');
+            ->leftJoin('meeting_types', 'meeting_types.id', '=', 'events.meeting_type_id')
+            ->select('events.*');
 
         if ($listMode === 'active') {
             $baseQuery->runtimeActive();
@@ -554,7 +625,7 @@ class SidMeetingController extends Controller
                 'end_time' => substr((string) $event->end_time, 0, 5),
                 'status' => $runtimeStatus,
                 'status_badge' => '<span class="badge ' . $statusClass . '">' . e($statusLabel) . '</span>',
-                'attendance_count' => (int) ($event->attendance_count ?? 0),
+                'attendance_count' => (int) ($event->attendances_count ?? 0),
                 'qr_link' => $qrLink,
                 'actions' => $this->buildEventActionsHtml($event, $runtimeStatus, $qrLink),
             ];
@@ -571,9 +642,19 @@ class SidMeetingController extends Controller
     public function apiEventDetail(Event $event): JsonResponse
     {
         $event->load(['site', 'meetingType', 'eventMinute.issues', 'attendances.employee.company']);
+        $event->loadCount('attendances');
+
+        $eligibleCompanies = Company::query()
+            ->whereHas('sites', fn ($q) => $q->where('sites.id', $event->site_id))
+            ->orderBy('name')
+            ->pluck('name')
+            ->values();
 
         return response()->json([
-            'event' => $this->mapEventToLegacy($event, true),
+            'event' => array_merge($this->mapEventToLegacy($event, true), [
+                'attendanceCount' => (int) $event->attendances_count,
+            ]),
+            'eligibleCompanies' => $eligibleCompanies,
             'attendance' => $event->attendances->map(function (Attendance $row): array {
                 return [
                     'id' => (string) $row->id,
