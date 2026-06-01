@@ -33,19 +33,9 @@
   <style>
     :root {
       --bc-blue: #2563eb;
-      --bc-blue-dark: #1d4ed8;
-      --bc-brand: #3952bc;
       --bc-cyan: #06b6d4;
       --bc-slate: #0f172a;
       --bc-soft: #f8fafc;
-      --bc-surface: #ffffff;
-      --bc-border: #e2e8f0;
-      --bc-muted: #64748b;
-      --radius-lg: 1rem;
-      --radius-xl: 1.25rem;
-      --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.05);
-      --shadow-md: 0 8px 30px rgba(15, 23, 42, 0.08);
-      --shadow-lg: 0 20px 50px rgba(15, 23, 42, 0.12);
     }
 
     * { box-sizing: border-box; }
@@ -78,340 +68,31 @@
     .fade-in { animation: fadeIn .22s ease-out; }
     @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
 
-    .module-nav-pills {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-      padding: 0.4rem;
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(14px);
-      border: 1px solid rgba(226, 232, 240, 0.95);
-      border-radius: var(--radius-xl);
-      box-shadow: var(--shadow-md);
+    .tab-active {
+      background: transparent;
+      color: #3952bc !important;
+      border-bottom: 2px solid #3952bc;
+      border-radius: 0 !important;
+      box-shadow: none;
     }
     .module-tab {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.45rem;
-      padding: 0.6rem 1rem;
-      border-radius: 0.7rem;
-      border: none;
-      background: transparent;
-      color: var(--bc-muted);
+      color: #595c5e;
       font-weight: 700;
-      font-size: 0.8125rem;
-      letter-spacing: 0.01em;
-      transition: background-color 0.18s ease, color 0.18s ease, box-shadow 0.18s ease, transform 0.18s ease;
+      font-size: 13px;
+      letter-spacing: .01em;
+      padding: 10px 2px;
+      border-bottom: 2px solid transparent;
+      transition: color .18s ease, border-color .18s ease;
+      border-radius: 0 !important;
     }
-    .module-tab:hover {
-      background: #f1f5f9;
-      color: var(--bc-brand);
-    }
-    .tab-active {
-      background: linear-gradient(135deg, var(--bc-brand) 0%, var(--bc-blue) 100%) !important;
-      color: #fff !important;
-      border-bottom: none !important;
-      border-radius: 0.7rem !important;
-      box-shadow: 0 4px 16px rgba(57, 82, 188, 0.35);
-    }
-    .tab-active .material-symbols-outlined { font-variation-settings: 'FILL' 1, 'wght' 500, 'GRAD' 0, 'opsz' 24; }
-    .app-header {
-      background: rgba(255, 255, 255, 0.92);
-      backdrop-filter: blur(16px);
-      border-bottom: 1px solid var(--bc-border);
-    }
-    .app-header nav a.is-current {
-      color: var(--bc-brand);
-      border-bottom: 2px solid var(--bc-brand);
-    }
-
-    .panel-card {
-      background: var(--bc-surface);
-      border: 1px solid var(--bc-border);
-      border-radius: 1.25rem;
-      box-shadow: var(--shadow-md);
-    }
-    .panel-card-header {
-      display: flex;
-      flex-wrap: wrap;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 1rem;
-      margin-bottom: 1.25rem;
-    }
-    .panel-card-title {
-      font-size: 1.125rem;
-      font-weight: 800;
-      color: var(--bc-slate);
-      letter-spacing: -0.02em;
-    }
-    .panel-card-desc {
-      margin-top: 0.35rem;
-      font-size: 0.8125rem;
-      line-height: 1.5;
-      color: var(--bc-muted);
-      max-width: 42rem;
-    }
-    .stats-grid {
-      display: grid;
-      gap: 1rem;
-      grid-template-columns: repeat(1, minmax(0, 1fr));
-    }
-    @media (min-width: 640px) { .stats-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
-    @media (min-width: 1024px) { .stats-grid { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
-    .stat-card {
-      position: relative;
-      overflow: hidden;
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--bc-border);
-      background: var(--bc-surface);
-      padding: 1.25rem 1.25rem 1.15rem;
-      box-shadow: var(--shadow-sm);
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-    }
-    .stat-card:hover {
-      transform: translateY(-2px);
-      box-shadow: var(--shadow-md);
-    }
-    .stat-card::before {
-      content: '';
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-      height: 3px;
-      background: linear-gradient(90deg, var(--bc-brand), var(--bc-cyan));
-      opacity: 0.85;
-    }
-    .stat-card--active::before { background: linear-gradient(90deg, #10b981, #34d399); }
-    .stat-card--rate::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
-    .stat-card__row {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 0.75rem;
-    }
-    .stat-card__icon {
-      display: flex;
-      height: 2.5rem;
-      width: 2.5rem;
-      align-items: center;
-      justify-content: center;
-      border-radius: 0.75rem;
-      background: linear-gradient(135deg, #eff6ff, #e0f2fe);
-      color: var(--bc-brand);
-    }
-    .stat-card--active .stat-card__icon { background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #059669; }
-    .stat-card--rate .stat-card__icon { background: linear-gradient(135deg, #eff6ff, #dbeafe); color: #2563eb; }
-    .stat-card__label {
-      font-size: 0.65rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-      color: #94a3b8;
-    }
-    .stat-card__value {
-      margin-top: 0.15rem;
-      font-size: 1.75rem;
-      font-weight: 800;
-      line-height: 1.1;
-      letter-spacing: -0.03em;
-      color: var(--bc-slate);
-    }
-    .stat-card--active .stat-card__value { color: #047857; }
-    .stat-card--rate .stat-card__value { color: #1d4ed8; }
-
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 0.4rem;
-      border-radius: 0.75rem;
-      padding: 0.65rem 1rem;
-      font-size: 0.8125rem;
-      font-weight: 800;
-      line-height: 1;
-      transition: transform 0.16s ease, box-shadow 0.16s ease, background 0.16s ease;
-    }
-    .btn-primary {
-      background: linear-gradient(135deg, var(--bc-brand), var(--bc-blue));
-      color: #fff;
-      box-shadow: 0 8px 22px rgba(57, 82, 188, 0.28);
-    }
-    .btn-secondary {
-      background: #fff;
-      color: #334155;
-      border: 1px solid var(--bc-border);
-      box-shadow: var(--shadow-sm);
-    }
-    .btn-dark {
-      background: #0f172a;
-      color: #fff;
-      box-shadow: var(--shadow-sm);
-    }
-    .btn-ghost {
-      background: #f8fafc;
-      color: #475569;
-      border: 1px solid var(--bc-border);
-    }
-    .btn-danger-soft {
-      background: #fef2f2;
-      color: #b91c1c;
-      border: 1px solid #fecaca;
-    }
-    .btn:hover:not(:disabled) { transform: translateY(-1px); }
-    .btn:active:not(:disabled) { transform: translateY(0); }
-    .fab-action:hover { filter: brightness(1.05); transform: translateY(-1px); }
-    .form-label {
-      display: block;
-      font-size: 0.75rem;
-      font-weight: 800;
-      color: #475569;
-      margin-bottom: 0.35rem;
-    }
-    .form-control {
-      width: 100%;
-      border-radius: 0.75rem;
-      border: 1px solid var(--bc-border);
-      background: #fff;
-      padding: 0.65rem 0.9rem;
-      font-size: 0.875rem;
-      outline: none;
-    }
-    .form-control:focus {
-      border-color: #60a5fa;
-      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.15);
-    }
-    .filter-panel {
-      border-radius: var(--radius-xl);
-      border: 1px solid var(--bc-border);
-      background: linear-gradient(180deg, #f8fafc 0%, #fff 100%);
-      padding: 1rem;
-      margin-bottom: 1rem;
-    }
-    .segment-control {
-      display: inline-flex;
-      flex-wrap: wrap;
-      gap: 0.25rem;
-      padding: 0.25rem;
-      border-radius: 0.85rem;
-      background: #f1f5f9;
-      border: 1px solid var(--bc-border);
-    }
-    .segment-control .module-tab {
-      padding: 0.5rem 1rem;
-      font-size: 0.75rem;
-    }
-    .event-card {
-      cursor: pointer;
-      border-radius: 1.25rem;
-      border: 1px solid var(--bc-border);
-      background: #fff;
-      overflow: hidden;
-      transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
-    }
-    .event-card:hover {
-      transform: translateY(-3px);
-      border-color: #bfdbfe;
-      box-shadow: 0 16px 40px rgba(37, 99, 235, 0.12);
-    }
-    .event-card__body {
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      padding: 1.25rem;
-    }
-    @media (min-width: 768px) {
-      .event-card__body { flex-direction: row; align-items: flex-start; justify-content: space-between; }
-    }
-    .event-card__metrics {
-      flex-shrink: 0;
-      min-width: 11rem;
-      border-radius: 0.85rem;
-      background: linear-gradient(180deg, #f8fafc, #f1f5f9);
-      padding: 1rem;
-      border: 1px solid var(--bc-border);
-    }
-    .event-card__metric-row {
-      display: flex;
-      justify-content: space-between;
-      gap: 1rem;
-      font-size: 0.8125rem;
-      padding: 0.2rem 0;
-    }
-    .event-card__metric-row + .event-card__metric-row { margin-top: 0.35rem; }
-    .event-card__actions {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem;
-      padding: 0 1.25rem 1.25rem;
-      border-top: 1px solid #f1f5f9;
-      background: #fafbfc;
-    }
-    .chip {
-      display: inline-flex;
-      align-items: center;
-      border-radius: 999px;
-      padding: 0.25rem 0.65rem;
-      font-size: 0.6875rem;
-      font-weight: 800;
-      line-height: 1;
-    }
-    .chip-code { background: #f1f5f9; color: #475569; }
-    .chip-week { background: #eff6ff; color: #1d4ed8; }
-    .empty-state {
-      border-radius: var(--radius-xl);
-      border: 1px dashed #cbd5e1;
-      background: linear-gradient(180deg, #fafbfc, #fff);
-      padding: 2.5rem 1.5rem;
-      text-align: center;
-    }
-    .empty-state__icon {
-      margin: 0 auto 0.75rem;
-      display: flex;
-      height: 3rem;
-      width: 3rem;
-      align-items: center;
-      justify-content: center;
-      border-radius: 999px;
-      background: #eff6ff;
-      color: var(--bc-brand);
-    }
-    .loading-banner {
-      display: flex;
-      align-items: center;
-      gap: 0.65rem;
-      border-radius: var(--radius-lg);
-      border: 1px solid #bfdbfe;
-      background: linear-gradient(90deg, #eff6ff, #f0f9ff);
-      padding: 0.75rem 1rem;
-      font-size: 0.8125rem;
-      font-weight: 700;
-      color: #1e40af;
-    }
-    .loading-spinner {
-      display: inline-block;
-      height: 1rem;
-      width: 1rem;
-      border-radius: 999px;
-      border: 2px solid #3b82f6;
-      border-top-color: transparent;
-      animation: spin 0.7s linear infinite;
-    }
-    @keyframes spin { to { transform: rotate(360deg); } }
-    .page-hero-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      border-radius: 999px;
-      background: linear-gradient(135deg, #eff6ff, #e0f2fe);
-      padding: 0.35rem 0.85rem;
-      font-size: 0.6875rem;
-      font-weight: 800;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      color: #1d4ed8;
-      border: 1px solid #bfdbfe;
+    .module-tab:hover { color: #3952bc; }
+    .module-nav {
+      background: #ffffff;
+      border: 1px solid #dfe3e6;
+      box-shadow: 0 1px 2px rgba(15, 23, 42, .04);
+      border-radius: 14px;
+      padding: 6px 18px;
+      gap: 24px;
     }
 
     button {
@@ -808,15 +489,14 @@
     }
   </style>
 </head>
-<body class="bg-slate-100 font-body text-slate-800 min-h-screen flex flex-col">
-  <div class="fixed inset-0 -z-10 overflow-hidden pointer-events-none">
-    <div class="absolute -top-32 -right-20 h-[28rem] w-[28rem] rounded-full bg-gradient-to-br from-cyan-200/50 to-blue-200/30 blur-3xl"></div>
-    <div class="absolute top-20 -left-24 h-96 w-96 rounded-full bg-blue-300/25 blur-3xl"></div>
-    <div class="absolute bottom-0 right-1/3 h-72 w-72 rounded-full bg-indigo-200/25 blur-3xl"></div>
-    <div class="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_rgba(57,82,188,0.04),_transparent_55%)]"></div>
+<body class="bg-[#f0f2f5] font-body text-slate-800 min-h-screen flex flex-col">
+  <div class="fixed inset-0 -z-10 overflow-hidden">
+    <div class="absolute -top-32 -right-20 h-96 w-96 rounded-full bg-cyan-200/40 blur-3xl"></div>
+    <div class="absolute top-24 -left-28 h-96 w-96 rounded-full bg-blue-300/30 blur-3xl"></div>
+    <div class="absolute bottom-0 right-1/4 h-80 w-80 rounded-full bg-violet-200/30 blur-3xl"></div>
   </div>
 
-  <header class="app-header w-full sticky top-0 z-50 shadow-sm">
+  <header class="w-full sticky top-0 bg-[#ffffff] border-b border-[#dfe3e6] z-50 shadow-sm">
     <div class="mx-auto px-8 py-4 flex justify-between items-center">
       <div class="flex items-center gap-10">
         <div class="flex flex-col">
@@ -856,58 +536,26 @@
           <span class="material-symbols-outlined text-xs">chevron_right</span>
           <span class="text-[#3952bc]">SID Meeting Dashboard</span>
         </nav>
-        <p class="page-hero-badge mb-3"><span class="material-symbols-outlined text-sm">qr_code_2</span> QR Event Maker & Absensi</p>
+        <p class="mb-2 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-bold uppercase tracking-wider text-blue-700 ring-1 ring-blue-100">QR Event Maker & Absensi</p>
         <h1 class="font-headline text-3xl font-extrabold tracking-tight text-slate-950 md:text-5xl">Event Meeting & Absensi SID</h1>
         <p class="mt-3 max-w-3xl text-sm leading-6 text-slate-600 md:text-base">Create event akan generate QR. Saat QR discan, form absensi event muncul. Peserta cukup input Kode SID, lalu nama, perusahaan, jabatan struktural, dan jabatan fungsional terisi otomatis dari sistem.</p>
       </div>
       
     </header>
 
-    <section class="stats-grid mb-6">
-      <article class="stat-card">
-        <div class="stat-card__row">
-          <div>
-            <p class="stat-card__label">Total Event</p>
-            <p id="statEvents" class="stat-card__value">0</p>
-          </div>
-          <div class="stat-card__icon"><span class="material-symbols-outlined">event</span></div>
-        </div>
-      </article>
-      <article class="stat-card stat-card--active">
-        <div class="stat-card__row">
-          <div>
-            <p class="stat-card__label">Event Aktif</p>
-            <p id="statActiveEvents" class="stat-card__value">0</p>
-          </div>
-          <div class="stat-card__icon"><span class="material-symbols-outlined">play_circle</span></div>
-        </div>
-      </article>
-      <article class="stat-card">
-        <div class="stat-card__row">
-          <div>
-            <p class="stat-card__label">Total Absensi</p>
-            <p id="statAttendance" class="stat-card__value">0</p>
-          </div>
-          <div class="stat-card__icon"><span class="material-symbols-outlined">groups</span></div>
-        </div>
-      </article>
-      <article class="stat-card stat-card--rate">
-        <div class="stat-card__row">
-          <div>
-            <p class="stat-card__label">Attendance Rate</p>
-            <p id="statAttendanceRateAll" class="stat-card__value">0%</p>
-          </div>
-          <div class="stat-card__icon"><span class="material-symbols-outlined">percent</span></div>
-        </div>
-      </article>
+    <section class="mb-6 grid gap-4 md:grid-cols-4">
+      <div class="bg-white p-6 rounded-2xl anchored-card"><p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Event</p><p id="statEvents" class="mt-2 text-3xl font-extrabold text-slate-950">0</p></div>
+      <div class="bg-white p-6 rounded-2xl anchored-card"><p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Event Aktif</p><p id="statActiveEvents" class="mt-2 text-3xl font-extrabold text-emerald-700">0</p></div>
+      <div class="bg-white p-6 rounded-2xl anchored-card"><p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Total Absensi</p><p id="statAttendance" class="mt-2 text-3xl font-extrabold text-slate-950">0</p></div>
+      <div class="bg-white p-6 rounded-2xl anchored-card"><p class="text-[10px] font-bold uppercase tracking-widest text-slate-400">Attendance Rate (All)</p><p id="statAttendanceRateAll" class="mt-2 text-3xl font-extrabold text-blue-700">0%</p></div>
     </section>
 
-    <nav class="module-nav-pills no-print sticky top-[4.25rem] z-30 mb-6">
-      <button data-tab="events" type="button" class="tab-btn module-tab tab-active" onclick="showTab('events')"><span class="material-symbols-outlined text-lg">add_circle</span> Create Event</button>
-      <button data-tab="companymaster" type="button" class="tab-btn module-tab" onclick="showTab('companymaster')"><span class="material-symbols-outlined text-lg">business</span> Master Perusahaan</button>
-      <button data-tab="report" type="button" class="tab-btn module-tab" onclick="showTab('report')"><span class="material-symbols-outlined text-lg">summarize</span> Rekap & Export</button>
-      <button data-tab="siteperformance" type="button" class="tab-btn module-tab" onclick="showTab('siteperformance')"><span class="material-symbols-outlined text-lg">monitoring</span> Site Performance</button>
-      <button data-tab="semanticeval" type="button" class="tab-btn module-tab" onclick="showTab('semanticeval')"><span class="material-symbols-outlined text-lg">psychology</span> Semantic Evaluation</button>
+    <nav class="module-nav no-print sticky top-3 z-30 mb-6 flex flex-wrap items-center">
+      <button data-tab="events" class="tab-btn module-tab tab-active" onclick="showTab('events')">Create Event</button>
+      <button data-tab="companymaster" class="tab-btn module-tab" onclick="showTab('companymaster')">Master Perusahaan</button>
+      <button data-tab="report" class="tab-btn module-tab" onclick="showTab('report')">Rekap & Export</button>
+      <button data-tab="siteperformance" class="tab-btn module-tab" onclick="showTab('siteperformance')">Site Performance</button>
+      <button data-tab="semanticeval" class="tab-btn module-tab" onclick="showTab('semanticeval')">Semantic Evaluation</button>
     </nav>
 
     <section id="tab-events" class="tab-panel fade-in">
@@ -966,19 +614,16 @@
         </div>
       </div>
 
-      <div class="panel-card glass soft-card rounded-3xl p-5 md:p-6">
-        <div class="panel-card-header">
-          <div>
-            <h2 class="panel-card-title">Daftar Event & QR</h2>
-            <p class="panel-card-desc">Klik kartu event untuk melihat modal rekap. Tombol QR dan form absen tetap tersedia di setiap event.</p>
-          </div>
-          <div class="no-print flex flex-col gap-2 sm:flex-row sm:items-center sm:flex-wrap">
-            <div class="segment-control">
-              <button id="eventListActiveBtn" type="button" onclick="setEventListMode('active')" class="module-tab tab-active">Event Aktif</button>
-              <button id="eventListInactiveBtn" type="button" onclick="setEventListMode('inactive')" class="module-tab">Sudah Tidak Aktif</button>
+      <div class="glass soft-card rounded-3xl p-5">
+        <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div><h2 class="text-xl font-black text-slate-950">Daftar Event & QR</h2><p class="text-sm text-slate-500">Klik kartu event untuk melihat modal rekap. Tombol QR dan form absen tetap tersedia di setiap event.</p></div>
+          <div class="no-print flex flex-col gap-2 md:flex-row md:items-center">
+            <div class="flex flex-wrap gap-2 rounded-2xl bg-white/70 p-2 shadow-sm ring-1 ring-slate-200">
+              <button id="eventListActiveBtn" type="button" onclick="setEventListMode('active')" class="module-tab tab-active px-4 py-3 text-sm font-black">Event Aktif</button>
+              <button id="eventListInactiveBtn" type="button" onclick="setEventListMode('inactive')" class="module-tab px-4 py-3 text-sm font-black">Sudah Tidak Aktif</button>
             </div>
-            <button type="button" onclick="toggleCreateEventContainer(true)" class="fab-action"><span class="material-symbols-outlined text-lg">add</span> Create Event</button>
-            <input id="eventSearch" type="search" placeholder="Cari meeting / site / week..." class="form-control min-w-[14rem]" />
+            <button onclick="toggleCreateEventContainer(true)" class="fab-action">+ Create Event</button>
+            <input id="eventSearch" type="search" placeholder="Cari jenis meeting / site / week..." class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
           </div>
         </div>
         <div id="eventList" class="grid gap-3"></div>
@@ -987,16 +632,16 @@
     </section>
 
     <section id="tab-companymaster" class="tab-panel fade-in hidden">
-      <div class="panel-card glass soft-card rounded-3xl p-5 md:p-6">
-        <div class="panel-card-header">
+      <div class="glass soft-card rounded-3xl p-5">
+        <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 class="panel-card-title">Master Perusahaan & Site Eligibility</h2>
-            <p class="panel-card-desc">Kelola daftar perusahaan dan checklist site eligible. Data ini menjadi dasar Attendance Rate per site.</p>
+            <h2 class="text-xl font-black text-slate-950">Master Perusahaan & Site Eligibility</h2>
+            <p class="text-sm text-slate-500">Kelola daftar perusahaan dan checklist site mana saja yang wajib/eligible mengikuti event. Data ini menjadi dasar Attendance Rate per site dan status kehadiran perusahaan.</p>
           </div>
-          <div class="no-print flex flex-wrap gap-2">
-            <button type="button" onclick="toggleCompanyInputContainer(true)" class="fab-action"><span class="material-symbols-outlined text-lg">add_business</span> Input Perusahaan</button>
-            <button type="button" onclick="exportCompanyMasterCSV()" class="btn btn-dark">Export CSV</button>
-            <button type="button" onclick="resetCompanyMaster()" class="btn btn-danger-soft">Reset Master</button>
+          <div class="no-print flex flex-col gap-2 md:flex-row">
+            <button onclick="toggleCompanyInputContainer(true)" class="fab-action">+ Input Perusahaan</button>
+            <button onclick="exportCompanyMasterCSV()" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-black text-white hover:bg-slate-800">Export Master CSV</button>
+            <button onclick="resetCompanyMaster()" class="rounded-2xl bg-red-50 px-4 py-3 text-sm font-black text-red-700 ring-1 ring-red-100 hover:bg-red-100">Reset Master</button>
           </div>
         </div>
 
@@ -1165,47 +810,45 @@
     </section>
 
     <section id="tab-report" class="tab-panel fade-in hidden">
-      <div id="reportTabLoading" class="loading-banner hidden mb-4">
-        <span class="loading-spinner"></span>
+      <div id="reportTabLoading" class="hidden mb-4 flex items-center gap-3 rounded-2xl bg-blue-50 px-4 py-3 text-sm font-bold text-blue-800 ring-1 ring-blue-100">
+        <span class="inline-block h-4 w-4 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></span>
         Memuat data rekap...
       </div>
-      <div class="panel-card glass soft-card rounded-3xl p-5 md:p-6">
-        <div class="panel-card-header">
+      <div class="glass soft-card rounded-3xl p-5">
+        <div class="mb-4 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
-            <h2 class="panel-card-title">Rekap & Export Keseluruhan</h2>
-            <p class="panel-card-desc">Tabel seluruh data absensi event. Gunakan filter Site dan Week untuk melihat data tertentu sebelum export.</p>
+            <h2 class="text-xl font-black text-slate-950">Rekap & Export Keseluruhan</h2>
+            <p class="text-sm text-slate-500">Tabel seluruh data absensi event. Gunakan filter Site dan Week untuk melihat data tertentu sebelum export.</p>
           </div>
-          <div class="no-print flex flex-wrap gap-2">
-            <button type="button" onclick="resetReportFilters()" class="btn btn-ghost"><span class="material-symbols-outlined text-base">restart_alt</span> Reset</button>
-            <button type="button" onclick="exportFilteredReportCSV()" class="btn btn-dark"><span class="material-symbols-outlined text-base">download</span> Absensi CSV</button>
-            <button type="button" onclick="exportMinutesReportCSV()" class="btn btn-primary"><span class="material-symbols-outlined text-base">description</span> Notulen CSV</button>
-          </div>
-        </div>
-
-        <div class="filter-panel no-print">
-          <div class="grid gap-3 md:grid-cols-3">
-            <div>
-              <label class="form-label" for="reportFilterSite">Filter Site</label>
-              <select id="reportFilterSite" onchange="scheduleReportReload()" class="form-control">
-                <option value="ALL">Semua Site</option>
-              </select>
-            </div>
-            <div>
-              <label class="form-label" for="reportFilterWeek">Filter Week</label>
-              <select id="reportFilterWeek" onchange="scheduleReportReload()" class="form-control">
-                <option value="ALL">Semua Week</option>
-              </select>
-            </div>
-            <div>
-              <label class="form-label" for="reportSearch">Pencarian</label>
-              <input id="reportSearch" type="search" oninput="scheduleReportReload()" placeholder="SID, nama, perusahaan, meeting..." class="form-control" />
-            </div>
+          <div class="no-print flex flex-col gap-2 md:flex-row">
+            <button onclick="resetReportFilters()" class="rounded-2xl bg-white px-4 py-3 text-sm font-black text-slate-700 shadow-sm ring-1 ring-slate-200 hover:bg-slate-50">Reset Filter</button>
+            <button onclick="exportFilteredReportCSV()" class="rounded-2xl bg-slate-900 px-4 py-3 text-sm font-black text-white hover:bg-slate-800">Export Absensi CSV</button>
+            <button onclick="exportMinutesReportCSV()" class="rounded-2xl bg-blue-600 px-4 py-3 text-sm font-black text-white hover:bg-blue-700">Export Notulen CSV</button>
           </div>
         </div>
 
-        <div class="no-print mb-4 segment-control">
-          <button id="reportViewAttendanceBtn" type="button" onclick="setReportView('attendance')" class="module-tab tab-active">Data Absensi</button>
-          <button id="reportViewMinutesBtn" type="button" onclick="setReportView('minutes')" class="module-tab">List Notulen</button>
+        <div class="no-print mb-4 grid gap-3 md:grid-cols-3">
+          <div>
+            <label class="text-sm font-bold text-slate-700">Filter Site</label>
+            <select id="reportFilterSite" onchange="scheduleReportReload()" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100">
+              <option value="ALL">Semua Site</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-bold text-slate-700">Filter Week</label>
+            <select id="reportFilterWeek" onchange="scheduleReportReload()" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100">
+              <option value="ALL">Semua Week</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-sm font-bold text-slate-700">Search</label>
+            <input id="reportSearch" type="search" oninput="scheduleReportReload()" placeholder="Cari SID / nama / perusahaan / meeting..." class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
+          </div>
+        </div>
+
+        <div class="no-print mb-4 flex flex-wrap gap-2 rounded-3xl bg-white/70 p-2 shadow-sm ring-1 ring-slate-200">
+          <button id="reportViewAttendanceBtn" onclick="setReportView('attendance')" class="module-tab tab-active px-4 py-3 text-sm font-black">Data Absensi</button>
+          <button id="reportViewMinutesBtn" onclick="setReportView('minutes')" class="module-tab px-4 py-3 text-sm font-black">List Notulen</button>
         </div>
 
         <div id="reportAttendancePanel">
@@ -1753,7 +1396,7 @@
     const target = document.getElementById('eventList');
     if (!target) return;
     const q = (document.getElementById('eventSearch')?.value || '').trim();
-    target.innerHTML = '<div class="loading-banner justify-center"><span class="loading-spinner"></span> Memuat daftar event...</div>';
+    target.innerHTML = '<div class="rounded-3xl bg-white p-6 text-center text-sm text-slate-500 ring-1 ring-slate-200">Memuat daftar event...</div>';
     try {
       const params = new URLSearchParams({
         list_mode: eventListMode,
@@ -1765,7 +1408,7 @@
       const rows = payload.data || [];
       eventsListMeta = payload.meta || eventsListMeta;
       if (!rows.length) {
-        target.innerHTML = '<div class="empty-state"><div class="empty-state__icon"><span class="material-symbols-outlined">event_busy</span></div><p class="text-sm font-bold text-slate-700">Belum ada event</p><p class="mt-1 text-xs text-slate-500">Buat event pertama dari tombol Create Event.</p></div>';
+        target.innerHTML = '<div class="rounded-3xl bg-white p-6 text-center text-sm font-semibold text-slate-500 ring-1 ring-slate-200">Belum ada event. Buat event pertama dari form Create Event.</div>';
         renderEventsPagination();
         return;
       }
@@ -1774,7 +1417,7 @@
         const status = getEventStatus(ev);
         const total = Number(ev.attendanceCount ?? 0);
         const qrLink = buildQRLink(ev.id);
-        return `<article onclick="openEventRecapModal('${escapeJS(ev.id)}')" class="event-card"><div class="event-card__body"><div class="min-w-0 flex-1"><div class="mb-2 flex flex-wrap items-center gap-2">${statusBadge(status)}<span class="chip chip-code">${escapeHTML(ev.code)}</span><span class="chip chip-week">${escapeHTML(ev.week)}</span></div><h3 class="text-lg font-extrabold tracking-tight text-slate-950">${escapeHTML(ev.meetingType)}</h3><p class="mt-1 flex flex-wrap items-center gap-1 text-sm text-slate-500"><span class="material-symbols-outlined text-base text-slate-400">location_on</span>${escapeHTML(ev.site)}<span class="text-slate-300">·</span><span class="material-symbols-outlined text-base text-slate-400">calendar_today</span>${formatDate(ev.date)}<span class="text-slate-300">·</span>${ev.startTime} – ${ev.endTime}</p><p class="mt-2 text-xs font-bold text-[#3952bc]">Klik kartu untuk rekap lengkap</p></div><div class="event-card__metrics"><div class="event-card__metric-row"><span class="text-slate-500">Absensi</span><b class="text-slate-900">${total}</b></div><div class="event-card__metric-row"><span class="text-slate-500">Status</span><b>${status}</b></div><div class="event-card__metric-row"><span class="text-slate-500">Durasi</span><b class="font-mono text-xs">${formatDuration(getElapsedMs(ev))}</b></div>${ev.closedAt ? `<div class="mt-2 border-t border-slate-200 pt-2 text-xs text-slate-500">Ditutup ${formatDateTime(ev.closedAt)}</div>` : ''}</div></div><div class="no-print event-card__actions"><button type="button" onclick="event.stopPropagation(); openQRModal('${escapeJS(ev.id)}')" class="btn btn-ghost text-xs py-2">QR</button><button type="button" onclick="event.stopPropagation(); openAttendanceFromEvent('${escapeJS(ev.id)}')" class="btn btn-ghost text-xs py-2">Absen</button>${status !== 'Closed' ? `<button type="button" onclick="event.stopPropagation(); askCloseMeeting('${escapeJS(ev.id)}', true)" class="btn btn-ghost text-xs py-2">Tutup</button>` : ''}<button type="button" onclick="event.stopPropagation(); copyText('${escapeJS(qrLink)}', this)" class="btn btn-ghost text-xs py-2">Copy Link</button><button type="button" onclick="event.stopPropagation(); editEvent('${escapeJS(ev.id)}')" class="btn btn-primary text-xs py-2">Edit</button><button type="button" onclick="event.stopPropagation(); deleteEvent('${escapeJS(ev.id)}')" class="btn btn-danger-soft text-xs py-2">Hapus</button></div></article>`;
+        return `<article onclick="openEventRecapModal('${escapeJS(ev.id)}')" class="cursor-pointer rounded-3xl bg-white p-5 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg"><div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"><div class="min-w-0"><div class="mb-2 flex flex-wrap items-center gap-2">${statusBadge(status)}<span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">${escapeHTML(ev.code)}</span><span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">${escapeHTML(ev.week)}</span></div><h3 class="text-lg font-black text-slate-950">${escapeHTML(ev.meetingType)}</h3><p class="mt-1 text-sm text-slate-500">${escapeHTML(ev.site)} · ${formatDate(ev.date)} · ${ev.startTime} - ${ev.endTime}</p><p class="mt-2 break-all text-xs text-slate-400">${escapeHTML(qrLink)}</p><p class="mt-2 text-xs font-bold text-blue-600">Klik kartu untuk melihat rekap event</p></div><div class="min-w-44 rounded-2xl bg-slate-50 p-4 text-sm ring-1 ring-slate-200"><div class="flex justify-between gap-4"><span>Absensi</span><b>${total}</b></div><div class="mt-1 flex justify-between gap-4"><span>Status</span><b>${status}</b></div><div class="mt-1 flex justify-between gap-4"><span>Waktu</span><b class="font-mono">${formatDuration(getElapsedMs(ev))}</b></div>${ev.closedAt ? `<div class="mt-1 text-xs text-slate-500">Closed: ${formatDateTime(ev.closedAt)}</div>` : ''}</div></div><div class="no-print mt-4 flex flex-wrap gap-2"><button onclick="event.stopPropagation(); openQRModal('${escapeJS(ev.id)}')" class="rounded-xl bg-cyan-50 px-3 py-2 text-xs font-black text-cyan-700 hover:bg-cyan-100">Lihat QR</button><button onclick="event.stopPropagation(); openAttendanceFromEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 hover:bg-emerald-100">Absen Manual</button>${status !== 'Closed' ? `<button onclick="event.stopPropagation(); askCloseMeeting('${escapeJS(ev.id)}', true)" class="rounded-xl bg-orange-50 px-3 py-2 text-xs font-black text-orange-700 hover:bg-orange-100">Tutup Meeting</button>` : ''}<button onclick="event.stopPropagation(); copyText('${escapeJS(qrLink)}', this)" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 hover:bg-slate-200">Copy Link Absensi</button><button onclick="event.stopPropagation(); editEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100">Edit</button><button onclick="event.stopPropagation(); deleteEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-100">Hapus</button></div></article>`;
       }).join('');
       renderEventsPagination();
     } catch (err) {
@@ -1791,10 +1434,10 @@
       return;
     }
     box.innerHTML = `
-      <span class="text-xs font-semibold text-slate-500">Halaman <b class="text-slate-800">${current_page}</b> / ${last_page} · ${total} event</span>
+      <span>Menampilkan halaman ${current_page} dari ${last_page} (${total} event)</span>
       <div class="flex gap-2">
-        <button type="button" ${current_page <= 1 ? 'disabled' : ''} onclick="changeEventsPage(${current_page - 1})" class="btn btn-ghost text-xs disabled:opacity-40">← Sebelumnya</button>
-        <button type="button" ${current_page >= last_page ? 'disabled' : ''} onclick="changeEventsPage(${current_page + 1})" class="btn btn-primary text-xs disabled:opacity-40">Berikutnya →</button>
+        <button type="button" ${current_page <= 1 ? 'disabled' : ''} onclick="changeEventsPage(${current_page - 1})" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 disabled:opacity-40">Sebelumnya</button>
+        <button type="button" ${current_page >= last_page ? 'disabled' : ''} onclick="changeEventsPage(${current_page + 1})" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 disabled:opacity-40">Berikutnya</button>
       </div>`;
   }
 
