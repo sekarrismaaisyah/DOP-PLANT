@@ -404,11 +404,259 @@ class SidMeetingController extends Controller
         }, 'similarity-export.csv');
     }
 
+    public function apiFormOptions(): JsonResponse
+    {
+        $sites = Site::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (Site $site): array => ['id' => $site->id, 'name' => $site->name])
+            ->values();
+
+        $meetingTypes = MeetingType::query()
+            ->where('is_active', true)
+            ->orderBy('name')
+            ->get(['id', 'name'])
+            ->map(fn (MeetingType $type): array => ['id' => $type->id, 'name' => $type->name])
+            ->values();
+
+        return response()->json([
+            'sites' => $sites,
+            'meetingTypes' => $meetingTypes,
+        ]);
+    }
+
+    public function apiStats(): JsonResponse
+    {
+        $totalEvents = Event::query()->count();
+        $activeEvents = Event::query()->runtimeActive()->count();
+        $totalAttendance = Attendance::query()->count();
+        $eventsWithAttendance = Attendance::query()->distinct('event_id')->count('event_id');
+        $attendanceRate = $totalEvents > 0
+            ? (int) round(($eventsWithAttendance / $totalEvents) * 100)
+            : 0;
+
+        return response()->json([
+            'totalEvents' => $totalEvents,
+            'activeEvents' => $activeEvents,
+            'totalAttendance' => $totalAttendance,
+            'attendanceRate' => $attendanceRate,
+        ]);
+    }
+
+    public function apiToggleCompanySite(Request $request, Company $company): JsonResponse
+    {
+        $payload = $request->validate([
+            'site' => 'required|string|max:255',
+            'checked' => 'required|boolean',
+        ]);
+
+        $site = Site::query()->where('name', $payload['site'])->first();
+        if (!$site) {
+            return response()->json(['ok' => false, 'message' => 'Site tidak ditemukan'], 422);
+        }
+
+        if ($request->boolean('checked')) {
+            $company->sites()->syncWithoutDetaching([$site->id => ['is_required' => true]]);
+        } else {
+            $company->sites()->detach($site->id);
+        }
+
+        return response()->json(['ok' => true]);
+    }
+
+    public function apiEventsData(Request $request): JsonResponse
+    {
+        $draw = (int) $request->input('draw', 0);
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+        if ($length < 1 || $length > 100) {
+            $length = 15;
+        }
+
+        $search = trim((string) ($request->input('search.value') ?? ''));
+        $listMode = $request->input('list_mode', 'active') === 'inactive' ? 'inactive' : 'active';
+        $orderColIndex = (int) $request->input('order.0.column', 3);
+        $orderDir = strtolower($request->input('order.0.dir', 'desc')) === 'asc' ? 'asc' : 'desc';
+
+        $orderColumns = [
+            0 => 'events.event_code',
+            1 => 'sites.name',
+            2 => 'meeting_types.name',
+            3 => 'events.meeting_date',
+            4 => 'events.week',
+            5 => 'events.status',
+            6 => 'attendance_count',
+        ];
+        $orderBy = $orderColumns[$orderColIndex] ?? 'events.meeting_date';
+
+        $baseQuery = Event::query()
+            ->select('events.*')
+            ->selectRaw('(SELECT COUNT(*) FROM attendances WHERE attendances.event_id = events.id) as attendance_count')
+            ->with(['site:id,name', 'meetingType:id,name'])
+            ->leftJoin('sites', 'sites.id', '=', 'events.site_id')
+            ->leftJoin('meeting_types', 'meeting_types.id', '=', 'events.meeting_type_id');
+
+        if ($listMode === 'active') {
+            $baseQuery->runtimeActive();
+        } else {
+            $baseQuery->runtimeInactive();
+        }
+
+        $recordsTotal = Event::query()
+            ->when($listMode === 'active', fn ($q) => $q->runtimeActive())
+            ->when($listMode === 'inactive', fn ($q) => $q->runtimeInactive())
+            ->count();
+
+        $filteredQuery = clone $baseQuery;
+        if ($search !== '') {
+            $filteredQuery->where(function ($q) use ($search): void {
+                $q->where('events.event_code', 'like', '%' . $search . '%')
+                    ->orWhere('events.week', 'like', '%' . $search . '%')
+                    ->orWhere('sites.name', 'like', '%' . $search . '%')
+                    ->orWhere('meeting_types.name', 'like', '%' . $search . '%');
+            });
+        }
+
+        $recordsFiltered = (clone $filteredQuery)->count('events.id');
+        $items = (clone $filteredQuery)
+            ->orderBy($orderBy, $orderDir)
+            ->skip($start)
+            ->take($length)
+            ->get();
+
+        $data = $items->map(function (Event $event): array {
+            $runtimeStatus = $event->runtimeStatus();
+            $qrLink = url('/attendance/' . $event->qr_token);
+            $statusClass = match ($runtimeStatus) {
+                'Open' => 'badge-open',
+                'Overrun' => 'badge-overrun',
+                'Closed' => 'badge-closed',
+                'Upcoming' => 'badge-upcoming',
+                default => 'badge-draft',
+            };
+            $statusLabel = match ($runtimeStatus) {
+                'Closed' => 'Meeting Ditutup',
+                'Overrun' => 'Lewat Jam Selesai',
+                'Open' => 'QR Aktif',
+                'Upcoming' => 'Belum Mulai',
+                default => 'Draft',
+            };
+
+            return [
+                'id' => (string) $event->id,
+                'event_code' => $event->event_code,
+                'site' => $event->site?->name ?? '-',
+                'meeting_type' => $event->meetingType?->name ?? '-',
+                'meeting_date' => optional($event->meeting_date)->format('Y-m-d'),
+                'week' => $event->week,
+                'start_time' => substr((string) $event->start_time, 0, 5),
+                'end_time' => substr((string) $event->end_time, 0, 5),
+                'status' => $runtimeStatus,
+                'status_badge' => '<span class="badge ' . $statusClass . '">' . e($statusLabel) . '</span>',
+                'attendance_count' => (int) ($event->attendance_count ?? 0),
+                'qr_link' => $qrLink,
+                'actions' => $this->buildEventActionsHtml($event, $runtimeStatus, $qrLink),
+            ];
+        })->values()->all();
+
+        return response()->json([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+        ]);
+    }
+
+    public function apiEventDetail(Event $event): JsonResponse
+    {
+        $event->load(['site', 'meetingType', 'eventMinute.issues', 'attendances.employee.company']);
+
+        return response()->json([
+            'event' => $this->mapEventToLegacy($event, true),
+            'attendance' => $event->attendances->map(function (Attendance $row): array {
+                return [
+                    'id' => (string) $row->id,
+                    'eventId' => (string) $row->event_id,
+                    'sid' => $row->kode_sid,
+                    'name' => $row->nama_snapshot,
+                    'company' => $row->perusahaan_snapshot,
+                    'structuralPosition' => $row->jabatan_struktural_snapshot,
+                    'functionalPosition' => $row->jabatan_fungsional_snapshot,
+                    'timestamp' => optional($row->attended_at)->toIso8601String(),
+                    'source' => strtoupper($row->input_method),
+                    'employeeId' => (string) $row->employee_id,
+                ];
+            })->values(),
+        ]);
+    }
+
+    public function apiCompaniesData(Request $request): JsonResponse
+    {
+        $draw = (int) $request->input('draw', 0);
+        $start = (int) $request->input('start', 0);
+        $length = (int) $request->input('length', 10);
+        if ($length < 1 || $length > 100) {
+            $length = 25;
+        }
+
+        $search = trim((string) ($request->input('search.value') ?? ''));
+        $orderColIndex = (int) $request->input('order.0.column', 0);
+        $orderDir = strtolower($request->input('order.0.dir', 'asc')) === 'desc' ? 'desc' : 'asc';
+        $orderBy = $orderColIndex === 1 ? 'sites_count' : 'companies.name';
+
+        $query = Company::query()->with('sites:id,name');
+        if ($search !== '') {
+            $query->where(function ($q) use ($search): void {
+                $q->where('name', 'like', '%' . $search . '%')
+                    ->orWhereHas('sites', fn ($sq) => $sq->where('name', 'like', '%' . $search . '%'));
+            });
+        }
+
+        $recordsTotal = Company::query()->count();
+        $recordsFiltered = (clone $query)->count();
+        $items = $query->orderBy($orderBy === 'sites_count' ? 'name' : $orderBy, $orderDir)
+            ->skip($start)
+            ->take($length)
+            ->get();
+
+        $siteNames = Site::query()->where('is_active', true)->orderBy('name')->pluck('name')->all();
+
+        $data = $items->map(function (Company $company) use ($siteNames): array {
+            $companySites = $company->sites->pluck('name')->all();
+
+            return [
+                'id' => $company->id,
+                'name' => '<b>' . e($company->name) . '</b><div class="mt-1 text-xs text-slate-500">' . count($companySites) . ' site eligible</div>',
+                'site_cells' => collect($siteNames)->map(function (string $site) use ($company, $companySites): string {
+                    $checked = in_array($site, $companySites, true) ? 'checked' : '';
+                    $siteJson = htmlspecialchars(json_encode($site), ENT_QUOTES, 'UTF-8');
+
+                    return '<input type="checkbox" ' . $checked . ' onchange="toggleCompanySiteDb(' . (int) $company->id . ', ' . $siteJson . ', this.checked)" class="h-4 w-4 rounded border-slate-300 text-blue-600" />';
+                })->all(),
+                'sites_list' => implode(', ', $companySites),
+                'actions' => '<div class="flex justify-center gap-2">'
+                    . '<button type="button" onclick="editCompanyDb(' . (int) $company->id . ', ' . htmlspecialchars(json_encode($company->name), ENT_QUOTES, 'UTF-8') . ')" class="rounded-lg bg-blue-50 px-3 py-2 text-xs font-black text-blue-700">Edit</button>'
+                    . '<button type="button" onclick="deleteCompanyDb(' . (int) $company->id . ')" class="rounded-lg bg-red-50 px-3 py-2 text-xs font-black text-red-700">Hapus</button>'
+                    . '</div>',
+            ];
+        })->values()->all();
+
+        return response()->json([
+            'draw' => $draw,
+            'recordsTotal' => $recordsTotal,
+            'recordsFiltered' => $recordsFiltered,
+            'data' => $data,
+            'siteColumns' => $siteNames,
+        ]);
+    }
+
     public function apiBootstrap(): JsonResponse
     {
         $events = Event::query()
-            ->with(['site', 'meetingType', 'eventMinute.issues'])
+            ->with(['site', 'meetingType'])
             ->orderByDesc('meeting_date')
+            ->limit(500)
             ->get();
 
         $attendance = Attendance::query()
@@ -443,36 +691,7 @@ class SidMeetingController extends Controller
 
         $meetingTypes = MeetingType::query()->where('is_active', true)->orderBy('name')->pluck('name')->values();
 
-        $eventRows = $events->map(function (Event $event): array {
-            $minute = $event->eventMinute;
-            $issues = collect($minute?->issues ?? []);
-            return [
-                'id' => (string) $event->id,
-                'code' => $event->event_code,
-                'qrToken' => $event->qr_token,
-                'meetingType' => optional($event->meetingType)->name,
-                'site' => optional($event->site)->name,
-                'date' => optional($event->meeting_date)->format('Y-m-d'),
-                'week' => $event->week,
-                'startTime' => substr((string) $event->start_time, 0, 5),
-                'endTime' => substr((string) $event->end_time, 0, 5),
-                'manualStatus' => $event->computed_status,
-                'closedAt' => optional($event->closed_at)->toIso8601String(),
-                'createdAt' => optional($event->created_at)->toIso8601String(),
-                'updatedAt' => optional($event->updated_at)->toIso8601String(),
-                'minutes' => $minute ? [
-                    'meetingTitle' => $minute->title,
-                    'meetingType' => optional($event->meetingType)->name,
-                    'meetingDate' => optional($event->meeting_date)->format('Y-m-d'),
-                    'notulis' => $minute->notulis,
-                    'location' => $minute->location,
-                    'updatedAt' => optional($minute->updated_at)->toIso8601String(),
-                    'enviroIssues' => $issues->where('section', 'enviro')->values()->map(fn ($i): array => $this->mapIssueToLegacy($i))->all(),
-                    'safetyIssues' => $issues->where('section', 'safety')->values()->map(fn ($i): array => $this->mapIssueToLegacy($i))->all(),
-                    'generalIssues' => $issues->where('section', 'general')->values()->map(fn ($i): array => $this->mapIssueToLegacy($i))->all(),
-                ] : null,
-            ];
-        })->values();
+        $eventRows = $events->map(fn (Event $event): array => $this->mapEventToLegacy($event, false))->values();
 
         return response()->json([
             'events' => $eventRows,
@@ -909,5 +1128,54 @@ class SidMeetingController extends Controller
             'remark' => $issue->keterangan,
             'nomor' => $issue->nomor,
         ];
+    }
+
+    private function mapEventToLegacy(Event $event, bool $withMinutes): array
+    {
+        $minute = $withMinutes ? $event->eventMinute : null;
+        $issues = collect($minute?->issues ?? []);
+
+        return [
+            'id' => (string) $event->id,
+            'code' => $event->event_code,
+            'qrToken' => $event->qr_token,
+            'meetingType' => optional($event->meetingType)->name,
+            'site' => optional($event->site)->name,
+            'date' => optional($event->meeting_date)->format('Y-m-d'),
+            'week' => $event->week,
+            'startTime' => substr((string) $event->start_time, 0, 5),
+            'endTime' => substr((string) $event->end_time, 0, 5),
+            'manualStatus' => $event->runtimeStatus(),
+            'closedAt' => optional($event->closed_at)->toIso8601String(),
+            'createdAt' => optional($event->created_at)->toIso8601String(),
+            'updatedAt' => optional($event->updated_at)->toIso8601String(),
+            'minutes' => $minute ? [
+                'meetingTitle' => $minute->title,
+                'meetingType' => optional($event->meetingType)->name,
+                'meetingDate' => optional($event->meeting_date)->format('Y-m-d'),
+                'notulis' => $minute->notulis,
+                'location' => $minute->location,
+                'updatedAt' => optional($minute->updated_at)->toIso8601String(),
+                'enviroIssues' => $issues->where('section', 'enviro')->values()->map(fn ($i): array => $this->mapIssueToLegacy($i))->all(),
+                'safetyIssues' => $issues->where('section', 'safety')->values()->map(fn ($i): array => $this->mapIssueToLegacy($i))->all(),
+                'generalIssues' => $issues->where('section', 'general')->values()->map(fn ($i): array => $this->mapIssueToLegacy($i))->all(),
+            ] : null,
+        ];
+    }
+
+    private function buildEventActionsHtml(Event $event, string $runtimeStatus, string $qrLink): string
+    {
+        $id = (int) $event->id;
+        $qrJs = addslashes($qrLink);
+        $closeBtn = $runtimeStatus !== 'Closed'
+            ? '<button type="button" onclick="event.stopPropagation(); askCloseMeeting(\'' . $id . '\', true)" class="rounded-xl bg-orange-50 px-3 py-2 text-xs font-black text-orange-700">Tutup</button>'
+            : '';
+
+        return '<div class="flex flex-wrap justify-end gap-1">'
+            . '<button type="button" onclick="event.stopPropagation(); openQRModalById(' . $id . ')" class="rounded-xl bg-cyan-50 px-3 py-2 text-xs font-black text-cyan-700">QR</button>'
+            . '<button type="button" onclick="event.stopPropagation(); openEventRecapModal(\'' . $id . '\')" class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700">Detail</button>'
+            . '<button type="button" onclick="event.stopPropagation(); copyText(\'' . $qrJs . '\', this)" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700">Copy</button>'
+            . $closeBtn
+            . '</div>';
     }
 }

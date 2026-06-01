@@ -15,6 +15,12 @@ Route::post('/attendance/{qrToken}', [SidMeetingAttendanceController::class, 'su
 
 Route::middleware(['auth'])->prefix('sid-meeting')->name('sid-meeting.')->group(function (): void {
     Route::get('/api/bootstrap', [SidMeetingController::class, 'apiBootstrap'])->name('api.bootstrap');
+    Route::get('/api/form-options', [SidMeetingController::class, 'apiFormOptions'])->name('api.form-options');
+    Route::get('/api/stats', [SidMeetingController::class, 'apiStats'])->name('api.stats');
+    Route::get('/api/events/data', [SidMeetingController::class, 'apiEventsData'])->name('api.events.data');
+    Route::get('/api/events/{event}', [SidMeetingController::class, 'apiEventDetail'])->name('api.events.show');
+    Route::get('/api/companies/data', [SidMeetingController::class, 'apiCompaniesData'])->name('api.companies.data');
+    Route::post('/api/companies/{company}/sites', [SidMeetingController::class, 'apiToggleCompanySite'])->name('api.companies.sites.toggle');
     Route::post('/api/events', [SidMeetingController::class, 'apiStoreEvent'])->name('api.events.store');
     Route::post('/api/companies', [SidMeetingController::class, 'apiStoreCompany'])->name('api.companies.store');
     Route::post('/api/attendance', [SidMeetingController::class, 'apiStoreAttendance'])->name('api.attendance.store');

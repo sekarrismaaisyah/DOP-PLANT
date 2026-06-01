@@ -26,6 +26,10 @@
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
   <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.8/css/dataTables.bootstrap5.min.css">
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.8/js/dataTables.bootstrap5.min.js"></script>
   <style>
     :root {
       --bc-blue: #2563eb;
@@ -383,8 +387,9 @@
           </div>
           <div>
             <label class="text-sm font-bold text-slate-700">Site</label>
-            <input id="eventSite" list="siteOptions" required placeholder="Cari / ketik site..." class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
-            <datalist id="siteOptions"><option value="BMO 1"></option><option value="BMO 2"></option><option value="BMO 3"></option><option value="GMO"></option><option value="SMO"></option><option value="LMO"></option><option value="Marine"></option><option value="HOTE"></option></datalist>
+            <select id="eventSite" required class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100">
+              <option value="">Pilih Site</option>
+            </select>
           </div>
           <div class="grid gap-4 md:grid-cols-2">
             <div><label class="text-sm font-bold text-slate-700">Tanggal Meeting</label><input id="meetingDate" type="date" required onchange="autoFillWeek()" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" /></div>
@@ -412,10 +417,25 @@
               <button id="eventListInactiveBtn" type="button" onclick="setEventListMode('inactive')" class="module-tab px-4 py-3 text-sm font-black">Sudah Tidak Aktif</button>
             </div>
             <button onclick="toggleCreateEventContainer(true)" class="fab-action">+ Create Event</button>
-            <input id="eventSearch" oninput="renderEvents()" placeholder="Cari jenis meeting / site / week..." class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
           </div>
         </div>
-        <div id="eventList" class="grid gap-3"></div>
+        <div class="table-wrap rounded-2xl border border-slate-200 bg-white">
+          <table id="eventsDataTable" class="min-w-full text-left text-sm display nowrap" style="width:100%">
+            <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+              <tr>
+                <th>Kode</th>
+                <th>Site</th>
+                <th>Jenis Meeting</th>
+                <th>Tanggal</th>
+                <th>Week</th>
+                <th>Status</th>
+                <th>Absensi</th>
+                <th class="no-print">Aksi</th>
+              </tr>
+            </thead>
+            <tbody></tbody>
+          </table>
+        </div>
       </div>
     </section>
 
@@ -465,12 +485,16 @@
                 <h3 class="font-black text-slate-950">Checklist Perusahaan per Site</h3>
                 <p id="companyMasterInfo" class="text-sm text-slate-500">0 perusahaan</p>
               </div>
-              <input id="companyMasterSearch" oninput="renderCompanyMaster()" placeholder="Cari perusahaan / site..." class="w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100 md:w-80" />
             </div>
             <div class="table-wrap rounded-2xl border border-slate-200 bg-white">
-              <table class="min-w-full text-left text-sm">
-                <thead id="companyMasterTableHead" class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500"></thead>
-                <tbody id="companyMasterTableBody"></tbody>
+              <table id="companyDataTable" class="min-w-full text-left text-sm display nowrap" style="width:100%">
+                <thead id="companyMasterTableHead" class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+                  <tr>
+                    <th>Perusahaan</th>
+                    <th class="text-center">Aksi</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
               </table>
             </div>
           </div>
@@ -957,6 +981,23 @@
   let db = loadDB();
   let bootstrapLoaded = false;
   let bootstrapPromise = null;
+  let formOptionsLoaded = false;
+  let formOptionsPromise = null;
+  let fullDataLoaded = false;
+  let eventsDataTable = null;
+  let companyDataTable = null;
+  let companySiteColumns = [];
+  const eventCache = {};
+  const DATATABLES_LANG = {
+    processing: 'Memuat...',
+    lengthMenu: 'Tampilkan _MENU_ data',
+    zeroRecords: 'Tidak ada data',
+    info: 'Menampilkan _START_–_END_ dari _TOTAL_',
+    infoEmpty: 'Menampilkan 0 data',
+    infoFiltered: '(disaring dari _MAX_)',
+    search: 'Cari:',
+    paginate: { first: '«', last: '»', next: '›', previous: '‹' }
+  };
   let syncInFlight = false;
   let syncQueued = false;
   let scannedEventId = getScannedEventIdFromURL();
@@ -1048,8 +1089,217 @@
     return payload;
   }
 
+  function getEventById(eventId) {
+    const key = String(eventId || '');
+    if (eventCache[key]) return eventCache[key];
+    return db.events.find(x => String(x.id) === key);
+  }
+
+  function cacheEvent(ev) {
+    if (!ev?.id) return;
+    eventCache[String(ev.id)] = ev;
+    const idx = db.events.findIndex(x => String(x.id) === String(ev.id));
+    if (idx >= 0) db.events[idx] = ev;
+    else db.events.push(ev);
+  }
+
+  async function loadFormOptions() {
+    if (formOptionsLoaded) return;
+    if (formOptionsPromise) return formOptionsPromise;
+    formOptionsPromise = apiFetch(`${SID_MEETING_API_BASE}/form-options`)
+      .then(payload => {
+        const meetingSelect = document.getElementById('meetingType');
+        const siteSelect = document.getElementById('eventSite');
+        const types = payload.meetingTypes || [];
+        const sites = payload.sites || [];
+        if (meetingSelect) {
+          const current = meetingSelect.value;
+          meetingSelect.innerHTML = '<option value="">Pilih Jenis Meeting</option>'
+            + types.map(t => `<option value="${escapeHTML(t.name)}">${escapeHTML(t.name)}</option>`).join('');
+          if (current) meetingSelect.value = current;
+        }
+        if (siteSelect) {
+          const currentSite = siteSelect.value;
+          siteSelect.innerHTML = '<option value="">Pilih Site</option>'
+            + sites.map(s => `<option value="${escapeHTML(s.name)}">${escapeHTML(s.name)}</option>`).join('');
+          if (currentSite) siteSelect.value = currentSite;
+        }
+        db.meetingTypes = types.length
+          ? types.map(t => t.name)
+          : getDefaultMeetingTypes();
+        formOptionsLoaded = true;
+        renderMeetingTypeManager();
+      })
+      .catch(err => {
+        console.warn('Form options gagal:', err);
+        renderMeetingTypeOptions();
+      })
+      .finally(() => { formOptionsPromise = null; });
+    return formOptionsPromise;
+  }
+
+  async function loadStats() {
+    try {
+      const stats = await apiFetch(`${SID_MEETING_API_BASE}/stats`);
+      document.getElementById('statEvents').textContent = stats.totalEvents ?? 0;
+      document.getElementById('statActiveEvents').textContent = stats.activeEvents ?? 0;
+      document.getElementById('statAttendance').textContent = stats.totalAttendance ?? 0;
+      document.getElementById('statAttendanceRateAll').textContent = (stats.attendanceRate ?? 0) + '%';
+    } catch (err) {
+      console.warn('Stats gagal:', err);
+    }
+  }
+
+  function initEventsDataTable() {
+    if (!window.jQuery || !$.fn.DataTable || eventsDataTable) return;
+    eventsDataTable = $('#eventsDataTable').DataTable({
+      processing: true,
+      serverSide: true,
+      searching: true,
+      ordering: true,
+      pageLength: 15,
+      lengthMenu: [[10, 15, 25, 50], [10, 15, 25, 50]],
+      order: [[3, 'desc']],
+      language: DATATABLES_LANG,
+      ajax: {
+        url: `${SID_MEETING_API_BASE}/events/data`,
+        data: d => { d.list_mode = eventListMode; }
+      },
+      columns: [
+        { data: 'event_code', name: 'event_code' },
+        { data: 'site', name: 'site' },
+        { data: 'meeting_type', name: 'meeting_type' },
+        { data: 'meeting_date', name: 'meeting_date' },
+        { data: 'week', name: 'week' },
+        { data: 'status_badge', name: 'status', orderable: false, searchable: false },
+        { data: 'attendance_count', name: 'attendance_count', className: 'text-center' },
+        { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'no-print text-end' }
+      ],
+      createdRow: (row, data) => {
+        row.style.cursor = 'pointer';
+        row.addEventListener('click', e => {
+          if (e.target.closest('button, a, input')) return;
+          openEventRecapModal(data.id);
+        });
+      }
+    });
+  }
+
+  function reloadEventsTable() {
+    if (eventsDataTable) eventsDataTable.ajax.reload(null, false);
+    else initEventsDataTable();
+  }
+
+  function initCompanyDataTable() {
+    if (!window.jQuery || !$.fn.DataTable) return;
+    if (companyDataTable) {
+      companyDataTable.ajax.reload(null, false);
+      return;
+    }
+    companyDataTable = $('#companyDataTable').DataTable({
+      processing: true,
+      serverSide: true,
+      pageLength: 25,
+      lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+      order: [[0, 'asc']],
+      language: DATATABLES_LANG,
+      ajax: {
+        url: `${SID_MEETING_API_BASE}/companies/data`,
+        dataSrc: json => {
+          setupCompanyTableColumns(json.siteColumns || []);
+          return json.data;
+        }
+      },
+      columns: [{ data: 'name', name: 'name' }, { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center no-print' }]
+    });
+  }
+
+  function setupCompanyTableColumns(siteColumns) {
+    if (!siteColumns.length || JSON.stringify(siteColumns) === JSON.stringify(companySiteColumns)) return;
+    companySiteColumns = siteColumns;
+    const headRow = document.querySelector('#companyMasterTableHead tr');
+    if (headRow) {
+      headRow.innerHTML = '<th class="px-4 py-3">Perusahaan</th>'
+        + siteColumns.map(site => `<th class="px-3 py-3 text-center">${escapeHTML(site)}</th>`).join('')
+        + '<th class="px-4 py-3 text-center no-print">Action</th>';
+    }
+    if (!companyDataTable) return;
+    const columns = [
+      { data: 'name', name: 'name' },
+      ...siteColumns.map((site, index) => ({
+        data: null,
+        orderable: false,
+        searchable: false,
+        className: 'text-center',
+        render: (_d, _t, row) => (row.site_cells && row.site_cells[index]) ? row.site_cells[index] : ''
+      })),
+      { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center no-print' }
+    ];
+    companyDataTable.destroy();
+    companyDataTable = $('#companyDataTable').DataTable({
+      processing: true,
+      serverSide: true,
+      pageLength: 25,
+      lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
+      order: [[0, 'asc']],
+      language: DATATABLES_LANG,
+      ajax: {
+        url: `${SID_MEETING_API_BASE}/companies/data`,
+        dataSrc: json => {
+          if (!companySiteColumns.length) setupCompanyTableColumns(json.siteColumns || []);
+          return json.data;
+        }
+      },
+      columns
+    });
+  }
+
+  async function toggleCompanySiteDb(companyId, site, checked) {
+    try {
+      await apiFetch(`${SID_MEETING_API_BASE}/companies/${companyId}/sites`, {
+        method: 'POST',
+        body: JSON.stringify({ site, checked })
+      });
+      toast('Site eligibility diperbarui');
+    } catch (err) {
+      toast(err.message || 'Gagal memperbarui site');
+      initCompanyDataTable();
+    }
+  }
+
+  function editCompanyDb(companyId, companyName) {
+    document.getElementById('companyId').value = 'COMP-' + companyId;
+    document.getElementById('companyName').value = companyName || '';
+    toggleCompanyInputContainer(true);
+  }
+
+  async function deleteCompanyDb(companyId) {
+    if (!confirm('Hapus perusahaan dari master?')) return;
+    try {
+      await fetch(`/sid-meeting/companies/${companyId}`, {
+        method: 'DELETE',
+        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+      });
+      toast('Perusahaan dihapus');
+      initCompanyDataTable();
+      loadStats();
+    } catch (err) {
+      toast('Gagal menghapus perusahaan');
+    }
+  }
+
+  async function openQRModalById(eventId) {
+    try {
+      const payload = await apiFetch(`${SID_MEETING_API_BASE}/events/${eventId}`);
+      cacheEvent(payload.event);
+      openQRModal(String(eventId));
+    } catch (err) {
+      toast(err.message || 'Gagal memuat QR event');
+    }
+  }
+
   async function hydrateFromDatabase(force = false) {
-    if (bootstrapLoaded && !force) return;
+    if (fullDataLoaded && !force) return;
     if (bootstrapPromise) return bootstrapPromise;
     bootstrapPromise = apiFetch(`${SID_MEETING_API_BASE}/bootstrap`)
       .then(payload => {
@@ -1060,16 +1310,21 @@
           meetingTypes: payload.meetingTypes || getDefaultMeetingTypes()
         });
         bootstrapLoaded = true;
-        refreshAll();
+        fullDataLoaded = true;
+        refreshHeavyViews();
       })
       .catch(err => {
         console.warn('Bootstrap database gagal:', err);
-        toast('Gagal memuat data database, fallback ke data lokal.');
+        toast('Gagal memuat data lengkap untuk rekap/performance.');
       })
       .finally(() => {
         bootstrapPromise = null;
       });
     return bootstrapPromise;
+  }
+
+  async function ensureFullDataLoaded() {
+    if (!fullDataLoaded) await hydrateFromDatabase(true);
   }
 
   function buildSyncPayload() {
@@ -1187,7 +1442,7 @@
   }
 
   function buildQRLink(eventId) {
-    const ev = db.events.find(x => x.id === eventId);
+    const ev = getEventById(eventId);
     if (ev?.qrToken) {
       return `${window.location.origin}/attendance/${encodeURIComponent(ev.qrToken)}`;
     }
@@ -1215,7 +1470,10 @@
     document.getElementById('companyInputContainer')?.classList.remove('open');
     panel.classList.toggle('open', shouldOpen);
     setFloatingOverlay(shouldOpen);
-    if (shouldOpen) setTimeout(() => document.getElementById('meetingType')?.focus(), 120);
+    if (shouldOpen) {
+      loadFormOptions();
+      setTimeout(() => document.getElementById('meetingType')?.focus(), 120);
+    }
   }
 
   function toggleCompanyInputContainer(forceState) {
@@ -1234,8 +1492,16 @@
     document.querySelectorAll('.tab-btn').forEach(btn => { btn.classList.remove('tab-active'); });
     const active = document.querySelector(`[data-tab="${tab}"]`);
     if (active) { active.classList.add('tab-active'); }
-    refreshAll();
-    if (tab === 'semanticeval') renderSemanticEvaluation(true);
+    if (tab === 'events') {
+      loadFormOptions();
+      loadStats();
+      reloadEventsTable();
+    } else if (tab === 'companymaster') {
+      initCompanyDataTable();
+    } else if (['report', 'siteperformance', 'semanticeval'].includes(tab)) {
+      ensureFullDataLoaded().then(() => refreshHeavyViews());
+      if (tab === 'semanticeval') renderSemanticEvaluation(true);
+    }
   }
 
   async function saveEvent(e) {
@@ -1252,8 +1518,10 @@
     if (toDateTime(payload.meeting_date, payload.end_time) <= toDateTime(payload.meeting_date, payload.start_time)) return eventSaveAlert('error', 'Jam selesai harus lebih besar dari jam mulai');
     try {
       await apiFetch(`${SID_MEETING_API_BASE}/events`, { method: 'POST', body: JSON.stringify(payload) });
-      await hydrateFromDatabase(true);
       clearEventForm();
+      toggleCreateEventContainer(false);
+      reloadEventsTable();
+      loadStats();
       eventSaveAlert('success', 'Event berhasil disimpan ke database');
     } catch (err) {
       eventSaveAlert('error', err.message || 'Gagal simpan event');
@@ -1261,7 +1529,7 @@
   }
 
   function editEvent(id) {
-    const ev = db.events.find(x => x.id === id); if (!ev) return;
+    const ev = getEventById(id); if (!ev) return;
     toggleCreateEventContainer(false);
     document.getElementById('eventId').value = ev.id;
     document.getElementById('meetingType').value = ev.meetingType;
@@ -1296,28 +1564,17 @@
     eventListMode = mode === 'inactive' ? 'inactive' : 'active';
     document.getElementById('eventListActiveBtn')?.classList.toggle('tab-active', eventListMode === 'active');
     document.getElementById('eventListInactiveBtn')?.classList.toggle('tab-active', eventListMode === 'inactive');
-    renderEvents();
+    reloadEventsTable();
   }
 
   function renderEvents() {
-    const q = (document.getElementById('eventSearch')?.value || '').toLowerCase();
-    const target = document.getElementById('eventList'); if (!target) return;
-    const rows = db.events
-      .filter(ev => eventListMode === 'inactive' ? !isEventActive(ev) : isEventActive(ev))
-      .filter(ev => [ev.meetingType, ev.site, ev.week, ev.code, getEventStatus(ev)].join(' ').toLowerCase().includes(q));
-    if (!rows.length) { target.innerHTML = `<div class="rounded-3xl bg-white p-6 text-center text-sm font-semibold text-slate-500 ring-1 ring-slate-200">Belum ada event. Buat event pertama dari form kiri.</div>`; return; }
-    target.innerHTML = rows.map(ev => {
-      const status = getEventStatus(ev);
-      const total = db.attendance.filter(a => a.eventId === ev.id).length;
-      const qrLink = buildQRLink(ev.id);
-      return `<article onclick="openEventRecapModal('${ev.id}')" class="cursor-pointer rounded-3xl bg-white p-5 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg"><div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"><div class="min-w-0"><div class="mb-2 flex flex-wrap items-center gap-2">${statusBadge(status)}<span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">${ev.code}</span><span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">${escapeHTML(ev.week)}</span></div><h3 class="text-lg font-black text-slate-950">${escapeHTML(ev.meetingType)}</h3><p class="mt-1 text-sm text-slate-500">${escapeHTML(ev.site)} · ${formatDate(ev.date)} · ${ev.startTime} - ${ev.endTime}</p><p class="mt-2 break-all text-xs text-slate-400">${escapeHTML(qrLink)}</p><p class="mt-2 text-xs font-bold text-blue-600">Klik kartu untuk melihat rekap event</p></div><div class="min-w-44 rounded-2xl bg-slate-50 p-4 text-sm ring-1 ring-slate-200"><div class="flex justify-between gap-4"><span>Absensi</span><b>${total}</b></div><div class="mt-1 flex justify-between gap-4"><span>Status</span><b>${status}</b></div><div class="mt-1 flex justify-between gap-4"><span>Waktu</span><b class="font-mono">${formatDuration(getElapsedMs(ev))}</b></div>${ev.closedAt ? `<div class="mt-1 text-xs text-slate-500">Closed: ${formatDateTime(ev.closedAt)}</div>` : ''}</div></div><div class="no-print mt-4 flex flex-wrap gap-2"><button onclick="event.stopPropagation(); openQRModal('${ev.id}')" class="rounded-xl bg-cyan-50 px-3 py-2 text-xs font-black text-cyan-700 hover:bg-cyan-100">Lihat QR</button><button onclick="event.stopPropagation(); openAttendanceFromEvent('${ev.id}')" class="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 hover:bg-emerald-100">Absen Manual</button>${status !== 'Closed' ? `<button onclick="event.stopPropagation(); askCloseMeeting('${ev.id}', true)" class="rounded-xl bg-orange-50 px-3 py-2 text-xs font-black text-orange-700 hover:bg-orange-100">Tutup Meeting</button>` : ''}<button onclick="event.stopPropagation(); copyText('${escapeJS(qrLink)}', this)" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 hover:bg-slate-200">Copy Link Absensi</button><button onclick="event.stopPropagation(); editEvent('${ev.id}')" class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100">Edit</button><button onclick="event.stopPropagation(); deleteEvent('${ev.id}')" class="rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-100">Hapus</button></div></article>`;
-    }).join('');
+    reloadEventsTable();
   }
 
   function escapeJS(value) { return String(value ?? '').replace(/\\/g, '\\\\').replace(/'/g, "\\'").replace(/\n/g, '\\n').replace(/\r/g, '\\r'); }
 
   function openQRModal(eventId) {
-    const ev = db.events.find(x => x.id === eventId); if (!ev) return;
+    const ev = getEventById(eventId); if (!ev) return;
     const link = buildQRLink(eventId);
     const box = document.getElementById('qrBox'); box.innerHTML = '';
     document.getElementById('qrModalTitle').textContent = `${ev.meetingType} · ${ev.site} · ${ev.week}`;
@@ -1332,15 +1589,21 @@
   function closeQRModal() { document.getElementById('qrModal').classList.add('hidden'); document.getElementById('qrModal').classList.remove('flex'); }
   function copyQRLink(buttonEl) { copyText(document.getElementById('qrLink').value, buttonEl); }
 
-  function openEventRecapModal(eventId) {
-    selectedRecapEventId = eventId;
-    scannedEventId = eventId;
-    const ev = db.events.find(x => x.id === eventId);
-    if (!ev) return;
-    renderEventRecapModal(eventId);
-    renderActiveAttendanceEvent();
-    document.getElementById('eventRecapModal').classList.remove('hidden');
-    document.getElementById('eventRecapModal').classList.add('flex');
+  async function openEventRecapModal(eventId) {
+    selectedRecapEventId = String(eventId);
+    scannedEventId = String(eventId);
+    try {
+      const payload = await apiFetch(`${SID_MEETING_API_BASE}/events/${eventId}`);
+      cacheEvent(payload.event);
+      db.attendance = db.attendance.filter(a => String(a.eventId) !== String(eventId));
+      (payload.attendance || []).forEach(row => db.attendance.push(row));
+      renderEventRecapModal(eventId);
+      renderActiveAttendanceEvent();
+      document.getElementById('eventRecapModal').classList.remove('hidden');
+      document.getElementById('eventRecapModal').classList.add('flex');
+    } catch (err) {
+      toast(err.message || 'Gagal memuat detail event');
+    }
   }
 
   function closeEventRecapModal() {
@@ -1430,7 +1693,7 @@
   }
 
   function renderEventRecapModal(eventId) {
-    const ev = db.events.find(x => x.id === eventId);
+    const ev = getEventById(eventId);
     if (!ev) return;
     const logs = db.attendance.filter(a => a.eventId === eventId);
     const companyRows = getCompanyStatusRows(logs, ev.site);
@@ -1575,7 +1838,7 @@
   async function saveEventMinutes(e) {
     e.preventDefault();
     if (!selectedRecapEventId) return toast('Belum ada event yang dipilih');
-    const ev = db.events.find(x => x.id === selectedRecapEventId);
+    const ev = getEventById(selectedRecapEventId);
     if (!ev) return toast('Event tidak ditemukan');
     const issues = [
       ...collectCurrentIssueRows('enviro').map((issue, index) => ({ ...issue, section: 'enviro', nomor: index + 1 })),
@@ -1597,9 +1860,9 @@
         method: 'POST',
         body: JSON.stringify(payload)
       });
-      await hydrateFromDatabase(true);
-      const refreshed = db.events.find(x => x.id === selectedRecapEventId);
-      if (refreshed) renderEventMinutesForm(refreshed);
+      const detail = await apiFetch(`${SID_MEETING_API_BASE}/events/${selectedRecapEventId}`);
+      cacheEvent(detail.event);
+      renderEventMinutesForm(detail.event);
       toast('Notulensi event berhasil disimpan ke database');
     } catch (err) {
       toast(err.message || 'Gagal simpan notulensi');
@@ -1753,7 +2016,7 @@
     e.preventDefault();
     const eventId = document.getElementById('attendanceEventId').value;
     const sid = document.getElementById('sidInput').value.trim().toUpperCase();
-    const ev = db.events.find(x => x.id === eventId);
+    const ev = getEventById(eventId);
     if (!ev) return toast('Event tidak ditemukan. Scan QR event terlebih dahulu.');
     if (!isEventActive(ev)) return toast('QR event tidak aktif. Absensi tidak dapat disimpan.');
     try {
@@ -1761,7 +2024,13 @@
         method: 'POST',
         body: JSON.stringify({ event_id: eventId, kode_sid: sid, input_method: 'manual' })
       });
-      await hydrateFromDatabase(true);
+      const detail = await apiFetch(`${SID_MEETING_API_BASE}/events/${eventId}`);
+      cacheEvent(detail.event);
+      db.attendance = db.attendance.filter(a => String(a.eventId) !== String(eventId));
+      (detail.attendance || []).forEach(row => db.attendance.push(row));
+      renderEventRecapModal(eventId);
+      loadStats();
+      reloadEventsTable();
       clearAttendanceForm();
       toast('Absensi berhasil disimpan ke database');
     } catch (err) {
@@ -1822,8 +2091,8 @@
         method: 'POST',
         body: JSON.stringify({ name, sites: selectedSites })
       });
-      await hydrateFromDatabase(true);
       clearCompanyForm();
+      initCompanyDataTable();
       toast('Master perusahaan berhasil disimpan ke database');
     } catch (err) {
       toast(err.message || 'Gagal simpan master perusahaan');
@@ -1869,6 +2138,10 @@
 
   function renderCompanyMaster() {
     renderCompanySiteChecklist(document.getElementById('companyId')?.value ? [...document.querySelectorAll('input[name="companySites"]:checked')].map(x => x.value) : SITE_MASTER);
+    if (companyDataTable) {
+      companyDataTable.ajax.reload(null, false);
+      return;
+    }
     const head = document.getElementById('companyMasterTableHead');
     const body = document.getElementById('companyMasterTableBody');
     const info = document.getElementById('companyMasterInfo');
@@ -1904,6 +2177,7 @@
   }
 
   function renderMeetingTypeOptions() {
+    if (formOptionsLoaded) return;
     const select = document.getElementById('meetingType');
     if (!select) return;
     const current = select.value;
@@ -2822,12 +3096,47 @@
   }
 
   function renderStats() {
+    if (!fullDataLoaded) {
+      loadStats();
+      return;
+    }
     document.getElementById('statEvents').textContent = db.events.length;
     document.getElementById('statActiveEvents').textContent = db.events.filter(isEventActive).length;
     document.getElementById('statAttendance').textContent = db.attendance.length;
     document.getElementById('statAttendanceRateAll').textContent = getOverallAttendanceRate() + '%';
   }
-  function refreshAll() { renderOptions(); renderEvents(); renderCompanyMaster(); renderActiveAttendanceEvent(); renderReport(); renderSitePerformance(); renderStats(); }
+
+  function refreshHeavyViews() {
+    renderOptions();
+    renderCompanyMaster();
+    renderActiveAttendanceEvent();
+    renderReport();
+    renderSitePerformance();
+    renderStats();
+  }
+
+  function refreshAll() {
+    renderActiveAttendanceEvent();
+    if (fullDataLoaded) refreshHeavyViews();
+    else loadStats();
+  }
+
+  function tickLiveClock() {
+    const nowIso = new Date().toISOString();
+    const ts = document.getElementById('timestampInput');
+    if (ts) ts.value = formatDateTime(nowIso);
+    const closeElapsed = document.getElementById('closeMeetingElapsed');
+    const pendingEv = getEventById(pendingCloseEventId);
+    if (closeElapsed && pendingEv) closeElapsed.textContent = formatDuration(getElapsedMs(pendingEv));
+    if (selectedRecapEventId && document.getElementById('eventRecapModal') && !document.getElementById('eventRecapModal').classList.contains('hidden')) {
+      const ev = getEventById(selectedRecapEventId);
+      if (ev) {
+        const elapsedCell = document.querySelector('#eventRecapSummary .font-mono');
+        if (elapsedCell) elapsedCell.textContent = formatDuration(getElapsedMs(ev));
+      }
+    }
+    checkMeetingClosePrompts();
+  }
 
   function exportAttendanceCSV() {
     const rows = db.attendance.filter(a => !scannedEventId || a.eventId === scannedEventId).map(a => { const ev = db.events.find(x => x.id === a.eventId) || {}; return { jenis_meeting: ev.meetingType || '', site: ev.site || '', tanggal_meeting: ev.date || '', week: ev.week || '', kode_sid: a.sid, nama: a.name, perusahaan: a.company, jabatan_struktural: a.structuralPosition, jabatan_fungsional: a.functionalPosition, timestamp: a.timestamp }; });
@@ -3034,18 +3343,29 @@
     toast('Meeting belum ditutup. Reminder akan muncul lagi.');
   }
 
-  function confirmCloseMeeting() {
-    const ev = db.events.find(x => x.id === pendingCloseEventId);
+  async function confirmCloseMeeting() {
+    const ev = getEventById(pendingCloseEventId);
     if (!ev) return dismissCloseMeetingPrompt();
-    ev.manualStatus = 'Closed';
-    ev.closedAt = new Date().toISOString();
-    ev.updatedAt = new Date().toISOString();
-    delete closePromptSnoozed[ev.id];
-    pendingCloseEventId = '';
-    document.getElementById('closeMeetingModal')?.classList.add('hidden');
-    document.getElementById('closeMeetingModal')?.classList.remove('flex');
-    saveDB();
-    toast('Meeting ditutup. Timer berhenti dan QR dikunci.');
+    try {
+      await fetch(`/sid-meeting/events/${encodeURIComponent(ev.id)}/close`, {
+        method: 'POST',
+        headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
+      });
+      ev.manualStatus = 'Closed';
+      ev.closedAt = new Date().toISOString();
+      ev.updatedAt = new Date().toISOString();
+      cacheEvent(ev);
+      delete closePromptSnoozed[ev.id];
+      pendingCloseEventId = '';
+      document.getElementById('closeMeetingModal')?.classList.add('hidden');
+      document.getElementById('closeMeetingModal')?.classList.remove('flex');
+      reloadEventsTable();
+      loadStats();
+      if (selectedRecapEventId === String(ev.id)) renderEventRecapModal(ev.id);
+      toast('Meeting ditutup. Timer berhenti dan QR dikunci.');
+    } catch (err) {
+      toast('Gagal menutup meeting');
+    }
   }
 
   function runSelfTests() {
@@ -3140,20 +3460,15 @@
   window.addEventListener('hashchange', () => {
     scannedEventId = getScannedEventIdFromURL();
     if (scannedEventId) openEventRecapModal(scannedEventId);
-    refreshAll();
   });
 
-  clearEventForm(); clearAttendanceForm(); refreshAll(); hydrateFromDatabase(true); if (scannedEventId) openEventRecapModal(scannedEventId);
-  refreshTimer = setInterval(() => {
-    const nowIso = new Date().toISOString();
-    const ts = document.getElementById('timestampInput');
-    if (ts) ts.value = formatDateTime(nowIso);
-    const closeElapsed = document.getElementById('closeMeetingElapsed');
-    const pendingEv = db.events.find(x => x.id === pendingCloseEventId);
-    if (closeElapsed && pendingEv) closeElapsed.textContent = formatDuration(getElapsedMs(pendingEv));
-    refreshAll();
-    checkMeetingClosePrompts();
-  }, 1000);
+  clearEventForm();
+  clearAttendanceForm();
+  loadFormOptions();
+  loadStats();
+  initEventsDataTable();
+  if (scannedEventId) openEventRecapModal(scannedEventId);
+  refreshTimer = setInterval(tickLiveClock, 1000);
 </script>
 </body>
 </html>

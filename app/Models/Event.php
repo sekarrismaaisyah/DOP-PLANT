@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -63,7 +64,15 @@ class Event extends Model
 
     public function getComputedStatusAttribute(): string
     {
+        return $this->runtimeStatus();
+    }
+
+    public function runtimeStatus(): string
+    {
         $status = strtolower((string) $this->status);
+        if ($status === 'draft') {
+            return 'Draft';
+        }
         if ($status === 'closed' || $this->closed_at !== null) {
             return 'Closed';
         }
@@ -80,15 +89,55 @@ class Event extends Model
             return 'Upcoming';
         }
 
-        if ($now->between($start, $end)) {
+        if ($now->lte($end)) {
             return 'Open';
         }
 
-        if ($now->gt($end)) {
-            return 'Expired';
-        }
+        return 'Overrun';
+    }
 
-        return 'Draft';
+    public function scopeRuntimeActive(Builder $query): Builder
+    {
+        $now = now();
+
+        return $query->whereNull('closed_at')
+            ->whereNotIn('events.status', ['closed', 'draft'])
+            ->where(function (Builder $q) use ($now): void {
+                $q->whereIn('events.status', ['open', 'overrun'])
+                    ->orWhere(function (Builder $open) use ($now): void {
+                        $open->whereDate('events.meeting_date', $now->toDateString())
+                            ->whereTime('events.start_time', '<=', $now->format('H:i:s'))
+                            ->whereTime('events.end_time', '>=', $now->format('H:i:s'));
+                    })
+                    ->orWhere(function (Builder $over) use ($now): void {
+                        $over->whereDate('events.meeting_date', $now->toDateString())
+                            ->whereTime('events.end_time', '<', $now->format('H:i:s'));
+                    });
+            });
+    }
+
+    public function scopeRuntimeInactive(Builder $query): Builder
+    {
+        $now = now();
+
+        return $query->where(function (Builder $q) use ($now): void {
+            $q->whereNotNull('closed_at')
+                ->orWhereIn('events.status', ['closed', 'draft'])
+                ->orWhereDate('events.meeting_date', '<', $now->toDateString())
+                ->orWhereDate('events.meeting_date', '>', $now->toDateString())
+                ->orWhere(function (Builder $upcomingToday) use ($now): void {
+                    $upcomingToday->whereDate('events.meeting_date', $now->toDateString())
+                        ->whereTime('events.start_time', '>', $now->format('H:i:s'))
+                        ->whereNull('closed_at')
+                        ->whereNotIn('events.status', ['open', 'overrun']);
+                })
+                ->orWhere(function (Builder $pastToday) use ($now): void {
+                    $pastToday->whereDate('events.meeting_date', $now->toDateString())
+                        ->whereTime('events.end_time', '<', $now->format('H:i:s'))
+                        ->whereNull('closed_at')
+                        ->whereNotIn('events.status', ['open', 'overrun']);
+                });
+        });
     }
 
     public function isOpenForAttendance(): bool
