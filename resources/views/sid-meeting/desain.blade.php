@@ -473,7 +473,7 @@
               </div>
             </div>
             <div class="table-wrap rounded-2xl border border-slate-200 bg-white">
-              <table id="companyDataTable" class="min-w-full text-left text-sm display nowrap" style="width:100%">
+              <table id="companyDataTable" class="min-w-full text-left text-sm nowrap w-full">
                 <thead id="companyMasterTableHead" class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
                   <tr>
                     <th>Perusahaan</th>
@@ -970,7 +970,6 @@
   let formOptionsLoaded = false;
   let formOptionsPromise = null;
   let fullDataLoaded = false;
-  let eventsDataTable = null;
   let eventsListPage = 1;
   let eventsListMeta = { current_page: 1, last_page: 1, total: 0 };
   let companiesLoaded = false;
@@ -1160,41 +1159,6 @@
     }
   }
 
-  function initEventsDataTable() {
-    if (!window.jQuery || !$.fn.DataTable || eventsDataTable) return;
-    eventsDataTable = $('#eventsDataTable').DataTable({
-      processing: true,
-      serverSide: true,
-      searching: true,
-      ordering: true,
-      pageLength: 15,
-      lengthMenu: [[10, 15, 25, 50], [10, 15, 25, 50]],
-      order: [[3, 'desc']],
-      language: DATATABLES_LANG,
-      ajax: {
-        url: `${SID_MEETING_API_BASE}/events/data`,
-        data: d => { d.list_mode = eventListMode; }
-      },
-      columns: [
-        { data: 'event_code', name: 'event_code' },
-        { data: 'site', name: 'site' },
-        { data: 'meeting_type', name: 'meeting_type' },
-        { data: 'meeting_date', name: 'meeting_date' },
-        { data: 'week', name: 'week' },
-        { data: 'status_badge', name: 'status', orderable: false, searchable: false },
-        { data: 'attendance_count', name: 'attendance_count', className: 'text-center' },
-        { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'no-print text-end' }
-      ],
-      createdRow: (row, data) => {
-        row.style.cursor = 'pointer';
-        row.addEventListener('click', e => {
-          if (e.target.closest('button, a, input')) return;
-          openEventRecapModal(data.id);
-        });
-      }
-    });
-  }
-
   function reloadEventsTable() {
     renderEvents();
   }
@@ -1263,53 +1227,66 @@
     renderEvents();
   }
 
-  function initCompanyDataTable() {
-    if (!window.jQuery || !$.fn.DataTable) return;
-    if (companyDataTable) {
-      companyDataTable.ajax.reload(null, false);
-      return;
-    }
-    companyDataTable = $('#companyDataTable').DataTable({
-      processing: true,
-      serverSide: true,
-      pageLength: 25,
-      lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
-      order: [[0, 'asc']],
-      language: DATATABLES_LANG,
-      ajax: {
-        url: `${SID_MEETING_API_BASE}/companies/data`,
-        dataSrc: json => {
-          setupCompanyTableColumns(json.siteColumns || []);
-          return json.data;
-        }
-      },
-      columns: [{ data: 'name', name: 'name' }, { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center no-print' }]
-    });
-  }
-
-  function setupCompanyTableColumns(siteColumns) {
-    if (!siteColumns.length || JSON.stringify(siteColumns) === JSON.stringify(companySiteColumns)) return;
-    companySiteColumns = siteColumns;
-    const headRow = document.querySelector('#companyMasterTableHead tr');
-    if (headRow) {
-      headRow.innerHTML = '<th class="px-4 py-3">Perusahaan</th>'
-        + siteColumns.map(site => `<th class="px-3 py-3 text-center">${escapeHTML(site)}</th>`).join('')
-        + '<th class="px-4 py-3 text-center no-print">Action</th>';
-    }
-    if (!companyDataTable) return;
-    const columns = [
+  function buildCompanyTableColumns(siteNames) {
+    return [
       { data: 'name', name: 'name' },
-      ...siteColumns.map((site, index) => ({
+      ...siteNames.map((site, index) => ({
         data: null,
+        name: `site_${site}`,
         orderable: false,
         searchable: false,
         className: 'text-center',
-        render: (_d, _t, row) => (row.site_cells && row.site_cells[index]) ? row.site_cells[index] : ''
+        defaultContent: '',
+        render: (_data, _type, row) => (row.site_cells && row.site_cells[index]) ? row.site_cells[index] : ''
       })),
       { data: 'actions', name: 'actions', orderable: false, searchable: false, className: 'text-center no-print' }
     ];
-    companyDataTable.destroy();
-    companyDataTable = $('#companyDataTable').DataTable({
+  }
+
+  function renderCompanyTableHead(siteNames) {
+    const headRow = document.querySelector('#companyMasterTableHead tr');
+    if (!headRow || !siteNames.length) return;
+    headRow.innerHTML = '<th class="px-4 py-3">Perusahaan</th>'
+      + siteNames.map(site => `<th class="px-3 py-3 text-center">${escapeHTML(site)}</th>`).join('')
+      + '<th class="px-4 py-3 text-center no-print">Action</th>';
+  }
+
+  async function initCompanyDataTable() {
+    if (!window.jQuery || !$.fn.DataTable) return;
+    const $table = $('#companyDataTable');
+    if (!$table.length) return;
+
+    const tab = document.getElementById('tab-companymaster');
+    if (tab && tab.classList.contains('hidden')) return;
+
+    if (companyDataTable) {
+      try {
+        companyDataTable.ajax.reload(null, false);
+      } catch (err) {
+        console.warn('Reload company table gagal, re-init:', err);
+        companyDataTable = null;
+      }
+      if (companyDataTable) return;
+    }
+
+    if ($.fn.DataTable.isDataTable($table)) {
+      $table.DataTable().destroy();
+      $table.find('tbody').empty();
+    }
+
+    let siteNames = [...SITE_MASTER];
+    try {
+      const opts = await apiFetch(`${SID_MEETING_API_BASE}/form-options`);
+      const fromApi = (opts.sites || []).map(s => s.name).filter(Boolean);
+      if (fromApi.length) siteNames = fromApi;
+    } catch (err) {
+      console.warn('Site columns fallback ke SITE_MASTER:', err);
+    }
+
+    companySiteColumns = siteNames;
+    renderCompanyTableHead(siteNames);
+
+    companyDataTable = $table.DataTable({
       processing: true,
       serverSide: true,
       pageLength: 25,
@@ -1318,12 +1295,9 @@
       language: DATATABLES_LANG,
       ajax: {
         url: `${SID_MEETING_API_BASE}/companies/data`,
-        dataSrc: json => {
-          if (!companySiteColumns.length) setupCompanyTableColumns(json.siteColumns || []);
-          return json.data;
-        }
+        dataSrc: 'data'
       },
-      columns
+      columns: buildCompanyTableColumns(siteNames)
     });
   }
 
@@ -1334,9 +1308,10 @@
         body: JSON.stringify({ site, checked })
       });
       toast('Site eligibility diperbarui');
+      if (companyDataTable) companyDataTable.ajax.reload(null, false);
     } catch (err) {
       toast(err.message || 'Gagal memperbarui site');
-      initCompanyDataTable();
+      if (companyDataTable) companyDataTable.ajax.reload(null, false);
     }
   }
 
@@ -1354,7 +1329,7 @@
         headers: { 'X-CSRF-TOKEN': CSRF_TOKEN, 'X-Requested-With': 'XMLHttpRequest', 'Accept': 'application/json' }
       });
       toast('Perusahaan dihapus');
-      initCompanyDataTable();
+      if (companyDataTable) companyDataTable.ajax.reload(null, false);
       loadStats();
     } catch (err) {
       toast('Gagal menghapus perusahaan');
@@ -1570,7 +1545,7 @@
       loadStats();
       renderEvents();
     } else if (tab === 'companymaster') {
-      initCompanyDataTable();
+      setTimeout(() => initCompanyDataTable(), 0);
     } else if (['report', 'siteperformance', 'semanticeval'].includes(tab)) {
       ensureFullDataLoaded().then(() => refreshHeavyViews());
       if (tab === 'semanticeval') renderSemanticEvaluation(true);
@@ -2172,7 +2147,8 @@
         body: JSON.stringify({ name, sites: selectedSites })
       });
       clearCompanyForm();
-      initCompanyDataTable();
+      if (companyDataTable) companyDataTable.ajax.reload(null, false);
+      else initCompanyDataTable();
       toast('Master perusahaan berhasil disimpan ke database');
     } catch (err) {
       toast(err.message || 'Gagal simpan master perusahaan');
@@ -2218,25 +2194,10 @@
 
   function renderCompanyMaster() {
     renderCompanySiteChecklist(document.getElementById('companyId')?.value ? [...document.querySelectorAll('input[name="companySites"]:checked')].map(x => x.value) : SITE_MASTER);
-    if (companyDataTable) {
-      companyDataTable.ajax.reload(null, false);
-      return;
+    const tab = document.getElementById('tab-companymaster');
+    if (tab && !tab.classList.contains('hidden')) {
+      initCompanyDataTable();
     }
-    const head = document.getElementById('companyMasterTableHead');
-    const body = document.getElementById('companyMasterTableBody');
-    const info = document.getElementById('companyMasterInfo');
-    if (!head || !body) return;
-    const q = (document.getElementById('companyMasterSearch')?.value || '').toLowerCase().trim();
-    const rows = getCompanyMaster().filter(company => {
-      const haystack = [company.name, ...(company.sites || [])].join(' ').toLowerCase();
-      return !q || haystack.includes(q);
-    }).sort((a, b) => a.name.localeCompare(b.name));
-    if (info) info.textContent = `${rows.length} perusahaan ditampilkan dari ${getCompanyMaster().length} total master`;
-    head.innerHTML = `<tr><th class="px-4 py-3">Perusahaan</th>${SITE_MASTER.map(site => `<th class="px-3 py-3 text-center">${escapeHTML(site)}</th>`).join('')}<th class="px-4 py-3 text-center">Action</th></tr>`;
-    body.innerHTML = rows.length ? rows.map(company => {
-      const sites = new Set(company.sites || []);
-      return `<tr class="border-t border-slate-100 hover:bg-slate-50"><td class="min-w-[260px] px-4 py-3"><b>${escapeHTML(company.name)}</b><div class="mt-1 text-xs text-slate-500">${sites.size} site eligible</div></td>${SITE_MASTER.map(site => `<td class="px-3 py-3 text-center"><input type="checkbox" ${sites.has(site) ? 'checked' : ''} onchange="toggleCompanySite('${escapeJS(company.id)}', '${escapeJS(site)}', this.checked)" class="h-4 w-4 rounded border-slate-300 text-blue-600 focus:ring-blue-500" /></td>`).join('')}<td class="no-print px-4 py-3"><div class="flex justify-center gap-2"><button onclick="editCompany('${escapeJS(company.id)}')" class="rounded-lg bg-blue-50 px-3 py-2 text-xs font-black text-blue-700">Edit</button><button onclick="deleteCompany('${escapeJS(company.id)}')" class="rounded-lg bg-red-50 px-3 py-2 text-xs font-black text-red-700">Hapus</button></div></td></tr>`;
-    }).join('') : `<tr><td colspan="${SITE_MASTER.length + 2}" class="px-4 py-8 text-center text-sm font-semibold text-slate-500">Tidak ada perusahaan sesuai pencarian.</td></tr>`;
   }
 
   function resetCompanyMaster() {
