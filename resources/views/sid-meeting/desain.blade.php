@@ -414,6 +414,228 @@
       border: 1px solid #bfdbfe;
     }
 
+    .report-hero {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1.1rem 1.25rem;
+      border-radius: var(--radius-xl);
+      background: linear-gradient(135deg, #3952bc 0%, #2563eb 55%, #0ea5e9 100%);
+      color: #fff;
+      box-shadow: 0 16px 40px rgba(57, 82, 188, 0.28);
+      margin-bottom: 1.25rem;
+    }
+    .report-hero__title {
+      font-size: 1.125rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+    .report-hero__desc {
+      margin-top: 0.25rem;
+      font-size: 0.8125rem;
+      line-height: 1.45;
+      color: rgba(255, 255, 255, 0.88);
+      max-width: 36rem;
+    }
+    .report-hero__actions { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+    .report-hero__actions .btn {
+      border: 1px solid rgba(255, 255, 255, 0.25);
+      box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+    }
+    .report-hero__actions .btn-ghost {
+      background: rgba(255, 255, 255, 0.95);
+      color: #334155;
+    }
+    .report-hero__actions .btn-dark {
+      background: #0f172a;
+      border-color: transparent;
+    }
+    .report-hero__actions .btn-primary {
+      background: #fff;
+      color: #1d4ed8;
+      border-color: transparent;
+    }
+    .report-controls {
+      display: grid;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    @media (min-width: 1024px) {
+      .report-controls {
+        grid-template-columns: auto 1fr;
+        align-items: start;
+      }
+    }
+    .report-filter-grid {
+      display: grid;
+      gap: 0.85rem;
+      grid-template-columns: 1fr;
+    }
+    @media (min-width: 768px) {
+      .report-filter-grid { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    }
+    .report-filter-item {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+    }
+    .report-filter-item .form-label {
+      display: flex;
+      align-items: center;
+      gap: 0.35rem;
+      margin-bottom: 0;
+      color: #475569;
+    }
+    .report-summary-bar {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.85rem 1rem;
+      margin-bottom: 0.75rem;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(90deg, #f8fafc, #fff);
+      border: 1px solid var(--bc-border);
+    }
+    .report-summary-stat {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      color: #475569;
+    }
+    .report-summary-stat strong {
+      font-size: 1rem;
+      font-weight: 800;
+      color: var(--bc-brand);
+    }
+    .report-summary-hint {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      font-size: 0.75rem;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    .report-data-shell {
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--bc-border);
+      background: #fff;
+      box-shadow: var(--shadow-md);
+      overflow: hidden;
+    }
+    .report-table-scroll {
+      max-height: min(68vh, 720px);
+      overflow: auto;
+      border: none !important;
+      border-radius: 0 !important;
+    }
+    .report-data-table { width: 100% !important; margin: 0 !important; }
+    .report-dt-wrapper { padding: 0.75rem 1rem 1rem; }
+    .report-dt-wrapper .dataTables_filter { display: none !important; }
+    .report-dt-wrapper .dataTables_processing {
+      position: absolute;
+      inset: auto 0 0 0;
+      margin: 0;
+      padding: 0.65rem;
+      background: rgba(255, 255, 255, 0.92);
+      border-top: 1px solid #e2e8f0;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: var(--bc-brand);
+      box-shadow: none;
+    }
+    .report-dt-wrapper .report-dt-top {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0 0 0.75rem;
+      border-bottom: 1px solid #f1f5f9;
+      margin-bottom: 0 !important;
+    }
+    .report-dt-wrapper .dataTables_length label {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .report-dt-wrapper .dataTables_length select {
+      border-radius: 0.65rem;
+      border: 1px solid var(--bc-border);
+      padding: 0.4rem 2rem 0.4rem 0.65rem;
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: #334155;
+      background: #fff;
+    }
+    .report-dt-wrapper .report-dt-footer {
+      padding-top: 0.85rem;
+      border-top: 1px solid #f1f5f9;
+      margin-top: 0.5rem;
+    }
+    .report-dt-wrapper table.dataTable thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: linear-gradient(180deg, #f1f5f9, #e8eef5) !important;
+      color: #475569;
+      font-size: 0.625rem;
+      padding: 0.75rem 0.85rem !important;
+      border-bottom: 2px solid #dbeafe !important;
+    }
+    .report-dt-wrapper table.dataTable tbody td {
+      padding: 0.7rem 0.85rem !important;
+      font-size: 0.8125rem;
+      border-bottom: 1px solid #f1f5f9;
+      color: #334155;
+    }
+    .report-dt-wrapper table.dataTable tbody tr {
+      transition: background 0.14s ease, box-shadow 0.14s ease;
+    }
+    .report-dt-wrapper table.dataTable tbody tr:nth-child(even) { background: #fafbfc; }
+    .report-dt-wrapper table.dataTable tbody tr:hover {
+      background: #eff6ff !important;
+      box-shadow: inset 3px 0 0 var(--bc-brand);
+    }
+    .report-dt-wrapper table.dataTable tbody tr:hover td { color: #0f172a; }
+    .report-data-shell { position: relative; }
+    .report-data-shell .dataTables_wrapper { width: 100%; }
+    .report-dt-wrapper .dataTables_paginate .paginate_button {
+      border-radius: 0.65rem !important;
+      border: 1px solid #e2e8f0 !important;
+      margin-left: 0.25rem;
+      padding: 0.35rem 0.7rem !important;
+      font-size: 0.75rem;
+      font-weight: 700;
+    }
+    .report-dt-wrapper .dataTables_paginate .paginate_button.current {
+      background: var(--bc-brand) !important;
+      border-color: var(--bc-brand) !important;
+      color: #fff !important;
+    }
+    .dt-badge {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 999px;
+      padding: 0.2rem 0.55rem;
+      font-size: 0.6875rem;
+      font-weight: 800;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    .dt-badge-week { background: #eff6ff; color: #1d4ed8; }
+    .dt-badge-site { background: #f0fdf4; color: #15803d; }
+    .dt-badge-sid { background: #f8fafc; color: #0f172a; font-family: ui-monospace, monospace; letter-spacing: 0.02em; }
+    .dt-cell-name { font-weight: 700; color: #0f172a; }
+    .dt-cell-date { color: #64748b; font-variant-numeric: tabular-nums; }
+
     button {
       transition: transform .16s ease, box-shadow .16s ease, background-color .16s ease, opacity .16s ease;
     }
@@ -1170,103 +1392,106 @@
         Memuat data rekap...
       </div>
       <div class="panel-card glass soft-card rounded-3xl p-5 md:p-6">
-        <div class="panel-card-header">
+        <div class="report-hero no-print">
           <div>
-            <h2 class="panel-card-title">Rekap & Export Keseluruhan</h2>
-            <p class="panel-card-desc">Tabel seluruh data absensi event. Gunakan filter Site dan Week untuk melihat data tertentu sebelum export.</p>
+            <p class="report-hero__title">Rekap & Export Keseluruhan</p>
+            <p class="report-hero__desc">Filter berdasarkan site dan week, lalu export data absensi atau notulen ke CSV.</p>
           </div>
-          <div class="no-print flex flex-wrap gap-2">
+          <div class="report-hero__actions">
             <button type="button" onclick="resetReportFilters()" class="btn btn-ghost"><span class="material-symbols-outlined text-base">restart_alt</span> Reset</button>
             <button type="button" onclick="exportFilteredReportCSV()" class="btn btn-dark"><span class="material-symbols-outlined text-base">download</span> Absensi CSV</button>
             <button type="button" onclick="exportMinutesReportCSV()" class="btn btn-primary"><span class="material-symbols-outlined text-base">description</span> Notulen CSV</button>
           </div>
         </div>
 
-        <div class="filter-panel no-print">
-          <div class="grid gap-3 md:grid-cols-3">
-            <div>
-              <label class="form-label" for="reportFilterSite">Filter Site</label>
-              <select id="reportFilterSite" onchange="scheduleReportReload()" class="form-control">
-                <option value="ALL">Semua Site</option>
-              </select>
-            </div>
-            <div>
-              <label class="form-label" for="reportFilterWeek">Filter Week</label>
-              <select id="reportFilterWeek" onchange="scheduleReportReload()" class="form-control">
-                <option value="ALL">Semua Week</option>
-              </select>
-            </div>
-            <div>
-              <label class="form-label" for="reportSearch">Pencarian</label>
-              <input id="reportSearch" type="search" oninput="scheduleReportReload()" placeholder="SID, nama, perusahaan, meeting..." class="form-control" />
+        <div class="report-controls no-print">
+          <div class="segment-control shrink-0">
+            <button id="reportViewAttendanceBtn" type="button" onclick="setReportView('attendance')" class="module-tab tab-active"><span class="material-symbols-outlined text-base">groups</span> Data Absensi</button>
+            <button id="reportViewMinutesBtn" type="button" onclick="setReportView('minutes')" class="module-tab"><span class="material-symbols-outlined text-base">description</span> List Notulen</button>
+          </div>
+          <div class="filter-panel" style="margin-bottom:0">
+            <div class="report-filter-grid">
+              <div class="report-filter-item">
+                <label class="form-label" for="reportFilterSite"><span class="material-symbols-outlined text-sm text-slate-400">location_on</span> Site</label>
+                <select id="reportFilterSite" onchange="scheduleReportReload()" class="form-control">
+                  <option value="ALL">Semua Site</option>
+                </select>
+              </div>
+              <div class="report-filter-item">
+                <label class="form-label" for="reportFilterWeek"><span class="material-symbols-outlined text-sm text-slate-400">date_range</span> Week</label>
+                <select id="reportFilterWeek" onchange="scheduleReportReload()" class="form-control">
+                  <option value="ALL">Semua Week</option>
+                </select>
+              </div>
+              <div class="report-filter-item">
+                <label class="form-label" for="reportSearch"><span class="material-symbols-outlined text-sm text-slate-400">search</span> Pencarian</label>
+                <input id="reportSearch" type="search" oninput="scheduleReportReload()" placeholder="SID, nama, perusahaan, meeting..." class="form-control" />
+              </div>
             </div>
           </div>
-        </div>
-
-        <div class="no-print mb-4 segment-control">
-          <button id="reportViewAttendanceBtn" type="button" onclick="setReportView('attendance')" class="module-tab tab-active">Data Absensi</button>
-          <button id="reportViewMinutesBtn" type="button" onclick="setReportView('minutes')" class="module-tab">List Notulen</button>
         </div>
 
         <div id="reportAttendancePanel">
-          <div class="mb-3 flex flex-col gap-2 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
-            <p id="reportTableInfo" class="font-bold">0 data ditampilkan</p>
-            <p class="text-xs text-slate-500">Klik baris untuk membuka modal rekap event terkait.</p>
+          <div class="report-summary-bar">
+            <span class="report-summary-stat"><span class="material-symbols-outlined text-lg text-[#3952bc]">table_rows</span><span id="reportTableInfo"><strong>0</strong> data ditampilkan</span></span>
+            <span class="report-summary-hint"><span class="material-symbols-outlined text-sm">touch_app</span> Klik baris untuk buka rekap event</span>
           </div>
-
-          <div class="table-wrap rounded-2xl border border-slate-200 bg-white">
-            <table id="reportAttendanceDataTable" class="min-w-full w-full text-left text-sm">
-              <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-                <tr>
-                  <th class="px-4 py-3">Tanggal</th>
-                  <th class="px-4 py-3">Week</th>
-                  <th class="px-4 py-3">Site</th>
-                  <th class="px-4 py-3">Jenis Meeting</th>
-                  <th class="px-4 py-3">Kode Event</th>
-                  <th class="px-4 py-3">Kode SID</th>
-                  <th class="px-4 py-3">Nama</th>
-                  <th class="px-4 py-3">Perusahaan</th>
-                  <th class="px-4 py-3">Jabatan Struktural</th>
-                  <th class="px-4 py-3">Jabatan Fungsional</th>
-                  <th class="px-4 py-3">Timestamp</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+          <div class="report-data-shell">
+            <div class="table-wrap report-table-scroll">
+              <table id="reportAttendanceDataTable" class="report-data-table display nowrap w-full text-sm">
+                <thead>
+                  <tr>
+                    <th>Tanggal</th>
+                    <th>Week</th>
+                    <th>Site</th>
+                    <th>Jenis Meeting</th>
+                    <th>Kode Event</th>
+                    <th>Kode SID</th>
+                    <th>Nama</th>
+                    <th>Perusahaan</th>
+                    <th>Jabatan Struktural</th>
+                    <th>Jabatan Fungsional</th>
+                    <th>Timestamp</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
         <div id="reportMinutesPanel" class="hidden">
-          <div class="mb-3 flex flex-col gap-2 text-sm text-slate-600 md:flex-row md:items-center md:justify-between">
-            <p id="minutesReportInfo" class="font-bold">0 notulen ditampilkan</p>
-            <p class="text-xs text-slate-500">Klik baris untuk membuka modal event dan edit/print notulensi.</p>
+          <div class="report-summary-bar">
+            <span class="report-summary-stat"><span class="material-symbols-outlined text-lg text-[#3952bc]">description</span><span id="minutesReportInfo"><strong>0</strong> notulen ditampilkan</span></span>
+            <span class="report-summary-hint"><span class="material-symbols-outlined text-sm">edit_note</span> Klik baris untuk edit notulensi event</span>
           </div>
-
-          <div class="table-wrap rounded-2xl border border-slate-200 bg-white">
-            <table id="reportMinutesDataTable" class="min-w-full w-full text-left text-sm">
-              <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
-                <tr>
-                  <th class="px-4 py-3">Tanggal</th>
-                  <th class="px-4 py-3">Week</th>
-                  <th class="px-4 py-3">Site</th>
-                  <th class="px-4 py-3">Jenis Meeting</th>
-                  <th class="px-4 py-3">Kode Event</th>
-                  <th class="px-4 py-3">Judul Notulen</th>
-                  <th class="px-4 py-3">Notulis</th>
-                  <th class="px-4 py-3">Lokasi</th>
-                  <th class="px-4 py-3">Section</th>
-                  <th class="px-4 py-3">No</th>
-                  <th class="px-4 py-3">Catatan Meeting</th>
-                  <th class="px-4 py-3">Issued By</th>
-                  <th class="px-4 py-3">PIC</th>
-                  <th class="px-4 py-3">Batas Waktu</th>
-                  <th class="px-4 py-3">Status</th>
-                  <th class="px-4 py-3">Keterangan</th>
-                  <th class="px-4 py-3">Updated</th>
-                </tr>
-              </thead>
-              <tbody></tbody>
-            </table>
+          <div class="report-data-shell">
+            <div class="table-wrap report-table-scroll">
+              <table id="reportMinutesDataTable" class="report-data-table display nowrap w-full text-sm">
+                <thead>
+                  <tr>
+                    <th>Tanggal</th>
+                    <th>Week</th>
+                    <th>Site</th>
+                    <th>Jenis Meeting</th>
+                    <th>Kode Event</th>
+                    <th>Judul Notulen</th>
+                    <th>Notulis</th>
+                    <th>Lokasi</th>
+                    <th>Section</th>
+                    <th>No</th>
+                    <th>Catatan Meeting</th>
+                    <th>Issued By</th>
+                    <th>PIC</th>
+                    <th>Batas Waktu</th>
+                    <th>Status</th>
+                    <th>Keterangan</th>
+                    <th>Updated</th>
+                  </tr>
+                </thead>
+                <tbody></tbody>
+              </table>
+            </div>
           </div>
         </div>
 
@@ -3467,7 +3692,7 @@
     if (!info || !json) return;
     const filtered = Number(json.recordsFiltered ?? 0);
     const total = Number(json.recordsTotal ?? 0);
-    info.textContent = `${filtered} data ditampilkan dari ${total} total absensi`;
+    info.innerHTML = `<strong>${filtered.toLocaleString('id-ID')}</strong> ditampilkan · ${total.toLocaleString('id-ID')} total absensi`;
   }
 
   function updateReportMinutesInfo(json) {
@@ -3475,8 +3700,10 @@
     if (!info || !json) return;
     const filtered = Number(json.recordsFiltered ?? 0);
     const total = Number(json.recordsTotal ?? 0);
-    info.textContent = `${filtered} baris notulen ditampilkan dari ${total} total issue`;
+    info.innerHTML = `<strong>${filtered.toLocaleString('id-ID')}</strong> ditampilkan · ${total.toLocaleString('id-ID')} total notulen`;
   }
+
+  const REPORT_DT_DOM = '<"report-dt-top"l>rt<"report-dt-footer flex flex-wrap items-center justify-between gap-3"ip>';
 
   function reportAjaxData(d) {
     const filters = getReportFilterParams();
@@ -3494,12 +3721,13 @@
     reportAttendanceTable = $table.DataTable({
       processing: true,
       serverSide: true,
+      searching: false,
       deferRender: true,
       pageLength: 25,
       lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
       order: [[10, 'desc']],
       language: DATATABLES_LANG,
-      dom: '<"company-dt-toolbar flex flex-col gap-3 mb-3 sm:flex-row sm:items-center sm:justify-between"lf>rt<"company-dt-footer flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"ip>',
+      dom: REPORT_DT_DOM,
       ajax: {
         url: `${SID_MEETING_API_BASE}/reports/attendance-data`,
         data: reportAjaxData,
@@ -3509,24 +3737,25 @@
         }
       },
       columns: [
-        { data: 'tanggal_meeting', render: d => escapeHTML(d || '-') },
-        { data: 'week', render: d => `<span class="font-black">${escapeHTML(d || '-')}</span>` },
-        { data: 'site', render: d => escapeHTML(d || '-') },
+        { data: 'tanggal_meeting', render: d => `<span class="dt-cell-date">${escapeHTML(d || '-')}</span>` },
+        { data: 'week', render: d => `<span class="dt-badge dt-badge-week">${escapeHTML(d || '-')}</span>` },
+        { data: 'site', render: d => `<span class="dt-badge dt-badge-site">${escapeHTML(d || '-')}</span>` },
         { data: 'jenis_meeting', render: d => escapeHTML(d || '-') },
-        { data: 'kode_event', render: d => escapeHTML(d || '-') },
-        { data: 'kode_sid', render: d => `<span class="font-black">${escapeHTML(d || '-')}</span>` },
-        { data: 'nama', render: d => `<b>${escapeHTML(d || '-')}</b>` },
+        { data: 'kode_event', render: d => `<span class="text-xs font-semibold text-slate-500">${escapeHTML(d || '-')}</span>` },
+        { data: 'kode_sid', render: d => `<span class="dt-badge dt-badge-sid">${escapeHTML(d || '-')}</span>` },
+        { data: 'nama', render: d => `<span class="dt-cell-name">${escapeHTML(d || '-')}</span>` },
         { data: 'perusahaan', render: d => escapeHTML(d || '-') },
-        { data: 'jabatan_struktural', render: d => escapeHTML(d || '-') },
-        { data: 'jabatan_fungsional', render: d => escapeHTML(d || '-') },
-        { data: 'timestamp', render: d => escapeHTML(d || '-') }
+        { data: 'jabatan_struktural', render: d => `<span class="text-slate-600">${escapeHTML(d || '-')}</span>` },
+        { data: 'jabatan_fungsional', render: d => `<span class="text-slate-600">${escapeHTML(d || '-')}</span>` },
+        { data: 'timestamp', render: d => `<span class="dt-cell-date">${escapeHTML(d || '-')}</span>` }
       ],
       createdRow: (row, data) => {
         row.style.cursor = 'pointer';
+        row.title = 'Klik untuk buka rekap event';
         row.addEventListener('click', () => openEventRecapModal(data.event_id));
       },
       initComplete: function() {
-        $('#reportAttendanceDataTable_wrapper').addClass('company-dt-wrapper');
+        $('#reportAttendanceDataTable_wrapper').addClass('report-dt-wrapper company-dt-wrapper');
       }
     });
   }
@@ -3539,12 +3768,13 @@
     reportMinutesTable = $table.DataTable({
       processing: true,
       serverSide: true,
+      searching: false,
       deferRender: true,
       pageLength: 25,
       lengthMenu: [[10, 25, 50, 100], [10, 25, 50, 100]],
       order: [[16, 'desc']],
       language: DATATABLES_LANG,
-      dom: '<"company-dt-toolbar flex flex-col gap-3 mb-3 sm:flex-row sm:items-center sm:justify-between"lf>rt<"company-dt-footer flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between"ip>',
+      dom: REPORT_DT_DOM,
       ajax: {
         url: `${SID_MEETING_API_BASE}/reports/minutes-data`,
         data: reportAjaxData,
@@ -3554,12 +3784,12 @@
         }
       },
       columns: [
-        { data: 'tanggal_meeting', render: d => escapeHTML(d || '-') },
-        { data: 'week', render: d => `<span class="font-black">${escapeHTML(d || '-')}</span>` },
-        { data: 'site', render: d => escapeHTML(d || '-') },
+        { data: 'tanggal_meeting', render: d => `<span class="dt-cell-date">${escapeHTML(d || '-')}</span>` },
+        { data: 'week', render: d => `<span class="dt-badge dt-badge-week">${escapeHTML(d || '-')}</span>` },
+        { data: 'site', render: d => `<span class="dt-badge dt-badge-site">${escapeHTML(d || '-')}</span>` },
         { data: 'jenis_meeting', render: d => escapeHTML(d || '-') },
-        { data: 'kode_event', render: d => escapeHTML(d || '-') },
-        { data: 'judul_notulen', render: d => `<b>${escapeHTML(d || '-')}</b>` },
+        { data: 'kode_event', render: d => `<span class="text-xs font-semibold text-slate-500">${escapeHTML(d || '-')}</span>` },
+        { data: 'judul_notulen', render: d => `<span class="dt-cell-name">${escapeHTML(d || '-')}</span>` },
         { data: 'notulis', render: d => escapeHTML(d || '-') },
         { data: 'lokasi', render: d => escapeHTML(d || '-') },
         { data: 'section', render: d => escapeHTML(d || '-') },
@@ -3574,13 +3804,14 @@
       ],
       createdRow: (row, data) => {
         row.style.cursor = 'pointer';
+        row.title = 'Klik untuk buka notulensi event';
         row.addEventListener('click', () => {
           openEventRecapModal(data.event_id);
           openEventMinutesForm();
         });
       },
       initComplete: function() {
-        $('#reportMinutesDataTable_wrapper').addClass('company-dt-wrapper');
+        $('#reportMinutesDataTable_wrapper').addClass('report-dt-wrapper company-dt-wrapper');
       }
     });
   }
