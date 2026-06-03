@@ -16,7 +16,12 @@ class EventMinute extends Model
         'title',
         'notulis',
         'location',
+        'issue_sections',
         'updated_by',
+    ];
+
+    protected $casts = [
+        'issue_sections' => 'array',
     ];
 
     public function event(): BelongsTo

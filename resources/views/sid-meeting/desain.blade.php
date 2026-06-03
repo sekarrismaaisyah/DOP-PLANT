@@ -709,6 +709,7 @@
       <button data-tab="events" class="tab-btn module-tab tab-active" onclick="showTab('events')">Create Event</button>
       <button data-tab="companymaster" class="tab-btn module-tab" onclick="showTab('companymaster')">Master Perusahaan</button>
       <button data-tab="report" class="tab-btn module-tab" onclick="showTab('report')">Rekap & Export</button>
+      <button data-tab="minutesmgmt" class="tab-btn module-tab" onclick="showTab('minutesmgmt')">Management Notulensi</button>
       <button data-tab="siteperformance" class="tab-btn module-tab" onclick="showTab('siteperformance')">Site Performance</button>
       <button data-tab="semanticeval" class="tab-btn module-tab" onclick="showTab('semanticeval')">Semantic Evaluation</button>
     </nav>
@@ -746,6 +747,43 @@
               </div>
             </div>
           </div>
+
+          <div>
+                     <label class="text-sm font-bold text-slate-700">Kategori Meeting</label>
+                     <select id="meetingLevel" onchange="handleMeetingLevelChange()" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none">
+                        <option value="site">Site Level</option>
+                        <option value="company">Company Level</option>
+                        <option value="department">Department Level</option>
+                     </select>
+                     <p id="meetingLevelHint" class="mt-2 text-xs font-semibold text-slate-500"></p>
+                  </div>
+
+                  <div id="meetingTargetPanel" class="hidden rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
+                     <div class="mb-3 flex items-center justify-between gap-2">
+                        <div>
+                           <h4 class="font-black text-slate-950">Target Kehadiran</h4>
+                           <p id="meetingTargetHint" class="text-sm text-slate-500"></p>
+                        </div>
+                        <div class="flex gap-2"><button type="button" onclick="toggleAllTargetCompanies(true)" class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700">Pilih Semua</button><button type="button" onclick="toggleAllTargetCompanies(false)" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700">Clear</button></div>
+                     </div>
+                     <div class="grid gap-4">
+                        <div>
+                           <label class="text-sm font-bold text-slate-700">Perusahaan Wajib Hadir</label>
+                           <input id="targetCompanySearch" type="search" placeholder="Cari nama perusahaan..." oninput="filterTargetCompanies()" class="mt-2 w-full rounded-2xl border border-slate-200 bg-white px-4 py-2.5 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
+                           <p id="targetCompanySearchInfo" class="mt-1 text-xs font-semibold text-slate-500"></p>
+                           <div id="targetCompanyChecklist" class="mt-2 max-h-52 overflow-auto rounded-2xl border border-slate-200 bg-white p-3"></div>
+                        </div>
+                        <div id="targetPositionBlock">
+                           <label class="text-sm font-bold text-slate-700">Jabatan Fungsional Wajib Hadir</label>
+                           <div id="targetPositionChecklist" class="mt-2 max-h-52 overflow-auto rounded-2xl border border-slate-200 bg-white p-3"></div>
+                        </div>
+                        <div id="targetDepartmentBlock" class="hidden">
+                           <label class="text-sm font-bold text-slate-700">Department Wajib Hadir</label>
+                           <div id="targetDepartmentChecklist" class="mt-2 max-h-52 overflow-auto rounded-2xl border border-slate-200 bg-white p-3"></div>
+                        </div>
+                     </div>
+                  </div>
+              
           <div>
             <label class="text-sm font-bold text-slate-700">Site</label>
             <select id="eventSite" required class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100">
@@ -917,6 +955,7 @@
                 <tr>
                   <th class="px-4 py-3">Rank</th>
                   <th class="px-4 py-3">Perusahaan</th>
+                  <th class="px-4 py-3">Kategori / Target</th>
                   <th class="px-4 py-3">Expected Event</th>
                   <th class="px-4 py-3">Event Hadir</th>
                   <th class="px-4 py-3">Total Absensi</th>
@@ -928,6 +967,28 @@
             </table>
           </div>
         </div>
+      </div>
+    </section>
+
+    <section id="tab-minutesmgmt" class="tab-panel fade-in hidden">
+      <div class="glass soft-card rounded-3xl p-5">
+        <div class="mb-5 flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+          <div>
+            <h2 class="text-xl font-black text-slate-950">Management Notulensi</h2>
+            <p class="text-sm text-slate-500">Daftar meeting yang sudah memiliki notulensi. Klik detail untuk melihat issue dan mengubah status.</p>
+          </div>
+          <div class="no-print flex flex-col gap-2 md:flex-row">
+            <select id="minutesMgmtStatusFilter" onchange="minutesMgmtPage=1;renderMinutesMgmtList()" class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100">
+              <option value="ALL">Semua Status Issue</option>
+              <option value="OPEN">Masih Ada Issue Open</option>
+              <option value="CLOSED">Semua Issue Closed</option>
+            </select>
+            <input id="minutesMgmtSearch" type="search" oninput="scheduleMinutesMgmtSearch()" placeholder="Cari meeting / notulen / site..." class="rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
+          </div>
+        </div>
+
+        <div id="minutesMgmtList" class="space-y-3"></div>
+        <div id="minutesMgmtPagination" class="no-print mt-4 flex flex-col gap-2 text-sm text-slate-500 md:flex-row md:items-center md:justify-between"></div>
       </div>
     </section>
 
@@ -1070,7 +1131,7 @@
         <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>
             <h4 class="text-lg font-black text-slate-950">Notulensi Event</h4>
-            <p class="text-sm text-slate-500">Form input notulensi dibuka melalui tombol. Format formal tetap memakai Enviro Issue, Safety Issue, General Issue, dan kolom Issued By pada catatan meeting.</p>
+            <p class="text-sm text-slate-500">Form input notulensi dibuka melalui tombol. Kelola group issue secara dinamis, lalu isi catatan meeting per group.</p>
             <p id="minutesUpdatedInfo" class="mt-1 text-xs font-bold text-slate-400">Belum ada notulensi</p>
           </div>
           <div class="no-print flex flex-col gap-2 md:flex-row md:items-center">
@@ -1089,6 +1150,20 @@
           </div>
 
           <form id="minutesForm" onsubmit="saveEventMinutes(event)" class="space-y-5">
+          <div class="no-print rounded-2xl bg-slate-50 p-3 ring-1 ring-slate-200">
+            <button type="button" onclick="toggleIssueGroupManager()" class="flex w-full items-center justify-between text-left text-xs font-black uppercase tracking-wider text-slate-600">
+              <span>Kelola Group Issue</span>
+              <span id="issueGroupManagerIcon">+</span>
+            </button>
+            <div id="issueGroupManager" class="mt-3 hidden space-y-3">
+              <div class="flex gap-2">
+                <input id="newIssueSectionTitle" type="text" onkeydown="if(event.key==='Enter'){event.preventDefault();addIssueSection();}" placeholder="Nama group issue baru..." class="min-w-0 flex-1 rounded-xl border border-slate-200 bg-white px-3 py-2 text-sm outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
+                <button type="button" onclick="addIssueSection()" class="rounded-xl bg-blue-600 px-3 py-2 text-xs font-black text-white hover:bg-blue-700">Tambah</button>
+              </div>
+              <div id="issueGroupList" class="flex flex-wrap gap-2"></div>
+            </div>
+          </div>
+
           <div id="minutesPrintArea" class="overflow-hidden rounded-2xl border-2 border-slate-950 bg-white text-slate-950">
             <table class="min-w-full border-collapse text-sm">
               <tr>
@@ -1128,18 +1203,7 @@
               </div>
             </div>
 
-            <div class="border-x border-b border-slate-950">
-              <div class="bg-slate-950 px-4 py-2 text-center text-xs font-black text-white">CATATAN MEETING (Enviro Issue)</div>
-              <div id="enviroIssueTable"></div>
-            </div>
-            <div class="border-x border-b border-slate-950">
-              <div class="bg-slate-950 px-4 py-2 text-center text-xs font-black text-white">CATATAN MEETING (Safety Issue)</div>
-              <div id="safetyIssueTable"></div>
-            </div>
-            <div class="border-x border-b border-slate-950">
-              <div class="bg-slate-950 px-4 py-2 text-center text-xs font-black text-white">CATATAN MEETING (General Issue)</div>
-              <div id="generalIssueTable"></div>
-            </div>
+            <div id="minutesIssueSectionsContainer"></div>
           </div>
 
           <div class="no-print flex flex-col gap-2 md:flex-row">
@@ -1226,6 +1290,63 @@
     </div>
   </div>
 
+  <div id="closeIssueModal" class="fixed inset-0 z-[70] hidden items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+    <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
+      <div class="flex items-start justify-between gap-4">
+        <div>
+          <p class="mb-2 inline-flex rounded-full bg-orange-50 px-3 py-1 text-xs font-black uppercase tracking-wider text-orange-700 ring-1 ring-orange-100">Verifikasi Close Issue</p>
+          <h3 class="text-2xl font-black text-slate-950">Tutup Issue?</h3>
+          <p class="mt-2 text-sm leading-6 text-slate-600">Masukkan No SID verifikator untuk mengubah status issue menjadi <b>Closed</b>.</p>
+        </div>
+        <button type="button" onclick="cancelCloseIssue()" class="rounded-xl bg-slate-100 px-3 py-2 text-sm font-black text-slate-700">✕</button>
+      </div>
+      <div class="mt-5 rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200">
+        <p class="text-xs font-black uppercase tracking-wider text-slate-400">Catatan Issue</p>
+        <p id="closeIssueText" class="mt-2 text-sm font-semibold leading-6 text-slate-800"></p>
+      </div>
+      <div class="mt-4">
+        <label class="text-sm font-bold text-slate-700">No SID Verifikator</label>
+        <input id="closeIssueVerifierSID" type="text" placeholder="Contoh: SID001" class="mt-1 w-full rounded-2xl border border-slate-200 bg-white px-4 py-3 text-sm font-bold uppercase tracking-wide outline-none focus:border-blue-400 focus:ring-4 focus:ring-blue-100" />
+      </div>
+      <div class="mt-5 grid grid-cols-2 gap-3">
+        <button type="button" onclick="cancelCloseIssue()" class="rounded-2xl bg-slate-100 px-4 py-3 text-sm font-black text-slate-700 hover:bg-slate-200">Batal</button>
+        <button type="button" onclick="submitCloseIssueVerification()" class="rounded-2xl bg-gradient-to-r from-red-600 to-orange-500 px-4 py-3 text-sm font-black text-white shadow-lg shadow-red-500/20 hover:opacity-95">Verifikasi & Close</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="minutesMgmtDetailModal" class="fixed inset-0 z-[65] hidden items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
+    <div class="modal-shell w-full max-w-6xl max-h-[92vh] overflow-y-auto rounded-[2rem] bg-white p-6 shadow-2xl ring-1 ring-white/20">
+      <div class="flex flex-col gap-3 md:flex-row md:items-start md:justify-between">
+        <div>
+          <p class="mb-2 inline-flex rounded-full bg-blue-50 px-3 py-1 text-xs font-black uppercase tracking-wider text-blue-700 ring-1 ring-blue-100">Detail Notulensi</p>
+          <h3 id="minutesMgmtDetailTitle" class="text-2xl font-black text-slate-950">Notulensi Meeting</h3>
+          <p id="minutesMgmtDetailSubtitle" class="mt-1 text-sm text-slate-500"></p>
+        </div>
+        <button type="button" onclick="closeMinutesMgmtDetailModal()" class="no-print rounded-xl bg-slate-100 px-3 py-2 text-sm font-black text-slate-700">✕</button>
+      </div>
+      <div id="minutesMgmtDetailSummary" class="mt-5 grid gap-4 md:grid-cols-4"></div>
+      <div class="mt-6 table-wrap rounded-2xl border border-slate-200 bg-white">
+        <table class="min-w-full text-left text-sm">
+          <thead class="bg-slate-50 text-xs uppercase tracking-wider text-slate-500">
+            <tr>
+              <th class="px-4 py-3">No</th>
+              <th class="px-4 py-3">Group Issue</th>
+              <th class="px-4 py-3 min-w-[240px]">Catatan Meeting</th>
+              <th class="px-4 py-3">Issued By</th>
+              <th class="px-4 py-3">PIC</th>
+              <th class="px-4 py-3">Batas Waktu</th>
+              <th class="px-4 py-3">Status</th>
+              <th class="px-4 py-3">Verifikator Close</th>
+              <th class="px-4 py-3">Keterangan</th>
+            </tr>
+          </thead>
+          <tbody id="minutesMgmtIssuesTable"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
   <div id="closeMeetingModal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 p-4 backdrop-blur-sm">
     <div class="w-full max-w-md rounded-3xl bg-white p-6 shadow-2xl">
       <div class="flex items-start justify-between gap-4">
@@ -1279,14 +1400,88 @@
   const CSRF_TOKEN = document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || '';
   const MEETING_TYPES = ['Safety Talk', 'P5M', 'Toolbox Meeting', 'OHS Committee Meeting', 'Incident Review', 'Critical Control Verification', 'Training / Workshop', 'Management Review'];
   const SITE_MASTER = ['BMO 1', 'BMO 2', 'BMO 3', 'GMO', 'SMO', 'LMO', 'Marine', 'HOTE'];
+  const DEFAULT_DEPARTMENTS = ['Operation', 'Maintenance', 'HSE', 'Engineering', 'Plant', 'Logistic', 'Environment', 'Management'];
+  const POSITION_FUNCTIONAL_MASTER = [
+    'Administrator',
+    'Crew',
+    'Direktur',
+    'Engineer/Specialist',
+    'Foreman/Group Leader',
+    'General Manager',
+    'Manager',
+    'Mekanik',
+    'Operator',
+    'Presiden Direktur',
+    'Security',
+    'Superintendent',
+    'Supervisor/Officer',
+    'Technician',
+    'Visitor'
+  ];
+  const TARGET_COMPANY_MASTER = [
+    'CV Batu Bual Sejahtera', 'CV Bena Jaya', 'CV Berau Robotic', 'CV Berau Sanggam Abadi', 'CV Bintang Azzahra',
+    'CV Bukit Manimbora', 'CV Damayanti', 'CV Elang Maju Mapan', 'CV Harapanku Family', 'CV Haryda Oto',
+    'CV Hulu Putra Banua', 'CV Juwita', 'CV Karya Amanda', 'CV Maju Makmur Tehnik', 'CV Megah Jaya Abadi',
+    'CV Muhi Karya Perdana', 'CV Putri Dewi', 'CV Rangga', 'CV Sambaliung Fiber', 'CV Santoso Putra Mandiri',
+    'CV Sanubari Pratama Komunikasi', 'CV Tangguh Mandiri', 'CV Teguh Harapan', 'CV Triana Jaya', 'CV Varissa Jaya',
+    'KAMPUS MERDEKA', 'Koperasi Bersama Kita Bisa', 'Koperasi Bintang Harapan', 'Koperasi Karyawan Bina Bersama',
+    'Koperasi Konsumen Pamandiri', 'Koperasi Maju Bersama', 'PT AKR Corporindo', 'PT Abadi Raya Commerce',
+    'PT Aditama Putra Grup', 'PT Aesculap', 'PT Agung Buana Rejeki', 'PT Akatara Bintang Perwira', 'PT Akesa Indonesia',
+    'PT Akra Anindha Mulia', 'PT Alpha Omega Semesta', 'PT Altrak', 'PT Altros Teknologi', 'PT Ambar Borneo',
+    'PT Andalan Duta Eka Nusantara', 'PT Andhita Asri Borneo', 'PT Aneka Cahaya Karunia', 'PT Apex Mitra Prima',
+    'PT Arcistec International', 'PT Arexas Indonesia', 'PT Asian Berdikari Cemerlang', 'PT Asian Bulk Logistics',
+    'PT Aviako Sepinggan', 'PT Bagong Dekaka Makmur', 'PT Bandang Mining Coal', 'PT Banua Sanggam Utama', 'PT Berau Coal',
+    'PT Berau Coal Energy', 'PT Berca Harydayaperkasa', 'PT Berkat Jaya Sukses', 'PT Berkat Teman Sejati', 'PT Bina Pertiwi',
+    'PT Bluepac Services', 'PT Bogasari Sarana Surya', 'PT Buana Indah Lalebata', 'PT Budi Harta Lestari',
+    'PT Bukit Makmur Mandiri Utama', 'PT Bumi Artlantis Raya', 'PT Bumi Hamparan Luas', 'PT Bumi Sanggam Sejahtera',
+    'PT Cahaya Sakti Jaya', 'PT Cahaya Trijaya Sentosa', 'PT Chitra Paratama', 'PT Cipta Krida Bahari',
+    'PT Cominco Mitra Perkasa', 'PT Comtelindo', 'PT DNX Indonesia', 'PT Dian Ciptamas Agung', 'PT Distribusi Ammo Nusantara',
+    'PT Dunia Pemadam Indonesia', 'PT Duta Borneo Mining', 'PT Eka Dharma Jaya Sakti', 'PT Elektrik Visi Indonesia',
+    'PT Energi Indonesia Berkarya', 'PT Energi Nuansa Jaya', 'PT Eonchemicals Putra', 'PT Epiroc Southern Asia',
+    'PT Eratec Bina Lestari', 'PT Etam Wira Utama', 'PT Eurotruk Trasindo', 'PT Fajar Anugerah Dinamika',
+    'PT Fitama Putri Mandiri', 'PT Frasta Survey Indonesia', 'PT Garuda Bakti Nusantara', 'PT Gatra Kaltim Jaya',
+    'PT Geoservices', 'PT Global Arrow', 'PT Gunung Giri Perkasa', 'PT Gurimbang Mandiri Utama', 'PT Harmoni Mitra Utama',
+    'PT Hexindo Adiperkasa', 'PT Hutan Rindang Banua', 'PT Imelda Teknik Mandiri', 'PT Indonesia Carbon Energy',
+    'PT Inovasi otomasi teknologi', 'PT Intecs Teknikatama Industri', 'PT Interprima Indocom', 'PT Jakarta Prima Cranes',
+    'PT Joymar Abadi Indonesia', 'PT Kalimantan Teknik Utama', 'PT Kaliraya Sari', 'PT Kaltim Diamond Coal',
+    'PT Kanitra Mitra Jaya Utama', 'PT Kasam', 'PT Kawan Segah Mandiri', 'PT Kemitraan MNK BME', 'PT Kharisma Berkat Sukses',
+    'PT Kinend', 'PT Liebherr Indonesia Perkasa', 'PT Limbah Bina Sejahtera', 'PT Lintech Duta Pratama',
+    'PT Lusavindra Jayamadya', 'PT Madhani Talatah Nusantara', 'PT Majau Inti Jaya', 'PT Maju Asri Jaya Utama',
+    'PT Maju Bersama Binungan', 'PT Mandau Berlian Sejati', 'PT Megah Mutiara Sakti', 'PT Meica Indo Teknik',
+    'PT Menara Borneo Jaya', 'PT Mentari Cipta Mandiri', 'PT Mitra Lanuk Permai', 'PT Mitra Sistematika Global',
+    'PT Mitra Sukses Raharja', 'PT Mulia Oto Partindo', 'PT Multi Ardecon', 'PT Multi Kontrol Nusantara',
+    'PT Multi Nitrotama Kimia', 'PT Multitama Indonesia', 'PT Mutiara Tanjung Lestari', 'PT Nawakara Perkasa Nusantara',
+    'PT Nityo Infotech', 'PT Nuansa Makmur Mandiri', 'PT Nusantara Tehnik Gemilang', 'PT Orecon Putra Perkasa',
+    'PT PBM Dharma Lautan Nusantara', 'PT Pamapersada Nusantara', 'PT Pancaran Samudera Transport',
+    'PT Pancaran Teknologi Transportasi Indonesia', 'PT Pangansari Utama', 'PT Partsindo Servicatama',
+    'PT Pelayaran Daya Samudera Mandiri', 'PT Pelayaran Kartika Samudera Adijaya', 'PT Perintis Proteksi Sejahtera',
+    'PT Permata Dwitunggal Abadi', 'PT Prima Tunggal Perkasa', 'PT Prima Unggul Persada', 'PT Primac Perkasa Indonesia',
+    'PT Primacom Interbuana', 'PT Primarindo Sukses Gemilang', 'PT Prina Duta Rekayasa', 'PT Puncak Makmur Jaya',
+    'PT Putra Daerah Mandiri Jaya', 'PT Putra Wahyu Agung', 'PT Quadran Empat Persada', 'PT Rareendo Mulia Abadi',
+    'PT Recsalog Geoprima', 'PT Reka Cuaca Indonesia Forte', 'PT Rentokil Indonesia', 'PT Resindo Energi Sumberdaya',
+    'PT Resty Nur', 'PT Ricobana Abadi', 'PT SUNBASEL', 'PT Salwa Jaya', 'PT Sambakungan Makmur Bersama',
+    'PT Sambakungan Samburakat Maluang Lati', 'PT Samburakat Jaya Utama', 'PT Samudera Berkah Adhiguna',
+    'PT Sanggar Sarana Baja', 'PT Sastra Barra Toga', 'PT Satnetcom Balikpapan', 'PT Satya Energi Solusi',
+    'PT Segara Persada Nusantara', 'PT Sehati Mandiri Utama', 'PT Semesta Quantum Eterniti', 'PT Serasi Autoraya',
+    'PT Shield On Service', 'PT Sinar Pagi', 'PT Sinar Perdana Berau', 'PT Sinarmas LDA Maritime',
+    'PT Skotfire and Safety Technology', 'PT Smartfren Telecom Tbk', 'PT Starcom Solusindo', 'PT Sucofindo',
+    'PT Sumber Mitra Binungan', 'PT Suprima Mitra Adihusada', 'PT Surveyor Carbon Consulting Indonesia',
+    'PT Surveyor Indonesia', 'PT Surya Megah Perkasa', 'PT Surya Nusantara Perkasa', 'PT Tangguh Optima Prima',
+    'PT Tantabuan Adhi Karya', 'PT Taubah Berlian Jaya', 'PT Tectona Mitra Utama', 'PT Terusan Raya',
+    'PT Tidung Jaya Mandiri', 'PT Tirta Sarana Borneo', 'PT Trakindo Utama', 'PT Transkon Jaya', 'PT Tri Daya Maxima',
+    'PT Triatra Sinergia Pratama', 'PT Trigana Abadi Swakarsa', 'PT Triputra Energi Megatara', 'PT Tunas Artha Gardatama',
+    'PT Unggul Jaya Berkah', 'PT United Tractors', 'PT Velseis Indonesia', 'PT Wahanabhara Bhakti', 'PT Weir Minerals Indonesia',
+    'PT Win Wahana Ciptamarga', 'PT Wirya Krenindo Perkasa', 'PT Yerry Primatama Hosindo',
+    'Politeknik Sinar Mas Berau Coal', 'Yayasan Dharma Bakti Berau Coal'
+  ];
 
   // Prototype pengganti Master SID by system.
   // Pada versi production, ganti fungsi fetchEmployeeBySID() agar memanggil API/HRIS/database pusat.
   const SYSTEM_SID_DIRECTORY = [
-    { id: 'SYS-EMP-1', sid: 'SID001', name: 'Budi Santoso', company: 'PAMA', structuralPosition: 'Supervisor', functionalPosition: 'Operator A2B' },
-    { id: 'SYS-EMP-2', sid: 'SID002', name: 'Andi Wijaya', company: 'Berau Coal', structuralPosition: 'Superintendent', functionalPosition: 'Safety Evaluator' },
-    { id: 'SYS-EMP-3', sid: 'SID003', name: 'Siti Rahma', company: 'BUMA', structuralPosition: 'Foreman', functionalPosition: 'Admin SHE' },
-    { id: 'SYS-EMP-4', sid: 'SID004', name: 'Rizky Pratama', company: 'PAMA', structuralPosition: 'Group Leader', functionalPosition: 'Mekanik' }
+    { id: 'SYS-EMP-1', sid: 'SID001', name: 'Budi Santoso', company: 'PAMA', structuralPosition: 'Supervisor', functionalPosition: 'Operator A2B', department: 'Operation' },
+    { id: 'SYS-EMP-2', sid: 'SID002', name: 'Andi Wijaya', company: 'Berau Coal', structuralPosition: 'Superintendent', functionalPosition: 'Safety Evaluator', department: 'HSE' },
+    { id: 'SYS-EMP-3', sid: 'SID003', name: 'Siti Rahma', company: 'BUMA', structuralPosition: 'Foreman', functionalPosition: 'Admin SHE', department: 'HSE' },
+    { id: 'SYS-EMP-4', sid: 'SID004', name: 'Rizky Pratama', company: 'PAMA', structuralPosition: 'Group Leader', functionalPosition: 'Mekanik', department: 'Maintenance' }
   ];
 
   // Prototype daftar perusahaan undangan/eligible by system.
@@ -1340,15 +1535,22 @@
   let selectedRecapEventId = '';
   let sitePerformanceChart = null;
   const ISSUE_TABLE_META = {
-    enviro: { containerId: 'enviroIssueTable', defaultRows: 6 },
-    safety: { containerId: 'safetyIssueTable', defaultRows: 4 },
-    general: { containerId: 'generalIssueTable', defaultRows: 4 }
+    enviro: { id: 'enviro', title: 'Enviro Issue', defaultRows: 3 },
+    safety: { id: 'safety', title: 'Safety Issue', defaultRows: 3 },
+    general: { id: 'general', title: 'General Issue', defaultRows: 3 }
   };
-  let issueRowCounts = { enviro: 6, safety: 4, general: 4 };
+  let activeIssueSections = [];
+  let issueRowCounts = { enviro: 3, safety: 3, general: 3 };
   let reportView = 'attendance';
   let eventListMode = 'active';
   let pendingCloseEventId = '';
   let closePromptSnoozed = {};
+  let pendingCloseIssue = null;
+  let minutesMgmtSelectedEventId = '';
+  let minutesMgmtPage = 1;
+  let minutesMgmtMeta = { current_page: 1, last_page: 1, total: 0 };
+  let minutesMgmtSearchTimer = null;
+  let minutesMgmtInitialized = false;
   let refreshTimer = null;
 
   function loadDB() {
@@ -1371,7 +1573,14 @@
       companies: Array.isArray(data.companies) && data.companies.length ? data.companies : getDefaultCompanyMaster(),
       meetingTypes: Array.isArray(data.meetingTypes) && data.meetingTypes.length ? data.meetingTypes : getDefaultMeetingTypes()
     };
-    next.events = next.events.map(ev => ({ ...ev, site: normalizeSiteValue(ev.site) })).filter(ev => SITE_MASTER.includes(ev.site));
+    next.events = next.events.map(ev => ({
+      ...ev,
+      site: normalizeSiteValue(ev.site),
+      meetingLevel: ev.meetingLevel || 'site',
+      targetCompanies: Array.isArray(ev.targetCompanies) ? ev.targetCompanies : [],
+      targetPositions: Array.isArray(ev.targetPositions) ? ev.targetPositions : [],
+      targetDepartments: Array.isArray(ev.targetDepartments) ? ev.targetDepartments : []
+    })).filter(ev => SITE_MASTER.includes(ev.site));
     next.companies = next.companies.map(company => {
       const mappedSites = [...new Set((company.sites || SITE_MASTER).map(normalizeSiteValue).filter(site => SITE_MASTER.includes(site)))];
       return { ...company, sites: mappedSites.length ? mappedSites : [...SITE_MASTER] };
@@ -1485,10 +1694,18 @@
           : getDefaultMeetingTypes();
         formOptionsLoaded = true;
         renderMeetingTypeManager();
+        renderMeetingTargetOptions({
+          targetCompanies: getCheckedValues('targetCompanies'),
+          targetPositions: getCheckedValues('targetPositions'),
+          targetDepartments: getCheckedValues('targetDepartments')
+        });
+        handleMeetingLevelChange();
       })
       .catch(err => {
         console.warn('Form options gagal:', err);
         renderMeetingTypeOptions();
+        renderMeetingTargetOptions({});
+        handleMeetingLevelChange();
       })
       .finally(() => { formOptionsPromise = null; });
     return formOptionsPromise;
@@ -1544,7 +1761,7 @@
         const status = getEventStatus(ev);
         const total = Number(ev.attendanceCount ?? 0);
         const qrLink = buildQRLink(ev.id);
-        return `<article onclick="openEventRecapModal('${escapeJS(ev.id)}')" class="cursor-pointer rounded-3xl bg-white p-5 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg"><div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"><div class="min-w-0"><div class="mb-2 flex flex-wrap items-center gap-2">${statusBadge(status)}<span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">${escapeHTML(ev.code)}</span><span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">${escapeHTML(ev.week)}</span></div><h3 class="text-lg font-black text-slate-950">${escapeHTML(ev.meetingType)}</h3><p class="mt-1 text-sm text-slate-500">${escapeHTML(ev.site)} · ${formatDate(ev.date)} · ${ev.startTime} - ${ev.endTime}</p><p class="mt-2 break-all text-xs text-slate-400">${escapeHTML(qrLink)}</p><p class="mt-2 text-xs font-bold text-blue-600">Klik kartu untuk melihat rekap event</p></div><div class="min-w-44 rounded-2xl bg-slate-50 p-4 text-sm ring-1 ring-slate-200"><div class="flex justify-between gap-4"><span>Absensi</span><b>${total}</b></div><div class="mt-1 flex justify-between gap-4"><span>Status</span><b>${status}</b></div><div class="mt-1 flex justify-between gap-4"><span>Waktu</span><b class="font-mono">${formatDuration(getElapsedMs(ev))}</b></div>${ev.closedAt ? `<div class="mt-1 text-xs text-slate-500">Closed: ${formatDateTime(ev.closedAt)}</div>` : ''}</div></div><div class="no-print mt-4 flex flex-wrap gap-2"><button onclick="event.stopPropagation(); openQRModal('${escapeJS(ev.id)}')" class="rounded-xl bg-cyan-50 px-3 py-2 text-xs font-black text-cyan-700 hover:bg-cyan-100">Lihat QR</button><button onclick="event.stopPropagation(); openAttendanceFromEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 hover:bg-emerald-100">Absen Manual</button>${status !== 'Closed' ? `<button onclick="event.stopPropagation(); askCloseMeeting('${escapeJS(ev.id)}', true)" class="rounded-xl bg-orange-50 px-3 py-2 text-xs font-black text-orange-700 hover:bg-orange-100">Tutup Meeting</button>` : ''}<button onclick="event.stopPropagation(); copyText('${escapeJS(qrLink)}', this)" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 hover:bg-slate-200">Copy Link Absensi</button><button onclick="event.stopPropagation(); editEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100">Edit</button><button onclick="event.stopPropagation(); deleteEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-100">Hapus</button></div></article>`;
+        return `<article onclick="openEventRecapModal('${escapeJS(ev.id)}')" class="cursor-pointer rounded-3xl bg-white p-5 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg"><div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between"><div class="min-w-0"><div class="mb-2 flex flex-wrap items-center gap-2">${statusBadge(status)}<span class="rounded-full bg-violet-50 px-3 py-1 text-xs font-black text-violet-700">${escapeHTML(getMeetingLevelLabel(ev.meetingLevel))}</span><span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">${escapeHTML(ev.code)}</span><span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">${escapeHTML(ev.week)}</span></div><h3 class="text-lg font-black text-slate-950">${escapeHTML(ev.meetingType)}</h3><p class="mt-1 text-sm text-slate-500">${escapeHTML(ev.site)} · ${formatDate(ev.date)} · ${ev.startTime} - ${ev.endTime}</p><p class="mt-2 break-all text-xs text-slate-400">${escapeHTML(qrLink)}</p><p class="mt-2 text-xs font-bold text-blue-600">Klik kartu untuk melihat rekap event</p></div><div class="min-w-44 rounded-2xl bg-slate-50 p-4 text-sm ring-1 ring-slate-200"><div class="flex justify-between gap-4"><span>Absensi</span><b>${total}</b></div><div class="mt-1 flex justify-between gap-4"><span>Status</span><b>${status}</b></div><div class="mt-1 flex justify-between gap-4"><span>Waktu</span><b class="font-mono">${formatDuration(getElapsedMs(ev))}</b></div>${ev.closedAt ? `<div class="mt-1 text-xs text-slate-500">Closed: ${formatDateTime(ev.closedAt)}</div>` : ''}</div></div><div class="no-print mt-4 flex flex-wrap gap-2"><button onclick="event.stopPropagation(); openQRModal('${escapeJS(ev.id)}')" class="rounded-xl bg-cyan-50 px-3 py-2 text-xs font-black text-cyan-700 hover:bg-cyan-100">Lihat QR</button><button onclick="event.stopPropagation(); openAttendanceFromEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-emerald-50 px-3 py-2 text-xs font-black text-emerald-700 hover:bg-emerald-100">Absen Manual</button>${status !== 'Closed' ? `<button onclick="event.stopPropagation(); askCloseMeeting('${escapeJS(ev.id)}', true)" class="rounded-xl bg-orange-50 px-3 py-2 text-xs font-black text-orange-700 hover:bg-orange-100">Tutup Meeting</button>` : ''}<button onclick="event.stopPropagation(); copyText('${escapeJS(qrLink)}', this)" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 hover:bg-slate-200">Copy Link Absensi</button><button onclick="event.stopPropagation(); editEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-blue-50 px-3 py-2 text-xs font-black text-blue-700 hover:bg-blue-100">Edit</button><button onclick="event.stopPropagation(); deleteEvent('${escapeJS(ev.id)}')" class="rounded-xl bg-red-50 px-3 py-2 text-xs font-black text-red-700 hover:bg-red-100">Hapus</button></div></article>`;
       }).join('');
       renderEventsPagination();
     } catch (err) {
@@ -1723,7 +1940,7 @@
       .then(payload => {
         db = migrateDB({
           events: payload.events || [],
-          attendance: payload.attendance || [],
+          attendance: (payload.attendance || []).map(normalizeAttendanceRow),
           companies: payload.companies || [],
           meetingTypes: payload.meetingTypes || getDefaultMeetingTypes()
         });
@@ -1789,11 +2006,13 @@
 
   function eventSaveAlert(type, message) {
     if (window.Swal) {
+      const titles = { success: 'Berhasil', error: 'Gagal', warning: 'Perhatian' };
+      const colors = { success: '#2563eb', error: '#dc2626', warning: '#d97706' };
       Swal.fire({
         icon: type,
-        title: type === 'success' ? 'Berhasil' : 'Gagal',
+        title: titles[type] || 'Info',
         text: message,
-        confirmButtonColor: type === 'success' ? '#2563eb' : '#dc2626'
+        confirmButtonColor: colors[type] || '#2563eb'
       });
       return;
     }
@@ -1918,6 +2137,8 @@
       setTimeout(() => initCompanyDataTable(), 0);
     } else if (tab === 'report') {
       initReportTab();
+    } else if (tab === 'minutesmgmt') {
+      initMinutesMgmtTab();
     } else if (tab === 'siteperformance') {
       initSitePerformanceTabLazy();
     } else if (tab === 'semanticeval') {
@@ -1927,15 +2148,23 @@
 
   async function saveEvent(e) {
     e.preventDefault();
+    const level = document.getElementById('meetingLevel')?.value || 'site';
     const payload = {
       meeting_type: document.getElementById('meetingType').value,
       site: normalizeSiteValue(document.getElementById('eventSite').value.trim()),
       meeting_date: document.getElementById('meetingDate').value,
       week: document.getElementById('meetingWeek').value.trim().toUpperCase(),
       start_time: document.getElementById('startTime').value,
-      end_time: document.getElementById('endTime').value
+      end_time: document.getElementById('endTime').value,
+      meeting_level: level,
+      target_companies: level === 'site' ? [] : getCheckedValues('targetCompanies'),
+      target_positions: level === 'company' ? getCheckedValues('targetPositions') : [],
+      target_departments: level === 'department' ? getCheckedValues('targetDepartments') : []
     };
     if (!SITE_MASTER.includes(payload.site)) return eventSaveAlert('error', 'Site tidak valid. Pilih site sesuai master.');
+    if (level !== 'site' && !payload.target_companies.length) return eventSaveAlert('error', 'Pilih minimal 1 perusahaan wajib hadir.');
+    if (level === 'company' && !payload.target_positions.length) return eventSaveAlert('error', 'Pilih minimal 1 jabatan wajib hadir.');
+    if (level === 'department' && !payload.target_departments.length) return eventSaveAlert('error', 'Pilih minimal 1 department wajib hadir.');
     if (toDateTime(payload.meeting_date, payload.end_time) <= toDateTime(payload.meeting_date, payload.start_time)) return eventSaveAlert('error', 'Jam selesai harus lebih besar dari jam mulai');
     try {
       await apiFetch(`${SID_MEETING_API_BASE}/events`, { method: 'POST', body: JSON.stringify(payload) });
@@ -1951,9 +2180,12 @@
 
   function editEvent(id) {
     const ev = getEventById(id); if (!ev) return;
-    toggleCreateEventContainer(false);
+    toggleCreateEventContainer(true);
     document.getElementById('eventId').value = ev.id;
     document.getElementById('meetingType').value = ev.meetingType;
+    document.getElementById('meetingLevel').value = ev.meetingLevel || 'site';
+    renderMeetingTargetOptions(ev);
+    handleMeetingLevelChange();
     document.getElementById('eventSite').value = ev.site;
     document.getElementById('meetingDate').value = ev.date;
     document.getElementById('meetingWeek').value = ev.week;
@@ -1979,6 +2211,10 @@
     autoFillWeek();
     document.getElementById('startTime').value = '08:00';
     document.getElementById('endTime').value = '10:00';
+    const levelEl = document.getElementById('meetingLevel');
+    if (levelEl) levelEl.value = 'site';
+    renderMeetingTargetOptions({});
+    handleMeetingLevelChange();
   }
 
   function setEventListMode(mode) {
@@ -2016,7 +2252,7 @@
       cacheEvent(payload.event);
       window.recapEligibleCompanies = Array.isArray(payload.eligibleCompanies) ? payload.eligibleCompanies : null;
       db.attendance = db.attendance.filter(a => String(a.eventId) !== String(eventId));
-      (payload.attendance || []).forEach(row => db.attendance.push(row));
+      (payload.attendance || []).forEach(row => db.attendance.push(normalizeAttendanceRow(row)));
       renderEventRecapModal(eventId, payload.attendance || []);
       renderActiveAttendanceEvent();
       document.getElementById('eventRecapModal').classList.remove('hidden');
@@ -2082,6 +2318,121 @@
     return db.companies;
   }
 
+  function renderTargetChecklist(containerId, inputName, values = [], selected = []) {
+    const box = document.getElementById(containerId);
+    if (!box) return;
+    const selectedSet = new Set(selected || []);
+    box.innerHTML = values.map(value => `
+      <label class="mb-2 flex cursor-pointer items-center gap-2 rounded-xl bg-slate-50 px-3 py-2 text-xs font-bold text-slate-700">
+        <input type="checkbox" name="${inputName}" value="${escapeHTML(value)}" ${selectedSet.has(value) ? 'checked' : ''} class="h-4 w-4 rounded border-slate-300 text-blue-600" />
+        <span>${escapeHTML(value)}</span>
+      </label>`).join('') || '<p class="p-3 text-xs font-semibold text-slate-400">Belum ada data.</p>';
+  }
+
+  function getCheckedValues(name) {
+    return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(el => el.value);
+  }
+
+  function getPositionOptions() {
+    return [...POSITION_FUNCTIONAL_MASTER];
+  }
+
+  function getTargetCompanyOptions() {
+    return [...TARGET_COMPANY_MASTER];
+  }
+
+  function renderTargetCompanyChecklist(selected = null) {
+    const preserved = selected ?? getCheckedValues('targetCompanies');
+    const selectedSet = new Set(preserved);
+    const search = (document.getElementById('targetCompanySearch')?.value || '').toLowerCase().trim();
+    const allCompanies = getTargetCompanyOptions();
+    const filtered = allCompanies.filter(name => !search || name.toLowerCase().includes(search));
+    const pinnedSelected = preserved.filter(name => search && !name.toLowerCase().includes(search));
+    const displayList = [...new Set([...pinnedSelected, ...filtered])].sort((a, b) => a.localeCompare(b, 'id'));
+    renderTargetChecklist('targetCompanyChecklist', 'targetCompanies', displayList, preserved);
+    const info = document.getElementById('targetCompanySearchInfo');
+    const checkedCount = preserved.length;
+    if (info) {
+      if (search) {
+        info.textContent = `Menampilkan ${filtered.length} dari ${allCompanies.length} perusahaan · ${checkedCount} terpilih`;
+      } else {
+        info.textContent = `${allCompanies.length} perusahaan · ${checkedCount} terpilih`;
+      }
+    }
+  }
+
+  function filterTargetCompanies() {
+    renderTargetCompanyChecklist();
+  }
+
+  function normalizeAttendanceRow(row = {}) {
+    return { ...row, department: row.department || inferEmployeeDepartment(row) };
+  }
+
+  function inferEmployeeDepartment(emp = {}) {
+    const text = [emp.department, emp.structuralPosition, emp.functionalPosition, emp.position, emp.jabatan].filter(Boolean).join(' ').toLowerCase();
+    if (/hse|safety|ohs|k3/.test(text)) return 'HSE';
+    if (/maint|mechanic|plant|workshop/.test(text)) return 'Maintenance';
+    if (/enviro|environment|lingkungan/.test(text)) return 'Environment';
+    if (/engineer|technical/.test(text)) return 'Engineering';
+    if (/manager|superintendent|pjo/.test(text)) return 'Management';
+    return 'Operation';
+  }
+
+  function getDepartmentOptions() {
+    return [...new Set([
+      ...DEFAULT_DEPARTMENTS,
+      ...SYSTEM_SID_DIRECTORY.map(inferEmployeeDepartment),
+      ...db.attendance.map(a => a.department || inferEmployeeDepartment(a))
+    ])].sort();
+  }
+
+  function renderMeetingTargetOptions(ev = {}) {
+    const searchEl = document.getElementById('targetCompanySearch');
+    if (searchEl && !searchEl.value) searchEl.value = '';
+    renderTargetCompanyChecklist(ev.targetCompanies || []);
+    renderTargetChecklist('targetPositionChecklist', 'targetPositions', getPositionOptions(), ev.targetPositions || []);
+    renderTargetChecklist('targetDepartmentChecklist', 'targetDepartments', getDepartmentOptions(), ev.targetDepartments || []);
+  }
+
+  function handleMeetingLevelChange() {
+    const level = document.getElementById('meetingLevel')?.value || 'site';
+    document.getElementById('meetingTargetPanel')?.classList.toggle('hidden', level === 'site');
+    document.getElementById('targetPositionBlock')?.classList.toggle('hidden', level !== 'company');
+    document.getElementById('targetDepartmentBlock')?.classList.toggle('hidden', level !== 'department');
+    const hint = document.getElementById('meetingLevelHint');
+    if (hint) {
+      hint.textContent = level === 'site'
+        ? 'Site Level memakai master perusahaan sesuai site.'
+        : level === 'company'
+          ? 'Company Level memakai perusahaan pilihan dan jabatan wajib hadir.'
+          : 'Department Level memakai perusahaan pilihan dan department wajib hadir.';
+    }
+    const targetHint = document.getElementById('meetingTargetHint');
+    if (targetHint) {
+      targetHint.textContent = level === 'company'
+        ? 'Pilih perusahaan dan jabatan yang wajib hadir.'
+        : 'Pilih perusahaan dan department yang wajib hadir.';
+    }
+  }
+
+  function toggleAllTargetCompanies(checked) {
+    if (checked) {
+      const search = (document.getElementById('targetCompanySearch')?.value || '').toLowerCase().trim();
+      const visible = getTargetCompanyOptions().filter(name => !search || name.toLowerCase().includes(search));
+      const merged = new Set([...getCheckedValues('targetCompanies'), ...visible]);
+      renderTargetCompanyChecklist([...merged]);
+      return;
+    }
+    renderTargetCompanyChecklist([]);
+  }
+
+  function getMeetingLevelLabel(level) {
+    if (level === 'company') return 'Company Level';
+    if (level === 'department') return 'Department Level';
+    return 'Site Level';
+  }
+
   function getEligibleCompaniesForSite(site) {
     if (Array.isArray(window.recapEligibleCompanies) && window.recapEligibleCompanies.length) {
       return [...window.recapEligibleCompanies];
@@ -2092,26 +2443,114 @@
     return companies.filter(company => (company.sites || []).includes(targetSite)).map(company => company.name);
   }
 
+  function getTargetCompaniesForEvent(ev) {
+    const level = ev?.meetingLevel || 'site';
+    if (level !== 'site' && ev?.targetCompanies?.length) return ev.targetCompanies;
+    return getEligibleCompaniesForSite(ev?.site || '');
+  }
+
+  function getRequiredCriteriaText(ev) {
+    const level = ev?.meetingLevel || 'site';
+    if (level === 'company') {
+      return (ev.targetPositions || []).length ? `Jabatan: ${(ev.targetPositions || []).join(', ')}` : 'Semua jabatan';
+    }
+    if (level === 'department') {
+      return (ev.targetDepartments || []).length ? `Dept: ${(ev.targetDepartments || []).join(', ')}` : 'Semua department';
+    }
+    return 'Master perusahaan site';
+  }
+
+  function attendanceMatchesExpectedUnit(att, unit) {
+    if (!att || !unit) return false;
+    if (normalizeCompanyName(att.company) !== normalizeCompanyName(unit.company)) return false;
+    if (unit.level === 'site') return true;
+    if (unit.level === 'company') {
+      if (unit.targetValue === 'Semua Jabatan') return true;
+      const target = String(unit.targetValue).trim().toLowerCase();
+      const functional = String(att.functionalPosition || '').trim().toLowerCase();
+      if (functional === target) return true;
+      return [att.structuralPosition].filter(Boolean)
+        .some(pos => String(pos).trim().toLowerCase() === target);
+    }
+    if (unit.level === 'department') {
+      if (unit.targetValue === 'Semua Department') return true;
+      return String(att.department || inferEmployeeDepartment(att)).toLowerCase() === String(unit.targetValue).toLowerCase();
+    }
+    return false;
+  }
+
+  function getEventLevel(ev) {
+    return ev?.meetingLevel || 'site';
+  }
+
+  function getEventExpectedUnits(ev) {
+    if (!ev) return [];
+    const level = getEventLevel(ev);
+    const companies = getTargetCompaniesForEvent(ev);
+    if (level === 'company') {
+      const positions = (ev.targetPositions || []).length ? ev.targetPositions : ['Semua Jabatan'];
+      return companies.flatMap(company => positions.map(position => ({
+        key: `${normalizeCompanyName(company)}::POSITION::${position}`,
+        company,
+        level,
+        targetType: 'Jabatan',
+        targetValue: position
+      })));
+    }
+    if (level === 'department') {
+      const departments = (ev.targetDepartments || []).length ? ev.targetDepartments : ['Semua Department'];
+      return companies.flatMap(company => departments.map(department => ({
+        key: `${normalizeCompanyName(company)}::DEPT::${department}`,
+        company,
+        level,
+        targetType: 'Department',
+        targetValue: department
+      })));
+    }
+    return companies.map(company => ({
+      key: `${normalizeCompanyName(company)}::SITE`,
+      company,
+      level: 'site',
+      targetType: 'Company',
+      targetValue: 'Company Representative'
+    }));
+  }
+
+  function getEventPresentUnits(ev, logs = null) {
+    const attendanceLogs = logs || getAttendanceLogsForEvent(ev?.id);
+    return getEventExpectedUnits(ev).filter(unit => attendanceLogs.some(att => attendanceMatchesExpectedUnit(att, unit)));
+  }
+
+  function getAttendanceRateForEvents(events) {
+    const expected = events.reduce((sum, ev) => sum + getEventExpectedUnits(ev).length, 0);
+    const present = events.reduce((sum, ev) => sum + getEventPresentUnits(ev).length, 0);
+    return expected ? Math.round((present / expected) * 100) : 0;
+  }
+
   function isCompanyEligibleForSite(companyName, site) {
     const companyKey = normalizeCompanyName(companyName);
     return getEligibleCompaniesForSite(site).some(name => normalizeCompanyName(name) === companyKey);
   }
 
-  function getCompanyStatusRows(logs, site = '') {
-    const attendedKeys = new Set(logs.map(a => normalizeCompanyName(a.company)));
-    const masterCompanies = [...getEligibleCompaniesForSite(site)];
+  function getCompanyStatusRows(logs, site = '', ev = null) {
+    const companies = ev ? [...getTargetCompaniesForEvent(ev)] : [...getEligibleCompaniesForSite(site)];
 
     logs.forEach(a => {
       const company = a.company || 'Tidak Ada Perusahaan';
-      if (!masterCompanies.some(x => normalizeCompanyName(x) === normalizeCompanyName(company))) {
-        masterCompanies.push(company);
+      if (!companies.some(x => normalizeCompanyName(x) === normalizeCompanyName(company))) {
+        companies.push(company);
       }
     });
 
-    return masterCompanies.map((company, index) => ({
+    const presentUnits = ev ? getEventPresentUnits(ev, logs) : null;
+
+    return companies.map((company, index) => ({
       no: index + 1,
       company,
-      status: attendedKeys.has(normalizeCompanyName(company)) ? 'HADIR' : 'TIDAK HADIR'
+      status: logs.some(a => normalizeCompanyName(a.company) === normalizeCompanyName(company) && (!ev || presentUnits.some(u => u.company === company)))
+        ? 'HADIR'
+        : 'TIDAK HADIR',
+      required: ev ? getRequiredCriteriaText(ev) : 'Site Level'
     }));
   }
 
@@ -2119,16 +2558,16 @@
     const ev = getEventById(eventId);
     if (!ev) return;
     const attendanceLogs = Array.isArray(logs) ? logs : getAttendanceLogsForEvent(eventId);
-    const companyRows = getCompanyStatusRows(attendanceLogs, ev.site);
-    const companyPresent = companyRows.filter(x => x.status === 'HADIR').length;
-    const companyAbsent = companyRows.filter(x => x.status === 'TIDAK HADIR').length;
-    const companyRate = companyRows.length ? Math.round((companyPresent / companyRows.length) * 100) : 0;
+    const companyRows = getCompanyStatusRows(attendanceLogs, ev.site, ev);
+    const expectedUnits = getEventExpectedUnits(ev);
+    const presentUnits = getEventPresentUnits(ev, attendanceLogs);
+    const attendanceRate = expectedUnits.length ? Math.round((presentUnits.length / expectedUnits.length) * 100) : 0;
 
     document.getElementById('eventRecapTitle').textContent = `${ev.meetingType} · ${ev.site} · ${formatDate(ev.date)} · ${ev.week}`;
     document.getElementById('eventRecapSummary').innerHTML = [
-      ['Total Absensi', attendanceLogs.length],
-      ['Perusahaan Hadir', companyPresent],
-      ['Attendance Rate', companyRate + '%'],
+      ['Target Hadir', `${presentUnits.length}/${expectedUnits.length}`],
+      ['Attendance Rate', attendanceRate + '%'],
+      ['Kategori Meeting', getMeetingLevelLabel(ev.meetingLevel)],
       ['Waktu Berjalan', formatDuration(getElapsedMs(ev))],
       ['Status Meeting', getEventStatus(ev)]
     ].map(([label, val]) => `<div class="rounded-3xl bg-slate-50 p-5 ring-1 ring-slate-200"><p class="text-sm font-semibold text-slate-500">${label}</p><p class="mt-2 text-xl font-black text-slate-950">${escapeHTML(String(val))}</p></div>`).join('');
@@ -2143,10 +2582,11 @@
               <th class="w-16 px-4 py-3 text-center">No</th>
               <th class="px-4 py-3">Perusahaan</th>
               <th class="w-40 px-4 py-3 text-center">Status Kehadiran</th>
+              <th class="px-4 py-3">Kriteria</th>
             </tr>
           </thead>
           <tbody>
-            ${companyRows.map(row => `<tr class="border-t border-slate-100 hover:bg-slate-50"><td class="px-4 py-3 text-center text-slate-500">${row.no}</td><td class="px-4 py-3 font-semibold text-slate-800">${escapeHTML(row.company)}</td><td class="px-4 py-3 text-center"><span class="${row.status === 'HADIR' ? 'status-hadir' : 'status-tidak-hadir'}">${row.status}</span></td></tr>`).join('')}
+            ${companyRows.map(row => `<tr class="border-t border-slate-100 hover:bg-slate-50"><td class="px-4 py-3 text-center text-slate-500">${row.no}</td><td class="px-4 py-3 font-semibold text-slate-800">${escapeHTML(row.company)}</td><td class="px-4 py-3 text-center"><span class="${row.status === 'HADIR' ? 'status-hadir' : 'status-tidak-hadir'}">${row.status}</span></td><td class="px-4 py-3 text-xs font-semibold text-slate-500">${escapeHTML(row.required)}</td></tr>`).join('')}
           </tbody>
         </table>
       </div>`;
@@ -2154,16 +2594,146 @@
     document.getElementById('eventRecapAttendees').innerHTML = attendanceLogs.length ? attendanceLogs.map(a => `<tr class="border-t border-slate-100"><td class="px-4 py-3">${formatDateTime(a.timestamp)}</td><td class="px-4 py-3 font-black">${escapeHTML(a.sid)}</td><td class="px-4 py-3"><b>${escapeHTML(a.name)}</b></td><td class="px-4 py-3">${escapeHTML(a.company || '-')}</td><td class="px-4 py-3"><div>${escapeHTML(a.structuralPosition || '-')}</div><div class="text-xs text-slate-500">${escapeHTML(a.functionalPosition || '-')}</div></td></tr>`).join('') : `<tr><td colspan="5" class="px-4 py-8 text-center text-sm font-semibold text-slate-500">Belum ada daftar hadir.</td></tr>`;
   }
 
+  function slugifyIssueSectionTitle(title) {
+    const base = String(title || 'section').toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '').slice(0, 24) || 'section';
+    let id = base;
+    let n = 1;
+    const used = new Set(activeIssueSections.map(s => s.id));
+    while (used.has(id)) id = `${base}_${n++}`;
+    return id;
+  }
+
+  function getDefaultIssueSections() {
+    return Object.values(ISSUE_TABLE_META).map(meta => ({
+      id: meta.id,
+      title: meta.title,
+      defaultRows: meta.defaultRows,
+      rows: []
+    }));
+  }
+
+  function normalizeIssueSection(section, index = 0) {
+    const title = String(section?.title || section?.section || `Issue Section ${index + 1}`).trim();
+    const id = String(section?.id || title || `section_${index + 1}`).toLowerCase().replace(/[^a-z0-9]+/g, '_').replace(/^_+|_+$/g, '') || `section_${index + 1}`;
+    return {
+      id,
+      title,
+      defaultRows: Number(section?.defaultRows || ISSUE_TABLE_META[id]?.defaultRows || 3),
+      rows: Array.isArray(section?.rows) ? section.rows : []
+    };
+  }
+
+  function getMinutesIssueSections(minutes = {}, includeDefaults = true) {
+    if (Array.isArray(minutes.issueSections) && minutes.issueSections.length) {
+      return minutes.issueSections.map(normalizeIssueSection);
+    }
+    const legacy = [
+      { ...ISSUE_TABLE_META.enviro, rows: minutes.enviroIssues || [] },
+      { ...ISSUE_TABLE_META.safety, rows: minutes.safetyIssues || [] },
+      { ...ISSUE_TABLE_META.general, rows: minutes.generalIssues || [] }
+    ].map(normalizeIssueSection);
+    const hasContent = legacy.some(section => section.rows.some(row => [row.note, row.issuedBy, row.pic, row.dueDate, row.remark].some(Boolean)));
+    return includeDefaults || hasContent ? legacy : [];
+  }
+
+  function getIssueSectionMeta(prefix) {
+    return activeIssueSections.find(section => section.id === prefix)
+      || ISSUE_TABLE_META[prefix]
+      || { id: prefix, title: prefix, defaultRows: 3 };
+  }
+
+  function renderIssueSections(sections = getDefaultIssueSections()) {
+    const container = document.getElementById('minutesIssueSectionsContainer');
+    if (!container) return;
+    activeIssueSections = (sections.length ? sections : getDefaultIssueSections()).map(normalizeIssueSection);
+    container.innerHTML = activeIssueSections.map(section => `
+      <section class="border-x border-b border-slate-950" data-issue-section-id="${escapeHTML(section.id)}">
+        <div class="flex items-center justify-between gap-3 bg-slate-950 px-4 py-2 text-xs font-black text-white">
+          <div class="flex flex-1 items-center justify-center gap-2">
+            <span>CATATAN MEETING (</span>
+            <input id="section_title_${escapeHTML(section.id)}" value="${escapeHTML(section.title)}" class="min-w-[160px] border-0 bg-transparent text-center text-xs font-black text-white outline-none placeholder:text-white/60" />
+            <span>)</span>
+          </div>
+          <button type="button" onclick="removeIssueSection('${escapeJS(section.id)}')" class="no-print rounded-lg bg-white/10 px-2 py-1 text-[10px] font-black text-white hover:bg-white/20">hapus</button>
+        </div>
+        <div id="issueTable_${escapeHTML(section.id)}"></div>
+      </section>`).join('');
+    activeIssueSections.forEach(section => {
+      const rowCount = Math.max(1, (section.rows || []).length || issueRowCounts[section.id] || section.defaultRows || 3);
+      buildIssueTable(`issueTable_${section.id}`, section.id, rowCount, section.rows || []);
+    });
+    renderIssueGroupList();
+  }
+
+  function renderIssueGroupList() {
+    const list = document.getElementById('issueGroupList');
+    if (!list) return;
+    list.innerHTML = activeIssueSections.map(section => {
+      const rows = document.getElementById(`issueTable_${section.id}`) ? collectCurrentIssueRows(section.id) : (section.rows || []);
+      const filledCount = rows.filter(row => [row.note, row.issuedBy, row.pic, row.dueDate, row.remark].some(Boolean)).length;
+      return `<span class="inline-flex items-center gap-2 rounded-full bg-white px-3 py-2 text-xs font-black text-slate-700 ring-1 ring-slate-200">
+        <span>${escapeHTML(section.title)}</span>
+        ${filledCount ? `<span class="rounded-full bg-blue-50 px-2 py-0.5 text-[10px] text-blue-700">${filledCount} issue</span>` : ''}
+        <button type="button" onclick="removeIssueSection('${escapeJS(section.id)}')" class="rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-black text-red-700">hapus</button>
+      </span>`;
+    }).join('');
+  }
+
+  function toggleIssueGroupManager() {
+    const panel = document.getElementById('issueGroupManager');
+    const icon = document.getElementById('issueGroupManagerIcon');
+    if (!panel) return;
+    const open = panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    if (icon) icon.textContent = open ? '−' : '+';
+  }
+
+  function addIssueSection() {
+    const input = document.getElementById('newIssueSectionTitle');
+    const title = (input?.value || '').trim();
+    if (!title) return toast('Isi nama group issue');
+    const sections = collectCurrentIssueSections();
+    sections.push({
+      id: slugifyIssueSectionTitle(title),
+      title,
+      defaultRows: 1,
+      rows: [{ note: '', issuedBy: '', pic: '', dueDate: '', status: 'Open', remark: '' }]
+    });
+    if (input) input.value = '';
+    renderIssueSections(sections);
+    toast('Group issue ditambahkan');
+  }
+
+  function removeIssueSection(id) {
+    const sections = collectCurrentIssueSections();
+    if (sections.length <= 1) return toast('Minimal 1 group issue tersedia');
+    const target = sections.find(section => section.id === id);
+    const hasContent = target?.rows?.some(row => [row.note, row.issuedBy, row.pic, row.dueDate, row.remark].some(Boolean));
+    if (hasContent && !confirm(`Hapus group issue "${target?.title || id}"?`)) return;
+    renderIssueSections(sections.filter(section => section.id !== id));
+    toast('Group issue dihapus');
+  }
+
+  function collectCurrentIssueSections() {
+    return activeIssueSections.length ? activeIssueSections.map(section => ({
+      id: section.id,
+      title: document.getElementById(`section_title_${section.id}`)?.value.trim() || section.title,
+      defaultRows: section.defaultRows || 1,
+      rows: collectCurrentIssueRows(section.id)
+    })) : getDefaultIssueSections();
+  }
+
   function buildIssueTable(containerId, prefix, rows = 4, data = []) {
     const container = document.getElementById(containerId);
     if (!container) return;
-    const rowCount = Math.max(1, rows || ISSUE_TABLE_META[prefix]?.defaultRows || 1);
+    const meta = getIssueSectionMeta(prefix);
+    const rowCount = Math.max(1, rows || issueRowCounts[prefix] || meta.defaultRows || 1);
     issueRowCounts[prefix] = rowCount;
     const safeData = Array.from({ length: rowCount }, (_, i) => data[i] || { note: '', issuedBy: '', pic: '', dueDate: '', status: 'Open', remark: '' });
     container.innerHTML = `
       <div class="no-print flex items-center justify-end gap-2 border-x border-slate-950 bg-slate-50 px-3 py-2">
-        <button type="button" onclick="addIssueRow('${prefix}')" class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100">+ Tambah Baris</button>
-        <button type="button" onclick="removeIssueRow('${prefix}')" class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-black text-red-700 ring-1 ring-red-100 hover:bg-red-100 ${rowCount <= 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${rowCount <= 1 ? 'disabled' : ''}>− Kurang Baris</button>
+        <button type="button" onclick="addIssueRow('${escapeJS(prefix)}')" class="rounded-lg bg-emerald-50 px-3 py-1.5 text-xs font-black text-emerald-700 ring-1 ring-emerald-100 hover:bg-emerald-100">+ Tambah Baris</button>
+        <button type="button" onclick="removeIssueRow('${escapeJS(prefix)}')" class="rounded-lg bg-red-50 px-3 py-1.5 text-xs font-black text-red-700 ring-1 ring-red-100 hover:bg-red-100 ${rowCount <= 1 ? 'opacity-50 cursor-not-allowed' : ''}" ${rowCount <= 1 ? 'disabled' : ''}>− Kurang Baris</button>
       </div>
       <table class="min-w-full border-collapse text-sm">
         <thead>
@@ -2190,6 +2760,7 @@
                   <option value="Open" ${(row.status || 'Open') === 'Open' ? 'selected' : ''}>Open</option>
                   <option value="Progress" ${row.status === 'Progress' ? 'selected' : ''}>Progress</option>
                   <option value="Overdue" ${row.status === 'Overdue' ? 'selected' : ''}>Overdue</option>
+                  <option value="Closed" ${row.status === 'Closed' ? 'selected' : ''}>Closed</option>
                 </select>
               </td>
               <td class="border border-slate-950 px-2 py-1"><input id="${prefix}_remark_${i}" value="${escapeHTML(row.remark || '')}" class="w-full border-0 bg-transparent px-1 py-1 outline-none" /></td>
@@ -2200,19 +2771,19 @@
   }
 
   function collectCurrentIssueRows(prefix) {
-    return collectIssueRows(prefix, issueRowCounts[prefix] || ISSUE_TABLE_META[prefix]?.defaultRows || 1);
+    const meta = getIssueSectionMeta(prefix);
+    return collectIssueRows(prefix, issueRowCounts[prefix] || meta.defaultRows || 1);
   }
 
   function rerenderIssueTable(prefix, nextRows, data) {
-    const meta = ISSUE_TABLE_META[prefix];
-    if (!meta) return;
-    buildIssueTable(meta.containerId, prefix, nextRows, data);
+    buildIssueTable(`issueTable_${prefix}`, prefix, nextRows, data);
   }
 
   function addIssueRow(prefix) {
     const currentData = collectCurrentIssueRows(prefix);
-    currentData.push({ note: '', pic: '', dueDate: '', remark: '' });
+    currentData.push({ note: '', issuedBy: '', pic: '', dueDate: '', status: 'Open', remark: '' });
     rerenderIssueTable(prefix, currentData.length, currentData);
+    renderIssueGroupList();
   }
 
   function removeIssueRow(prefix) {
@@ -2220,6 +2791,7 @@
     if (currentData.length <= 1) return toast('Minimal 1 baris harus tersedia');
     currentData.pop();
     rerenderIssueTable(prefix, currentData.length, currentData);
+    renderIssueGroupList();
   }
 
   function renderEventMinutesForm(ev) {
@@ -2236,9 +2808,11 @@
       ? [{ note: [minutes.topic, minutes.discussion, minutes.decision, minutes.action].filter(Boolean).join(' | '), issuedBy: minutes.issuedBy || '', pic: minutes.pic || '', dueDate: minutes.dueDate || '', status: 'Open', remark: minutes.status || '' }]
       : [];
 
-    buildIssueTable('enviroIssueTable', 'enviro', Math.max(1, (minutes.enviroIssues || []).length || ISSUE_TABLE_META.enviro.defaultRows), withLegacyIssuedBy(minutes.enviroIssues || []));
-    buildIssueTable('safetyIssueTable', 'safety', Math.max(1, (minutes.safetyIssues || []).length || ISSUE_TABLE_META.safety.defaultRows), withLegacyIssuedBy(minutes.safetyIssues || []));
-    buildIssueTable('generalIssueTable', 'general', Math.max(1, (minutes.generalIssues || legacyGeneral || []).length || ISSUE_TABLE_META.general.defaultRows), withLegacyIssuedBy(minutes.generalIssues || legacyGeneral));
+    const sections = getMinutesIssueSections(minutes, true).map(section => ({
+      ...section,
+      rows: withLegacyIssuedBy(section.id === 'general' && !minutes.generalIssues?.length ? (section.rows?.length ? section.rows : legacyGeneral) : section.rows)
+    }));
+    renderIssueSections(sections);
 
     const info = document.getElementById('minutesUpdatedInfo');
     if (info) info.textContent = minutes.updatedAt ? `Updated: ${formatDateTime(minutes.updatedAt)}` : 'Belum ada notulensi';
@@ -2261,24 +2835,34 @@
 
   async function saveEventMinutes(e) {
     e.preventDefault();
-    if (!selectedRecapEventId) return toast('Belum ada event yang dipilih');
+    if (!selectedRecapEventId) return eventSaveAlert('warning', 'Belum ada event yang dipilih');
     const ev = getEventById(selectedRecapEventId);
-    if (!ev) return toast('Event tidak ditemukan');
-    const issues = [
-      ...collectCurrentIssueRows('enviro').map((issue, index) => ({ ...issue, section: 'enviro', nomor: index + 1 })),
-      ...collectCurrentIssueRows('safety').map((issue, index) => ({ ...issue, section: 'safety', nomor: index + 1 })),
-      ...collectCurrentIssueRows('general').map((issue, index) => ({ ...issue, section: 'general', nomor: index + 1 }))
-    ];
+    if (!ev) return eventSaveAlert('warning', 'Event tidak ditemukan');
+    const issueSections = collectCurrentIssueSections();
+    const issues = issueSections.flatMap(section => collectCurrentIssueRows(section.id).map((issue, index) => ({
+      ...issue,
+      section: section.id,
+      nomor: index + 1
+    })));
     const payload = {
       title: document.getElementById('minutesMeetingTitle')?.value.trim() || '',
       notulis: document.getElementById('minutesNotulis')?.value.trim() || '',
       location: document.getElementById('minutesLocation')?.value.trim() || '',
+      issueSections: issueSections.map(({ id, title, defaultRows }) => ({ id, title, defaultRows })),
       issues
     };
     const mt = document.getElementById('minutesMeetingType')?.value.trim();
     if (mt) payload.meeting_type = mt;
     const md = document.getElementById('minutesMeetingDate')?.value;
     if (md) payload.meeting_date = md;
+    if (window.Swal) {
+      Swal.fire({
+        title: 'Menyimpan notulensi...',
+        allowOutsideClick: false,
+        allowEscapeKey: false,
+        didOpen: () => Swal.showLoading()
+      });
+    }
     try {
       await apiFetch(`${SID_MEETING_API_BASE}/events/${encodeURIComponent(selectedRecapEventId)}/minutes`, {
         method: 'POST',
@@ -2291,9 +2875,11 @@
       (detail.attendance || []).forEach(row => db.attendance.push(row));
       renderEventRecapModal(selectedRecapEventId, detail.attendance || []);
       renderEventMinutesForm(detail.event);
-      toast('Notulensi event berhasil disimpan ke database');
+      if (window.Swal) Swal.close();
+      eventSaveAlert('success', 'Notulensi event berhasil disimpan ke database');
     } catch (err) {
-      toast(err.message || 'Gagal simpan notulensi');
+      if (window.Swal) Swal.close();
+      eventSaveAlert('error', err.message || 'Gagal simpan notulensi');
     }
   }
 
@@ -2302,9 +2888,9 @@
       const el = document.getElementById(id);
       if (el) el.value = '';
     });
-    buildIssueTable('enviroIssueTable', 'enviro', ISSUE_TABLE_META.enviro.defaultRows, []);
-    buildIssueTable('safetyIssueTable', 'safety', ISSUE_TABLE_META.safety.defaultRows, []);
-    buildIssueTable('generalIssueTable', 'general', ISSUE_TABLE_META.general.defaultRows, []);
+    const newSectionInput = document.getElementById('newIssueSectionTitle');
+    if (newSectionInput) newSectionInput.value = '';
+    renderIssueSections(getDefaultIssueSections());
   }
 
   function printEventMinutes() {
@@ -2392,11 +2978,224 @@
 
   async function fetchEmployeeBySID(sid) {
     if (!sid) return null;
-    // Production example:
-    // const res = await fetch(`/api/employees/by-sid/${encodeURIComponent(sid)}`);
-    // if (!res.ok) return null;
-    // return await res.json();
-    return SYSTEM_SID_DIRECTORY.find(x => x.sid.toUpperCase() === sid.toUpperCase()) || null;
+    try {
+      const payload = await apiFetch(`${SID_MEETING_API_BASE}/employees/by-sid/${encodeURIComponent(String(sid).trim().toUpperCase())}`);
+      return payload.employee || null;
+    } catch {
+      return SYSTEM_SID_DIRECTORY.find(x => x.sid.toUpperCase() === String(sid).trim().toUpperCase()) || null;
+    }
+  }
+
+  function scheduleMinutesMgmtSearch() {
+    clearTimeout(minutesMgmtSearchTimer);
+    minutesMgmtSearchTimer = setTimeout(() => {
+      minutesMgmtPage = 1;
+      renderMinutesMgmtList();
+    }, 350);
+  }
+
+  function initMinutesMgmtTab() {
+    if (!minutesMgmtInitialized) minutesMgmtInitialized = true;
+    renderMinutesMgmtList();
+  }
+
+  async function renderMinutesMgmtList() {
+    const target = document.getElementById('minutesMgmtList');
+    if (!target) return;
+    const q = (document.getElementById('minutesMgmtSearch')?.value || '').trim();
+    const status = document.getElementById('minutesMgmtStatusFilter')?.value || 'ALL';
+    target.innerHTML = '<div class="rounded-3xl bg-white p-6 text-center text-sm text-slate-500 ring-1 ring-slate-200">Memuat daftar notulensi...</div>';
+    try {
+      const params = new URLSearchParams({
+        page: String(minutesMgmtPage),
+        per_page: '20',
+        q,
+        status
+      });
+      const payload = await apiFetch(`${SID_MEETING_API_BASE}/minutes-management/list?${params.toString()}`);
+      const rows = payload.data || [];
+      minutesMgmtMeta = payload.meta || minutesMgmtMeta;
+      if (!rows.length) {
+        target.innerHTML = '<div class="rounded-3xl bg-white p-6 text-center text-sm font-semibold text-slate-500 ring-1 ring-slate-200">Belum ada notulensi meeting tersimpan.</div>';
+        renderMinutesMgmtPagination();
+        return;
+      }
+      target.innerHTML = rows.map(row => {
+        const allClosed = row.issuesCount > 0 && row.openIssuesCount === 0;
+        const statusBadge = allClosed
+          ? '<span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-700 ring-1 ring-slate-200">Semua Closed</span>'
+          : `<span class="rounded-full bg-emerald-50 px-3 py-1 text-xs font-black text-emerald-700 ring-1 ring-emerald-100">${row.openIssuesCount} Open</span>`;
+        return `<article onclick="openMinutesMgmtDetail('${escapeJS(row.eventId)}')" class="cursor-pointer rounded-3xl bg-white p-5 ring-1 ring-slate-200 transition hover:-translate-y-0.5 hover:shadow-lg">
+          <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
+            <div class="min-w-0">
+              <div class="mb-2 flex flex-wrap items-center gap-2">
+                ${statusBadge}
+                <span class="rounded-full bg-slate-100 px-3 py-1 text-xs font-black text-slate-600">${escapeHTML(row.code)}</span>
+                <span class="rounded-full bg-blue-50 px-3 py-1 text-xs font-black text-blue-700">${escapeHTML(row.week || '-')}</span>
+              </div>
+              <h3 class="text-lg font-black text-slate-950">${escapeHTML(row.title || row.meetingType || 'Notulensi Meeting')}</h3>
+              <p class="mt-1 text-sm text-slate-500">${escapeHTML(row.meetingType || '-')} · ${escapeHTML(row.site || '-')} · ${formatDate(row.date)}</p>
+              <p class="mt-2 text-xs text-slate-400">Notulis: ${escapeHTML(row.notulis || '-')} · Lokasi: ${escapeHTML(row.location || '-')}</p>
+              <p class="mt-2 text-xs font-bold text-blue-600">Klik untuk detail notulensi & kelola status issue</p>
+            </div>
+            <div class="min-w-44 rounded-2xl bg-slate-50 p-4 text-sm ring-1 ring-slate-200">
+              <div class="flex justify-between gap-4"><span>Total Issue</span><b>${row.issuesCount}</b></div>
+              <div class="mt-1 flex justify-between gap-4"><span>Closed</span><b>${row.closedIssuesCount}</b></div>
+              <div class="mt-1 flex justify-between gap-4"><span>Updated</span><b class="text-xs">${formatDateTime(row.updatedAt)}</b></div>
+            </div>
+          </div>
+        </article>`;
+      }).join('');
+      renderMinutesMgmtPagination();
+    } catch (err) {
+      target.innerHTML = `<div class="rounded-3xl bg-red-50 p-6 text-center text-sm text-red-700 ring-1 ring-red-100">${escapeHTML(err.message || 'Gagal memuat daftar notulensi')}</div>`;
+    }
+  }
+
+  function renderMinutesMgmtPagination() {
+    const box = document.getElementById('minutesMgmtPagination');
+    if (!box) return;
+    const { current_page, last_page, total } = minutesMgmtMeta;
+    if (!total) {
+      box.innerHTML = '';
+      return;
+    }
+    box.innerHTML = `
+      <span>Menampilkan halaman ${current_page} dari ${last_page} (${total} notulensi)</span>
+      <div class="flex gap-2">
+        <button type="button" ${current_page <= 1 ? 'disabled' : ''} onclick="changeMinutesMgmtPage(${current_page - 1})" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 disabled:opacity-40">Sebelumnya</button>
+        <button type="button" ${current_page >= last_page ? 'disabled' : ''} onclick="changeMinutesMgmtPage(${current_page + 1})" class="rounded-xl bg-slate-100 px-3 py-2 text-xs font-black text-slate-700 disabled:opacity-40">Berikutnya</button>
+      </div>`;
+  }
+
+  function changeMinutesMgmtPage(page) {
+    if (page < 1 || page > minutesMgmtMeta.last_page) return;
+    minutesMgmtPage = page;
+    renderMinutesMgmtList();
+  }
+
+  async function openMinutesMgmtDetail(eventId) {
+    minutesMgmtSelectedEventId = String(eventId);
+    try {
+      const payload = await apiFetch(`${SID_MEETING_API_BASE}/minutes-management/events/${encodeURIComponent(eventId)}`);
+      cacheEvent(payload.event);
+      renderMinutesMgmtDetailModal(payload.event, payload.issues || []);
+      document.getElementById('minutesMgmtDetailModal')?.classList.remove('hidden');
+      document.getElementById('minutesMgmtDetailModal')?.classList.add('flex');
+    } catch (err) {
+      eventSaveAlert('error', err.message || 'Gagal memuat detail notulensi');
+    }
+  }
+
+  function closeMinutesMgmtDetailModal() {
+    document.getElementById('minutesMgmtDetailModal')?.classList.add('hidden');
+    document.getElementById('minutesMgmtDetailModal')?.classList.remove('flex');
+  }
+
+  function renderMinutesMgmtDetailModal(ev, issues = []) {
+    const minutes = ev.minutes || {};
+    document.getElementById('minutesMgmtDetailTitle').textContent = minutes.meetingTitle || `NOTULENSI MEETING ${ev.meetingType || ''}`.trim();
+    document.getElementById('minutesMgmtDetailSubtitle').textContent = `${ev.meetingType || '-'} · ${ev.site || '-'} · ${formatDate(ev.date)} · ${ev.week || '-'}`;
+    const openCount = issues.filter(i => i.status !== 'Closed').length;
+    const closedCount = issues.filter(i => i.status === 'Closed').length;
+    document.getElementById('minutesMgmtDetailSummary').innerHTML = [
+      ['Total Issue', issues.length],
+      ['Open / Progress', openCount],
+      ['Closed', closedCount],
+      ['Updated', minutes.updatedAt ? formatDateTime(minutes.updatedAt) : '-']
+    ].map(([label, val]) => `<div class="rounded-3xl bg-slate-50 p-4 ring-1 ring-slate-200"><p class="text-xs font-black uppercase tracking-wider text-slate-400">${label}</p><p class="mt-2 text-lg font-black text-slate-950">${escapeHTML(String(val))}</p></div>`).join('');
+
+    const tbody = document.getElementById('minutesMgmtIssuesTable');
+    if (!tbody) return;
+    tbody.innerHTML = issues.length ? issues.map(issue => {
+      const currentStatus = issue.rawStatus || issue.status || 'Open';
+      const statusOptions = ['Open', 'Progress', 'Overdue', 'Closed'].map(status => `<option value="${status}" ${currentStatus === status ? 'selected' : ''}>${status}</option>`).join('');
+      const verifier = issue.closedBySid
+        ? `${escapeHTML(issue.closedBySid)}${issue.closedByName ? ' · ' + escapeHTML(issue.closedByName) : ''}${issue.closedAt ? '<div class="mt-1 text-[10px] text-slate-400">' + escapeHTML(formatDateTime(issue.closedAt)) + '</div>' : ''}`
+        : '-';
+      return `<tr class="border-t border-slate-100">
+        <td class="px-4 py-3 text-center">${issue.nomor || '-'}</td>
+        <td class="px-4 py-3 font-semibold">${escapeHTML(issue.sectionTitle || issue.section || '-')}</td>
+        <td class="px-4 py-3">${escapeHTML(issue.note || '-')}</td>
+        <td class="px-4 py-3">${escapeHTML(issue.issuedBy || '-')}</td>
+        <td class="px-4 py-3">${escapeHTML(issue.pic || '-')}</td>
+        <td class="px-4 py-3">${issue.dueDate ? formatDate(issue.dueDate) : '-'}</td>
+        <td class="px-4 py-3">
+          <select data-prev-status="${escapeHTML(currentStatus)}" onchange="handleMgmtIssueStatusChange('${escapeJS(issue.id)}', this)" class="rounded-xl border border-slate-200 bg-white px-2 py-1.5 text-xs font-black outline-none">
+            ${statusOptions}
+          </select>
+          <div class="mt-1"><span class="rounded-full px-2 py-0.5 text-[10px] font-black ring-1 ${getMinutesStatusClass(issue.status)}">${escapeHTML(issue.status || 'Open')}</span></div>
+        </td>
+        <td class="px-4 py-3 text-xs">${verifier}</td>
+        <td class="px-4 py-3">${escapeHTML(issue.remark || '-')}</td>
+      </tr>`;
+    }).join('') : `<tr><td colspan="9" class="px-4 py-8 text-center text-sm font-semibold text-slate-500">Belum ada issue pada notulensi ini.</td></tr>`;
+  }
+
+  function handleMgmtIssueStatusChange(issueId, selectEl) {
+    const next = selectEl?.value || 'Open';
+    const prev = selectEl?.dataset?.prevStatus || 'Open';
+    if (next === prev) return;
+    if (next === 'Closed') {
+      pendingCloseIssue = { issueId, prevStatus: prev, selectEl };
+      selectEl.value = prev;
+      const row = selectEl.closest('tr');
+      const note = row?.querySelector('td:nth-child(3)')?.textContent?.trim() || 'Issue belum memiliki catatan.';
+      openCloseIssueModal(note);
+      return;
+    }
+    updateMgmtIssueStatus(issueId, next, selectEl);
+  }
+
+  async function updateMgmtIssueStatus(issueId, status, selectEl) {
+    try {
+      const payload = await apiFetch(`${SID_MEETING_API_BASE}/minutes-management/issues/${encodeURIComponent(issueId)}/status`, {
+        method: 'POST',
+        body: JSON.stringify({ status })
+      });
+      if (selectEl) selectEl.dataset.prevStatus = status;
+      if (minutesMgmtSelectedEventId) await openMinutesMgmtDetail(minutesMgmtSelectedEventId);
+      renderMinutesMgmtList();
+      toast(`Status issue diubah ke ${status}`);
+    } catch (err) {
+      if (selectEl) selectEl.value = selectEl.dataset.prevStatus || 'Open';
+      eventSaveAlert('error', err.message || 'Gagal mengubah status issue');
+    }
+  }
+
+  function openCloseIssueModal(noteText) {
+    const textEl = document.getElementById('closeIssueText');
+    const sidEl = document.getElementById('closeIssueVerifierSID');
+    if (textEl) textEl.textContent = noteText || 'Issue belum memiliki catatan.';
+    if (sidEl) sidEl.value = '';
+    document.getElementById('closeIssueModal')?.classList.remove('hidden');
+    document.getElementById('closeIssueModal')?.classList.add('flex');
+    setTimeout(() => sidEl?.focus(), 120);
+  }
+
+  function cancelCloseIssue() {
+    pendingCloseIssue = null;
+    document.getElementById('closeIssueModal')?.classList.add('hidden');
+    document.getElementById('closeIssueModal')?.classList.remove('flex');
+  }
+
+  async function submitCloseIssueVerification() {
+    if (!pendingCloseIssue) return cancelCloseIssue();
+    const sid = document.getElementById('closeIssueVerifierSID')?.value.trim().toUpperCase();
+    if (!sid) return eventSaveAlert('warning', 'Masukkan No SID verifikator');
+    try {
+      await apiFetch(`${SID_MEETING_API_BASE}/minutes-management/issues/${encodeURIComponent(pendingCloseIssue.issueId)}/close`, {
+        method: 'POST',
+        body: JSON.stringify({ kode_sid: sid })
+      });
+      pendingCloseIssue = null;
+      cancelCloseIssue();
+      if (minutesMgmtSelectedEventId) await openMinutesMgmtDetail(minutesMgmtSelectedEventId);
+      renderMinutesMgmtList();
+      eventSaveAlert('success', 'Issue berhasil diubah ke Closed');
+    } catch (err) {
+      eventSaveAlert('error', err.message || 'Verifikasi close issue gagal');
+    }
   }
 
   function clearAttendanceForm() {
@@ -2666,7 +3465,16 @@
     toast(usedCount ? `Jenis meeting dihapus dari dropdown. ${usedCount} event lama tetap tersimpan.` : 'Jenis meeting dihapus dari dropdown');
   }
 
-  function renderOptions() { renderMeetingTypeOptions(); renderMeetingTypeManager(); }
+  function renderOptions() {
+    renderMeetingTypeOptions();
+    renderMeetingTypeManager();
+    renderMeetingTargetOptions({
+      targetCompanies: getCheckedValues('targetCompanies'),
+      targetPositions: getCheckedValues('targetPositions'),
+      targetDepartments: getCheckedValues('targetDepartments')
+    });
+    handleMeetingLevelChange();
+  }
 
   function populateReportFilters() {
     const siteSelect = document.getElementById('reportFilterSite');
@@ -2714,10 +3522,10 @@
     });
   }
 
-  function getMinuteIssueRows(minutes, section, issues) {
+  function getMinuteIssueRows(minutes, section, issues, sectionId = '') {
     return (issues || [])
-      .map((issue, index) => ({ section, issueNo: index + 1, ...issue }))
-      .filter(row => [row.note, row.issuedBy, row.pic, row.dueDate, row.remark].some(Boolean));
+      .map((issue, index) => ({ section, sectionId, issueNo: index + 1, ...issue }))
+      .filter(row => [row.note, row.issuedBy, row.pic, row.dueDate, row.remark, row.status].some(Boolean));
   }
 
   function getMinutesReportRows() {
@@ -2727,11 +3535,9 @@
     const rows = [];
     db.events.forEach(ev => {
       const minutes = ev.minutes || {};
-      const issueRows = [
-        ...getMinuteIssueRows(minutes, 'Enviro Issue', minutes.enviroIssues),
-        ...getMinuteIssueRows(minutes, 'Safety Issue', minutes.safetyIssues),
-        ...getMinuteIssueRows(minutes, 'General Issue', minutes.generalIssues)
-      ];
+      const issueRows = getMinutesIssueSections(minutes, false).flatMap(section =>
+        getMinuteIssueRows(minutes, section.title, section.rows, section.id)
+      );
 
       if (!issueRows.length && minutes.updatedAt) {
         issueRows.push({ section: 'Notulensi', issueNo: 1, note: '(Notulensi tersimpan tanpa catatan issue)', issuedBy: '', pic: '', dueDate: '', status: 'Open', remark: '' });
@@ -2773,14 +3579,11 @@
     const rows = [];
     db.events.forEach(ev => {
       const minutes = ev.minutes || {};
-      const issueRows = [
-        ...getMinuteIssueRows(minutes, 'Enviro Issue', minutes.enviroIssues),
-        ...getMinuteIssueRows(minutes, 'Safety Issue', minutes.safetyIssues),
-        ...getMinuteIssueRows(minutes, 'General Issue', minutes.generalIssues)
-      ];
-      issueRows.forEach(issue => {
+      getMinutesIssueSections(minutes, false).flatMap(section =>
+        getMinuteIssueRows(minutes, section.title, section.rows, section.id)
+      ).forEach(issue => {
         rows.push({
-          id: ev.id + '::' + issue.section + '::' + issue.issueNo,
+          id: ev.id + '::' + (issue.sectionId || issue.section) + '::' + issue.issueNo,
           eventId: ev.id,
           site: ev.site || '',
           week: ev.week || '',
@@ -3474,12 +4277,7 @@
     const datasets = sites.map((site, idx) => {
       const data = weeks.map(week => {
         const siteWeekEvents = filteredEvents.filter(ev => ev.site === site && ev.week === week);
-        const expectedCompanyEvent = siteWeekEvents.reduce((sum, ev) => sum + getEligibleCompaniesForSite(ev.site).length, 0);
-        const companyPresentEvent = siteWeekEvents.reduce((sum, ev) => {
-          const logs = db.attendance.filter(a => a.eventId === ev.id);
-          return sum + getCompanyStatusRows(logs, ev.site).filter(row => row.status === 'HADIR').length;
-        }, 0);
-        return expectedCompanyEvent ? Math.round((companyPresentEvent / expectedCompanyEvent) * 100) : null;
+        return getAttendanceRateForEvents(siteWeekEvents) || null;
       });
       const hue = (idx * 57) % 360;
       return {
@@ -3507,29 +4305,67 @@
       const weekOk = selectedWeek === 'ALL' || ev.week === selectedWeek;
       return siteOk && weekOk;
     });
-    const eventIds = new Set(filteredEvents.map(ev => ev.id));
-    const filteredAttendance = db.attendance.filter(a => eventIds.has(a.eventId));
-    const companies = selectedSite === 'ALL' ? getCompanyMaster().map(c => c.name) : getEligibleCompaniesForSite(selectedSite);
+    const eventIds = new Set(filteredEvents.map(ev => String(ev.id)));
+    const filteredAttendance = db.attendance.filter(a => eventIds.has(String(a.eventId)));
+    const map = new Map();
 
-    filteredAttendance.forEach(a => {
-      const company = a.company || 'Tidak Ada Perusahaan';
-      if (!companies.some(x => normalizeCompanyName(x) === normalizeCompanyName(company))) {
-        companies.push(company);
-      }
+    filteredEvents.forEach(ev => {
+      const expectedUnits = getEventExpectedUnits(ev);
+      const presentKeys = new Set(getEventPresentUnits(ev).map(unit => unit.key));
+      expectedUnits.forEach(unit => {
+        const key = normalizeCompanyName(unit.company);
+        if (!map.has(key)) {
+          map.set(key, {
+            company: unit.company,
+            expectedEvents: 0,
+            presentEvents: 0,
+            totalAbsensi: 0,
+            levels: new Set(),
+            targetTypes: new Set()
+          });
+        }
+        const row = map.get(key);
+        row.expectedEvents++;
+        if (presentKeys.has(unit.key)) row.presentEvents++;
+        row.levels.add(getMeetingLevelLabel(unit.level));
+        row.targetTypes.add(unit.targetType);
+      });
     });
 
-    return companies.map(company => {
-      const companyKey = normalizeCompanyName(company);
-      const expectedEvents = filteredEvents.reduce((sum, ev) => sum + (isCompanyEligibleForSite(company, ev.site) ? 1 : 0), 0);
-      const presentEvents = filteredEvents.reduce((sum, ev) => {
-        const logs = db.attendance.filter(a => a.eventId === ev.id && normalizeCompanyName(a.company) === companyKey);
-        return sum + (logs.length ? 1 : 0);
-      }, 0);
-      const totalAbsensi = filteredAttendance.filter(a => normalizeCompanyName(a.company) === companyKey).length;
-      const attendanceRate = expectedEvents ? Math.round((presentEvents / expectedEvents) * 100) : (totalAbsensi ? 100 : 0);
+    filteredAttendance.forEach(a => {
+      const ev = filteredEvents.find(e => String(e.id) === String(a.eventId));
+      if (!ev) return;
+      const key = normalizeCompanyName(a.company);
+      if (!map.has(key)) {
+        map.set(key, {
+          company: a.company || 'Tidak Ada Perusahaan',
+          expectedEvents: 0,
+          presentEvents: 0,
+          totalAbsensi: 0,
+          levels: new Set([getMeetingLevelLabel(ev.meetingLevel)]),
+          targetTypes: new Set(['Attendance Only'])
+        });
+      }
+      map.get(key).totalAbsensi++;
+    });
+
+    return [...map.values()].map(row => {
+      const attendanceRate = row.expectedEvents
+        ? Math.round((row.presentEvents / row.expectedEvents) * 100)
+        : (row.totalAbsensi ? 100 : 0);
       const perf = getCompanyPerformanceLabel(attendanceRate);
-      return { company, expectedEvents, presentEvents, totalAbsensi, attendanceRate, performanceLabel: perf.label, performanceClass: perf.cls };
-    }).filter(row => row.expectedEvents > 0 || row.totalAbsensi > 0).sort((a, b) => b.attendanceRate - a.attendanceRate || b.totalAbsensi - a.totalAbsensi || a.company.localeCompare(b.company));
+      return {
+        company: row.company,
+        expectedEvents: row.expectedEvents,
+        presentEvents: row.presentEvents,
+        totalAbsensi: row.totalAbsensi,
+        levels: [...row.levels].join(', '),
+        targetTypes: [...row.targetTypes].join(', '),
+        attendanceRate,
+        performanceLabel: perf.label,
+        performanceClass: perf.cls
+      };
+    }).sort((a, b) => b.attendanceRate - a.attendanceRate || a.company.localeCompare(b.company));
   }
 
   function getCompanyPerformanceLabel(rate) {
@@ -3543,7 +4379,7 @@
     const search = (document.getElementById('companyPerformanceSearch')?.value || '').toLowerCase().trim();
     return getCompanyAttendanceRateRows().filter(row => {
       if (!search) return true;
-      return [row.company, row.performanceLabel, row.attendanceRate, row.expectedEvents, row.presentEvents, row.totalAbsensi]
+      return [row.company, row.performanceLabel, row.levels, row.targetTypes, row.attendanceRate, row.expectedEvents, row.presentEvents, row.totalAbsensi]
         .join(' ')
         .toLowerCase()
         .includes(search);
@@ -3566,12 +4402,13 @@
     tbody.innerHTML = rows.length ? rows.map((row, index) => `<tr class="border-t border-slate-100 hover:bg-blue-50/50">
       <td class="px-4 py-3 font-black">#${index + 1}</td>
       <td class="px-4 py-3"><b>${escapeHTML(row.company)}</b></td>
+      <td class="px-4 py-3"><div class="text-xs font-black">${escapeHTML(row.levels || '-')}</div><div class="mt-1 text-xs text-slate-500">${escapeHTML(row.targetTypes || '-')}</div></td>
       <td class="px-4 py-3">${row.expectedEvents}</td>
       <td class="px-4 py-3">${row.presentEvents}</td>
       <td class="px-4 py-3">${row.totalAbsensi}</td>
       <td class="px-4 py-3"><b>${row.attendanceRate}%</b></td>
       <td class="px-4 py-3"><span class="rounded-full px-3 py-1 text-xs font-black ring-1 ${row.performanceClass}">${row.performanceLabel}</span></td>
-    </tr>`).join('') : `<tr><td colspan="7" class="px-4 py-8 text-center text-sm font-semibold text-slate-500">Tidak ada data perusahaan sesuai filter.</td></tr>`;
+    </tr>`).join('') : `<tr><td colspan="8" class="px-4 py-8 text-center text-sm font-semibold text-slate-500">Tidak ada data perusahaan sesuai filter.</td></tr>`;
   }
 
   function renderSitePerformance() {
@@ -3654,6 +4491,8 @@
       site_filter: selectedSite,
       week_filter: selectedWeek,
       perusahaan: row.company,
+      kategori: row.levels || '',
+      target_basis: row.targetTypes || '',
       expected_event: row.expectedEvents,
       event_hadir: row.presentEvents,
       total_absensi: row.totalAbsensi,
@@ -3664,16 +4503,7 @@
   }
 
   function getOverallAttendanceRate() {
-    if (!db.events.length || !getCompanyMaster().length) return 0;
-    let totalExpectedCompanyEvent = 0;
-    let totalPresentCompanyEvent = 0;
-    db.events.forEach(ev => {
-      const logs = db.attendance.filter(a => a.eventId === ev.id);
-      const rows = getCompanyStatusRows(logs, ev.site);
-      totalExpectedCompanyEvent += rows.length;
-      totalPresentCompanyEvent += rows.filter(row => row.status === 'HADIR').length;
-    });
-    return totalExpectedCompanyEvent ? Math.round((totalPresentCompanyEvent / totalExpectedCompanyEvent) * 100) : 0;
+    return getAttendanceRateForEvents(db.events);
   }
 
   function renderStats() {
@@ -4011,6 +4841,13 @@
     assert('Legacy site MTL/CPP termigrasi ke Marine', normalizeSiteValue('MTL') === 'Marine' && normalizeSiteValue('CPP') === 'Marine');
     assert('Eligible company per site menghasilkan array', Array.isArray(getEligibleCompaniesForSite('Marine')));
     assert('Company status rows bisa menghitung HADIR', getCompanyStatusRows([{ company: 'PT Transkon Jaya' }]).some(x => x.company === 'PT Transkon Jaya' && x.status === 'HADIR'));
+    assert('Kategori meeting select tersedia', !!document.getElementById('meetingLevel'));
+    assert('Function handleMeetingLevelChange tersedia', typeof handleMeetingLevelChange === 'function');
+    assert('Function renderMeetingTargetOptions tersedia', typeof renderMeetingTargetOptions === 'function');
+    assert('Function getEventExpectedUnits tersedia', typeof getEventExpectedUnits === 'function');
+    assert('Site level event menghasilkan unit perusahaan', getEventExpectedUnits({ meetingLevel: 'site', site: 'Marine' }).length >= 1);
+    assert('Master perusahaan target checklist tersedia', getTargetCompanyOptions().length >= 190);
+    assert('Search perusahaan target tersedia', !!document.getElementById('targetCompanySearch') && typeof renderTargetCompanyChecklist === 'function');
     assert('Style status hadir sudah badge standard', getComputedStyle(document.documentElement).getPropertyValue('--dummy') !== 'force-fail');
     assert('Attendance Rate All card tersedia', !!document.getElementById('statAttendanceRateAll'));
     assert('Attendance Rate All menghasilkan angka valid', Number.isInteger(getOverallAttendanceRate()) && getOverallAttendanceRate() >= 0 && getOverallAttendanceRate() <= 100);
@@ -4028,8 +4865,10 @@
     assert('Tombol Input Notulensi tersedia', !!document.getElementById('minutesToggleBtn'));
     assert('Panel input notulensi default tersembunyi', document.getElementById('minutesInputPanel')?.classList.contains('hidden'));
     assert('Field Issued By header sudah dipindah', !document.getElementById('minutesIssuedBy'));
-    assert('Kolom Issued By issue tersedia setelah render tabel', typeof buildIssueTable === 'function');
-    assert('Tabel Enviro Issue tersedia', !!document.getElementById('enviroIssueTable'));
+    assert('Kelola group issue tersedia', !!document.getElementById('issueGroupManager') && typeof addIssueSection === 'function');
+    assert('Container issue sections dinamis tersedia', !!document.getElementById('minutesIssueSectionsContainer'));
+    assert('Function render issue sections tersedia', typeof renderIssueSections === 'function');
+    assert('Default issue sections berisi 3 group', getDefaultIssueSections().length === 3);
     assert('Function collect issue rows tersedia', typeof collectIssueRows === 'function');
     assert('Status catatan meeting tersedia di issue rows', collectIssueRows('enviro', 1)[0]?.status !== undefined);
     assert('Function status class notulen tersedia', typeof getMinutesStatusClass === 'function');

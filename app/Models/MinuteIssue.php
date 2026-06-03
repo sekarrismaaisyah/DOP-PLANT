@@ -19,11 +19,15 @@ class MinuteIssue extends Model
         'pic',
         'due_date',
         'status',
+        'closed_at',
+        'closed_by_sid',
+        'closed_by_name',
         'keterangan',
     ];
 
     protected $casts = [
         'due_date' => 'date',
+        'closed_at' => 'datetime',
     ];
 
     protected $appends = [

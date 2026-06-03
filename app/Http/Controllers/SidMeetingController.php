@@ -938,6 +938,7 @@ class SidMeetingController extends Controller
                 'event_minutes.notulis as minute_notulis',
                 'event_minutes.location as minute_location',
                 'event_minutes.updated_at as minute_updated_at',
+                'event_minutes.issue_sections as minute_issue_sections',
             ])
             ->orderBy($orderBy, $orderDir)
             ->skip($start)
@@ -945,12 +946,10 @@ class SidMeetingController extends Controller
             ->get();
 
         $data = $items->map(function ($row): array {
-            $sectionLabel = match ($row->section) {
-                'enviro' => 'Enviro Issue',
-                'safety' => 'Safety Issue',
-                'general' => 'General Issue',
-                default => ucfirst((string) $row->section),
-            };
+            $issueSections = is_string($row->minute_issue_sections ?? null)
+                ? json_decode($row->minute_issue_sections, true)
+                : ($row->minute_issue_sections ?? null);
+            $sectionLabel = $this->resolveIssueSectionTitle(is_array($issueSections) ? $issueSections : null, (string) $row->section);
             $meetingDate = $row->meeting_date instanceof Carbon
                 ? $row->meeting_date->format('Y-m-d')
                 : (string) $row->meeting_date;
@@ -1047,22 +1046,48 @@ class SidMeetingController extends Controller
             'week' => 'required|string|max:16',
             'start_time' => 'required',
             'end_time' => 'required',
+            'meeting_level' => 'nullable|in:site,company,department',
+            'target_companies' => 'nullable|array',
+            'target_companies.*' => 'string|max:255',
+            'target_positions' => 'nullable|array',
+            'target_positions.*' => 'string|max:255',
+            'target_departments' => 'nullable|array',
+            'target_departments.*' => 'string|max:255',
         ]);
+
+        $meetingLevel = $payload['meeting_level'] ?? 'site';
+        $targetCompanies = array_values(array_filter($payload['target_companies'] ?? []));
+        $targetPositions = array_values(array_filter($payload['target_positions'] ?? []));
+        $targetDepartments = array_values(array_filter($payload['target_departments'] ?? []));
+
+        if ($meetingLevel !== 'site' && $targetCompanies === []) {
+            return response()->json(['ok' => false, 'message' => 'Pilih minimal 1 perusahaan wajib hadir.'], 422);
+        }
+        if ($meetingLevel === 'company' && $targetPositions === []) {
+            return response()->json(['ok' => false, 'message' => 'Pilih minimal 1 jabatan wajib hadir.'], 422);
+        }
+        if ($meetingLevel === 'department' && $targetDepartments === []) {
+            return response()->json(['ok' => false, 'message' => 'Pilih minimal 1 department wajib hadir.'], 422);
+        }
 
         $meetingType = MeetingType::query()->firstOrCreate(['name' => $payload['meeting_type']], ['is_active' => true]);
         $site = Site::query()->firstOrCreate(['name' => $payload['site']], ['is_active' => true]);
 
-        $event = $this->createEventWithUniqueCode(function (string $eventCode) use ($payload, $meetingType, $site): Event {
+        $event = $this->createEventWithUniqueCode(function (string $eventCode) use ($payload, $meetingType, $site, $meetingLevel, $targetCompanies, $targetPositions, $targetDepartments): Event {
             return Event::query()->create([
                 'event_code' => $eventCode,
                 'qr_token' => (string) Str::uuid(),
                 'meeting_type_id' => $meetingType->id,
                 'site_id' => $site->id,
+                'meeting_level' => $meetingLevel,
+                'target_companies' => $meetingLevel === 'site' ? null : $targetCompanies,
+                'target_positions' => $meetingLevel === 'company' ? $targetPositions : null,
+                'target_departments' => $meetingLevel === 'department' ? $targetDepartments : null,
                 'meeting_date' => $payload['meeting_date'],
                 'week' => $payload['week'],
                 'start_time' => $payload['start_time'],
                 'end_time' => $payload['end_time'],
-                'status' => 'draft',
+                'status' => 'open',
                 'created_by' => auth()->id(),
             ]);
         }, $payload['meeting_date']);
@@ -1130,8 +1155,12 @@ class SidMeetingController extends Controller
             'location' => 'nullable|string|max:255',
             'meeting_type' => 'nullable|string|max:255',
             'meeting_date' => 'nullable|date',
+            'issueSections' => 'nullable|array',
+            'issueSections.*.id' => 'required_with:issueSections|string|max:64',
+            'issueSections.*.title' => 'required_with:issueSections|string|max:255',
+            'issueSections.*.defaultRows' => 'nullable|integer|min:1|max:50',
             'issues' => 'array',
-            'issues.*.section' => 'required|in:enviro,safety,general',
+            'issues.*.section' => 'required|string|max:64',
             'issues.*.nomor' => 'nullable|integer|min:1',
             'issues.*.note' => 'nullable|string',
             'issues.*.issuedBy' => 'nullable|string|max:255',
@@ -1142,12 +1171,23 @@ class SidMeetingController extends Controller
         ]);
 
         DB::transaction(function () use ($event, $payload): void {
+            $issueSections = collect($payload['issueSections'] ?? [])
+                ->map(fn (array $section): array => [
+                    'id' => trim((string) ($section['id'] ?? '')),
+                    'title' => trim((string) ($section['title'] ?? '')),
+                    'defaultRows' => max(1, (int) ($section['defaultRows'] ?? 3)),
+                ])
+                ->filter(fn (array $section): bool => $section['id'] !== '' && $section['title'] !== '')
+                ->values()
+                ->all();
+
             $minute = EventMinute::query()->updateOrCreate(
                 ['event_id' => $event->id],
                 [
                     'title' => $payload['title'] ?? null,
                     'notulis' => $payload['notulis'] ?? null,
                     'location' => $payload['location'] ?? null,
+                    'issue_sections' => $issueSections !== [] ? $issueSections : null,
                     'updated_by' => auth()->id(),
                 ]
             );
@@ -1454,29 +1494,269 @@ class SidMeetingController extends Controller
         });
     }
 
+    private function resolveIssueSectionTitle(?array $issueSections, string $sectionId): string
+    {
+        $match = collect($issueSections ?? [])->first(fn (array $section): bool => ($section['id'] ?? '') === $sectionId);
+        if (is_array($match) && filled($match['title'] ?? null)) {
+            return (string) $match['title'];
+        }
+
+        return match ($sectionId) {
+            'enviro' => 'Enviro Issue',
+            'safety' => 'Safety Issue',
+            'general' => 'General Issue',
+            default => ucwords(str_replace('_', ' ', $sectionId)),
+        };
+    }
+
+    private function mapMinutesToLegacy(?EventMinute $minute, ?Event $event = null): ?array
+    {
+        if (! $minute) {
+            return null;
+        }
+
+        $event ??= $minute->event;
+        $issues = collect($minute->issues ?? []);
+        $issueSections = is_array($minute->issue_sections) && $minute->issue_sections !== []
+            ? $minute->issue_sections
+            : [
+                ['id' => 'enviro', 'title' => 'Enviro Issue', 'defaultRows' => 3],
+                ['id' => 'safety', 'title' => 'Safety Issue', 'defaultRows' => 3],
+                ['id' => 'general', 'title' => 'General Issue', 'defaultRows' => 3],
+            ];
+
+        $rowsBySection = $issues->groupBy('section');
+        $issueSectionsWithRows = collect($issueSections)->map(function (array $section) use ($rowsBySection): array {
+            $id = (string) ($section['id'] ?? 'section');
+
+            return [
+                'id' => $id,
+                'title' => (string) ($section['title'] ?? $id),
+                'defaultRows' => max(1, (int) ($section['defaultRows'] ?? 3)),
+                'rows' => ($rowsBySection->get($id) ?? collect())->values()->map(fn (MinuteIssue $issue): array => $this->mapIssueToLegacy($issue))->all(),
+            ];
+        })->values()->all();
+
+        return [
+            'meetingTitle' => $minute->title,
+            'meetingType' => optional($event?->meetingType)->name,
+            'meetingDate' => optional($event?->meeting_date)->format('Y-m-d'),
+            'notulis' => $minute->notulis,
+            'location' => $minute->location,
+            'updatedAt' => optional($minute->updated_at)->toIso8601String(),
+            'issueSections' => $issueSectionsWithRows,
+            'enviroIssues' => $issues->where('section', 'enviro')->values()->map(fn (MinuteIssue $issue): array => $this->mapIssueToLegacy($issue))->all(),
+            'safetyIssues' => $issues->where('section', 'safety')->values()->map(fn (MinuteIssue $issue): array => $this->mapIssueToLegacy($issue))->all(),
+            'generalIssues' => $issues->where('section', 'general')->values()->map(fn (MinuteIssue $issue): array => $this->mapIssueToLegacy($issue))->all(),
+        ];
+    }
+
     private function mapIssueToLegacy(MinuteIssue $issue): array
     {
         return [
+            'id' => (string) $issue->id,
+            'section' => $issue->section,
             'note' => $issue->catatan_meeting,
             'issuedBy' => $issue->issued_by,
             'pic' => $issue->pic,
             'dueDate' => optional($issue->due_date)->format('Y-m-d'),
-            'status' => $issue->computed_status,
+            'status' => $issue->status === 'Closed' ? 'Closed' : $issue->computed_status,
+            'rawStatus' => $issue->status,
             'remark' => $issue->keterangan,
             'nomor' => $issue->nomor,
+            'closedAt' => optional($issue->closed_at)->toIso8601String(),
+            'closedBySid' => $issue->closed_by_sid,
+            'closedByName' => $issue->closed_by_name,
         ];
+    }
+
+    public function apiEmployeeBySid(string $kodeSid): JsonResponse
+    {
+        $sid = strtoupper(trim($kodeSid));
+        $employee = Employee::query()
+            ->with('company')
+            ->where('kode_sid', $sid)
+            ->where('is_active', true)
+            ->first();
+
+        if (! $employee) {
+            return response()->json(['ok' => false, 'message' => 'SID tidak ditemukan'], 404);
+        }
+
+        return response()->json([
+            'ok' => true,
+            'employee' => [
+                'id' => (string) $employee->id,
+                'sid' => $employee->kode_sid,
+                'name' => $employee->nama,
+                'company' => optional($employee->company)->name,
+                'structuralPosition' => $employee->jabatan_struktural,
+                'functionalPosition' => $employee->jabatan_fungsional,
+            ],
+        ]);
+    }
+
+    public function apiMinutesManagementList(Request $request): JsonResponse
+    {
+        $page = max(1, (int) $request->input('page', 1));
+        $perPage = (int) $request->input('per_page', 20);
+        if ($perPage < 1 || $perPage > 50) {
+            $perPage = 20;
+        }
+
+        $search = trim((string) $request->input('q', ''));
+        $statusFilter = strtoupper((string) $request->input('status', 'ALL'));
+
+        $query = EventMinute::query()
+            ->with(['event.site', 'event.meetingType'])
+            ->whereHas('event')
+            ->withCount('issues')
+            ->withCount([
+                'issues as open_issues_count' => fn ($q) => $q->where('status', '!=', 'Closed'),
+                'issues as closed_issues_count' => fn ($q) => $q->where('status', 'Closed'),
+            ]);
+
+        if ($search !== '') {
+            $query->where(function ($q) use ($search): void {
+                $q->where('title', 'like', '%' . $search . '%')
+                    ->orWhere('notulis', 'like', '%' . $search . '%')
+                    ->orWhere('location', 'like', '%' . $search . '%')
+                    ->orWhereHas('event', fn ($eq) => $eq->where('event_code', 'like', '%' . $search . '%')
+                        ->orWhere('week', 'like', '%' . $search . '%')
+                        ->orWhereHas('site', fn ($sq) => $sq->where('name', 'like', '%' . $search . '%'))
+                        ->orWhereHas('meetingType', fn ($mq) => $mq->where('name', 'like', '%' . $search . '%')));
+            });
+        }
+
+        if ($statusFilter === 'OPEN') {
+            $query->whereHas('issues', fn ($q) => $q->where('status', '!=', 'Closed'));
+        } elseif ($statusFilter === 'CLOSED') {
+            $query->whereHas('issues', fn ($q) => $q->where('status', 'Closed'))
+                ->whereDoesntHave('issues', fn ($q) => $q->where('status', '!=', 'Closed'));
+        }
+
+        $paginator = $query->orderByDesc('updated_at')->paginate($perPage, ['*'], 'page', $page);
+
+        $data = $paginator->getCollection()->map(function (EventMinute $minute): array {
+            $event = $minute->event;
+
+            return [
+                'eventId' => (string) $event->id,
+                'code' => $event->event_code,
+                'meetingType' => optional($event->meetingType)->name,
+                'site' => optional($event->site)->name,
+                'date' => optional($event->meeting_date)->format('Y-m-d'),
+                'week' => $event->week,
+                'title' => $minute->title,
+                'notulis' => $minute->notulis,
+                'location' => $minute->location,
+                'issuesCount' => (int) $minute->issues_count,
+                'openIssuesCount' => (int) $minute->open_issues_count,
+                'closedIssuesCount' => (int) $minute->closed_issues_count,
+                'updatedAt' => optional($minute->updated_at)->toIso8601String(),
+            ];
+        })->values()->all();
+
+        return response()->json([
+            'data' => $data,
+            'meta' => [
+                'current_page' => $paginator->currentPage(),
+                'last_page' => $paginator->lastPage(),
+                'per_page' => $paginator->perPage(),
+                'total' => $paginator->total(),
+            ],
+        ]);
+    }
+
+    public function apiMinutesManagementDetail(Event $event): JsonResponse
+    {
+        $event->load(['site', 'meetingType', 'eventMinute.issues']);
+
+        if (! $event->eventMinute) {
+            return response()->json(['ok' => false, 'message' => 'Notulensi tidak ditemukan untuk event ini'], 404);
+        }
+
+        $minutes = $this->mapMinutesToLegacy($event->eventMinute, $event);
+        $issueSections = is_array($minutes['issueSections'] ?? null) ? $minutes['issueSections'] : [];
+        $sectionTitleMap = collect($issueSections)->mapWithKeys(fn (array $section): array => [
+            (string) ($section['id'] ?? '') => (string) ($section['title'] ?? ''),
+        ]);
+
+        $issues = $event->eventMinute->issues->sortBy(['section', 'nomor'])->values()->map(function (MinuteIssue $issue) use ($sectionTitleMap): array {
+            $legacy = $this->mapIssueToLegacy($issue);
+
+            return array_merge($legacy, [
+                'sectionTitle' => $sectionTitleMap->get($issue->section) ?: $this->resolveIssueSectionTitle(null, (string) $issue->section),
+            ]);
+        });
+
+        return response()->json([
+            'ok' => true,
+            'event' => $this->mapEventToLegacy($event, true),
+            'issues' => $issues,
+        ]);
+    }
+
+    public function apiUpdateMinuteIssueStatus(Request $request, MinuteIssue $issue): JsonResponse
+    {
+        $payload = $request->validate([
+            'status' => 'required|in:Open,Progress,Overdue',
+        ]);
+
+        $issue->update([
+            'status' => $payload['status'],
+            'closed_at' => null,
+            'closed_by_sid' => null,
+            'closed_by_name' => null,
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'issue' => $this->mapIssueToLegacy($issue->fresh()),
+        ]);
+    }
+
+    public function apiCloseMinuteIssue(Request $request, MinuteIssue $issue): JsonResponse
+    {
+        $payload = $request->validate([
+            'kode_sid' => 'required|string|max:50',
+        ]);
+
+        $employee = Employee::query()
+            ->where('kode_sid', strtoupper(trim($payload['kode_sid'])))
+            ->where('is_active', true)
+            ->first();
+
+        if (! $employee) {
+            return response()->json(['ok' => false, 'message' => 'SID verifikator tidak ditemukan'], 422);
+        }
+
+        $issue->update([
+            'status' => 'Closed',
+            'closed_at' => now(),
+            'closed_by_sid' => $employee->kode_sid,
+            'closed_by_name' => $employee->nama,
+        ]);
+
+        return response()->json([
+            'ok' => true,
+            'issue' => $this->mapIssueToLegacy($issue->fresh()),
+        ]);
     }
 
     private function mapEventToLegacy(Event $event, bool $withMinutes): array
     {
         $minute = $withMinutes ? $event->eventMinute : null;
-        $issues = collect($minute?->issues ?? []);
 
         return [
             'id' => (string) $event->id,
             'code' => $event->event_code,
             'qrToken' => $event->qr_token,
             'meetingType' => optional($event->meetingType)->name,
+            'meetingLevel' => $event->meeting_level ?: 'site',
+            'targetCompanies' => array_values($event->target_companies ?? []),
+            'targetPositions' => array_values($event->target_positions ?? []),
+            'targetDepartments' => array_values($event->target_departments ?? []),
             'site' => optional($event->site)->name,
             'date' => optional($event->meeting_date)->format('Y-m-d'),
             'week' => $event->week,
@@ -1486,17 +1766,7 @@ class SidMeetingController extends Controller
             'closedAt' => optional($event->closed_at)->toIso8601String(),
             'createdAt' => optional($event->created_at)->toIso8601String(),
             'updatedAt' => optional($event->updated_at)->toIso8601String(),
-            'minutes' => $minute ? [
-                'meetingTitle' => $minute->title,
-                'meetingType' => optional($event->meetingType)->name,
-                'meetingDate' => optional($event->meeting_date)->format('Y-m-d'),
-                'notulis' => $minute->notulis,
-                'location' => $minute->location,
-                'updatedAt' => optional($minute->updated_at)->toIso8601String(),
-                'enviroIssues' => $issues->where('section', 'enviro')->values()->map(fn ($i): array => $this->mapIssueToLegacy($i))->all(),
-                'safetyIssues' => $issues->where('section', 'safety')->values()->map(fn ($i): array => $this->mapIssueToLegacy($i))->all(),
-                'generalIssues' => $issues->where('section', 'general')->values()->map(fn ($i): array => $this->mapIssueToLegacy($i))->all(),
-            ] : null,
+            'minutes' => $this->mapMinutesToLegacy($minute, $event),
         ];
     }
 

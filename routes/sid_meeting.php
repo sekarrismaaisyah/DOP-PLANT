@@ -25,6 +25,11 @@ Route::middleware(['auth'])->prefix('sid-meeting')->name('sid-meeting.')->group(
     Route::get('/api/reports/filters', [SidMeetingController::class, 'apiReportFilters'])->name('api.reports.filters');
     Route::get('/api/reports/attendance-data', [SidMeetingController::class, 'apiReportAttendanceData'])->name('api.reports.attendance-data');
     Route::get('/api/reports/minutes-data', [SidMeetingController::class, 'apiReportMinutesData'])->name('api.reports.minutes-data');
+    Route::get('/api/minutes-management/list', [SidMeetingController::class, 'apiMinutesManagementList'])->name('api.minutes-management.list');
+    Route::get('/api/minutes-management/events/{event}', [SidMeetingController::class, 'apiMinutesManagementDetail'])->name('api.minutes-management.detail');
+    Route::get('/api/employees/by-sid/{kodeSid}', [SidMeetingController::class, 'apiEmployeeBySid'])->name('api.employees.by-sid');
+    Route::post('/api/minutes-management/issues/{issue}/status', [SidMeetingController::class, 'apiUpdateMinuteIssueStatus'])->name('api.minutes-management.issue.status');
+    Route::post('/api/minutes-management/issues/{issue}/close', [SidMeetingController::class, 'apiCloseMinuteIssue'])->name('api.minutes-management.issue.close');
     Route::post('/api/companies/{company}/sites', [SidMeetingController::class, 'apiToggleCompanySite'])->name('api.companies.sites.toggle');
     Route::post('/api/events', [SidMeetingController::class, 'apiStoreEvent'])->name('api.events.store');
     Route::post('/api/companies', [SidMeetingController::class, 'apiStoreCompany'])->name('api.companies.store');

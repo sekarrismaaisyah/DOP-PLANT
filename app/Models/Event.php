@@ -19,6 +19,10 @@ class Event extends Model
         'qr_token',
         'meeting_type_id',
         'site_id',
+        'meeting_level',
+        'target_companies',
+        'target_positions',
+        'target_departments',
         'meeting_date',
         'week',
         'start_time',
@@ -31,6 +35,9 @@ class Event extends Model
     protected $casts = [
         'meeting_date' => 'date',
         'closed_at' => 'datetime',
+        'target_companies' => 'array',
+        'target_positions' => 'array',
+        'target_departments' => 'array',
     ];
 
     protected $appends = [

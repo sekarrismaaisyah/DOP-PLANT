@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://cdn.tailwindcss.com"></script>
-    <script defer src="https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js"></script>
     <style>
         :root {
             --brand-1: #1f7a5f;
@@ -44,23 +43,6 @@
             box-shadow: 0 10px 22px rgba(79, 70, 229, 0.28);
         }
         .btn-primary:hover { filter: brightness(0.97); }
-        .face-scan-line {
-            animation: face-scan-move 2.4s linear infinite;
-        }
-        .face-box-canvas {
-            position: absolute;
-            inset: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        @keyframes face-scan-move {
-            0% { transform: translateY(-120%); opacity: 0; }
-            20% { opacity: 0.9; }
-            50% { transform: translateY(0%); opacity: 0.9; }
-            80% { opacity: 0.9; }
-            100% { transform: translateY(120%); opacity: 0; }
-        }
     </style>
     <title>Form Absensi Event</title>
 </head>
@@ -187,10 +169,6 @@
                 </dl>
             </div>
 
-            <input type="hidden" name="face_verified" id="face_verified" value="0">
-            <input type="hidden" name="face_distance" id="face_distance" value="">
-            <input type="hidden" name="face_bypass" id="face_bypass" value="0">
-
             <div class="mt-6 flex items-center justify-between gap-3 border-t border-slate-200 pt-5">
                 <p class="text-xs text-slate-500">Form ini tidak memerlukan login akun.</p>
                 <button id="btn_submit_attendance" class="btn-primary px-6 py-3 text-sm">
@@ -204,52 +182,35 @@
         <div class="w-full max-w-4xl rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl">
             <div class="mb-4 flex items-start justify-between gap-3 border-b border-slate-200 pb-3">
                 <div>
-                    <h3 class="text-lg font-semibold text-slate-900">Verifikasi Wajah</h3>
-                    <p class="text-sm text-slate-600">Pastikan wajah berada di area frame sebelum lanjut kirim absensi.</p>
+                    <h3 class="text-lg font-semibold text-slate-900">Ambil Foto Absensi</h3>
+                    <p class="text-sm text-slate-600">Aktifkan kamera lalu ambil foto sebelum kirim absensi.</p>
                 </div>
                 <button id="face_modal_close" type="button" class="rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100">Tutup</button>
             </div>
 
             <div class="grid gap-4 md:grid-cols-2">
                 <div>
-                    <p class="mb-1 text-xs text-slate-500">Foto Referensi</p>
-                    <img id="face_ref_img" src="" alt="" class="h-64 w-full rounded-2xl border border-slate-200 object-contain bg-slate-100 shadow-sm">
+                    <p class="mb-1 text-xs text-slate-500">Hasil Foto</p>
+                    <img id="face_capture_preview" src="" alt="" class="h-64 w-full rounded-2xl border border-slate-200 object-contain bg-slate-100 shadow-sm">
                 </div>
                 <div>
                     <p class="mb-1 text-xs text-slate-500">Live Camera</p>
                     <div id="face_camera_wrap" class="relative h-64 overflow-hidden rounded-2xl border border-slate-300 bg-slate-950 shadow-xl">
                         <video id="face_live_video" class="h-full w-full object-cover" autoplay playsinline muted></video>
+                        <img id="face_live_captured" src="" alt="Hasil foto kamera" class="hidden h-full w-full object-cover">
                         <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-transparent to-purple-500/10"></div>
-                        <div id="face_scan_line" class="face-scan-line pointer-events-none absolute inset-x-4 top-1/2 h-[2px] bg-gradient-to-r from-transparent via-cyan-300 to-transparent opacity-80"></div>
-                        <div class="absolute left-3 top-3 rounded-full border border-cyan-300/50 bg-cyan-500/20 px-2 py-1 text-[10px] font-semibold uppercase tracking-wide text-cyan-100">
-                            Face Scan
-                        </div>
-                        <div id="face_identity_live" class="absolute left-3 right-3 top-12 hidden rounded-lg border border-emerald-300/70 bg-emerald-500/20 px-2 py-1 text-xs font-semibold text-emerald-50 backdrop-blur-sm"></div>
-                        <canvas id="face_box_canvas" class="face-box-canvas"></canvas>
-                        <svg class="pointer-events-none absolute inset-0 h-full w-full" viewBox="0 0 100 100" preserveAspectRatio="none">
-                            <rect x="10" y="12" width="80" height="76" rx="12" ry="12" fill="none" stroke="rgba(255,255,255,0.10)" stroke-width="0.6"/>
-                        </svg>
-                        <div id="face_fail_badge" class="absolute inset-x-3 bottom-3 hidden rounded-lg border border-red-300 bg-red-100 px-2 py-1 text-xs font-semibold text-red-700">
-                            Wajah tidak cocok. Coba posisikan wajah lebih dekat dan terang.
-                        </div>
                     </div>
                 </div>
             </div>
 
-            <div id="face_identity_ok" class="mt-4 hidden rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm text-emerald-800"></div>
             <p id="face_verify_status" class="mt-3 min-h-[1.25rem] rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700"></p>
             <canvas id="face_capture_canvas" width="360" height="360" class="hidden"></canvas>
 
             <div class="mt-4 flex flex-wrap justify-end gap-2">
                 <button id="btn_start_camera" type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">Aktifkan Kamera</button>
-                <button id="btn_verify_face" type="button" class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Verifikasi & Kirim</button>
-                <button id="btn_confirm_submit" type="button" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700">Kirim Absensi Sekarang</button>
-                <button id="btn_bypass_submit" type="button" class="w-full rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 sm:w-auto">Kirim absensi tanpa verifikasi wajah</button>
+                <button id="btn_take_photo" type="button" class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Ambil Foto</button>
+                <button id="btn_send_attendance" type="button" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700">Kirim Absensi</button>
 
-            </div>
-            <div class="mt-5 border-t border-slate-200 pt-4">
-                <p class="mb-2 text-xs text-slate-500">Jika kamera atau AI tidak bisa mendeteksi wajah, Anda tetap dapat mengirim absensi lewat opsi di bawah (tanpa verifikasi wajah).</p>
-                <!-- <button id="btn_bypass_submit" type="button" class="w-full rounded-xl border border-amber-300 bg-amber-50 px-4 py-3 text-sm font-semibold text-amber-900 hover:bg-amber-100 sm:w-auto">Kirim absensi tanpa verifikasi wajah</button> -->
             </div>
         </div>
     </div>
@@ -257,7 +218,6 @@
         (function () {
             // URL relatif agar fetch selalu ke origin yang sama dengan halaman (hindari mismatch APP_URL).
             var lookupPath = @json(route('sid-meeting.attendance.lookup', ['qrToken' => $event->qr_token], false));
-            var photoProxyPath = @json(route('sid-meeting.attendance.photo-proxy', ['qrToken' => $event->qr_token], false));
             var kodeInput = document.getElementById('kode_sid');
             var btn = document.getElementById('btn_cek_sid');
             var noSidToggle = document.getElementById('no_sid_toggle');
@@ -266,69 +226,20 @@
             var manualPanel = document.getElementById('manual_panel');
             var manualRequiredIds = ['manual_nama', 'manual_perusahaan', 'manual_jabatan'];
             var faceStatusEl = document.getElementById('face_verify_status');
-            var faceRefImg = document.getElementById('face_ref_img');
+            var faceCapturePreview = document.getElementById('face_capture_preview');
             var faceVideo = document.getElementById('face_live_video');
+            var faceLiveCaptured = document.getElementById('face_live_captured');
             var faceCanvas = document.getElementById('face_capture_canvas');
-            var faceBoxCanvas = document.getElementById('face_box_canvas');
-            var faceVerifiedInput = document.getElementById('face_verified');
-            var faceDistanceInput = document.getElementById('face_distance');
-            var faceBypassInput = document.getElementById('face_bypass');
             var faceModal = document.getElementById('face_modal');
             var faceModalClose = document.getElementById('face_modal_close');
-            var faceIdentityOk = document.getElementById('face_identity_ok');
-            var faceIdentityLive = document.getElementById('face_identity_live');
-            var faceScanLine = document.getElementById('face_scan_line');
-            var faceFailBadge = document.getElementById('face_fail_badge');
-            var faceCameraWrap = document.getElementById('face_camera_wrap');
             var btnStartCamera = document.getElementById('btn_start_camera');
-            var btnVerifyFace = document.getElementById('btn_verify_face');
-            var btnConfirmSubmit = document.getElementById('btn_confirm_submit');
-            var btnBypassSubmit = document.getElementById('btn_bypass_submit');
-            var faceModelsReady = false;
-            var faceModelLoadPromise = null;
+            var btnTakePhoto = document.getElementById('btn_take_photo');
+            var btnSendAttendance = document.getElementById('btn_send_attendance');
             var cameraStream = null;
             var latestPhotoUrl = null;
-            var latestPhotoProxyUrl = null;
-            var faceThreshold = 0.50;
-            var tinyDetectorOptions = null;
             var allowDirectSubmit = false;
-            /** Hanya true setelah "Verifikasi & Kirim" benar-benar match (boleh dipercaya untuk kirim form). */
-            var lastFaceMatchOk = false;
+            var hasCapturedPhoto = false;
             var formEl = document.querySelector('form[method="post"]');
-            var faceBoxLoopHandle = null;
-
-            function makeProxyPhotoUrl(rawUrl) {
-                if (!rawUrl) return null;
-                var sep = photoProxyPath.indexOf('?') >= 0 ? '&' : '?';
-                return photoProxyPath + sep + 'foto=' + encodeURIComponent(rawUrl);
-            }
-
-            function waitForImageReady(imgEl) {
-                return new Promise(function (resolve, reject) {
-                    if (!imgEl) {
-                        reject(new Error('Elemen gambar referensi tidak tersedia.'));
-                        return;
-                    }
-                    if (imgEl.complete && imgEl.naturalWidth > 0) {
-                        resolve(true);
-                        return;
-                    }
-                    var onLoad = function () {
-                        cleanup();
-                        resolve(true);
-                    };
-                    var onError = function () {
-                        cleanup();
-                        reject(new Error('Gagal memuat foto referensi.'));
-                    };
-                    var cleanup = function () {
-                        imgEl.removeEventListener('load', onLoad);
-                        imgEl.removeEventListener('error', onError);
-                    };
-                    imgEl.addEventListener('load', onLoad);
-                    imgEl.addEventListener('error', onError);
-                });
-            }
 
             function setFaceStatus(msg, cls) {
                 if (!faceStatusEl) return;
@@ -336,103 +247,16 @@
                 faceStatusEl.className = 'min-h-[1.25rem] text-xs font-medium ' + (cls || 'text-slate-700');
             }
 
-            function setFaceVerified(ok, distance) {
-                if (faceVerifiedInput) faceVerifiedInput.value = ok ? '1' : '0';
-                if (faceDistanceInput) faceDistanceInput.value = (typeof distance === 'number' && isFinite(distance)) ? distance.toFixed(4) : '';
-            }
-
-            function resetFaceVerification() {
-                lastFaceMatchOk = false;
-                if (faceBypassInput) faceBypassInput.value = '0';
-                setFaceVerified(false);
+            function resetFaceCapture() {
+                hasCapturedPhoto = false;
+                if (faceLiveCaptured) {
+                    faceLiveCaptured.classList.add('hidden');
+                    faceLiveCaptured.removeAttribute('src');
+                }
+                if (faceVideo) {
+                    faceVideo.classList.remove('hidden');
+                }
                 setFaceStatus('', 'text-slate-700');
-                if (faceIdentityOk) {
-                    faceIdentityOk.classList.add('hidden');
-                    faceIdentityOk.textContent = '';
-                }
-                if (faceIdentityLive) {
-                    faceIdentityLive.classList.add('hidden');
-                    faceIdentityLive.textContent = '';
-                }
-                if (faceFailBadge) faceFailBadge.classList.add('hidden');
-                if (faceCameraWrap) {
-                    faceCameraWrap.classList.remove('border-red-400', 'ring-2', 'ring-red-300', 'border-emerald-300', 'ring-emerald-300/40');
-                    faceCameraWrap.classList.add('border-slate-300');
-                }
-                if (faceScanLine) faceScanLine.classList.remove('hidden');
-                clearFaceBoxOverlay();
-            }
-
-            function clearFaceBoxOverlay() {
-                if (!faceBoxCanvas) return;
-                var ctx = faceBoxCanvas.getContext('2d');
-                if (!ctx) return;
-                ctx.clearRect(0, 0, faceBoxCanvas.width, faceBoxCanvas.height);
-            }
-
-            function syncFaceBoxCanvasSize() {
-                if (!faceBoxCanvas || !faceVideo) return;
-                var box = faceVideo.getBoundingClientRect();
-                var w = Math.max(1, Math.round(box.width));
-                var h = Math.max(1, Math.round(box.height));
-                if (faceBoxCanvas.width !== w || faceBoxCanvas.height !== h) {
-                    faceBoxCanvas.width = w;
-                    faceBoxCanvas.height = h;
-                }
-            }
-
-            function drawFaceBox(detection, verified) {
-                if (!faceBoxCanvas || !faceVideo) return;
-                syncFaceBoxCanvasSize();
-                var ctx = faceBoxCanvas.getContext('2d');
-                if (!ctx) return;
-                ctx.clearRect(0, 0, faceBoxCanvas.width, faceBoxCanvas.height);
-                if (!detection || !detection.box) return;
-
-                var box = detection.box;
-                var scaleX = faceBoxCanvas.width / (faceVideo.videoWidth || faceBoxCanvas.width);
-                var scaleY = faceBoxCanvas.height / (faceVideo.videoHeight || faceBoxCanvas.height);
-                var x = box.x * scaleX;
-                var y = box.y * scaleY;
-                var w = box.width * scaleX;
-                var h = box.height * scaleY;
-                var color = verified ? '#34d399' : '#22c55e';
-
-                ctx.strokeStyle = color;
-                ctx.lineWidth = 3;
-                ctx.shadowColor = color;
-                ctx.shadowBlur = 10;
-                ctx.strokeRect(x, y, w, h);
-                ctx.shadowBlur = 0;
-
-                ctx.fillStyle = 'rgba(34, 197, 94, 0.15)';
-                ctx.fillRect(x, y, w, h);
-            }
-
-            async function ensureFaceModelsLoaded() {
-                if (faceModelsReady) return true;
-                if (faceModelLoadPromise) return faceModelLoadPromise;
-                if (!window.faceapi) {
-                    throw new Error('Library face-api.js belum termuat.');
-                }
-                if (!tinyDetectorOptions) {
-                    tinyDetectorOptions = new faceapi.TinyFaceDetectorOptions({
-                        inputSize: 416,
-                        scoreThreshold: 0.3
-                    });
-                }
-
-                var modelPath = 'https://cdn.jsdelivr.net/npm/@vladmandic/face-api@latest/model';
-                faceModelLoadPromise = Promise.all([
-                    faceapi.nets.tinyFaceDetector.loadFromUri(modelPath),
-                    faceapi.nets.faceLandmark68Net.loadFromUri(modelPath),
-                    faceapi.nets.faceRecognitionNet.loadFromUri(modelPath)
-                ]).then(function () {
-                    faceModelsReady = true;
-                    return true;
-                });
-
-                return faceModelLoadPromise;
             }
 
             async function startCamera() {
@@ -450,8 +274,24 @@
                 });
                 if (faceVideo) {
                     faceVideo.srcObject = cameraStream;
+                    faceVideo.classList.remove('hidden');
                     await faceVideo.play();
-                    startFaceBoxLoop();
+                }
+                if (faceLiveCaptured) {
+                    faceLiveCaptured.classList.add('hidden');
+                    faceLiveCaptured.removeAttribute('src');
+                }
+            }
+
+            function stopCamera() {
+                if (!cameraStream) return;
+                cameraStream.getTracks().forEach(function (track) {
+                    track.stop();
+                });
+                cameraStream = null;
+                if (faceVideo) {
+                    faceVideo.pause();
+                    faceVideo.srcObject = null;
                 }
             }
 
@@ -465,152 +305,36 @@
                 if (!faceModal) return;
                 faceModal.classList.add('hidden');
                 faceModal.classList.remove('flex');
-                stopFaceBoxLoop();
-                clearFaceBoxOverlay();
             }
 
-            async function detectFaceBoxFromElement(el) {
-                if (!window.faceapi) return null;
-                if (!tinyDetectorOptions) {
-                    tinyDetectorOptions = new faceapi.TinyFaceDetectorOptions({
-                        inputSize: 416,
-                        scoreThreshold: 0.3
-                    });
+            function capturePhoto() {
+                if (!faceVideo || !faceCanvas || !faceCapturePreview) {
+                    setFaceStatus('Komponen kamera tidak lengkap.', 'text-red-700');
+                    return false;
                 }
-                return await faceapi.detectSingleFace(el, tinyDetectorOptions);
-            }
-
-            function stopFaceBoxLoop() {
-                if (faceBoxLoopHandle) {
-                    window.clearInterval(faceBoxLoopHandle);
-                    faceBoxLoopHandle = null;
+                if (!faceVideo.videoWidth || !faceVideo.videoHeight) {
+                    setFaceStatus('Kamera belum aktif. Klik "Aktifkan Kamera" dulu.', 'text-amber-700');
+                    return false;
                 }
-            }
-
-            function startFaceBoxLoop() {
-                stopFaceBoxLoop();
-                if (!faceVideo || !faceBoxCanvas) return;
-                faceBoxLoopHandle = window.setInterval(function () {
-                    if (!faceModal || faceModal.classList.contains('hidden')) return;
-                    if (!faceVideo.videoWidth || !faceVideo.videoHeight) return;
-                    detectFaceBoxFromElement(faceVideo)
-                        .then(function (det) {
-                            drawFaceBox(det, false);
-                        })
-                        .catch(function () {
-                            clearFaceBoxOverlay();
-                        });
-                }, 250);
-            }
-
-            async function detectDescriptorFromImage(el) {
-                if (!window.faceapi) {
-                    throw new Error('Library face-api.js belum termuat.');
-                }
-                if (!tinyDetectorOptions) {
-                    tinyDetectorOptions = new faceapi.TinyFaceDetectorOptions({
-                        inputSize: 416,
-                        scoreThreshold: 0.3
-                    });
-                }
-                var result = await faceapi
-                    .detectSingleFace(el, tinyDetectorOptions)
-                    .withFaceLandmarks()
-                    .withFaceDescriptor();
-                return result ? result.descriptor : null;
-            }
-
-            async function detectDescriptorWithFallback(imgEl) {
-                var direct = await detectDescriptorFromImage(imgEl);
-                if (direct) return direct;
-
-                // Fallback: upscale foto referensi agar wajah kecil lebih mudah terdeteksi.
-                var fallbackCanvas = document.createElement('canvas');
-                var targetW = 640;
-                var ratio = imgEl.naturalWidth > 0 ? (imgEl.naturalHeight / imgEl.naturalWidth) : 1;
-                var targetH = Math.max(360, Math.round(targetW * ratio));
-                fallbackCanvas.width = targetW;
-                fallbackCanvas.height = targetH;
-                var fallbackCtx = fallbackCanvas.getContext('2d');
-                fallbackCtx.drawImage(imgEl, 0, 0, targetW, targetH);
-                return await detectDescriptorFromImage(fallbackCanvas);
-            }
-
-            async function verifyCurrentFace() {
-                resetFaceVerification();
-                if (!latestPhotoProxyUrl) {
-                    setFaceStatus('Foto referensi belum tersedia.', 'text-amber-700');
-                    return;
-                }
-
-                setFaceStatus('Memuat model AI...', 'text-slate-600');
-                await ensureFaceModelsLoaded();
-                await startCamera();
-
-                if (!faceRefImg || !faceVideo || !faceCanvas) {
-                    throw new Error('Komponen verifikasi wajah tidak lengkap.');
-                }
-                await waitForImageReady(faceRefImg);
-
-                setFaceStatus('Menganalisis wajah...', 'text-slate-600');
-
-                var refDescriptor = await detectDescriptorWithFallback(faceRefImg);
-                if (!refDescriptor) {
-                    setFaceStatus('Wajah pada foto referensi tidak terdeteksi. Coba SID lain atau update foto profil.', 'text-red-700');
-                    return;
-                }
-
-                var ctx = faceCanvas.getContext('2d');
                 var size = 360;
+                var ctx = faceCanvas.getContext('2d');
+                if (!ctx) {
+                    setFaceStatus('Canvas foto tidak tersedia.', 'text-red-700');
+                    return false;
+                }
                 ctx.drawImage(faceVideo, 0, 0, size, size);
-
-                var liveDescriptor = await detectDescriptorFromImage(faceCanvas);
-                if (!liveDescriptor) {
-                    setFaceStatus('Wajah pada kamera tidak terdeteksi. Pastikan wajah jelas dan terang.', 'text-amber-700');
-                    return;
+                var capturedDataUrl = faceCanvas.toDataURL('image/jpeg', 0.9);
+                if (faceLiveCaptured) {
+                    faceLiveCaptured.src = capturedDataUrl;
+                    faceLiveCaptured.classList.remove('hidden');
                 }
-
-                var distance = faceapi.euclideanDistance(refDescriptor, liveDescriptor);
-                var matched = distance <= faceThreshold;
-                setFaceVerified(matched, distance);
-
-                if (matched) {
-                    lastFaceMatchOk = true;
-                    if (faceBypassInput) faceBypassInput.value = '0';
-                    setFaceStatus('Verifikasi berhasil (jarak: ' + distance.toFixed(4) + ').', 'text-emerald-700');
-                    if (faceIdentityOk) {
-                        var nama = document.getElementById('pv_nama');
-                        var nik = document.getElementById('pv_nik');
-                        var perusahaan = document.getElementById('pv_perusahaan');
-                        faceIdentityOk.innerHTML = 'Data diri terverifikasi: <strong>' + (nama ? nama.textContent : '-') + '</strong> | NIK: <strong>' + (nik ? nik.textContent : '-') + '</strong> | Perusahaan: <strong>' + (perusahaan ? perusahaan.textContent : '-') + '</strong>';
-                        faceIdentityOk.classList.remove('hidden');
-                        if (faceIdentityLive) {
-                            faceIdentityLive.textContent = 'Terverifikasi: ' + (nama ? nama.textContent : '-');
-                            faceIdentityLive.classList.remove('hidden');
-                        }
-                    }
-                    if (faceFailBadge) faceFailBadge.classList.add('hidden');
-                    if (faceCameraWrap) {
-                        faceCameraWrap.classList.remove('border-red-400', 'ring-2', 'ring-red-300', 'border-slate-300');
-                        faceCameraWrap.classList.add('border-emerald-300', 'ring-2', 'ring-emerald-300/40');
-                    }
-                    if (faceScanLine) faceScanLine.classList.add('hidden');
-                    detectFaceBoxFromElement(faceVideo).then(function (det) { drawFaceBox(det, true); }).catch(function () {});
-                } else {
-                    lastFaceMatchOk = false;
-                    setFaceStatus('Verifikasi gagal (jarak: ' + distance.toFixed(4) + '). Coba ulangi.', 'text-red-700');
-                    if (faceFailBadge) faceFailBadge.classList.remove('hidden');
-                    if (faceIdentityLive) {
-                        faceIdentityLive.classList.add('hidden');
-                        faceIdentityLive.textContent = '';
-                    }
-                    if (faceCameraWrap) {
-                        faceCameraWrap.classList.remove('border-slate-300', 'border-emerald-300', 'ring-emerald-300/40');
-                        faceCameraWrap.classList.add('border-red-400', 'ring-2', 'ring-red-300');
-                    }
-                    if (faceScanLine) faceScanLine.classList.remove('hidden');
-                    detectFaceBoxFromElement(faceVideo).then(function (det) { drawFaceBox(det, false); }).catch(function () {});
+                if (faceVideo) {
+                    faceVideo.classList.add('hidden');
                 }
+                stopCamera();
+                hasCapturedPhoto = true;
+                setFaceStatus('Foto berhasil diambil. Klik "Kirim Absensi".', 'text-emerald-700');
+                return true;
             }
 
             function setStatus(msg, cls) {
@@ -633,18 +357,20 @@
                         fotoEl.alt = d.nama || 'Foto';
                         fotoWrap.classList.remove('hidden');
                         latestPhotoUrl = d.foto;
-                        latestPhotoProxyUrl = makeProxyPhotoUrl(d.foto);
-                        if (faceRefImg) {
-                            faceRefImg.src = latestPhotoProxyUrl || '';
-                            faceRefImg.alt = d.nama || 'Foto referensi';
+                        if (faceCapturePreview) {
+                            faceCapturePreview.src = d.foto;
+                            faceCapturePreview.alt = d.nama || 'Foto database';
                         }
-                        resetFaceVerification();
+                        resetFaceCapture();
                     } else {
                         fotoWrap.classList.add('hidden');
                         fotoEl.removeAttribute('src');
                         latestPhotoUrl = null;
-                        latestPhotoProxyUrl = null;
-                        resetFaceVerification();
+                        if (faceCapturePreview) {
+                            faceCapturePreview.removeAttribute('src');
+                            faceCapturePreview.alt = '';
+                        }
+                        resetFaceCapture();
                     }
                 }
                 setDd('pv_nama', d.nama);
@@ -683,8 +409,11 @@
                     btn.classList.add('opacity-60', 'cursor-not-allowed');
                     if (panel) panel.classList.add('hidden');
                     latestPhotoUrl = null;
-                    latestPhotoProxyUrl = null;
-                    resetFaceVerification();
+                    if (faceCapturePreview) {
+                        faceCapturePreview.removeAttribute('src');
+                        faceCapturePreview.alt = '';
+                    }
+                    resetFaceCapture();
                     setManualPanel(true);
                     setStatus('Mode manual aktif. Silakan isi data tanpa SID.', 'text-amber-700');
                     return;
@@ -734,8 +463,11 @@
                         if (res.body && res.body._parseError) {
                             if (panel) panel.classList.add('hidden');
                             latestPhotoUrl = null;
-                            latestPhotoProxyUrl = null;
-                            resetFaceVerification();
+                            if (faceCapturePreview) {
+                                faceCapturePreview.removeAttribute('src');
+                                faceCapturePreview.alt = '';
+                            }
+                            resetFaceCapture();
                             setStatus('Server mengembalikan non-JSON (HTTP ' + res.status + '). Periksa URL / log server.', 'text-red-700');
                             return;
                         }
@@ -750,8 +482,11 @@
                         }
                         if (panel) panel.classList.add('hidden');
                         latestPhotoUrl = null;
-                        latestPhotoProxyUrl = null;
-                        resetFaceVerification();
+                        if (faceCapturePreview) {
+                            faceCapturePreview.removeAttribute('src');
+                            faceCapturePreview.alt = '';
+                        }
+                        resetFaceCapture();
                         var msg = (res.body && res.body.message) ? res.body.message : 'Gagal memuat data.';
                         if (res.status === 419) {
                             msg = 'Sesi halaman kedaluwarsa. Muat ulang halaman lalu coba lagi.';
@@ -762,8 +497,11 @@
                         btn.disabled = false;
                         if (panel) panel.classList.add('hidden');
                         latestPhotoUrl = null;
-                        latestPhotoProxyUrl = null;
-                        resetFaceVerification();
+                        if (faceCapturePreview) {
+                            faceCapturePreview.removeAttribute('src');
+                            faceCapturePreview.alt = '';
+                        }
+                        resetFaceCapture();
                         var detail = (err && err.message) ? err.message : '';
                         setStatus('Tidak terhubung ke server. ' + (detail ? '(' + detail + ')' : 'Periksa jaringan atau muat ulang halaman.'), 'text-red-700');
                     });
@@ -774,70 +512,24 @@
                 btnStartCamera.addEventListener('click', function () {
                     startCamera()
                         .then(function () {
-                            setFaceStatus('Kamera aktif. Lanjutkan verifikasi wajah.', 'text-slate-700');
+                            setFaceStatus('Kamera aktif. Klik "Ambil Foto".', 'text-slate-700');
                         })
                         .catch(function (e) {
                             setFaceStatus((e && e.message) ? e.message : 'Tidak bisa mengaktifkan kamera.', 'text-red-700');
                         });
                 });
             }
-            if (btnVerifyFace) {
-                btnVerifyFace.addEventListener('click', function () {
-                    verifyCurrentFace().catch(function (e) {
-                        lastFaceMatchOk = false;
-                        setFaceStatus((e && e.message) ? e.message : 'Terjadi kesalahan verifikasi wajah.', 'text-red-700');
-                        setFaceVerified(false);
-                        if (faceFailBadge) faceFailBadge.classList.remove('hidden');
-                        if (faceIdentityLive) {
-                            faceIdentityLive.classList.add('hidden');
-                            faceIdentityLive.textContent = '';
-                        }
-                        if (faceCameraWrap) {
-                            faceCameraWrap.classList.remove('border-slate-300', 'border-emerald-300', 'ring-emerald-300/40');
-                            faceCameraWrap.classList.add('border-red-400', 'ring-2', 'ring-red-300');
-                        }
-                    });
+            if (btnTakePhoto) {
+                btnTakePhoto.addEventListener('click', function () {
+                    capturePhoto();
                 });
             }
-            if (btnConfirmSubmit) {
-                btnConfirmSubmit.addEventListener('click', function () {
-                    var fvEl = document.getElementById('face_verified');
-                    var fdEl = document.getElementById('face_distance');
-                    if (!lastFaceMatchOk || !fvEl || fvEl.value !== '1') {
-                        setFaceStatus('Verifikasi wajah belum valid. Klik "Verifikasi & Kirim" sampai status berhasil.', 'text-red-700');
+            if (btnSendAttendance) {
+                btnSendAttendance.addEventListener('click', function () {
+                    if (!hasCapturedPhoto) {
+                        setFaceStatus('Ambil foto terlebih dahulu sebelum kirim absensi.', 'text-amber-700');
                         return;
                     }
-                    if (!fdEl || fdEl.value === '' || fdEl.value === null) {
-                        setFaceStatus('Data verifikasi tidak lengkap. Ulangi verifikasi wajah.', 'text-red-700');
-                        return;
-                    }
-                    var distNum = parseFloat(fdEl.value);
-                    if (!isFinite(distNum) || distNum > faceThreshold + 0.02) {
-                        setFaceStatus('Skor verifikasi tidak sah. Ulangi verifikasi wajah.', 'text-red-700');
-                        lastFaceMatchOk = false;
-                        if (fvEl) fvEl.value = '0';
-                        return;
-                    }
-                    if (faceBypassInput) faceBypassInput.value = '0';
-                    allowDirectSubmit = true;
-                    closeFaceModal();
-                    if (formEl) formEl.submit();
-                });
-            }
-            if (btnBypassSubmit) {
-                btnBypassSubmit.addEventListener('click', function () {
-                    if (noSidToggle && noSidToggle.checked) {
-                        setFaceStatus('Opsi ini hanya untuk peserta dengan SID.', 'text-amber-700');
-                        return;
-                    }
-                    if (!kodeInput || (kodeInput.value || '').trim() === '') {
-                        setFaceStatus('Isi dan cek Kode SID terlebih dahulu.', 'text-amber-700');
-                        return;
-                    }
-                    lastFaceMatchOk = false;
-                    setFaceVerified(false);
-                    if (faceBypassInput) faceBypassInput.value = '1';
-                    setFaceStatus('Mengirim absensi tanpa verifikasi wajah…', 'text-amber-800');
                     allowDirectSubmit = true;
                     closeFaceModal();
                     if (formEl) formEl.submit();
@@ -856,39 +548,16 @@
                         allowDirectSubmit = false;
                         return;
                     }
-                    if (noSidToggle && noSidToggle.checked) return;
-                    var bypassEl = document.getElementById('face_bypass');
-                    if (bypassEl && bypassEl.value === '1') {
-                        return;
-                    }
-                    if (!latestPhotoUrl) {
-                        var sidNow = kodeInput ? (kodeInput.value || '').trim() : '';
-                        if (sidNow !== '') {
-                            evt.preventDefault();
-                            openFaceModal();
-                            setFaceStatus('Tidak ada foto referensi atau verifikasi gagal? Gunakan tombol oranye di bawah untuk kirim tanpa verifikasi wajah.', 'text-amber-800');
-                            return;
-                        }
-                        evt.preventDefault();
-                        setFaceStatus('Foto referensi belum tersedia. Cek SID terlebih dahulu.', 'text-red-700');
-                        return;
-                    }
-                    var fvEl = document.getElementById('face_verified');
-                    var fdEl = document.getElementById('face_distance');
-                    var distParsed = fdEl && fdEl.value !== '' ? parseFloat(fdEl.value) : NaN;
-                    var distOk = isFinite(distParsed) && distParsed <= faceThreshold + 0.02;
-                    if (!lastFaceMatchOk || !fvEl || fvEl.value !== '1' || !distOk) {
-                        evt.preventDefault();
-                        resetFaceVerification();
-                        openFaceModal();
-                        startCamera()
-                            .then(function () {
-                                setFaceStatus('Kamera aktif. Klik "Verifikasi & Kirim" hingga berhasil, lalu "Kirim Absensi Sekarang".', 'text-slate-700');
-                            })
-                            .catch(function (e) {
-                                setFaceStatus((e && e.message) ? e.message : 'Tidak bisa mengaktifkan kamera.', 'text-red-700');
-                            });
-                    }
+                    evt.preventDefault();
+                    resetFaceCapture();
+                    openFaceModal();
+                    startCamera()
+                        .then(function () {
+                            setFaceStatus('Kamera aktif. Klik "Ambil Foto" lalu "Kirim Absensi".', 'text-slate-700');
+                        })
+                        .catch(function (e) {
+                            setFaceStatus((e && e.message) ? e.message : 'Tidak bisa mengaktifkan kamera.', 'text-red-700');
+                        });
                 });
             }
             if (faceModalClose) {
