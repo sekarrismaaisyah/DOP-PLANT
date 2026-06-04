@@ -426,6 +426,60 @@
         @apply mt-4 space-y-3 text-[13px] leading-relaxed text-slate-600;
       }
 
+      .hira-detail-card .hira-detail-toolbar {
+        @apply flex flex-col gap-4 border-b border-slate-200/90 pb-4 sm:flex-row sm:items-start sm:justify-between;
+      }
+      .hira-detail-card .hira-detail-actions {
+        @apply flex flex-wrap gap-2;
+      }
+      .hira-detail-card .hira-detail-actions .btn-primary {
+        @apply border-[#3952bc] bg-[#3952bc] text-white hover:bg-[#2f4399];
+      }
+      .hira-detail-file-label {
+        @apply inline-flex h-[38px] cursor-pointer items-center rounded-lg border border-slate-200 bg-white px-3.5 text-xs font-bold text-ink shadow-sm hover:bg-slate-50;
+      }
+      .hira-detail-wrap {
+        @apply overflow-x-auto;
+      }
+      .hira-detail-wrap table.hira-detail-master {
+        @apply min-w-full border-collapse text-xs;
+      }
+      .hira-detail-wrap table.hira-detail-master td,
+      .hira-detail-wrap table.hira-detail-master th {
+        @apply border border-slate-200 px-2 py-2 align-top;
+      }
+      .hira-detail-parent-row td {
+        @apply border-slate-200 bg-white p-3 text-ink;
+      }
+      .hira-detail-parent-row input {
+        @apply min-w-[280px] rounded-lg border border-slate-200 bg-white px-2.5 py-2 text-sm text-ink shadow-sm;
+      }
+      .hira-detail-parent-row button {
+        @apply border-slate-200 bg-white text-ink;
+      }
+      .hira-detail-child-table {
+        @apply min-w-[3350px] text-xs;
+      }
+      .hira-detail-child-table th {
+        @apply whitespace-nowrap bg-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-600;
+      }
+      .hira-detail-child-table td input,
+      .hira-detail-child-table td select {
+        @apply min-w-[70px] w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs;
+      }
+      .hira-detail-note {
+        @apply rounded-lg border border-dashed border-slate-300 bg-slate-50 px-2 py-1.5 text-xs text-slate-600;
+      }
+      .hira-detail-status {
+        @apply mt-2 text-xs text-muted;
+      }
+      .hira-detail-status.is-error {
+        @apply text-error font-semibold;
+      }
+      .hira-detail-status.is-saving {
+        @apply text-[#3952bc];
+      }
+
       .risk-matrix-section .risk-matrix-dual {
         @apply grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8;
       }
@@ -680,6 +734,53 @@
     </div>
 
     <section class="card page-intro" id="pageIntro"></section>
+
+    <section class="card hira-detail-card" data-page-only="driver" hidden aria-labelledby="hiraDetailHeading">
+      <div class="hira-detail-toolbar">
+        <div>
+          <h2 id="hiraDetailHeading" class="m-0 text-lg font-bold text-[#1f2937]">Tabel Detail HIRA</h2>
+          <p class="muted small m-0 mt-1">Header tabel berada di dalam parent collapsible. Initial: Collapse All.</p>
+          <p id="hiraDetailStatus" class="hira-detail-status m-0 mt-2" role="status" aria-live="polite"></p>
+        </div>
+        <div class="hira-detail-actions">
+          <button type="button" class="btn-primary" id="hiraDetailAddParent">Tambah Parent</button>
+          <button type="button" id="hiraDetailExportXls">Download Excel</button>
+          <button type="button" id="hiraDetailExportCsv">Download CSV</button>
+          <label class="hira-detail-file-label">
+            <input type="file" id="hiraDetailUpload" accept=".csv,.xls,.html,.htm" class="hidden" aria-label="Upload file HIRA">
+            Upload
+          </label>
+          <button type="button" id="hiraDetailReset">Reset Contoh</button>
+          <button type="button" id="hiraDetailExpandAll">Expand All</button>
+          <button type="button" id="hiraDetailCollapseAll">Collapse All</button>
+        </div>
+      </div>
+      <div id="hiraDetailTable" class="hira-detail-wrap mt-4" aria-busy="false"></div>
+    </section>
+
+    <section class="card hira-detail-card" data-page-only="correlation" hidden aria-labelledby="hiraScurveHeading">
+      <div class="hira-detail-toolbar">
+        <div>
+          <h2 id="hiraScurveHeading" class="m-0 text-lg font-bold text-[#1f2937]">Tabel S-Curve Improvement</h2>
+          <p class="muted small m-0 mt-1">Input child task manual per improvement plan. Chart S-Curve muncul di popup icon mata pada Dashboard. Initial: Collapse All.</p>
+          <p id="hiraScurveStatus" class="hira-detail-status m-0 mt-2" role="status" aria-live="polite"></p>
+        </div>
+        <div class="hira-detail-actions">
+          <button type="button" class="btn-primary" id="hiraScurveAddParent">Tambah Parent</button>
+          <button type="button" id="hiraScurveExportXls">Download Excel</button>
+          <button type="button" id="hiraScurveExportCsv">Download CSV</button>
+          <label class="hira-detail-file-label">
+            <input type="file" id="hiraScurveUpload" accept=".csv,.xls,.html,.htm" class="hidden" aria-label="Upload file task S-Curve">
+            Upload
+          </label>
+          <button type="button" id="hiraScurveReseed">Reset dari HIRA</button>
+          <button type="button" id="hiraScurveExpandAll">Expand All</button>
+          <button type="button" id="hiraScurveCollapseAll">Collapse All</button>
+        </div>
+      </div>
+      <div id="hiraScurveTaskTable" class="hira-detail-wrap mt-4" aria-busy="false"></div>
+    </section>
+
     <section class="risk-profile-board exec-summary-panel" data-page-only="overview" aria-labelledby="execSummaryHeading">
       <div class="exec-summary-top">
         <div class="card-title">
@@ -940,249 +1041,11 @@
 
   
 
-    <div class="cards-wrap" data-page-only="overview">
-      <section class="grid grid-site-cards" id="siteCards"></section>
-      <div id="sitePopup" class="site-popup" aria-live="polite"></div>
-    </div>
+   
 
-    <section class="section grid grid-2" data-section="overview">
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Risk Score Site W18</h2>
-            <div class="muted small">Ranking risk site dan stabilitas baseline berdasarkan grafik profiling.</div>
-          </div>
-          <span class="badge blue">Site Level</span>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Rank</th>
-                <th>Site</th>
-                <th>Risk W18</th>
-                <th>Status</th>
-                <th>Driver Ringkas</th>
-                <th>Trend 4 Minggu</th>
-              </tr>
-            </thead>
-            <tbody id="rankingTable"></tbody>
-          </table>
-        </div>
-      </div>
+    
 
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Kontribusi Driver Utama</h2>
-            <div class="muted small">Agregasi driver kontraktor yang paling menjelaskan risk site.</div>
-          </div>
-          <span class="badge yellow">W15–W18</span>
-        </div>
-        <div class="driver-list" id="driverContribution"></div>
-        <div class="footer-note">Pembobotan rekomendasi: Safety Accountability 35% mencakup Golden Rules, TBC, Blindspot, Ratio Pelaporan, dan Overdue Hazard; Coverage Quality 25% mencakup coverage weekly/daily dan area kritis; Exposure/RFID 20% adalah skor komposit berbasis RFID pengawas, RFID non-pengawas, rasio non-pengawas terhadap pengawas, dan perubahan exposure mingguan; Fatigue Management 20% mencakup true alert fatigue, FTW jam tidur kurang, dan speak up sebelum alert.</div>
-      </div>
-    </section>
-
-    <section class="section grid grid-2" data-section="overview">
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Scatter Korelasi</h2>
-            <div class="muted small">Sumbu X: Contractor Driver Risk Index · Sumbu Y: Risk Score Site W18</div>
-          </div>
-          <span class="badge red">Prioritas</span>
-        </div>
-        <div class="scatter-box" id="scatterBox">
-          <div class="scatter-axis-x"></div>
-          <div class="scatter-axis-y"></div>
-          <div class="quadrant-label q1">True High Risk</div>
-          <div class="quadrant-label q2">Model Check</div>
-          <div class="quadrant-label q3">Stable Control</div>
-          <div class="quadrant-label q4">Latent Risk</div>
-        </div>
-        <div class="legend">
-          <div class="legend-item"><span class="swatch bg-[#33a852]"></span>Benchmark</div>
-          <div class="legend-item"><span class="swatch bg-[#f5bd24]"></span>Watch</div>
-          <div class="legend-item"><span class="swatch bg-[#ef8a21]"></span>Unstable</div>
-          <div class="legend-item"><span class="swatch bg-[#d92828]"></span>High Risk</div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Detail Komponen Driver</h2>
-            <div class="muted small">Definisi isi dari Safety Accountability, Coverage Quality, Exposure/RFID, dan Fatigue Management.</div>
-          </div>
-          <span class="badge green">Driver Dictionary</span>
-        </div>
-        <div class="summary-list" id="driverDictionary"></div>
-      </div>
-    </section>
-
-    <section class="section card" data-section="driver" hidden>
-      <div class="card-title">
-        <div>
-          <h2>Contractor Driver Heatmap</h2>
-          <div class="muted small">Arahkan kursor ke setiap nilai untuk melihat penjelasan tanpa terpotong oleh tabel.</div>
-        </div>
-        <span class="badge orange">Driver Diagnostic</span>
-      </div>
-      <div class="table-wrap">
-        <table>
-          <thead>
-            <tr>
-              <th>Site</th>
-              <th>Risk Site</th>
-              <th>Safety Accountability</th>
-              <th>Coverage Quality</th>
-              <th>Exposure / RFID</th>
-              <th>Fatigue Management</th>
-              <th>Driver Index</th>
-              <th>Detail Dominan</th>
-              <th>Kesimpulan</th>
-            </tr>
-          </thead>
-          <tbody id="heatmapTable"></tbody>
-        </table>
-      </div>
-      <div class="legend">
-        <div class="legend-item"><span class="swatch border border-[#9ad6a6] bg-[#e7f6ea]"></span>Low</div>
-        <div class="legend-item"><span class="swatch border border-[#f5d875] bg-[#fff6d9]"></span>Medium</div>
-        <div class="legend-item"><span class="swatch border border-[#f3b46f] bg-[#fff0df]"></span>High</div>
-        <div class="legend-item"><span class="swatch border border-[#ed8b8b] bg-[#fde9e9]"></span>Critical</div>
-      </div>
-    </section>
-
-    <section class="section grid grid-2" data-section="driver" hidden>
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Trend Driver Mingguan</h2>
-            <div class="muted small">Simulasi tren W15–W18 dari indikator yang ditandai merah pada dashboard kontraktor.</div>
-          </div>
-        </div>
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Site</th>
-                <th>Risk</th>
-                <th>Driver Trend</th>
-                <th>Momentum</th>
-              </tr>
-            </thead>
-            <tbody id="trendTable"></tbody>
-          </table>
-        </div>
-      </div>
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Formula Index</h2>
-            <div class="muted small">Struktur kalkulasi agar dashboard kontraktor bisa dijadikan driver risk site.</div>
-          </div>
-        </div>
-        <div class="formula-box">Contractor Driver Risk Index =<br>&nbsp;&nbsp;35% Safety Accountability<br>+ 25% Coverage Quality<br>+ 20% Exposure / RFID<br>+ 20% Fatigue Management<br><br>Safety Accountability = GR + TBC + Blindspot + Ratio Pelaporan + Overdue Hazard<br>Coverage Quality = Coverage Weekly + Coverage Daily + Coverage Area Kritis<br>Exposure/RFID = RFID Pengawas + RFID Non Pengawas + Rasio Non Pengawas : Pengawas + perubahan exposure mingguan<br>Fatigue Management = True Alert Fatigue + FTW Jam Tidur Kurang + Speak Up Sebelum Alert</div>
-      </div>
-    </section>
-
-    <section class="section grid grid-2" data-section="correlation" hidden>
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Correlation Bridge Matrix</h2>
-            <div class="muted small">Mekanisme membaca kecocokan risk site dengan driver kontraktor.</div>
-          </div>
-        </div>
-        <div class="bridge">
-          <div class="bridge-box critical">
-            <h4>Risk Site Tinggi + Driver Merah</h4>
-            <p><b>True High Risk.</b> Risiko site benar-benar didukung oleh sinyal kontraktor. Perlu intervensi langsung ke driver dominan.</p>
-          </div>
-          <div class="bridge-box watch">
-            <h4>Risk Site Tinggi + Driver Hijau</h4>
-            <p><b>Model / Data Check.</b> Perlu cek apakah ada driver belum masuk, data terlambat, atau exposure khusus yang belum terukur.</p>
-          </div>
-          <div class="bridge-box latent">
-            <h4>Risk Site Rendah + Driver Merah</h4>
-            <p><b>Latent Risk.</b> Belum terlihat pada risk score, tetapi dapat menjadi early warning untuk 1–4 minggu berikutnya.</p>
-          </div>
-          <div class="bridge-box safe">
-            <h4>Risk Site Rendah + Driver Hijau</h4>
-            <p><b>Benchmark.</b> Kontrol stabil dan dapat dijadikan referensi praktik untuk site lain.</p>
-          </div>
-        </div>
-      </div>
-
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Narasi Eksekutif</h2>
-            <div class="muted small">Ringkasan siap pakai untuk BOD/management.</div>
-          </div>
-          <span class="badge green">Ringkasan manajemen</span>
-        </div>
-        <p class="muted leading-[1.7] mt-0">Risk Score Site Week 18 menunjukkan LMO sebagai benchmark dengan profil risiko terendah dan paling stabil, sedangkan BMO 1 menjadi prioritas utama karena mengalami lonjakan risk score tertinggi. Jika dikorelasikan dengan dashboard level kontraktor, peningkatan risiko terutama dipengaruhi oleh kombinasi Safety Accountability, Blindspot TBC, Blindspot GR, penurunan Ratio Pengawas dengan TBC, Coverage Daily yang belum optimal, serta tekanan Fatigue Management. Dengan demikian, dashboard kontraktor berfungsi sebagai early driver diagnostic untuk menjelaskan penyebab risk score site, bukan hanya sebagai pelaporan indikator terpisah.</p>
-        <div class="summary-list" id="bridgeSummary"></div>
-      </div>
-    </section>
-
-    <section class="section grid grid-2" data-section="action" hidden>
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Action Priority</h2>
-            <div class="muted small">Prioritas intervensi berdasarkan risk site dan driver kontraktor.</div>
-          </div>
-          <span class="badge red">Execution</span>
-        </div>
-        <div class="action-card" id="actionList"></div>
-      </div>
-      <div class="card">
-        <div class="card-title">
-          <div>
-            <h2>Management Control Focus</h2>
-            <div class="muted small">Fokus kontrol yang direkomendasikan untuk 1–4 minggu ke depan.</div>
-          </div>
-        </div>
-        <div class="summary-list">
-          <div class="summary-item">
-            <div class="rank">1</div>
-            <div>
-              <div class="strong">Validasi Blindspot Area</div>
-              <div class="muted small">Cek area tidak tercover, area kritis, dan kualitas tindak lanjut TBC.</div>
-            </div>
-            <span class="badge red">Urgent</span>
-          </div>
-          <div class="summary-item">
-            <div class="rank">2</div>
-            <div>
-              <div class="strong">Leadership Intervention</div>
-              <div class="muted small">Gunakan Golden Rules dan Blindspot GR sebagai trigger eskalasi L2–L3.</div>
-            </div>
-            <span class="badge orange">High</span>
-          </div>
-          <div class="summary-item">
-            <div class="rank">3</div>
-            <div>
-              <div class="strong">Coverage Quality Review</div>
-              <div class="muted small">Tidak hanya mengejar coverage 100%, tetapi memastikan temuan kritis tertangkap.</div>
-            </div>
-            <span class="badge yellow">Watch</span>
-          </div>
-          <div class="summary-item">
-            <div class="rank">4</div>
-            <div>
-              <div class="strong">Fatigue Management</div>
-              <div class="muted small">Korelasikan alert fatigue dengan FTW jam tidur kurang dan exposure shift.</div>
-            </div>
-            <span class="badge blue">Monitor</span>
-          </div>
-        </div>
-      </div>
-    </section>
+   
 
     <div class="footer-note">Catatan: angka dashboard ini disusun dari interpretasi visual risk profiling Week 18 dan dashboard kontraktor yang diberikan. Untuk implementasi final, hubungkan dengan data asli per kontraktor/site agar skor, tren, dan korelasi dapat dihitung otomatis.</div>
     @include('peer-pressure-edukasi.partials.peer-dashboard-wizard-nav', ['wizardStep' => 2])
@@ -1367,6 +1230,25 @@
     const coverageAreaKritisRows = @json($coverageAreaKritisRows);
     const blindspotTbcWeek = @json($blindspotTbcWeek);
     const blindspotTbcRows = @json($blindspotTbcRows);
+    const hiraDetailApi = {
+      index: @json(route('hira.improvement.detail-rows.index')),
+      sync: @json(route('hira.improvement.detail-rows.sync')),
+      reset: @json(route('hira.improvement.detail-rows.reset')),
+      import: @json(route('hira.improvement.detail-rows.import')),
+      exportCsv: @json(route('hira.improvement.detail-rows.export.csv')),
+      exportXls: @json(route('hira.improvement.detail-rows.export.xls')),
+      destroyBase: @json(url('/hira/improvement/detail-rows')),
+    };
+    const hiraScurveApi = {
+      index: @json(route('hira.improvement.scurve-tasks.index')),
+      sync: @json(route('hira.improvement.scurve-tasks.sync')),
+      reseed: @json(route('hira.improvement.scurve-tasks.reseed')),
+      import: @json(route('hira.improvement.scurve-tasks.import')),
+      exportCsv: @json(route('hira.improvement.scurve-tasks.export.csv')),
+      exportXls: @json(route('hira.improvement.scurve-tasks.export.xls')),
+    };
+    const HIRA_SCURVE_HEADERS = ["No", "Child Task", "Plan Date", "Actual Date", "Status", "Keterangan", "Action"];
+    const hiraDetailCsrf = @json(csrf_token());
     const sites = [
       {
         site: "BMO 1",
@@ -1507,13 +1389,13 @@
         index: "1/4"
       },
       driver: {
-        title: "Driver Kontraktor",
-        description: "Halaman ini fokus pada heatmap empat driver utama: Safety Accountability, Coverage Quality, Exposure/RFID, dan Fatigue Management, termasuk detail dominan per site.",
+        title: "Input HIRA Detail",
+        description: "Tabel detail HIRA per improvement plan (parent collapsible). Data tersimpan ke database; gunakan tombol impor/ekspor untuk sinkronisasi massal.",
         index: "2/4"
       },
       correlation: {
-        title: "Correlation Bridge",
-        description: "Halaman ini menjelaskan hubungan antara risk score site dan driver kontraktor untuk membedakan true high risk, latent risk, model check, dan benchmark.",
+        title: "S-Curve Improvement",
+        description: "Input task S-Curve per improvement plan (parent collapsible). Data tersimpan ke database; chart S-Curve tampil di popup detail pada Dashboard.",
         index: "3/4"
       },
       action: {
@@ -1676,6 +1558,7 @@
     }
 
     function renderCards() {
+      if (!siteCards) return;
       const filtered = applyFilters();
       siteCards.innerHTML = filtered.map(siteData => `
         <article class="card score-card ${selectedSite === siteData.site ? "selected" : ""}" data-site="${escapeHtml(siteData.site)}">
@@ -1732,6 +1615,7 @@
     }
 
     function renderSitePopup() {
+      if (!sitePopup) return;
       const selected = getSite(selectedSite);
       sitePopup.innerHTML = `
         <div class="popup-head">
@@ -1806,7 +1690,7 @@
     }
 
     function closeSitePopup() {
-      sitePopup.classList.remove("show");
+      sitePopup?.classList.remove("show");
     }
 
     function closeImprovementDetailModal() {
@@ -2972,6 +2856,797 @@
       });
     }
 
+    /* ——— Input HIRA Detail (desain.html) + API database ——— */
+    const HIRA_DETAIL_HEADERS = [
+      "No", "Sections", "Aktivitas", "Sub Aktivitas", "Sub sub Aktivitas", "R/NR", "Site", "Faktor",
+      "Bahaya/Aspek Lingkungan/Penyebab Potensial", "Kejadian / Potensi", "Kep Awal", "Konseq Awal",
+      "Nilai Risiko Awal", "Nilai Resiko awal", "TP Awal", "Pengendalian yang dilakukan (Tertinggi)",
+      "Pemilik Pengendalian", "Pengendalian Lanjutan / Improvement", "Level Efektivitas", "Jenis Exposure",
+      "Exposure Aktual", "Exposure Pengendalian", "% Exposure Covered", "Kep Sisa", "Konseq Sisa",
+      "Nilai Risiko Sisa", "Level Sisa", "Target Nilai Risiko", "TP Lanjutan", "Pemilik Lanjutan",
+      "Tanggal Mulai", "Target Tanggal", "Status", "Decision", "Action"
+    ];
+    let hiraDetailRows = [];
+    let hiraDetailOpts = {};
+    let hiraDetailExpanded = {};
+    let hiraDetailLoaded = false;
+    let hiraDetailSaveTimer = null;
+    let hiraDetailSaving = false;
+
+    function hiraDetailScope() {
+      const companyEl = document.getElementById("hiraHeroCompany");
+      const yearEl = document.getElementById("hiraHeroYear");
+      return {
+        company: companyEl?.value === "bm" || !companyEl ? "Bukit Makmur" : (companyEl.options[companyEl.selectedIndex]?.text || "Bukit Makmur"),
+        period_year: Number(yearEl?.value || 2026) || 2026,
+      };
+    }
+
+    function hiraDetailScopeQuery() {
+      const s = hiraDetailScope();
+      return `company=${encodeURIComponent(s.company)}&period_year=${encodeURIComponent(s.period_year)}`;
+    }
+
+    function setHiraDetailStatus(message, type = "") {
+      const el = document.getElementById("hiraDetailStatus");
+      if (!el) return;
+      el.textContent = message || "";
+      el.classList.remove("is-error", "is-saving");
+      if (type) el.classList.add(type);
+    }
+
+    async function hiraDetailFetch(url, options = {}) {
+      const headers = { Accept: "application/json", ...(options.headers || {}) };
+      if (options.method && options.method !== "GET") {
+        headers["Content-Type"] = "application/json";
+        headers["X-CSRF-TOKEN"] = hiraDetailCsrf;
+      }
+      const res = await fetch(url, { ...options, headers });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data.message || "Permintaan gagal.");
+      return data;
+    }
+
+    function hiraNum(v) {
+      const x = Number(v);
+      return Number.isFinite(x) ? x : 0;
+    }
+    function hiraClamp(v, min, max) {
+      return Math.min(Math.max(v, min), max);
+    }
+    function hiraFmt(v) {
+      return Number(v || 0).toLocaleString("id-ID", { maximumFractionDigits: 1 });
+    }
+    function hiraPct(v) {
+      return Number.isFinite(v) ? (v * 100).toFixed(1) + "%" : "-";
+    }
+    function hiraBand(score) {
+      if (score >= 17) return { label: "Significant", cls: "significant" };
+      if (score >= 10) return { label: "High", cls: "high" };
+      if (score >= 5) return { label: "Medium", cls: "medium" };
+      if (score >= 1) return { label: "Low", cls: "low" };
+      return { label: "Eliminated", cls: "low" };
+    }
+    function hiraRank(label) {
+      return { Eliminated: 0, Low: 1, Medium: 2, High: 3, Significant: 4 }[label] || 0;
+    }
+    function hiraExposureCoverage(r) {
+      const before = Math.max(hiraNum(r.exposureBeforeValue), 0);
+      const control = Math.max(hiraNum(r.exposureControlValue), 0);
+      return before > 0 ? hiraClamp(control, 0, before) / before : 0;
+    }
+    function hiraCalc(r) {
+      const ka = hiraClamp(Math.round(hiraNum(r.kepAwal)), 0, 5);
+      const ca = hiraClamp(Math.round(hiraNum(r.konseqAwal)), 0, 5);
+      const ks = r.controlLevel === "L1 - Eliminasi" ? 0 : hiraClamp(Math.round(hiraNum(r.kepSisa)), 0, 5);
+      const cs = r.controlLevel === "L1 - Eliminasi" ? 0 : hiraClamp(Math.round(hiraNum(r.konseqSisa)), 0, 5);
+      const exA = Math.max(hiraNum(r.exposureBeforeValue), 0);
+      const exC = hiraClamp(hiraNum(r.exposureControlValue), 0, exA);
+      const cover = hiraExposureCoverage(r);
+      const scoreA = ka * ca;
+      const scoreS = ks * cs;
+      const bA = hiraBand(scoreA);
+      const bS = hiraBand(scoreS);
+      let decision = "Monitor", dcls = "blue";
+      if (hiraRank(bS.label) > hiraRank(r.targetRisk || "Medium")) {
+        decision = "Belum Capai Target"; dcls = "significant";
+      } else if (cover < 0.75) {
+        decision = "Lanjutkan Coverage"; dcls = "high";
+      } else if (r.status !== "Verified Effective" && r.status !== "Closed") {
+        decision = "Verifikasi Efektivitas"; dcls = "medium";
+      } else if (bS.label === "Low") {
+        decision = "Accept / Close"; dcls = "low";
+      }
+      return { ka, ca, ks, cs, exA, exC, cover, scoreA, scoreS, bA, bS, decision, dcls };
+    }
+    function hiraGroupBy(arr, key) {
+      return arr.reduce((acc, row) => {
+        const v = row[key] || "-";
+        (acc[v] = acc[v] || []).push(row);
+        return acc;
+      }, {});
+    }
+    function hiraUnique(field, arr = hiraDetailRows) {
+      return new Set(arr.map(r => String(r[field] || "").trim()).filter(Boolean)).size;
+    }
+    function hiraSummarize(arr = hiraDetailRows) {
+      const cal = arr.map(hiraCalc);
+      const sum = k => cal.reduce((a, x) => a + x[k], 0);
+      const highPick = bandKey => cal.reduce((m, x) => hiraRank(x[bandKey].label) > hiraRank(m.label) ? x[bandKey] : m, hiraBand(0));
+      return {
+        rows: arr.length,
+        risk: hiraUnique("hazard", arr),
+        plan: hiraUnique("improvementPlan", arr),
+        scoreA: sum("scoreA"),
+        scoreS: sum("scoreS"),
+        exA: sum("exA"),
+        exC: sum("exC"),
+        cover: sum("exA") > 0 ? sum("exC") / sum("exA") : 0,
+        highA: highPick("bA"),
+        highS: highPick("bS"),
+        decision: (cal.find(x => x.decision === "Belum Capai Target")
+          || cal.find(x => x.decision === "Lanjutkan Coverage")
+          || cal.find(x => x.decision === "Verifikasi Efektivitas")
+          || cal[0] || { decision: "Monitor", dcls: "blue" }),
+      };
+    }
+    function hiraGroupSummary(arr) {
+      const s = hiraSummarize(arr);
+      return {
+        ...s,
+        sections: hiraUnique("section", arr),
+        activities: hiraUnique("activity", arr),
+        subActivities: hiraUnique("subActivity", arr),
+        subSubActivities: hiraUnique("subSubActivity", arr),
+      };
+    }
+    function hiraPillRisk(cls) {
+      const map = { significant: "pill-risk--significant", high: "pill-risk--high", medium: "pill-risk--medium", low: "pill-risk--medium" };
+      return map[cls] || "pill-risk--medium";
+    }
+    function hiraPillDecision(dcls) {
+      const map = { significant: "pill-decision--target", high: "pill-decision--coverage", medium: "pill-decision--verify", low: "pill-decision--verify", blue: "pill-decision--verify" };
+      return map[dcls] || "pill-decision--verify";
+    }
+
+    function hiraDetailInput(v, ix, key, type = "text") {
+      return `<input type="${type}" value="${escapeHtml(v)}" data-hira-ix="${ix}" data-hira-key="${escapeHtml(key)}">`;
+    }
+    function hiraDetailSelect(v, opts, ix, key) {
+      const list = opts || [];
+      return `<select data-hira-ix="${ix}" data-hira-key="${escapeHtml(key)}">${list.map(o => `<option value="${escapeHtml(o)}"${o === v ? " selected" : ""}>${escapeHtml(o)}</option>`).join("")}</select>`;
+    }
+
+    function hiraDetailSetVal(ix, key, value) {
+      if (key === "improvementPlan") {
+        const old = hiraDetailRows[ix].improvementPlan;
+        hiraDetailRows.forEach(r => { if (r.improvementPlan === old) r.improvementPlan = value; });
+      } else {
+        hiraDetailRows[ix][key] = value;
+      }
+      renderHiraDetailTable();
+      scheduleHiraDetailSave();
+    }
+
+    function scheduleHiraDetailSave() {
+      clearTimeout(hiraDetailSaveTimer);
+      hiraDetailSaveTimer = setTimeout(() => persistHiraDetailRows(), 600);
+    }
+
+    async function persistHiraDetailRows() {
+      if (hiraDetailSaving) return;
+      hiraDetailSaving = true;
+      setHiraDetailStatus("Menyimpan…", "is-saving");
+      try {
+        const data = await hiraDetailFetch(`${hiraDetailApi.sync}?${hiraDetailScopeQuery()}`, {
+          method: "POST",
+          body: JSON.stringify({ rows: hiraDetailRows }),
+        });
+        hiraDetailRows = data.rows || hiraDetailRows;
+        setHiraDetailStatus("Tersimpan.");
+        renderHiraDetailTable();
+      } catch (err) {
+        setHiraDetailStatus(err.message || "Gagal menyimpan.", "is-error");
+      } finally {
+        hiraDetailSaving = false;
+      }
+    }
+
+    function renderHiraDetailTable() {
+      const host = document.getElementById("hiraDetailTable");
+      if (!host) return;
+      const groups = hiraGroupBy(hiraDetailRows, "improvementPlan");
+      const O = hiraDetailOpts;
+      let html = '<table class="hira-detail-master"><tbody>';
+      Object.entries(groups).forEach(([plan, arr], gi) => {
+        const gs = hiraGroupSummary(arr);
+        const open = !!hiraDetailExpanded[plan];
+        const firstIndex = hiraDetailRows.findIndex(r => r.improvementPlan === plan);
+        const lastId = arr[arr.length - 1]?.id;
+        const lastIx = hiraDetailRows.findIndex(r => r.id === lastId);
+        html += `<tr class="hira-detail-parent-row"><td colspan="${HIRA_DETAIL_HEADERS.length}">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" data-hira-toggle="${escapeHtml(plan)}">${open ? "−" : "+"}</button>
+              ${hiraDetailInput(plan, firstIndex, "improvementPlan")}
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="badge blue">${open ? "Expanded" : "Collapsed"}</span>
+              <span class="badge blue">${gs.rows} child rows</span>
+              <span class="badge blue">${gs.risk} risiko</span>
+              <span class="badge blue">Exposure ${hiraPct(gs.cover)}</span>
+              <span class="pill-risk ${hiraPillRisk(gs.highA.cls)}">Awal ${gs.highA.label}</span>
+              <span class="pill-risk ${hiraPillRisk(gs.highS.cls)}">Sisa ${gs.highS.label}</span>
+              <span class="pill-decision ${hiraPillDecision(gs.decision.dcls)}">${gs.decision.decision}</span>
+              <button type="button" data-hira-add-child="${lastIx >= 0 ? lastIx : firstIndex}">+ Child</button>
+            </div>
+          </div>
+        </td></tr>`;
+        if (open) {
+          html += `<tr><td colspan="${HIRA_DETAIL_HEADERS.length}" class="!p-0"><div class="hira-detail-wrap"><table class="hira-detail-child-table"><thead><tr>`;
+          html += HIRA_DETAIL_HEADERS.map(h => `<th>${escapeHtml(h)}</th>`).join("");
+          html += "</tr></thead><tbody>";
+          arr.forEach((r, i) => {
+            const ix = hiraDetailRows.findIndex(x => x.id === r.id);
+            const x = hiraCalc(r);
+            html += `<tr>
+              <td><b>${gi + 1}.${i + 1}</b></td>
+              <td>${hiraDetailInput(r.section, ix, "section")}</td>
+              <td>${hiraDetailInput(r.activity, ix, "activity")}</td>
+              <td>${hiraDetailInput(r.subActivity, ix, "subActivity")}</td>
+              <td>${hiraDetailInput(r.subSubActivity, ix, "subSubActivity")}</td>
+              <td>${hiraDetailSelect(r.rnr, O.rnr, ix, "rnr")}</td>
+              <td>${hiraDetailSelect(r.site, O.sites, ix, "site")}</td>
+              <td>${hiraDetailSelect(r.faktor, O.faktor, ix, "faktor")}</td>
+              <td>${hiraDetailInput(r.hazard, ix, "hazard")}</td>
+              <td>${hiraDetailInput(r.eventPotential, ix, "eventPotential")}</td>
+              <td>${hiraDetailInput(r.kepAwal, ix, "kepAwal", "number")}</td>
+              <td>${hiraDetailInput(r.konseqAwal, ix, "konseqAwal", "number")}</td>
+              <td><b>${hiraFmt(x.scoreA)}</b></td>
+              <td><span class="pill-risk ${hiraPillRisk(x.bA.cls)}">${x.bA.label}</span></td>
+              <td>${hiraDetailSelect(r.tpAwal, O.tp, ix, "tpAwal")}</td>
+              <td>${hiraDetailInput(r.existingControl, ix, "existingControl")}</td>
+              <td>${hiraDetailInput(r.ownerExisting, ix, "ownerExisting")}</td>
+              <td><div class="hira-detail-note">${escapeHtml(plan)}</div></td>
+              <td>${hiraDetailSelect(r.controlLevel, O.control, ix, "controlLevel")}</td>
+              <td>${hiraDetailSelect(r.exposureType, O.exposure, ix, "exposureType")}</td>
+              <td>${hiraDetailInput(r.exposureBeforeValue, ix, "exposureBeforeValue", "number")}</td>
+              <td>${hiraDetailInput(r.exposureControlValue, ix, "exposureControlValue", "number")}</td>
+              <td><b>${hiraPct(x.cover)}</b></td>
+              <td>${hiraDetailInput(r.kepSisa, ix, "kepSisa", "number")}</td>
+              <td>${hiraDetailInput(r.konseqSisa, ix, "konseqSisa", "number")}</td>
+              <td><b>${hiraFmt(x.scoreS)}</b></td>
+              <td><span class="pill-risk ${hiraPillRisk(x.bS.cls)}">${x.bS.label}</span></td>
+              <td>${hiraDetailSelect(r.targetRisk, O.target, ix, "targetRisk")}</td>
+              <td>${hiraDetailSelect(r.tpLanjutan, O.tp, ix, "tpLanjutan")}</td>
+              <td>${hiraDetailInput(r.ownerLanjutan, ix, "ownerLanjutan")}</td>
+              <td>${hiraDetailInput(r.startDate, ix, "startDate", "date")}</td>
+              <td>${hiraDetailInput(r.targetDate, ix, "targetDate", "date")}</td>
+              <td>${hiraDetailSelect(r.status, O.status, ix, "status")}</td>
+              <td><span class="pill-decision ${hiraPillDecision(x.dcls)}">${x.decision}</span></td>
+              <td>
+                <button type="button" data-hira-add-child="${ix}">+ Detail</button>
+                <button type="button" data-hira-del="${ix}">Hapus</button>
+              </td>
+            </tr>`;
+          });
+          html += "</tbody></table></div></td></tr>";
+        }
+      });
+      html += "</tbody></table>";
+      host.innerHTML = html || '<p class="muted small p-4">Belum ada data. Klik Tambah Parent.</p>';
+    }
+
+    function hiraDetailBlankRow(planName) {
+      return {
+        improvementPlan: planName,
+        section: "Section",
+        activity: "Aktivitas",
+        subActivity: "Sub Aktivitas",
+        subSubActivity: "Sub-sub Aktivitas",
+        rnr: "R",
+        site: "HO",
+        faktor: "Men",
+        hazard: "Bahaya/Aspek Lingkungan/Penyebab Potensial",
+        eventPotential: "Kejadian / Potensi",
+        kepAwal: "1",
+        konseqAwal: "1",
+        tpAwal: "ADM",
+        existingControl: "Pengendalian yang dilakukan (Tertinggi)",
+        ownerExisting: "Pemilik Pengendalian",
+        controlLevel: "L3 - Mendeteksi + Intervensi Manusia",
+        exposureType: "Unit",
+        exposureBeforeValue: "0",
+        exposureControlValue: "0",
+        kepSisa: "1",
+        konseqSisa: "1",
+        targetRisk: "Medium",
+        tpLanjutan: "ADM",
+        ownerLanjutan: "Owner",
+        startDate: "",
+        targetDate: "",
+        status: "Not Started",
+      };
+    }
+
+    function hiraDetailAddParent() {
+      const name = `New Improvement Plan ${hiraUnique("improvementPlan") + 1}`;
+      hiraDetailRows.push({ ...hiraDetailBlankRow(name), id: null });
+      hiraDetailExpanded[name] = true;
+      renderHiraDetailTable();
+      scheduleHiraDetailSave();
+    }
+
+    function hiraDetailAddChild(ix) {
+      const base = hiraDetailRows[ix];
+      if (!base) return;
+      const r = { ...base, id: null, subSubActivity: "Sub-sub Aktivitas baru", hazard: "Bahaya/Aspek Lingkungan/Penyebab Potensial", eventPotential: "Kejadian / Potensi", exposureBeforeValue: "0", exposureControlValue: "0", status: "Not Started" };
+      hiraDetailRows.splice(ix + 1, 0, r);
+      renderHiraDetailTable();
+      scheduleHiraDetailSave();
+    }
+
+    function hiraDetailDeleteRow(ix) {
+      hiraDetailRows.splice(ix, 1);
+      renderHiraDetailTable();
+      scheduleHiraDetailSave();
+    }
+
+    function hiraDetailSetAllExpanded(open) {
+      Object.keys(hiraGroupBy(hiraDetailRows, "improvementPlan")).forEach(plan => {
+        hiraDetailExpanded[plan] = open;
+      });
+      renderHiraDetailTable();
+    }
+
+    async function loadHiraDetailRows(force = false) {
+      if (hiraDetailLoaded && !force) return;
+      const host = document.getElementById("hiraDetailTable");
+      if (host) host.setAttribute("aria-busy", "true");
+      setHiraDetailStatus("Memuat data…", "is-saving");
+      try {
+        const data = await hiraDetailFetch(`${hiraDetailApi.index}?${hiraDetailScopeQuery()}`);
+        hiraDetailRows = data.rows || [];
+        hiraDetailOpts = data.options || {};
+        hiraDetailExpanded = {};
+        hiraDetailLoaded = true;
+        setHiraDetailStatus(`${hiraDetailRows.length} baris dimuat.`);
+        renderHiraDetailTable();
+      } catch (err) {
+        setHiraDetailStatus(err.message || "Gagal memuat data.", "is-error");
+      } finally {
+        if (host) host.setAttribute("aria-busy", "false");
+      }
+    }
+
+    function bindHiraDetailTable() {
+      const host = document.getElementById("hiraDetailTable");
+      if (!host || host.dataset.bound === "1") return;
+      host.dataset.bound = "1";
+      host.addEventListener("input", event => {
+        const el = event.target.closest("[data-hira-ix][data-hira-key]");
+        if (!el) return;
+        hiraDetailSetVal(Number(el.dataset.hiraIx), el.dataset.hiraKey, el.value);
+      });
+      host.addEventListener("change", event => {
+        const el = event.target.closest("[data-hira-ix][data-hira-key]");
+        if (!el) return;
+        hiraDetailSetVal(Number(el.dataset.hiraIx), el.dataset.hiraKey, el.value);
+      });
+      host.addEventListener("click", event => {
+        const toggle = event.target.closest("[data-hira-toggle]");
+        if (toggle) {
+          const plan = toggle.dataset.hiraToggle;
+          hiraDetailExpanded[plan] = !hiraDetailExpanded[plan];
+          renderHiraDetailTable();
+          return;
+        }
+        const addChild = event.target.closest("[data-hira-add-child]");
+        if (addChild) {
+          hiraDetailAddChild(Number(addChild.dataset.hiraAddChild));
+          return;
+        }
+        const del = event.target.closest("[data-hira-del]");
+        if (del) hiraDetailDeleteRow(Number(del.dataset.hiraDel));
+      });
+    }
+
+    function bindHiraDetailToolbar() {
+      document.getElementById("hiraDetailAddParent")?.addEventListener("click", hiraDetailAddParent);
+      document.getElementById("hiraDetailExpandAll")?.addEventListener("click", () => hiraDetailSetAllExpanded(true));
+      document.getElementById("hiraDetailCollapseAll")?.addEventListener("click", () => hiraDetailSetAllExpanded(false));
+      document.getElementById("hiraDetailExportCsv")?.addEventListener("click", () => {
+        window.location.href = `${hiraDetailApi.exportCsv}?${hiraDetailScopeQuery()}`;
+      });
+      document.getElementById("hiraDetailExportXls")?.addEventListener("click", () => {
+        window.location.href = `${hiraDetailApi.exportXls}?${hiraDetailScopeQuery()}`;
+      });
+      document.getElementById("hiraDetailReset")?.addEventListener("click", async () => {
+        if (!confirm("Reset semua baris ke data contoh untuk periode ini?")) return;
+        setHiraDetailStatus("Mereset…", "is-saving");
+        try {
+          const data = await hiraDetailFetch(`${hiraDetailApi.reset}?${hiraDetailScopeQuery()}`, { method: "POST", body: "{}" });
+          hiraDetailRows = data.rows || [];
+          hiraDetailExpanded = {};
+          setHiraDetailStatus(data.message || "Reset selesai.");
+          renderHiraDetailTable();
+        } catch (err) {
+          setHiraDetailStatus(err.message || "Reset gagal.", "is-error");
+        }
+      });
+      document.getElementById("hiraDetailUpload")?.addEventListener("change", async event => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.append("file", file);
+        setHiraDetailStatus("Mengimpor…", "is-saving");
+        try {
+          const res = await fetch(`${hiraDetailApi.import}?${hiraDetailScopeQuery()}`, {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": hiraDetailCsrf, Accept: "application/json" },
+            body: fd,
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || "Impor gagal.");
+          hiraDetailRows = data.rows || [];
+          hiraDetailExpanded = {};
+          setHiraDetailStatus(data.message || "Impor berhasil.");
+          renderHiraDetailTable();
+        } catch (err) {
+          setHiraDetailStatus(err.message || "Impor gagal.", "is-error");
+        }
+        event.target.value = "";
+      });
+    }
+
+    /* ——— S-Curve Improvement (desain.html scurvePage) + API ——— */
+    let hiraScurveTasks = [];
+    let hiraScurveOpts = { status: ["Open", "Progress", "Done", "Closed"] };
+    let hiraScurveExpanded = {};
+    let hiraScurveLoaded = false;
+    let hiraScurveSaveTimer = null;
+    let hiraScurveSaving = false;
+
+    function setHiraScurveStatus(message, type = "") {
+      const el = document.getElementById("hiraScurveStatus");
+      if (!el) return;
+      el.textContent = message || "";
+      el.classList.remove("is-error", "is-saving");
+      if (type === "is-error") el.classList.add("is-error");
+      if (type === "is-saving") el.classList.add("is-saving");
+    }
+
+    function hiraScurveUniquePlans() {
+      return new Set(hiraScurveTasks.map(t => String(t.improvementPlan || "").trim()).filter(Boolean)).size;
+    }
+
+    function hiraScurvePlanInput(plan) {
+      return `<input type="text" value="${escapeHtml(plan)}" data-scurve-plan-old="${escapeHtml(plan)}" data-scurve-plan-input>`;
+    }
+
+    function hiraScurveRenamePlan(oldPlan, newPlan) {
+      const next = String(newPlan || "").trim();
+      if (!next || oldPlan === next) return;
+      hiraScurveTasks.forEach(t => {
+        if (t.improvementPlan === oldPlan) t.improvementPlan = next;
+      });
+      if (hiraScurveExpanded[oldPlan]) {
+        hiraScurveExpanded[next] = true;
+        delete hiraScurveExpanded[oldPlan];
+      }
+      renderHiraScurveTable();
+      scheduleHiraScurveSave();
+    }
+
+    function hiraScurveTasksByPlan() {
+      return hiraScurveTasks.reduce((acc, t) => {
+        const plan = t.improvementPlan || "-";
+        (acc[plan] = acc[plan] || []).push(t);
+        return acc;
+      }, {});
+    }
+
+    function hiraScurveDateNum(v) {
+      const d = new Date(v);
+      return Number.isFinite(d.getTime()) ? d.getTime() : null;
+    }
+
+    function hiraScurveStatusWeight(s) {
+      if (s === "Done" || s === "Closed") return 1;
+      if (s === "Progress") return 0.5;
+      return 0;
+    }
+
+    function hiraScurveBuildSeries(tasks) {
+      const valid = tasks
+        .map(t => ({ t, plan: hiraScurveDateNum(t.plannedDate), actual: hiraScurveDateNum(t.actualDate) }))
+        .filter(x => x.plan || x.actual)
+        .sort((a, b) => (a.plan || a.actual) - (b.plan || b.actual));
+      if (!valid.length) return null;
+      const datePool = [...new Set(valid.flatMap(x => [x.plan, x.actual]).filter(Boolean))].sort((a, b) => a - b);
+      const total = Math.max(tasks.length, 1);
+      return {
+        points: datePool.map(d => ({
+          planned: hiraClamp(tasks.filter(t => hiraScurveDateNum(t.plannedDate) && hiraScurveDateNum(t.plannedDate) <= d).length / total * 100, 0, 100),
+          actual: hiraClamp(tasks.reduce((s, t) => {
+            const ad = hiraScurveDateNum(t.actualDate);
+            return (!ad || ad > d) ? s : s + hiraScurveStatusWeight(t.status);
+          }, 0) / total * 100, 0, 100),
+        })),
+      };
+    }
+
+    function hiraScurveTaskInput(plan, t, ix, key, type = "text") {
+      return `<input type="${type}" value="${escapeHtml(t[key])}" data-scurve-plan="${escapeHtml(plan)}" data-scurve-ix="${ix}" data-scurve-key="${escapeHtml(key)}">`;
+    }
+
+    function hiraScurveTaskSelect(plan, t, ix, key) {
+      const list = hiraScurveOpts.status || [];
+      return `<select data-scurve-plan="${escapeHtml(plan)}" data-scurve-ix="${ix}" data-scurve-key="${escapeHtml(key)}">${list.map(o => `<option value="${escapeHtml(o)}"${o === t[key] ? " selected" : ""}>${escapeHtml(o)}</option>`).join("")}</select>`;
+    }
+
+    function hiraScurveUpdateTask(ix, key, value) {
+      if (!hiraScurveTasks[ix]) return;
+      hiraScurveTasks[ix][key] = value;
+      renderHiraScurveTable();
+      scheduleHiraScurveSave();
+    }
+
+    function hiraScurveBlankTasks(planName) {
+      return [
+        { improvementPlan: planName, taskName: "Planning & preparation", plannedDate: "", actualDate: "", status: "Progress", note: "Input manual task progress" },
+        { improvementPlan: planName, taskName: "Implementation", plannedDate: "", actualDate: "", status: "Open", note: "Isi actual date saat task berjalan/selesai" },
+        { improvementPlan: planName, taskName: "Verification & closure", plannedDate: "", actualDate: "", status: "Open", note: "Validasi efektivitas improvement" },
+      ];
+    }
+
+    function hiraScurveAddParent() {
+      const name = `New Improvement Plan ${hiraScurveUniquePlans() + 1}`;
+      hiraScurveBlankTasks(name).forEach(t => hiraScurveTasks.push({ ...t, id: null }));
+      hiraScurveExpanded[name] = true;
+      renderHiraScurveTable();
+      scheduleHiraScurveSave();
+    }
+
+    function hiraScurveAddTask(plan, afterIx = null) {
+      const row = {
+        id: null,
+        improvementPlan: plan,
+        taskName: "Task baru",
+        plannedDate: "",
+        actualDate: "",
+        status: "Open",
+        note: "",
+      };
+      if (afterIx !== null && afterIx >= 0) {
+        hiraScurveTasks.splice(afterIx + 1, 0, row);
+      } else {
+        hiraScurveTasks.push(row);
+      }
+      hiraScurveExpanded[plan] = true;
+      renderHiraScurveTable();
+      scheduleHiraScurveSave();
+    }
+
+    function hiraScurveDeleteTask(ix) {
+      hiraScurveTasks.splice(ix, 1);
+      renderHiraScurveTable();
+      scheduleHiraScurveSave();
+    }
+
+    function scheduleHiraScurveSave() {
+      clearTimeout(hiraScurveSaveTimer);
+      hiraScurveSaveTimer = setTimeout(() => persistHiraScurveTasks(), 600);
+    }
+
+    async function persistHiraScurveTasks() {
+      if (hiraScurveSaving) return;
+      hiraScurveSaving = true;
+      setHiraScurveStatus("Menyimpan…", "is-saving");
+      try {
+        const data = await hiraDetailFetch(`${hiraScurveApi.sync}?${hiraDetailScopeQuery()}`, {
+          method: "POST",
+          body: JSON.stringify({ tasks: hiraScurveTasks }),
+        });
+        hiraScurveTasks = data.tasks || hiraScurveTasks;
+        setHiraScurveStatus("Tersimpan.");
+        renderHiraScurveTable();
+      } catch (err) {
+        setHiraScurveStatus(err.message || "Gagal menyimpan.", "is-error");
+      } finally {
+        hiraScurveSaving = false;
+      }
+    }
+
+    function renderHiraScurveTable() {
+      const host = document.getElementById("hiraScurveTaskTable");
+      if (!host) return;
+      const byPlan = hiraScurveTasksByPlan();
+      const plans = Object.keys(byPlan).sort();
+      const colSpan = HIRA_SCURVE_HEADERS.length;
+
+      let html = '<table class="hira-detail-master"><tbody>';
+      plans.forEach((plan, gi) => {
+        const tasks = byPlan[plan] || [];
+        const series = hiraScurveBuildSeries(tasks);
+        const last = series?.points?.[series.points.length - 1];
+        const open = !!hiraScurveExpanded[plan];
+        html += `<tr class="hira-detail-parent-row"><td colspan="${colSpan}">
+          <div class="flex flex-wrap items-center justify-between gap-3">
+            <div class="flex flex-wrap items-center gap-2">
+              <button type="button" data-scurve-toggle="${escapeHtml(plan)}">${open ? "−" : "+"}</button>
+              ${hiraScurvePlanInput(plan)}
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="badge blue">${open ? "Expanded" : "Collapsed"}</span>
+              <span class="badge blue">${tasks.length} child task</span>
+              <span class="badge blue">Plan ${last ? last.planned.toFixed(1) + "%" : "-"}</span>
+              <span class="badge blue">Actual ${last ? last.actual.toFixed(1) + "%" : "-"}</span>
+              <button type="button" data-scurve-add="${escapeHtml(plan)}">+ Child</button>
+            </div>
+          </div>
+        </td></tr>`;
+        if (open) {
+          html += `<tr><td colspan="${colSpan}" class="!p-0"><div class="hira-detail-wrap"><table class="hira-detail-child-table" style="min-width:1500px"><thead><tr>`;
+          html += HIRA_SCURVE_HEADERS.map(h => `<th>${escapeHtml(h)}</th>`).join("");
+          html += "</tr></thead><tbody>";
+          if (!tasks.length) {
+            html += `<tr><td colspan="${colSpan}" class="text-center text-muted py-6">Belum ada task. Klik + Child pada parent ini.</td></tr>`;
+          } else {
+            tasks.forEach((t, i) => {
+              const rowIx = hiraScurveTasks.findIndex(x => x === t || (x.id && t.id && x.id === t.id));
+              html += `<tr>
+                <td><b>${gi + 1}.${i + 1}</b></td>
+                <td>${hiraScurveTaskInput(plan, t, rowIx, "taskName")}</td>
+                <td>${hiraScurveTaskInput(plan, t, rowIx, "plannedDate", "date")}</td>
+                <td>${hiraScurveTaskInput(plan, t, rowIx, "actualDate", "date")}</td>
+                <td>${hiraScurveTaskSelect(plan, t, rowIx, "status")}</td>
+                <td>${hiraScurveTaskInput(plan, t, rowIx, "note")}</td>
+                <td>
+                  <button type="button" data-scurve-add-child="${rowIx}">+ Detail</button>
+                  <button type="button" data-scurve-del="${rowIx}">Hapus</button>
+                </td>
+              </tr>`;
+            });
+          }
+          html += "</tbody></table></div></td></tr>";
+        }
+      });
+      html += "</tbody></table>";
+      host.innerHTML = html || '<p class="muted small p-4">Belum ada data. Klik Tambah Parent atau isi tab Input HIRA Detail lalu Reset dari HIRA.</p>';
+    }
+
+    function hiraScurveSetAllExpanded(open) {
+      Object.keys(hiraScurveTasksByPlan()).forEach(plan => { hiraScurveExpanded[plan] = open; });
+      renderHiraScurveTable();
+    }
+
+    async function loadHiraScurveTasks(force = false) {
+      if (hiraScurveLoaded && !force) return;
+      const host = document.getElementById("hiraScurveTaskTable");
+      if (host) host.setAttribute("aria-busy", "true");
+      setHiraScurveStatus("Memuat task…", "is-saving");
+      try {
+        const data = await hiraDetailFetch(`${hiraScurveApi.index}?${hiraDetailScopeQuery()}`);
+        hiraScurveTasks = data.tasks || [];
+        hiraScurveOpts = data.options || hiraScurveOpts;
+        hiraScurveExpanded = {};
+        hiraScurveLoaded = true;
+        setHiraScurveStatus(`${hiraScurveTasks.length} task dimuat.`);
+        renderHiraScurveTable();
+      } catch (err) {
+        setHiraScurveStatus(err.message || "Gagal memuat task.", "is-error");
+      } finally {
+        if (host) host.setAttribute("aria-busy", "false");
+      }
+    }
+
+    function bindHiraScurveTable() {
+      const host = document.getElementById("hiraScurveTaskTable");
+      if (!host || host.dataset.bound === "1") return;
+      host.dataset.bound = "1";
+      host.addEventListener("input", event => {
+        const planInput = event.target.closest("[data-scurve-plan-input]");
+        if (planInput) return;
+        const el = event.target.closest("[data-scurve-ix][data-scurve-key]");
+        if (!el) return;
+        hiraScurveUpdateTask(Number(el.dataset.scurveIx), el.dataset.scurveKey, el.value);
+      });
+      host.addEventListener("change", event => {
+        const el = event.target.closest("[data-scurve-ix][data-scurve-key]");
+        if (!el) return;
+        hiraScurveUpdateTask(Number(el.dataset.scurveIx), el.dataset.scurveKey, el.value);
+      });
+      host.addEventListener("focusout", event => {
+        const planInput = event.target.closest("[data-scurve-plan-input]");
+        if (!planInput) return;
+        hiraScurveRenamePlan(planInput.dataset.scurvePlanOld, planInput.value);
+      });
+      host.addEventListener("keydown", event => {
+        const planInput = event.target.closest("[data-scurve-plan-input]");
+        if (!planInput || event.key !== "Enter") return;
+        event.preventDefault();
+        planInput.blur();
+      });
+      host.addEventListener("click", event => {
+        const toggle = event.target.closest("[data-scurve-toggle]");
+        if (toggle) {
+          const plan = toggle.dataset.scurveToggle;
+          hiraScurveExpanded[plan] = !hiraScurveExpanded[plan];
+          renderHiraScurveTable();
+          return;
+        }
+        const add = event.target.closest("[data-scurve-add]");
+        if (add) {
+          hiraScurveAddTask(add.dataset.scurveAdd);
+          return;
+        }
+        const addChild = event.target.closest("[data-scurve-add-child]");
+        if (addChild) {
+          const ix = Number(addChild.dataset.scurveAddChild);
+          const plan = hiraScurveTasks[ix]?.improvementPlan;
+          if (plan) hiraScurveAddTask(plan, ix);
+          return;
+        }
+        const del = event.target.closest("[data-scurve-del]");
+        if (del) hiraScurveDeleteTask(Number(del.dataset.scurveDel));
+      });
+    }
+
+    function bindHiraScurveToolbar() {
+      document.getElementById("hiraScurveAddParent")?.addEventListener("click", hiraScurveAddParent);
+      document.getElementById("hiraScurveExpandAll")?.addEventListener("click", () => hiraScurveSetAllExpanded(true));
+      document.getElementById("hiraScurveCollapseAll")?.addEventListener("click", () => hiraScurveSetAllExpanded(false));
+      document.getElementById("hiraScurveExportCsv")?.addEventListener("click", () => {
+        window.location.href = `${hiraScurveApi.exportCsv}?${hiraDetailScopeQuery()}`;
+      });
+      document.getElementById("hiraScurveExportXls")?.addEventListener("click", () => {
+        window.location.href = `${hiraScurveApi.exportXls}?${hiraDetailScopeQuery()}`;
+      });
+      document.getElementById("hiraScurveUpload")?.addEventListener("change", async event => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.append("file", file);
+        setHiraScurveStatus("Mengimpor…", "is-saving");
+        try {
+          const res = await fetch(`${hiraScurveApi.import}?${hiraDetailScopeQuery()}`, {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": hiraDetailCsrf, Accept: "application/json" },
+            body: fd,
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || "Impor gagal.");
+          hiraScurveTasks = data.tasks || [];
+          hiraScurveExpanded = {};
+          setHiraScurveStatus(data.message || "Impor berhasil.");
+          renderHiraScurveTable();
+        } catch (err) {
+          setHiraScurveStatus(err.message || "Impor gagal.", "is-error");
+        }
+        event.target.value = "";
+      });
+      document.getElementById("hiraScurveReseed")?.addEventListener("click", async () => {
+        if (!confirm("Reset semua task dari data HIRA detail? Task manual akan diganti.")) return;
+        setHiraScurveStatus("Regenerasi…", "is-saving");
+        try {
+          const data = await hiraDetailFetch(`${hiraScurveApi.reseed}?${hiraDetailScopeQuery()}`, { method: "POST", body: "{}" });
+          hiraScurveTasks = data.tasks || [];
+          hiraScurveExpanded = {};
+          setHiraScurveStatus(data.message || "Selesai.");
+          renderHiraScurveTable();
+        } catch (err) {
+          setHiraScurveStatus(err.message || "Regenerasi gagal.", "is-error");
+        }
+      });
+    }
+
+    function syncPageOnlyContent(view) {
+      document.querySelectorAll("[data-page-only]").forEach(element => {
+        element.hidden = element.dataset.pageOnly !== view;
+      });
+    }
+
     function switchView(view) {
       activeView = view;
       document.querySelectorAll(".tabs button").forEach(button => button.classList.toggle("active", button.dataset.view === view));
@@ -2980,6 +3655,8 @@
       });
       syncPageOnlyContent(view);
       renderPageIntro(view);
+      if (view === "driver") loadHiraDetailRows();
+      if (view === "correlation") loadHiraScurveTasks();
       closeSitePopup();
       hideTooltip();
       bindTooltips();
@@ -2993,7 +3670,6 @@
     }
 
     function renderAll() {
-      renderCards();
       renderRiskProfiling();
       renderSitePerformance();
       renderDriverDictionary();
@@ -3013,12 +3689,6 @@
       switchView(button.dataset.view);
     });
 
-    siteCards?.addEventListener("click", event => {
-      const card = event.target.closest(".score-card");
-      if (!card) return;
-      selectSite(card.dataset.site);
-    });
-
     document.getElementById("scatterBox")?.addEventListener("click", event => {
       const point = event.target.closest(".point");
       if (!point) return;
@@ -3027,7 +3697,6 @@
 
     riskFilter?.addEventListener("change", () => {
       if (activeView !== "overview") return;
-      renderCards();
       closeSitePopup();
     });
     if (riskProfileSiteFilter) {
@@ -3062,6 +3731,10 @@
     setupRiskProfileSiteFilter();
     bindImprovementRekapTable();
     bindRiskMatrixCells();
+    bindHiraDetailTable();
+    bindHiraDetailToolbar();
+    bindHiraScurveTable();
+    bindHiraScurveToolbar();
     renderAll();
   </script>
 </body>

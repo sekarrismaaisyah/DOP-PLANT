@@ -15,6 +15,9 @@ use PhpOffice\PhpSpreadsheet\Cell\DataType;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
+use PhpOffice\PhpSpreadsheet\Style\Alignment;
+use PhpOffice\PhpSpreadsheet\Style\Fill;
+use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
@@ -97,6 +100,40 @@ final class PeerPressureKejadianEdukasiExcelImportService
         'Site',
     ];
 
+    private const TEMPLATE_HEADER_FILL = '548235';
+
+    private const TEMPLATE_HEADER_FONT = 'FFFFFF';
+
+    /** @var list<string> */
+    private const COLUMN_COMMENTS = [
+        "Wajib di baris awal kejadian.\nFormat DD/MM/YYYY atau tanggal Excel.\nContoh pengisian: 15/01/2026",
+        "Wajib diisi.\nFormat 24 jam HH:MM atau HH:MM:SS.\nContoh pengisian: 08:30",
+        "Cantumkan kelompok lokasi tempat temuan.\nContoh pengisian: Pit",
+        "Cantumkan lokasi temuan spesifik.\nContoh pengisian: Line A",
+        "Cantumkan kelompok lokasi edukasi.\nContoh pengisian: Mess",
+        "Cantumkan lokasi edukasi spesifik.\nContoh pengisian: Mess Site X",
+        "Wajib diisi.\nFormat DD/MM/YYYY atau tanggal Excel.\nContoh pengisian: 16/01/2026",
+        "Wajib diisi.\nFormat 24 jam HH:MM atau HH:MM:SS.\nContoh pengisian: 09:00",
+        "Cantumkan nama perusahaan terkait kejadian.\nContoh pengisian: PT Contoh",
+        "Opsional. Isi tasklist temuan jika ada.\nContoh pengisian: Ceklist harian",
+        "Wajib diisi.\nRingkasan kronologi temuan secara singkat dan jelas.",
+        "Cantumkan kategori deviasi.\nContoh pengisian: Golden Rules",
+        "Cantumkan nama pemimpin edukasi.\nContoh pengisian: Nama Leader",
+        "Opsional. ID Berecord jika tersedia.\nContoh pengisian: BR-12345",
+        "SID karyawan pelanggar.\nContoh pengisian: SID001",
+        "Nama pelanggar sesuai SID.\nContoh pengisian: Nama Pelanggar",
+        "SID karyawan peer.\nContoh pengisian: SID002",
+        "Nama peer sesuai SID.\nContoh pengisian: Nama Peer",
+        "Opsional. Jenis kelompok kerja.\nContoh pengisian: Kontraktor",
+        "Opsional. Kelompok aktivitas pekerjaan.\nContoh pengisian: Operasi",
+        "Opsional. Aktivitas pekerjaan.\nContoh pengisian: Loading",
+        "Opsional. Departemen terkait.\nContoh pengisian: Dept Safety",
+        "Opsional. URL bukti/evidence lengkap jika ada.\nContoh pengisian: https://example.com/evidence",
+        "Wajib diisi.\nDurasi edukasi dalam menit (angka bulat > 0).\nContoh pengisian: 45",
+        "Wajib diisi.\nContoh pengisian: SELESAI atau OPEN (maks. 50 karakter).",
+        "Opsional. Kode atau nama site.\nContoh pengisian: SITE-A",
+    ];
+
     public function importFromUpload(UploadedFile $file): PeerPressureKejadianEdukasiExcelImportResult
     {
         $prevExcelCalendar = ExcelDate::getExcelCalendar();
@@ -106,7 +143,7 @@ final class PeerPressureKejadianEdukasiExcelImportService
             ExcelDate::setExcelCalendar($spreadsheet->getExcelCalendar());
 
             $worksheet = $spreadsheet->getActiveSheet();
-            $rows = $worksheet->toArray(null, true, false, false);
+            $rows = $worksheet->toArray(null, true, true, false);
 
             if (count($rows) < 2) {
                 return new PeerPressureKejadianEdukasiExcelImportResult(
@@ -118,17 +155,19 @@ final class PeerPressureKejadianEdukasiExcelImportService
                 );
             }
 
-            $headerRow = $this->normalizeRowToZeroBased(array_shift($rows));
-            $headerErrors = $this->validateHeaders($headerRow);
-            if ($headerErrors !== []) {
+            $headerResolution = $this->resolveHeaderRow($rows);
+            if ($headerResolution['errors'] !== []) {
                 return new PeerPressureKejadianEdukasiExcelImportResult(
                     false,
                     'Header Excel tidak sesuai template.',
-                    $headerErrors,
+                    $headerResolution['errors'],
                     0,
                     0
                 );
             }
+
+            $rows = $headerResolution['dataRows'];
+            $firstDataExcelRow = $headerResolution['firstDataExcelRow'];
 
             if (! $this->hasAnyDataRow($rows)) {
                 return new PeerPressureKejadianEdukasiExcelImportResult(
@@ -140,7 +179,7 @@ final class PeerPressureKejadianEdukasiExcelImportService
                 );
             }
 
-            $validationErrors = $this->collectBlockingErrors($rows);
+            $validationErrors = $this->collectBlockingErrors($rows, $firstDataExcelRow);
             if ($validationErrors !== []) {
                 return new PeerPressureKejadianEdukasiExcelImportResult(
                     false,
@@ -157,7 +196,7 @@ final class PeerPressureKejadianEdukasiExcelImportService
 
             DB::beginTransaction();
 
-            $rowNum = 2;
+            $rowNum = $firstDataExcelRow;
             $current = null;
             $urutan = 0;
 
@@ -249,13 +288,29 @@ final class PeerPressureKejadianEdukasiExcelImportService
         $sheet->setTitle('Data Peer Pressure');
 
         $headers = self::EXPECTED_HEADERS;
+        $headerRow = 2;
+        $lastCol = Coordinate::stringFromColumnIndex(count($headers));
+        $lastColLetter = $lastCol;
+
+        $instructionText = '1. Lembar ini digunakan untuk mengimpor data kejadian dan edukasi Peer Pressure ke sistem. '
+            . '2. Isi semua kolom sesuai petunjuk pada komentar di setiap header kolom (arahkan kursor ke tanda segitiga merah). '
+            . '3. Satu kejadian dimulai saat kolom Tanggal Temuan terisi; baris berikutnya dengan Tanggal Temuan kosong ditambahkan sebagai pelanggar/peer pada kejadian yang sama. '
+            . '4. Tanggal Temuan & Tanggal Edukasi: DD/MM/YYYY atau format tanggal Excel. Jam Temuan & Jam Edukasi: HH:MM (24 jam). '
+            . '5. Hapus atau timpa baris contoh (baris 3–4) dengan data Anda sebelum upload.';
+
+        $sheet->mergeCells('A1:' . $lastColLetter . '1');
+        $sheet->setCellValue('A1', $instructionText);
+        $this->applyTemplateBannerStyle($sheet, 'A1:' . $lastColLetter . '1');
+        $sheet->getRowDimension(1)->setRowHeight(48);
+
         $col = 1;
         foreach ($headers as $h) {
-            $sheet->setCellValue(Coordinate::stringFromColumnIndex($col) . '1', $h);
+            $cellRef = Coordinate::stringFromColumnIndex($col) . $headerRow;
+            $sheet->setCellValue($cellRef, $h);
             $col++;
         }
-        $lastCol = Coordinate::stringFromColumnIndex(count($headers));
-        $sheet->getStyle('A1:' . $lastCol . '1')->getFont()->setBold(true);
+        $this->applyTemplateBannerStyle($sheet, 'A' . $headerRow . ':' . $lastColLetter . $headerRow);
+        $this->addHeaderColumnComments($sheet, $headerRow);
 
         $example = [
             '15/01/2026',
@@ -285,28 +340,54 @@ final class PeerPressureKejadianEdukasiExcelImportService
             'SELESAI',
             'SITE-A',
         ];
+        $exampleRow = 3;
         foreach ($example as $i => $val) {
             $c = Coordinate::stringFromColumnIndex($i + 1);
-            $sheet->setCellValueExplicit($c . '2', (string) $val, DataType::TYPE_STRING);
+            $sheet->setCellValueExplicit($c . $exampleRow, (string) $val, DataType::TYPE_STRING);
         }
 
-        $sheet->mergeCells('A3:' . $lastCol . '4');
-        $sheet->setCellValue(
-            'A3',
-            "PETUNJUK FORMAT\n"
-            . "• Tanggal Temuan & Tanggal Edukasi: teks DD/MM/YYYY (contoh 15/01/2026) atau tanggal serial Excel.\n"
-            . "• Jam Temuan & Jam Edukasi: format 24 jam HH:MM atau HH:MM:SS (contoh 08:30).\n"
-            . "• Durasi Edukasi (Menit): angka > 0.\n"
-            . "• Baris berikutnya dengan kolom Tanggal Temuan kosong = tambahan pelanggar/peer untuk kejadian di atas.\n"
-            . "• Hapus atau timpa baris contoh (baris 2) dengan data Anda sebelum upload."
-        );
-        $sheet->getStyle('A3')->getAlignment()->setWrapText(true);
-        $sheet->getStyle('A3')->getFont()->setSize(10);
+        $continuationRow = 4;
+        $continuation = [
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            'SID003',
+            'Pelanggar Tambahan',
+            'SID004',
+            'Peer Tambahan',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+            '',
+        ];
+        foreach ($continuation as $i => $val) {
+            if ($val === '') {
+                continue;
+            }
+            $c = Coordinate::stringFromColumnIndex($i + 1);
+            $sheet->setCellValueExplicit($c . $continuationRow, (string) $val, DataType::TYPE_STRING);
+        }
 
         for ($c = 1; $c <= count($headers); $c++) {
             $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($c))->setAutoSize(true);
         }
-        $sheet->getRowDimension(3)->setRowHeight(90);
+
+        $sheet->freezePane('A3');
 
         $info = $spreadsheet->createSheet();
         $info->setTitle('Referensi Kolom');
@@ -317,13 +398,30 @@ final class PeerPressureKejadianEdukasiExcelImportService
         $rowsHelp = [
             ['Tanggal Temuan', 'Wajib untuk baris awal kejadian', 'DD/MM/YYYY atau serial tanggal Excel'],
             ['Jam Temuan', 'Wajib', 'HH:MM atau HH:MM:SS (24 jam)'],
+            ['Kelompok Lokasi Temuan', 'Opsional (default "-")', 'Teks'],
+            ['Lokasi Temuan', 'Opsional (default "-")', 'Teks'],
+            ['Kelompok Lokasi Edukasi', 'Opsional (default "-")', 'Teks'],
+            ['Lokasi Edukasi', 'Opsional (default "-")', 'Teks'],
             ['Tanggal Edukasi', 'Wajib', 'DD/MM/YYYY atau serial tanggal Excel'],
             ['Jam Edukasi', 'Wajib', 'HH:MM atau HH:MM:SS'],
+            ['Perusahaan', 'Opsional (default "-")', 'Teks'],
+            ['Tasklist Temuan (Jika Ada)', 'Opsional', 'Teks'],
             ['Kronologi Temuan', 'Wajib', 'Teks'],
+            ['Kategori Deviasi', 'Opsional (default "-")', 'Teks'],
+            ['Pemimpin Edukasi', 'Opsional (default "-")', 'Teks'],
+            ['Id Berecord', 'Opsional', 'Teks'],
+            ['SID Pelanggar', 'Opsional per baris', 'Teks — baris lanjutan tanpa tanggal temuan'],
+            ['Nama Pelanggar', 'Opsional per baris', 'Teks'],
+            ['SID Peer', 'Opsional per baris', 'Teks'],
+            ['Nama Peer', 'Opsional per baris', 'Teks'],
+            ['Jenis Kelompok Kerja', 'Opsional', 'Teks'],
+            ['Kelompok Aktivitas Pekerjaan', 'Opsional', 'Teks'],
+            ['Aktivitas Pekerjaan', 'Opsional', 'Teks'],
+            ['Departemen', 'Opsional', 'Teks'],
+            ['Evidence', 'Opsional', 'URL lengkap jika ada'],
             ['Durasi Edukasi (Menit)', 'Wajib', 'Bilangan bulat > 0'],
             ['Status Pelaksanaan Edukasi', 'Wajib', 'Contoh: SELESAI, OPEN (maks. 50 karakter)'],
             ['Site', 'Opsional', 'Maks. 255 karakter'],
-            ['Evidence', 'Opsional', 'URL lengkap jika ada'],
         ];
         $r = 2;
         foreach ($rowsHelp as $h) {
@@ -346,6 +444,74 @@ final class PeerPressureKejadianEdukasiExcelImportService
         }, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
         ]);
+    }
+
+    /**
+     * @param  list<array<int, mixed>>  $rows
+     * @return array{dataRows: list<array<int, mixed>>, firstDataExcelRow: int, errors: list<string>}
+     */
+    private function resolveHeaderRow(array $rows): array
+    {
+        $candidates = [0, 1];
+        $lastErrors = [];
+
+        foreach ($candidates as $headerIndex) {
+            if (! isset($rows[$headerIndex])) {
+                continue;
+            }
+
+            $headerRow = $this->normalizeRowToZeroBased($rows[$headerIndex]);
+            $headerErrors = $this->validateHeaders($headerRow);
+            if ($headerErrors === []) {
+                return [
+                    'dataRows' => array_values(array_slice($rows, $headerIndex + 1)),
+                    'firstDataExcelRow' => $headerIndex + 2,
+                    'errors' => [],
+                ];
+            }
+
+            $lastErrors = $headerErrors;
+        }
+
+        return [
+            'dataRows' => [],
+            'firstDataExcelRow' => 2,
+            'errors' => $lastErrors,
+        ];
+    }
+
+    private function applyTemplateBannerStyle(Worksheet $sheet, string $range): void
+    {
+        $sheet->getStyle($range)->applyFromArray([
+            'font' => [
+                'bold' => true,
+                'color' => ['rgb' => self::TEMPLATE_HEADER_FONT],
+                'size' => 10,
+            ],
+            'fill' => [
+                'fillType' => Fill::FILL_SOLID,
+                'startColor' => ['rgb' => self::TEMPLATE_HEADER_FILL],
+            ],
+            'alignment' => [
+                'horizontal' => Alignment::HORIZONTAL_LEFT,
+                'vertical' => Alignment::VERTICAL_CENTER,
+                'wrapText' => true,
+            ],
+        ]);
+    }
+
+    private function addHeaderColumnComments(Worksheet $sheet, int $headerRow): void
+    {
+        foreach (self::EXPECTED_HEADERS as $i => $header) {
+            $cellRef = Coordinate::stringFromColumnIndex($i + 1) . $headerRow;
+            $commentText = self::COLUMN_COMMENTS[$i] ?? 'Isi sesuai petunjuk kolom ' . $header . '.';
+
+            $comment = $sheet->getComment($cellRef);
+            $comment->setAuthor('Admin Peer Pressure');
+            $comment->getText()->createTextRun($commentText);
+            $comment->setWidth('260pt');
+            $comment->setHeight('80pt');
+        }
     }
 
     /**
@@ -388,10 +554,10 @@ final class PeerPressureKejadianEdukasiExcelImportService
      * @param  list<array<int, mixed>>  $rows
      * @return list<string>
      */
-    private function collectBlockingErrors(array $rows): array
+    private function collectBlockingErrors(array $rows, int $firstDataExcelRow = 2): array
     {
         $errors = [];
-        $rowNum = 2;
+        $rowNum = $firstDataExcelRow;
         $hasSuccessfulHeader = false;
 
         foreach ($rows as $row) {
@@ -436,20 +602,22 @@ final class PeerPressureKejadianEdukasiExcelImportService
         $rawTanggalEdukasi = $row[self::COL['tanggal_edukasi']] ?? null;
         $rawJamEdukasi = $row[self::COL['jam_edukasi']] ?? null;
 
-        $tanggalTemuan = $this->parseDateCell($rawTanggalTemuan);
-        if ($tanggalTemuan === null) {
-            $errors[] = "{$prefix}: kolom \"Tanggal Temuan\" tidak valid. Gunakan DD/MM/YYYY (contoh 15/01/2026) atau tanggal Excel. Nilai sel: " . $this->previewCell($rawTanggalTemuan) . '.';
+        $tanggalTemuanParsed = $this->parseDateCellStrict($rawTanggalTemuan, 'tanggal temuan');
+        if (! $tanggalTemuanParsed['ok']) {
+            $errors[] = "{$prefix}: {$tanggalTemuanParsed['error']}. Nilai sel: " . $this->previewCell($rawTanggalTemuan) . '.';
         }
+        $tanggalTemuan = $tanggalTemuanParsed['ok'] ? $tanggalTemuanParsed['value'] : null;
 
         $jamTemuan = $this->parseTimeCell($rawJamTemuan);
         if ($jamTemuan === null) {
             $errors[] = "{$prefix}: kolom \"Jam Temuan\" tidak valid. Gunakan HH:MM atau HH:MM:SS (24 jam). Nilai sel: " . $this->previewCell($rawJamTemuan) . '.';
         }
 
-        $tanggalEdukasi = $this->parseDateCell($rawTanggalEdukasi);
-        if ($tanggalEdukasi === null) {
-            $errors[] = "{$prefix}: kolom \"Tanggal Edukasi\" tidak valid. Gunakan DD/MM/YYYY. Nilai sel: " . $this->previewCell($rawTanggalEdukasi) . '.';
+        $tanggalEdukasiParsed = $this->parseDateCellStrict($rawTanggalEdukasi, 'tanggal edukasi');
+        if (! $tanggalEdukasiParsed['ok']) {
+            $errors[] = "{$prefix}: {$tanggalEdukasiParsed['error']}. Nilai sel: " . $this->previewCell($rawTanggalEdukasi) . '.';
         }
+        $tanggalEdukasi = $tanggalEdukasiParsed['ok'] ? $tanggalEdukasiParsed['value'] : null;
 
         $jamEdukasi = $this->parseTimeCell($rawJamEdukasi);
         if ($jamEdukasi === null) {
@@ -574,41 +742,69 @@ final class PeerPressureKejadianEdukasiExcelImportService
         return $s === '' ? null : $s;
     }
 
-    private function parseDateCell(mixed $v): ?string
+    /**
+     * @return array{ok: true, value: string}|array{ok: false, error: string}
+     */
+    private function parseDateCellStrict(mixed $v, string $fieldLabel): array
     {
-        if ($v === null || $v === '') {
-            return null;
+        if ($v instanceof \DateTimeInterface) {
+            $v = $v->format('d/m/Y');
         }
+
+        if ($v === null || $v === '') {
+            return ['ok' => false, 'error' => 'format ' . $fieldLabel . ' salah'];
+        }
+
         if (is_numeric($v)) {
             try {
-                return ExcelDate::excelToDateTimeObject((float) $v)->format('Y-m-d');
+                $date = ExcelDate::excelToDateTimeObject((float) $v)->format('Y-m-d');
+
+                return ['ok' => true, 'value' => $date];
             } catch (Exception $e) {
-                return null;
+                return ['ok' => false, 'error' => 'format ' . $fieldLabel . ' salah'];
             }
         }
+
         $s = trim((string) $v);
         if ($s === '') {
-            return null;
+            return ['ok' => false, 'error' => 'format ' . $fieldLabel . ' salah'];
         }
+
+        if (preg_match('/^(\d{4})-(\d{2})-(\d{2})$/', $s, $m)) {
+            $year = (int) $m[1];
+            $month = (int) $m[2];
+            $day = (int) $m[3];
+            if (checkdate($month, $day, $year)) {
+                return ['ok' => true, 'value' => sprintf('%04d-%02d-%02d', $year, $month, $day)];
+            }
+
+            return ['ok' => false, 'error' => 'format ' . $fieldLabel . ' salah'];
+        }
+
         if (preg_match('/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4})$/', $s, $m)) {
-            try {
-                $day = (int) $m[1];
-                $month = (int) $m[2];
-                $year = (int) $m[3];
+            $part1 = (int) $m[1];
+            $part2 = (int) $m[2];
+            $year = (int) $m[3];
 
-                return Carbon::createFromDate($year, $month, $day)->format('Y-m-d');
-            } catch (Exception $e) {
-                return null;
+            if ($part1 <= 12 && $part2 > 12) {
+                return ['ok' => false, 'error' => 'format ' . $fieldLabel . ' salah'];
             }
-        }
-        foreach (['Y-m-d', 'd/m/Y', 'j/n/Y', 'd-m-Y', 'j-n-Y'] as $fmt) {
-            try {
-                return Carbon::createFromFormat($fmt, $s)->format('Y-m-d');
-            } catch (Exception $e) {
+
+            if ($part1 > 31 || $part2 > 12 || $part1 < 1 || $part2 < 1) {
+                return ['ok' => false, 'error' => 'format ' . $fieldLabel . ' salah'];
             }
+
+            $day = $part1;
+            $month = $part2;
+
+            if (! checkdate($month, $day, $year)) {
+                return ['ok' => false, 'error' => 'format ' . $fieldLabel . ' salah'];
+            }
+
+            return ['ok' => true, 'value' => sprintf('%04d-%02d-%02d', $year, $month, $day)];
         }
 
-        return null;
+        return ['ok' => false, 'error' => 'format ' . $fieldLabel . ' salah'];
     }
 
     private function parseTimeCell(mixed $v): ?string

@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers;
 
 use App\Http\Requests\PeerPressureEdukasiDataRequest;
+use App\Models\PeerPressureDataImportLog;
 use App\Models\PeerPressureKejadianEdukasi;
 use App\Models\PeerPressurePesertaEdukasi;
 use App\Services\PeerPressure\PeerPressureKaryawanNitipService;
@@ -53,11 +54,17 @@ class PeerPressureEdukasiDataController extends Controller
         }
         $peerFotoUrls = $karyawanNitip->fotoUrlsByKodeSids($sids);
 
+        $importLogs = PeerPressureDataImportLog::query()
+            ->latest()
+            ->limit(50)
+            ->get();
+
         return view('peer-pressure-edukasi.data.index', [
             'kejadian' => $kejadian,
             'q' => $q,
             'navActive' => 'data',
             'peerFotoUrls' => $peerFotoUrls,
+            'importLogs' => $importLogs,
         ]);
     }
 
@@ -70,6 +77,13 @@ class PeerPressureEdukasiDataController extends Controller
         ]);
 
         if ($validator->fails()) {
+            $this->logImportAttempt(
+                $request,
+                false,
+                'Validasi file gagal.',
+                collect($validator->errors()->all())->all(),
+            );
+
             return redirect()
                 ->route('peer-pressure-edukasi.data.index', ['modal' => 'import'])
                 ->withErrors($validator)
@@ -77,6 +91,14 @@ class PeerPressureEdukasiDataController extends Controller
         }
 
         $result = $excelImport->importFromUpload($request->file('excel_file'));
+        $this->logImportAttempt(
+            $request,
+            $result->success,
+            $result->message,
+            $result->errors,
+            $result->importedKejadian,
+            $result->importedPeserta,
+        );
 
         if (! $result->success) {
             return redirect()
@@ -184,5 +206,31 @@ class PeerPressureEdukasiDataController extends Controller
         return redirect()
             ->route('peer-pressure-edukasi.data.index')
             ->with('success', 'Data Peer Pressure berhasil dihapus.');
+    }
+
+    /**
+     * @param  list<string>  $errors
+     */
+    private function logImportAttempt(
+        Request $request,
+        bool $success,
+        string $message,
+        array $errors = [],
+        int $importedKejadian = 0,
+        int $importedPeserta = 0,
+    ): void {
+        $user = $request->user();
+        $file = $request->file('excel_file');
+
+        PeerPressureDataImportLog::query()->create([
+            'user_id' => $user?->id,
+            'user_name' => $user?->name ?? 'Pengguna',
+            'original_filename' => $file?->getClientOriginalName(),
+            'status' => $success ? 'success' : 'failed',
+            'message' => $message,
+            'validation_errors' => $errors !== [] ? $errors : null,
+            'imported_kejadian' => $importedKejadian,
+            'imported_peserta' => $importedPeserta,
+        ]);
     }
 }

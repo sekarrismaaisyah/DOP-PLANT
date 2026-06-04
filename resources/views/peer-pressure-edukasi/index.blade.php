@@ -34,7 +34,8 @@
             <div class="card-body">
                 <h5 class="fw-bold mb-3">Upload Excel</h5>
                 <p class="text-muted small mb-3">
-                    Baris pertama = header. Satu kejadian dimulai saat kolom <strong>Tanggal Temuan</strong> terisi.
+                    Baris 1 berisi petunjuk pengisian; <strong>header kolom di baris 2</strong> (hover tanda segitiga merah untuk petunjuk per kolom).
+                    Satu kejadian dimulai saat kolom <strong>Tanggal Temuan</strong> terisi.
                     Baris berikutnya dengan Tanggal Temuan kosong akan ditambahkan sebagai peserta (SID Pelanggar/Peer) pada kejadian yang sama.
                     Tanggal di Excel (tanggal temuan &amp; edukasi) memakai <strong>DD/MM/YYYY</strong> atau format tanggal Excel; import membaca nilai asli sel sehingga sama dengan yang tampil di spreadsheet.
                 </p>
