@@ -868,173 +868,25 @@
               <th scope="col">View</th>
             </tr>
           </thead>
-          <tbody>
-            <tr data-plan-id="1" data-plan-title="Interlock Seatbelt Unit HD dan LV" tabindex="0" role="button" aria-label="Pilih improvement plan Interlock Seatbelt Unit HD dan LV">
-              <td>Interlock Seatbelt Unit HD dan LV</td>
-              <td class="improvement-rekap-num">4</td>
-              <td class="improvement-rekap-num">3</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-exposure">81.2%</td>
-              <td class="text-center"><span class="pill-risk pill-risk--significant">Significant</span></td>
-              <td class="text-center"><span class="pill-risk pill-risk--high">High</span></td>
-              <td class="text-center"><span class="pill-decision pill-decision--target">Belum Capai Target</span></td>
-              <td class="text-center">
-                <button type="button" class="improvement-rekap-view-btn" data-plan-view aria-label="Detail improvement Interlock Seatbelt Unit HD dan LV">
-                  <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
-                </button>
-              </td>
-            </tr>
-            <tr data-plan-id="2" data-plan-title="CCTV Analytic Workshop Area" tabindex="0" role="button" aria-label="Pilih improvement plan CCTV Analytic Workshop Area">
-              <td>CCTV Analytic Workshop Area</td>
-              <td class="improvement-rekap-num">3</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-num">1</td>
-              <td class="improvement-rekap-num">1</td>
-              <td class="improvement-rekap-exposure">95.5%</td>
-              <td class="text-center"><span class="pill-risk pill-risk--high">High</span></td>
-              <td class="text-center"><span class="pill-risk pill-risk--medium">Medium</span></td>
-              <td class="text-center"><span class="pill-decision pill-decision--verify">Verifikasi Efektivitas</span></td>
-              <td class="text-center">
-                <button type="button" class="improvement-rekap-view-btn" data-plan-view aria-label="Detail improvement CCTV Analytic Workshop Area">
-                  <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
-                </button>
-              </td>
-            </tr>
-            <tr data-plan-id="3" data-plan-title="Speed Limit &amp; Geofencing Haul Road" tabindex="0" role="button" aria-label="Pilih improvement plan Speed Limit dan Geofencing Haul Road">
-              <td>Speed Limit &amp; Geofencing Haul Road</td>
-              <td class="improvement-rekap-num">5</td>
-              <td class="improvement-rekap-num">4</td>
-              <td class="improvement-rekap-num">3</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-num">1</td>
-              <td class="improvement-rekap-exposure">72.4%</td>
-              <td class="text-center"><span class="pill-risk pill-risk--medium">Medium</span></td>
-              <td class="text-center"><span class="pill-risk pill-risk--medium">Medium</span></td>
-              <td class="text-center"><span class="pill-decision pill-decision--coverage">Lanjutkan Coverage</span></td>
-              <td class="text-center">
-                <button type="button" class="improvement-rekap-view-btn" data-plan-view aria-label="Detail improvement Speed Limit dan Geofencing Haul Road">
-                  <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
-                </button>
-              </td>
-            </tr>
-            <tr data-plan-id="4" data-plan-title="Pre-start Checklist Alat Berat" tabindex="0" role="button" aria-label="Pilih improvement plan Pre-start Checklist Alat Berat">
-              <td>Pre-start Checklist Alat Berat</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-num">1</td>
-              <td class="improvement-rekap-num">1</td>
-              <td class="improvement-rekap-num">1</td>
-              <td class="improvement-rekap-exposure">88.0%</td>
-              <td class="text-center"><span class="pill-risk pill-risk--high">High</span></td>
-              <td class="text-center"><span class="pill-risk pill-risk--significant">Significant</span></td>
-              <td class="text-center"><span class="pill-decision pill-decision--target">Belum Capai Target</span></td>
-              <td class="text-center">
-                <button type="button" class="improvement-rekap-view-btn" data-plan-view aria-label="Detail improvement Pre-start Checklist Alat Berat">
-                  <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
-                </button>
-              </td>
-            </tr>
-            <tr data-plan-id="5" data-plan-title="Housekeeping &amp; Aisles Marking Stockpile" tabindex="0" role="button" aria-label="Pilih improvement plan Housekeeping dan Aisles Marking Stockpile">
-              <td>Housekeeping &amp; Aisles Marking Stockpile</td>
-              <td class="improvement-rekap-num">3</td>
-              <td class="improvement-rekap-num">3</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-num">2</td>
-              <td class="improvement-rekap-exposure">69.8%</td>
-              <td class="text-center"><span class="pill-risk pill-risk--significant">Significant</span></td>
-              <td class="text-center"><span class="pill-risk pill-risk--high">High</span></td>
-              <td class="text-center"><span class="pill-decision pill-decision--verify">Verifikasi Efektivitas</span></td>
-              <td class="text-center">
-                <button type="button" class="improvement-rekap-view-btn" data-plan-view aria-label="Detail improvement Housekeeping dan Aisles Marking Stockpile">
-                  <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
-                </button>
-              </td>
-            </tr>
+          <tbody id="improvementRekapTableBody">
+            <tr><td colspan="10" class="text-center text-muted py-8">Memuat rekap improvement plan…</td></tr>
           </tbody>
         </table>
       </div>
     </section>
 
     <section class="card risk-matrix-section" data-page-only="overview" aria-label="Matriks risiko awal dan sisa">
-      @php
-        $rmLevels = [
-          'K5' => ['yellow', 'orange', 'orange', 'red', 'red'],
-          'K4' => ['green', 'yellow', 'orange', 'orange', 'red'],
-          'K3' => ['green', 'yellow', 'yellow', 'orange', 'orange'],
-          'K2' => ['green', 'green', 'yellow', 'yellow', 'orange'],
-          'K1' => ['green', 'green', 'green', 'green', 'yellow'],
-        ];
-        $rmRows = array_keys($rmLevels);
-        $rmCols = ['C1', 'C2', 'C3', 'C4', 'C5'];
-        $rmInitial = ['K4-C4' => 2, 'K4-C5' => 2, 'K3-C3' => 2, 'K3-C4' => 9, 'K3-C5' => 1];
-        $rmResidual = ['K2-C3' => 2, 'K2-C4' => 10, 'K2-C5' => 1, 'K1-C4' => 1, 'K1-C5' => 2];
-        $rmTipsAwal = [
-          'K3-C3' => 'Aktivitas: seatbelt interlock unit HD/LV · Bahaya: pengemudi tidak terikat saat manuver.',
-          'K3-C4' => 'Aktivitas: hauling bundar · Bahaya: interaksi pekerja dengan alat berat bergerak.',
-          'K3-C5' => 'Aktivitas: dumping stockpile · Bahaya: tubrukan unit dan longsor material.',
-          'K4-C4' => 'Aktivitas: workshop LV & HD · Bahaya: seatbelt tidak terkunci saat manuver terbatas.',
-          'K4-C5' => 'Aktivitas: night shift maintenance · Bahaya: fatigued driving & komunikasi terbatas.',
-        ];
-        $rmTipsSisa = [
-          'K2-C3' => 'Aktivitas: interlock seatbelt & checklist · Bahaya: bypass sensor / override tidak resmi.',
-          'K2-C4' => 'Aktivitas: CCTV analytic area workshop · Bahaya: slips, trips, falls & peralatan tersimpan tidak rapi.',
-          'K2-C5' => 'Aktivitas: stockpile marking · Bahaya: pejalan kaki vs alat angkat.',
-          'K1-C4' => 'Aktivitas: pre-start checklist · Bahaya: komponen kritis tidak terinspeksi.',
-          'K1-C5' => 'Aktivitas: geofencing haul road · Bahaya: overspeed di tikungan.',
-        ];
-      @endphp
+      <div id="riskMatrixFilterInfo" class="card mb-4 p-4 text-sm text-slate-700" hidden></div>
       <div class="risk-matrix-dual">
         <article class="risk-matrix-panel">
           <h3 id="riskMatrixAwalHeading">Matriks Risiko Awal - Tanpa Pengendalian Improvement</h3>
           <p class="risk-matrix-sub m-0">Klik sel untuk menyorot posisi yang sama di matriks lain · Hover untuk aktivitas &amp; bahaya</p>
-          <div class="risk-matrix-grid" role="grid" aria-labelledby="riskMatrixAwalHeading">
-            <div class="risk-matrix-corner">K/C</div>
-            @foreach ($rmCols as $c)
-              <div class="risk-matrix-col-head">{{ $c }}</div>
-            @endforeach
-            @foreach ($rmRows as $rk)
-              <div class="risk-matrix-row-head">{{ $rk }}</div>
-              @foreach ($rmCols as $i => $col)
-                @php
-                  $cellKey = $rk . '-' . $col;
-                  $lv = $rmLevels[$rk][$i];
-                  $v = $rmInitial[$cellKey] ?? null;
-                  $tip = $rmTipsAwal[$cellKey] ?? 'Tidak ada agregasi risiko di sel ' . $rk . ' × ' . $col . ' (matriks awal).';
-                @endphp
-                <button type="button" class="risk-matrix-cell risk-matrix-cell--{{ $lv }}" data-matrix="initial" data-k="{{ $rk }}" data-c="{{ $col }}" aria-label="Sel matriks awal {{ $rk }} {{ $col }}">
-                  <span class="tooltip-wrap" data-tooltip="{{ e($tip) }}" tabindex="-1">@if ($v !== null){{ $v }}@endif</span>
-                </button>
-              @endforeach
-            @endforeach
-          </div>
+          <div id="riskMatrixAwalGrid" class="risk-matrix-grid" role="grid" aria-labelledby="riskMatrixAwalHeading"></div>
         </article>
         <article class="risk-matrix-panel">
           <h3 id="riskMatrixSisaHeading">Matriks Risiko Sisa - Dengan Pengendalian Improvement</h3>
           <p class="risk-matrix-sub m-0">Klik sel untuk menyorot posisi yang sama di matriks lain · Hover untuk aktivitas &amp; bahaya</p>
-          <div class="risk-matrix-grid" role="grid" aria-labelledby="riskMatrixSisaHeading">
-            <div class="risk-matrix-corner">K/C</div>
-            @foreach ($rmCols as $c)
-              <div class="risk-matrix-col-head">{{ $c }}</div>
-            @endforeach
-            @foreach ($rmRows as $rk)
-              <div class="risk-matrix-row-head">{{ $rk }}</div>
-              @foreach ($rmCols as $i => $col)
-                @php
-                  $cellKey = $rk . '-' . $col;
-                  $lv = $rmLevels[$rk][$i];
-                  $v = $rmResidual[$cellKey] ?? null;
-                  $tip = $rmTipsSisa[$cellKey] ?? 'Tidak ada agregasi risiko di sel ' . $rk . ' × ' . $col . ' (matriks sisa).';
-                @endphp
-                <button type="button" class="risk-matrix-cell risk-matrix-cell--{{ $lv }}" data-matrix="residual" data-k="{{ $rk }}" data-c="{{ $col }}" aria-label="Sel matriks sisa {{ $rk }} {{ $col }}">
-                  <span class="tooltip-wrap" data-tooltip="{{ e($tip) }}" tabindex="-1">@if ($v !== null){{ $v }}@endif</span>
-                </button>
-              @endforeach
-            @endforeach
-          </div>
+          <div id="riskMatrixSisaGrid" class="risk-matrix-grid" role="grid" aria-labelledby="riskMatrixSisaHeading"></div>
         </article>
       </div>
     </section>
@@ -1232,6 +1084,7 @@
     const blindspotTbcRows = @json($blindspotTbcRows);
     const hiraDetailApi = {
       index: @json(route('hira.improvement.detail-rows.index')),
+      overview: @json(route('hira.improvement.detail-rows.overview')),
       sync: @json(route('hira.improvement.detail-rows.sync')),
       reset: @json(route('hira.improvement.detail-rows.reset')),
       import: @json(route('hira.improvement.detail-rows.import')),
@@ -1484,8 +1337,11 @@
 
     let selectedSite = "BMO 1";
     let selectedRiskProfileSite = "ALL";
-    let improvementRekapSelectedId = null;
-    let selectedRiskMatrixCell = null;
+    let improvementRekapSelectedSlug = null;
+    let hiraOverviewData = null;
+    let hiraOverviewMatrixCell = null;
+    const HIRA_MATRIX_ROWS = ["K5", "K4", "K3", "K2", "K1"];
+    const HIRA_MATRIX_COLS = ["C1", "C2", "C3", "C4", "C5"];
     let activeView = "overview";
     let riskProfileMainChartInstance = null;
     let riskProfileMiniChartInstances = [];
@@ -1699,68 +1555,276 @@
       document.body.style.overflow = "";
     }
 
+    function hiraFmtLocale(value, maximumFractionDigits = 1) {
+      const n = Number(value);
+      return Number.isFinite(n)
+        ? n.toLocaleString("id-ID", { maximumFractionDigits })
+        : "0";
+    }
+
+    function hiraMatrixLevelFromScore(score) {
+      const cls = hiraBand(score).cls;
+      return { significant: "red", high: "orange", medium: "yellow", low: "green" }[cls] || "green";
+    }
+
+    function hiraMatrixTooltip(rows) {
+      if (!rows?.length) return "Tidak ada data";
+      return rows.map((r, i) => `${i + 1}. Aktivitas: ${r.activity || "-"}\nBahaya: ${r.hazard || "-"}`).join("\n\n");
+    }
+
+    function hiraBuildMatrixClient(rows, type) {
+      const matrix = {};
+      HIRA_MATRIX_ROWS.forEach(rk => {
+        HIRA_MATRIX_COLS.forEach(col => {
+          const l = Number(rk.replace("K", ""));
+          const c = Number(col.replace("C", ""));
+          matrix[`${rk}-${col}`] = { count: 0, rows: [], level: hiraMatrixLevelFromScore(l * c) };
+        });
+      });
+      rows.forEach(row => {
+        const x = hiraCalc(row);
+        const l = type === "awal" ? x.ka : x.ks;
+        const c = type === "awal" ? x.ca : x.cs;
+        if (l < 1 || c < 1 || l > 5 || c > 5) return;
+        const key = `K${l}-C${c}`;
+        matrix[key].count++;
+        matrix[key].rows.push(row);
+        matrix[key].level = hiraMatrixLevelFromScore(l * c);
+      });
+      return matrix;
+    }
+
+    function hiraOverviewBaseRows() {
+      if (!hiraOverviewData?.rows) return [];
+      let rows = hiraOverviewData.rows;
+      if (improvementRekapSelectedSlug) {
+        const plan = (hiraOverviewData.plans || []).find(p => p.slug === improvementRekapSelectedSlug);
+        if (plan) rows = rows.filter(r => r.improvementPlan === plan.name);
+      }
+      return rows;
+    }
+
+    function hiraRowsByMatrixCell(rows, source, k, c) {
+      const kNum = Number(String(k).replace("K", ""));
+      const cNum = Number(String(c).replace("C", ""));
+      return rows.filter(row => {
+        const x = hiraCalc(row);
+        const rl = source === "awal" ? x.ka : x.ks;
+        const rc = source === "awal" ? x.ca : x.cs;
+        return rl === kNum && rc === cNum;
+      });
+    }
+
+    function renderHiraExecutiveSummary(exec) {
+      if (!exec) return;
+      const set = (id, text) => { const el = document.getElementById(id); if (el) el.textContent = text; };
+      set("execSummaryImprovementPlans", hiraFmtLocale(exec.plan, 0));
+      set("execSummaryRiskCoverCount", hiraFmtLocale(exec.risk, 0));
+      set("mgmtHlPlans", hiraFmtLocale(exec.plan, 0));
+      set("mgmtHlRisks", hiraFmtLocale(exec.risk, 0));
+      set("execSummaryRiskFrom", hiraFmtLocale(exec.scoreA, 0));
+      set("execSummaryRiskTo", hiraFmtLocale(exec.scoreS, 0));
+      set("execSummaryRiskDelta", hiraFmtLocale(Math.max(0, exec.scoreA - exec.scoreS), 0));
+      set("mgmtHlRiskFrom", hiraFmtLocale(exec.scoreA, 0));
+      set("mgmtHlRiskTo", hiraFmtLocale(exec.scoreS, 0));
+      const coverPct = hiraPct(exec.cover);
+      set("execSummaryExposurePct", coverPct);
+      set("mgmtHlExposurePct", coverPct);
+      set("execSummaryExposureNum", hiraFmtLocale(exec.exC, 1));
+      set("execSummaryExposureDen", hiraFmtLocale(exec.exA, 1));
+      if (exec.priorityPlan) {
+        set("mgmtHlPrioritySite", exec.priorityPlan);
+      }
+    }
+
+    function renderImprovementRekapTable() {
+      const tbody = document.getElementById("improvementRekapTableBody");
+      if (!tbody) return;
+      const plans = hiraOverviewData?.plans || [];
+      if (!plans.length) {
+        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-8">Belum ada data HIRA. Isi tab Input HIRA Detail terlebih dahulu.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = plans.map(plan => {
+        const selected = improvementRekapSelectedSlug === plan.slug;
+        const awalPill = hiraPillRisk(plan.highA?.cls);
+        const sisaPill = hiraPillRisk(plan.highS?.cls);
+        const decPill = hiraPillDecision(plan.decision?.dcls);
+        return `<tr data-plan-slug="${escapeHtml(plan.slug)}" data-plan-title="${escapeHtml(plan.name)}" tabindex="0" role="button" class="${selected ? "is-selected" : ""}" aria-label="Pilih improvement plan ${escapeHtml(plan.name)}">
+          <td><b>${escapeHtml(plan.name)}</b></td>
+          <td class="improvement-rekap-num">${plan.rows}</td>
+          <td class="improvement-rekap-num">${plan.sections}</td>
+          <td class="improvement-rekap-num">${plan.activities}</td>
+          <td class="improvement-rekap-num">${plan.subActivities}</td>
+          <td class="improvement-rekap-num">${plan.subSubActivities}</td>
+          <td class="improvement-rekap-exposure"><b>${hiraPct(plan.cover)}</b></td>
+          <td class="text-center"><span class="pill-risk ${awalPill}">${escapeHtml(plan.highA?.label || "-")}</span></td>
+          <td class="text-center"><span class="pill-risk ${sisaPill}">${escapeHtml(plan.highS?.label || "-")}</span></td>
+          <td class="text-center"><span class="pill-decision ${decPill}">${escapeHtml(plan.decision?.decision || "-")}</span></td>
+          <td class="text-center">
+            <button type="button" class="improvement-rekap-view-btn" data-plan-view aria-label="Detail improvement ${escapeHtml(plan.name)}">
+              <span class="material-symbols-outlined" aria-hidden="true">visibility</span>
+            </button>
+          </td>
+        </tr>`;
+      }).join("");
+    }
+
+    function renderRiskMatrixFilterInfo() {
+      const box = document.getElementById("riskMatrixFilterInfo");
+      if (!box) return;
+      const planName = improvementRekapSelectedSlug
+        ? (hiraOverviewData?.plans || []).find(p => p.slug === improvementRekapSelectedSlug)?.name
+        : null;
+      const cellLabel = hiraOverviewMatrixCell
+        ? `${hiraOverviewMatrixCell.source === "initial" ? "Awal" : "Sisa"} ${hiraOverviewMatrixCell.k}/${hiraOverviewMatrixCell.c} → filter matriks ${hiraOverviewMatrixCell.source === "initial" ? "Sisa" : "Awal"}`
+        : "None";
+      box.innerHTML = `<div class="flex flex-wrap items-center justify-between gap-3">
+        <div><b>Filter improvement:</b> ${escapeHtml(planName || "All Improvement Plan")}
+        <span class="text-slate-300">|</span> <b>Filter cell:</b> ${escapeHtml(cellLabel)}</div>
+        ${hiraOverviewMatrixCell ? '<button type="button" id="riskMatrixClearCell">Reset Filter Cell</button>' : ""}
+      </div>`;
+      box.hidden = false;
+      box.onclick = event => {
+        if (event.target.id !== "riskMatrixClearCell") return;
+        hiraOverviewMatrixCell = null;
+        renderHiraRiskMatrices();
+      };
+    }
+
+    function renderRiskMatrixGrid(hostId, matrix, matrixType) {
+      const host = document.getElementById(hostId);
+      if (!host) return;
+      let html = '<div class="risk-matrix-corner">K/C</div>';
+      HIRA_MATRIX_COLS.forEach(c => { html += `<div class="risk-matrix-col-head">${c}</div>`; });
+      HIRA_MATRIX_ROWS.forEach(rk => {
+        html += `<div class="risk-matrix-row-head">${rk}</div>`;
+        HIRA_MATRIX_COLS.forEach(col => {
+          const key = `${rk}-${col}`;
+          const cell = matrix[key] || { count: 0, level: "green", rows: [] };
+          const selected = hiraOverviewMatrixCell
+            && hiraOverviewMatrixCell.k === rk
+            && hiraOverviewMatrixCell.c === col
+            && hiraOverviewMatrixCell.source === matrixType;
+          const tip = hiraMatrixTooltip(cell.rows);
+          html += `<button type="button" class="risk-matrix-cell risk-matrix-cell--${cell.level}${cell.count ? "" : ""}${selected ? " is-selected" : ""}" data-matrix="${matrixType === "awal" ? "initial" : "residual"}" data-k="${rk}" data-c="${col}" aria-label="Sel matriks ${matrixType} ${rk} ${col}">
+            <span class="tooltip-wrap" data-tooltip="${escapeHtml(tip)}" tabindex="-1">${cell.count || ""}</span>
+          </button>`;
+        });
+      });
+      host.innerHTML = html;
+    }
+
+    function renderHiraRiskMatrices() {
+      const base = hiraOverviewBaseRows();
+      let awalRows = base;
+      let sisaRows = base;
+      if (hiraOverviewMatrixCell) {
+        const source = hiraOverviewMatrixCell.source === "initial" ? "awal" : "sisa";
+        const filtered = hiraRowsByMatrixCell(base, source, hiraOverviewMatrixCell.k, hiraOverviewMatrixCell.c);
+        awalRows = source === "sisa" ? filtered : base;
+        sisaRows = source === "awal" ? filtered : base;
+      }
+      renderRiskMatrixGrid("riskMatrixAwalGrid", hiraBuildMatrixClient(awalRows, "awal"), "awal");
+      renderRiskMatrixGrid("riskMatrixSisaGrid", hiraBuildMatrixClient(sisaRows, "sisa"), "sisa");
+      renderRiskMatrixFilterInfo();
+      bindTooltips();
+    }
+
+    function renderHiraOverviewDashboard() {
+      if (!hiraOverviewData) return;
+      renderHiraExecutiveSummary(hiraOverviewData.executive);
+      renderImprovementRekapTable();
+      renderHiraRiskMatrices();
+    }
+
+    async function loadHiraOverview(force = false) {
+      if (hiraOverviewData && !force) {
+        renderHiraOverviewDashboard();
+        return;
+      }
+      const tbody = document.getElementById("improvementRekapTableBody");
+      if (tbody) tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-8">Memuat rekap improvement plan…</td></tr>';
+      try {
+        const data = await hiraDetailFetch(`${hiraDetailApi.overview}?${hiraDetailScopeQuery()}`);
+        hiraOverviewData = data;
+        renderHiraOverviewDashboard();
+      } catch (err) {
+        if (tbody) tbody.innerHTML = `<tr><td colspan="10" class="text-center text-error py-8">${escapeHtml(err.message || "Gagal memuat data.")}</td></tr>`;
+      }
+    }
+
     function openImprovementDetailModal(title) {
       const modal = document.getElementById("improvementDetailModal");
       const titleEl = document.getElementById("improvementDetailModalTitle");
       const bodyEl = document.getElementById("improvementDetailModalBody");
       if (!modal || !titleEl || !bodyEl) return;
-      const label = title || "Improvement plan";
-      titleEl.textContent = label;
-      const safe = escapeHtml(label);
-      bodyEl.innerHTML = `
-        <p class="m-0">Ringkasan treatment, milestone, PIC, dan evidence dapat ditampilkan di sini setelah terhubung ke API.</p>
-        <p class="m-0"><strong>Plan:</strong> ${safe}</p>
-      `;
+      const plan = (hiraOverviewData?.plans || []).find(p => p.name === title);
+      titleEl.textContent = title || "Improvement plan";
+      if (!plan) {
+        bodyEl.innerHTML = `<p class="m-0">Data plan tidak ditemukan.</p>`;
+      } else {
+        bodyEl.innerHTML = `
+          <p class="m-0"><strong>Rows:</strong> ${plan.rows} · <strong>Risiko unik:</strong> ${plan.risk}</p>
+          <p class="m-0"><strong>Exposure covered:</strong> ${hiraPct(plan.cover)}</p>
+          <p class="m-0"><strong>Risiko awal:</strong> ${escapeHtml(plan.highA?.label || "-")} → <strong>Sisa:</strong> ${escapeHtml(plan.highS?.label || "-")}</p>
+          <p class="m-0"><strong>Decision:</strong> ${escapeHtml(plan.decision?.decision || "-")}</p>
+          <p class="m-0 text-muted small">Chart S-Curve lengkap tersedia setelah integrasi task S-Curve pada popup ini.</p>
+        `;
+      }
       modal.hidden = false;
       document.body.style.overflow = "hidden";
     }
 
     function clearImprovementPlanFilter() {
-      const tbody = document.querySelector("#improvementRekapTable tbody");
+      const tbody = document.getElementById("improvementRekapTableBody");
       const hint = document.getElementById("improvementRekapFilterHint");
       tbody?.querySelectorAll("tr.is-selected").forEach(row => row.classList.remove("is-selected"));
-      improvementRekapSelectedId = null;
+      improvementRekapSelectedSlug = null;
       if (hint) hint.hidden = true;
-      window.dispatchEvent(new CustomEvent("improvement-plan-filter", { detail: { id: null, title: null } }));
+      renderHiraRiskMatrices();
     }
 
     function applyImprovementPlanFilter(row) {
-      const tbody = document.querySelector("#improvementRekapTable tbody");
+      const tbody = document.getElementById("improvementRekapTableBody");
       const hint = document.getElementById("improvementRekapFilterHint");
       const label = hint?.querySelector("[data-filter-label]");
-      const id = row.dataset.planId;
-      if (improvementRekapSelectedId === id) {
+      const slug = row.dataset.planSlug;
+      if (improvementRekapSelectedSlug === slug) {
         clearImprovementPlanFilter();
         return;
       }
       tbody?.querySelectorAll("tr.is-selected").forEach(r => r.classList.remove("is-selected"));
       row.classList.add("is-selected");
-      improvementRekapSelectedId = id;
+      improvementRekapSelectedSlug = slug;
       if (hint && label) {
         label.textContent = row.dataset.planTitle || "";
         hint.hidden = false;
       }
-      window.dispatchEvent(new CustomEvent("improvement-plan-filter", { detail: { id, title: row.dataset.planTitle } }));
+      hiraOverviewMatrixCell = null;
+      renderImprovementRekapTable();
+      renderHiraRiskMatrices();
     }
 
     function bindImprovementRekapTable() {
-      const tbody = document.querySelector("#improvementRekapTable tbody");
-      if (!tbody) return;
+      const tbody = document.getElementById("improvementRekapTableBody");
+      if (!tbody || tbody.dataset.bound === "1") return;
+      tbody.dataset.bound = "1";
       tbody.addEventListener("click", event => {
         if (event.target.closest("button[data-plan-view]")) {
           event.stopPropagation();
-          const row = event.target.closest("tr[data-plan-id]");
+          const row = event.target.closest("tr[data-plan-slug]");
           openImprovementDetailModal(row?.dataset.planTitle);
           return;
         }
-        const row = event.target.closest("tr[data-plan-id]");
+        const row = event.target.closest("tr[data-plan-slug]");
         if (!row) return;
         applyImprovementPlanFilter(row);
       });
       tbody.addEventListener("keydown", event => {
         if (event.key !== "Enter" && event.key !== " ") return;
         if (event.target.closest("button[data-plan-view]")) return;
-        const row = event.target.closest("tr[data-plan-id]");
+        const row = event.target.closest("tr[data-plan-slug]");
         if (!row) return;
         event.preventDefault();
         applyImprovementPlanFilter(row);
@@ -1777,30 +1841,24 @@
       });
     }
 
-    function clearRiskMatrixSelection() {
-      const dual = document.querySelector(".risk-matrix-dual");
-      selectedRiskMatrixCell = null;
-      dual?.querySelectorAll(".risk-matrix-cell.is-selected").forEach(el => el.classList.remove("is-selected"));
-    }
-
     function bindRiskMatrixCells() {
       const dual = document.querySelector(".risk-matrix-dual");
-      if (!dual) return;
+      if (!dual || dual.dataset.bound === "1") return;
+      dual.dataset.bound = "1";
       dual.addEventListener("click", event => {
         const cell = event.target.closest(".risk-matrix-cell[data-k]");
         if (!cell) return;
+        const count = Number(cell.textContent.trim());
+        if (!count) return;
         const { k, c, matrix } = cell.dataset;
         if (!k || !c) return;
-        const pair = `${k}-${c}`;
-        if (selectedRiskMatrixCell === pair) {
-          clearRiskMatrixSelection();
-          window.dispatchEvent(new CustomEvent("risk-matrix-cell-select", { detail: { k, c, matrix: null } }));
-          return;
-        }
-        selectedRiskMatrixCell = pair;
-        dual.querySelectorAll(".risk-matrix-cell.is-selected").forEach(el => el.classList.remove("is-selected"));
-        dual.querySelectorAll(`.risk-matrix-cell[data-k="${k}"][data-c="${c}"]`).forEach(el => el.classList.add("is-selected"));
-        window.dispatchEvent(new CustomEvent("risk-matrix-cell-select", { detail: { k, c, matrix: matrix || null } }));
+        const source = matrix === "initial" ? "initial" : "residual";
+        const same = hiraOverviewMatrixCell
+          && hiraOverviewMatrixCell.k === k
+          && hiraOverviewMatrixCell.c === c
+          && hiraOverviewMatrixCell.source === source;
+        hiraOverviewMatrixCell = same ? null : { k, c, source };
+        renderHiraRiskMatrices();
       });
     }
 
@@ -3045,6 +3103,8 @@
         hiraDetailRows = data.rows || hiraDetailRows;
         setHiraDetailStatus("Tersimpan.");
         renderHiraDetailTable();
+        hiraOverviewData = null;
+        if (activeView === "overview") loadHiraOverview(true);
       } catch (err) {
         setHiraDetailStatus(err.message || "Gagal menyimpan.", "is-error");
       } finally {
@@ -3655,6 +3715,7 @@
       });
       syncPageOnlyContent(view);
       renderPageIntro(view);
+      if (view === "overview") loadHiraOverview();
       if (view === "driver") loadHiraDetailRows();
       if (view === "correlation") loadHiraScurveTasks();
       closeSitePopup();
@@ -3670,6 +3731,7 @@
     }
 
     function renderAll() {
+      loadHiraOverview();
       renderRiskProfiling();
       renderSitePerformance();
       renderDriverDictionary();

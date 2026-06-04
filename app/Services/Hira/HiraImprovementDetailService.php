@@ -506,4 +506,240 @@ final class HiraImprovementDetailService
 
         return min($max, max($min, $n));
     }
+
+    /**
+     * Data dashboard overview: rekap plan, executive summary, matriks (logika desain.html).
+     *
+     * @return array<string, mixed>
+     */
+    public function overviewForScope(string $company, int $periodYear): array
+    {
+        $rows = $this->listForScope($company, $periodYear);
+        $plans = $this->improvementPlanSummaries($rows);
+        $executive = $this->summarizeRows($rows);
+        $priority = $this->pickPriorityPlan($plans);
+
+        return [
+            'rows' => $rows,
+            'plans' => $plans,
+            'executive' => array_merge($executive, [
+                'priorityPlan' => $priority['name'] ?? null,
+                'priorityDecision' => $priority['decision']['decision'] ?? null,
+                'priorityResidual' => $priority['highS']['label'] ?? null,
+            ]),
+            'matrixAwal' => $this->buildRiskMatrix($rows, 'awal'),
+            'matrixSisa' => $this->buildRiskMatrix($rows, 'sisa'),
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<array<string, mixed>>
+     */
+    public function improvementPlanSummaries(array $rows): array
+    {
+        $grouped = [];
+        foreach ($rows as $row) {
+            $plan = trim((string) ($row['improvementPlan'] ?? '')) ?: '-';
+            $grouped[$plan][] = $row;
+        }
+
+        $plans = [];
+        foreach ($grouped as $name => $arr) {
+            $summary = $this->groupSummary($arr);
+            $plans[] = array_merge([
+                'name' => $name,
+                'slug' => md5($name),
+            ], $summary);
+        }
+
+        usort($plans, fn ($a, $b) => strcmp((string) $a['name'], (string) $b['name']));
+
+        return $plans;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return array<string, mixed>
+     */
+    public function summarizeRows(array $rows): array
+    {
+        $calcs = array_map(fn (array $row) => $this->calc($row), $rows);
+        $sum = static fn (string $key) => array_sum(array_map(static fn (array $c) => $c[$key], $calcs));
+
+        $highA = $this->highestBand($calcs, 'bA');
+        $highS = $this->highestBand($calcs, 'bS');
+        $decision = $this->pickAggregateDecision($calcs);
+
+        $exA = $sum('exA');
+        $exC = $sum('exC');
+
+        return [
+            'rows' => count($rows),
+            'risk' => $this->uniqueFieldCount($rows, 'hazard'),
+            'plan' => $this->uniqueFieldCount($rows, 'improvementPlan'),
+            'scoreA' => $sum('scoreA'),
+            'scoreS' => $sum('scoreS'),
+            'exA' => $exA,
+            'exC' => $exC,
+            'cover' => $exA > 0 ? $exC / $exA : 0.0,
+            'highA' => $highA,
+            'highS' => $highS,
+            'decision' => $decision,
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $arr
+     * @return array<string, mixed>
+     */
+    public function groupSummary(array $arr): array
+    {
+        $summary = $this->summarizeRows($arr);
+
+        return array_merge($summary, [
+            'sections' => $this->uniqueFieldCount($arr, 'section'),
+            'activities' => $this->uniqueFieldCount($arr, 'activity'),
+            'subActivities' => $this->uniqueFieldCount($arr, 'subActivity'),
+            'subSubActivities' => $this->uniqueFieldCount($arr, 'subSubActivity'),
+        ]);
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return array<string, array{count: int, level: string, tooltip: string}>
+     */
+    public function buildRiskMatrix(array $rows, string $type): array
+    {
+        $matrix = [];
+        for ($l = 1; $l <= 5; $l++) {
+            for ($c = 1; $c <= 5; $c++) {
+                $matrix["K{$l}-C{$c}"] = [
+                    'count' => 0,
+                    'level' => $this->matrixLevelClass($l * $c),
+                    'tooltip' => 'Tidak ada agregasi risiko di sel K' . $l . ' × C' . $c . ' (matriks ' . ($type === 'awal' ? 'awal' : 'sisa') . ').',
+                    'rows' => [],
+                ];
+            }
+        }
+
+        foreach ($rows as $row) {
+            $calc = $this->calc($row);
+            $l = $type === 'awal' ? $calc['ka'] : $calc['ks'];
+            $c = $type === 'awal' ? $calc['ca'] : $calc['cs'];
+            if ($l < 1 || $c < 1 || $l > 5 || $c > 5) {
+                continue;
+            }
+            $key = "K{$l}-C{$c}";
+            $matrix[$key]['count']++;
+            $matrix[$key]['rows'][] = $row;
+            $matrix[$key]['level'] = $this->matrixLevelClass($l * $c);
+            $matrix[$key]['tooltip'] = $this->matrixCellTooltip($matrix[$key]['rows']);
+        }
+
+        return $matrix;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $plans
+     * @return array<string, mixed>|null
+     */
+    private function pickPriorityPlan(array $plans): ?array
+    {
+        if ($plans === []) {
+            return null;
+        }
+
+        $sorted = $plans;
+        usort($sorted, function (array $a, array $b) {
+            $rankDiff = $this->rank((string) ($b['highS']['label'] ?? '')) - $this->rank((string) ($a['highS']['label'] ?? ''));
+
+            return $rankDiff !== 0 ? $rankDiff : (int) round(($a['cover'] - $b['cover']) * 1000);
+        });
+
+        return $sorted[0];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $calcs
+     * @return array{label: string, cls: string}
+     */
+    private function highestBand(array $calcs, string $bandKey): array
+    {
+        $current = $this->band(0);
+        foreach ($calcs as $calc) {
+            $band = $calc[$bandKey] ?? $this->band(0);
+            if ($this->rank((string) $band['label']) > $this->rank((string) $current['label'])) {
+                $current = $band;
+            }
+        }
+
+        return $current;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $calcs
+     * @return array{decision: string, dcls: string}
+     */
+    private function pickAggregateDecision(array $calcs): array
+    {
+        foreach (['Belum Capai Target', 'Lanjutkan Coverage', 'Verifikasi Efektivitas'] as $label) {
+            foreach ($calcs as $calc) {
+                if (($calc['decision'] ?? '') === $label) {
+                    return ['decision' => $label, 'dcls' => (string) ($calc['dcls'] ?? 'blue')];
+                }
+            }
+        }
+
+        $first = $calcs[0] ?? null;
+
+        return [
+            'decision' => (string) ($first['decision'] ?? 'Monitor'),
+            'dcls' => (string) ($first['dcls'] ?? 'blue'),
+        ];
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function matrixCellTooltip(array $rows): string
+    {
+        if ($rows === []) {
+            return 'Tidak ada data';
+        }
+
+        $lines = [];
+        foreach ($rows as $i => $row) {
+            $lines[] = ($i + 1) . '. Aktivitas: ' . ($row['activity'] ?? '-')
+                . "\nBahaya: " . ($row['hazard'] ?? '-');
+        }
+
+        return implode("\n\n", $lines);
+    }
+
+    private function matrixLevelClass(int $score): string
+    {
+        return match ($this->band($score)['cls']) {
+            'significant' => 'red',
+            'high' => 'orange',
+            'medium' => 'yellow',
+            default => 'green',
+        };
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function uniqueFieldCount(array $rows, string $field): int
+    {
+        $values = [];
+        foreach ($rows as $row) {
+            $value = trim((string) ($row[$field] ?? ''));
+            if ($value !== '') {
+                $values[$value] = true;
+            }
+        }
+
+        return count($values);
+    }
 }

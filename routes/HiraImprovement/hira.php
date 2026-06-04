@@ -10,6 +10,7 @@ Route::prefix('hira')->name('hira.')->group(function (): void {
 
     Route::prefix('improvement/detail-rows')->name('improvement.detail-rows.')->group(function (): void {
         Route::get('/', [HiraImprovementDetailApiController::class, 'index'])->name('index');
+        Route::get('/overview', [HiraImprovementDetailApiController::class, 'overview'])->name('overview');
         Route::post('/sync', [HiraImprovementDetailApiController::class, 'sync'])->name('sync');
         Route::post('/', [HiraImprovementDetailApiController::class, 'store'])->name('store');
         Route::post('/reset', [HiraImprovementDetailApiController::class, 'reset'])->name('reset');

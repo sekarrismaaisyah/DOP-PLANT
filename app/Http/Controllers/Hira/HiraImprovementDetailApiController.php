@@ -22,6 +22,13 @@ class HiraImprovementDetailApiController extends Controller
         ]);
     }
 
+    public function overview(Request $request, HiraImprovementDetailService $service): JsonResponse
+    {
+        [$company, $year] = $this->scope($request);
+
+        return response()->json($service->overviewForScope($company, $year));
+    }
+
     public function sync(Request $request, HiraImprovementDetailService $service): JsonResponse
     {
         [$company, $year] = $this->scope($request);
