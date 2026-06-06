@@ -5522,12 +5522,21 @@
         return String(site || '').trim().toUpperCase();
     }
 
+    function getEffectiveSiteValue(props) {
+        if (!props) return '';
+        const rawSite = String(props.site || props.Site || '').trim();
+        if (rawSite) return rawSite;
+        return String(props.unit_id || props.unitId || '').trim();
+    }
+
     function getFeatureSiteKey(feature) {
         if (!feature) return '';
         const props = feature.getProperties();
         const cctvData = props.cctvData;
         return normalizeGeotagSiteKey(
-            props.site || props.Site || props.ra_site_name || props.raSiteName ||
+            getEffectiveSiteValue(props) ||
+            props.ra_site_name || props.raSiteName ||
+            (cctvData && getEffectiveSiteValue(cctvData)) ||
             (cctvData && cctvData.site) || ''
         );
     }
@@ -5566,6 +5575,21 @@
     function featureMatchesGeotaggingSiteFilter(feature) {
         if (!currentGeotaggingSiteFilters || !currentGeotaggingSiteFilters.length) return false;
         const featureKey = getFeatureSiteKey(feature);
+        if (!featureKey) return false;
+
+        const knownSiteKeys = getGeotaggingAvailableSites().map(function(s) {
+            return normalizeGeotagSiteKey(s);
+        });
+        const isKnownSite = knownSiteKeys.indexOf(featureKey) !== -1;
+
+        // DOP dengan unit_id non-site (mis. EX-001) tetap tampil di Critical Area
+        if (!isKnownSite) {
+            const props = feature.getProperties();
+            if (props.pekerjaan != null || props.potensi_resiko != null) {
+                return true;
+            }
+        }
+
         return currentGeotaggingSiteFilters.some(function(site) {
             return normalizeGeotagSiteKey(site) === featureKey;
         });
@@ -9392,7 +9416,7 @@ source: new ol.source.Vector(),
                         geometry: line,
                         dopId: dopId,
                         cctvId: cctv.id,
-                        site: dopFeature.get('site') || cctv.site || null
+                        site: getEffectiveSiteValue(dopFeature.getProperties()) || cctv.site || null
                     });
                     lineFeatures.push(lineFeature);
                 }
@@ -9446,7 +9470,7 @@ source: new ol.source.Vector(),
                             geometry: line,
                             dopId: props.id,
                             cctvId: cctv.id,
-                            site: props.site || cctv.site || null
+                            site: getEffectiveSiteValue(props) || cctv.site || null
                         });
                         lineFeatures.push(lineFeature);
 
@@ -9462,7 +9486,7 @@ source: new ol.source.Vector(),
                                     nama_cctv: cctv.nama_cctv,
                                     kondisi: cctv.kondisi,
                                     status: cctv.status,
-                                    site: cctv.site || props.site || null,
+                                    site: cctv.site || getEffectiveSiteValue(props) || null,
                                     lokasi_pemasangan: cctv.lokasi_pemasangan
                                 }
                             });
@@ -23836,7 +23860,8 @@ source: new ol.source.Vector(),
                     let rows = result.data;
                     if (currentGeotaggingSiteFilters && currentGeotaggingSiteFilters.length) {
                         rows = rows.filter(function(row) {
-                            return isGeotagSiteInFilter(row.site || row.ra_site_name || '', currentGeotaggingSiteFilters);
+                            const rowSite = getEffectiveSiteValue(row) || row.ra_site_name || '';
+                            return isGeotagSiteInFilter(rowSite, currentGeotaggingSiteFilters);
                         });
                     }
                     ikkControlroomCount = rows.length;

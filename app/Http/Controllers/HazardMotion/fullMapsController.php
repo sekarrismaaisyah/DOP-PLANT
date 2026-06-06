@@ -2399,6 +2399,11 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     }
                 }
                 
+                $effectiveSite = trim((string) ($plan->site ?? ''));
+                if ($effectiveSite === '') {
+                    $effectiveSite = trim((string) ($plan->unit_id ?? ''));
+                }
+
                 // Create Point geometry from coordinates
                 $feature = [
                     'type' => 'Feature',
@@ -2408,7 +2413,7 @@ Hanya return JSON array, tanpa markdown, tanpa penjelasan tambahan.";
                     ],
                     'properties' => [
                         'id' => $plan->id,
-                        'site' => $plan->site ?? null,
+                        'site' => $effectiveSite !== '' ? $effectiveSite : null,
                         'pekerjaan' => $plan->pekerjaan ?? null,
                         'unit_id' => $plan->unit_id ?? null,
                         'lokasi' => $lokasi,
