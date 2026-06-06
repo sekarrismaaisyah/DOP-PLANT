@@ -642,22 +642,6 @@
   color: #5f6368;
 }
 
-.geotag-site-option{
-  cursor: pointer;
-  transition: background .15s ease, border-color .15s ease;
-}
-.geotag-site-option.active{
-  background: #e8f0fe;
-  border-color: #1a73e8 !important;
-}
-.geotag-site-option .site-filter-check{
-  color: #1a73e8;
-  visibility: hidden;
-}
-.geotag-site-option.active .site-filter-check{
-  visibility: visible;
-}
-
 /* -------------------
    Left Sidebar (GMaps)
    ------------------- */
@@ -5194,9 +5178,9 @@
     
     // Site filter - harus didefinisikan sebelum digunakan di style function
     let currentSiteFilter = '';
-    // Filter polygon geotaging.js per site (default GMO)
-    let currentGeotaggingSiteFilter = 'GMO';
-    let pendingGeotaggingSiteFilter = 'GMO';
+    // Filter polygon geotaging.js per site (multi-select, default GMO)
+    let currentGeotaggingSiteFilters = ['GMO'];
+    let pendingGeotaggingSiteFilters = ['GMO'];
     
     // Sidebar Panel Management - harus didefinisikan sebelum digunakan
     let currentSidebarTab = 'cctv';
@@ -5544,9 +5528,43 @@
         return normalizeGeotagSiteKey(props.site || props.Site || '');
     }
 
+    function normalizeGeotaggingSiteFilters(sites) {
+        if (!Array.isArray(sites)) {
+            sites = sites ? [sites] : [];
+        }
+        const available = getGeotaggingAvailableSites();
+        const normalized = [];
+        sites.forEach(function(site) {
+            const key = normalizeGeotagSiteKey(site);
+            if (!key) return;
+            const canonical = available.find(function(s) {
+                return normalizeGeotagSiteKey(s) === key;
+            }) || String(site).trim();
+            if (normalized.indexOf(canonical) === -1) normalized.push(canonical);
+        });
+        return normalized;
+    }
+
+    function isGeotagSiteInFilter(siteName, filterList) {
+        const key = normalizeGeotagSiteKey(siteName);
+        if (!filterList || !filterList.length || !key) return false;
+        return filterList.some(function(s) {
+            return normalizeGeotagSiteKey(s) === key;
+        });
+    }
+
+    function formatGeotaggingSiteFilterLabel(sites) {
+        if (!sites || !sites.length) return 'Tidak ada';
+        if (sites.length <= 2) return sites.join(', ');
+        return sites.length + ' site';
+    }
+
     function featureMatchesGeotaggingSiteFilter(feature) {
-        if (!currentGeotaggingSiteFilter) return true;
-        return getFeatureSiteKey(feature) === normalizeGeotagSiteKey(currentGeotaggingSiteFilter);
+        if (!currentGeotaggingSiteFilters || !currentGeotaggingSiteFilters.length) return false;
+        const featureKey = getFeatureSiteKey(feature);
+        return currentGeotaggingSiteFilters.some(function(site) {
+            return normalizeGeotagSiteKey(site) === featureKey;
+        });
     }
 
     function getGeotaggingSiteFeatureCounts() {
@@ -5566,7 +5584,7 @@
         const counts = getGeotaggingSiteFeatureCounts();
         const siteSet = new Set(Object.keys(counts));
         if (!siteSet.size) {
-            return [currentGeotaggingSiteFilter || 'GMO'];
+            return currentGeotaggingSiteFilters.length ? currentGeotaggingSiteFilters.slice() : ['GMO'];
         }
         const preferredOrder = ['GMO', 'BMO 1', 'BMO 2', 'BMO 3', 'LMO', 'SMO'];
         const ordered = preferredOrder.filter(function(s) { return siteSet.has(s); });
@@ -5576,7 +5594,14 @@
         return ordered;
     }
 
-    function renderGeotaggingSiteFilterModalList(selectedSite) {
+    function updateGeotaggingSiteFilterActiveLabel(selectedSites) {
+        const activeLabel = document.getElementById('geotagSiteFilterActiveLabel');
+        if (activeLabel) {
+            activeLabel.textContent = formatGeotaggingSiteFilterLabel(selectedSites);
+        }
+    }
+
+    function renderGeotaggingSiteFilterModalList(selectedSites) {
         const modalBody = document.getElementById('geotagSiteFilterModalBody');
         if (!modalBody) return;
 
@@ -5587,7 +5612,7 @@
         }
 
         const counts = getGeotaggingSiteFeatureCounts();
-        const activeKey = normalizeGeotagSiteKey(selectedSite || currentGeotaggingSiteFilter);
+        const activeSites = normalizeGeotaggingSiteFilters(selectedSites || currentGeotaggingSiteFilters);
 
         if (!sites.length) {
             modalBody.innerHTML = '<div class="text-center py-5 text-muted">Tidak ada data site di geotaging.js</div>';
@@ -5596,37 +5621,42 @@
 
         modalBody.innerHTML = `
             <div class="mb-3">
-                <p class="text-muted mb-1">Pilih site untuk menampilkan polygon area kerja di peta.</p>
-                <p class="mb-0"><strong>Site aktif:</strong> <span id="geotagSiteFilterActiveLabel">${selectedSite || currentGeotaggingSiteFilter || '-'}</span></p>
+                <p class="text-muted mb-1">Aktifkan site untuk menampilkan polygon area kerja di peta. Bisa pilih lebih dari satu site.</p>
+                <p class="mb-0"><strong>Site aktif:</strong> <span id="geotagSiteFilterActiveLabel">${formatGeotaggingSiteFilterLabel(activeSites)}</span></p>
             </div>
             <div class="list-group">
-                ${sites.map(function(site) {
-                    const isActive = normalizeGeotagSiteKey(site) === activeKey;
+                ${sites.map(function(site, index) {
+                    const isActive = isGeotagSiteInFilter(site, activeSites);
                     const count = counts[site] || 0;
+                    const safeSite = escapeHtml(site);
                     return `
-                        <button type="button"
-                            class="list-group-item list-group-item-action geotag-site-option d-flex justify-content-between align-items-center${isActive ? ' active' : ''}"
-                            data-site="${String(site).replace(/"/g, '&quot;')}"
-                            onclick="selectGeotaggingSiteInModal(this, '${String(site).replace(/'/g, "\\'")}')">
-                            <div class="text-start">
-                                <h6 class="mb-1">${site}</h6>
+                        <div class="list-group-item d-flex justify-content-between align-items-center">
+                            <div class="flex-grow-1">
+                                <h6 class="mb-1">${safeSite}</h6>
                                 <small class="text-muted">${count} polygon area kerja</small>
                             </div>
-                            <i class="material-icons-outlined site-filter-check">check_circle</i>
-                        </button>
+                            <div class="form-check form-switch">
+                                <input class="form-check-input" type="checkbox"
+                                    id="geotagSiteToggle${index}"
+                                    data-site="${safeSite}"
+                                    ${isActive ? 'checked' : ''}
+                                    onchange="toggleGeotaggingSiteInModal('${safeSite.replace(/'/g, "\\'")}', this.checked)">
+                                <label class="form-check-label" for="geotagSiteToggle${index}"></label>
+                            </div>
+                        </div>
                     `;
                 }).join('')}
             </div>
             <div class="alert alert-info mt-3 mb-0">
                 <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">info</i>
-                <small>Pilih site lalu klik <strong>Terapkan Filter</strong> untuk menampilkan polygon area kerja site tersebut.</small>
+                <small>Gunakan toggle untuk menampilkan/menyembunyikan polygon per site. Klik <strong>Terapkan Filter</strong> untuk mengupdate peta.</small>
             </div>
         `;
     }
 
     function showGeotaggingSiteFilterModal() {
-        pendingGeotaggingSiteFilter = currentGeotaggingSiteFilter || 'GMO';
-        renderGeotaggingSiteFilterModalList(pendingGeotaggingSiteFilter);
+        pendingGeotaggingSiteFilters = currentGeotaggingSiteFilters.slice();
+        renderGeotaggingSiteFilterModalList(pendingGeotaggingSiteFilters);
 
         const modalEl = document.getElementById('geotagSiteFilterModal');
         if (!modalEl || typeof bootstrap === 'undefined') return;
@@ -5635,19 +5665,21 @@
         modal.show();
     }
 
-    window.selectGeotaggingSiteInModal = function(buttonEl, site) {
-        pendingGeotaggingSiteFilter = site;
-        document.querySelectorAll('#geotagSiteFilterModalBody .geotag-site-option').forEach(function(el) {
-            el.classList.remove('active');
-        });
-        if (buttonEl) buttonEl.classList.add('active');
-        const activeLabel = document.getElementById('geotagSiteFilterActiveLabel');
-        if (activeLabel) activeLabel.textContent = site;
+    window.toggleGeotaggingSiteInModal = function(siteName, isActive) {
+        if (isActive) {
+            if (!isGeotagSiteInFilter(siteName, pendingGeotaggingSiteFilters)) {
+                pendingGeotaggingSiteFilters.push(siteName);
+            }
+        } else {
+            pendingGeotaggingSiteFilters = pendingGeotaggingSiteFilters.filter(function(site) {
+                return normalizeGeotagSiteKey(site) !== normalizeGeotagSiteKey(siteName);
+            });
+        }
+        updateGeotaggingSiteFilterActiveLabel(pendingGeotaggingSiteFilters);
     };
 
     window.applyGeotaggingSiteFilterFromModal = function() {
-        if (!pendingGeotaggingSiteFilter) return;
-        applyGeotaggingSiteFilter(pendingGeotaggingSiteFilter);
+        applyGeotaggingSiteFilter(pendingGeotaggingSiteFilters.slice());
 
         const modalEl = document.getElementById('geotagSiteFilterModal');
         if (modalEl && typeof bootstrap !== 'undefined') {
@@ -5656,11 +5688,16 @@
         }
     };
 
-    function updateGeotaggingSiteFilterUi(activeSite) {
+    function updateGeotaggingSiteFilterUi(activeSites) {
         const categoryItem = document.getElementById('gmCategoryGeotagSite');
+        const label = formatGeotaggingSiteFilterLabel(activeSites);
         if (categoryItem) {
-            categoryItem.classList.add('active');
-            categoryItem.title = 'Site aktif: ' + (activeSite || 'GMO');
+            if (activeSites && activeSites.length) {
+                categoryItem.classList.add('active');
+            } else {
+                categoryItem.classList.remove('active');
+            }
+            categoryItem.title = 'Site aktif: ' + label;
         }
     }
 
@@ -5681,9 +5718,9 @@
         }
     }
 
-    function applyGeotaggingSiteFilter(siteKey, fitMap) {
-        currentGeotaggingSiteFilter = siteKey || '';
-        updateGeotaggingSiteFilterUi(siteKey);
+    function applyGeotaggingSiteFilter(siteKeys, fitMap) {
+        currentGeotaggingSiteFilters = normalizeGeotaggingSiteFilters(siteKeys);
+        updateGeotaggingSiteFilterUi(currentGeotaggingSiteFilters);
 
         if (areaKerjaBmo2PamaLayer) {
             areaKerjaBmo2PamaLayer.setVisible(true);
@@ -5711,12 +5748,14 @@
             if (!sites.length) sites = ['BMO 2'];
         }
 
-        const defaultSite = shouldFilterToBmo2Pama ? 'BMO 2' : 'GMO';
-        const resolvedDefault = sites.indexOf(defaultSite) !== -1 ? defaultSite : sites[0];
-        const siteToApply = (currentGeotaggingSiteFilter && sites.indexOf(currentGeotaggingSiteFilter) !== -1)
-            ? currentGeotaggingSiteFilter
-            : resolvedDefault;
-        pendingGeotaggingSiteFilter = siteToApply;
+        const defaultSites = shouldFilterToBmo2Pama ? ['BMO 2'] : ['GMO'];
+        const resolvedDefault = defaultSites.filter(function(s) { return sites.indexOf(s) !== -1; });
+        const fallbackDefault = resolvedDefault.length ? resolvedDefault : (sites[0] ? [sites[0]] : []);
+        const currentValid = normalizeGeotaggingSiteFilters(currentGeotaggingSiteFilters).filter(function(s) {
+            return sites.indexOf(s) !== -1;
+        });
+        const siteToApply = currentValid.length ? currentValid : fallbackDefault;
+        pendingGeotaggingSiteFilters = siteToApply.slice();
         applyGeotaggingSiteFilter(siteToApply, !!areaKerjaBmo2PamaLayer);
     }
 
