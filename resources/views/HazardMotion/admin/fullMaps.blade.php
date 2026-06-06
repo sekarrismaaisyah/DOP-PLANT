@@ -657,6 +657,9 @@
   z-index: 1300;
   margin-top: 6px;
 }
+.gm-category-site-filter .dropdown-menu.show{
+  display: block;
+}
 .gm-category-site-filter .dropdown-item{
   padding: 10px 16px;
   display: flex;
@@ -3251,23 +3254,25 @@
                 <div class="gm-search-results" id="gmSearchResults"></div>
             </div>
             
+            <!-- Site filter polygon geotaging (di luar gm-category-filters agar dropdown tidak ter-clip) -->
+            <div class="dropdown gm-category-site-filter">
+                <button class="gm-category-item dropdown-toggle" type="button" id="gmGeotagSiteFilterBtn" aria-expanded="false" title="Pilih site untuk menampilkan polygon area kerja">
+                    <i class="material-icons-outlined">layers</i>
+                    <span class="gm-site-filter-label">Site:</span>
+                    <span id="gmGeotagSiteFilterText">GMO</span>
+                </button>
+                <ul class="dropdown-menu shadow-sm" id="gmGeotagSiteFilterDropdown" aria-labelledby="gmGeotagSiteFilterBtn">
+                    <li><a class="dropdown-item filter-option active" href="#" data-value="GMO"><span>GMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                    <li><a class="dropdown-item filter-option" href="#" data-value="BMO 1"><span>BMO 1</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                    <li><a class="dropdown-item filter-option" href="#" data-value="BMO 2"><span>BMO 2</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                    <li><a class="dropdown-item filter-option" href="#" data-value="BMO 3"><span>BMO 3</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                    <li><a class="dropdown-item filter-option" href="#" data-value="LMO"><span>LMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                    <li><a class="dropdown-item filter-option" href="#" data-value="SMO"><span>SMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                </ul>
+            </div>
+
             <!-- Category Filters - Sejajar dengan Search Box -->
             <div class="gm-category-filters">
-                <div class="dropdown gm-category-site-filter">
-                    <button class="gm-category-item dropdown-toggle" type="button" id="gmGeotagSiteFilterBtn" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false" title="Pilih site untuk menampilkan polygon area kerja">
-                        <i class="material-icons-outlined">layers</i>
-                        <span class="gm-site-filter-label">Site:</span>
-                        <span id="gmGeotagSiteFilterText">GMO</span>
-                    </button>
-                    <ul class="dropdown-menu shadow-sm" id="gmGeotagSiteFilterDropdown" aria-labelledby="gmGeotagSiteFilterBtn">
-                        <li><a class="dropdown-item filter-option active" href="#" data-value="GMO"><span>GMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                        <li><a class="dropdown-item filter-option" href="#" data-value="BMO 1"><span>BMO 1</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                        <li><a class="dropdown-item filter-option" href="#" data-value="BMO 2"><span>BMO 2</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                        <li><a class="dropdown-item filter-option" href="#" data-value="BMO 3"><span>BMO 3</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                        <li><a class="dropdown-item filter-option" href="#" data-value="LMO"><span>LMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                        <li><a class="dropdown-item filter-option" href="#" data-value="SMO"><span>SMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                    </ul>
-                </div>
                   <a href="#" class="gm-category-item" id="gmCategoryCctv" title="CCTV (default: tidak tampil, klik untuk tampilkan)">
                     <i class="material-icons-outlined">camera_alt</i>
                     <span>CCTV</span>
@@ -5668,6 +5673,21 @@
         if (!dropdown || dropdown.dataset.bound === '1') return;
 
         dropdown.dataset.bound = '1';
+
+        if (btn && typeof bootstrap !== 'undefined' && !btn.dataset.dropdownInit) {
+            btn.dataset.dropdownInit = '1';
+            const existing = bootstrap.Dropdown.getInstance(btn);
+            if (existing) existing.dispose();
+            new bootstrap.Dropdown(btn, {
+                autoClose: true,
+                popperConfig: function(defaultBsPopperConfig) {
+                    const config = defaultBsPopperConfig || {};
+                    config.strategy = 'fixed';
+                    return config;
+                }
+            });
+        }
+
         dropdown.addEventListener('click', function(e) {
             const target = e.target.closest('.filter-option');
             if (!target) return;
