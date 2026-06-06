@@ -642,6 +642,51 @@
   color: #5f6368;
 }
 
+.gm-category-site-filter{
+  position: relative;
+  flex-shrink: 0;
+  z-index: 1200;
+}
+.gm-category-site-filter .dropdown-menu{
+  min-width: 180px;
+  max-height: 320px;
+  overflow-y: auto;
+  font-size: 14px;
+  border-radius: 12px;
+  border: 1px solid #dadce0;
+  z-index: 1300;
+  margin-top: 6px;
+}
+.gm-category-site-filter .dropdown-item{
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+}
+.gm-category-site-filter .dropdown-item.active,
+.gm-category-site-filter .dropdown-item:active{
+  background: #e8f0fe;
+  color: #1a73e8;
+}
+.gm-category-site-filter .dropdown-item .site-filter-check{
+  font-size: 18px;
+  color: #1a73e8;
+  visibility: hidden;
+}
+.gm-category-site-filter .dropdown-item.active .site-filter-check{
+  visibility: visible;
+}
+.gm-category-site-filter .gm-category-item.dropdown-toggle::after{
+  margin-left: 6px;
+  vertical-align: middle;
+}
+.gm-category-site-filter .gm-site-filter-label{
+  font-size: 13px;
+  color: #5f6368;
+  margin-right: 2px;
+}
+
 /* -------------------
    Left Sidebar (GMaps)
    ------------------- */
@@ -3208,6 +3253,21 @@
             
             <!-- Category Filters - Sejajar dengan Search Box -->
             <div class="gm-category-filters">
+                <div class="dropdown gm-category-site-filter">
+                    <button class="gm-category-item dropdown-toggle" type="button" id="gmGeotagSiteFilterBtn" data-bs-toggle="dropdown" data-bs-auto-close="true" aria-expanded="false" title="Pilih site untuk menampilkan polygon area kerja">
+                        <i class="material-icons-outlined">layers</i>
+                        <span class="gm-site-filter-label">Site:</span>
+                        <span id="gmGeotagSiteFilterText">GMO</span>
+                    </button>
+                    <ul class="dropdown-menu shadow-sm" id="gmGeotagSiteFilterDropdown" aria-labelledby="gmGeotagSiteFilterBtn">
+                        <li><a class="dropdown-item filter-option active" href="#" data-value="GMO"><span>GMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                        <li><a class="dropdown-item filter-option" href="#" data-value="BMO 1"><span>BMO 1</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                        <li><a class="dropdown-item filter-option" href="#" data-value="BMO 2"><span>BMO 2</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                        <li><a class="dropdown-item filter-option" href="#" data-value="BMO 3"><span>BMO 3</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                        <li><a class="dropdown-item filter-option" href="#" data-value="LMO"><span>LMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                        <li><a class="dropdown-item filter-option" href="#" data-value="SMO"><span>SMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
+                    </ul>
+                </div>
                   <a href="#" class="gm-category-item" id="gmCategoryCctv" title="CCTV (default: tidak tampil, klik untuk tampilkan)">
                     <i class="material-icons-outlined">camera_alt</i>
                     <span>CCTV</span>
@@ -5149,6 +5209,8 @@
     
     // Site filter - harus didefinisikan sebelum digunakan di style function
     let currentSiteFilter = '';
+    // Filter polygon geotaging.js per site (default GMO)
+    let currentGeotaggingSiteFilter = 'GMO';
     
     // Sidebar Panel Management - harus didefinisikan sebelum digunakan
     let currentSidebarTab = 'cctv';
@@ -5354,23 +5416,52 @@
     function computeGeometryAreaM2(olGeometry) {
         if (!olGeometry) return null;
         try {
+            // Geometri sudah EPSG:3857 dari createLayerFromGeoJson32650 — hitung geodesic langsung
+            const area3857 = Math.abs(ol.sphere.getArea(olGeometry, { projection: 'EPSG:3857' }));
+            if (area3857 > 1) {
+                return area3857;
+            }
             const clone = olGeometry.clone();
             clone.transform('EPSG:3857', 'EPSG:4326');
-            return Math.abs(ol.sphere.getArea(clone));
+            const area4326 = Math.abs(ol.sphere.getArea(clone));
+            return area4326 > 1 ? area4326 : null;
         } catch (e) {
             return null;
         }
+    }
+
+    function isBlankAreaKerjaValue(val) {
+        return val == null || val === '' || val === 'null' || val === 'N/A';
+    }
+
+    function isMissingLokasiId(val) {
+        return isBlankAreaKerjaValue(val) || val === 0 || val === '0';
+    }
+
+    function isMissingLuasan(val) {
+        if (isBlankAreaKerjaValue(val)) return true;
+        const num = parseFloat(val);
+        return isNaN(num) || num <= 0 || num < 1;
+    }
+
+    function isGmoGeotagProperties(props) {
+        if (!props) return false;
+        const site = String(props.site || props.Site || '').trim().toUpperCase();
+        return !!(props.Lokasi || props.Site || props.Sub_Lokasi) || site === 'GMO';
     }
 
     function normalizeAreaKerjaProperties(rawProps, olGeometry) {
         if (!rawProps || typeof rawProps !== 'object') return {};
 
         const props = Object.assign({}, rawProps);
+        delete props.geometry;
+
         const lokasiInduk = props.lokasi || props.Lokasi || '';
         const subLokasi = props.Sub_Lokasi || props.sub_lokasi || props.detail_lokasi || '';
         const site = props.site || props.Site || '';
+        const isGmoGeotag = isGmoGeotagProperties(props);
 
-        if (props.Lokasi || props.Site || props.Sub_Lokasi) {
+        if (isGmoGeotag) {
             props.lokasi = (subLokasi && subLokasi !== lokasiInduk)
                 ? subLokasi
                 : (lokasiInduk || subLokasi);
@@ -5378,21 +5469,17 @@
             props.detail_lokasi = subLokasi || lokasiInduk || null;
             props.site = site;
 
-            if (props.id_lokasi == null || props.id_lokasi === '' || props.id_lokasi === 0) {
-                if (props.Id != null && props.Id !== 0) {
-                    props.id_lokasi = props.Id;
-                } else {
-                    props.id_lokasi = generateStableLokasiId(props.site, lokasiInduk, subLokasi);
-                }
+            if (isMissingLokasiId(props.Id) || props.Id === 0) {
+                props.id_lokasi = generateStableLokasiId(props.site, lokasiInduk, subLokasi);
+            } else {
+                props.id_lokasi = props.Id;
             }
 
-            if (!props.perusahaan) {
-                if (String(props.site).trim().toUpperCase() === 'GMO') {
-                    props.perusahaan = 'PT Pamapersada Nusantara';
-                }
+            if (isBlankAreaKerjaValue(props.perusahaan) && String(props.site).trim().toUpperCase() === 'GMO') {
+                props.perusahaan = 'PT Pamapersada Nusantara';
             }
 
-            if (!props.area_kerja) {
+            if (isBlankAreaKerjaValue(props.area_kerja)) {
                 props.area_kerja = inferAreaKerjaCategory(lokasiInduk, props.lokasi);
             }
         } else {
@@ -5401,31 +5488,263 @@
             props.detail_lokasi = props.detail_lokasi || subLokasi || null;
         }
 
-        if (props.luasan == null || props.luasan === '' || isNaN(parseFloat(props.luasan))) {
+        if (isMissingLuasan(props.luasan)) {
             const computed = computeGeometryAreaM2(olGeometry);
             if (computed != null && computed > 0) {
                 props.luasan = computed;
             }
         }
 
+        if (olGeometry && props.luasan > 0) {
+            props._areaM2 = props.luasan;
+        }
+
         return props;
+    }
+
+    function applyNormalizedPropsToFeature(feature, raw, normalized) {
+        if (!feature || !normalized) return;
+
+        if (isBlankAreaKerjaValue(raw.lokasi) && normalized.lokasi) feature.set('lokasi', normalized.lokasi);
+        if (isBlankAreaKerjaValue(raw.site) && normalized.site) feature.set('site', normalized.site);
+        if (isMissingLokasiId(raw.id_lokasi) && normalized.id_lokasi) feature.set('id_lokasi', normalized.id_lokasi);
+        else if (isGmoGeotagProperties(normalized) && normalized.id_lokasi) feature.set('id_lokasi', normalized.id_lokasi);
+        if (isBlankAreaKerjaValue(raw.perusahaan) && normalized.perusahaan) feature.set('perusahaan', normalized.perusahaan);
+        if (isBlankAreaKerjaValue(raw.area_kerja) && normalized.area_kerja) feature.set('area_kerja', normalized.area_kerja);
+        if (isMissingLuasan(raw.luasan) && normalized.luasan) feature.set('luasan', normalized.luasan);
+        if (normalized._areaM2) feature.set('_areaM2', normalized._areaM2);
+        if (normalized.detail_lokasi) feature.set('detail_lokasi', normalized.detail_lokasi);
+        if (normalized.lokasi_induk) feature.set('lokasi_induk', normalized.lokasi_induk);
+    }
+
+    function preprocessGeotaggingBeatsGeoJson(geoJson) {
+        if (!geoJson || !Array.isArray(geoJson.features)) return geoJson;
+
+        geoJson.features.forEach(function(feature) {
+            if (!feature || !feature.properties) return;
+            feature.properties = normalizeAreaKerjaProperties(feature.properties, null);
+        });
+
+        return geoJson;
     }
 
     function getAreaKerjaFeatureProps(feature) {
         if (!feature) return {};
         const raw = feature.getProperties();
         const normalized = normalizeAreaKerjaProperties(raw, feature.getGeometry());
-
-        if (!raw.lokasi && normalized.lokasi) feature.set('lokasi', normalized.lokasi);
-        if (!raw.site && normalized.site) feature.set('site', normalized.site);
-        if (!raw.id_lokasi && normalized.id_lokasi) feature.set('id_lokasi', normalized.id_lokasi);
-        if (!raw.perusahaan && normalized.perusahaan) feature.set('perusahaan', normalized.perusahaan);
-        if (!raw.area_kerja && normalized.area_kerja) feature.set('area_kerja', normalized.area_kerja);
-        if ((!raw.luasan || isNaN(parseFloat(raw.luasan))) && normalized.luasan) feature.set('luasan', normalized.luasan);
-        if (normalized.detail_lokasi) feature.set('detail_lokasi', normalized.detail_lokasi);
-        if (normalized.lokasi_induk) feature.set('lokasi_induk', normalized.lokasi_induk);
-
+        applyNormalizedPropsToFeature(feature, raw, normalized);
         return normalized;
+    }
+
+    function getFeatureAreaM2Cached(feature) {
+        if (!feature) return Infinity;
+        const cached = feature.get('_areaM2');
+        if (cached != null && !isNaN(cached)) return cached;
+        const area = computeGeometryAreaM2(feature.getGeometry());
+        if (area != null && area > 0) {
+            feature.set('_areaM2', area);
+            return area;
+        }
+        return Infinity;
+    }
+
+    function normalizeGeotagSiteKey(site) {
+        return String(site || '').trim().toUpperCase();
+    }
+
+    function getFeatureSiteKey(feature) {
+        if (!feature) return '';
+        const props = feature.getProperties();
+        return normalizeGeotagSiteKey(props.site || props.Site || '');
+    }
+
+    function featureMatchesGeotaggingSiteFilter(feature) {
+        if (!currentGeotaggingSiteFilter) return true;
+        return getFeatureSiteKey(feature) === normalizeGeotagSiteKey(currentGeotaggingSiteFilter);
+    }
+
+    function getGeotaggingSiteFeatureCounts() {
+        const counts = {};
+        if (typeof window.geotagging_beats === 'undefined' || !window.geotagging_beats.features) {
+            return counts;
+        }
+        window.geotagging_beats.features.forEach(function(feature) {
+            const site = String(feature.properties && (feature.properties.site || feature.properties.Site) || '').trim();
+            if (!site) return;
+            counts[site] = (counts[site] || 0) + 1;
+        });
+        return counts;
+    }
+
+    function getGeotaggingAvailableSites() {
+        const counts = getGeotaggingSiteFeatureCounts();
+        const siteSet = new Set(Object.keys(counts));
+        if (!siteSet.size) {
+            return [currentGeotaggingSiteFilter || 'GMO'];
+        }
+        const preferredOrder = ['GMO', 'BMO 1', 'BMO 2', 'BMO 3', 'LMO', 'SMO'];
+        const ordered = preferredOrder.filter(function(s) { return siteSet.has(s); });
+        siteSet.forEach(function(s) {
+            if (ordered.indexOf(s) === -1) ordered.push(s);
+        });
+        return ordered;
+    }
+
+    function renderGeotaggingSiteFilterDropdown(activeSite) {
+        const dropdown = document.getElementById('gmGeotagSiteFilterDropdown');
+        if (!dropdown) return;
+
+        let sites = getGeotaggingAvailableSites();
+        if (shouldFilterToBmo2Pama) {
+            sites = sites.filter(function(s) { return normalizeGeotagSiteKey(s) === 'BMO 2'; });
+            if (!sites.length) sites = ['BMO 2'];
+        }
+
+        const counts = getGeotaggingSiteFeatureCounts();
+        const activeKey = normalizeGeotagSiteKey(activeSite || currentGeotaggingSiteFilter);
+
+        dropdown.innerHTML = sites.map(function(site) {
+            const isActive = normalizeGeotagSiteKey(site) === activeKey;
+            const count = counts[site] ? ' <small class="text-muted">(' + counts[site] + ')</small>' : '';
+            return '<li><a class="dropdown-item filter-option' + (isActive ? ' active' : '') + '" href="#" data-value="' + site.replace(/"/g, '&quot;') + '"><span>' + site + count + '</span><i class="material-icons-outlined site-filter-check">check</i></a></li>';
+        }).join('');
+    }
+
+    function updateGeotaggingSiteFilterUi(activeSite) {
+        const textEl = document.getElementById('gmGeotagSiteFilterText');
+        const btn = document.getElementById('gmGeotagSiteFilterBtn');
+        if (textEl && activeSite) {
+            textEl.textContent = activeSite;
+        }
+        if (btn) {
+            btn.classList.add('active');
+        }
+        renderGeotaggingSiteFilterDropdown(activeSite);
+    }
+
+    function fitMapToGeotaggingSiteFilter() {
+        if (!areaKerjaBmo2PamaLayer || !map) return;
+        const extent = ol.extent.createEmpty();
+        let hasFeature = false;
+        areaKerjaBmo2PamaLayer.getSource().getFeatures().forEach(function(feature) {
+            if (!featureMatchesGeotaggingSiteFilter(feature)) return;
+            const geometry = feature.getGeometry();
+            if (geometry) {
+                ol.extent.extend(extent, geometry.getExtent());
+                hasFeature = true;
+            }
+        });
+        if (hasFeature && !ol.extent.isEmpty(extent)) {
+            map.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 16, duration: 400 });
+        }
+    }
+
+    function applyGeotaggingSiteFilter(siteKey, fitMap) {
+        currentGeotaggingSiteFilter = siteKey || '';
+        updateGeotaggingSiteFilterUi(siteKey);
+
+        if (areaKerjaBmo2PamaLayer) {
+            areaKerjaBmo2PamaLayer.setVisible(true);
+            areaKerjaBmo2PamaLayer.setOpacity(1.0);
+            areaKerjaBmo2PamaLayer.setStyle(function(feature) {
+                return getRiskBasedAreaKerjaStyle(feature);
+            });
+            areaKerjaBmo2PamaLayer.getSource().changed();
+        }
+        if (areaKerjaBoundaryOnlyLayer) {
+            areaKerjaBoundaryOnlyLayer.getSource().changed();
+        }
+        if (map) {
+            map.render();
+        }
+        if (fitMap !== false) {
+            fitMapToGeotaggingSiteFilter();
+        }
+    }
+
+    function bindGeotaggingSiteFilterEvents() {
+        const dropdown = document.getElementById('gmGeotagSiteFilterDropdown');
+        const btn = document.getElementById('gmGeotagSiteFilterBtn');
+        if (!dropdown || dropdown.dataset.bound === '1') return;
+
+        dropdown.dataset.bound = '1';
+        dropdown.addEventListener('click', function(e) {
+            const target = e.target.closest('.filter-option');
+            if (!target) return;
+            e.preventDefault();
+            const site = target.getAttribute('data-value');
+            if (!site) return;
+            applyGeotaggingSiteFilter(site);
+            if (btn && typeof bootstrap !== 'undefined') {
+                const instance = bootstrap.Dropdown.getInstance(btn);
+                if (instance) instance.hide();
+            }
+        });
+    }
+
+    function initGeotaggingSiteFilter() {
+        bindGeotaggingSiteFilterEvents();
+
+        let sites = getGeotaggingAvailableSites();
+        if (shouldFilterToBmo2Pama) {
+            sites = sites.filter(function(s) { return normalizeGeotagSiteKey(s) === 'BMO 2'; });
+            if (!sites.length) sites = ['BMO 2'];
+        }
+
+        const defaultSite = shouldFilterToBmo2Pama ? 'BMO 2' : 'GMO';
+        const resolvedDefault = sites.indexOf(defaultSite) !== -1 ? defaultSite : sites[0];
+        const siteToApply = (currentGeotaggingSiteFilter && sites.indexOf(currentGeotaggingSiteFilter) !== -1)
+            ? currentGeotaggingSiteFilter
+            : resolvedDefault;
+        applyGeotaggingSiteFilter(siteToApply, !!areaKerjaBmo2PamaLayer);
+    }
+
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', bindGeotaggingSiteFilterEvents);
+    } else {
+        bindGeotaggingSiteFilterEvents();
+    }
+
+    function pickAreaKerjaFeatureAtPixel(pixel) {
+        const directHit = map.forEachFeatureAtPixel(pixel, function(feature) {
+            return feature;
+        });
+
+        if (!directHit) {
+            return null;
+        }
+
+        const directType = directHit.get('type');
+        const directData = directHit.get('data');
+        if (directType || directData) {
+            return directHit;
+        }
+
+        if (areaKerjaBmo2PamaLayer && areaKerjaBmo2PamaLayer.getVisible()) {
+            const geotagFeatures = (map.getFeaturesAtPixel(pixel, {
+                layerFilter: function(layer) {
+                    return layer === areaKerjaBmo2PamaLayer;
+                }
+            }) || []).filter(featureMatchesGeotaggingSiteFilter);
+
+            if (geotagFeatures.length > 0) {
+                let bestFeature = geotagFeatures[0];
+                let bestArea = getFeatureAreaM2Cached(bestFeature);
+
+                for (let i = 1; i < geotagFeatures.length; i++) {
+                    const candidate = geotagFeatures[i];
+                    const candidateArea = getFeatureAreaM2Cached(candidate);
+                    if (candidateArea < bestArea) {
+                        bestArea = candidateArea;
+                        bestFeature = candidate;
+                    }
+                }
+
+                return bestFeature;
+            }
+        }
+
+        return directHit;
     }
 
     // Function to create layer from GeoJSON data with EPSG:32650 (UTM Zone 50N)
@@ -6014,6 +6333,9 @@
     // Style akan menggunakan cached risk level jika sudah dihitung
     // Jika belum, akan menggunakan default MEDIUM (kuning)
     function getRiskBasedAreaKerjaStyle(feature) {
+        if (!featureMatchesGeotaggingSiteFilter(feature)) {
+            return null;
+        }
         // Cek apakah feature sudah punya cached risk level
         // Risk level di-set saat popup dibuka dan risk matrix summary dihitung
         const cachedRiskLevel = feature.get('riskLevel');
@@ -6093,6 +6415,9 @@
 
     /** Style boundary saja (dari geotaging.js) - tanpa warna risk, tanpa kalkulasi. Hanya outline netral. */
     function getBoundaryOnlyStyle(feature) {
+        if (!featureMatchesGeotaggingSiteFilter(feature)) {
+            return null;
+        }
         return new ol.style.Style({
             fill: new ol.style.Fill({ color: 'rgba(255, 193, 7, 0.06)' }),
             stroke: new ol.style.Stroke({
@@ -11347,6 +11672,8 @@ source: new ol.source.Vector(),
                     });
                     console.log('[geotaging] Filtered features by site BMO 2:', originalCount, '→', geotaggingGeoJson.features.length);
                 }
+
+                preprocessGeotaggingBeatsGeoJson(geotaggingGeoJson);
                 
                 areaKerjaBmo2PamaLayer = createLayerFromGeoJson32650(
                     geotaggingGeoJson,
@@ -11392,6 +11719,8 @@ source: new ol.source.Vector(),
                     }).catch(error => {
                         console.error('Error calculating risk levels:', error);
                     });
+
+                    initGeotaggingSiteFilter();
                 } else {
                     console.error('✗ Failed to create Area Kerja Geotagging layer');
                 }
@@ -11721,7 +12050,12 @@ source: new ol.source.Vector(),
                 }
             });
             
-            // Area Kerja Layers
+            // Area Kerja Layers — skip jika sudah memakai geotagging_beats dari geotaging.js
+            const useGeotaggingBeatsOnly = typeof window.geotagging_beats !== 'undefined' && window.geotagging_beats;
+            if (useGeotaggingBeatsOnly) {
+                console.log('[geotaging] Menggunakan geotagging_beats saja untuk layer Area Kerja, skip layer area_kerja_*.js');
+            }
+
             const areaKerjaConfigs = [
                 { varName: 'areaKerjaBmo1Fad', layerName: 'Area Kerja BMO1 FAD', zIndex: 411 },
                 { varName: 'areaKerjaBmo1Kdc', layerName: 'Area Kerja BMO1 KDC', zIndex: 412 },
@@ -11734,6 +12068,7 @@ source: new ol.source.Vector(),
                 { varName: 'areaKerjaSmoMtn', layerName: 'Area Kerja SMO MTN', zIndex: 418 }
             ];
             
+            if (!useGeotaggingBeatsOnly) {
             areaKerjaConfigs.forEach(config => {
                 if (typeof window[config.varName] !== 'undefined' && window[config.varName]) {
                     try {
@@ -11806,6 +12141,7 @@ source: new ol.source.Vector(),
                     console.warn(`✗ ${config.varName} not found or undefined`);
                 }
             });
+            }
             
             // Add areaKerjaBmo2PamaLayer to areaKerjaLayers if it exists
             if (areaKerjaBmo2PamaLayer) {
@@ -12424,9 +12760,7 @@ source: new ol.source.Vector(),
     // Click handler
     map.on('singleclick', async function(evt) {
         // Clear CCTV to hazard lines when clicking on map (unless clicking on CCTV)
-        const clickedFeature = map.forEachFeatureAtPixel(evt.pixel, function(feature) {
-            return feature;
-        });
+        const clickedFeature = pickAreaKerjaFeatureAtPixel(evt.pixel);
         
         // Only clear if not clicking on CCTV
         if (!clickedFeature || clickedFeature.get('type') !== 'cctv') {
@@ -12544,7 +12878,7 @@ source: new ol.source.Vector(),
             // Check for Area Kerja (beats schema atau GMO geotagging schema)
             const hasIdLokasi = akProps.id_lokasi != null && akProps.id_lokasi !== '';
             const hasLokasi = !!(akProps.lokasi) && !!(akProps.site || akProps.perusahaan);
-            const isGmoGeotag = ('Lokasi' in props || 'Site' in props) && !hasNomorCctv;
+            const isGmoGeotag = isGmoGeotagProperties(akProps) && !hasNomorCctv;
             const isAreaKerja = hasIdLokasi || hasLokasi || isGmoGeotag;
             
             if (hasNomorCctv || isAreaKerja) {
@@ -13643,7 +13977,7 @@ source: new ol.source.Vector(),
         const site = getValue(props.site);
         const perusahaan = getValue(props.perusahaan);
         const areaKerja = getValue(props.area_kerja);
-        const luasan = props.luasan && props.luasan !== null && !isNaN(props.luasan)
+        const luasan = !isMissingLuasan(props.luasan)
             ? parseFloat(props.luasan).toLocaleString('id-ID', {maximumFractionDigits: 2})
             : 'N/A';
         const lokasiIndukHtml = (lokasiInduk && lokasiInduk !== lokasiNameFinal)
