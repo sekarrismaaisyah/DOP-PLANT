@@ -5525,7 +5525,11 @@
     function getFeatureSiteKey(feature) {
         if (!feature) return '';
         const props = feature.getProperties();
-        return normalizeGeotagSiteKey(props.site || props.Site || '');
+        const cctvData = props.cctvData;
+        return normalizeGeotagSiteKey(
+            props.site || props.Site || props.ra_site_name || props.raSiteName ||
+            (cctvData && cctvData.site) || ''
+        );
     }
 
     function normalizeGeotaggingSiteFilters(sites) {
@@ -5649,7 +5653,7 @@
             </div>
             <div class="alert alert-info mt-3 mb-0">
                 <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">info</i>
-                <small>Gunakan toggle untuk menampilkan/menyembunyikan polygon per site. Klik <strong>Terapkan Filter</strong> untuk mengupdate peta.</small>
+                <small>Gunakan toggle untuk menampilkan/menyembunyikan polygon area kerja dan data Critical Area (Cov% Dop / IKK) per site. Klik <strong>Terapkan Filter</strong> untuk mengupdate peta.</small>
             </div>
         `;
     }
@@ -5701,18 +5705,45 @@
         }
     }
 
+    function refreshCriticalAreaLayersForSiteFilter() {
+        if (dailyOperationPlansLayer) {
+            dailyOperationPlansLayer.getSource().changed();
+        }
+        if (ikkLayer) {
+            ikkLayer.getSource().changed();
+        }
+        if (dopCctvLinesLayer) {
+            dopCctvLinesLayer.getSource().changed();
+        }
+        if (dopCctvMarkersLayer) {
+            dopCctvMarkersLayer.getSource().changed();
+        }
+    }
+
     function fitMapToGeotaggingSiteFilter() {
-        if (!areaKerjaBmo2PamaLayer || !map) return;
+        if (!map) return;
         const extent = ol.extent.createEmpty();
         let hasFeature = false;
-        areaKerjaBmo2PamaLayer.getSource().getFeatures().forEach(function(feature) {
+
+        function addFeatureExtent(feature) {
             if (!featureMatchesGeotaggingSiteFilter(feature)) return;
             const geometry = feature.getGeometry();
             if (geometry) {
                 ol.extent.extend(extent, geometry.getExtent());
                 hasFeature = true;
             }
-        });
+        }
+
+        if (areaKerjaBmo2PamaLayer && areaKerjaBmo2PamaLayer.getVisible()) {
+            areaKerjaBmo2PamaLayer.getSource().getFeatures().forEach(addFeatureExtent);
+        }
+        if (dailyOperationPlansLayer && dailyOperationPlansLayer.getVisible()) {
+            dailyOperationPlansLayer.getSource().getFeatures().forEach(addFeatureExtent);
+        }
+        if (ikkLayer && ikkLayer.getVisible()) {
+            ikkLayer.getSource().getFeatures().forEach(addFeatureExtent);
+        }
+
         if (hasFeature && !ol.extent.isEmpty(extent)) {
             map.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 16, duration: 400 });
         }
@@ -5732,6 +5763,10 @@
         }
         if (areaKerjaBoundaryOnlyLayer) {
             areaKerjaBoundaryOnlyLayer.getSource().changed();
+        }
+        refreshCriticalAreaLayersForSiteFilter();
+        if (currentSidebarTab === 'controlroom' && typeof loadIkkForControlroomSidebar === 'function') {
+            loadIkkForControlroomSidebar();
         }
         if (map) {
             map.render();
@@ -8218,6 +8253,10 @@ source: new ol.source.Vector(),
             if (!geometry || geometry.getType() !== 'Point') {
                 return [];
             }
+
+            if (!featureMatchesGeotaggingSiteFilter(feature)) {
+                return [];
+            }
             
             const point = geometry.getCoordinates();
             
@@ -8523,6 +8562,7 @@ source: new ol.source.Vector(),
         style: function(feature, resolution) {
             const geometry = feature.getGeometry();
             if (!geometry || geometry.getType() !== 'Point') return [];
+            if (!featureMatchesGeotaggingSiteFilter(feature)) return [];
             const styles = [];
             let blinkTime = 0;
             if (typeof getPulseAnimationTime === 'function' && pulseAnimationStartTime !== null) {
@@ -8685,6 +8725,10 @@ source: new ol.source.Vector(),
     dopCctvLinesLayer = new ol.layer.Vector({
         source: new ol.source.Vector(),
         style: function(feature, resolution) {
+            if (!featureMatchesGeotaggingSiteFilter(feature)) {
+                return [];
+            }
+
             // Get pulse animation values
             const pulse = getPulseValues(getPulseAnimationTime(), 'fast');
             
@@ -8743,6 +8787,10 @@ source: new ol.source.Vector(),
     dopCctvMarkersLayer = new ol.layer.Vector({
         source: new ol.source.Vector(),
         style: function(feature) {
+            if (!featureMatchesGeotaggingSiteFilter(feature)) {
+                return [];
+            }
+
             const cctvData = feature.get('cctvData');
             const iconUrl = createCCTVIcon(cctvData || {});
             
@@ -9081,17 +9129,26 @@ source: new ol.source.Vector(),
                             console.log('Layer visible:', dailyOperationPlansLayer.getVisible());
                             console.log('Layer source features:', dailyOperationPlansLayer.getSource().getFeatures().length);
                             
-                            // Fit map to show all plans if there are any
-                            const extent = source.getExtent();
-                            console.log('Source extent:', extent);
-                            if (extent && extent[0] !== Infinity && extent[1] !== Infinity) {
+                            // Fit map to show filtered plans if there are any
+                            const extent = ol.extent.createEmpty();
+                            let hasVisibleFeature = false;
+                            featuresInSource.forEach(function(feature) {
+                                if (!featureMatchesGeotaggingSiteFilter(feature)) return;
+                                const geometry = feature.getGeometry();
+                                if (geometry) {
+                                    ol.extent.extend(extent, geometry.getExtent());
+                                    hasVisibleFeature = true;
+                                }
+                            });
+                            console.log('Source extent (filtered):', extent);
+                            if (hasVisibleFeature && extent[0] !== Infinity && extent[1] !== Infinity) {
                                 map.getView().fit(extent, {
                                     padding: [50, 50, 50, 50],
                                     maxZoom: 18
                                 });
-                                console.log('Map fitted to extent');
+                                console.log('Map fitted to filtered extent');
                             } else {
-                                console.warn('Invalid extent, cannot fit map');
+                                console.warn('No visible DOP for selected site filter, cannot fit map');
                             }
                         } catch (error) {
                             console.error('Error adding features to layer:', error);
@@ -9259,10 +9316,19 @@ source: new ol.source.Vector(),
                 if (iconsToCreate === 0 && ikkLayer) ikkLayer.changed();
                 console.log('[IKK] Card icon: dibuat baru =', iconsToCreate, ', dari cache =', Object.keys(keyToFeatures).length - iconsToCreate);
                 if (featuresToAdd.length > 0) {
-                    const extent = source.getExtent();
-                    if (extent && extent[0] !== Infinity) {
+                    const extent = ol.extent.createEmpty();
+                    let hasVisibleFeature = false;
+                    featuresToAdd.forEach(function(feature) {
+                        if (!featureMatchesGeotaggingSiteFilter(feature)) return;
+                        const geometry = feature.getGeometry();
+                        if (geometry) {
+                            ol.extent.extend(extent, geometry.getExtent());
+                            hasVisibleFeature = true;
+                        }
+                    });
+                    if (hasVisibleFeature && extent[0] !== Infinity) {
                         map.getView().fit(extent, { padding: [50, 50, 50, 50], maxZoom: 18 });
-                        console.log('[IKK] Peta di-fit ke extent feature');
+                        console.log('[IKK] Peta di-fit ke extent feature (filtered by site)');
                     }
                 }
                 setTimeout(function() {
@@ -9325,7 +9391,8 @@ source: new ol.source.Vector(),
                     const lineFeature = new ol.Feature({
                         geometry: line,
                         dopId: dopId,
-                        cctvId: cctv.id
+                        cctvId: cctv.id,
+                        site: dopFeature.get('site') || cctv.site || null
                     });
                     lineFeatures.push(lineFeature);
                 }
@@ -9378,7 +9445,8 @@ source: new ol.source.Vector(),
                         const lineFeature = new ol.Feature({
                             geometry: line,
                             dopId: props.id,
-                            cctvId: cctv.id
+                            cctvId: cctv.id,
+                            site: props.site || cctv.site || null
                         });
                         lineFeatures.push(lineFeature);
 
@@ -9394,6 +9462,7 @@ source: new ol.source.Vector(),
                                     nama_cctv: cctv.nama_cctv,
                                     kondisi: cctv.kondisi,
                                     status: cctv.status,
+                                    site: cctv.site || props.site || null,
                                     lokasi_pemasangan: cctv.lokasi_pemasangan
                                 }
                             });
@@ -23764,10 +23833,16 @@ source: new ol.source.Vector(),
             .then(res => res.json())
             .then(result => {
                 if (result.success && Array.isArray(result.data)) {
-                    ikkControlroomCount = result.data.length;
+                    let rows = result.data;
+                    if (currentGeotaggingSiteFilters && currentGeotaggingSiteFilters.length) {
+                        rows = rows.filter(function(row) {
+                            return isGeotagSiteInFilter(row.site || row.ra_site_name || '', currentGeotaggingSiteFilters);
+                        });
+                    }
+                    ikkControlroomCount = rows.length;
                     const badge = document.getElementById('controlroomTabCount');
                     if (badge) badge.textContent = ikkControlroomCount;
-                    renderIkkControlroomList(result.data);
+                    renderIkkControlroomList(rows);
                 } else {
                     ikkControlroomCount = 0;
                     if (document.getElementById('controlroomTabCount')) document.getElementById('controlroomTabCount').textContent = '0';
@@ -26098,7 +26173,7 @@ source: new ol.source.Vector(),
         }
         
         const source = dailyOperationPlansLayer.getSource();
-        const features = source.getFeatures();
+        const features = source.getFeatures().filter(featureMatchesGeotaggingSiteFilter);
         
         if (features.length === 0) {
             panelBody.innerHTML = '<div class="gm-notification-empty">Belum ada data pekerjaan yang dimuat</div>';
