@@ -642,52 +642,20 @@
   color: #5f6368;
 }
 
-.gm-category-site-filter{
-  position: relative;
-  flex-shrink: 0;
-  z-index: 1200;
+.geotag-site-option{
+  cursor: pointer;
+  transition: background .15s ease, border-color .15s ease;
 }
-.gm-category-site-filter .dropdown-menu{
-  min-width: 180px;
-  max-height: 320px;
-  overflow-y: auto;
-  font-size: 14px;
-  border-radius: 12px;
-  border: 1px solid #dadce0;
-  z-index: 1300;
-  margin-top: 6px;
-}
-.gm-category-site-filter .dropdown-menu.show{
-  display: block;
-}
-.gm-category-site-filter .dropdown-item{
-  padding: 10px 16px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.gm-category-site-filter .dropdown-item.active,
-.gm-category-site-filter .dropdown-item:active{
+.geotag-site-option.active{
   background: #e8f0fe;
-  color: #1a73e8;
+  border-color: #1a73e8 !important;
 }
-.gm-category-site-filter .dropdown-item .site-filter-check{
-  font-size: 18px;
+.geotag-site-option .site-filter-check{
   color: #1a73e8;
   visibility: hidden;
 }
-.gm-category-site-filter .dropdown-item.active .site-filter-check{
+.geotag-site-option.active .site-filter-check{
   visibility: visible;
-}
-.gm-category-site-filter .gm-category-item.dropdown-toggle::after{
-  margin-left: 6px;
-  vertical-align: middle;
-}
-.gm-category-site-filter .gm-site-filter-label{
-  font-size: 13px;
-  color: #5f6368;
-  margin-right: 2px;
 }
 
 /* -------------------
@@ -3254,25 +3222,12 @@
                 <div class="gm-search-results" id="gmSearchResults"></div>
             </div>
             
-            <!-- Site filter polygon geotaging (di luar gm-category-filters agar dropdown tidak ter-clip) -->
-            <div class="dropdown gm-category-site-filter">
-                <button class="gm-category-item dropdown-toggle" type="button" id="gmGeotagSiteFilterBtn" aria-expanded="false" title="Pilih site untuk menampilkan polygon area kerja">
-                    <i class="material-icons-outlined">layers</i>
-                    <span class="gm-site-filter-label">Site:</span>
-                    <span id="gmGeotagSiteFilterText">GMO</span>
-                </button>
-                <ul class="dropdown-menu shadow-sm" id="gmGeotagSiteFilterDropdown" aria-labelledby="gmGeotagSiteFilterBtn">
-                    <li><a class="dropdown-item filter-option active" href="#" data-value="GMO"><span>GMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                    <li><a class="dropdown-item filter-option" href="#" data-value="BMO 1"><span>BMO 1</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                    <li><a class="dropdown-item filter-option" href="#" data-value="BMO 2"><span>BMO 2</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                    <li><a class="dropdown-item filter-option" href="#" data-value="BMO 3"><span>BMO 3</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                    <li><a class="dropdown-item filter-option" href="#" data-value="LMO"><span>LMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                    <li><a class="dropdown-item filter-option" href="#" data-value="SMO"><span>SMO</span><i class="material-icons-outlined site-filter-check">check</i></a></li>
-                </ul>
-            </div>
-
             <!-- Category Filters - Sejajar dengan Search Box -->
             <div class="gm-category-filters">
+                <a href="#" class="gm-category-item active" id="gmCategoryGeotagSite" title="Pilih site untuk menampilkan polygon area kerja">
+                    <i class="material-icons-outlined">layers</i>
+                    <span>Site</span>
+                </a>
                   <a href="#" class="gm-category-item" id="gmCategoryCctv" title="CCTV (default: tidak tampil, klik untuk tampilkan)">
                     <i class="material-icons-outlined">camera_alt</i>
                     <span>CCTV</span>
@@ -4493,6 +4448,31 @@
     </div>
 </div>
 
+<!-- Modal Filter Site Area Kerja (geotaging.js) -->
+<div class="modal fade" id="geotagSiteFilterModal" tabindex="-1" aria-labelledby="geotagSiteFilterModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-scrollable">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="geotagSiteFilterModalLabel">
+                    <i class="material-icons-outlined">layers</i> Filter Site Area Kerja
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body" id="geotagSiteFilterModalBody">
+                <div class="text-center py-4">
+                    <div class="spinner-border text-primary" role="status">
+                        <span class="visually-hidden">Loading...</span>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                <button type="button" class="btn btn-primary" onclick="applyGeotaggingSiteFilterFromModal()">Terapkan Filter</button>
+            </div>
+        </div>
+    </div>
+</div>
+
 <!-- Modal Control Room -->
 <div class="modal fade" id="controlRoomModal" tabindex="-1" aria-labelledby="controlRoomModalLabel" aria-hidden="true">
     <div class="modal-dialog modal-lg modal-dialog-scrollable">
@@ -5216,6 +5196,7 @@
     let currentSiteFilter = '';
     // Filter polygon geotaging.js per site (default GMO)
     let currentGeotaggingSiteFilter = 'GMO';
+    let pendingGeotaggingSiteFilter = 'GMO';
     
     // Sidebar Panel Management - harus didefinisikan sebelum digunakan
     let currentSidebarTab = 'cctv';
@@ -5595,9 +5576,9 @@
         return ordered;
     }
 
-    function renderGeotaggingSiteFilterDropdown(activeSite) {
-        const dropdown = document.getElementById('gmGeotagSiteFilterDropdown');
-        if (!dropdown) return;
+    function renderGeotaggingSiteFilterModalList(selectedSite) {
+        const modalBody = document.getElementById('geotagSiteFilterModalBody');
+        if (!modalBody) return;
 
         let sites = getGeotaggingAvailableSites();
         if (shouldFilterToBmo2Pama) {
@@ -5606,25 +5587,81 @@
         }
 
         const counts = getGeotaggingSiteFeatureCounts();
-        const activeKey = normalizeGeotagSiteKey(activeSite || currentGeotaggingSiteFilter);
+        const activeKey = normalizeGeotagSiteKey(selectedSite || currentGeotaggingSiteFilter);
 
-        dropdown.innerHTML = sites.map(function(site) {
-            const isActive = normalizeGeotagSiteKey(site) === activeKey;
-            const count = counts[site] ? ' <small class="text-muted">(' + counts[site] + ')</small>' : '';
-            return '<li><a class="dropdown-item filter-option' + (isActive ? ' active' : '') + '" href="#" data-value="' + site.replace(/"/g, '&quot;') + '"><span>' + site + count + '</span><i class="material-icons-outlined site-filter-check">check</i></a></li>';
-        }).join('');
+        if (!sites.length) {
+            modalBody.innerHTML = '<div class="text-center py-5 text-muted">Tidak ada data site di geotaging.js</div>';
+            return;
+        }
+
+        modalBody.innerHTML = `
+            <div class="mb-3">
+                <p class="text-muted mb-1">Pilih site untuk menampilkan polygon area kerja di peta.</p>
+                <p class="mb-0"><strong>Site aktif:</strong> <span id="geotagSiteFilterActiveLabel">${selectedSite || currentGeotaggingSiteFilter || '-'}</span></p>
+            </div>
+            <div class="list-group">
+                ${sites.map(function(site) {
+                    const isActive = normalizeGeotagSiteKey(site) === activeKey;
+                    const count = counts[site] || 0;
+                    return `
+                        <button type="button"
+                            class="list-group-item list-group-item-action geotag-site-option d-flex justify-content-between align-items-center${isActive ? ' active' : ''}"
+                            data-site="${String(site).replace(/"/g, '&quot;')}"
+                            onclick="selectGeotaggingSiteInModal(this, '${String(site).replace(/'/g, "\\'")}')">
+                            <div class="text-start">
+                                <h6 class="mb-1">${site}</h6>
+                                <small class="text-muted">${count} polygon area kerja</small>
+                            </div>
+                            <i class="material-icons-outlined site-filter-check">check_circle</i>
+                        </button>
+                    `;
+                }).join('')}
+            </div>
+            <div class="alert alert-info mt-3 mb-0">
+                <i class="material-icons-outlined me-2" style="font-size: 18px; vertical-align: middle;">info</i>
+                <small>Pilih site lalu klik <strong>Terapkan Filter</strong> untuk menampilkan polygon area kerja site tersebut.</small>
+            </div>
+        `;
     }
 
+    function showGeotaggingSiteFilterModal() {
+        pendingGeotaggingSiteFilter = currentGeotaggingSiteFilter || 'GMO';
+        renderGeotaggingSiteFilterModalList(pendingGeotaggingSiteFilter);
+
+        const modalEl = document.getElementById('geotagSiteFilterModal');
+        if (!modalEl || typeof bootstrap === 'undefined') return;
+
+        const modal = bootstrap.Modal.getOrCreateInstance(modalEl);
+        modal.show();
+    }
+
+    window.selectGeotaggingSiteInModal = function(buttonEl, site) {
+        pendingGeotaggingSiteFilter = site;
+        document.querySelectorAll('#geotagSiteFilterModalBody .geotag-site-option').forEach(function(el) {
+            el.classList.remove('active');
+        });
+        if (buttonEl) buttonEl.classList.add('active');
+        const activeLabel = document.getElementById('geotagSiteFilterActiveLabel');
+        if (activeLabel) activeLabel.textContent = site;
+    };
+
+    window.applyGeotaggingSiteFilterFromModal = function() {
+        if (!pendingGeotaggingSiteFilter) return;
+        applyGeotaggingSiteFilter(pendingGeotaggingSiteFilter);
+
+        const modalEl = document.getElementById('geotagSiteFilterModal');
+        if (modalEl && typeof bootstrap !== 'undefined') {
+            const modal = bootstrap.Modal.getInstance(modalEl);
+            if (modal) modal.hide();
+        }
+    };
+
     function updateGeotaggingSiteFilterUi(activeSite) {
-        const textEl = document.getElementById('gmGeotagSiteFilterText');
-        const btn = document.getElementById('gmGeotagSiteFilterBtn');
-        if (textEl && activeSite) {
-            textEl.textContent = activeSite;
+        const categoryItem = document.getElementById('gmCategoryGeotagSite');
+        if (categoryItem) {
+            categoryItem.classList.add('active');
+            categoryItem.title = 'Site aktif: ' + (activeSite || 'GMO');
         }
-        if (btn) {
-            btn.classList.add('active');
-        }
-        renderGeotaggingSiteFilterDropdown(activeSite);
     }
 
     function fitMapToGeotaggingSiteFilter() {
@@ -5667,44 +5704,7 @@
         }
     }
 
-    function bindGeotaggingSiteFilterEvents() {
-        const dropdown = document.getElementById('gmGeotagSiteFilterDropdown');
-        const btn = document.getElementById('gmGeotagSiteFilterBtn');
-        if (!dropdown || dropdown.dataset.bound === '1') return;
-
-        dropdown.dataset.bound = '1';
-
-        if (btn && typeof bootstrap !== 'undefined' && !btn.dataset.dropdownInit) {
-            btn.dataset.dropdownInit = '1';
-            const existing = bootstrap.Dropdown.getInstance(btn);
-            if (existing) existing.dispose();
-            new bootstrap.Dropdown(btn, {
-                autoClose: true,
-                popperConfig: function(defaultBsPopperConfig) {
-                    const config = defaultBsPopperConfig || {};
-                    config.strategy = 'fixed';
-                    return config;
-                }
-            });
-        }
-
-        dropdown.addEventListener('click', function(e) {
-            const target = e.target.closest('.filter-option');
-            if (!target) return;
-            e.preventDefault();
-            const site = target.getAttribute('data-value');
-            if (!site) return;
-            applyGeotaggingSiteFilter(site);
-            if (btn && typeof bootstrap !== 'undefined') {
-                const instance = bootstrap.Dropdown.getInstance(btn);
-                if (instance) instance.hide();
-            }
-        });
-    }
-
     function initGeotaggingSiteFilter() {
-        bindGeotaggingSiteFilterEvents();
-
         let sites = getGeotaggingAvailableSites();
         if (shouldFilterToBmo2Pama) {
             sites = sites.filter(function(s) { return normalizeGeotagSiteKey(s) === 'BMO 2'; });
@@ -5716,13 +5716,24 @@
         const siteToApply = (currentGeotaggingSiteFilter && sites.indexOf(currentGeotaggingSiteFilter) !== -1)
             ? currentGeotaggingSiteFilter
             : resolvedDefault;
+        pendingGeotaggingSiteFilter = siteToApply;
         applyGeotaggingSiteFilter(siteToApply, !!areaKerjaBmo2PamaLayer);
     }
 
+    function bindGeotaggingSiteFilterCategoryClick() {
+        const categoryItem = document.getElementById('gmCategoryGeotagSite');
+        if (!categoryItem || categoryItem.dataset.bound === '1') return;
+        categoryItem.dataset.bound = '1';
+        categoryItem.addEventListener('click', function(e) {
+            e.preventDefault();
+            showGeotaggingSiteFilterModal();
+        });
+    }
+
     if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', bindGeotaggingSiteFilterEvents);
+        document.addEventListener('DOMContentLoaded', bindGeotaggingSiteFilterCategoryClick);
     } else {
-        bindGeotaggingSiteFilterEvents();
+        bindGeotaggingSiteFilterCategoryClick();
     }
 
     function pickAreaKerjaFeatureAtPixel(pixel) {
