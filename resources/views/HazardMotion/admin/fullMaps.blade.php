@@ -5327,6 +5327,107 @@
         }
     }
 
+    // Normalisasi property Area Kerja (skema beats lowercase + skema GMO geotagging: Lokasi/Site/Sub_Lokasi)
+    function isLikelyWgs84Pair(x, y) {
+        return Math.abs(x) <= 180 && Math.abs(y) <= 90 && Math.abs(x) < 1000;
+    }
+
+    function generateStableLokasiId(site, lokasiInduk, subLokasi) {
+        const str = [site, lokasiInduk, subLokasi].filter(v => v != null && String(v).trim() !== '').join('|').toUpperCase().trim();
+        let hash = 0;
+        for (let i = 0; i < str.length; i++) {
+            hash = ((hash << 5) - hash) + str.charCodeAt(i);
+            hash |= 0;
+        }
+        return 1172000000 + (Math.abs(hash) % 999999);
+    }
+
+    function inferAreaKerjaCategory(lokasiInduk, lokasiDisplay) {
+        const name = String(lokasiInduk || lokasiDisplay || '').toLowerCase();
+        if (name.includes('high risk') || name.includes('highrisk') || name.includes('pit')) return 'Pit';
+        if (name.includes('haul')) return 'Hauling';
+        if (name.includes('wmp') || name.includes('cpp') || name.includes('plant') || name.includes('infra')) return 'Infra Tambang';
+        if (name.includes('change shift') || name.includes('security') || name.includes('dapur') || name.includes('control room')) return 'Non Proses';
+        return lokasiInduk || lokasiDisplay || 'Area Kerja';
+    }
+
+    function computeGeometryAreaM2(olGeometry) {
+        if (!olGeometry) return null;
+        try {
+            const clone = olGeometry.clone();
+            clone.transform('EPSG:3857', 'EPSG:4326');
+            return Math.abs(ol.sphere.getArea(clone));
+        } catch (e) {
+            return null;
+        }
+    }
+
+    function normalizeAreaKerjaProperties(rawProps, olGeometry) {
+        if (!rawProps || typeof rawProps !== 'object') return {};
+
+        const props = Object.assign({}, rawProps);
+        const lokasiInduk = props.lokasi || props.Lokasi || '';
+        const subLokasi = props.Sub_Lokasi || props.sub_lokasi || props.detail_lokasi || '';
+        const site = props.site || props.Site || '';
+
+        if (props.Lokasi || props.Site || props.Sub_Lokasi) {
+            props.lokasi = (subLokasi && subLokasi !== lokasiInduk)
+                ? subLokasi
+                : (lokasiInduk || subLokasi);
+            props.lokasi_induk = lokasiInduk || null;
+            props.detail_lokasi = subLokasi || lokasiInduk || null;
+            props.site = site;
+
+            if (props.id_lokasi == null || props.id_lokasi === '' || props.id_lokasi === 0) {
+                if (props.Id != null && props.Id !== 0) {
+                    props.id_lokasi = props.Id;
+                } else {
+                    props.id_lokasi = generateStableLokasiId(props.site, lokasiInduk, subLokasi);
+                }
+            }
+
+            if (!props.perusahaan) {
+                if (String(props.site).trim().toUpperCase() === 'GMO') {
+                    props.perusahaan = 'PT Pamapersada Nusantara';
+                }
+            }
+
+            if (!props.area_kerja) {
+                props.area_kerja = inferAreaKerjaCategory(lokasiInduk, props.lokasi);
+            }
+        } else {
+            props.lokasi = props.lokasi || props.nama_lokasi || props.name || lokasiInduk || subLokasi || '';
+            props.site = props.site || site;
+            props.detail_lokasi = props.detail_lokasi || subLokasi || null;
+        }
+
+        if (props.luasan == null || props.luasan === '' || isNaN(parseFloat(props.luasan))) {
+            const computed = computeGeometryAreaM2(olGeometry);
+            if (computed != null && computed > 0) {
+                props.luasan = computed;
+            }
+        }
+
+        return props;
+    }
+
+    function getAreaKerjaFeatureProps(feature) {
+        if (!feature) return {};
+        const raw = feature.getProperties();
+        const normalized = normalizeAreaKerjaProperties(raw, feature.getGeometry());
+
+        if (!raw.lokasi && normalized.lokasi) feature.set('lokasi', normalized.lokasi);
+        if (!raw.site && normalized.site) feature.set('site', normalized.site);
+        if (!raw.id_lokasi && normalized.id_lokasi) feature.set('id_lokasi', normalized.id_lokasi);
+        if (!raw.perusahaan && normalized.perusahaan) feature.set('perusahaan', normalized.perusahaan);
+        if (!raw.area_kerja && normalized.area_kerja) feature.set('area_kerja', normalized.area_kerja);
+        if ((!raw.luasan || isNaN(parseFloat(raw.luasan))) && normalized.luasan) feature.set('luasan', normalized.luasan);
+        if (normalized.detail_lokasi) feature.set('detail_lokasi', normalized.detail_lokasi);
+        if (normalized.lokasi_induk) feature.set('lokasi_induk', normalized.lokasi_induk);
+
+        return normalized;
+    }
+
     // Function to create layer from GeoJSON data with EPSG:32650 (UTM Zone 50N)
     function createLayerFromGeoJson32650(geoJsonData, layerName, styleFunction, zIndex = 300) {
         if (!geoJsonData) {
@@ -5401,10 +5502,14 @@
                         (coord.length === 2 || (coord.length === 3 && typeof coord[2] === 'number'))) {
                         // This is a coordinate pair [x, y] or [x, y, z]
                         try {
-                            // Transform from EPSG:32650 (UTM) to EPSG:4326 (WGS84)
-                            const wgs84 = proj4('EPSG:32650', 'EPSG:4326', [coord[0], coord[1]]);
-                            // Transform from EPSG:4326 to EPSG:3857 (Web Mercator)
-                            const webMercator = ol.proj.transform(wgs84, 'EPSG:4326', 'EPSG:3857');
+                            let webMercator;
+                            // GMO geotagging: koordinat sudah WGS84 (lon/lat). Beats: EPSG:32650 (UTM).
+                            if (isLikelyWgs84Pair(coord[0], coord[1])) {
+                                webMercator = ol.proj.transform([coord[0], coord[1]], 'EPSG:4326', 'EPSG:3857');
+                            } else {
+                                const wgs84 = proj4('EPSG:32650', 'EPSG:4326', [coord[0], coord[1]]);
+                                webMercator = ol.proj.transform(wgs84, 'EPSG:4326', 'EPSG:3857');
+                            }
                             // Preserve z coordinate if present
                             if (coord.length === 3) {
                                 return [webMercator[0], webMercator[1], coord[2]];
@@ -5453,10 +5558,12 @@
                         }
                         
                         // Read feature with transformed geometry (already in EPSG:3857)
-                        return new ol.format.GeoJSON().readFeature(transformedFeature, {
+                        const olFeature = new ol.format.GeoJSON().readFeature(transformedFeature, {
                             dataProjection: 'EPSG:3857',
                             featureProjection: 'EPSG:3857'
                         });
+                        getAreaKerjaFeatureProps(olFeature);
+                        return olFeature;
                     } catch (error) {
                         console.warn(`${layerName}: Error processing feature:`, error);
                         return null;
@@ -5501,7 +5608,7 @@
     // Calculate risk level for area kerja based on risk matrix criteria
     // Versi dengan parameter cctvList untuk menghindari duplicate API call
     function calculateRiskForAreaKerjaWithCctvList(feature, cctvList, hasOnlineCctv) {
-        const props = feature.getProperties();
+        const props = getAreaKerjaFeatureProps(feature);
         const lokasiName = props.lokasi || props.nama_lokasi || props.name || '';
         const idLokasi = props.id_lokasi || props.id || '';
         
@@ -5555,7 +5662,7 @@
     // Calculate risk level for area kerja based on risk matrix criteria
     // Sekarang async karena checkCctvOnlineInArea menjadi async
     async function calculateRiskForAreaKerja(feature) {
-        const props = feature.getProperties();
+        const props = getAreaKerjaFeatureProps(feature);
         const lokasiName = props.lokasi || props.nama_lokasi || props.name || '';
         const idLokasi = props.id_lokasi || props.id || '';
         
@@ -5705,7 +5812,7 @@
             // Process batch in parallel
             await Promise.all(batch.map(async (feature) => {
                 try {
-                    const props = feature.getProperties();
+                    const props = getAreaKerjaFeatureProps(feature);
                     const lokasiName = props.lokasi || props.nama_lokasi || props.name || '';
                     const idLokasi = props.id_lokasi || props.id || '';
                     
@@ -6213,7 +6320,7 @@
 
     // Get detailed risk matrix summary for popup display
     async function getRiskMatrixSummary(feature) {
-        const props = feature.getProperties();
+        const props = getAreaKerjaFeatureProps(feature);
         const lokasiName = props.lokasi || props.nama_lokasi || props.name || '';
         const idLokasi = props.id_lokasi || props.id || '';
         const geometry = feature.getGeometry();
@@ -12430,26 +12537,27 @@ source: new ol.source.Vector(),
             }
             
             // Check if it's a GeoJSON polygon (Area Kerja or Area CCTV)
+            const akProps = getAreaKerjaFeatureProps(feature);
             
             // Check for Area CCTV (has nomor_cctv property, even if null)
-            const hasNomorCctv = 'nomor_cctv' in props;
-            // Check for Area Kerja (has id_lokasi property OR has lokasi property with site/perusahaan)
-            // Area Kerja BMO2 PAMA uses 'lokasi' instead of 'id_lokasi'
-            const hasIdLokasi = 'id_lokasi' in props;
-            const hasLokasi = 'lokasi' in props && ('site' in props || 'perusahaan' in props);
-            const isAreaKerja = hasIdLokasi || (hasLokasi && !hasNomorCctv);
+            const hasNomorCctv = 'nomor_cctv' in akProps;
+            // Check for Area Kerja (beats schema atau GMO geotagging schema)
+            const hasIdLokasi = akProps.id_lokasi != null && akProps.id_lokasi !== '';
+            const hasLokasi = !!(akProps.lokasi) && !!(akProps.site || akProps.perusahaan);
+            const isGmoGeotag = ('Lokasi' in props || 'Site' in props) && !hasNomorCctv;
+            const isAreaKerja = hasIdLokasi || hasLokasi || isGmoGeotag;
             
             if (hasNomorCctv || isAreaKerja) {
                 let content = '';
                 
                 if (hasNomorCctv) {
                     // Area CCTV - Tambahkan tombol untuk filter SAP
-                    const cctvNo = (props.nomor_cctv && props.nomor_cctv !== null && props.nomor_cctv !== 'null') ? props.nomor_cctv : 'N/A';
-                    const cctvName = (props.nama_cctv && props.nama_cctv !== null && props.nama_cctv !== 'null') ? props.nama_cctv : 'N/A';
-                    const cctvLokasi = props.coverage_lokasi || props.lokasi_pemasangan || props.coverage_detail_lokasi || props.lokasi || '';
-                    const site = props.site || 'N/A';
-                    const perusahaan = props.perusahaan_cctv || props.perusahaan || 'N/A';
-                    const luasan = props.luasan ? props.luasan.toLocaleString('id-ID', {maximumFractionDigits: 2}) : 'N/A';
+                    const cctvNo = (akProps.nomor_cctv && akProps.nomor_cctv !== null && akProps.nomor_cctv !== 'null') ? akProps.nomor_cctv : 'N/A';
+                    const cctvName = (akProps.nama_cctv && akProps.nama_cctv !== null && akProps.nama_cctv !== 'null') ? akProps.nama_cctv : 'N/A';
+                    const cctvLokasi = akProps.coverage_lokasi || akProps.lokasi_pemasangan || akProps.coverage_detail_lokasi || akProps.lokasi || '';
+                    const site = akProps.site || 'N/A';
+                    const perusahaan = akProps.perusahaan_cctv || akProps.perusahaan || 'N/A';
+                    const luasan = akProps.luasan ? akProps.luasan.toLocaleString('id-ID', {maximumFractionDigits: 2}) : 'N/A';
                     
                     content = `
                         <div style="min-width: 280px; background-color: #ffffff !important;">
@@ -12472,7 +12580,7 @@ source: new ol.source.Vector(),
                     popupOverlay.setPosition(evt.coordinate);
                 } else if (isAreaKerja) {
                     // Area Kerja - Show summary modal instead of popup
-                    showAreaKerjaSummaryModal(feature, props);
+                    showAreaKerjaSummaryModal(feature, akProps);
                 }
             }
         } else {
@@ -13482,6 +13590,10 @@ source: new ol.source.Vector(),
     async function showAreaKerjaSummaryModal(feature, props) {
         // Close popup first
         popupOverlay.setPosition(undefined);
+
+        props = feature
+            ? getAreaKerjaFeatureProps(feature)
+            : normalizeAreaKerjaProperties(props, null);
         
         // Store area kerja data for intervensi button
         // Handle null values properly
@@ -13526,6 +13638,7 @@ source: new ol.source.Vector(),
         modal.show();
         
         const lokasiNameFinal = getValue(props.lokasi);
+        const lokasiInduk = getValue(props.lokasi_induk);
         const areaKerjaId = getValue(props.id_lokasi) || getValue(props.fid) || getValue(props.lokasi);
         const site = getValue(props.site);
         const perusahaan = getValue(props.perusahaan);
@@ -13533,6 +13646,9 @@ source: new ol.source.Vector(),
         const luasan = props.luasan && props.luasan !== null && !isNaN(props.luasan)
             ? parseFloat(props.luasan).toLocaleString('id-ID', {maximumFractionDigits: 2})
             : 'N/A';
+        const lokasiIndukHtml = (lokasiInduk && lokasiInduk !== lokasiNameFinal)
+            ? `<p class="mb-2"><strong>Kategori Lokasi:</strong> ${lokasiInduk}</p>`
+            : '';
         
         try {
             // TARP-based recommendations function - based on TARP CCTV Monitoring table
@@ -13778,6 +13894,7 @@ source: new ol.source.Vector(),
                             </div>
                             <div class="card-body">
                                 <p class="mb-2"><strong>Lokasi:</strong> ${lokasiNameFinal || 'N/A'}</p>
+                                ${lokasiIndukHtml}
                                 ${props.id_lokasi ? `<p class="mb-2"><strong>ID Lokasi:</strong> ${props.id_lokasi}</p>` : ''}
                                 ${props.fid && !props.id_lokasi ? `<p class="mb-2"><strong>ID:</strong> ${props.fid}</p>` : ''}
                                 <p class="mb-2"><strong>Site:</strong> ${site || 'N/A'}</p>
