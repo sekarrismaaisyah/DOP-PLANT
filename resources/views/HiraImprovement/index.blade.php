@@ -479,6 +479,9 @@
       .hira-detail-status.is-saving {
         @apply text-[#3952bc];
       }
+      .hira-detail-status.is-dirty {
+        @apply font-semibold text-amber-700;
+      }
 
       .risk-matrix-section .risk-matrix-dual {
         @apply grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8;
@@ -744,6 +747,7 @@
         </div>
         <div class="hira-detail-actions">
           <button type="button" class="btn-primary" id="hiraDetailAddParent">Tambah Parent</button>
+          <button type="button" class="btn-primary" id="hiraDetailSave" disabled>Simpan</button>
           <button type="button" id="hiraDetailExportXls">Download Excel</button>
           <button type="button" id="hiraDetailExportCsv">Download CSV</button>
           <label class="hira-detail-file-label">
@@ -2928,8 +2932,8 @@
     let hiraDetailOpts = {};
     let hiraDetailExpanded = {};
     let hiraDetailLoaded = false;
-    let hiraDetailSaveTimer = null;
     let hiraDetailSaving = false;
+    let hiraDetailDirty = false;
 
     function hiraDetailScope() {
       const companyEl = document.getElementById("hiraHeroCompany");
@@ -2949,7 +2953,7 @@
       const el = document.getElementById("hiraDetailStatus");
       if (!el) return;
       el.textContent = message || "";
-      el.classList.remove("is-error", "is-saving");
+      el.classList.remove("is-error", "is-saving", "is-dirty");
       if (type) el.classList.add(type);
     }
 
@@ -3075,33 +3079,50 @@
       return `<select data-hira-ix="${ix}" data-hira-key="${escapeHtml(key)}">${list.map(o => `<option value="${escapeHtml(o)}"${o === v ? " selected" : ""}>${escapeHtml(o)}</option>`).join("")}</select>`;
     }
 
-    function hiraDetailSetVal(ix, key, value) {
+    function hiraDetailApplyVal(ix, key, value) {
       if (key === "improvementPlan") {
         const old = hiraDetailRows[ix].improvementPlan;
         hiraDetailRows.forEach(r => { if (r.improvementPlan === old) r.improvementPlan = value; });
+        if (old !== value && Object.prototype.hasOwnProperty.call(hiraDetailExpanded, old)) {
+          hiraDetailExpanded[value] = hiraDetailExpanded[old];
+          delete hiraDetailExpanded[old];
+        }
       } else {
         hiraDetailRows[ix][key] = value;
       }
-      renderHiraDetailTable();
-      scheduleHiraDetailSave();
     }
 
-    function scheduleHiraDetailSave() {
-      clearTimeout(hiraDetailSaveTimer);
-      hiraDetailSaveTimer = setTimeout(() => persistHiraDetailRows(), 600);
+    function updateHiraDetailSaveButton() {
+      const btn = document.getElementById("hiraDetailSave");
+      if (btn) btn.disabled = !hiraDetailDirty || hiraDetailSaving;
+    }
+
+    function markHiraDetailDirty() {
+      if (hiraDetailDirty) return;
+      hiraDetailDirty = true;
+      setHiraDetailStatus("Ada perubahan belum disimpan. Klik Simpan untuk menyimpan.", "is-dirty");
+      updateHiraDetailSaveButton();
+    }
+
+    function clearHiraDetailDirty(message = "Tersimpan.") {
+      hiraDetailDirty = false;
+      setHiraDetailStatus(message);
+      updateHiraDetailSaveButton();
     }
 
     async function persistHiraDetailRows() {
-      if (hiraDetailSaving) return;
+      if (hiraDetailSaving || !hiraDetailDirty) return;
       hiraDetailSaving = true;
+      updateHiraDetailSaveButton();
       setHiraDetailStatus("Menyimpan…", "is-saving");
+      renderHiraDetailTable();
       try {
         const data = await hiraDetailFetch(`${hiraDetailApi.sync}?${hiraDetailScopeQuery()}`, {
           method: "POST",
           body: JSON.stringify({ rows: hiraDetailRows }),
         });
         hiraDetailRows = data.rows || hiraDetailRows;
-        setHiraDetailStatus("Tersimpan.");
+        clearHiraDetailDirty("Tersimpan.");
         renderHiraDetailTable();
         hiraOverviewData = null;
         if (activeView === "overview") loadHiraOverview(true);
@@ -3109,6 +3130,7 @@
         setHiraDetailStatus(err.message || "Gagal menyimpan.", "is-error");
       } finally {
         hiraDetailSaving = false;
+        updateHiraDetailSaveButton();
       }
     }
 
@@ -3234,7 +3256,7 @@
       hiraDetailRows.push({ ...hiraDetailBlankRow(name), id: null });
       hiraDetailExpanded[name] = true;
       renderHiraDetailTable();
-      scheduleHiraDetailSave();
+      markHiraDetailDirty();
     }
 
     function hiraDetailAddChild(ix) {
@@ -3243,13 +3265,13 @@
       const r = { ...base, id: null, subSubActivity: "Sub-sub Aktivitas baru", hazard: "Bahaya/Aspek Lingkungan/Penyebab Potensial", eventPotential: "Kejadian / Potensi", exposureBeforeValue: "0", exposureControlValue: "0", status: "Not Started" };
       hiraDetailRows.splice(ix + 1, 0, r);
       renderHiraDetailTable();
-      scheduleHiraDetailSave();
+      markHiraDetailDirty();
     }
 
     function hiraDetailDeleteRow(ix) {
       hiraDetailRows.splice(ix, 1);
       renderHiraDetailTable();
-      scheduleHiraDetailSave();
+      markHiraDetailDirty();
     }
 
     function hiraDetailSetAllExpanded(open) {
@@ -3270,7 +3292,7 @@
         hiraDetailOpts = data.options || {};
         hiraDetailExpanded = {};
         hiraDetailLoaded = true;
-        setHiraDetailStatus(`${hiraDetailRows.length} baris dimuat.`);
+        clearHiraDetailDirty(`${hiraDetailRows.length} baris dimuat.`);
         renderHiraDetailTable();
       } catch (err) {
         setHiraDetailStatus(err.message || "Gagal memuat data.", "is-error");
@@ -3285,13 +3307,16 @@
       host.dataset.bound = "1";
       host.addEventListener("input", event => {
         const el = event.target.closest("[data-hira-ix][data-hira-key]");
-        if (!el) return;
-        hiraDetailSetVal(Number(el.dataset.hiraIx), el.dataset.hiraKey, el.value);
+        if (!el || el.tagName === "SELECT") return;
+        hiraDetailApplyVal(Number(el.dataset.hiraIx), el.dataset.hiraKey, el.value);
+        markHiraDetailDirty();
       });
       host.addEventListener("change", event => {
         const el = event.target.closest("[data-hira-ix][data-hira-key]");
         if (!el) return;
-        hiraDetailSetVal(Number(el.dataset.hiraIx), el.dataset.hiraKey, el.value);
+        hiraDetailApplyVal(Number(el.dataset.hiraIx), el.dataset.hiraKey, el.value);
+        markHiraDetailDirty();
+        renderHiraDetailTable();
       });
       host.addEventListener("click", event => {
         const toggle = event.target.closest("[data-hira-toggle]");
@@ -3313,6 +3338,7 @@
 
     function bindHiraDetailToolbar() {
       document.getElementById("hiraDetailAddParent")?.addEventListener("click", hiraDetailAddParent);
+      document.getElementById("hiraDetailSave")?.addEventListener("click", () => persistHiraDetailRows());
       document.getElementById("hiraDetailExpandAll")?.addEventListener("click", () => hiraDetailSetAllExpanded(true));
       document.getElementById("hiraDetailCollapseAll")?.addEventListener("click", () => hiraDetailSetAllExpanded(false));
       document.getElementById("hiraDetailExportCsv")?.addEventListener("click", () => {
@@ -3328,7 +3354,7 @@
           const data = await hiraDetailFetch(`${hiraDetailApi.reset}?${hiraDetailScopeQuery()}`, { method: "POST", body: "{}" });
           hiraDetailRows = data.rows || [];
           hiraDetailExpanded = {};
-          setHiraDetailStatus(data.message || "Reset selesai.");
+          clearHiraDetailDirty(data.message || "Reset selesai.");
           renderHiraDetailTable();
         } catch (err) {
           setHiraDetailStatus(err.message || "Reset gagal.", "is-error");
@@ -3350,7 +3376,7 @@
           if (!res.ok) throw new Error(data.message || "Impor gagal.");
           hiraDetailRows = data.rows || [];
           hiraDetailExpanded = {};
-          setHiraDetailStatus(data.message || "Impor berhasil.");
+          clearHiraDetailDirty(data.message || "Impor berhasil.");
           renderHiraDetailTable();
         } catch (err) {
           setHiraDetailStatus(err.message || "Impor gagal.", "is-error");
