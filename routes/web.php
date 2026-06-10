@@ -747,6 +747,9 @@ Route::middleware(['auth'])->group(function () {
     require __DIR__ . '/validasi_tbc.php';
     require __DIR__ . '/scorecard.php';
 
+    // Route modul Pembatasan LV
+    require __DIR__ . '/PembatasanLV/pembatasan_lv.php';
+
     // Role & Permission Management Routes
     Route::prefix('role-permission')->name('role-permission.')->group(function () {
         Route::get('/', [RolePermissionController::class, 'index'])->name('index');
