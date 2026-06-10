@@ -166,6 +166,8 @@ class HiraImprovementDetailApiController extends Controller
     {
         return [
             'sites' => HiraImprovementDetailService::OPT_SITES,
+            'perusahaan' => HiraImprovementDetailService::OPT_PERUSAHAAN,
+            'kategori' => HiraImprovementDetailService::OPT_KATEGORI,
             'rnr' => HiraImprovementDetailService::OPT_RNR,
             'faktor' => HiraImprovementDetailService::OPT_FAKTOR,
             'status' => HiraImprovementDetailService::OPT_STATUS,

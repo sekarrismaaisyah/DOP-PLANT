@@ -12,6 +12,14 @@ final class HiraImprovementDetailService
 {
     public const OPT_SITES = ['HO', 'BMO 1', 'BMO 2', 'BMO 3', 'GMO', 'LMO', 'SMO', 'Marine', 'HOTE', 'PMO'];
 
+    public const OPT_PERUSAHAAN = ['Bukit Makmur', 'Thiess', 'PAMA', 'Macmahon', 'Dynamiq', 'Hyundai', 'Other'];
+
+    public const OPT_KATEGORI = [
+        'Replikasi',
+        'Non Replikasi (New)',
+        'Rekomendasi Insiden & Pelanggaran',
+    ];
+
     public const OPT_RNR = ['R', 'NR'];
 
     public const OPT_FAKTOR = ['Men', 'Met', 'Mac', 'Mat', 'Env'];
@@ -210,6 +218,10 @@ final class HiraImprovementDetailService
                 'subSubActivity' => trim((string) ($r['Sub sub Aktivitas'] ?? 'Sub-sub Aktivitas')),
                 'rnr' => trim((string) ($r['R/NR'] ?? 'R')),
                 'site' => trim((string) ($r['Site'] ?? 'HO')),
+                'perusahaan' => trim((string) ($r['Perusahaan'] ?? 'Bukit Makmur')),
+                'kategori' => trim((string) ($r['Kategori'] ?? 'Non Replikasi (New)')),
+                'replikasiList' => trim((string) ($r['List Replikasi'] ?? '')),
+                'replikasiInisiatorSite' => trim((string) ($r['Inisiator Mitra Site'] ?? '')),
                 'faktor' => trim((string) ($r['Faktor'] ?? 'Men')),
                 'hazard' => $hazard !== '' ? $hazard : 'Bahaya/Aspek Lingkungan/Penyebab Potensial',
                 'eventPotential' => trim((string) ($r['Kejadian / Potensi'] ?? 'Kejadian / Potensi')),
@@ -261,6 +273,10 @@ final class HiraImprovementDetailService
                 'Sub sub Aktivitas' => (string) $client['subSubActivity'],
                 'R/NR' => (string) $client['rnr'],
                 'Site' => (string) $client['site'],
+                'Perusahaan' => (string) $client['perusahaan'],
+                'Kategori' => (string) $client['kategori'],
+                'List Replikasi' => (string) $client['replikasiList'],
+                'Inisiator Mitra Site' => (string) $client['replikasiInisiatorSite'],
                 'Faktor' => (string) $client['faktor'],
                 'Bahaya/Aspek Lingkungan/Penyebab Potensial' => (string) $client['hazard'],
                 'Kejadian / Potensi' => (string) $client['eventPotential'],
@@ -404,6 +420,10 @@ final class HiraImprovementDetailService
             'subSubActivity' => $row->sub_sub_activity,
             'rnr' => $row->rnr,
             'site' => $row->site,
+            'perusahaan' => $row->perusahaan,
+            'kategori' => $row->kategori,
+            'replikasiList' => $row->replikasi_list ?? '',
+            'replikasiInisiatorSite' => $row->replikasi_inisiator_site ?? '',
             'faktor' => $row->faktor,
             'hazard' => $row->hazard ?? '',
             'eventPotential' => $row->event_potential ?? '',
@@ -435,17 +455,23 @@ final class HiraImprovementDetailService
     {
         $start = trim((string) ($client['startDate'] ?? ''));
         $target = trim((string) ($client['targetDate'] ?? ''));
+        $kategori = trim((string) ($client['kategori'] ?? 'Non Replikasi (New)'));
+        $isReplikasi = $kategori === 'Replikasi';
 
         return [
             'company' => $company,
             'period_year' => $periodYear,
-            'improvement_plan' => trim((string) ($client['improvementPlan'] ?? 'New Improvement Plan')),
+            'improvement_plan' => trim((string) ($client['improvementPlan'] ?? $client['improvement_plan'] ?? 'New Improvement Plan')),
             'section' => trim((string) ($client['section'] ?? '')),
             'activity' => trim((string) ($client['activity'] ?? '')),
-            'sub_activity' => trim((string) ($client['subActivity'] ?? '')),
-            'sub_sub_activity' => trim((string) ($client['subSubActivity'] ?? '')),
+            'sub_activity' => trim((string) ($client['subActivity'] ?? $client['sub_activity'] ?? '')),
+            'sub_sub_activity' => trim((string) ($client['subSubActivity'] ?? $client['sub_sub_activity'] ?? '')),
             'rnr' => trim((string) ($client['rnr'] ?? 'R')),
             'site' => trim((string) ($client['site'] ?? 'HO')),
+            'perusahaan' => trim((string) ($client['perusahaan'] ?? 'Bukit Makmur')),
+            'kategori' => $kategori,
+            'replikasi_list' => $isReplikasi ? trim((string) ($client['replikasiList'] ?? $client['replikasi_list'] ?? '')) : null,
+            'replikasi_inisiator_site' => $isReplikasi ? trim((string) ($client['replikasiInisiatorSite'] ?? $client['replikasi_inisiator_site'] ?? '')) : null,
             'faktor' => trim((string) ($client['faktor'] ?? 'Men')),
             'hazard' => trim((string) ($client['hazard'] ?? '')),
             'event_potential' => trim((string) ($client['eventPotential'] ?? '')),
@@ -602,6 +628,10 @@ final class HiraImprovementDetailService
             'activities' => $this->uniqueFieldCount($arr, 'activity'),
             'subActivities' => $this->uniqueFieldCount($arr, 'subActivity'),
             'subSubActivities' => $this->uniqueFieldCount($arr, 'subSubActivity'),
+            'siteLabels' => $this->uniqueFieldValues($arr, 'site'),
+            'perusahaanLabels' => $this->uniqueFieldValues($arr, 'perusahaan'),
+            'kategoriLabels' => $this->uniqueFieldValues($arr, 'kategori'),
+            'replikasiCount' => $this->countByKategori($arr, 'Replikasi'),
         ]);
     }
 
@@ -725,6 +755,41 @@ final class HiraImprovementDetailService
             'medium' => 'yellow',
             default => 'green',
         };
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     * @return list<string>
+     */
+    private function uniqueFieldValues(array $rows, string $field): array
+    {
+        $values = [];
+        foreach ($rows as $row) {
+            $value = trim((string) ($row[$field] ?? ''));
+            if ($value !== '') {
+                $values[$value] = true;
+            }
+        }
+
+        $list = array_keys($values);
+        sort($list);
+
+        return $list;
+    }
+
+    /**
+     * @param  list<array<string, mixed>>  $rows
+     */
+    private function countByKategori(array $rows, string $kategori): int
+    {
+        $count = 0;
+        foreach ($rows as $row) {
+            if (trim((string) ($row['kategori'] ?? '')) === $kategori) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 
     /**

@@ -458,14 +458,18 @@
         @apply border-slate-200 bg-white text-ink;
       }
       .hira-detail-child-table {
-        @apply min-w-[3350px] text-xs;
+        @apply min-w-[3800px] text-xs;
       }
       .hira-detail-child-table th {
         @apply whitespace-nowrap bg-slate-100 text-[10px] font-bold uppercase tracking-wide text-slate-600;
       }
       .hira-detail-child-table td input,
-      .hira-detail-child-table td select {
-        @apply min-w-[70px] w-full rounded-md border border-slate-200 px-2 py-1.5 text-xs;
+      .hira-detail-child-table td select,
+      .hira-detail-child-table td textarea {
+        @apply min-w-[70px] w-full max-w-[220px] rounded-md border border-slate-200 px-2 py-1.5 text-xs;
+      }
+      .hira-detail-child-table td select.hira-replikasi-multi {
+        @apply min-w-[180px] max-w-[260px];
       }
       .hira-detail-note {
         @apply rounded-lg border border-dashed border-slate-300 bg-slate-50 px-2 py-1.5 text-xs text-slate-600;
@@ -860,6 +864,9 @@
           <thead>
             <tr>
               <th scope="col">Improvement Plan</th>
+              <th scope="col">Site</th>
+              <th scope="col">Perusahaan</th>
+              <th scope="col">Kategori</th>
               <th scope="col">Rows</th>
               <th scope="col">Section</th>
               <th scope="col">Activity</th>
@@ -873,7 +880,7 @@
             </tr>
           </thead>
           <tbody id="improvementRekapTableBody">
-            <tr><td colspan="10" class="text-center text-muted py-8">Memuat rekap improvement plan…</td></tr>
+            <tr><td colspan="14" class="text-center text-muted py-8">Memuat rekap improvement plan…</td></tr>
           </tbody>
         </table>
       </div>
@@ -1646,7 +1653,7 @@
       if (!tbody) return;
       const plans = hiraOverviewData?.plans || [];
       if (!plans.length) {
-        tbody.innerHTML = '<tr><td colspan="10" class="text-center text-muted py-8">Belum ada data HIRA. Isi tab Input HIRA Detail terlebih dahulu.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="14" class="text-center text-muted py-8">Belum ada data HIRA. Isi tab Input HIRA Detail terlebih dahulu.</td></tr>';
         return;
       }
       tbody.innerHTML = plans.map(plan => {
@@ -1654,8 +1661,17 @@
         const awalPill = hiraPillRisk(plan.highA?.cls);
         const sisaPill = hiraPillRisk(plan.highS?.cls);
         const decPill = hiraPillDecision(plan.decision?.dcls);
+        const siteLabels = (plan.siteLabels || []).join(", ") || "-";
+        const perusahaanLabels = (plan.perusahaanLabels || []).join(", ") || "-";
+        const kategoriLabels = (plan.kategoriLabels || []).join(", ") || "-";
+        const replikasiBadge = (plan.replikasiCount || 0) > 0
+          ? `<span class="badge blue ml-1">${plan.replikasiCount} replikasi</span>`
+          : "";
         return `<tr data-plan-slug="${escapeHtml(plan.slug)}" data-plan-title="${escapeHtml(plan.name)}" tabindex="0" role="button" class="${selected ? "is-selected" : ""}" aria-label="Pilih improvement plan ${escapeHtml(plan.name)}">
-          <td><b>${escapeHtml(plan.name)}</b></td>
+          <td><b>${escapeHtml(plan.name)}</b>${replikasiBadge}</td>
+          <td class="small">${escapeHtml(siteLabels)}</td>
+          <td class="small">${escapeHtml(perusahaanLabels)}</td>
+          <td class="small">${escapeHtml(kategoriLabels)}</td>
           <td class="improvement-rekap-num">${plan.rows}</td>
           <td class="improvement-rekap-num">${plan.sections}</td>
           <td class="improvement-rekap-num">${plan.activities}</td>
@@ -2920,7 +2936,8 @@
 
     /* ——— Input HIRA Detail (desain.html) + API database ——— */
     const HIRA_DETAIL_HEADERS = [
-      "No", "Sections", "Aktivitas", "Sub Aktivitas", "Sub sub Aktivitas", "R/NR", "Site", "Faktor",
+      "No", "Sections", "Aktivitas", "Sub Aktivitas", "Sub sub Aktivitas", "R/NR", "Site", "Perusahaan", "Kategori",
+      "List Replikasi", "Inisiator Mitra Site", "Faktor",
       "Bahaya/Aspek Lingkungan/Penyebab Potensial", "Kejadian / Potensi", "Kep Awal", "Konseq Awal",
       "Nilai Risiko Awal", "Nilai Resiko awal", "TP Awal", "Pengendalian yang dilakukan (Tertinggi)",
       "Pemilik Pengendalian", "Pengendalian Lanjutan / Improvement", "Level Efektivitas", "Jenis Exposure",
@@ -3078,6 +3095,24 @@
       const list = opts || [];
       return `<select data-hira-ix="${ix}" data-hira-key="${escapeHtml(key)}">${list.map(o => `<option value="${escapeHtml(o)}"${o === v ? " selected" : ""}>${escapeHtml(o)}</option>`).join("")}</select>`;
     }
+    function hiraIsReplikasiKategori(kategori) {
+      return String(kategori || "").trim() === "Replikasi";
+    }
+    function hiraDetailReplikasiListCell(r, ix, planOptions) {
+      if (!hiraIsReplikasiKategori(r.kategori)) {
+        return '<span class="muted small">—</span>';
+      }
+      const plans = planOptions || [];
+      const selected = String(r.replikasiList || "").split(",").map(s => s.trim()).filter(Boolean);
+      const options = plans.map(p => `<option value="${escapeHtml(p)}"${selected.includes(p) ? " selected" : ""}>${escapeHtml(p)}</option>`).join("");
+      return `<select multiple size="3" class="hira-replikasi-multi" data-hira-ix="${ix}" data-hira-key="replikasiList" aria-label="List replikasi">${options}</select>`;
+    }
+    function hiraDetailReplikasiSiteCell(r, ix, sites) {
+      if (!hiraIsReplikasiKategori(r.kategori)) {
+        return '<span class="muted small">—</span>';
+      }
+      return hiraDetailSelect(r.replikasiInisiatorSite || "", sites || [], ix, "replikasiInisiatorSite");
+    }
 
     function hiraDetailApplyVal(ix, key, value) {
       if (key === "improvementPlan") {
@@ -3089,6 +3124,10 @@
         }
       } else {
         hiraDetailRows[ix][key] = value;
+        if (key === "kategori" && !hiraIsReplikasiKategori(value)) {
+          hiraDetailRows[ix].replikasiList = "";
+          hiraDetailRows[ix].replikasiInisiatorSite = "";
+        }
       }
     }
 
@@ -3139,6 +3178,7 @@
       if (!host) return;
       const groups = hiraGroupBy(hiraDetailRows, "improvementPlan");
       const O = hiraDetailOpts;
+      const planOptions = Object.keys(groups);
       let html = '<table class="hira-detail-master"><tbody>';
       Object.entries(groups).forEach(([plan, arr], gi) => {
         const gs = hiraGroupSummary(arr);
@@ -3179,6 +3219,10 @@
               <td>${hiraDetailInput(r.subSubActivity, ix, "subSubActivity")}</td>
               <td>${hiraDetailSelect(r.rnr, O.rnr, ix, "rnr")}</td>
               <td>${hiraDetailSelect(r.site, O.sites, ix, "site")}</td>
+              <td>${hiraDetailSelect(r.perusahaan, O.perusahaan, ix, "perusahaan")}</td>
+              <td>${hiraDetailSelect(r.kategori, O.kategori, ix, "kategori")}</td>
+              <td>${hiraDetailReplikasiListCell(r, ix, planOptions)}</td>
+              <td>${hiraDetailReplikasiSiteCell(r, ix, O.sites)}</td>
               <td>${hiraDetailSelect(r.faktor, O.faktor, ix, "faktor")}</td>
               <td>${hiraDetailInput(r.hazard, ix, "hazard")}</td>
               <td>${hiraDetailInput(r.eventPotential, ix, "eventPotential")}</td>
@@ -3228,6 +3272,10 @@
         subSubActivity: "Sub-sub Aktivitas",
         rnr: "R",
         site: "HO",
+        perusahaan: "Bukit Makmur",
+        kategori: "Non Replikasi (New)",
+        replikasiList: "",
+        replikasiInisiatorSite: "",
         faktor: "Men",
         hazard: "Bahaya/Aspek Lingkungan/Penyebab Potensial",
         eventPotential: "Kejadian / Potensi",
@@ -3314,7 +3362,11 @@
       host.addEventListener("change", event => {
         const el = event.target.closest("[data-hira-ix][data-hira-key]");
         if (!el) return;
-        hiraDetailApplyVal(Number(el.dataset.hiraIx), el.dataset.hiraKey, el.value);
+        let value = el.value;
+        if (el.multiple) {
+          value = Array.from(el.selectedOptions).map(opt => opt.value).filter(Boolean).join(", ");
+        }
+        hiraDetailApplyVal(Number(el.dataset.hiraIx), el.dataset.hiraKey, value);
         markHiraDetailDirty();
         renderHiraDetailTable();
       });
