@@ -159,56 +159,6 @@
       <div class="bg-white rounded-2xl anchored-card overflow-hidden">
          <div class="border-b border-outline-variant/20 px-6 py-4 flex items-start justify-between gap-3">
             <div>
-               <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">LV Keluar (Checkout)</span>
-               <p class="font-headline font-extrabold text-3xl tabular-nums mt-1">{{ number_format($lvKeluar) }}</p>
-               <p class="text-on-surface-variant text-[11px] font-medium mt-1">
-                  {{ \Carbon\Carbon::parse($filters['tanggal'])->format('d M Y') }}
-                  @if($filters['control_room'] !== '')
-                     • {{ $filters['control_room'] }}
-                  @else
-                     • Semua CR Anda
-                  @endif
-               </p>
-            </div>
-            <div class="p-2 bg-emerald-50 rounded-lg shrink-0">
-               <span class="material-symbols-outlined text-emerald-700">logout</span>
-            </div>
-         </div>
-         <div class="overflow-x-auto max-h-[320px] overflow-y-auto">
-            <table class="w-full text-left">
-               <thead class="border-b border-outline-variant/20 bg-[#f8fafc] sticky top-0">
-                  <tr>
-                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">No</th>
-                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Driver</th>
-                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">LV</th>
-                     <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Check-in</th>
-                  </tr>
-               </thead>
-               <tbody class="divide-y divide-outline-variant/10">
-                  @forelse($lvKeluarList as $index => $row)
-                  <tr class="transition-colors hover:bg-[#f8fafc]">
-                     <td class="px-4 py-3 text-sm tabular-nums text-on-surface-variant">{{ $index + 1 }}</td>
-                     <td class="px-4 py-3 text-sm text-on-surface">{{ $row->nama_driver }}</td>
-                     <td class="px-4 py-3 text-sm font-bold text-on-background">{{ $row->no_lambung }}</td>
-                     <td class="px-4 py-3 text-sm text-on-surface whitespace-nowrap">{{ $row->checkin_at?->timezone(config('app.timezone'))->format('d M Y H:i') }}</td>
-                  </tr>
-                  @empty
-                  <tr>
-                     <td colspan="4" class="px-4 py-8 text-center text-sm text-on-surface-variant">
-                        Tidak ada LV checkout pada tanggal ini.
-                     </td>
-                  </tr>
-                  @endforelse
-               </tbody>
-            </table>
-         </div>
-      </div>
-   </div>
-
-   <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
-      <div class="bg-white rounded-2xl anchored-card overflow-hidden">
-         <div class="border-b border-outline-variant/20 px-6 py-4 flex items-start justify-between gap-3">
-            <div>
                <span class="text-on-surface-variant text-[11px] font-bold tracking-wider uppercase">Orang Masuk (Belum Checkout)</span>
             </div>
             <div class="p-2 bg-primary/10 rounded-lg shrink-0">
@@ -268,6 +218,12 @@
          </div>
       </div>
 
+     
+   </div>
+
+   <!-- <div class="mt-8 grid grid-cols-1 lg:grid-cols-2 gap-6">
+     
+
       <div class="bg-white rounded-2xl anchored-card overflow-hidden">
          <div class="border-b border-outline-variant/20 px-6 py-4 flex items-start justify-between gap-3">
             <div>
@@ -315,7 +271,7 @@
             </table>
          </div>
       </div>
-   </div>
+   </div> -->
 
    <div class="mt-6 bg-white rounded-2xl anchored-card overflow-hidden">
       <div class="border-b border-outline-variant/20 px-6 py-4 flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
