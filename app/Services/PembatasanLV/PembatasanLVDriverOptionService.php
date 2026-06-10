@@ -24,7 +24,10 @@ SELECT
     nama,
     nik,
     nama_perusahaan,
-    site
+    site,
+    departement,
+    dept_dic,
+    dept_mainkon
 FROM (
     SELECT
         trim(ifNull(toString(kode_sid), '')) AS kode_sid,
@@ -32,6 +35,9 @@ FROM (
         trim(ifNull(toString(nik), '')) AS nik,
         trim(ifNull(toString(nama_perusahaan), '')) AS nama_perusahaan,
         trim(ifNull(toString(site), '')) AS site,
+        trim(ifNull(toString(departement), '')) AS departement,
+        trim(ifNull(toString(dept_dic), '')) AS dept_dic,
+        trim(ifNull(toString(Dept_Mainkon), '')) AS dept_mainkon,
         ROW_NUMBER() OVER (
             PARTITION BY lowerUTF8(trim(ifNull(toString(kode_sid), '')))
             ORDER BY _airbyte_extracted_at DESC
@@ -69,6 +75,7 @@ SQL;
                         'nik' => trim((string) ($row['nik'] ?? '')),
                         'nama_perusahaan' => trim((string) ($row['nama_perusahaan'] ?? '')),
                         'site' => trim((string) ($row['site'] ?? '')),
+                        'dept' => $this->resolveDept($row),
                     ];
                 })
                 ->filter(fn (array $row) => $row['nama'] !== '' && $row['kode_sid'] !== '')
@@ -90,5 +97,20 @@ SQL;
 
         return $this->options($sid, 20)
             ->first(fn (array $row) => mb_strtolower($row['kode_sid']) === mb_strtolower($sid));
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function resolveDept(array $row): string
+    {
+        foreach (['departement', 'dept_dic', 'dept_mainkon'] as $key) {
+            $value = trim((string) ($row[$key] ?? ''));
+            if ($value !== '') {
+                return $value;
+            }
+        }
+
+        return '';
     }
 }

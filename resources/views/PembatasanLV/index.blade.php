@@ -296,9 +296,10 @@
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Lokasi</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Check-in</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Check-out</th>
+                  <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Durasi</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Status</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Shift</th>
-                  <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant w-28">Aksi</th>
+                  <!-- <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant w-28">Aksi</th> -->
                </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant/10">
@@ -322,6 +323,15 @@
                         <span class="text-on-surface-variant">—</span>
                      @endif
                   </td>
+                  <td class="px-4 py-4 text-sm whitespace-nowrap">
+                     @if($row->checkout_at)
+                     <span class="font-mono font-bold text-on-surface tabular-nums">{{ $row->plvDurasiLabel() }}</span>
+                     @elseif($row->checkin_at)
+                     <span class="plv-durasi-live font-mono font-bold text-primary tabular-nums" data-checkin-at="{{ $row->checkin_at->timezone(config('app.timezone'))->toIso8601String() }}">{{ $row->plvDurasiLabel() }}</span>
+                     @else
+                     <span class="text-on-surface-variant">—</span>
+                     @endif
+                  </td>
                   <td class="px-4 py-4 text-sm">
                      @if($row->checkout_at)
                      <span class="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800">Checkout</span>
@@ -332,7 +342,7 @@
                   <td class="px-4 py-4 text-sm">
                      <span class="inline-flex rounded-full bg-[#eef2ff] px-2.5 py-0.5 text-[10px] font-bold text-primary">Shift {{ $row->shift }}</span>
                   </td>
-                  <td class="px-4 py-4 text-sm">
+                  <!-- <td class="px-4 py-4 text-sm">
                      @if($row->checkout_at === null)
                      <form method="POST" action="{{ route('pembatasan-lv.checkout.lv', $row) }}" class="plv-checkout-form inline" data-unit="{{ $row->no_lambung }}" data-driver="{{ $row->nama_driver }}">
                         @csrf
@@ -344,11 +354,11 @@
                      @else
                      <span class="text-xs text-on-surface-variant">—</span>
                      @endif
-                  </td>
+                  </td> -->
                </tr>
                @empty
                <tr>
-                  <td colspan="10" class="px-6 py-12 text-center text-sm text-on-surface-variant">
+                  <td colspan="11" class="px-6 py-12 text-center text-sm text-on-surface-variant">
                      @if($supervisedRooms->isEmpty())
                         Tidak ada control room terdaftar untuk akun Anda.
                      @else
@@ -382,13 +392,15 @@
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">SID</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Nama</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Perusahaan</th>
+                  <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Dept</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Control Room</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Lokasi</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Check-in</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Check-out</th>
+                  <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Durasi</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Status</th>
                   <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">Shift</th>
-                  <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant w-28">Aksi</th>
+                  <!-- <th class="px-4 py-3 text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant w-28">Aksi</th> -->
                </tr>
             </thead>
             <tbody class="divide-y divide-outline-variant/10">
@@ -398,6 +410,7 @@
                   <td class="px-4 py-4 text-sm font-bold text-on-background">{{ $row->sid }}</td>
                   <td class="px-4 py-4 text-sm text-on-surface">{{ $row->nama }}</td>
                   <td class="px-4 py-4 text-sm text-on-surface">{{ $row->nama_perusahaan ?: '—' }}</td>
+                  <td class="px-4 py-4 text-sm text-on-surface">{{ $row->dept ?: '—' }}</td>
                   <td class="px-4 py-4 text-sm text-on-surface">{{ $row->control_room }}</td>
                   <td class="px-4 py-4 text-sm text-on-surface">
                      <div>{{ $row->lokasi }}</div>
@@ -413,6 +426,15 @@
                         <span class="text-on-surface-variant">—</span>
                      @endif
                   </td>
+                  <td class="px-4 py-4 text-sm whitespace-nowrap">
+                     @if($row->checkout_at)
+                     <span class="font-mono font-bold text-on-surface tabular-nums">{{ $row->plvDurasiLabel() }}</span>
+                     @elseif($row->checkin_at)
+                     <span class="plv-durasi-live font-mono font-bold text-primary tabular-nums" data-checkin-at="{{ $row->checkin_at->timezone(config('app.timezone'))->toIso8601String() }}">{{ $row->plvDurasiLabel() }}</span>
+                     @else
+                     <span class="text-on-surface-variant">—</span>
+                     @endif
+                  </td>
                   <td class="px-4 py-4 text-sm">
                      @if($row->checkout_at)
                      <span class="inline-flex rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 text-[10px] font-bold uppercase tracking-wider text-emerald-800">Checkout</span>
@@ -423,7 +445,7 @@
                   <td class="px-4 py-4 text-sm">
                      <span class="inline-flex rounded-full bg-[#eef2ff] px-2.5 py-0.5 text-[10px] font-bold text-primary">Shift {{ $row->shift }}</span>
                   </td>
-                  <td class="px-4 py-4 text-sm">
+                  <!-- <td class="px-4 py-4 text-sm">
                      @if($row->checkout_at === null)
                      <form method="POST" action="{{ route('pembatasan-lv.checkout.orang', $row) }}" class="plv-checkout-orang-form inline" data-sid="{{ $row->sid }}" data-nama="{{ $row->nama }}">
                         @csrf
@@ -435,11 +457,11 @@
                      @else
                      <span class="text-xs text-on-surface-variant">—</span>
                      @endif
-                  </td>
+                  </td> -->
                </tr>
                @empty
                <tr>
-                  <td colspan="11" class="px-6 py-12 text-center text-sm text-on-surface-variant">
+                  <td colspan="12" class="px-6 py-12 text-center text-sm text-on-surface-variant">
                      @if($supervisedRooms->isEmpty())
                         Tidak ada control room terdaftar untuk akun Anda.
                      @else

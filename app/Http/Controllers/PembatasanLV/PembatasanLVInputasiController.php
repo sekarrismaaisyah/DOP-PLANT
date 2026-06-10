@@ -126,6 +126,7 @@ class PembatasanLVInputasiController extends Controller
             'nik' => $request->validated('nik'),
             'nama_perusahaan' => $request->validated('nama_perusahaan'),
             'site' => $request->validated('site'),
+            'dept' => $request->validated('dept'),
             'lokasi' => $request->validated('lokasi'),
             'detail_lokasi' => $request->validated('detail_lokasi'),
             'creator_id' => $user?->id,
@@ -186,6 +187,7 @@ class PembatasanLVInputasiController extends Controller
             'subtitle' => trim(collect([
                 $row['kode_sid'] ?? null,
                 $row['nik'] ?? null,
+                $row['dept'] ?? null,
                 $row['nama_perusahaan'] ?? null,
                 $row['site'] ?? null,
             ])->filter()->implode(' • ')),
@@ -207,8 +209,10 @@ class PembatasanLVInputasiController extends Controller
             'nik' => $row['nik'],
             'nama_perusahaan' => $row['nama_perusahaan'],
             'site' => $row['site'],
+            'dept' => $row['dept'],
             'subtitle' => trim(collect([
                 $row['nama'],
+                $row['dept'] ?? null,
                 $row['nama_perusahaan'],
                 $row['site'],
             ])->filter()->implode(' • ')),

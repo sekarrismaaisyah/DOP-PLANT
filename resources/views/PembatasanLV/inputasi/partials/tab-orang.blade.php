@@ -12,7 +12,7 @@
    <div class="p-6 space-y-6 border-b border-outline-variant/15">
       <div>
          <h3 class="font-headline font-bold text-base text-on-background mb-1">Inputasi Orang</h3>
-         <p class="text-xs text-on-surface-variant">Pencatatan personel masuk area dengan SID — nama dan perusahaan terisi otomatis dari data karyawan.</p>
+         <p class="text-xs text-on-surface-variant">Pencatatan personel masuk area dengan SID — nama, perusahaan, dan dept terisi otomatis dari data karyawan.</p>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -116,6 +116,16 @@
             <input type="hidden" name="site" id="orang-site" value="{{ $oldOrang ? old('site') : '' }}"/>
          </div>
 
+         {{-- Dept (auto) --}}
+         <div>
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Dept</label>
+            <div id="orang-dept-display" class="flex min-h-[42px] items-center rounded-xl border border-outline-variant/20 bg-[#f8fafc] px-3 text-sm font-medium text-on-surface">
+               {{ $oldOrang ? old('dept', '—') : '—' }}
+            </div>
+            <input type="hidden" name="dept" id="orang-dept" value="{{ $oldOrang ? old('dept') : '' }}"/>
+            <p class="mt-1 text-[11px] text-on-surface-variant">Dari departement / dept_dic / Dept_Mainkon</p>
+         </div>
+
          {{-- Lokasi --}}
          <div class="plv-orang-combobox-wrap" data-plv-orang-combobox data-url="{{ route('pembatasan-lv.inputasi.options.lokasi') }}" data-field="lokasi" data-target-detail="#plv-orang-detail-lokasi-wrap">
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Lokasi <span class="text-error">*</span></label>
@@ -198,15 +208,18 @@
       var perusahaan = item ? (item.nama_perusahaan || '') : '';
       var nik = item ? (item.nik || '') : '';
       var site = item ? (item.site || '') : '';
+      var dept = item ? (item.dept || '') : '';
 
       document.getElementById('orang-nama').value = nama;
       document.getElementById('orang-perusahaan').value = perusahaan;
       document.getElementById('orang-nik').value = nik;
       document.getElementById('orang-site').value = site;
+      document.getElementById('orang-dept').value = dept;
       document.getElementById('orang-nama-display').textContent = displayOrDash(nama);
       document.getElementById('orang-perusahaan-display').textContent = displayOrDash(perusahaan);
       document.getElementById('orang-nik-display').textContent = displayOrDash(nik);
       document.getElementById('orang-site-display').textContent = displayOrDash(site);
+      document.getElementById('orang-dept-display').textContent = displayOrDash(dept);
    }
 
    function clearKaryawan() {

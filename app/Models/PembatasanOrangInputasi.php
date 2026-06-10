@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FormatsPlvDurasi;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PembatasanOrangInputasi extends Model
 {
+    use FormatsPlvDurasi;
     protected $table = 'pembatasan_orang_inputasi';
 
     protected $fillable = [
@@ -17,6 +19,7 @@ class PembatasanOrangInputasi extends Model
         'nik',
         'nama_perusahaan',
         'site',
+        'dept',
         'lokasi',
         'detail_lokasi',
         'creator_id',

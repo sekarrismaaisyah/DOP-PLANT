@@ -2,11 +2,13 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\FormatsPlvDurasi;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class PembatasanLvInputasi extends Model
 {
+    use FormatsPlvDurasi;
     protected $table = 'pembatasan_lv_inputasi';
 
     protected $fillable = [

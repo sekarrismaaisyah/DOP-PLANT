@@ -23,6 +23,7 @@ class PembatasanLVInputasiOrangRequest extends FormRequest
             'nik' => ['nullable', 'string', 'max:64'],
             'nama_perusahaan' => ['nullable', 'string', 'max:255'],
             'site' => ['nullable', 'string', 'max:255'],
+            'dept' => ['nullable', 'string', 'max:255'],
             'lokasi' => ['required', 'string', 'max:255'],
             'detail_lokasi' => ['nullable', 'string', 'max:2000'],
             'control_room' => ['required', 'string', 'max:255'],
