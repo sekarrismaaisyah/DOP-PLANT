@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         :root {
@@ -43,11 +43,20 @@
             box-shadow: 0 10px 22px rgba(79, 70, 229, 0.28);
         }
         .btn-primary:hover { filter: brightness(0.97); }
+        #face_modal .face-modal-panel {
+            max-height: 100dvh;
+            max-height: 100svh;
+        }
+        @supports (padding: max(0px)) {
+            #face_modal .face-modal-actions {
+                padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+            }
+        }
     </style>
     <title>Form Absensi Event</title>
 </head>
-<body class="min-h-screen bg-[#e8efe9] py-6 px-3 text-slate-800">
-    <div class="mx-auto max-w-xl space-y-4 rounded-[28px] p-3 app-shell">
+<body class="min-h-screen bg-[#e8efe9] py-3 px-2 text-slate-800 sm:py-6 sm:px-3">
+    <div class="mx-auto max-w-xl space-y-3 rounded-2xl p-2 app-shell sm:space-y-4 sm:rounded-[28px] sm:p-3">
         <div class="overflow-hidden rounded-3xl glass-card">
             <div class="hero-band px-5 py-5 md:px-6">
                 <p class="text-xs font-semibold uppercase tracking-widest text-[#2f5f4d]">Absensi Digital</p>
@@ -169,48 +178,51 @@
                 </dl>
             </div>
 
-            <div class="mt-6 flex items-center justify-between gap-3 border-t border-slate-200 pt-5">
+            <div class="mt-6 flex flex-col gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:items-center sm:justify-between">
                 <p class="text-xs text-slate-500">Form ini tidak memerlukan login akun.</p>
-                <button id="btn_submit_attendance" class="btn-primary px-6 py-3 text-sm">
+                <button id="btn_submit_attendance" class="btn-primary w-full px-6 py-3 text-sm sm:w-auto">
                     Kirim Absensi
                 </button>
             </div>
         </form>
     </div>
 
-    <div id="face_modal" class="fixed inset-0 z-50 hidden items-center justify-center bg-slate-950/70 px-4 backdrop-blur-sm">
-        <div class="w-full max-w-4xl rounded-3xl border border-slate-200 bg-white p-5 shadow-2xl">
-            <div class="mb-4 flex items-start justify-between gap-3 border-b border-slate-200 pb-3">
-                <div>
-                    <h3 class="text-lg font-semibold text-slate-900">Ambil Foto Absensi</h3>
-                    <p class="text-sm text-slate-600">Aktifkan kamera lalu ambil foto sebelum kirim absensi.</p>
+    <div id="face_modal" class="fixed inset-0 z-50 hidden flex-col bg-slate-950/70 backdrop-blur-sm sm:items-center sm:justify-center sm:p-4">
+        <div class="face-modal-panel flex h-full w-full flex-col overflow-hidden border-slate-200 bg-white shadow-2xl sm:h-auto sm:max-h-[92vh] sm:max-w-4xl sm:rounded-3xl sm:border">
+            <div class="flex shrink-0 items-start justify-between gap-3 border-b border-slate-200 px-4 py-3 sm:px-5 sm:py-4">
+                <div class="min-w-0 pr-2">
+                    <h3 class="text-base font-semibold text-slate-900 sm:text-lg">Ambil Foto Absensi</h3>
+                    <p class="text-xs text-slate-600 sm:text-sm">Aktifkan kamera, ambil foto, lalu kirim absensi.</p>
                 </div>
-                <button id="face_modal_close" type="button" class="rounded-lg border border-slate-300 px-3 py-1 text-xs font-semibold text-slate-600 hover:bg-slate-100">Tutup</button>
+                <button id="face_modal_close" type="button" class="shrink-0 rounded-lg border border-slate-300 px-3 py-1.5 text-xs font-semibold text-slate-600 hover:bg-slate-100">Tutup</button>
             </div>
 
-            <div class="grid gap-4 md:grid-cols-2">
-                <div>
-                    <p class="mb-1 text-xs text-slate-500">Hasil Foto</p>
-                    <img id="face_capture_preview" src="" alt="" class="h-64 w-full rounded-2xl border border-slate-200 object-contain bg-slate-100 shadow-sm">
-                </div>
-                <div>
-                    <p class="mb-1 text-xs text-slate-500">Live Camera</p>
-                    <div id="face_camera_wrap" class="relative h-64 overflow-hidden rounded-2xl border border-slate-300 bg-slate-950 shadow-xl">
-                        <video id="face_live_video" class="h-full w-full object-cover" autoplay playsinline muted></video>
-                        <img id="face_live_captured" src="" alt="Hasil foto kamera" class="hidden h-full w-full object-cover">
-                        <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-transparent to-purple-500/10"></div>
+            <div class="min-h-0 flex-1 overflow-y-auto overscroll-contain px-4 py-3 sm:px-5 sm:py-4">
+                <div class="grid gap-3 sm:gap-4 md:grid-cols-2">
+                    <div class="order-2 md:order-1">
+                        <p class="mb-1 text-xs text-slate-500">Hasil Foto</p>
+                        <img id="face_capture_preview" src="" alt="" class="mx-auto h-28 w-full max-w-[220px] rounded-xl border border-slate-200 bg-slate-100 object-contain shadow-sm sm:h-40 sm:max-w-none md:h-64 md:rounded-2xl">
+                    </div>
+                    <div class="order-1 md:order-2">
+                        <p class="mb-1 text-xs text-slate-500">Live Camera</p>
+                        <div id="face_camera_wrap" class="relative aspect-[4/3] max-h-[38vh] overflow-hidden rounded-xl border border-slate-300 bg-slate-950 shadow-xl sm:max-h-none sm:rounded-2xl md:h-64 md:aspect-auto">
+                            <video id="face_live_video" class="h-full w-full object-cover" autoplay playsinline muted></video>
+                            <img id="face_live_captured" src="" alt="Hasil foto kamera" class="hidden h-full w-full object-cover">
+                            <div class="pointer-events-none absolute inset-0 bg-gradient-to-b from-cyan-500/10 via-transparent to-purple-500/10"></div>
+                        </div>
                     </div>
                 </div>
+
+                <p id="face_verify_status" class="mt-3 min-h-[1.25rem] rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700"></p>
+                <canvas id="face_capture_canvas" width="360" height="360" class="hidden"></canvas>
             </div>
 
-            <p id="face_verify_status" class="mt-3 min-h-[1.25rem] rounded-lg bg-slate-100 px-3 py-2 text-xs font-medium text-slate-700"></p>
-            <canvas id="face_capture_canvas" width="360" height="360" class="hidden"></canvas>
-
-            <div class="mt-4 flex flex-wrap justify-end gap-2">
-                <button id="btn_start_camera" type="button" class="rounded-xl border border-slate-300 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-100">Aktifkan Kamera</button>
-                <button id="btn_take_photo" type="button" class="rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2 text-xs font-semibold text-indigo-700 hover:bg-indigo-100">Ambil Foto</button>
-                <button id="btn_send_attendance" type="button" class="rounded-xl bg-emerald-600 px-4 py-2 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700">Kirim Absensi</button>
-
+            <div class="face-modal-actions shrink-0 border-t border-slate-200 bg-white px-4 py-3 sm:px-5">
+                <div class="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:justify-end">
+                    <button id="btn_start_camera" type="button" class="w-full rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-xs font-semibold text-slate-700 hover:bg-slate-100 sm:w-auto">Aktifkan Kamera</button>
+                    <button id="btn_take_photo" type="button" class="w-full rounded-xl border border-indigo-200 bg-indigo-50 px-4 py-2.5 text-xs font-semibold text-indigo-700 hover:bg-indigo-100 sm:w-auto">Ambil Foto</button>
+                    <button id="btn_send_attendance" type="button" class="w-full rounded-xl bg-emerald-600 px-4 py-2.5 text-xs font-semibold text-white shadow-sm hover:bg-emerald-700 sm:w-auto">Kirim Absensi</button>
+                </div>
             </div>
         </div>
     </div>
@@ -299,12 +311,14 @@
                 if (!faceModal) return;
                 faceModal.classList.remove('hidden');
                 faceModal.classList.add('flex');
+                document.body.style.overflow = 'hidden';
             }
 
             function closeFaceModal() {
                 if (!faceModal) return;
                 faceModal.classList.add('hidden');
                 faceModal.classList.remove('flex');
+                document.body.style.overflow = '';
             }
 
             function capturePhoto() {
