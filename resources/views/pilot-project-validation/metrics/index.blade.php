@@ -34,7 +34,7 @@
   </div>
 
   <div class="overflow-x-auto"><table class="w-full min-w-[1000px] text-sm text-left">
-    <thead class="bg-[#f8fafc] text-on-surface-variant font-bold text-[10px] uppercase tracking-[0.15em] border-b border-outline-variant/20"><tr><th class="px-8 py-5">ID</th><th class="px-8 py-5">Project</th><th class="px-8 py-5">Gate</th><th class="px-8 py-5">Metric</th><th class="px-8 py-5">Type</th><th class="px-8 py-5">Value</th><th class="px-8 py-5">Aksi</th></tr></thead>
+    <thead class="bg-[#f8fafc] text-on-surface-variant font-bold text-[10px] uppercase tracking-[0.15em] border-b border-outline-variant/20"><tr><th class="px-8 py-5">ID</th><th class="px-8 py-5">Project</th><th class="px-8 py-5">Gate</th><th class="px-8 py-5">Metric</th><th class="px-8 py-5">Type</th><th class="px-8 py-5">Value</th><th class="px-8 py-5">Evaluasi</th><th class="px-8 py-5">Aksi</th></tr></thead>
     <tbody class="divide-y divide-outline-variant/10">
       @php
         $groupedRows = $rows->getCollection()->groupBy(function ($item) {
@@ -42,7 +42,7 @@
         });
       @endphp
       @forelse($groupedRows as $projectName => $projectRows)
-        <tr class="bg-[#f3f6fb]"><td colspan="7" class="px-8 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-primary">{{ $projectName }} ({{ $projectRows->count() }} metric)</td></tr>
+        <tr class="bg-[#f3f6fb]"><td colspan="8" class="px-8 py-3 text-[11px] font-bold uppercase tracking-[0.12em] text-primary">{{ $projectName }} ({{ $projectRows->count() }} metric)</td></tr>
         @foreach($projectRows as $row)
           <tr class="hover:bg-[#f8fafc] transition-colors align-top">
             <td class="px-8 py-5 text-xs">{{ $row->id }}</td>
@@ -51,15 +51,63 @@
             <td class="px-8 py-5 text-xs">{{ $row->metric_name }}</td>
             <td class="px-8 py-5 text-xs">{{ $row->metric_type }}</td>
             <td class="px-8 py-5 text-xs">{{ $row->metric_value ?: '—' }}</td>
+            <td class="px-8 py-5 text-xs">
+              <span
+                class="ppv-metric-eval inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide bg-amber-50 text-amber-800 border-amber-200"
+                data-type="{{ $row->metric_type }}"
+                data-direction="{{ $row->direction ?: 'high' }}"
+                data-value="{{ $row->metric_value }}"
+                data-pass="{{ $row->pass_threshold ?? 80 }}"
+                data-conditional="{{ $row->conditional_threshold ?? 60 }}"
+              >—</span>
+            </td>
             <td class="px-8 py-5"><div class="flex flex-col gap-2"><a href="{{ route('pilot-project-validation.metrics.edit', $row) }}" class="inline-flex items-center justify-center rounded-lg border border-primary/30 bg-primary/5 px-3 py-1.5 text-[11px] font-bold text-primary hover:bg-primary/10">Edit</a><form method="post" action="{{ route('pilot-project-validation.metrics.destroy', $row) }}" onsubmit="return confirm('Hapus data?')">@csrf @method('DELETE')<button class="w-full inline-flex items-center justify-center rounded-lg border border-error/30 bg-red-50 px-3 py-1.5 text-[11px] font-bold text-error hover:bg-red-100">Hapus</button></form></div></td>
           </tr>
         @endforeach
       @empty
-        <tr><td colspan="7" class="px-8 py-10 text-center text-sm text-on-surface-variant font-medium">Belum ada data</td></tr>
+        <tr><td colspan="8" class="px-8 py-10 text-center text-sm text-on-surface-variant font-medium">Belum ada data</td></tr>
       @endforelse
     </tbody>
   </table></div>
   <div class="p-6 bg-[#f8fafc] border-t border-outline-variant/20">{{ $rows->links() }}</div>
 </div>
-@endsection
 
+<script>
+(function () {
+  function evaluateMetricStatus(el) {
+    var type = String(el.dataset.type || 'range').toLowerCase();
+    if (type === 'select') {
+      var selected = String(el.dataset.value || 'conditional').toLowerCase();
+      return ['pass', 'conditional', 'fail'].indexOf(selected) >= 0 ? selected : 'conditional';
+    }
+    var direction = String(el.dataset.direction || 'high').toLowerCase() === 'low' ? 'low' : 'high';
+    var value = parseFloat(el.dataset.value);
+    var pass = parseFloat(el.dataset.pass);
+    var conditional = parseFloat(el.dataset.conditional);
+    if (!isFinite(value)) value = 0;
+    if (!isFinite(pass)) pass = 80;
+    if (!isFinite(conditional)) conditional = 60;
+    if (direction === 'high') {
+      if (value >= pass) return 'pass';
+      if (value >= conditional) return 'conditional';
+      return 'fail';
+    }
+    if (value <= pass) return 'pass';
+    if (value <= conditional) return 'conditional';
+    return 'fail';
+  }
+
+  function badgeClass(status) {
+    if (status === 'pass') return 'bg-emerald-50 text-emerald-800 border-emerald-200';
+    if (status === 'fail') return 'bg-red-50 text-red-800 border-red-200';
+    return 'bg-amber-50 text-amber-800 border-amber-200';
+  }
+
+  document.querySelectorAll('.ppv-metric-eval').forEach(function (el) {
+    var status = evaluateMetricStatus(el);
+    el.textContent = status;
+    el.className = 'ppv-metric-eval inline-flex items-center rounded-full border px-2.5 py-1 text-[10px] font-bold uppercase tracking-wide ' + badgeClass(status);
+  });
+})();
+</script>
+@endsection
