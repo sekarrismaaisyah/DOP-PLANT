@@ -65,6 +65,7 @@ class PilotProjectValidationMetricController extends Controller
             'metric_status' => ['nullable', 'string', 'max:64'],
         ]);
         $data['critical'] = (bool) ($data['critical'] ?? false);
+        $data['direction'] = $this->normalizeMetricDirection($data['direction'] ?? null);
 
         PilotProjectValidationMetric::query()->create($data);
 
@@ -104,6 +105,7 @@ class PilotProjectValidationMetricController extends Controller
             'metric_status' => ['nullable', 'string', 'max:64'],
         ]);
         $data['critical'] = (bool) ($data['critical'] ?? false);
+        $data['direction'] = $this->normalizeMetricDirection($data['direction'] ?? null);
 
         $metric->update($data);
 
@@ -199,7 +201,7 @@ class PilotProjectValidationMetricController extends Controller
                     'sort_order' => $sortOrder,
                     'metric_desc' => $this->nullableString($row['metric_description'] ?? $row['metric_desc'] ?? null),
                     'metric_type' => $this->normalizeMetricType($row['metric_type'] ?? null),
-                    'direction' => $this->nullableString($row['direction'] ?? null),
+                    'direction' => $this->normalizeMetricDirection($row['direction'] ?? null),
                     'critical' => $this->parseBool($row['critical'] ?? null),
                     'unit' => $this->nullableString($row['unit'] ?? null),
                     'metric_value' => $this->nullableString($row['current_value'] ?? $row['metric_value'] ?? null),
@@ -399,6 +401,16 @@ class PilotProjectValidationMetricController extends Controller
         }
 
         return 'range';
+    }
+
+    private function normalizeMetricDirection(mixed $value): ?string
+    {
+        $text = mb_strtolower(trim((string) ($value ?? '')));
+        if ($text === '') {
+            return null;
+        }
+
+        return $text === 'low' ? 'low' : 'high';
     }
 }
 

@@ -373,22 +373,23 @@ class PilotProjectValidationPortfolioService
                     'targetCloseDate' => $g->target_close_date?->format('Y-m-d') ?? '',
                     'reviewerStatus' => $g->reviewer_status ?? '',
                     'metrics' => $g->metrics->map(function (PilotProjectValidationMetric $m) {
+                        $metricType = strtolower(trim((string) ($m->metric_type ?? 'range')));
                         $base = [
                             'name' => $m->metric_name,
                             'desc' => $m->metric_desc ?? '',
-                            'type' => $m->metric_type === 'select' ? 'select' : 'range',
+                            'type' => $metricType === 'select' ? 'select' : 'range',
                             'critical' => (bool) $m->critical,
                             'picCurrentFinding' => $m->pic_current_finding ?? '',
                             'picEvidenceSource' => $m->pic_evidence_source ?? '',
                             'picComment' => $m->pic_comment ?? '',
                             'metricStatus' => $m->metric_status ?? '',
                         ];
-                        if ($m->metric_type === 'select') {
+                        if ($metricType === 'select') {
                             $base['value'] = $this->normalizeSelectValue($m->metric_value ?? 'conditional');
 
                             return $base;
                         }
-                        $base['direction'] = ($m->direction ?? 'high') === 'low' ? 'low' : 'high';
+                        $base['direction'] = $this->normalizeMetricDirection($m->direction);
                         $base['unit'] = $m->unit ?? '%';
                         $base['min'] = $m->min_value !== null ? (float) $m->min_value : 0.0;
                         $base['max'] = $m->max_value !== null ? (float) $m->max_value : 100.0;
@@ -559,16 +560,21 @@ class PilotProjectValidationPortfolioService
         return $candidate;
     }
 
-    private function parseFloatish(?string $value): float
+    private function normalizeMetricDirection(mixed $value): string
     {
-        if ($value === null || $value === '') {
-            return 0.0;
-        }
-        if (! is_numeric($value)) {
+        $direction = strtolower(trim((string) ($value ?? 'high')));
+
+        return $direction === 'low' ? 'low' : 'high';
+    }
+
+    private function parseFloatish(mixed $value): float
+    {
+        $normalized = $this->normalizeLocaleNumber($value);
+        if ($normalized === null) {
             return 0.0;
         }
 
-        return (float) $value;
+        return (float) $normalized;
     }
 
     private function clampInt(mixed $value, int $min, int $max): int

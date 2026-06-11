@@ -15,6 +15,7 @@
       importExcelUrl: @json(route('pilot-project-validation.portfolio.import-excel')),
       projectsAdminUrl: @json(route('pilot-project-validation.projects.index')),
       projectPdfUrlTemplate: @json(route('pilot-project-validation.project-pdf.show', ['key' => '__KEY__'])),
+      initialPortfolio: @json($portfolio ?? ['projects' => [], 'historySnapshots' => []]),
     };
   </script>
   <style>
@@ -2373,20 +2374,70 @@
         return window.XLSX.utils.sheet_to_json(workbook.Sheets[sheetName], { defval: '' }).map(normalizeRow);
       }
 
+      function normalizeMetricDirection(value) {
+        return String(value || 'high').trim().toLowerCase() === 'low' ? 'low' : 'high';
+      }
+
+      function parseMetricNumber(value, fallback) {
+        if (value === null || value === undefined || value === '') return fallback;
+        const cleaned = String(value).replace(/%/g, '').replace(/\s+/g, '').replace(',', '.');
+        const n = Number(cleaned);
+        return Number.isFinite(n) ? n : fallback;
+      }
+
       function ensureMetricShape(metric) {
+        metric.type = String(metric.type || 'range').trim().toLowerCase() === 'select' ? 'select' : 'range';
         if (metric.type === 'select') {
-          metric.value = ['pass', 'conditional', 'fail'].indexOf(metric.value) >= 0 ? metric.value : 'conditional';
+          const selected = String(metric.value || 'conditional').trim().toLowerCase();
+          metric.value = ['pass', 'conditional', 'fail'].indexOf(selected) >= 0 ? selected : 'conditional';
         } else {
-          metric.direction = metric.direction || 'high';
+          metric.direction = normalizeMetricDirection(metric.direction);
           metric.unit = metric.unit == null ? '%' : metric.unit;
-          metric.min = Number.isFinite(+metric.min) ? +metric.min : 0;
-          metric.max = Number.isFinite(+metric.max) ? +metric.max : 100;
-          metric.step = Number.isFinite(+metric.step) ? +metric.step : 1;
-          metric.value = Number.isFinite(+metric.value) ? +metric.value : 50;
-          metric.pass = Number.isFinite(+metric.pass) ? +metric.pass : 80;
-          metric.conditional = Number.isFinite(+metric.conditional) ? +metric.conditional : 60;
+          metric.min = parseMetricNumber(metric.min, 0);
+          metric.max = parseMetricNumber(metric.max, 100);
+          metric.step = parseMetricNumber(metric.step, 1);
+          metric.value = parseMetricNumber(metric.value, 50);
+          metric.pass = parseMetricNumber(metric.pass, 80);
+          metric.conditional = parseMetricNumber(metric.conditional, 60);
         }
         return metric;
+      }
+
+      function normalizeProjectFromServer(project) {
+        if (!project || typeof project !== 'object') return project;
+        (project.gates || []).forEach(function (gate) {
+          gate.hardGate = !!gate.hardGate;
+          (gate.metrics || []).forEach(ensureMetricShape);
+        });
+        return project;
+      }
+
+      function applyPortfolioPayload(data, statusTitle, statusMessage, statusVariant) {
+        if (data && data.projects && data.projects.length) {
+          projects.length = 0;
+          data.projects.forEach(function (project) {
+            projects.push(normalizeProjectFromServer(JSON.parse(JSON.stringify(project))));
+          });
+          historySnapshots = data.historySnapshots && data.historySnapshots.length ? data.historySnapshots.slice() : [];
+          expandedProjects = new Set([0]);
+          expandedDashboardProjects = new Set([0]);
+          renderAll();
+          closeModal();
+          setImportStatus(
+            statusTitle || 'Berhasil dimuat',
+            statusMessage || (data.projects.length + ' proyek dimuat dari database.'),
+            statusVariant || 'notice-card notice-success'
+          );
+          return true;
+        }
+        restoreSeedProjects();
+        renderAll();
+        setImportStatus(
+          statusTitle || 'Database kosong',
+          statusMessage || 'Belum ada data tersimpan. Ditampilkan contoh default.',
+          statusVariant || 'notice-card notice-warning'
+        );
+        return false;
       }
 
       function evaluateMetric(metric) {
@@ -3164,7 +3215,10 @@
       }
 
       function parseFieldValue(field, value) {
-        if (['progress', 'min', 'max', 'step', 'value', 'pass', 'conditional'].indexOf(field) >= 0) return Number(value);
+        if (['progress', 'min', 'max', 'step', 'value', 'pass', 'conditional'].indexOf(field) >= 0) {
+          return parseMetricNumber(value, 0);
+        }
+        if (field === 'direction') return normalizeMetricDirection(value);
         if (field === 'hardGate' || field === 'critical') return value === 'true' || value === true;
         return value;
       }
@@ -3710,35 +3764,43 @@
         return m ? m.getAttribute('content') || '' : '';
       }
 
-      function loadPortfolioFromServer() {
+      function loadPortfolioFromServer(options) {
         const cfg = window.PilotProjectValidation || {};
         if (!cfg.portfolioUrl) return;
-        setImportStatus('Memuat…', 'Mengambil portfolio dari database server.', 'notice-card');
-        fetch(cfg.portfolioUrl, {
+        const silent = !!(options && options.silent);
+        if (!silent) {
+          setImportStatus('Memuat…', 'Mengambil portfolio terbaru dari database.', 'notice-card');
+        }
+        const url = cfg.portfolioUrl + (cfg.portfolioUrl.indexOf('?') >= 0 ? '&' : '?') + '_=' + Date.now();
+        fetch(url, {
           credentials: 'same-origin',
-          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+          headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          cache: 'no-store'
         })
           .then(function (r) {
             if (!r.ok) throw new Error('HTTP ' + r.status);
             return r.json();
           })
           .then(function (data) {
-            if (data.projects && data.projects.length) {
-              projects.length = 0;
-              data.projects.forEach(function (project) { projects.push(project); });
-              historySnapshots = data.historySnapshots && data.historySnapshots.length ? data.historySnapshots : [];
-              expandedProjects = new Set([0]);
-              expandedDashboardProjects = new Set([0]);
-              renderAll();
-              closeModal();
-              setImportStatus('Berhasil dimuat', data.projects.length + ' proyek dimuat dari database ke halaman ini.', 'notice-card notice-success');
-            } else {
-              restoreSeedProjects();
-              renderAll();
-              setImportStatus('Database kosong', 'Belum ada data tersimpan. Ditampilkan contoh default. Anda bisa input/impor lalu Simpan ke server.', 'notice-card notice-warning');
-            }
+            applyPortfolioPayload(
+              data,
+              'Berhasil dimuat',
+              (data.projects && data.projects.length)
+                ? (data.projects.length + ' proyek dimuat dari database. Perhitungan mengikuti nilai terbaru di database.')
+                : 'Belum ada data tersimpan. Ditampilkan contoh default.',
+              (data.projects && data.projects.length) ? 'notice-card notice-success' : 'notice-card notice-warning'
+            );
           })
           .catch(function (err) {
+            if (projects.length) {
+              renderAll();
+              setImportStatus(
+                'Gagal memuat ulang',
+                (err && err.message ? err.message : 'Tidak dapat menghubungi server.') + ' Data terakhir tetap ditampilkan.',
+                'notice-card notice-error'
+              );
+              return;
+            }
             restoreSeedProjects();
             renderAll();
             setImportStatus('Gagal memuat', err && err.message ? err.message : 'Tidak dapat menghubungi server.', 'notice-card notice-error');
@@ -3807,13 +3869,8 @@
           })
           .then(function (body) {
             if (body.projects && body.projects.length) {
-              projects.length = 0;
-              body.projects.forEach(function (project) { projects.push(project); });
-              historySnapshots = body.historySnapshots && body.historySnapshots.length ? body.historySnapshots : [];
-              expandedProjects = new Set([0]);
-              expandedDashboardProjects = new Set([0]);
-              renderAll();
-              closeModal();
+              applyPortfolioPayload(body, 'Tersimpan di database', body.message || 'Data Excel tersimpan ke database.', 'notice-card notice-success');
+              return;
             }
             const msg = body && body.message ? body.message : 'Selesai.';
             setImportStatus('Tersimpan di database', msg, 'notice-card notice-success');
@@ -3841,6 +3898,7 @@
         if (dashboardTab) dashboardTab.onclick = function () {
           currentPage = 'dashboard';
           applyPageState();
+          loadPortfolioFromServer({ silent: true });
           var el = document.getElementById('dashboardPage');
           if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
         };
@@ -3875,6 +3933,11 @@
         };
         document.addEventListener('keydown', function (event) {
           if (event.key === 'Escape') closeModal();
+        });
+        document.addEventListener('visibilitychange', function () {
+          if (document.visibilityState === 'visible') {
+            loadPortfolioFromServer({ silent: true });
+          }
         });
         document.addEventListener('keydown', function (event) {
           if (event.key !== 'Enter' && event.key !== ' ') return;
@@ -3959,8 +4022,17 @@
       }
 
       bindGlobalEvents();
-      setImportStatus('Memuat…', 'Mengambil data dashboard dari database.', 'notice-card');
-      loadPortfolioFromServer();
+      const bootPortfolio = (window.PilotProjectValidation && window.PilotProjectValidation.initialPortfolio)
+        ? window.PilotProjectValidation.initialPortfolio
+        : { projects: [], historySnapshots: [] };
+      applyPortfolioPayload(
+        bootPortfolio,
+        'Siap',
+        (bootPortfolio.projects && bootPortfolio.projects.length)
+          ? (bootPortfolio.projects.length + ' proyek dimuat dari database. Status gate dihitung dari nilai metric di database.')
+          : 'Belum ada data di database. Menampilkan contoh default.',
+        (bootPortfolio.projects && bootPortfolio.projects.length) ? 'notice-card notice-success' : 'notice-card notice-warning'
+      );
     })();
   </script>
 </body>

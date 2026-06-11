@@ -34,7 +34,14 @@ class PilotProjectValidationController extends Controller
             ->orderBy('project_name')
             ->get(['project_name', 'support']);
 
-        return view('PilotProjectValidation.index', compact('needSupportProjects'));
+        try {
+            $portfolio = $this->portfolioService->portfolioToFrontendArray();
+        } catch (Throwable $e) {
+            Log::error('pilot-project-validation.index.portfolio', ['e' => $e->getMessage()]);
+            $portfolio = ['projects' => [], 'historySnapshots' => []];
+        }
+
+        return view('PilotProjectValidation.index', compact('needSupportProjects', 'portfolio'));
     }
 
     public function portfolio(): JsonResponse
@@ -42,7 +49,10 @@ class PilotProjectValidationController extends Controller
         try {
             $data = $this->portfolioService->portfolioToFrontendArray();
 
-            return response()->json($data);
+            return response()
+                ->json($data)
+                ->header('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0')
+                ->header('Pragma', 'no-cache');
         } catch (Throwable $e) {
             Log::error('pilot-project-validation.portfolio.show', ['e' => $e->getMessage()]);
 
