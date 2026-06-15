@@ -1,5 +1,5 @@
 {{--
-    Filter picker (gaya dashboard-peer): site, tanggal, control room.
+    Filter picker: site, tanggal, control room.
 
     Variabel:
     - $sites         (iterable)
@@ -11,20 +11,20 @@
    $siteLabel = $filters['site'] !== '' ? $filters['site'] : 'Semua Site';
    $tanggalLabel = \Carbon\Carbon::parse($filters['tanggal'])->format('d M Y');
    $controlRoomLabel = $filters['control_room'] !== '' ? $filters['control_room'] : 'Semua Control Room';
-   $pickerBtnClass = 'inline-flex w-full items-center justify-center gap-2 rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-4 py-3 text-left shadow-inner transition-colors hover:bg-surface-container-high sm:w-auto sm:min-w-[14rem]';
-   $dropdownClass = 'plv-filter-dropdown hidden absolute right-0 top-full z-40 mt-2 max-h-64 w-72 overflow-y-auto rounded-xl border border-outline-variant/20 bg-white py-2 shadow-card-heavy';
-   $optionClass = 'flex w-full items-center px-4 py-2.5 text-left text-sm font-semibold text-on-surface transition-colors hover:bg-[#f5f7f9]';
+   $pickerBtnClass = 'plv-filter-pill inline-flex w-full items-center gap-3 rounded-xl px-4 py-3 text-left sm:w-auto sm:min-w-[12.5rem]';
+   $dropdownClass = 'plv-filter-dropdown hidden absolute right-0 top-full z-40 mt-2 max-h-64 w-72 overflow-y-auto rounded-xl border border-outline-variant/20 bg-white py-2 shadow-lg';
+   $optionClass = 'flex w-full items-center px-4 py-2.5 text-left text-sm font-medium text-on-surface transition-colors duration-200 hover:bg-primary/[0.04]';
 @endphp
+<div class="flex flex-wrap items-center justify-start lg:justify-end gap-3">
 <form method="GET" action="{{ route('pembatasan-lv.index') }}" id="plv-filter-form" class="flex flex-wrap items-center gap-3">
-   {{-- Site --}}
    <div class="relative" data-plv-filter-wrap>
       <button type="button" data-plv-filter-toggle class="{{ $pickerBtnClass }}" aria-haspopup="listbox" aria-expanded="false">
-         <span class="material-symbols-outlined text-primary text-xl">location_on</span>
-         <span class="flex min-w-0 flex-1 flex-col items-start">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Site</span>
-            <span id="plv-site-label" class="truncate text-sm font-bold text-on-surface">{{ $siteLabel }}</span>
+         <span class="material-symbols-outlined text-primary text-xl shrink-0">location_on</span>
+         <span class="flex min-w-0 flex-1 flex-col items-start leading-tight gap-0.5">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">Site</span>
+            <span id="plv-site-label" class="truncate text-sm font-bold text-on-background">{{ $siteLabel }}</span>
          </span>
-         <span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+         <span class="material-symbols-outlined text-on-surface-variant/45 text-xl shrink-0">expand_more</span>
       </button>
       <div class="{{ $dropdownClass }}" data-plv-filter-menu role="listbox">
          <button type="button" class="{{ $optionClass }} plv-filter-option" data-name="site" data-value="" data-label="Semua Site">Semua Site</button>
@@ -35,28 +35,26 @@
       <input type="hidden" name="site" id="plv-filter-site" value="{{ $filters['site'] }}"/>
    </div>
 
-   {{-- Tanggal --}}
    <div class="relative" data-plv-filter-wrap>
       <button type="button" id="plv-open-tanggal" class="{{ $pickerBtnClass }}" aria-haspopup="dialog">
-         <span class="material-symbols-outlined text-primary text-xl">calendar_month</span>
-         <span class="flex min-w-0 flex-1 flex-col items-start">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Tanggal</span>
-            <span id="plv-tanggal-label" class="truncate text-sm font-bold text-on-surface">{{ $tanggalLabel }}</span>
+         <span class="material-symbols-outlined text-primary text-xl shrink-0">calendar_month</span>
+         <span class="flex min-w-0 flex-1 flex-col items-start leading-tight gap-0.5">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">Tanggal</span>
+            <span id="plv-tanggal-label" class="truncate text-sm font-bold text-on-background">{{ $tanggalLabel }}</span>
          </span>
-         <span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+         <span class="material-symbols-outlined text-on-surface-variant/45 text-xl shrink-0">expand_more</span>
       </button>
       <input type="date" name="tanggal" id="plv-filter-tanggal" value="{{ $filters['tanggal'] }}" class="pointer-events-none absolute opacity-0" tabindex="-1" aria-hidden="true"/>
    </div>
 
-   {{-- Control Room --}}
    <div class="relative" data-plv-filter-wrap>
       <button type="button" data-plv-filter-toggle class="{{ $pickerBtnClass }}" aria-haspopup="listbox" aria-expanded="false">
-         <span class="material-symbols-outlined text-primary text-xl">meeting_room</span>
-         <span class="flex min-w-0 flex-1 flex-col items-start">
-            <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">Control Room</span>
-            <span id="plv-control-room-label" class="truncate text-sm font-bold text-on-surface">{{ $controlRoomLabel }}</span>
+         <span class="material-symbols-outlined text-primary text-xl shrink-0">meeting_room</span>
+         <span class="flex min-w-0 flex-1 flex-col items-start leading-tight gap-0.5">
+            <span class="text-[10px] font-bold uppercase tracking-wider text-on-surface-variant/80">Control Room</span>
+            <span id="plv-control-room-label" class="truncate text-sm font-bold text-on-background">{{ $controlRoomLabel }}</span>
          </span>
-         <span class="material-symbols-outlined text-on-surface-variant">expand_more</span>
+         <span class="material-symbols-outlined text-on-surface-variant/45 text-xl shrink-0">expand_more</span>
       </button>
       <div class="{{ $dropdownClass }}" data-plv-filter-menu role="listbox">
          <button type="button" class="{{ $optionClass }} plv-filter-option" data-name="control_room" data-value="" data-label="Semua Control Room">Semua Control Room</button>
@@ -68,11 +66,23 @@
    </div>
 
    @if($filters['site'] || $filters['control_room'] || request()->has('tanggal'))
-   <a href="{{ route('pembatasan-lv.index') }}" class="inline-flex items-center justify-center rounded-xl border border-outline-variant/30 bg-white px-3 py-3 text-on-surface-variant shadow-sm transition-colors hover:bg-surface-container-high" title="Reset filter">
+   <a href="{{ route('pembatasan-lv.index') }}" class="plv-filter-pill inline-flex items-center justify-center rounded-xl px-3 py-3 text-on-surface-variant" title="Reset filter">
       <span class="material-symbols-outlined text-xl">restart_alt</span>
    </a>
    @endif
 </form>
+
+   <div class="flex items-center gap-2 shrink-0">
+      <button type="button" data-plv-open-inputasi="lv" class="plv-add-btn plv-add-btn--lv" title="Tambah inputasi LV">
+         <span class="material-symbols-outlined text-lg">local_shipping</span>
+         Tambah LV
+      </button>
+      <button type="button" data-plv-open-inputasi="orang" class="plv-add-btn plv-add-btn--orang" title="Tambah inputasi orang">
+         <span class="material-symbols-outlined text-lg">person_add</span>
+         Tambah Orang
+      </button>
+   </div>
+</div>
 
 @push('scripts')
 <script>
@@ -109,8 +119,7 @@
          var label = opt.getAttribute('data-label') || '';
          var input = form.querySelector('[name="' + name + '"]');
          if (input) input.value = value;
-         var labelEl = document.getElementById('plv-' + name.replace('_', '-') + '-label')
-            || document.getElementById('plv-' + name + '-label');
+         var labelEl = document.getElementById('plv-site-label');
          if (name === 'control_room') labelEl = document.getElementById('plv-control-room-label');
          if (name === 'site') labelEl = document.getElementById('plv-site-label');
          if (labelEl) labelEl.textContent = label;

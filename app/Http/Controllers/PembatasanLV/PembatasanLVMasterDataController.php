@@ -15,7 +15,7 @@ class PembatasanLVMasterDataController extends Controller
 
     public function index(Request $request): View
     {
-        $activeTab = in_array($request->query('tab'), ['control-room', 'lv'], true)
+        $activeTab = in_array($request->query('tab'), ['control-room', 'lv', 'aktivitas'], true)
             ? $request->query('tab')
             : 'site';
 

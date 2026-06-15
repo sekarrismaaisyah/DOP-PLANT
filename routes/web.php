@@ -750,6 +750,9 @@ Route::middleware(['auth'])->group(function () {
     // Route modul Pembatasan LV
     require __DIR__ . '/PembatasanLV/pembatasan_lv.php';
 
+    // Route modul Auto Banned
+    require __DIR__ . '/AutoBanned/auto_banned.php';
+
     // Role & Permission Management Routes
     Route::prefix('role-permission')->name('role-permission.')->group(function () {
         Route::get('/', [RolePermissionController::class, 'index'])->name('index');

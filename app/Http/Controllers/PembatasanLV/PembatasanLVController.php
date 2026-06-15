@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\PembatasanLV;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\PembatasanLV\Concerns\ProvidesPembatasanLVInputasiFormContext;
 use App\Http\Controllers\PembatasanLV\Concerns\ProvidesPembatasanLVLayout;
 use App\Models\CctvData;
 use App\Models\PembatasanLvInputasi;
 use App\Models\PembatasanOrangInputasi;
+use App\Services\PembatasanLV\PembatasanLVControlRoomContextService;
 use App\Services\PembatasanLV\PembatasanLVOverviewService;
+use App\Services\PembatasanLV\PembatasanLVShiftService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -16,9 +19,12 @@ use Illuminate\View\View;
 class PembatasanLVController extends Controller
 {
     use ProvidesPembatasanLVLayout;
+    use ProvidesPembatasanLVInputasiFormContext;
 
     public function __construct(
         private readonly PembatasanLVOverviewService $overviewService,
+        private readonly PembatasanLVShiftService $shiftService,
+        private readonly PembatasanLVControlRoomContextService $controlRoomContext,
     ) {}
 
     public function index(Request $request): View
@@ -104,6 +110,8 @@ class PembatasanLVController extends Controller
             'orangMasukAktifList' => $orangMasukAktifList,
             'orangKeluarList' => $orangKeluarList,
             'orangAllList' => $orangAllList,
+            'formContext' => $this->pembatasanLvInputasiFormContext($this->shiftService, $this->controlRoomContext, $user),
+            'aktivitasOptions' => $this->pembatasanLvAktivitasOptions(),
         ]);
     }
 

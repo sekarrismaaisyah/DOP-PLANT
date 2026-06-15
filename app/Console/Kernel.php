@@ -61,6 +61,19 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/dopm-auto-alert-wa.log'));
 
+        // Auto Banned: polling scraping tiap menit untuk deteksi perubahan Pass/Not Pass
+        $schedule->command('auto-banned:poll-scrap')
+            ->everyMinute()
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/auto-banned-poll.log'));
+
+        // Auto Banned: email HSECT — Selasa list awal, reminder harian untuk yang belum banned
+        $schedule->command('auto-banned:hsct-email')
+            ->timezone(config('auto_banned.hsct.timezone', 'Asia/Makassar'))
+            ->dailyAt(config('auto_banned.hsct.send_time', '08:00'))
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/auto-banned-hsct-email.log'));
+
         // Generate planning roster dari DOP & IKK setiap 10 menit (hari ini). Skip jika job periode yang sama masih pending/processing.
         $schedule->command('roster:generate-planning')
             ->everyMinutes()

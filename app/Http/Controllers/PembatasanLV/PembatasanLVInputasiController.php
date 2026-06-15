@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\PembatasanLV;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\PembatasanLV\Concerns\ProvidesPembatasanLVInputasiFormContext;
 use App\Http\Controllers\PembatasanLV\Concerns\ProvidesPembatasanLVLayout;
 use App\Http\Requests\PembatasanLV\PembatasanLVInputasiLvRequest;
 use App\Http\Requests\PembatasanLV\PembatasanLVInputasiOrangRequest;
 use App\Models\BecomelineUnit;
 use App\Models\CctvData;
-use App\Models\MasterAktivitas;
+use App\Models\PembatasanMasterAktivitas;
 use App\Models\PembatasanLvInputasi;
 use App\Models\PembatasanOrangInputasi;
 use App\Services\PembatasanLV\PembatasanLVKapasitasLokasiService;
@@ -25,6 +26,7 @@ use Illuminate\View\View;
 class PembatasanLVInputasiController extends Controller
 {
     use ProvidesPembatasanLVLayout;
+    use ProvidesPembatasanLVInputasiFormContext;
 
     public function __construct(
         private readonly PembatasanLVShiftService $shiftService,
@@ -37,38 +39,12 @@ class PembatasanLVInputasiController extends Controller
     public function index(): View
     {
         $user = Auth::user();
-        $now = now()->timezone(config('app.timezone'));
-        $controlRooms = $this->controlRoomContext->controlRoomsForUser($user);
 
         return view('PembatasanLV.inputasi.index', [
             'navActive' => 'inputasi',
             'navItems' => $this->pembatasanLvNavItems(),
-            'sites' => CctvData::query()
-                ->whereNotNull('site')
-                ->where('site', '!=', '')
-                ->distinct()
-                ->orderBy('site')
-                ->pluck('site'),
-            'controlRooms' => CctvData::query()
-                ->whereNotNull('control_room')
-                ->where('control_room', '!=', '')
-                ->distinct()
-                ->orderBy('control_room')
-                ->pluck('control_room'),
-            'formContext' => [
-                'shift' => $this->shiftService->resolveShift($now),
-                'shift_label' => $this->shiftService->shiftLabel($this->shiftService->resolveShift($now)),
-                'checkin_at' => $now->format('Y-m-d\TH:i'),
-                'checkin_display' => $now->format('d M Y H:i'),
-                'creator_name' => (string) ($user?->name ?? '—'),
-                'creator_id' => $user?->id,
-                'control_room' => $controlRooms->first(),
-                'control_rooms' => $controlRooms->all(),
-                'timezone' => config('app.timezone'),
-            ],
-            'aktivitasOptions' => MasterAktivitas::query()
-                ->orderBy('nama_aktivitas')
-                ->pluck('nama_aktivitas'),
+            'formContext' => $this->pembatasanLvInputasiFormContext($this->shiftService, $this->controlRoomContext, $user),
+            'aktivitasOptions' => $this->pembatasanLvAktivitasOptions(),
         ]);
     }
 
@@ -102,7 +78,7 @@ class PembatasanLVInputasiController extends Controller
         ]);
 
         return redirect()
-            ->route('pembatasan-lv.inputasi.index', ['tab' => 'lv'])
+            ->route('pembatasan-lv.index')
             ->with('success', 'Inputasi LV berhasil disimpan.');
     }
 
@@ -138,7 +114,7 @@ class PembatasanLVInputasiController extends Controller
         ]);
 
         return redirect()
-            ->route('pembatasan-lv.inputasi.index', ['tab' => 'orang'])
+            ->route('pembatasan-lv.index')
             ->with('success', 'Inputasi orang berhasil disimpan.');
     }
 
@@ -252,15 +228,34 @@ class PembatasanLVInputasiController extends Controller
     {
         $q = trim((string) $request->query('q', ''));
 
-        $query = MasterAktivitas::query()->orderBy('nama_aktivitas');
+        $query = PembatasanMasterAktivitas::query()
+            ->orderBy('site')
+            ->orderBy('detail_aktivitas_pengoperasian_lv');
+
         if ($q !== '') {
-            $query->where('nama_aktivitas', 'like', '%'.$q.'%');
+            $query->where(function ($builder) use ($q): void {
+                $builder->where('detail_aktivitas_pengoperasian_lv', 'like', '%'.$q.'%')
+                    ->orWhere('kategori_aktivitas_luar_kabin', 'like', '%'.$q.'%')
+                    ->orWhere('site', 'like', '%'.$q.'%')
+                    ->orWhere('perusahaan', 'like', '%'.$q.'%')
+                    ->orWhere('departemen', 'like', '%'.$q.'%');
+            });
         }
 
-        $data = $query->limit(50)->pluck('nama_aktivitas')->map(fn (string $value) => [
-            'value' => $value,
-            'label' => $value,
-        ])->values();
+        $data = $query
+            ->limit(50)
+            ->get(['site', 'perusahaan', 'departemen', 'kategori_aktivitas_luar_kabin', 'detail_aktivitas_pengoperasian_lv'])
+            ->map(fn (PembatasanMasterAktivitas $row) => [
+                'value' => $row->detail_aktivitas_pengoperasian_lv,
+                'label' => $row->detail_aktivitas_pengoperasian_lv,
+                'subtitle' => implode(' · ', array_filter([
+                    $row->site,
+                    $row->perusahaan,
+                    $row->departemen,
+                    $row->kategori_aktivitas_luar_kabin,
+                ])),
+            ])
+            ->values();
 
         return response()->json(['data' => $data]);
     }

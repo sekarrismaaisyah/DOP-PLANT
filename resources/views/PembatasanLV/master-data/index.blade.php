@@ -13,7 +13,7 @@
    @include('PembatasanLV.partials.page-header', [
       'breadcrumbCurrent' => 'Master Data',
       'pageTitle' => 'Master Data',
-      'pageSubtitle' => 'Kelola data referensi site, control room, dan unit LV',
+      'pageSubtitle' => 'Kelola data referensi site, control room, unit LV, dan aktivitas pekerjaan',
    ])
 @endsection
 
@@ -38,6 +38,12 @@
                Unit LV
             </span>
          </a>
+         <a href="{{ route('pembatasan-lv.master-data.index', array_filter(['tab' => 'aktivitas', 'q' => $q ?: null])) }}" role="tab" class="{{ $activeTab === 'aktivitas' ? $tabActiveClass : $tabInactiveClass }}">
+            <span class="inline-flex items-center gap-2">
+               <span class="material-symbols-outlined text-lg">engineering</span>
+               Aktivitas Luar Kabin
+            </span>
+         </a>
       </div>
 
       <form method="GET" action="{{ route('pembatasan-lv.master-data.index') }}" id="plv-master-search-form" class="flex w-full max-w-md items-center gap-2">
@@ -47,14 +53,21 @@
             <input type="search" id="plv-master-search-input" name="q" value="{{ $q }}" placeholder="Cari data master…" class="w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] py-2.5 pl-10 pr-3 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"/>
          </div>
          <button type="submit" class="inline-flex shrink-0 items-center justify-center rounded-xl border border-outline-variant/30 bg-white px-4 py-2.5 text-xs font-bold shadow-sm hover:bg-surface-container-high">Cari</button>
-         @if($q !== '' && !in_array($activeTab, ['site', 'control-room', 'lv'], true))
+         @if($q !== '' && !in_array($activeTab, ['site', 'control-room', 'lv', 'aktivitas'], true))
          <a href="{{ route('pembatasan-lv.master-data.index', ['tab' => $activeTab]) }}" class="inline-flex shrink-0 items-center justify-center rounded-xl px-3 py-2.5 text-xs font-bold text-on-surface-variant hover:bg-[#f1f5f9]">Reset</a>
          @endif
-         @if(in_array($activeTab, ['site', 'control-room', 'lv'], true))
+         @if(in_array($activeTab, ['site', 'control-room', 'lv', 'aktivitas'], true))
          <button type="button" id="plv-master-search-reset" class="inline-flex shrink-0 items-center justify-center rounded-xl px-3 py-2.5 text-xs font-bold text-on-surface-variant hover:bg-[#f1f5f9] {{ $q === '' ? 'hidden' : '' }}">Reset</button>
          @endif
       </form>
    </div>
+
+   @if(session('success'))
+   <div class="mb-4 rounded-xl border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900" role="alert">{{ session('success') }}</div>
+   @endif
+   @if(session('error'))
+   <div class="mb-4 rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">{{ session('error') }}</div>
+   @endif
 
    <div class="bg-white rounded-2xl anchored-card overflow-hidden">
       <div class="flex flex-col gap-3 border-b border-outline-variant/20 p-6 sm:flex-row sm:items-center sm:justify-between">
@@ -65,6 +78,9 @@
             @elseif($activeTab === 'control-room')
             <h3 class="font-headline font-bold text-lg text-on-background">Pengawas Control Room</h3>
             <p class="mt-1 text-xs text-on-surface-variant">Kelola pengawas per control room beserta batas LV dan detail lokasi.</p>
+            @elseif($activeTab === 'aktivitas')
+            <h3 class="font-headline font-bold text-lg text-on-background">Master Aktivitas Pekerjaan di Luar Kabin</h3>
+            <p class="mt-1 text-xs text-on-surface-variant">Referensi aktivitas pekerjaan di luar kabin &amp; pembatasan LV per site, perusahaan, dan departemen.</p>
             @else
             <h3 class="font-headline font-bold text-lg text-on-background">Master Unit LV</h3>
             <p class="mt-1 text-xs text-on-surface-variant">Data unit dari Becomeline (becomeline_unit).</p>
@@ -80,6 +96,21 @@
             <span class="material-symbols-outlined text-base">person_add</span>
             Tambah Pengawas
          </button>
+         @elseif($activeTab === 'aktivitas')
+         <div class="flex flex-wrap items-center gap-2">
+            <a href="{{ route('pembatasan-lv.master-data.aktivitas.template') }}" class="inline-flex items-center gap-2 rounded-xl border border-outline-variant/30 bg-white px-4 py-2.5 text-xs font-bold text-on-surface shadow-sm hover:bg-surface-container-high">
+               <span class="material-symbols-outlined text-base">download</span>
+               Unduh Format Excel
+            </a>
+            <button type="button" id="plv-aktivitas-import-btn" class="inline-flex items-center gap-2 rounded-xl border border-outline-variant/30 bg-white px-4 py-2.5 text-xs font-bold text-on-surface shadow-sm hover:bg-surface-container-high">
+               <span class="material-symbols-outlined text-base">upload_file</span>
+               Import Excel
+            </button>
+            <button type="button" id="plv-aktivitas-add-btn" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-xs font-bold text-white shadow-md hover:opacity-95">
+               <span class="material-symbols-outlined text-base">add</span>
+               Tambah Data
+            </button>
+         </div>
          @endif
       </div>
 
@@ -94,6 +125,9 @@
             'activeTab' => $activeTab,
          ])
 
+         @elseif($activeTab === 'aktivitas')
+         @include('PembatasanLV.master-data.partials.aktivitas-panel', ['siteOptions' => $siteOptions, 'q' => $q])
+
          @else
          @include('PembatasanLV.master-data.partials.unit-lv-panel', ['q' => $q])
          @endif
@@ -106,5 +140,10 @@
 
    @if($activeTab === 'control-room')
    @include('PembatasanLV.master-data.partials.control-room-pengawas-modal', ['controlRoomOptions' => $controlRoomOptions])
+   @endif
+
+   @if($activeTab === 'aktivitas')
+   @include('PembatasanLV.master-data.partials.aktivitas-modal', ['siteOptions' => $siteOptions])
+   @include('PembatasanLV.master-data.partials.aktivitas-import-modal')
    @endif
 @endsection

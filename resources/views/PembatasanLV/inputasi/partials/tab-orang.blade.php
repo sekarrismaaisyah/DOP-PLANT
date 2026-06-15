@@ -5,15 +5,27 @@
    $selectedControlRoom = $oldOrang ? old('control_room', $ctx['control_room'] ?? '') : ($ctx['control_room'] ?? '');
 @endphp
 
-<form method="POST" action="{{ route('pembatasan-lv.inputasi.orang.store') }}" id="plv-inputasi-orang-form" class="bg-white rounded-2xl anchored-card overflow-hidden">
+<form method="POST" action="{{ route('pembatasan-lv.inputasi.orang.store') }}" id="plv-inputasi-orang-form" class="flex min-h-0 flex-1 flex-col">
    @csrf
    <input type="hidden" name="tipe" value="orang"/>
 
-   <div class="p-6 space-y-6 border-b border-outline-variant/15">
-      <div>
-         <h3 class="font-headline font-bold text-base text-on-background mb-1">Inputasi Orang</h3>
-         <p class="text-xs text-on-surface-variant">Pencatatan personel masuk area dengan SID — nama, perusahaan, dan dept terisi otomatis dari data karyawan.</p>
+   <div class="min-h-0 flex-1 overflow-y-auto px-6 py-5 space-y-4">
+      @if($errors->any() && old('tipe') === 'orang')
+      <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">
+         <p class="font-semibold mb-1">Periksa input berikut:</p>
+         <ul class="list-disc list-inside space-y-0.5">
+            @foreach($errors->all() as $err)
+               <li>{{ $err }}</li>
+            @endforeach
+         </ul>
       </div>
+      @endif
+
+      @if($controlRooms->isEmpty() && $selectedControlRoom === '')
+      <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+         Akun Anda belum terdaftar sebagai pengawas control room. Hubungi admin untuk mendaftarkan email/nama Anda di Master Data → Pengawas Control Room.
+      </div>
+      @endif
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
          {{-- Shift --}}
@@ -75,7 +87,7 @@
             <label class="block text-xs font-bold text-on-surface-variant mb-1">SID <span class="text-error">*</span></label>
             <div class="relative">
                <input type="text" name="sid" id="orang-sid" autocomplete="off" required value="{{ $oldOrang ? old('sid') : '' }}" placeholder="Cari kode SID…" class="plv-orang-combobox-input w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2.5 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"/>
-               <ul class="plv-orang-combobox-list absolute z-30 mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
+               <ul class="plv-orang-combobox-list absolute z-[210] mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
             </div>
             <p class="mt-1 text-[11px] text-on-surface-variant">Data dari Nitip · bep_vw_wp_karyawan (cari SID, nama, atau NIK)</p>
          </div>
@@ -131,7 +143,7 @@
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Lokasi <span class="text-error">*</span></label>
             <div class="relative">
                <input type="text" name="lokasi" autocomplete="off" required value="{{ $oldOrang ? old('lokasi') : '' }}" placeholder="Cari lokasi…" class="plv-orang-combobox-input w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2.5 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"/>
-               <ul class="plv-orang-combobox-list absolute z-30 mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
+               <ul class="plv-orang-combobox-list absolute z-[210] mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
             </div>
          </div>
 
@@ -140,7 +152,7 @@
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Detail Lokasi</label>
             <div class="relative">
                <input type="text" name="detail_lokasi" autocomplete="off" value="{{ $oldOrang ? old('detail_lokasi') : '' }}" placeholder="Pilih lokasi terlebih dahulu…" class="plv-orang-combobox-input w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2.5 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"/>
-               <ul class="plv-orang-combobox-list absolute z-30 mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
+               <ul class="plv-orang-combobox-list absolute z-[210] mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
             </div>
          </div>
 
@@ -149,7 +161,7 @@
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Aktivitas</label>
             <div class="relative">
                <input type="text" name="aktivitas" autocomplete="off" value="{{ $oldOrang ? old('aktivitas') : '' }}" placeholder="Pilih atau ketik aktivitas…" class="plv-orang-combobox-input w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2.5 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"/>
-               <ul class="plv-orang-combobox-list absolute z-30 mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
+               <ul class="plv-orang-combobox-list absolute z-[210] mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
             </div>
          </div>
       </div>
@@ -160,20 +172,14 @@
       </div>
    </div>
 
-   <div class="p-6 bg-[#f8fafc] flex flex-wrap justify-end gap-3 border-t border-outline-variant/20">
-      <a href="{{ route('pembatasan-lv.index') }}" class="inline-flex items-center justify-center rounded-xl border border-outline-variant/30 bg-white px-5 py-2.5 text-sm font-bold text-on-surface hover:bg-white">Batal</a>
+   <div class="shrink-0 flex flex-wrap justify-end gap-3 border-t border-outline-variant/20 bg-[#f8fafc] px-6 py-4">
+      <button type="button" data-plv-inputasi-close class="inline-flex items-center justify-center rounded-xl border border-outline-variant/30 bg-white px-5 py-2.5 text-sm font-bold text-on-surface hover:bg-white">Batal</button>
       <button type="submit" id="plv-orang-submit-btn" class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white shadow-md hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50" @disabled($controlRooms->isEmpty() && $selectedControlRoom === '')>
          <span class="material-symbols-outlined text-lg">save</span>
          Simpan Inputasi Orang
       </button>
    </div>
 </form>
-
-@if($controlRooms->isEmpty() && $selectedControlRoom === '')
-<div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-   Akun Anda belum terdaftar sebagai pengawas control room. Hubungi admin untuk mendaftarkan email/nama Anda di Master Data → Pengawas Control Room.
-</div>
-@endif
 
 @push('scripts')
 <script>

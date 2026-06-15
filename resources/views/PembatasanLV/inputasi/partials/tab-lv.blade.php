@@ -5,15 +5,27 @@
    $selectedControlRoom = $oldLv ? old('control_room', $ctx['control_room'] ?? '') : ($ctx['control_room'] ?? '');
 @endphp
 
-<form method="POST" action="{{ route('pembatasan-lv.inputasi.lv.store') }}" id="plv-inputasi-lv-form" class="bg-white rounded-2xl anchored-card overflow-hidden">
+<form method="POST" action="{{ route('pembatasan-lv.inputasi.lv.store') }}" id="plv-inputasi-lv-form" class="flex min-h-0 flex-1 flex-col">
    @csrf
    <input type="hidden" name="tipe" value="lv"/>
 
-   <div class="p-6 space-y-6 border-b border-outline-variant/15">
-      <div>
-         <h3 class="font-headline font-bold text-base text-on-background mb-1">Inputasi LV</h3>
-         <p class="text-xs text-on-surface-variant">Pencatatan unit LV dengan shift otomatis dan control room sesuai penugasan pengawas.</p>
+   <div class="min-h-0 flex-1 overflow-y-auto px-6 py-5 space-y-4">
+      @if($errors->any() && old('tipe') === 'lv')
+      <div class="rounded-xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">
+         <p class="font-semibold mb-1">Periksa input berikut:</p>
+         <ul class="list-disc list-inside space-y-0.5">
+            @foreach($errors->all() as $err)
+               <li>{{ $err }}</li>
+            @endforeach
+         </ul>
       </div>
+      @endif
+
+      @if($controlRooms->isEmpty() && $selectedControlRoom === '')
+      <div class="rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+         Akun Anda belum terdaftar sebagai pengawas control room. Hubungi admin untuk mendaftarkan email/nama Anda di Master Data → Pengawas Control Room.
+      </div>
+      @endif
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
          {{-- Shift (otomatis) --}}
@@ -76,7 +88,7 @@
             <div class="relative">
                <input type="text" name="nama_driver" autocomplete="off" required value="{{ $oldLv ? old('nama_driver') : '' }}" placeholder="Cari nama driver…" class="plv-combobox-input w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2.5 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"/>
                <input type="hidden" name="driver_ref" value="{{ $oldLv ? old('driver_ref') : '' }}"/>
-               <ul class="plv-combobox-list absolute z-30 mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
+               <ul class="plv-combobox-list absolute z-[210] mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
             </div>
             <p class="mt-1 text-[11px] text-on-surface-variant">Data dari Nitip · bep_vw_wp_karyawan (cari nama, SID, atau NIK)</p>
          </div>
@@ -87,7 +99,7 @@
             <div class="relative">
                <input type="text" name="no_lambung" autocomplete="off" required value="{{ $oldLv ? old('no_lambung') : '' }}" placeholder="Cari no lambung…" class="plv-combobox-input w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2.5 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"/>
                <input type="hidden" name="id_unit" value="{{ $oldLv ? old('id_unit') : '' }}"/>
-               <ul class="plv-combobox-list absolute z-30 mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
+               <ul class="plv-combobox-list absolute z-[210] mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
             </div>
          </div>
 
@@ -96,7 +108,7 @@
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Lokasi <span class="text-error">*</span></label>
             <div class="relative">
                <input type="text" name="lokasi" autocomplete="off" required value="{{ $oldLv ? old('lokasi') : '' }}" placeholder="Cari lokasi…" class="plv-combobox-input w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2.5 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"/>
-               <ul class="plv-combobox-list absolute z-30 mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
+               <ul class="plv-combobox-list absolute z-[210] mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
             </div>
          </div>
 
@@ -105,7 +117,7 @@
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Detail Lokasi</label>
             <div class="relative">
                <input type="text" name="detail_lokasi" autocomplete="off" value="{{ $oldLv ? old('detail_lokasi') : '' }}" placeholder="Pilih lokasi terlebih dahulu…" class="plv-combobox-input w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2.5 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"/>
-               <ul class="plv-combobox-list absolute z-30 mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
+               <ul class="plv-combobox-list absolute z-[210] mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
             </div>
          </div>
 
@@ -114,7 +126,7 @@
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Aktivitas</label>
             <div class="relative">
                <input type="text" name="aktivitas" autocomplete="off" value="{{ $oldLv ? old('aktivitas') : '' }}" placeholder="Pilih atau ketik aktivitas…" class="plv-combobox-input w-full rounded-xl border border-outline-variant/30 bg-[#f8fafc] px-3 py-2.5 text-sm outline-none focus:border-primary/40 focus:ring-2 focus:ring-primary/15"/>
-               <ul class="plv-combobox-list absolute z-30 mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
+               <ul class="plv-combobox-list absolute z-[210] mt-1 hidden max-h-52 w-full overflow-y-auto rounded-xl border border-outline-variant/30 bg-white py-1 shadow-lg"></ul>
             </div>
             @if(($aktivitasOptions ?? collect())->isNotEmpty())
             <datalist id="plv-aktivitas-fallback">
@@ -134,20 +146,14 @@
       </div>
    </div>
 
-   <div class="p-6 bg-[#f8fafc] flex flex-wrap justify-end gap-3 border-t border-outline-variant/20">
-      <a href="{{ route('pembatasan-lv.index') }}" class="inline-flex items-center justify-center rounded-xl border border-outline-variant/30 bg-white px-5 py-2.5 text-sm font-bold text-on-surface hover:bg-white">Batal</a>
+   <div class="shrink-0 flex flex-wrap justify-end gap-3 border-t border-outline-variant/20 bg-[#f8fafc] px-6 py-4">
+      <button type="button" data-plv-inputasi-close class="inline-flex items-center justify-center rounded-xl border border-outline-variant/30 bg-white px-5 py-2.5 text-sm font-bold text-on-surface hover:bg-white">Batal</button>
       <button type="submit" id="plv-lv-submit-btn" class="inline-flex items-center justify-center gap-2 rounded-xl bg-primary px-6 py-2.5 text-sm font-bold text-white shadow-md hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-50" @disabled($controlRooms->isEmpty() && $selectedControlRoom === '')>
          <span class="material-symbols-outlined text-lg">save</span>
          Simpan Inputasi LV
       </button>
    </div>
 </form>
-
-@if($controlRooms->isEmpty() && $selectedControlRoom === '')
-<div class="mt-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
-   Akun Anda belum terdaftar sebagai pengawas control room. Hubungi admin untuk mendaftarkan email/nama Anda di Master Data → Pengawas Control Room.
-</div>
-@endif
 
 @push('scripts')
 <script>
@@ -170,7 +176,10 @@
       };
    }
 
-   document.querySelectorAll('[data-plv-combobox]').forEach(function (wrap) {
+   var lvForm = document.getElementById('plv-inputasi-lv-form');
+   if (!lvForm) return;
+
+   lvForm.querySelectorAll('[data-plv-combobox]').forEach(function (wrap) {
       var url = wrap.getAttribute('data-url');
       var nameField = wrap.querySelector('[name="' + wrap.getAttribute('data-name') + '"]');
       var visibleInput = wrap.querySelector('.plv-combobox-input');
@@ -200,7 +209,7 @@
          if (hiddenExtra) hiddenExtra.value = idVal;
          list.classList.add('hidden');
          if (detailTarget && label) {
-            var detailWrap = document.querySelector(detailTarget);
+            var detailWrap = lvForm.querySelector(detailTarget);
             if (detailWrap) {
                var detailInput = detailWrap.querySelector('[name="detail_lokasi"]');
                if (detailInput) detailInput.value = '';
@@ -232,7 +241,7 @@
          var fetchUrl = new URL(url, window.location.origin);
          if (q) fetchUrl.searchParams.set('q', q);
          if (lokasiParam) {
-            var lokasiInput = document.querySelector('input[name="lokasi"]');
+            var lokasiInput = lvForm.querySelector('input[name="lokasi"]');
             if (lokasiInput && lokasiInput.value) {
                fetchUrl.searchParams.set('lokasi', lokasiInput.value);
             }
@@ -267,8 +276,8 @@
    var kapasitasUrl = @json(route('pembatasan-lv.inputasi.kapasitas-lokasi'));
    var kapasitasBanner = document.getElementById('plv-kapasitas-banner');
    var submitBtn = document.getElementById('plv-lv-submit-btn');
-   var lokasiInput = document.querySelector('input[name="lokasi"]');
-   var detailInput = document.querySelector('input[name="detail_lokasi"]');
+   var lokasiInput = lvForm.querySelector('input[name="lokasi"]');
+   var detailInput = lvForm.querySelector('input[name="detail_lokasi"]');
 
    function renderKapasitas(data) {
       if (!kapasitasBanner) return;
