@@ -100,11 +100,11 @@
             <input type="hidden" name="nik" id="plv-plan-orang-nik" value="{{ $oldOrang ? old('nik') : '' }}"/>
          </div>
 
-         <div>
+         <!-- <div>
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Site</label>
             <div id="plv-plan-orang-site-display" class="flex min-h-[42px] items-center rounded-xl border border-outline-variant/20 bg-[#f8fafc] px-3 text-sm font-medium text-on-surface">{{ $oldOrang ? old('site', '—') : '—' }}</div>
             <input type="hidden" name="site" id="plv-plan-orang-site" value="{{ $oldOrang ? old('site') : '' }}"/>
-         </div>
+         </div> -->
 
          <div>
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Dept</label>

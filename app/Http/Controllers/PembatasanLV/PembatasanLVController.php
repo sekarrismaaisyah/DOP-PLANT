@@ -8,6 +8,7 @@ use App\Http\Controllers\PembatasanLV\Concerns\ProvidesPembatasanLVLayout;
 use App\Models\CctvData;
 use App\Models\PembatasanLvInputasi;
 use App\Models\PembatasanOrangInputasi;
+use App\Services\PembatasanLV\PembatasanLVEvaluasiService;
 use App\Services\PembatasanLV\PembatasanLVControlRoomContextService;
 use App\Services\PembatasanLV\PembatasanLVOverviewService;
 use App\Services\PembatasanLV\PembatasanLVShiftService;
@@ -25,6 +26,7 @@ class PembatasanLVController extends Controller
         private readonly PembatasanLVOverviewService $overviewService,
         private readonly PembatasanLVShiftService $shiftService,
         private readonly PembatasanLVControlRoomContextService $controlRoomContext,
+        private readonly PembatasanLVEvaluasiService $evaluasiService,
     ) {}
 
     public function index(Request $request): View
@@ -80,10 +82,18 @@ class PembatasanLVController extends Controller
 
         $orangMasukAktif = (clone $this->overviewService->orangMasukAktifQuery($user, $filters))->count();
         $orangKeluar = (clone $this->overviewService->orangKeluarQuery($user, $filters))->count();
+        $sapIndex = $this->evaluasiService->buildSapReporterIndex($filters);
         $orangMasukAktifList = $this->overviewService
             ->orangMasukAktifQuery($user, $filters)
             ->limit(100)
-            ->get();
+            ->get()
+            ->each(function (PembatasanOrangInputasi $row) use ($sapIndex): void {
+                $row->has_sap = $this->evaluasiService->personHasSap(
+                    (string) $row->sid,
+                    (string) $row->nama,
+                    $sapIndex,
+                );
+            });
         $orangKeluarList = $this->overviewService
             ->orangKeluarQuery($user, $filters)
             ->limit(100)
@@ -110,6 +120,7 @@ class PembatasanLVController extends Controller
             'orangMasukAktifList' => $orangMasukAktifList,
             'orangKeluarList' => $orangKeluarList,
             'orangAllList' => $orangAllList,
+            'sapAvailable' => $sapIndex['available'] ?? false,
             'formContext' => $this->pembatasanLvInputasiFormContext($this->shiftService, $this->controlRoomContext, $user),
             'aktivitasOptions' => $this->pembatasanLvAktivitasOptions(),
         ]);
@@ -208,6 +219,7 @@ class PembatasanLVController extends Controller
         ];
 
         $now = now()->timezone(config('app.timezone'));
+        $sapIndex = $this->evaluasiService->buildSapReporterIndex($filters);
 
         $rows = $this->overviewService
             ->orangMasukAktifQuery($user, $filters)
@@ -221,6 +233,11 @@ class PembatasanLVController extends Controller
                 'checkin_at' => $row->checkin_at?->timezone(config('app.timezone'))->toIso8601String(),
                 'lokasi' => $row->lokasi,
                 'detail_lokasi' => $row->detail_lokasi,
+                'has_sap' => $this->evaluasiService->personHasSap(
+                    (string) $row->sid,
+                    (string) $row->nama,
+                    $sapIndex,
+                ),
                 'durasi_detik' => $row->checkin_at
                     ? (int) $row->checkin_at->timezone(config('app.timezone'))->diffInSeconds($now)
                     : 0,
@@ -232,6 +249,7 @@ class PembatasanLVController extends Controller
             'meta' => [
                 'total' => $rows->count(),
                 'server_now' => $now->toIso8601String(),
+                'sap_available' => $sapIndex['available'] ?? false,
             ],
         ]);
     }

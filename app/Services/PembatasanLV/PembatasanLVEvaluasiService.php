@@ -579,6 +579,68 @@ class PembatasanLVEvaluasiService
         ];
     }
 
+    /**
+     * Indeks pelapor SAP (SID & nama) untuk pencocokan cepat di overview orang.
+     *
+     * @param  array{site?: string, tanggal?: string}  $filters
+     * @return array{available: bool, sids: array<string, true>, names: array<string, true>}
+     */
+    public function buildSapReporterIndex(array $filters): array
+    {
+        $tanggalResolved = $this->resolveTanggal((string) ($filters['tanggal'] ?? ''));
+        $resolvedFilters = [
+            'site' => trim((string) ($filters['site'] ?? '')),
+            'tanggal' => $tanggalResolved['tanggal'],
+            'tanggal_label' => $tanggalResolved['tanggal_label'],
+            'shift' => '',
+            'perusahaan' => '',
+        ];
+
+        $available = $this->clickHouseNitip()?->isConnected() ?? false;
+        $sapRows = $available ? $this->fetchSapRows($resolvedFilters) : [];
+
+        $sids = [];
+        $names = [];
+
+        foreach ($sapRows as $sap) {
+            $sid = mb_strtolower(trim((string) ($sap['sid_pelapor'] ?? '')));
+            $nama = mb_strtolower(trim((string) ($sap['nama_pelapor'] ?? '')));
+
+            if ($sid !== '') {
+                $sids[$sid] = true;
+            }
+
+            if ($nama !== '') {
+                $names[$nama] = true;
+            }
+        }
+
+        return [
+            'available' => $available,
+            'sids' => $sids,
+            'names' => $names,
+        ];
+    }
+
+    /**
+     * @param  array{available: bool, sids: array<string, true>, names: array<string, true>}  $sapIndex
+     */
+    public function personHasSap(string $sid, string $nama, array $sapIndex): bool
+    {
+        if (! ($sapIndex['available'] ?? false)) {
+            return false;
+        }
+
+        $sidKey = mb_strtolower(trim($sid));
+        if ($sidKey !== '' && isset($sapIndex['sids'][$sidKey])) {
+            return true;
+        }
+
+        $namaKey = mb_strtolower(trim($nama));
+
+        return $namaKey !== '' && isset($sapIndex['names'][$namaKey]);
+    }
+
     private function clickHouseNitip(): ?ClickHouseService
     {
         if (! class_exists(ClickHouseService::class)) {

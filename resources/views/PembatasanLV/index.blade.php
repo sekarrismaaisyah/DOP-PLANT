@@ -272,13 +272,14 @@
 
          <div id="plv-live-panel-orang" role="tabpanel" aria-labelledby="plv-live-tab-orang" data-plv-live-panel="orang" class="hidden p-5 sm:p-6 max-h-[380px] overflow-y-auto">
             <div class="overflow-x-auto -mx-1">
-               <table class="ab-table-soft w-full text-left min-w-[560px]">
+               <table class="ab-table-soft w-full text-left min-w-[640px]">
                   <thead class="sticky top-0 bg-white/95 backdrop-blur-sm z-10">
                      <tr class="border-b border-outline-variant/10">
                         <th class="px-3 py-2.5 text-[10px] uppercase text-on-surface-variant/70">No</th>
                         <th class="px-3 py-2.5 text-[10px] uppercase text-on-surface-variant/70">Nama</th>
                         <th class="px-3 py-2.5 text-[10px] uppercase text-on-surface-variant/70">SID</th>
                         <th class="px-3 py-2.5 text-[10px] uppercase text-on-surface-variant/70">Lokasi</th>
+                        <th class="px-3 py-2.5 text-[10px] uppercase text-on-surface-variant/70 text-center">SAP</th>
                         <th class="px-3 py-2.5 text-[10px] uppercase text-on-surface-variant/70">Durasi</th>
                         <th class="px-3 py-2.5 text-[10px] uppercase text-on-surface-variant/70 w-24">Aksi</th>
                      </tr>
@@ -293,6 +294,15 @@
                            <div>{{ $row->lokasi }}</div>
                            @if($row->detail_lokasi)
                            <div class="text-xs text-on-surface-variant mt-0.5">{{ $row->detail_lokasi }}</div>
+                           @endif
+                        </td>
+                        <td class="px-3 py-3 text-sm text-center whitespace-nowrap">
+                           @if(!$sapAvailable)
+                           <span class="text-xs text-on-surface-variant/60">—</span>
+                           @elseif($row->has_sap ?? false)
+                           <span class="inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">Ada</span>
+                           @else
+                           <span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Tidak</span>
                            @endif
                         </td>
                         <td class="px-3 py-3 text-sm whitespace-nowrap">
@@ -310,7 +320,7 @@
                      </tr>
                      @empty
                      <tr id="plv-orang-masuk-aktif-empty">
-                        <td colspan="6" class="px-3 py-10">
+                        <td colspan="7" class="px-3 py-10">
                            <div class="ab-empty-illus mx-auto max-w-sm rounded-2xl px-6 py-8 text-center">
                               <span class="material-symbols-outlined text-4xl text-primary/25 mb-3 block">groups</span>
                               <p class="text-sm font-medium text-on-surface">
@@ -682,19 +692,30 @@
    var csrfToken = @json(csrf_token());
    var filterParams = @json($filters);
    var supervisedRoomsEmpty = @json($supervisedRooms->isEmpty());
+   var sapAvailable = @json($sapAvailable ?? false);
    var serverOffsetMs = 0;
 
    function escapeHtml(value) {
       return String(value ?? '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
    }
 
-   function emptyLiveHtml(icon, title, subtitle) {
-      return '<tr><td colspan="6" class="px-3 py-10">' +
+   function emptyLiveHtml(icon, title, subtitle, colspan) {
+      return '<tr><td colspan="' + (colspan || 6) + '" class="px-3 py-10">' +
          '<div class="ab-empty-illus mx-auto max-w-sm rounded-2xl px-6 py-8 text-center">' +
             '<span class="material-symbols-outlined text-4xl text-primary/25 mb-3 block">' + icon + '</span>' +
             '<p class="text-sm font-medium text-on-surface">' + escapeHtml(title) + '</p>' +
             '<p class="text-xs text-on-surface-variant mt-1">' + escapeHtml(subtitle) + '</p>' +
          '</div></td></tr>';
+   }
+
+   function renderSapBadge(hasSap) {
+      if (!sapAvailable) {
+         return '<span class="text-xs text-on-surface-variant/60">—</span>';
+      }
+      if (hasSap) {
+         return '<span class="inline-flex items-center rounded-md bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700">Ada</span>';
+      }
+      return '<span class="inline-flex items-center rounded-md bg-emerald-50 px-2 py-0.5 text-[10px] font-bold text-emerald-700">Tidak</span>';
    }
 
    function formatDurasi(totalSeconds) {
@@ -775,7 +796,8 @@
          tbody.innerHTML = emptyLiveHtml(
             'groups',
             supervisedRoomsEmpty ? 'Tidak ada control room terdaftar' : 'Belum ada personel di area',
-            'Data akan muncul setelah ada check-in'
+            'Data akan muncul setelah ada check-in',
+            7
          );
          return;
       }
@@ -786,6 +808,7 @@
             '<td class="px-3 py-3 text-sm font-semibold text-on-background">' + escapeHtml(row.sid) + '</td>' +
             '<td class="px-3 py-3 text-sm text-on-surface"><div>' + escapeHtml(row.lokasi) + '</div>' +
                (row.detail_lokasi ? '<div class="text-xs text-on-surface-variant mt-0.5">' + escapeHtml(row.detail_lokasi) + '</div>' : '') + '</td>' +
+            '<td class="px-3 py-3 text-sm text-center whitespace-nowrap">' + renderSapBadge(!!row.has_sap) + '</td>' +
             '<td class="px-3 py-3 text-sm whitespace-nowrap"><span class="plv-durasi-live font-mono font-semibold text-primary tabular-nums" data-checkin-at="' + escapeHtml(row.checkin_at) + '">' + formatDurasi(row.durasi_detik || 0) + '</span></td>' +
             '<td class="px-3 py-3 text-sm"><form method="POST" action="' + checkoutOrangUrlBase + '/' + row.id + '" class="plv-checkout-orang-form inline" data-sid="' + escapeHtml(row.sid) + '" data-nama="' + escapeHtml(row.nama) + '">' +
                '<input type="hidden" name="_token" value="' + escapeHtml(csrfToken) + '">' +
@@ -806,6 +829,9 @@
             if (json.meta && json.meta.server_now) {
                var serverNow = Date.parse(json.meta.server_now);
                if (!Number.isNaN(serverNow)) serverOffsetMs = serverNow - Date.now();
+            }
+            if (json.meta && typeof json.meta.sap_available === 'boolean') {
+               sapAvailable = json.meta.sap_available;
             }
             renderOrangMasukAktifRows(json.data || []);
          })
