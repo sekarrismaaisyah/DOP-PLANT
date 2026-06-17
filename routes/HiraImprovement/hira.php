@@ -3,6 +3,7 @@
 use App\Http\Controllers\Hira\HiraImprovementDetailApiController;
 use App\Http\Controllers\Hira\HiraImprovementController;
 use App\Http\Controllers\Hira\HiraImprovementRekayasaApiController;
+use App\Http\Controllers\Hira\HiraImprovementRekayasaReplikasiApiController;
 use App\Http\Controllers\Hira\HiraImprovementScurveTaskApiController;
 use Illuminate\Support\Facades\Route;
 
@@ -30,7 +31,20 @@ Route::prefix('hira')->name('hira.')->group(function (): void {
         Route::get('/export.xls', [HiraImprovementRekayasaApiController::class, 'exportExcel'])->name('export.xls');
         Route::get('/template.csv', [HiraImprovementRekayasaApiController::class, 'exportTemplate'])->name('export.template');
         Route::get('/template.xls', [HiraImprovementRekayasaApiController::class, 'exportTemplateExcel'])->name('export.template.xls');
+        Route::get('/export-merged.xlsx', [HiraImprovementRekayasaApiController::class, 'exportMergedExcelAll'])->name('export.merged');
+        Route::get('/template-selected.xlsx', [HiraImprovementRekayasaApiController::class, 'exportSelectedReplikasiTemplate'])->name('export.template.selected');
+        Route::get('/{id}/export-merged.xlsx', [HiraImprovementRekayasaApiController::class, 'exportMergedExcel'])->whereNumber('id')->name('export.merged.row');
         Route::delete('/{id}', [HiraImprovementRekayasaApiController::class, 'destroy'])->whereNumber('id')->name('destroy');
+    });
+
+    Route::prefix('improvement/rekayasa-replikasi-rows')->name('improvement.rekayasa-replikasi-rows.')->group(function (): void {
+        Route::get('/', [HiraImprovementRekayasaReplikasiApiController::class, 'index'])->name('index');
+        Route::post('/sync', [HiraImprovementRekayasaReplikasiApiController::class, 'sync'])->name('sync');
+        Route::post('/reset', [HiraImprovementRekayasaReplikasiApiController::class, 'reset'])->name('reset');
+        Route::post('/import', [HiraImprovementRekayasaReplikasiApiController::class, 'import'])->name('import');
+        Route::get('/export.xlsx', [HiraImprovementRekayasaReplikasiApiController::class, 'exportExcel'])->name('export.xlsx');
+        Route::get('/template.xlsx', [HiraImprovementRekayasaReplikasiApiController::class, 'exportTemplate'])->name('export.template');
+        Route::delete('/{id}', [HiraImprovementRekayasaReplikasiApiController::class, 'destroy'])->whereNumber('id')->name('destroy');
     });
 
     Route::prefix('improvement/scurve-tasks')->name('improvement.scurve-tasks.')->group(function (): void {

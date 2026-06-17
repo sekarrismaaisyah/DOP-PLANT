@@ -5,9 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Hira;
 
 use App\Http\Controllers\Controller;
+use App\Services\Hira\HiraImprovementRekayasaMergedExportService;
+use App\Services\Hira\HiraImprovementRekayasaReplikasiService;
 use App\Services\Hira\HiraImprovementRekayasaService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class HiraImprovementRekayasaApiController extends Controller
@@ -109,6 +112,67 @@ class HiraImprovementRekayasaApiController extends Controller
         return $this->streamExcelDownload($service->templateRows(), 'template_pengendalian_rekayasa.xls');
     }
 
+    public function exportMergedExcel(
+        Request $request,
+        int $id,
+        HiraImprovementRekayasaMergedExportService $mergedExportService,
+    ): StreamedResponse {
+        [$company, $year] = $this->scope($request);
+        $row = $mergedExportService->exportRowById($company, $year, $id);
+        $spreadsheet = $mergedExportService->buildSpreadsheet([$row], 'Rekayasa Merged');
+        $writer = new Xlsx($spreadsheet);
+        $safeName = 'rekayasa_merged_'.$id.'.xlsx';
+
+        return response()->streamDownload(function () use ($writer): void {
+            $writer->save('php://output');
+        }, $safeName, [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function exportMergedExcelAll(
+        Request $request,
+        HiraImprovementRekayasaMergedExportService $mergedExportService,
+    ): StreamedResponse {
+        [$company, $year] = $this->scope($request);
+        $rows = $mergedExportService->exportRowsForScope($company, $year);
+        $spreadsheet = $mergedExportService->buildSpreadsheet($rows, 'Rekayasa Merged');
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer): void {
+            $writer->save('php://output');
+        }, 'tabel_rekayasa_merged.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function exportSelectedReplikasiTemplate(
+        Request $request,
+        HiraImprovementRekayasaReplikasiService $replikasiService,
+    ): StreamedResponse {
+        [$company, $year] = $this->scope($request);
+        $ids = $this->parseRekayasaRowIds($request);
+
+        if ($ids === []) {
+            abort(422, 'Pilih minimal satu baris yang sudah tersimpan.');
+        }
+
+        try {
+            $data = $replikasiService->templateRowsForIds($company, $year, $ids);
+        } catch (\InvalidArgumentException $e) {
+            abort(422, $e->getMessage());
+        }
+
+        $spreadsheet = $replikasiService->buildSpreadsheet($data);
+        $writer = new Xlsx($spreadsheet);
+
+        return response()->streamDownload(function () use ($writer): void {
+            $writer->save('php://output');
+        }, 'template_rekayasa_replikasi_terpilih.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
     /**
      * @param  list<array<string, string>>  $data
      */
@@ -168,5 +232,22 @@ class HiraImprovementRekayasaApiController extends Controller
         }
 
         return [$company, $year];
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function parseRekayasaRowIds(Request $request): array
+    {
+        $ids = $request->input('ids', []);
+
+        if (is_string($ids)) {
+            $ids = array_filter(array_map('trim', explode(',', $ids)));
+        }
+
+        return array_values(array_unique(array_filter(
+            array_map(static fn ($id) => (int) $id, (array) $ids),
+            static fn (int $id) => $id > 0,
+        )));
     }
 }

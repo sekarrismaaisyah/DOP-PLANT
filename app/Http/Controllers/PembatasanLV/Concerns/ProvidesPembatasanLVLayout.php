@@ -23,6 +23,11 @@ trait ProvidesPembatasanLVLayout
                 'route' => 'pembatasan-lv.planning.index',
             ],
             [
+                'key' => 'evaluasi',
+                'label' => 'Evaluasi',
+                'route' => 'pembatasan-lv.evaluasi.index',
+            ],
+            [
                 'key' => 'master-data',
                 'label' => 'Master Data',
                 'route' => 'pembatasan-lv.master-data.index',

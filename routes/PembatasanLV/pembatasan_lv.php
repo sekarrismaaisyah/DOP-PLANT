@@ -8,6 +8,7 @@ use App\Http\Controllers\PembatasanLV\PembatasanLVBecomelineUnitController;
 use App\Http\Controllers\PembatasanLV\PembatasanLVControlRoomPengawasController;
 use App\Http\Controllers\PembatasanLV\PembatasanLVPlanningController;
 use App\Http\Controllers\PembatasanLV\PembatasanLVMasterAktivitasController;
+use App\Http\Controllers\PembatasanLV\PembatasanLVEvaluasiController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])
@@ -44,6 +45,9 @@ Route::middleware(['auth'])
         Route::get('/planning/orang/template', [PembatasanLVPlanningController::class, 'downloadTemplateOrang'])->name('planning.orang.template');
         Route::post('/planning/lv/import', [PembatasanLVPlanningController::class, 'importLv'])->name('planning.lv.import');
         Route::post('/planning/orang/import', [PembatasanLVPlanningController::class, 'importOrang'])->name('planning.orang.import');
+
+        Route::get('/evaluasi', [PembatasanLVEvaluasiController::class, 'index'])->name('evaluasi.index');
+        Route::get('/evaluasi/data', [PembatasanLVEvaluasiController::class, 'data'])->name('evaluasi.data');
 
         Route::get('/master-data', [PembatasanLVMasterDataController::class, 'index'])->name('master-data.index');
 

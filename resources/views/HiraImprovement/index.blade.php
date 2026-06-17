@@ -8,6 +8,8 @@
   <script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
   <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="https://cdn.datatables.net/1.13.7/css/jquery.dataTables.min.css">
+  <link rel="stylesheet" href="https://cdn.datatables.net/fixedcolumns/4.3.0/css/fixedColumns.dataTables.min.css">
   <script>
     tailwind.config = {
       theme: {
@@ -480,9 +482,19 @@
       .hira-rekayasa-table td {
         @apply border border-slate-200 px-2 py-2 align-top;
       }
-      .hira-rekayasa-table td input,
+      .hira-rekayasa-table td input[type="text"],
       .hira-rekayasa-table td textarea {
         @apply w-full min-w-[120px] rounded-md border border-slate-200 px-2 py-1.5 text-xs;
+      }
+      .hira-rekayasa-table input[type="checkbox"].hira-rekayasa-row-check,
+      .hira-rekayasa-table input[type="checkbox"]#hiraRekayasaSelectAll {
+        @apply m-0 h-4 w-4 min-w-0 cursor-pointer rounded border-slate-300 p-0 shadow-none accent-[#3952bc];
+      }
+      .hira-rekayasa-table input[type="checkbox"].hira-rekayasa-row-check:disabled {
+        @apply cursor-not-allowed opacity-40;
+      }
+      .hira-rekayasa-table .hira-rekayasa-select-cell {
+        @apply w-10 min-w-[2.5rem] max-w-[2.5rem] px-2 py-2 text-center align-middle;
       }
       .hira-rekayasa-table td textarea {
         @apply min-h-[72px] min-w-[220px] max-w-[360px] resize-y;
@@ -505,6 +517,25 @@
       }
       .hira-rekayasa-filter-hint strong {
         @apply font-semibold text-ink;
+      }
+      .hira-replikasi-dt-wrap {
+        @apply mt-4 overflow-x-auto rounded-lg border border-slate-200 bg-white;
+      }
+      .hira-replikasi-dt-wrap table.dataTable {
+        @apply w-full border-collapse text-xs;
+      }
+      .hira-replikasi-dt-wrap table.dataTable thead th {
+        @apply whitespace-nowrap bg-slate-100 px-3 py-2.5 text-left text-[10px] font-bold uppercase tracking-wide text-slate-600;
+      }
+      .hira-replikasi-dt-wrap table.dataTable tbody td {
+        @apply border-b border-slate-100 px-3 py-2 align-top text-[12px] text-slate-700;
+      }
+      .hira-replikasi-dt-wrap .dataTables_wrapper .dataTables_filter input,
+      .hira-replikasi-dt-wrap .dataTables_wrapper .dataTables_length select {
+        @apply rounded-md border border-slate-200 px-2 py-1 text-xs;
+      }
+      .hira-replikasi-dt-wrap .dataTables_wrapper .dataTables_paginate .paginate_button {
+        @apply rounded-md border border-slate-200 px-2 py-1 text-xs;
       }
       .hira-detail-note {
         @apply rounded-lg border border-dashed border-slate-300 bg-slate-50 px-2 py-1.5 text-xs text-slate-600;
@@ -764,6 +795,7 @@
         <button type="button" data-view="driver">Input HIRA Detail</button>
         <button type="button" data-view="correlation">S-Curve Improvement</button>
         <button type="button" data-view="rekayasa">Pengendalian Rekayasa</button>
+        <button type="button" data-view="replikasi">Rekayasa &amp; Replikasi</button>
         <button type="button" data-view="action">Action Priority</button>
       </div>
       <!-- <div class="filters" data-page-only="overview">
@@ -833,11 +865,12 @@
           <p id="hiraRekayasaStatus" class="hira-detail-status m-0 mt-2" role="status" aria-live="polite"></p>
         </div>
         <div class="hira-detail-actions">
-          <button type="button" class="btn-primary" id="hiraRekayasaAddRow">Tambah Baris</button>
-          <button type="button" class="btn-primary" id="hiraRekayasaSave" disabled>Simpan</button>
-          <button type="button" id="hiraRekayasaTemplateCsv">Download Template (CSV)</button>
-          <button type="button" id="hiraRekayasaExportXls">Download Excel</button>
-          <button type="button" id="hiraRekayasaExportCsv">Download CSV</button>
+          <!-- <button type="button" class="btn-primary" id="hiraRekayasaAddRow">Tambah Baris</button> -->
+          <!-- <button type="button" class="btn-primary" id="hiraRekayasaSave" disabled>Simpan</button> -->
+          <!-- <button type="button" id="hiraRekayasaTemplateCsv">Download Template (CSV)</button> -->
+          <button type="button" id="hiraRekayasaTemplateSelectedXlsx" disabled>Download Template Excel (Terpilih)</button>
+          <!-- <button type="button" id="hiraRekayasaExportXls">Download Excel</button> -->
+          <!-- <button type="button" id="hiraRekayasaExportCsv">Download CSV</button> -->
           <label class="hira-detail-file-label">
             <input type="file" id="hiraRekayasaUpload" accept=".csv,.xls,.html,.htm,text/csv" class="hidden" aria-label="Upload file pengendalian rekayasa">
             Upload
@@ -846,6 +879,61 @@
         </div>
       </div>
       <div id="hiraRekayasaTable" class="hira-detail-wrap mt-4" aria-busy="false"></div>
+    </section>
+
+    <section class="card hira-detail-card" data-page-only="replikasi" hidden aria-labelledby="hiraReplikasiHeading">
+      <div class="hira-detail-toolbar">
+        <div>
+          <h2 id="hiraReplikasiHeading" class="m-0 text-lg font-bold text-[#1f2937]">Tabel Rekayasa &amp; Replikasi</h2>
+          <p class="muted small m-0 mt-1">Input data via Excel (.xlsx). Unduh template, isi kolom, lalu upload. Tabel menggunakan DataTables agar performa tetap ringan pada data besar.</p>
+          <p id="hiraReplikasiStatus" class="hira-detail-status m-0 mt-2" role="status" aria-live="polite"></p>
+        </div>
+        <div class="hira-detail-actions">
+          <button type="button" id="hiraReplikasiTemplateXlsx">Download Template Excel</button>
+          <button type="button" id="hiraReplikasiExportXlsx">Download Excel</button>
+          <label class="hira-detail-file-label">
+            <input type="file" id="hiraReplikasiUpload" accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/vnd.ms-excel" class="hidden" aria-label="Upload file Excel rekayasa replikasi">
+            Upload Excel
+          </label>
+          <button type="button" id="hiraReplikasiReset">Reset Contoh</button>
+        </div>
+      </div>
+      <div id="hiraReplikasiTableWrap" class="hira-replikasi-dt-wrap" aria-busy="false">
+        <table id="hiraReplikasiDataTable" class="display nowrap" style="width:100%">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Company</th>
+              <th>Aktivitas (Rekayasa)</th>
+              <th>Site Perusahaan (Rekayasa)</th>
+              <th>Site</th>
+              <th>Perusahaan</th>
+              <th>Aktivitas</th>
+              <th>Kategori Rekayasa</th>
+              <th>Origin Replikasi</th>
+              <th>Pengendalian Rekayasa</th>
+              <th>Penjelasan/Proses Kerja</th>
+              <th>Deteksi</th>
+              <th>Intervensi</th>
+              <th>Level Efektivitas</th>
+              <th>Nilai Risiko Awal</th>
+              <th>Prediksi Penurunan Risiko</th>
+              <th>Prediksi Risiko Sisa</th>
+              <th>Target</th>
+              <th>Total Populasi</th>
+              <th>Target Replikasi by Komitmen</th>
+              <th>Aktual Replikasi</th>
+              <th>Satuan</th>
+              <th>Jumlah Mitra Replikasi</th>
+              <th>Tercover BeHIRA?</th>
+              <th>Potensi Peningkatan Level Efektivitas</th>
+              <th>Pengendalian + Peningkatan Efektivitas</th>
+              <th>Target Standarisasi (Due date)</th>
+            </tr>
+          </thead>
+          <tbody></tbody>
+        </table>
+      </div>
     </section>
 
     <section class="risk-profile-board exec-summary-panel" data-page-only="overview" aria-labelledby="execSummaryHeading">
@@ -1139,6 +1227,9 @@
       $blindspotTbcRows = [];
     }
   @endphp
+  <script src="https://code.jquery.com/jquery-3.7.1.min.js"></script>
+  <script src="https://cdn.datatables.net/1.13.7/js/jquery.dataTables.min.js"></script>
+  <script src="https://cdn.datatables.net/fixedcolumns/4.3.0/js/dataTables.fixedColumns.min.js"></script>
   <script>
     const historicalRiskProfileData = @json($historicalRiskProfile);
     const predictionRiskProfileData = @json($predictionRiskProfile);
@@ -1177,8 +1268,19 @@
       import: @json(route('hira.improvement.rekayasa-rows.import')),
       exportCsv: @json(route('hira.improvement.rekayasa-rows.export.csv')),
       exportXls: @json(route('hira.improvement.rekayasa-rows.export.xls')),
+      exportMergedAll: @json(route('hira.improvement.rekayasa-rows.export.merged')),
+      exportMergedRowBase: @json(url('/hira/improvement/rekayasa-rows')),
+      templateSelectedXlsx: @json(route('hira.improvement.rekayasa-rows.export.template.selected')),
       templateCsv: @json(route('hira.improvement.rekayasa-rows.export.template')),
       templateXls: @json(route('hira.improvement.rekayasa-rows.export.template.xls')),
+    };
+    const hiraReplikasiApi = {
+      index: @json(route('hira.improvement.rekayasa-replikasi-rows.index')),
+      sync: @json(route('hira.improvement.rekayasa-replikasi-rows.sync')),
+      reset: @json(route('hira.improvement.rekayasa-replikasi-rows.reset')),
+      import: @json(route('hira.improvement.rekayasa-replikasi-rows.import')),
+      exportXlsx: @json(route('hira.improvement.rekayasa-replikasi-rows.export.xlsx')),
+      templateXlsx: @json(route('hira.improvement.rekayasa-replikasi-rows.export.template')),
     };
     const HIRA_REKAYASA_HEADERS = ["Aktivitas", "Site Perusahaan", "Pengendalian Rekayasa", "Deteksi", "Intervensi", "Prediksi Penurunan Risiko", "Penjelasan/Proses Kerja"];
     const HIRA_REKAYASA_FILTER_FIELDS = [
@@ -1329,27 +1431,32 @@
       overview: {
         title: "Executive Summary",
         description: "Risk Treatment & Improvement Impact",
-        index: "1/5"
+        index: "1/6"
       },
       driver: {
         title: "Input HIRA Detail",
         description: "Tabel detail HIRA per improvement plan (parent collapsible). Data tersimpan ke database; gunakan tombol impor/ekspor untuk sinkronisasi massal.",
-        index: "2/5"
+        index: "2/6"
       },
       correlation: {
         title: "S-Curve Improvement",
         description: "Input task S-Curve per improvement plan (parent collapsible). Data tersimpan ke database; chart S-Curve tampil di popup detail pada Dashboard.",
-        index: "3/5"
+        index: "3/6"
       },
       rekayasa: {
         title: "Pengendalian Rekayasa",
         description: "Tabel pengendalian rekayasa per aktivitas dan site. Unduh template CSV, isi data, lalu upload file .csv.",
-        index: "4/5"
+        index: "4/6"
+      },
+      replikasi: {
+        title: "Rekayasa & Replikasi",
+        description: "Tabel master rekayasa dan replikasi. Unduh template Excel (.xlsx), isi data, lalu upload file Excel.",
+        index: "5/6"
       },
       action: {
         title: "Action Priority",
         description: "Halaman ini menampilkan urutan prioritas intervensi dan fokus kontrol manajemen untuk 1-4 minggu ke depan.",
-        index: "5/5"
+        index: "6/6"
       }
     };
 
@@ -3868,9 +3975,70 @@
     let hiraRekayasaLoaded = false;
     let hiraRekayasaSaving = false;
     let hiraRekayasaDirty = false;
+    let hiraRekayasaSelectedIds = new Set();
     let hiraRekayasaFilters = Object.fromEntries(
       HIRA_REKAYASA_FILTER_FIELDS.map(field => [field.key, ""])
     );
+
+    function hiraRekayasaVisibleSelectableIds() {
+      return hiraRekayasaVisibleRowIndexes()
+        .map(ix => hiraRekayasaRows[ix])
+        .filter(row => row?.id)
+        .map(row => Number(row.id));
+    }
+
+    function syncHiraRekayasaSelectionUi() {
+      const btn = document.getElementById("hiraRekayasaTemplateSelectedXlsx");
+      const count = hiraRekayasaSelectedIds.size;
+      if (btn) {
+        btn.disabled = count === 0;
+        btn.textContent = count > 0
+          ? `Download Template Excel (${count} terpilih)`
+          : "Download Template Excel (Terpilih)";
+      }
+
+      const host = document.getElementById("hiraRekayasaTable");
+      if (!host) return;
+
+      const selectableIds = hiraRekayasaVisibleSelectableIds();
+      const visibleSelectedCount = selectableIds.filter(id => hiraRekayasaSelectedIds.has(id)).length;
+      const selectAll = host.querySelector("#hiraRekayasaSelectAll");
+      if (selectAll) {
+        selectAll.indeterminate = visibleSelectedCount > 0 && visibleSelectedCount < selectableIds.length;
+        selectAll.checked = selectableIds.length > 0 && visibleSelectedCount === selectableIds.length;
+      }
+
+      host.querySelectorAll("[data-rekayasa-select]").forEach(input => {
+        const id = Number(input.dataset.rekayasaSelect);
+        input.checked = hiraRekayasaSelectedIds.has(id);
+      });
+    }
+
+    function hiraRekayasaToggleSelect(id, checked) {
+      const rowId = Number(id);
+      if (!rowId) return;
+      if (checked) hiraRekayasaSelectedIds.add(rowId);
+      else hiraRekayasaSelectedIds.delete(rowId);
+      syncHiraRekayasaSelectionUi();
+    }
+
+    function hiraRekayasaToggleSelectAllVisible(checked) {
+      const ids = hiraRekayasaVisibleSelectableIds();
+      if (checked) ids.forEach(id => hiraRekayasaSelectedIds.add(id));
+      else ids.forEach(id => hiraRekayasaSelectedIds.delete(id));
+      syncHiraRekayasaSelectionUi();
+    }
+
+    function hiraRekayasaDownloadSelectedTemplate() {
+      const ids = [...hiraRekayasaSelectedIds];
+      if (!ids.length) {
+        setHiraRekayasaStatus("Pilih minimal satu baris yang sudah tersimpan.", "is-error");
+        return;
+      }
+      const params = new URLSearchParams(hiraDetailScope());
+      ids.forEach(id => params.append("ids[]", String(id)));
+      window.location.href = `${hiraRekayasaApi.templateSelectedXlsx}?${params.toString()}`;
+    }
 
     function hiraRekayasaUniqueValues(key) {
       return [...new Set(
@@ -3928,15 +4096,20 @@
     function hiraRekayasaTableBodyHtml() {
       const visibleIndexes = hiraRekayasaVisibleRowIndexes();
       if (!hiraRekayasaRows.length) {
-        return `<tr><td colspan="8" class="text-center text-muted py-8">Belum ada data. Tambah baris atau upload dari template.</td></tr>`;
+        return `<tr><td colspan="9" class="text-center text-muted py-8">Belum ada data. Tambah baris atau upload dari template.</td></tr>`;
       }
       if (!visibleIndexes.length) {
-        return `<tr><td colspan="8" class="text-center text-muted py-8">Tidak ada baris yang cocok dengan filter.</td></tr>`;
+        return `<tr><td colspan="9" class="text-center text-muted py-8">Tidak ada baris yang cocok dengan filter.</td></tr>`;
       }
       return visibleIndexes.map(ix => {
         const r = hiraRekayasaRows[ix];
+        const rowId = r.id ? Number(r.id) : 0;
+        const checked = rowId > 0 && hiraRekayasaSelectedIds.has(rowId);
         return `
           <tr>
+            <td class="hira-rekayasa-select-cell">
+              <input type="checkbox" class="hira-rekayasa-row-check" data-rekayasa-select="${rowId}"${checked ? " checked" : ""}${rowId > 0 ? "" : " disabled"} aria-label="Pilih baris${rowId > 0 ? ` ${rowId}` : ""}">
+            </td>
             <td>${hiraRekayasaInput(r.aktivitas, ix, "aktivitas")}</td>
             <td>${hiraRekayasaInput(r.sitePerusahaan, ix, "sitePerusahaan")}</td>
             <td class="hira-rekayasa-col-wide">${hiraRekayasaTextarea(r.pengendalianRekayasa, ix, "pengendalianRekayasa")}</td>
@@ -3944,7 +4117,10 @@
             <td>${hiraRekayasaInput(r.intervensi, ix, "intervensi")}</td>
             <td>${hiraRekayasaInput(r.prediksiPenurunanRisiko, ix, "prediksiPenurunanRisiko")}</td>
             <td class="hira-rekayasa-col-wide">${hiraRekayasaTextarea(r.penjelasanProsesKerja, ix, "penjelasanProsesKerja")}</td>
-            <td><button type="button" class="hira-detail-note" data-rekayasa-del="${ix}">Hapus</button></td>
+            <td class="whitespace-nowrap">
+              ${r.id ? `<button type="button" class="hira-detail-note" data-rekayasa-dl="${r.id}" title="Download Excel gabungan rekayasa + replikasi">Download Excel</button>` : ""}
+              <button type="button" class="hira-detail-note" data-rekayasa-del="${ix}">Hapus</button>
+            </td>
           </tr>
         `;
       }).join("");
@@ -3953,8 +4129,9 @@
     function hiraRekayasaFilterHintHtml() {
       if (!hiraRekayasaRows.length) return "";
       const visibleCount = hiraRekayasaVisibleRowIndexes().length;
+      const selectedCount = hiraRekayasaSelectedIds.size;
       return `<div class="hira-rekayasa-filter-actions">
-        <p class="hira-rekayasa-filter-hint m-0">Menampilkan <strong>${visibleCount}</strong> dari <strong>${hiraRekayasaRows.length}</strong> baris${hiraRekayasaHasActiveFilters() ? " (filter aktif)" : ""}.</p>
+        <p class="hira-rekayasa-filter-hint m-0">Menampilkan <strong>${visibleCount}</strong> dari <strong>${hiraRekayasaRows.length}</strong> baris${hiraRekayasaHasActiveFilters() ? " (filter aktif)" : ""}${selectedCount ? ` · <strong>${selectedCount}</strong> terpilih` : ""}.</p>
         ${hiraRekayasaHasActiveFilters() ? '<button type="button" class="hira-detail-note" id="hiraRekayasaClearFiltersBar">Hapus filter</button>' : ""}
       </div>`;
     }
@@ -3986,6 +4163,7 @@
       } else if (hintHtml) {
         host.insertAdjacentHTML("afterbegin", hintHtml);
       }
+      syncHiraRekayasaSelectionUi();
     }
 
     function setHiraRekayasaStatus(message, type = "") {
@@ -4065,11 +4243,14 @@
       const host = document.getElementById("hiraRekayasaTable");
       if (!host) return;
 
-      const header = HIRA_REKAYASA_HEADERS.map(h => `<th scope="col">${escapeHtml(h)}</th>`).join("") + '<th scope="col">Action</th>';
-      const filterRow = HIRA_REKAYASA_FILTER_FIELDS.map(field => `<th scope="col">${hiraRekayasaFilterControl(field)}</th>`).join("")
+      const header = '<th scope="col" class="hira-rekayasa-select-cell"><input type="checkbox" id="hiraRekayasaSelectAll" aria-label="Pilih semua baris yang tampil"></th>'
+        + HIRA_REKAYASA_HEADERS.map(h => `<th scope="col">${escapeHtml(h)}</th>`).join("") + '<th scope="col">Action</th>';
+      const filterRow = '<th scope="col" class="hira-rekayasa-select-cell"></th>'
+        + HIRA_REKAYASA_FILTER_FIELDS.map(field => `<th scope="col">${hiraRekayasaFilterControl(field)}</th>`).join("")
         + '<th scope="col"><button type="button" class="hira-detail-note whitespace-nowrap" id="hiraRekayasaClearFilters" title="Hapus semua filter">Reset</button></th>';
 
       host.innerHTML = `${hiraRekayasaFilterHintHtml()}<table class="hira-rekayasa-table"><thead><tr>${header}</tr><tr class="hira-rekayasa-filter-row">${filterRow}</tr></thead><tbody>${hiraRekayasaTableBodyHtml()}</tbody></table>`;
+      syncHiraRekayasaSelectionUi();
     }
 
     function hiraRekayasaAddRow() {
@@ -4079,6 +4260,8 @@
     }
 
     function hiraRekayasaDeleteRow(ix) {
+      const removed = hiraRekayasaRows[ix];
+      if (removed?.id) hiraRekayasaSelectedIds.delete(Number(removed.id));
       hiraRekayasaRows.splice(ix, 1);
       renderHiraRekayasaTable();
       markHiraRekayasaDirty();
@@ -4131,9 +4314,19 @@
       });
       host.addEventListener("change", event => {
         const filterEl = event.target.closest("[data-rekayasa-filter]");
-        if (!filterEl) return;
-        hiraRekayasaFilters[filterEl.dataset.rekayasaFilter] = filterEl.value;
-        refreshHiraRekayasaTableView();
+        if (filterEl) {
+          hiraRekayasaFilters[filterEl.dataset.rekayasaFilter] = filterEl.value;
+          refreshHiraRekayasaTableView();
+          return;
+        }
+        if (event.target.id === "hiraRekayasaSelectAll") {
+          hiraRekayasaToggleSelectAllVisible(event.target.checked);
+          return;
+        }
+        const selectEl = event.target.closest("[data-rekayasa-select]");
+        if (selectEl) {
+          hiraRekayasaToggleSelect(selectEl.dataset.rekayasaSelect, selectEl.checked);
+        }
       });
       host.addEventListener("click", event => {
         if (event.target.closest("#hiraRekayasaClearFilters, #hiraRekayasaClearFiltersBar")) {
@@ -4141,7 +4334,15 @@
           return;
         }
         const del = event.target.closest("[data-rekayasa-del]");
-        if (del) hiraRekayasaDeleteRow(Number(del.dataset.rekayasaDel));
+        if (del) {
+          hiraRekayasaDeleteRow(Number(del.dataset.rekayasaDel));
+          return;
+        }
+        const dl = event.target.closest("[data-rekayasa-dl]");
+        if (dl) {
+          const rowId = dl.dataset.rekayasaDl;
+          window.location.href = `${hiraRekayasaApi.exportMergedRowBase}/${rowId}/export-merged.xlsx?${hiraDetailScopeQuery()}`;
+        }
       });
     }
 
@@ -4151,6 +4352,7 @@
       document.getElementById("hiraRekayasaTemplateCsv")?.addEventListener("click", () => {
         window.location.href = hiraRekayasaApi.templateCsv;
       });
+      document.getElementById("hiraRekayasaTemplateSelectedXlsx")?.addEventListener("click", hiraRekayasaDownloadSelectedTemplate);
       document.getElementById("hiraRekayasaExportCsv")?.addEventListener("click", () => {
         window.location.href = `${hiraRekayasaApi.exportCsv}?${hiraDetailScopeQuery()}`;
       });
@@ -4193,6 +4395,164 @@
       });
     }
 
+    /* ——— Rekayasa & Replikasi (Excel + DataTables) ——— */
+    let hiraReplikasiRows = [];
+    let hiraReplikasiLoaded = false;
+    let hiraReplikasiDataTable = null;
+
+    function setHiraReplikasiStatus(message, type = "") {
+      const el = document.getElementById("hiraReplikasiStatus");
+      if (!el) return;
+      el.textContent = message || "";
+      el.classList.remove("is-error", "is-saving", "is-dirty");
+      if (type) el.classList.add(type);
+    }
+
+    function hiraReplikasiRowToArray(row) {
+      return [
+        row.rekayasaRowId || "",
+        row.company || "",
+        row.rekayasaAktivitas || "",
+        row.rekayasaSitePerusahaan || "",
+        row.site || "",
+        row.perusahaan || "",
+        row.aktivitas || "",
+        row.kategoriRekayasa || "",
+        row.originReplikasi || "",
+        row.pengendalianRekayasa || "",
+        row.penjelasanProsesKerja || "",
+        row.deteksi || "",
+        row.intervensi || "",
+        row.levelEfektivitas || "",
+        row.nilaiRisikoAwal || "",
+        row.prediksiPenurunanRisiko || "",
+        row.prediksiRisikoSisa || "",
+        row.target || "",
+        row.totalPopulasi || "",
+        row.targetReplikasiKomitmen || "",
+        row.aktualReplikasi || "",
+        row.satuan || "",
+        row.jumlahMitraReplikasi || "",
+        row.tercoverBehira || "",
+        row.potensiPeningkatanLevelEfektivitas || "",
+        row.pengendalianPeningkatanLevelEfektivitas || "",
+        row.targetStandarisasiDueDate || "",
+      ];
+    }
+
+    function renderHiraReplikasiDataTable() {
+      if (!window.jQuery || !$.fn.DataTable) return;
+
+      const tableData = hiraReplikasiRows.map(row => hiraReplikasiRowToArray(row));
+      const tableEl = $("#hiraReplikasiDataTable");
+
+      if ($.fn.DataTable.isDataTable("#hiraReplikasiDataTable")) {
+        const dt = tableEl.DataTable();
+        dt.clear();
+        dt.rows.add(tableData);
+        dt.draw(false);
+        hiraReplikasiDataTable = dt;
+        return;
+      }
+
+      hiraReplikasiDataTable = tableEl.DataTable({
+        data: tableData,
+        columns: Array.from({ length: 27 }, (_, index) => ({
+          data: index,
+          defaultContent: "",
+          render(data) {
+            const text = data == null ? "" : String(data);
+            return `<span title="${escapeHtml(text)}">${escapeHtml(text)}</span>`;
+          },
+        })),
+        pageLength: 25,
+        lengthMenu: [10, 25, 50, 100, 250],
+        deferRender: true,
+        scrollX: true,
+        fixedColumns: {
+          left: 5,
+        },
+        order: [[0, "asc"]],
+        language: {
+          search: "Cari:",
+          lengthMenu: "Tampilkan _MENU_ baris",
+          info: "Menampilkan _START_–_END_ dari _TOTAL_ baris",
+          infoEmpty: "Tidak ada data",
+          zeroRecords: "Tidak ada baris yang cocok",
+          paginate: {
+            first: "Awal",
+            last: "Akhir",
+            next: "›",
+            previous: "‹",
+          },
+        },
+      });
+    }
+
+    async function loadHiraReplikasiRows(force = false) {
+      if (hiraReplikasiLoaded && !force) {
+        renderHiraReplikasiDataTable();
+        return;
+      }
+      const wrap = document.getElementById("hiraReplikasiTableWrap");
+      wrap?.setAttribute("aria-busy", "true");
+      setHiraReplikasiStatus("Memuat data…", "is-saving");
+      try {
+        const data = await hiraDetailFetch(`${hiraReplikasiApi.index}?${hiraDetailScopeQuery()}`);
+        hiraReplikasiRows = data.rows || [];
+        hiraReplikasiLoaded = true;
+        setHiraReplikasiStatus(`${hiraReplikasiRows.length} baris dimuat.`);
+        renderHiraReplikasiDataTable();
+      } catch (err) {
+        setHiraReplikasiStatus(err.message || "Gagal memuat data.", "is-error");
+      } finally {
+        wrap?.setAttribute("aria-busy", "false");
+      }
+    }
+
+    function bindHiraReplikasiToolbar() {
+      document.getElementById("hiraReplikasiTemplateXlsx")?.addEventListener("click", () => {
+        window.location.href = hiraReplikasiApi.templateXlsx;
+      });
+      document.getElementById("hiraReplikasiExportXlsx")?.addEventListener("click", () => {
+        window.location.href = `${hiraReplikasiApi.exportXlsx}?${hiraDetailScopeQuery()}`;
+      });
+      document.getElementById("hiraReplikasiUpload")?.addEventListener("change", async event => {
+        const file = event.target.files?.[0];
+        if (!file) return;
+        const fd = new FormData();
+        fd.append("file", file);
+        setHiraReplikasiStatus("Mengimpor Excel…", "is-saving");
+        try {
+          const res = await fetch(`${hiraReplikasiApi.import}?${hiraDetailScopeQuery()}`, {
+            method: "POST",
+            headers: { "X-CSRF-TOKEN": hiraDetailCsrf, Accept: "application/json" },
+            body: fd,
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.message || "Impor gagal.");
+          hiraReplikasiRows = data.rows || [];
+          setHiraReplikasiStatus(data.message || "Impor berhasil.");
+          renderHiraReplikasiDataTable();
+        } catch (err) {
+          setHiraReplikasiStatus(err.message || "Impor gagal.", "is-error");
+        }
+        event.target.value = "";
+      });
+      document.getElementById("hiraReplikasiReset")?.addEventListener("click", async () => {
+        if (!confirm("Reset data ke contoh default? Data saat ini akan diganti.")) return;
+        setHiraReplikasiStatus("Mereset…", "is-saving");
+        try {
+          const data = await hiraDetailFetch(`${hiraReplikasiApi.reset}?${hiraDetailScopeQuery()}`, { method: "POST", body: "{}" });
+          hiraReplikasiRows = data.rows || [];
+          setHiraReplikasiStatus(data.message || "Data direset.");
+          renderHiraReplikasiDataTable();
+        } catch (err) {
+          setHiraReplikasiStatus(err.message || "Reset gagal.", "is-error");
+        }
+      });
+    }
+
     function syncPageOnlyContent(view) {
       document.querySelectorAll("[data-page-only]").forEach(element => {
         element.hidden = element.dataset.pageOnly !== view;
@@ -4211,6 +4571,7 @@
       if (view === "driver") loadHiraDetailRows();
       if (view === "correlation") loadHiraScurveTasks();
       if (view === "rekayasa") loadHiraRekayasaRows();
+      if (view === "replikasi") loadHiraReplikasiRows();
       closeSitePopup();
       hideTooltip();
       bindTooltips();
@@ -4292,6 +4653,7 @@
     bindHiraScurveToolbar();
     bindHiraRekayasaTable();
     bindHiraRekayasaToolbar();
+    bindHiraReplikasiToolbar();
     renderAll();
   </script>
 </body>

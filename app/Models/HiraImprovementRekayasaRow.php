@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class HiraImprovementRekayasaRow extends Model
 {
@@ -27,4 +28,12 @@ class HiraImprovementRekayasaRow extends Model
         'period_year' => 'integer',
         'sort_order' => 'integer',
     ];
+
+    /**
+     * @return HasOne<HiraImprovementRekayasaRowReplikasiDetail, $this>
+     */
+    public function replikasiDetail(): HasOne
+    {
+        return $this->hasOne(HiraImprovementRekayasaRowReplikasiDetail::class, 'rekayasa_row_id');
+    }
 }
