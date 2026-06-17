@@ -163,7 +163,7 @@ class HiraImprovementRekayasaApiController extends Controller
             abort(422, $e->getMessage());
         }
 
-        $spreadsheet = $replikasiService->buildSpreadsheet($data);
+        $spreadsheet = $replikasiService->buildSpreadsheet($data, true);
         $writer = new Xlsx($spreadsheet);
 
         return response()->streamDownload(function () use ($writer): void {

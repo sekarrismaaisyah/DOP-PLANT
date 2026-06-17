@@ -103,7 +103,7 @@ class HiraImprovementRekayasaReplikasiApiController extends Controller
     public function exportTemplate(Request $request, HiraImprovementRekayasaReplikasiService $service): StreamedResponse
     {
         [$company, $year] = $this->scope($request);
-        $spreadsheet = $service->buildSpreadsheet($service->templateRows($company, $year));
+        $spreadsheet = $service->buildSpreadsheet($service->templateRows($company, $year), true);
         $writer = new Xlsx($spreadsheet);
 
         return response()->streamDownload(function () use ($writer): void {

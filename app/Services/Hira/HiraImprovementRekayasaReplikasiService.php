@@ -245,9 +245,9 @@ final class HiraImprovementRekayasaReplikasiService
             ->all();
     }
 
-    public function buildSpreadsheet(array $rows): Spreadsheet
+    public function buildSpreadsheet(array $rows, bool $withTemplateDropdowns = false): Spreadsheet
     {
-        return $this->mergedExportService->buildSpreadsheet($rows, 'Rekayasa Replikasi');
+        return $this->mergedExportService->buildSpreadsheet($rows, 'Rekayasa Replikasi', $withTemplateDropdowns);
     }
 
     /**

@@ -119,15 +119,6 @@
             <input type="hidden" name="nik" id="orang-nik" value="{{ $oldOrang ? old('nik') : '' }}"/>
          </div>
 
-         {{-- Site (auto) --}}
-         <div>
-            <label class="block text-xs font-bold text-on-surface-variant mb-1">Site</label>
-            <div id="orang-site-display" class="flex min-h-[42px] items-center rounded-xl border border-outline-variant/20 bg-[#f8fafc] px-3 text-sm font-medium text-on-surface">
-               {{ $oldOrang ? old('site', '—') : '—' }}
-            </div>
-            <input type="hidden" name="site" id="orang-site" value="{{ $oldOrang ? old('site') : '' }}"/>
-         </div>
-
          {{-- Dept (auto) --}}
          <div>
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Dept</label>
@@ -213,18 +204,15 @@
       var nama = item ? (item.nama || '') : '';
       var perusahaan = item ? (item.nama_perusahaan || '') : '';
       var nik = item ? (item.nik || '') : '';
-      var site = item ? (item.site || '') : '';
       var dept = item ? (item.dept || '') : '';
 
       document.getElementById('orang-nama').value = nama;
       document.getElementById('orang-perusahaan').value = perusahaan;
       document.getElementById('orang-nik').value = nik;
-      document.getElementById('orang-site').value = site;
       document.getElementById('orang-dept').value = dept;
       document.getElementById('orang-nama-display').textContent = displayOrDash(nama);
       document.getElementById('orang-perusahaan-display').textContent = displayOrDash(perusahaan);
       document.getElementById('orang-nik-display').textContent = displayOrDash(nik);
-      document.getElementById('orang-site-display').textContent = displayOrDash(site);
       document.getElementById('orang-dept-display').textContent = displayOrDash(dept);
    }
 
