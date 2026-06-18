@@ -8,6 +8,7 @@ use Illuminate\Support\Facades\Route;
 Route::prefix('fatigue-management')->name('fatigue-management.')->middleware('fatigue.management')->group(function (): void {
     Route::get('/dashboard', [FatigueManagementDashboardController::class, 'index'])->name('dashboard');
     Route::get('/upload', [FatigueManagementUploadController::class, 'index'])->name('upload');
+    Route::get('/upload/tutorial', [FatigueManagementUploadController::class, 'tutorial'])->name('upload.tutorial');
 
     Route::prefix('monitoring')->name('monitoring.')->group(function (): void {
         Route::post('/evidence', [FatigueManagementMonitoringController::class, 'storeEvidence'])->name('evidence.store');

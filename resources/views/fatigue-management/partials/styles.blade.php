@@ -646,4 +646,357 @@
       margin-left: 0.1rem;
    }
    .fm-upload-table td { vertical-align: top; }
+
+   /* Tutorial upload */
+   .fm-upload-tutorial {
+      border: 1px solid rgba(57, 82, 188, 0.12);
+      border-radius: 1rem;
+      background: #fff;
+      box-shadow: 0 1px 2px rgba(44, 47, 49, 0.04);
+      overflow: hidden;
+   }
+   .fm-upload-tutorial__toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.875rem;
+      padding: 1rem 1.25rem;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+   }
+   .fm-upload-tutorial__toggle::-webkit-details-marker { display: none; }
+   .fm-upload-tutorial__toggle-icon {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 2.5rem;
+      height: 2.5rem;
+      border-radius: 0.75rem;
+      background: rgba(57, 82, 188, 0.1);
+      color: #3952bc;
+      flex-shrink: 0;
+   }
+   .fm-upload-tutorial__body {
+      padding: 0 1.25rem 1.25rem;
+      border-top: 1px solid rgba(171, 173, 175, 0.2);
+   }
+   .fm-tutorial-steps {
+      list-style: none;
+      margin: 1rem 0 0;
+      padding: 0;
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+   }
+   .fm-tutorial-step {
+      display: flex;
+      gap: 0.875rem;
+      align-items: flex-start;
+   }
+   .fm-tutorial-step__num {
+      flex-shrink: 0;
+      width: 1.75rem;
+      height: 1.75rem;
+      border-radius: 0.5rem;
+      background: #3952bc;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+   }
+   .fm-tutorial-step__title {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #2c2f31;
+      margin: 0 0 0.25rem;
+   }
+   .fm-tutorial-step__desc {
+      font-size: 0.8125rem;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.5;
+   }
+   .fm-tutorial-slot-legend {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 0.75rem;
+   }
+   .fm-tutorial-slot-demo {
+      pointer-events: none;
+      cursor: default;
+      min-width: 7rem;
+   }
+   .fm-tutorial-legend-labels {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+      margin-top: 0.5rem;
+      font-size: 0.6875rem;
+      color: #64748b;
+   }
+   .fm-tutorial-file-list {
+      margin: 0.5rem 0 0;
+      padding-left: 1.125rem;
+      font-size: 0.75rem;
+      color: #64748b;
+   }
+   .fm-tutorial-file-list li { margin-bottom: 0.25rem; }
+   .fm-tutorial-rules {
+      margin-top: 1.25rem;
+      padding-top: 1rem;
+      border-top: 1px dashed rgba(171, 173, 175, 0.35);
+   }
+   .fm-tutorial-rules__grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 0.75rem;
+   }
+   .fm-tutorial-rules__item {
+      display: flex;
+      gap: 0.625rem;
+      align-items: flex-start;
+      padding: 0.75rem;
+      border-radius: 0.75rem;
+      background: #f8fafc;
+      border: 1px solid rgba(171, 173, 175, 0.2);
+      font-size: 0.75rem;
+      color: #64748b;
+   }
+   .fm-tutorial-rules__item p { margin: 0; line-height: 1.45; }
+   .fm-tutorial-rules__item strong {
+      display: block;
+      color: #2c2f31;
+      font-size: 0.8125rem;
+      margin-bottom: 0.2rem;
+   }
+   .fm-tutorial-rules__note {
+      margin: 0.75rem 0 0;
+      font-size: 0.6875rem;
+      color: #64748b;
+      padding: 0.625rem 0.75rem;
+      background: #eff6ff;
+      border-radius: 0.5rem;
+      border-left: 3px solid #3952bc;
+   }
+
+   /* Tutorial full page */
+   .fm-tutorial-full__hero {
+      background: linear-gradient(135deg, #f8fafc 0%, #eef2ff 100%);
+   }
+   .fm-tutorial-full__hero-icon {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 1rem;
+      background: #fff;
+      border: 1px solid rgba(57, 82, 188, 0.12);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+   }
+   .fm-tutorial-full__meta-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(5rem, 1fr));
+      gap: 0.75rem;
+   }
+   .fm-tutorial-full__meta-grid dt {
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+   }
+   .fm-tutorial-full__meta-grid dd {
+      font-size: 0.8125rem;
+      font-weight: 700;
+      color: #2c2f31;
+      margin: 0.15rem 0 0;
+   }
+   .fm-tutorial-full__step {
+      display: flex;
+      gap: 1rem;
+      padding-bottom: 1.75rem;
+      margin-bottom: 1.75rem;
+      border-bottom: 1px dashed rgba(171, 173, 175, 0.35);
+      position: relative;
+   }
+   .fm-tutorial-full__step--last {
+      border-bottom: none;
+      margin-bottom: 0;
+      padding-bottom: 0;
+   }
+   .fm-tutorial-full__step-badge {
+      flex-shrink: 0;
+      width: 2.25rem;
+      height: 2.25rem;
+      border-radius: 0.625rem;
+      background: #3952bc;
+      color: #fff;
+      font-size: 0.9375rem;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+   }
+   .fm-tutorial-full__step-content { flex: 1; min-width: 0; }
+   .fm-tutorial-full__step-content h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #2c2f31;
+      margin: 0 0 0.5rem;
+   }
+   .fm-tutorial-full__step-content > p {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin: 0;
+      line-height: 1.6;
+   }
+   .fm-tutorial-full__table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8125rem;
+      margin-top: 1rem;
+   }
+   .fm-tutorial-full__table th,
+   .fm-tutorial-full__table td {
+      border: 1px solid rgba(171, 173, 175, 0.25);
+      padding: 0.625rem 0.75rem;
+      text-align: left;
+      vertical-align: top;
+   }
+   .fm-tutorial-full__table th {
+      background: #f1f5f9;
+      font-size: 0.6875rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+      color: #64748b;
+   }
+   .fm-tutorial-full__table--compact { max-width: 36rem; }
+   .fm-tutorial-full__callout {
+      display: flex;
+      gap: 0.625rem;
+      align-items: flex-start;
+      margin-top: 0.875rem;
+      padding: 0.75rem 1rem;
+      border-radius: 0.625rem;
+      font-size: 0.8125rem;
+      line-height: 1.5;
+   }
+   .fm-tutorial-full__callout--info {
+      background: #eff6ff;
+      border: 1px solid #bfdbfe;
+      color: #1e40af;
+   }
+   .fm-tutorial-full__callout--success {
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      color: #047857;
+   }
+   .fm-tutorial-full__mock {
+      margin-top: 1rem;
+      border: 1px solid rgba(171, 173, 175, 0.3);
+      border-radius: 0.75rem;
+      background: #fafbfc;
+      overflow: hidden;
+   }
+   .fm-tutorial-full__mock-label {
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #64748b;
+      padding: 0.5rem 0.75rem;
+      background: #f1f5f9;
+      border-bottom: 1px solid rgba(171, 173, 175, 0.2);
+   }
+   .fm-tutorial-full__mock--filter { padding: 0.75rem; }
+   .fm-tutorial-full__mock--filter .flex { padding: 0.5rem; }
+   .fm-tutorial-full__mock-field {
+      background: #fff;
+      border: 1px solid rgba(171, 173, 175, 0.3);
+      border-radius: 0.5rem;
+      padding: 0.4rem 0.75rem;
+      font-size: 0.8125rem;
+   }
+   .fm-tutorial-full__mock-field span {
+      display: block;
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+   }
+   .fm-tutorial-full__mock-btn {
+      display: inline-flex;
+      align-items: center;
+      padding: 0.45rem 1rem;
+      border-radius: 0.625rem;
+      background: #3952bc;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 700;
+   }
+   .fm-tutorial-full__mock-btn--ghost {
+      background: #fff;
+      border: 1px solid rgba(171, 173, 175, 0.35);
+      color: #2c2f31;
+   }
+   .fm-tutorial-full__mock-modal-header {
+      padding: 1rem;
+      border-bottom: 1px solid rgba(171, 173, 175, 0.2);
+      background: #fff;
+   }
+   .fm-tutorial-full__mock-modal-body { padding: 1rem; }
+   .fm-tutorial-full__mock-label-field {
+      display: block;
+      font-size: 0.625rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      color: #64748b;
+      margin-bottom: 0.35rem;
+   }
+   .fm-tutorial-full__mock-file,
+   .fm-tutorial-full__mock-input,
+   .fm-tutorial-full__mock-textarea {
+      background: #fff;
+      border: 1px dashed rgba(171, 173, 175, 0.5);
+      border-radius: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      font-size: 0.8125rem;
+      color: #94a3b8;
+   }
+   .fm-tutorial-full__mock-textarea { min-height: 3rem; }
+   .fm-tutorial-full__slot-demo { margin-top: 0.75rem; }
+   .fm-tutorial-full__dot {
+      display: inline-block;
+      width: 0.625rem;
+      height: 0.625rem;
+      border-radius: 50%;
+      vertical-align: middle;
+      margin-right: 0.25rem;
+   }
+   .fm-tutorial-full__dot--blue { background: #3952bc; }
+   .fm-tutorial-full__dot--green { background: #047857; }
+   .fm-tutorial-full__dot--gray { background: #94a3b8; }
+   .fm-tutorial-full__faq {
+      padding: 0.875rem 0;
+   }
+   .fm-tutorial-full__faq summary {
+      font-size: 0.875rem;
+      font-weight: 700;
+      color: #2c2f31;
+      cursor: pointer;
+      list-style: none;
+   }
+   .fm-tutorial-full__faq summary::-webkit-details-marker { display: none; }
+   .fm-tutorial-full__faq p {
+      margin: 0.5rem 0 0;
+      font-size: 0.8125rem;
+      color: #64748b;
+      line-height: 1.55;
+      padding-left: 0.25rem;
+   }
 </style>

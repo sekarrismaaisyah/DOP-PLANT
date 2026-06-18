@@ -43,6 +43,10 @@
                <span class="fm-type-pill fm-type-pill--upgrade">U — Upgrade</span>
             </div>
             <div class="mt-3 flex flex-wrap gap-2">
+               <a href="{{ route('fatigue-management.upload.tutorial', request()->only(['year', 'iso_week', 'partner'])) }}" class="fm-action-btn fm-action-btn--ghost">
+                  <span class="material-symbols-outlined text-sm">school</span>
+                  Tutorial Upload Lengkap
+               </a>
                @unless($isPartnerLocked)
                <a href="{{ route('fatigue-management.dashboard', request()->only(['year', 'iso_week', 'partner'])) }}" class="fm-action-btn fm-action-btn--ghost">
                   <span class="material-symbols-outlined text-sm">dashboard</span>
@@ -147,14 +151,7 @@
       </div>
    </div>
 
-   <div class="rounded-xl border border-primary/10 bg-primary/[0.04] px-4 py-3 text-sm text-on-surface-variant">
-      <p class="font-semibold text-on-background mb-1">Aturan slot upload</p>
-      <ul class="list-disc pl-5 space-y-0.5 text-xs">
-         <li><strong>Shift 1</strong> — aktif <strong>06:00–18:00</strong> · <strong>Shift 2</strong> — aktif <strong>18:00–06:00</strong> (melewati tengah malam)</li>
-         <li><strong>Harian</strong> — hanya slot <strong>hari ini</strong> yang muncul & bisa diupload</li>
-         <li><strong>Mingguan</strong> — bebas <strong>Sen–Min</strong> dalam minggu {{ $isoWeek }} (semua slot terbuka)</li>
-      </ul>
-   </div>
+   @include('fatigue-management.partials.upload-tutorial')
 
    @forelse($uploadFrequencyGroups as $group)
    <section class="fm-mon-card overflow-hidden" id="fm-freq-{{ $group['key'] }}">

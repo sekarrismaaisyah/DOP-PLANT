@@ -48,4 +48,28 @@ class FatigueManagementUploadController extends Controller
             'partnerAccess' => $this->fatiguePartnerAccessViewData($access),
         ]);
     }
+
+    public function tutorial(Request $request): View
+    {
+        $access = $this->fatiguePartnerAccess($request);
+
+        return view('fatigue-management.upload-tutorial-full', [
+            'navActive' => 'upload',
+            'navItems' => $this->fatigueManagementNavItems($access),
+            'programLabel' => 'Fatigue Management GMO',
+            'filters' => [
+                'year' => $request->filled('year') ? (int) $request->get('year') : (int) date('Y'),
+                'isoWeek' => $request->filled('iso_week')
+                    ? (string) $request->get('iso_week')
+                    : 'W' . str_pad((string) date('W'), 2, '0', STR_PAD_LEFT),
+            ],
+            'uploadPageContext' => FatigueManagementFrequencyPlan::uploadPageContext(
+                $request->filled('year') ? (int) $request->get('year') : (int) date('Y'),
+                $request->filled('iso_week')
+                    ? (string) $request->get('iso_week')
+                    : 'W' . str_pad((string) date('W'), 2, '0', STR_PAD_LEFT),
+            ),
+            'partnerAccess' => $this->fatiguePartnerAccessViewData($access),
+        ]);
+    }
 }
