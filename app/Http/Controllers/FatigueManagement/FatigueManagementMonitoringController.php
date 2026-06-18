@@ -5,17 +5,21 @@ declare(strict_types=1);
 namespace App\Http\Controllers\FatigueManagement;
 
 use App\Http\Controllers\Controller;
+use App\Http\Controllers\FatigueManagement\Concerns\ResolvesFatigueManagementPartnerAccess;
 use App\Http\Requests\FatigueManagement\FatigueManagementStoreEvaluationRequest;
 use App\Http\Requests\FatigueManagement\FatigueManagementStoreEvidenceRequest;
 use App\Models\FatigueManagementProgramMonitoring;
 use App\Services\FatigueManagement\FatigueManagementMonitoringService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FatigueManagementMonitoringController extends Controller
 {
+    use ResolvesFatigueManagementPartnerAccess;
+
     public function storeEvidence(
         FatigueManagementStoreEvidenceRequest $request,
         FatigueManagementMonitoringService $monitoringService,
@@ -27,6 +31,7 @@ class FatigueManagementMonitoringController extends Controller
             (string) $validated['partner_key'],
             (int) $validated['year'],
             (string) $validated['iso_week'],
+            (string) $validated['frequency_slot'],
             $request->file('evidence_file'),
             $validated['evidence_notes'] ?? null,
             $validated['pic_name'] ?? null,
@@ -37,7 +42,7 @@ class FatigueManagementMonitoringController extends Controller
         }
 
         return redirect()
-            ->route('fatigue-management.dashboard', $request->only(['year', 'iso_week', 'partner', 'program']))
+            ->route('fatigue-management.upload', $request->only(['year', 'iso_week', 'partner', 'program']))
             ->with('success', 'Evidence berhasil diupload.');
     }
 
@@ -65,9 +70,10 @@ class FatigueManagementMonitoringController extends Controller
             ->with('success', 'Evaluasi berhasil disimpan.');
     }
 
-    public function downloadEvidence(int $id): StreamedResponse
+    public function downloadEvidence(Request $request, int $id): StreamedResponse
     {
         $record = FatigueManagementProgramMonitoring::query()->findOrFail($id);
+        $this->fatiguePartnerAccess($request)->assertCanAccessPartner((string) $record->partner_key);
 
         if (! $record->evidence_file_path || ! Storage::exists($record->evidence_file_path)) {
             abort(404, 'File evidence tidak ditemukan.');

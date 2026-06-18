@@ -1,87 +1,10 @@
 @extends('PembatasanLV.layouts.app')
 
-@section('title', 'Monitoring Program Fatigue Management GMO')
+@section('title', 'Dashboard Checklist Fatigue Management GMO')
 
 @push('head')
-<script src="https://cdn.jsdelivr.net/npm/echarts@5/dist/echarts.min.js"></script>
-<style>
-   .fm-mon { --fm-ease: cubic-bezier(0.4, 0, 0.2, 1); }
-   .fm-mon-card {
-      background: rgba(255, 255, 255, 0.92);
-      border: 1px solid rgba(57, 82, 188, 0.07);
-      box-shadow: 0 1px 2px rgba(44, 47, 49, 0.04), 0 8px 24px -6px rgba(57, 82, 188, 0.08);
-      border-radius: 1rem;
-   }
-   .fm-mon-kpi { position: relative; overflow: hidden; }
-   .fm-mon-kpi::after {
-      content: '';
-      position: absolute;
-      right: -1rem;
-      top: -1rem;
-      width: 5rem;
-      height: 5rem;
-      border-radius: 9999px;
-      opacity: 0.08;
-      background: currentColor;
-   }
-   .fm-status {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      border-radius: 9999px;
-      padding: 0.25rem 0.65rem;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      letter-spacing: 0.02em;
-      white-space: nowrap;
-   }
-   .fm-status--gray { background: #f1f5f9; color: #64748b; }
-   .fm-status--blue { background: #eef2ff; color: #3952bc; }
-   .fm-status--amber { background: #fff7ed; color: #c2410c; }
-   .fm-status--green { background: #ecfdf5; color: #047857; }
-   .fm-status--indigo { background: #e0e7ff; color: #4338ca; }
-   .fm-status--red { background: #fef2f2; color: #b91c1c; }
-   .fm-source-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      border-radius: 0.5rem;
-      padding: 0.2rem 0.55rem;
-      font-size: 0.625rem;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-   }
-   .fm-source-pill--evidence { background: #eef2ff; color: #3952bc; }
-   .fm-source-pill--eval { background: #ecfdf5; color: #047857; }
-   .fm-filter-pill {
-      background: #ffffff;
-      border: 1px solid rgba(171, 173, 175, 0.28);
-      box-shadow: 0 1px 2px rgba(44, 47, 49, 0.04);
-   }
-   .fm-action-btn {
-      display: inline-flex;
-      align-items: center;
-      gap: 0.35rem;
-      border-radius: 0.625rem;
-      padding: 0.4rem 0.65rem;
-      font-size: 0.6875rem;
-      font-weight: 700;
-      transition: opacity 0.2s var(--fm-ease);
-   }
-   .fm-action-btn:hover { opacity: 0.92; }
-   .fm-action-btn--primary { background: #3952bc; color: #fff; }
-   .fm-action-btn--ghost {
-      background: #fff;
-      border: 1px solid rgba(171, 173, 175, 0.35);
-      color: #2c2f31;
-   }
-   .fm-modal-backdrop {
-      background: rgba(15, 23, 42, 0.45);
-      backdrop-filter: blur(4px);
-   }
-   .fm-modal-panel { max-height: min(85vh, 640px); }
-</style>
+@include('fatigue-management.partials.styles')
+@include('fatigue-management.partials.site-matrix-styles')
 @endpush
 
 @section('content')
@@ -89,51 +12,53 @@
    $doc = $dashboard['document'] ?? [];
    $isoWeek = $filters['isoWeek'] ?? '';
    $year = $filters['year'] ?? date('Y');
-   $partnerLabel = ($filters['partnerKey'] ?? '') !== '' ? $filters['partnerKey'] : 'Semua Mitra';
-   $kpis = [
-      ['label' => 'Total Item Monitoring', 'value' => $summary['total_items'] ?? 0, 'hint' => 'Program standar × mitra', 'color' => 'text-primary', 'icon' => 'grid_view'],
-      ['label' => 'Sudah Upload Evidence', 'value' => ($summary['pct_uploaded'] ?? 0).'%', 'hint' => ($summary['evidence_uploaded'] ?? 0).' dari '.($summary['total_items'] ?? 0).' item', 'color' => 'text-emerald-600', 'icon' => 'upload_file'],
-      ['label' => 'Belum Upload', 'value' => $summary['evidence_belum'] ?? 0, 'hint' => 'Perlu upload evidence mitra', 'color' => 'text-red-600', 'icon' => 'pending_actions'],
-      ['label' => 'Menunggu Review', 'value' => $summary['menunggu_review'] ?? 0, 'hint' => 'Evidence siap dievaluasi GMO', 'color' => 'text-secondary', 'icon' => 'rate_review'],
-      ['label' => 'Disetujui', 'value' => $summary['disetujui'] ?? 0, 'hint' => 'Evaluasi program disetujui', 'color' => 'text-emerald-600', 'icon' => 'check_circle'],
-      ['label' => 'Terverifikasi', 'value' => ($summary['pct_verified'] ?? 0).'%', 'hint' => ($summary['evidence_verified'] ?? 0).' evidence terverifikasi', 'color' => 'text-primary', 'icon' => 'verified'],
-   ];
-   $evidenceStatusClass = static function (?string $status): string {
-      return match ($status) {
-         'sudah_upload' => 'fm-status--blue',
-         'terverifikasi' => 'fm-status--green',
-         'perlu_lengkap' => 'fm-status--amber',
+   $typeClass = static function (?string $type): string {
+      return match ($type) {
+         'mandatory', 'wajib' => 'fm-type-pill--mandatory',
+         'upgrade' => 'fm-type-pill--upgrade',
+         default => 'fm-type-pill--mitra',
+      };
+   };
+   $checklistClass = static function (?string $color): string {
+      return match ($color) {
+         'green' => 'fm-status--green',
+         'blue' => 'fm-status--blue',
+         'amber' => 'fm-status--amber',
+         'red' => 'fm-status--red',
          default => 'fm-status--gray',
       };
    };
-   $evalStatusClass = static function (?string $status): string {
-      return match ($status) {
-         'menunggu_review' => 'fm-status--blue',
-         'dalam_evaluasi' => 'fm-status--indigo',
-         'perlu_perbaikan' => 'fm-status--amber',
-         'disetujui' => 'fm-status--green',
-         'ditolak' => 'fm-status--red',
-         default => 'fm-status--gray',
+   $freqIcon = static function (string $key): string {
+      return match ($key) {
+         'shift' => 'schedule',
+         'daily' => 'today',
+         default => 'date_range',
       };
    };
 @endphp
 
 <div class="fm-mon -mt-2 space-y-7">
-   <section class="pb-6 border-b border-outline-variant/30">
+   <section class="pb-5 border-b border-outline-variant/30">
       <div class="flex flex-col xl:flex-row xl:items-end xl:justify-between gap-5">
          <div class="min-w-0">
-            <nav class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-on-surface-variant mb-2.5" aria-label="Breadcrumb">
+            <nav class="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.08em] text-on-surface-variant mb-2.5">
                <span>Fatigue Management GMO</span>
                <span class="material-symbols-outlined text-[13px] opacity-60">chevron_right</span>
-               <span class="text-primary">Monitoring & Evaluasi Program</span>
+               <span class="text-primary">Dashboard Checklist</span>
             </nav>
-            <h1 class="font-headline font-extrabold text-3xl text-on-background tracking-tight">Monitoring Pelaksanaan Program per Mitra</h1>
+            <h1 class="font-headline font-extrabold text-3xl text-on-background tracking-tight">Checklist per Perusahaan</h1>
             <p class="mt-1.5 text-sm text-on-surface-variant">
-               {{ $doc['code'] ?? 'FMP-STD-001' }} · {{ $isoWeek }} {{ $year }} · Upload evidence & proses evaluasi per standar site GMO
+               Site GMO · {{ $doc['code'] ?? 'FMP-STD-001' }} · {{ $isoWeek }} {{ $year }} · Shift / Harian / Mingguan
             </p>
-            <div class="mt-3 flex flex-wrap gap-2">
-               <span class="fm-source-pill fm-source-pill--evidence"><span class="material-symbols-outlined text-sm">upload_file</span> Evidence</span>
-               <span class="fm-source-pill fm-source-pill--eval"><span class="material-symbols-outlined text-sm">fact_check</span> Evaluasi GMO</span>
+            <div class="mt-2 flex flex-wrap gap-2 text-[10px] font-bold uppercase tracking-wide">
+               <span class="fm-type-pill fm-type-pill--mandatory">M — Wajib dijalankan</span>
+               <span class="fm-type-pill fm-type-pill--upgrade">U — Upgrade frekuensi</span>
+            </div>
+            <div class="mt-3">
+               <a href="{{ route('fatigue-management.upload', request()->only(['year', 'iso_week', 'partner'])) }}" class="fm-action-btn fm-action-btn--primary">
+                  <span class="material-symbols-outlined text-sm">upload</span>
+                  Ke Halaman Upload
+               </a>
             </div>
          </div>
 
@@ -155,38 +80,20 @@
                </select>
             </div>
             <div>
-               <label class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Mitra</label>
-               <select name="partner" class="fm-filter-pill rounded-xl px-3 py-2.5 text-sm font-semibold min-w-[10rem]">
-                  <option value="">Semua Mitra</option>
+               <label class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Perusahaan</label>
+               <select name="partner" class="fm-filter-pill rounded-xl px-3 py-2.5 text-sm font-semibold min-w-[11rem]">
+                  <option value="">Semua Perusahaan</option>
                   @foreach($filterOptions['partners'] ?? [] as $p)
                   <option value="{{ $p['value'] }}" @selected(($filters['partnerKey'] ?? '') === $p['value'])>{{ $p['label'] }}</option>
                   @endforeach
                </select>
             </div>
             <div>
-               <label class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Program</label>
-               <select name="program" class="fm-filter-pill rounded-xl px-3 py-2.5 text-sm font-semibold min-w-[12rem] max-w-[14rem]">
-                  <option value="">Semua Program</option>
-                  @foreach($filterOptions['programs'] ?? [] as $p)
-                  <option value="{{ $p['value'] }}" @selected(($filters['programKey'] ?? '') === $p['value'])>{{ Str::limit($p['label'], 42) }}</option>
-                  @endforeach
-               </select>
-            </div>
-            <div>
-               <label class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Evidence</label>
-               <select name="evidence_status" class="fm-filter-pill rounded-xl px-3 py-2.5 text-sm font-semibold min-w-[9rem]">
-                  <option value="">Semua</option>
-                  @foreach($filterOptions['evidence_statuses'] ?? [] as $s)
-                  <option value="{{ $s['value'] }}" @selected(($filters['evidenceStatus'] ?? '') === $s['value'])>{{ $s['label'] }}</option>
-                  @endforeach
-               </select>
-            </div>
-            <div>
-               <label class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Evaluasi</label>
-               <select name="evaluation_status" class="fm-filter-pill rounded-xl px-3 py-2.5 text-sm font-semibold min-w-[9rem]">
-                  <option value="">Semua</option>
-                  @foreach($filterOptions['evaluation_statuses'] ?? [] as $s)
-                  <option value="{{ $s['value'] }}" @selected(($filters['evaluationStatus'] ?? '') === $s['value'])>{{ $s['label'] }}</option>
+               <label class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Tipe Program</label>
+               <select name="program_type" class="fm-filter-pill rounded-xl px-3 py-2.5 text-sm font-semibold min-w-[11rem]">
+                  <option value="">Semua Tipe</option>
+                  @foreach($filterOptions['program_types'] ?? [] as $t)
+                  <option value="{{ $t['value'] }}" @selected(($filters['programType'] ?? '') === $t['value'])>{{ $t['label'] }}</option>
                   @endforeach
                </select>
             </div>
@@ -194,189 +101,299 @@
                <span class="material-symbols-outlined text-lg">filter_alt</span>
                Terapkan
             </button>
-            @if(($filters['partnerKey'] ?? '') || ($filters['programKey'] ?? '') || ($filters['evidenceStatus'] ?? '') || ($filters['evaluationStatus'] ?? ''))
-            <a href="{{ route('fatigue-management.dashboard', ['year' => $year, 'iso_week' => $isoWeek]) }}" class="fm-filter-pill inline-flex items-center justify-center rounded-xl px-3 py-2.5" title="Reset filter">
-               <span class="material-symbols-outlined text-xl text-on-surface-variant">restart_alt</span>
-            </a>
-            @endif
          </form>
       </div>
    </section>
 
-   <section class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6 gap-4">
-      @foreach($kpis as $kpi)
-      <div class="fm-mon-card fm-mon-kpi p-5 {{ $kpi['color'] }}">
-         <div class="flex items-start justify-between gap-3 relative z-10">
-            <div>
-               <p class="text-[11px] font-semibold uppercase tracking-wider text-on-surface-variant">{{ $kpi['label'] }}</p>
-               <p class="mt-2 font-headline font-bold text-3xl tabular-nums text-on-background leading-none">{{ is_numeric($kpi['value']) ? number_format($kpi['value']) : $kpi['value'] }}</p>
-               <p class="mt-2 text-xs text-on-surface-variant">{{ $kpi['hint'] }}</p>
+   @include('fatigue-management.partials.site-matrix-summary', [
+      'siteMatrix' => $siteMatrix ?? [],
+      'companyGroups' => $companyGroups ?? [],
+      'summary' => $summary ?? [],
+      'isoWeek' => $isoWeek,
+      'year' => $year,
+   ])
+
+   @if(($frequencyGroups ?? []) !== [])
+   <section class="grid grid-cols-1 md:grid-cols-3 gap-3">
+      @foreach($frequencyGroups as $fg)
+      <div class="fm-mon-card p-4 rounded-2xl fm-freq-summary-card">
+         <div class="flex items-start justify-between gap-2">
+            <div class="flex items-center gap-2">
+               <span class="fm-freq-section-icon fm-freq-section-icon--{{ $fg['key'] }}">
+                  <span class="material-symbols-outlined text-lg">{{ $freqIcon($fg['key']) }}</span>
+               </span>
+               <div>
+                  <h3 class="font-headline font-bold text-sm text-on-background">{{ $fg['label'] }}</h3>
+                  <p class="text-[10px] text-on-surface-variant mt-0.5">{{ $fg['description'] ?? '' }}</p>
+               </div>
             </div>
-            <span class="material-symbols-outlined text-3xl opacity-70">{{ $kpi['icon'] }}</span>
+            <span class="text-lg font-extrabold text-primary tabular-nums">{{ $fg['pct_checklist'] ?? 0 }}%</span>
+         </div>
+         <div class="mt-3 flex items-center justify-between text-xs font-semibold text-on-surface-variant">
+            <span>{{ $fg['checklist_ok'] ?? 0 }}/{{ $fg['total'] ?? 0 }} checklist OK</span>
+            <span>{{ $fg['total'] ?? 0 }} program</span>
+         </div>
+         <div class="fm-type-bar-track mt-2">
+            <div class="fm-type-bar-fill fm-type-bar-fill--{{ $fg['key'] }} is-animated" data-target-width="{{ $fg['pct_checklist'] ?? 0 }}"></div>
          </div>
       </div>
       @endforeach
    </section>
+   @endif
 
-   <section class="grid grid-cols-1 xl:grid-cols-2 gap-6">
-      <div class="fm-mon-card p-5">
-         <h2 class="font-headline font-bold text-base text-on-background">% Upload Evidence per Mitra</h2>
-         <p class="text-xs text-on-surface-variant mt-0.5 mb-3">{{ $isoWeek }} {{ $year }}</p>
-         <div id="fm-chart-upload" class="h-64"></div>
-      </div>
-      <div class="fm-mon-card p-5">
-         <h2 class="font-headline font-bold text-base text-on-background">Distribusi Status Evaluasi</h2>
-         <p class="text-xs text-on-surface-variant mt-0.5 mb-3">Proses review GMO</p>
-         <div id="fm-chart-eval" class="h-64"></div>
-      </div>
-   </section>
-
-   <section class="fm-mon-card overflow-hidden">
-      <div class="px-5 py-4 border-b border-outline-variant/15 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3">
+   <section class="fm-mon-card p-0 overflow-hidden rounded-2xl">
+      <div class="px-5 sm:px-6 pt-5 pb-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 border-b border-outline-variant/10">
          <div>
-            <h2 class="font-headline font-bold text-lg text-on-background">Matriks Monitoring Program</h2>
-            <p class="text-xs text-on-surface-variant mt-0.5">{{ $isoWeek }} {{ $year }} · {{ $partnerLabel }} · Upload evidence & evaluasi per standar</p>
+            <h2 class="font-headline font-semibold text-base text-on-background">Daftar Perusahaan</h2>
+            <p class="text-xs text-on-surface-variant mt-0.5">Ringkasan submit & checklist per mitra · {{ $isoWeek }} {{ $year }}</p>
          </div>
-         <div class="flex flex-wrap gap-2 text-xs">
-            <span class="fm-status fm-status--gray">Belum Upload</span>
-            <span class="fm-status fm-status--blue">Sudah Upload</span>
-            <span class="fm-status fm-status--green">Terverifikasi</span>
-            <span class="fm-status fm-status--amber">Perlu Perbaikan</span>
-         </div>
-      </div>
-      <div class="overflow-x-auto">
-         <table class="w-full text-sm">
-            <thead class="bg-surface-container-low/60 text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
-               <tr>
-                  <th class="px-4 py-3 text-left">No</th>
-                  <th class="px-4 py-3 text-left min-w-[220px]">Program / Standar</th>
-                  <th class="px-4 py-3 text-left">Pilar HO</th>
-                  <th class="px-4 py-3 text-left">Mitra</th>
-                  <th class="px-4 py-3 text-left">Evidence</th>
-                  <th class="px-4 py-3 text-left">Upload</th>
-                  <th class="px-4 py-3 text-left">Evaluasi</th>
-                  <th class="px-4 py-3 text-center">Skor</th>
-                  <th class="px-4 py-3 text-left">Aksi</th>
-               </tr>
-            </thead>
-            <tbody class="divide-y divide-outline-variant/10">
-               @forelse($rows as $row)
-               <tr class="hover:bg-primary/[0.02] transition-colors align-top">
-                  <td class="px-4 py-3 font-bold text-primary tabular-nums">{{ $row['program_no'] }}</td>
-                  <td class="px-4 py-3 max-w-xs">
-                     <p class="font-semibold text-on-background">{{ $row['program_title'] }}</p>
-                     <p class="text-[11px] text-on-surface-variant mt-1 line-clamp-2" title="{{ $row['evidence_requirement'] ?? '' }}">{{ $row['evidence_requirement'] ?? '' }}</p>
-                  </td>
-                  <td class="px-4 py-3 text-xs text-on-surface-variant whitespace-nowrap">{{ $row['program_pillar'] }}</td>
-                  <td class="px-4 py-3">
-                     <p class="font-semibold text-on-background">{{ $row['partner_key'] }}</p>
-                     <p class="text-[11px] text-on-surface-variant">{{ Str::limit($row['partner_name'] ?? '', 24) }}</p>
-                  </td>
-                  <td class="px-4 py-3">
-                     <span class="fm-status {{ $evidenceStatusClass($row['evidence_status'] ?? null) }}">{{ $row['evidence_status_label'] ?? '—' }}</span>
-                     @if($row['evidence_file_url'] ?? null)
-                     <a href="{{ $row['evidence_file_url'] }}" class="mt-1.5 flex items-center gap-1 text-[11px] font-semibold text-primary hover:underline">
-                        <span class="material-symbols-outlined text-sm">attach_file</span>
-                        {{ Str::limit($row['evidence_original_name'] ?? 'Download', 22) }}
-                     </a>
-                     @endif
-                  </td>
-                  <td class="px-4 py-3 text-xs text-on-surface-variant">
-                     @if($row['evidence_uploaded_at'] ?? null)
-                        <p>{{ $row['evidence_uploaded_at'] }}</p>
-                        @if($row['pic_name'] ?? null)<p class="mt-0.5">PIC: {{ $row['pic_name'] }}</p>@endif
-                     @else
-                        <span class="text-red-600 font-semibold">Belum ada</span>
-                     @endif
-                  </td>
-                  <td class="px-4 py-3">
-                     <span class="fm-status {{ $evalStatusClass($row['evaluation_status'] ?? null) }}">{{ $row['evaluation_status_label'] ?? '—' }}</span>
-                     @if($row['evaluated_at'] ?? null)
-                     <p class="text-[11px] text-on-surface-variant mt-1">{{ $row['evaluated_at'] }}</p>
-                     @if($row['evaluated_by'] ?? null)<p class="text-[11px] text-on-surface-variant">oleh {{ $row['evaluated_by'] }}</p>@endif
-                     @endif
-                  </td>
-                  <td class="px-4 py-3 text-center">
-                     <span class="inline-flex min-w-[2rem] justify-center rounded-lg bg-primary/5 px-2 py-1 font-bold tabular-nums text-primary">
-                        {{ isset($row['evaluation_score']) ? $row['evaluation_score'] : '—' }}
-                     </span>
-                  </td>
-                  <td class="px-4 py-3">
-                     <div class="flex flex-col gap-1.5">
-                        <button type="button" class="fm-action-btn fm-action-btn--primary js-upload-btn" data-row='@json($row)'>
-                           <span class="material-symbols-outlined text-sm">upload</span>
-                           {{ ($row['evidence_status'] ?? '') === 'belum_upload' ? 'Upload' : 'Ganti' }}
-                        </button>
-                        @if($row['id'] ?? null)
-                        <button type="button" class="fm-action-btn fm-action-btn--ghost js-eval-btn" data-row='@json($row)'>
-                           <span class="material-symbols-outlined text-sm">rate_review</span>
-                           Evaluasi
-                        </button>
-                        @endif
-                     </div>
-                  </td>
-               </tr>
-               @empty
-               <tr>
-                  <td colspan="9" class="px-4 py-12 text-center text-on-surface-variant">
-                     <span class="material-symbols-outlined text-4xl opacity-30 block mb-2">inventory_2</span>
-                     Tidak ada data monitoring untuk filter ini.
-                  </td>
-               </tr>
-               @endforelse
-            </tbody>
-         </table>
-      </div>
-   </section>
-</div>
-
-{{-- Modal Upload --}}
-<div id="fm-upload-modal" class="fixed inset-0 z-[100] hidden" aria-hidden="true">
-   <div class="fm-modal-backdrop absolute inset-0" data-fm-modal-close></div>
-   <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
-      <div class="fm-modal-panel fm-mon-card w-full max-w-lg flex flex-col overflow-hidden bg-white shadow-2xl" role="dialog" aria-modal="true">
-         <div class="px-5 py-4 border-b border-outline-variant/15 flex items-start justify-between gap-4">
-            <div>
-               <p class="text-[10px] font-bold uppercase tracking-wider text-primary">Upload Evidence</p>
-               <h3 id="fm-upload-title" class="font-headline font-bold text-lg text-on-background mt-1">—</h3>
-               <p id="fm-upload-subtitle" class="text-xs text-on-surface-variant mt-1">—</p>
-            </div>
-            <button type="button" class="rounded-xl p-2 text-on-surface-variant hover:bg-surface-container-low" data-fm-modal-close aria-label="Tutup">
-               <span class="material-symbols-outlined text-xl">close</span>
+         <div class="flex gap-2">
+            <button type="button" id="fm-expand-all" class="fm-action-btn fm-action-btn--ghost text-xs">
+               <span class="material-symbols-outlined text-sm">unfold_more</span>
+               Bentang Semua
+            </button>
+            <button type="button" id="fm-collapse-all" class="fm-action-btn fm-action-btn--ghost text-xs">
+               <span class="material-symbols-outlined text-sm">unfold_less</span>
+               Ciutkan Semua
             </button>
          </div>
-         <form id="fm-upload-form" method="POST" action="{{ route('fatigue-management.monitoring.evidence.store') }}" enctype="multipart/form-data" class="px-5 py-4 space-y-4">
-            @csrf
-            <input type="hidden" name="program_key" id="fm-upload-program-key" />
-            <input type="hidden" name="partner_key" id="fm-upload-partner-key" />
-            <input type="hidden" name="year" value="{{ $year }}" />
-            <input type="hidden" name="iso_week" value="{{ $isoWeek }}" />
-            <div>
-               <label class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">File Evidence *</label>
-               <input type="file" name="evidence_file" required accept=".pdf,.jpg,.jpeg,.png,.xlsx,.xls,.doc,.docx,.zip" class="w-full text-sm fm-filter-pill rounded-xl px-3 py-2.5" />
-               <p class="mt-1 text-[11px] text-on-surface-variant">PDF, gambar, Excel, Word, ZIP — maks. 10 MB</p>
-            </div>
-            <div>
-               <label class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">PIC Upload</label>
-               <input type="text" name="pic_name" class="w-full fm-filter-pill rounded-xl px-3 py-2.5 text-sm" placeholder="Nama pengupload" />
-            </div>
-            <div>
-               <label class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Catatan</label>
-               <textarea name="evidence_notes" rows="2" class="w-full fm-filter-pill rounded-xl px-3 py-2.5 text-sm" placeholder="Keterangan evidence"></textarea>
-            </div>
-            <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant/15">
-               <button type="button" class="fm-action-btn fm-action-btn--ghost" data-fm-modal-close>Batal</button>
-               <button type="submit" class="fm-action-btn fm-action-btn--primary px-4">
-                  <span class="material-symbols-outlined text-sm">save</span>
-                  Simpan Evidence
-               </button>
-            </div>
-         </form>
       </div>
-   </div>
+
+      <div class="fm-company-list">
+         @forelse($companyGroups as $group)
+         @php
+            $isOpen = ($expandedPartner ?? '') !== '' && strtoupper($expandedPartner) === strtoupper($group['partner_key']);
+            $sections = $group['frequency_sections'] ?? [];
+            $tier = $group['status_tier'] ?? 'warning';
+            $pct = $group['pct_checklist'] ?? 0;
+         @endphp
+         <article class="fm-company-card fm-company-card--{{ $tier }} {{ $isOpen ? 'is-open' : '' }}" data-partner="{{ $group['partner_key'] }}">
+            <button type="button" class="fm-company-summary" data-fm-toggle-company aria-expanded="{{ $isOpen ? 'true' : 'false' }}">
+               <div class="fm-company-avatar hidden md:flex" aria-hidden="true">{{ $group['partner_key'] }}</div>
+
+               <div class="fm-company-meta">
+                  <div class="flex flex-wrap items-start justify-between gap-2">
+                     <div>
+                        <p class="fm-company-name">{{ $group['partner_name'] }}</p>
+                        <div class="fm-company-sub">
+                           <span class="fm-tier-badge">
+                              <span class="material-symbols-outlined text-[12px]">
+                                 @if($tier === 'complete') verified
+                                 @elseif($tier === 'good') thumb_up
+                                 @elseif($tier === 'warning') schedule
+                                 @else warning
+                                 @endif
+                              </span>
+                              {{ $group['status_label'] ?? '—' }}
+                           </span>
+                           <span>{{ $group['partner_key'] }}</span>
+                           <span>·</span>
+                           <span>{{ $group['total'] }} program</span>
+                        </div>
+                     </div>
+                     <div class="fm-ring-wrap md:hidden">
+                        <svg class="fm-ring" viewBox="0 0 36 36" aria-hidden="true">
+                           <path class="fm-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                           <path class="fm-ring-fill" stroke-dasharray="{{ $pct }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                        </svg>
+                        <div class="fm-ring-label">
+                           <span class="fm-ring-pct">{{ $pct }}%</span>
+                        </div>
+                     </div>
+                  </div>
+
+                  <div class="fm-stat-grid">
+                     <div class="fm-stat-box fm-stat-box--submit">
+                        <p class="fm-stat-box__value">{{ $group['submitted_count'] ?? 0 }}</p>
+                        <p class="fm-stat-box__label">Sudah Submit</p>
+                     </div>
+                     <div class="fm-stat-box fm-stat-box--pending">
+                        <p class="fm-stat-box__value">{{ $group['belum_submit'] ?? 0 }}</p>
+                        <p class="fm-stat-box__label">Belum Submit</p>
+                     </div>
+                     <div class="fm-stat-box fm-stat-box--check">
+                        <p class="fm-stat-box__value">{{ $group['checklist_ok'] ?? 0 }}/{{ $group['total'] ?? 0 }}</p>
+                        <p class="fm-stat-box__label">Checklist OK</p>
+                     </div>
+                     <div class="fm-stat-box fm-stat-box--verify">
+                        <p class="fm-stat-box__value">{{ $group['verified_count'] ?? 0 }}</p>
+                        <p class="fm-stat-box__label">Terverifikasi</p>
+                     </div>
+                  </div>
+
+                  <div class="fm-type-bars">
+                     <div class="fm-type-bar-row">
+                        <span class="fm-freq-bar-label">
+                           <span class="fm-freq-bar-dot fm-freq-bar-dot--shift"></span>
+                           Shift
+                        </span>
+                        <div class="fm-type-bar-track">
+                           <div class="fm-type-bar-fill fm-type-bar-fill--shift is-animated" data-target-width="{{ $group['shift_pct'] ?? 0 }}"></div>
+                        </div>
+                        <span class="fm-type-bar-count">{{ $group['shift_ok'] ?? 0 }}/{{ $group['shift_total'] ?? 0 }}</span>
+                     </div>
+                     <div class="fm-type-bar-row">
+                        <span class="fm-freq-bar-label">
+                           <span class="fm-freq-bar-dot fm-freq-bar-dot--daily"></span>
+                           Harian
+                        </span>
+                        <div class="fm-type-bar-track">
+                           <div class="fm-type-bar-fill fm-type-bar-fill--daily is-animated" data-target-width="{{ $group['daily_pct'] ?? 0 }}"></div>
+                        </div>
+                        <span class="fm-type-bar-count">{{ $group['daily_ok'] ?? 0 }}/{{ $group['daily_total'] ?? 0 }}</span>
+                     </div>
+                     <div class="fm-type-bar-row">
+                        <span class="fm-freq-bar-label">
+                           <span class="fm-freq-bar-dot fm-freq-bar-dot--weekly"></span>
+                           Mingguan
+                        </span>
+                        <div class="fm-type-bar-track">
+                           <div class="fm-type-bar-fill fm-type-bar-fill--weekly is-animated" data-target-width="{{ $group['weekly_pct'] ?? 0 }}"></div>
+                        </div>
+                        <span class="fm-type-bar-count">{{ $group['weekly_ok'] ?? 0 }}/{{ $group['weekly_total'] ?? 0 }}</span>
+                     </div>
+                  </div>
+
+                  <div class="fm-detail-toggle">
+                     <span data-fm-toggle-label>{{ $isOpen ? 'Sembunyikan Detail Program' : 'Lihat Detail Program' }}</span>
+                     <span class="material-symbols-outlined">expand_more</span>
+                  </div>
+               </div>
+
+               <div class="fm-ring-wrap hidden md:block">
+                  <svg class="fm-ring" viewBox="0 0 36 36" role="img" aria-label="Progress checklist {{ $pct }} persen">
+                     <path class="fm-ring-bg" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                     <path class="fm-ring-fill" stroke-dasharray="{{ $pct }}, 100" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831" />
+                  </svg>
+                  <div class="fm-ring-label">
+                     <span class="fm-ring-pct">{{ $pct }}%</span>
+                     <span class="fm-ring-caption">Checklist</span>
+                  </div>
+               </div>
+            </button>
+
+            <div class="fm-program-panel-wrap">
+            <div class="fm-program-panel-inner">
+            <div class="fm-program-panel">
+               <div class="fm-detail-header">
+                  <div>
+                     <h3>Detail Program — {{ $group['partner_name'] }}</h3>
+                     <p class="text-[11px] text-on-surface-variant mt-1">Submit {{ $group['pct_submitted'] ?? 0 }}% · Checklist {{ $pct }}% · Disetujui {{ $group['eval_approved'] ?? 0 }} program</p>
+                  </div>
+                  <div class="fm-detail-chips">
+                     <span class="fm-detail-chip">
+                        <span class="material-symbols-outlined text-[13px] text-primary">upload_file</span>
+                        {{ $group['submitted_count'] ?? 0 }} submit
+                     </span>
+                     <span class="fm-detail-chip">
+                        <span class="material-symbols-outlined text-[13px] text-emerald-600">check_circle</span>
+                        {{ $group['checklist_ok'] ?? 0 }} checklist
+                     </span>
+                     <span class="fm-detail-chip">
+                        <span class="material-symbols-outlined text-[13px] text-indigo-600">verified</span>
+                        {{ $group['verified_count'] ?? 0 }} verified
+                     </span>
+                     <a href="{{ route('fatigue-management.upload', ['year' => $year, 'iso_week' => $isoWeek, 'partner' => $group['partner_key']]) }}" class="fm-detail-chip hover:bg-primary/5 text-primary" onclick="event.stopPropagation()">
+                        <span class="material-symbols-outlined text-[13px]">add_circle</span>
+                        Upload
+                     </a>
+                  </div>
+               </div>
+
+               @foreach($sections as $section)
+               @php
+                  $sectionItems = $section['rows'] ?? [];
+                  $sectionOk = collect($sectionItems)->where('checklist_met', true)->count();
+               @endphp
+               <div class="fm-program-section">
+                  <p class="fm-program-section-title">
+                     <span class="inline-flex items-center gap-1.5">
+                        <span class="fm-freq-section-icon fm-freq-section-icon--{{ $section['key'] ?? 'weekly' }}">
+                           <span class="material-symbols-outlined text-sm">{{ $freqIcon($section['key'] ?? 'weekly') }}</span>
+                        </span>
+                        {{ $section['label'] ?? '' }}
+                     </span>
+                     <span class="fm-program-section-count">{{ $sectionOk }}/{{ count($sectionItems) }}</span>
+                  </p>
+                  @if($section['description'] ?? null)
+                  <p class="text-[10px] text-on-surface-variant mb-2 -mt-1">{{ $section['description'] }}</p>
+                  @endif
+
+                  @foreach($sectionItems as $prog)
+                  @php
+                     $slots = $prog['frequency_slots'] ?? [];
+                     $isDone = (bool) ($prog['checklist_met'] ?? false);
+                  @endphp
+                  <div class="fm-program-item {{ $isDone ? 'is-done' : 'is-pending' }}">
+                     <div class="fm-program-check-wrap {{ $isDone ? 'is-done' : 'is-pending' }}" aria-hidden="true">
+                        <span class="material-symbols-outlined">{{ $isDone ? 'check_box' : 'check_box_outline_blank' }}</span>
+                     </div>
+                     <div class="flex-1 min-w-0">
+                        <div class="flex flex-wrap items-start justify-between gap-2">
+                           <p class="font-semibold text-sm text-on-background leading-snug">{{ $prog['program_title'] }}</p>
+                           <div class="flex flex-wrap items-center gap-1.5 shrink-0">
+                              <span class="fm-freq-pill">
+                                 <span class="material-symbols-outlined text-[13px]">schedule</span>
+                                 {{ $prog['frequency_category_label'] ?? $prog['frequency_raw'] ?? $prog['frequency'] ?? '—' }}
+                              </span>
+                              <span class="fm-type-pill {{ $typeClass($prog['program_type'] ?? null) }}">{{ $prog['program_type_label'] ?? '' }}</span>
+                           </div>
+                        </div>
+
+                        <div class="fm-freq-slots" title="Slot frekuensi periode {{ $isoWeek }}">
+                           @foreach($slots as $slot)
+                           <span class="fm-freq-slot {{ ($slot['done'] ?? false) ? 'is-done' : '' }}" title="{{ $slot['label'] }}">
+                              @if($slot['done'] ?? false)
+                              <span class="material-symbols-outlined text-[11px]">check</span>
+                              @else
+                              {{ Str::limit($slot['label'], 3, '') }}
+                              @endif
+                           </span>
+                           @endforeach
+                        </div>
+
+                        <div class="mt-2 flex flex-wrap items-center gap-2 text-[11px]">
+                           <span class="fm-status {{ $checklistClass($prog['checklist_color'] ?? null) }}">{{ $prog['checklist_label'] ?? '—' }}</span>
+                           @if($prog['evidence_uploaded_at'] ?? null)
+                           <span class="inline-flex items-center gap-1 text-on-surface-variant">
+                              <span class="material-symbols-outlined text-[13px]">upload</span>
+                              {{ $prog['evidence_uploaded_at'] }}
+                           </span>
+                           @if($prog['evidence_file_url'] ?? null)
+                           <a href="{{ $prog['evidence_file_url'] }}" class="inline-flex items-center gap-1 font-semibold text-primary hover:underline">
+                              <span class="material-symbols-outlined text-[13px]">attach_file</span>
+                              {{ Str::limit($prog['evidence_original_name'] ?? 'File', 18) }}
+                           </a>
+                           @endif
+                           @else
+                           <span class="text-red-600 font-semibold">Belum submit evidence</span>
+                           @endif
+                           @if($prog['id'] ?? null)
+                           <button type="button" class="fm-action-btn fm-action-btn--ghost js-eval-btn" data-row='@json($prog)'>
+                              <span class="material-symbols-outlined text-sm">rate_review</span>
+                              Evaluasi
+                           </button>
+                           @endif
+                        </div>
+                     </div>
+                  </div>
+                  @endforeach
+               </div>
+               @endforeach
+            </div>
+            </div>
+            </div>
+         </article>
+         @empty
+         <div class="px-5 py-16 text-center text-on-surface-variant text-sm">
+            <span class="material-symbols-outlined text-4xl opacity-30 block mb-2">business</span>
+            Tidak ada perusahaan untuk filter ini.
+         </div>
+         @endforelse
+      </div>
+   </section>
 </div>
 
-{{-- Modal Evaluasi --}}
 <div id="fm-eval-modal" class="fixed inset-0 z-[100] hidden" aria-hidden="true">
    <div class="fm-modal-backdrop absolute inset-0" data-fm-modal-close></div>
    <div class="relative flex min-h-full items-center justify-center p-4 sm:p-6">
@@ -417,7 +434,7 @@
             </div>
             <div class="flex justify-end gap-2 pt-2 border-t border-outline-variant/15">
                <button type="button" class="fm-action-btn fm-action-btn--ghost" data-fm-modal-close>Batal</button>
-               <button type="submit" class="fm-action-btn fm-action-btn--primary px-4 bg-emerald-600" style="background:#047857">
+               <button type="submit" class="fm-action-btn fm-action-btn--primary px-4" style="background:#047857">
                   <span class="material-symbols-outlined text-sm">check</span>
                   Simpan Evaluasi
                </button>
@@ -431,40 +448,87 @@
 @push('scripts')
 <script>
 (function () {
-   var chartData = @json($chart);
+   function animateProgressBars(root) {
+      var scope = root || document;
+      scope.querySelectorAll('.fm-type-bar-fill.is-animated[data-target-width]').forEach(function (el, i) {
+         var target = parseFloat(el.getAttribute('data-target-width') || '0');
+         if (isNaN(target)) target = 0;
+         el.style.width = '0%';
+         requestAnimationFrame(function () {
+            setTimeout(function () {
+               el.style.width = Math.min(100, Math.max(0, target)) + '%';
+            }, 80 + (i * 40));
+         });
+      });
+
+      scope.querySelectorAll('.fm-ring-fill').forEach(function (ring) {
+         var dash = ring.getAttribute('stroke-dasharray');
+         if (!dash) return;
+         var parts = dash.split(',');
+         var target = parseFloat(parts[0] || '0');
+         ring.setAttribute('stroke-dasharray', '0, 100');
+         requestAnimationFrame(function () {
+            setTimeout(function () {
+               ring.setAttribute('stroke-dasharray', target + ', 100');
+            }, 120);
+         });
+      });
+   }
+
+   function setCompanyOpen(card, open) {
+      card.classList.toggle('is-open', open);
+      var btn = card.querySelector('[data-fm-toggle-company]');
+      var label = card.querySelector('[data-fm-toggle-label]');
+      if (btn) btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+      if (label) label.textContent = open ? 'Sembunyikan Detail Program' : 'Lihat Detail Program';
+      if (open) {
+         requestAnimationFrame(function () {
+            animateProgressBars(card);
+         });
+      }
+   }
+
+   document.querySelectorAll('[data-fm-toggle-company]').forEach(function (btn) {
+      btn.addEventListener('click', function () {
+         var card = btn.closest('.fm-company-card');
+         if (!card) return;
+         setCompanyOpen(card, !card.classList.contains('is-open'));
+      });
+   });
+
+   var expandAll = document.getElementById('fm-expand-all');
+   var collapseAll = document.getElementById('fm-collapse-all');
+   if (expandAll) {
+      expandAll.addEventListener('click', function () {
+         document.querySelectorAll('.fm-company-card').forEach(function (c) { setCompanyOpen(c, true); });
+      });
+   }
+   if (collapseAll) {
+      collapseAll.addEventListener('click', function () {
+         document.querySelectorAll('.fm-company-card').forEach(function (c) { setCompanyOpen(c, false); });
+      });
+   }
+
+   animateProgressBars(document);
 
    function openModal(id) {
       var m = document.getElementById(id);
       if (!m) return;
       m.classList.remove('hidden');
-      m.setAttribute('aria-hidden', 'false');
       document.body.style.overflow = 'hidden';
    }
    function closeAllModals() {
-      document.querySelectorAll('#fm-upload-modal, #fm-eval-modal').forEach(function (m) {
-         m.classList.add('hidden');
-         m.setAttribute('aria-hidden', 'true');
-      });
+      document.querySelectorAll('#fm-eval-modal').forEach(function (m) { m.classList.add('hidden'); });
       document.body.style.overflow = '';
    }
 
-   document.querySelectorAll('.js-upload-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
-         var row = JSON.parse(btn.dataset.row);
-         document.getElementById('fm-upload-program-key').value = row.program_key;
-         document.getElementById('fm-upload-partner-key').value = row.partner_key;
-         document.getElementById('fm-upload-title').textContent = 'Std ' + row.program_no + ' · ' + row.partner_key;
-         document.getElementById('fm-upload-subtitle').textContent = row.program_title;
-         openModal('fm-upload-modal');
-      });
-   });
-
    document.querySelectorAll('.js-eval-btn').forEach(function (btn) {
-      btn.addEventListener('click', function () {
+      btn.addEventListener('click', function (e) {
+         e.stopPropagation();
          var row = JSON.parse(btn.dataset.row);
          if (!row.id) return;
          document.getElementById('fm-eval-form').action = '/fatigue-management/monitoring/' + row.id + '/evaluation';
-         document.getElementById('fm-eval-title').textContent = 'Std ' + row.program_no + ' · ' + row.partner_key;
+         document.getElementById('fm-eval-title').textContent = row.partner_key + ' · ' + row.program_type_label;
          document.getElementById('fm-eval-subtitle').textContent = row.program_title;
          if (row.evaluation_status) document.getElementById('fm-eval-status').value = row.evaluation_status;
          openModal('fm-eval-modal');
@@ -477,50 +541,6 @@
    document.addEventListener('keydown', function (e) {
       if (e.key === 'Escape') closeAllModals();
    });
-
-   if (window.echarts) {
-      var uploadEl = document.getElementById('fm-chart-upload');
-      if (uploadEl) {
-         var c1 = echarts.init(uploadEl);
-         c1.setOption({
-            grid: { left: 40, right: 12, top: 12, bottom: 56 },
-            tooltip: { trigger: 'axis' },
-            xAxis: { type: 'category', data: chartData.partner_labels || [], axisLabel: { rotate: 30, fontSize: 10 } },
-            yAxis: { type: 'value', max: 100, axisLabel: { formatter: '{value}%' } },
-            series: [{ type: 'bar', data: chartData.partner_upload_pct || [], itemStyle: { color: '#3952bc', borderRadius: [4,4,0,0] }, barMaxWidth: 32 }],
-         });
-         window.addEventListener('resize', function () { c1.resize(); });
-      }
-
-      var evalEl = document.getElementById('fm-chart-eval');
-      if (evalEl) {
-         var counts = chartData.evaluation_counts || {};
-         var labels = {
-            menunggu_evidence: 'Menunggu Evidence',
-            menunggu_review: 'Menunggu Review',
-            dalam_evaluasi: 'Dalam Evaluasi',
-            perlu_perbaikan: 'Perlu Perbaikan',
-            disetujui: 'Disetujui',
-            ditolak: 'Ditolak'
-         };
-         var colors = ['#94a3b8','#3952bc','#6366f1','#c2410c','#047857','#b91c1c'];
-         var c2 = echarts.init(evalEl);
-         c2.setOption({
-            tooltip: { trigger: 'item' },
-            legend: { bottom: 0, type: 'scroll' },
-            series: [{
-               type: 'pie',
-               radius: ['42%', '65%'],
-               center: ['50%', '44%'],
-               data: Object.keys(counts).map(function (k, i) {
-                  return { name: labels[k] || k, value: counts[k], itemStyle: { color: colors[i % colors.length] } };
-               }),
-               label: { fontSize: 10 },
-            }],
-         });
-         window.addEventListener('resize', function () { c2.resize(); });
-      }
-   }
 })();
 </script>
 @endpush

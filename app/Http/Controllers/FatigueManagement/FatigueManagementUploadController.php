@@ -8,22 +8,18 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\FatigueManagement\Concerns\ProvidesFatigueManagementLayout;
 use App\Http\Controllers\FatigueManagement\Concerns\ResolvesFatigueManagementPartnerAccess;
 use App\Services\FatigueManagement\FatigueManagementMonitoringService;
+use App\Support\FatigueManagement\FatigueManagementFrequencyPlan;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
 
-class FatigueManagementDashboardController extends Controller
+class FatigueManagementUploadController extends Controller
 {
     use ProvidesFatigueManagementLayout;
     use ResolvesFatigueManagementPartnerAccess;
 
-    public function index(Request $request, FatigueManagementMonitoringService $monitoringService): View|\Illuminate\Http\RedirectResponse
+    public function index(Request $request, FatigueManagementMonitoringService $monitoringService): View
     {
         $access = $this->fatiguePartnerAccess($request);
-
-        if ($access->isLocked()) {
-            return redirect()->route('fatigue-management.upload', $request->only(['year', 'iso_week']));
-        }
-
         $partnerFilter = $access->resolvePartnerFilter(
             $request->filled('partner') ? (string) $request->get('partner') : null,
         );
@@ -34,26 +30,21 @@ class FatigueManagementDashboardController extends Controller
             $partnerFilter,
             $request->filled('program') ? (string) $request->get('program') : null,
             $request->filled('program_type') ? (string) $request->get('program_type') : null,
-            $request->filled('checklist_status') ? (string) $request->get('checklist_status') : null,
-            $request->filled('evidence_status') ? (string) $request->get('evidence_status') : null,
-            $request->filled('evaluation_status') ? (string) $request->get('evaluation_status') : null,
         );
 
-        return view('fatigue-management.dashboard', [
-            'navActive' => 'dashboard',
+        return view('fatigue-management.upload', [
+            'navActive' => 'upload',
             'navItems' => $this->fatigueManagementNavItems($access),
             'programLabel' => 'Fatigue Management GMO',
             'dashboard' => $dashboard,
             'filters' => $dashboard['filters'] ?? [],
             'filterOptions' => $dashboard['filter_options'] ?? [],
-            'summary' => $dashboard['summary'] ?? [],
             'rows' => $dashboard['rows'] ?? [],
-            'companyGroups' => $dashboard['company_groups'] ?? [],
-            'siteMatrix' => $dashboard['site_matrix'] ?? [],
-            'frequencyGroups' => $dashboard['frequency_groups'] ?? [],
-            'expandedPartner' => $access->isLocked()
-                ? (string) $access->partnerKey
-                : ($request->filled('partner') ? (string) $request->get('partner') : ''),
+            'uploadFrequencyGroups' => $dashboard['upload_frequency_groups'] ?? [],
+            'uploadPageContext' => FatigueManagementFrequencyPlan::uploadPageContext(
+                (int) ($dashboard['filters']['year'] ?? date('Y')),
+                (string) ($dashboard['filters']['isoWeek'] ?? ''),
+            ),
             'partnerAccess' => $this->fatiguePartnerAccessViewData($access),
         ]);
     }

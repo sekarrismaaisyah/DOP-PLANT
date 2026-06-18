@@ -17,6 +17,7 @@ class FatigueManagementProgramMonitoring extends Model
         'partner_key',
         'year',
         'iso_week',
+        'frequency_slot',
         'evidence_status',
         'evidence_file_path',
         'evidence_original_name',

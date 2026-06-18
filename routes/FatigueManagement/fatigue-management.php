@@ -2,10 +2,12 @@
 
 use App\Http\Controllers\FatigueManagement\FatigueManagementDashboardController;
 use App\Http\Controllers\FatigueManagement\FatigueManagementMonitoringController;
+use App\Http\Controllers\FatigueManagement\FatigueManagementUploadController;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('fatigue-management')->name('fatigue-management.')->group(function (): void {
+Route::prefix('fatigue-management')->name('fatigue-management.')->middleware('fatigue.management')->group(function (): void {
     Route::get('/dashboard', [FatigueManagementDashboardController::class, 'index'])->name('dashboard');
+    Route::get('/upload', [FatigueManagementUploadController::class, 'index'])->name('upload');
 
     Route::prefix('monitoring')->name('monitoring.')->group(function (): void {
         Route::post('/evidence', [FatigueManagementMonitoringController::class, 'storeEvidence'])->name('evidence.store');

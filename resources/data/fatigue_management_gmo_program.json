@@ -12,6 +12,18 @@
     "intro": "Belum semua standar Fatigue Program tersedia merata di seluruh mitra GMO. Sebagian besar mitra sudah memiliki program dasar seperti fatigue check awal shift, campaign fatigue, parental control / Google Activity, sobriety, dan tensi.",
     "callout": "Arah implementasi: standar HO dan standar Site GMO harus menjadi standar minimum wajib seluruh mitra, bukan hanya program inisiatif masing-masing mitra."
   },
+  "ho_classification": {
+    "M": {
+      "key": "mandatory",
+      "label": "Mandatory (M)",
+      "description": "Wajib dijalankan seluruh mitra GMO"
+    },
+    "U": {
+      "key": "upgrade",
+      "label": "Upgrade (U)",
+      "description": "Upgrade frekuensi dan evaluasi program"
+    }
+  },
   "program_gaps": [
     "Speak Up / Check Point / Tegur Sapa fatigue",
     "Fatigue check in-shift / jam kritis",
@@ -149,21 +161,23 @@
     { "no": 3, "standard": "Door to door / family support ke mess, kontrakan, atau keluarga pekerja berisiko", "status": "wajib" },
     { "no": 4, "standard": "Speak up / check point / tegur sapa fatigue saat P5M, awal shift, dan jam kritis", "status": "wajib" },
     { "no": 5, "standard": "Deklarasi tidur minimal 6 jam sebelum bekerja", "status": "wajib" },
-    { "no": 6, "standard": "Fatigue check / Fit to Work 100% di awal shift", "status": "wajib" },
+    { "no": 6, "standard": "Fatigue check / Fit to Work di awal shift", "status": "wajib" },
     { "no": 7, "standard": "Sobriety test / alcohol test untuk pekerja risiko tinggi dan pemegang SIMPER", "status": "upgrade" },
     { "no": 8, "standard": "Tensi / pemeriksaan kesehatan kritis untuk SIMPER, driver, operator, dan pekerja riwayat risiko", "status": "upgrade" },
     { "no": 9, "standard": "Parental control / Google Activity / screen time check sebelum bekerja", "status": "upgrade" },
     { "no": 10, "standard": "Fatigue check in-shift pada jam kritis", "status": "wajib" },
     { "no": 11, "standard": "Sidak mess / kontrakan / rest time patrol pada jam rawan mengantuk", "status": "upgrade" },
-    { "no": 12, "standard": "Power nap, stretching, wake up call, stop 5 menit untuk recovery", "status": "replikasi" },
-    { "no": 13, "standard": "DMS / OPA / wearable monitoring jika tersedia; manual monitoring jika belum tersedia", "status": "replikasi" },
     { "no": 14, "standard": "Reporting evidence harian dan evaluasi mingguan", "status": "wajib" },
     { "no": 15, "standard": "Governance / instruksi resmi PJO / program resmi mitra", "status": "wajib" },
     { "no": 16, "standard": "Leadership walkthrough / management patrol", "status": "upgrade" },
-    { "no": 17, "standard": "Coaching PJA untuk pekerja short sleep, repetitive alert, atau temuan fatigue", "status": "wajib" }
+    { "no": 17, "standard": "Treatment repetitive alert fatigue / coaching PJA", "status": "wajib" },
+    { "no": 18, "standard": "Fatigue test 100% di awal shift", "status": "upgrade" },
+    { "no": 19, "standard": "High-risk hours monitoring dan off-duty recovery monitoring", "status": "wajib" },
+    { "no": 20, "standard": "Review manual untuk kontrol khusus / kasus spesifik", "status": "wajib" },
+    { "no": 23, "standard": "Kontrol screen time / Google Activity / parental control in-shift", "status": "upgrade" }
   ],
-  "mandatory_programs": [
-    { "program": "Door to door / family support", "mitra": ["HRB", "SCI", "SCCI", "ACI", "PAMA", "MOP", "TMU"] },
+  "partner_gap_reference": [
+    { "program": "Door to door / family support", "mitra": ["HRB", "SCI", "SCCI", "ACI", "PAMA", "MOP", "TMU"], "note": "Referensi gap mitra — bukan tier program terpisah" },
     { "program": "Speak up / check point / tegur sapa fatigue", "mitra": ["HRB", "SCI", "SCCI", "ACI", "PAMA", "MOP", "DNX", "DAN", "TMU"] },
     { "program": "Fatigue check in-shift / jam kritis", "mitra": ["HRB", "SCCI", "ACI", "OPP", "DNX", "DAN"] },
     { "program": "Sidak mess / kontrakan / rest time monitoring", "mitra": ["HRB", "SCI", "SCCI", "ACI", "DNX", "DAN"] },

@@ -1,0 +1,2201 @@
+{
+  "schema_version": "1.0",
+  "metadata": {
+    "title": "Perkuatan Fatigue Management selama Piala Dunia 2026",
+    "source_file": "Perkuatan Fatigue Management selama Piala Dunia 2026(3).xlsx",
+    "generated_at": "2026-06-18T12:58:13+08:00",
+    "timezone": "Asia/Makassar",
+    "default_program_period": {
+      "start_date": "2026-06-11",
+      "end_date": "2026-07-20"
+    }
+  },
+  "summary": {
+    "sheet_count": 12,
+    "partner_count": 12,
+    "program_count": 77,
+    "subactivity_count": 4,
+    "sites": [
+      {
+        "site": "GMO",
+        "partner_count": 12,
+        "partners": [
+          "PT Hutan Rindang Banua",
+          "PT SUCOFINDO",
+          "PT. Surveyor Carbon Consulting Indonesia",
+          "PT Arcistec International",
+          "PT Bumi Artlantis Raya",
+          "PT ORECON PUTRA PERKASA",
+          "PAMA",
+          "KDC",
+          "Mulia Oto Partindo",
+          "DNX",
+          "DAN",
+          "Tectona Mitra Utama"
+        ],
+        "program_count": 77
+      },
+      {
+        "site": "LMO",
+        "partner_count": 2,
+        "partners": [
+          "PT SUCOFINDO",
+          "PT Arcistec International"
+        ],
+        "program_count": 7
+      },
+      {
+        "site": "BMO1",
+        "partner_count": 1,
+        "partners": [
+          "PT SUCOFINDO"
+        ],
+        "program_count": 4
+      },
+      {
+        "site": "BMO2",
+        "partner_count": 1,
+        "partners": [
+          "PT SUCOFINDO"
+        ],
+        "program_count": 4
+      },
+      {
+        "site": "SMO",
+        "partner_count": 2,
+        "partners": [
+          "PT SUCOFINDO",
+          "PT Arcistec International"
+        ],
+        "program_count": 7
+      },
+      {
+        "site": "MARINE",
+        "partner_count": 1,
+        "partners": [
+          "PT SUCOFINDO"
+        ],
+        "program_count": 4
+      },
+      {
+        "site": "BMO",
+        "partner_count": 1,
+        "partners": [
+          "PT Arcistec International"
+        ],
+        "program_count": 3
+      },
+      {
+        "site": "BMO-1",
+        "partner_count": 1,
+        "partners": [
+          "PT ORECON PUTRA PERKASA"
+        ],
+        "program_count": 3
+      }
+    ]
+  },
+  "companies": [
+    {
+      "source_sheet": "PT HRB All Site",
+      "company": "PT Hutan Rindang Banua",
+      "sites": [
+        "GMO"
+      ],
+      "site_raw_values": [
+        "GMO"
+      ],
+      "programs": [
+        {
+          "no": 11,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Hutan Rindang Banua",
+          "program": "Pelaksanaan Sobriety & Fatigue Test\nSeluruh Karyawan Awal Shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Shiftly",
+          "implementer": "PJA Revegetasi",
+          "pic": "HSE",
+          "implementation_indicator": "Zero Incident Fatigue Related Fit\nTo Work",
+          "source_sheet": "PT HRB All Site",
+          "source_row": 2
+        },
+        {
+          "no": 12,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Hutan Rindang Banua",
+          "program": "Tensi Awal Shift Untuk Karyawan\nPemegang Simper",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Shiftly",
+          "implementer": "PJA Revegetasi",
+          "pic": "HSE",
+          "implementation_indicator": "Zero Incident Fatigue Related Fit\nTo Work",
+          "source_sheet": "PT HRB All Site",
+          "source_row": 3
+        },
+        {
+          "no": 13,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Hutan Rindang Banua",
+          "program": "Parental Control & Google Activit",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Shiftly",
+          "implementer": "PJA Revegetasi",
+          "pic": "HSE",
+          "implementation_indicator": "Zero Incident Fatigue Related Fit\nTo Work",
+          "source_sheet": "PT HRB All Site",
+          "source_row": 4
+        },
+        {
+          "no": 14,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Hutan Rindang Banua",
+          "program": "Sosialisasi ke pekerja tentang menjaga\npola tidur pada saat event piala dunia",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "PJA Revegetasi",
+          "pic": "HSE",
+          "implementation_indicator": "Zero Incident Fatigue Related Fit\nTo Work",
+          "source_sheet": "PT HRB All Site",
+          "source_row": 5
+        },
+        {
+          "no": 15,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Hutan Rindang Banua",
+          "program": "Campaign Perihal Menjaga Pola Jam Tidur\nPada Saat Event Piala Dunia",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "PJA Revegetasi",
+          "pic": "HSE",
+          "implementation_indicator": "Zero Incident Fatigue Related Fit\nTo Work",
+          "source_sheet": "PT HRB All Site",
+          "source_row": 6
+        }
+      ],
+      "program_count": 5
+    },
+    {
+      "source_sheet": "SCI",
+      "company": "PT SUCOFINDO",
+      "sites": [
+        "LMO",
+        "BMO1",
+        "BMO2",
+        "GMO",
+        "SMO",
+        "MARINE"
+      ],
+      "site_raw_values": [
+        "LMO\nBMO1\nBMO2\nGMO\nSMO\nMARINE"
+      ],
+      "programs": [
+        {
+          "no": 1,
+          "site_raw": "LMO\nBMO1\nBMO2\nGMO\nSMO\nMARINE",
+          "sites": [
+            "LMO",
+            "BMO1",
+            "BMO2",
+            "GMO",
+            "SMO",
+            "MARINE"
+          ],
+          "company": "PT SUCOFINDO",
+          "program": "Pelaksanaan Fatigue Management\n1. Pemeriksaan jam tidur dan memastikan karyawan Fit To Work\n2. Pelaksanaan sobriety dan tensi\n3. Report actual pemeriksaan (Form Fatigue & Jam Tidur)",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily\n(Awal Shift)",
+          "implementer": "Pengawas/HSE",
+          "pic": "Pengawas/HSE",
+          "implementation_indicator": "Tidak terdapat temuan pekerja tidak istirahat",
+          "source_sheet": "SCI",
+          "source_row": 2
+        },
+        {
+          "no": 2,
+          "site_raw": "LMO\nBMO1\nBMO2\nGMO\nSMO\nMARINE",
+          "sites": [
+            "LMO",
+            "BMO1",
+            "BMO2",
+            "GMO",
+            "SMO",
+            "MARINE"
+          ],
+          "company": "PT SUCOFINDO",
+          "program": "Sidak Google Activity / Parental Control (Jam Tidur)\n1. Plan pelaksanaan sidak google activity\n2. Report pelaksanaan sidak google activity\n3. Evaluasi hasil sidak google activity\n4. Tindak lanjut bagi yang terindikasi kurang tidur",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily\n(Awal Shift)",
+          "implementer": "Pengawas/HSE",
+          "pic": "Pengawas/HSE",
+          "implementation_indicator": "Tidak terdapat temuan saat digital parental",
+          "source_sheet": "SCI",
+          "source_row": 3
+        },
+        {
+          "no": 3,
+          "site_raw": "LMO\nBMO1\nBMO2\nGMO\nSMO\nMARINE",
+          "sites": [
+            "LMO",
+            "BMO1",
+            "BMO2",
+            "GMO",
+            "SMO",
+            "MARINE"
+          ],
+          "company": "PT SUCOFINDO",
+          "program": "Inspeksi dan Observasi Pekerja\n1. Pemantauan pekerja dalam penggunaan HP saat bekerja untuk melihat skor pertandingan\n2. Pelaksanaan sobriety dan streaching di jam kritis",
+          "timeline": {
+            "raw": "12 Juni - 20 Juli",
+            "start_date": "2026-06-12",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily",
+          "implementer": "Pengawas/HSE",
+          "pic": "Pengawas/HSE",
+          "implementation_indicator": "Memastikan semua pekerja dalam keadaan FIT",
+          "source_sheet": "SCI",
+          "source_row": 4
+        },
+        {
+          "no": 4,
+          "site_raw": "LMO\nBMO1\nBMO2\nGMO\nSMO\nMARINE",
+          "sites": [
+            "LMO",
+            "BMO1",
+            "BMO2",
+            "GMO",
+            "SMO",
+            "MARINE"
+          ],
+          "company": "PT SUCOFINDO",
+          "program": "Campaign Fatigue Management Selama Piala Dunia",
+          "timeline": {
+            "raw": "13 Juni - 20 Juli",
+            "start_date": "2026-06-13",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "HSE",
+          "pic": "HSE",
+          "implementation_indicator": "Pekerja memahami arti penting menjaga pola istirahat yang cukup",
+          "source_sheet": "SCI",
+          "source_row": 5
+        }
+      ],
+      "program_count": 4
+    },
+    {
+      "source_sheet": "PT. SCCI",
+      "company": "PT. Surveyor Carbon Consulting Indonesia",
+      "sites": [
+        "GMO"
+      ],
+      "site_raw_values": [
+        "GMO"
+      ],
+      "programs": [
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT. Surveyor Carbon Consulting Indonesia",
+          "program": "Pelaksanaan Fatigue Management",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli 2026",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily\n(Awal Shift)",
+          "implementer": "Pengawas & HSE",
+          "pic": "Pengawas & HSE",
+          "implementation_indicator": "Memastikan Driver Sarana LV yang melakukan aktivitas dalam kondisi Fit dan Siap untuk bekerja",
+          "source_sheet": "PT. SCCI",
+          "source_row": 2,
+          "subactivities": [
+            {
+              "description": "Pelaksanaan Tensi, alkohol test dan Sobriety test bagi pemilik SIMPER diawal Shift",
+              "source_row": 3
+            },
+            {
+              "description": "Monitoring pelaporan Parental Control serta kecukupan tidur (minimal 6 jam)",
+              "implementation_indicator": "Tidak terdapat temuan Driver Sarana LV memiliki jam tidur kurang dari 6 jam",
+              "source_row": 4
+            }
+          ]
+        },
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT. Surveyor Carbon Consulting Indonesia",
+          "program": "Digital Campaign menjaga pola hidup dan meningkatkan awareness pekerja ditengah gempuran demam piala dunia 2026",
+          "timeline": {
+            "raw": "13 Juni - 20 Juli",
+            "start_date": "2026-06-13",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "HSE",
+          "pic": "HSE",
+          "implementation_indicator": "Pekerja memiliki awareness dan pemahaman terkait dengan bahaya risiko dari Fatigue",
+          "source_sheet": "PT. SCCI",
+          "source_row": 5
+        },
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT. Surveyor Carbon Consulting Indonesia",
+          "program": "Inspeksi dan Observasi",
+          "timeline": {
+            "raw": "13 Juni - 20 Juli",
+            "start_date": "2026-06-13",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily",
+          "implementer": "Pengawas & HSE",
+          "pic": "Pengawas & HSE",
+          "implementation_indicator": "Tidak terdapat pekerja yang melakukan aktivitas pekerjaan menggunakan HP",
+          "source_sheet": "PT. SCCI",
+          "source_row": 6,
+          "subactivities": [
+            {
+              "description": "Pemantauan pekerja terkait dengan penggunaan HP ketika sedang bekerja (Menonton siaran ulang/highlght ketika bekerja)",
+              "source_row": 7
+            },
+            {
+              "description": "Pelaksanaan Sobriety test untuk pekerja Surveyor dan Sampler",
+              "timeline": {
+                "raw": "13 Juni - 20 Juli",
+                "start_date": "2026-06-13",
+                "end_date": "2026-07-20"
+              },
+              "frequency": "Daily",
+              "implementer": "Pengawas & HSE",
+              "pic": "Pengawas & HSE",
+              "implementation_indicator": "Memastikan Surveyor & Sampler yang sedang bekerja dalam kondisi Fit dan Siap untuk bekerja",
+              "source_row": 8
+            }
+          ]
+        }
+      ],
+      "program_count": 3
+    },
+    {
+      "source_sheet": "ACI",
+      "company": "PT Arcistec International",
+      "sites": [
+        "LMO",
+        "BMO",
+        "GMO",
+        "SMO"
+      ],
+      "site_raw_values": [
+        "LMO\nBMO\nGMO\nSMO"
+      ],
+      "programs": [
+        {
+          "no": 1,
+          "site_raw": "LMO\nBMO\nGMO\nSMO",
+          "sites": [
+            "LMO",
+            "BMO",
+            "GMO",
+            "SMO"
+          ],
+          "company": "PT Arcistec International",
+          "program": "Pelaksanaan Fatigue Management\n1. Pemeriksaan jam tidur dan memastikan karyawan Fit To Work\n2. Pelaksanaan sobriety test\n3. Pelaksanaan Tensi bagi pemegang SIMPER",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily\n(Awal Shift)",
+          "implementer": "Pengawas/HSE",
+          "pic": "Pengawas/HSE",
+          "implementation_indicator": "Tidak terdapat temuan pekerja tidak istirahat",
+          "source_sheet": "ACI",
+          "source_row": 2
+        },
+        {
+          "no": 2,
+          "site_raw": "LMO\nBMO\nGMO\nSMO",
+          "sites": [
+            "LMO",
+            "BMO",
+            "GMO",
+            "SMO"
+          ],
+          "company": "PT Arcistec International",
+          "program": "Random Chek Google Activity / Parental Control (Jam Tidur)\n1. Plan pelaksanaan sidak google activity\n2. Report pelaksanaan sidak google activity\n3. Tindak lanjut bagi yang terindikasi kurang tidur",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily\n(Awal Shift)",
+          "implementer": "Pengawas/HSE",
+          "pic": "Pengawas/HSE",
+          "implementation_indicator": "Tidak terdapat temuan saat digital parental",
+          "source_sheet": "ACI",
+          "source_row": 3
+        },
+        {
+          "no": 3,
+          "site_raw": "LMO\nBMO\nGMO\nSMO",
+          "sites": [
+            "LMO",
+            "BMO",
+            "GMO",
+            "SMO"
+          ],
+          "company": "PT Arcistec International",
+          "program": "Campaign Fatigue Management Selama Piala Dunia",
+          "timeline": {
+            "raw": "13 Juni - 20 Juli",
+            "start_date": "2026-06-13",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "HSE",
+          "pic": "HSE",
+          "implementation_indicator": "Pekerja memahami arti penting menjaga pola istirahat yang cukup",
+          "source_sheet": "ACI",
+          "source_row": 4
+        }
+      ],
+      "program_count": 3
+    },
+    {
+      "source_sheet": "BAR BMO3 & GMO",
+      "company": "PT Bumi Artlantis Raya",
+      "sites": [
+        "GMO"
+      ],
+      "site_raw_values": [
+        "GMO"
+      ],
+      "programs": [
+        {
+          "no": 1,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Bumi Artlantis Raya",
+          "program": "Pelaksanaan Sobriety Test dan Pemeriksaan Tekanan Darah Bagi Karyawan Pemilik Riwayat Kritis di Awal Shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per Shift",
+          "implementer": "HSE, Produksi, GA, Logistik",
+          "pic": "HSE, Produksi, GA, Logistik",
+          "implementation_indicator": "Karyawan fit sebelum bekerja",
+          "source_sheet": "BAR BMO3 & GMO",
+          "source_row": 2,
+          "additional_tracking": {
+            "cells": [
+              {
+                "column": "J",
+                "value": "Achievement"
+              },
+              {
+                "column": "K",
+                "value": "2026-06-12"
+              },
+              {
+                "column": "L",
+                "value": "2026-06-13"
+              },
+              {
+                "column": "M",
+                "value": "2026-06-14"
+              },
+              {
+                "column": "N",
+                "value": "2026-06-15"
+              },
+              {
+                "column": "O",
+                "value": "2026-06-16"
+              },
+              {
+                "column": "P",
+                "value": "2026-06-17"
+              },
+              {
+                "column": "Q",
+                "value": "2026-06-18"
+              },
+              {
+                "column": "R",
+                "value": "2026-06-19"
+              },
+              {
+                "column": "S",
+                "value": "2026-06-20"
+              },
+              {
+                "column": "T",
+                "value": "2026-06-21"
+              },
+              {
+                "column": "U",
+                "value": "2026-06-22"
+              },
+              {
+                "column": "V",
+                "value": "2026-06-23"
+              },
+              {
+                "column": "W",
+                "value": "2026-06-24"
+              },
+              {
+                "column": "X",
+                "value": "2026-06-25"
+              },
+              {
+                "column": "Y",
+                "value": "2026-06-26"
+              },
+              {
+                "column": "Z",
+                "value": "2026-06-27"
+              },
+              {
+                "column": "AA",
+                "value": "2026-06-28"
+              },
+              {
+                "column": "AB",
+                "value": "2026-06-29"
+              },
+              {
+                "column": "AC",
+                "value": "2026-06-30"
+              },
+              {
+                "column": "AD",
+                "value": "2026-07-01"
+              },
+              {
+                "column": "AE",
+                "value": "2026-07-02"
+              },
+              {
+                "column": "AF",
+                "value": "2026-07-03"
+              },
+              {
+                "column": "AG",
+                "value": "2026-07-04"
+              },
+              {
+                "column": "AH",
+                "value": "2026-07-05"
+              },
+              {
+                "column": "AI",
+                "value": "2026-07-06"
+              },
+              {
+                "column": "AJ",
+                "value": "2026-07-07"
+              },
+              {
+                "column": "AK",
+                "value": "2026-07-08"
+              },
+              {
+                "column": "AL",
+                "value": "2026-07-09"
+              },
+              {
+                "column": "AM",
+                "value": "2026-07-10"
+              },
+              {
+                "column": "AN",
+                "value": "2026-07-11"
+              },
+              {
+                "column": "AO",
+                "value": "2026-07-12"
+              },
+              {
+                "column": "AP",
+                "value": "2026-07-13"
+              },
+              {
+                "column": "AQ",
+                "value": "2026-07-14"
+              },
+              {
+                "column": "AR",
+                "value": "2026-07-15"
+              },
+              {
+                "column": "AS",
+                "value": "2026-07-16"
+              },
+              {
+                "column": "AT",
+                "value": "2026-07-17"
+              },
+              {
+                "column": "AU",
+                "value": "2026-07-18"
+              },
+              {
+                "column": "AV",
+                "value": "2026-07-19"
+              },
+              {
+                "column": "AW",
+                "value": "2026-07-20"
+              }
+            ],
+            "dates": [
+              "2026-06-12",
+              "2026-06-13",
+              "2026-06-14",
+              "2026-06-15",
+              "2026-06-16",
+              "2026-06-17",
+              "2026-06-18",
+              "2026-06-19",
+              "2026-06-20",
+              "2026-06-21",
+              "2026-06-22",
+              "2026-06-23",
+              "2026-06-24",
+              "2026-06-25",
+              "2026-06-26",
+              "2026-06-27",
+              "2026-06-28",
+              "2026-06-29",
+              "2026-06-30",
+              "2026-07-01",
+              "2026-07-02",
+              "2026-07-03",
+              "2026-07-04",
+              "2026-07-05",
+              "2026-07-06",
+              "2026-07-07",
+              "2026-07-08",
+              "2026-07-09",
+              "2026-07-10",
+              "2026-07-11",
+              "2026-07-12",
+              "2026-07-13",
+              "2026-07-14",
+              "2026-07-15",
+              "2026-07-16",
+              "2026-07-17",
+              "2026-07-18",
+              "2026-07-19",
+              "2026-07-20"
+            ],
+            "entries": [
+              "Achievement"
+            ]
+          }
+        },
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Bumi Artlantis Raya",
+          "program": "Parental Control & Google Activity",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per Shift",
+          "implementer": "HSE, Produksi, GA, Logistik",
+          "pic": "HSE, Produksi, GA, Logistik",
+          "implementation_indicator": "Tidak ada kurang jam tidur karyawan",
+          "source_sheet": "BAR BMO3 & GMO",
+          "source_row": 3,
+          "additional_tracking": {
+            "cells": [
+              {
+                "column": "K",
+                "value": "Google Activity & Sobriety Test"
+              },
+              {
+                "column": "L",
+                "value": "Google Activity & Sobriety Test"
+              },
+              {
+                "column": "M",
+                "value": "Google Activity & Sobriety Test"
+              }
+            ],
+            "entries": [
+              "Google Activity & Sobriety Test",
+              "Google Activity & Sobriety Test",
+              "Google Activity & Sobriety Test"
+            ]
+          }
+        },
+        {
+          "no": 3,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Bumi Artlantis Raya",
+          "program": "Health Talk",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per Week",
+          "implementer": "Medik",
+          "pic": "Medik",
+          "implementation_indicator": "Karyawan memahami cara menjaga pola istirahan saat event Piala Dunia",
+          "source_sheet": "BAR BMO3 & GMO",
+          "source_row": 4,
+          "additional_tracking": {
+            "cells": [
+              {
+                "column": "K",
+                "value": "Health Talk"
+              },
+              {
+                "column": "L",
+                "value": "Health Talk"
+              },
+              {
+                "column": "M",
+                "value": "Health Talk"
+              }
+            ],
+            "entries": [
+              "Health Talk",
+              "Health Talk",
+              "Health Talk"
+            ]
+          }
+        },
+        {
+          "no": 4,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Bumi Artlantis Raya",
+          "program": "Pelaksanaan Fatigue check jam kritis",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per Shift",
+          "implementer": "HSE, Produksi, GA, Logistik",
+          "pic": "HSE, Produksi, GA, Logistik",
+          "implementation_indicator": "Identifikasi karyawan terindikasi fatigue pada jam kritis",
+          "source_sheet": "BAR BMO3 & GMO",
+          "source_row": 5,
+          "additional_tracking": {
+            "cells": [
+              {
+                "column": "K",
+                "value": "Google Activity & Sobriety Test"
+              },
+              {
+                "column": "L",
+                "value": "Google Activity & Sobriety Test"
+              },
+              {
+                "column": "M",
+                "value": "Google Activity & Sobriety Test"
+              }
+            ],
+            "entries": [
+              "Google Activity & Sobriety Test",
+              "Google Activity & Sobriety Test",
+              "Google Activity & Sobriety Test"
+            ]
+          }
+        },
+        {
+          "no": 6,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Bumi Artlantis Raya",
+          "program": "Campaign Highlight Piala Dunia",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per Day",
+          "implementer": "HSE",
+          "pic": "HSE",
+          "implementation_indicator": "Informasi seputar hasil pertandingan piala dunia",
+          "source_sheet": "BAR BMO3 & GMO",
+          "source_row": 6,
+          "additional_tracking": {
+            "cells": [
+              {
+                "column": "K",
+                "value": "Campaign"
+              },
+              {
+                "column": "L",
+                "value": "-"
+              },
+              {
+                "column": "M",
+                "value": "-"
+              }
+            ],
+            "entries": [
+              "Campaign",
+              "-",
+              "-"
+            ]
+          }
+        },
+        {
+          "no": 7,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Bumi Artlantis Raya",
+          "program": "Broadcast Interaktif",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per Shift",
+          "implementer": "HSE",
+          "pic": "HSE",
+          "implementation_indicator": "Pesan keselamatan dan tegus sapa team HSE ke operator di jam kritis",
+          "source_sheet": "BAR BMO3 & GMO",
+          "source_row": 7,
+          "additional_tracking": {
+            "cells": [
+              {
+                "column": "K",
+                "value": "Tidak Terlaksana"
+              },
+              {
+                "column": "L",
+                "value": "Tidak Terlaksana"
+              },
+              {
+                "column": "M",
+                "value": "Tidak Terlaksana"
+              }
+            ],
+            "entries": [
+              "Tidak Terlaksana",
+              "Tidak Terlaksana",
+              "Tidak Terlaksana"
+            ]
+          }
+        },
+        {
+          "no": 9,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT Bumi Artlantis Raya",
+          "program": "Door To Door & Sidak Kontrakan Event Piala Dunia",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per Week",
+          "implementer": "HSE & GA",
+          "pic": "HSE & GA",
+          "implementation_indicator": "Peran keluarga karyawan untuk mendukung fatigue manajemen",
+          "source_sheet": "BAR BMO3 & GMO",
+          "source_row": 8,
+          "additional_tracking": {
+            "cells": [
+              {
+                "column": "K",
+                "value": "Plan hari minggu"
+              },
+              {
+                "column": "L",
+                "value": "Plan hari minggu"
+              },
+              {
+                "column": "M",
+                "value": "Door To Door & Sidak Kontrakan"
+              }
+            ],
+            "entries": [
+              "Plan hari minggu",
+              "Plan hari minggu",
+              "Door To Door & Sidak Kontrakan"
+            ]
+          }
+        }
+      ],
+      "program_count": 7
+    },
+    {
+      "source_sheet": "OPP GMO & BMO1",
+      "company": "PT ORECON PUTRA PERKASA",
+      "sites": [
+        "GMO",
+        "BMO-1"
+      ],
+      "site_raw_values": [
+        "GMO",
+        "GMO & BMO-1"
+      ],
+      "programs": [
+        {
+          "no": 1,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT ORECON PUTRA PERKASA",
+          "program": "Spanduk Campaign Fatigue Management Highlight Piala Dunia",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Monthly",
+          "implementer": "HSE",
+          "pic": "Eka",
+          "implementation_indicator": "Memberikan Edukasi / tips istirahat yang cukup kepada seluruh personil",
+          "source_sheet": "OPP GMO & BMO1",
+          "source_row": 2
+        },
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT ORECON PUTRA PERKASA",
+          "program": "Campaign Fatigue Management Highlight Piala Dunia",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "HSE",
+          "pic": "Week 1 ( 11 s/d 17): Sury\nWeek 2 (18 s/d 24): Eka\nWeek 3 (25 s/d 1): Cahaya\nWeek 4 (2 s/d 8): Fajri\nweek 5 (9 s/d 15) : Eza\nweek 6 (16 s/d 20) : Roy",
+          "implementation_indicator": "Pekerja & Keluarga Memahami Arti penting menjaga pola istirahat yang cukup",
+          "source_sheet": "OPP GMO & BMO1",
+          "source_row": 3
+        },
+        {
+          "no": 3,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT ORECON PUTRA PERKASA",
+          "program": "Sidak Mess (Monitoring langsung jam tidur dan aktivitas lain di jam-jam kritis untuk pekerja mess)",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1 x / Week",
+          "implementer": "HSE & HCGA",
+          "pic": "AFIF & ROY",
+          "implementation_indicator": "Tidak ditemukan aktivitas yang berpotensi mengurangi waktu istirahat pada jam tidur yang telah ditetapkan.",
+          "source_sheet": "OPP GMO & BMO1",
+          "source_row": 4
+        },
+        {
+          "no": 4,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT ORECON PUTRA PERKASA",
+          "program": "Door To Door Event Piala Dunia",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x / 2 Week",
+          "implementer": "HSE & HCGA",
+          "pic": "SURY & SYAMSUL",
+          "source_sheet": "OPP GMO & BMO1",
+          "source_row": 5
+        },
+        {
+          "no": 5,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT ORECON PUTRA PERKASA",
+          "program": "Pelaksanaan Sobriety Test dan Pemeriksaan Tekanan Darah Bagi Karyawan Pemilik Riwayat Kritis di Awal Shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x / Day",
+          "implementer": "HSE",
+          "pic": "Paramedic",
+          "implementation_indicator": "Seluruh karyawan target menjalani pemeriksaan dan dinyatakan fit to work sebelum memulai pekerjaan.",
+          "source_sheet": "OPP GMO & BMO1",
+          "source_row": 6
+        },
+        {
+          "no": 6,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT ORECON PUTRA PERKASA",
+          "program": "Parental Control & Google Activity",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "2x / Day (Pagi dan Siang)",
+          "implementer": "HSE",
+          "pic": "Paramedic",
+          "implementation_indicator": "Tidak ada kurang jam tidur karyawan",
+          "source_sheet": "OPP GMO & BMO1",
+          "source_row": 7
+        },
+        {
+          "no": 7,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PT ORECON PUTRA PERKASA",
+          "program": "Monitoring Alcohol dan Drug Test Pada Pemilik Simper",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x / Day",
+          "implementer": "HSE",
+          "pic": "Paramedic",
+          "implementation_indicator": "Tidak ditemukan hasil positif alkohol maupun narkoba pada karyawan yang diperiksa.",
+          "source_sheet": "OPP GMO & BMO1",
+          "source_row": 8
+        },
+        {
+          "no": 8,
+          "site_raw": "GMO & BMO-1",
+          "sites": [
+            "GMO",
+            "BMO-1"
+          ],
+          "company": "PT ORECON PUTRA PERKASA",
+          "program": "Pengecekan HP karyawan terkait potensi bermain judi online",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x / Week",
+          "implementer": "HSE & HCGA",
+          "pic": "INDRA & ALDIANSYAH",
+          "implementation_indicator": "Tidak ditemukan aktivitas judi online yang berpotensi mengganggu waktu istirahat dan kondisi fit to work karyawan.",
+          "source_sheet": "OPP GMO & BMO1",
+          "source_row": 9
+        },
+        {
+          "no": 9,
+          "site_raw": "GMO & BMO-1",
+          "sites": [
+            "GMO",
+            "BMO-1"
+          ],
+          "company": "PT ORECON PUTRA PERKASA",
+          "program": "Monitoring pelaksanaan speak up karyawan di awal shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x / Day",
+          "implementer": "HSE & SPV",
+          "pic": "HSE + SPV",
+          "implementation_indicator": "Seluruh karyawan menyampaikan kondisi fit to work dan tidak ada laporan fatigue yang tidak ditindaklanjuti.",
+          "source_sheet": "OPP GMO & BMO1",
+          "source_row": 10
+        },
+        {
+          "no": 10,
+          "site_raw": "GMO & BMO-1",
+          "sites": [
+            "GMO",
+            "BMO-1"
+          ],
+          "company": "PT ORECON PUTRA PERKASA",
+          "program": "Pengecekan Roster Karyawan",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x / Monthly",
+          "implementer": "HCGA",
+          "pic": "AFIF & FADRAH",
+          "implementation_indicator": "Kepatuhan terhadap roster kerja dan waktu istirahat sesuai ketentuan perusahaan tercapai 100%.",
+          "source_sheet": "OPP GMO & BMO1",
+          "source_row": 11
+        }
+      ],
+      "program_count": 10
+    },
+    {
+      "source_sheet": "PAMA GMO",
+      "company": "PAMA",
+      "sites": [
+        "GMO"
+      ],
+      "site_raw_values": [
+        "GMO"
+      ],
+      "programs": [
+        {
+          "no": 1,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "Pengecheckan Driver di Area Mess di Jam rawan",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Jam Malam / Jam Istirahat",
+          "implementer": "HCGS",
+          "pic": "GL Transport",
+          "implementation_indicator": "Tidak ada temuan karyawan beraktifitas dijam tersebut",
+          "source_sheet": "PAMA GMO",
+          "source_row": 2
+        },
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "Mewajibkan Driver melaksanakan Power Nap minimal 10 - 15 Menit di jam istirahat",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Jam Istirahat Kerja",
+          "implementer": "All Dept",
+          "pic": "GL Transport",
+          "implementation_indicator": "Karyawan melaksanakan Power Nap di Jam Istirahat",
+          "source_sheet": "PAMA GMO",
+          "source_row": 3
+        },
+        {
+          "no": 3,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "Wake Up Call terkait dengan pengelolaan jam tidur dan fatigue",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Story Whatsapp dan Share ke Maisng Maisng Grup Dept",
+          "implementer": "SHE",
+          "pic": "GL Transport",
+          "implementation_indicator": "Karyawan Paham terkait dengan pengelolaan jam tidur",
+          "source_sheet": "PAMA GMO",
+          "source_row": 4
+        },
+        {
+          "no": 4,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(OPA) Operator menggunakan wearable OPA saat tidur",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x/Shift",
+          "implementer": "Operator",
+          "pic": "Windarto",
+          "implementation_indicator": "100% karyawan Mancal menggunakan Jam OPA",
+          "source_sheet": "PAMA GMO",
+          "source_row": 5
+        },
+        {
+          "no": 5,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(OPA) Validasi kesesuaian jam tidur OPA oleh tim OPA Corner pada saat awal shift",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x/Shift",
+          "implementer": "IT,SHE,OTD",
+          "pic": "Windarto & Dani Eko",
+          "implementation_indicator": "Hasil jam tidur Operator yang menggunakan OPA sesuai dengan aktual",
+          "source_sheet": "PAMA GMO",
+          "source_row": 6
+        },
+        {
+          "no": 6,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(OPA) Follow up Coaching n Counselling pada jam tidur OPA yang tidak tercapai",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x/Shift",
+          "implementer": "GL",
+          "pic": "Windarto",
+          "implementation_indicator": "Operator dengan jam tidur kurang dilakukan follow up dan didalami",
+          "source_sheet": "PAMA GMO",
+          "source_row": 7
+        },
+        {
+          "no": 7,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(Sidak jam tidur) Sidak dilakukan secara random oleh SHE & Supervisor (3x/minggu)",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "3x/minggu",
+          "implementer": "SHE & Spv",
+          "pic": "Dani Eko",
+          "implementation_indicator": "Menindak terkait kepatuhan jam tidur operator",
+          "source_sheet": "PAMA GMO",
+          "source_row": 8
+        },
+        {
+          "no": 8,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(Sidak jam tidur) Pemeriksaan meliputi jam tidur, kualitas istirahat, dan kondisi fisik",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "3x/minggu",
+          "implementer": "SHE & Spv",
+          "pic": "Dani Eko",
+          "implementation_indicator": "Menindak terkait kepatuhan jam tidur operator",
+          "source_sheet": "PAMA GMO",
+          "source_row": 9
+        },
+        {
+          "no": 9,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(Sidak jam tidur) Temuan ketidaksesuaian dilakukan coaching dan evaluasi",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "3x/minggu",
+          "implementer": "SHE & Spv",
+          "pic": "Dani Eko",
+          "implementation_indicator": "Menindak terkait kepatuhan jam tidur operator",
+          "source_sheet": "PAMA GMO",
+          "source_row": 10
+        },
+        {
+          "no": 10,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(Campaign) Campaign dilakukan melalui banner & poster (memuat wake up call)",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily",
+          "implementer": "SHE",
+          "pic": "Dani Eko",
+          "implementation_indicator": "Campaign terlaksana secara daily",
+          "source_sheet": "PAMA GMO",
+          "source_row": 11
+        },
+        {
+          "no": 11,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(Campaign) Edukasi fatigue dilakukan secara rutin di area kerja & mess",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x/week",
+          "implementer": "SHE",
+          "pic": "Dani Eko",
+          "implementation_indicator": "Campaign terlaksana secara daily",
+          "source_sheet": "PAMA GMO",
+          "source_row": 12
+        },
+        {
+          "no": 12,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(Campaign) Campaign difokuskan pada area dengan risiko fatigue tinggi",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x/week",
+          "implementer": "SHE",
+          "pic": "Dani Eko",
+          "implementation_indicator": "Campaign terlaksana secara daily",
+          "source_sheet": "PAMA GMO",
+          "source_row": 13
+        },
+        {
+          "no": 13,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(Campaign) Dilakukan evaluasi efektivitas campaign setiap bulan",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x/week",
+          "implementer": "SHE",
+          "pic": "Dani Eko",
+          "implementation_indicator": "Campaign terlaksana secara daily",
+          "source_sheet": "PAMA GMO",
+          "source_row": 14
+        },
+        {
+          "no": 14,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(Fatigue Check) Pemeriksaan kondisi fatigue dilakukan sebelum bekerja dan pada saat jam kritis",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x/shift",
+          "implementer": "Operator",
+          "pic": "Windarto",
+          "implementation_indicator": "Fatigue Check terlaksana secara daily",
+          "source_sheet": "PAMA GMO",
+          "source_row": 15
+        },
+        {
+          "no": 15,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(Fatigue Check) Pemeriksaan meliputi tekanan darah, form fatigue check, dan sobriety test",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x/shift",
+          "implementer": "Operator",
+          "pic": "Windarto",
+          "implementation_indicator": "Fatigue Check terlaksana secara daily",
+          "source_sheet": "PAMA GMO",
+          "source_row": 16
+        },
+        {
+          "no": 16,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "PAMA",
+          "program": "(Fatigue Check) Operator dengan risiko tinggi diberikan tindakan istirahat",
+          "timeline": {
+            "raw": "11 Juni - 20 juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x/shift",
+          "implementer": "Operator",
+          "pic": "Windarto",
+          "implementation_indicator": "Fatigue Check terlaksana secara daily",
+          "source_sheet": "PAMA GMO",
+          "source_row": 17
+        }
+      ],
+      "program_count": 16
+    },
+    {
+      "source_sheet": "KDC GMO",
+      "company": "KDC",
+      "sites": [
+        "GMO"
+      ],
+      "site_raw_values": [
+        "GMO"
+      ],
+      "programs": [
+        {
+          "no": 1,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "KDC",
+          "program": "Pelaksanaan Sobriety Test dan Pemeriksaan Tekanan Darah Bagi Karyawan Pemilik Riwayat Kritis di Awal Shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily (Awal Shift)",
+          "implementer": "Pengawas/QHSE",
+          "pic": "Pengawas/QHSE",
+          "implementation_indicator": "Tidak terdapat temuan pekerja tidak istirahat",
+          "source_sheet": "KDC GMO",
+          "source_row": 2
+        },
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "KDC",
+          "program": "Parental Control & Google Activity",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily (Awal Shift)",
+          "implementer": "Pengawas/QHSE",
+          "pic": "Pengawas/QHSE",
+          "implementation_indicator": "Tidak terdapat temuan saat digital parental",
+          "source_sheet": "KDC GMO",
+          "source_row": 3
+        },
+        {
+          "no": 3,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "KDC",
+          "program": "Health Talk",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "QHSE",
+          "pic": "QHSE",
+          "implementation_indicator": "Karyawan memahami cara menjaga pola istirahan saat event Piala Dunia",
+          "source_sheet": "KDC GMO",
+          "source_row": 4
+        },
+        {
+          "no": 4,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "KDC",
+          "program": "Pelaksanaan Fatigue check jam kriti",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily",
+          "implementer": "Pengawas",
+          "pic": "Pengawas",
+          "implementation_indicator": "Kesesuaian & kualitas pelaksanaan fatigue test oleh pengawas",
+          "source_sheet": "KDC GMO",
+          "source_row": 5
+        },
+        {
+          "no": 5,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "KDC",
+          "program": "Pelaksanaan Stretching Setelah Jam Istiraha",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily",
+          "implementer": "Pengawas",
+          "pic": "Pengawas",
+          "implementation_indicator": "Karyawan fit bekerja setelah istiraha",
+          "source_sheet": "KDC GMO",
+          "source_row": 6
+        },
+        {
+          "no": 6,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "KDC",
+          "program": "Campaign Highlight Piala Dunia",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily",
+          "implementer": "QHSE",
+          "pic": "QHSE",
+          "implementation_indicator": "Informasi seputar hasil pertandingan piala dunia",
+          "source_sheet": "KDC GMO",
+          "source_row": 7
+        },
+        {
+          "no": 7,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "KDC",
+          "program": "Broadcast Interaktif",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Daily",
+          "implementer": "Pengawas",
+          "pic": "Pengawas",
+          "implementation_indicator": "Pesan keselamatan dan tegus sapa team CR ke operator di jam kriti",
+          "source_sheet": "KDC GMO",
+          "source_row": 8
+        },
+        {
+          "no": 8,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "KDC",
+          "program": "Sidak Mess (Kedisipilinan Jam Tidur Karyawan",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "Pengawas/QHSE",
+          "pic": "Pengawas/QHSE",
+          "implementation_indicator": "Tidak ada karyawan mess yang tidur di atas jam istiraha",
+          "source_sheet": "KDC GMO",
+          "source_row": 9
+        },
+        {
+          "no": 9,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "KDC",
+          "program": "Door To Door Event Piala Dunia",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "Pengawas/QHSE",
+          "pic": "Pengawas/QHSE",
+          "implementation_indicator": "Peran keluarga karyawan untuk mendukung fatigue manajeme",
+          "source_sheet": "KDC GMO",
+          "source_row": 10
+        }
+      ],
+      "program_count": 9
+    },
+    {
+      "source_sheet": "MOP GMO",
+      "company": "Mulia Oto Partindo",
+      "sites": [
+        "GMO"
+      ],
+      "site_raw_values": [
+        "GMO"
+      ],
+      "programs": [
+        {
+          "no": 1,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Mulia Oto Partindo",
+          "program": "Membuat jadwal safety patrol untuk operator DT setiap shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per shift",
+          "implementer": "HSE & Produksi",
+          "pic": "Yanuar",
+          "implementation_indicator": "Terbentuk leader safety dari setiap operator untuk saling mengingatkan terkait K3 di jalan hauling",
+          "source_sheet": "MOP GMO",
+          "source_row": 2
+        },
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Mulia Oto Partindo",
+          "program": "Pelaksanaan patrol jalan hauling oleh team HSE dan komunikasi 2 arah di jam kritis",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per shift",
+          "implementer": "HSE",
+          "pic": "Agus & Gilang",
+          "implementation_indicator": "Komunikasi 2 arah saat bertemu dengan unit DT di hauling serta pengecekan kondisi area kerja",
+          "source_sheet": "MOP GMO",
+          "source_row": 3
+        },
+        {
+          "no": 3,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Mulia Oto Partindo",
+          "program": "Pelaksanaan fatigue test 100% setiap shift pada jam kritis dan pelaksanaan sobriety test awal shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per shift",
+          "implementer": "Produksi",
+          "pic": "Djunrianto",
+          "implementation_indicator": "Menjamin kesiapan fisik karyawan di awal shift dan pada jam kritis",
+          "source_sheet": "MOP GMO",
+          "source_row": 4
+        },
+        {
+          "no": 4,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Mulia Oto Partindo",
+          "program": "Pelaksanaan inspeksi serta observasi langsung perwakilan manajemen di lapangan",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "2x per week",
+          "implementer": "Manajemen",
+          "pic": "Andri Kusuma",
+          "implementation_indicator": "Manajemen hadir dan membuka ruang diskusi dengan pekerja",
+          "source_sheet": "MOP GMO",
+          "source_row": 5
+        },
+        {
+          "no": 5,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Mulia Oto Partindo",
+          "program": "Sesi dialog santai antara manajemen serta semua perwakilan departemen",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "1x per month",
+          "implementer": "Manajemen",
+          "pic": "Andri Kusuma",
+          "implementation_indicator": "Adanya budaya peduli dan komunikasi yang baik antara manajemen dan pekerja",
+          "source_sheet": "MOP GMO",
+          "source_row": 6
+        },
+        {
+          "no": 6,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Mulia Oto Partindo",
+          "program": "Membuat kampanye keselamatan",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "2x per week",
+          "implementer": "HSE",
+          "pic": "Yanuar",
+          "implementation_indicator": "Meningkatkan kesadaran dan perubahan perilaku karyawan terkait keselamatan",
+          "source_sheet": "MOP GMO",
+          "source_row": 7
+        }
+      ],
+      "program_count": 6
+    },
+    {
+      "source_sheet": "DNX GMO",
+      "company": "DNX",
+      "sites": [
+        "GMO"
+      ],
+      "site_raw_values": [
+        "GMO"
+      ],
+      "programs": [
+        {
+          "no": 1,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "DNX",
+          "program": "1. Pelaksanaan Fatigue Test 100% di awal shift (Sobriety test, tensi, dan pemeriksaan jam tidur)",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Shift 1",
+          "implementer": "PJO & HSE",
+          "pic": "Pak Ferdy & Nur",
+          "implementation_indicator": "Tidak terdapat temuan pekerja tidak istirahat",
+          "source_sheet": "DNX GMO",
+          "source_row": 2
+        },
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "DNX",
+          "program": "2. Pemeriksaan Parental Control 100% di awal shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Shift 1",
+          "implementer": "PJO & HSE",
+          "pic": "Pak Ferdy & Nur",
+          "implementation_indicator": "Tidak terdapat temuan saat digital parental",
+          "source_sheet": "DNX GMO",
+          "source_row": 3
+        },
+        {
+          "no": 3,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "DNX",
+          "program": "3. Digital Campaign & Spanduk terkait Bahaya Fatigue karena Menonton Piala Dunia dan Himbauan untuk menonton Highlight nya saja",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly & Mounlty",
+          "implementer": "PJO & HSE",
+          "pic": "Pak Ferdy & Nur",
+          "implementation_indicator": "Pekerja Termotivasi untuk bekerja selamat",
+          "source_sheet": "DNX GMO",
+          "source_row": 4
+        },
+        {
+          "no": 4,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "DNX",
+          "program": "4. Door to Door / Family Support terkait Pengelolaan Fatigue selama event Piala Dunia.",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "PJO & HSE",
+          "pic": "Pak Ferdy & Nur",
+          "implementation_indicator": "Pekerja & Keluarga Memahami Arti penting menjaga pola istirahat yang cukup",
+          "source_sheet": "DNX GMO",
+          "source_row": 5
+        }
+      ],
+      "program_count": 4
+    },
+    {
+      "source_sheet": "DAN GMO",
+      "company": "DAN",
+      "sites": [
+        "GMO"
+      ],
+      "site_raw_values": [
+        "GMO"
+      ],
+      "programs": [
+        {
+          "no": 1,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "DAN",
+          "program": "1. Pelaksanaan Fatigue Test 100% di awal shift (Sobriety test, dan pemeriksaan jam tidur)",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Shift 1",
+          "implementer": "Kepala gudang & HSE",
+          "pic": "Hamri Hadi & Ristendi Andika",
+          "implementation_indicator": "Tidak terdapat temuan pekerja tidak istirahat",
+          "source_sheet": "DAN GMO",
+          "source_row": 2
+        },
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "DAN",
+          "program": "2. Pemeriksaan Parental Control 100% di awal shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Shift 1",
+          "implementer": "Kepala gudang & HSE",
+          "pic": "Hamri Hadi & Ristendi Andika",
+          "implementation_indicator": "Tidak terdapat temuan saat digital parental",
+          "source_sheet": "DAN GMO",
+          "source_row": 3
+        },
+        {
+          "no": 3,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "DAN",
+          "program": "3. Pelaksanaan Cek Tekanan Darah 100% Di Awal Shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Awal shift 1",
+          "implementer": "PJS PJO & HSE",
+          "pic": "Hendi Prayogo & Ristendi A",
+          "implementation_indicator": "Tidak terdapat temuan saat pemeriksaan tekanan darah",
+          "source_sheet": "DAN GMO",
+          "source_row": 4
+        },
+        {
+          "no": 4,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "DAN",
+          "program": "4. Digital Campaign & Spanduk terkait Bahaya Fatigue karena Menonton Piala Dunia dan Himbauan untuk menonton Highlight nya saja",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly & Mounlty",
+          "implementer": "Kepala gudang & HSE",
+          "pic": "Hamri Hadi & Ristendi Andika",
+          "implementation_indicator": "Pekerja Termotivasi untuk bekerja selamat",
+          "source_sheet": "DAN GMO",
+          "source_row": 5
+        },
+        {
+          "no": 5,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "DAN",
+          "program": "5. Door to Door / Family Support terkait Pengelolaan Fatigue selama event Piala Dunia.",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "Kepala gudang & HSE",
+          "pic": "Hamri Hadi & Ristendi Andika",
+          "implementation_indicator": "Pekerja & Keluarga Memahami Arti penting menjaga pola istirahat yang cukup",
+          "source_sheet": "DAN GMO",
+          "source_row": 6
+        }
+      ],
+      "program_count": 5
+    },
+    {
+      "source_sheet": "TMU GMO",
+      "company": "Tectona Mitra Utama",
+      "sites": [
+        "GMO"
+      ],
+      "site_raw_values": [
+        "GMO"
+      ],
+      "programs": [
+        {
+          "no": 1,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Tectona Mitra Utama",
+          "program": "Pelaksanaan Fatigue Test 100% Di Awal Shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Awal shift dan jam kritis",
+          "implementer": "HSE",
+          "pic": "Pengawas, HSE",
+          "implementation_indicator": "Tidak terdapat temuan pekerja saat pelaksanaan fatigue test",
+          "source_sheet": "TMU GMO",
+          "source_row": 2
+        },
+        {
+          "no": 2,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Tectona Mitra Utama",
+          "program": "Pelaksanaan Cek Tekanan Darah 100% Di Awal Shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Awal shift",
+          "implementer": "HSE",
+          "pic": "Paramedik, Pengawas, HSE",
+          "implementation_indicator": "Tidak terdapat temuan saat pemeriksaan tekanan darah",
+          "source_sheet": "TMU GMO",
+          "source_row": 3
+        },
+        {
+          "no": 3,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Tectona Mitra Utama",
+          "program": "Sidak Jam Tidur Pekerja",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Shiftly jam istirahat",
+          "implementer": "HSE",
+          "pic": "Pengawas, HSE",
+          "implementation_indicator": "Tidak terdapat temuan pekerja tidak istirahat",
+          "source_sheet": "TMU GMO",
+          "source_row": 4
+        },
+        {
+          "no": 4,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Tectona Mitra Utama",
+          "program": "Pemeriksaan Parental Control 100% di awal shift",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Awal shift",
+          "implementer": "HSE",
+          "pic": "Pengawas, HSE",
+          "implementation_indicator": "Tidak terdapat temuan saat digital parental",
+          "source_sheet": "TMU GMO",
+          "source_row": 5
+        },
+        {
+          "no": 5,
+          "site_raw": "GMO",
+          "sites": [
+            "GMO"
+          ],
+          "company": "Tectona Mitra Utama",
+          "program": "Digital Campaign Bahaya Fatigue Akibat Tidur Kurang Dari 6 Jam",
+          "timeline": {
+            "raw": "11 Juni - 20 Juli",
+            "start_date": "2026-06-11",
+            "end_date": "2026-07-20"
+          },
+          "frequency": "Weekly",
+          "implementer": "HSE",
+          "pic": "Pengawas, HSE",
+          "implementation_indicator": "Pekerja termotivasi untuk bekerja selamat",
+          "source_sheet": "TMU GMO",
+          "source_row": 6
+        }
+      ],
+      "program_count": 5
+    }
+  ]
+}
