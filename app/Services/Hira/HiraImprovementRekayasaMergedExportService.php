@@ -185,17 +185,14 @@ final class HiraImprovementRekayasaMergedExportService
         return $spreadsheet;
     }
 
-    private function applyTemplateDropdownValidations(
-        Spreadsheet $spreadsheet,
-        Worksheet $sheet,
-        int $lastDataRow,
-    ): void {
+    private function applyTemplateDropdownValidations(Spreadsheet $spreadsheet, Worksheet $sheet, int $lastDataRow): void
+    {
         $listSheet = $spreadsheet->createSheet();
-        $listSheet->setTitle('DropdownLists');
-        $listSheet->setSheetState(Worksheet::SHEETSTATE_VERYHIDDEN);
+        $listSheet->setTitle('Pilihan');
+        $listSheet->setSheetState(Worksheet::SHEETSTATE_HIDDEN);
 
         $headerIndex = array_flip(self::MERGED_EXPORT_HEADERS);
-        $listCol = 1;
+        $listColumnIndex = 1;
 
         foreach (self::TEMPLATE_DROPDOWN_OPTIONS as $header => $options) {
             if (! isset($headerIndex[$header])) {
@@ -203,35 +200,34 @@ final class HiraImprovementRekayasaMergedExportService
             }
 
             $mainColLetter = Coordinate::stringFromColumnIndex($headerIndex[$header] + 1);
-            $listColLetter = Coordinate::stringFromColumnIndex($listCol);
+            $listColLetter = Coordinate::stringFromColumnIndex($listColumnIndex);
 
             foreach ($options as $optionIndex => $option) {
                 $listSheet->setCellValue($listColLetter.($optionIndex + 1), $option);
             }
 
             $formula = sprintf(
-                'DropdownLists!$%s$1:$%s$%d',
+                'Pilihan!$%s$1:$%s$%d',
                 $listColLetter,
                 $listColLetter,
                 count($options),
             );
 
-            $firstCell = $mainColLetter.'2';
-            $validation = $sheet->getCell($firstCell)->getDataValidation();
+            $range = sprintf('%s2:%s%d', $mainColLetter, $mainColLetter, $lastDataRow);
+
+            $validation = new DataValidation;
             $validation->setType(DataValidation::TYPE_LIST);
             $validation->setErrorStyle(DataValidation::STYLE_STOP);
             $validation->setAllowBlank(true);
             $validation->setShowDropDown(true);
-            $validation->setShowInputMessage(true);
             $validation->setShowErrorMessage(true);
             $validation->setErrorTitle('Nilai tidak valid');
             $validation->setError('Pilih salah satu opsi dari daftar dropdown.');
-            $validation->setPromptTitle($header);
-            $validation->setPrompt('Pilih nilai dari daftar.');
             $validation->setFormula1($formula);
-            $validation->setSqref(sprintf('%s2:%s%d', $mainColLetter, $mainColLetter, $lastDataRow));
 
-            $listCol++;
+            $sheet->setDataValidation($range, $validation);
+
+            $listColumnIndex++;
         }
     }
 

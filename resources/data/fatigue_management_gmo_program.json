@@ -1,0 +1,326 @@
+{
+  "document": {
+    "code": "FMP-STD-001",
+    "version": "1.0",
+    "date": "Juni 2026",
+    "classification": "Internal GMO",
+    "site": "GMO",
+    "title": "Standarisasi Fatigue Management Program HO & Site GMO",
+    "subtitle": "Kerangka minimum untuk menyeragamkan program fatigue seluruh mitra GMO — mencakup kontrol pre-shift, monitoring jam kritis, recovery, serta assurance berbasis evidence."
+  },
+  "executive_summary": {
+    "intro": "Belum semua standar Fatigue Program tersedia merata di seluruh mitra GMO. Sebagian besar mitra sudah memiliki program dasar seperti fatigue check awal shift, campaign fatigue, parental control / Google Activity, sobriety, dan tensi.",
+    "callout": "Arah implementasi: standar HO dan standar Site GMO harus menjadi standar minimum wajib seluruh mitra, bukan hanya program inisiatif masing-masing mitra."
+  },
+  "program_gaps": [
+    "Speak Up / Check Point / Tegur Sapa fatigue",
+    "Fatigue check in-shift / jam kritis",
+    "Sidak mess / kontrakan / rest time monitoring",
+    "Door to door / family support",
+    "Reporting evidence dan evaluasi data fatigue",
+    "Governance / instruksi resmi PJO / program resmi",
+    "Leadership walkthrough / management patrol",
+    "Treatment repetitive fatigue alert / coaching PJA",
+    "DMS / OPA / teknologi monitoring bila tersedia",
+    "Health talk / edukasi kesehatan"
+  ],
+  "ho_pillars": [
+    {
+      "num": "01",
+      "title": "Prevention & Awareness",
+      "description": "Mencegah fatigue sejak sebelum pekerja masuk risiko: edukasi, keluarga, digital campaign, dan budaya speak up.",
+      "color": "navy",
+      "blocks": [
+        {
+          "status": "wajib",
+          "items": [
+            "Campaign / sosialisasi / reminder fatigue",
+            "Door to door / family support",
+            "Speak up / check point / tegur sapa kondisi fatigue",
+            "Himbauan menonton highlight / siaran ulang, bukan live saat jam istirahat",
+            "Digital campaign disertai kontrol penggunaan HP saat bekerja"
+          ]
+        },
+        {
+          "status": "replikasi",
+          "items": [
+            "Health talk / edukasi kesehatan",
+            "Rekaman suara keluarga sebagai pesan keselamatan",
+            "Edukasi pra-turnamen dan kunjungan keluarga / kontrakan"
+          ]
+        }
+      ]
+    },
+    {
+      "num": "02",
+      "title": "Pre-Shift Control",
+      "description": "Memastikan pekerja fit sebelum shift melalui pemeriksaan tidur, kesehatan, alkohol, dan kontrol aktivitas digital.",
+      "color": "blue",
+      "blocks": [
+        {
+          "status": "wajib",
+          "items": [
+            "Fit to Work / fatigue check awal shift",
+            "Deklarasi kecukupan tidur minimal 6 jam",
+            "Verifikasi kondisi pekerja sebelum bekerja",
+            "Pekerja tidak fit wajib ditindaklanjuti sebelum masuk kerja"
+          ]
+        },
+        {
+          "status": "upgrade",
+          "items": [
+            "Fatigue test 100% di awal shift",
+            "Sobriety test / alcohol test",
+            "Pemeriksaan tensi untuk pekerja berisiko / pemegang SIMPER",
+            "Pemeriksaan parental control / Google Activity sebelum bekerja"
+          ]
+        }
+      ]
+    },
+    {
+      "num": "03",
+      "title": "In-Shift Monitoring & Recovery",
+      "description": "Mengendalikan risiko pada jam kritis melalui observasi, rest control, teknologi, dan tindakan recovery cepat.",
+      "color": "teal",
+      "blocks": [
+        {
+          "status": "wajib",
+          "items": [
+            "Fatigue check in-shift pada jam kritis",
+            "Rest time control dan pemantauan pekerja pada jam rawan mengantuk",
+            "High-risk hours monitoring",
+            "Recovery monitoring: power nap, stretching, wake up call, stop 5 menit bila diperlukan"
+          ]
+        },
+        {
+          "status": "upgrade",
+          "items": [
+            "Sidak mess / kontrakan / CCTV mess / security patrol",
+            "Observasi pekerja saat jam kritis",
+            "Kontrol penggunaan HP / screen time / Google Activity"
+          ]
+        },
+        {
+          "status": "replikasi",
+          "items": [
+            "DMS / OPA / wearable monitoring jika tersedia",
+            "Coaching untuk pekerja short sleep atau repetitive fatigue alert"
+          ]
+        }
+      ]
+    },
+    {
+      "num": "04",
+      "title": "Assurance & Governance",
+      "description": "Menjamin program berjalan konsisten melalui evidence, evaluasi, instruksi resmi, genba, dan tindak lanjut berulang.",
+      "color": "orange",
+      "blocks": [
+        {
+          "status": "wajib",
+          "items": [
+            "Evaluasi data / reporting / monitoring evidence",
+            "Governance / instruksi / program resmi",
+            "Review manual untuk pekerja atau kasus spesifik",
+            "Treatment repetitive alert fatigue / coaching oleh PJA",
+            "Bukti pelaksanaan harian, mingguan, dan tindak lanjut"
+          ]
+        },
+        {
+          "status": "upgrade",
+          "items": [
+            "Genba / leadership walkthrough / management patrol",
+            "Evaluasi efektivitas program mingguan"
+          ]
+        },
+        {
+          "status": "replikasi",
+          "items": [
+            "Instruksi resmi PJO terkait pengelolaan fatigue selama Piala Dunia",
+            "Komite evaluasi disiplin operasi",
+            "Observasi tambahan seperti drone / kontrol lapangan khusus bila relevan"
+          ]
+        }
+      ]
+    }
+  ],
+  "site_standards": [
+    { "no": 1, "standard": "Campaign fatigue, digital campaign, poster, spanduk, reminder harian", "status": "wajib" },
+    { "no": 2, "standard": "Himbauan tidak menonton live match pada jam istirahat, diarahkan ke highlight / siaran ulang", "status": "wajib" },
+    { "no": 3, "standard": "Door to door / family support ke mess, kontrakan, atau keluarga pekerja berisiko", "status": "wajib" },
+    { "no": 4, "standard": "Speak up / check point / tegur sapa fatigue saat P5M, awal shift, dan jam kritis", "status": "wajib" },
+    { "no": 5, "standard": "Deklarasi tidur minimal 6 jam sebelum bekerja", "status": "wajib" },
+    { "no": 6, "standard": "Fatigue check / Fit to Work 100% di awal shift", "status": "wajib" },
+    { "no": 7, "standard": "Sobriety test / alcohol test untuk pekerja risiko tinggi dan pemegang SIMPER", "status": "upgrade" },
+    { "no": 8, "standard": "Tensi / pemeriksaan kesehatan kritis untuk SIMPER, driver, operator, dan pekerja riwayat risiko", "status": "upgrade" },
+    { "no": 9, "standard": "Parental control / Google Activity / screen time check sebelum bekerja", "status": "upgrade" },
+    { "no": 10, "standard": "Fatigue check in-shift pada jam kritis", "status": "wajib" },
+    { "no": 11, "standard": "Sidak mess / kontrakan / rest time patrol pada jam rawan mengantuk", "status": "upgrade" },
+    { "no": 12, "standard": "Power nap, stretching, wake up call, stop 5 menit untuk recovery", "status": "replikasi" },
+    { "no": 13, "standard": "DMS / OPA / wearable monitoring jika tersedia; manual monitoring jika belum tersedia", "status": "replikasi" },
+    { "no": 14, "standard": "Reporting evidence harian dan evaluasi mingguan", "status": "wajib" },
+    { "no": 15, "standard": "Governance / instruksi resmi PJO / program resmi mitra", "status": "wajib" },
+    { "no": 16, "standard": "Leadership walkthrough / management patrol", "status": "upgrade" },
+    { "no": 17, "standard": "Coaching PJA untuk pekerja short sleep, repetitive alert, atau temuan fatigue", "status": "wajib" }
+  ],
+  "mandatory_programs": [
+    { "program": "Door to door / family support", "mitra": ["HRB", "SCI", "SCCI", "ACI", "PAMA", "MOP", "TMU"] },
+    { "program": "Speak up / check point / tegur sapa fatigue", "mitra": ["HRB", "SCI", "SCCI", "ACI", "PAMA", "MOP", "DNX", "DAN", "TMU"] },
+    { "program": "Fatigue check in-shift / jam kritis", "mitra": ["HRB", "SCCI", "ACI", "OPP", "DNX", "DAN"] },
+    { "program": "Sidak mess / kontrakan / rest time monitoring", "mitra": ["HRB", "SCI", "SCCI", "ACI", "DNX", "DAN"] },
+    { "program": "Reporting evidence dan evaluasi data mingguan", "mitra": ["ALL"] },
+    { "program": "Governance / instruksi resmi PJO", "mitra": ["ALL"] },
+    { "program": "Leadership walkthrough / management patrol", "mitra": ["ALL_EXCEPT_MOP"] },
+    { "program": "Coaching pekerja short sleep / repetitive fatigue", "mitra": ["ALL"] },
+    { "program": "DMS / OPA / teknologi monitoring bila tersedia", "mitra": ["REPLICATE_PAMA"] },
+    { "program": "Health talk / edukasi kesehatan", "mitra": ["HRB", "SCCI", "ACI", "OPP", "PAMA", "MOP", "DNX", "DAN", "TMU"] }
+  ],
+  "evidence_standards": [
+    { "program": "Campaign / sosialisasi", "evidence": "Foto, materi campaign, daftar hadir, link broadcast" },
+    { "program": "Fatigue check awal shift", "evidence": "Form pemeriksaan, rekap jumlah pekerja diperiksa, daftar pekerja tidak fit" },
+    { "program": "Deklarasi tidur minimal 6 jam", "evidence": "Form declare, hasil verifikasi, tindak lanjut pekerja kurang tidur" },
+    { "program": "Sobriety / alcohol test", "evidence": "Log pemeriksaan, hasil test, tindak lanjut jika positif" },
+    { "program": "Tensi / kesehatan kritis", "evidence": "Rekap pemeriksaan, daftar pekerja risiko tinggi, tindakan medis" },
+    { "program": "Parental control / Google Activity", "evidence": "Screenshot / log pemeriksaan, daftar deviasi, tindak lanjut" },
+    { "program": "Fatigue check jam kritis", "evidence": "Jadwal jam kritis, hasil observasi, pekerja yang diberi recovery" },
+    { "program": "Sidak mess / kontrakan", "evidence": "Jadwal sidak, foto, temuan, tindak lanjut" },
+    { "program": "Door to door / family support", "evidence": "Foto kunjungan, daftar keluarga/kontrakan, pesan keselamatan" },
+    { "program": "Speak up / tegur sapa", "evidence": "Log check point, laporan pekerja tidak fit, tindak lanjut pengawas" },
+    { "program": "Leadership walkthrough", "evidence": "Form genba, temuan, keputusan lapangan" },
+    { "program": "Coaching repetitive fatigue", "evidence": "Form coaching, nama pekerja, penyebab, action, hasil follow up" },
+    { "program": "Reporting program", "evidence": "Daily report, weekly summary, trend fatigue, action closure" }
+  ],
+  "daily_reporting": [
+    "Jumlah pekerja masuk shift",
+    "Jumlah pekerja dilakukan fatigue check",
+    "Jumlah pekerja tidur kurang dari 6 jam",
+    "Jumlah pekerja tidak fit to work",
+    "Jumlah pekerja dilakukan sobriety test",
+    "Jumlah pekerja dilakukan tensi",
+    "Jumlah pekerja diperiksa parental control / Google Activity",
+    "Jumlah temuan penggunaan HP / screen time abnormal",
+    "Jumlah fatigue check jam kritis",
+    "Jumlah pekerja diberi power nap / rest / stop bekerja sementara",
+    "Jumlah sidak mess / kontrakan",
+    "Jumlah door to door / family support",
+    "Jumlah coaching pekerja fatigue",
+    "Jumlah repetitive fatigue case",
+    "Status evidence: lengkap / tidak lengkap",
+    "Action closure dan PIC"
+  ],
+  "conclusion": {
+    "strong": ["PAMA", "KDC", "BAR", "OPP"],
+    "medium": ["SCI", "SCCI", "MOP", "TMU", "DNX", "DAN"],
+    "weak": ["HRB", "ACI"],
+    "callout": "Fokus implementasi berikutnya: menyeragamkan program jam kritis, speak up, door to door, sidak mess, reporting evidence, governance PJO, leadership walkthrough, dan coaching fatigue berulang."
+  },
+  "partners": [
+    {
+      "key": "HRB",
+      "name": "PT HRB",
+      "classification": "weak",
+      "classification_label": "Perlu dilengkapi signifikan",
+      "note": "Program dasar sudah ada, tetapi belum lengkap sebagai standar GMO.",
+      "existing": ["Sobriety & fatigue test awal shift", "Tensi awal shift untuk pemegang SIMPER", "Parental control / Google Activity", "Sosialisasi pola tidur", "Campaign menjaga pola jam tidur"],
+      "gaps": ["Door to door / family support", "Speak up / check point / tegur sapa fatigue", "Fatigue check in-shift / jam kritis", "Sidak mess / rest time monitoring", "Reporting evidence & evaluasi mingguan", "Governance / instruksi resmi", "Leadership walkthrough"]
+    },
+    {
+      "key": "SCI",
+      "name": "PT Sucofindo / SCI",
+      "classification": "medium",
+      "classification_label": "Cukup — perlu penguatan",
+      "note": "Cukup baik, sudah punya reporting, tetapi perlu penguatan family support, governance, dan leadership control.",
+      "existing": ["Pemeriksaan jam tidur dan Fit to Work", "Sobriety dan tensi", "Report actual pemeriksaan fatigue dan jam tidur", "Sidak Google Activity / parental control", "Inspeksi penggunaan HP saat bekerja", "Sobriety dan stretching di jam kritis", "Campaign fatigue"],
+      "gaps": ["Door to door / family support", "Speak up / check point / tegur sapa", "Sidak mess / kontrakan spesifik", "Governance / instruksi resmi PJO", "Leadership walkthrough", "Treatment repetitive fatigue / coaching PJA"]
+    },
+    {
+      "key": "SCCI",
+      "name": "PT SCCI",
+      "classification": "medium",
+      "classification_label": "Cukup — perlu penguatan",
+      "note": "Pre-shift cukup kuat, tetapi in-shift monitoring dan assurance belum lengkap.",
+      "existing": ["Fatigue management awal shift", "Tensi, alcohol test, dan sobriety test", "Monitoring parental control dan kecukupan tidur minimal 6 jam", "Digital campaign", "Inspeksi penggunaan HP saat bekerja", "Sobriety test untuk surveyor dan sampler"],
+      "gaps": ["Door to door / family support", "Speak up / check point / tegur sapa", "Fatigue check in-shift / jam kritis secara eksplisit", "Sidak mess / rest time patrol", "Reporting evidence mingguan", "Governance / instruksi resmi", "Leadership walkthrough"]
+    },
+    {
+      "key": "ACI",
+      "name": "PT ACI",
+      "classification": "weak",
+      "classification_label": "Perlu dilengkapi signifikan",
+      "note": "Masih pada level dasar, perlu dilengkapi agar sesuai standar GMO.",
+      "existing": ["Pemeriksaan jam tidur dan Fit to Work", "Sobriety test", "Tensi untuk pemegang SIMPER", "Random check Google Activity / parental control", "Campaign fatigue"],
+      "gaps": ["Door to door / family support", "Speak up / check point / tegur sapa", "Fatigue check in-shift / jam kritis", "Sidak mess / rest time monitoring", "Reporting evidence", "Governance / instruksi resmi", "Leadership walkthrough", "Coaching pekerja berisiko"]
+    },
+    {
+      "key": "BAR",
+      "name": "PT BAR",
+      "classification": "strong",
+      "classification_label": "Relatif kuat",
+      "note": "Salah satu mitra yang sudah kuat; dapat menjadi contoh untuk door to door, health talk, broadcast interaktif, dan jam kritis.",
+      "existing": ["Sobriety test dan pemeriksaan tekanan darah", "Parental control / Google Activity", "Health talk", "Fatigue check jam kritis", "Campaign highlight Piala Dunia", "Broadcast interaktif / tegur sapa", "Door to door dan sidak kontrakan"],
+      "gaps": ["Fatigue check 100% awal shift belum tertulis eksplisit", "Reporting evidence dan evaluasi data mingguan", "Governance / instruksi resmi PJO", "Leadership walkthrough", "DMS / OPA / teknologi monitoring bila tersedia", "Coaching repetitive fatigue alert"]
+    },
+    {
+      "key": "OPP",
+      "name": "PT OPP",
+      "classification": "strong",
+      "classification_label": "Relatif kuat",
+      "note": "Sangat lengkap pada pre-shift, mess control, door to door, dan speak up; perlu jam kritis dan assurance governance.",
+      "existing": ["Spanduk dan campaign fatigue", "Sidak mess", "Door to door", "Sobriety test dan tensi awal shift", "Parental control / Google Activity 2 kali per hari", "Alcohol dan drug test", "Pengecekan HP terkait aktivitas istirahat", "Speak up awal shift", "Pengecekan roster"],
+      "gaps": ["Fatigue check in-shift / jam kritis secara eksplisit", "Health talk / edukasi kesehatan", "Reporting evidence dan evaluasi data mingguan", "Governance / instruksi resmi", "Leadership walkthrough", "Treatment repetitive fatigue / coaching PJA"]
+    },
+    {
+      "key": "PAMA",
+      "name": "PAMA GMO",
+      "classification": "strong",
+      "classification_label": "Relatif kuat",
+      "note": "Program paling kuat dari sisi teknologi, recovery, coaching, dan jam kritis; benchmark untuk OPA dan power nap.",
+      "existing": ["Pengecekan driver di mess pada jam rawan", "Power nap 10–15 menit", "Wake up call fatigue", "OPA wearable saat tidur", "Validasi jam tidur OPA", "Coaching & counselling jam tidur tidak tercapai", "Sidak jam tidur", "Campaign harian", "Fatigue check sebelum bekerja dan jam kritis", "Tensi, form fatigue check, dan sobriety test", "Tindakan istirahat untuk operator risiko tinggi"],
+      "gaps": ["Door to door / family support", "Parental control / Google Activity", "Governance / instruksi resmi PJO", "Leadership walkthrough formal", "Reporting evidence terstandar ke GMO"]
+    },
+    {
+      "key": "KDC",
+      "name": "KDC GMO",
+      "classification": "strong",
+      "classification_label": "Relatif kuat",
+      "note": "Program kuat dan cukup lengkap; perlu diperkuat di reporting, governance, dan coaching berbasis temuan.",
+      "existing": ["Sobriety test dan tensi awal shift", "Parental control / Google Activity", "Health talk", "Fatigue check jam kritis", "Stretching setelah jam istirahat", "Campaign highlight Piala Dunia", "Broadcast interaktif", "Sidak mess", "Door to door"],
+      "gaps": ["Speak up / check point awal shift secara eksplisit", "Reporting evidence dan evaluasi mingguan", "Governance / instruksi resmi", "Leadership walkthrough", "DMS / OPA bila tersedia", "Coaching repetitive fatigue"]
+    },
+    {
+      "key": "MOP",
+      "name": "MOP GMO",
+      "classification": "medium",
+      "classification_label": "Cukup — perlu penguatan",
+      "note": "Kuat pada in-shift monitoring dan leadership walkthrough, tetapi masih perlu pre-shift digital control dan family support.",
+      "existing": ["Safety patrol setiap shift", "Patrol hauling dan komunikasi dua arah di jam kritis", "Fatigue test 100% setiap shift pada jam kritis", "Sobriety test awal shift", "Observasi langsung manajemen di lapangan", "Dialog manajemen dengan pekerja", "Campaign keselamatan"],
+      "gaps": ["Parental control / Google Activity", "Door to door / family support", "Pemeriksaan tensi / kesehatan kritis", "Sidak mess / rest time monitoring", "Speak up / deklarasi tidur minimal 6 jam", "Reporting evidence terstandar", "Governance / instruksi resmi"]
+    },
+    {
+      "key": "DNX",
+      "name": "DNX GMO",
+      "classification": "medium",
+      "classification_label": "Cukup — perlu penguatan",
+      "note": "Pre-shift control dan family support sudah baik; perlu penguatan jam kritis dan assurance.",
+      "existing": ["Fatigue test 100% awal shift", "Sobriety test, tensi, dan pemeriksaan jam tidur", "Parental control 100% awal shift", "Digital campaign dan spanduk", "Door to door / family support"],
+      "gaps": ["Speak up / check point / tegur sapa", "Fatigue check in-shift / jam kritis", "Sidak mess / rest time monitoring", "Reporting evidence dan evaluasi mingguan", "Governance / instruksi resmi", "Leadership walkthrough", "Coaching repetitive fatigue"]
+    },
+    {
+      "key": "DAN",
+      "name": "DAN GMO",
+      "classification": "medium",
+      "classification_label": "Cukup — perlu penguatan",
+      "note": "Kuat di pre-shift dan family support, tetapi perlu penguatan in-shift monitoring dan governance.",
+      "existing": ["Fatigue test 100% awal shift", "Sobriety test dan pemeriksaan jam tidur", "Parental control 100% awal shift", "Tensi 100% awal shift", "Digital campaign dan spanduk", "Door to door / family support"],
+      "gaps": ["Speak up / check point / tegur sapa", "Fatigue check in-shift / jam kritis", "Sidak mess / rest time monitoring", "Reporting evidence dan evaluasi mingguan", "Governance / instruksi resmi", "Leadership walkthrough", "Coaching pekerja berisiko"]
+    },
+    {
+      "key": "TMU",
+      "name": "TMU GMO",
+      "classification": "medium",
+      "classification_label": "Cukup — perlu penguatan",
+      "note": "Cukup kuat pada jam kritis, parental control, dan sidak tidur; perlu family support, speak up, dan assurance.",
+      "existing": ["Fatigue test awal shift dan jam kritis", "Tensi awal shift", "Sidak jam tidur pekerja", "Parental control 100% awal shift", "Digital campaign bahaya fatigue akibat tidur kurang dari 6 jam"],
+      "gaps": ["Door to door / family support", "Speak up / check point / tegur sapa", "Sobriety test belum tertulis eksplisit", "Health talk / edukasi kesehatan", "Reporting evidence dan evaluasi mingguan", "Governance / instruksi resmi", "Leadership walkthrough", "Coaching repetitive fatigue"]
+    }
+  ]
+}

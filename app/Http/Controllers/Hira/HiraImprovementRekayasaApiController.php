@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Hira;
 
 use App\Http\Controllers\Controller;
+use App\Services\Hira\HiraImprovementExcelTemplateWriter;
 use App\Services\Hira\HiraImprovementRekayasaMergedExportService;
 use App\Services\Hira\HiraImprovementRekayasaReplikasiService;
 use App\Services\Hira\HiraImprovementRekayasaService;
@@ -149,7 +150,7 @@ class HiraImprovementRekayasaApiController extends Controller
     public function exportSelectedReplikasiTemplate(
         Request $request,
         HiraImprovementRekayasaReplikasiService $replikasiService,
-    ): StreamedResponse {
+    ) {
         [$company, $year] = $this->scope($request);
         $ids = $this->parseRekayasaRowIds($request);
 
@@ -164,13 +165,8 @@ class HiraImprovementRekayasaApiController extends Controller
         }
 
         $spreadsheet = $replikasiService->buildSpreadsheet($data, true);
-        $writer = new Xlsx($spreadsheet);
 
-        return response()->streamDownload(function () use ($writer): void {
-            $writer->save('php://output');
-        }, 'template_rekayasa_replikasi_terpilih.xlsx', [
-            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        ]);
+        return HiraImprovementExcelTemplateWriter::download($spreadsheet, 'template_rekayasa_replikasi_terpilih.xlsx');
     }
 
     /**

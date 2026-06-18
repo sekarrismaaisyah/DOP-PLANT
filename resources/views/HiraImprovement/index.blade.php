@@ -4512,7 +4512,7 @@
 
     function bindHiraReplikasiToolbar() {
       document.getElementById("hiraReplikasiTemplateXlsx")?.addEventListener("click", () => {
-        window.location.href = hiraReplikasiApi.templateXlsx;
+        window.location.href = `${hiraReplikasiApi.templateXlsx}?${hiraDetailScopeQuery()}`;
       });
       document.getElementById("hiraReplikasiExportXlsx")?.addEventListener("click", () => {
         window.location.href = `${hiraReplikasiApi.exportXlsx}?${hiraDetailScopeQuery()}`;
