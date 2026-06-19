@@ -11,6 +11,7 @@ return [
         ))),
         'initial_day' => (int) env('AUTO_BANNED_HSCT_INITIAL_DAY', 2), // 0=Sun, 2=Tuesday
         'send_time' => env('AUTO_BANNED_HSCT_SEND_TIME', '08:00'),
+        'send_lock_seconds' => (int) env('AUTO_BANNED_HSCT_SEND_LOCK_SECONDS', 600),
         'use_dummy_when_empty' => (bool) env('AUTO_BANNED_HSCT_USE_DUMMY', false),
     ],
 

@@ -396,7 +396,7 @@
                            <span class="ab-sheet-muted">—</span>
                            @endif
                         </td>
-                        <td>{{ $row['treatmentStatus']->label() ?? '—' }}</td>
+                        <td><span class="ab-sheet-muted">—</span></td>
                         <td>{{ $row['verificationStatus']->label() ?? '—' }}</td>
                         <td>
                            @if(($row['slaUnbannedLabel'] ?? '—') !== '—')

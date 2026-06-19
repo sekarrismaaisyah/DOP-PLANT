@@ -16,7 +16,9 @@ use App\Models\AutoBannedStatusSnapshot;
 use App\Models\ScrAutoBannedTbcSap;
 use App\Support\AutoBanned\AutoBannedSchema;
 use Carbon\Carbon;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Mail;
@@ -78,7 +80,7 @@ class AutoBannedHsctEmailService
      */
     public function sendInitialEmail(string $week, string $year, bool $force = false): array
     {
-        if ($this->findCampaign($week, $year) !== null && ! $force) {
+        if (! $force && $this->findCampaign($week, $year) !== null) {
             return ['action' => 'skip', 'message' => 'Campaign periode ini sudah ada.', 'sent' => false];
         }
 
@@ -92,49 +94,39 @@ class AutoBannedHsctEmailService
             return ['action' => 'skip', 'message' => 'Tidak ada data banned untuk dikirim.', 'sent' => false];
         }
 
-        return DB::transaction(function () use ($week, $year, $recipients, $sourceItems, $force): array {
+        $lockSeconds = (int) config('auto_banned.hsct.send_lock_seconds', 600);
+        $lock = Cache::lock('auto_banned:hsct-email-send', $lockSeconds);
+
+        if (! $lock->get()) {
+            return [
+                'action' => 'skip',
+                'message' => 'Proses kirim email HSECT sedang berjalan di proses lain. Coba lagi setelah selesai.',
+                'sent' => false,
+            ];
+        }
+
+        try {
             if ($force) {
-                $existing = $this->findCampaign($week, $year);
-                if ($existing !== null) {
-                    $existing->items()->delete();
-                    $existing->emailLogs()->delete();
-                    $existing->delete();
-                }
+                $this->deleteExistingCampaignWithRetry($week, $year);
             }
 
-            $campaign = AutoBannedHsctCampaign::query()->create([
-                'week' => $week,
-                'iso_year' => $year,
-                'status' => AutoBannedHsctCampaignStatus::Active,
-                'total_items' => $sourceItems->count(),
-                'confirmed_items' => 0,
-                'reminder_count' => 0,
-                'initial_sent_at' => now(),
-            ]);
+            $campaign = DB::transaction(function () use ($week, $year, $sourceItems): AutoBannedHsctCampaign {
+                $campaign = AutoBannedHsctCampaign::query()->create([
+                    'week' => $week,
+                    'iso_year' => $year,
+                    'status' => AutoBannedHsctCampaignStatus::Active,
+                    'total_items' => $sourceItems->count(),
+                    'confirmed_items' => 0,
+                    'reminder_count' => 0,
+                    'initial_sent_at' => now(),
+                ]);
 
-            foreach ($sourceItems as $item) {
-                AutoBannedHsctCampaignItem::query()->updateOrCreate(
-                    [
-                        'campaign_id' => $campaign->id,
-                        'sid' => $item['sid'],
-                    ],
-                    [
-                        'snapshot_id' => $item['snapshot_id'],
-                        'karyawan' => $item['karyawan'],
-                        'perusahaan' => $item['perusahaan'],
-                        'site_dedicated' => $item['site'],
-                        'banned_reason' => $item['reason'],
-                        'is_confirmed' => false,
-                        'confirmed_at' => null,
-                    ],
-                );
+                $this->insertCampaignItems($campaign, $sourceItems);
 
-                if ($item['snapshot_id'] !== null) {
-                    $this->markSnapshotSent($item['sid'], $week, $year, $item['snapshot_id']);
-                } else {
-                    $this->markSnapshotSent($item['sid'], $week, $year, null);
-                }
-            }
+                return $campaign;
+            });
+
+            $this->markSnapshotsSentBulk($sourceItems, $week, $year);
 
             $payload = $this->formatPayload($sourceItems);
             $sent = $this->dispatchMail(
@@ -172,7 +164,9 @@ class AutoBannedHsctEmailService
                     : 'Campaign dibuat tetapi email gagal dikirim.',
                 'sent' => $sent,
             ];
-        });
+        } finally {
+            $lock->release();
+        }
     }
 
     /**
@@ -526,6 +520,101 @@ class AutoBannedHsctEmailService
             'hsct_sync_status' => AutoBannedHsctSyncStatus::Sent->value,
             'hsct_sent_at' => now(),
         ]);
+    }
+
+    /**
+     * @param  Collection<int, array{snapshot_id: ?int, sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>  $sourceItems
+     */
+    private function markSnapshotsSentBulk(Collection $sourceItems, string $week, string $year): void
+    {
+        if (! Schema::hasTable('auto_banned_status_snapshots')) {
+            return;
+        }
+
+        $sids = $sourceItems
+            ->pluck('sid')
+            ->filter(fn (string $sid): bool => $sid !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($sids === []) {
+            return;
+        }
+
+        AutoBannedStatusSnapshot::query()
+            ->where('week', $week)
+            ->where('iso_year', $year)
+            ->whereIn('sid', $sids)
+            ->update([
+                'hsct_sync_status' => AutoBannedHsctSyncStatus::Sent->value,
+                'hsct_sent_at' => now(),
+            ]);
+    }
+
+    /**
+     * @param  Collection<int, array{snapshot_id: ?int, sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>  $sourceItems
+     */
+    private function insertCampaignItems(AutoBannedHsctCampaign $campaign, Collection $sourceItems): void
+    {
+        $timestamp = now();
+
+        $rows = $sourceItems->map(fn (array $item): array => [
+            'campaign_id' => $campaign->id,
+            'snapshot_id' => $item['snapshot_id'],
+            'sid' => $item['sid'],
+            'karyawan' => $item['karyawan'],
+            'perusahaan' => $item['perusahaan'],
+            'site_dedicated' => $item['site'],
+            'banned_reason' => $item['reason'],
+            'is_confirmed' => false,
+            'confirmed_at' => null,
+            'created_at' => $timestamp,
+            'updated_at' => $timestamp,
+        ])->all();
+
+        foreach (array_chunk($rows, 500) as $chunk) {
+            AutoBannedHsctCampaignItem::query()->insert($chunk);
+        }
+    }
+
+    private function deleteExistingCampaignWithRetry(string $week, string $year, int $maxAttempts = 5): void
+    {
+        $attempt = 0;
+
+        while (true) {
+            $existing = $this->findCampaign($week, $year);
+
+            if ($existing === null) {
+                return;
+            }
+
+            try {
+                $existing->delete();
+
+                return;
+            } catch (QueryException $exception) {
+                $attempt++;
+
+                if ($attempt >= $maxAttempts || ! $this->isLockOrDeadlockException($exception)) {
+                    throw $exception;
+                }
+
+                usleep(random_int(200_000, 800_000));
+            }
+        }
+    }
+
+    private function isLockOrDeadlockException(QueryException $exception): bool
+    {
+        $code = (string) $exception->getCode();
+        $message = $exception->getMessage();
+
+        return $code === '40001'
+            || $code === '1213'
+            || $code === '1205'
+            || str_contains($message, 'Deadlock')
+            || str_contains($message, 'Lock wait timeout');
     }
 
     public function findCampaign(string $week, string $year): ?AutoBannedHsctCampaign
