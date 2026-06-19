@@ -14,6 +14,7 @@ use App\Models\AutoBannedHsctCampaignItem;
 use App\Models\AutoBannedHsctEmailLog;
 use App\Models\AutoBannedStatusSnapshot;
 use App\Models\ScrAutoBannedTbcSap;
+use App\Support\AutoBanned\AutoBannedSchema;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -86,8 +87,7 @@ class AutoBannedHsctEmailService
             return ['action' => 'error', 'message' => 'AUTO_BANNED_HSCT_EMAILS belum dikonfigurasi.', 'sent' => false];
         }
 
-        $this->syncScrapBeforeResolve($week, $year);
-        $sourceItems = $this->resolveBannedSourceItems($week, $year);
+        $sourceItems = $this->resolveInitialBannedSourceItems($week, $year);
         if ($sourceItems->isEmpty()) {
             return ['action' => 'skip', 'message' => 'Tidak ada data banned untuk dikirim.', 'sent' => false];
         }
@@ -113,16 +113,21 @@ class AutoBannedHsctEmailService
             ]);
 
             foreach ($sourceItems as $item) {
-                AutoBannedHsctCampaignItem::query()->create([
-                    'campaign_id' => $campaign->id,
-                    'snapshot_id' => $item['snapshot_id'],
-                    'sid' => $item['sid'],
-                    'karyawan' => $item['karyawan'],
-                    'perusahaan' => $item['perusahaan'],
-                    'site_dedicated' => $item['site'],
-                    'banned_reason' => $item['reason'],
-                    'is_confirmed' => false,
-                ]);
+                AutoBannedHsctCampaignItem::query()->updateOrCreate(
+                    [
+                        'campaign_id' => $campaign->id,
+                        'sid' => $item['sid'],
+                    ],
+                    [
+                        'snapshot_id' => $item['snapshot_id'],
+                        'karyawan' => $item['karyawan'],
+                        'perusahaan' => $item['perusahaan'],
+                        'site_dedicated' => $item['site'],
+                        'banned_reason' => $item['reason'],
+                        'is_confirmed' => false,
+                        'confirmed_at' => null,
+                    ],
+                );
 
                 if ($item['snapshot_id'] !== null) {
                     $this->markSnapshotSent($item['sid'], $week, $year, $item['snapshot_id']);
@@ -348,12 +353,28 @@ class AutoBannedHsctEmailService
     }
 
     /**
+     * List lengkap untuk email awal — semua baris scrape periode, tanpa cek status HSECT/banned.
+     *
+     * @return Collection<int, array{snapshot_id: ?int, sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>
+     */
+    public function resolveInitialBannedSourceItems(string $week, string $year): Collection
+    {
+        if (! AutoBannedSchema::hasScrapTable()) {
+            return collect();
+        }
+
+        return $this->buildItemsFromScrapTable($week, $year, filterByHsctStatus: false);
+    }
+
+    /**
+     * List untuk reminder / SID baru — hanya yang belum terkirim/terkonfirmasi HSECT.
+     *
      * @return Collection<int, array{snapshot_id: ?int, sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>
      */
     public function resolveBannedSourceItems(string $week, string $year): Collection
     {
         if (AutoBannedSchema::hasScrapTable()) {
-            $scrapItems = $this->buildItemsFromScrapTable($week, $year);
+            $scrapItems = $this->buildItemsFromScrapTable($week, $year, filterByHsctStatus: true);
 
             if ($scrapItems->isNotEmpty()) {
                 return $scrapItems;
@@ -385,7 +406,7 @@ class AutoBannedHsctEmailService
      *
      * @return Collection<int, array{snapshot_id: ?int, sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>
      */
-    private function buildItemsFromScrapTable(string $week, string $year): Collection
+    private function buildItemsFromScrapTable(string $week, string $year, bool $filterByHsctStatus = true): Collection
     {
         $query = ScrAutoBannedTbcSap::query()
             ->whereNotNull('SID')
@@ -413,6 +434,8 @@ class AutoBannedHsctEmailService
                 ->keyBy('sid')
             : collect();
 
+        $seenSids = [];
+
         return $rows
             ->map(function (ScrAutoBannedTbcSap $row) use ($snapshots): array {
                 $sid = trim((string) ($row->SID ?? ''));
@@ -429,7 +452,17 @@ class AutoBannedHsctEmailService
                     'hsct_sync_status' => $snapshot?->hsct_sync_status,
                 ];
             })
-            ->filter(function (array $item): bool {
+            ->filter(function (array $item) use ($filterByHsctStatus, &$seenSids): bool {
+                if ($item['sid'] === '' || isset($seenSids[$item['sid']])) {
+                    return false;
+                }
+
+                $seenSids[$item['sid']] = true;
+
+                if (! $filterByHsctStatus) {
+                    return true;
+                }
+
                 $status = $item['hsct_sync_status'];
 
                 if ($status === null) {
@@ -454,9 +487,23 @@ class AutoBannedHsctEmailService
 
     private function syncScrapBeforeResolve(string $week, string $year): void
     {
-        if ($this->scrapPollService->scrTableAvailable()
-            && $this->scrapPollService->snapshotsTableAvailable()) {
+        if (! $this->scrapPollService->scrTableAvailable()
+            || ! $this->scrapPollService->snapshotsTableAvailable()) {
+            return;
+        }
+
+        if (! $this->scrapPollService->shouldPoll()) {
+            return;
+        }
+
+        try {
             $this->scrapPollService->poll($week, $year);
+        } catch (\Throwable $exception) {
+            Log::warning('AutoBanned poll before HSECT email skipped', [
+                'week' => $week,
+                'year' => $year,
+                'error' => $exception->getMessage(),
+            ]);
         }
     }
 

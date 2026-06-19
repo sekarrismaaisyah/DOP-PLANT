@@ -123,7 +123,7 @@
          <div class="ab-fade-in ab-fade-in-delay-1 ab-surface-card rounded-2xl overflow-hidden">
             <div class="px-5 sm:px-6 pt-5 pb-4 flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4 border-b border-outline-variant/10">
                <div>
-                  <h2 class="font-headline font-semibold text-base text-on-background">Campaign Periode Ini</h2>
+                  <h2 class="font-headline font-semibold text-base text-on-background">Email Periode Ini</h2>
                   <p class="text-xs text-on-surface-variant mt-0.5">Status pengiriman email & progress konfirmasi banned HSECT</p>
                </div>
                @if($hsctEmailAvailable)
