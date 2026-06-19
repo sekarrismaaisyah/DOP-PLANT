@@ -133,6 +133,7 @@
       .file-name { margin-top: .65rem; font-size: .82rem; font-weight: 600; color: var(--ok); word-break: break-all; }
       .footer-note { text-align: center; color: var(--muted); font-size: .78rem; margin-top: 1.25rem; line-height: 1.5; }
       .hp { position: absolute; left: -9999px; opacity: 0; height: 0; width: 0; overflow: hidden; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
       .period-pill {
          display: inline-flex; align-items: center; gap: .35rem; margin-top: .75rem;
          padding: .4rem .75rem; border-radius: 999px; background: #f1f5f9; font-size: .78rem; font-weight: 600; color: #475569;
@@ -235,13 +236,13 @@
             Bisa foto (JPG/PNG), PDF, Word, atau Excel. Maksimal <strong>{{ $maxUploadMb }} MB</strong>.
          </div>
          <div class="field">
-            <label for="evidence_file" class="dropzone" id="dropzone">
-               <input type="file" id="evidence_file" name="evidence_file" accept="{{ $acceptAttr }}" required style="display:none"/>
+            <input type="file" id="evidence_file" name="evidence_file" accept="{{ $acceptAttr }},image/*,application/pdf" class="sr-only"/>
+            <div class="dropzone" id="dropzone" role="button" tabindex="0" aria-controls="evidence_file">
                <div class="dropzone-icon material-symbols-outlined">cloud_upload</div>
                <p class="dropzone-title">Ketuk untuk pilih file</p>
                <p class="dropzone-sub">atau seret & lepas file ke sini</p>
                <p class="file-name" id="file-name"></p>
-            </label>
+            </div>
          </div>
          <button type="submit" class="btn btn-primary btn-block" id="btn-submit">
             <span class="material-symbols-outlined">send</span>
@@ -348,7 +349,12 @@
       }
    }
 
-   form.addEventListener('submit', function () {
+   form.addEventListener('submit', function (e) {
+      if (!fileInput.files || !fileInput.files.length) {
+         e.preventDefault();
+         alert('Pilih file bukti terlebih dahulu.');
+         return;
+      }
       submitBtn.disabled = true;
       submitBtn.innerHTML = '<span class="material-symbols-outlined">hourglass_top</span> Mengirim…';
    });

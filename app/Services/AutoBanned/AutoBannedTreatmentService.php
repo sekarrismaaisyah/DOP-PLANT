@@ -122,10 +122,20 @@ class AutoBannedTreatmentService
             ]);
         }
 
-        $storedPath = $file->storeAs(
-            'auto-banned/treatment-evidence/'.$year.'/'.$week,
-            $sid.'_'.time().'.'.$file->getClientOriginalExtension(),
-        );
+        $directory = 'auto-banned/treatment-evidence/'.$year.'/'.$week;
+        Storage::disk('local')->makeDirectory($directory);
+
+        $extension = strtolower($file->getClientOriginalExtension() ?: $file->extension() ?: 'bin');
+        $extension = preg_replace('/[^a-z0-9]+/', '', $extension) ?: 'bin';
+        $filename = $sid.'_'.time().'.'.$extension;
+
+        $storedPath = $file->storeAs($directory, $filename, 'local');
+
+        if ($storedPath === false || ! Storage::disk('local')->exists($storedPath)) {
+            throw ValidationException::withMessages([
+                'evidence_file' => ['Gagal menyimpan file ke server. Pastikan folder storage/app dapat ditulis (chmod) dan jalankan php artisan storage:link jika diperlukan.'],
+            ]);
+        }
 
         $submitterDisplayName = $user !== null
             ? trim((string) ($user->name ?? 'User'))
@@ -163,13 +173,13 @@ class AutoBannedTreatmentService
     {
         $path = trim((string) ($unbanRequest->evidence_file_path ?? ''));
 
-        if ($path === '' || ! Storage::exists($path)) {
+        if ($path === '' || ! Storage::disk('local')->exists($path)) {
             abort(404, 'File evidence tidak ditemukan.');
         }
 
         $filename = $unbanRequest->evidence_original_name ?: basename($path);
 
-        return Storage::download($path, $filename);
+        return Storage::disk('local')->download($path, $filename);
     }
 
     private function syncSnapshotWorkflow(string $sid, string $week, string $year): void

@@ -36,7 +36,21 @@ return [
 
     'treatment' => [
         'max_upload_kb' => (int) env('AUTO_BANNED_TREATMENT_MAX_UPLOAD_KB', 10240),
-        'allowed_mimes' => ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xlsx', 'xls'],
+        'allowed_mimes' => ['pdf', 'jpg', 'jpeg', 'png', 'webp', 'heic', 'heif', 'doc', 'docx', 'xlsx', 'xls'],
+        'allowed_mime_types' => [
+            'application/pdf',
+            'image/jpeg',
+            'image/jpg',
+            'image/png',
+            'image/webp',
+            'image/heic',
+            'image/heif',
+            'application/msword',
+            'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+            'application/vnd.ms-excel',
+            'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+            'application/octet-stream',
+        ],
         'public_form_enabled' => (bool) env('AUTO_BANNED_PUBLIC_TREATMENT_FORM', true),
     ],
 ];
