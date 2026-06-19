@@ -20,6 +20,11 @@
    @if(($filters['q'] ?? '') !== '')
    <input type="hidden" name="q" value="{{ $filters['q'] }}"/>
    @endif
+   @foreach($preserveParams ?? [] as $paramKey => $paramValue)
+   @if($paramValue !== '' && $paramValue !== null)
+   <input type="hidden" name="{{ $paramKey }}" value="{{ $paramValue }}"/>
+   @endif
+   @endforeach
 
    {{-- Site --}}
    <div class="relative" data-ab-filter-wrap>

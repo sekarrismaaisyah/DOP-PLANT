@@ -18,8 +18,7 @@ class AutoBannedHsctEmailMail extends Mailable
 
     /**
      * @param  array<int, array{sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>  $employees
-     * @param  array<int, array{label: string, count: int}>  $perusahaanSummary
-     * @param  array<int, array{label: string, count: int}>  $siteSummary
+     * @param  array<int, array{perusahaan: string, site: string, count: int}>  $summaryRows
      */
     public function __construct(
         public AutoBannedHsctEmailType $emailType,
@@ -32,8 +31,9 @@ class AutoBannedHsctEmailMail extends Mailable
         public int $pendingCount,
         public string $excelPath,
         public string $excelFilename,
-        public array $perusahaanSummary = [],
-        public array $siteSummary = [],
+        public array $summaryRows = [],
+        public int $perusahaanCount = 0,
+        public int $siteCount = 0,
     ) {}
 
     public function envelope(): Envelope

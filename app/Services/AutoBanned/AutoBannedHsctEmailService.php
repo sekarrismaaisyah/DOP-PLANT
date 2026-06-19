@@ -809,37 +809,48 @@ class AutoBannedHsctEmailService
     /**
      * @param  array<int, array{sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>  $employees
      * @return array{
-     *     perusahaan: array<int, array{label: string, count: int}>,
-     *     site: array<int, array{label: string, count: int}>
+     *     rows: array<int, array{perusahaan: string, site: string, count: int}>,
+     *     perusahaanCount: int,
+     *     siteCount: int
      * }
      */
     public function buildListSummaries(array $employees): array
     {
         $collection = collect($employees);
 
-        $perusahaan = $collection
-            ->groupBy(fn (array $row): string => trim($row['perusahaan'] ?? '') !== '' ? trim($row['perusahaan']) : '—')
-            ->map(fn ($group, string $label): array => [
-                'label' => $label,
-                'count' => $group->count(),
-            ])
-            ->sortByDesc('count')
-            ->values()
-            ->all();
+        $rows = $collection
+            ->groupBy(function (array $row): string {
+                $perusahaan = trim($row['perusahaan'] ?? '') !== '' ? trim($row['perusahaan']) : '—';
+                $site = trim($row['site'] ?? '') !== '' ? trim($row['site']) : '—';
 
-        $site = $collection
-            ->groupBy(fn (array $row): string => trim($row['site'] ?? '') !== '' ? trim($row['site']) : '—')
-            ->map(fn ($group, string $label): array => [
-                'label' => $label,
-                'count' => $group->count(),
+                return $perusahaan.'|'.$site;
+            })
+            ->map(function ($group, string $key): array {
+                [$perusahaan, $site] = array_pad(explode('|', $key, 2), 2, '—');
+
+                return [
+                    'perusahaan' => $perusahaan,
+                    'site' => $site,
+                    'count' => $group->count(),
+                ];
+            })
+            ->sortBy([
+                ['perusahaan', 'asc'],
+                ['site', 'asc'],
             ])
-            ->sortByDesc('count')
             ->values()
             ->all();
 
         return [
-            'perusahaan' => $perusahaan,
-            'site' => $site,
+            'rows' => $rows,
+            'perusahaanCount' => $collection
+                ->map(fn (array $row): string => trim($row['perusahaan'] ?? '') !== '' ? trim($row['perusahaan']) : '—')
+                ->unique()
+                ->count(),
+            'siteCount' => $collection
+                ->map(fn (array $row): string => trim($row['site'] ?? '') !== '' ? trim($row['site']) : '—')
+                ->unique()
+                ->count(),
         ];
     }
 
@@ -901,8 +912,9 @@ class AutoBannedHsctEmailService
                 pendingCount: $pendingCount,
                 excelPath: $excelPath,
                 excelFilename: $excelFilename,
-                perusahaanSummary: $summaries['perusahaan'],
-                siteSummary: $summaries['site'],
+                summaryRows: $summaries['rows'],
+                perusahaanCount: $summaries['perusahaanCount'],
+                siteCount: $summaries['siteCount'],
             );
 
             foreach ($recipients as $email) {

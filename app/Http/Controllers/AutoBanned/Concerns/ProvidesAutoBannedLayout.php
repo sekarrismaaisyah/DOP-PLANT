@@ -28,6 +28,11 @@ trait ProvidesAutoBannedLayout
                 'route' => 'auto-banned.inputasi.index',
             ],
             [
+                'key' => 'sod-verification',
+                'label' => 'Verifikasi SOD',
+                'route' => 'auto-banned.sod-verification.index',
+            ],
+            [
                 'key' => 'master-data',
                 'label' => 'Master Data',
                 'route' => 'auto-banned.master-data.index',

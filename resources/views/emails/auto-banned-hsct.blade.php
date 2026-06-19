@@ -52,49 +52,29 @@
 
       <div class="stats">
         <div class="stat"><strong>{{ count($employees) }}</strong><span>Total harus di-banned</span></div>
-        <div class="stat"><strong>{{ count($perusahaanSummary) }}</strong><span>Perusahaan</span></div>
-        <div class="stat"><strong>{{ count($siteSummary) }}</strong><span>Site</span></div>
+        <div class="stat"><strong>{{ $perusahaanCount }}</strong><span>Perusahaan</span></div>
+        <div class="stat"><strong>{{ $siteCount }}</strong><span>Site</span></div>
       </div>
 
-      <p class="section-title">Ringkasan per Perusahaan</p>
+      <p class="section-title">Ringkasan per Perusahaan &amp; Site</p>
       <table>
         <thead>
           <tr>
             <th>Perusahaan</th>
-            <th style="text-align:right;width:120px;">Jumlah Orang</th>
-          </tr>
-        </thead>
-        <tbody>
-          @forelse($perusahaanSummary as $row)
-          <tr>
-            <td>{{ $row['label'] }}</td>
-            <td class="count">{{ $row['count'] }} orang</td>
-          </tr>
-          @empty
-          <tr>
-            <td colspan="2">—</td>
-          </tr>
-          @endforelse
-        </tbody>
-      </table>
-
-      <p class="section-title">Ringkasan per Site</p>
-      <table>
-        <thead>
-          <tr>
             <th>Site</th>
             <th style="text-align:right;width:120px;">Jumlah Orang</th>
           </tr>
         </thead>
         <tbody>
-          @forelse($siteSummary as $row)
+          @forelse($summaryRows as $row)
           <tr>
-            <td>{{ $row['label'] }}</td>
+            <td>{{ $row['perusahaan'] }}</td>
+            <td>{{ $row['site'] }}</td>
             <td class="count">{{ $row['count'] }} orang</td>
           </tr>
           @empty
           <tr>
-            <td colspan="2">—</td>
+            <td colspan="3">—</td>
           </tr>
           @endforelse
         </tbody>
