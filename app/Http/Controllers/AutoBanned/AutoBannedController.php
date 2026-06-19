@@ -9,7 +9,6 @@ use App\Http\Controllers\AutoBanned\Concerns\ProvidesAutoBannedLayout;
 use App\Models\AutoBannedHsctCampaign;
 use App\Models\AutoBannedStatusSnapshot;
 use App\Services\AutoBanned\AutoBannedHsctEmailService;
-use App\Services\AutoBanned\AutoBannedMonitoringDummyService;
 use App\Services\AutoBanned\AutoBannedOverviewService;
 use App\Services\AutoBanned\AutoBannedScrapPollService;
 use Illuminate\Http\RedirectResponse;
@@ -23,7 +22,6 @@ class AutoBannedController extends Controller
     public function __construct(
         private readonly AutoBannedOverviewService $overviewService,
         private readonly AutoBannedScrapPollService $pollService,
-        private readonly AutoBannedMonitoringDummyService $monitoringDummyService,
         private readonly AutoBannedHsctEmailService $hsctEmailService,
     ) {}
 
@@ -40,7 +38,7 @@ class AutoBannedController extends Controller
             'filterOptions' => $overview['filterOptions'],
             'stats' => $overview['stats'],
             'bannedRows' => $overview['bannedRows'],
-            'monitoringLifecycleRows' => $this->monitoringDummyService->lifecycleRows(),
+            'monitoringLifecycleRows' => $overview['monitoringRows'],
             'unbanRows' => $overview['unbanRows'],
             'syncStats' => $overview['syncStats'],
             'recentChanges' => $overview['recentChanges'],

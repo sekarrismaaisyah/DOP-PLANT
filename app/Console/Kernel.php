@@ -74,6 +74,13 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/auto-banned-hsct-email.log'));
 
+        // Auto Banned: verifikasi hourly apakah SID terkirim HSECT sudah terbanned di tabel scrape lain
+        $schedule->command('auto-banned:verify-banned')
+            ->timezone(config('auto_banned.hsct.timezone', 'Asia/Makassar'))
+            ->hourlyAt(10)
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/auto-banned-verify.log'));
+
         // Generate planning roster dari DOP & IKK setiap 10 menit (hari ini). Skip jika job periode yang sama masih pending/processing.
         $schedule->command('roster:generate-planning')
             ->everyMinutes()

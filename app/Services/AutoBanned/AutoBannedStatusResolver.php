@@ -12,7 +12,9 @@ use App\Enums\AutoBannedUnbanStatus;
 use App\Enums\AutoBannedVerificationStatus;
 use App\Models\AutoBannedStatusSnapshot;
 use App\Models\AutoBannedUnbanRequest;
+use App\Support\AutoBanned\AutoBannedSchema;
 use Carbon\CarbonInterface;
+use Illuminate\Database\QueryException;
 use Illuminate\Support\Collection;
 
 class AutoBannedStatusResolver
@@ -35,23 +37,33 @@ class AutoBannedStatusResolver
             return;
         }
 
-        $unbanRequest = AutoBannedUnbanRequest::query()
-            ->where('sid', $snapshot->sid)
-            ->when($snapshot->week !== '', fn ($q) => $q->where('week', $snapshot->week))
-            ->when($snapshot->iso_year !== '', fn ($q) => $q->where('iso_year', $snapshot->iso_year))
-            ->orderByDesc('created_at')
-            ->first();
-
         $now = now()->timezone(config('app.timezone'));
 
+        if (! AutoBannedSchema::hasUnbanRequestsTable()) {
+            $this->applyTreatmentWithoutUnbanRequest($snapshot, $now);
+
+            return;
+        }
+
+        try {
+            $unbanRequest = AutoBannedUnbanRequest::query()
+                ->where('sid', $snapshot->sid)
+                ->when($snapshot->week !== '', fn ($q) => $q->where('week', $snapshot->week))
+                ->when($snapshot->iso_year !== '', fn ($q) => $q->where('iso_year', $snapshot->iso_year))
+                ->orderByDesc('created_at')
+                ->first();
+        } catch (QueryException $exception) {
+            if (AutoBannedSchema::isMissingTableException($exception)) {
+                $this->applyTreatmentWithoutUnbanRequest($snapshot, $now);
+
+                return;
+            }
+
+            throw $exception;
+        }
+
         if ($unbanRequest === null) {
-            $treatmentDeadline = ($snapshot->banned_detected_at ?? $snapshot->first_seen_at)
-                ->copy()
-                ->addDays(AutoBannedSlaCalculator::TREATMENT_DEADLINE_DAYS);
-            $snapshot->treatment_status = $now->greaterThan($treatmentDeadline)
-                ? AutoBannedTreatmentStatus::Overdue
-                : AutoBannedTreatmentStatus::NeedSubmit;
-            $snapshot->verification_status = AutoBannedVerificationStatus::None;
+            $this->applyTreatmentWithoutUnbanRequest($snapshot, $now);
 
             return;
         }
@@ -97,10 +109,24 @@ class AutoBannedStatusResolver
             $snapshot->unban_opened_at = $snapshot->verification_done_at;
         }
 
-        if ($snapshot->hsct_sync_status === AutoBannedHsctSyncStatus::Confirmed) {
+        if ($snapshot->hsct_sync_status === AutoBannedHsctSyncStatus::Confirmed
+            && $snapshot->verification_status === AutoBannedVerificationStatus::Done) {
             $snapshot->ban_status = AutoBannedBanStatus::ClosedUnbanned;
             $snapshot->unban_closed_at ??= $snapshot->hsct_confirmed_at ?? $now;
+        } elseif ($snapshot->hsct_sync_status === AutoBannedHsctSyncStatus::Confirmed) {
+            $snapshot->ban_status = AutoBannedBanStatus::CloseBanned;
         }
+    }
+
+    private function applyTreatmentWithoutUnbanRequest(AutoBannedStatusSnapshot $snapshot, CarbonInterface $now): void
+    {
+        $treatmentDeadline = ($snapshot->banned_detected_at ?? $snapshot->first_seen_at)
+            ->copy()
+            ->addDays(AutoBannedSlaCalculator::TREATMENT_DEADLINE_DAYS);
+        $snapshot->treatment_status = $now->greaterThan($treatmentDeadline)
+            ? AutoBannedTreatmentStatus::Overdue
+            : AutoBannedTreatmentStatus::NeedSubmit;
+        $snapshot->verification_status = AutoBannedVerificationStatus::None;
     }
 
     /**

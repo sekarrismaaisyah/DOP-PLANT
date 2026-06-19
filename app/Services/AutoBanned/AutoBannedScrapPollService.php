@@ -12,6 +12,7 @@ use App\Models\AutoBannedPollLog;
 use App\Models\AutoBannedStatusChange;
 use App\Models\AutoBannedStatusSnapshot;
 use App\Models\ScrAutoBannedTbcSap;
+use App\Support\AutoBanned\AutoBannedSchema;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
@@ -185,6 +186,13 @@ class AutoBannedScrapPollService
                     $snapshot->ban_status = AutoBannedBanStatus::OpenBanned;
                     $snapshot->hsct_sync_status = AutoBannedHsctSyncStatus::Pending;
                 }
+            } elseif ($snapshot->hsct_sync_status === AutoBannedHsctSyncStatus::NotRequired
+                || $snapshot->hsct_sync_status === null) {
+                // Baris ada di scr_auto_banned_tbc_sap = masuk list banned HSECT
+                $snapshot->system_status = AutoBannedSystemStatus::NotPassed;
+                $snapshot->banned_detected_at ??= $now;
+                $snapshot->ban_status = AutoBannedBanStatus::OpenBanned;
+                $snapshot->hsct_sync_status = AutoBannedHsctSyncStatus::Pending;
             } else {
                 $snapshot->hsct_sync_status = AutoBannedHsctSyncStatus::NotRequired;
                 if ($hasChange && $changeType === AutoBannedStatusChangeType::NotPassToPass) {
@@ -194,8 +202,11 @@ class AutoBannedScrapPollService
             }
 
             $snapshot->save();
-            $this->statusResolver->syncWorkflowFromUnbanRequests($snapshot);
-            $snapshot->save();
+
+            if (AutoBannedSchema::hasUnbanRequestsTable()) {
+                $this->statusResolver->syncWorkflowFromUnbanRequests($snapshot);
+                $snapshot->save();
+            }
 
             if ($hasChange && $changeType !== null) {
                 AutoBannedStatusChange::query()->create([
@@ -251,8 +262,7 @@ class AutoBannedScrapPollService
         $snapshot->update([
             'hsct_sync_status' => AutoBannedHsctSyncStatus::Confirmed,
             'hsct_confirmed_at' => now(),
-            'ban_status' => AutoBannedBanStatus::ClosedUnbanned,
-            'unban_closed_at' => now(),
+            'ban_status' => AutoBannedBanStatus::CloseBanned,
         ]);
     }
 }

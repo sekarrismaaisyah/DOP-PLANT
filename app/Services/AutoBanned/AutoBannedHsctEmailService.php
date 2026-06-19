@@ -4,15 +4,16 @@ declare(strict_types=1);
 
 namespace App\Services\AutoBanned;
 
+use App\Enums\AutoBannedBanStatus;
 use App\Enums\AutoBannedHsctCampaignStatus;
 use App\Enums\AutoBannedHsctEmailType;
 use App\Enums\AutoBannedHsctSyncStatus;
-use App\Enums\AutoBannedSystemStatus;
 use App\Mail\AutoBannedHsctEmailMail;
 use App\Models\AutoBannedHsctCampaign;
 use App\Models\AutoBannedHsctCampaignItem;
 use App\Models\AutoBannedHsctEmailLog;
 use App\Models\AutoBannedStatusSnapshot;
+use App\Models\ScrAutoBannedTbcSap;
 use Carbon\Carbon;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -23,8 +24,10 @@ use Illuminate\Support\Facades\Schema;
 class AutoBannedHsctEmailService
 {
     public function __construct(
-        private readonly AutoBannedMonitoringDummyService $dummyService,
         private readonly AutoBannedStatusNormalizer $normalizer,
+        private readonly AutoBannedHsctListExcelExporter $excelExporter,
+        private readonly AutoBannedScrapPollService $scrapPollService,
+        private readonly AutoBannedOverviewService $overviewService,
     ) {}
 
     public function tablesAvailable(): bool
@@ -52,6 +55,9 @@ class AutoBannedHsctEmailService
         }
 
         if ($campaign !== null && $campaign->status === AutoBannedHsctCampaignStatus::Active) {
+            $this->syncNewItemsToCampaign($campaign);
+            $campaign->refresh();
+
             if ($force || ! $this->isInitialSendDay($now)) {
                 return $this->sendReminderEmail($campaign, $force);
             }
@@ -80,6 +86,7 @@ class AutoBannedHsctEmailService
             return ['action' => 'error', 'message' => 'AUTO_BANNED_HSCT_EMAILS belum dikonfigurasi.', 'sent' => false];
         }
 
+        $this->syncScrapBeforeResolve($week, $year);
         $sourceItems = $this->resolveBannedSourceItems($week, $year);
         if ($sourceItems->isEmpty()) {
             return ['action' => 'skip', 'message' => 'Tidak ada data banned untuk dikirim.', 'sent' => false];
@@ -118,12 +125,9 @@ class AutoBannedHsctEmailService
                 ]);
 
                 if ($item['snapshot_id'] !== null) {
-                    AutoBannedStatusSnapshot::query()
-                        ->where('id', $item['snapshot_id'])
-                        ->update([
-                            'hsct_sync_status' => AutoBannedHsctSyncStatus::Sent->value,
-                            'hsct_sent_at' => now(),
-                        ]);
+                    $this->markSnapshotSent($item['sid'], $week, $year, $item['snapshot_id']);
+                } else {
+                    $this->markSnapshotSent($item['sid'], $week, $year, null);
                 }
             }
 
@@ -179,14 +183,47 @@ class AutoBannedHsctEmailService
         $this->syncCampaignConfirmation($campaign);
         $campaign->refresh();
 
-        $pendingItems = $campaign->items()->where('is_confirmed', false)->get();
-        if ($pendingItems->isEmpty()) {
-            $campaign->update([
-                'status' => AutoBannedHsctCampaignStatus::Completed,
-                'completed_at' => now(),
-            ]);
-
+        if ($campaign->status === AutoBannedHsctCampaignStatus::Completed) {
             return ['action' => 'completed', 'message' => 'Semua SID sudah banned — campaign ditutup.', 'sent' => false];
+        }
+
+        $timezone = config('auto_banned.hsct.timezone', 'Asia/Makassar');
+        $pendingItems = $campaign->items()
+            ->where('is_confirmed', false)
+            ->get()
+            ->filter(function (AutoBannedHsctCampaignItem $item) use ($force, $timezone, $campaign): bool {
+                $snapshot = $this->resolveItemSnapshot($item, $campaign);
+
+                if ($snapshot === null) {
+                    return false;
+                }
+
+                if ($snapshot->hsct_sync_status !== AutoBannedHsctSyncStatus::Sent) {
+                    return false;
+                }
+
+                if ($snapshot->hsct_confirmed_at !== null) {
+                    return false;
+                }
+
+                if (! $force && $snapshot->hsct_sent_at !== null) {
+                    $sentAt = $snapshot->hsct_sent_at->timezone($timezone);
+
+                    if ($sentAt->isToday()) {
+                        return false;
+                    }
+                }
+
+                return true;
+            })
+            ->values();
+
+        if ($pendingItems->isEmpty()) {
+            return [
+                'action' => 'skip',
+                'message' => 'Tidak ada SID eligible untuk reminder (semua sudah terbanned atau baru dikirim hari ini).',
+                'sent' => false,
+            ];
         }
 
         if (! $force && $campaign->last_reminder_at !== null && $campaign->last_reminder_at->isToday()) {
@@ -244,6 +281,42 @@ class AutoBannedHsctEmailService
         ];
     }
 
+    public function syncNewItemsToCampaign(AutoBannedHsctCampaign $campaign): int
+    {
+        $existingSids = $campaign->items()->pluck('sid')->all();
+        $newItems = $this->resolveBannedSourceItems($campaign->week, $campaign->iso_year)
+            ->filter(fn (array $item): bool => ! in_array($item['sid'], $existingSids, true));
+
+        if ($newItems->isEmpty()) {
+            return 0;
+        }
+
+        foreach ($newItems as $item) {
+            AutoBannedHsctCampaignItem::query()->create([
+                'campaign_id' => $campaign->id,
+                'snapshot_id' => $item['snapshot_id'],
+                'sid' => $item['sid'],
+                'karyawan' => $item['karyawan'],
+                'perusahaan' => $item['perusahaan'],
+                'site_dedicated' => $item['site'],
+                'banned_reason' => $item['reason'],
+                'is_confirmed' => false,
+            ]);
+
+            if ($item['snapshot_id'] !== null) {
+                $this->markSnapshotSent($item['sid'], $campaign->week, $campaign->iso_year, $item['snapshot_id']);
+            } else {
+                $this->markSnapshotSent($item['sid'], $campaign->week, $campaign->iso_year, null);
+            }
+        }
+
+        $campaign->update([
+            'total_items' => $campaign->items()->count(),
+        ]);
+
+        return $newItems->count();
+    }
+
     public function syncCampaignConfirmation(AutoBannedHsctCampaign $campaign): void
     {
         $items = $campaign->items()->get();
@@ -253,16 +326,7 @@ class AutoBannedHsctEmailService
                 continue;
             }
 
-            $snapshot = null;
-            if ($item->snapshot_id !== null) {
-                $snapshot = AutoBannedStatusSnapshot::query()->find($item->snapshot_id);
-            } else {
-                $snapshot = AutoBannedStatusSnapshot::query()
-                    ->where('sid', $item->sid)
-                    ->where('week', $campaign->week)
-                    ->where('iso_year', $campaign->iso_year)
-                    ->first();
-            }
+            $snapshot = $this->resolveItemSnapshot($item, $campaign);
 
             if ($snapshot !== null && $snapshot->hsct_sync_status === AutoBannedHsctSyncStatus::Confirmed) {
                 $item->update([
@@ -288,41 +352,133 @@ class AutoBannedHsctEmailService
      */
     public function resolveBannedSourceItems(string $week, string $year): Collection
     {
-        if (Schema::hasTable('auto_banned_status_snapshots')) {
-            $snapshots = AutoBannedStatusSnapshot::query()
-                ->where('week', $week)
-                ->where('iso_year', $year)
-                ->where('system_status', AutoBannedSystemStatus::NotPassed)
-                ->orderBy('karyawan')
-                ->get();
+        if (AutoBannedSchema::hasScrapTable()) {
+            $scrapItems = $this->buildItemsFromScrapTable($week, $year);
 
-            if ($snapshots->isNotEmpty()) {
-                return $snapshots->map(fn (AutoBannedStatusSnapshot $s) => [
-                    'snapshot_id' => $s->id,
-                    'sid' => $s->sid,
-                    'karyawan' => $s->karyawan ?? '',
-                    'site' => $s->site_dedicated ?? '',
-                    'perusahaan' => $s->perusahaan ?? '',
-                    'reason' => $s->banned_reason ?? 'Tidak ada SAP',
-                ]);
+            if ($scrapItems->isNotEmpty()) {
+                return $scrapItems;
             }
         }
 
-        if (config('auto_banned.hsct.use_dummy_when_empty', true)) {
-            return $this->dummyService->lifecycleRows()
-                ->filter(fn (array $row) => $row['systemStatus'] === AutoBannedSystemStatus::NotPassed)
-                ->map(fn (array $row) => [
-                    'snapshot_id' => null,
-                    'sid' => $row['sid'],
-                    'karyawan' => $row['karyawan'],
-                    'site' => '',
-                    'perusahaan' => '',
-                    'reason' => 'Tidak ada SAP',
-                ])
-                ->values();
+        if (! Schema::hasTable('auto_banned_status_snapshots')) {
+            return collect();
         }
 
-        return collect();
+        return AutoBannedStatusSnapshot::query()
+            ->where('week', $week)
+            ->where('iso_year', $year)
+            ->where('hsct_sync_status', AutoBannedHsctSyncStatus::Pending)
+            ->orderBy('karyawan')
+            ->get()
+            ->map(fn (AutoBannedStatusSnapshot $s) => [
+                'snapshot_id' => $s->id,
+                'sid' => $s->sid,
+                'karyawan' => $s->karyawan ?? '',
+                'site' => $s->site_dedicated ?? '',
+                'perusahaan' => $s->perusahaan ?? '',
+                'reason' => $s->banned_reason ?? 'Tidak ada SAP',
+            ]);
+    }
+
+    /**
+     * Semua baris di scr_auto_banned_tbc_sap = list yang harus di-banned (sumber utama HSECT).
+     *
+     * @return Collection<int, array{snapshot_id: ?int, sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>
+     */
+    private function buildItemsFromScrapTable(string $week, string $year): Collection
+    {
+        $query = ScrAutoBannedTbcSap::query()
+            ->whereNotNull('SID')
+            ->where('SID', '!=', '');
+
+        if ($week !== '') {
+            $query->whereRaw('UPPER(TRIM(CAST(Week AS CHAR))) = ?', [$this->normalizer->normalizeWeek($week)]);
+        }
+
+        if ($year !== '') {
+            $query->whereRaw('TRIM(CAST(ISO_Year AS CHAR)) = ?', [trim($year)]);
+        }
+
+        $rows = $query->orderBy('Karyawan')->orderBy('SID')->get();
+
+        if ($rows->isEmpty()) {
+            return collect();
+        }
+
+        $snapshots = Schema::hasTable('auto_banned_status_snapshots')
+            ? AutoBannedStatusSnapshot::query()
+                ->where('week', $week)
+                ->where('iso_year', $year)
+                ->get()
+                ->keyBy('sid')
+            : collect();
+
+        return $rows
+            ->map(function (ScrAutoBannedTbcSap $row) use ($snapshots): array {
+                $sid = trim((string) ($row->SID ?? ''));
+                /** @var AutoBannedStatusSnapshot|null $snapshot */
+                $snapshot = $snapshots->get($sid);
+
+                return [
+                    'snapshot_id' => $snapshot?->id,
+                    'sid' => $sid,
+                    'karyawan' => trim((string) ($row->Karyawan ?? '')),
+                    'site' => trim((string) ($row->Site_Dedicated ?? '')),
+                    'perusahaan' => trim((string) ($row->Perusahaan ?? '')),
+                    'reason' => trim((string) ($row->Banned_SID_Reason ?? '')) ?: 'Tidak ada SAP',
+                    'hsct_sync_status' => $snapshot?->hsct_sync_status,
+                ];
+            })
+            ->filter(function (array $item): bool {
+                $status = $item['hsct_sync_status'];
+
+                if ($status === null) {
+                    return true;
+                }
+
+                return ! in_array($status, [
+                    AutoBannedHsctSyncStatus::Sent,
+                    AutoBannedHsctSyncStatus::Confirmed,
+                ], true);
+            })
+            ->map(fn (array $item): array => [
+                'snapshot_id' => $item['snapshot_id'],
+                'sid' => $item['sid'],
+                'karyawan' => $item['karyawan'],
+                'site' => $item['site'],
+                'perusahaan' => $item['perusahaan'],
+                'reason' => $item['reason'],
+            ])
+            ->values();
+    }
+
+    private function syncScrapBeforeResolve(string $week, string $year): void
+    {
+        if ($this->scrapPollService->scrTableAvailable()
+            && $this->scrapPollService->snapshotsTableAvailable()) {
+            $this->scrapPollService->poll($week, $year);
+        }
+    }
+
+    private function markSnapshotSent(string $sid, string $week, string $year, ?int $snapshotId): void
+    {
+        if (! Schema::hasTable('auto_banned_status_snapshots')) {
+            return;
+        }
+
+        $query = AutoBannedStatusSnapshot::query()
+            ->where('sid', $sid)
+            ->where('week', $week)
+            ->where('iso_year', $year);
+
+        if ($snapshotId !== null) {
+            $query = AutoBannedStatusSnapshot::query()->where('id', $snapshotId);
+        }
+
+        $query->update([
+            'hsct_sync_status' => AutoBannedHsctSyncStatus::Sent->value,
+            'hsct_sent_at' => now(),
+        ]);
     }
 
     public function findCampaign(string $week, string $year): ?AutoBannedHsctCampaign
@@ -345,11 +501,14 @@ class AutoBannedHsctEmailService
             return ['week' => $normalizedWeek, 'year' => $normalizedYear];
         }
 
-        $now = Carbon::now(config('auto_banned.hsct.timezone', 'Asia/Makassar'));
+        $period = $this->overviewService->resolvePeriod([
+            'week' => $normalizedWeek,
+            'year' => $normalizedYear,
+        ]);
 
         return [
-            'week' => 'W'.$now->isoWeek(),
-            'year' => (string) $now->isoWeekYear(),
+            'week' => $period['week'],
+            'year' => $period['year'],
         ];
     }
 
@@ -392,6 +551,35 @@ class AutoBannedHsctEmailService
     }
 
     /**
+     * @return array{
+     *     totalDispatches: int,
+     *     totalSidSent: int,
+     *     initialDispatches: int,
+     *     reminderDispatches: int,
+     *     lastSentAt: ?string,
+     *     lastSentLabel: ?string,
+     *     lastTotalSent: int
+     * }
+     */
+    public function emailHistorySummary(?string $week = null, ?string $year = null): array
+    {
+        $logs = $this->emailHistory($week, $year, 500)
+            ->where('status', 'sent');
+
+        $lastLog = $logs->first();
+
+        return [
+            'totalDispatches' => $logs->count(),
+            'totalSidSent' => (int) $logs->sum('total_in_list'),
+            'initialDispatches' => $logs->where('email_type', AutoBannedHsctEmailType::Initial)->count(),
+            'reminderDispatches' => $logs->where('email_type', AutoBannedHsctEmailType::Reminder)->count(),
+            'lastSentAt' => $lastLog?->sent_at?->toDateTimeString(),
+            'lastSentLabel' => $lastLog?->sent_at?->timezone(config('auto_banned.hsct.timezone', 'Asia/Makassar'))->format('d M Y H:i').' WITA',
+            'lastTotalSent' => (int) ($lastLog?->total_in_list ?? 0),
+        ];
+    }
+
+    /**
      * @return Collection<int, AutoBannedHsctCampaignItem>
      */
     public function pendingCampaignItems(?string $week = null, ?string $year = null): Collection
@@ -414,15 +602,42 @@ class AutoBannedHsctEmailService
 
     public function confirmCampaignItem(AutoBannedHsctCampaignItem $item): void
     {
+        $campaign = $item->campaign;
+        $snapshot = $campaign !== null
+            ? $this->resolveItemSnapshot($item, $campaign)
+            : null;
+
+        if ($snapshot !== null) {
+            $snapshot->update([
+                'hsct_sync_status' => AutoBannedHsctSyncStatus::Confirmed,
+                'hsct_confirmed_at' => now(),
+                'ban_status' => AutoBannedBanStatus::CloseBanned,
+            ]);
+        }
+
         $item->update([
             'is_confirmed' => true,
             'confirmed_at' => now(),
         ]);
 
-        $campaign = $item->campaign;
         if ($campaign !== null) {
             $this->syncCampaignConfirmation($campaign);
         }
+    }
+
+    private function resolveItemSnapshot(
+        AutoBannedHsctCampaignItem $item,
+        AutoBannedHsctCampaign $campaign,
+    ): ?AutoBannedStatusSnapshot {
+        if ($item->snapshot_id !== null) {
+            return AutoBannedStatusSnapshot::query()->find($item->snapshot_id);
+        }
+
+        return AutoBannedStatusSnapshot::query()
+            ->where('sid', $item->sid)
+            ->where('week', $campaign->week)
+            ->where('iso_year', $campaign->iso_year)
+            ->first();
     }
 
     /**
@@ -452,6 +667,43 @@ class AutoBannedHsctEmailService
             'lastReminderAt' => $campaign->last_reminder_at?->format('d M Y H:i'),
             'completedAt' => $campaign->completed_at?->format('d M Y H:i'),
             'allBanned' => $campaign->status === AutoBannedHsctCampaignStatus::Completed,
+        ];
+    }
+
+    /**
+     * @param  array<int, array{sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>  $employees
+     * @return array{
+     *     perusahaan: array<int, array{label: string, count: int}>,
+     *     site: array<int, array{label: string, count: int}>
+     * }
+     */
+    public function buildListSummaries(array $employees): array
+    {
+        $collection = collect($employees);
+
+        $perusahaan = $collection
+            ->groupBy(fn (array $row): string => trim($row['perusahaan'] ?? '') !== '' ? trim($row['perusahaan']) : '—')
+            ->map(fn ($group, string $label): array => [
+                'label' => $label,
+                'count' => $group->count(),
+            ])
+            ->sortByDesc('count')
+            ->values()
+            ->all();
+
+        $site = $collection
+            ->groupBy(fn (array $row): string => trim($row['site'] ?? '') !== '' ? trim($row['site']) : '—')
+            ->map(fn ($group, string $label): array => [
+                'label' => $label,
+                'count' => $group->count(),
+            ])
+            ->sortByDesc('count')
+            ->values()
+            ->all();
+
+        return [
+            'perusahaan' => $perusahaan,
+            'site' => $site,
         ];
     }
 
@@ -487,7 +739,21 @@ class AutoBannedHsctEmailService
         int $confirmedCount,
         int $pendingCount,
     ): bool {
+        $excelPath = '';
+        $excelFilename = '';
+
         try {
+            $excel = $this->excelExporter->createTempFile(
+                employees: $employees,
+                week: $week,
+                year: $year,
+                emailType: $emailType,
+                reminderNumber: $reminderNumber,
+            );
+            $excelPath = $excel['path'];
+            $excelFilename = $excel['filename'];
+            $summaries = $this->buildListSummaries($employees);
+
             $mailable = new AutoBannedHsctEmailMail(
                 emailType: $emailType,
                 reminderNumber: $reminderNumber,
@@ -497,6 +763,10 @@ class AutoBannedHsctEmailService
                 totalInitial: $totalInitial,
                 confirmedCount: $confirmedCount,
                 pendingCount: $pendingCount,
+                excelPath: $excelPath,
+                excelFilename: $excelFilename,
+                perusahaanSummary: $summaries['perusahaan'],
+                siteSummary: $summaries['site'],
             );
 
             foreach ($recipients as $email) {
@@ -511,6 +781,8 @@ class AutoBannedHsctEmailService
             ]);
 
             return false;
+        } finally {
+            $this->excelExporter->deleteTempFile($excelPath);
         }
     }
 }

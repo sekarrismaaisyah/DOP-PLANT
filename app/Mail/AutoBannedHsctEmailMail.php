@@ -6,6 +6,7 @@ namespace App\Mail;
 
 use App\Enums\AutoBannedHsctEmailType;
 use Illuminate\Bus\Queueable;
+use Illuminate\Mail\Attachment;
 use Illuminate\Mail\Mailable;
 use Illuminate\Mail\Mailables\Content;
 use Illuminate\Mail\Mailables\Envelope;
@@ -17,6 +18,8 @@ class AutoBannedHsctEmailMail extends Mailable
 
     /**
      * @param  array<int, array{sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>  $employees
+     * @param  array<int, array{label: string, count: int}>  $perusahaanSummary
+     * @param  array<int, array{label: string, count: int}>  $siteSummary
      */
     public function __construct(
         public AutoBannedHsctEmailType $emailType,
@@ -27,6 +30,10 @@ class AutoBannedHsctEmailMail extends Mailable
         public int $totalInitial,
         public int $confirmedCount,
         public int $pendingCount,
+        public string $excelPath,
+        public string $excelFilename,
+        public array $perusahaanSummary = [],
+        public array $siteSummary = [],
     ) {}
 
     public function envelope(): Envelope
@@ -41,5 +48,21 @@ class AutoBannedHsctEmailMail extends Mailable
     public function content(): Content
     {
         return new Content(view: 'emails.auto-banned-hsct');
+    }
+
+    /**
+     * @return array<int, Attachment>
+     */
+    public function attachments(): array
+    {
+        if ($this->excelPath === '' || ! is_file($this->excelPath)) {
+            return [];
+        }
+
+        return [
+            Attachment::fromPath($this->excelPath)
+                ->as($this->excelFilename)
+                ->withMime('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'),
+        ];
     }
 }

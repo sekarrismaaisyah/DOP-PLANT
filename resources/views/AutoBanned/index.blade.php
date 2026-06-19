@@ -340,14 +340,10 @@
                <div>
                   <h2 class="font-headline font-semibold text-base text-on-background">Daftar Monitoring Lifecycle</h2>
                   <p class="text-xs text-on-surface-variant mt-0.5">
-                     Preview status terakhir per SID (data dummy) &bull; {{ $periodLabel }}
+                     Status lifecycle per SID dari polling &amp; HSECT &bull; {{ $periodLabel }}
                   </p>
                </div>
                <div class="flex flex-wrap items-center gap-2 self-start sm:self-auto">
-                  <span class="inline-flex items-center gap-1.5 rounded-full bg-amber-50 border border-amber-200 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-amber-800 shrink-0">
-                     <span class="material-symbols-outlined text-sm">science</span>
-                     Data Dummy
-                  </span>
                   <div class="inline-flex p-1 rounded-xl bg-[#f1f5f9]/80 gap-0.5" role="tablist" aria-label="Jenis monitoring">
                   <button type="button" role="tab" id="ab-mon-tab-banned" data-ab-mon-tab="banned" aria-selected="true" aria-controls="ab-mon-panel-banned" class="ab-tab-btn rounded-lg px-4 py-2 text-xs font-semibold text-on-surface-variant">Banned</button>
                   <button type="button" role="tab" id="ab-mon-tab-unban" data-ab-mon-tab="unban" aria-selected="false" aria-controls="ab-mon-panel-unban" class="ab-tab-btn rounded-lg px-4 py-2 text-xs font-semibold text-on-surface-variant">Unbanned</button>

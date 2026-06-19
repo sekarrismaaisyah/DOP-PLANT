@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\AutoBanned;
 
 use App\Enums\AutoBannedBanStatus;
+use App\Enums\AutoBannedHsctSyncStatus;
 use App\Enums\AutoBannedSystemStatus;
 use App\Enums\AutoBannedTreatmentStatus;
 use App\Enums\AutoBannedVerificationStatus;
@@ -54,24 +55,14 @@ class AutoBannedSlaCalculator
             ];
         }
 
-        $listAt = $snapshot->first_seen_at;
-        $bannedAt = $snapshot->banned_detected_at ?? $snapshot->first_seen_at;
-        $bannedDeadline = $bannedAt->copy()->addDays(self::BANNED_SLA_DAYS);
-        $bannedOverdue = $now->greaterThan($bannedDeadline);
+        $slaBanned = $this->resolveBannedSla($snapshot, $now);
 
-        $listDay = (int) $listAt->format('j');
-        $bannedDay = (int) $bannedAt->format('j');
-        $listBannedDelta = max(0, (int) $listAt->copy()->startOfDay()->diffInDays($bannedAt->copy()->startOfDay()));
-
-        $slaBannedLabel = $bannedOverdue ? 'Counting overdue…' : 'Counting open…';
-        $slaBannedDetail = "delta waktu banned - waktu list ({$bannedDay} - {$listDay} = {$listBannedDelta} hari)";
-
-        $banStatus = $snapshot->ban_status;
         $slaUnbannedLabel = '—';
         $slaUnbannedDetail = '—';
         $slaUnbannedTone = 'muted';
-        $remainingBannedLabel = '—';
-        $remainingBannedDetail = '—';
+        $remainingBannedLabel = $slaBanned['remainingBannedLabel'];
+        $remainingBannedDetail = $slaBanned['remainingBannedDetail'];
+        $banStatus = $slaBanned['banStatus'];
 
         if ($snapshot->verification_status === AutoBannedVerificationStatus::Done
             || $snapshot->verification_status === AutoBannedVerificationStatus::DoneOverdue) {
@@ -100,21 +91,13 @@ class AutoBannedSlaCalculator
             $banStatus = AutoBannedBanStatus::OnTreatmentBanned;
             $remainingBannedLabel = 'On treatment';
             $remainingBannedDetail = 'menunggu verifikasi SOD';
-        } else {
-            $banStatus = $bannedOverdue
-                ? AutoBannedBanStatus::OverdueBanned
-                : AutoBannedBanStatus::OpenBanned;
-
-            $remainingDays = $bannedDeadline->isFuture() ? (int) $now->diffInDays($bannedDeadline) : 0;
-            $remainingBannedLabel = $bannedOverdue ? 'Overdue' : "{$remainingDays} hari";
-            $remainingBannedDetail = 'hari dia harus unbanned - waktu sekarang';
         }
 
         return [
             'followUpLabel' => $followUpLabel,
-            'slaBannedLabel' => $slaBannedLabel,
-            'slaBannedDetail' => $slaBannedDetail,
-            'slaBannedTone' => $bannedOverdue ? 'danger' : 'wait',
+            'slaBannedLabel' => $slaBanned['slaBannedLabel'],
+            'slaBannedDetail' => $slaBanned['slaBannedDetail'],
+            'slaBannedTone' => $slaBanned['slaBannedTone'],
             'slaUnbannedLabel' => $slaUnbannedLabel,
             'slaUnbannedDetail' => $slaUnbannedDetail,
             'slaUnbannedTone' => $slaUnbannedTone,
@@ -124,10 +107,84 @@ class AutoBannedSlaCalculator
         ];
     }
 
+    /**
+     * @return array{
+     *     slaBannedLabel: string,
+     *     slaBannedDetail: string,
+     *     slaBannedTone: string,
+     *     remainingBannedLabel: string,
+     *     remainingBannedDetail: string,
+     *     banStatus: AutoBannedBanStatus
+     * }
+     */
+    private function resolveBannedSla(AutoBannedStatusSnapshot $snapshot, CarbonInterface $now): array
+    {
+        if ($snapshot->ban_status === AutoBannedBanStatus::CloseBanned
+            || $snapshot->hsct_sync_status === AutoBannedHsctSyncStatus::Confirmed) {
+            $sentAt = $snapshot->hsct_sent_at ?? $snapshot->first_seen_at;
+            $confirmedAt = $snapshot->hsct_confirmed_at ?? $now;
+            $sentDay = (int) $sentAt->format('j');
+            $confirmedDay = (int) $confirmedAt->format('j');
+            $delta = max(0, (int) $sentAt->copy()->startOfDay()->diffInDays($confirmedAt->copy()->startOfDay()));
+
+            return [
+                'slaBannedLabel' => "Closed ({$delta} hari)",
+                'slaBannedDetail' => "delta waktu banned - waktu list dikirim ({$confirmedDay} - {$sentDay} = {$delta} hari)",
+                'slaBannedTone' => 'muted',
+                'remainingBannedLabel' => '—',
+                'remainingBannedDetail' => '—',
+                'banStatus' => AutoBannedBanStatus::CloseBanned,
+            ];
+        }
+
+        if ($snapshot->hsct_sent_at === null) {
+            return [
+                'slaBannedLabel' => '—',
+                'slaBannedDetail' => 'Menunggu email HSECT terkirim',
+                'slaBannedTone' => 'muted',
+                'remainingBannedLabel' => '—',
+                'remainingBannedDetail' => '—',
+                'banStatus' => AutoBannedBanStatus::OpenBanned,
+            ];
+        }
+
+        $sentAt = $snapshot->hsct_sent_at;
+        $bannedDeadline = $sentAt->copy()->addDays(self::BANNED_SLA_DAYS);
+        $bannedOverdue = $now->greaterThan($bannedDeadline);
+
+        $sentDay = (int) $sentAt->format('j');
+        $nowDay = (int) $now->format('j');
+        $listBannedDelta = max(0, (int) $sentAt->copy()->startOfDay()->diffInDays($now->copy()->startOfDay()));
+
+        $slaBannedLabel = $bannedOverdue ? 'Counting overdue…' : 'Counting open…';
+        $slaBannedDetail = "delta waktu banned - waktu list dikirim ({$nowDay} - {$sentDay} = {$listBannedDelta} hari)";
+
+        $remainingDays = $bannedDeadline->isFuture() ? (int) $now->diffInDays($bannedDeadline) : 0;
+
+        return [
+            'slaBannedLabel' => $slaBannedLabel,
+            'slaBannedDetail' => $slaBannedDetail,
+            'slaBannedTone' => $bannedOverdue ? 'danger' : 'wait',
+            'remainingBannedLabel' => $bannedOverdue ? 'Overdue' : "{$remainingDays} hari",
+            'remainingBannedDetail' => 'hari dia harus unbanned - waktu sekarang',
+            'banStatus' => $bannedOverdue
+                ? AutoBannedBanStatus::OverdueBanned
+                : AutoBannedBanStatus::OpenBanned,
+        ];
+    }
+
     private function buildFollowUpLabel(AutoBannedStatusSnapshot $snapshot): string
     {
+        if ($snapshot->hsct_confirmed_at !== null) {
+            return 'Banned '.$snapshot->hsct_confirmed_at->format('j F Y, h:i a');
+        }
+
+        if ($snapshot->hsct_sent_at !== null) {
+            return 'List dikirim '.$snapshot->hsct_sent_at->format('j F Y, h:i a');
+        }
+
         if ($snapshot->system_status === AutoBannedSystemStatus::NotPassed && $snapshot->banned_detected_at !== null) {
-            return 'Banned '.$snapshot->banned_detected_at->format('j F Y, h:i a');
+            return 'Detected '.$snapshot->banned_detected_at->format('j F Y, h:i a');
         }
 
         if ($snapshot->first_seen_at !== null) {

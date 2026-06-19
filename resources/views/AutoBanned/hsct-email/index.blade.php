@@ -67,6 +67,15 @@
    $periodLabel = trim(($period['week'] ?? '').' · '.($period['year'] ?? ''), ' ·');
    $hsctCampaign = $hsctCampaign ?? null;
    $hsctEmailHistory = $hsctEmailHistory ?? collect();
+   $hsctHistorySummary = $hsctHistorySummary ?? [
+      'totalDispatches' => 0,
+      'totalSidSent' => 0,
+      'initialDispatches' => 0,
+      'reminderDispatches' => 0,
+      'lastSentAt' => null,
+      'lastSentLabel' => null,
+      'lastTotalSent' => 0,
+   ];
    $hsctEmailAvailable = $hsctEmailAvailable ?? false;
    $hsctPendingItems = $hsctPendingItems ?? collect();
    $sendTime = config('auto_banned.hsct.send_time', '08:00');
@@ -182,18 +191,41 @@
          {{-- Riwayat email --}}
          <div class="ab-fade-in ab-fade-in-delay-2 ab-surface-card rounded-2xl overflow-hidden">
             <div class="px-5 sm:px-6 pt-5 pb-4 border-b border-outline-variant/10">
-               <h2 class="font-headline font-semibold text-base text-on-background">Historis Pengiriman</h2>
-               <p class="text-xs text-on-surface-variant mt-0.5">Log email awal & reminder yang sudah terkirim</p>
+               <h2 class="font-headline font-semibold text-base text-on-background">Historis Pengiriman ke HSECT</h2>
+               <p class="text-xs text-on-surface-variant mt-0.5">Waktu kirim, tipe email, dan total SID yang dikirimkan (termasuk lampiran Excel)</p>
             </div>
+
+            <div class="px-5 sm:px-6 py-4 bg-[#fafbfc]/80 border-b border-outline-variant/10 grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs">
+               <div class="rounded-lg bg-white border border-outline-variant/15 px-3 py-2">
+                  <p class="text-on-surface-variant">Total Pengiriman</p>
+                  <p class="font-bold text-on-background mt-0.5 tabular-nums">{{ number_format($hsctHistorySummary['totalDispatches']) }}x</p>
+               </div>
+               <div class="rounded-lg bg-white border border-outline-variant/15 px-3 py-2">
+                  <p class="text-on-surface-variant">Total SID Dikirim</p>
+                  <p class="font-bold text-primary mt-0.5 tabular-nums">{{ number_format($hsctHistorySummary['totalSidSent']) }} SID</p>
+               </div>
+               <div class="rounded-lg bg-white border border-outline-variant/15 px-3 py-2">
+                  <p class="text-on-surface-variant">Email Awal / Reminder</p>
+                  <p class="font-bold text-on-background mt-0.5 tabular-nums">{{ $hsctHistorySummary['initialDispatches'] }} / {{ $hsctHistorySummary['reminderDispatches'] }}</p>
+               </div>
+               <div class="rounded-lg bg-white border border-outline-variant/15 px-3 py-2">
+                  <p class="text-on-surface-variant">Terakhir Dikirim</p>
+                  <p class="font-bold text-on-background mt-0.5">{{ $hsctHistorySummary['lastSentLabel'] ?? '—' }}</p>
+                  @if(($hsctHistorySummary['lastTotalSent'] ?? 0) > 0)
+                  <p class="text-[10px] text-on-surface-variant mt-0.5">{{ $hsctHistorySummary['lastTotalSent'] }} SID</p>
+                  @endif
+               </div>
+            </div>
+
             <div class="overflow-x-auto">
                <table class="ab-sheet-table w-full min-w-[900px] text-left">
                   <thead>
                      <tr>
-                        <th>Waktu Kirim</th>
+                        <th>Waktu Kirim (WITA)</th>
                         <th>Tipe</th>
                         <th>Reminder #</th>
                         <th>Periode</th>
-                        <th>Total List</th>
+                        <th>Total SID Dikirim</th>
                         <th>Sudah Banned</th>
                         <th>Belum Banned</th>
                         <th>Status</th>
@@ -202,7 +234,7 @@
                   <tbody>
                      @forelse($hsctEmailHistory as $log)
                      <tr>
-                        <td class="whitespace-nowrap">{{ $log->sent_at?->format('d M Y H:i') }}</td>
+                        <td class="whitespace-nowrap font-medium">{{ $log->sent_at?->timezone(config('auto_banned.hsct.timezone', 'Asia/Makassar'))->format('d M Y H:i') }} WITA</td>
                         <td>{{ $log->email_type->label() }}</td>
                         <td class="tabular-nums">{{ $log->reminder_number }}</td>
                         <td>{{ $log->week }} {{ $log->iso_year }}</td>
@@ -233,7 +265,7 @@
             <ol class="mt-3 space-y-3 text-xs text-on-surface-variant">
                <li class="flex gap-2">
                   <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">1</span>
-                  <span><strong class="text-on-background">Selasa</strong> — Email awal berisi semua SID Not Passed (tidak ada SAP)</span>
+                  <span><strong class="text-on-background">Selasa</strong> — Email awal + lampiran Excel berisi semua SID Not Passed</span>
                </li>
                <li class="flex gap-2">
                   <span class="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-primary/10 text-[10px] font-bold text-primary">2</span>

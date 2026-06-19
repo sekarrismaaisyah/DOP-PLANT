@@ -44,6 +44,7 @@ class AutoBannedHsctEmailController extends Controller
             'filterRoute' => 'auto-banned.hsct-email.index',
             'hsctCampaign' => $this->hsctEmailService->activeCampaignSummary($week, $year),
             'hsctEmailHistory' => $this->hsctEmailService->emailHistory($week, $year, 50),
+            'hsctHistorySummary' => $this->hsctEmailService->emailHistorySummary($week, $year),
             'hsctEmailAvailable' => $this->hsctEmailService->tablesAvailable(),
             'hsctPendingItems' => $this->hsctEmailService->pendingCampaignItems($week, $year),
         ]);
