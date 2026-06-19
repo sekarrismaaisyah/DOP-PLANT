@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Console\Commands;
 
+use App\Services\AutoBanned\AutoBannedOverviewService;
 use App\Services\AutoBanned\AutoBannedScrapPollService;
 use Illuminate\Console\Command;
 
@@ -15,8 +16,10 @@ class AutoBannedPollScrapCommand extends Command
 
     protected $description = 'Polling data scraping auto banned dan deteksi perubahan status Pass/Not Pass';
 
-    public function handle(AutoBannedScrapPollService $pollService): int
-    {
+    public function handle(
+        AutoBannedScrapPollService $pollService,
+        AutoBannedOverviewService $overviewService,
+    ): int {
         if (! $pollService->scrTableAvailable()) {
             $this->warn('Tabel scr_auto_banned_tbc_sap belum tersedia.');
 
@@ -29,13 +32,25 @@ class AutoBannedPollScrapCommand extends Command
             return self::FAILURE;
         }
 
-        $week = $this->option('week') !== null ? (string) $this->option('week') : null;
-        $year = $this->option('year') !== null ? (string) $this->option('year') : null;
+        $weekOption = $this->option('week') !== null ? (string) $this->option('week') : '';
+        $yearOption = $this->option('year') !== null ? (string) $this->option('year') : '';
+        $period = $overviewService->resolvePeriod([
+            'week' => $weekOption,
+            'year' => $yearOption,
+        ]);
 
-        $result = $pollService->poll($week, $year);
+        $result = $pollService->poll($period['week'], $period['year']);
+
+        if ($result['skipped'] ?? false) {
+            $this->line('[skip] '.($result['message'] ?? 'Poll dilewati.'));
+
+            return self::SUCCESS;
+        }
 
         $this->info(sprintf(
-            'Poll selesai: %d baris diproses, %d snapshot baru, %d perubahan status.',
+            'Poll selesai (%s %s): %d baris diproses, %d snapshot baru, %d perubahan status.',
+            $period['week'],
+            $period['year'],
             $result['rows_processed'],
             $result['new_snapshots'],
             $result['status_changes'],

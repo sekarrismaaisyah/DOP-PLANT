@@ -13,12 +13,17 @@ use App\Models\AutoBannedStatusChange;
 use App\Models\AutoBannedStatusSnapshot;
 use App\Models\ScrAutoBannedTbcSap;
 use App\Support\AutoBanned\AutoBannedSchema;
+use Illuminate\Contracts\Cache\Lock;
+use Illuminate\Database\QueryException;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 class AutoBannedScrapPollService
 {
     private const SCR_TABLE = 'scr_auto_banned_tbc_sap';
+
+    private const DEADLOCK_MAX_ATTEMPTS = 3;
 
     public function __construct(
         private readonly AutoBannedStatusNormalizer $normalizer,
@@ -36,18 +41,33 @@ class AutoBannedScrapPollService
     }
 
     /**
-     * @return array{rows_processed: int, new_snapshots: int, status_changes: int, poll_log_id: ?int}
+     * @return array{rows_processed: int, new_snapshots: int, status_changes: int, poll_log_id: ?int, skipped: bool, message: ?string}
      */
     public function poll(?string $week = null, ?string $year = null): array
     {
+        $emptyResult = static fn (?string $message = null): array => [
+            'rows_processed' => 0,
+            'new_snapshots' => 0,
+            'status_changes' => 0,
+            'poll_log_id' => null,
+            'skipped' => true,
+            'message' => $message,
+        ];
+
         if (! $this->scrTableAvailable() || ! $this->snapshotsTableAvailable()) {
-            return [
-                'rows_processed' => 0,
-                'new_snapshots' => 0,
-                'status_changes' => 0,
-                'poll_log_id' => null,
-            ];
+            return $emptyResult('Tabel scraping atau snapshot belum tersedia.');
         }
+
+        if ($this->hasActiveRunningPoll()) {
+            return $emptyResult('Poll lain masih berjalan.');
+        }
+
+        $lock = $this->acquirePollLock();
+        if ($lock === null) {
+            return $emptyResult('Poll sedang berjalan di proses lain.');
+        }
+
+        $this->failStaleRunningPolls();
 
         $pollLog = AutoBannedPollLog::query()->create([
             'poll_started_at' => now(),
@@ -108,6 +128,8 @@ class AutoBannedScrapPollService
             ]);
 
             throw $exception;
+        } finally {
+            $lock->release();
         }
 
         return [
@@ -115,6 +137,8 @@ class AutoBannedScrapPollService
             'new_snapshots' => $newSnapshots,
             'status_changes' => $statusChanges,
             'poll_log_id' => $pollLog->id,
+            'skipped' => false,
+            'message' => null,
         ];
     }
 
@@ -122,6 +146,28 @@ class AutoBannedScrapPollService
      * @return array{is_new: bool, has_change: bool}
      */
     private function processScrapRow(ScrAutoBannedTbcSap $scrRow): array
+    {
+        $attempt = 0;
+
+        while (true) {
+            try {
+                return $this->processScrapRowOnce($scrRow);
+            } catch (QueryException $exception) {
+                $attempt++;
+
+                if ($attempt >= self::DEADLOCK_MAX_ATTEMPTS || ! $this->isRetryableQueryException($exception)) {
+                    throw $exception;
+                }
+
+                usleep(random_int(50_000, 250_000));
+            }
+        }
+    }
+
+    /**
+     * @return array{is_new: bool, has_change: bool}
+     */
+    private function processScrapRowOnce(ScrAutoBannedTbcSap $scrRow): array
     {
         $identity = $this->normalizer->resolveIdentity($scrRow);
         if ($identity['sid'] === '' || $identity['week'] === '' || $identity['iso_year'] === '') {
@@ -137,7 +183,6 @@ class AutoBannedScrapPollService
                 ->where('sid', $identity['sid'])
                 ->where('week', $identity['week'])
                 ->where('iso_year', $identity['iso_year'])
-                ->lockForUpdate()
                 ->first();
 
             $isNew = $snapshot === null;
@@ -188,7 +233,6 @@ class AutoBannedScrapPollService
                 }
             } elseif ($snapshot->hsct_sync_status === AutoBannedHsctSyncStatus::NotRequired
                 || $snapshot->hsct_sync_status === null) {
-                // Baris ada di scr_auto_banned_tbc_sap = masuk list banned HSECT
                 $snapshot->system_status = AutoBannedSystemStatus::NotPassed;
                 $snapshot->banned_detected_at ??= $now;
                 $snapshot->ban_status = AutoBannedBanStatus::OpenBanned;
@@ -233,6 +277,10 @@ class AutoBannedScrapPollService
 
     public function shouldPoll(): bool
     {
+        if ($this->hasActiveRunningPoll()) {
+            return false;
+        }
+
         if (! Schema::hasTable('auto_banned_poll_logs')) {
             return true;
         }
@@ -246,7 +294,9 @@ class AutoBannedScrapPollService
             return true;
         }
 
-        return $lastPoll->poll_finished_at->lte(now()->subMinute());
+        $minInterval = (int) config('auto_banned.poll.min_interval_seconds', 60);
+
+        return $lastPoll->poll_finished_at->lte(now()->subSeconds($minInterval));
     }
 
     public function markHsctSent(AutoBannedStatusSnapshot $snapshot): void
@@ -264,5 +314,57 @@ class AutoBannedScrapPollService
             'hsct_confirmed_at' => now(),
             'ban_status' => AutoBannedBanStatus::CloseBanned,
         ]);
+    }
+
+    private function acquirePollLock(): ?Lock
+    {
+        $lockSeconds = (int) config('auto_banned.poll.lock_seconds', 300);
+        $lock = Cache::lock('auto_banned:poll-scrap', $lockSeconds);
+
+        return $lock->get() ? $lock : null;
+    }
+
+    private function hasActiveRunningPoll(): bool
+    {
+        if (! Schema::hasTable('auto_banned_poll_logs')) {
+            return false;
+        }
+
+        $staleMinutes = (int) config('auto_banned.poll.stale_running_minutes', 10);
+
+        return AutoBannedPollLog::query()
+            ->where('status', 'running')
+            ->where('poll_started_at', '>=', now()->subMinutes($staleMinutes))
+            ->exists();
+    }
+
+    private function failStaleRunningPolls(): void
+    {
+        if (! Schema::hasTable('auto_banned_poll_logs')) {
+            return;
+        }
+
+        $staleMinutes = (int) config('auto_banned.poll.stale_running_minutes', 10);
+
+        AutoBannedPollLog::query()
+            ->where('status', 'running')
+            ->where('poll_started_at', '<', now()->subMinutes($staleMinutes))
+            ->update([
+                'status' => 'failed',
+                'poll_finished_at' => now(),
+                'error_message' => 'Poll stale — dibatalkan otomatis.',
+            ]);
+    }
+
+    private function isRetryableQueryException(QueryException $exception): bool
+    {
+        $code = (string) $exception->getCode();
+        $message = $exception->getMessage();
+
+        return $code === '40001'
+            || $code === '1213'
+            || str_contains($message, 'Deadlock')
+            || $code === '23000'
+            || str_contains($message, 'Duplicate entry');
     }
 }

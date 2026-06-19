@@ -14,6 +14,13 @@ return [
         'use_dummy_when_empty' => (bool) env('AUTO_BANNED_HSCT_USE_DUMMY', false),
     ],
 
+    'poll' => [
+        'trigger_on_page_load' => (bool) env('AUTO_BANNED_POLL_ON_PAGE_LOAD', false),
+        'lock_seconds' => (int) env('AUTO_BANNED_POLL_LOCK_SECONDS', 300),
+        'stale_running_minutes' => (int) env('AUTO_BANNED_POLL_STALE_MINUTES', 10),
+        'min_interval_seconds' => (int) env('AUTO_BANNED_POLL_MIN_INTERVAL', 60),
+    ],
+
     'ban_verify' => [
         'table' => env('AUTO_BANNED_VERIFY_TABLE', ''),
         'sid_column' => env('AUTO_BANNED_VERIFY_SID_COLUMN', 'SID'),

@@ -72,8 +72,18 @@ class AutoBannedOverviewService
             'year' => $period['year'],
         ]);
 
-        if ($triggerPoll && $tableAvailable && $trackingAvailable && $this->pollService->shouldPoll()) {
-            $this->pollService->poll($resolvedFilters['week'], $resolvedFilters['year']);
+        if (
+            config('auto_banned.poll.trigger_on_page_load', false)
+            && $triggerPoll
+            && $tableAvailable
+            && $trackingAvailable
+            && $this->pollService->shouldPoll()
+        ) {
+            try {
+                $this->pollService->poll($resolvedFilters['week'], $resolvedFilters['year']);
+            } catch (\Throwable) {
+                // Jangan gagalkan halaman dashboard jika poll bentrok — scheduler akan retry.
+            }
         }
 
         $filterOptions = $this->filterOptions($resolvedFilters);
