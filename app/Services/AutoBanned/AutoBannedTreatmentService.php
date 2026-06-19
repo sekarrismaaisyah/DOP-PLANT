@@ -129,12 +129,10 @@ class AutoBannedTreatmentService
 
         $submitterDisplayName = $user !== null
             ? trim((string) ($user->name ?? 'User'))
-            : trim($submitterName);
+            : ($submitterName !== '' ? $submitterName : ($context['karyawan'] !== '' ? $context['karyawan'] : 'Form Publik'));
 
         if ($submitterDisplayName === '') {
-            throw ValidationException::withMessages([
-                'nama_pengirim' => ['Nama pengirim wajib diisi.'],
-            ]);
+            $submitterDisplayName = 'Form Publik';
         }
 
         $request = AutoBannedUnbanRequest::query()->create([

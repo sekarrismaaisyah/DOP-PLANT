@@ -217,15 +217,10 @@
          </div>
       </section>
 
-      {{-- Step 2: Data pengirim --}}
-      <section class="card" id="section-profile">
-         <h2 class="card-title"><span class="num">2</span> Data Anda</h2>
-         <div class="field">
-            <label for="nama_pengirim">Nama Lengkap Pengirim <span class="req">*</span></label>
-            <input class="input" type="text" id="nama_pengirim" name="nama_pengirim" value="{{ old('nama_pengirim') }}" placeholder="Nama lengkap Anda" required maxlength="255"/>
-            <p class="hint">Bisa diisi sendiri atau oleh admin site yang membantu.</p>
-         </div>
-         <div class="field">
+      {{-- Step 2: Ringkasan perbaikan --}}
+      <section class="card" id="section-perbaikan">
+         <h2 class="card-title"><span class="num">2</span> Perbaikan yang Dilakukan</h2>
+         <div class="field" style="margin-bottom:0">
             <label for="alasan_pengajuan">Apa yang sudah diperbaiki? <span class="req">*</span></label>
             <textarea class="textarea" id="alasan_pengajuan" name="alasan_pengajuan" placeholder="Contoh: Sudah koordinasi dengan HSE, SAP sudah diperbaiki, lampiran screenshot SAP terbaru." required maxlength="2000">{{ old('alasan_pengajuan') }}</textarea>
             <p class="hint">Jelaskan singkat tindakan perbaikan yang sudah dilakukan.</p>

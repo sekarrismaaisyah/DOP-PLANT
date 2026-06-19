@@ -87,7 +87,6 @@ class AutoBannedPublicTreatmentController extends Controller
             alasanPengajuan: (string) $validated['alasan_pengajuan'],
             file: $request->file('evidence_file'),
             user: null,
-            submitterName: (string) $validated['nama_pengirim'],
         );
 
         $week = (string) $validated['week'];

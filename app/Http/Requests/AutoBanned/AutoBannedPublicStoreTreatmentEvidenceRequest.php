@@ -29,7 +29,6 @@ class AutoBannedPublicStoreTreatmentEvidenceRequest extends FormRequest
             'sid' => ['required', 'string', 'max:64'],
             'week' => ['required', 'string', 'max:8'],
             'year' => ['required', 'string', 'max:8'],
-            'nama_pengirim' => ['required', 'string', 'max:255'],
             'alasan_pengajuan' => ['required', 'string', 'max:2000'],
             'evidence_file' => ['required', 'file', 'max:'.$maxKb, 'mimes:'.implode(',', $mimes)],
             'website' => ['nullable', 'string', 'max:0'],
@@ -43,7 +42,6 @@ class AutoBannedPublicStoreTreatmentEvidenceRequest extends FormRequest
     {
         return [
             'sid.required' => 'Masukkan SID Anda terlebih dahulu.',
-            'nama_pengirim.required' => 'Masukkan nama lengkap Anda.',
             'alasan_pengajuan.required' => 'Ceritakan singkat tindakan perbaikan yang sudah dilakukan.',
             'evidence_file.required' => 'Lampirkan file bukti (foto atau dokumen).',
             'evidence_file.mimes' => 'File harus berupa PDF, foto, Word, atau Excel.',
