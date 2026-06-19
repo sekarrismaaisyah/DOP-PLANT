@@ -426,9 +426,9 @@
 
             <div id="ab-mon-panel-unban" role="tabpanel" aria-labelledby="ab-mon-tab-unban" data-ab-mon-panel="unban" class="hidden overflow-x-auto">
                <div class="px-5 sm:px-6 py-3 flex justify-end border-b border-outline-variant/5 bg-[#fafbfc]/50">
-                  <a href="{{ route('auto-banned.inputasi.index') }}" class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-dim transition-colors">
-                     <span class="material-symbols-outlined text-base">add_circle</span>
-                     Ajukan Unbanned
+                  <a href="{{ route('auto-banned.inputasi.index', array_filter(['site' => $filters['site'] ?? '', 'week' => $filters['week'] ?? '', 'year' => $filters['year'] ?? '', 'open_inputasi' => 'treatment'])) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-dim transition-colors">
+                     <span class="material-symbols-outlined text-base">upload_file</span>
+                     Upload Evidence Treatment
                   </a>
                </div>
                <table class="ab-table-soft w-full min-w-[640px] text-left">
@@ -440,6 +440,7 @@
                         <th class="px-4 py-3 text-[10px] uppercase text-on-surface-variant/70">Alasan</th>
                         <th class="px-4 py-3 text-[10px] uppercase text-on-surface-variant/70">Status</th>
                         <th class="px-4 py-3 text-[10px] uppercase text-on-surface-variant/70">Tanggal</th>
+                        <th class="px-4 py-3 text-[10px] uppercase text-on-surface-variant/70">Evidence</th>
                      </tr>
                   </thead>
                   <tbody class="divide-y divide-outline-variant/5">
@@ -461,10 +462,20 @@
                         <td class="px-4 py-3 text-xs text-on-surface-variant max-w-[180px] truncate" title="{{ $row->alasan_pengajuan }}">{{ \Illuminate\Support\Str::limit($row->alasan_pengajuan, 50) }}</td>
                         <td class="px-4 py-3"><span class="ab-badge {{ $badgeClass }}">{{ $row->status->label() }}</span></td>
                         <td class="px-4 py-3 text-[11px] text-on-surface-variant whitespace-nowrap">{{ $row->created_at?->format('d M Y H:i') }}</td>
+                        <td class="px-4 py-3 text-xs">
+                           @if(!empty($row->evidence_file_path))
+                           <a href="{{ route('auto-banned.unban-requests.evidence', $row) }}" class="inline-flex items-center gap-1 font-semibold text-primary hover:underline">
+                              <span class="material-symbols-outlined text-base">download</span>
+                              {{ \Illuminate\Support\Str::limit($row->evidence_original_name ?: 'Evidence', 24) }}
+                           </a>
+                           @else
+                           <span class="text-on-surface-variant">—</span>
+                           @endif
+                        </td>
                      </tr>
                      @empty
                      <tr>
-                        <td colspan="6" class="px-4 py-12">
+                        <td colspan="7" class="px-4 py-12">
                            <div class="ab-empty-illus mx-auto max-w-sm rounded-2xl px-6 py-8 text-center">
                               <span class="material-symbols-outlined text-4xl text-primary/25 mb-3 block">inbox</span>
                               <p class="text-sm font-medium text-on-surface">Belum ada pengajuan unbanned</p>
@@ -604,13 +615,13 @@
          <div class="ab-fade-in ab-fade-in-delay-3 ab-surface-card rounded-2xl p-5">
             <h3 class="font-headline font-semibold text-sm text-on-background mb-4">Aksi Cepat</h3>
             <div class="space-y-2">
-               <a href="{{ route('auto-banned.inputasi.index') }}" class="group flex w-full items-center gap-3 rounded-xl border border-transparent bg-[#f8fafc] px-4 py-3 transition-all duration-300 hover:border-primary/15 hover:bg-primary/[0.04]">
+               <a href="{{ route('auto-banned.inputasi.index', array_filter(['week' => $filters['week'] ?? '', 'year' => $filters['year'] ?? '', 'open_inputasi' => 'treatment'])) }}" class="group flex w-full items-center gap-3 rounded-xl border border-transparent bg-[#f8fafc] px-4 py-3 transition-all duration-300 hover:border-primary/15 hover:bg-primary/[0.04]">
                   <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm text-primary transition-transform duration-300 group-hover:scale-105">
-                     <span class="material-symbols-outlined text-xl">how_to_reg</span>
+                     <span class="material-symbols-outlined text-xl">clinical_notes</span>
                   </span>
                   <div class="min-w-0">
-                     <p class="text-sm font-semibold text-on-background">Ajukan Unbanned</p>
-                     <p class="text-[11px] text-on-surface-variant truncate">Form pengajuan SID</p>
+                     <p class="text-sm font-semibold text-on-background">Upload Evidence Treatment</p>
+                     <p class="text-[11px] text-on-surface-variant truncate">Lampirkan bukti perbaikan SID banned</p>
                   </div>
                   <span class="material-symbols-outlined text-on-surface-variant/40 ml-auto text-lg transition-transform duration-300 group-hover:translate-x-0.5">arrow_forward</span>
                </a>

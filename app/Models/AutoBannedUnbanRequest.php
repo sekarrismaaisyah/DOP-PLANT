@@ -20,6 +20,10 @@ class AutoBannedUnbanRequest extends Model
         'banned_reason',
         'status_banned_ref',
         'alasan_pengajuan',
+        'evidence_file_path',
+        'evidence_original_name',
+        'evidence_mime',
+        'evidence_uploaded_at',
         'status',
         'week',
         'iso_year',
@@ -34,6 +38,7 @@ class AutoBannedUnbanRequest extends Model
     protected $casts = [
         'status' => AutoBannedUnbanStatus::class,
         'reviewed_at' => 'datetime',
+        'evidence_uploaded_at' => 'datetime',
     ];
 
     public function submittedBy(): BelongsTo

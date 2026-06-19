@@ -18,7 +18,7 @@
       </a>
    </div>
 
-   <div class="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-3xl">
+   <div class="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl">
       <button type="button" data-ab-open-inputasi="lv" class="group flex items-center gap-4 rounded-2xl border border-outline-variant/15 bg-white p-6 text-left shadow-sm transition-all duration-300 hover:border-primary/20 hover:shadow-md">
          <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary transition-transform duration-300 group-hover:scale-105">
             <span class="material-symbols-outlined text-2xl">local_shipping</span>
@@ -37,6 +37,17 @@
          <div class="min-w-0 flex-1">
             <p class="font-headline font-bold text-base text-on-background">Inputasi Orang</p>
             <p class="mt-1 text-xs text-on-surface-variant">Catat personel masuk/keluar — data karyawan dari SID</p>
+         </div>
+         <span class="material-symbols-outlined text-on-surface-variant/40 transition-transform duration-300 group-hover:translate-x-0.5">arrow_forward</span>
+      </button>
+
+      <button type="button" data-ab-open-inputasi="treatment" class="group flex items-center gap-4 rounded-2xl border border-emerald-200/60 bg-gradient-to-br from-emerald-50/80 to-white p-6 text-left shadow-sm transition-all duration-300 hover:border-emerald-300 hover:shadow-md">
+         <span class="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-emerald-100 text-emerald-700 transition-transform duration-300 group-hover:scale-105">
+            <span class="material-symbols-outlined text-2xl">clinical_notes</span>
+         </span>
+         <div class="min-w-0 flex-1">
+            <p class="font-headline font-bold text-base text-on-background">Upload Evidence Treatment</p>
+            <p class="mt-1 text-xs text-on-surface-variant">Lampirkan bukti perbaikan untuk SID banned · periode {{ $filters['week'] ?? '—' }} {{ $filters['year'] ?? '' }}</p>
          </div>
          <span class="material-symbols-outlined text-on-surface-variant/40 transition-transform duration-300 group-hover:translate-x-0.5">arrow_forward</span>
       </button>

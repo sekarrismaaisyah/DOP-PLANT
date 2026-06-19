@@ -6,6 +6,7 @@ use App\Http\Controllers\AutoBanned\AutoBannedController;
 use App\Http\Controllers\AutoBanned\AutoBannedHsctEmailController;
 use App\Http\Controllers\AutoBanned\AutoBannedInputasiController;
 use App\Http\Controllers\AutoBanned\AutoBannedMasterDataController;
+use App\Http\Controllers\AutoBanned\AutoBannedTreatmentController;
 use Illuminate\Support\Facades\Route;
 
 Route::middleware(['auth'])
@@ -20,5 +21,8 @@ Route::middleware(['auth'])
         Route::post('/snapshots/{snapshot}/hsct-sent', [AutoBannedController::class, 'markHsctSent'])->name('snapshots.hsct-sent');
         Route::post('/snapshots/{snapshot}/hsct-confirmed', [AutoBannedController::class, 'markHsctConfirmed'])->name('snapshots.hsct-confirmed');
         Route::get('/inputasi', [AutoBannedInputasiController::class, 'index'])->name('inputasi.index');
+        Route::get('/treatment-evidence/lookup-sid', [AutoBannedTreatmentController::class, 'lookupSid'])->name('treatment-evidence.lookup-sid');
+        Route::post('/treatment-evidence', [AutoBannedTreatmentController::class, 'store'])->name('treatment-evidence.store');
+        Route::get('/unban-requests/{unbanRequest}/evidence', [AutoBannedTreatmentController::class, 'downloadEvidence'])->name('unban-requests.evidence');
         Route::get('/master-data', [AutoBannedMasterDataController::class, 'index'])->name('master-data.index');
     });

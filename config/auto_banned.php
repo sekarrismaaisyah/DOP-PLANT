@@ -33,4 +33,9 @@ return [
             explode(',', (string) env('AUTO_BANNED_VERIFY_EXECUTED_VALUES', ''))
         ))),
     ],
+
+    'treatment' => [
+        'max_upload_kb' => (int) env('AUTO_BANNED_TREATMENT_MAX_UPLOAD_KB', 10240),
+        'allowed_mimes' => ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xlsx', 'xls'],
+    ],
 ];
