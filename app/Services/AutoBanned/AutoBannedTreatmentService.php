@@ -89,7 +89,8 @@ class AutoBannedTreatmentService
         string $year,
         string $alasanPengajuan,
         UploadedFile $file,
-        User $user,
+        ?User $user = null,
+        string $submitterName = '',
     ): AutoBannedUnbanRequest {
         if (! Schema::hasTable('auto_banned_unban_requests')) {
             throw ValidationException::withMessages([
@@ -126,6 +127,16 @@ class AutoBannedTreatmentService
             $sid.'_'.time().'.'.$file->getClientOriginalExtension(),
         );
 
+        $submitterDisplayName = $user !== null
+            ? trim((string) ($user->name ?? 'User'))
+            : trim($submitterName);
+
+        if ($submitterDisplayName === '') {
+            throw ValidationException::withMessages([
+                'nama_pengirim' => ['Nama pengirim wajib diisi.'],
+            ]);
+        }
+
         $request = AutoBannedUnbanRequest::query()->create([
             'sid' => $context['sid'],
             'karyawan' => $context['karyawan'] !== '' ? $context['karyawan'] : $sid,
@@ -141,8 +152,8 @@ class AutoBannedTreatmentService
             'status' => AutoBannedUnbanStatus::Pending,
             'week' => $week,
             'iso_year' => $year,
-            'submitted_by_id' => $user->id,
-            'submitted_by_name' => trim((string) ($user->name ?? 'User')),
+            'submitted_by_id' => $user?->id,
+            'submitted_by_name' => $submitterDisplayName,
         ]);
 
         $this->syncSnapshotWorkflow($sid, $week, $year);

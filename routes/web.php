@@ -70,6 +70,9 @@ require __DIR__ . '/sid_meeting.php';
 
 Auth::routes();
 
+// Form publik Auto Banned — tanpa login
+require __DIR__.'/AutoBanned/auto_banned_public.php';
+
 // Route khusus screenshot dashboard (tanpa middleware auth, pakai token)
 // URL: /dopmikk/dopm/dashboard/screenshot?token=SECRET
 Route::get('/dopmikk/dopm/dashboard/screenshot', function (\Illuminate\Http\Request $request) {

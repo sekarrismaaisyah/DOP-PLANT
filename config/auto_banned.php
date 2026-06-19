@@ -37,5 +37,6 @@ return [
     'treatment' => [
         'max_upload_kb' => (int) env('AUTO_BANNED_TREATMENT_MAX_UPLOAD_KB', 10240),
         'allowed_mimes' => ['pdf', 'jpg', 'jpeg', 'png', 'doc', 'docx', 'xlsx', 'xls'],
+        'public_form_enabled' => (bool) env('AUTO_BANNED_PUBLIC_TREATMENT_FORM', true),
     ],
 ];

@@ -426,9 +426,9 @@
 
             <div id="ab-mon-panel-unban" role="tabpanel" aria-labelledby="ab-mon-tab-unban" data-ab-mon-panel="unban" class="hidden overflow-x-auto">
                <div class="px-5 sm:px-6 py-3 flex justify-end border-b border-outline-variant/5 bg-[#fafbfc]/50">
-                  <a href="{{ route('auto-banned.inputasi.index', array_filter(['site' => $filters['site'] ?? '', 'week' => $filters['week'] ?? '', 'year' => $filters['year'] ?? '', 'open_inputasi' => 'treatment'])) }}" class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-dim transition-colors">
-                     <span class="material-symbols-outlined text-base">upload_file</span>
-                     Upload Evidence Treatment
+                  <a href="{{ route('auto-banned.public.treatment.form', array_filter(['week' => $filters['week'] ?? '', 'year' => $filters['year'] ?? ''])) }}" target="_blank" rel="noopener" class="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:text-primary-dim transition-colors">
+                     <span class="material-symbols-outlined text-base">open_in_new</span>
+                     Form Publik Treatment
                   </a>
                </div>
                <table class="ab-table-soft w-full min-w-[640px] text-left">
@@ -615,13 +615,13 @@
          <div class="ab-fade-in ab-fade-in-delay-3 ab-surface-card rounded-2xl p-5">
             <h3 class="font-headline font-semibold text-sm text-on-background mb-4">Aksi Cepat</h3>
             <div class="space-y-2">
-               <a href="{{ route('auto-banned.inputasi.index', array_filter(['week' => $filters['week'] ?? '', 'year' => $filters['year'] ?? '', 'open_inputasi' => 'treatment'])) }}" class="group flex w-full items-center gap-3 rounded-xl border border-transparent bg-[#f8fafc] px-4 py-3 transition-all duration-300 hover:border-primary/15 hover:bg-primary/[0.04]">
+               <a href="{{ route('auto-banned.public.treatment.form', array_filter(['week' => $filters['week'] ?? '', 'year' => $filters['year'] ?? ''])) }}" target="_blank" rel="noopener" class="group flex w-full items-center gap-3 rounded-xl border border-transparent bg-[#f8fafc] px-4 py-3 transition-all duration-300 hover:border-primary/15 hover:bg-primary/[0.04]">
                   <span class="flex h-9 w-9 items-center justify-center rounded-xl bg-white shadow-sm text-primary transition-transform duration-300 group-hover:scale-105">
                      <span class="material-symbols-outlined text-xl">clinical_notes</span>
                   </span>
                   <div class="min-w-0">
-                     <p class="text-sm font-semibold text-on-background">Upload Evidence Treatment</p>
-                     <p class="text-[11px] text-on-surface-variant truncate">Lampirkan bukti perbaikan SID banned</p>
+                     <p class="text-sm font-semibold text-on-background">Form Publik Treatment</p>
+                     <p class="text-[11px] text-on-surface-variant truncate">Link untuk karyawan — tanpa login</p>
                   </div>
                   <span class="material-symbols-outlined text-on-surface-variant/40 ml-auto text-lg transition-transform duration-300 group-hover:translate-x-0.5">arrow_forward</span>
                </a>
