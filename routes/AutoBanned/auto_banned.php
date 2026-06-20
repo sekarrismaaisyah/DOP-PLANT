@@ -7,6 +7,7 @@ use App\Http\Controllers\AutoBanned\AutoBannedHsctEmailController;
 use App\Http\Controllers\AutoBanned\AutoBannedInputasiController;
 use App\Http\Controllers\AutoBanned\AutoBannedMasterDataController;
 use App\Http\Controllers\AutoBanned\AutoBannedSodVerificationController;
+use App\Http\Controllers\AutoBanned\AutoBannedTableauFlowHistoryController;
 use App\Http\Controllers\AutoBanned\AutoBannedTreatmentController;
 use Illuminate\Support\Facades\Route;
 
@@ -16,6 +17,7 @@ Route::middleware(['auth'])
     ->group(function (): void {
         Route::get('/', [AutoBannedController::class, 'index'])->name('index');
         Route::get('/hsct-email', [AutoBannedHsctEmailController::class, 'index'])->name('hsct-email.index');
+        Route::get('/tableau-flow-history', [AutoBannedTableauFlowHistoryController::class, 'index'])->name('tableau-flow-history.index');
         Route::post('/hsct-email/initial', [AutoBannedHsctEmailController::class, 'sendInitial'])->name('hsct-email.initial');
         Route::post('/hsct-email/reminder', [AutoBannedHsctEmailController::class, 'sendReminder'])->name('hsct-email.reminder');
         Route::post('/hsct-campaign-items/{item}/confirm', [AutoBannedHsctEmailController::class, 'confirmItem'])->name('hsct-campaign-items.confirm');

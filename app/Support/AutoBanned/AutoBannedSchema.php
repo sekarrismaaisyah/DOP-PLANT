@@ -36,6 +36,15 @@ final class AutoBannedSchema
         }
     }
 
+    public static function hasTableauFlowHistoryTable(): bool
+    {
+        try {
+            return Schema::hasTable('tableau_flow_history');
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     public static function isMissingTableException(QueryException $exception): bool
     {
         $code = (string) $exception->getCode();

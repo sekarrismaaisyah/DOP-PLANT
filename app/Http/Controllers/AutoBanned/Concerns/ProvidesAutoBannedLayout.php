@@ -23,6 +23,11 @@ trait ProvidesAutoBannedLayout
                 'route' => 'auto-banned.hsct-email.index',
             ],
             [
+                'key' => 'tableau-flow-history',
+                'label' => 'Riwayat Tableau Flow',
+                'route' => 'auto-banned.tableau-flow-history.index',
+            ],
+            [
                 'key' => 'inputasi',
                 'label' => 'Inputasi',
                 'route' => 'auto-banned.inputasi.index',
