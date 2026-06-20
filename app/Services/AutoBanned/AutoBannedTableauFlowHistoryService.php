@@ -69,7 +69,7 @@ class AutoBannedTableauFlowHistoryService
             ];
         }
 
-        $query = $this->baseQuery($filters);
+        $query = $this->filteredQuery($filters);
         $latest = (clone $query)
             ->select(['logged_at'])
             ->orderByDesc('logged_at')
@@ -133,7 +133,7 @@ class AutoBannedTableauFlowHistoryService
      */
     private function baseQuery(array $filters)
     {
-        $query = AutoBannedTableauFlowHistory::query()
+        return $this->filteredQuery($filters)
             ->select([
                 'id',
                 'logged_at',
@@ -147,6 +147,14 @@ class AutoBannedTableauFlowHistoryService
             ])
             ->orderByDesc('logged_at')
             ->orderByDesc('id');
+    }
+
+    /**
+     * @param  array{status_code: string, flow_name: string, q: string}  $filters
+     */
+    private function filteredQuery(array $filters)
+    {
+        $query = AutoBannedTableauFlowHistory::query();
 
         if ($filters['status_code'] !== '') {
             $query->where('status_code', $filters['status_code']);
