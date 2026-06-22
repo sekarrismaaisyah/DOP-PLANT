@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\AutoBanned;
 
 use App\Enums\AutoBannedUnbanStatus;
+use App\Models\AutoBannedMasterSod;
 use App\Models\AutoBannedStatusSnapshot;
 use App\Models\AutoBannedUnbanRequest;
 use App\Models\ScrAutoBannedTbcSap;
@@ -167,6 +168,64 @@ class AutoBannedTreatmentService
         $this->syncSnapshotWorkflow($sid, $week, $year);
 
         return $request;
+    }
+
+    public function resolveMasterSodWhatsappRedirectUrl(AutoBannedUnbanRequest $unbanRequest): ?string
+    {
+        if (! Schema::hasTable('auto_banned_master_sods')) {
+            return null;
+        }
+
+        $site = trim((string) ($unbanRequest->site_dedicated ?? ''));
+        if ($site === '') {
+            return null;
+        }
+
+        $masterSod = AutoBannedMasterSod::query()
+            ->whereRaw('UPPER(TRIM(site)) = ?', [mb_strtoupper($site)])
+            ->orderBy('id')
+            ->first();
+
+        if ($masterSod === null) {
+            return null;
+        }
+
+        $phone = $this->normalizeWhatsappPhone((string) $masterSod->no_hp);
+        if ($phone === '') {
+            return null;
+        }
+
+        $reviewUrl = route('auto-banned.sod-verification.index', [], true);
+
+        $message = sprintf(
+            "Halo %s,\n\nSaya %s (SID: %s) telah mengajukan treatment banned untuk periode %s %s.\n\nMohon bantuannya untuk review.\nLink review: %s\n\nTerima kasih.",
+            trim((string) $masterSod->nama),
+            trim((string) ($unbanRequest->karyawan ?? $unbanRequest->sid)),
+            trim((string) $unbanRequest->sid),
+            trim((string) ($unbanRequest->week ?? '')),
+            trim((string) ($unbanRequest->iso_year ?? '')),
+            $reviewUrl,
+        );
+
+        return 'https://wa.me/'.$phone.'?text='.rawurlencode($message);
+    }
+
+    private function normalizeWhatsappPhone(string $phone): string
+    {
+        $digits = preg_replace('/\D+/', '', $phone) ?? '';
+        if ($digits === '') {
+            return '';
+        }
+
+        if (str_starts_with($digits, '0')) {
+            return '62'.substr($digits, 1);
+        }
+
+        if (str_starts_with($digits, '62')) {
+            return $digits;
+        }
+
+        return $digits;
     }
 
     public function downloadEvidence(AutoBannedUnbanRequest $unbanRequest): StreamedResponse

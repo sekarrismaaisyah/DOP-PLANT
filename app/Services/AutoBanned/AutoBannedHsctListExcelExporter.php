@@ -24,9 +24,12 @@ class AutoBannedHsctListExcelExporter
     ): array {
         $spreadsheet = new Spreadsheet;
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('List Banned');
+        $sheet->setTitle($emailType === AutoBannedHsctEmailType::UnbanRequest ? 'List Unban' : 'List Banned');
 
-        $headers = ['No', 'Nama', 'SID', 'Site', 'Perusahaan', 'Alasan Banned'];
+        $headers = $emailType === AutoBannedHsctEmailType::UnbanRequest
+            ? ['No', 'Nama', 'SID', 'Site', 'Perusahaan', 'Alasan Banned', 'Alasan Pengajuan', 'Diajukan Oleh']
+            : ['No', 'Nama', 'SID', 'Site', 'Perusahaan', 'Alasan Banned'];
+
         foreach ($headers as $colIndex => $header) {
             $cell = $sheet->getCell([$colIndex + 1, 1]);
             $cell->setValue($header);
@@ -41,17 +44,32 @@ class AutoBannedHsctListExcelExporter
 
         foreach ($employees as $index => $employee) {
             $row = $index + 2;
-            $sheet->fromArray([
-                $index + 1,
-                $employee['karyawan'] ?? '',
-                $employee['sid'] ?? '',
-                $employee['site'] ?? '',
-                $employee['perusahaan'] ?? '',
-                $employee['reason'] ?? '',
-            ], null, 'A'.$row);
+
+            if ($emailType === AutoBannedHsctEmailType::UnbanRequest) {
+                $sheet->fromArray([
+                    $index + 1,
+                    $employee['karyawan'] ?? '',
+                    $employee['sid'] ?? '',
+                    $employee['site'] ?? '',
+                    $employee['perusahaan'] ?? '',
+                    $employee['reason'] ?? '',
+                    $employee['alasan_pengajuan'] ?? '',
+                    $employee['submitted_by'] ?? '',
+                ], null, 'A'.$row);
+            } else {
+                $sheet->fromArray([
+                    $index + 1,
+                    $employee['karyawan'] ?? '',
+                    $employee['sid'] ?? '',
+                    $employee['site'] ?? '',
+                    $employee['perusahaan'] ?? '',
+                    $employee['reason'] ?? '',
+                ], null, 'A'.$row);
+            }
         }
 
-        foreach (range('A', 'F') as $column) {
+        $lastColumn = $emailType === AutoBannedHsctEmailType::UnbanRequest ? 'H' : 'F';
+        foreach (range('A', $lastColumn) as $column) {
             $sheet->getColumnDimension($column)->setAutoSize(true);
         }
 
@@ -80,6 +98,16 @@ class AutoBannedHsctListExcelExporter
         AutoBannedHsctEmailType $emailType,
         int $reminderNumber,
     ): string {
+        if ($emailType === AutoBannedHsctEmailType::UnbanRequest) {
+            $weekSlug = strtolower(preg_replace('/[^a-z0-9]+/', '-', $week) ?: 'batch');
+
+            return sprintf(
+                'auto-banned-hsct-unban-%s-%s.xlsx',
+                $weekSlug,
+                preg_replace('/[^0-9]+/', '', $year) ?: 'all',
+            );
+        }
+
         $suffix = $emailType === AutoBannedHsctEmailType::Initial
             ? 'awal'
             : 'reminder-'.$reminderNumber;

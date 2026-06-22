@@ -9,27 +9,45 @@ use App\Enums\AutoBannedHsctSyncStatus;
 use App\Enums\AutoBannedSystemStatus;
 use App\Models\AutoBannedHsctCampaign;
 use App\Models\AutoBannedStatusSnapshot;
+use App\Services\DatabaseConnectionService;
 use Carbon\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Schema;
+use Illuminate\Support\Facades\Log;
+use Throwable;
 
 class AutoBannedBanVerifyService
 {
     public function __construct(
         private readonly AutoBannedStatusNormalizer $normalizer,
         private readonly AutoBannedHsctEmailService $hsctEmailService,
+        private readonly DatabaseConnectionService $databaseConnectionService,
     ) {}
 
     public function verifyTableAvailable(): bool
     {
-        $table = $this->verifyTableName();
+        if (! $this->isConfigured()) {
+            return false;
+        }
 
-        return $table !== '' && Schema::hasTable($table);
+        if (! $this->isConnectionReady()) {
+            return false;
+        }
+
+        try {
+            return $this->verifySourceExists();
+        } catch (Throwable $exception) {
+            Log::warning('AutoBanned ban verify source check failed', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return false;
+        }
     }
 
     public function snapshotsTableAvailable(): bool
     {
-        return Schema::hasTable('auto_banned_status_snapshots');
+        return \Illuminate\Support\Facades\Schema::hasTable('auto_banned_status_snapshots');
     }
 
     /**
@@ -46,12 +64,43 @@ class AutoBannedBanVerifyService
             ];
         }
 
-        if (! $this->verifyTableAvailable()) {
+        if (! $this->isConfigured()) {
             return [
                 'checked' => 0,
                 'confirmed' => 0,
                 'skipped' => 0,
-                'message' => 'Tabel verifikasi banned belum dikonfigurasi (AUTO_BANNED_VERIFY_TABLE).',
+                'message' => 'Sumber verifikasi banned belum dikonfigurasi (AUTO_BANNED_VERIFY_TABLE).',
+            ];
+        }
+
+        if (! $this->isConnectionReady()) {
+            return [
+                'checked' => 0,
+                'confirmed' => 0,
+                'skipped' => 0,
+                'message' => $this->connectionUnavailableMessage(),
+            ];
+        }
+
+        try {
+            if (! $this->verifySourceExists()) {
+                return [
+                    'checked' => 0,
+                    'confirmed' => 0,
+                    'skipped' => 0,
+                    'message' => 'View/tabel verifikasi tidak ditemukan: '.$this->qualifiedSourceName(),
+                ];
+            }
+        } catch (Throwable $exception) {
+            Log::error('AutoBanned ban verify source lookup failed', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [
+                'checked' => 0,
+                'confirmed' => 0,
+                'skipped' => 0,
+                'message' => 'Gagal mengakses sumber verifikasi: '.$exception->getMessage(),
             ];
         }
 
@@ -76,11 +125,27 @@ class AutoBannedBanVerifyService
             ];
         }
 
+        try {
+            $permitStatusMap = $this->fetchPermitStatusMap($snapshots->pluck('sid'));
+        } catch (Throwable $exception) {
+            Log::error('AutoBanned ban verify query failed', [
+                'error' => $exception->getMessage(),
+            ]);
+
+            return [
+                'checked' => $snapshots->count(),
+                'confirmed' => 0,
+                'skipped' => $snapshots->count(),
+                'message' => 'Gagal query status permit BCSID: '.$exception->getMessage(),
+            ];
+        }
+
         $confirmed = 0;
         $skipped = 0;
 
         foreach ($snapshots as $snapshot) {
-            $verifyRow = $this->findVerifyRow($snapshot, $period['week'], $period['year']);
+            $sidKey = strtoupper(trim($snapshot->sid));
+            $verifyRow = $permitStatusMap[$sidKey] ?? null;
 
             if ($verifyRow === null) {
                 $skipped++;
@@ -88,7 +153,7 @@ class AutoBannedBanVerifyService
                 continue;
             }
 
-            $statusRaw = (string) ($verifyRow->{$this->statusColumn()} ?? '');
+            $statusRaw = (string) ($verifyRow->status_permit ?? '');
 
             if (! $this->isExecutedBan($statusRaw)) {
                 $skipped++;
@@ -109,7 +174,7 @@ class AutoBannedBanVerifyService
             'checked' => $snapshots->count(),
             'confirmed' => $confirmed,
             'skipped' => $skipped,
-            'message' => "Verifikasi selesai: {$confirmed} SID dikonfirmasi banned, {$skipped} belum terbanned.",
+            'message' => "Verifikasi selesai: {$confirmed} SID dikonfirmasi banned (status_permit NOT PASSED), {$skipped} belum terbanned.",
         ];
     }
 
@@ -148,6 +213,52 @@ class AutoBannedBanVerifyService
         return true;
     }
 
+    /**
+     * @param  Collection<int, string>  $sids
+     * @return array<string, object{status_permit: mixed, update_date_permit: mixed}>
+     */
+    private function fetchPermitStatusMap(Collection $sids): array
+    {
+        $normalizedSids = $sids
+            ->map(fn (string $sid): string => strtoupper(trim($sid)))
+            ->filter(fn (string $sid): bool => $sid !== '')
+            ->unique()
+            ->values()
+            ->all();
+
+        if ($normalizedSids === []) {
+            return [];
+        }
+
+        $connection = $this->connectionName();
+        $qualifiedSource = $this->qualifiedSourceName();
+        $sidColumn = $this->sidColumn();
+        $statusColumn = $this->statusColumn();
+        $placeholders = implode(', ', array_fill(0, count($normalizedSids), '?'));
+
+        $sql = <<<SQL
+            SELECT DISTINCT ON (UPPER(TRIM({$sidColumn}::text)))
+                UPPER(TRIM({$sidColumn}::text)) AS sid_key,
+                {$statusColumn} AS status_permit,
+                update_date_permit
+            FROM {$qualifiedSource}
+            WHERE UPPER(TRIM({$sidColumn}::text)) IN ({$placeholders})
+            ORDER BY UPPER(TRIM({$sidColumn}::text)), id DESC
+        SQL;
+
+        $rows = DB::connection($connection)->select($sql, $normalizedSids);
+
+        $map = [];
+        foreach ($rows as $row) {
+            $key = strtoupper(trim((string) ($row->sid_key ?? '')));
+            if ($key !== '') {
+                $map[$key] = $row;
+            }
+        }
+
+        return $map;
+    }
+
     private function confirmBanned(AutoBannedStatusSnapshot $snapshot, Carbon $now): void
     {
         $snapshot->update([
@@ -157,35 +268,73 @@ class AutoBannedBanVerifyService
         ]);
     }
 
-    /**
-     * @return object|null
-     */
-    private function findVerifyRow(AutoBannedStatusSnapshot $snapshot, string $week, string $year): ?object
+    private function isConfigured(): bool
     {
-        $query = DB::table($this->verifyTableName())
-            ->where($this->sidColumn(), $snapshot->sid);
+        return $this->verifyTableName() !== '';
+    }
 
-        $weekColumn = (string) config('auto_banned.ban_verify.week_column', '');
-        if ($weekColumn !== '' && Schema::hasColumn($this->verifyTableName(), $weekColumn)) {
-            $query->whereRaw(
-                'UPPER(TRIM(CAST(`'.$weekColumn.'` AS CHAR))) = ?',
-                [$this->normalizer->normalizeWeek($week)]
-            );
+    private function isConnectionReady(): bool
+    {
+        if ($this->connectionName() !== 'pgsql_ssh') {
+            return true;
         }
 
-        $yearColumn = (string) config('auto_banned.ban_verify.year_column', '');
-        if ($yearColumn !== '' && Schema::hasColumn($this->verifyTableName(), $yearColumn)) {
-            $query->whereRaw(
-                'TRIM(CAST(`'.$yearColumn.'` AS CHAR)) = ?',
-                [trim($year)]
-            );
+        if (! config('auto_banned.ban_verify.require_ssh_tunnel', true)) {
+            return true;
         }
 
-        if (Schema::hasColumn($this->verifyTableName(), 'id')) {
-            $query->orderByDesc('id');
+        return $this->databaseConnectionService->isTunnelActive();
+    }
+
+    private function connectionUnavailableMessage(): string
+    {
+        $localPort = config('database.connections.pgsql_ssh.local_port', 5433);
+
+        return "SSH tunnel PostgreSQL belum aktif (port {$localPort}). "
+            .'Jalankan setup-ssh-tunnel.bat/ps1 terlebih dahulu, lalu ulangi auto-banned:verify-banned.';
+    }
+
+    private function verifySourceExists(): bool
+    {
+        $connection = $this->connectionName();
+        $schema = $this->verifySchema();
+        $table = $this->verifyTableName();
+
+        $result = DB::connection($connection)->select(
+            'SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.tables
+                WHERE table_schema = ?
+                  AND table_name = ?
+            ) AS exists',
+            [$schema, $table]
+        );
+
+        if ((bool) ($result[0]->exists ?? false)) {
+            return true;
         }
 
-        return $query->first();
+        $viewResult = DB::connection($connection)->select(
+            'SELECT EXISTS (
+                SELECT 1
+                FROM information_schema.views
+                WHERE table_schema = ?
+                  AND table_name = ?
+            ) AS exists',
+            [$schema, $table]
+        );
+
+        return (bool) ($viewResult[0]->exists ?? false);
+    }
+
+    private function connectionName(): string
+    {
+        return trim((string) config('auto_banned.ban_verify.connection', 'pgsql_ssh'));
+    }
+
+    private function verifySchema(): string
+    {
+        return trim((string) config('auto_banned.ban_verify.schema', 'bcsid'));
     }
 
     private function verifyTableName(): string
@@ -193,13 +342,25 @@ class AutoBannedBanVerifyService
         return trim((string) config('auto_banned.ban_verify.table', ''));
     }
 
+    private function qualifiedSourceName(): string
+    {
+        $schema = $this->verifySchema();
+        $table = $this->verifyTableName();
+
+        if ($schema === '') {
+            return $table;
+        }
+
+        return $schema.'.'.$table;
+    }
+
     private function sidColumn(): string
     {
-        return (string) config('auto_banned.ban_verify.sid_column', 'SID');
+        return (string) config('auto_banned.ban_verify.sid_column', 'kode_sid');
     }
 
     private function statusColumn(): string
     {
-        return (string) config('auto_banned.ban_verify.status_column', 'Status_Banned_SID_SAP');
+        return (string) config('auto_banned.ban_verify.status_column', 'status_permit');
     }
 }

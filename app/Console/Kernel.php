@@ -74,6 +74,13 @@ class Kernel extends ConsoleKernel
             ->withoutOverlapping()
             ->appendOutputTo(storage_path('logs/auto-banned-hsct-email.log'));
 
+        // Auto Banned: email batch pengajuan unban approved (belum pernah dikirim) ke HSECT
+        $schedule->command('auto-banned:hsct-unban-email')
+            ->timezone(config('auto_banned.hsct.timezone', 'Asia/Makassar'))
+            ->dailyAt(config('auto_banned.hsct.send_time', '08:00'))
+            ->withoutOverlapping()
+            ->appendOutputTo(storage_path('logs/auto-banned-hsct-unban-email.log'));
+
         // Auto Banned: verifikasi hourly apakah SID terkirim HSECT sudah terbanned di tabel scrape lain
         $schedule->command('auto-banned:verify-banned')
             ->timezone(config('auto_banned.hsct.timezone', 'Asia/Makassar'))

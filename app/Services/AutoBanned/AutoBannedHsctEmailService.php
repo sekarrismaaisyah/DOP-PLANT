@@ -8,11 +8,13 @@ use App\Enums\AutoBannedBanStatus;
 use App\Enums\AutoBannedHsctCampaignStatus;
 use App\Enums\AutoBannedHsctEmailType;
 use App\Enums\AutoBannedHsctSyncStatus;
+use App\Enums\AutoBannedUnbanStatus;
 use App\Mail\AutoBannedHsctEmailMail;
 use App\Models\AutoBannedHsctCampaign;
 use App\Models\AutoBannedHsctCampaignItem;
 use App\Models\AutoBannedHsctEmailLog;
 use App\Models\AutoBannedStatusSnapshot;
+use App\Models\AutoBannedUnbanRequest;
 use App\Models\ScrAutoBannedTbcSap;
 use App\Support\AutoBanned\AutoBannedSchema;
 use Carbon\Carbon;
@@ -855,6 +857,173 @@ class AutoBannedHsctEmailService
     }
 
     /**
+     * @return array{action: string, message: string, sent: bool, count: int}
+     */
+    public function sendUnbanBatchEmail(?string $week = null, ?string $year = null, bool $force = false): array
+    {
+        if (! Schema::hasTable('auto_banned_unban_requests')) {
+            return ['action' => 'error', 'message' => 'Tabel pengajuan unban belum tersedia.', 'sent' => false, 'count' => 0];
+        }
+
+        $recipients = $this->recipients();
+        if ($recipients === []) {
+            return ['action' => 'error', 'message' => 'AUTO_BANNED_HSCT_EMAILS belum dikonfigurasi.', 'sent' => false, 'count' => 0];
+        }
+
+        $requests = $this->resolveApprovedUnbanRequestsForHsct($week, $year, $force);
+
+        if ($requests->isEmpty()) {
+            return [
+                'action' => 'skip',
+                'message' => 'Tidak ada pengajuan unban approved yang belum dikirim ke HSECT.',
+                'sent' => false,
+                'count' => 0,
+            ];
+        }
+
+        [$displayWeek, $displayYear] = $this->resolveUnbanEmailPeriodLabel($week, $year, $requests);
+
+        $employees = $requests
+            ->map(fn (AutoBannedUnbanRequest $row) => $this->formatUnbanRequestPayload($row))
+            ->values()
+            ->all();
+
+        $sent = $this->dispatchMail(
+            recipients: $recipients,
+            emailType: AutoBannedHsctEmailType::UnbanRequest,
+            reminderNumber: 1,
+            week: $displayWeek,
+            year: $displayYear,
+            employees: $employees,
+            totalInitial: $requests->count(),
+            confirmedCount: 0,
+            pendingCount: $requests->count(),
+            reviewUrl: route('auto-banned.sod-verification.index', [], true),
+        );
+
+        if ($sent) {
+            AutoBannedUnbanRequest::query()
+                ->whereIn('id', $requests->pluck('id'))
+                ->update(['hsct_notified_at' => now()]);
+        }
+
+        Log::info('AutoBanned unban HSECT batch email '.($sent ? 'sent' : 'failed'), [
+            'week_filter' => $week,
+            'year_filter' => $year,
+            'count' => $requests->count(),
+            'recipients' => $recipients,
+        ]);
+
+        return [
+            'action' => $sent ? 'unban_batch' : 'error',
+            'message' => $sent
+                ? "Email unban HSECT terkirim ({$requests->count()} pengajuan dalam 1 email)."
+                : 'Gagal mengirim email unban HSECT.',
+            'sent' => $sent,
+            'count' => $requests->count(),
+        ];
+    }
+
+    /**
+     * Pengajuan unban yang sudah disetujui SOD dan belum pernah dikirim ke HSECT.
+     *
+     * @return Collection<int, AutoBannedUnbanRequest>
+     */
+    public function resolveApprovedUnbanRequestsForHsct(?string $week = null, ?string $year = null, bool $includeNotified = false): Collection
+    {
+        $query = AutoBannedUnbanRequest::query()
+            ->where('status', AutoBannedUnbanStatus::Approved)
+            ->orderBy('iso_year')
+            ->orderBy('week')
+            ->orderBy('site_dedicated')
+            ->orderBy('karyawan')
+            ->orderBy('sid');
+
+        if ($week !== null && trim($week) !== '') {
+            $query->where('week', $this->normalizer->normalizeWeek($week));
+        }
+
+        if ($year !== null && trim($year) !== '') {
+            $query->where('iso_year', trim($year));
+        }
+
+        if (! $includeNotified) {
+            $query->whereNull('hsct_notified_at');
+        }
+
+        return $query->get();
+    }
+
+    /**
+     * @deprecated Gunakan resolveApprovedUnbanRequestsForHsct()
+     *
+     * @return Collection<int, AutoBannedUnbanRequest>
+     */
+    public function resolvePendingUnbanRequests(?string $week = null, ?string $year = null, bool $includeNotified = false): Collection
+    {
+        return $this->resolveApprovedUnbanRequestsForHsct($week, $year, $includeNotified);
+    }
+
+    /**
+     * @param  Collection<int, AutoBannedUnbanRequest>  $requests
+     * @return array{0: string, 1: string}
+     */
+    private function resolveUnbanEmailPeriodLabel(?string $week, ?string $year, Collection $requests): array
+    {
+        if ($week !== null && trim($week) !== '' && $year !== null && trim($year) !== '') {
+            $period = $this->resolvePeriod($week, $year);
+
+            return [$period['week'], $period['year']];
+        }
+
+        if ($week !== null && trim($week) !== '') {
+            return [$this->normalizer->normalizeWeek($week), 'Semua Tahun'];
+        }
+
+        if ($year !== null && trim($year) !== '') {
+            return ['Semua Minggu', trim($year)];
+        }
+
+        $periods = $requests
+            ->map(fn (AutoBannedUnbanRequest $row): string => trim(($row->week ?? '').' '.($row->iso_year ?? '')))
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($periods->count() === 1) {
+            [$singleWeek, $singleYear] = array_pad(explode(' ', (string) $periods->first(), 2), 2, '');
+
+            return [trim($singleWeek), trim($singleYear)];
+        }
+
+        return ['Semua', 'Periode'];
+    }
+
+    /**
+     * @return array{
+     *     sid: string,
+     *     karyawan: string,
+     *     site: string,
+     *     perusahaan: string,
+     *     reason: string,
+     *     alasan_pengajuan: string,
+     *     submitted_by: string
+     * }
+     */
+    private function formatUnbanRequestPayload(AutoBannedUnbanRequest $unbanRequest): array
+    {
+        return [
+            'sid' => trim((string) $unbanRequest->sid),
+            'karyawan' => trim((string) ($unbanRequest->karyawan ?? '')),
+            'site' => trim((string) ($unbanRequest->site_dedicated ?? '')),
+            'perusahaan' => trim((string) ($unbanRequest->perusahaan ?? '')),
+            'reason' => trim((string) ($unbanRequest->banned_reason ?? '')) ?: '—',
+            'alasan_pengajuan' => trim((string) ($unbanRequest->alasan_pengajuan ?? '')),
+            'submitted_by' => trim((string) ($unbanRequest->submitted_by_name ?? '')) ?: 'Form Publik',
+        ];
+    }
+
+    /**
      * @param  Collection<int, array<string, mixed>>|array<int, array<string, mixed>>  $items
      * @return array<int, array{sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>
      */
@@ -885,6 +1054,7 @@ class AutoBannedHsctEmailService
         int $totalInitial,
         int $confirmedCount,
         int $pendingCount,
+        ?string $reviewUrl = null,
     ): bool {
         $excelPath = '';
         $excelFilename = '';
@@ -915,6 +1085,7 @@ class AutoBannedHsctEmailService
                 summaryRows: $summaries['rows'],
                 perusahaanCount: $summaries['perusahaanCount'],
                 siteCount: $summaries['siteCount'],
+                reviewUrl: $reviewUrl,
             );
 
             foreach ($recipients as $email) {

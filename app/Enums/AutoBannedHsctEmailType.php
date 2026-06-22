@@ -8,12 +8,14 @@ enum AutoBannedHsctEmailType: string
 {
     case Initial = 'initial';
     case Reminder = 'reminder';
+    case UnbanRequest = 'unban_request';
 
     public function label(): string
     {
         return match ($this) {
             self::Initial => 'Email Awal (Selasa)',
             self::Reminder => 'Email Reminder',
+            self::UnbanRequest => 'Pengajuan Unban',
         };
     }
 }

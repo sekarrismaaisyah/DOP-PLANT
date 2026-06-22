@@ -80,7 +80,7 @@ class AutoBannedPublicTreatmentController extends Controller
     {
         $validated = $request->validated();
 
-        $this->treatmentService->storeTreatmentEvidence(
+        $unbanRequest = $this->treatmentService->storeTreatmentEvidence(
             sid: (string) $validated['sid'],
             week: (string) $validated['week'],
             year: (string) $validated['year'],
@@ -88,6 +88,11 @@ class AutoBannedPublicTreatmentController extends Controller
             file: $request->file('evidence_file'),
             user: null,
         );
+
+        $whatsappUrl = $this->treatmentService->resolveMasterSodWhatsappRedirectUrl($unbanRequest);
+        if ($whatsappUrl !== null) {
+            return redirect()->away($whatsappUrl);
+        }
 
         $week = (string) $validated['week'];
         $year = (string) $validated['year'];

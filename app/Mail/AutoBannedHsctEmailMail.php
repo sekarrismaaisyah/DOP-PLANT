@@ -17,7 +17,7 @@ class AutoBannedHsctEmailMail extends Mailable
     use Queueable, SerializesModels;
 
     /**
-     * @param  array<int, array{sid: string, karyawan: string, site: string, perusahaan: string, reason: string}>  $employees
+     * @param  array<int, array{sid: string, karyawan: string, site: string, perusahaan: string, reason: string, alasan_pengajuan?: string, submitted_by?: string}>  $employees
      * @param  array<int, array{perusahaan: string, site: string, count: int}>  $summaryRows
      */
     public function __construct(
@@ -34,13 +34,16 @@ class AutoBannedHsctEmailMail extends Mailable
         public array $summaryRows = [],
         public int $perusahaanCount = 0,
         public int $siteCount = 0,
+        public ?string $reviewUrl = null,
     ) {}
 
     public function envelope(): Envelope
     {
-        $subject = $this->emailType === AutoBannedHsctEmailType::Initial
-            ? "[Auto Banned] List Banned HSECT {$this->week} {$this->isoYear} — Email Awal (Selasa)"
-            : "[Auto Banned] Reminder #{$this->reminderNumber} — Belum Banned ({$this->pendingCount} SID) {$this->week}";
+        $subject = match ($this->emailType) {
+            AutoBannedHsctEmailType::Initial => "[Auto Banned] List Banned HSECT {$this->week} {$this->isoYear} — Email Awal (Selasa)",
+            AutoBannedHsctEmailType::Reminder => "[Auto Banned] Reminder #{$this->reminderNumber} — Belum Banned ({$this->pendingCount} SID) {$this->week}",
+            AutoBannedHsctEmailType::UnbanRequest => $this->buildUnbanSubject(),
+        };
 
         return new Envelope(subject: $subject);
     }
@@ -48,6 +51,18 @@ class AutoBannedHsctEmailMail extends Mailable
     public function content(): Content
     {
         return new Content(view: 'emails.auto-banned-hsct');
+    }
+
+    private function buildUnbanSubject(): string
+    {
+        $count = count($this->employees);
+        $periodPart = trim("{$this->week} {$this->isoYear}");
+
+        if ($periodPart === '' || $periodPart === 'Semua Periode') {
+            return "[Auto Banned] Pengajuan Unban HSECT — {$count} SID";
+        }
+
+        return "[Auto Banned] Pengajuan Unban HSECT {$periodPart} — {$count} SID";
     }
 
     /**

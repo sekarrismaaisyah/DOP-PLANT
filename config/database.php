@@ -88,7 +88,7 @@ return [
             'charset' => 'utf8',
             'prefix' => '',
             'prefix_indexes' => true,
-            'search_path' => 'public',
+            'search_path' => 'public, datamart, bcsid',
             'sslmode' => 'prefer',
             // SSH Configuration
             'ssh_host' => env('SSH_HOST', '13.212.87.127'),

@@ -13,7 +13,7 @@ class AutoBannedVerifyBannedCommand extends Command
                             {--week= : Minggu ISO (contoh: W24)}
                             {--year= : Tahun ISO}';
 
-    protected $description = 'Verifikasi hourly: cek SID terkirim HSECT sudah terbanned di tabel scrape verifikasi';
+    protected $description = 'Verifikasi hourly: cek SID terkirim HSECT sudah NOT PASSED di BCSID (bep_vw_safety_all_karyawan)';
 
     public function handle(AutoBannedBanVerifyService $verifyService): int
     {
@@ -24,7 +24,7 @@ class AutoBannedVerifyBannedCommand extends Command
         }
 
         if (! $verifyService->verifyTableAvailable()) {
-            $this->warn('Tabel verifikasi belum dikonfigurasi. Set AUTO_BANNED_VERIFY_TABLE di .env');
+            $this->warn('Sumber verifikasi BCSID belum tersedia. Pastikan SSH tunnel aktif dan AUTO_BANNED_VERIFY_* sudah dikonfigurasi di .env');
 
             return self::SUCCESS;
         }

@@ -6,6 +6,7 @@ use App\Http\Controllers\AutoBanned\AutoBannedController;
 use App\Http\Controllers\AutoBanned\AutoBannedHsctEmailController;
 use App\Http\Controllers\AutoBanned\AutoBannedInputasiController;
 use App\Http\Controllers\AutoBanned\AutoBannedMasterDataController;
+use App\Http\Controllers\AutoBanned\AutoBannedMasterSodController;
 use App\Http\Controllers\AutoBanned\AutoBannedSodVerificationController;
 use App\Http\Controllers\AutoBanned\AutoBannedTableauFlowHistoryController;
 use App\Http\Controllers\AutoBanned\AutoBannedTreatmentController;
@@ -30,4 +31,15 @@ Route::middleware(['auth'])
         Route::get('/sod-verification', [AutoBannedSodVerificationController::class, 'index'])->name('sod-verification.index');
         Route::post('/unban-requests/{unbanRequest}/review', [AutoBannedSodVerificationController::class, 'review'])->name('unban-requests.review');
         Route::get('/master-data', [AutoBannedMasterDataController::class, 'index'])->name('master-data.index');
+
+        Route::get('/master-sod', [AutoBannedMasterSodController::class, 'index'])->name('master-sod.index');
+        Route::prefix('master-sod')
+            ->name('master-sod.')
+            ->group(function (): void {
+                Route::get('/data', [AutoBannedMasterSodController::class, 'data'])->name('data');
+                Route::post('/', [AutoBannedMasterSodController::class, 'store'])->name('store');
+                Route::get('/{masterSod}', [AutoBannedMasterSodController::class, 'show'])->name('show');
+                Route::put('/{masterSod}', [AutoBannedMasterSodController::class, 'update'])->name('update');
+                Route::delete('/{masterSod}', [AutoBannedMasterSodController::class, 'destroy'])->name('destroy');
+            });
     });

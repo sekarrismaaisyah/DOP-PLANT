@@ -23,15 +23,18 @@ return [
     ],
 
     'ban_verify' => [
-        'table' => env('AUTO_BANNED_VERIFY_TABLE', ''),
-        'sid_column' => env('AUTO_BANNED_VERIFY_SID_COLUMN', 'SID'),
-        'status_column' => env('AUTO_BANNED_VERIFY_STATUS_COLUMN', 'Status_Banned_SID_SAP'),
-        'week_column' => env('AUTO_BANNED_VERIFY_WEEK_COLUMN', 'Week'),
-        'year_column' => env('AUTO_BANNED_VERIFY_YEAR_COLUMN', 'ISO_Year'),
+        'connection' => env('AUTO_BANNED_VERIFY_CONNECTION', 'pgsql_ssh'),
+        'schema' => env('AUTO_BANNED_VERIFY_SCHEMA', 'bcsid'),
+        'table' => env('AUTO_BANNED_VERIFY_TABLE', 'bep_vw_safety_all_karyawan'),
+        'sid_column' => env('AUTO_BANNED_VERIFY_SID_COLUMN', 'kode_sid'),
+        'status_column' => env('AUTO_BANNED_VERIFY_STATUS_COLUMN', 'status_permit'),
+        'week_column' => env('AUTO_BANNED_VERIFY_WEEK_COLUMN', ''),
+        'year_column' => env('AUTO_BANNED_VERIFY_YEAR_COLUMN', ''),
         'executed_values' => array_values(array_filter(array_map(
             'trim',
-            explode(',', (string) env('AUTO_BANNED_VERIFY_EXECUTED_VALUES', ''))
+            explode(',', (string) env('AUTO_BANNED_VERIFY_EXECUTED_VALUES', 'NOT PASSED'))
         ))),
+        'require_ssh_tunnel' => (bool) env('AUTO_BANNED_VERIFY_REQUIRE_SSH_TUNNEL', true),
     ],
 
     'treatment' => [

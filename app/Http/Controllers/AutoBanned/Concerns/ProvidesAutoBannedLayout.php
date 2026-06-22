@@ -42,6 +42,11 @@ trait ProvidesAutoBannedLayout
                 'label' => 'Master Data',
                 'route' => 'auto-banned.master-data.index',
             ],
+            [
+                'key' => 'master-sod',
+                'label' => 'Master SOD',
+                'route' => 'auto-banned.master-sod.index',
+            ],
         ];
     }
 }

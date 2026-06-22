@@ -42,6 +42,12 @@
         <strong>List berikut harus di-banned.</strong><br/>
         Mohon proses banned di sistem HSECT sesuai ringkasan di bawah ini.
       </p>
+      @elseif($emailType === \App\Enums\AutoBannedHsctEmailType::UnbanRequest)
+      <span class="badge">PENGAJUAN UNBAN</span>
+      <p class="intro" style="margin-top:14px">
+        <strong>Berikut pengajuan unban / treatment banned yang sudah disetujui SOD.</strong><br/>
+        Mohon proses unban di sistem HSECT sesuai ringkasan di bawah ini.
+      </p>
       @else
       <span class="badge">REMINDER #{{ $reminderNumber }}</span>
       <p class="intro" style="margin-top:14px">
@@ -51,7 +57,11 @@
       @endif
 
       <div class="stats">
+        @if($emailType === \App\Enums\AutoBannedHsctEmailType::UnbanRequest)
+        <div class="stat"><strong>{{ count($employees) }}</strong><span>Total pengajuan unban</span></div>
+        @else
         <div class="stat"><strong>{{ count($employees) }}</strong><span>Total harus di-banned</span></div>
+        @endif
         <div class="stat"><strong>{{ $perusahaanCount }}</strong><span>Perusahaan</span></div>
         <div class="stat"><strong>{{ $siteCount }}</strong><span>Site</span></div>
       </div>
@@ -82,14 +92,29 @@
 
       <p class="attachment-note">
         <strong>Detail lengkap di lampiran Excel</strong> — file <strong>{{ $excelFilename ?? 'auto-banned-hsct.xlsx' }}</strong>
-        berisi {{ count($employees) }} baris data lengkap: <em>Nama, SID, Perusahaan, Site,</em> dan Alasan Banned.
+        berisi {{ count($employees) }} baris data lengkap:
+        @if($emailType === \App\Enums\AutoBannedHsctEmailType::UnbanRequest)
+        <em>Nama, SID, Perusahaan, Site, Alasan Banned, Alasan Pengajuan,</em> dan Diajukan Oleh.
+        Gunakan file Excel sebagai referensi utama untuk proses unban di HSECT.
+        @else
+        <em>Nama, SID, Perusahaan, Site,</em> dan Alasan Banned.
         Gunakan file Excel sebagai referensi utama untuk proses banned di HSECT.
+        @endif
       </p>
+
+      @if($emailType === \App\Enums\AutoBannedHsctEmailType::UnbanRequest && filled($reviewUrl ?? null))
+      <p class="attachment-note">
+        <strong>Link review pengajuan:</strong>
+        <a href="{{ $reviewUrl }}" style="color:#3952bc;">{{ $reviewUrl }}</a>
+      </p>
+      @endif
     </div>
     <div class="footer">
       Email otomatis dari sistem Monitoring Auto Banned PT. Berau Coal.
       @if($emailType === \App\Enums\AutoBannedHsctEmailType::Reminder)
       Reminder akan terus dikirim setiap hari hingga semua SID dikonfirmasi banned.
+      @elseif($emailType === \App\Enums\AutoBannedHsctEmailType::UnbanRequest)
+      Email ini dikirim otomatis berisi batch pengajuan unban yang sudah approved oleh SOD.
       @endif
     </div>
   </div>

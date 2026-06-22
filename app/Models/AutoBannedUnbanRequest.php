@@ -25,6 +25,7 @@ class AutoBannedUnbanRequest extends Model
         'evidence_mime',
         'evidence_uploaded_at',
         'status',
+        'hsct_notified_at',
         'week',
         'iso_year',
         'submitted_by_id',
@@ -39,6 +40,7 @@ class AutoBannedUnbanRequest extends Model
         'status' => AutoBannedUnbanStatus::class,
         'reviewed_at' => 'datetime',
         'evidence_uploaded_at' => 'datetime',
+        'hsct_notified_at' => 'datetime',
     ];
 
     public function submittedBy(): BelongsTo
