@@ -19,6 +19,7 @@ Route::middleware(['auth'])
     ->group(function (): void {
         Route::get('/', [AutoBannedController::class, 'index'])->name('index');
         Route::get('/banned-monitoring', [AutoBannedController::class, 'bannedMonitoring'])->name('banned-monitoring.index');
+        Route::post('/banned-monitoring/send-email', [AutoBannedController::class, 'sendDailyBannedEmail'])->name('banned-monitoring.send-email');
         Route::get('/unban-monitoring', [AutoBannedUnbanMonitoringController::class, 'index'])->name('unban-monitoring.index');
         Route::get('/hsct-email', [AutoBannedHsctEmailController::class, 'index'])->name('hsct-email.index');
         Route::get('/tableau-flow-history', [AutoBannedTableauFlowHistoryController::class, 'index'])->name('tableau-flow-history.index');

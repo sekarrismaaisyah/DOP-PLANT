@@ -25,6 +25,7 @@ Route::middleware(['auth'])
         Route::get('/plan/create', [DopSafetyPlanController::class, 'create'])->name('plan.create');
         Route::post('/plan', [DopSafetyPlanController::class, 'store'])->name('plan.store');
         Route::get('/plan/template', [DopSafetyPlanController::class, 'downloadTemplate'])->name('plan.template');
+        Route::post('/plan/import-items', [DopSafetyPlanController::class, 'importItems'])->name('plan.import-items');
         Route::post('/plan/import', [DopSafetyPlanController::class, 'import'])->name('plan.import');
         Route::get('/plan/{plan}', [DopSafetyPlanController::class, 'show'])->whereNumber('plan')->name('plan.show');
         Route::get('/plan/{plan}/edit', [DopSafetyPlanController::class, 'edit'])->whereNumber('plan')->name('plan.edit');

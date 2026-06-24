@@ -3,6 +3,7 @@
    $formMethod = $formMethod ?? 'POST';
    $submitLabel = $submitLabel ?? 'Simpan DOP';
    $oldItems = old('items', $defaults['items'] ?? []);
+   $tableStructure = $tableStructure ?? config('dop_safety.table_structure', []);
 @endphp
 
 <form action="{{ $formAction }}" method="POST" class="space-y-6">
@@ -42,17 +43,42 @@
    </div>
 
    <div class="ds-surface-card rounded-2xl p-6">
-      <div class="flex items-center justify-between mb-4">
+      <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
          <h2 class="font-headline font-bold text-base">Item Pekerjaan</h2>
-         <button type="button" id="ds-add-item" class="inline-flex items-center gap-1 rounded-lg bg-primary/10 text-primary px-3 py-1.5 text-xs font-bold">
-            <span class="material-symbols-outlined text-sm">add</span> Tambah Baris
-         </button>
+         <div class="flex flex-wrap items-end gap-2">
+            <a href="{{ route('dop-safety.plan.template', ['scope' => 'items']) }}" class="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white text-gray-700 px-3 py-1.5 text-xs font-bold hover:bg-gray-50">
+               <span class="material-symbols-outlined text-sm">download</span> Template Excel
+            </a>
+            <div>
+               <label class="block text-[10px] font-bold uppercase tracking-wider text-on-surface-variant mb-1">Upload Excel Item</label>
+               <input type="file" id="ds-items-excel-file" accept=".xlsx,.xls" class="text-xs rounded-lg border border-gray-200 px-2 py-1.5 bg-white max-w-[200px]">
+            </div>
+            <button type="button" id="ds-items-excel-upload" class="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white text-gray-700 px-3 py-1.5 text-xs font-bold hover:bg-gray-50">
+               <span class="material-symbols-outlined text-sm">upload</span> Muat ke Tabel
+            </button>
+            <button type="button" id="ds-add-item" class="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white text-gray-700 px-3 py-1.5 text-xs font-bold hover:bg-gray-50">
+               <span class="material-symbols-outlined text-sm">add</span> Tambah Baris
+            </button>
+         </div>
       </div>
 
-      <div id="ds-items-container" class="space-y-4">
-         @foreach($oldItems as $index => $item)
-         @include('DopSafety.plan.partials.item-row', ['index' => $index, 'item' => $item])
-         @endforeach
+      <div id="ds-items-import-alert" class="hidden rounded-xl border px-4 py-3 text-sm mb-4"></div>
+
+      <div class="overflow-x-auto">
+         <table class="ds-table ds-plan-table w-full text-sm border-collapse min-w-[1400px]">
+            <thead>
+               @include('DopSafety.plan.partials.table-head', [
+                  'tableStructure' => $tableStructure,
+                  'shiftOptions' => $shiftOptions,
+                  'defaults' => $defaults,
+               ])
+            </thead>
+            <tbody id="ds-items-container">
+               @foreach($oldItems as $index => $item)
+               @include('DopSafety.plan.partials.item-row', ['index' => $index, 'item' => $item, 'sectionOptions' => $sectionOptions])
+               @endforeach
+            </tbody>
+         </table>
       </div>
    </div>
 
@@ -94,19 +120,23 @@
 @include('DopSafety.plan.partials.item-row', ['index' => '__INDEX__', 'item' => [
    'section_name' => config('dop_safety.sections.0'),
    'unit_code' => '',
-   'unit_category' => 'TRACK',
    'location' => '',
    'job_detail' => '',
    'work_permit' => 'N/A',
    'tools' => '',
-   'workers' => '',
+   'worker_names' => '',
+   'worker_sids' => '',
    'cctv' => '',
    'group_leader' => '',
+   'group_leader_sid' => '',
    'section_head' => '',
+   'section_head_sid' => '',
    'she_leader' => '',
+   'she_leader_sid' => '',
    'dept_head' => '',
+   'dept_head_sid' => '',
    'pja_bc' => '',
-]])
+], 'sectionOptions' => $sectionOptions])
 </template>
 
 @push('scripts')
@@ -115,16 +145,93 @@
    const container = document.getElementById('ds-items-container');
    const template = document.getElementById('ds-item-row-template');
    const addBtn = document.getElementById('ds-add-item');
+   const uploadBtn = document.getElementById('ds-items-excel-upload');
+   const fileInput = document.getElementById('ds-items-excel-file');
+   const alertBox = document.getElementById('ds-items-import-alert');
+   const importUrl = @json(route('dop-safety.plan.import-items'));
+   const csrfToken = @json(csrf_token());
+
    if (!container || !template || !addBtn) return;
 
    let nextIndex = container.querySelectorAll('.ds-item-row').length;
 
-   addBtn.addEventListener('click', function () {
-      const html = template.innerHTML.replace(/__INDEX__/g, String(nextIndex));
-      const wrapper = document.createElement('div');
+   function renumberRows() {
+      container.querySelectorAll('.ds-item-row').forEach(function (row, idx) {
+         const noCell = row.querySelector('td:first-child');
+         if (noCell) noCell.textContent = String(idx + 1);
+      });
+   }
+
+   function showImportAlert(type, message, errors) {
+      if (!alertBox) return;
+      alertBox.classList.remove('hidden', 'border-red-200', 'bg-red-50', 'text-red-900', 'border-amber-200', 'bg-amber-50', 'text-amber-900', 'border-green-200', 'bg-green-50', 'text-green-900');
+      if (type === 'error') {
+         alertBox.classList.add('border-red-200', 'bg-red-50', 'text-red-900');
+      } else if (type === 'warning') {
+         alertBox.classList.add('border-amber-200', 'bg-amber-50', 'text-amber-900');
+      } else {
+         alertBox.classList.add('border-green-200', 'bg-green-50', 'text-green-900');
+      }
+      let html = '<p class="font-bold">' + message + '</p>';
+      if (errors && errors.length) {
+         html += '<ul class="list-disc pl-4 mt-2 space-y-1">';
+         errors.slice(0, 10).forEach(function (err) {
+            html += '<li>' + err + '</li>';
+         });
+         html += '</ul>';
+      }
+      alertBox.innerHTML = html;
+   }
+
+   function appendItemRow(item, index) {
+      const html = template.innerHTML.replace(/__INDEX__/g, String(index));
+      const wrapper = document.createElement('tbody');
       wrapper.innerHTML = html.trim();
-      container.appendChild(wrapper.firstElementChild);
+      const row = wrapper.firstElementChild;
+      if (!row) return;
+
+      Object.keys(item).forEach(function (key) {
+         const field = row.querySelector('[name="items[' + index + '][' + key + ']"]');
+         if (field) {
+            field.value = item[key] ?? '';
+         }
+      });
+
+      container.appendChild(row);
+   }
+
+   function replaceItems(items) {
+      container.innerHTML = '';
+      items.forEach(function (item, index) {
+         appendItemRow(item, index);
+      });
+      nextIndex = items.length;
+      renumberRows();
+   }
+
+   addBtn.addEventListener('click', function () {
+      appendItemRow({
+         section_name: @json(config('dop_safety.sections.0')),
+         unit_code: '',
+         location: '',
+         job_detail: '',
+         work_permit: 'N/A',
+         tools: '',
+         worker_names: '',
+         worker_sids: '',
+         cctv: '',
+         group_leader: '',
+         group_leader_sid: '',
+         section_head: '',
+         section_head_sid: '',
+         she_leader: '',
+         she_leader_sid: '',
+         dept_head: '',
+         dept_head_sid: '',
+         pja_bc: '',
+      }, nextIndex);
       nextIndex++;
+      renumberRows();
    });
 
    container.addEventListener('click', function (e) {
@@ -136,7 +243,57 @@
          return;
       }
       btn.closest('.ds-item-row')?.remove();
+      renumberRows();
    });
+
+   if (uploadBtn && fileInput) {
+      uploadBtn.addEventListener('click', function () {
+         const file = fileInput.files && fileInput.files[0];
+         if (!file) {
+            showImportAlert('error', 'Pilih file Excel item pekerjaan terlebih dahulu.', []);
+            return;
+         }
+
+         uploadBtn.disabled = true;
+         uploadBtn.classList.add('opacity-60');
+
+         const formData = new FormData();
+         formData.append('excel_file', file);
+         formData.append('_token', csrfToken);
+
+         fetch(importUrl, {
+            method: 'POST',
+            body: formData,
+            headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+         })
+            .then(function (response) {
+               return response.json().then(function (data) {
+                  return { ok: response.ok, data: data };
+               });
+            })
+            .then(function (result) {
+               if (!result.ok || !result.data.success) {
+                  showImportAlert('error', result.data.message || 'Import gagal.', result.data.errors || []);
+                  return;
+               }
+
+               replaceItems(result.data.items || []);
+               if (result.data.errors && result.data.errors.length) {
+                  showImportAlert('warning', result.data.message, result.data.errors);
+               } else {
+                  showImportAlert('success', result.data.message, []);
+               }
+               fileInput.value = '';
+            })
+            .catch(function () {
+               showImportAlert('error', 'Gagal mengupload file. Periksa koneksi atau format file.', []);
+            })
+            .finally(function () {
+               uploadBtn.disabled = false;
+               uploadBtn.classList.remove('opacity-60');
+            });
+      });
+   }
 })();
 </script>
 @endpush

@@ -6,6 +6,7 @@ namespace App\Services\DopSafety;
 
 use App\Support\DopSafety\DopSafetyPlanTableStructure;
 use PhpOffice\PhpSpreadsheet\Cell\Coordinate;
+use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Spreadsheet;
 use PhpOffice\PhpSpreadsheet\Style\Alignment;
 use PhpOffice\PhpSpreadsheet\Style\Border;
@@ -13,33 +14,57 @@ use PhpOffice\PhpSpreadsheet\Style\Fill;
 use PhpOffice\PhpSpreadsheet\Worksheet\Worksheet;
 
 /**
- * Template Excel DOP Safety — layout baris/kolom mengikuti table_structure JSON.
- *
- * Baris 1      : SHIFT (17 kolom, tanpa No.)
- * Baris 2      : SECTION (17 kolom, tanpa No.)
- * Baris 3–4    : Header kolom (rowspan 2 + LIST PEKERJA colspan 2)
- * Baris 5+     : Data (30 kolom: meta 3 + tabel 18 + otorisasi 9)
+ * Template & parser Excel item pekerjaan saja (untuk form create/edit DOP).
  */
-final class DopSafetyPlanExcelTemplateService
+final class DopSafetyPlanItemsExcelService
 {
-    public static function requiredColumnCount(): int
-    {
-        return DopSafetyPlanTableStructure::totalImportColumnCount();
-    }
+    private const COL_ITEM_NO = 0;
 
-    /**
-     * @return list<string>
-     */
-    public static function expectedHeaders(): array
-    {
-        return DopSafetyPlanTableStructure::flatImportHeaders();
-    }
+    private const COL_UNIT_CODE = 1;
+
+    private const COL_SECTION = 2;
+
+    private const COL_LOCATION = 3;
+
+    private const COL_JOB_DETAIL = 4;
+
+    private const COL_WORK_PERMIT = 5;
+
+    private const COL_TOOLS = 6;
+
+    private const COL_WORKER_NAME = 7;
+
+    private const COL_WORKER_SID = 8;
+
+    private const COL_CCTV = 9;
+
+    private const COL_GROUP_LEADER = 10;
+
+    private const COL_GROUP_LEADER_SID = 11;
+
+    private const COL_SECTION_HEAD = 12;
+
+    private const COL_SECTION_HEAD_SID = 13;
+
+    private const COL_SHE_LEADER = 14;
+
+    private const COL_SHE_LEADER_SID = 15;
+
+    private const COL_DEPT_HEAD = 16;
+
+    private const COL_DEPT_HEAD_SID = 17;
+
+    private const COL_PJA_BC = 18;
+
+    public function __construct(
+        private readonly DopSafetyPlanExcelTemplateService $excelTemplateService,
+    ) {}
 
     public function buildSpreadsheet(): Spreadsheet
     {
         $spreadsheet = new Spreadsheet();
         $sheet = $spreadsheet->getActiveSheet();
-        $sheet->setTitle('DOP Items');
+        $sheet->setTitle('Item Pekerjaan');
 
         $this->writeTableStructureHeaders($sheet);
         $this->writeExampleRows($sheet);
@@ -49,25 +74,64 @@ final class DopSafetyPlanExcelTemplateService
     }
 
     /**
-     * @param  list<list<mixed>>  $rows
-     * @return list<string>
+     * @return array{items: list<array<string, string>>, errors: list<string>, header_invalid: bool}
      */
-    public function validateImportHeaders(array $rows): array
+    public function parseFromFile(string $filePath): array
     {
-        return $this->validateStructuralHeaders($rows);
-    }
+        $spreadsheet = IOFactory::load($filePath);
+        $worksheet = $spreadsheet->getActiveSheet();
+        $rows = $worksheet->toArray();
 
-    /**
-     * @return list<string>
-     */
-    public function parseListCell(mixed $value): array
-    {
-        return DopSafetyPlanTableStructure::splitListCell($value);
-    }
+        $headerErrors = $this->validateStructuralHeaders($rows);
+        if ($headerErrors !== []) {
+            return [
+                'items' => [],
+                'errors' => $headerErrors,
+                'header_invalid' => true,
+            ];
+        }
 
-    public function resolveDataStartRowIndex(array $rows): int
-    {
-        return DopSafetyPlanTableStructure::EXCEL_DATA_START_ROW - 1;
+        $dataStartRow = DopSafetyPlanTableStructure::EXCEL_DATA_START_ROW - 1;
+        $dataRows = array_slice($rows, $dataStartRow);
+        $items = [];
+        $errors = [];
+        $rowNumber = DopSafetyPlanTableStructure::EXCEL_DATA_START_ROW;
+
+        foreach ($dataRows as $row) {
+            if (! is_array($row)) {
+                $rowNumber++;
+
+                continue;
+            }
+
+            if ($this->isEmptyRow($row)) {
+                $rowNumber++;
+
+                continue;
+            }
+
+            if ($this->isNoteRow($row)) {
+                break;
+            }
+
+            try {
+                $items[] = $this->parseRow($row, $rowNumber);
+            } catch (\InvalidArgumentException $e) {
+                $errors[] = $e->getMessage();
+            }
+
+            $rowNumber++;
+        }
+
+        if ($items === [] && $errors === []) {
+            $errors[] = 'Tidak ada baris item pekerjaan yang dapat diimport.';
+        }
+
+        return [
+            'items' => $items,
+            'errors' => $errors,
+            'header_invalid' => false,
+        ];
     }
 
     /**
@@ -82,8 +146,8 @@ final class DopSafetyPlanExcelTemplateService
         $sectionRow = DopSafetyPlanTableStructure::EXCEL_SECTION_ROW - 1;
         $colRow1 = DopSafetyPlanTableStructure::EXCEL_COLUMN_HEADER_ROW_1 - 1;
         $colRow2 = DopSafetyPlanTableStructure::EXCEL_COLUMN_HEADER_ROW_2 - 1;
+        $shiftStart = DopSafetyPlanTableStructure::excelItemsOnlyShiftStartColumn();
 
-        $shiftStart = DopSafetyPlanTableStructure::excelShiftSectionStartColumn();
         $shiftName = (string) ($structure['shifts'][0]['name'] ?? 'SHIFT 1');
         $shiftCell = $rows[$shiftRow][$shiftStart - 1] ?? null;
         if ($this->normalizeHeaderCell($shiftCell) !== $this->normalizeHeaderCell($shiftName)) {
@@ -96,8 +160,7 @@ final class DopSafetyPlanExcelTemplateService
             $errors[] = 'Baris ' . DopSafetyPlanTableStructure::EXCEL_SECTION_ROW . ' tidak sesuai — seharusnya banner "' . $sectionName . '".';
         }
 
-        $dataStartCol = DopSafetyPlanTableStructure::EXCEL_DATA_START_COLUMN;
-        $leafHeaders = DopSafetyPlanTableStructure::leafHeaders();
+        $dataStartCol = DopSafetyPlanTableStructure::EXCEL_ITEMS_ONLY_DATA_START_COLUMN;
         $leafIndex = 0;
 
         foreach ($structure['columns'] as $column) {
@@ -130,50 +193,109 @@ final class DopSafetyPlanExcelTemplateService
         return $errors;
     }
 
+    /**
+     * @param  list<mixed>  $row
+     * @return array<string, string>
+     */
+    private function parseRow(array $row, int $rowNumber): array
+    {
+        $row = array_pad(
+            array_slice($row, 0, DopSafetyPlanTableStructure::DATA_COLUMN_COUNT),
+            DopSafetyPlanTableStructure::DATA_COLUMN_COUNT,
+            null,
+        );
+
+        $sectionName = trim((string) ($row[self::COL_SECTION] ?? ''));
+        $location = trim((string) ($row[self::COL_LOCATION] ?? ''));
+        $jobDetail = trim((string) ($row[self::COL_JOB_DETAIL] ?? ''));
+
+        if ($sectionName === '' || $location === '' || $jobDetail === '') {
+            throw new \InvalidArgumentException("Baris {$rowNumber}: Section, Lokasi, dan Detail Pekerjaan wajib diisi.");
+        }
+
+        $allowedSections = config('dop_safety.sections', []);
+        if (! in_array($sectionName, $allowedSections, true)) {
+            throw new \InvalidArgumentException("Baris {$rowNumber}: Section \"{$sectionName}\" tidak valid.");
+        }
+
+        $workers = DopSafetyPlanTableStructure::workersToDisplayCells(
+            DopSafetyPlanTableStructure::parseWorkersFromCells(
+                $row[self::COL_WORKER_NAME] ?? null,
+                $row[self::COL_WORKER_SID] ?? null,
+            ),
+        );
+
+        $tools = $this->excelTemplateService->parseListCell($row[self::COL_TOOLS] ?? null);
+
+        return [
+            'section_name' => $sectionName,
+            'unit_code' => trim((string) ($row[self::COL_UNIT_CODE] ?? '')),
+            'location' => $location,
+            'job_detail' => $jobDetail,
+            'work_permit' => trim((string) ($row[self::COL_WORK_PERMIT] ?? '')) ?: 'N/A',
+            'tools' => implode(', ', $tools),
+            'worker_names' => $workers['names'],
+            'worker_sids' => $workers['sids'],
+            'cctv' => trim((string) ($row[self::COL_CCTV] ?? '')),
+            'group_leader' => trim((string) ($row[self::COL_GROUP_LEADER] ?? '')),
+            'group_leader_sid' => trim((string) ($row[self::COL_GROUP_LEADER_SID] ?? '')),
+            'section_head' => trim((string) ($row[self::COL_SECTION_HEAD] ?? '')),
+            'section_head_sid' => trim((string) ($row[self::COL_SECTION_HEAD_SID] ?? '')),
+            'she_leader' => trim((string) ($row[self::COL_SHE_LEADER] ?? '')),
+            'she_leader_sid' => trim((string) ($row[self::COL_SHE_LEADER_SID] ?? '')),
+            'dept_head' => trim((string) ($row[self::COL_DEPT_HEAD] ?? '')),
+            'dept_head_sid' => trim((string) ($row[self::COL_DEPT_HEAD_SID] ?? '')),
+            'pja_bc' => trim((string) ($row[self::COL_PJA_BC] ?? '')),
+        ];
+    }
+
+    /**
+     * @param  list<mixed>  $row
+     */
+    private function isEmptyRow(array $row): bool
+    {
+        $slice = array_slice($row, 0, DopSafetyPlanTableStructure::DATA_COLUMN_COUNT);
+
+        return empty(array_filter($slice, static fn ($c) => $c !== null && trim((string) $c) !== ''));
+    }
+
+    /**
+     * @param  list<mixed>  $row
+     */
+    private function isNoteRow(array $row): bool
+    {
+        $first = trim((string) ($row[0] ?? ''));
+
+        return str_starts_with(mb_strtoupper($first), 'CATATAN');
+    }
+
     private function writeTableStructureHeaders(Worksheet $sheet): void
     {
         $structure = DopSafetyPlanTableStructure::definition()['table_structure'];
-        $dataStartCol = DopSafetyPlanTableStructure::EXCEL_DATA_START_COLUMN;
-        $shiftStartCol = DopSafetyPlanTableStructure::excelShiftSectionStartColumn();
+        $dataStartCol = DopSafetyPlanTableStructure::EXCEL_ITEMS_ONLY_DATA_START_COLUMN;
+        $shiftStartCol = DopSafetyPlanTableStructure::excelItemsOnlyShiftStartColumn();
         $shiftSpan = DopSafetyPlanTableStructure::EXCEL_SHIFT_SECTION_COLSPAN;
         $shiftEndCol = $shiftStartCol + $shiftSpan - 1;
-        $authStartCol = DopSafetyPlanTableStructure::excelAuthorizationStartColumn();
 
-        $headerStyle = $this->headerStyle('3952BC', 'FFFFFF');
-        $subHeaderStyle = $this->headerStyle('E8EAF6', '1A237E');
-        $metaStyle = $this->headerStyle('D5E8F6', '1A237E');
-
-        foreach (DopSafetyPlanTableStructure::documentMetaHeaders() as $i => $label) {
-            $col = $i + 1;
-            $cell = $this->cellRef($col, 1);
-            $sheet->setCellValue($cell, $label);
-            $sheet->mergeCells($this->cellRef($col, 1) . ':' . $this->cellRef($col, DopSafetyPlanTableStructure::EXCEL_COLUMN_HEADER_ROW_2));
-            $sheet->getStyle($cell)->applyFromArray($metaStyle);
-            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->setWidth(max(14, mb_strlen($label) + 6));
-        }
-
-        foreach (DopSafetyPlanTableStructure::authorizationHeaders() as $i => $label) {
-            $col = $authStartCol + $i;
-            $cell = $this->cellRef($col, DopSafetyPlanTableStructure::EXCEL_COLUMN_HEADER_ROW_1);
-            $sheet->setCellValue($cell, $label);
-            $sheet->mergeCells(
-                $this->cellRef($col, DopSafetyPlanTableStructure::EXCEL_COLUMN_HEADER_ROW_1)
-                . ':' . $this->cellRef($col, DopSafetyPlanTableStructure::EXCEL_COLUMN_HEADER_ROW_2),
-            );
-            $sheet->getStyle($cell)->applyFromArray($subHeaderStyle);
-            $sheet->getColumnDimension(Coordinate::stringFromColumnIndex($col))->setWidth(max(14, min(30, mb_strlen($label) + 4)));
-        }
+        $headerStyle = $this->headerStyle('F3F4F6', '111827');
+        $subHeaderStyle = $this->headerStyle('FFFFFF', '374151');
 
         $shift = $structure['shifts'][0] ?? ['name' => 'SHIFT 1'];
         $shiftCell = $this->cellRef($shiftStartCol, DopSafetyPlanTableStructure::EXCEL_SHIFT_ROW);
         $sheet->setCellValue($shiftCell, (string) ($shift['name'] ?? 'SHIFT 1'));
-        $sheet->mergeCells($this->cellRef($shiftStartCol, DopSafetyPlanTableStructure::EXCEL_SHIFT_ROW) . ':' . $this->cellRef($shiftEndCol, DopSafetyPlanTableStructure::EXCEL_SHIFT_ROW));
+        $sheet->mergeCells(
+            $this->cellRef($shiftStartCol, DopSafetyPlanTableStructure::EXCEL_SHIFT_ROW)
+            . ':' . $this->cellRef($shiftEndCol, DopSafetyPlanTableStructure::EXCEL_SHIFT_ROW),
+        );
         $sheet->getStyle($shiftCell)->applyFromArray($headerStyle);
 
         $section = $structure['sections'][0] ?? ['name' => 'FIELD TRACK'];
         $sectionCell = $this->cellRef($shiftStartCol, DopSafetyPlanTableStructure::EXCEL_SECTION_ROW);
         $sheet->setCellValue($sectionCell, (string) ($section['name'] ?? 'FIELD TRACK'));
-        $sheet->mergeCells($this->cellRef($shiftStartCol, DopSafetyPlanTableStructure::EXCEL_SECTION_ROW) . ':' . $this->cellRef($shiftEndCol, DopSafetyPlanTableStructure::EXCEL_SECTION_ROW));
+        $sheet->mergeCells(
+            $this->cellRef($shiftStartCol, DopSafetyPlanTableStructure::EXCEL_SECTION_ROW)
+            . ':' . $this->cellRef($shiftEndCol, DopSafetyPlanTableStructure::EXCEL_SECTION_ROW),
+        );
         $sheet->getStyle($sectionCell)->applyFromArray($headerStyle);
 
         $colIndex = $dataStartCol;
@@ -225,20 +347,14 @@ final class DopSafetyPlanExcelTemplateService
     {
         $examples = [
             [
-                'GMO', '2026-06-24', '1',
                 '1', 'DT4304', 'FIELD TRACK', 'WORKSHOP', 'Ganti roller track unit DT4304', 'N/A',
                 'Chain Block, Impact Wrench', 'Ahmad; Budi', 'SID001; SID002', 'CCTV-12',
                 'Rudi GL', 'GL001', 'Siti SH', 'SH001', 'Hendra SHE', 'SHE001', 'Pak DH Plant', 'DH001', 'Pak PJA BC',
-                'GMO, 23 Jun 2026', 'Budi GL', 'Group Leader Wheel/Track',
-                'Siti SH', 'Section Head Track', 'Dept Head Plant', 'Dept. Head Plant',
-                'Supt Safety BC', 'Supt Safety BC',
             ],
             [
-                'GMO', '2026-06-24', '1',
                 '2', 'EX1296', 'FIELD TRACK', 'PIT WEST', 'Overhaul final drive EX1296', 'Hot Work',
                 'Torque Wrench, Crane 10T', 'Candra', 'SID003', 'CCTV-05',
                 'Rudi GL', 'GL001', 'Siti SH', 'SH001', 'Hendra SHE', 'SHE001', 'Pak DH Plant', 'DH001', 'Pak PJA BC',
-                '', '', '', '', '', '', '', '', '',
             ],
         ];
 
@@ -254,17 +370,15 @@ final class DopSafetyPlanExcelTemplateService
     private function writeNotes(Worksheet $sheet): void
     {
         $startRow = DopSafetyPlanTableStructure::EXCEL_DATA_START_ROW + 4;
-        $sheet->setCellValue('A' . $startRow, 'CATATAN TEMPLATE DOP:');
+        $sheet->setCellValue('A' . $startRow, 'CATATAN TEMPLATE ITEM PEKERJAAN:');
         $sheet->getStyle('A' . $startRow)->getFont()->setBold(true);
 
         $notes = [
-            '1. Baris 1–4 = header tabel (SHIFT, SECTION, kolom). Data mulai baris ' . DopSafetyPlanTableStructure::EXCEL_DATA_START_ROW . '.',
-            '2. Site + Hari/Tanggal + Shift yang sama = satu dokumen DOP.',
-            '3. Shift: isi angka 1 atau 2.',
-            '4. Section: FIELD TRACK, WORKSHOP TRACK, FIELD WHEEL, MAIN WORKSHOP WHEEL, FIELD SPEX, WORKSHOP TYRE, WORKSHOP SPEX, WORKSHOP FABRIKASI.',
-            '5. LIST PEKERJA: kolom NAMA dan SID — pisahkan beberapa pekerja dengan titik koma (;).',
-            '6. Kolom otorisasi dokumen cukup diisi pada baris pertama tiap dokumen.',
-            '7. ' . config('dop_safety.disclaimer'),
+            '1. File ini hanya berisi item pekerjaan — isi Header Dokumen di form web.',
+            '2. Baris 1–4 = header tabel. Data mulai baris ' . DopSafetyPlanTableStructure::EXCEL_DATA_START_ROW . '.',
+            '3. Section: FIELD TRACK, WORKSHOP TRACK, FIELD WHEEL, MAIN WORKSHOP WHEEL, FIELD SPEX, WORKSHOP TYRE, WORKSHOP SPEX, WORKSHOP FABRIKASI.',
+            '4. LIST PEKERJA: kolom NAMA dan SID — pisahkan beberapa pekerja dengan titik koma (;).',
+            '5. Alat Bantu: pisahkan dengan koma jika lebih dari satu.',
         ];
 
         foreach ($notes as $i => $note) {

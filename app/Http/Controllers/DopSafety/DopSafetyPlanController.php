@@ -10,10 +10,13 @@ use App\Http\Requests\DopSafety\DopSafetyPlanImportRequest;
 use App\Http\Requests\DopSafety\DopSafetyPlanStoreRequest;
 use App\Http\Requests\DopSafety\DopSafetyPlanUpdateRequest;
 use App\Models\DopSafetyPlan;
+use App\Services\DopSafety\DopSafetyPlanItemsExcelService;
 use App\Services\DopSafety\DopSafetyPlanExcelTemplateService;
 use App\Services\DopSafety\DopSafetyPlanImportService;
 use App\Services\DopSafety\DopSafetyPlanPersistenceService;
 use App\Support\DopSafety\DopSafetyProgramDefinition;
+use App\Support\DopSafety\DopSafetyPlanTableStructure;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -28,6 +31,7 @@ class DopSafetyPlanController extends Controller
     public function __construct(
         private readonly DopSafetyPlanPersistenceService $persistenceService,
         private readonly DopSafetyPlanExcelTemplateService $excelTemplateService,
+        private readonly DopSafetyPlanItemsExcelService $itemsExcelService,
         private readonly DopSafetyPlanImportService $importService,
     ) {}
 
@@ -150,16 +154,76 @@ class DopSafetyPlanController extends Controller
             ->with('success', 'DOP berhasil dihapus.');
     }
 
-    public function downloadTemplate(): StreamedResponse
+    public function downloadTemplate(Request $request): StreamedResponse
     {
-        $spreadsheet = $this->excelTemplateService->buildSpreadsheet();
-        $filename = 'template-dop-safety-' . date('Y-m-d') . '.xlsx';
+        $scope = (string) $request->query('scope', 'document');
+        $itemsOnly = $scope === 'items';
+
+        $spreadsheet = $itemsOnly
+            ? $this->itemsExcelService->buildSpreadsheet()
+            : $this->excelTemplateService->buildSpreadsheet();
+
+        $filename = $itemsOnly
+            ? 'template-dop-safety-item-pekerjaan-' . date('Y-m-d') . '.xlsx'
+            : 'template-dop-safety-dokumen-' . date('Y-m-d') . '.xlsx';
 
         return response()->streamDownload(function () use ($spreadsheet) {
             $writer = new Xlsx($spreadsheet);
             $writer->save('php://output');
         }, $filename, [
             'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
+    }
+
+    public function importItems(DopSafetyPlanImportRequest $request): JsonResponse
+    {
+        $file = $request->file('excel_file');
+        if ($file === null) {
+            return response()->json([
+                'success' => false,
+                'message' => 'File Excel tidak ditemukan.',
+                'items' => [],
+                'errors' => [],
+            ], 422);
+        }
+
+        try {
+            $result = $this->itemsExcelService->parseFromFile($file->getRealPath());
+        } catch (\Throwable $e) {
+            report($e);
+
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal membaca file Excel: ' . $e->getMessage(),
+                'items' => [],
+                'errors' => [],
+            ], 422);
+        }
+
+        if (! empty($result['header_invalid'])) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Struktur kolom Excel tidak sesuai template item pekerjaan.',
+                'items' => [],
+                'errors' => $result['errors'],
+                'header_invalid' => true,
+            ], 422);
+        }
+
+        if ($result['items'] === []) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Tidak ada item pekerjaan yang berhasil dibaca.',
+                'items' => [],
+                'errors' => $result['errors'],
+            ], 422);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => count($result['items']) . ' item pekerjaan berhasil dimuat ke form.',
+            'items' => $result['items'],
+            'errors' => $result['errors'],
         ]);
     }
 
@@ -209,10 +273,10 @@ class DopSafetyPlanController extends Controller
         return $this->dopSafetyViewData($navActive, [
             'defaults' => $defaults,
             'sectionOptions' => config('dop_safety.sections', []),
-            'unitCategories' => config('dop_safety.unit_categories', []),
             'shiftOptions' => config('dop_safety.shifts', []),
             'statusOptions' => $this->statusOptions(),
             'disclaimer' => config('dop_safety.disclaimer'),
+            'tableStructure' => DopSafetyPlanTableStructure::definition()['table_structure'],
         ]);
     }
 
@@ -260,22 +324,30 @@ class DopSafetyPlanController extends Controller
             'acknowledged_2_position' => $plan->acknowledged_2_position ?? '',
             'acknowledged_3_name' => $plan->acknowledged_3_name ?? '',
             'acknowledged_3_position' => $plan->acknowledged_3_position ?? '',
-            'items' => $plan->items->map(fn ($item) => [
-                'section_name' => $item->section_name,
-                'unit_code' => $item->unit_code,
-                'unit_category' => $item->unit_category,
-                'location' => $item->location,
-                'job_detail' => $item->job_detail,
-                'work_permit' => $item->work_permit,
-                'tools' => is_array($item->tools) ? implode(', ', $item->tools) : '',
-                'workers' => is_array($item->workers) ? implode(', ', $item->workers) : '',
-                'cctv' => $item->cctv ?? '',
-                'group_leader' => $item->group_leader ?? '',
-                'section_head' => $item->section_head ?? '',
-                'she_leader' => $item->she_leader ?? '',
-                'dept_head' => $item->dept_head ?? '',
-                'pja_bc' => $item->pja_bc ?? '',
-            ])->values()->all() ?: [$this->emptyItemRow()],
+            'items' => $plan->items->map(function ($item) {
+                $workers = DopSafetyPlanTableStructure::workersToDisplayCells(is_array($item->workers) ? $item->workers : []);
+
+                return [
+                    'section_name' => $item->section_name,
+                    'unit_code' => $item->unit_code,
+                    'location' => $item->location,
+                    'job_detail' => $item->job_detail,
+                    'work_permit' => $item->work_permit,
+                    'tools' => is_array($item->tools) ? implode(', ', $item->tools) : '',
+                    'worker_names' => $workers['names'],
+                    'worker_sids' => $workers['sids'],
+                    'cctv' => $item->cctv ?? '',
+                    'group_leader' => $item->group_leader ?? '',
+                    'group_leader_sid' => $item->group_leader_sid ?? '',
+                    'section_head' => $item->section_head ?? '',
+                    'section_head_sid' => $item->section_head_sid ?? '',
+                    'she_leader' => $item->she_leader ?? '',
+                    'she_leader_sid' => $item->she_leader_sid ?? '',
+                    'dept_head' => $item->dept_head ?? '',
+                    'dept_head_sid' => $item->dept_head_sid ?? '',
+                    'pja_bc' => $item->pja_bc ?? '',
+                ];
+            })->values()->all() ?: [$this->emptyItemRow()],
         ];
     }
 
@@ -287,17 +359,21 @@ class DopSafetyPlanController extends Controller
         return [
             'section_name' => config('dop_safety.sections.0', 'FIELD TRACK'),
             'unit_code' => '',
-            'unit_category' => 'TRACK',
             'location' => '',
             'job_detail' => '',
             'work_permit' => 'N/A',
             'tools' => '',
-            'workers' => '',
+            'worker_names' => '',
+            'worker_sids' => '',
             'cctv' => '',
             'group_leader' => '',
+            'group_leader_sid' => '',
             'section_head' => '',
+            'section_head_sid' => '',
             'she_leader' => '',
+            'she_leader_sid' => '',
             'dept_head' => '',
+            'dept_head_sid' => '',
             'pja_bc' => '',
         ];
     }

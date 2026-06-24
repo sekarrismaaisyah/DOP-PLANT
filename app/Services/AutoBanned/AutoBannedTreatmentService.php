@@ -88,6 +88,59 @@ class AutoBannedTreatmentService
     }
 
     /**
+     * Resolve SID context dari tabel scr_daily_banned (Tableau Daily Banned).
+     *
+     * @return array{sid: string, karyawan: string, perusahaan: string, site_dedicated: string, banned_reason: string, status_banned_ref: string, week: string, iso_year: string}|null
+     */
+    public function resolveSidContextFromScrDailyBanned(string $sid, ?int $scrDailyBannedId = null): ?array
+    {
+        if (! AutoBannedSchema::hasScrDailyBannedTable()) {
+            return null;
+        }
+
+        $sid = strtoupper(trim($sid));
+        if ($sid === '') {
+            return null;
+        }
+
+        $query = ScrDailyBanned::query()
+            ->whereRaw('UPPER(TRIM('.ScrDailyBannedColumns::SID.')) = ?', [$sid]);
+
+        if ($scrDailyBannedId !== null) {
+            $query->where('id', $scrDailyBannedId);
+        } else {
+            $query->orderByDesc('filter_date')->orderByDesc('scraped_at');
+        }
+
+        $row = $query->first([
+            'id',
+            ScrDailyBannedColumns::SID,
+            ScrDailyBannedColumns::NAMA,
+            ScrDailyBannedColumns::PERUSAHAAN,
+            ScrDailyBannedColumns::SITE,
+            ScrDailyBannedColumns::BANNED_REASON,
+            ScrDailyBannedColumns::BANNED_STATUS,
+        ]);
+
+        if ($row === null) {
+            return null;
+        }
+
+        $rowSid = strtoupper(trim((string) ($row->{ScrDailyBannedColumns::SID} ?? '')));
+
+        return [
+            'sid' => $rowSid !== '' ? $rowSid : $sid,
+            'karyawan' => trim((string) ($row->{ScrDailyBannedColumns::NAMA} ?? '')),
+            'perusahaan' => trim((string) ($row->{ScrDailyBannedColumns::PERUSAHAAN} ?? '')),
+            'site_dedicated' => trim((string) ($row->{ScrDailyBannedColumns::SITE} ?? '')),
+            'banned_reason' => trim((string) ($row->{ScrDailyBannedColumns::BANNED_REASON} ?? '')),
+            'status_banned_ref' => trim((string) ($row->{ScrDailyBannedColumns::BANNED_STATUS} ?? '')),
+            'week' => '',
+            'iso_year' => '',
+        ];
+    }
+
+    /**
      * @return array<int, array{id: int, label: string, filter_date: ?string, banned_reason: string, site: string, nama: string}>
      */
     public function scrDailyBannedOptionsForSid(string $sid): array
@@ -154,8 +207,11 @@ class AutoBannedTreatmentService
 
         $context = $this->resolveSidContext($sid, $week, $year);
         if ($context === null) {
+            $context = $this->resolveSidContextFromScrDailyBanned($sid, $scrDailyBannedId);
+        }
+        if ($context === null) {
             throw ValidationException::withMessages([
-                'sid' => ['SID tidak ditemukan pada periode yang dipilih.'],
+                'sid' => ['SID tidak ditemukan di data banned.'],
             ]);
         }
 

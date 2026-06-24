@@ -14,17 +14,20 @@ return new class extends Migration
             $table->unsignedInteger('item_no')->index();
             $table->string('section_name', 80)->index();
             $table->string('unit_code', 50);
-            $table->string('unit_category', 20)->index();
             $table->string('location');
             $table->text('job_detail');
             $table->string('work_permit')->default('N/A');
             $table->json('tools')->nullable();
             $table->json('workers')->nullable();
-            $table->string('cctv')->nullable();
+            $table->string('cctv', 100)->nullable();
             $table->string('group_leader')->nullable();
+            $table->string('group_leader_sid', 50)->nullable();
             $table->string('section_head')->nullable();
+            $table->string('section_head_sid', 50)->nullable();
             $table->string('she_leader')->nullable();
+            $table->string('she_leader_sid', 50)->nullable();
             $table->string('dept_head')->nullable();
+            $table->string('dept_head_sid', 50)->nullable();
             $table->string('pja_bc')->nullable();
             $table->timestamps();
 

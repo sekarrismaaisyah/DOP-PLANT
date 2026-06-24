@@ -63,7 +63,7 @@
             <span class="material-symbols-outlined text-sm">add</span>
             Input DOP Baru
          </a>
-         <a href="{{ route('dop-safety.plan.template') }}" class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-white px-4 py-2.5 text-sm font-bold text-primary hover:bg-primary/5">
+         <a href="{{ route('dop-safety.plan.template', ['scope' => 'document']) }}" class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-white px-4 py-2.5 text-sm font-bold text-primary hover:bg-primary/5">
             <span class="material-symbols-outlined text-sm">download</span>
             Download Template Excel
          </a>

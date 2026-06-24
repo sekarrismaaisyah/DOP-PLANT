@@ -22,9 +22,9 @@
 @include('DopSafety.plan.partials.form', [
    'defaults' => $defaults,
    'sectionOptions' => $sectionOptions,
-   'unitCategories' => $unitCategories,
    'shiftOptions' => $shiftOptions,
    'statusOptions' => $statusOptions,
+   'tableStructure' => $tableStructure ?? config('dop_safety.table_structure', []),
    'formAction' => route('dop-safety.plan.update', $plan),
    'formMethod' => 'PUT',
    'submitLabel' => 'Perbarui DOP',

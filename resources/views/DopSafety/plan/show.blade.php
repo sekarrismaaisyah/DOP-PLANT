@@ -22,6 +22,9 @@
 @endpush
 
 @section('content')
+@php
+   $tableStructure = config('dop_safety.table_structure', []);
+@endphp
 <div class="relative">
    <div class="ds-watermark">{{ $watermark }}</div>
 
@@ -45,45 +48,48 @@
 
       @foreach($itemsBySection as $sectionName => $items)
       <div class="ds-surface-card rounded-2xl p-6">
-         <h2 class="font-headline font-bold text-lg mb-4 text-primary">{{ $sectionName }}</h2>
          <div class="overflow-x-auto">
-            <table class="ds-table w-full text-sm">
+            <table class="ds-table ds-plan-table w-full text-sm border-collapse min-w-[1400px]">
                <thead>
-                  <tr class="border-b border-outline-variant/20">
-                     <th class="text-left py-2">No</th>
-                     <th class="text-left py-2">Unit</th>
-                     <th class="text-left py-2">Lokasi</th>
-                     <th class="text-left py-2">Detail Pekerjaan</th>
-                     <th class="text-left py-2">Pekerja</th>
-                     <th class="text-left py-2">CCTV</th>
-                     <th class="text-left py-2">L1–L4</th>
-                  </tr>
+                  @include('DopSafety.plan.partials.table-head', [
+                     'tableStructure' => array_merge($tableStructure, [
+                        'sections' => [['name' => $sectionName, 'colspan' => \App\Support\DopSafety\DopSafetyPlanTableStructure::EXCEL_SHIFT_SECTION_COLSPAN]],
+                     ]),
+                     'shiftOptions' => config('dop_safety.shifts', []),
+                     'defaults' => ['shift' => $plan->shift],
+                  ])
                </thead>
                <tbody>
                   @foreach($items as $item)
-                  <tr class="border-b border-outline-variant/10 align-top">
-                     <td class="py-3 font-bold">{{ $item->item_no }}</td>
-                     <td class="py-3">
-                        <div class="font-semibold">{{ $item->unit_code }}</div>
-                        <div class="text-xs text-on-surface-variant">{{ $item->unit_category }}</div>
+                  @php
+                     $workers = \App\Support\DopSafety\DopSafetyPlanTableStructure::workersToDisplayCells(is_array($item->workers) ? $item->workers : []);
+                  @endphp
+                  <tr class="border-b border-gray-100 align-top bg-white hover:bg-gray-50">
+                     <td class="px-2 py-3 border border-gray-200 text-center font-bold text-gray-700">{{ $item->item_no }}</td>
+                     <td class="px-2 py-3 border border-gray-200 font-semibold">{{ $item->unit_code }}</td>
+                     <td class="px-2 py-3 border border-gray-200">{{ $item->section_name }}</td>
+                     <td class="px-2 py-3 border border-gray-200">{{ $item->location }}</td>
+                     <td class="px-2 py-3 border border-gray-200">
+                        {{ $item->job_detail }}
                      </td>
-                     <td class="py-3">{{ $item->location }}</td>
-                     <td class="py-3">
-                        <div>{{ $item->job_detail }}</div>
-                        <div class="text-xs text-on-surface-variant mt-1">Izin: {{ $item->work_permit }}</div>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->work_permit }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">
                         @if(is_array($item->tools) && count($item->tools))
-                        <div class="text-xs mt-1">Alat: {{ implode(', ', $item->tools) }}</div>
-                        @endif
+                        {{ implode(', ', $item->tools) }}
+                        @else — @endif
                      </td>
-                     <td class="py-3 text-xs">{{ is_array($item->workers) ? implode(', ', $item->workers) : '—' }}</td>
-                     <td class="py-3 text-xs">{{ $item->cctv ?? '—' }}</td>
-                     <td class="py-3 text-xs space-y-0.5">
-                        @if($item->group_leader)<div>GL: {{ $item->group_leader }}</div>@endif
-                        @if($item->section_head)<div>SH: {{ $item->section_head }}</div>@endif
-                        @if($item->she_leader)<div>SHE: {{ $item->she_leader }}</div>@endif
-                        @if($item->dept_head)<div>DH: {{ $item->dept_head }}</div>@endif
-                        @if($item->pja_bc)<div>PJA: {{ $item->pja_bc }}</div>@endif
-                     </td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $workers['names'] ?: '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $workers['sids'] ?: '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->cctv ?? '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->group_leader ?? '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->group_leader_sid ?? '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->section_head ?? '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->section_head_sid ?? '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->she_leader ?? '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->she_leader_sid ?? '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->dept_head ?? '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->dept_head_sid ?? '—' }}</td>
+                     <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->pja_bc ?? '—' }}</td>
                   </tr>
                   @endforeach
                </tbody>

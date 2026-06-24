@@ -28,4 +28,6 @@ return [
         1 => 'Shift 1',
         2 => 'Shift 2',
     ],
+
+    'table_structure' => \App\Support\DopSafety\DopSafetyPlanTableStructure::definition()['table_structure'],
 ];

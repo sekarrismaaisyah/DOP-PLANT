@@ -8,6 +8,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\AutoBanned\Concerns\ProvidesAutoBannedLayout;
 use App\Models\AutoBannedHsctCampaign;
 use App\Models\AutoBannedStatusSnapshot;
+use App\Services\AutoBanned\AutoBannedDailyBannedEmailService;
 use App\Services\AutoBanned\AutoBannedDailyDashboardService;
 use App\Services\AutoBanned\AutoBannedHsctEmailService;
 use App\Services\AutoBanned\AutoBannedMonitoringOverviewService;
@@ -25,6 +26,7 @@ class AutoBannedController extends Controller
         private readonly AutoBannedDailyDashboardService $dailyDashboardService,
         private readonly AutoBannedScrapPollService $pollService,
         private readonly AutoBannedHsctEmailService $hsctEmailService,
+        private readonly AutoBannedDailyBannedEmailService $dailyBannedEmailService,
     ) {}
 
     public function index(Request $request): View
@@ -60,6 +62,25 @@ class AutoBannedController extends Controller
             'scrTableAvailable' => $dashboard['scrTableAvailable'],
             'logTableAvailable' => $dashboard['logTableAvailable'],
         ]);
+    }
+
+    public function sendDailyBannedEmail(Request $request): RedirectResponse
+    {
+        $filterDate = trim((string) $request->input('filter_date', ''));
+        $filterShift = trim((string) $request->input('filter_shift', ''));
+        $force = (bool) $request->boolean('force');
+
+        $result = $this->dailyBannedEmailService->sendForDateAndShift(
+            $filterDate !== '' ? $filterDate : null,
+            $filterShift !== '' ? $filterShift : null,
+            $force,
+        );
+
+        $key = $result['action'] === 'error' ? 'error' : 'success';
+
+        return redirect()
+            ->route('auto-banned.banned-monitoring.index', $request->only(['filter_date', 'site', 'perusahaan', 'q']))
+            ->with($key, $result['message']);
     }
 
     public function markHsctSent(Request $request, AutoBannedStatusSnapshot $snapshot): RedirectResponse

@@ -14,7 +14,6 @@ class DopSafetyPlanItem extends Model
         'item_no',
         'section_name',
         'unit_code',
-        'unit_category',
         'location',
         'job_detail',
         'work_permit',
@@ -22,9 +21,13 @@ class DopSafetyPlanItem extends Model
         'workers',
         'cctv',
         'group_leader',
+        'group_leader_sid',
         'section_head',
+        'section_head_sid',
         'she_leader',
+        'she_leader_sid',
         'dept_head',
+        'dept_head_sid',
         'pja_bc',
     ];
 

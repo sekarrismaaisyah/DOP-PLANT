@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Requests\DopSafety;
 
 use App\Enums\DopSafetyPlanStatus;
+use App\Support\DopSafety\DopSafetyPlanTableStructure;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -46,17 +47,21 @@ class DopSafetyPlanStoreRequest extends FormRequest
             'items' => ['required', 'array', 'min:1'],
             'items.*.section_name' => ['required', 'string', Rule::in(config('dop_safety.sections', []))],
             'items.*.unit_code' => ['nullable', 'string', 'max:50'],
-            'items.*.unit_category' => ['required', 'string', Rule::in(config('dop_safety.unit_categories', []))],
             'items.*.location' => ['required', 'string', 'max:255'],
             'items.*.job_detail' => ['required', 'string'],
             'items.*.work_permit' => ['nullable', 'string', 'max:255'],
             'items.*.tools' => ['nullable', 'string'],
-            'items.*.workers' => ['nullable', 'string'],
+            'items.*.worker_names' => ['nullable', 'string'],
+            'items.*.worker_sids' => ['nullable', 'string'],
             'items.*.cctv' => ['nullable', 'string', 'max:100'],
             'items.*.group_leader' => ['nullable', 'string', 'max:255'],
+            'items.*.group_leader_sid' => ['nullable', 'string', 'max:50'],
             'items.*.section_head' => ['nullable', 'string', 'max:255'],
+            'items.*.section_head_sid' => ['nullable', 'string', 'max:50'],
             'items.*.she_leader' => ['nullable', 'string', 'max:255'],
+            'items.*.she_leader_sid' => ['nullable', 'string', 'max:50'],
             'items.*.dept_head' => ['nullable', 'string', 'max:255'],
+            'items.*.dept_head_sid' => ['nullable', 'string', 'max:50'],
             'items.*.pja_bc' => ['nullable', 'string', 'max:255'],
         ];
     }
@@ -98,17 +103,23 @@ class DopSafetyPlanStoreRequest extends FormRequest
                 'item_no' => $index + 1,
                 'section_name' => $item['section_name'] ?? '',
                 'unit_code' => ($item['unit_code'] ?? '') !== '' ? $item['unit_code'] : 'N/A',
-                'unit_category' => $item['unit_category'] ?? '',
                 'location' => $item['location'] ?? '',
                 'job_detail' => $item['job_detail'] ?? '',
                 'work_permit' => ($item['work_permit'] ?? '') !== '' ? $item['work_permit'] : 'N/A',
                 'tools' => $item['tools'] ?? '',
-                'workers' => $item['workers'] ?? '',
+                'workers' => DopSafetyPlanTableStructure::parseWorkersFromCells(
+                    $item['worker_names'] ?? null,
+                    $item['worker_sids'] ?? null,
+                ),
                 'cctv' => $item['cctv'] ?? null,
                 'group_leader' => $item['group_leader'] ?? null,
+                'group_leader_sid' => $item['group_leader_sid'] ?? null,
                 'section_head' => $item['section_head'] ?? null,
+                'section_head_sid' => $item['section_head_sid'] ?? null,
                 'she_leader' => $item['she_leader'] ?? null,
+                'she_leader_sid' => $item['she_leader_sid'] ?? null,
                 'dept_head' => $item['dept_head'] ?? null,
+                'dept_head_sid' => $item['dept_head_sid'] ?? null,
                 'pja_bc' => $item['pja_bc'] ?? null,
             ];
         }

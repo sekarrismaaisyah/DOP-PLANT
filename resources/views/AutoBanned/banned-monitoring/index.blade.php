@@ -403,11 +403,26 @@
          <h1>Monitoring Daily Banned</h1>
          <p>{{ $periodLabel }}@if($scrapedLabel) &bull; Scrape {{ $scrapedLabel }}@endif</p>
       </div>
-      @include('AutoBanned.partials.daily-filter-bar', [
-         'filters' => $filters,
-         'filterOptions' => $filterOptions,
-         'filterRoute' => 'auto-banned.banned-monitoring.index',
-      ])
+      <div class="flex items-center gap-2 flex-wrap">
+         @if($scrTableAvailable)
+         <form method="POST" action="{{ route('auto-banned.banned-monitoring.send-email') }}" class="inline-flex items-center gap-2">
+            @csrf
+            <input type="hidden" name="filter_date" value="{{ $filters['filter_date'] ?? '' }}">
+            <label class="inline-flex items-center gap-1 text-xs text-[#888]">
+               <input type="checkbox" name="force" value="1" class="rounded border-gray-300">
+               Paksa kirim
+            </label>
+            <button type="submit" class="inline-flex items-center gap-1 rounded bg-[#01b0c6] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#019aab]">
+               Kirim Email Notifikasi
+            </button>
+         </form>
+         @endif
+         @include('AutoBanned.partials.daily-filter-bar', [
+            'filters' => $filters,
+            'filterOptions' => $filterOptions,
+            'filterRoute' => 'auto-banned.banned-monitoring.index',
+         ])
+      </div>
    </div>
 
    @if(!$scrTableAvailable)

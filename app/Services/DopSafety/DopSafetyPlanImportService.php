@@ -5,19 +5,82 @@ declare(strict_types=1);
 namespace App\Services\DopSafety;
 
 use App\Enums\DopSafetyPlanStatus;
+use App\Support\DopSafety\DopSafetyPlanTableStructure;
 use Illuminate\Support\Facades\Auth;
 use PhpOffice\PhpSpreadsheet\IOFactory;
 use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 
 class DopSafetyPlanImportService
 {
+    private const COL_SITE = 0;
+
+    private const COL_PLAN_DATE = 1;
+
+    private const COL_SHIFT = 2;
+
+    private const COL_ITEM_NO = 3;
+
+    private const COL_UNIT_CODE = 4;
+
+    private const COL_SECTION = 5;
+
+    private const COL_LOCATION = 6;
+
+    private const COL_JOB_DETAIL = 7;
+
+    private const COL_WORK_PERMIT = 8;
+
+    private const COL_TOOLS = 9;
+
+    private const COL_WORKER_NAME = 10;
+
+    private const COL_WORKER_SID = 11;
+
+    private const COL_CCTV = 12;
+
+    private const COL_GROUP_LEADER = 13;
+
+    private const COL_GROUP_LEADER_SID = 14;
+
+    private const COL_SECTION_HEAD = 15;
+
+    private const COL_SECTION_HEAD_SID = 16;
+
+    private const COL_SHE_LEADER = 17;
+
+    private const COL_SHE_LEADER_SID = 18;
+
+    private const COL_DEPT_HEAD = 19;
+
+    private const COL_DEPT_HEAD_SID = 20;
+
+    private const COL_PJA_BC = 21;
+
+    private const COL_AUTH_LOCATION_DATE = 22;
+
+    private const COL_CREATED_BY_NAME = 23;
+
+    private const COL_CREATED_BY_POSITION = 24;
+
+    private const COL_ACK_1_NAME = 25;
+
+    private const COL_ACK_1_POSITION = 26;
+
+    private const COL_ACK_2_NAME = 27;
+
+    private const COL_ACK_2_POSITION = 28;
+
+    private const COL_ACK_3_NAME = 29;
+
+    private const COL_ACK_3_POSITION = 30;
+
     public function __construct(
         private readonly DopSafetyPlanExcelTemplateService $templateService,
         private readonly DopSafetyPlanPersistenceService $persistenceService,
     ) {}
 
     /**
-     * @return array{imported: int, documents: int, errors: list<string>}
+     * @return array{imported: int, documents: int, errors: list<string>, header_invalid?: bool}
      */
     public function importFromFile(string $filePath): array
     {
@@ -25,7 +88,7 @@ class DopSafetyPlanImportService
         $worksheet = $spreadsheet->getActiveSheet();
         $rows = $worksheet->toArray();
 
-        $headerErrors = $this->templateService->validateImportHeaders($rows[0] ?? null);
+        $headerErrors = $this->templateService->validateImportHeaders($rows);
         if ($headerErrors !== []) {
             return [
                 'imported' => 0,
@@ -35,10 +98,11 @@ class DopSafetyPlanImportService
             ];
         }
 
-        $dataRows = array_slice($rows, 1);
+        $dataStartRow = $this->templateService->resolveDataStartRowIndex($rows);
+        $dataRows = array_slice($rows, $dataStartRow);
         $grouped = [];
         $errors = [];
-        $rowNumber = 2;
+        $rowNumber = $dataStartRow + 1;
 
         foreach ($dataRows as $row) {
             if ($this->isEmptyRow($row)) {
@@ -131,11 +195,15 @@ class DopSafetyPlanImportService
      */
     private function parseRow(array $row, int $rowNumber): array
     {
-        $row = array_pad(array_slice($row, 0, DopSafetyPlanExcelTemplateService::REQUIRED_COLUMN_COUNT), DopSafetyPlanExcelTemplateService::REQUIRED_COLUMN_COUNT, null);
+        $row = array_pad(
+            array_slice($row, 0, DopSafetyPlanExcelTemplateService::requiredColumnCount()),
+            DopSafetyPlanExcelTemplateService::requiredColumnCount(),
+            null,
+        );
 
-        $site = trim((string) ($row[0] ?? ''));
-        $planDateRaw = $row[1] ?? null;
-        $shiftRaw = trim((string) ($row[2] ?? ''));
+        $site = trim((string) ($row[self::COL_SITE] ?? ''));
+        $planDateRaw = $row[self::COL_PLAN_DATE] ?? null;
+        $shiftRaw = trim((string) ($row[self::COL_SHIFT] ?? ''));
 
         if ($site === '' || $planDateRaw === null || trim((string) $planDateRaw) === '') {
             throw new \InvalidArgumentException("Baris {$rowNumber}: Site, Hari/Tanggal, dan Shift wajib diisi.");
@@ -144,24 +212,18 @@ class DopSafetyPlanImportService
         $planDate = $this->parseDate($planDateRaw, $rowNumber);
         $shift = $this->parseShift($shiftRaw, $rowNumber);
 
-        $sectionName = trim((string) ($row[3] ?? ''));
-        $unitCode = trim((string) ($row[5] ?? ''));
-        $location = trim((string) ($row[7] ?? ''));
-        $jobDetail = trim((string) ($row[8] ?? ''));
+        $sectionName = trim((string) ($row[self::COL_SECTION] ?? ''));
+        $unitCode = trim((string) ($row[self::COL_UNIT_CODE] ?? ''));
+        $location = trim((string) ($row[self::COL_LOCATION] ?? ''));
+        $jobDetail = trim((string) ($row[self::COL_JOB_DETAIL] ?? ''));
 
         if ($sectionName === '' || $location === '' || $jobDetail === '') {
-            throw new \InvalidArgumentException("Baris {$rowNumber}: Section Kerja, Lokasi, dan Detail Pekerjaan wajib diisi.");
-        }
-
-        $unitCategory = strtoupper(trim((string) ($row[6] ?? '')));
-        $allowedCategories = config('dop_safety.unit_categories', []);
-        if ($unitCategory !== '' && ! in_array($unitCategory, $allowedCategories, true)) {
-            throw new \InvalidArgumentException("Baris {$rowNumber}: Kategori Unit tidak valid ({$unitCategory}).");
+            throw new \InvalidArgumentException("Baris {$rowNumber}: Section, Lokasi, dan Detail Pekerjaan wajib diisi.");
         }
 
         $allowedSections = config('dop_safety.sections', []);
         if (! in_array($sectionName, $allowedSections, true)) {
-            throw new \InvalidArgumentException("Baris {$rowNumber}: Section Kerja \"{$sectionName}\" tidak valid.");
+            throw new \InvalidArgumentException("Baris {$rowNumber}: Section \"{$sectionName}\" tidak valid.");
         }
 
         $header = [
@@ -169,33 +231,39 @@ class DopSafetyPlanImportService
             'plan_date' => $planDate,
             'shift' => $shift,
             'status' => DopSafetyPlanStatus::PendingApproval->value,
-            'auth_location_date' => trim((string) ($row[18] ?? '')) ?: null,
-            'created_by_name' => trim((string) ($row[19] ?? '')) ?: null,
-            'created_by_position' => trim((string) ($row[20] ?? '')) ?: null,
-            'acknowledged_1_name' => trim((string) ($row[21] ?? '')) ?: null,
-            'acknowledged_1_position' => trim((string) ($row[22] ?? '')) ?: null,
-            'acknowledged_2_name' => trim((string) ($row[23] ?? '')) ?: null,
-            'acknowledged_2_position' => trim((string) ($row[24] ?? '')) ?: null,
-            'acknowledged_3_name' => trim((string) ($row[25] ?? '')) ?: null,
-            'acknowledged_3_position' => trim((string) ($row[26] ?? '')) ?: null,
+            'auth_location_date' => trim((string) ($row[self::COL_AUTH_LOCATION_DATE] ?? '')) ?: null,
+            'created_by_name' => trim((string) ($row[self::COL_CREATED_BY_NAME] ?? '')) ?: null,
+            'created_by_position' => trim((string) ($row[self::COL_CREATED_BY_POSITION] ?? '')) ?: null,
+            'acknowledged_1_name' => trim((string) ($row[self::COL_ACK_1_NAME] ?? '')) ?: null,
+            'acknowledged_1_position' => trim((string) ($row[self::COL_ACK_1_POSITION] ?? '')) ?: null,
+            'acknowledged_2_name' => trim((string) ($row[self::COL_ACK_2_NAME] ?? '')) ?: null,
+            'acknowledged_2_position' => trim((string) ($row[self::COL_ACK_2_POSITION] ?? '')) ?: null,
+            'acknowledged_3_name' => trim((string) ($row[self::COL_ACK_3_NAME] ?? '')) ?: null,
+            'acknowledged_3_position' => trim((string) ($row[self::COL_ACK_3_POSITION] ?? '')) ?: null,
         ];
 
         $item = [
-            'item_no' => (int) ($row[4] ?? 0) ?: null,
+            'item_no' => (int) ($row[self::COL_ITEM_NO] ?? 0) ?: null,
             'section_name' => $sectionName,
             'unit_code' => $unitCode !== '' ? $unitCode : 'N/A',
-            'unit_category' => $unitCategory !== '' ? $unitCategory : $this->inferCategory($sectionName),
             'location' => $location,
             'job_detail' => $jobDetail,
-            'work_permit' => trim((string) ($row[9] ?? '')) ?: 'N/A',
-            'tools' => $this->templateService->parseListCell($row[10] ?? null),
-            'workers' => $this->templateService->parseListCell($row[11] ?? null),
-            'cctv' => trim((string) ($row[12] ?? '')) ?: null,
-            'group_leader' => trim((string) ($row[13] ?? '')) ?: null,
-            'section_head' => trim((string) ($row[14] ?? '')) ?: null,
-            'she_leader' => trim((string) ($row[15] ?? '')) ?: null,
-            'dept_head' => trim((string) ($row[16] ?? '')) ?: null,
-            'pja_bc' => trim((string) ($row[17] ?? '')) ?: null,
+            'work_permit' => trim((string) ($row[self::COL_WORK_PERMIT] ?? '')) ?: 'N/A',
+            'tools' => $this->templateService->parseListCell($row[self::COL_TOOLS] ?? null),
+            'workers' => DopSafetyPlanTableStructure::parseWorkersFromCells(
+                $row[self::COL_WORKER_NAME] ?? null,
+                $row[self::COL_WORKER_SID] ?? null,
+            ),
+            'cctv' => trim((string) ($row[self::COL_CCTV] ?? '')) ?: null,
+            'group_leader' => trim((string) ($row[self::COL_GROUP_LEADER] ?? '')) ?: null,
+            'group_leader_sid' => trim((string) ($row[self::COL_GROUP_LEADER_SID] ?? '')) ?: null,
+            'section_head' => trim((string) ($row[self::COL_SECTION_HEAD] ?? '')) ?: null,
+            'section_head_sid' => trim((string) ($row[self::COL_SECTION_HEAD_SID] ?? '')) ?: null,
+            'she_leader' => trim((string) ($row[self::COL_SHE_LEADER] ?? '')) ?: null,
+            'she_leader_sid' => trim((string) ($row[self::COL_SHE_LEADER_SID] ?? '')) ?: null,
+            'dept_head' => trim((string) ($row[self::COL_DEPT_HEAD] ?? '')) ?: null,
+            'dept_head_sid' => trim((string) ($row[self::COL_DEPT_HEAD_SID] ?? '')) ?: null,
+            'pja_bc' => trim((string) ($row[self::COL_PJA_BC] ?? '')) ?: null,
         ];
 
         return [
@@ -229,19 +297,6 @@ class DopSafetyPlanImportService
         }
 
         return $shift;
-    }
-
-    private function inferCategory(string $sectionName): string
-    {
-        $upper = mb_strtoupper($sectionName);
-
-        foreach (config('dop_safety.unit_categories', []) as $cat) {
-            if (str_contains($upper, $cat)) {
-                return $cat;
-            }
-        }
-
-        return 'TRACK';
     }
 
     /**

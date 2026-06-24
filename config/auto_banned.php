@@ -15,6 +15,16 @@ return [
         'use_dummy_when_empty' => (bool) env('AUTO_BANNED_HSCT_USE_DUMMY', false),
     ],
 
+    'daily_banned' => [
+        'timezone' => env('AUTO_BANNED_DAILY_TIMEZONE', 'Asia/Makassar'),
+        'recipients' => array_values(array_filter(array_map(
+            'trim',
+            explode(',', (string) env('AUTO_BANNED_DAILY_EMAILS', ''))
+        ))),
+        'send_time' => env('AUTO_BANNED_DAILY_SEND_TIME', '08:00'),
+        'send_lock_seconds' => (int) env('AUTO_BANNED_DAILY_SEND_LOCK_SECONDS', 600),
+    ],
+
     'poll' => [
         'trigger_on_page_load' => (bool) env('AUTO_BANNED_POLL_ON_PAGE_LOAD', false),
         'lock_seconds' => (int) env('AUTO_BANNED_POLL_LOCK_SECONDS', 300),

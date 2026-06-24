@@ -41,6 +41,39 @@
    .ds-table thead th { font-weight: 600; letter-spacing: 0.04em; font-size: 11px; text-transform: uppercase; color: #595c5e; }
    .ds-table tbody tr { transition: background 0.2s ease; }
    .ds-table tbody tr:hover { background: rgba(57, 82, 188, 0.02); }
+
+   /* Tabel plan DOP — tema putih basic */
+   .ds-plan-table { background: #ffffff; }
+   .ds-plan-table thead th {
+      background: #ffffff;
+      color: #374151;
+      border: 1px solid #e5e7eb;
+      font-weight: 600;
+   }
+   .ds-plan-table .ds-table-shift-row th,
+   .ds-plan-table .ds-table-section-row th {
+      background: #ffffff;
+      color: #111827;
+      border: 1px solid #e5e7eb;
+      font-weight: 700;
+   }
+   .ds-plan-table .ds-table-header-row th,
+   .ds-plan-table .ds-table-subheader-row th {
+      background: #ffffff;
+      color: #4b5563;
+   }
+   .ds-plan-table tbody td {
+      background: #ffffff;
+      border-color: #e5e7eb;
+   }
+   .ds-plan-table tbody tr:hover td {
+      background: #fafafa;
+   }
+   .ds-plan-table tbody input,
+   .ds-plan-table tbody select,
+   .ds-plan-table tbody textarea {
+      background: #ffffff;
+   }
    .ds-progress-bar { height: 6px; border-radius: 9999px; background: #e8ecf4; overflow: hidden; }
    .ds-progress-fill { height: 100%; border-radius: 9999px; background: linear-gradient(90deg, #3952bc, #72479e); transition: width 0.8s ease; }
    .ds-alert-critical {

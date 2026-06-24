@@ -51,21 +51,17 @@ class AutoBannedPublicTreatmentController extends Controller
     public function lookupSid(Request $request): JsonResponse
     {
         $sid = strtoupper(trim((string) $request->query('sid', '')));
-        $period = $this->overviewService->resolvePeriod([
-            'week' => (string) $request->query('week', ''),
-            'year' => (string) $request->query('year', ''),
-        ]);
 
         if ($sid === '') {
             return response()->json(['found' => false, 'message' => 'Ketik SID Anda lalu tekan Cari.']);
         }
 
-        $context = $this->treatmentService->resolveSidContext($sid, $period['week'], $period['year']);
+        $context = $this->treatmentService->resolveSidContextFromScrDailyBanned($sid);
 
         if ($context === null) {
             return response()->json([
                 'found' => false,
-                'message' => 'SID tidak ditemukan di periode '.$period['week'].' '.$period['year'].'. Periksa ejaan SID atau hubungi admin.',
+                'message' => 'SID tidak ditemukan di data Daily Banned. Periksa ejaan SID atau hubungi admin.',
             ]);
         }
 

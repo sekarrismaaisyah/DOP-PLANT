@@ -111,17 +111,20 @@ class DopSafetyPlanPersistenceService
                 'item_no' => (int) ($item['item_no'] ?? ($index + 1)),
                 'section_name' => (string) ($item['section_name'] ?? ''),
                 'unit_code' => (string) ($item['unit_code'] ?? 'N/A'),
-                'unit_category' => (string) ($item['unit_category'] ?? ''),
                 'location' => (string) ($item['location'] ?? ''),
                 'job_detail' => (string) ($item['job_detail'] ?? ''),
                 'work_permit' => (string) ($item['work_permit'] ?? 'N/A'),
                 'tools' => $this->normalizeStringList($item['tools'] ?? []),
-                'workers' => $this->normalizeStringList($item['workers'] ?? []),
+                'workers' => $this->normalizeWorkers($item['workers'] ?? []),
                 'cctv' => $this->nullableString($item['cctv'] ?? null),
                 'group_leader' => $this->nullableString($item['group_leader'] ?? null),
+                'group_leader_sid' => $this->nullableString($item['group_leader_sid'] ?? null),
                 'section_head' => $this->nullableString($item['section_head'] ?? null),
+                'section_head_sid' => $this->nullableString($item['section_head_sid'] ?? null),
                 'she_leader' => $this->nullableString($item['she_leader'] ?? null),
+                'she_leader_sid' => $this->nullableString($item['she_leader_sid'] ?? null),
                 'dept_head' => $this->nullableString($item['dept_head'] ?? null),
+                'dept_head_sid' => $this->nullableString($item['dept_head_sid'] ?? null),
                 'pja_bc' => $this->nullableString($item['pja_bc'] ?? null),
             ]);
         }
@@ -142,6 +145,40 @@ class DopSafetyPlanPersistenceService
         }
 
         return [];
+    }
+
+    /**
+     * @param  mixed  $value
+     * @return list<array{name: string, sid: string}>
+     */
+    private function normalizeWorkers(mixed $value): array
+    {
+        if (is_string($value) && trim($value) !== '') {
+            return \App\Support\DopSafety\DopSafetyPlanTableStructure::parseWorkersFromCells($value, '');
+        }
+
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $workers = [];
+        foreach ($value as $worker) {
+            if (is_array($worker)) {
+                $name = trim((string) ($worker['name'] ?? ''));
+                $sid = trim((string) ($worker['sid'] ?? ''));
+            } else {
+                $name = trim((string) $worker);
+                $sid = '';
+            }
+
+            if ($name === '' && $sid === '') {
+                continue;
+            }
+
+            $workers[] = ['name' => $name, 'sid' => $sid];
+        }
+
+        return $workers;
     }
 
     private function nullableString(mixed $value): ?string
