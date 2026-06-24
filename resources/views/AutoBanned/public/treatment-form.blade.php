@@ -216,6 +216,13 @@
                <div><span>Alasan Banned</span><strong id="pv-reason">—</strong></div>
             </div>
          </div>
+         <div class="field" id="scr-daily-wrap" style="display:none;margin-top:1rem;margin-bottom:0">
+            <label for="scr_daily_banned_id">Record Daily Banned <span class="req">*</span></label>
+            <select class="input" id="scr_daily_banned_id" name="scr_daily_banned_id">
+               <option value="">— Pilih setelah cari SID —</option>
+            </select>
+            <p class="hint">Pilih tanggal / record banned harian yang ingin diajukan unban.</p>
+         </div>
       </section>
 
       {{-- Step 2: Ringkasan perbaikan --}}
@@ -267,11 +274,33 @@
    var lookupBtn = document.getElementById('btn-lookup');
    var lookupMsg = document.getElementById('lookup-msg');
    var preview = document.getElementById('sid-preview');
+   var scrWrap = document.getElementById('scr-daily-wrap');
+   var scrSelect = document.getElementById('scr_daily_banned_id');
+   var oldScrDailyId = @json(old('scr_daily_banned_id'));
    var dropzone = document.getElementById('dropzone');
    var fileInput = document.getElementById('evidence_file');
    var fileNameEl = document.getElementById('file-name');
    var form = document.getElementById('treatment-form');
    var submitBtn = document.getElementById('btn-submit');
+
+   function setScrDailyOptions(options) {
+      if (!scrWrap || !scrSelect) return;
+      scrSelect.innerHTML = '<option value="">— Pilih record Daily Banned —</option>';
+      if (!options || !options.length) {
+         scrWrap.style.display = 'none';
+         scrSelect.removeAttribute('required');
+         return;
+      }
+      options.forEach(function (opt) {
+         var option = document.createElement('option');
+         option.value = String(opt.id);
+         option.textContent = opt.label;
+         scrSelect.appendChild(option);
+      });
+      scrWrap.style.display = 'block';
+      scrSelect.setAttribute('required', 'required');
+      if (oldScrDailyId) scrSelect.value = String(oldScrDailyId);
+   }
 
    function setPreview(data) {
       document.getElementById('pv-karyawan').textContent = data.karyawan || '—';
@@ -304,11 +333,13 @@
                lookupMsg.textContent = payload.message || 'SID tidak ditemukan.';
                lookupMsg.style.color = '#dc2626';
                preview.classList.remove('is-visible');
+               setScrDailyOptions([]);
                return;
             }
             lookupMsg.textContent = payload.message || 'Data ditemukan ✓';
             lookupMsg.style.color = '#059669';
             setPreview(payload.data || {});
+            setScrDailyOptions(payload.scr_daily_options || []);
          })
          .catch(function () {
             lookupBtn.disabled = false;
@@ -353,6 +384,11 @@
       if (!fileInput.files || !fileInput.files.length) {
          e.preventDefault();
          alert('Pilih file bukti terlebih dahulu.');
+         return;
+      }
+      if (scrSelect && scrSelect.hasAttribute('required') && !scrSelect.value) {
+         e.preventDefault();
+         alert('Pilih record Daily Banned terlebih dahulu.');
          return;
       }
       submitBtn.disabled = true;

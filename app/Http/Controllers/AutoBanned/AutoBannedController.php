@@ -8,8 +8,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Controllers\AutoBanned\Concerns\ProvidesAutoBannedLayout;
 use App\Models\AutoBannedHsctCampaign;
 use App\Models\AutoBannedStatusSnapshot;
+use App\Services\AutoBanned\AutoBannedDailyDashboardService;
 use App\Services\AutoBanned\AutoBannedHsctEmailService;
-use App\Services\AutoBanned\AutoBannedOverviewService;
+use App\Services\AutoBanned\AutoBannedMonitoringOverviewService;
 use App\Services\AutoBanned\AutoBannedScrapPollService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -20,7 +21,8 @@ class AutoBannedController extends Controller
     use ProvidesAutoBannedLayout;
 
     public function __construct(
-        private readonly AutoBannedOverviewService $overviewService,
+        private readonly AutoBannedMonitoringOverviewService $overviewService,
+        private readonly AutoBannedDailyDashboardService $dailyDashboardService,
         private readonly AutoBannedScrapPollService $pollService,
         private readonly AutoBannedHsctEmailService $hsctEmailService,
     ) {}
@@ -30,21 +32,33 @@ class AutoBannedController extends Controller
         $filters = $this->overviewService->resolveFilters($request);
         $overview = $this->overviewService->buildOverview($filters);
 
-        return view('AutoBanned.index', [
+        return view('AutoBanned.overview.index', [
             'navActive' => 'overview',
             'navItems' => $this->autoBannedNavItems(),
             'filters' => $overview['filters'],
-            'period' => $overview['period'],
             'filterOptions' => $overview['filterOptions'],
-            'stats' => $overview['stats'],
-            'bannedRows' => $overview['bannedRows'],
-            'monitoringLifecycleRows' => $overview['monitoringRows'],
-            'unbanRows' => $overview['unbanRows'],
-            'syncStats' => $overview['syncStats'],
-            'recentChanges' => $overview['recentChanges'],
-            'pollMeta' => $overview['pollMeta'],
-            'tableAvailable' => $overview['tableAvailable'],
-            'trackingAvailable' => $overview['trackingAvailable'],
+            'banned' => $overview['banned'],
+            'unban' => $overview['unban'],
+        ]);
+    }
+
+    public function bannedMonitoring(Request $request): View
+    {
+        $filters = $this->dailyDashboardService->resolveFilters($request);
+        $dashboard = $this->dailyDashboardService->buildDashboard($filters);
+
+        return view('AutoBanned.banned-monitoring.index', [
+            'navActive' => 'Monitoring Banned',
+            'navItems' => $this->autoBannedNavItems(),
+            'filters' => $dashboard['filters'],
+            'period' => $dashboard['period'],
+            'filterOptions' => $dashboard['filterOptions'],
+            'stats' => $dashboard['stats'],
+            'chartData' => $dashboard['chartData'],
+            'bannedRows' => $dashboard['bannedRows'],
+            'logRows' => $dashboard['logRows'],
+            'scrTableAvailable' => $dashboard['scrTableAvailable'],
+            'logTableAvailable' => $dashboard['logTableAvailable'],
         ]);
     }
 
@@ -54,7 +68,7 @@ class AutoBannedController extends Controller
         $this->syncCampaignForSnapshot($snapshot);
 
         return redirect()
-            ->route('auto-banned.index', $request->only(['site', 'week', 'year', 'perusahaan', 'q']))
+            ->route('auto-banned.banned-monitoring.index', $request->only(['filter_date', 'site', 'perusahaan', 'q']))
             ->with('success', 'SID '.$snapshot->sid.' ditandai terkirim ke HSECT.');
     }
 
@@ -64,7 +78,7 @@ class AutoBannedController extends Controller
         $this->syncCampaignForSnapshot($snapshot);
 
         return redirect()
-            ->route('auto-banned.index', $request->only(['site', 'week', 'year', 'perusahaan', 'q']))
+            ->route('auto-banned.banned-monitoring.index', $request->only(['filter_date', 'site', 'perusahaan', 'q']))
             ->with('success', 'SID '.$snapshot->sid.' dikonfirmasi banned oleh HSECT.');
     }
 

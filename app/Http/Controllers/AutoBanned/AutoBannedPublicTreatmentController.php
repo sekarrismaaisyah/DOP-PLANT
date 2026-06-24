@@ -73,6 +73,7 @@ class AutoBannedPublicTreatmentController extends Controller
             'found' => true,
             'message' => 'Data ditemukan. Lanjut isi formulir di bawah.',
             'data' => $context,
+            'scr_daily_options' => $this->treatmentService->scrDailyBannedOptionsForSid($sid),
         ]);
     }
 
@@ -87,6 +88,9 @@ class AutoBannedPublicTreatmentController extends Controller
             alasanPengajuan: (string) $validated['alasan_pengajuan'],
             file: $request->file('evidence_file'),
             user: null,
+            scrDailyBannedId: isset($validated['scr_daily_banned_id'])
+                ? (int) $validated['scr_daily_banned_id']
+                : null,
         );
 
         $whatsappUrl = $this->treatmentService->resolveMasterSodWhatsappRedirectUrl($unbanRequest);

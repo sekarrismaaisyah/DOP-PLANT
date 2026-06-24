@@ -873,6 +873,7 @@ Route::middleware(['auth'])->group(function () {
 
     require __DIR__ . '/HiraImprovement/hira.php';
     require __DIR__ . '/FatigueManagement/fatigue-management.php';
+    require __DIR__ . '/DopSafety/dop-safety.php';
 
 
     // Define a GET route with dynamic placeholders for route parameters

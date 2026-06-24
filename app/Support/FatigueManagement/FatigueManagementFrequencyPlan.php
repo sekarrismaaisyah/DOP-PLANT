@@ -146,7 +146,7 @@ final class FatigueManagementFrequencyPlan
             'week_relation_label' => match ($relation) {
                 'past' => 'Minggu lampau — semua slot terbuka untuk pelengkapan',
                 'future' => 'Minggu mendatang — upload belum dibuka',
-                default => 'Minggu berjalan — slot mengikuti hari & jam saat ini',
+                default => 'Minggu berjalan — slot aktif & pelengkapan hari/shift yang sudah lewat',
             },
             'today_index' => $todayIndex,
             'today_label' => $todayIndex !== null ? self::DAY_LABELS[$todayIndex - 1] : null,
@@ -215,21 +215,24 @@ final class FatigueManagementFrequencyPlan
             ];
         }
 
-        // Minggu berjalan — aturan hari & jam
+        // Minggu berjalan — slot aktif + pelengkapan hari/shift yang sudah lewat
         if ($mode === self::MODE_DAILY) {
             $todayIndex = self::dayIndexInIsoWeek($now, $year, $isoWeek);
             $slotDay = (int) ($slotDef['day_index'] ?? 0);
             $isToday = $todayIndex !== null && $slotDay === $todayIndex;
-            $visible = $isDone || $isToday;
-            $uploadable = $isToday && ! $isDone;
+            $isPastOrToday = $todayIndex !== null && $slotDay > 0 && $slotDay <= $todayIndex;
+            $visible = $isDone || $isPastOrToday;
+            $uploadable = $isPastOrToday && ! $isDone;
 
             return [
                 'visible' => $visible,
                 'uploadable' => $uploadable,
-                'time_window' => 'Hari ini (00:00–23:59)',
+                'time_window' => $isToday ? 'Hari ini (00:00–23:59)' : $timeWindow,
                 'hint' => $isDone
                     ? 'Sudah upload'
-                    : ($isToday ? 'Slot aktif hari ini' : 'Muncul pada hari tersebut'),
+                    : ($isToday
+                        ? 'Slot aktif hari ini'
+                        : ($isPastOrToday ? 'Pelengkapan hari yang sudah lewat' : 'Muncul pada hari tersebut')),
                 'is_active' => $isToday && ! $isDone,
             ];
         }
@@ -238,12 +241,16 @@ final class FatigueManagementFrequencyPlan
             $active = self::activeShiftSlot($year, $isoWeek, $now);
             $slotKey = (string) ($slotDef['key'] ?? '');
             $isActive = $active !== null && $active['key'] === $slotKey;
-            $visible = $isDone || $isActive;
+            $hasPassed = self::hasShiftSlotPassed($slotDef, $year, $isoWeek, $now);
+            $visible = $isDone || $isActive || ($hasPassed && ! $isDone);
+            $uploadable = ! $isDone && ($isActive || $hasPassed);
 
             if ($isActive && ! $isDone) {
                 $hint = 'Slot aktif sekarang';
             } elseif ($isDone) {
                 $hint = 'Sudah upload';
+            } elseif ($hasPassed) {
+                $hint = 'Pelengkapan shift yang sudah lewat';
             } elseif ((int) ($slotDef['shift_index'] ?? 0) === 1) {
                 $hint = 'Aktif pukul 06:00–18:00';
             } else {
@@ -252,7 +259,7 @@ final class FatigueManagementFrequencyPlan
 
             return [
                 'visible' => $visible,
-                'uploadable' => $isActive && ! $isDone,
+                'uploadable' => $uploadable,
                 'time_window' => $timeWindow,
                 'hint' => $hint,
                 'is_active' => $isActive && ! $isDone,
@@ -329,13 +336,13 @@ final class FatigueManagementFrequencyPlan
             [
                 'key' => 'shift',
                 'label' => 'Shift',
-                'description' => 'Shift 1 (06:00–18:00) & Shift 2 (18:00–06:00) — slot muncul sesuai jam',
+                'description' => 'Shift 1 (06:00–18:00) & Shift 2 (18:00–06:00) — slot aktif & pelengkapan shift yang sudah lewat',
                 'order' => 1,
             ],
             [
                 'key' => 'daily',
                 'label' => 'Harian',
-                'description' => '1 upload per hari — hanya slot hari ini yang aktif',
+                'description' => '1 upload per hari — slot hari ini & pelengkapan hari yang sudah lewat',
                 'order' => 2,
             ],
             [
@@ -512,24 +519,35 @@ final class FatigueManagementFrequencyPlan
         string $isoWeek,
         Carbon $now,
     ): bool {
-        if (in_array($mode, [self::MODE_WEEKLY_COUNT, self::MODE_WEEKLY_ONCE], true)) {
-            return true;
-        }
-
-        if ($mode === self::MODE_DAILY) {
-            return true;
-        }
-
-        if ($mode === self::MODE_SHIFT_PER_DAY) {
-            $active = self::activeShiftSlot($year, $isoWeek, $now);
-            if ($active === null) {
-                return false;
-            }
-
-            return (int) ($slotDef['day_index'] ?? 0) === (int) $active['day_index'];
-        }
-
         return true;
+    }
+
+    /**
+     * Apakah jendela shift sudah berakhir (untuk pelengkapan upload).
+     *
+     * @param  array<string, mixed>  $slotDef
+     */
+    private static function hasShiftSlotPassed(array $slotDef, int $year, string $isoWeek, Carbon $now): bool
+    {
+        $dayIndex = (int) ($slotDef['day_index'] ?? 0);
+        $shiftIndex = (int) ($slotDef['shift_index'] ?? 0);
+
+        if ($dayIndex < 1 || $shiftIndex < 1) {
+            return false;
+        }
+
+        return $now->gte(self::shiftSlotEnd($year, $isoWeek, $dayIndex, $shiftIndex));
+    }
+
+    private static function shiftSlotEnd(int $year, string $isoWeek, int $dayIndex, int $shiftIndex): Carbon
+    {
+        $dayStart = self::weekStart($year, $isoWeek)->copy()->addDays($dayIndex - 1);
+
+        if ($shiftIndex === 1) {
+            return $dayStart->copy()->setTime(self::SHIFT_1_END_HOUR, 0, 0);
+        }
+
+        return $dayStart->copy()->addDay()->setTime(self::SHIFT_1_START_HOUR, 0, 0);
     }
 
     private static function appNow(?Carbon $now = null): Carbon

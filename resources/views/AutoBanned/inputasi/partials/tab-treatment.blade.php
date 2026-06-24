@@ -87,6 +87,20 @@
          </div>
       </div>
 
+      <div id="ab-treatment-scr-wrap" class="hidden">
+         <label for="ab-treatment-scr-select" class="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">
+            Record Daily Banned <span class="text-red-500">*</span>
+         </label>
+         <select
+            id="ab-treatment-scr-select"
+            name="scr_daily_banned_id"
+            class="w-full rounded-xl border border-outline-variant/25 bg-[#f8fafc] px-3 py-2.5 text-sm text-on-surface focus:border-primary/30 focus:ring-2 focus:ring-primary/10"
+         >
+            <option value="">— Pilih setelah cek SID —</option>
+         </select>
+         <p class="mt-1.5 text-[11px] text-on-surface-variant">Pilih record banned harian yang ingin diajukan unban.</p>
+      </div>
+
       <div>
          <label for="ab-treatment-alasan" class="block text-[11px] font-bold uppercase tracking-wider text-on-surface-variant mb-1.5">Ringkasan Treatment <span class="text-red-500">*</span></label>
          <textarea

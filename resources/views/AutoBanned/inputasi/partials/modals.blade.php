@@ -64,6 +64,35 @@
    var sidInput = document.getElementById('ab-treatment-sid');
    var lookupMsg = document.getElementById('ab-treatment-lookup-msg');
    var preview = document.getElementById('ab-treatment-preview');
+   var scrWrap = document.getElementById('ab-treatment-scr-wrap');
+   var scrSelect = document.getElementById('ab-treatment-scr-select');
+   var oldScrDailyId = @json(old('scr_daily_banned_id'));
+
+   function setScrDailyOptions(options) {
+      if (!scrWrap || !scrSelect) return;
+
+      scrSelect.innerHTML = '<option value="">— Pilih record Daily Banned —</option>';
+
+      if (!options || !options.length) {
+         scrWrap.classList.add('hidden');
+         scrSelect.removeAttribute('required');
+         return;
+      }
+
+      options.forEach(function (opt) {
+         var option = document.createElement('option');
+         option.value = String(opt.id);
+         option.textContent = opt.label;
+         scrSelect.appendChild(option);
+      });
+
+      scrWrap.classList.remove('hidden');
+      scrSelect.setAttribute('required', 'required');
+
+      if (oldScrDailyId) {
+         scrSelect.value = String(oldScrDailyId);
+      }
+   }
 
    function setPreview(data) {
       if (!preview) return;
@@ -105,12 +134,14 @@
                lookupMsg.textContent = payload.message || 'SID tidak ditemukan.';
                lookupMsg.className = 'mt-1.5 text-[11px] text-red-600';
                if (preview) preview.classList.add('hidden');
+               setScrDailyOptions([]);
                return;
             }
 
             lookupMsg.textContent = 'SID ditemukan.';
             lookupMsg.className = 'mt-1.5 text-[11px] text-emerald-700';
             setPreview(payload.data || {});
+            setScrDailyOptions(payload.scr_daily_options || []);
          })
          .catch(function () {
             lookupMsg.textContent = 'Gagal memeriksa SID. Coba lagi.';

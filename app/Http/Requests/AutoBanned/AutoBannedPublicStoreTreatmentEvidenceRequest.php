@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 namespace App\Http\Requests\AutoBanned;
 
+use App\Http\Requests\AutoBanned\Concerns\ValidatesAutoBannedScrDailyBannedLink;
 use App\Http\Requests\AutoBanned\Concerns\ValidatesAutoBannedTreatmentEvidenceFile;
 use Illuminate\Foundation\Http\FormRequest;
 
 class AutoBannedPublicStoreTreatmentEvidenceRequest extends FormRequest
 {
+    use ValidatesAutoBannedScrDailyBannedLink;
     use ValidatesAutoBannedTreatmentEvidenceFile;
 
     public function authorize(): bool
@@ -25,14 +27,14 @@ class AutoBannedPublicStoreTreatmentEvidenceRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        return array_merge([
             'sid' => ['required', 'string', 'max:64'],
             'week' => ['required', 'string', 'max:8'],
             'year' => ['required', 'string', 'max:8'],
             'alasan_pengajuan' => ['required', 'string', 'max:2000'],
             'evidence_file' => $this->treatmentEvidenceFileRules(),
             'website' => ['nullable', 'string', 'max:0'],
-        ];
+        ], $this->scrDailyBannedIdRules());
     }
 
     /**
@@ -40,7 +42,7 @@ class AutoBannedPublicStoreTreatmentEvidenceRequest extends FormRequest
      */
     public function messages(): array
     {
-        return array_merge($this->treatmentEvidenceFileMessages(), [
+        return array_merge($this->treatmentEvidenceFileMessages(), $this->scrDailyBannedIdMessages(), [
             'sid.required' => 'Masukkan SID Anda terlebih dahulu.',
             'alasan_pengajuan.required' => 'Ceritakan singkat tindakan perbaikan yang sudah dilakukan.',
         ]);

@@ -122,6 +122,14 @@
             </a>
           </li>
 
+          <li>
+            <a class="" href="{{ route('dop-safety.dashboard') }}">
+              <div class="parent-icon"><i class="material-icons-outlined">health_and_safety</i>
+              </div>
+              <div class="menu-title">DOP Safety GMO</div>
+            </a>
+          </li>
+
           <!-- <li class="menu-label">DOPM$IKK</li>
           <li>
             <a href="{{ route('dopmikk.dopm.dashboard') }}">

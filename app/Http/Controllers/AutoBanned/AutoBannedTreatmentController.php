@@ -48,6 +48,7 @@ class AutoBannedTreatmentController extends Controller
         return response()->json([
             'found' => true,
             'data' => $context,
+            'scr_daily_options' => $this->treatmentService->scrDailyBannedOptionsForSid($sid),
         ]);
     }
 
@@ -62,6 +63,9 @@ class AutoBannedTreatmentController extends Controller
             alasanPengajuan: (string) $validated['alasan_pengajuan'],
             file: $request->file('evidence_file'),
             user: $request->user(),
+            scrDailyBannedId: isset($validated['scr_daily_banned_id'])
+                ? (int) $validated['scr_daily_banned_id']
+                : null,
         );
 
         return redirect()

@@ -9,6 +9,15 @@ use Illuminate\Support\Facades\Schema;
 
 final class AutoBannedSchema
 {
+    public static function hasScrDailyBannedTable(): bool
+    {
+        try {
+            return Schema::hasTable('scr_daily_banned');
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
     public static function hasUnbanRequestsTable(): bool
     {
         try {

@@ -13,6 +13,7 @@ class AutoBannedUnbanRequest extends Model
     protected $table = 'auto_banned_unban_requests';
 
     protected $fillable = [
+        'scr_daily_banned_id',
         'sid',
         'karyawan',
         'perusahaan',
@@ -42,6 +43,11 @@ class AutoBannedUnbanRequest extends Model
         'evidence_uploaded_at' => 'datetime',
         'hsct_notified_at' => 'datetime',
     ];
+
+    public function scrDailyBanned(): BelongsTo
+    {
+        return $this->belongsTo(ScrDailyBanned::class, 'scr_daily_banned_id');
+    }
 
     public function submittedBy(): BelongsTo
     {

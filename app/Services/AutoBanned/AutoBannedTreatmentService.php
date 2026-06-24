@@ -9,7 +9,10 @@ use App\Models\AutoBannedMasterSod;
 use App\Models\AutoBannedStatusSnapshot;
 use App\Models\AutoBannedUnbanRequest;
 use App\Models\ScrAutoBannedTbcSap;
+use App\Models\ScrDailyBanned;
 use App\Models\User;
+use App\Support\AutoBanned\AutoBannedSchema;
+use App\Support\AutoBanned\ScrDailyBannedColumns;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\Storage;
@@ -84,6 +87,51 @@ class AutoBannedTreatmentService
         ];
     }
 
+    /**
+     * @return array<int, array{id: int, label: string, filter_date: ?string, banned_reason: string, site: string, nama: string}>
+     */
+    public function scrDailyBannedOptionsForSid(string $sid): array
+    {
+        if (! AutoBannedSchema::hasScrDailyBannedTable()) {
+            return [];
+        }
+
+        $sid = strtoupper(trim($sid));
+        if ($sid === '') {
+            return [];
+        }
+
+        return ScrDailyBanned::query()
+            ->whereRaw('UPPER(TRIM('.ScrDailyBannedColumns::SID.')) = ?', [$sid])
+            ->orderByDesc('filter_date')
+            ->orderByDesc('scraped_at')
+            ->limit(50)
+            ->get([
+                'id',
+                'filter_date',
+                ScrDailyBannedColumns::BANNED_REASON,
+                ScrDailyBannedColumns::BANNED_STATUS,
+                ScrDailyBannedColumns::SITE,
+                ScrDailyBannedColumns::NAMA,
+            ])
+            ->map(function (ScrDailyBanned $row): array {
+                $filterDate = $row->filter_date?->format('d M Y') ?? '—';
+                $reason = trim((string) ($row->{ScrDailyBannedColumns::BANNED_REASON} ?? '')) ?: '—';
+                $site = trim((string) ($row->{ScrDailyBannedColumns::SITE} ?? '')) ?: '—';
+
+                return [
+                    'id' => (int) $row->id,
+                    'label' => sprintf('%s — %s (%s)', $filterDate, $reason, $site),
+                    'filter_date' => $row->filter_date?->toDateString(),
+                    'banned_reason' => $reason,
+                    'site' => $site,
+                    'nama' => trim((string) ($row->{ScrDailyBannedColumns::NAMA} ?? '')),
+                ];
+            })
+            ->values()
+            ->all();
+    }
+
     public function storeTreatmentEvidence(
         string $sid,
         string $week,
@@ -92,6 +140,7 @@ class AutoBannedTreatmentService
         UploadedFile $file,
         ?User $user = null,
         string $submitterName = '',
+        ?int $scrDailyBannedId = null,
     ): AutoBannedUnbanRequest {
         if (! Schema::hasTable('auto_banned_unban_requests')) {
             throw ValidationException::withMessages([
@@ -123,6 +172,8 @@ class AutoBannedTreatmentService
             ]);
         }
 
+        $scrRow = $this->resolveScrDailyBannedForSid($sid, $scrDailyBannedId);
+
         $directory = 'auto-banned/treatment-evidence/'.$year.'/'.$week;
         Storage::disk('local')->makeDirectory($directory);
 
@@ -147,11 +198,18 @@ class AutoBannedTreatmentService
         }
 
         $request = AutoBannedUnbanRequest::query()->create([
+            'scr_daily_banned_id' => $scrRow?->id,
             'sid' => $context['sid'],
-            'karyawan' => $context['karyawan'] !== '' ? $context['karyawan'] : $sid,
+            'karyawan' => $scrRow?->{ScrDailyBannedColumns::NAMA}
+                ? trim((string) $scrRow->{ScrDailyBannedColumns::NAMA})
+                : ($context['karyawan'] !== '' ? $context['karyawan'] : $sid),
             'perusahaan' => $context['perusahaan'] ?: null,
-            'site_dedicated' => $context['site_dedicated'] ?: null,
-            'banned_reason' => $context['banned_reason'] ?: null,
+            'site_dedicated' => $scrRow?->{ScrDailyBannedColumns::SITE}
+                ? trim((string) $scrRow->{ScrDailyBannedColumns::SITE})
+                : ($context['site_dedicated'] ?: null),
+            'banned_reason' => $scrRow?->{ScrDailyBannedColumns::BANNED_REASON}
+                ? trim((string) $scrRow->{ScrDailyBannedColumns::BANNED_REASON})
+                : ($context['banned_reason'] ?: null),
             'status_banned_ref' => $context['status_banned_ref'] ?: null,
             'alasan_pengajuan' => trim($alasanPengajuan),
             'evidence_file_path' => $storedPath,
@@ -168,6 +226,35 @@ class AutoBannedTreatmentService
         $this->syncSnapshotWorkflow($sid, $week, $year);
 
         return $request;
+    }
+
+    private function resolveScrDailyBannedForSid(string $sid, ?int $scrDailyBannedId): ?ScrDailyBanned
+    {
+        if (! AutoBannedSchema::hasScrDailyBannedTable()) {
+            return null;
+        }
+
+        if ($scrDailyBannedId === null) {
+            throw ValidationException::withMessages([
+                'scr_daily_banned_id' => ['Pilih record Daily Banned yang terkait.'],
+            ]);
+        }
+
+        $scrRow = ScrDailyBanned::query()->find($scrDailyBannedId);
+        if ($scrRow === null) {
+            throw ValidationException::withMessages([
+                'scr_daily_banned_id' => ['Record Daily Banned tidak ditemukan.'],
+            ]);
+        }
+
+        $scrSid = strtoupper(trim((string) ($scrRow->{ScrDailyBannedColumns::SID} ?? '')));
+        if ($scrSid !== $sid) {
+            throw ValidationException::withMessages([
+                'scr_daily_banned_id' => ['Record Daily Banned tidak cocok dengan SID yang dipilih.'],
+            ]);
+        }
+
+        return $scrRow;
     }
 
     public function resolveMasterSodWhatsappRedirectUrl(AutoBannedUnbanRequest $unbanRequest): ?string

@@ -229,9 +229,9 @@
                         @if(($uploadPageContext['week_relation'] ?? '') === 'future')
                            Minggu belum dimulai
                         @elseif($group['key'] === 'shift')
-                           Tidak ada shift aktif saat ini — Shift 1: 06:00–18:00, Shift 2: 18:00–06:00
+                           Tidak ada shift aktif atau pelengkapan — Shift 1: 06:00–18:00, Shift 2: 18:00–06:00
                         @elseif($group['key'] === 'daily')
-                           Slot harian hari ini belum tersedia atau sudah lengkap
+                           Tidak ada slot harian yang perlu dilengkapi atau sudah lengkap
                         @else
                            Semua slot sudah terisi
                         @endif
@@ -254,7 +254,7 @@
                            data-row='@json($row)'
                            data-slot-key="{{ $slot['key'] }}"
                            data-slot-label="{{ $slot['label'] }}"
-                           title="{{ $isDone ? 'Ganti: ' : 'Upload: ' }}{{ $slot['label'] }}@if($slot['time_window'] ?? '') ({{ $slot['time_window'] }})@endif"
+                           title="{{ $isDone ? 'Ganti: ' : ($isActive ? 'Upload: ' : 'Pelengkapan: ') }}{{ $slot['label'] }}@if($slot['time_window'] ?? '') ({{ $slot['time_window'] }})@endif"
                         >
                            <span class="fm-slot-btn__label">{{ $slot['label'] }}</span>
                            @if($slot['time_window'] ?? '')
@@ -267,8 +267,8 @@
                               <span class="material-symbols-outlined text-[14px]">attach_file</span>
                            </a>
                            @endif
-                           @elseif($isActive)
-                           <span class="material-symbols-outlined fm-slot-btn__icon">upload</span>
+                           @elseif($isUploadable)
+                           <span class="material-symbols-outlined fm-slot-btn__icon">{{ $isActive ? 'upload' : 'history' }}</span>
                            @endif
                         </button>
                         @else
