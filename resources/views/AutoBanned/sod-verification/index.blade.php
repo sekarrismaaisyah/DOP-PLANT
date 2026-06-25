@@ -38,7 +38,31 @@
       display: inline-flex; align-items: center; gap: .25rem; border-radius: .5rem;
       padding: .35rem .65rem; font-size: 10px; font-weight: 700;
    }
+   .ab-sod-actions { display: flex; flex-wrap: wrap; gap: .35rem; }
+   .ab-sod-swal-popup { width: 32rem; max-width: calc(100vw - 2rem); }
+   .ab-sod-swal-html { text-align: left; }
+   .ab-sod-swal-meta {
+      text-align: center; font-size: .875rem; color: #475569; margin-bottom: .85rem; line-height: 1.45;
+   }
+   .ab-sod-swal-box {
+      border-radius: .75rem; padding: .75rem .85rem; margin-bottom: .65rem;
+   }
+   .ab-sod-swal-box--banned {
+      background: #fef2f2; border: 1px solid #fecaca;
+   }
+   .ab-sod-swal-box--treatment {
+      background: rgba(57, 82, 188, 0.06); border: 1px solid rgba(57, 82, 188, 0.14);
+   }
+   .ab-sod-swal-label {
+      font-size: 10px; font-weight: 700; letter-spacing: .04em; text-transform: uppercase; margin-bottom: .35rem;
+   }
+   .ab-sod-swal-box--banned .ab-sod-swal-label { color: #991b1b; }
+   .ab-sod-swal-box--treatment .ab-sod-swal-label { color: #3952bc; }
+   .ab-sod-swal-text {
+      font-size: 12px; color: #334155; line-height: 1.55; white-space: pre-wrap; word-break: break-word;
+   }
 </style>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
 @endpush
 
 @section('content')
@@ -221,23 +245,54 @@
                   </td>
                   <td>
                      @if($row->status === \App\Enums\AutoBannedUnbanStatus::Pending)
-                     <div class="flex flex-col gap-1.5 min-w-[9rem]">
-                        <form method="POST" action="{{ route('auto-banned.unban-requests.review', $row) }}" class="inline">
+                     @php
+                        $reviewContext = json_encode([
+                           'banned_reason' => $row->banned_reason ?? '',
+                           'alasan_pengajuan' => $row->alasan_pengajuan ?? '',
+                        ], JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_QUOT | JSON_HEX_AMP | JSON_UNESCAPED_UNICODE);
+                     @endphp
+                     <div class="ab-sod-actions">
+                        <button
+                           type="button"
+                           class="ab-btn-sm ab-btn-approve"
+                           data-ab-sod-review-btn
+                           data-action="approve"
+                           data-form="ab-sod-review-form-{{ $row->id }}"
+                           data-sid="{{ $row->sid }}"
+                           data-karyawan="{{ $row->karyawan }}"
+                           data-review-context="{{ $reviewContext }}"
+                        >
+                           <span class="material-symbols-outlined text-sm">check_circle</span>
+                           Terima
+                        </button>
+                        <button
+                           type="button"
+                           class="ab-btn-sm ab-btn-reject"
+                           data-ab-sod-review-btn
+                           data-action="reject"
+                           data-form="ab-sod-review-form-{{ $row->id }}"
+                           data-sid="{{ $row->sid }}"
+                           data-karyawan="{{ $row->karyawan }}"
+                           data-review-context="{{ $reviewContext }}"
+                        >
+                           <span class="material-symbols-outlined text-sm">cancel</span>
+                           Tolak
+                        </button>
+                        <form
+                           id="ab-sod-review-form-{{ $row->id }}"
+                           method="POST"
+                           action="{{ route('auto-banned.unban-requests.review', $row) }}"
+                           class="hidden"
+                        >
                            @csrf
-                           <input type="hidden" name="action" value="approve"/>
-                           <button type="submit" class="ab-btn-sm ab-btn-approve w-full justify-center" onclick="return confirm('Setujui pengajuan SID {{ $row->sid }}?')">
-                              <span class="material-symbols-outlined text-sm">check_circle</span>
-                              Setujui
-                           </button>
-                        </form>
-                        <form method="POST" action="{{ route('auto-banned.unban-requests.review', $row) }}" class="inline space-y-1">
-                           @csrf
-                           <input type="hidden" name="action" value="reject"/>
-                           <input type="text" name="catatan_review" placeholder="Catatan (opsional)" maxlength="2000" class="w-full rounded-lg border border-outline-variant/25 px-2 py-1 text-[10px]"/>
-                           <button type="submit" class="ab-btn-sm ab-btn-reject w-full justify-center" onclick="return confirm('Tolak pengajuan SID {{ $row->sid }}?')">
-                              <span class="material-symbols-outlined text-sm">cancel</span>
-                              Tolak
-                           </button>
+                           <input type="hidden" name="action" value=""/>
+                           <input type="hidden" name="catatan_review" value=""/>
+                           @foreach($queryBase as $key => $val)
+                           <input type="hidden" name="{{ $key }}" value="{{ $val }}"/>
+                           @endforeach
+                           @if($currentStatus !== '' && $currentStatus !== 'all')
+                           <input type="hidden" name="status" value="{{ $currentStatus }}"/>
+                           @endif
                         </form>
                      </div>
                      @else
@@ -263,3 +318,115 @@
    @endif
 </div>
 @endsection
+
+@push('scripts')
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+(function () {
+   function escapeHtml(value) {
+      return String(value ?? '')
+         .replace(/&/g, '&amp;')
+         .replace(/</g, '&lt;')
+         .replace(/>/g, '&gt;')
+         .replace(/"/g, '&quot;');
+   }
+
+   function displayText(value) {
+      var text = String(value ?? '').trim();
+      return text !== '' ? escapeHtml(text) : '<span class="text-slate-400">—</span>';
+   }
+
+   function buildReviewModalHtml(sid, karyawan, bannedReason, alasanPengajuan) {
+      var meta = 'SID <strong>' + escapeHtml(sid) + '</strong>';
+      if (karyawan) {
+         meta += ' — ' + escapeHtml(karyawan);
+      }
+
+      return '<div class="ab-sod-swal-html">' +
+         '<p class="ab-sod-swal-meta">' + meta + '</p>' +
+         '<div class="ab-sod-swal-box ab-sod-swal-box--banned">' +
+            '<p class="ab-sod-swal-label">Alasan Banned</p>' +
+            '<p class="ab-sod-swal-text">' + displayText(bannedReason) + '</p>' +
+         '</div>' +
+         '<div class="ab-sod-swal-box ab-sod-swal-box--treatment">' +
+            '<p class="ab-sod-swal-label">Ringkasan Treatment</p>' +
+            '<p class="ab-sod-swal-text">' + displayText(alasanPengajuan) + '</p>' +
+         '</div>' +
+      '</div>';
+   }
+
+   function openReviewModal(action, sid, karyawan, bannedReason, alasanPengajuan, formId) {
+      var form = document.getElementById(formId);
+      if (!form) return;
+
+      var isApprove = action === 'approve';
+      var title = isApprove ? 'Terima Pengajuan?' : 'Tolak Pengajuan?';
+
+      if (typeof Swal === 'undefined') {
+         var catatan = window.prompt((isApprove ? 'Terima' : 'Tolak') + ' pengajuan SID ' + sid + '. Catatan (opsional):', '') || '';
+         form.querySelector('[name="action"]').value = action;
+         form.querySelector('[name="catatan_review"]').value = catatan;
+         form.submit();
+         return;
+      }
+
+      Swal.fire({
+         title: title,
+         html: buildReviewModalHtml(sid, karyawan, bannedReason, alasanPengajuan),
+         input: 'textarea',
+         inputLabel: 'Catatan verifikasi',
+         inputPlaceholder: 'Catatan (opsional)',
+         inputAttributes: {
+            maxlength: '2000',
+            rows: '4',
+            'aria-label': 'Catatan verifikasi',
+         },
+         icon: isApprove ? 'question' : 'warning',
+         showCancelButton: true,
+         confirmButtonText: isApprove ? 'Ya, Terima' : 'Ya, Tolak',
+         cancelButtonText: 'Batal',
+         confirmButtonColor: isApprove ? '#059669' : '#dc2626',
+         cancelButtonColor: '#94a3b8',
+         reverseButtons: true,
+         focusConfirm: false,
+         customClass: {
+            popup: 'ab-sod-swal-popup',
+         },
+      }).then(function (result) {
+         if (!result.isConfirmed) return;
+
+         form.querySelector('[name="action"]').value = action;
+         form.querySelector('[name="catatan_review"]').value = (result.value || '').trim();
+         form.submit();
+      });
+   }
+
+   function parseReviewContext(raw) {
+      if (!raw) {
+         return { banned_reason: '', alasan_pengajuan: '' };
+      }
+
+      try {
+         return JSON.parse(raw);
+      } catch (error) {
+         return { banned_reason: '', alasan_pengajuan: '' };
+      }
+   }
+
+   document.querySelectorAll('[data-ab-sod-review-btn]').forEach(function (button) {
+      button.addEventListener('click', function () {
+         var context = parseReviewContext(button.getAttribute('data-review-context'));
+
+         openReviewModal(
+            button.getAttribute('data-action') || '',
+            button.getAttribute('data-sid') || '',
+            button.getAttribute('data-karyawan') || '',
+            context.banned_reason || '',
+            context.alasan_pengajuan || '',
+            button.getAttribute('data-form') || ''
+         );
+      });
+   });
+})();
+</script>
+@endpush

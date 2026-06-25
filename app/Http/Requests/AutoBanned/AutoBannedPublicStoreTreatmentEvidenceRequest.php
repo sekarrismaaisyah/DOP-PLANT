@@ -32,6 +32,7 @@ class AutoBannedPublicStoreTreatmentEvidenceRequest extends FormRequest
             'week' => ['required', 'string', 'max:8'],
             'year' => ['required', 'string', 'max:8'],
             'alasan_pengajuan' => ['required', 'string', 'max:2000'],
+            'no_hp' => ['required', 'string', 'max:32'],
             'evidence_file' => $this->treatmentEvidenceFileRules(),
             'website' => ['nullable', 'string', 'max:0'],
         ], $this->scrDailyBannedIdRules());
@@ -45,6 +46,17 @@ class AutoBannedPublicStoreTreatmentEvidenceRequest extends FormRequest
         return array_merge($this->treatmentEvidenceFileMessages(), $this->scrDailyBannedIdMessages(), [
             'sid.required' => 'Masukkan SID Anda terlebih dahulu.',
             'alasan_pengajuan.required' => 'Ceritakan singkat tindakan perbaikan yang sudah dilakukan.',
+            'no_hp.required' => 'Masukkan nomor HP / WhatsApp Anda.',
         ]);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function attributes(): array
+    {
+        return [
+            'no_hp' => 'nomor HP',
+        ];
     }
 }

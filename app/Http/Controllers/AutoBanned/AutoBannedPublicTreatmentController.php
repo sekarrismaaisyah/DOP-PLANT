@@ -87,6 +87,7 @@ class AutoBannedPublicTreatmentController extends Controller
             scrDailyBannedId: isset($validated['scr_daily_banned_id'])
                 ? (int) $validated['scr_daily_banned_id']
                 : null,
+            noHp: (string) $validated['no_hp'],
         );
 
         $whatsappUrl = $this->treatmentService->resolveMasterSodWhatsappRedirectUrl($unbanRequest);

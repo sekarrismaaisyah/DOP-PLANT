@@ -1,6 +1,6 @@
 @extends('AutoBanned.layouts.app')
 
-@section('title', 'Riwayat Tableau Flow')
+@section('title', 'Monitoring Flow Tablue')
 
 @push('head')
 <style>

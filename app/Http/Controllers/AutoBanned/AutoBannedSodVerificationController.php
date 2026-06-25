@@ -10,6 +10,7 @@ use App\Http\Requests\AutoBanned\AutoBannedReviewUnbanRequestRequest;
 use App\Models\AutoBannedUnbanRequest;
 use App\Services\AutoBanned\AutoBannedOverviewService;
 use App\Services\AutoBanned\AutoBannedSodVerificationService;
+use App\Services\AutoBanned\AutoBannedTreatmentService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\View\View;
@@ -21,6 +22,7 @@ class AutoBannedSodVerificationController extends Controller
     public function __construct(
         private readonly AutoBannedOverviewService $overviewService,
         private readonly AutoBannedSodVerificationService $sodVerificationService,
+        private readonly AutoBannedTreatmentService $treatmentService,
     ) {}
 
     public function index(Request $request): View
@@ -60,11 +62,16 @@ class AutoBannedSodVerificationController extends Controller
         $catatan = $request->input('catatan_review');
 
         if ($request->isApprove()) {
-            $this->sodVerificationService->approve($unbanRequest, $user, is_string($catatan) ? $catatan : null);
+            $unbanRequest = $this->sodVerificationService->approve($unbanRequest, $user, is_string($catatan) ? $catatan : null);
             $message = 'Pengajuan SID '.$unbanRequest->sid.' disetujui.';
         } else {
-            $this->sodVerificationService->reject($unbanRequest, $user, is_string($catatan) ? $catatan : null);
+            $unbanRequest = $this->sodVerificationService->reject($unbanRequest, $user, is_string($catatan) ? $catatan : null);
             $message = 'Pengajuan SID '.$unbanRequest->sid.' ditolak.';
+        }
+
+        $whatsappUrl = $this->treatmentService->resolveApplicantReviewWhatsappRedirectUrl($unbanRequest);
+        if ($whatsappUrl !== null) {
+            return redirect()->away($whatsappUrl);
         }
 
         return redirect()

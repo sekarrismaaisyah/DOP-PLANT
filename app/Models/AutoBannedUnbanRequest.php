@@ -31,6 +31,7 @@ class AutoBannedUnbanRequest extends Model
         'iso_year',
         'submitted_by_id',
         'submitted_by_name',
+        'no_hp',
         'reviewed_by_id',
         'reviewed_by_name',
         'reviewed_at',

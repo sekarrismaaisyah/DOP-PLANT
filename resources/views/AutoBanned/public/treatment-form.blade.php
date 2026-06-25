@@ -228,6 +228,11 @@
       {{-- Step 2: Ringkasan perbaikan --}}
       <section class="card" id="section-perbaikan">
          <h2 class="card-title"><span class="num">2</span> Perbaikan yang Dilakukan</h2>
+         <div class="field">
+            <label for="no_hp">Nomor HP / WhatsApp <span class="req">*</span></label>
+            <input class="input" type="tel" id="no_hp" name="no_hp" value="{{ old('no_hp') }}" placeholder="Contoh: 081234567890" required maxlength="32" inputmode="tel" autocomplete="tel"/>
+            <p class="hint">Nomor aktif untuk dihubungi terkait pengajuan ini.</p>
+         </div>
          <div class="field" style="margin-bottom:0">
             <label for="alasan_pengajuan">Apa yang sudah diperbaiki? <span class="req">*</span></label>
             <textarea class="textarea" id="alasan_pengajuan" name="alasan_pengajuan" placeholder="Contoh: Sudah koordinasi dengan HSE, SAP sudah diperbaiki, lampiran screenshot SAP terbaru." required maxlength="2000">{{ old('alasan_pengajuan') }}</textarea>

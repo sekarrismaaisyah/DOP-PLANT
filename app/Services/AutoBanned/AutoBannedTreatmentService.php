@@ -194,6 +194,7 @@ class AutoBannedTreatmentService
         ?User $user = null,
         string $submitterName = '',
         ?int $scrDailyBannedId = null,
+        ?string $noHp = null,
     ): AutoBannedUnbanRequest {
         if (! Schema::hasTable('auto_banned_unban_requests')) {
             throw ValidationException::withMessages([
@@ -277,6 +278,7 @@ class AutoBannedTreatmentService
             'iso_year' => $year,
             'submitted_by_id' => $user?->id,
             'submitted_by_name' => $submitterDisplayName,
+            'no_hp' => $this->normalizeStoredPhoneNumber($noHp),
         ]);
 
         $this->syncSnapshotWorkflow($sid, $week, $year);
@@ -353,11 +355,128 @@ class AutoBannedTreatmentService
         return 'https://wa.me/'.$phone.'?text='.rawurlencode($message);
     }
 
+    public function resolveApplicantReviewWhatsappRedirectUrl(AutoBannedUnbanRequest $unbanRequest): ?string
+    {
+        $phone = $this->normalizeWhatsappPhone((string) ($unbanRequest->no_hp ?? ''));
+        if ($phone === '') {
+            return null;
+        }
+
+        $recipientName = trim((string) ($unbanRequest->karyawan ?? ''));
+        if ($recipientName === '') {
+            $recipientName = trim((string) ($unbanRequest->submitted_by_name ?? ''));
+        }
+        if ($recipientName === '') {
+            $recipientName = trim((string) $unbanRequest->sid);
+        }
+
+        $week = trim((string) ($unbanRequest->week ?? ''));
+        $year = trim((string) ($unbanRequest->iso_year ?? ''));
+        $period = trim($week.' '.$year);
+        $reviewerName = trim((string) ($unbanRequest->reviewed_by_name ?? 'SOD'));
+        $catatan = trim((string) ($unbanRequest->catatan_review ?? ''));
+
+        $message = match ($unbanRequest->status) {
+            AutoBannedUnbanStatus::Approved => $this->buildApplicantApprovedWhatsappMessage(
+                recipientName: $recipientName,
+                sid: trim((string) $unbanRequest->sid),
+                period: $period,
+                reviewerName: $reviewerName,
+                catatan: $catatan,
+            ),
+            AutoBannedUnbanStatus::Rejected => $this->buildApplicantRejectedWhatsappMessage(
+                recipientName: $recipientName,
+                sid: trim((string) $unbanRequest->sid),
+                period: $period,
+                reviewerName: $reviewerName,
+                catatan: $catatan,
+            ),
+            default => null,
+        };
+
+        if ($message === null || $message === '') {
+            return null;
+        }
+
+        return 'https://wa.me/'.$phone.'?text='.rawurlencode($message);
+    }
+
+    private function buildApplicantApprovedWhatsappMessage(
+        string $recipientName,
+        string $sid,
+        string $period,
+        string $reviewerName,
+        string $catatan,
+    ): string {
+        $lines = [
+            'Halo '.$recipientName.',',
+            '',
+            'Pengajuan treatment banned Anda telah *DISETUJUI*.',
+            '',
+            'SID: '.$sid,
+        ];
+
+        if ($period !== '') {
+            $lines[] = 'Periode: '.$period;
+        }
+
+        $lines[] = 'Reviewer: '.$reviewerName;
+
+        if ($catatan !== '') {
+            $lines[] = '';
+            $lines[] = 'Catatan: '.$catatan;
+        }
+
+        $lines[] = '';
+        $lines[] = 'Terima kasih.';
+        $lines[] = 'PT Berau Coal — Safety App';
+
+        return implode("\n", $lines);
+    }
+
+    private function buildApplicantRejectedWhatsappMessage(
+        string $recipientName,
+        string $sid,
+        string $period,
+        string $reviewerName,
+        string $catatan,
+    ): string {
+        $lines = [
+            'Halo '.$recipientName.',',
+            '',
+            'Mohon maaf, pengajuan treatment banned Anda *DITOLAK*.',
+            '',
+            'SID: '.$sid,
+        ];
+
+        if ($period !== '') {
+            $lines[] = 'Periode: '.$period;
+        }
+
+        $lines[] = 'Reviewer: '.$reviewerName;
+        $lines[] = '';
+        $lines[] = 'Catatan: '.($catatan !== '' ? $catatan : 'Tidak ada catatan.');
+        $lines[] = '';
+        $lines[] = 'Silakan koordinasi dengan SOD/site terkait untuk langkah selanjutnya.';
+        $lines[] = 'PT Berau Coal — Safety App';
+
+        return implode("\n", $lines);
+    }
+
     private function normalizeWhatsappPhone(string $phone): string
     {
+        return $this->normalizeStoredPhoneNumber($phone) ?? '';
+    }
+
+    private function normalizeStoredPhoneNumber(?string $phone): ?string
+    {
+        if ($phone === null) {
+            return null;
+        }
+
         $digits = preg_replace('/\D+/', '', $phone) ?? '';
         if ($digits === '') {
-            return '';
+            return null;
         }
 
         if (str_starts_with($digits, '0')) {

@@ -113,7 +113,9 @@ class AutoBannedSodVerificationService
             'catatan_review' => $catatan !== null && trim($catatan) !== '' ? trim($catatan) : null,
         ]);
 
-        $this->syncSnapshotForRequest($unbanRequest->fresh());
+        $unbanRequest = $unbanRequest->fresh();
+
+        $this->syncSnapshotForRequest($unbanRequest);
 
         return $unbanRequest;
     }
