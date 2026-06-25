@@ -269,6 +269,8 @@
    var lookupUrl = @json(route('auto-banned.public.treatment.lookup-sid'));
    var week = document.querySelector('input[name="week"]').value;
    var year = document.querySelector('input[name="year"]').value;
+   var maxUploadBytes = @json((int) config('auto_banned.treatment.max_upload_kb', 10240) * 1024);
+   var maxUploadMb = @json((int) ceil(((int) config('auto_banned.treatment.max_upload_kb', 10240)) / 1024));
 
    var sidInput = document.getElementById('sid');
    var lookupBtn = document.getElementById('btn-lookup');
@@ -373,7 +375,15 @@
 
    function showFileName() {
       if (fileInput.files && fileInput.files[0]) {
-         fileNameEl.textContent = '✓ ' + fileInput.files[0].name;
+         var file = fileInput.files[0];
+         if (file.size > maxUploadBytes) {
+            fileInput.value = '';
+            fileNameEl.textContent = '';
+            dropzone.classList.remove('has-file');
+            alert('Ukuran file terlalu besar (' + (file.size / 1024 / 1024).toFixed(1) + ' MB). Maksimal ' + maxUploadMb + ' MB.');
+            return;
+         }
+         fileNameEl.textContent = '✓ ' + file.name;
          dropzone.classList.add('has-file');
          document.getElementById('step-dot-2').classList.add('is-done');
          document.getElementById('step-dot-3').classList.add('is-active');
@@ -384,6 +394,11 @@
       if (!fileInput.files || !fileInput.files.length) {
          e.preventDefault();
          alert('Pilih file bukti terlebih dahulu.');
+         return;
+      }
+      if (fileInput.files[0].size > maxUploadBytes) {
+         e.preventDefault();
+         alert('Ukuran file terlalu besar. Maksimal ' + maxUploadMb + ' MB.');
          return;
       }
       if (scrSelect && scrSelect.hasAttribute('required') && !scrSelect.value) {

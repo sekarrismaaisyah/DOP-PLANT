@@ -15,7 +15,6 @@ trait ValidatesAutoBannedTreatmentEvidenceFile
     protected function treatmentEvidenceFileRules(): array
     {
         return [
-            'required',
             function (string $attribute, mixed $value, \Closure $fail): void {
                 $this->validateTreatmentEvidenceUpload($value, $fail);
             },
@@ -27,15 +26,29 @@ trait ValidatesAutoBannedTreatmentEvidenceFile
      */
     protected function treatmentEvidenceFileMessages(): array
     {
-        $maxMb = (int) ceil(((int) config('auto_banned.treatment.max_upload_kb', 10240)) / 1024);
-
         return [
             'evidence_file.required' => 'Lampirkan file bukti (foto atau dokumen).',
+            'evidence_file.uploaded' => 'Gagal mengupload file. Pastikan ukuran maks. 10 MB dan koneksi stabil, lalu coba lagi.',
         ];
     }
 
     protected function validateTreatmentEvidenceUpload(mixed $value, \Closure $fail): void
     {
+        if ($value === null || $value === '') {
+            $contentLength = (int) request()->server('CONTENT_LENGTH', 0);
+            $postMax = $this->parseIniSize((string) ini_get('post_max_size'));
+
+            if ($contentLength > 0 && $postMax > 0 && $contentLength > $postMax) {
+                $fail('Ukuran unggahan melebihi batas server (post_max_size). Kurangi ukuran file atau kompres foto.');
+
+                return;
+            }
+
+            $fail('Lampirkan file bukti (foto atau dokumen).');
+
+            return;
+        }
+
         if (! $value instanceof UploadedFile) {
             $fail('Pilih file bukti terlebih dahulu.');
 
