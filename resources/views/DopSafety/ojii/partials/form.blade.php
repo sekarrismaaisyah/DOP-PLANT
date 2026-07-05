@@ -1,18 +1,12 @@
 @php
-   $formAction = $formAction ?? route('dop-safety.plan.store');
+   $formAction = $formAction ?? route('dop-safety.ojii.store');
    $formMethod = $formMethod ?? 'POST';
    $submitLabel = $submitLabel ?? 'Simpan DOP';
    $oldItems = old('items', $defaults['items'] ?? []);
    $tableStructure = $tableStructure ?? config('dop_safety.table_structure', []);
 @endphp
 
-<form id="ds-bulk-approval-form" action="{{ route('dop-safety.plan.bulk-approval') }}" method="POST" class="hidden">
-   @csrf
-   <input type="hidden" name="target_level" id="ds-modal-target-level">
-   <div id="ds-hidden-checkbox-container"></div>
-</form>
-
-<form action="{{ $formAction }}" method="POST" class="space-y-6">
+<form action="{{ $formAction }}" method="POST" enctype="multipart/form-data" class="space-y-6">
    @csrf
    @if($formMethod !== 'POST')
    @method($formMethod)
@@ -52,7 +46,10 @@
       <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
          <h2 class="font-headline font-bold text-base">Item Pekerjaan</h2>
          <div class="flex flex-wrap items-end gap-2">
-            <a href="{{ route('dop-safety.plan.template', ['scope' => 'items']) }}" class="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white text-gray-700 px-3 py-1.5 text-xs font-bold hover:bg-gray-50">
+            <a href="{{ route('dop-safety.download-worker-template') }}" class="inline-flex items-center gap-1 rounded-lg border border-indigo-200 bg-indigo-50 text-indigo-700 px-3 py-1.5 text-xs font-bold hover:bg-indigo-100">
+               <span class="material-symbols-outlined text-sm">group</span> Template Mekanik
+            </a>
+            <a href="{{ route('dop-safety.oji.template', ['scope' => 'items']) }}" class="inline-flex items-center gap-1 rounded-lg border border-gray-200 bg-white text-gray-700 px-3 py-1.5 text-xs font-bold hover:bg-gray-50">
                <span class="material-symbols-outlined text-sm">download</span> Template Excel
             </a>
             <div>
@@ -73,7 +70,7 @@
       <div class="overflow-x-auto">
          <table class="ds-table ds-plan-table w-full text-sm border-collapse min-w-[1400px]">
             <thead>
-               @include('DopSafety.plan.partials.table-head', [
+               @include('DopSafety.ojii.partials.table-head', [
                   'tableStructure' => $tableStructure,
                   'shiftOptions' => $shiftOptions,
                   'defaults' => $defaults,
@@ -81,7 +78,7 @@
             </thead>
             <tbody id="ds-items-container">
                @foreach($oldItems as $index => $item)
-               @include('DopSafety.plan.partials.item-row', ['index' => $index, 'item' => $item, 'sectionOptions' => $sectionOptions])
+               @include('DopSafety.ojii.partials.item-row', ['index' => $index, 'item' => $item, 'sectionOptions' => $sectionOptions])
                @endforeach
             </tbody>
          </table>
@@ -116,69 +113,57 @@
       </div>
    </div>
 
-   <div class="flex flex-wrap gap-3 items-center">
+   <div class="flex flex-wrap gap-3">
       <button type="submit" class="inline-flex items-center gap-2 rounded-xl bg-primary px-5 py-2.5 text-sm font-bold text-white hover:opacity-95">{{ $submitLabel }}</button>
-      
-      <button type="button" id="ds-trigger-approval-btn" class="inline-flex items-center gap-2 rounded-xl bg-amber-600 px-5 py-2.5 text-sm font-bold text-white hover:bg-amber-700 shadow-sm transition">
-         <span class="material-symbols-outlined text-sm">done_all</span> Apprrove
-      </button>
-
-      <a href="{{ route('dop-safety.plan.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-outline-variant/30 px-5 py-2.5 text-sm font-bold text-on-surface-variant hover:bg-white">Batal</a>
+      <a href="{{ route('dop-safety.oji.index') }}" class="inline-flex items-center gap-2 rounded-xl border border-outline-variant/30 px-5 py-2.5 text-sm font-bold text-on-surface-variant hover:bg-white">Batal</a>
    </div>
 </form>
 
-<!-- MODAL 1: PILIHAN JABATAN APPROVAL -->
-<div id="ds-approval-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
-   <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-gray-100">
-      <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
-         <h3 class="text-base font-bold text-gray-900 flex items-center gap-2">
-            <span class="material-symbols-outlined text-amber-600">verified_user</span> Otorisasi Approval Massal
-         </h3>
-         <button type="button" onclick="closeModal('ds-approval-modal')" class="text-gray-400 hover:text-gray-600 text-xl font-bold">×</button>
-      </div>
+<!-- Reject Modal -->
+<div
+    id="rejectModal"
+    class="fixed inset-0 bg-black/40 hidden items-center justify-center z-50">
 
-      <div class="mb-5">
-         <p class="text-xs text-gray-500 mb-3">Tentukan peran/level otorisasi Anda saat ini untuk item pekerjaan terpilih:</p>
-         
-         <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Level Approval *</label>
-         <select id="ds-modal-level-select" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:ring-amber-500">
-            <option value="" disabled selected>-- Pilih Jabatan Otorisasi --</option>
-            <option value="waiting_lce">Level 1: LCE (Logistics & Compliance)</option>
-            <option value="waiting_dept_head">Level 2: Dept. Head Plant / Terkait</option>
-            <option value="waiting_dept_head_she">Level 3: Dept. Head SHE</option>
-            <option value="waiting_pm">Level 4: Project Manager (PM)</option>
-            <option value="waiting_suptend_safety">Level 5: Superintendent Safety BC</option>
-            <option value="waiting_wktt">Level 6: WKTT</option>
-         </select>
-         <p class="text-[11px] text-amber-700 bg-amber-50 rounded-lg p-2 mt-2 hidden" id="ds-modal-info-baris"></p>
-      </div>
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
 
-      <div class="flex justify-end gap-2 border-t border-gray-100 pt-3">
-         <button type="button" onclick="closeModal('ds-approval-modal')" class="px-4 py-2 text-xs font-bold text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50">Batal</button>
-         <button type="button" id="ds-next-to-confirm-btn" class="px-4 py-2 text-xs font-bold text-white bg-amber-600 rounded-xl hover:bg-amber-700">Lanjutkan</button>
-      </div>
-   </div>
-</div>
+        <h2 class="text-lg font-bold mb-3">
+            Reject Approval
+        </h2>
 
-<!-- MODAL 2: KONFIRMASI YAKIN (SURETY POP-UP) -->
-<div id="ds-confirm-sure-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
-   <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center">
-      <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
-         <span class="material-symbols-outlined text-3xl">help</span>
-      </div>
-      
-      <h3 class="text-base font-bold text-gray-900 mb-2">Apakah Anda yakin data ini akan disetujui?</h3>
-      <p class="text-xs text-gray-500 mb-6">Tindakan ini akan mengubah status persetujuan item pekerjaan terpilih secara permanen di dalam sistem.</p>
+        <p class="text-sm text-gray-600 mb-3">
+            Masukkan alasan reject.
+        </p>
 
-      <div class="flex justify-center gap-3">
-         <button type="button" onclick="closeModal('ds-confirm-sure-modal')" class="w-28 py-2 text-xs font-bold text-gray-500 border border-gray-200 rounded-xl hover:bg-gray-50">Periksa Kembali</button>
-         <button type="button" id="ds-submit-approval-btn" class="w-28 py-2 text-xs font-bold text-white bg-green-600 rounded-xl hover:bg-green-700 shadow-md">Ya, Setujui!</button>
-      </div>
-   </div>
+        <textarea
+            id="rejectReason"
+            rows="5"
+            class="w-full border rounded-lg p-2 text-sm"
+            placeholder="Masukkan alasan reject..."></textarea>
+
+        <div class="flex justify-end gap-2 mt-4">
+
+            <button
+                type="button"
+                id="cancelReject"
+                class="px-4 py-2 rounded bg-gray-300">
+                Batal
+            </button>
+
+            <button
+                type="button"
+                id="submitReject"
+                class="px-4 py-2 rounded bg-red-600 text-white">
+                Reject
+            </button>
+
+        </div>
+
+    </div>
+
 </div>
 
 <template id="ds-item-row-template">
-@include('DopSafety.plan.partials.item-row', ['index' => '__INDEX__', 'item' => [
+@include('DopSafety.ojii.partials.item-row', ['index' => '__INDEX__', 'item' => [
    'section_name' => config('dop_safety.sections.0'),
    'unit_code' => '',
    'location' => '',
@@ -199,6 +184,73 @@
    'pja_bc' => '',
 ], 'sectionOptions' => $sectionOptions])
 </template>
+<div id="approvalModal"
+     class="fixed inset-0 z-50 hidden items-center justify-center bg-black/50">
+
+    <div class="bg-white rounded-xl shadow-xl w-[420px] p-6">
+
+        <h3 class="text-lg font-bold mb-3">
+            Konfirmasi Approval
+        </h3>
+
+        <p class="text-sm text-gray-600 mb-6">
+            Apakah Anda yakin ingin menyetujui data ini?
+        </p>
+
+        <div class="flex justify-end gap-2">
+            <button
+                id="cancelApproval"
+                type="button"
+                class="px-4 py-2 rounded border">
+                Batal
+            </button>
+
+            <button
+                id="confirmApproval"
+                type="button"
+                class="px-4 py-2 rounded bg-green-600 text-white">
+                Ya, Approve
+            </button>
+        </div>
+
+    </div>
+</div>
+
+<div id="mechanicViewModal" class="fixed inset-0 z-[60] hidden items-center justify-center bg-black/50">
+    <div class="bg-white rounded-xl shadow-xl w-full max-w-2xl max-h-[85vh] flex flex-col">
+        
+        <div class="p-4 border-b border-gray-200 flex justify-between items-center bg-gray-50 rounded-t-xl">
+            <h3 class="text-base font-bold text-gray-800">
+                Daftar Pekerja Mekanik
+            </h3>
+            <button type="button" id="closeMechanicModal" class="text-gray-400 hover:text-red-600 text-xl font-bold px-2">
+                &times;
+            </button>
+        </div>
+
+        <div class="p-4 overflow-y-auto">
+            <table class="w-full text-sm border-collapse border border-gray-200">
+                <thead class="bg-gray-100">
+                    <tr>
+                        <th class="border border-gray-200 px-3 py-2 text-center w-10">No.</th>
+                        <th class="border border-gray-200 px-3 py-2 text-left">NRP</th>
+                        <th class="border border-gray-200 px-3 py-2 text-left">Nama</th>
+                        <th class="border border-gray-200 px-3 py-2 text-left">Jabatan</th>
+                    </tr>
+                </thead>
+                <tbody id="mechanicTableBody">
+                    </tbody>
+            </table>
+        </div>
+
+        <div class="p-4 border-t border-gray-200 flex justify-end">
+            <button type="button" id="closeMechanicModalBtn" class="px-4 py-2 text-sm rounded border bg-white hover:bg-gray-100 font-bold text-gray-700">
+                Tutup
+            </button>
+        </div>
+
+    </div>
+</div>
 
 @push('scripts')
 <script>
@@ -211,18 +263,10 @@
    const alertBox = document.getElementById('ds-items-import-alert');
    const importUrl = @json(route('dop-safety.plan.import-items'));
    const csrfToken = @json(csrf_token());
-
-   // Elements Modal & Approval Elements
-   const triggerApprovalBtn = document.getElementById('ds-trigger-approval-btn');
-   const approvalModal = document.getElementById('ds-approval-modal');
-   const confirmSureModal = document.getElementById('ds-confirm-sure-modal');
-   const nextToConfirmBtn = document.getElementById('ds-next-to-confirm-btn');
-   const submitApprovalBtn = document.getElementById('ds-submit-approval-btn');
-   const modalLevelSelect = document.getElementById('ds-modal-level-select');
-   const modalInfoBaris = document.getElementById('ds-modal-info-baris');
-   const bulkForm = document.getElementById('ds-bulk-approval-form');
-   const hiddenCheckboxContainer = document.getElementById('ds-hidden-checkbox-container');
-   const targetLevelHiddenInput = document.getElementById('ds-modal-target-level');
+   const rejectUrl = @json(route('dop-safety.oji.item.reject', ['item' => '__ID__']));
+   const approveUrl = @json(
+    route('dop-safety.oji.items.approve', ['item' => '__ID__'])
+);
 
    if (!container || !template || !addBtn) return;
 
@@ -230,59 +274,8 @@
 
    function renumberRows() {
       container.querySelectorAll('.ds-item-row').forEach(function (row, idx) {
-         // Kolom ke-2 adalah nomor urut karena kolom ke-1 diisi checkbox selector
-         const noCell = row.querySelector('td:nth-child(2)');
+         const noCell = row.querySelector('td:first-child');
          if (noCell) noCell.textContent = String(idx + 1);
-      });
-   }
-
-   window.closeModal = function(modalId) {
-      document.getElementById(modalId)?.classList.add('hidden');
-   };
-
-   if (triggerApprovalBtn) {
-      triggerApprovalBtn.addEventListener('click', function() {
-         const checkedBoxes = container.querySelectorAll('input[name="selected_items[]"]:checked');
-         if (checkedBoxes.length === 0) {
-            alert('Silakan pilih minimal satu item pekerjaan dengan mencentang checkbox terlebih dahulu.');
-            return;
-         }
-         if (modalInfoBaris) {
-            modalInfoBaris.textContent = checkedBoxes.length + ' item pekerjaan terpilih untuk diproses.';
-            modalInfoBaris.classList.remove('hidden');
-         }
-         approvalModal.classList.remove('hidden');
-      });
-   }
-
-   if (nextToConfirmBtn) {
-      nextToConfirmBtn.addEventListener('click', function() {
-         if (!modalLevelSelect.value) {
-            alert('Anda harus memilih Tingkat Peran Jabatan Approval terlebih dahulu!');
-            return;
-         }
-         approvalModal.classList.add('hidden');
-         confirmSureModal.classList.remove('hidden');
-      });
-   }
-
-   if (submitApprovalBtn && bulkForm) {
-      submitApprovalBtn.addEventListener('click', function() {
-         hiddenCheckboxContainer.innerHTML = '';
-         targetLevelHiddenInput.value = modalLevelSelect.value;
-
-         const checkedBoxes = container.querySelectorAll('input[name="selected_items[]"]:checked');
-         checkedBoxes.forEach(function(box) {
-            const hiddenInput = document.createElement('input');
-            hiddenInput.type = 'hidden';
-            hiddenInput.name = 'selected_items[]';
-            hiddenInput.value = box.value;
-            hiddenCheckboxContainer.appendChild(hiddenInput);
-         });
-
-         submitApprovalBtn.disabled = true;
-         submitApprovalBtn.textContent = 'Menyimpan...';
-         bulkForm.submit();
       });
    }
 
@@ -418,6 +411,265 @@
             });
       });
    }
+   const modal = document.getElementById('approvalModal');
+const confirmBtn = document.getElementById('confirmApproval');
+const cancelBtn = document.getElementById('cancelApproval');
+
+let currentButton = null;
+
+container.addEventListener('click', function(e){
+
+    const btn = e.target.closest('.approve-btn');
+
+    if(!btn) return;
+
+    currentButton = btn;
+
+    modal.classList.remove('hidden');
+    modal.classList.add('flex');
+
+});
+
+cancelBtn.addEventListener('click', function(){
+
+    modal.classList.add('hidden');
+    modal.classList.remove('flex');
+
+});
+
+confirmBtn.addEventListener('click', function () {
+
+    if (!currentButton) return;
+
+    const itemId = currentButton.dataset.id;
+
+    fetch(
+        approveUrl.replace('__ID__', itemId),
+        {
+            method: 'PATCH',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            }
+        }
+    )
+    .then(response => response.json())
+    .then(data => {
+
+        if (!data.success) {
+            alert('Approve gagal');
+            return;
+        }
+
+        currentButton.dataset.status = data.status;
+
+        switch (data.status) {
+
+            case 'waiting_safety':
+                currentButton.innerHTML = 'Waiting Approval Dept Head Safety';
+                break;
+
+            case 'waiting_pm':
+                currentButton.innerHTML = 'Waiting Approval PM';
+                break;
+
+            case 'done':
+                currentButton.innerHTML = 'Approved';
+                currentButton.disabled = true;
+                currentButton.classList.remove('bg-green-600');
+                currentButton.classList.add('bg-green-800');
+                break;
+        }
+
+        modal.classList.add('hidden');
+        modal.classList.remove('flex');
+
+    })
+    .catch(() => {
+        alert('Terjadi kesalahan.');
+    });
+
+});
+
+let currentRejectButton = null;
+
+document.addEventListener('click', function (e) {
+
+    const btn = e.target.closest('.reject-btn');
+
+    if (!btn) return;
+
+    currentRejectButton = btn;
+
+    document.getElementById('rejectModal').classList.remove('hidden');
+    document.getElementById('rejectModal').classList.add('flex');
+
+});
+
+document
+.getElementById('cancelReject')
+.addEventListener('click', function () {
+
+    document.getElementById('rejectModal').classList.add('hidden');
+    document.getElementById('rejectModal').classList.remove('flex');
+
+    document.getElementById('rejectReason').value = '';
+
+});
+
+document
+.getElementById('submitReject')
+.addEventListener('click', function () {
+
+    const reason = document.getElementById('rejectReason').value.trim();
+
+    if (reason === '') {
+        alert('Alasan reject wajib diisi.');
+        return;
+    }
+
+    const itemId = currentRejectButton.dataset.id;
+
+    fetch(
+        rejectUrl.replace('__ID__', itemId),
+        {
+            method: 'POST',
+            headers: {
+                'X-CSRF-TOKEN': csrfToken,
+                'Accept': 'application/json',
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                reason: reason
+            })
+        }
+    )
+   .then(response => response.json())
+   .then(data => {
+
+      if (!data.success) {
+         alert('Reject gagal.');
+         return;
+      }
+
+      currentRejectButton.innerHTML = 'Rejected';
+      currentRejectButton.disabled = true;
+
+      currentRejectButton.classList.remove('bg-red-600');
+      currentRejectButton.classList.add('bg-gray-500');
+
+      document.getElementById('rejectModal').classList.add('hidden');
+      document.getElementById('rejectModal').classList.remove('flex');
+
+      document.getElementById('rejectReason').value = '';
+
+      // Reload setelah 300ms
+      setTimeout(() => {
+         window.location.reload();
+      }, 300);
+
+   })
+   .catch(() => {
+      alert('Terjadi kesalahan.');
+   });
+
+});
+
+window.handleRowWorkerUpload = function(input) {
+    const itemId = input.getAttribute('data-id');
+    if (!input.files || input.files[0] == null) return;
+
+    const formData = new FormData();
+    formData.append('item_id', itemId);
+    formData.append('file_excel', input.files[0]);
+    formData.append('_token', '{{ csrf_token() }}');
+
+    const btn = input.nextElementSibling;
+    const originalText = btn.innerText;
+    btn.disabled = true;
+    btn.innerText = 'Uploading...';
+    btn.classList.add('opacity-50');
+
+    fetch("{{ route('dop-safety.upload-item-workers') }}", {
+        method: 'POST',
+        body: formData,
+        headers: { 'Accept': 'application/json', 'X-Requested-With': 'XMLHttpRequest' }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            window.location.reload(); // Reload untuk memperbarui angka jumlah mekanik
+        } else {
+            alert('Gagal: ' + data.message);
+            btn.disabled = false;
+            btn.innerText = originalText;
+            btn.classList.remove('opacity-50');
+        }
+        input.value = '';
+    })
+    .catch(error => {
+        console.error(error);
+        alert('Terjadi kesalahan koneksi sistem.');
+        input.value = '';
+        btn.disabled = false;
+        btn.innerText = originalText;
+        btn.classList.remove('opacity-50');
+    });
+};
+
 })();
+
+// --- LOGIC MODAL VIEW MEKANIK ---
+const mechanicModal = document.getElementById('mechanicViewModal');
+const mechanicTableBody = document.getElementById('mechanicTableBody');
+
+// Fungsi menutup modal
+function hideMechanicModal() {
+    mechanicModal.classList.add('hidden');
+    mechanicModal.classList.remove('flex');
+}
+
+document.getElementById('closeMechanicModal').addEventListener('click', hideMechanicModal);
+document.getElementById('closeMechanicModalBtn').addEventListener('click', hideMechanicModal);
+
+document.addEventListener('click', function(e) {
+    const btn = e.target.closest('.view-mechanic-btn');
+    if (!btn) return;
+
+    const nrps = btn.getAttribute('data-nrps').split(';');
+    const names = btn.getAttribute('data-names').split(';');
+    const positions = btn.getAttribute('data-positions').split(';');
+
+    mechanicTableBody.innerHTML = '';
+    let hasData = false;
+
+    for (let i = 0; i < names.length; i++) {
+        const nrp = nrps[i] ? nrps[i].trim() : '-';
+        const name = names[i] ? names[i].trim() : '-';
+        const position = positions[i] ? positions[i].trim() : '-';
+
+        if (name === '-' && nrp === '-') continue;
+
+        hasData = true;
+        
+        const row = document.createElement('tr');
+        row.innerHTML = `
+            <td class="border border-gray-200 px-3 py-2 text-center">${i + 1}</td>
+            <td class="border border-gray-200 px-3 py-2 text-gray-800 font-mono">${nrp}</td>
+            <td class="border border-gray-200 px-3 py-2 font-semibold">${name}</td>
+            <td class="border border-gray-200 px-3 py-2 text-xs uppercase tracking-wider">${position}</td>
+        `;
+        mechanicTableBody.appendChild(row);
+    }
+
+    if (!hasData) {
+        mechanicTableBody.innerHTML = `<tr><td colspan="4" class="text-center py-6 text-gray-500 italic">Belum ada data pekerja mekanik.</td></tr>`;
+    }
+
+    mechanicModal.classList.remove('hidden');
+    mechanicModal.classList.add('flex');
+});
 </script>
 @endpush

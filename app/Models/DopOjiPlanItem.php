@@ -7,10 +7,13 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
-class DopSafetyPlanItem extends Model
+class DopOjiPlanItem extends Model
 {
+    protected $table = 'dop_oji_plan_items';
+
     protected $fillable = [
-        'dop_safety_plan_id',
+        'dop_oji_plan_id',
+        'dop_safety_plan_item_id',
         'item_no',
         'section_name',
         'unit_code',
@@ -22,6 +25,10 @@ class DopSafetyPlanItem extends Model
         'cctv',
         'group_leader',
         'group_leader_sid',
+        'evidence_1',
+        'evidence_2',
+        'evidence_3',
+        'evidence_4',
         'section_head',
         'section_head_sid',
         'she_leader',
@@ -30,6 +37,9 @@ class DopSafetyPlanItem extends Model
         'dept_head_sid',
         'pja_bc',
         'approval_status',
+        'approved_at',
+        'reject_reason',
+       
     ];
 
     protected function casts(): array
@@ -38,18 +48,26 @@ class DopSafetyPlanItem extends Model
             'item_no' => 'integer',
             'tools' => 'array',
             'workers' => 'array',
+             'approved_at' => 'datetime',
         ];
     }
 
     public function plan(): BelongsTo
     {
-        return $this->belongsTo(DopSafetyPlan::class, 'dop_safety_plan_id');
+        return $this->belongsTo(
+            DopOjiPlan::class,
+            'dop_oji_plan_id'
+        );
     }
 
-    // Di dalam file App\Models\DopSafetyPlanItem.php
-public function ojiPlanItem()
-{
-    // Mengarahkan bahwa item DOP ini memiliki satu item OJI melalui foreign key 'dop_safety_plan_item_id'
-    return $this->hasOne(DopOjiPlanItem::class, 'dop_safety_plan_item_id');
-}
+    public function safetyPlanItem()
+    {
+        return $this->belongsTo(DopSafetyPlanItem::class, 'dop_safety_plan_item_id');
+    }
+
+
+    public function mekanikWorkers(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(DopOjiPlanItemWorker::class, 'dop_oji_plan_item_id', 'id');
+    }
 }

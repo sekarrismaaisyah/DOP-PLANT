@@ -29,5 +29,5 @@ return [
         2 => 'Shift 2',
     ],
 
-    'table_structure' => \App\Support\DopSafety\DopSafetyPlanTableStructure::definition()['table_structure'],
+    'table_structure' => \App\Support\DopSafety\DopSafetyPlanTableStructure::webdefinition()['table_structure'],
 ];

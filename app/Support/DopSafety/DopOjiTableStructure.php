@@ -7,16 +7,15 @@ namespace App\Support\DopSafety;
 /**
  * Struktur header tabel DOP Safety (SHIFT × SECTION × kolom pekerjaan).
  */
-final class DopSafetyPlanTableStructure
+final class DopOjiTableStructure
 {
-  // Jumlah kolom murni di Excel (sesuai isi leafHeaders)
-  public const DATA_COLUMN_COUNT = 19;
+  public const DATA_COLUMN_COUNT = 26;
 
   public const HEADER_ROW_COUNT = 4;
 
   public const EXCEL_META_COLUMN_COUNT = 3;
 
-  public const EXCEL_SHIFT_SECTION_COLSPAN = 18;
+  public const EXCEL_SHIFT_SECTION_COLSPAN = 26;
 
   public const EXCEL_SHIFT_ROW = 1;
 
@@ -49,56 +48,7 @@ final class DopSafetyPlanTableStructure
   }
 
   /**
-   * 1. KHUSUS UNTUK TAMPILAN WEB (BLADE)
-   * Mengandung kolom 'Select' dan 'Status Approval DOP'
-   */
-  public static function webDefinition(): array
-  {
-    return [
-      'table_structure' => [
-        'columns' => [
-          ['name' => 'No.', 'rowspan' => 2],
-          ['name' => 'Approve', 'rowspan' => 2],
-          ['name' => 'Status Approval OJI', 'rowspan' => 2],
-          ['name' => 'Status Approval DOP', 'rowspan' => 2],
-          ['name' => 'Kode Unit', 'rowspan' => 2],
-          ['name' => 'Section', 'rowspan' => 2],
-          ['name' => 'Lokasi', 'rowspan' => 2],
-          ['name' => 'Detail Pekerjaan', 'rowspan' => 2],
-          ['name' => 'IZIN KERJA', 'rowspan' => 2],
-          ['name' => 'Alat Bantu / Peralatan', 'rowspan' => 2],
-          [
-            'name' => 'LIST PEKERJA',
-            'colspan' => 2,
-            'sub_columns' => [
-              ['name' => 'NAMA'],
-              ['name' => 'SID'],
-            ],
-          ],
-          ['name' => 'CCTV', 'rowspan' => 2],
-          ['name' => 'Group Leader (L1)', 'rowspan' => 2],
-          ['name' => 'SID', 'rowspan' => 2, 'key' => 'group_leader_sid'],
-          ['name' => 'Section Head (L2)', 'rowspan' => 2],
-          ['name' => 'SID', 'rowspan' => 2, 'key' => 'section_head_sid'],
-          ['name' => 'SHE Leader (L3)', 'rowspan' => 2],
-          ['name' => 'SID', 'rowspan' => 2, 'key' => 'she_leader_sid'],
-          ['name' => 'Dept. Head (L4)', 'rowspan' => 2],
-          ['name' => 'SID', 'rowspan' => 2, 'key' => 'dept_head_sid'],
-          ['name' => 'PJA BC', 'rowspan' => 2],
-        ],
-        'shifts' => [
-          ['name' => 'SHIFT 1', 'colspan' => 21],
-        ],
-        'sections' => [
-          ['name' => 'FIELD TRACK', 'colspan' => 21],
-        ],
-      ],
-    ];
-  }
-
-  /**
-   * 2. KEMBALIKAN UNTUK SINKRONISASI TEMPLATE EXCEL
-   * Dibuat bersih tanpa kolom 'Select' dan 'Status Approval DOP' agar file lama lolos validasi.
+   * @return array{table_structure: array{columns: list<array<string, mixed>>, shifts: list<array<string, mixed>>, sections: list<array<string, mixed>>}}
    */
   public static function definition(): array
   {
@@ -123,6 +73,10 @@ final class DopSafetyPlanTableStructure
           ['name' => 'CCTV', 'rowspan' => 2],
           ['name' => 'Group Leader (L1)', 'rowspan' => 2],
           ['name' => 'SID', 'rowspan' => 2, 'key' => 'group_leader_sid'],
+          ['name' => 'Evidence 1', 'rowspan' => 2, 'key' => 'evidence_1'],
+          ['name' => 'Evidence 2', 'rowspan' => 2, 'key' => 'evidence_2'],
+          ['name' => 'Evidence 3', 'rowspan' => 2, 'key' => 'evidence_3'],
+          ['name' => 'Evidence 4', 'rowspan' => 2, 'key' => 'evidence_4'],
           ['name' => 'Section Head (L2)', 'rowspan' => 2],
           ['name' => 'SID', 'rowspan' => 2, 'key' => 'section_head_sid'],
           ['name' => 'SHE Leader (L3)', 'rowspan' => 2],
@@ -130,6 +84,9 @@ final class DopSafetyPlanTableStructure
           ['name' => 'Dept. Head (L4)', 'rowspan' => 2],
           ['name' => 'SID', 'rowspan' => 2, 'key' => 'dept_head_sid'],
           ['name' => 'PJA BC', 'rowspan' => 2],
+          ['name' => 'Upload Pekerja', 'rowspan' => 2],
+          ['name' => 'Reject Reason', 'rowspan' => 2],
+          ['name' => 'Aksi', 'rowspan' => 2],
         ],
         'shifts' => [
           ['name' => 'SHIFT 1', 'colspan' => 18],
@@ -143,6 +100,8 @@ final class DopSafetyPlanTableStructure
 
   /**
    * Label kolom data (baris header paling bawah).
+   *
+   * @return list<string>
    */
   public static function leafHeaders(): array
   {
@@ -159,6 +118,10 @@ final class DopSafetyPlanTableStructure
       'CCTV',
       'Group Leader (L1)',
       'SID',
+      'Evidence 1',
+      'Evidence 2',
+      'Evidence 3',
+      'Evidence 4',
       'Section Head (L2)',
       'SID',
       'SHE Leader (L3)',
@@ -166,14 +129,26 @@ final class DopSafetyPlanTableStructure
       'Dept. Head (L4)',
       'SID',
       'PJA BC',
+      'Upload Pekerja',
+      'Reject Reason',
     ];
   }
 
+  /**
+   * Kolom meta dokumen di awal baris data Excel (di luar blok SHIFT).
+   *
+   * @return list<string>
+   */
   public static function documentMetaHeaders(): array
   {
     return ['Site', 'Hari/Tanggal', 'Shift'];
   }
 
+  /**
+   * Kolom otorisasi dokumen di akhir baris data Excel.
+   *
+   * @return list<string>
+   */
   public static function authorizationHeaders(): array
   {
     return [
@@ -196,6 +171,9 @@ final class DopSafetyPlanTableStructure
       + count(self::authorizationHeaders());
   }
 
+  /**
+   * @return list<string>
+   */
   public static function flatImportHeaders(): array
   {
     return [
@@ -205,10 +183,15 @@ final class DopSafetyPlanTableStructure
     ];
   }
 
+  /**
+   * @param  list<mixed>  $workers
+   * @return array{names: string, sids: string}
+   */
   public static function workersToDisplayCells(array $workers): array
   {
     $names = [];
     $sids = [];
+
     foreach ($workers as $worker) {
       if (is_array($worker)) {
         $name = trim((string) ($worker['name'] ?? ''));
@@ -217,41 +200,56 @@ final class DopSafetyPlanTableStructure
         $name = trim((string) $worker);
         $sid = '';
       }
+
       if ($name === '' && $sid === '') {
         continue;
       }
+
       $names[] = $name;
       $sids[] = $sid;
     }
+
     return [
       'names' => implode('; ', $names),
       'sids' => implode('; ', $sids),
     ];
   }
 
+  /**
+   * @return list<array{name: string, sid: string}>
+   */
   public static function parseWorkersFromCells(mixed $namesRaw, mixed $sidsRaw): array
   {
     $names = self::splitListCell($namesRaw);
     $sids = self::splitListCell($sidsRaw);
     $workers = [];
+
     $max = max(count($names), count($sids));
     for ($i = 0; $i < $max; $i++) {
       $name = trim((string) ($names[$i] ?? ''));
       $sid = trim((string) ($sids[$i] ?? ''));
+
       if ($name === '' && $sid === '') {
         continue;
       }
+
       $workers[] = ['name' => $name, 'sid' => $sid];
     }
+
     return $workers;
   }
 
+  /**
+   * @return list<string>
+   */
   public static function splitListCell(mixed $value): array
   {
     if ($value === null || trim((string) $value) === '') {
       return [];
     }
+
     $parts = preg_split('/[,;|]/', (string) $value) ?: [];
+
     return array_values(array_filter(array_map(static fn ($p) => trim((string) $p), $parts)));
   }
 }

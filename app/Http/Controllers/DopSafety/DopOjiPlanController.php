@@ -9,13 +9,14 @@ use App\Http\Controllers\DopSafety\Concerns\ProvidesDopSafetyLayout;
 use App\Http\Requests\DopSafety\DopSafetyPlanImportRequest;
 use App\Http\Requests\DopSafety\DopSafetyPlanStoreRequest;
 use App\Http\Requests\DopSafety\DopSafetyPlanUpdateRequest;
-use App\Models\DopSafetyPlan;
+use App\Models\DopOjiPlan;
 use App\Services\DopSafety\DopSafetyPlanItemsExcelService;
 use App\Services\DopSafety\DopSafetyPlanExcelTemplateService;
 use App\Services\DopSafety\DopSafetyPlanImportService;
-use App\Services\DopSafety\DopSafetyPlanPersistenceService;
+use App\Services\DopSafety\DopOjiPlanPersistenceService;
 use App\Support\DopSafety\DopSafetyProgramDefinition;
-use App\Support\DopSafety\DopSafetyPlanTableStructure;
+use App\Support\DopSafety\DopOjiTableStructure;
+use App\Models\DopOjiPlanItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -23,16 +24,13 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\View\View;
 use PhpOffice\PhpSpreadsheet\Writer\Xlsx;
 use Symfony\Component\HttpFoundation\StreamedResponse;
-use Illuminate\Support\Facades\DB;
-use Barryvdh\DomPDF\Facade\Pdf;
-use App\Models\DopOjiPlanItem;
 
-class DopSafetyPlanController extends Controller
+class DopOjiPlanController extends Controller
 {
     use ProvidesDopSafetyLayout;
 
     public function __construct(
-        private readonly DopSafetyPlanPersistenceService $persistenceService,
+        private readonly DopOjiPlanPersistenceService $persistenceService,
         private readonly DopSafetyPlanExcelTemplateService $excelTemplateService,
         private readonly DopSafetyPlanItemsExcelService $itemsExcelService,
         private readonly DopSafetyPlanImportService $importService,
@@ -44,7 +42,7 @@ class DopSafetyPlanController extends Controller
             ? (int) $request->get('per_page', 15)
             : 15;
 
-        $query = DopSafetyPlan::query()
+        $query = DopOjiPlan::query()
             ->withCount('items')
             ->with('user:id,name');
 
@@ -87,7 +85,7 @@ class DopSafetyPlanController extends Controller
             ->paginate($perPage)
             ->withQueryString();
 
-        return view('DopSafety.plan.index', $this->dopSafetyViewData('plan', [
+        return view('DopSafety.ojii.index', $this->dopSafetyViewData('oji', [
             'rules' => DopSafetyProgramDefinition::dopDailyRules(),
             'approvers' => ['Dept. Head Plant', 'Dept. Head SHE', 'Supt Safety BC'],
             'plans' => $plans,
@@ -98,29 +96,59 @@ class DopSafetyPlanController extends Controller
 
     public function create(): View
     {
-        return view('DopSafety.plan.create', $this->formViewData('plan', $this->emptyFormDefaults()));
+        return view('DopSafety.ojii.create', $this->formViewData('plan', $this->emptyFormDefaults()));
     }
 
-    public function store(DopSafetyPlanStoreRequest $request): RedirectResponse
-    {
-        $this->persistenceService->create(
-            $request->headerPayload(),
-            $request->itemsPayload(),
-            Auth::id(),
-        );
+  public function store(DopSafetyPlanStoreRequest $request): RedirectResponse
+{
+    //dd($request->all(), $request->file());
+    $items = $request->itemsPayload();
 
-        return redirect()
-            ->route('dop-safety.plan.index')
-            ->with('success', 'DOP berhasil disimpan.');
+    foreach ($items as $index => &$item) {
+
+        if ($request->hasFile("evidence_1.$index")) {
+            $item['evidence_1'] =
+                $request->file("evidence_1.$index")
+                    ->store('oji-evidence', 'public');
+        }
+
+        if ($request->hasFile("evidence_2.$index")) {
+            $item['evidence_2'] =
+                $request->file("evidence_2.$index")
+                    ->store('oji-evidence', 'public');
+        }
+
+        if ($request->hasFile("evidence_3.$index")) {
+            $item['evidence_3'] =
+                $request->file("evidence_3.$index")
+                    ->store('oji-evidence', 'public');
+        }
+
+        if ($request->hasFile("evidence_4.$index")) {
+            $item['evidence_4'] =
+                $request->file("evidence_4.$index")
+                    ->store('oji-evidence', 'public');
+        }
     }
 
-    public function show(DopSafetyPlan $plan): View
+    $this->persistenceService->create(
+        $request->headerPayload(),
+        $items, // ← BUKAN $request->itemsPayload()
+        Auth::id(),
+    );
+
+    return redirect()
+        ->route('dop-safety.oji.index')
+        ->with('success', 'DOP berhasil disimpan.');
+}
+
+    public function show(DopOjiPlan $plan): View
     {
-        $plan->load(['items.ojiPlanItem', 'user:id,name']);
+        $plan->load(['items', 'user:id,name']);
 
         $itemsBySection = $plan->items->groupBy('section_name');
 
-        return view('DopSafety.plan.show', $this->dopSafetyViewData('plan', [
+        return view('DopSafety.ojii.show', $this->dopSafetyViewData('ojii', [
             'plan' => $plan,
             'itemsBySection' => $itemsBySection,
             'disclaimer' => config('dop_safety.disclaimer'),
@@ -128,12 +156,11 @@ class DopSafetyPlanController extends Controller
         ]));
     }
 
-    public function edit(DopSafetyPlan $plan): View
+    public function edit(DopOjiPlan $plan): View
     {
         $plan->load('items');
 
-        return view(
-            'DopSafety.plan.edit',
+        return view('DopSafety.ojii.edit',
             array_merge(
                 $this->formViewData(
                     'plan',
@@ -145,66 +172,89 @@ class DopSafetyPlanController extends Controller
             )
         );
     }
-
-    public function update(DopSafetyPlanUpdateRequest $request, DopSafetyPlan $plan): RedirectResponse
+   
+    public function update( DopSafetyPlanUpdateRequest $request,DopOjiPlan $plan): RedirectResponse
     {
+        $items = $request->itemsPayload();
+
+        foreach ($items as $index => &$item) {
+
+            foreach (['evidence_1', 'evidence_2', 'evidence_3', 'evidence_4'] as $field) {
+
+                if ($request->hasFile($field.'.'.$index)) {
+
+                    $item[$field] = $request
+                        ->file($field.'.'.$index)
+                        ->store('oji-evidence', 'public');
+
+                }
+
+            }
+        }
+
+        unset($item);
+
+        // DEBUG
+        //dd($items);
+
         $this->persistenceService->update(
             $plan,
             $request->headerPayload(),
-            $request->itemsPayload(),
+            $items
         );
 
         return redirect()
-            ->route('dop-safety.plan.show', $plan)
+            ->route('dop-safety.oji.show', $plan)
             ->with('success', 'DOP berhasil diperbarui.');
     }
 
-    public function destroy(DopSafetyPlan $plan): RedirectResponse
+    public function approve(DopOjiPlanItem $item): JsonResponse
+    {
+        $nextStatus = match ($item->approval_status) {
+
+            'waiting_dept_head' => 'waiting_safety',
+
+            'waiting_safety' => 'waiting_pm',
+
+            'waiting_pm' => 'done',
+
+            default => $item->approval_status,
+        };
+
+        $item->update([
+            'approval_status' => $nextStatus,
+            'approved_at' => now(),
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'status' => $nextStatus,
+        ]);
+    }
+
+    public function rejectItem(Request $request,DopOjiPlanItem $item): JsonResponse
+    {
+        $request->validate([
+            'reason' => ['required', 'string'],
+        ]);
+
+        $item->update([
+            'approval_status' => 'rejected',
+            'reject_reason'   => $request->reason,
+        ]);
+
+        return response()->json([
+            'success' => true,
+        ]);
+    }
+
+    public function destroy(DopOjiPlan $plan): RedirectResponse
     {
         $plan->delete();
 
         return redirect()
-            ->route('dop-safety.plan.index')
+            ->route('dop-safety.oji.index')
             ->with('success', 'DOP berhasil dihapus.');
-    }
-
-    public function bulkApproval(Request $request): RedirectResponse
-    {
-        $request->validate([
-            'target_level'     => ['required', 'string'], 
-            'selected_items'   => ['required', 'array'],
-            'selected_items.*' => ['required', 'integer'], 
-        ]);
-
-        $targetLevel     = $request->input('target_level');     
-        $selectedItemIds = $request->input('selected_items');   
-
-        try {
-            DB::beginTransaction();
-
-            $updatedRows = \App\Models\DopSafetyPlanItem::query()
-                ->where(function ($query) use ($selectedItemIds) {
-                    $query->whereIn('id', $selectedItemIds);
-                })
-                ->update([
-                    'approval_status' => $targetLevel, 
-                    'updated_at'      => now(),
-                ]);
-
-            DB::commit();
-
-            return redirect()
-                ->back()
-                ->with('success', "Approval Berhasil untuk {$updatedRows} DOP.");
-
-        } catch (\Throwable $e) {
-            DB::rollBack();
-            report($e); 
-
-            return redirect()
-                ->back()
-                ->with('error', 'Gagal memproses approval massal item pekerjaan: ' . $e->getMessage());
-        }
     }
 
     public function downloadTemplate(Request $request): StreamedResponse
@@ -329,7 +379,7 @@ class DopSafetyPlanController extends Controller
             'shiftOptions' => config('dop_safety.shifts', []),
             'statusOptions' => $this->statusOptions(),
             'disclaimer' => config('dop_safety.disclaimer'),
-            'tableStructure' => DopSafetyPlanTableStructure::webdefinition()['table_structure'],
+            'tableStructure' => DopOjiTableStructure::definition()['table_structure'],
         ]);
     }
 
@@ -360,9 +410,10 @@ class DopSafetyPlanController extends Controller
     /**
      * @return array<string, mixed>
      */
-    private function planToFormDefaults(DopSafetyPlan $plan): array
+    private function planToFormDefaults(DopOjiPlan $plan): array
     {
         return [
+            
             'plan' => $plan,
             'site' => $plan->site,
             'plan_date' => $plan->plan_date->toDateString(),
@@ -378,9 +429,10 @@ class DopSafetyPlanController extends Controller
             'acknowledged_3_name' => $plan->acknowledged_3_name ?? '',
             'acknowledged_3_position' => $plan->acknowledged_3_position ?? '',
             'items' => $plan->items->map(function ($item) {
-                $workers = DopSafetyPlanTableStructure::workersToDisplayCells(is_array($item->workers) ? $item->workers : []);
+                $workers = DopOjiTableStructure::workersToDisplayCells(is_array($item->workers) ? $item->workers : []);
 
                 return [
+                    'id' => $item->id, 
                     'section_name' => $item->section_name,
                     'unit_code' => $item->unit_code,
                     'location' => $item->location,
@@ -399,7 +451,12 @@ class DopSafetyPlanController extends Controller
                     'dept_head' => $item->dept_head ?? '',
                     'dept_head_sid' => $item->dept_head_sid ?? '',
                     'pja_bc' => $item->pja_bc ?? '',
-                    'approval_status' => $item->approval_status ?? 'waiting_lce',
+                    'evidence_1' => $item->evidence_1,
+                    'evidence_2' => $item->evidence_2,
+                    'evidence_3' => $item->evidence_3,
+                    'evidence_4' => $item->evidence_4,
+                     'approval_status' => $item->approval_status,
+                     'reject_reason' => $item->reject_reason,
                 ];
             })->values()->all() ?: [$this->emptyItemRow()],
         ];
@@ -429,6 +486,7 @@ class DopSafetyPlanController extends Controller
             'dept_head' => '',
             'dept_head_sid' => '',
             'pja_bc' => '',
+            
         ];
     }
 
@@ -443,20 +501,99 @@ class DopSafetyPlanController extends Controller
             ->all();
     }
 
-    public function exportPdf(\App\Models\DopSafetyPlan $plan) 
+    public function downloadWorkerTemplate(): \Symfony\Component\HttpFoundation\StreamedResponse
     {
-        $plan->load(['items']);
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
         
-        $itemsBySection = $plan->items->groupBy('section_name');
+        $sheet->setCellValue('A1', 'NRP');
+        $sheet->setCellValue('B1', 'NAMA');
+        $sheet->setCellValue('C1', 'JABATAN');
+        
+        $sheet->setCellValue('A2', '412190658');
+        $sheet->setCellValue('B2', 'sekar');
+        $sheet->setCellValue('C2', 'GL');
 
-        $pdf = Pdf::loadView('DopSafety.plan.pdf', [
-            'plan' => $plan,
-            'itemsBySection' => $itemsBySection
-        ])->setPaper('a4', 'landscape'); 
+        foreach (range('A', 'C') as $col) {
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
 
-        $fileName = 'DOP_PLANT_' . strtoupper($plan->site) . '_' . \Carbon\Carbon::parse($plan->plan_date)->format('d_M_Y') . '_SHIFT_' . $plan->shift . '.pdf';
-
-        return $pdf->download($fileName);
+        return response()->streamDownload(function () use ($spreadsheet) {
+            $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+            $writer->save('php://output');
+        }, 'template_pekerja_mekanik.xlsx', [
+            'Content-Type' => 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        ]);
     }
+
+    public function uploadItemWorkers(Request $request): JsonResponse
+    {
+        $request->validate([
+            'item_id' => ['required', 'exists:dop_oji_plan_items,id'],
+            'file_excel' => ['required', 'mimes:xlsx,xls'],
+        ]);
+
+        try {
+            $itemId = $request->input('item_id');
+            $file = $request->file('file_excel');
+
+            if ($file === null) {
+                return response()->json(['success' => false, 'message' => 'File tidak terbaca.'], 422);
+            }
+
+            $reader = \PhpOffice\PhpSpreadsheet\IOFactory::createReaderForFile($file->getRealPath());
+            $spreadsheet = $reader->load($file->getRealPath());
+            $sheetData = $spreadsheet->getActiveSheet()->toArray(null, true, true, true);
+
+            $arrNrp = [];
+            $arrName = [];
+            $arrPosition = [];
+            $workerCount = 0;
+
+            foreach ($sheetData as $rowIndex => $row) {
+                if ($rowIndex === 1) {
+                    continue; 
+                }
+
+                $nrp = trim((string) ($row['A'] ?? ''));
+                $name = trim((string) ($row['B'] ?? ''));
+                $position = trim((string) ($row['C'] ?? ''));
+
+                if ($nrp === '' && $name === '') {
+                    continue;
+                }
+
+                $arrNrp[] = $nrp;
+                $arrName[] = $name;
+                $arrPosition[] = $position !== '' ? $position : 'Mekanik';
+                
+                $workerCount++;
+            }
+
+            \App\Models\DopOjiPlanItemWorker::query()->where('dop_oji_plan_item_id', $itemId)->delete();
+
+            if ($workerCount > 0) {
+                \App\Models\DopOjiPlanItemWorker::create([
+                    'dop_oji_plan_item_id' => $itemId,
+                    'nrp' => implode('; ', $arrNrp),
+                    'name' => implode('; ', $arrName),
+                    'position' => implode('; ', $arrPosition),
+                ]);
+            }
+
+            return response()->json([
+                'success' => true,
+                'message' => "Berhasil menggabungkan {$workerCount} pekerja mekanik ke dalam 1 baris.",
+            ]);
+
+        } catch (\Throwable $e) {
+            report($e);
+            return response()->json([
+                'success' => false,
+                'message' => 'Gagal memproses file Excel Pekerja: ' . $e->getMessage(),
+            ], 500);
+        }
+    }
+
 
 }

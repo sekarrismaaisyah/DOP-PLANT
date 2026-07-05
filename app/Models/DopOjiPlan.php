@@ -9,8 +9,10 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class DopSafetyPlan extends Model
+class DopOjiPlan extends Model
 {
+    protected $table = 'dop_oji_plans';
+
     protected $fillable = [
         'site',
         'plan_date',
@@ -44,18 +46,8 @@ class DopSafetyPlan extends Model
 
     public function items(): HasMany
     {
-        return $this->hasMany(DopSafetyPlanItem::class)
-            ->orderBy('id'); // ❗ ganti dari item_no
-    }
-
-    /**
-     * OPTIONAL: kalau ada OJI plan 1:1 dengan DOP plan
-     */
-    public function ojiPlan(): HasMany
-    {
-        return $this->hasMany(DopOjiPlan::class, 'site', 'site')
-            ->whereColumn('plan_date', 'plan_date')
-            ->whereColumn('shift', 'shift');
+        return $this->hasMany(DopOjiPlanItem::class, 'dop_oji_plan_id')
+            ->orderBy('id'); // lebih aman daripada item_no
     }
 
     public function shiftLabel(): string
@@ -63,9 +55,4 @@ class DopSafetyPlan extends Model
         return config('dop_safety.shifts')[$this->shift]
             ?? 'Shift ' . $this->shift;
     }
-
-    public function safetyPlanItem()
-{
-    return $this->belongsTo(DopSafetyPlanItem::class, 'dop_safety_plan_item_id');
-}
 }

@@ -7,6 +7,8 @@ namespace App\Services\DopSafety;
 use App\Enums\DopSafetyPlanStatus;
 use App\Models\DopSafetyPlan;
 use App\Models\DopSafetyPlanItem;
+use App\Models\DopOjiPlan;
+use App\Models\DopOjiPlanItem;
 use Illuminate\Support\Facades\DB;
 
 class DopSafetyPlanPersistenceService
@@ -18,12 +20,30 @@ class DopSafetyPlanPersistenceService
     public function create(array $header, array $items, ?int $userId = null): DopSafetyPlan
     {
         return DB::transaction(function () use ($header, $items, $userId) {
-            $plan = DopSafetyPlan::query()->create([
+
+            $attributes = [
                 ...$this->mapHeaderAttributes($header),
                 'user_id' => $userId,
-            ]);
+            ];
+
+            // Simpan DOP
+            $plan = DopSafetyPlan::query()->create($attributes);
 
             $this->syncItems($plan, $items);
+
+            // Simpan OJI
+            $ojiPlan = DopOjiPlan::query()->updateOrCreate(
+                [
+                    'site' => $attributes['site'],
+                    'plan_date' => $attributes['plan_date'],
+                    'shift' => $attributes['shift'],
+                ],
+                $attributes,
+            );
+
+            $ojiPlan->items()->delete();
+
+            $this->syncOjiItems($ojiPlan, $items);
 
             return $plan->load('items');
         });
@@ -36,13 +56,32 @@ class DopSafetyPlanPersistenceService
     public function update(DopSafetyPlan $plan, array $header, array $items): DopSafetyPlan
     {
         return DB::transaction(function () use ($plan, $header, $items) {
-            $plan->update($this->mapHeaderAttributes($header));
+
+            $attributes = $this->mapHeaderAttributes($header);
+
+            $plan->update($attributes);
+
             $plan->items()->delete();
+
             $this->syncItems($plan, $items);
+
+            $ojiPlan = DopOjiPlan::query()->updateOrCreate(
+                [
+                    'site' => $attributes['site'],
+                    'plan_date' => $attributes['plan_date'],
+                    'shift' => $attributes['shift'],
+                ],
+                $attributes,
+            );
+
+            $ojiPlan->items()->delete();
+
+            $this->syncOjiItems($ojiPlan, $items);
 
             return $plan->fresh(['items']);
         });
     }
+
 
     /**
      * @param  array<string, mixed>  $header
@@ -51,8 +90,12 @@ class DopSafetyPlanPersistenceService
     public function upsertByDocumentKey(array $header, array $items, ?int $userId = null): DopSafetyPlan
     {
         return DB::transaction(function () use ($header, $items, $userId) {
+
             $attrs = $this->mapHeaderAttributes($header);
 
+            // ==========================
+            // SIMPAN DOP SAFETY
+            // ==========================
             $plan = DopSafetyPlan::query()->updateOrCreate(
                 [
                     'site' => $attrs['site'],
@@ -66,7 +109,29 @@ class DopSafetyPlanPersistenceService
             );
 
             $plan->items()->delete();
-            $this->syncItems($plan, $items);
+            
+            // Simpan ODP item dan tangkap hasilnya (beserta ID database)
+            $savedSafetyItems = $this->syncItems($plan, $items);
+
+            // ==========================
+            // SIMPAN DOP OJI
+            // ==========================
+            $ojiPlan = DopOjiPlan::query()->updateOrCreate(
+                [
+                    'site' => $attrs['site'],
+                    'plan_date' => $attrs['plan_date'],
+                    'shift' => $attrs['shift'],
+                ],
+                [
+                    ...$attrs,
+                    'user_id' => $userId,
+                ],
+            );
+
+            $ojiPlan->items()->delete();
+
+            // Jalankan sinkronisasi OJI item menggunakan data ODP ber-ID
+            $this->syncOjiItems($ojiPlan, $savedSafetyItems);
 
             return $plan->fresh(['items']);
         });
@@ -103,10 +168,12 @@ class DopSafetyPlanPersistenceService
     /**
      * @param  list<array<string, mixed>>  $items
      */
-    private function syncItems(DopSafetyPlan $plan, array $items): void
+    private function syncItems(DopSafetyPlan $plan, array $items): array
     {
+        $savedItems = [];
+
         foreach ($items as $index => $item) {
-            DopSafetyPlanItem::query()->create([
+            $savedItems[] = DopSafetyPlanItem::query()->create([
                 'dop_safety_plan_id' => $plan->id,
                 'item_no' => (int) ($item['item_no'] ?? ($index + 1)),
                 'section_name' => (string) ($item['section_name'] ?? ''),
@@ -128,6 +195,8 @@ class DopSafetyPlanPersistenceService
                 'pja_bc' => $this->nullableString($item['pja_bc'] ?? null),
             ]);
         }
+
+        return $savedItems;
     }
 
     /**
@@ -190,5 +259,89 @@ class DopSafetyPlanPersistenceService
         $trimmed = trim((string) $value);
 
         return $trimmed === '' ? null : $trimmed;
+    }
+
+    // private function syncOjiItems(DopOjiPlan $plan, array $items): void
+    // {
+    //     foreach ($items as $index => $item) {
+    //         DopOjiPlanItem::query()->create([
+    //             'dop_oji_plan_id' => $plan->id,
+
+    //             'item_no' => (int) ($item['item_no'] ?? ($index + 1)),
+    //             'section_name' => (string) ($item['section_name'] ?? ''),
+    //             'unit_code' => (string) ($item['unit_code'] ?? 'N/A'),
+    //             'location' => (string) ($item['location'] ?? ''),
+    //             'job_detail' => (string) ($item['job_detail'] ?? ''),
+    //             'work_permit' => (string) ($item['work_permit'] ?? 'N/A'),
+
+    //             'tools' => $this->normalizeStringList($item['tools'] ?? []),
+    //             'workers' => $this->normalizeWorkers($item['workers'] ?? []),
+
+    //             'cctv' => $this->nullableString($item['cctv'] ?? null),
+
+    //             'group_leader' => $this->nullableString($item['group_leader'] ?? null),
+    //             'group_leader_sid' => $this->nullableString($item['group_leader_sid'] ?? null),
+
+    //             // khusus OJI
+    //             'evidence_1' => null,
+    //             'evidence_2' => null,
+    //             'evidence_3' => null,
+    //             'evidence_4' => null,
+
+    //             'section_head' => $this->nullableString($item['section_head'] ?? null),
+    //             'section_head_sid' => $this->nullableString($item['section_head_sid'] ?? null),
+
+    //             'she_leader' => $this->nullableString($item['she_leader'] ?? null),
+    //             'she_leader_sid' => $this->nullableString($item['she_leader_sid'] ?? null),
+
+    //             'dept_head' => $this->nullableString($item['dept_head'] ?? null),
+    //             'dept_head_sid' => $this->nullableString($item['dept_head_sid'] ?? null),
+
+    //             'pja_bc' => $this->nullableString($item['pja_bc'] ?? null),
+    //         ]);
+    //     }
+    // }  
+
+    private function syncOjiItems(DopOjiPlan $plan, array $savedSafetyItems): void
+    {
+        foreach ($savedSafetyItems as $index => $safetyItem) {
+            DopOjiPlanItem::query()->create([
+                'dop_oji_plan_id' => $plan->id,
+                'dop_safety_plan_item_id' => $safetyItem->id, // <--- KUNCI RELASI DI SINI
+
+                'item_no' => $safetyItem->item_no,
+                'section_name' => $safetyItem->section_name,
+                'unit_code' => $safetyItem->unit_code,
+                'location' => $safetyItem->location,
+                'job_detail' => $safetyItem->job_detail,
+                'work_permit' => $safetyItem->work_permit,
+
+                // Mengambil langsung nilai yang sudah dinormalisasi dari safetyItem
+                'tools' => $safetyItem->tools,
+                'workers' => $safetyItem->workers,
+
+                'cctv' => $safetyItem->cctv,
+
+                'group_leader' => $safetyItem->group_leader,
+                'group_leader_sid' => $safetyItem->group_leader_sid,
+
+                // khusus OJI
+                'evidence_1' => null,
+                'evidence_2' => null,
+                'evidence_3' => null,
+                'evidence_4' => null,
+
+                'section_head' => $safetyItem->section_head,
+                'section_head_sid' => $safetyItem->section_head_sid,
+
+                'she_leader' => $safetyItem->she_leader,
+                'she_leader_sid' => $safetyItem->she_leader_sid,
+
+                'dept_head' => $safetyItem->dept_head,
+                'dept_head_sid' => $safetyItem->dept_head_sid,
+
+                'pja_bc' => $safetyItem->pja_bc,
+            ]);
+        }
     }
 }
