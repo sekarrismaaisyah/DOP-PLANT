@@ -127,7 +127,6 @@
    </div>
 </form>
 
-<!-- MODAL 1: PILIHAN JABATAN APPROVAL -->
 <div id="ds-approval-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-sm">
    <div class="relative w-full max-w-md rounded-2xl bg-white p-6 shadow-xl border border-gray-100">
       <div class="flex items-center justify-between border-b border-gray-100 pb-3 mb-4">
@@ -141,15 +140,38 @@
          <p class="text-xs text-gray-500 mb-3">Tentukan peran/level otorisasi Anda saat ini untuk item pekerjaan terpilih:</p>
          
          <label class="block text-xs font-bold text-gray-700 mb-1">Pilih Level Approval *</label>
+         
+         @php
+             $user = auth()->user();
+             
+             $dopApprovalLevels = [
+                 ['value' => 'waiting_lce', 'slug' => 'lce', 'label' => 'Level 1: LCE (Logistics & Compliance)'],
+                 ['value' => 'waiting_dept_head', 'slug' => 'dept-head-plant', 'label' => 'Level 2: Dept. Head Plant / Terkait'],
+                 ['value' => 'waiting_dept_head_she', 'slug' => 'dept-head-safety', 'label' => 'Level 3: Dept. Head SHE'],
+                 ['value' => 'waiting_pm', 'slug' => 'project-manager', 'label' => 'Level 4: Project Manager (PM)'],
+                 ['value' => 'waiting_suptend_safety', 'slug' => 'superintendent-safety', 'label' => 'Level 5: Superintendent Safety BC'],
+                 ['value' => 'waiting_wktt', 'slug' => 'wktt', 'label' => 'Level 6: WKTT'],
+             ];
+         @endphp
+
          <select id="ds-modal-level-select" class="w-full rounded-xl border border-gray-300 px-3 py-2 text-sm focus:border-amber-500 focus:ring-amber-500">
             <option value="" disabled selected>-- Pilih Jabatan Otorisasi --</option>
-            <option value="waiting_lce">Level 1: LCE (Logistics & Compliance)</option>
-            <option value="waiting_dept_head">Level 2: Dept. Head Plant / Terkait</option>
-            <option value="waiting_dept_head_she">Level 3: Dept. Head SHE</option>
-            <option value="waiting_pm">Level 4: Project Manager (PM)</option>
-            <option value="waiting_suptend_safety">Level 5: Superintendent Safety BC</option>
-            <option value="waiting_wktt">Level 6: WKTT</option>
+            
+            @foreach($dopApprovalLevels as $level)
+                @if($user && $user->hasRole($level['slug']))
+                    <option value="{{ $level['value'] }}" class="text-gray-900 font-medium">
+                        {{ $level['label'] }}
+                    </option>
+                @else
+                    <option value="{{ $level['value'] }}" disabled class="text-gray-400 bg-gray-100">
+                        {{ $level['label'] }} 🔒 (Akses Ditolak)
+                    </option>
+                @endif
+            @endforeach
+
          </select>
+         <p class="text-[11px] text-gray-500 mt-2">* Anda hanya dapat memilih level otorisasi sesuai jabatan Anda saat ini.</p>
+         
          <p class="text-[11px] text-amber-700 bg-amber-50 rounded-lg p-2 mt-2 hidden" id="ds-modal-info-baris"></p>
       </div>
 
@@ -160,7 +182,6 @@
    </div>
 </div>
 
-<!-- MODAL 2: KONFIRMASI YAKIN (SURETY POP-UP) -->
 <div id="ds-confirm-sure-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/70 backdrop-blur-sm">
    <div class="relative w-full max-w-sm rounded-2xl bg-white p-6 shadow-2xl text-center">
       <div class="w-14 h-14 bg-amber-50 text-amber-600 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -421,3 +442,4 @@
 })();
 </script>
 @endpush
+

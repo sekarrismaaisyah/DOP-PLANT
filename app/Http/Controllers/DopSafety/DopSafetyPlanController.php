@@ -178,24 +178,42 @@ class DopSafetyPlanController extends Controller
 
         $targetLevel     = $request->input('target_level');     
         $selectedItemIds = $request->input('selected_items');   
+        $user            = auth()->user();
+
+        $roleMap = [
+            'waiting_lce'            => 'lce',
+            'waiting_dept_head'      => 'dept-head',
+            'waiting_dept_head_she'  => 'dept-head-safety',
+            'waiting_pm'             => 'project-manager',
+            'waiting_suptend_safety' => 'superintendent-safety',
+            'waiting_wktt'           => 'wktt',
+        ];
+
+        $requiredSlug = $roleMap[$targetLevel] ?? null;
+
+        if (!$requiredSlug || !$user->hasRole($requiredSlug)) {
+            return redirect()
+                ->back()
+                ->with('error', 'Otorisasi Ditolak! Anda tidak memiliki hak akses (Role: ' . ($requiredSlug ?? 'Tidak Valid') . ') untuk menyetujui di level ini.');
+        }
 
         try {
             DB::beginTransaction();
 
-            $updatedRows = \App\Models\DopSafetyPlanItem::query()
-                ->where(function ($query) use ($selectedItemIds) {
-                    $query->whereIn('id', $selectedItemIds);
-                })
-                ->update([
-                    'approval_status' => $targetLevel, 
-                    'updated_at'      => now(),
-                ]);
+           $updatedRows = \App\Models\DopSafetyPlanItem::query()
+            ->where(function ($query) use ($selectedItemIds) {
+                $query->whereIn('id', $selectedItemIds);
+            })
+            ->update([
+                'approval_status' => $targetLevel, 
+                'updated_at'      => now(),
+            ]);
 
             DB::commit();
 
             return redirect()
                 ->back()
-                ->with('success', "Approval Berhasil untuk {$updatedRows} DOP.");
+                ->with('success', "Approval Berhasil! Status {$updatedRows} item DOP telah diperbarui.");
 
         } catch (\Throwable $e) {
             DB::rollBack();

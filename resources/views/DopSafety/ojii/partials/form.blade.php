@@ -462,6 +462,8 @@ confirmBtn.addEventListener('click', function () {
             return;
         }
 
+        window.location.reload();
+
         currentButton.dataset.status = data.status;
 
         switch (data.status) {

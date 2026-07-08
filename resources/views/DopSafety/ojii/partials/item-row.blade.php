@@ -131,93 +131,129 @@
       </div>
    </td>
    <td class="px-2 py-2 border border-gray-200 bg-white text-center">
-    @if(!empty($item['id']))
-        <div class="flex flex-col items-center gap-1.5 min-w-[90px]">
-            @php
-               $workerRow = \App\Models\DopOjiPlanItemWorker::query()->where('dop_oji_plan_item_id', $item['id'])->first();
+      @if(!empty($item['id']))
+         <div class="flex flex-col items-center gap-1.5 min-w-[90px]">
+               @php
+                  $workerRow = \App\Models\DopOjiPlanItemWorker::query()->where('dop_oji_plan_item_id', $item['id'])->first();
+                  
+                  $totalWorkers = 0;
+                  $strNrp = '';
+                  $strName = '';
+                  $strPosition = '';
+
+                  if ($workerRow && !empty($workerRow->nrp)) {
+                     $strNrp = $workerRow->nrp;
+                     $strName = $workerRow->name;
+                     $strPosition = $workerRow->position;
+                     
+                     $arrNrp = array_filter(array_map('trim', explode(';', $strNrp)));
+                     $totalWorkers = count($arrNrp);
+                  }
+               @endphp
                
-               $totalWorkers = 0;
-               $strNrp = '';
-               $strName = '';
-               $strPosition = '';
+               <span class="text-[10px] font-semibold text-gray-500">
+                  {{ $totalWorkers }} Pekerja
+               </span>
 
-               if ($workerRow && !empty($workerRow->nrp)) {
-                   $strNrp = $workerRow->nrp;
-                   $strName = $workerRow->name;
-                   $strPosition = $workerRow->position;
-                   
-                   $arrNrp = array_filter(array_map('trim', explode(';', $strNrp)));
-                   $totalWorkers = count($arrNrp);
-               }
-            @endphp
-            
-            <span class="text-[10px] font-semibold text-gray-500">
-               {{ $totalWorkers }} Pekerja
-            </span>
+               <div class="flex flex-col gap-1 w-full">
+                  @if($totalWorkers > 0)
+                     <button type="button" 
+                              class="view-mechanic-btn px-2 py-1 text-[9px] rounded bg-blue-500 hover:bg-blue-600 text-white font-bold shadow-sm"
+                              data-nrps="{{ $strNrp }}"
+                              data-names="{{ $strName }}"
+                              data-positions="{{ $strPosition }}">
+                           👁️ Lihat Data
+                     </button>
+                  @endif
 
-            <div class="flex flex-col gap-1 w-full">
-                @if($totalWorkers > 0)
-                    <button type="button" 
-                            class="view-mechanic-btn px-2 py-1 text-[9px] rounded bg-blue-500 hover:bg-blue-600 text-white font-bold shadow-sm"
-                            data-nrps="{{ $strNrp }}"
-                            data-names="{{ $strName }}"
-                            data-positions="{{ $strPosition }}">
-                        👁️ Lihat Data
-                    </button>
-                @endif
-
-                <input type="file" 
-                       id="worker_file_{{ $item['id'] }}" 
-                       accept=".xlsx, .xls" 
-                       class="hidden" 
-                       data-id="{{ $item['id'] }}"
-                       onchange="handleRowWorkerUpload(this)">
-                       
-                <button type="button" 
-                        onclick="document.getElementById('worker_file_{{ $item['id'] }}').click()"
-                        class="px-2 py-1 text-[9px] rounded bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm">
-                    📎 Upload Excel
-                </button>
-            </div>
-        </div>
-    @else
-        <span class="text-gray-400 text-[10px] italic">Save item dahulu</span>
-    @endif
-</td>
+                  <input type="file" 
+                        id="worker_file_{{ $item['id'] }}" 
+                        accept=".xlsx, .xls" 
+                        class="hidden" 
+                        data-id="{{ $item['id'] }}"
+                        onchange="handleRowWorkerUpload(this)">
+                        
+                  <button type="button" 
+                           onclick="document.getElementById('worker_file_{{ $item['id'] }}').click()"
+                           class="px-2 py-1 text-[9px] rounded bg-indigo-600 hover:bg-indigo-700 text-white font-medium shadow-sm">
+                     📎 Upload Excel
+                  </button>
+               </div>
+         </div>
+      @else
+         <span class="text-gray-400 text-[10px] italic">Save item dahulu</span>
+      @endif
+   </td>
    <td class="px-2 py-2 border border-gray-200 bg-white">
 
-    @if(($item['approval_status'] ?? '') === 'rejected')
+      @if(($item['approval_status'] ?? '') === 'rejected')
 
-        <div class="rounded bg-red-100 border border-red-300 p-2 text-xs text-red-700">
-            {{ $item['reject_reason'] ?? '-' }}
-        </div>
+         <div class="rounded bg-red-100 border border-red-300 p-2 text-xs text-red-700">
+               {{ $item['reject_reason'] ?? '-' }}
+         </div>
 
-    @else
+      @else
 
-        <span class="text-gray-400 text-xs">-</span>
+         <span class="text-gray-400 text-xs">-</span>
 
-    @endif
+      @endif
 
-</td>
-   <td class="px-2 py-2 border border-gray-200 bg-white">
-    <div class="flex flex-col gap-1">
-        {{-- <button
-            type="button"
-            class="px-2 py-1 text-[10px] rounded bg-green-600 text-white">
-            Approve
-        </button> --}}
-        @php
-    $approvalStatus = $item['approval_status'] ?? 'waiting_dept_head';
+   </td>
+   <td class="px-2 py-2 border border-gray-200 bg-white text-center">
+      <div class="flex flex-col gap-1.5">
+         
+         @php
+               $approvalStatus = $item['approval_status'] ?? 'waiting_dept_head';
+               $user = auth()->user();
 
-    $approveLabel = match ($approvalStatus) {
-        'waiting_dept_head' => 'Waiting Approval Dept Head',
-        'waiting_safety' => 'Waiting Approval Dept Head Safety',
-        'waiting_pm' => 'Waiting Approval PM',
-        'done' => 'Approved',
-        'rejected' => 'Rejected',
-        default => 'Approve',
-    };
-@endphp
+               $requiredRole = match ($approvalStatus) {
+                  'waiting_dept_head' => 'dept-head', 
+                  'waiting_safety'    => 'dept-head-safety',
+                  'waiting_pm'        => 'project-manager',
+                  default             => null,
+               };
+
+               $hasPermission = $user && $requiredRole && $user->hasRole($requiredRole);
+               
+               $isDisabled = in_array($approvalStatus, ['done', 'rejected']) || !$hasPermission;
+
+               $approveLabel = match ($approvalStatus) {
+                  'waiting_dept_head' => 'Waiting Approval Dept Head',
+                  'waiting_safety'    => 'Waiting Approval Dept Head Safety',
+                  'waiting_pm'        => 'Waiting Approval PM',
+                  'done'              => 'Approved',
+                  'rejected'          => 'Rejected',
+                  default             => 'Approve',
+               };
+         @endphp
+
+         <button
+               type="button"
+               class="approve-btn px-2 py-1.5 text-[10px] font-bold rounded text-white shadow-sm transition-all
+                  {{ $approvalStatus === 'done' ? 'bg-green-700' : ($approvalStatus === 'rejected' ? 'bg-gray-500' : ($isDisabled ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-green-600 hover:bg-green-700')) }}"
+               data-id="{{ $item['id'] ?? '' }}"
+               data-status="{{ $approvalStatus }}"
+               @disabled($isDisabled)
+               title="{{ !$hasPermission && !in_array($approvalStatus, ['done','rejected']) ? 'Anda tidak memiliki akses (Butuh Role: '.$requiredRole.')' : '' }}"
+         >
+               {{ $approveLabel }}
+         </button>
+
+         <button
+               type="button"
+               class="reject-btn px-2 py-1.5 text-[10px] font-bold rounded text-white shadow-sm transition-all
+                  {{ $isDisabled ? 'bg-gray-300 cursor-not-allowed text-gray-500' : 'bg-red-600 hover:bg-red-700' }}"
+               data-id="{{ $item['id'] ?? '' }}"
+               data-status="{{ $approvalStatus }}"
+               data-index="{{ $index ?? 0 }}"
+               @disabled($isDisabled)
+               title="{{ !$hasPermission && !in_array($approvalStatus, ['done','rejected']) ? 'Hanya role '.$requiredRole.' yang bisa menolak' : '' }}"
+         >
+               Reject
+         </button>
+
+      </div>
+   </td>
 
 <button
     type="button"
