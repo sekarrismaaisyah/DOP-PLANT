@@ -16,6 +16,7 @@ return new class extends Migration
             $table->string('evidence_2')->nullable()->after('evidence_1');
             $table->string('evidence_3')->nullable()->after('evidence_2');
             $table->string('evidence_4')->nullable()->after('evidence_3');
+            $table->string('evidence_5')->nullable()->after('evidence_4');
         });
     }
 
@@ -30,6 +31,7 @@ return new class extends Migration
                 'evidence_2',
                 'evidence_3',
                 'evidence_4',
+                'evidence_5',
             ]);
         });
     }

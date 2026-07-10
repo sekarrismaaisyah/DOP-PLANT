@@ -106,6 +106,23 @@
       </a>
    @endif
 </td>
+
+<td class="px-2 py-2 border border-gray-200 bg-white">
+   <input
+      type="file"
+      name="evidence_5[{{ $index }}]"
+      class="w-full min-w-[120px] text-xs">
+
+   @if(!empty($item['evidence_5']))
+      <a
+         href="{{ asset('storage/'.$item['evidence_5']) }}"
+         target="_blank"
+         class="text-blue-600 text-[10px] hover:underline">
+         Lihat
+      </a>
+   @endif
+</td>
+
    <td class="px-2 py-2 border border-gray-200 bg-white">
       <input type="text" name="items[{{ $index }}][section_head]" value="{{ $item['section_head'] ?? '' }}" class="w-full min-w-[90px] rounded border border-outline-variant/30 px-2 py-1 text-xs">
    </td>
@@ -255,35 +272,9 @@
       </div>
    </td>
 
-<button
-    type="button"
-    class="approve-btn px-2 py-1 text-[10px] rounded text-white
-        {{ $approvalStatus === 'done'
-            ? 'bg-green-700'
-            : ($approvalStatus === 'rejected'
-                ? 'bg-gray-500'
-                : 'bg-green-600') }}"
-    data-id="{{ $item['id'] ?? '' }}"
-    data-status="{{ $approvalStatus }}"
-    @disabled(in_array($approvalStatus, ['done','rejected']))
->
-    {{ $approveLabel }}
-</button>
 
-        <button
-            type="button"
-            class="reject-btn px-2 py-1 text-[10px] rounded bg-red-600 text-white"
-            data-id="{{ $item['id'] ?? '' }}"
-            data-status="{{ $approvalStatus }}"
-            data-index="{{ $index }}"
-            @disabled(in_array($approvalStatus, ['done','rejected']))
-        >
-            Reject
-        </button>
-        <input
-    type="hidden"
-    name="items[{{ $index }}][evidence_1]"
-    value="{{ $item['evidence_1'] ?? '' }}">
+
+       
 
 <input
     type="hidden"
@@ -299,6 +290,11 @@
     type="hidden"
     name="items[{{ $index }}][evidence_4]"
     value="{{ $item['evidence_4'] ?? '' }}">
+
+<input
+    type="hidden"
+    name="items[{{ $index }}][evidence_5]"
+    value="{{ $item['evidence_5'] ?? '' }}">
 
         <input
     type="hidden"

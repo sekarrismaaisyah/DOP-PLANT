@@ -171,6 +171,7 @@ class DopOjiPlanPersistenceService
                 'evidence_2' => $this->nullableString($item['evidence_2'] ?? null),
                 'evidence_3' => $this->nullableString($item['evidence_3'] ?? null),
                 'evidence_4' => $this->nullableString($item['evidence_4'] ?? null),
+                'evidence_5' => $this->nullableString($item['evidence_5'] ?? null),
 
                 'group_leader_sid' => $this->nullableString($item['group_leader_sid'] ?? null),
                 'section_head' => $this->nullableString($item['section_head'] ?? null),

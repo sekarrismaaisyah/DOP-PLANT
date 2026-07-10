@@ -161,6 +161,7 @@ class DopSafetyPlanStoreRequest extends FormRequest
                 'evidence_2' => $item['evidence_2'] ?? null,
                 'evidence_3' => $item['evidence_3'] ?? null,
                 'evidence_4' => $item['evidence_4'] ?? null,
+                'evidence_5' => $item['evidence_5'] ?? null,
 
             ];
         }

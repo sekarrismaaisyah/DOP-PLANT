@@ -29,6 +29,7 @@ class DopOjiPlanItem extends Model
         'evidence_2',
         'evidence_3',
         'evidence_4',
+        'evidence_5',
         'section_head',
         'section_head_sid',
         'she_leader',

@@ -330,6 +330,7 @@ class DopSafetyPlanPersistenceService
                 'evidence_2' => null,
                 'evidence_3' => null,
                 'evidence_4' => null,
+                'evidence_5' => null,
 
                 'section_head' => $safetyItem->section_head,
                 'section_head_sid' => $safetyItem->section_head_sid,

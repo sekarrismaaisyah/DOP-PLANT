@@ -102,7 +102,7 @@
                      <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->group_leader ?? '—' }}</td>
                      <td class="px-2 py-3 border border-gray-200 text-xs">{{ $item->group_leader_sid ?? '—' }}</td>
                      
-                     @foreach(['evidence_1', 'evidence_2', 'evidence_3', 'evidence_4'] as $evField)
+                     @foreach(['evidence_1', 'evidence_2', 'evidence_3', 'evidence_4', 'evidence_5'] as $evField)
                      <td class="px-2 py-3 border border-gray-200 text-center text-xs">
                         @if(!empty($item->$evField))
                            <a href="{{ asset('storage/'.$item->$evField) }}" target="_blank" class="text-blue-600 font-bold hover:underline">Lihat</a>

@@ -23,7 +23,7 @@
             {{ $column['name'] }}
          </th>
       @else
-         <th rowspan="2" class="text-center px-2 py-2 font-bold align-middle">
+         <th rowspan="2" class="text-center px-2 py-2 font-bold align-middle {{ strtolower($column['name']) === 'aksi' ? 'min-w-[160px]' : '' }}">
             {{ $column['name'] }}
          </th>
       @endif
@@ -38,3 +38,4 @@
       @endif
    @endforeach
 </tr>
+

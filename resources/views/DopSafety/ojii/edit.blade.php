@@ -4,6 +4,7 @@
 
 @push('head')
 @include('DopSafety.partials.styles')
+
 @endpush
 
 @section('content')
@@ -27,6 +28,6 @@
    'tableStructure' => $tableStructure ?? config('dop_safety.table_structure', []),
    'formAction' => route('dop-safety.oji.update', $plan),
    'formMethod' => 'PUT',
-   'submitLabel' => 'Perbarui DOP',
+   'submitLabel' => 'Perbarui OJI',
 ])
 @endsection

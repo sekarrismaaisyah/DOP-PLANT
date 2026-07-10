@@ -129,6 +129,12 @@ class DopOjiPlanController extends Controller
                 $request->file("evidence_4.$index")
                     ->store('oji-evidence', 'public');
         }
+
+        if ($request->hasFile("evidence_5.$index")) {
+            $item['evidence_5'] =
+                $request->file("evidence_5.$index")
+                    ->store('oji-evidence', 'public');
+        }
     }
 
     $this->persistenceService->create(
@@ -148,7 +154,7 @@ class DopOjiPlanController extends Controller
 
         $itemsBySection = $plan->items->groupBy('section_name');
 
-        return view('DopSafety.ojii.show', $this->dopSafetyViewData('ojii', [
+        return view('DopSafety.ojii.show', $this->dopSafetyViewData('oji', [
             'plan' => $plan,
             'itemsBySection' => $itemsBySection,
             'disclaimer' => config('dop_safety.disclaimer'),
@@ -163,7 +169,7 @@ class DopOjiPlanController extends Controller
         return view('DopSafety.ojii.edit',
             array_merge(
                 $this->formViewData(
-                    'plan',
+                    'oji',
                     $this->planToFormDefaults($plan)
                 ),
                 [
@@ -179,7 +185,7 @@ class DopOjiPlanController extends Controller
 
         foreach ($items as $index => &$item) {
 
-            foreach (['evidence_1', 'evidence_2', 'evidence_3', 'evidence_4'] as $field) {
+            foreach (['evidence_1', 'evidence_2', 'evidence_3', 'evidence_4', 'evidence_5'] as $field) {
 
                 if ($request->hasFile($field.'.'.$index)) {
 
@@ -455,6 +461,7 @@ class DopOjiPlanController extends Controller
                     'evidence_2' => $item->evidence_2,
                     'evidence_3' => $item->evidence_3,
                     'evidence_4' => $item->evidence_4,
+                    'evidence_5' => $item->evidence_5,
                      'approval_status' => $item->approval_status,
                      'reject_reason' => $item->reject_reason,
                 ];
