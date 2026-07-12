@@ -214,12 +214,29 @@ class DopSafetyPlanController extends Controller
         try {
             DB::beginTransaction();
 
+            // 1. Update status child (item DOP) massal
             $updatedRows = \App\Models\DopSafetyPlanItem::query()
                 ->whereIn('id', $selectedItemIds) 
                 ->update([
-                    'approval_status' => $nextStatus, // <--- UPDATE KE LEVEL BERIKUTNYA
+                    'approval_status' => $nextStatus,
                     'updated_at'      => now(),
                 ]);
+
+            // ==========================================
+            // 2. SINKRONISASI PARENT (DOP PLAN)
+            // ==========================================
+            // Cari tahu ID dokumen induk (DOP) dari item-item yang baru saja di-approve
+            $planIds = \App\Models\DopSafetyPlanItem::query()
+                ->whereIn('id', $selectedItemIds)
+                ->pluck('dop_safety_plan_id') // Pastikan nama foreign key-nya benar
+                ->unique();
+
+            // Jalankan pengecekan untuk setiap dokumen induk yang terpengaruh
+            foreach ($planIds as $planId) {
+                $plan = \App\Models\DopSafetyPlan::find($planId);
+                $plan?->syncStatusToDone();
+            }
+            // ==========================================
 
             DB::commit();
 

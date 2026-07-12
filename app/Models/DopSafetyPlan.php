@@ -68,4 +68,21 @@ class DopSafetyPlan extends Model
 {
     return $this->belongsTo(DopSafetyPlanItem::class, 'dop_safety_plan_item_id');
 }
+
+
+    public function syncStatusToDone(): void
+    {
+        $totalItems = $this->items()->count();
+
+        if ($totalItems === 0) {
+            return; 
+        }
+
+        $doneItems = $this->items()->where('approval_status', 'done')->count();
+
+        if ($totalItems === $doneItems) {
+            // Gunakan Enum yang sama seperti sebelumnya
+            $this->update(['status' => \App\Enums\DopSafetyPlanStatus::Approved]); 
+        }
+    }
 }
