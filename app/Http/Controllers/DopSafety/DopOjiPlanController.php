@@ -214,27 +214,27 @@ class DopOjiPlanController extends Controller
             ->with('success', 'DOP berhasil diperbarui.');
     }
 
-    public function approve(DopOjiPlanItem $item): JsonResponse
+    public function approve(\App\Models\DopOjiPlanItem $item): JsonResponse
     {
         $nextStatus = match ($item->approval_status) {
-
             'waiting_dept_head' => 'waiting_safety',
-
-            'waiting_safety' => 'waiting_pm',
-
-            'waiting_pm' => 'done',
-
-            default => $item->approval_status,
+            'waiting_safety'    => 'waiting_pm',
+            'waiting_pm'        => 'done',
+            default             => $item->approval_status,
         };
 
         $item->update([
             'approval_status' => $nextStatus,
-            'approved_at' => now(),
+            'approved_at'     => now(),
         ]);
+
+      
+        $plan = \App\Models\DopOjiPlan::findOrFail($item->dop_oji_plan_id);
+        $plan?->syncStatusToDone();
 
         return response()->json([
             'success' => true,
-            'status' => $nextStatus,
+            'status'  => $nextStatus,
         ]);
     }
 

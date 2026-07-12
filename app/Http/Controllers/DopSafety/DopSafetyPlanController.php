@@ -189,7 +189,17 @@ class DopSafetyPlanController extends Controller
             'waiting_wktt'           => 'wktt',
         ];
 
+        $nextStatusMap = [
+            'waiting_lce'            => 'waiting_dept_head',
+            'waiting_dept_head'      => 'waiting_dept_head_she',
+            'waiting_dept_head_she'  => 'waiting_pm',
+            'waiting_pm'             => 'waiting_suptend_safety',
+            'waiting_suptend_safety' => 'waiting_wktt',
+            'waiting_wktt'           => 'done', // <-- Jika WKTT approve, status menjadi done
+        ];
+
         $requiredSlug = $roleMap[$targetLevel] ?? null;
+        $nextStatus   = $nextStatusMap[$targetLevel] ?? null;
 
         if (!$requiredSlug || !$user->hasRole($requiredSlug)) {
             return redirect()
@@ -197,23 +207,25 @@ class DopSafetyPlanController extends Controller
                 ->with('error', 'Otorisasi Ditolak! Anda tidak memiliki hak akses (Role: ' . ($requiredSlug ?? 'Tidak Valid') . ') untuk menyetujui di level ini.');
         }
 
+        if (!$nextStatus) {
+            return redirect()->back()->with('error', 'Status approval tidak dikenali oleh sistem.');
+        }
+
         try {
             DB::beginTransaction();
 
-           $updatedRows = \App\Models\DopSafetyPlanItem::query()
-            ->where(function ($query) use ($selectedItemIds) {
-                $query->whereIn('id', $selectedItemIds);
-            })
-            ->update([
-                'approval_status' => $targetLevel, 
-                'updated_at'      => now(),
-            ]);
+            $updatedRows = \App\Models\DopSafetyPlanItem::query()
+                ->whereIn('id', $selectedItemIds) 
+                ->update([
+                    'approval_status' => $nextStatus, // <--- UPDATE KE LEVEL BERIKUTNYA
+                    'updated_at'      => now(),
+                ]);
 
             DB::commit();
 
             return redirect()
                 ->back()
-                ->with('success', "Approval Berhasil! Status {$updatedRows} item DOP telah diperbarui.");
+                ->with('success', "Approval Berhasil! Status {$updatedRows} item DOP telah dilanjutkan ke tahap berikutnya.");
 
         } catch (\Throwable $e) {
             DB::rollBack();
@@ -464,6 +476,8 @@ class DopSafetyPlanController extends Controller
     public function exportPdf(\App\Models\DopSafetyPlan $plan) 
     {
         $plan->load(['items']);
+
+        //dd($plan->items->toArray());
         
         $itemsBySection = $plan->items->groupBy('section_name');
 

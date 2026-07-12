@@ -55,4 +55,22 @@ class DopOjiPlan extends Model
         return config('dop_safety.shifts')[$this->shift]
             ?? 'Shift ' . $this->shift;
     }
+
+    /**
+     * Memeriksa dan memperbarui status parent jika semua item sudah 'done'.
+     */
+    public function syncStatusToDone(): void
+    {
+        $totalItems = $this->items()->count();
+
+        if ($totalItems === 0) {
+            return; 
+        }
+
+        $doneItems = $this->items()->where('approval_status', 'done')->count();
+
+        if ($totalItems === $doneItems) {
+            $this->update(['status' => \App\Enums\DopSafetyPlanStatus::Approved]); 
+        }
+    }
 }

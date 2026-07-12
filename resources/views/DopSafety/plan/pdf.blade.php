@@ -112,13 +112,14 @@
         <thead>
             <tr class="bg-green-header">
                 <th rowspan="2" width="2%">No.</th>
+                <th rowspan="2" width="4%">COMPLETED</th>
                 <th rowspan="2" width="5%">Kode Unit</th>
                 <th rowspan="2" width="6%">Section</th>
                 <th rowspan="2" width="6%">Lokasi</th>
-                <th rowspan="2" width="13%">Detail Pekerjaan</th>
+                <th rowspan="2" width="11%">Detail Pekerjaan</th>
                 <th rowspan="2" width="4%">IZIN KERJA</th>
                 <th rowspan="2" width="4%">CCTV</th>
-                <th rowspan="2" width="10%">Alat Bantu / Peralatan</th>
+                <th rowspan="2" width="8%">Alat Bantu / Peralatan</th>
                 <th colspan="2">LIST PEKERJA</th>
                 <th rowspan="2" width="6%">Group Leader (L1)</th>
                 <th rowspan="2" width="4%">SID</th>
@@ -137,7 +138,7 @@
         </thead>
         <tbody>
             <tr>
-                <td colspan="19" class="bg-brown-shift">
+                <td colspan="20" class="bg-brown-shift">
                     SHIFT {{ $plan->shift }}
                 </td>
             </tr>
@@ -145,7 +146,7 @@
             @php $no = 1; @endphp
             @foreach($itemsBySection as $sectionName => $items)
                 <tr>
-                    <td colspan="19" class="bg-black-section">
+                    <td colspan="20" class="bg-black-section">
                         {{ strtoupper($sectionName) }}
                     </td>
                 </tr>
@@ -156,6 +157,9 @@
                     @endphp
                     <tr>
                         <td>{{ $no++ }}</td>
+                        <td style="font-weight: bold; color: {{ $item->approval_status === 'done' ? 'green' : 'red' }};">
+                            {{ $item->approval_status === 'done' ? 'OK' : 'NOK' }}
+                        </td>
                         <td>{{ $item->unit_code }}</td>
                         <td>{{ $item->section_name }}</td>
                         <td>{{ $item->location }}</td>
@@ -190,8 +194,6 @@
                 <table class="sig-inner-table">
                     <tr><td class="sig-top">Dibuat Oleh</td></tr>
                     <tr><td class="sig-mid"></td></tr>
-                    {{-- <tr><td class="sig-name">{{ strtoupper($plan->created_by_name ?? 'RICKY MAULANA FAGI') }}</td></tr>
-                    <tr><td class="sig-bot">{{ $plan->created_by_position ?? 'LCE' }}</td></tr> --}}
                     <tr><td class="sig-name">{{ 'RICKY MAULANA FAGI' }}</td></tr>
                     <tr><td class="sig-bot">{{ 'LCE' }}</td></tr>
                 </table>

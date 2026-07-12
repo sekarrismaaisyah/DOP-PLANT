@@ -61,7 +61,7 @@
       <div class="flex flex-wrap gap-2">
          <a href="{{ route('dop-safety.oji.create') }}" class="inline-flex items-center gap-2 rounded-xl bg-primary px-4 py-2.5 text-sm font-bold text-white hover:opacity-95">
             <span class="material-symbols-outlined text-sm">add</span>
-            Input DOP Baru
+            Input OJI Baru
          </a>
          <a href="{{ route('dop-safety.oji.template', ['scope' => 'document']) }}" class="inline-flex items-center gap-2 rounded-xl border border-primary/20 bg-white px-4 py-2.5 text-sm font-bold text-primary hover:bg-primary/5">
             <span class="material-symbols-outlined text-sm">download</span>
@@ -114,7 +114,7 @@
    </div>
 
    <div class="lg:col-span-3 ds-surface-card rounded-2xl p-6">
-      <h2 class="font-headline font-bold text-base mb-4">Daftar DOP Daily</h2>
+      <h2 class="font-headline font-bold text-base mb-4">Daftar OJI Daily</h2>
       <div class="overflow-x-auto">
          <table class="ds-table w-full text-sm">
             <thead>

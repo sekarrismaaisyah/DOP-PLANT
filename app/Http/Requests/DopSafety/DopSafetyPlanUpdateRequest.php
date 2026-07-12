@@ -11,17 +11,20 @@ class DopSafetyPlanUpdateRequest extends DopSafetyPlanStoreRequest
     /**
      * @return array<string, mixed>
      */
+    
     public function rules(): array
     {
         $rules = parent::rules();
-        /** @var \App\Models\DopSafetyPlan|null $plan */
+        
         $plan = $this->route('plan');
+
+        $tableName = $plan ? $plan->getTable() : 'dop_safety_plans';
 
         $rules['site'] = [
             'required',
             'string',
             'max:50',
-            Rule::unique('dop_safety_plans')
+            Rule::unique($tableName) // <--- Sekarang tabelnya dinamis!
                 ->where(function ($query) {
                     $query->where('site', $this->input('site'))
                         ->where('plan_date', $this->input('plan_date'))
@@ -29,6 +32,8 @@ class DopSafetyPlanUpdateRequest extends DopSafetyPlanStoreRequest
                 })
                 ->ignore($plan?->id),
         ];
+
+        $rules['plan_date'] = ['required', 'date'];
 
         return $rules;
     }

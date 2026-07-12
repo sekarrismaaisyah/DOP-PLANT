@@ -171,13 +171,13 @@
                                   default                 => 'bg-gray-50 text-gray-700 border-gray-200'
                               };
                               $statusLabel = match($currStatus) {
-                                  'waiting_lce'           => 'Waiting Dept. Head',
-                                  'waiting_dept_head'     => 'Waiting DH SHE',
-                                  'waiting_dept_head_she' => 'Waiting PM',
-                                  'waiting_pm'            => 'Waiting Supt. Safety',
-                                  'waiting_suptend_safety'=> 'Waiting WKTT',
-                                  'waiting_wktt'          => 'Done',
-                                  'done'                  => 'Approved Complete',
+                                    'waiting_lce'            => 'Waiting LCE',
+                                    'waiting_dept_head'      => 'Waiting Dept. Head',
+                                    'waiting_dept_head_she'  => 'Waiting DH SHE',
+                                    'waiting_pm'             => 'Waiting PM',
+                                    'waiting_suptend_safety' => 'Waiting Supt. Safety',
+                                    'waiting_wktt'           => 'Waiting WKTT',
+                                    'done'                   => 'Done',
                                   default                 => strtoupper(str_replace('_', ' ', $currStatus))
                               };
                           @endphp
