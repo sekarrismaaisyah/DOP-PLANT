@@ -302,47 +302,55 @@ class DopSafetyPlanPersistenceService
     //     }
     // }  
 
-    private function syncOjiItems(DopOjiPlan $plan, array $savedSafetyItems): void
+   private function syncOjiItems(DopOjiPlan $plan, array $savedSafetyItems): void
     {
+        // Helper fungsi pembaca data agar kebal error (bisa baca Array maupun Object)
+        $getVal = fn($item, $key) => is_array($item) ? ($item[$key] ?? null) : ($item->$key ?? null);
+
         foreach ($savedSafetyItems as $index => $safetyItem) {
-            DopOjiPlanItem::query()->create([
-                'dop_oji_plan_id' => $plan->id,
-                'dop_safety_plan_item_id' => $safetyItem->id, // <--- KUNCI RELASI DI SINI
+            
+            $safetyItemId = $getVal($safetyItem, 'id');
 
-                'item_no' => $safetyItem->item_no,
-                'section_name' => $safetyItem->section_name,
-                'unit_code' => $safetyItem->unit_code,
-                'location' => $safetyItem->location,
-                'job_detail' => $safetyItem->job_detail,
-                'work_permit' => $safetyItem->work_permit,
+            // Pastikan ID tidak kosong
+            if (! $safetyItemId) {
+                continue;
+            }
 
-                // Mengambil langsung nilai yang sudah dinormalisasi dari safetyItem
-                'tools' => $safetyItem->tools,
-                'workers' => $safetyItem->workers,
+            // Gunakan updateOrCreate agar saat Edit (Update) datanya ditimpa, bukan ditambah (duplikat)
+            DopOjiPlanItem::query()->updateOrCreate(
+                [
+                    // Kondisi Pencarian (Kunci Relasi)
+                    'dop_oji_plan_id' => $plan->id,
+                    'dop_safety_plan_item_id' => $safetyItemId,
+                ],
+                [
+                    // Data yang akan diisi/diupdate
+                    'item_no' => $getVal($safetyItem, 'item_no'),
+                    'section_name' => $getVal($safetyItem, 'section_name'),
+                    'unit_code' => $getVal($safetyItem, 'unit_code'),
+                    'location' => $getVal($safetyItem, 'location'),
+                    'job_detail' => $getVal($safetyItem, 'job_detail'),
+                    'work_permit' => $getVal($safetyItem, 'work_permit'),
 
-                'cctv' => $safetyItem->cctv,
+                    'tools' => $getVal($safetyItem, 'tools'),
+                    'workers' => $getVal($safetyItem, 'workers'),
+                    'cctv' => $getVal($safetyItem, 'cctv'),
 
-                'group_leader' => $safetyItem->group_leader,
-                'group_leader_sid' => $safetyItem->group_leader_sid,
+                    'group_leader' => $getVal($safetyItem, 'group_leader'),
+                    'group_leader_sid' => $getVal($safetyItem, 'group_leader_sid'),
 
-                // khusus OJI
-                'evidence_1' => null,
-                'evidence_2' => null,
-                'evidence_3' => null,
-                'evidence_4' => null,
-                'evidence_5' => null,
+                    'section_head' => $getVal($safetyItem, 'section_head'),
+                    'section_head_sid' => $getVal($safetyItem, 'section_head_sid'),
 
-                'section_head' => $safetyItem->section_head,
-                'section_head_sid' => $safetyItem->section_head_sid,
+                    'she_leader' => $getVal($safetyItem, 'she_leader'),
+                    'she_leader_sid' => $getVal($safetyItem, 'she_leader_sid'),
 
-                'she_leader' => $safetyItem->she_leader,
-                'she_leader_sid' => $safetyItem->she_leader_sid,
+                    'dept_head' => $getVal($safetyItem, 'dept_head'),
+                    'dept_head_sid' => $getVal($safetyItem, 'dept_head_sid'),
 
-                'dept_head' => $safetyItem->dept_head,
-                'dept_head_sid' => $safetyItem->dept_head_sid,
-
-                'pja_bc' => $safetyItem->pja_bc,
-            ]);
+                    'pja_bc' => $getVal($safetyItem, 'pja_bc'),
+                ]
+            );
         }
     }
 }
