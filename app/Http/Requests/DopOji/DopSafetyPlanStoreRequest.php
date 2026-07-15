@@ -35,6 +35,8 @@ class DopSafetyPlanStoreRequest extends FormRequest
             ],
             'plan_date' => ['required', 'date'],
             'shift' => ['required', 'integer', Rule::in([1, 2])],
+            'company'    => ['required', 'string', 'max:100'], // <--- Tambahkan
+            'department' => ['required', 'string', 'max:100'],
             'status' => ['required', 'string', Rule::enum(DopSafetyPlanStatus::class)],
             'auth_location_date' => ['nullable', 'string', 'max:255'],
             'created_by_name' => ['nullable', 'string', 'max:255'],

@@ -87,10 +87,36 @@
 
    <div class="ds-surface-card rounded-2xl p-6">
       <h2 class="font-headline font-bold text-base mb-4">Blok Otorisasi Dokumen</h2>
+      
       <div class="grid md:grid-cols-2 gap-4">
          <div class="md:col-span-2">
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Lokasi & Tanggal Pembuatan</label>
             <input type="text" name="auth_location_date" value="{{ old('auth_location_date', $defaults['auth_location_date'] ?? '') }}" class="w-full rounded-xl border border-outline-variant/30 px-3 py-2 text-sm">
+         </div>
+         <div>
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Company </label>
+            <input type="text" 
+                  name="company" 
+                  value="{{ old('company', $plan->company ?? '') }}" 
+                  required 
+                  placeholder="Contoh: PT PAMA"
+                  class="w-full rounded-xl border border-outline-variant/30 px-3 py-2 text-sm">
+            @error('company')
+               <span class="text-xs text-red-500">{{ $message }}</span>
+            @enderror
+         </div>
+
+         <div>
+            <label class="block text-xs font-bold text-on-surface-variant mb-1">Departemen </label>
+            <input type="text" 
+                  name="department" 
+                  value="{{ old('department', $plan->department ?? '') }}" 
+                  required 
+                  placeholder="Contoh: PLANT"
+                  class="w-full rounded-xl border border-outline-variant/30 px-3 py-2 text-sm">
+            @error('department')
+               <span class="text-xs text-red-500">{{ $message }}</span>
+            @enderror
          </div>
          <div>
             <label class="block text-xs font-bold text-on-surface-variant mb-1">Dibuat Oleh — Nama</label>

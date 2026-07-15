@@ -17,6 +17,39 @@ class DopSafetyPlanPersistenceService
      * @param  array<string, mixed>  $header
      * @param  list<array<string, mixed>>  $items
      */
+    // public function create(array $header, array $items, ?int $userId = null): DopSafetyPlan
+    // {
+    //     return DB::transaction(function () use ($header, $items, $userId) {
+
+    //         $attributes = [
+    //             ...$this->mapHeaderAttributes($header),
+    //             'user_id' => $userId,
+    //         ];
+
+    //         // Simpan DOP
+    //         $plan = DopSafetyPlan::query()->create($attributes);
+
+    //         $this->syncItems($plan, $items);
+
+    //         // Simpan OJI
+    //         $ojiPlan = DopOjiPlan::query()->updateOrCreate(
+    //             [
+    //                 'site' => $attributes['site'],
+    //                 'company' => $attributes['company'],       // <--- Tambahkan Kunci
+    //                 'department' => $attributes['department'],
+    //                 'plan_date' => $attributes['plan_date'],
+    //                 'shift' => $attributes['shift'],
+    //             ],
+    //             $attributes,
+    //         );
+
+    //         $ojiPlan->items()->delete();
+
+    //         $this->syncOjiItems($ojiPlan, $items);
+
+    //         return $plan->load('items');
+    //     });
+    // }
     public function create(array $header, array $items, ?int $userId = null): DopSafetyPlan
     {
         return DB::transaction(function () use ($header, $items, $userId) {
@@ -29,25 +62,62 @@ class DopSafetyPlanPersistenceService
             // Simpan DOP
             $plan = DopSafetyPlan::query()->create($attributes);
 
-            $this->syncItems($plan, $items);
+            // TANGKAP HASILNYA!
+            $savedSafetyItems = $this->syncItems($plan, $items);
 
             // Simpan OJI
             $ojiPlan = DopOjiPlan::query()->updateOrCreate(
                 [
                     'site' => $attributes['site'],
+                    'company' => $attributes['company'],
+                    'department' => $attributes['department'],
                     'plan_date' => $attributes['plan_date'],
                     'shift' => $attributes['shift'],
                 ],
                 $attributes,
             );
 
-            $ojiPlan->items()->delete();
-
-            $this->syncOjiItems($ojiPlan, $items);
+            // GUNAKAN VARIABEL YANG DITANGKAP TADI!
+            $this->syncOjiItems($ojiPlan, $savedSafetyItems);
 
             return $plan->load('items');
         });
     }
+
+    // /**
+    //  * @param  array<string, mixed>  $header
+    //  * @param  list<array<string, mixed>>  $items
+    //  */
+    // public function update(DopSafetyPlan $plan, array $header, array $items): DopSafetyPlan
+    // {
+    //     return DB::transaction(function () use ($plan, $header, $items) {
+
+    //         $attributes = $this->mapHeaderAttributes($header);
+
+    //         $plan->update($attributes);
+
+    //         $plan->items()->delete();
+
+    //         $this->syncItems($plan, $items);
+
+    //         $ojiPlan = DopOjiPlan::query()->updateOrCreate(
+    //             [
+    //                 'site' => $attributes['site'],
+    //                 'company' => $attributes['company'],       // <--- Tambahkan Kunci
+    //                 'department' => $attributes['department'],
+    //                 'plan_date' => $attributes['plan_date'],
+    //                 'shift' => $attributes['shift'],
+    //             ],
+    //             $attributes,
+    //         );
+
+    //         $ojiPlan->items()->delete();
+
+    //         $this->syncOjiItems($ojiPlan, $items);
+
+    //         return $plan->fresh(['items']);
+    //     });
+    // }
 
     /**
      * @param  array<string, mixed>  $header
@@ -56,6 +126,13 @@ class DopSafetyPlanPersistenceService
     public function update(DopSafetyPlan $plan, array $header, array $items): DopSafetyPlan
     {
         return DB::transaction(function () use ($plan, $header, $items) {
+            
+            // Tangkap nilai asli sebelum di-update (Perbaikan yang tadi)
+            $originalSite       = $plan->getOriginal('site');
+            $originalCompany    = $plan->getOriginal('company');
+            $originalDepartment = $plan->getOriginal('department');
+            $originalPlanDate   = $plan->getOriginal('plan_date');
+            $originalShift      = $plan->getOriginal('shift');
 
             $attributes = $this->mapHeaderAttributes($header);
 
@@ -63,20 +140,29 @@ class DopSafetyPlanPersistenceService
 
             $plan->items()->delete();
 
-            $this->syncItems($plan, $items);
+            // ========================================================
+            // PERBAIKAN: TANGKAP HASILNYA KE DALAM VARIABEL
+            // ========================================================
+            $savedSafetyItems = $this->syncItems($plan, $items);
 
             $ojiPlan = DopOjiPlan::query()->updateOrCreate(
                 [
-                    'site' => $attributes['site'],
-                    'plan_date' => $attributes['plan_date'],
-                    'shift' => $attributes['shift'],
+                    'site'       => $originalSite,
+                    'company'    => $originalCompany,
+                    'department' => $originalDepartment,
+                    'plan_date'  => $originalPlanDate,
+                    'shift'      => $originalShift,
                 ],
-                $attributes,
+                $attributes 
             );
 
-            $ojiPlan->items()->delete();
+            // Karena data OJI lama sudah ketemu, kita tidak boleh main delete() sembarangan
+            // Hapus baris ini: $ojiPlan->items()->delete(); (TIDAK PERLU LAGI karena pakai updateOrCreate di itemnya)
 
-            $this->syncOjiItems($ojiPlan, $items);
+            // ========================================================
+            // PERBAIKAN: GUNAKAN VARIABEL YANG SUDAH ADA ID-NYA
+            // ========================================================
+            $this->syncOjiItems($ojiPlan, $savedSafetyItems);
 
             return $plan->fresh(['items']);
         });
@@ -99,6 +185,8 @@ class DopSafetyPlanPersistenceService
             $plan = DopSafetyPlan::query()->updateOrCreate(
                 [
                     'site' => $attrs['site'],
+                    'company' => $attrs['company'],       // <--- Tambahkan Kunci
+                    'department' => $attrs['department'], 
                     'plan_date' => $attrs['plan_date'],
                     'shift' => $attrs['shift'],
                 ],
@@ -108,7 +196,7 @@ class DopSafetyPlanPersistenceService
                 ],
             );
 
-            $plan->items()->delete();
+            // $plan->items()->delete();
             
             // Simpan ODP item dan tangkap hasilnya (beserta ID database)
             $savedSafetyItems = $this->syncItems($plan, $items);
@@ -128,7 +216,7 @@ class DopSafetyPlanPersistenceService
                 ],
             );
 
-            $ojiPlan->items()->delete();
+            // $ojiPlan->items()->delete();
 
             // Jalankan sinkronisasi OJI item menggunakan data ODP ber-ID
             $this->syncOjiItems($ojiPlan, $savedSafetyItems);
@@ -150,6 +238,8 @@ class DopSafetyPlanPersistenceService
 
         return [
             'site' => (string) ($header['site'] ?? ''),
+            'company' => (string) ($header['company'] ?? ''),       // <--- TAMBAHKAN INI
+            'department' => (string) ($header['department'] ?? ''),
             'plan_date' => (string) ($header['plan_date'] ?? ''),
             'shift' => (int) ($header['shift'] ?? 1),
             'status' => $status,
@@ -171,11 +261,13 @@ class DopSafetyPlanPersistenceService
     private function syncItems(DopSafetyPlan $plan, array $items): array
     {
         $savedItems = [];
+        $lastItemNo = DopSafetyPlanItem::where('dop_safety_plan_id', $plan->id)->max('item_no') ?? 0;
 
         foreach ($items as $index => $item) {
+            $lastItemNo++;
             $savedItems[] = DopSafetyPlanItem::query()->create([
                 'dop_safety_plan_id' => $plan->id,
-                'item_no' => (int) ($item['item_no'] ?? ($index + 1)),
+                'item_no' => $lastItemNo,
                 'section_name' => (string) ($item['section_name'] ?? ''),
                 'unit_code' => (string) ($item['unit_code'] ?? 'N/A'),
                 'location' => (string) ($item['location'] ?? ''),

@@ -28,10 +28,14 @@ class DopSafetyPlanStoreRequest extends FormRequest
                 'max:50',
                 Rule::unique('dop_safety_plans')->where(function ($query) {
                     $query->where('site', $this->input('site'))
+                    ->where('company', $this->input('company'))       // <--- Tambahan Kunci
+                        ->where('department', $this->input('department'))
                         ->where('plan_date', $this->input('plan_date'))
                         ->where('shift', (int) $this->input('shift'));
                 }),
             ],
+            'company'    => ['required', 'string', 'max:100'], // <--- Tambahkan
+            'department' => ['required', 'string', 'max:100'],
             'plan_date' => ['required', 'date'],
             'shift' => ['required', 'integer', Rule::in([1, 2])],
             'status' => ['required', 'string', Rule::enum(DopSafetyPlanStatus::class)],
@@ -84,7 +88,8 @@ class DopSafetyPlanStoreRequest extends FormRequest
     public function headerPayload(): array
     {
         return $this->only([
-            'site', 'plan_date', 'shift', 'status',
+            'site', 'company',
+            'department','plan_date', 'shift', 'status',
             'auth_location_date', 'created_by_name', 'created_by_position',
             'acknowledged_1_name', 'acknowledged_1_position',
             'acknowledged_2_name', 'acknowledged_2_position',

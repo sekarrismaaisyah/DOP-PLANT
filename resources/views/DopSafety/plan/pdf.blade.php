@@ -226,14 +226,14 @@
                 </table>
             </td>
             
-            <td class="sig-box">
+            {{-- <td class="sig-box">
                 <table class="sig-inner-table">
                     <tr><td class="sig-top">Mengetahui</td></tr>
                     <tr><td class="sig-mid"></td></tr>
                     <tr><td class="sig-name">{{ strtoupper($plan->acknowledged_4_name ?? 'DAVI TANTRA') }}</td></tr>
                     <tr><td class="sig-bot">Safety Operation Superintendent</td></tr>
                 </table>
-            </td>
+            </td> --}}
         </tr>
     </table>
 

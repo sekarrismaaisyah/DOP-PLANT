@@ -26,6 +26,7 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 use Illuminate\Support\Facades\DB;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\DopOjiPlanItem;
+use App\Models\DopOjiPlan;
 
 class DopSafetyPlanController extends Controller
 {
@@ -159,13 +160,44 @@ class DopSafetyPlanController extends Controller
             ->with('success', 'DOP berhasil diperbarui.');
     }
 
+    // public function destroy(DopSafetyPlan $plan): RedirectResponse
+    // {
+    //     $plan->delete();
+
+    //     return redirect()
+    //         ->route('dop-safety.plan.index')
+    //         ->with('success', 'DOP berhasil dihapus.');
+    // }
+
     public function destroy(DopSafetyPlan $plan): RedirectResponse
     {
-        $plan->delete();
+        \Illuminate\Support\Facades\DB::transaction(function () use ($plan) {
+            // 1. Cari dokumen OJI kembarannya berdasarkan Composite Key (Kunci Unik)
+            $ojiPlan = DopOjiPlan::query()
+                ->where('site', $plan->site)
+                ->where('company', $plan->company)
+                ->where('department', $plan->department)
+                ->where('plan_date', $plan->plan_date)
+                ->where('shift', $plan->shift)
+                ->first();
+
+            // 2. Jika dokumen OJI ditemukan, hapus OJI beserta seluruh item/anaknya
+            if ($ojiPlan) {
+                // Hapus item pekerjaan di OJI terlebih dahulu (jika tidak pakai cascade di migration database)
+                $ojiPlan->items()->delete(); 
+                $ojiPlan->delete();
+            }
+
+            // 3. Hapus item pekerjaan di DOP Safety
+            $plan->items()->delete();
+
+            // 4. Hapus data utama DOP Safety
+            $plan->delete();
+        });
 
         return redirect()
             ->route('dop-safety.plan.index')
-            ->with('success', 'DOP berhasil dihapus.');
+            ->with('success', 'DOP dan dokumen OJI terkait berhasil dihapus.');
     }
 
     public function bulkApproval(Request $request): RedirectResponse

@@ -225,7 +225,7 @@ final class DopSafetyPlanExcelTemplateService
     {
         $examples = [
             [
-                'GMO', '2026-06-24', '1',
+                'GMO', 'PT PAMA', 'PLANT', '2026-06-24', '1',
                 '1', 'DT4304', 'FIELD TRACK', 'WORKSHOP', 'Ganti roller track unit DT4304', 'N/A',
                 'Chain Block, Impact Wrench', 'Ahmad; Budi', 'SID001; SID002', 'CCTV-12',
                 'Rudi GL', 'GL001', 'Siti SH', 'SH001', 'Hendra SHE', 'SHE001', 'Pak DH Plant', 'DH001', 'Pak PJA BC',
@@ -234,7 +234,7 @@ final class DopSafetyPlanExcelTemplateService
                 'Supt Safety BC', 'Supt Safety BC',
             ],
             [
-                'GMO', '2026-06-24', '1',
+                'GMO', 'PT PAMA', 'PLANT', '2026-06-24', '1',
                 '2', 'EX1296', 'FIELD TRACK', 'PIT WEST', 'Overhaul final drive EX1296', 'Hot Work',
                 'Torque Wrench, Crane 10T', 'Candra', 'SID003', 'CCTV-05',
                 'Rudi GL', 'GL001', 'Siti SH', 'SH001', 'Hendra SHE', 'SHE001', 'Pak DH Plant', 'DH001', 'Pak PJA BC',

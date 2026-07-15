@@ -27,6 +27,8 @@ class DopSafetyPlanUpdateRequest extends DopSafetyPlanStoreRequest
             Rule::unique($tableName) // <--- Sekarang tabelnya dinamis!
                 ->where(function ($query) {
                     $query->where('site', $this->input('site'))
+                    ->where('department', $this->input('department')) // <--- Tambahan Kunci
+                        ->where('plan_date', $this->input('plan_date'))
                         ->where('plan_date', $this->input('plan_date'))
                         ->where('shift', (int) $this->input('shift'));
                 })

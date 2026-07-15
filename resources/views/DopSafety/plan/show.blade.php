@@ -217,6 +217,18 @@
       </div>
       @endforeach
 
+      <div class="ds-surface-card rounded-2xl p-6 mb-6">
+         <h2 class="font-headline font-bold text-base mb-4">Informasi Dokumen</h2>
+         <div class="grid md:grid-cols-2 gap-4 text-sm">
+            <div><span class="font-bold">Site:</span> {{ $plan->site ?? '—' }}</div>
+            <div><span class="font-bold">Tanggal Plan:</span> {{ $plan->plan_date ?? '—' }}</div>
+            <div><span class="font-bold">Shift:</span> {{ $plan->shift ?? '—' }}</div>
+            
+            <div><span class="font-bold">Company:</span> {{ $plan->company ?? '—' }}</div>
+            <div><span class="font-bold">Departemen:</span> {{ $plan->department ?? '—' }}</div>
+         </div>
+      </div>
+
       <div class="ds-surface-card rounded-2xl p-6">
          <h2 class="font-headline font-bold text-base mb-4">Otorisasi Dokumen</h2>
          <div class="grid md:grid-cols-2 gap-4 text-sm">

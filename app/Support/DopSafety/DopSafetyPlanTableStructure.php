@@ -14,7 +14,7 @@ final class DopSafetyPlanTableStructure
 
   public const HEADER_ROW_COUNT = 4;
 
-  public const EXCEL_META_COLUMN_COUNT = 3;
+  public const EXCEL_META_COLUMN_COUNT = 5;
 
   public const EXCEL_SHIFT_SECTION_COLSPAN = 18;
 
@@ -28,7 +28,7 @@ final class DopSafetyPlanTableStructure
 
   public const EXCEL_DATA_START_ROW = 5;
 
-  public const EXCEL_DATA_START_COLUMN = 4;
+  public const EXCEL_DATA_START_COLUMN = 6;
 
   /** Template upload form create/edit — hanya kolom item (tanpa meta & otorisasi). */
   public const EXCEL_ITEMS_ONLY_DATA_START_COLUMN = 1;
@@ -171,7 +171,7 @@ final class DopSafetyPlanTableStructure
 
   public static function documentMetaHeaders(): array
   {
-    return ['Site', 'Hari/Tanggal', 'Shift'];
+    return ['Site', 'Company', 'Departemen', 'Hari/Tanggal', 'Shift'];
   }
 
   public static function authorizationHeaders(): array

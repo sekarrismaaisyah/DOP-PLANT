@@ -15,6 +15,8 @@ class DopOjiPlan extends Model
 
     protected $fillable = [
         'site',
+        'company',      // <-- Pastikan ini ada
+        'department',
         'plan_date',
         'shift',
         'status',

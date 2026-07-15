@@ -13,6 +13,8 @@ class DopSafetyPlan extends Model
 {
     protected $fillable = [
         'site',
+        'company',      // <--- Tambahkan ini
+        'department',
         'plan_date',
         'shift',
         'status',

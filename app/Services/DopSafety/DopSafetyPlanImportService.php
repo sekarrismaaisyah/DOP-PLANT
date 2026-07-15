@@ -13,66 +13,38 @@ use PhpOffice\PhpSpreadsheet\Shared\Date as ExcelDate;
 class DopSafetyPlanImportService
 {
     private const COL_SITE = 0;
-
-    private const COL_PLAN_DATE = 1;
-
-    private const COL_SHIFT = 2;
-
-    private const COL_ITEM_NO = 3;
-
-    private const COL_UNIT_CODE = 4;
-
-    private const COL_SECTION = 5;
-
-    private const COL_LOCATION = 6;
-
-    private const COL_JOB_DETAIL = 7;
-
-    private const COL_WORK_PERMIT = 8;
-
-    private const COL_TOOLS = 9;
-
-    private const COL_WORKER_NAME = 10;
-
-    private const COL_WORKER_SID = 11;
-
-    private const COL_CCTV = 12;
-
-    private const COL_GROUP_LEADER = 13;
-
-    private const COL_GROUP_LEADER_SID = 14;
-
-    private const COL_SECTION_HEAD = 15;
-
-    private const COL_SECTION_HEAD_SID = 16;
-
-    private const COL_SHE_LEADER = 17;
-
-    private const COL_SHE_LEADER_SID = 18;
-
-    private const COL_DEPT_HEAD = 19;
-
-    private const COL_DEPT_HEAD_SID = 20;
-
-    private const COL_PJA_BC = 21;
-
-    private const COL_AUTH_LOCATION_DATE = 22;
-
-    private const COL_CREATED_BY_NAME = 23;
-
-    private const COL_CREATED_BY_POSITION = 24;
-
-    private const COL_ACK_1_NAME = 25;
-
-    private const COL_ACK_1_POSITION = 26;
-
-    private const COL_ACK_2_NAME = 27;
-
-    private const COL_ACK_2_POSITION = 28;
-
-    private const COL_ACK_3_NAME = 29;
-
-    private const COL_ACK_3_POSITION = 30;
+    private const COL_COMPANY = 1;      // <-- BARU
+    private const COL_DEPARTMENT = 2;   // <-- BARU
+    private const COL_PLAN_DATE = 3;    // Geser jadi 3
+    private const COL_SHIFT = 4;        // Geser jadi 4
+    private const COL_ITEM_NO = 5;
+    private const COL_UNIT_CODE = 6;
+    private const COL_SECTION = 7;
+    private const COL_LOCATION = 8;
+    private const COL_JOB_DETAIL = 9;
+    private const COL_WORK_PERMIT = 10;
+    private const COL_TOOLS = 11;
+    private const COL_WORKER_NAME = 12;
+    private const COL_WORKER_SID = 13;
+    private const COL_CCTV = 14;
+    private const COL_GROUP_LEADER = 15;
+    private const COL_GROUP_LEADER_SID = 16;
+    private const COL_SECTION_HEAD = 17;
+    private const COL_SECTION_HEAD_SID = 18;
+    private const COL_SHE_LEADER = 19;
+    private const COL_SHE_LEADER_SID = 20;
+    private const COL_DEPT_HEAD = 21;
+    private const COL_DEPT_HEAD_SID = 22;
+    private const COL_PJA_BC = 23;
+    private const COL_AUTH_LOCATION_DATE = 24;
+    private const COL_CREATED_BY_NAME = 25;
+    private const COL_CREATED_BY_POSITION = 26;
+    private const COL_ACK_1_NAME = 27;
+    private const COL_ACK_1_POSITION = 28;
+    private const COL_ACK_2_NAME = 29;
+    private const COL_ACK_2_POSITION = 30;
+    private const COL_ACK_3_NAME = 31;
+    private const COL_ACK_3_POSITION = 32;
 
     public function __construct(
         private readonly DopSafetyPlanExcelTemplateService $templateService,
@@ -202,10 +174,12 @@ class DopSafetyPlanImportService
         );
 
         $site = trim((string) ($row[self::COL_SITE] ?? ''));
+        $company = trim((string) ($row[self::COL_COMPANY] ?? ''));       // <-- TANGKAP COMPANY
+        $department = trim((string) ($row[self::COL_DEPARTMENT] ?? ''));
         $planDateRaw = $row[self::COL_PLAN_DATE] ?? null;
         $shiftRaw = trim((string) ($row[self::COL_SHIFT] ?? ''));
 
-        if ($site === '' || $planDateRaw === null || trim((string) $planDateRaw) === '') {
+        if ($site === '' || $company === '' || $department === '' || $planDateRaw === null || trim((string) $planDateRaw) === '') {
             throw new \InvalidArgumentException("Baris {$rowNumber}: Site, Hari/Tanggal, dan Shift wajib diisi.");
         }
 
@@ -228,6 +202,8 @@ class DopSafetyPlanImportService
 
         $header = [
             'site' => $site,
+            'company' => $company,       // <-- MASUKKAN KE HEADER
+            'department' => $department,
             'plan_date' => $planDate,
             'shift' => $shift,
             'status' => DopSafetyPlanStatus::PendingApproval->value,
@@ -267,7 +243,7 @@ class DopSafetyPlanImportService
         ];
 
         return [
-            'document_key' => $site . '|' . $planDate . '|' . $shift,
+            'document_key' => $site . '|' . $company . '|' . $department . '|' . $planDate . '|' . $shift,
             'header' => $header,
             'item' => $item,
         ];
@@ -307,7 +283,7 @@ class DopSafetyPlanImportService
     private function mergeHeader(array $existing, array $incoming): array
     {
         foreach ($incoming as $key => $value) {
-            if (in_array($key, ['site', 'plan_date', 'shift', 'status'], true)) {
+            if (in_array($key, ['site', 'company', 'department', 'plan_date', 'shift', 'status'], true)) {
                 continue;
             }
             if ($value !== null && $value !== '') {
